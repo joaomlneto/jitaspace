@@ -21,12 +21,8 @@ F
 apps/web/tsconfig.json,9/1/9161a379683e0c9eefe972193e00e929fda9e488
 H
 apps/web/next.config.mjs,2/5/25e23be54c138f58d4eefee919095cfe622f1c13
-@
-apps/web/env.mjs,4/7/47226d560534823c7a21ba7ce742be06efdc31eb
 <
 .env.example,d/4/d4dae00d11854b35292c2b8a30515a9a0aa2d871
-4
-.env,3/c/3c84dcdc6bbe3d7817c49dcdc327b926fea1808a
 <
 package.json,7/0/7030d0b2f71b999ff89a343de08c414af32fc93a
 E

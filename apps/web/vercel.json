@@ -1,4 +1,7 @@
 {
+  "name": "JitaSpace Web App",
+  "buildCommand": "pnpm dlx turbo run build",
+  "installCommand": "pnpm install",
   "rewrites": [
     {
       "source": "/analytics/:match*",
