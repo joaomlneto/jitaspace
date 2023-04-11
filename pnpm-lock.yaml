@@ -229,8 +229,8 @@ importers:
         specifier: 13.2.4
         version: 13.2.4(eslint@8.37.0)(typescript@5.0.3)
       eslint-config-prettier:
-        specifier: ^8.6.0
-        version: 8.6.0(eslint@8.37.0)
+        specifier: ^8.8.0
+        version: 8.8.0(eslint@8.37.0)
       eslint-config-turbo:
         specifier: ^0.0.10
         version: 0.0.10(eslint@8.37.0)
@@ -3281,8 +3281,8 @@ packages:
       - supports-color
     dev: false
 
-  /eslint-config-prettier@8.6.0(eslint@8.37.0):
-    resolution: {integrity: sha512-bAF0eLpLVqP5oEVUFKpMA+NnRFICwn9X8B5jrR9FcqnYBuPbqWEjTEspPWMj5ye6czoSLDweCzSo3Ko7gGrZaA==}
+  /eslint-config-prettier@8.8.0(eslint@8.37.0):
+    resolution: {integrity: sha512-wLbQiFre3tdGgpDv67NQKnJuTlcUVYHas3k+DZCc2U2BadthoEY4B7hLPvAxaqdyOGCzuLfii2fqGph10va7oA==}
     hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
