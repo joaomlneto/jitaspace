@@ -13,11 +13,12 @@ import {
 import { useSession } from "next-auth/react";
 import useSWRInfinite from "swr/infinite";
 
-import { toArrayIfNot } from "~/utils/types";
+import { type GetCharactersCharacterIdMail200Item } from "@jitaspace/esi-client";
+import { toArrayIfNot } from "@jitaspace/utils";
+
 import { LabelColorSwatch } from "~/components/ColorSwatch";
 import { MailboxDataTable } from "~/components/MailboxTable";
 import { LabelNameText } from "~/components/Text";
-import { type GetCharactersCharacterIdMail200Item } from "~/esi/model";
 import { DefaultLayout } from "~/layout";
 
 export default function Page() {

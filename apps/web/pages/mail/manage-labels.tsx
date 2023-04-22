@@ -15,16 +15,16 @@ import { showNotification } from "@mantine/notifications";
 import { type AxiosError } from "axios";
 import { useSession } from "next-auth/react";
 
-import { isSpecialLabelId } from "~/utils/esi";
-import { randomProperty } from "~/utils/types";
-import { LabelColorSwatch } from "~/components/ColorSwatch";
-import { LabelNameText } from "~/components/Text";
 import {
+  PostCharactersCharacterIdMailLabelsBodyColor,
   deleteCharactersCharacterIdMailLabelsLabelId,
   postCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailLabels,
-} from "~/esi/mail";
-import { PostCharactersCharacterIdMailLabelsBodyColor } from "~/esi/model";
+} from "@jitaspace/esi-client";
+import { isSpecialLabelId, randomProperty } from "@jitaspace/utils";
+
+import { LabelColorSwatch } from "~/components/ColorSwatch";
+import { LabelNameText } from "~/components/Text";
 import { DefaultLayout } from "~/layout";
 
 function CreateLabelModal() {

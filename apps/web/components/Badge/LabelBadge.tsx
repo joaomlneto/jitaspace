@@ -1,7 +1,7 @@
 import { Badge, type BadgeProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "~/esi/mail";
+import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 
 type Props = BadgeProps & {
   labelId?: string | number;

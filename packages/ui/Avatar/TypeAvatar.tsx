@@ -1,17 +1,13 @@
 import { type AvatarProps } from "@mantine/core";
 
-import EveEntityAvatar from "./EveEntityAvatar";
+import { EveEntityAvatar } from "./EveEntityAvatar";
 
 type Props = Omit<AvatarProps, "src"> & {
   typeId?: string;
   variation?: string;
 };
 
-export default function TypeAvatar({
-  typeId,
-  variation,
-  ...otherProps
-}: Props) {
+export function TypeAvatar({ typeId, variation, ...otherProps }: Props) {
   return (
     <EveEntityAvatar
       category="types"

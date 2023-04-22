@@ -14,9 +14,10 @@ import {
 import { IconMailFast, IconMailbox, IconTag } from "@tabler/icons";
 import { signIn, useSession } from "next-auth/react";
 
-import { isSpecialLabelId } from "~/utils/esi";
-import { useGetCharactersCharacterIdMailLabels } from "~/esi/mail";
-import { CharacterAvatar } from "../../components/Avatar";
+import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import { CharacterAvatar } from "@jitaspace/ui";
+import { isSpecialLabelId } from "@jitaspace/utils";
+
 import { LoginWithEveOnlineButton } from "../../components/Button";
 import { LabelColorSwatch } from "../../components/ColorSwatch";
 import { LabelNameText } from "../../components/Text";

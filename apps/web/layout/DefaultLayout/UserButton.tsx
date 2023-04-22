@@ -1,10 +1,11 @@
+import React from "react";
 import {
-  createStyles,
   Group,
   Menu,
   Text,
   UnstyledButton,
-  UnstyledButtonProps,
+  createStyles,
+  type UnstyledButtonProps,
 } from "@mantine/core";
 import {
   IconChevronRight,
@@ -12,9 +13,9 @@ import {
   IconSettings,
   IconSwitchHorizontal,
 } from "@tabler/icons";
-import { CharacterAvatar } from "../../components/Avatar";
 import { signIn, signOut, useSession } from "next-auth/react";
-import React from "react";
+
+import { CharacterAvatar } from "@jitaspace/ui";
 
 const useStyles = createStyles((theme) => ({
   user: {
@@ -64,13 +65,17 @@ export default function UserButton({ icon, ...others }: UserButtonProps) {
         </Menu.Item>
         <Menu.Item
           icon={<IconSwitchHorizontal size={14} stroke={1.5} />}
-          onClick={() => signIn("eveonline")}
+          onClick={() => {
+            void signIn("eveonline");
+          }}
         >
           Change Character
         </Menu.Item>
         <Menu.Item
           icon={<IconLogout size={14} stroke={1.5} />}
-          onClick={() => signOut({ callbackUrl: "/", redirect: true })}
+          onClick={() => {
+            void signOut({ callbackUrl: "/", redirect: true });
+          }}
         >
           Logout
         </Menu.Item>

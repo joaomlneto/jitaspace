@@ -1,7 +1,7 @@
 import { Text, type TextProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLists } from "~/esi/mail";
+import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
 
 type Props = TextProps & {
   mailingListId?: number;

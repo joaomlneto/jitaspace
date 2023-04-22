@@ -6,8 +6,9 @@ import ReactHtmlParser, { convertNodeToElement } from "react-html-parser";
 import {
   useGetCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailMailId,
-} from "~/esi/mail";
-import { EveMailSenderAvatar } from "../Avatar";
+} from "@jitaspace/esi-client";
+import { EveMailSenderAvatar } from "@jitaspace/ui";
+
 import { EveMailSenderNameText } from "../Text";
 
 function transformMailBody(

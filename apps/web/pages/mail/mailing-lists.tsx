@@ -12,7 +12,8 @@ import {
 } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLists } from "~/esi/mail";
+import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
+
 import { DefaultLayout } from "~/layout";
 
 export default function Page() {

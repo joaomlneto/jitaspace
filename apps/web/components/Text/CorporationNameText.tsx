@@ -1,6 +1,6 @@
 import { Text, type TextProps } from "@mantine/core";
 
-import { useGetCorporationsCorporationId } from "~/esi/corporation";
+import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
 
 type Props = TextProps & {
   corporationId?: number;

@@ -1,12 +1,12 @@
 import { type AvatarProps } from "@mantine/core";
 
-import EveEntityAvatar from "./EveEntityAvatar";
+import { EveEntityAvatar } from "./EveEntityAvatar";
 
 export type CharacterAvatarProps = Omit<AvatarProps, "src"> & {
   characterId?: number | string | null;
 };
 
-export default function CharacterAvatar({
+export function CharacterAvatar({
   characterId,
   ...otherProps
 }: CharacterAvatarProps) {

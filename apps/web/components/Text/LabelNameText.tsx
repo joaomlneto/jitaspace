@@ -1,8 +1,8 @@
 import { Text, type TextProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
-import { humanLabelName } from "~/utils/esi";
-import { useGetCharactersCharacterIdMailLabels } from "~/esi/mail";
+import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import { humanLabelName } from "@jitaspace/utils";
 
 type Props = TextProps & {
   labelId?: string | number;

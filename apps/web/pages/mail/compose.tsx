@@ -22,12 +22,15 @@ import { IconCircleMinus, IconCirclePlus } from "@tabler/icons";
 import { HttpStatusCode, type AxiosError } from "axios";
 import { useSession } from "next-auth/react";
 
-import { CharacterAvatar } from "~/components/Avatar";
+import {
+  postCharactersCharacterIdMail,
+  type PostUniverseNames200ItemCategory,
+} from "@jitaspace/esi-client";
+import { CharacterAvatar } from "@jitaspace/ui";
+
 import { EvemailEditor } from "~/components/EvemailEditor";
 import { EsiSearchSelect } from "~/components/Select";
 import { CSPACostText, CharacterNameText } from "~/components/Text";
-import { postCharactersCharacterIdMail } from "~/esi/mail";
-import { type PostUniverseNames200ItemCategory } from "~/esi/model";
 import { DefaultLayout } from "~/layout";
 
 export default function Page() {

@@ -1,22 +1,22 @@
 import { Avatar, type AvatarProps } from "@mantine/core";
 
-import { esiImageSizeClamp } from "~/utils/math";
-import { getAvatarSize } from "~/utils/ui";
+import { esiImageSizeClamp, getAvatarSize } from "@jitaspace/utils";
+
 import { sizes } from "./Avatar.styles";
 
-type Props = Omit<AvatarProps, "src"> & {
+export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
   category: string;
   id?: string | number | null;
   variation: string;
 };
 
-export default function EveEntityAvatar({
+export function EveEntityAvatar({
   category,
   id,
   variation,
   size,
   ...avatarProps
-}: Props) {
+}: EveEntityAvatarProps) {
   const imageSize = esiImageSizeClamp(
     getAvatarSize({
       size: size ?? "md",

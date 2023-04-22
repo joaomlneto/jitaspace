@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Text, type TextProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
-import { toArrayIfNot } from "~/utils/types";
-import { postCharactersCharacterIdCspa } from "~/esi/character";
+import { postCharactersCharacterIdCspa } from "@jitaspace/esi-client";
+import { toArrayIfNot } from "@jitaspace/utils";
 
 type Props = TextProps & {
   characterIds?: number | number[];

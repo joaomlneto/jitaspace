@@ -6,8 +6,9 @@ import {
   characterIdRanges,
   corporationIdRanges,
   isIdInRanges,
-} from "~/utils/esi";
-import AllianceAvatar from "./AllianceAvatar";
+} from "@jitaspace/utils";
+
+import { AllianceAvatar } from "./AllianceAvatar";
 import {
   CharacterAvatar,
   CorporationAvatar,
@@ -22,11 +23,7 @@ type Props = Omit<AvatarProps, "src"> & {
   }[];
 };
 
-export default function EveMailSenderAvatar({
-  id,
-  recipients,
-  ...otherProps
-}: Props) {
+export function EveMailSenderAvatar({ id, recipients, ...otherProps }: Props) {
   if (!id) {
     return <Avatar {...otherProps} />;
   }

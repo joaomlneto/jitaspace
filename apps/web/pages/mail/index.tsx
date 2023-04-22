@@ -12,7 +12,8 @@ import {
 } from "@mantine/core";
 import { signIn, useSession } from "next-auth/react";
 
-import { CharacterAvatar } from "~/components/Avatar";
+import { CharacterAvatar } from "@jitaspace/ui";
+
 import { LoginWithEveOnlineButton } from "~/components/Button";
 import { PermissionsTable } from "~/components/Permissions";
 import { DefaultLayout } from "~/layout";

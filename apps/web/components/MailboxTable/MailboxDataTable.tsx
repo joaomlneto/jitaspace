@@ -13,13 +13,14 @@ import { format } from "date-fns";
 import { DataTable } from "mantine-datatable";
 import { useSession } from "next-auth/react";
 
-import { isSpecialLabelId } from "~/utils/esi";
 import {
   deleteCharactersCharacterIdMailMailId,
   putCharactersCharacterIdMailMailId,
   useGetCharactersCharacterIdMailLabels,
-} from "~/esi/mail";
-import { EveMailSenderAvatar } from "../Avatar";
+} from "@jitaspace/esi-client";
+import { EveMailSenderAvatar } from "@jitaspace/ui";
+import { isSpecialLabelId } from "@jitaspace/utils";
+
 import { LabelColorSwatch } from "../ColorSwatch";
 import { MessagePanel } from "../MessagePanel";
 import { EveMailSenderNameText, LabelNameText } from "../Text";

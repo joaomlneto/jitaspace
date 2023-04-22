@@ -1,6 +1,6 @@
 import { Text, type TextProps } from "@mantine/core";
 
-import { useGetCharactersCharacterId } from "~/esi/character";
+import { useGetCharactersCharacterId } from "@jitaspace/esi-client";
 
 type Props = TextProps & {
   characterId?: number;

@@ -2,10 +2,13 @@ import React, { forwardRef, useEffect } from "react";
 import { Group, Select, type SelectProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
-import { type PostUniverseNames200ItemCategory } from "~/esi/model";
-import { useGetCharactersCharacterIdSearch } from "~/esi/search";
-import { postUniverseNames } from "~/esi/universe";
-import CharacterAvatar from "../Avatar/CharacterAvatar";
+import {
+  postUniverseNames,
+  useGetCharactersCharacterIdSearch,
+  type PostUniverseNames200ItemCategory,
+} from "@jitaspace/esi-client";
+import { CharacterAvatar } from "@jitaspace/ui";
+
 import { CharacterNameText } from "../Text";
 
 interface ItemProps extends React.ComponentPropsWithoutRef<"div"> {

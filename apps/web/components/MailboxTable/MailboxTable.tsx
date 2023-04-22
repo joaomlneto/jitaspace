@@ -12,8 +12,9 @@ import { openModal } from "@mantine/modals";
 import { IconMail, IconMailOpened } from "@tabler/icons";
 import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "../../esi/mail";
-import { EveMailSenderAvatar } from "../Avatar";
+import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import { EveMailSenderAvatar } from "@jitaspace/ui";
+
 import { MessagePanel } from "../MessagePanel";
 import { EveMailSenderNameText } from "../Text";
 

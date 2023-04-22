@@ -1,12 +1,15 @@
 import { type AvatarProps } from "@mantine/core";
 
-import EveEntityAvatar from "./EveEntityAvatar";
+import { EveEntityAvatar } from "./EveEntityAvatar";
 
-type Props = Omit<AvatarProps, "src"> & {
+export type AllianceAvatarProps = Omit<AvatarProps, "src"> & {
   allianceId?: string | number | null;
 };
 
-export default function AllianceAvatar({ allianceId, ...otherProps }: Props) {
+export function AllianceAvatar({
+  allianceId,
+  ...otherProps
+}: AllianceAvatarProps) {
   return (
     <EveEntityAvatar
       category="alliances"

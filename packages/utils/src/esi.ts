@@ -1,4 +1,4 @@
-import { GetCharactersCharacterIdMailLabels200LabelsItem } from "../esi/model";
+import { type GetCharactersCharacterIdMailLabels200LabelsItem } from "@jitaspace/esi-client";
 
 export const characterIdRanges: [number, number][] = [
   [3000000, 4000000],
@@ -22,7 +22,7 @@ export const isSpecialLabelId = (id?: number) =>
   id && SPECIAL_LABEL_IDS.includes(id);
 
 export const humanLabelName = (
-  label?: GetCharactersCharacterIdMailLabels200LabelsItem
+  label?: GetCharactersCharacterIdMailLabels200LabelsItem,
 ): string => {
   switch (label?.label_id) {
     case 1:

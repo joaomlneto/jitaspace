@@ -1,6 +1,6 @@
 import { Text, type TextProps } from "@mantine/core";
 
-import { useGetAlliancesAllianceId } from "~/esi/alliance";
+import { useGetAlliancesAllianceId } from "@jitaspace/esi-client";
 
 type Props = TextProps & {
   allianceId?: number;

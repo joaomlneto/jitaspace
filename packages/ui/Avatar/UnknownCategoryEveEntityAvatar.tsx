@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Avatar, type AvatarProps } from "@mantine/core";
 
-import { esiImageSizeClamp } from "~/utils/math";
-import { getAvatarSize } from "~/utils/ui";
-import { postUniverseNames } from "~/esi/universe";
+import { postUniverseNames } from "@jitaspace/esi-client";
+import { esiImageSizeClamp, getAvatarSize } from "@jitaspace/utils";
+
 import { sizes } from "./Avatar.styles";
 
 type Props = Omit<AvatarProps, "src"> & {
@@ -67,6 +67,6 @@ function _UnknownCategoryEveEntityAvatar({ id, size, ...avatarProps }: Props) {
   );
 }
 
-export default function UnknownCategoryEveEntityAvatar(props: Props) {
+export function UnknownCategoryEveEntityAvatar(props: Props) {
   return useMemo(() => <_UnknownCategoryEveEntityAvatar {...props} />, [props]);
 }

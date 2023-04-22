@@ -1,15 +1,15 @@
 import { type AvatarProps } from "@mantine/core";
 
-import EveEntityAvatar from "./EveEntityAvatar";
+import { EveEntityAvatar } from "./EveEntityAvatar";
 
-type Props = Omit<AvatarProps, "src"> & {
+export type CorporationAvatarProps = Omit<AvatarProps, "src"> & {
   corporationId?: string | number | null;
 };
 
-export default function CorporationAvatar({
+export function CorporationAvatar({
   corporationId,
   ...otherProps
-}: Props) {
+}: CorporationAvatarProps) {
   return (
     <EveEntityAvatar
       category="corporations"

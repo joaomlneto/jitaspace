@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Text, type TextProps } from "@mantine/core";
 
-import { postUniverseNames } from "~/esi/universe";
+import { postUniverseNames } from "@jitaspace/esi-client";
 
 type Props = TextProps & {
   entityId?: string | number;
