@@ -6,6 +6,7 @@ import Script from "next/script";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { NotificationsProvider } from "@mantine/notifications";
+import { Analytics } from "@vercel/analytics/react";
 import { SessionProvider, signIn } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 
@@ -56,6 +57,8 @@ export default function App({
         src={"/analytics/script.js"}
         data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
       ></Script>
+
+      <Analytics />
 
       {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */}
       <SessionProvider session={session}>
