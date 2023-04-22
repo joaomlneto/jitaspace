@@ -37,14 +37,14 @@ export function getRandomInt(min: number, max: number) {
 export function shuffleArray<T>(a: T[]): T[] {
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    // @ts-ignore
+    // @ts-expect-error no-unchecked-indexed-access
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
 }
 
 export function getRandomArrayEntry<T>(array: T[]): T {
-  // @ts-ignore
+  // @ts-expect-error no-unchecked-indexed-access
   return array[getRandomInt(0, array.length - 1)];
 }
 
