@@ -14,12 +14,12 @@ import {
 import { IconMailFast, IconMailbox, IconTag } from "@tabler/icons";
 import { signIn, useSession } from "next-auth/react";
 
+import { isSpecialLabelId } from "~/utils/esi";
+import { useGetCharactersCharacterIdMailLabels } from "~/esi/mail";
 import { CharacterAvatar } from "../../components/Avatar";
 import { LoginWithEveOnlineButton } from "../../components/Button";
 import { LabelColorSwatch } from "../../components/ColorSwatch";
 import { LabelNameText } from "../../components/Text";
-import { useGetCharactersCharacterIdMailLabels } from "../../esi/mail";
-import { isSpecialLabelId } from "../../utils/esi";
 import LinksGroup from "./NavbarLinksGroup";
 import UserButton from "./UserButton";
 

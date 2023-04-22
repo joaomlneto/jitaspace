@@ -1,14 +1,14 @@
 import { useState } from "react";
+import Link, { type LinkProps } from "next/link";
 import {
   Box,
   Collapse,
-  createStyles,
   Group,
   ThemeIcon,
   UnstyledButton,
+  createStyles,
 } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons";
-import Link from "next/link";
 
 const useStyles = createStyles((theme) => ({
   control: {
@@ -62,7 +62,7 @@ interface LinksGroupProps {
   icon: JSX.Element;
   rightIcon?: JSX.Element;
   label: JSX.Element;
-  link?: string;
+  link?: LinkProps["href"];
   initiallyOpened?: boolean;
   links?: { key: string; label: JSX.Element | string; link: string }[];
 }
