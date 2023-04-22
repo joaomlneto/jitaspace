@@ -1,3 +1,3 @@
-import LabelColorSwatch from "./LabelColorSwatch";
+import MailLabelColorSwatch from "./MailLabelColorSwatch";
 
-export { LabelColorSwatch };
+export { MailLabelColorSwatch };

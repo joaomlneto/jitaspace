@@ -1,13 +1,12 @@
-import { ColorSwatch, type ColorSwatchProps } from "@mantine/core";
+import { Badge, type BadgeProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 
-type Props = Omit<ColorSwatchProps, "color"> & {
+type Props = BadgeProps & {
   labelId?: string | number;
 };
-
-export default function LabelColorSwatch({ labelId, ...otherProps }: Props) {
+export default function MailLabelBadge({ labelId, ...otherProps }: Props) {
   const { data: session } = useSession();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
@@ -19,13 +18,11 @@ export default function LabelColorSwatch({ labelId, ...otherProps }: Props) {
       },
     },
   );
+
   return (
-    <ColorSwatch
-      color={
-        labels?.data.labels?.find((label) => label.label_id == labelId)
-          ?.color ?? "primary"
-      }
-      {...otherProps}
-    />
+    <Badge {...otherProps}>
+      {labels?.data.labels?.find((label) => label.label_id == labelId)?.name ??
+        labelId}
+    </Badge>
   );
 }

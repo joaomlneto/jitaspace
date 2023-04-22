@@ -19,13 +19,13 @@
     "preinstall": "npx only-allow pnpm"
   },
   "dependencies": {
-    "@jitaspace/eslint-config": "*",
     "@ianvs/prettier-plugin-sort-imports": "^3.7.2",
+    "@jitaspace/eslint-config": "*",
     "@manypkg/cli": "^0.20.0",
     "@types/prettier": "^2.7.2",
     "eslint": "^8.37.0",
     "prettier": "^2.8.7",
-    "turbo": "^1.8.8",
-    "typescript": "^5.0.3"
+    "turbo": "^1.9.3",
+    "typescript": "^5.0.4"
   }
 }

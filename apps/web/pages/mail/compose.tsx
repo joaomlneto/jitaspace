@@ -101,7 +101,7 @@ export default function Page() {
           message: "Not logged in",
         });
       }
-      const result = await postCharactersCharacterIdMail(session?.user.id, {
+      const result = await postCharactersCharacterIdMail(session.user.id, {
         approved_cost: 0,
         body: values.body,
         recipients: values.recipients.map((r) => ({

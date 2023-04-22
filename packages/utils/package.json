@@ -11,12 +11,10 @@
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --noEmit"
   },
-  "dependencies": {
-  },
   "devDependencies": {
     "@jitaspace/esi-client": "*",
     "@jitaspace/eslint-config": "*",
-    "eslint": "^8.38.0",
+    "eslint": "^8.39.0",
     "typescript": "^5.0.4"
   }
 }

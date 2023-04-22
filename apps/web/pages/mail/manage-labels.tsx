@@ -23,7 +23,7 @@ import {
 } from "@jitaspace/esi-client";
 import { isSpecialLabelId, randomProperty } from "@jitaspace/utils";
 
-import { LabelColorSwatch } from "~/components/ColorSwatch";
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { LabelNameText } from "~/components/Text";
 import { DefaultLayout } from "~/layout";
 
@@ -159,7 +159,7 @@ export default function Page() {
             <tr key={label.label_id}>
               <td>
                 <Group>
-                  <LabelColorSwatch labelId={label.label_id} size={16} />
+                  <MailLabelColorSwatch labelId={label.label_id} size={16} />
                   <LabelNameText labelId={label.label_id} />
                 </Group>
               </td>

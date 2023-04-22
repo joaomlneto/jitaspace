@@ -19,7 +19,7 @@ import { CharacterAvatar } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
 import { LoginWithEveOnlineButton } from "../../components/Button";
-import { LabelColorSwatch } from "../../components/ColorSwatch";
+import { MailLabelColorSwatch } from "../../components/ColorSwatch";
 import { LabelNameText } from "../../components/Text";
 import LinksGroup from "./NavbarLinksGroup";
 import UserButton from "./UserButton";
@@ -130,7 +130,9 @@ export default function DefaultLayoutNavbar() {
                 <LinksGroup
                   key={item.label_id ?? index}
                   link={`/mail/mailbox?labels=${item.label_id}`}
-                  icon={<LabelColorSwatch labelId={item.label_id} size={16} />}
+                  icon={
+                    <MailLabelColorSwatch labelId={item.label_id} size={16} />
+                  }
                   label={<LabelNameText labelId={item.label_id} />}
                   rightIcon={
                     item.unread_count ? (
@@ -156,7 +158,7 @@ export default function DefaultLayoutNavbar() {
                       label: (
                         <Group position="apart">
                           <Group>
-                            <LabelColorSwatch
+                            <MailLabelColorSwatch
                               labelId={item.label_id}
                               size={16}
                             />

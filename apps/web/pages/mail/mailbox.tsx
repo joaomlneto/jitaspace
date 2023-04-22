@@ -16,7 +16,7 @@ import useSWRInfinite from "swr/infinite";
 import { type GetCharactersCharacterIdMail200Item } from "@jitaspace/esi-client";
 import { toArrayIfNot } from "@jitaspace/utils";
 
-import { LabelColorSwatch } from "~/components/ColorSwatch";
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { MailboxDataTable } from "~/components/MailboxTable";
 import { LabelNameText } from "~/components/Text";
 import { DefaultLayout } from "~/layout";
@@ -91,7 +91,7 @@ export default function Page() {
             {toArrayIfNot(labels).flatMap((list) =>
               list.split(",").map((labelId) => (
                 <Group noWrap spacing="xs" key={labelId}>
-                  <LabelColorSwatch labelId={labelId} size={16} />
+                  <MailLabelColorSwatch labelId={labelId} size={16} />
                   <LabelNameText labelId={labelId} />
                 </Group>
               )),

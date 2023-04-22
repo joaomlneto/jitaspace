@@ -21,7 +21,7 @@ import {
 import { EveMailSenderAvatar } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
-import { LabelColorSwatch } from "../ColorSwatch";
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { MessagePanel } from "../MessagePanel";
 import { EveMailSenderNameText, LabelNameText } from "../Text";
 
@@ -134,7 +134,10 @@ export default function MailboxDataTable({ data, mutate }: Props) {
                   (item) =>
                     item && (
                       <Group noWrap spacing="xs" key={item.label_id}>
-                        <LabelColorSwatch labelId={item.label_id} size={16} />
+                        <MailLabelColorSwatch
+                          labelId={item.label_id}
+                          size={16}
+                        />
                         <LabelNameText labelId={item.label_id} />
                       </Group>
                     ),
@@ -210,12 +213,15 @@ export default function MailboxDataTable({ data, mutate }: Props) {
                         }}
                       >
                         <Group>
-                          <LabelColorSwatch labelId={label.label_id} size={16}>
+                          <MailLabelColorSwatch
+                            labelId={label.label_id}
+                            size={16}
+                          >
                             {label.label_id &&
                               mail.labels?.includes(label.label_id) && (
                                 <IconCheck size={16} />
                               )}
-                          </LabelColorSwatch>
+                          </MailLabelColorSwatch>
                           {label.label_id &&
                           mail.labels?.includes(label.label_id)
                             ? `Remove ${label.name}`
