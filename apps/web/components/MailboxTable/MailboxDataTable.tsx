@@ -8,7 +8,7 @@ import {
   IconMailOpened,
   IconMenu2,
   IconTrash,
-} from "@tabler/icons";
+} from "@tabler/icons-react";
 import { format } from "date-fns";
 import { DataTable } from "mantine-datatable";
 import { useSession } from "next-auth/react";

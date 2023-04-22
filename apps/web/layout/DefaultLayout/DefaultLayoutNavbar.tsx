@@ -11,7 +11,7 @@ import {
   UnstyledButton,
   createStyles,
 } from "@mantine/core";
-import { IconMailFast, IconMailbox, IconTag } from "@tabler/icons";
+import { IconMailFast, IconMailbox, IconTag } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
@@ -65,7 +65,7 @@ const useStyles = createStyles((theme) => ({
 }));
 
 export default function DefaultLayoutNavbar() {
-  const { classes, theme } = useStyles();
+  const { classes } = useStyles();
   const { data: session, status } = useSession();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
@@ -194,7 +194,7 @@ export default function DefaultLayoutNavbar() {
         {status === "authenticated" && <UserButton />}
         {status === "unauthenticated" && (
           <LoginWithEveOnlineButton
-            width={NAVBAR_WIDTH - 2 * theme.spacing.xs}
+            width={NAVBAR_WIDTH - 16}
             onClick={() => {
               void signIn("eveonline");
             }}

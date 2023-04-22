@@ -60,10 +60,7 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
     callbacks: {
-        session({
-                              session,
-                              token,
-                          }: {
+        session({session,token}: {
             session: Session;
             token: JWT & { accessToken?: string };
         }) {
