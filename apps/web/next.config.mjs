@@ -9,7 +9,12 @@ const config = {
   reactStrictMode: true,
 
   /** Enables hot reloading for local packages without a build step */
-  transpilePackages: ["@jitaspace/auth", "@jitaspace/esi-client", "@jitaspace/ui", "@jitaspace/utils"],
+  transpilePackages: [
+    "@jitaspace/auth",
+    "@jitaspace/esi-client",
+    "@jitaspace/ui",
+    "@jitaspace/utils",
+  ],
 
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: !!process.env.CI },
@@ -32,12 +37,12 @@ const config = {
   async redirects() {
     return [
       {
-        source: '/',
-        destination: '/mail',
+        source: "/",
+        destination: "/mail",
         permanent: false,
       },
-    ]
-  }
+    ];
+  },
 };
 
 export default config;

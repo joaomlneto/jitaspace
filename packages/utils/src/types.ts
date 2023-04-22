@@ -3,7 +3,7 @@ export function toArrayIfNot<T>(value: T | T[]): T[] {
 }
 
 export function randomProperty(obj: object) {
-  var keys = Object.keys(obj);
+  const keys = Object.keys(obj);
   // @ts-ignore
   return obj[keys[(keys.length * Math.random()) << 0]];
 }

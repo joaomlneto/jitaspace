@@ -1,8 +1,9 @@
+import React, { type PropsWithChildren } from "react";
 import { AppShell, createStyles } from "@mantine/core";
-import React, { PropsWithChildren } from "react";
-import DefaultLayoutNavbar from "./DefaultLayoutNavbar";
-import DefaultLayoutFooter from "./DefaultLayoutFooter";
 import { useSession } from "next-auth/react";
+
+import DefaultLayoutFooter from "./DefaultLayoutFooter";
+import DefaultLayoutNavbar from "./DefaultLayoutNavbar";
 
 const useStyles = createStyles((theme) => ({
   container: {

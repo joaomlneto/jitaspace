@@ -1,4 +1,4 @@
-import { z } from "zod";
+import {z} from "zod";
 
 /**
  * Specify your server-side environment variables schema here. This way you can ensure the app isn't
@@ -22,9 +22,9 @@ const server = z.object({
  */
 const client = z.object({
   NEXT_PUBLIC_UMAMI_WEBSITE_ID:
-      process.env.NODE_ENV === "production"
-          ? z.string().min(1)
-          : z.string().min(1).optional(),
+    process.env.NODE_ENV === "production"
+      ? z.string().min(1)
+      : z.string().min(1).optional(),
 });
 
 /**

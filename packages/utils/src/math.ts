@@ -52,7 +52,7 @@ export function getRandomArrayEntry<T>(array: T[]): T {
  * Bernoulli trial: returns true with probability p
  * @param probability of success
  */
-export function randomBoolean(probability: number = 0.5) {
+export function randomBoolean(probability = 0.5) {
   return Math.random() < probability;
 }
 
@@ -60,13 +60,13 @@ export function randomBoolean(probability: number = 0.5) {
  * Compute the average time until the next event based on a given rate of events
  * @arg rate: how many events per time period
  */
-export function randomExponential(rate: number = 1) {
+export function randomExponential(rate = 1) {
   return -Math.log(Math.random()) / rate;
 }
 
 /**
  * Return the number of failures before the first success with a geometric distribution
  */
-export function randomGeometric(successProbability: number = 0.5) {
+export function randomGeometric(successProbability = 0.5) {
   return Math.floor(Math.log(Math.random()) / Math.log(1 - successProbability));
 }
