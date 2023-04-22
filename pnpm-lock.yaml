@@ -155,8 +155,8 @@ importers:
         specifier: ^2.1.2
         version: 2.1.2(next@13.2.4)
       nextjs-routes:
-        specifier: ^1.0.8
-        version: 1.0.8(next@13.2.4)
+        specifier: ^1.0.9
+        version: 1.0.9(next@13.2.4)
       react:
         specifier: 18.2.0
         version: 18.2.0
@@ -5048,8 +5048,8 @@ packages:
       next: 13.2.4(@babel/core@7.21.4)(react-dom@18.2.0)(react@18.2.0)
     dev: false
 
-  /nextjs-routes@1.0.8(next@13.2.4):
-    resolution: {integrity: sha512-EWBrzT0VS+SGcrhEbCUGnDlEAS6tjJSiecbSA7x75pBbcW9IYkYw7JxDMNqFhiSrvtYAL8yIWFwbQ8x0Jmz7wg==}
+  /nextjs-routes@1.0.9(next@13.2.4):
+    resolution: {integrity: sha512-vITLm5SzpoYGGgDUmWXjf2GU5oHyc4Oh/b7VdDOTqKudEOWuSk1pluZFIlZ9ogVqVxI28c+U+EQ6KyjZOuZR5g==}
     peerDependencies:
       next: '*'
     dependencies:

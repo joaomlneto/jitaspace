@@ -54,7 +54,7 @@
     "next-auth": "^4.21.1",
     "next-seo": "^5.15.0",
     "nextjs-cors": "^2.1.2",
-    "nextjs-routes": "^1.0.8",
+    "nextjs-routes": "^1.0.9",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-html-parser": "^2.0.2",
