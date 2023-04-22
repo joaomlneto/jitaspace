@@ -52,7 +52,7 @@ export default function App({
         strategy="afterInteractive"
         async
         defer
-        // /analytics is a proxy to the umami server
+        // /analytics is a proxy to the umami server - set in vercel.json
         src={"/analytics/script.js"}
         data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
       ></Script>
