@@ -12,10 +12,10 @@ import {
 } from "@mantine/core";
 import { signIn, useSession } from "next-auth/react";
 
-import { CharacterAvatar } from "../components/Avatar";
-import { LoginWithEveOnlineButton } from "../components/Button";
-import { PermissionsTable } from "../components/Permissions";
-import { DefaultLayout } from "../layout";
+import { CharacterAvatar } from "~/components/Avatar";
+import { LoginWithEveOnlineButton } from "~/components/Button";
+import { PermissionsTable } from "~/components/Permissions";
+import { DefaultLayout } from "~/layout";
 
 export default function Page() {
   const { data: session, status } = useSession();

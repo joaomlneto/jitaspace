@@ -14,11 +14,11 @@ import { useSession } from "next-auth/react";
 import useSWRInfinite from "swr/infinite";
 
 import { toArrayIfNot } from "~/utils/types";
+import { LabelColorSwatch } from "~/components/ColorSwatch";
+import { MailboxDataTable } from "~/components/MailboxTable";
+import { LabelNameText } from "~/components/Text";
 import { type GetCharactersCharacterIdMail200Item } from "~/esi/model";
-import { LabelColorSwatch } from "../components/ColorSwatch";
-import { MailboxDataTable } from "../components/MailboxTable";
-import { LabelNameText } from "../components/Text";
-import { DefaultLayout } from "../layout";
+import { DefaultLayout } from "~/layout";
 
 export default function Page() {
   const router = useRouter();

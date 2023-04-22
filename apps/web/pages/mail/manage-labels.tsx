@@ -17,15 +17,15 @@ import { useSession } from "next-auth/react";
 
 import { isSpecialLabelId } from "~/utils/esi";
 import { randomProperty } from "~/utils/types";
+import { LabelColorSwatch } from "~/components/ColorSwatch";
+import { LabelNameText } from "~/components/Text";
 import {
   deleteCharactersCharacterIdMailLabelsLabelId,
   postCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailLabels,
 } from "~/esi/mail";
 import { PostCharactersCharacterIdMailLabelsBodyColor } from "~/esi/model";
-import { LabelColorSwatch } from "../components/ColorSwatch";
-import { LabelNameText } from "../components/Text";
-import { DefaultLayout } from "../layout";
+import { DefaultLayout } from "~/layout";
 
 function CreateLabelModal() {
   const { data: session } = useSession();
