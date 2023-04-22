@@ -10,6 +10,7 @@ import {
   Text,
   UnstyledButton,
   createStyles,
+  rem,
 } from "@mantine/core";
 import { IconMailFast, IconMailbox, IconTag } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
@@ -36,17 +37,17 @@ const useStyles = createStyles((theme) => ({
   header: {
     padding: theme.spacing.md,
     paddingTop: 0,
-    marginLeft: -theme.spacing.md,
-    marginRight: -theme.spacing.md,
+    marginLeft: `calc(${theme.spacing.md} * -1)`,
+    marginRight: `calc(${theme.spacing.md} * -1)`,
     color: theme.colorScheme === "dark" ? theme.white : theme.black,
-    borderBottom: `1px solid ${
+    borderBottom: `${rem(1)} solid ${
       theme.colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[3]
     }`,
   },
 
   links: {
-    marginLeft: -theme.spacing.md,
-    marginRight: -theme.spacing.md,
+    marginLeft: `calc(${theme.spacing.md} * -1)`,
+    marginRight: `calc(${theme.spacing.md} * -1)`,
   },
 
   linksInner: {
@@ -55,12 +56,12 @@ const useStyles = createStyles((theme) => ({
   },
 
   footer: {
-    marginLeft: -theme.spacing.md,
-    marginRight: -theme.spacing.md,
-    borderTop: `1px solid ${
+    marginLeft: `calc(${theme.spacing.md} * -1)`,
+    marginRight: `calc(${theme.spacing.md} * -1)`,
+    borderTop: `${rem(1)} solid ${
       theme.colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[3]
     }`,
-    marginBottom: -theme.spacing.md,
+    marginBottom: `calc(${theme.spacing.md} * -1)`,
   },
 }));
 
