@@ -5,7 +5,7 @@ import Head from "next/head";
 import Script from "next/script";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
-import { NotificationsProvider } from "@mantine/notifications";
+import { Notifications } from "@mantine/notifications";
 import { Analytics } from "@vercel/analytics/react";
 import { SessionProvider, signIn } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
@@ -68,12 +68,11 @@ export default function App({
             withNormalizeCSS
             theme={{ colorScheme: "dark" }}
           >
+            <Notifications />
             <RouterTransition />
-            <NotificationsProvider>
-              <ModalsProvider modalProps={{ centered: true }}>
-                {getLayout(<Component {...pageProps} />)}
-              </ModalsProvider>
-            </NotificationsProvider>
+            <ModalsProvider modalProps={{ centered: true }}>
+              {getLayout(<Component {...pageProps} />)}
+            </ModalsProvider>
           </MantineProvider>
         </AxiosContextProvider>
       </SessionProvider>

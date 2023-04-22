@@ -8,7 +8,7 @@ import {
   UnstyledButton,
   createStyles,
 } from "@mantine/core";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 
 const useStyles = createStyles((theme) => ({
   control: {

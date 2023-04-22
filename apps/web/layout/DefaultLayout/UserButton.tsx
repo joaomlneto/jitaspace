@@ -12,7 +12,7 @@ import {
   IconLogout,
   IconSettings,
   IconSwitchHorizontal,
-} from "@tabler/icons";
+} from "@tabler/icons-react";
 import { signIn, signOut, useSession } from "next-auth/react";
 
 import { CharacterAvatar } from "@jitaspace/ui";
@@ -42,7 +42,12 @@ export default function UserButton({ icon, ...others }: UserButtonProps) {
   const { data: session } = useSession();
 
   return (
-    <Menu withArrow width="target" position="bottom" transition="pop">
+    <Menu
+      withArrow
+      width="target"
+      position="bottom"
+      transitionProps={{ transition: "pop" }}
+    >
       <Menu.Target>
         <UnstyledButton className={classes.user} {...others}>
           <Group>

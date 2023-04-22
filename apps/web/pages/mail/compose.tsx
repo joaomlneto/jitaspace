@@ -18,7 +18,7 @@ import { useForm } from "@mantine/form";
 import { useDebouncedValue, useSetState } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
-import { IconCircleMinus, IconCirclePlus } from "@tabler/icons";
+import { IconCircleMinus, IconCirclePlus } from "@tabler/icons-react";
 import { HttpStatusCode, type AxiosError } from "axios";
 import { useSession } from "next-auth/react";
 

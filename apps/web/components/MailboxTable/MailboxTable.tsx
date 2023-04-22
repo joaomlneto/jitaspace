@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { openModal } from "@mantine/modals";
-import { IconMail, IconMailOpened } from "@tabler/icons";
+import { IconMail, IconMailOpened } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
