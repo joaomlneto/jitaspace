@@ -1,26 +1,27 @@
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
 import {
   Badge,
-  createStyles,
   Group,
   Loader,
   Navbar,
   ScrollArea,
   Text,
   UnstyledButton,
+  createStyles,
 } from "@mantine/core";
-import { IconMailbox, IconMailFast, IconTag } from "@tabler/icons";
-import UserButton from "./UserButton";
-import LinksGroup from "./NavbarLinksGroup";
+import { IconMailFast, IconMailbox, IconTag } from "@tabler/icons";
 import { signIn, useSession } from "next-auth/react";
-import { LoginWithEveOnlineButton } from "../../components/Button";
-import { useGetCharactersCharacterIdMailLabels } from "../../esi/mail";
+
 import { CharacterAvatar } from "../../components/Avatar";
-import React from "react";
-import Image from "next/image";
+import { LoginWithEveOnlineButton } from "../../components/Button";
 import { LabelColorSwatch } from "../../components/ColorSwatch";
-import Link from "next/link";
 import { LabelNameText } from "../../components/Text";
+import { useGetCharactersCharacterIdMailLabels } from "../../esi/mail";
 import { isSpecialLabelId } from "../../utils/esi";
+import LinksGroup from "./NavbarLinksGroup";
+import UserButton from "./UserButton";
 
 export const NAVBAR_WIDTH = 250;
 
@@ -73,7 +74,7 @@ export default function DefaultLayoutNavbar() {
       swr: {
         enabled: !!session?.user?.id,
       },
-    }
+    },
   );
 
   const specialLabels =
@@ -108,12 +109,12 @@ export default function DefaultLayoutNavbar() {
           {status === "authenticated" && (
             <>
               <LinksGroup
-                link="/compose"
+                link="/mail/compose"
                 icon={<IconMailFast size={16} />}
                 label={<Text>Compose</Text>}
               />
               <LinksGroup
-                link="/mailbox"
+                link="/mail/mailbox"
                 icon={<IconMailbox size={16} />}
                 label={<Text>All Mails</Text>}
                 rightIcon={
@@ -127,7 +128,7 @@ export default function DefaultLayoutNavbar() {
               {specialLabels.map((item, index) => (
                 <LinksGroup
                   key={item.label_id ?? index}
-                  link={`/mailbox?labels=${item.label_id}`}
+                  link={`/mail/mailbox?labels=${item.label_id}`}
                   icon={<LabelColorSwatch labelId={item.label_id} size={16} />}
                   label={<LabelNameText labelId={item.label_id} />}
                   rightIcon={
@@ -174,12 +175,12 @@ export default function DefaultLayoutNavbar() {
               <LinksGroup
                 icon={<IconMailbox size={16} />}
                 label={<Text>Mailing Lists</Text>}
-                link={"/mailing-lists"}
+                link={"/mail/mailing-lists"}
               />
               <LinksGroup
                 icon={<IconTag size={16} />}
                 label={<Text>Manage Labels</Text>}
-                link={"/manage-labels"}
+                link={"/mail/manage-labels"}
               />
             </>
           )}
@@ -191,7 +192,9 @@ export default function DefaultLayoutNavbar() {
         {status === "unauthenticated" && (
           <LoginWithEveOnlineButton
             width={NAVBAR_WIDTH - 2 * theme.spacing.xs}
-            onClick={() => signIn("eveonline")}
+            onClick={() => {
+              void signIn("eveonline");
+            }}
           />
         )}
         {status === "loading" && (
