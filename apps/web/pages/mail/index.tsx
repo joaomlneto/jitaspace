@@ -36,9 +36,7 @@ export default function Page() {
           <Center>
             <LoginWithEveOnlineButton
               className="umami--click--login-button"
-              onClick={() =>
-                void signIn("eveonline", { callbackUrl: "/mailbox" })
-              }
+              onClick={() => void signIn("eveonline", { callbackUrl: "/" })}
             />
           </Center>
         )}

@@ -1,5 +1,5 @@
-import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { withAuth } from "next-auth/middleware";
 
 export default withAuth(
   function middleware(req) {
@@ -15,7 +15,7 @@ export default withAuth(
         return true;
       },
     },
-  }
+  },
 );
 
-export const config = { matcher: ["/mailbox"] };
+export const config = { matcher: ["/mail/mailbox"] };
