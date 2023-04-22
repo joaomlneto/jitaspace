@@ -1,11 +1,18 @@
 import React from "react";
-import { Anchor, Container, Footer, Text, createStyles } from "@mantine/core";
+import {
+  Anchor,
+  Container,
+  Footer,
+  Text,
+  createStyles,
+  px,
+} from "@mantine/core";
 
 export const FOOTER_HEIGHT = 60;
 
 const useStyles = createStyles((theme) => ({
   container: {
-    height: FOOTER_HEIGHT + 8,
+    height: FOOTER_HEIGHT + px(theme.spacing.xl),
   },
   footer: {
     position: "absolute",
