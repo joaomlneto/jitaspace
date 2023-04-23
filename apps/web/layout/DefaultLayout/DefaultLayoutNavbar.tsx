@@ -170,7 +170,7 @@ export default function DefaultLayoutNavbar() {
                           )}
                         </Group>
                       ),
-                      link: `/mailbox?labels=${item.label_id}`,
+                      link: `/mail/mailbox?labels=${item.label_id}`,
                     })) ?? []
                   }
                   initiallyOpened={true}
