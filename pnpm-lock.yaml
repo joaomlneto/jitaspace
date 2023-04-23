@@ -179,8 +179,8 @@ importers:
         specifier: 1.12.3
         version: 1.12.3
       swr:
-        specifier: ^2.1.3
-        version: 2.1.3(react@18.2.0)
+        specifier: ^2.1.4
+        version: 2.1.4(react@18.2.0)
       typescript:
         specifier: 5.0.4
         version: 5.0.4
@@ -5831,8 +5831,8 @@ packages:
     engines: {node: '>= 0.4'}
     dev: false
 
-  /swr@2.1.3(react@18.2.0):
-    resolution: {integrity: sha512-g3ApxIM4Fjbd6vvEAlW60hJlKcYxHb+wtehogTygrh6Jsw7wNagv9m4Oj5Gq6zvvZw0tcyhVGL9L0oISvl3sUw==}
+  /swr@2.1.4(react@18.2.0):
+    resolution: {integrity: sha512-NG+eu3s3YT7aCnL0BRzsYIh8U0HhzA4II1bNMTUtO5D+N+4+YJpcfLiagFdrt0IbTGCbOiVyzAIMvqOCsk9cQA==}
     peerDependencies:
       react: ^16.11.0 || ^17.0.0 || ^18.0.0
     dependencies:
