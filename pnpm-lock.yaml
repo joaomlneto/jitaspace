@@ -149,8 +149,8 @@ importers:
         specifier: ^3.1.2
         version: 3.1.2
       mantine-datatable:
-        specifier: ^2.4.8
-        version: 2.4.8(@mantine/core@6.0.8)(@mantine/hooks@6.0.8)(react@18.2.0)
+        specifier: ^2.4.11
+        version: 2.4.11(@mantine/core@6.0.8)(@mantine/hooks@6.0.8)(react@18.2.0)
       next:
         specifier: ^13.3.1
         version: 13.3.1(@babel/core@7.21.4)(react-dom@18.2.0)(react@18.2.0)
@@ -4482,8 +4482,8 @@ packages:
     resolution: {integrity: sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==}
     dev: false
 
-  /mantine-datatable@2.4.8(@mantine/core@6.0.8)(@mantine/hooks@6.0.8)(react@18.2.0):
-    resolution: {integrity: sha512-DI/6ROwUe6OqifeyOnmo8d5s9KfKbooTko+JRDiZ8hFkugY3pPg8RtpyJxpqv9HtCPne6zp02w4Yi21DXGJoRQ==}
+  /mantine-datatable@2.4.11(@mantine/core@6.0.8)(@mantine/hooks@6.0.8)(react@18.2.0):
+    resolution: {integrity: sha512-m1mMiwxFnJJS5AYvMKgvR2Ez+v7ARdVyatq+smBwzz2qmaGlDjK5fJh1/9XTV3rDENrCgJehOSNGbVrNYNZeZA==}
     peerDependencies:
       '@mantine/core': ^6.0.8
       '@mantine/hooks': ^6.0.8
