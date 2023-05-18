@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { Container } from "@mantine/core";
 
 import { MessagePanel } from "~/components/MessagePanel";
-import { DefaultLayout } from "~/layout";
+import { MailNavbarLayout } from "~/layout";
 
 export default function Page() {
   const router = useRouter();
@@ -16,5 +16,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <DefaultLayout>{page}</DefaultLayout>;
+  return <MailNavbarLayout>{page}</MailNavbarLayout>;
 };
