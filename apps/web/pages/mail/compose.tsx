@@ -21,6 +21,7 @@ import { showNotification } from "@mantine/notifications";
 import { IconCircleMinus, IconCirclePlus } from "@tabler/icons-react";
 import { HttpStatusCode, type AxiosError } from "axios";
 import { useSession } from "next-auth/react";
+import { NextSeo } from "next-seo";
 
 import {
   postCharactersCharacterIdMail,
@@ -31,7 +32,7 @@ import { CharacterAvatar } from "@jitaspace/ui";
 import { EvemailEditor } from "~/components/EvemailEditor";
 import { EsiSearchSelect } from "~/components/Select";
 import { CSPACostText, CharacterNameText } from "~/components/Text";
-import { DefaultLayout } from "~/layout";
+import { MailNavbarLayout } from "~/layout";
 
 export default function Page() {
   const { data: session } = useSession();
@@ -198,143 +199,150 @@ export default function Page() {
   };
 
   return (
-    <Container p="xl">
-      <form
-        onSubmit={form.onSubmit((values) => {
-          form.validate();
-          if (form.isValid()) void handleSend(values);
-        })}
-      >
-        <Stack spacing="xl">
-          <Title order={1}>Compose New Message</Title>
-          <Grid>
-            <Grid.Col span={2}>
-              <Text>Subject</Text>
-            </Grid.Col>
-            <Grid.Col span="auto">
-              <TextInput
-                placeholder="What is this all about?"
-                {...form.getInputProps("subject")}
-              />
-            </Grid.Col>
-            <Grid.Col span="content">
-              <Button
-                type="submit"
-                leftIcon={
-                  <Image
-                    src={"/icons/evemail.png"}
-                    alt="Labels"
-                    width={32}
-                    height={32}
-                  />
-                }
-              >
-                Send
-              </Button>
-            </Grid.Col>
-          </Grid>
-          <Grid>
-            <Grid.Col span={2}>
-              <Text>Recipients</Text>
-            </Grid.Col>
-            <Grid.Col span="auto">
-              <Stack>
-                {form.values.recipients.length > 0 && (
-                  <Stack>
-                    <SimpleGrid cols={2}>
-                      {form.values.recipients.map((characterId) => (
-                        <Group key={characterId} position="apart">
-                          <Group>
-                            <CharacterAvatar
-                              characterId={characterId}
-                              size="sm"
-                              radius="xl"
-                            />
-                            <CharacterNameText
-                              characterId={Number(characterId)}
-                            />
-                          </Group>
-                          <Group>
-                            <Text size="xs" color="dimmed">
-                              CSPA:{" "}
-                              <CSPACostText
-                                span
-                                characterIds={Number(characterId)}
-                              />
-                            </Text>
-                            <ActionIcon
-                              size="sm"
-                              onClick={() => handleRemoveRecipient(characterId)}
-                              color="red"
-                            >
-                              <IconCircleMinus />
-                            </ActionIcon>
-                          </Group>
-                        </Group>
-                      ))}
-                    </SimpleGrid>
-                  </Stack>
-                )}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleAddRecipient();
-                  }}
-                >
-                  <Group align="center">
-                    <EsiSearchSelect
-                      label={undefined}
-                      placeholder={
-                        form.values.recipients.length > 0
-                          ? "Add another recipient"
-                          : "Add a recipient"
-                      }
-                      size="xs"
-                      w={300}
-                      value={selectedRecipient}
-                      onChange={setSelectedRecipient}
-                      searchValue={searchString}
-                      debouncedSearchValue={debouncedSearchString}
-                      onSearchChange={setSearchString}
-                      namesCache={namesCache}
-                      setNamesCache={setNamesCache}
+    <>
+      <NextSeo title="EveMail" />
+      <Container p="xl">
+        <form
+          onSubmit={form.onSubmit((values) => {
+            form.validate();
+            if (form.isValid()) void handleSend(values);
+          })}
+        >
+          <Stack spacing="xl">
+            <Title order={1}>Compose New Message</Title>
+            <Grid>
+              <Grid.Col span={2}>
+                <Text>Subject</Text>
+              </Grid.Col>
+              <Grid.Col span="auto">
+                <TextInput
+                  placeholder="What is this all about?"
+                  {...form.getInputProps("subject")}
+                />
+              </Grid.Col>
+              <Grid.Col span="content">
+                <Button
+                  type="submit"
+                  leftIcon={
+                    <Image
+                      src={"/icons/evemail.png"}
+                      alt="Labels"
+                      width={32}
+                      height={32}
                     />
-                    <ActionIcon
-                      size="sm"
-                      disabled={!selectedRecipient}
-                      radius="xl"
-                      onClick={handleAddRecipient}
-                      color="green"
-                    >
-                      <IconCirclePlus />
-                    </ActionIcon>
-                  </Group>
-                </form>
-              </Stack>
+                  }
+                >
+                  Send
+                </Button>
+              </Grid.Col>
+            </Grid>
+            <Grid>
+              <Grid.Col span={2}>
+                <Text>Recipients</Text>
+              </Grid.Col>
+              <Grid.Col span="auto">
+                <Stack>
+                  {form.values.recipients.length > 0 && (
+                    <Stack>
+                      <SimpleGrid cols={2}>
+                        {form.values.recipients.map((characterId) => (
+                          <Group key={characterId} position="apart">
+                            <Group>
+                              <CharacterAvatar
+                                characterId={characterId}
+                                size="sm"
+                                radius="xl"
+                              />
+                              <CharacterNameText
+                                characterId={Number(characterId)}
+                              />
+                            </Group>
+                            <Group>
+                              <Text size="xs" color="dimmed">
+                                CSPA:{" "}
+                                <CSPACostText
+                                  span
+                                  characterIds={Number(characterId)}
+                                />
+                              </Text>
+                              <ActionIcon
+                                size="sm"
+                                onClick={() =>
+                                  handleRemoveRecipient(characterId)
+                                }
+                                color="red"
+                              >
+                                <IconCircleMinus />
+                              </ActionIcon>
+                            </Group>
+                          </Group>
+                        ))}
+                      </SimpleGrid>
+                    </Stack>
+                  )}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleAddRecipient();
+                    }}
+                  >
+                    <Group align="center">
+                      <EsiSearchSelect
+                        label={undefined}
+                        placeholder={
+                          form.values.recipients.length > 0
+                            ? "Add another recipient"
+                            : "Add a recipient"
+                        }
+                        size="xs"
+                        w={300}
+                        value={selectedRecipient}
+                        onChange={setSelectedRecipient}
+                        searchValue={searchString}
+                        debouncedSearchValue={debouncedSearchString}
+                        onSearchChange={setSearchString}
+                        namesCache={namesCache}
+                        setNamesCache={setNamesCache}
+                      />
+                      <ActionIcon
+                        size="sm"
+                        disabled={!selectedRecipient}
+                        radius="xl"
+                        onClick={handleAddRecipient}
+                        color="green"
+                      >
+                        <IconCirclePlus />
+                      </ActionIcon>
+                    </Group>
+                  </form>
+                </Stack>
+                {form.errors.recipients && (
+                  <Text size="xs" color="red">
+                    {form.errors.recipients}
+                  </Text>
+                )}
+              </Grid.Col>
+            </Grid>
+            <Stack spacing={0}>
+              <EvemailEditor
+                content={form.values.body}
+                onContentUpdate={(content) =>
+                  form.setFieldValue("body", content)
+                }
+              />
               {form.errors.recipients && (
                 <Text size="xs" color="red">
-                  {form.errors.recipients}
+                  {form.errors.body}
                 </Text>
               )}
-            </Grid.Col>
-          </Grid>
-          <Stack spacing={0}>
-            <EvemailEditor
-              content={form.values.body}
-              onContentUpdate={(content) => form.setFieldValue("body", content)}
-            />
-            {form.errors.recipients && (
-              <Text size="xs" color="red">
-                {form.errors.body}
-              </Text>
-            )}
+            </Stack>
           </Stack>
-        </Stack>
-      </form>
-    </Container>
+        </form>
+      </Container>
+    </>
   );
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <DefaultLayout>{page}</DefaultLayout>;
+  return <MailNavbarLayout>{page}</MailNavbarLayout>;
 };

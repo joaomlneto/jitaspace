@@ -33,16 +33,6 @@ const config = {
       },
     ],
   },
-
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/mail",
-        permanent: false,
-      },
-    ];
-  },
 };
 
 export default config;

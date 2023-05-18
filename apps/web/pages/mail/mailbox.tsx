@@ -11,6 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useSession } from "next-auth/react";
+import { NextSeo } from "next-seo";
 import useSWRInfinite from "swr/infinite";
 
 import { type GetCharactersCharacterIdMail200Item } from "@jitaspace/esi-client";
@@ -19,7 +20,7 @@ import { toArrayIfNot } from "@jitaspace/utils";
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { MailboxDataTable } from "~/components/MailboxTable";
 import { LabelNameText } from "~/components/Text";
-import { DefaultLayout } from "~/layout";
+import { MailNavbarLayout } from "~/layout";
 
 export default function Page() {
   const router = useRouter();
@@ -67,54 +68,57 @@ export default function Page() {
   const hasMore = mergedData.length === 50 * size;
 
   return (
-    <Container size="xl">
-      <Stack>
-        {error && (
-          <Container size="xs">
-            {/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */}
-            <Alert title="Error loading messages">{error.message}</Alert>
-          </Container>
-        )}
-        <Group>
-          <Title order={1}>Mailbox</Title>
-          {(isLoading || isValidating) && (
-            <Group>
-              <Loader size="xs" />
-              {isLoading && <Text>Loading</Text>}
-              {isValidating && <Text>Refreshing</Text>}
-            </Group>
+    <>
+      <NextSeo title="EveMail" />
+      <Container size="xl">
+        <Stack>
+          {error && (
+            <Container size="xs">
+              {/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */}
+              <Alert title="Error loading messages">{error.message}</Alert>
+            </Container>
           )}
-        </Group>
-        {labels && (
           <Group>
-            <Title order={4}>Labels:</Title>
-            {toArrayIfNot(labels).flatMap((list) =>
-              list.split(",").map((labelId) => (
-                <Group noWrap spacing="xs" key={labelId}>
-                  <MailLabelColorSwatch labelId={labelId} size={16} />
-                  <LabelNameText labelId={labelId} />
-                </Group>
-              )),
+            <Title order={1}>Mailbox</Title>
+            {(isLoading || isValidating) && (
+              <Group>
+                <Loader size="xs" />
+                {isLoading && <Text>Loading</Text>}
+                {isValidating && <Text>Refreshing</Text>}
+              </Group>
             )}
           </Group>
-        )}
-        {data && (
-          <MailboxDataTable data={mergedData} mutate={() => void mutate()} />
-        )}
-        {hasMore && (
-          <Button
-            w="100%"
-            onClick={() => void setSize(size + 1)}
-            disabled={isLoading || isValidating}
-          >
-            Load more messages
-          </Button>
-        )}
-      </Stack>
-    </Container>
+          {labels && (
+            <Group>
+              <Title order={4}>Labels:</Title>
+              {toArrayIfNot(labels).flatMap((list) =>
+                list.split(",").map((labelId) => (
+                  <Group noWrap spacing="xs" key={labelId}>
+                    <MailLabelColorSwatch labelId={labelId} size={16} />
+                    <LabelNameText labelId={labelId} />
+                  </Group>
+                )),
+              )}
+            </Group>
+          )}
+          {data && (
+            <MailboxDataTable data={mergedData} mutate={() => void mutate()} />
+          )}
+          {hasMore && (
+            <Button
+              w="100%"
+              onClick={() => void setSize(size + 1)}
+              disabled={isLoading || isValidating}
+            >
+              Load more messages
+            </Button>
+          )}
+        </Stack>
+      </Container>
+    </>
   );
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <DefaultLayout>{page}</DefaultLayout>;
+  return <MailNavbarLayout>{page}</MailNavbarLayout>;
 };

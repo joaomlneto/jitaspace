@@ -25,7 +25,7 @@ import { isSpecialLabelId, randomProperty } from "@jitaspace/utils";
 
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { LabelNameText } from "~/components/Text";
-import { DefaultLayout } from "~/layout";
+import { MailNavbarLayout } from "~/layout";
 
 function CreateLabelModal() {
   const { data: session } = useSession();
@@ -220,5 +220,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <DefaultLayout>{page}</DefaultLayout>;
+  return <MailNavbarLayout>{page}</MailNavbarLayout>;
 };

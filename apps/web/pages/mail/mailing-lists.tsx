@@ -14,7 +14,7 @@ import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
 
-import { DefaultLayout } from "~/layout";
+import { MailNavbarLayout } from "~/layout";
 
 export default function Page() {
   const { data: session } = useSession();
@@ -71,5 +71,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <DefaultLayout>{page}</DefaultLayout>;
+  return <MailNavbarLayout>{page}</MailNavbarLayout>;
 };
