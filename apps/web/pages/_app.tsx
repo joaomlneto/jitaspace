@@ -10,7 +10,6 @@ import { Analytics } from "@vercel/analytics/react";
 import { SessionProvider, signIn } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 
-import { env } from "~/env.mjs";
 import RouterTransition from "../components/RouterTransition";
 import AxiosContextProvider from "../contexts/axios";
 
@@ -50,16 +49,14 @@ export default function App({
         description="EveMail is a web application that allows you to view your EVE Online mail in a more modern and user-friendly way."
       />
 
-      {env.NODE_ENV === "production" && (
-        <Script
-          strategy="afterInteractive"
-          async
-          defer
-          // /analytics is a proxy to the umami server - set in vercel.json
-          src={"/analytics/script.js"}
-          data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-        ></Script>
-      )}
+      <Script
+        strategy="afterInteractive"
+        async
+        defer
+        // /analytics is a proxy to the umami server - set in vercel.json
+        src={"/analytics/script.js"}
+        data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+      ></Script>
 
       <Analytics />
 
