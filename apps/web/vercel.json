@@ -1,11 +1,5 @@
 {
-  "name": "JitaSpace Web App",
+  "name": "JitaSpace WebApp",
   "buildCommand": "pnpm dlx turbo run build",
-  "installCommand": "pnpm install",
-  "rewrites": [
-    {
-      "source": "/analytics/:match*",
-      "destination": "https://analytics.umami.is/:match*"
-    }
-  ]
+  "installCommand": "pnpm install"
 }

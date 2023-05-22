@@ -33,6 +33,13 @@ const config = {
       },
     ],
   },
+
+  rewrites: async () => [
+    {
+      "source": "/analytics/:match*",
+      "destination": "https://analytics.umami.is/:match*", // Proxy to Umami
+    }
+  ],
 };
 
 export default config;
