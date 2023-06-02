@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@jitaspace/esi-client": "*",
-    "@jitaspace/eslint-config": "*",
+    "@jitaspace/eslint-config": "^0.1.0",
     "eslint": "^8.39.0",
     "typescript": "^5.0.4"
   }
