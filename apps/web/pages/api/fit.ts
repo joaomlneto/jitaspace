@@ -5,23 +5,15 @@ export default async function NextApiRouteHandler(
   res: NextApiResponse<
     | { error: string }
     | {
-        success: string;
-        scopes: string[];
         shipName: string;
         shipTypeId: number;
         shipItemId: number;
-        modules: any;
-        types: {
-          id: number;
-          name: string;
-        }[];
+        itemsInShip: any;
         names: Record<string, string>;
         eft: string;
       }
   >,
 ) {
-  console.log("HEADERS:", req.headers);
-
   // Check if authorization header is present and has the right format
   if (
     !req.headers.authorization ||
@@ -41,8 +33,6 @@ export default async function NextApiRouteHandler(
 
   // Decode token
   const decoded = JSON.parse(atob(token.split(".")[1]!));
-
-  console.log("DECODED:", decoded);
 
   // Extract character ID from token
   const characterId = decoded.sub.split(":")[2];
@@ -227,13 +217,10 @@ export default async function NextApiRouteHandler(
   ];
 
   return res.json({
-    success: "Hello world",
-    scopes,
     shipItemId: currentShip.ship_item_id,
     shipName: currentShip.ship_name,
     shipTypeId: currentShip.ship_type_id,
-    modules,
-    types: typeNames,
+    itemsInShip: modules,
     names,
     eft: eft.join("\n"),
   });
