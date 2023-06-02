@@ -1,4 +1,6 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
+import { HttpStatusCode } from "axios";
+import * as jose from "jose";
 
 export default async function NextApiRouteHandler(
   req: NextApiRequest,
@@ -19,7 +21,9 @@ export default async function NextApiRouteHandler(
     !req.headers.authorization ||
     !req.headers.authorization.startsWith("Bearer ")
   ) {
-    return res.status(401).json({ error: "Authorization header invalid." });
+    return res
+      .status(HttpStatusCode.Unauthorized)
+      .json({ error: "Authorization header invalid." });
   }
 
   // Get the token
@@ -27,25 +31,43 @@ export default async function NextApiRouteHandler(
 
   if (!token) {
     return res
-      .status(401)
+      .status(HttpStatusCode.Unauthorized)
       .json({ error: "Authorization header token invalid." });
   }
-
-  // TODO: Check if token is valid (signature, expiration)
 
   // Decode token
   const decoded = JSON.parse(atob(token.split(".")[1]!));
 
+  // Check if token is valid (signature, expiration)
+  try {
+    const JWKS = jose.createRemoteJWKSet(
+      new URL("https://login.eveonline.com/oauth/jwks"),
+    );
+    await jose.jwtVerify(token, JWKS, {
+      issuer: "login.eveonline.com",
+      audience: "EVE Online",
+    });
+  } catch (e) {
+    console.error("error verifying token", (e as Error).message);
+    return res
+      .status(HttpStatusCode.Forbidden)
+      .json({ error: "Token is invalid. " + (e as Error).message });
+  }
+
   // Extract character ID from token
   const characterId = decoded.sub.split(":")[2];
   if (!characterId) {
-    return res.status(401).json({ error: "No character ID found." });
+    return res
+      .status(HttpStatusCode.BadRequest)
+      .json({ error: "No character ID found." });
   }
 
   // Extract scopes from token
   const scopes: string[] = decoded.scp;
   if (!scopes) {
-    return res.status(401).json({ error: "No scopes found." });
+    return res
+      .status(HttpStatusCode.BadRequest)
+      .json({ error: "No scopes found." });
   }
 
   // Check if scopes are valid/sufficient
@@ -54,7 +76,7 @@ export default async function NextApiRouteHandler(
     "esi-assets.read_assets.v1",
   ];
   if (!requiredScopes.every((scope) => scopes.includes(scope))) {
-    return res.status(401).json({
+    return res.status(HttpStatusCode.Forbidden).json({
       error: `Scopes missing in EVE SSO token: ${requiredScopes
         .filter((scope) => !scopes.includes(scope))
         .join(", ")}`,
@@ -72,7 +94,9 @@ export default async function NextApiRouteHandler(
   );
 
   if (!currentShipResponse.ok) {
-    return res.status(500).json({ error: "Could not get current ship." });
+    return res
+      .status(HttpStatusCode.InternalServerError)
+      .json({ error: "Could not get current ship." });
   }
 
   const currentShip: {
@@ -103,7 +127,9 @@ export default async function NextApiRouteHandler(
   );
 
   if (!assetsResponse.ok) {
-    return res.status(500).json({ error: "Could not get assets." });
+    return res
+      .status(HttpStatusCode.InternalServerError)
+      .json({ error: "Could not get assets." });
   }
 
   const numPagesAssets = parseInt(assetsResponse.headers.get("x-pages")!);
@@ -123,7 +149,9 @@ export default async function NextApiRouteHandler(
     );
 
     if (!assetsResponse.ok) {
-      return res.status(500).json({ error: "Could not get assets." });
+      return res
+        .status(HttpStatusCode.InternalServerError)
+        .json({ error: "Could not get assets." });
     }
 
     const assetsData = await assetsResponse.json();
@@ -224,6 +252,6 @@ export default async function NextApiRouteHandler(
     shipTypeId: currentShip.ship_type_id,
     itemsInShip: modules,
     names,
-    eft: eft.join("\n"),
+    eft: eft.join("\n").trim(),
   });
 }

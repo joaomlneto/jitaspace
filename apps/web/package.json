@@ -17,6 +17,7 @@
     "@emotion/react": "^11.10.6",
     "@emotion/server": "^11.10.0",
     "@jitaspace/auth": "*",
+    "@jitaspace/auth-multisession": "*",
     "@jitaspace/esi-client": "*",
     "@jitaspace/ui": "*",
     "@jitaspace/utils": "*",
@@ -51,6 +52,7 @@
     "embla-carousel-react": "^7.1.0",
     "eslint": "8.39.0",
     "eslint-config-next": "13.3.1",
+    "jose": "^4.14.4",
     "jwt-decode": "^3.1.2",
     "mantine-datatable": "^2.4.11",
     "next": "^13.3.1",
@@ -67,13 +69,13 @@
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@jitaspace/eslint-config": "*",
+    "@jitaspace/eslint-config": "^0.1.0",
     "@types/node": "^18.15.11",
     "@types/react": "^18.0.33",
     "@types/react-dom": "^18.0.11",
     "@types/react-html-parser": "^2.0.2",
     "dotenv-cli": "^7.2.1",
-    "eslint": "^8.37.0",
+    "eslint": "^8.39.0",
     "typescript": "^5.0.3"
   }
 }
