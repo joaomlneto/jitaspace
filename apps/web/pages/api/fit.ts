@@ -26,7 +26,9 @@ export default async function NextApiRouteHandler(
   const token = req.headers.authorization.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({ error: "Authorization header invalid." });
+    return res
+      .status(401)
+      .json({ error: "Authorization header token invalid." });
   }
 
   // TODO: Check if token is valid (signature, expiration)
