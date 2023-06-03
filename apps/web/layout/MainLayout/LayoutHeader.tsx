@@ -4,8 +4,6 @@ import Link from "next/link";
 import {
   Box,
   Burger,
-  Center,
-  Collapse,
   Container,
   Divider,
   Drawer,
@@ -23,7 +21,6 @@ import { useDisclosure } from "@mantine/hooks";
 import {
   IconBook,
   IconChartPie3,
-  IconChevronDown,
   IconCode,
   IconCoin,
   IconFingerprint,
@@ -256,22 +253,6 @@ export function LayoutHeader() {
             my="sm"
             color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
-
-          <Link href="#" className={classes.link}>
-            Home
-          </Link>
-          <UnstyledButton className={classes.link} onClick={toggleLinks}>
-            <Center inline>
-              <Box component="span" mr={5}>
-                Features
-              </Box>
-              <IconChevronDown size={16} color={theme.fn.primaryColor()} />
-            </Center>
-          </UnstyledButton>
-          <Collapse in={linksOpened}>{links}</Collapse>
-          <Link href="#" className={classes.link}>
-            Learn
-          </Link>
 
           <Link href="/mail" className={classes.link}>
             <Group>
