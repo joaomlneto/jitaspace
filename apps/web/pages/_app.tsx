@@ -44,8 +44,8 @@ export default function App({
       </Head>
 
       <DefaultSeo
-        defaultTitle="JitaSpace"
-        titleTemplate="%s | JitaSpace"
+        defaultTitle="Jita"
+        titleTemplate="%s | Jita"
         description="EveMail is a web application that allows you to view your EVE Online mail in a more modern and user-friendly way."
       />
 
@@ -53,7 +53,7 @@ export default function App({
         strategy="afterInteractive"
         async
         defer
-        // /analytics is a proxy to the umami server - set in vercel.json
+        // /analytics is a proxy to the umami server - set in next.config.mjs
         src={"/analytics/script.js"}
         data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
       ></Script>

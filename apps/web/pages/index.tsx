@@ -1,3 +1,4 @@
+import React, { ReactElement } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -11,6 +12,8 @@ import {
   rem,
   type ImageProps,
 } from "@mantine/core";
+
+import { MainLayout } from "~/layout";
 
 const apps: {
   title: string;
@@ -110,7 +113,7 @@ export default function Page() {
   return (
     <Container size="lg" py="xl">
       <Title order={2} className={classes.title} ta="center" mt="sm">
-        JitaSpace Tools
+        Jita Tools
       </Title>
 
       <Text c="dimmed" className={classes.description} ta="center" mt="md">
@@ -129,3 +132,7 @@ export default function Page() {
     </Container>
   );
 }
+
+Page.getLayout = function getLayout(page: ReactElement) {
+  return <MainLayout>{page}</MainLayout>;
+};

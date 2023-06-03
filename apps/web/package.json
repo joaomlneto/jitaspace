@@ -17,7 +17,6 @@
     "@emotion/react": "^11.10.6",
     "@emotion/server": "^11.10.0",
     "@jitaspace/auth": "*",
-    "@jitaspace/auth-multisession": "*",
     "@jitaspace/esi-client": "*",
     "@jitaspace/ui": "*",
     "@jitaspace/utils": "*",

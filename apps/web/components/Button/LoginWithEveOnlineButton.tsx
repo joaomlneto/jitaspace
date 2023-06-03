@@ -24,6 +24,7 @@ const useStyles = createStyles((theme) => ({
 
 type Props = UnstyledButtonProps & {
   width?: number;
+  size?: "large" | "small";
   onClick?: () => void;
 };
 
@@ -35,8 +36,11 @@ export default function LoginWithEveOnlineButton(props: Props) {
     theme.colorScheme === "dark" ? "black" : "white"
   }-large.png`;
 
-  const width = props.width ?? 270;
-  const height = (width * 45) / 270;
+  const defaultWidth = props.size === "large" ? 270 : 195;
+  const defaultHeight = props.size === "large" ? 45 : 30;
+
+  const width = props.width ?? defaultWidth;
+  const height = (width / defaultWidth) * defaultHeight;
 
   return (
     <UnstyledButton onClick={props.onClick} className={classes.user} {...props}>
