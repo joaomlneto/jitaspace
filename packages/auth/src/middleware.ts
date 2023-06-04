@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "next-auth/middleware";
 
-export default withAuth(
+export const middleware = withAuth(
   function middleware(req) {
     if (!req.nextauth.token) {
       const url = req.nextUrl.clone();
@@ -11,11 +11,9 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token, req }) => {
+      authorized: ({ token: _token, req: _req }) => {
         return true;
       },
     },
   },
 );
-
-export const config = { matcher: ["/mail/mailbox"] };

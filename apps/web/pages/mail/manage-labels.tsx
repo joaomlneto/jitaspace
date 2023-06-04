@@ -16,9 +16,9 @@ import { type AxiosError } from "axios";
 import { useSession } from "next-auth/react";
 
 import {
-  PostCharactersCharacterIdMailLabelsBodyColor,
   deleteCharactersCharacterIdMailLabelsLabelId,
   postCharactersCharacterIdMailLabels,
+  PostCharactersCharacterIdMailLabelsBodyColor,
   useGetCharactersCharacterIdMailLabels,
 } from "@jitaspace/esi-client";
 import { isSpecialLabelId, randomProperty } from "@jitaspace/utils";
@@ -32,7 +32,6 @@ function CreateLabelModal() {
   const form = useForm({
     initialValues: {
       name: "",
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       color: randomProperty(PostCharactersCharacterIdMailLabelsBodyColor),
     },
     validate: {
@@ -63,7 +62,6 @@ function CreateLabelModal() {
               session?.user.id,
               {
                 name: values.name,
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
                 color: values.color,
               },
             );

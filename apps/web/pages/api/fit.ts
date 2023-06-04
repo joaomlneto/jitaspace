@@ -10,7 +10,7 @@ export default async function NextApiRouteHandler(
         shipName: string;
         shipTypeId: number;
         shipItemId: number;
-        itemsInShip: any;
+        itemsInShip: unknown;
         names: Record<string, string>;
         eft: string;
       }
@@ -36,7 +36,17 @@ export default async function NextApiRouteHandler(
   }
 
   // Decode token
-  const decoded = JSON.parse(atob(token.split(".")[1]!));
+
+  const tokenPayload = token.split(".")[1];
+  if (!tokenPayload) {
+    return res
+      .status(HttpStatusCode.Unauthorized)
+      .json({ error: "Token payload invalid." });
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const decoded: Record<string, string> = JSON.parse(
+    Buffer.from(tokenPayload, "base64").toString(),
+  );
 
   // Check if token is valid (signature, expiration)
   try {
@@ -54,8 +64,14 @@ export default async function NextApiRouteHandler(
       .json({ error: "Token is invalid. " + (e as Error).message });
   }
 
+  if (!decoded.sub) {
+    return res
+      .status(HttpStatusCode.BadRequest)
+      .json({ error: "No subject found in token." });
+  }
+
   // Extract character ID from token
-  const characterId = decoded.sub.split(":")[2];
+  const characterId: string | undefined = decoded.sub.split(":")[2];
   if (!characterId) {
     return res
       .status(HttpStatusCode.BadRequest)
@@ -63,7 +79,8 @@ export default async function NextApiRouteHandler(
   }
 
   // Extract scopes from token
-  const scopes: string[] = decoded.scp;
+
+  const scopes: string[] = decoded.scp as unknown as string[];
   if (!scopes) {
     return res
       .status(HttpStatusCode.BadRequest)
@@ -99,6 +116,7 @@ export default async function NextApiRouteHandler(
       .json({ error: "Could not get current ship." });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const currentShip: {
     ship_item_id: number;
     ship_name: string;
@@ -132,9 +150,12 @@ export default async function NextApiRouteHandler(
       .json({ error: "Could not get assets." });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const numPagesAssets = parseInt(assetsResponse.headers.get("x-pages")!);
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const assetsData = await assetsResponse.json();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   assets = [...assets, ...assetsData];
 
   // get remaining pages of assets
@@ -154,8 +175,10 @@ export default async function NextApiRouteHandler(
         .json({ error: "Could not get assets." });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const assetsData = await assetsResponse.json();
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     assets = [...assets, ...assetsData];
   }
 
@@ -172,6 +195,7 @@ export default async function NextApiRouteHandler(
     ]),
   ];
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const typeNames: { category: string; name: string; id: number }[] =
     await fetch(`https://esi.evetech.net/latest/universe/names/`, {
       method: "POST",
@@ -212,7 +236,7 @@ export default async function NextApiRouteHandler(
     ...usedMedSlots.map((slot) => {
       return modules
         .filter((module) => module.location_flag === slot)
-        .sort((a, b) => (a.is_singleton ? -1 : 1))
+        .sort((a, _b) => (a.is_singleton ? -1 : 1))
         .map((module) => `${names[module.type_id]}`)
         .join(",");
     }),
@@ -220,7 +244,7 @@ export default async function NextApiRouteHandler(
     ...usedHighSlots.map((slot) => {
       return modules
         .filter((module) => module.location_flag === slot)
-        .sort((a, b) => (a.is_singleton ? -1 : 1))
+        .sort((a, _b) => (a.is_singleton ? -1 : 1))
         .map((module) => `${names[module.type_id]}`)
         .join(",");
     }),

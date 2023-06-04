@@ -1,14 +1,14 @@
-import React, { ReactElement } from "react";
+import React, { type ReactElement } from "react";
 import Link from "next/link";
 import {
   Card,
   Container,
+  createStyles,
   Image,
+  rem,
   SimpleGrid,
   Text,
   UnstyledButton,
-  createStyles,
-  rem,
   type ImageProps,
 } from "@mantine/core";
 
