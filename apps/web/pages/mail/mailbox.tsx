@@ -20,7 +20,7 @@ import { toArrayIfNot } from "@jitaspace/utils";
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { MailboxDataTable } from "~/components/MailboxTable";
 import { LabelNameText } from "~/components/Text";
-import { MailNavbarLayout } from "~/layout";
+import { MailLayout } from "~/layout";
 
 export default function Page() {
   const router = useRouter();
@@ -120,5 +120,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailNavbarLayout>{page}</MailNavbarLayout>;
+  return <MailLayout>{page}</MailLayout>;
 };

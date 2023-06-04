@@ -6,7 +6,6 @@ import {
   Image,
   SimpleGrid,
   Text,
-  Title,
   UnstyledButton,
   createStyles,
   rem,
@@ -96,38 +95,32 @@ const useStyles = createStyles((theme) => ({
 
 export default function Page() {
   const { classes, theme } = useStyles();
-  const features = apps.map((feature) => (
-    <UnstyledButton component={Link} href={feature.href} key={feature.title}>
-      <Card shadow="md" radius="md" className={classes.card} padding="xl">
-        <feature.icon width={rem(64)} color={theme.fn.primaryColor()} />
-        <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
-          {feature.title}
-        </Text>
-        <Text fz="sm" c="dimmed" mt="sm">
-          {feature.description}
-        </Text>
-      </Card>
-    </UnstyledButton>
-  ));
 
   return (
-    <Container size="lg" py="xl">
-      <Title order={2} className={classes.title} ta="center" mt="sm">
-        Jita Tools
-      </Title>
-
-      <Text c="dimmed" className={classes.description} ta="center" mt="md">
-        Here are the tools currently available on the website, with more to come
-        in the near future!
-      </Text>
-
+    <Container size="lg">
       <SimpleGrid
         cols={2}
         spacing="xl"
-        mt={50}
+        mt="xl"
         breakpoints={[{ maxWidth: "md", cols: 1 }]}
       >
-        {features}
+        {apps.map((feature) => (
+          <UnstyledButton
+            component={Link}
+            href={feature.href}
+            key={feature.title}
+          >
+            <Card shadow="md" radius="md" className={classes.card} padding="xl">
+              <feature.icon width={rem(64)} color={theme.fn.primaryColor()} />
+              <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
+                {feature.title}
+              </Text>
+              <Text fz="sm" c="dimmed" mt="sm">
+                {feature.description}
+              </Text>
+            </Card>
+          </UnstyledButton>
+        ))}
       </SimpleGrid>
     </Container>
   );

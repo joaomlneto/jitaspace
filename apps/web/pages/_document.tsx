@@ -35,7 +35,7 @@ export default class _Document extends Document {
         <Head>
           <link
             rel="apple-touch-icon"
-            sizes="180x180"
+            sizes="152x152"
             href="/apple-touch-icon.png"
           />
           <link
@@ -51,9 +51,11 @@ export default class _Document extends Document {
             href="/favicon-16x16.png"
           />
           <link rel="manifest" href="/site.webmanifest" />
-          <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#808080" />
-          <meta name="msapplication-TileColor" content="#808080" />
-          <meta name="theme-color" content="#808080" />
+          <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#abc2d9" />
+          <meta name="apple-mobile-web-app-title" content="Jita" />
+          <meta name="application-name" content="Jita" />
+          <meta name="msapplication-TileColor" content="#abc2d9" />
+          <meta name="theme-color" content="#abc2d9" />
         </Head>
         <body>
           <Main />

@@ -27,7 +27,7 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-export default function MailNavbarLayoutFooter() {
+export default function LayoutFooter() {
   const { classes } = useStyles();
 
   return (

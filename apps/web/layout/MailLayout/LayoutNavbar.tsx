@@ -65,7 +65,7 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-export default function MailNavbarLayoutNavbar() {
+export default function LayoutNavbar() {
   const { classes } = useStyles();
   const { data: session, status } = useSession();
 

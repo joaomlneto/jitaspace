@@ -17,7 +17,7 @@ import { CharacterAvatar } from "@jitaspace/ui";
 
 import { LoginWithEveOnlineButton } from "~/components/Button";
 import { PermissionsTable } from "~/components/Permissions";
-import { MailNavbarLayout } from "~/layout";
+import { MailLayout } from "~/layout";
 
 export default function Page() {
   const { data: session, status } = useSession();
@@ -173,5 +173,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailNavbarLayout>{page}</MailNavbarLayout>;
+  return <MailLayout>{page}</MailLayout>;
 };

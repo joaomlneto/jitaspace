@@ -32,7 +32,7 @@ import { CharacterAvatar } from "@jitaspace/ui";
 import { EvemailEditor } from "~/components/EvemailEditor";
 import { EsiSearchSelect } from "~/components/Select";
 import { CSPACostText, CharacterNameText } from "~/components/Text";
-import { MailNavbarLayout } from "~/layout";
+import { MailLayout } from "~/layout";
 
 export default function Page() {
   const { data: session } = useSession();
@@ -344,5 +344,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailNavbarLayout>{page}</MailNavbarLayout>;
+  return <MailLayout>{page}</MailLayout>;
 };

@@ -1,2 +1,2 @@
-export * from "./MailNavbarLayout";
+export * from "./MailLayout";
 export * from "./MainLayout";

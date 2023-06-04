@@ -2,8 +2,8 @@ import React, { type PropsWithChildren } from "react";
 import { AppShell, createStyles } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
-import DefaultLayoutFooter from "./MailNavbarLayoutFooter";
-import DefaultLayoutNavbar from "./MailNavbarLayoutNavbar";
+import DefaultLayoutFooter from "./LayoutFooter";
+import DefaultLayoutNavbar from "./LayoutNavbar";
 
 const useStyles = createStyles((theme) => ({
   container: {
@@ -13,7 +13,7 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-export function MailNavbarLayout({ children }: PropsWithChildren<{}>) {
+export function MailLayout({ children }: PropsWithChildren<{}>) {
   const { classes } = useStyles();
   const { data: session, status } = useSession();
   return (

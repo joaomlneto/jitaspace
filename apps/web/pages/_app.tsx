@@ -60,7 +60,6 @@ export default function App({
 
       <Analytics />
 
-      {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */}
       <SessionProvider session={session}>
         <AxiosContextProvider>
           <MantineProvider
