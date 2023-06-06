@@ -3,20 +3,24 @@ import { Text, type TextProps } from "@mantine/core";
 import { useGetCharactersCharacterId } from "@jitaspace/esi-client";
 
 type Props = TextProps & {
-  characterId?: number;
+  characterId: string | number;
 };
 export default function CharacterNameText({
   characterId,
   ...otherProps
 }: Props) {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { data, error } = useGetCharactersCharacterId(characterId!, undefined, {
-    swr: { enabled: characterId !== undefined },
-  });
+  const { data, error } = useGetCharactersCharacterId(
+    typeof characterId === "string" ? parseInt(characterId, 10) : characterId,
+    undefined,
+    {
+      swr: { enabled: characterId !== undefined },
+    },
+  );
+
+  console.log({ data, error });
 
   const characterDeleted =
-    (error?.response?.data as { error?: unknown }).error ==
-    "Character has been deleted!";
+    error?.response?.data?.error == "Character has been deleted!";
 
   return (
     <Text {...otherProps}>

@@ -5,17 +5,17 @@ import {
   Box,
   Burger,
   Container,
+  createStyles,
   Divider,
   Drawer,
   Group,
   Header,
+  rem,
   ScrollArea,
   Text,
   ThemeIcon,
   Tooltip,
   UnstyledButton,
-  createStyles,
-  rem,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
@@ -29,6 +29,7 @@ import {
 import { signIn, useSession } from "next-auth/react";
 
 import { LoginWithEveOnlineButton } from "~/components/Button";
+import { TotalUnreadMailsIndicator } from "~/components/Indicator/TotalUnreadMailsIndicator";
 import UserButton from "./UserButton";
 
 const useStyles = createStyles((theme) => ({
@@ -207,12 +208,14 @@ export function LayoutHeader() {
                 openDelay={200}
               >
                 <Link href="/mail" className={classes.link}>
-                  <Image
-                    src="/icons/evemail.png"
-                    alt="EveMail"
-                    width={32}
-                    height={32}
-                  />
+                  <TotalUnreadMailsIndicator position="bottom-end" offset={8}>
+                    <Image
+                      src="/icons/evemail.png"
+                      alt="EveMail"
+                      width={32}
+                      height={32}
+                    />
+                  </TotalUnreadMailsIndicator>
                 </Link>
               </Tooltip>
             </Group>

@@ -10,6 +10,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SessionProvider, signIn } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 
+import { contextModals } from "~/components/Modals";
 import RouterTransition from "../components/RouterTransition";
 import AxiosContextProvider from "../contexts/axios";
 
@@ -70,7 +71,10 @@ export default function App({
           >
             <Notifications />
             <RouterTransition />
-            <ModalsProvider modalProps={{ centered: true }}>
+            <ModalsProvider
+              modals={contextModals}
+              modalProps={{ centered: true }}
+            >
               {getLayout(<Component {...pageProps} />)}
             </ModalsProvider>
           </MantineProvider>

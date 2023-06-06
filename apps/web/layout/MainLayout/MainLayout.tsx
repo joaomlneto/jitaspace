@@ -1,6 +1,5 @@
 import React, { type PropsWithChildren } from "react";
-import { AppShell, createStyles } from "@mantine/core";
-import { useSession } from "next-auth/react";
+import { AppShell, createStyles, type AppShellProps } from "@mantine/core";
 
 import { LayoutFooter } from "~/layout/MainLayout/LayoutFooter";
 import { LayoutHeader } from "./LayoutHeader";
@@ -13,14 +12,16 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-export function MainLayout({ children }: PropsWithChildren<{}>) {
+export function MainLayout({
+  children,
+  ...otherProps
+}: PropsWithChildren<AppShellProps>) {
   const { classes } = useStyles();
-  const { data: session, status } = useSession();
   return (
     <AppShell
       header={<LayoutHeader />}
       className={classes.container}
-      layout="alt"
+      {...otherProps}
     >
       {children}
       <LayoutFooter />

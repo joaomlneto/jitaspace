@@ -3,12 +3,15 @@ import { Text, type TextProps } from "@mantine/core";
 import { useGetAlliancesAllianceId } from "@jitaspace/esi-client";
 
 type Props = TextProps & {
-  allianceId?: number;
+  allianceId: string | number;
 };
 export default function AllianceNameText({ allianceId, ...otherProps }: Props) {
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { data } = useGetAlliancesAllianceId(allianceId!, undefined, {
-    swr: { enabled: allianceId !== undefined },
-  });
+  const { data } = useGetAlliancesAllianceId(
+    typeof allianceId === "string" ? parseInt(allianceId, 10) : allianceId,
+    undefined,
+    {
+      swr: { enabled: allianceId !== undefined },
+    },
+  );
   return <Text {...otherProps}>{data && data.data.name}</Text>;
 }

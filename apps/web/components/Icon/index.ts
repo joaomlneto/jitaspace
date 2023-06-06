@@ -1,0 +1,1 @@
+export { MailLabelIcon } from "./MailLabelIcon";

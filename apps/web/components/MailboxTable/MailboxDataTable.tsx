@@ -1,6 +1,6 @@
 import React from "react";
 import { ActionIcon, Anchor, Group, Menu, Text } from "@mantine/core";
-import { openConfirmModal, openModal } from "@mantine/modals";
+import { openConfirmModal, openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import {
   IconCheck,
@@ -22,7 +22,6 @@ import { EveMailSenderAvatar } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";
-import { MessagePanel } from "../MessagePanel";
 import { EveMailSenderNameText, LabelNameText } from "../Text";
 
 type Props = {
@@ -89,13 +88,21 @@ export default function MailboxDataTable({ data, mutate }: Props) {
           accessor: "subject",
           render: (mail) => (
             <Anchor
-              onClick={() =>
-                openModal({
+              onClick={() => {
+                if (!mail.mail_id) {
+                  showNotification({
+                    title: "Error",
+                    message: "Mail ID is not defined for this mail!?",
+                  });
+                  return;
+                }
+                openContextModal({
+                  modal: "viewMailMessage",
                   title: mail.subject,
                   size: "xl",
-                  children: <MessagePanel messageId={mail.mail_id} />,
-                })
-              }
+                  innerProps: { messageId: mail.mail_id },
+                });
+              }}
               fw={mail.is_read ? "normal" : "bold"}
             >
               {mail.subject !== undefined &&
@@ -189,7 +196,8 @@ export default function MailboxDataTable({ data, mutate }: Props) {
                                     ? mail.labels?.filter(
                                         (labelId) => labelId !== label.label_id,
                                       )
-                                    : [...(mail.labels ?? []), label.label_id!],
+                                    : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                                      [...(mail.labels ?? []), label.label_id!],
                               },
                             );
                             const item = data.find(

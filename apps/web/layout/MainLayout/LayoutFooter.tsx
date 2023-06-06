@@ -2,10 +2,10 @@ import React from "react";
 import {
   Anchor,
   Container,
-  Footer,
-  Text,
   createStyles,
+  Footer,
   px,
+  Text,
 } from "@mantine/core";
 
 export const FOOTER_HEIGHT = 60;
@@ -32,7 +32,7 @@ export function LayoutFooter() {
 
   return (
     <Container className={classes.container}>
-      <Footer height="auto" className={classes.footer}>
+      <Footer height="auto" className={classes.footer} zIndex={-1}>
         <Text color="dimmed" size="xs" align="center">
           All EVE-related materials are property of{" "}
           <Anchor href="https://ccpgames.com" target="_blank">
