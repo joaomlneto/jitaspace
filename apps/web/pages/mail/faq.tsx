@@ -6,7 +6,7 @@ import { MailLayout } from "~/layout";
 
 export default function Page() {
   return (
-    <Container p="xl">
+    <Container>
       <Title order={1}>Frequently Asked Questions</Title>
       <EveMailFaqAccordion />
     </Container>

@@ -218,6 +218,21 @@ export function LayoutHeader() {
                   </TotalUnreadMailsIndicator>
                 </Link>
               </Tooltip>
+              <Tooltip
+                label="View upcoming events and meetings on your EVE Online calendar."
+                w={200}
+                multiline
+                openDelay={200}
+              >
+                <Link href="/calendar" className={classes.link}>
+                  <Image
+                    src="/icons/calendar.png"
+                    alt="Calendar"
+                    width={32}
+                    height={32}
+                  />
+                </Link>
+              </Tooltip>
             </Group>
 
             <Group className={classes.hiddenMobile}>
@@ -266,6 +281,18 @@ export function LayoutHeader() {
                 height={32}
               />
               <Text>EveMail</Text>
+            </Group>
+          </Link>
+
+          <Link href="/calendar" className={classes.link}>
+            <Group>
+              <Image
+                src="/icons/calendar.png"
+                alt="Calendar"
+                width={32}
+                height={32}
+              />
+              <Text>Calendar</Text>
             </Group>
           </Link>
 

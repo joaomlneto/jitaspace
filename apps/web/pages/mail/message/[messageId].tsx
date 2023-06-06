@@ -2,7 +2,7 @@ import React, { type ReactElement } from "react";
 import { useRouter } from "next/router";
 import { Container } from "@mantine/core";
 
-import { MessagePanel } from "~/components/MessagePanel";
+import { MessagePanel } from "~/components/EveMail";
 import { MailLayout } from "~/layout";
 
 export default function Page() {

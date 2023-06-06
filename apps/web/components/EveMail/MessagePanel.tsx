@@ -6,9 +6,8 @@ import ReactHtmlParser, { convertNodeToElement } from "react-html-parser";
 import {
   useGetCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailMailId,
-} from "@jitaspace/esi-client";
-import { EveMailSenderAvatar } from "@jitaspace/ui";
-
+} from "../../../../packages/esi-client";
+import { EveMailSenderAvatar } from "../../../../packages/ui";
 import { EveMailSenderNameText } from "../Text";
 
 function transformMailBody(
@@ -28,7 +27,7 @@ function transformMailBody(
   }
 }
 
-export default function MessagePanel({ messageId }: { messageId?: number }) {
+export function MessagePanel({ messageId }: { messageId?: number }) {
   const { data: session } = useSession();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(

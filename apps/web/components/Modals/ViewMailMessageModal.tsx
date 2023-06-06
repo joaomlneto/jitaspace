@@ -1,7 +1,7 @@
 import React from "react";
 import { type ContextModalProps } from "@mantine/modals";
 
-import { MessagePanel } from "~/components/MessagePanel";
+import { MessagePanel } from "~/components/EveMail";
 
 export function ViewMailMessageModal({
   innerProps,

@@ -15,8 +15,8 @@ import { useSession } from "next-auth/react";
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { EveMailSenderAvatar } from "@jitaspace/ui";
 
-import { MessagePanel } from "../MessagePanel";
-import { EveMailSenderNameText } from "../Text";
+import { MessagePanel } from "~/components/EveMail";
+import { EveMailSenderNameText } from "~/components/Text";
 
 type Props = {
   data: {

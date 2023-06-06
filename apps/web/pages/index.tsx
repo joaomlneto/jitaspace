@@ -25,9 +25,18 @@ const apps: {
     description:
       "Access your EVE Online correspondence whilst out of the game.",
     icon: (props: ImageProps) => (
-      <Image src="/icons/evemail.png" alt="EveMail" {...props} />
+      <Image src="/icons/evemail.png" alt="Mail" {...props} />
     ),
     href: "/mail",
+  },
+  {
+    title: "Calendar",
+    description:
+      "View upcoming events and meetings on your EVE Online calendar.",
+    icon: (props: ImageProps) => (
+      <Image src="/icons/calendar.png" alt="Calendar" {...props} />
+    ),
+    href: "/calendar",
   },
   {
     title: "An OpenAPI for the SDE",
