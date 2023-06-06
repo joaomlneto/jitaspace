@@ -48,7 +48,7 @@
     "axios": "^1.4.0",
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.8",
-    "embla-carousel-react": "8.0.0-rc06",
+    "embla-carousel-react": "8.0.0-rc07",
     "eslint": "8.42.0",
     "eslint-config-next": "13.4.4",
     "jose": "^4.14.4",
