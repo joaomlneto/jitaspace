@@ -19,7 +19,9 @@ export function TotalUnreadMailsIndicator(props: IndicatorProps) {
 
   return (
     <Indicator
-      disabled={status !== "authenticated"}
+      disabled={
+        status !== "authenticated" || labels?.data.total_unread_count === 0
+      }
       label={`${labels?.data.total_unread_count ?? ""}`}
       {...props}
     />
