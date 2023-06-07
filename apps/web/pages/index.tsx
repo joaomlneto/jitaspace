@@ -17,7 +17,7 @@ import { MainLayout } from "~/layout";
 const apps: {
   title: string;
   description: string;
-  icon: (props: ImageProps) => JSX.Element;
+  icon: (props: ImageProps) => React.ReactElement;
   href: string;
 }[] = [
   {
@@ -37,6 +37,15 @@ const apps: {
       <Image src="/icons/calendar.png" alt="Calendar" {...props} />
     ),
     href: "/calendar",
+  },
+  {
+    title: "Skills",
+    description:
+      "Manage your skills and skills points on your EVE Online character.",
+    icon: (props: ImageProps) => (
+      <Image src="/icons/calendar.png" alt="Calendar" {...props} />
+    ),
+    href: "/skills",
   },
   {
     title: "An OpenAPI for the SDE",

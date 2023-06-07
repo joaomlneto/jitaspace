@@ -6,7 +6,7 @@ import { postUniverseNames } from "@jitaspace/esi-client";
 type Props = TextProps & {
   entityId?: string | number;
 };
-export default function EveEntityNameText({ entityId, ...otherProps }: Props) {
+export function EveEntityName({ entityId, ...otherProps }: Props) {
   const [name, setName] = useState<string | undefined>(undefined);
 
   useEffect(() => {

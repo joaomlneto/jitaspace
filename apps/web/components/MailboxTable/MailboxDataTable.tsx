@@ -18,11 +18,14 @@ import {
   putCharactersCharacterIdMailMailId,
   useGetCharactersCharacterIdMailLabels,
 } from "@jitaspace/esi-client";
-import { EveMailSenderAvatar } from "@jitaspace/ui";
+import {
+  EveMailSenderAvatar,
+  EveMailSenderName,
+  LabelName,
+} from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";
-import { EveMailSenderNameText, LabelNameText } from "../Text";
 
 type Props = {
   data: {
@@ -74,7 +77,7 @@ export default function MailboxDataTable({ data, mutate }: Props) {
                   size="sm"
                   radius="xl"
                 />
-                <EveMailSenderNameText
+                <EveMailSenderName
                   recipients={mail.recipients}
                   id={mail.from}
                   fw={mail.is_read ? "normal" : "bold"}
@@ -145,7 +148,7 @@ export default function MailboxDataTable({ data, mutate }: Props) {
                           labelId={item.label_id}
                           size={16}
                         />
-                        <LabelNameText labelId={item.label_id} />
+                        <LabelName labelId={item.label_id} />
                       </Group>
                     ),
                 )}

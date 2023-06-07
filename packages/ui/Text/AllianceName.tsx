@@ -5,7 +5,7 @@ import { useGetAlliancesAllianceId } from "@jitaspace/esi-client";
 type Props = TextProps & {
   allianceId: string | number;
 };
-export default function AllianceNameText({ allianceId, ...otherProps }: Props) {
+export function AllianceName({ allianceId, ...otherProps }: Props) {
   const { data } = useGetAlliancesAllianceId(
     typeof allianceId === "string" ? parseInt(allianceId, 10) : allianceId,
     undefined,

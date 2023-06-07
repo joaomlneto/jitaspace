@@ -6,10 +6,7 @@ import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
 type Props = TextProps & {
   mailingListId?: number;
 };
-export default function MailingListNameText({
-  mailingListId,
-  ...otherProps
-}: Props) {
+export function MailingListName({ mailingListId, ...otherProps }: Props) {
   const { data: session } = useSession();
 
   const { data } = useGetCharactersCharacterIdMailLists(

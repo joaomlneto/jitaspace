@@ -4,6 +4,7 @@ import {
   Anchor,
   Badge,
   Center,
+  Container,
   Group,
   Indicator,
   JsonInput,
@@ -59,106 +60,111 @@ export default function Page() {
   };
 
   return (
-    <Stack spacing="xl">
-      <Group>
-        <Title order={1}>Calendar</Title>
-        {isLoading && <Loader />}
-      </Group>
-      {false && (
-        <JsonInput
-          value={JSON.stringify(
-            events?.data.map((event) => ({
-              ...event,
-              title: "<REDACTED>",
-              event_id: "<REDACTED>",
-            })) ?? [],
-            null,
-            2,
-          )}
-          readOnly
-          maxRows={20}
-          autosize
-        />
-      )}
-      {false && (
-        <JsonInput
-          value={JSON.stringify(eventsPerDate, null, 2)}
-          readOnly
-          maxRows={20}
-          autosize
-        />
-      )}
-      <Center>
-        <Calendar
-          size="xl"
-          excludeDate={(date: Date) => {
-            // return false if date is before today
-            const startOfToday = new Date().setHours(0, 0, 0, 0);
-            return date.getTime() < startOfToday;
-          }}
-          renderDay={(date: Date) => {
-            const day = date.getDate();
-            const dayEvents = eventsPerDate[date.getTime()] ?? [];
-            const hasUnrespondedEvents = dayEvents.some(
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-              (event) => event.event_response === "tentative",
-            );
-            return (
-              <Indicator
-                label={dayEvents.length}
-                //size={8}
-                color={hasUnrespondedEvents ? "red" : "green"}
-                offset={-2}
-                disabled={dayEvents.length === 0}
-              >
-                <div>{day}</div>
-              </Indicator>
-            );
-          }}
-        />
-      </Center>
-      <Table>
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Date</th>
-            <th>Response</th>
-          </tr>
-        </thead>
-        <tbody>
-          {events?.data?.map((event) => (
-            <tr key={event.event_id}>
-              <td>
-                <Group noWrap align="end" spacing="xs">
-                  {event.importance === 1 && (
-                    <ThemeIcon
-                      color="red"
-                      variant="light"
-                      radius="xl"
-                      size="sm"
-                    >
-                      <IconExclamationCircle />
-                    </ThemeIcon>
-                  )}
-                  <Anchor component={Link} href={`/calendar/${event.event_id}`}>
-                    {event.title}
-                  </Anchor>
-                </Group>
-              </td>
-              <td>{new Date(event.event_date!).toLocaleString()}</td>
-              <td>
-                <Badge
-                  color={eventResponseColor[event.event_response!]}
-                  variant="light"
+    <Container>
+      <Stack spacing="xl">
+        <Group>
+          <Title order={1}>Calendar</Title>
+          {isLoading && <Loader />}
+        </Group>
+        {false && (
+          <JsonInput
+            value={JSON.stringify(
+              events?.data.map((event) => ({
+                ...event,
+                title: "<REDACTED>",
+                event_id: "<REDACTED>",
+              })) ?? [],
+              null,
+              2,
+            )}
+            readOnly
+            maxRows={20}
+            autosize
+          />
+        )}
+        {false && (
+          <JsonInput
+            value={JSON.stringify(eventsPerDate, null, 2)}
+            readOnly
+            maxRows={20}
+            autosize
+          />
+        )}
+        <Center>
+          <Calendar
+            size="xl"
+            excludeDate={(date: Date) => {
+              // return false if date is before today
+              const startOfToday = new Date().setHours(0, 0, 0, 0);
+              return date.getTime() < startOfToday;
+            }}
+            renderDay={(date: Date) => {
+              const day = date.getDate();
+              const dayEvents = eventsPerDate[date.getTime()] ?? [];
+              const hasUnrespondedEvents = dayEvents.some(
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                (event) => event.event_response === "tentative",
+              );
+              return (
+                <Indicator
+                  label={dayEvents.length}
+                  //size={8}
+                  color={hasUnrespondedEvents ? "red" : "green"}
+                  offset={-2}
+                  disabled={dayEvents.length === 0}
                 >
-                  {event.event_response}
-                </Badge>
-              </td>
+                  <div>{day}</div>
+                </Indicator>
+              );
+            }}
+          />
+        </Center>
+        <Table>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Date</th>
+              <th>Response</th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
-    </Stack>
+          </thead>
+          <tbody>
+            {events?.data?.map((event) => (
+              <tr key={event.event_id}>
+                <td>
+                  <Group noWrap align="end" spacing="xs">
+                    {event.importance === 1 && (
+                      <ThemeIcon
+                        color="red"
+                        variant="light"
+                        radius="xl"
+                        size="sm"
+                      >
+                        <IconExclamationCircle />
+                      </ThemeIcon>
+                    )}
+                    <Anchor
+                      component={Link}
+                      href={`/calendar/${event.event_id}`}
+                    >
+                      {event.title}
+                    </Anchor>
+                  </Group>
+                </td>
+                <td>{new Date(event.event_date!).toLocaleString()}</td>
+                <td>
+                  <Badge
+                    color={eventResponseColor[event.event_response!]}
+                    variant="light"
+                  >
+                    {event.event_response}
+                  </Badge>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </Stack>
+    </Container>
   );
 }
 

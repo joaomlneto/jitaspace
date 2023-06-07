@@ -6,9 +6,8 @@ import ReactHtmlParser, { convertNodeToElement } from "react-html-parser";
 import {
   useGetCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailMailId,
-} from "../../../../packages/esi-client";
-import { EveMailSenderAvatar } from "../../../../packages/ui";
-import { EveMailSenderNameText } from "../Text";
+} from "@jitaspace/esi-client";
+import { EveMailSenderAvatar, EveMailSenderName } from "@jitaspace/ui";
 
 function transformMailBody(
   node: {
@@ -61,7 +60,7 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
           size="sm"
           radius="xl"
         />
-        <EveMailSenderNameText
+        <EveMailSenderName
           recipients={mail?.data.recipients}
           id={mail?.data.from}
         />
@@ -82,7 +81,7 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
                   size="sm"
                   radius="xl"
                 />
-                <EveMailSenderNameText
+                <EveMailSenderName
                   recipients={mail?.data.recipients}
                   id={recipient.recipient_id}
                 />

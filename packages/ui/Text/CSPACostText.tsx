@@ -8,10 +8,7 @@ import { toArrayIfNot } from "@jitaspace/utils";
 type Props = TextProps & {
   characterIds?: number | number[];
 };
-export default function CharacterNameText({
-  characterIds,
-  ...otherProps
-}: Props) {
+export function CSPACostText({ characterIds, ...otherProps }: Props) {
   const { data: session } = useSession();
   const [cost, setCost] = useState<number | null>(null);
 

@@ -5,10 +5,7 @@ import { useGetCharactersCharacterId } from "@jitaspace/esi-client";
 type Props = TextProps & {
   characterId: string | number;
 };
-export default function CharacterNameText({
-  characterId,
-  ...otherProps
-}: Props) {
+export function CharacterName({ characterId, ...otherProps }: Props) {
   const { data, error } = useGetCharactersCharacterId(
     typeof characterId === "string" ? parseInt(characterId, 10) : characterId,
     undefined,

@@ -17,12 +17,11 @@ import { IconMailbox, IconMailFast, IconTag } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { CharacterAvatar } from "@jitaspace/ui";
+import { CharacterAvatar, LabelName } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
 import { LoginWithEveOnlineButton } from "../../components/Button";
 import { MailLabelColorSwatch } from "../../components/ColorSwatch";
-import { LabelNameText } from "../../components/Text";
 import LinksGroup from "./NavbarLinksGroup";
 import UserButton from "./UserButton";
 
@@ -141,7 +140,7 @@ export default function MailLayoutNavbar() {
                     icon={
                       <MailLabelColorSwatch labelId={item.label_id} size={16} />
                     }
-                    label={<LabelNameText labelId={item.label_id} />}
+                    label={<LabelName labelId={item.label_id} />}
                     rightIcon={
                       item.unread_count ? (
                         <Badge variant="filled">{item.unread_count}</Badge>

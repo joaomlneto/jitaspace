@@ -8,10 +8,10 @@ import {
   deleteCharactersCharacterIdMailLabelsLabelId,
   useGetCharactersCharacterIdMailLabels,
 } from "@jitaspace/esi-client";
+import { LabelName } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";
-import { LabelNameText } from "~/components/Text";
 
 export function LabelManagementTable() {
   const { data: session } = useSession();
@@ -40,7 +40,7 @@ export function LabelManagementTable() {
             <td>
               <Group>
                 <MailLabelColorSwatch labelId={label.label_id} size={16} />
-                <LabelNameText labelId={label.label_id} />
+                <LabelName labelId={label.label_id} />
               </Group>
             </td>
             <td align="right">

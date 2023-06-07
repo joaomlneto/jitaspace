@@ -13,10 +13,9 @@ import { IconMail, IconMailOpened } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { EveMailSenderAvatar } from "@jitaspace/ui";
+import { EveMailSenderAvatar, EveMailSenderName } from "@jitaspace/ui";
 
 import { MessagePanel } from "~/components/EveMail";
-import { EveMailSenderNameText } from "~/components/Text";
 
 type Props = {
   data: {
@@ -79,7 +78,7 @@ export default function MailboxTable({ data }: Props) {
                   size="sm"
                   radius="xl"
                 />
-                <EveMailSenderNameText
+                <EveMailSenderName
                   recipients={mail.recipients}
                   id={mail.from}
                   fw={mail.is_read ? "normal" : "bold"}

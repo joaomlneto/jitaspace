@@ -17,7 +17,7 @@ import { useSession } from "next-auth/react";
 
 import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
 
-import { EvemailEditor } from "~/components/EvemailEditor";
+import { MailMessageEditor } from "~/components/EveMail";
 import { EmailRecipientSearchMultiSelect } from "~/components/MultiSelect";
 
 type EveMailComposeFormProps = {
@@ -185,7 +185,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
           </Grid.Col>
         </Grid>
         <Stack spacing={0}>
-          <EvemailEditor
+          <MailMessageEditor
             content={form.values.body}
             onContentUpdate={(content) => form.setFieldValue("body", content)}
           />

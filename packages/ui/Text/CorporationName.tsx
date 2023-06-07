@@ -5,10 +5,7 @@ import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
 type Props = TextProps & {
   corporationId: string | number;
 };
-export default function CorporationNameText({
-  corporationId,
-  ...otherProps
-}: Props) {
+export function CorporationName({ corporationId, ...otherProps }: Props) {
   const { data } = useGetCorporationsCorporationId(
     typeof corporationId === "string"
       ? parseInt(corporationId, 10)

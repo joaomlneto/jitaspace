@@ -20,18 +20,15 @@ import {
 } from "@jitaspace/esi-client";
 import {
   AllianceAvatar,
+  AllianceName,
   CharacterAvatar,
+  CharacterName,
   CorporationAvatar,
+  CorporationName,
+  EveEntityName,
   TypeAvatar,
   UnknownCategoryEveEntityAvatar,
 } from "@jitaspace/ui";
-
-import {
-  AllianceNameText,
-  CharacterNameText,
-  CorporationNameText,
-  EveEntityNameText,
-} from "~/components/Text";
 
 export type EsiSearchMultiSelectProps = Omit<
   MultiSelectProps,
@@ -74,7 +71,7 @@ export function EsiSearchMultiselectValue({
           mr={10}
           radius="xl"
         />
-        <EveEntityNameText
+        <EveEntityName
           entityId={value}
           sx={{ lineHeight: 1, fontSize: rem(12) }}
         />
@@ -132,28 +129,28 @@ export const EsiSearchMultiSelectItem = forwardRef<
     switch (category) {
       case "alliance":
         return (
-          <AllianceNameText
+          <AllianceName
             allianceId={value!}
             sx={{ lineHeight: 1, fontSize: rem(12) }}
           />
         );
       case "corporation":
         return (
-          <CorporationNameText
+          <CorporationName
             corporationId={value!}
             sx={{ lineHeight: 1, fontSize: rem(12) }}
           />
         );
       case "character":
         return (
-          <CharacterNameText
+          <CharacterName
             characterId={value!}
             sx={{ lineHeight: 1, fontSize: rem(12) }}
           />
         );
       default:
         return (
-          <EveEntityNameText
+          <EveEntityName
             entityId={value}
             sx={{ lineHeight: 1, fontSize: rem(12) }}
           />

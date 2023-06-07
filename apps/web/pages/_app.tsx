@@ -1,4 +1,9 @@
-import React, { useEffect, type ReactElement, type ReactNode } from "react";
+import React, {
+  useEffect,
+  type PropsWithChildren,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { type NextPage } from "next";
 import { type AppProps } from "next/app";
 import Head from "next/head";
@@ -7,7 +12,7 @@ import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { Analytics } from "@vercel/analytics/react";
-import { SessionProvider, signIn } from "next-auth/react";
+import { SessionProvider, signIn, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 
 import { contextModals } from "~/components/Modals";
@@ -22,6 +27,18 @@ type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
 };
 
+function NextAuthTokenExpirationHandler({ children }: PropsWithChildren) {
+  const { data: session } = useSession();
+
+  useEffect(() => {
+    // @ts-expect-error: session.error is not defined in the session type
+    if (session?.error === "RefreshAccessTokenError") {
+      void signIn("eveonline"); // Force sign in to hopefully resolve error
+    }
+  }, [session]);
+  return children;
+}
+
 export default function App({
   Component,
   pageProps: { session, ...pageProps },
@@ -30,6 +47,7 @@ export default function App({
 
   useEffect(() => {
     if ((session as { error?: string })?.error === "RefreshAccessTokenError") {
+      console.log("TOKEN EXPIRED!!!!!!!!!!!!!!!!!!");
       void signIn("eveonline"); // Force sign in to hopefully resolve error
     }
   }, [session]);
@@ -63,22 +81,24 @@ export default function App({
 
       {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */}
       <SessionProvider session={session}>
-        <AxiosContextProvider>
-          <MantineProvider
-            withGlobalStyles
-            withNormalizeCSS
-            theme={{ colorScheme: "dark" }}
-          >
-            <Notifications />
-            <RouterTransition />
-            <ModalsProvider
-              modals={contextModals}
-              modalProps={{ centered: true }}
+        <NextAuthTokenExpirationHandler>
+          <AxiosContextProvider>
+            <MantineProvider
+              withGlobalStyles
+              withNormalizeCSS
+              theme={{ colorScheme: "dark" }}
             >
-              {getLayout(<Component {...pageProps} />)}
-            </ModalsProvider>
-          </MantineProvider>
-        </AxiosContextProvider>
+              <Notifications />
+              <RouterTransition />
+              <ModalsProvider
+                modals={contextModals}
+                modalProps={{ centered: true }}
+              >
+                {getLayout(<Component {...pageProps} />)}
+              </ModalsProvider>
+            </MantineProvider>
+          </AxiosContextProvider>
+        </NextAuthTokenExpirationHandler>
       </SessionProvider>
     </>
   );

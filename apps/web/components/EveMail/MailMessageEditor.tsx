@@ -15,7 +15,7 @@ type EvemailEditorProps = Omit<RichTextEditorProps, "editor" | "children"> & {
   onContentUpdate: (content: string) => void;
 };
 
-export default function EvemailEditor({
+export function MailMessageEditor({
   content,
   onContentUpdate,
   ...otherProps

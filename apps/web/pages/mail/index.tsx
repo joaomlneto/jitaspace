@@ -9,6 +9,7 @@ import {
   Container,
   Grid,
   Group,
+  JsonInput,
   Loader,
   Stack,
   Text,
@@ -74,7 +75,7 @@ export default function Page() {
             Authorization: `Bearer ${session?.accessToken}`,
           },
         }).then((r) => r.json()),
-      { refreshInterval: 15000, revalidateAll: true },
+      { refreshInterval: 1000, revalidateAll: true },
     );
 
   const mergedData = data?.flat() ?? [];
@@ -84,6 +85,7 @@ export default function Page() {
   return (
     <>
       <NextSeo title="EveMail" />
+      <JsonInput value={JSON.stringify(session)} autosize />
       <Container size="xl">
         <Stack>
           {error && (

@@ -7,9 +7,7 @@ import {
   useGetCharactersCharacterIdSearch,
   type PostUniverseNames200ItemCategory,
 } from "@jitaspace/esi-client";
-import { CharacterAvatar } from "@jitaspace/ui";
-
-import { CharacterNameText } from "../Text";
+import { CharacterAvatar, CharacterName } from "@jitaspace/ui";
 
 interface ItemProps extends React.ComponentPropsWithoutRef<"div"> {
   characterId: number;
@@ -23,7 +21,7 @@ const EsiSearchSelectItem = forwardRef<HTMLDivElement, ItemProps>(
         <Group noWrap>
           <CharacterAvatar characterId={characterId} radius="xl" />
           <div>
-            <CharacterNameText characterId={characterId} size="sm" />
+            <CharacterName characterId={characterId} size="sm" />
           </div>
         </Group>
       </div>

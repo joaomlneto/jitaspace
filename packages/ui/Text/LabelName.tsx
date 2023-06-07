@@ -8,7 +8,7 @@ type Props = TextProps & {
   labelId?: string | number;
 };
 
-export default function LabelNameText({ labelId, ...otherProps }: Props) {
+export function LabelName({ labelId, ...otherProps }: Props) {
   const { data: session } = useSession();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(

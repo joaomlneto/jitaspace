@@ -11,18 +11,19 @@ import {
 } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
-import { CharacterNameText } from "~/components/Text";
-import { MainLayout } from "~/layout";
 import {
   useGetCharactersCharacterIdCalendarEventId,
   useGetCharactersCharacterIdCalendarEventIdAttendees,
   type GetCharactersCharacterIdCalendarEventIdAttendees200Item,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
-} from "../../../../packages/esi-client";
+} from "@jitaspace/esi-client";
 import {
   CharacterAvatar,
+  CharacterName,
   UnknownCategoryEveEntityAvatar,
-} from "../../../../packages/ui";
+} from "@jitaspace/ui";
+
+import { MainLayout } from "~/layout";
 
 export default function Page() {
   const router = useRouter();
@@ -128,7 +129,7 @@ export default function Page() {
                   size="sm"
                   radius="xl"
                 />
-                <CharacterNameText characterId={attendee.character_id!} />
+                <CharacterName characterId={attendee.character_id!} />
               </Group>
               <Badge
                 variant="light"
