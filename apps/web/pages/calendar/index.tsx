@@ -64,7 +64,7 @@ export default function Page() {
         <Title order={1}>Calendar</Title>
         {isLoading && <Loader />}
       </Group>
-      {true && (
+      {false && (
         <JsonInput
           value={JSON.stringify(
             events?.data.map((event) => ({
