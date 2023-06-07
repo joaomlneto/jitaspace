@@ -1,8 +1,9 @@
-export { AllianceName } from "./AllianceName";
-export { CharacterName } from "./CharacterName";
-export { CorporationName } from "./CorporationName";
-export { CSPACostText } from "./CSPACostText";
-export { EveEntityName } from "./EveEntityName";
-export { EveMailSenderName } from "./EveMailSenderName";
-export { LabelName } from "./LabelName";
-export { MailingListName } from "./MailingListName";
+export * from "./AllianceName";
+export * from "./CharacterName";
+export * from "./CorporationName";
+export * from "./CSPACostText";
+export * from "./EveEntityName";
+export * from "./EveMailSenderName";
+export * from "./EveMailRecipientName";
+export * from "./LabelName";
+export * from "./MailingListName";

@@ -1,14 +1,15 @@
+import { memo } from "react";
 import { Text, type TextProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { humanLabelName } from "@jitaspace/utils";
 
-type Props = TextProps & {
+export type LabelNameProps = TextProps & {
   labelId?: string | number;
 };
 
-export function LabelName({ labelId, ...otherProps }: Props) {
+export const LabelName = memo(({ labelId, ...otherProps }: LabelNameProps) => {
   const { data: session } = useSession();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
@@ -28,4 +29,5 @@ export function LabelName({ labelId, ...otherProps }: Props) {
       )}
     </Text>
   );
-}
+});
+LabelName.displayName = "LabelName";

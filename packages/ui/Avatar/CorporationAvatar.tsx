@@ -1,22 +1,23 @@
+import { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { EveEntityAvatar } from "./EveEntityAvatar";
+import { EveImageServerAvatar } from "./EveImageServerAvatar";
 
 export type CorporationAvatarProps = Omit<AvatarProps, "src"> & {
   corporationId?: string | number | null;
 };
 
-export function CorporationAvatar({
-  corporationId,
-  ...otherProps
-}: CorporationAvatarProps) {
-  return (
-    <EveEntityAvatar
-      category="corporations"
-      id={`${corporationId}`}
-      variation="logo"
-      size={otherProps.size}
-      {...otherProps}
-    />
-  );
-}
+export const CorporationAvatar = memo(
+  ({ corporationId, ...otherProps }: CorporationAvatarProps) => {
+    return (
+      <EveImageServerAvatar
+        category="corporations"
+        id={`${corporationId}`}
+        variation="logo"
+        size={otherProps.size}
+        {...otherProps}
+      />
+    );
+  },
+);
+CorporationAvatar.displayName = "CorporationAvatar";

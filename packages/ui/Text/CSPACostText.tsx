@@ -5,10 +5,13 @@ import { useSession } from "next-auth/react";
 import { postCharactersCharacterIdCspa } from "@jitaspace/esi-client";
 import { toArrayIfNot } from "@jitaspace/utils";
 
-type Props = TextProps & {
+export type CSPACostTextProps = TextProps & {
   characterIds?: number | number[];
 };
-export function CSPACostText({ characterIds, ...otherProps }: Props) {
+export function CSPACostText({
+  characterIds,
+  ...otherProps
+}: CSPACostTextProps) {
   const { data: session } = useSession();
   const [cost, setCost] = useState<number | null>(null);
 

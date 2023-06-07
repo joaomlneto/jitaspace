@@ -7,7 +7,13 @@ import {
   useGetCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
-import { EveMailSenderAvatar, EveMailSenderName } from "@jitaspace/ui";
+import {
+  EveEntityAvatar,
+  EveMailRecipientAvatar,
+  EveMailRecipientName,
+  EveMailSenderAvatar,
+  EveMailSenderName,
+} from "@jitaspace/ui";
 
 function transformMailBody(
   node: {
@@ -54,16 +60,9 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
       <Group>ID: {messageId}</Group>
       <Group>
         From:
-        <EveMailSenderAvatar
-          id={mail?.data.from}
-          recipients={mail?.data.recipients}
-          size="sm"
-          radius="xl"
-        />
-        <EveMailSenderName
-          recipients={mail?.data.recipients}
-          id={mail?.data.from}
-        />
+        <EveEntityAvatar id={mail?.data.from} size="sm" radius="xl" />
+        <EveMailSenderAvatar messageId={messageId} size="sm" radius="xl" />
+        <EveMailSenderName messageId={messageId} />
       </Group>
       <Group align="start">
         <Spoiler
@@ -75,15 +74,15 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
             <Text>To:</Text>
             {mail?.data.recipients?.map((recipient) => (
               <Group noWrap key={recipient.recipient_id}>
-                <EveMailSenderAvatar
-                  id={recipient.recipient_id}
-                  recipients={mail?.data.recipients}
+                <EveMailRecipientAvatar
+                  messageId={messageId}
+                  recipientId={recipient.recipient_id}
                   size="sm"
                   radius="xl"
                 />
-                <EveMailSenderName
-                  recipients={mail?.data.recipients}
-                  id={recipient.recipient_id}
+                <EveMailRecipientName
+                  messageId={messageId}
+                  recipientId={recipient.recipient_id}
                 />
               </Group>
             ))}

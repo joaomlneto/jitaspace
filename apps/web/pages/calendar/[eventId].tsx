@@ -17,11 +17,7 @@ import {
   type GetCharactersCharacterIdCalendarEventIdAttendees200Item,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
-import {
-  CharacterAvatar,
-  CharacterName,
-  UnknownCategoryEveEntityAvatar,
-} from "@jitaspace/ui";
+import { CharacterAvatar, CharacterName, EveEntityAvatar } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layout";
 
@@ -106,10 +102,7 @@ export default function Page() {
           <Text>Owner</Text>
           <Group noWrap>
             {/* FIXME: We know the type of this entity! */}
-            <UnknownCategoryEveEntityAvatar
-              id={event?.data.owner_id}
-              size="sm"
-            />{" "}
+            <EveEntityAvatar id={event?.data.owner_id} size="sm" />{" "}
             <Text>{event?.data.owner_name}</Text>
           </Group>
         </Group>

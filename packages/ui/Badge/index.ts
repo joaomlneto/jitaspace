@@ -1,3 +1,1 @@
-import MailLabelBadge from "./MailLabelBadge";
-
-export { MailLabelBadge };
+export * from "./MailLabelBadge";

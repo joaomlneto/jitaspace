@@ -1,4 +1,5 @@
 import {
+  Indicator,
   type AvatarProps,
   type ColorSwatchProps,
   type MantineNumberSize,
@@ -15,7 +16,11 @@ type MailLabelIconProps = Partial<AvatarProps & ColorSwatchProps> & {
 
 export function MailLabelIcon({ labelId, ...otherProps }: MailLabelIconProps) {
   if (labelId == "4" || labelId == 4) {
-    return <CorporationAvatar corporationId={1} {...otherProps} />;
+    return (
+      <Indicator position="middle-center" zIndex={0}>
+        <CorporationAvatar corporationId={1} {...otherProps} />
+      </Indicator>
+    );
   }
   if (labelId == "8" || labelId == 8) {
     return <AllianceAvatar allianceId={1} {...otherProps} />;

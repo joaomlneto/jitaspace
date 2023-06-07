@@ -1,70 +1,31 @@
-import Image from "next/image";
-import { Avatar, type AvatarProps } from "@mantine/core";
+import React, { memo } from "react";
+import { type AvatarProps } from "@mantine/core";
+import { useSession } from "next-auth/react";
 
-import {
-  allianceIdRanges,
-  characterIdRanges,
-  corporationIdRanges,
-  isIdInRanges,
-} from "@jitaspace/utils";
+import { useGetCharactersCharacterIdMailMailId } from "@jitaspace/esi-client";
 
-import { AllianceAvatar } from "./AllianceAvatar";
-import {
-  CharacterAvatar,
-  CorporationAvatar,
-  UnknownCategoryEveEntityAvatar,
-} from "./index";
+import { EveEntityAvatar } from "./index";
 
-type Props = Omit<AvatarProps, "src"> & {
-  id?: number;
-  recipients?: {
-    recipient_id: number;
-    recipient_type: string;
-  }[];
+type EveMailSenderAvatarProps = Omit<AvatarProps, "src"> & {
+  messageId?: number;
 };
 
-export function EveMailSenderAvatar({ id, recipients, ...otherProps }: Props) {
-  if (!id) {
-    return <Avatar {...otherProps} />;
-  }
+export const EveMailSenderAvatar = memo(
+  ({ messageId, ...otherProps }: EveMailSenderAvatarProps) => {
+    const { data: session } = useSession();
 
-  const recipient = recipients?.find(
-    (recipient) => recipient.recipient_id === id,
-  );
+    const { data: mail } = useGetCharactersCharacterIdMailMailId(
+      session?.user.id ?? 0,
+      messageId ?? 0,
+      undefined,
+      {
+        swr: {
+          enabled: !!session?.user.id && !!messageId,
+        },
+      },
+    );
 
-  if (recipient) {
-    switch (recipient.recipient_type) {
-      case "character":
-        return <CharacterAvatar characterId={id} {...otherProps} />;
-      case "corporation":
-        return <CorporationAvatar corporationId={id} {...otherProps} />;
-      case "alliance":
-        return <AllianceAvatar allianceId={id} {...otherProps} />;
-      case "mailing_list":
-        return (
-          <Image
-            src="/icons/grouplist.png"
-            width={26}
-            height={26}
-            alt="Mailing List"
-          />
-        );
-      default:
-        return <Avatar {...otherProps} />;
-    }
-  }
-
-  if (isIdInRanges(id, characterIdRanges)) {
-    return <CharacterAvatar characterId={id} {...otherProps} />;
-  }
-
-  if (isIdInRanges(id, corporationIdRanges)) {
-    return <CorporationAvatar corporationId={id} {...otherProps} />;
-  }
-
-  if (isIdInRanges(id, allianceIdRanges)) {
-    return <AllianceAvatar allianceId={id} {...otherProps} />;
-  }
-
-  return <UnknownCategoryEveEntityAvatar id={id} {...otherProps} />;
-}
+    return <EveEntityAvatar id={mail?.data.from} {...otherProps} />;
+  },
+);
+EveMailSenderAvatar.displayName = "EveMailSenderAvatar";

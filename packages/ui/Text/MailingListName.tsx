@@ -1,27 +1,32 @@
+import { memo } from "react";
 import { Text, type TextProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
 
-type Props = TextProps & {
+export type MailingListNameProps = TextProps & {
   mailingListId?: number;
 };
-export function MailingListName({ mailingListId, ...otherProps }: Props) {
-  const { data: session } = useSession();
 
-  const { data } = useGetCharactersCharacterIdMailLists(
-    session?.user.id ?? 1,
-    undefined,
-    {
-      swr: {
-        enabled: !!session?.user.id,
+export const MailingListName = memo(
+  ({ mailingListId, ...otherProps }: MailingListNameProps) => {
+    const { data: session } = useSession();
+
+    const { data } = useGetCharactersCharacterIdMailLists(
+      session?.user.id ?? 1,
+      undefined,
+      {
+        swr: {
+          enabled: !!session?.user.id,
+        },
       },
-    },
-  );
-  return (
-    <Text {...otherProps}>
-      {data?.data.find((list) => list.mailing_list_id === mailingListId)
-        ?.name ?? "Unknown Mailing List"}
-    </Text>
-  );
-}
+    );
+    return (
+      <Text {...otherProps}>
+        {data?.data.find((list) => list.mailing_list_id === mailingListId)
+          ?.name ?? "Unknown Mailing List"}
+      </Text>
+    );
+  },
+);
+MailingListName.displayName = "MailingListName";

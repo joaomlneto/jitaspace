@@ -25,9 +25,9 @@ import {
   CharacterName,
   CorporationAvatar,
   CorporationName,
+  EveEntityAvatar,
   EveEntityName,
   TypeAvatar,
-  UnknownCategoryEveEntityAvatar,
 } from "@jitaspace/ui";
 
 export type EsiSearchMultiSelectProps = Omit<
@@ -65,12 +65,7 @@ export function EsiSearchMultiselectValue({
           borderRadius: theme.radius.sm,
         })}
       >
-        <UnknownCategoryEveEntityAvatar
-          id={value}
-          size={16}
-          mr={10}
-          radius="xl"
-        />
+        <EveEntityAvatar id={value} size={16} mr={10} radius="xl" />
         <EveEntityName
           entityId={value}
           sx={{ lineHeight: 1, fontSize: rem(12) }}
@@ -114,14 +109,7 @@ export const EsiSearchMultiSelectItem = forwardRef<
       case "inventory_type":
         return <TypeAvatar typeId={value} size={16} mr={10} radius="xl" />;
       default:
-        return (
-          <UnknownCategoryEveEntityAvatar
-            id={value}
-            size={16}
-            mr={10}
-            radius="xl"
-          />
-        );
+        return <EveEntityAvatar id={value} size={16} mr={10} radius="xl" />;
     }
   };
   const TextComponent = () => {

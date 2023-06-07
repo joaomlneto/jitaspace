@@ -73,14 +73,12 @@ export default function MailboxTable({ data }: Props) {
             <td>
               <Group noWrap>
                 <EveMailSenderAvatar
-                  id={mail.from}
-                  recipients={mail.recipients}
+                  messageId={mail.mail_id}
                   size="sm"
                   radius="xl"
                 />
                 <EveMailSenderName
-                  recipients={mail.recipients}
-                  id={mail.from}
+                  messageId={mail.mail_id}
                   fw={mail.is_read ? "normal" : "bold"}
                 />
               </Group>
