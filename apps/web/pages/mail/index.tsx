@@ -5,6 +5,7 @@ import {
   ActionIcon,
   Alert,
   Button,
+  Center,
   Container,
   Grid,
   Group,
@@ -73,6 +74,7 @@ export default function Page() {
             Authorization: `Bearer ${session?.accessToken}`,
           },
         }).then((r) => r.json()),
+      { refreshInterval: 5000, revalidateAll: true },
     );
 
   const mergedData = data?.flat() ?? [];
@@ -225,6 +227,11 @@ export default function Page() {
             >
               Load more messages
             </Button>
+          )}
+          {!isLoading && !isValidating && !hasMore && (
+            <Center>
+              <Text color="dimmed">No more messages</Text>
+            </Center>
           )}
         </Stack>
       </Container>
