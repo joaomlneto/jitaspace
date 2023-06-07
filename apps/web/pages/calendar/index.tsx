@@ -10,9 +10,11 @@ import {
   Loader,
   Stack,
   Table,
+  ThemeIcon,
   Title,
 } from "@mantine/core";
 import { Calendar } from "@mantine/dates";
+import { IconExclamationCircle } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 
 import {
@@ -62,9 +64,17 @@ export default function Page() {
         <Title order={1}>Calendar</Title>
         {isLoading && <Loader />}
       </Group>
-      {false && (
+      {true && (
         <JsonInput
-          value={JSON.stringify(events?.data ?? [], null, 2)}
+          value={JSON.stringify(
+            events?.data.map((event) => ({
+              ...event,
+              title: "<REDACTED>",
+              event_id: "<REDACTED>",
+            })) ?? [],
+            null,
+            2,
+          )}
           readOnly
           maxRows={20}
           autosize
@@ -112,7 +122,6 @@ export default function Page() {
           <tr>
             <th>Title</th>
             <th>Date</th>
-            <th>Importance</th>
             <th>Response</th>
           </tr>
         </thead>
@@ -120,12 +129,23 @@ export default function Page() {
           {events?.data?.map((event) => (
             <tr key={event.event_id}>
               <td>
-                <Anchor component={Link} href={`/calendar/${event.event_id}`}>
-                  {event.title}
-                </Anchor>
+                <Group noWrap align="end" spacing="xs">
+                  {event.importance === 1 && (
+                    <ThemeIcon
+                      color="red"
+                      variant="light"
+                      radius="xl"
+                      size="sm"
+                    >
+                      <IconExclamationCircle />
+                    </ThemeIcon>
+                  )}
+                  <Anchor component={Link} href={`/calendar/${event.event_id}`}>
+                    {event.title}
+                  </Anchor>
+                </Group>
               </td>
-              <td>{event.event_date}</td>
-              <td>{event.importance}</td>
+              <td>{new Date(event.event_date).toLocaleString()}</td>
               <td>
                 <Badge
                   color={eventResponseColor[event.event_response!]}
