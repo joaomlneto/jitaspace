@@ -145,7 +145,7 @@ export default function Page() {
                   </Anchor>
                 </Group>
               </td>
-              <td>{new Date(event.event_date).toLocaleString()}</td>
+              <td>{new Date(event.event_date!).toLocaleString()}</td>
               <td>
                 <Badge
                   color={eventResponseColor[event.event_response!]}
