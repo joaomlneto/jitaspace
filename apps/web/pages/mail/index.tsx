@@ -9,7 +9,6 @@ import {
   Container,
   Grid,
   Group,
-  JsonInput,
   Loader,
   Stack,
   Text,
@@ -85,7 +84,6 @@ export default function Page() {
   return (
     <>
       <NextSeo title="EveMail" />
-      <JsonInput value={JSON.stringify(session)} autosize />
       <Container size="xl">
         <Stack>
           {error && (
