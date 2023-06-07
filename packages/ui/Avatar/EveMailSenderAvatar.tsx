@@ -66,7 +66,5 @@ export function EveMailSenderAvatar({ id, recipients, ...otherProps }: Props) {
     return <AllianceAvatar allianceId={id} {...otherProps} />;
   }
 
-  // TODO: attempt to resolve the ID to the appropriate entity type
-
   return <UnknownCategoryEveEntityAvatar id={id} {...otherProps} />;
 }

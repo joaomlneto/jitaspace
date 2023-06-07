@@ -2,6 +2,13 @@ import React from "react";
 import { Text, type TextProps } from "@mantine/core";
 
 import {
+  allianceIdRanges,
+  characterIdRanges,
+  corporationIdRanges,
+  isIdInRanges,
+} from "@jitaspace/utils";
+
+import {
   AllianceName,
   CharacterName,
   CorporationName,
@@ -42,6 +49,18 @@ export function EveMailSenderName({ id, recipients, ...otherProps }: Props) {
           </EveEntityName>
         );
     }
+  }
+
+  if (isIdInRanges(id, characterIdRanges)) {
+    return <CharacterName characterId={id} {...otherProps} />;
+  }
+
+  if (isIdInRanges(id, corporationIdRanges)) {
+    return <CorporationName corporationId={id} {...otherProps} />;
+  }
+
+  if (isIdInRanges(id, allianceIdRanges)) {
+    return <AllianceName allianceId={id} {...otherProps} />;
   }
 
   // Resolve wtf this is

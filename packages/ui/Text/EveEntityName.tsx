@@ -8,16 +8,32 @@ type Props = TextProps & {
 };
 export function EveEntityName({ entityId, ...otherProps }: Props) {
   const [name, setName] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (!entityId) {
       return;
     }
 
-    void postUniverseNames([Number(entityId)], {}, {}).then((data) => {
-      setName(data.data[0]?.name);
-    });
+    void postUniverseNames([Number(entityId)], {}, {})
+      .then((data) => {
+        setName(data.data[0]?.name);
+      })
+      .catch((err) => {
+        setError(JSON.stringify(err));
+      });
   }, [entityId]);
 
-  return <Text {...otherProps}>{name}</Text>;
+  return (
+    <Text {...otherProps}>
+      {name ??
+        (error !== undefined ? (
+          <Text span color="dimmed">
+            Name Unknown
+          </Text>
+        ) : (
+          "?"
+        ))}
+    </Text>
+  );
 }
