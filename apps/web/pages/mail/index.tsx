@@ -74,7 +74,7 @@ export default function Page() {
             Authorization: `Bearer ${session?.accessToken}`,
           },
         }).then((r) => r.json()),
-      { refreshInterval: 5000, revalidateAll: true },
+      { refreshInterval: 15000, revalidateAll: true },
     );
 
   const mergedData = data?.flat() ?? [];
@@ -219,14 +219,16 @@ export default function Page() {
           {data && (
             <MailboxDataTable data={mergedData} mutate={() => void mutate()} />
           )}
-          {(isLoading || isValidating || hasMore) && (
-            <Button
-              w="100%"
-              onClick={() => void setSize(size + 1)}
-              disabled={isLoading || isValidating}
-            >
+          {hasMore && (
+            <Button w="100%" onClick={() => void setSize(size + 1)}>
               Load more messages
             </Button>
+          )}
+          {(isLoading || isValidating) && !hasMore && (
+            <Group noWrap>
+              <Loader size="sm" />
+              <Text>Loading messages</Text>
+            </Group>
           )}
           {!isLoading && !isValidating && !hasMore && (
             <Center>
