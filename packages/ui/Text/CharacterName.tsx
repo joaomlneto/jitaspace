@@ -17,7 +17,7 @@ export const CharacterName = memo(
       },
     );
 
-    console.log({ data, error });
+    // console.log({ data, error });
 
     const characterDeleted =
       error?.response?.data?.error == "Character has been deleted!";
