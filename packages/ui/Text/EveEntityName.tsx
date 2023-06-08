@@ -68,8 +68,8 @@ const EveEntityNameFallback = memo(
       <Text {...otherProps}>
         {name ??
           (error !== undefined ? (
-            <Text span color="dimmed">
-              Name Unknown
+            <Text span color="dimmed" fs="italic">
+              Unknown
             </Text>
           ) : (
             "?"
