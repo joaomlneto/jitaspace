@@ -8,10 +8,8 @@ import {
   deleteCharactersCharacterIdMailLabelsLabelId,
   useGetCharactersCharacterIdMailLabels,
 } from "@jitaspace/esi-client";
-import { LabelName } from "@jitaspace/ui";
+import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
-
-import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 
 export function LabelManagementTable() {
   const { data: session } = useSession();

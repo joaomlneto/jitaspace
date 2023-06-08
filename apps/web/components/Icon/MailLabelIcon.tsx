@@ -5,9 +5,11 @@ import {
   type MantineNumberSize,
 } from "@mantine/core";
 
-import { AllianceAvatar, CorporationAvatar } from "@jitaspace/ui";
-
-import { MailLabelColorSwatch } from "~/components/ColorSwatch";
+import {
+  AllianceAvatar,
+  CorporationAvatar,
+  MailLabelColorSwatch,
+} from "@jitaspace/ui";
 
 type MailLabelIconProps = Partial<AvatarProps & ColorSwatchProps> & {
   labelId: string | number;

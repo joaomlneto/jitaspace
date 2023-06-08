@@ -17,11 +17,14 @@ import { IconMailbox, IconMailFast, IconTag } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { CharacterAvatar, LabelName } from "@jitaspace/ui";
+import {
+  CharacterAvatar,
+  LabelName,
+  LoginWithEveOnlineButton,
+  MailLabelColorSwatch,
+} from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
-import { LoginWithEveOnlineButton } from "../../components/Button";
-import { MailLabelColorSwatch } from "../../components/ColorSwatch";
 import LinksGroup from "./NavbarLinksGroup";
 import UserButton from "./UserButton";
 

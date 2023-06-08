@@ -22,10 +22,9 @@ import {
   EveMailSenderAvatar,
   EveMailSenderName,
   LabelName,
+  MailLabelColorSwatch,
 } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
-
-import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 
 type Props = {
   data: {

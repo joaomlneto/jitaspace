@@ -16,7 +16,7 @@ import { sizes } from "./Avatar.styles";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
 
-type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
+export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
   id?: string | number | null;
 };
 

@@ -6,7 +6,7 @@ import { useGetCharactersCharacterIdMailMailId } from "@jitaspace/esi-client";
 
 import { EveEntityAvatar } from "./index";
 
-type EveMailSenderAvatarProps = Omit<AvatarProps, "src"> & {
+export type EveMailSenderAvatarProps = Omit<AvatarProps, "src"> & {
   messageId?: number;
 };
 

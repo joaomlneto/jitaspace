@@ -28,7 +28,8 @@ import {
 } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
 
-import { LoginWithEveOnlineButton } from "~/components/Button";
+import { LoginWithEveOnlineButton } from "@jitaspace/ui";
+
 import { TotalUnreadMailsIndicator } from "~/components/Indicator/TotalUnreadMailsIndicator";
 import UserButton from "./UserButton";
 

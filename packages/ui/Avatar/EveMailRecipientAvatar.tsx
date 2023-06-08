@@ -14,7 +14,7 @@ import {
 import { AllianceAvatar } from "./AllianceAvatar";
 import { CharacterAvatar, CorporationAvatar, EveEntityAvatar } from "./index";
 
-type EveMailRecipientAvatarProps = Omit<AvatarProps, "src"> & {
+export type EveMailRecipientAvatarProps = Omit<AvatarProps, "src"> & {
   messageId?: number;
   recipientId?: number;
 };

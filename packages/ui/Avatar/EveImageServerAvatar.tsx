@@ -5,14 +5,20 @@ import { esiImageSizeClamp, getAvatarSize } from "@jitaspace/utils";
 
 import { sizes } from "./Avatar.styles";
 
-export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
+export type EveImageServerAvatarProps = Omit<AvatarProps, "src"> & {
   category: string;
   id?: string | number | null;
   variation: string;
 };
 
 export const EveImageServerAvatar = memo(
-  ({ category, id, variation, size, ...avatarProps }: EveEntityAvatarProps) => {
+  ({
+    category,
+    id,
+    variation,
+    size,
+    ...avatarProps
+  }: EveImageServerAvatarProps) => {
     const imageSize = esiImageSizeClamp(
       getAvatarSize({
         size: size ?? "md",
