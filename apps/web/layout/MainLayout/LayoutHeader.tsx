@@ -17,7 +17,7 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useHeadroom } from "@mantine/hooks";
 import {
   IconBook,
   IconChartPie3,
@@ -161,6 +161,7 @@ const mockdata = [
 ];
 
 export function LayoutHeader() {
+  const pinned = useHeadroom({ fixedAt: 120 });
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
   const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
@@ -187,7 +188,14 @@ export function LayoutHeader() {
 
   return (
     <Box>
-      <Header height={60} px="md">
+      <Header
+        height={rem(60)}
+        px="md"
+        sx={{
+          transform: `translate3d(0, ${pinned ? 0 : rem(-110)}, 0)`,
+          transition: "transform 400ms ease",
+        }}
+      >
         <Container size="xl" h={60} p={0}>
           <Group position="apart" sx={{ height: "100%" }}>
             <Link href="/" className={classes.logo}>
