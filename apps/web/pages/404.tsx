@@ -1,3 +1,5 @@
+import React, { type ReactElement } from "react";
+import Link from "next/link";
 import {
   Button,
   Container,
@@ -7,6 +9,8 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+
+import { MainLayout } from "~/layout";
 
 const useStyles = createStyles((theme) => ({
   root: {
@@ -49,7 +53,7 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-export function NotFoundTitle() {
+export default function Page() {
   const { classes } = useStyles();
 
   return (
@@ -66,10 +70,16 @@ export function NotFoundTitle() {
         address, or the page has been moved to another URL.
       </Text>
       <Group position="center">
-        <Button variant="subtle" size="md">
-          Take me back to home page
-        </Button>
+        <Link href="/">
+          <Button variant="subtle" size="md">
+            Take me back to home page
+          </Button>
+        </Link>
       </Group>
     </Container>
   );
 }
+
+Page.getLayout = function getLayout(page: ReactElement) {
+  return <MainLayout>{page}</MainLayout>;
+};
