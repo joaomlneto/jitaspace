@@ -1,16 +1,26 @@
-import { memo, useEffect, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { Avatar, type AvatarProps } from "@mantine/core";
 
 import { postUniverseNames } from "@jitaspace/esi-client";
-import { esiImageSizeClamp, getAvatarSize } from "@jitaspace/utils";
+import {
+  allianceIdRanges,
+  characterIdRanges,
+  corporationIdRanges,
+  esiImageSizeClamp,
+  getAvatarSize,
+  isIdInRanges,
+} from "@jitaspace/utils";
 
+import { AllianceAvatar } from "./AllianceAvatar";
 import { sizes } from "./Avatar.styles";
+import { CharacterAvatar } from "./CharacterAvatar";
+import { CorporationAvatar } from "./CorporationAvatar";
 
 type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
   id?: string | number | null;
 };
 
-export const EveEntityAvatar = memo(
+export const EveEntityAvatarFallback = memo(
   ({ id, size, ...avatarProps }: EveEntityAvatarProps) => {
     const [category, setCategory] = useState<string | undefined>();
 
@@ -65,6 +75,34 @@ export const EveEntityAvatar = memo(
         {...avatarProps}
       />
     );
+  },
+);
+EveEntityAvatarFallback.displayName = "EveEntityAvatarFallback";
+
+export const EveEntityAvatar = memo(
+  ({ id, ...otherProps }: EveEntityAvatarProps) => {
+    id = typeof id === "string" ? parseInt(id) : id;
+
+    if (!id) {
+      return <Avatar {...otherProps} />;
+    }
+
+    if (isIdInRanges(id, characterIdRanges)) {
+      return <CharacterAvatar characterId={id} {...otherProps} />;
+    }
+
+    if (isIdInRanges(id, corporationIdRanges)) {
+      return <CorporationAvatar corporationId={id} {...otherProps} />;
+    }
+
+    if (isIdInRanges(id, allianceIdRanges)) {
+      return <AllianceAvatar allianceId={id} {...otherProps} />;
+    }
+
+    // FIXME: Add more ranges!
+
+    // Resolve wtf this is in the worst possible way - via a POST request!
+    return <EveEntityAvatarFallback id={id} {...otherProps} />;
   },
 );
 EveEntityAvatar.displayName = "EveEntityAvatar";
