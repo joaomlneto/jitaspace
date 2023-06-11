@@ -14,10 +14,14 @@ export const EveEntityName = ({
 }: EveEntityNameProps) => {
   const { name, loading, error } = useEsiName(entityId, category);
 
+  if (loading) {
+    return (
+      <Skeleton visible={loading}>
+        <Text {...otherProps}>{name ?? "Unknown"}</Text>
+      </Skeleton>
+    );
+  }
+
   // Resolve wtf this is in the worst possible way - via a POST request!
-  return (
-    <Skeleton visible={loading}>
-      <Text {...otherProps}>{name ?? "Unknown"}</Text>
-    </Skeleton>
-  );
+  return <Text {...otherProps}>{name ?? "Unknown"}</Text>;
 };
