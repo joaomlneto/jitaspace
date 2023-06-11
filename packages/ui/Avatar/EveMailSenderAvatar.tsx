@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
@@ -10,30 +10,36 @@ export type EveMailSenderAvatarProps = Omit<AvatarProps, "src"> & {
   messageId?: number;
 };
 
-export const EveMailSenderAvatar = memo(
-  ({ messageId, ...otherProps }: EveMailSenderAvatarProps) => {
-    const { data: session } = useSession();
+export const EveMailSenderAvatar = ({
+  messageId,
+  ...otherProps
+}: EveMailSenderAvatarProps) => {
+  const { data: session } = useSession();
 
-    const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
-      session?.user.id ?? 0,
-      messageId ?? 0,
-      undefined,
-      {
-        swr: {
-          enabled: !!session?.user.id && !!messageId,
-        },
+  const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
+    session?.user.id ?? 0,
+    messageId ?? 0,
+    undefined,
+    {
+      swr: {
+        enabled: !!session?.user.id && !!messageId,
       },
+    },
+  );
+
+  if (!mail?.data.from) {
+    return (
+      <Skeleton
+        visible={isLoading || !mail?.data.from}
+        radius={otherProps.radius}
+        height={otherProps.size}
+        width={otherProps.size}
+        circle
+      >
+        <Avatar {...otherProps} />
+      </Skeleton>
     );
+  }
 
-    if (!mail?.data.from) {
-      return (
-        <Skeleton visible={isLoading}>
-          <Avatar {...otherProps} />
-        </Skeleton>
-      );
-    }
-
-    return <EveEntityAvatar id={mail?.data.from} {...otherProps} />;
-  },
-);
-EveMailSenderAvatar.displayName = "EveMailSenderAvatar";
+  return <EveEntityAvatar id={mail?.data.from} {...otherProps} />;
+};
