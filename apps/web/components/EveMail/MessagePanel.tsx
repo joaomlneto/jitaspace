@@ -8,9 +8,8 @@ import {
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
 import {
-  EveEntityAvatar,
+  EveEntityName,
   EveMailRecipientAvatar,
-  EveMailRecipientName,
   EveMailSenderAvatar,
   EveMailSenderName,
 } from "@jitaspace/ui";
@@ -60,7 +59,6 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
       <Group>ID: {messageId}</Group>
       <Group>
         From:
-        <EveEntityAvatar id={mail?.data.from} size="sm" radius="xl" />
         <EveMailSenderAvatar messageId={messageId} size="sm" radius="xl" />
         <EveMailSenderName messageId={messageId} />
       </Group>
@@ -80,10 +78,14 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
                   size="sm"
                   radius="xl"
                 />
-                <EveMailRecipientName
-                  messageId={messageId}
-                  recipientId={recipient.recipient_id}
-                />
+                {recipient.recipient_type === "mailing_list" ? (
+                  <Text>Mailing List</Text>
+                ) : (
+                  <EveEntityName
+                    category={recipient.recipient_type}
+                    entityId={recipient.recipient_id}
+                  />
+                )}
               </Group>
             ))}
           </Group>

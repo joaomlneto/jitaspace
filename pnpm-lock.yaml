@@ -1,4 +1,8 @@
-lockfileVersion: '6.0'
+lockfileVersion: '6.1'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
 
 importers:
 
@@ -49,6 +53,9 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../../packages/esi-client
+      '@jitaspace/eve-icons':
+        specifier: '*'
+        version: link:../../packages/eve-icons
       '@jitaspace/ui':
         specifier: '*'
         version: link:../../packages/ui
@@ -94,6 +101,9 @@ importers:
       '@mantine/tiptap':
         specifier: ^6.0.13
         version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.21.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0)
+      '@react-hook/cache':
+        specifier: ^1.1.1
+        version: 1.1.1(react@18.2.0)
       '@tabler/icons-react':
         specifier: ^2.21.0
         version: 2.21.0(react@18.2.0)
@@ -272,11 +282,39 @@ importers:
         specifier: ^5.1.3
         version: 5.1.3
 
+  packages/eve-icons:
+    dependencies:
+      '@jitaspace/esi-client':
+        specifier: '*'
+        version: link:../esi-client
+      '@jitaspace/utils':
+        specifier: '*'
+        version: link:../utils
+      react:
+        specifier: 18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: 18.2.0
+        version: 18.2.0(react@18.2.0)
+    devDependencies:
+      '@jitaspace/eslint-config':
+        specifier: ^0.1.0
+        version: link:../eslint-config
+      eslint:
+        specifier: ^8.42.0
+        version: 8.42.0
+      typescript:
+        specifier: ^5.1.3
+        version: 5.1.3
+
   packages/ui:
     dependencies:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../esi-client
+      '@jitaspace/eve-icons':
+        specifier: '*'
+        version: link:../eve-icons
       '@jitaspace/utils':
         specifier: '*'
         version: link:../utils
@@ -1661,6 +1699,23 @@ packages:
       react: ^16.8 || ^17.0 || ^18.0
     dependencies:
       '@babel/runtime': 7.22.3
+      react: 18.2.0
+    dev: false
+
+  /@react-hook/cache@1.1.1(react@18.2.0):
+    resolution: {integrity: sha512-FY0Bwvxsv9Gu6pUbVdNylh4jyWPtQRegQM9G6yVx3l2cYjbxzaJwEXticLfsRcciCbnk7iyZfJn6mZ4N4+q9qA==}
+    peerDependencies:
+      react: '>=16.8'
+    dependencies:
+      '@react-hook/latest': 1.0.3(react@18.2.0)
+      react: 18.2.0
+    dev: false
+
+  /@react-hook/latest@1.0.3(react@18.2.0):
+    resolution: {integrity: sha512-dy6duzl+JnAZcDbNTfmaP3xHiKtbXYOaz3G51MGVljh548Y8MWzTr+PHLOfvpypEVW9zwvl+VyKjbWKEVbV1Rg==}
+    peerDependencies:
+      react: '>=16.8'
+    dependencies:
       react: 18.2.0
     dev: false
 

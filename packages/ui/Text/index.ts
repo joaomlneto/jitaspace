@@ -4,6 +4,5 @@ export * from "./CorporationName";
 export * from "./CSPACostText";
 export * from "./EveEntityName";
 export * from "./EveMailSenderName";
-export * from "./EveMailRecipientName";
 export * from "./LabelName";
 export * from "./MailingListName";

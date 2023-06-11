@@ -1,6 +1,6 @@
-import { ReactNode } from "react";
-import { useSession } from "next-auth/react";
+import { type ReactNode } from "react";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 
 export default function AxiosContextProvider({
   children,

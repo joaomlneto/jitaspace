@@ -1,7 +1,7 @@
-import { memo } from "react";
-import { Text, type TextProps } from "@mantine/core";
+import React, { memo } from "react";
+import { type TextProps } from "@mantine/core";
 
-import { useGetAlliancesAllianceId } from "@jitaspace/esi-client";
+import { EveEntityName } from "./EveEntityName";
 
 export type AllianceNameProps = TextProps & {
   allianceId: string | number;
@@ -9,14 +9,13 @@ export type AllianceNameProps = TextProps & {
 
 export const AllianceName = memo(
   ({ allianceId, ...otherProps }: AllianceNameProps) => {
-    const { data } = useGetAlliancesAllianceId(
-      typeof allianceId === "string" ? parseInt(allianceId, 10) : allianceId,
-      undefined,
-      {
-        swr: { enabled: allianceId !== undefined },
-      },
+    return (
+      <EveEntityName
+        entityId={allianceId}
+        category="alliance"
+        {...otherProps}
+      />
     );
-    return <Text {...otherProps}>{data && data.data.name}</Text>;
   },
 );
 AllianceName.displayName = "AllianceName";

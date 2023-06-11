@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   Badge,
@@ -17,6 +16,7 @@ import { IconMailbox, IconMailFast, IconTag } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import { EveMailNeocomIcon, EveMailTagIcon } from "@jitaspace/eve-icons";
 import {
   CharacterAvatar,
   LabelName,
@@ -102,12 +102,7 @@ export default function MailLayoutNavbar() {
           <Group position="apart">
             <UnstyledButton component={Link} href="/">
               <Group>
-                <Image
-                  src="/icons/evemail.png"
-                  width={32}
-                  height={32}
-                  alt="EveMail"
-                />
+                <EveMailNeocomIcon width={32} height={32} alt="EveMail" />
                 <Text fw="bold">EveMail</Text>
               </Group>
             </UnstyledButton>
@@ -154,12 +149,7 @@ export default function MailLayoutNavbar() {
                 {customLabels.length > 0 && (
                   <LinksGroup
                     icon={
-                      <Image
-                        src={"/icons/evemailtag.png"}
-                        alt="Labels"
-                        width={24}
-                        height={24}
-                      />
+                      <EveMailTagIcon alt="Labels" width={24} height={24} />
                     }
                     label={<Text>Labels</Text>}
                     links={

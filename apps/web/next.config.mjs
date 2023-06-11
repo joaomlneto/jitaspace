@@ -12,6 +12,7 @@ const config = {
   transpilePackages: [
     "@jitaspace/auth",
     "@jitaspace/esi-client",
+    "@jitaspace/eve-icons",
     "@jitaspace/ui",
     "@jitaspace/utils",
   ],

@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, ColorPicker, Stack, Text, TextInput } from "@mantine/core";
+import { Button, Grid, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { type ContextModalProps } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
@@ -11,6 +11,8 @@ import {
   PostCharactersCharacterIdMailLabelsBodyColor,
 } from "@jitaspace/esi-client";
 import { randomProperty } from "@jitaspace/utils";
+
+import { MailLabelColorSelect } from "~/components/Select";
 
 export function CreateMailLabelModal({
   context,
@@ -80,27 +82,22 @@ export function CreateMailLabelModal({
       })}
     >
       <Stack>
-        <TextInput withAsterisk label="Name" {...form.getInputProps("name")} />
-        <Stack spacing={0}>
-          <Text size="sm" fw={500}>
-            Color
-          </Text>
-          <ColorPicker
-            style={{
-              backgroundColor: form.values.color as string,
-              borderRadius: 5,
-              padding: 5,
-              paddingTop: 0,
-            }}
-            format="hex"
-            focusable={true}
-            withPicker={false}
-            swatches={Object.keys(PostCharactersCharacterIdMailLabelsBodyColor)}
-            swatchesPerRow={18}
-            fullWidth
-            {...form.getInputProps("color")}
-          />
-        </Stack>
+        <Grid>
+          <Grid.Col span="auto">
+            <TextInput
+              withAsterisk
+              miw={120}
+              label="Name"
+              {...form.getInputProps("name")}
+            />
+          </Grid.Col>
+          <Grid.Col span="content">
+            <MailLabelColorSelect
+              label="Color"
+              {...form.getInputProps("color")}
+            />
+          </Grid.Col>
+        </Grid>
         <Button type="submit">Create Label</Button>
       </Stack>
     </form>

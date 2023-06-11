@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Text, type TextProps } from "@mantine/core";
+import { Skeleton, Text, type TextProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
@@ -12,7 +12,7 @@ export const MailingListName = memo(
   ({ mailingListId, ...otherProps }: MailingListNameProps) => {
     const { data: session } = useSession();
 
-    const { data } = useGetCharactersCharacterIdMailLists(
+    const { data, isLoading } = useGetCharactersCharacterIdMailLists(
       session?.user.id ?? 1,
       undefined,
       {
@@ -22,10 +22,12 @@ export const MailingListName = memo(
       },
     );
     return (
-      <Text {...otherProps}>
-        {data?.data.find((list) => list.mailing_list_id === mailingListId)
-          ?.name ?? "Unknown Mailing List"}
-      </Text>
+      <Skeleton visible={isLoading}>
+        <Text {...otherProps}>
+          {data?.data.find((list) => list.mailing_list_id === mailingListId)
+            ?.name ?? "Unknown Mailing List"}
+        </Text>
+      </Skeleton>
     );
   },
 );

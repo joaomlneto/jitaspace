@@ -15,6 +15,8 @@ import { Analytics } from "@vercel/analytics/react";
 import { SessionProvider, signIn, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 
+import { EveIconsContextProvider } from "@jitaspace/eve-icons";
+
 import { contextModals } from "~/components/Modals";
 import RouterTransition from "../components/RouterTransition";
 import AxiosContextProvider from "../contexts/axios";
@@ -83,20 +85,22 @@ export default function App({
       <SessionProvider session={session}>
         <NextAuthTokenExpirationHandler>
           <AxiosContextProvider>
-            <MantineProvider
-              withGlobalStyles
-              withNormalizeCSS
-              theme={{ colorScheme: "dark" }}
-            >
-              <Notifications />
-              <RouterTransition />
-              <ModalsProvider
-                modals={contextModals}
-                modalProps={{ centered: true }}
+            <EveIconsContextProvider iconVersion="rhea">
+              <MantineProvider
+                withGlobalStyles
+                withNormalizeCSS
+                theme={{ colorScheme: "dark" }}
               >
-                {getLayout(<Component {...pageProps} />)}
-              </ModalsProvider>
-            </MantineProvider>
+                <Notifications />
+                <RouterTransition />
+                <ModalsProvider
+                  modals={contextModals}
+                  modalProps={{ centered: true }}
+                >
+                  {getLayout(<Component {...pageProps} />)}
+                </ModalsProvider>
+              </MantineProvider>
+            </EveIconsContextProvider>
           </AxiosContextProvider>
         </NextAuthTokenExpirationHandler>
       </SessionProvider>

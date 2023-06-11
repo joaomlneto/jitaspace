@@ -1,31 +1,32 @@
 import React, { type ReactElement } from "react";
+import Image, { type ImageProps } from "next/image";
 import Link from "next/link";
 import {
   Card,
   Container,
   createStyles,
-  Image,
   rem,
   SimpleGrid,
   Text,
   UnstyledButton,
-  type ImageProps,
 } from "@mantine/core";
+
+import { CalendarNeocomIcon, EveMailNeocomIcon } from "@jitaspace/eve-icons";
 
 import { MainLayout } from "~/layout";
 
 const apps: {
   title: string;
   description: string;
-  icon: (props: ImageProps) => React.ReactElement;
+  icon: (props: Partial<Omit<ImageProps, "src">>) => React.ReactElement;
   href: string;
 }[] = [
   {
     title: "EveMail",
     description:
       "Access your EVE Online correspondence whilst out of the game.",
-    icon: (props: ImageProps) => (
-      <Image src="/icons/evemail.png" alt="Mail" {...props} />
+    icon: ({ alt, ...otherProps }) => (
+      <EveMailNeocomIcon alt={alt ?? "Mail"} {...otherProps} />
     ),
     href: "/mail",
   },
@@ -33,8 +34,8 @@ const apps: {
     title: "Calendar",
     description:
       "View upcoming events and meetings on your EVE Online calendar.",
-    icon: (props: ImageProps) => (
-      <Image src="/icons/calendar.png" alt="Calendar" {...props} />
+    icon: ({ alt, ...otherProps }) => (
+      <CalendarNeocomIcon alt={alt ?? "Mail"} {...otherProps} />
     ),
     href: "/calendar",
   },
@@ -42,8 +43,8 @@ const apps: {
     title: "Skills",
     description:
       "Manage your skills and skills points on your EVE Online character.",
-    icon: (props: ImageProps) => (
-      <Image src="/icons/calendar.png" alt="Calendar" {...props} />
+    icon: ({ alt, ...otherProps }) => (
+      <CalendarNeocomIcon alt={alt ?? "Mail"} {...otherProps} />
     ),
     href: "/skills",
   },
@@ -51,11 +52,11 @@ const apps: {
     title: "An OpenAPI for the SDE",
     description:
       "An OpenAPI specification for the EVE Online Static Data Export, making it easy to integrate into your web applications without the need for a database.",
-    icon: (props: ImageProps) => (
+    icon: ({ alt, ...otherProps }) => (
       <Image
         src="https://images.evetech.net/types/60753/icon?size=64"
-        alt="EveMail"
-        {...props}
+        alt={alt ?? "SDE OpenAPI"}
+        {...otherProps}
       />
     ),
     href: "https://sde.jita.space",
@@ -129,7 +130,11 @@ export default function Page() {
             key={feature.title}
           >
             <Card shadow="md" radius="md" className={classes.card} padding="xl">
-              <feature.icon width={rem(64)} color={theme.fn.primaryColor()} />
+              <feature.icon
+                height={64}
+                width={64}
+                color={theme.fn.primaryColor()}
+              />
               <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
                 {feature.title}
               </Text>

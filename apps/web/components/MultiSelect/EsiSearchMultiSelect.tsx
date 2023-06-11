@@ -1,5 +1,6 @@
 import React, { forwardRef } from "react";
 import {
+  Avatar,
   Badge,
   Box,
   CloseButton,
@@ -7,6 +8,7 @@ import {
   Loader,
   MultiSelect,
   rem,
+  Text,
   type MultiSelectProps,
   type MultiSelectValueProps,
   type SelectItemProps,
@@ -20,11 +22,8 @@ import {
 } from "@jitaspace/esi-client";
 import {
   AllianceAvatar,
-  AllianceName,
   CharacterAvatar,
-  CharacterName,
   CorporationAvatar,
-  CorporationName,
   EveEntityAvatar,
   EveEntityName,
   TypeAvatar,
@@ -88,6 +87,9 @@ export const EsiSearchMultiSelectItem = forwardRef<
 >(({ value, category, ...others }, ref) => {
   const AvatarComponent = () => {
     // TODO: should support other categories for better performance!
+    if (!value) {
+      return <Avatar size={16} mr={10} radius="xl" />;
+    }
     switch (category) {
       case "alliance":
         return (
@@ -112,44 +114,19 @@ export const EsiSearchMultiSelectItem = forwardRef<
         return <EveEntityAvatar id={value} size={16} mr={10} radius="xl" />;
     }
   };
-  const TextComponent = () => {
-    // TODO: should support other categories for better performance!
-    switch (category) {
-      case "alliance":
-        return (
-          <AllianceName
-            allianceId={value!}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
-          />
-        );
-      case "corporation":
-        return (
-          <CorporationName
-            corporationId={value!}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
-          />
-        );
-      case "character":
-        return (
-          <CharacterName
-            characterId={value!}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
-          />
-        );
-      default:
-        return (
-          <EveEntityName
-            entityId={value}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
-          />
-        );
-    }
-  };
   return (
     <Group noWrap position="apart" ref={ref} {...others}>
       <Group noWrap spacing="xs">
         <AvatarComponent />
-        <TextComponent />
+        {value ? (
+          <EveEntityName
+            entityId={value}
+            category={category}
+            sx={{ lineHeight: 1, fontSize: rem(12) }}
+          />
+        ) : (
+          <Text>Unknown</Text>
+        )}
       </Group>
       <Badge size="xs" variant="subtle">
         {category}

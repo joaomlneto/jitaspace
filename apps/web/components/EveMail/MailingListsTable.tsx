@@ -1,9 +1,9 @@
 import React from "react";
-import Image from "next/image";
 import { Alert, Container, Group, Stack, Text } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
+import { GroupListIcon } from "@jitaspace/eve-icons";
 
 export function MailingListsTable() {
   const { data: session } = useSession();
@@ -29,12 +29,7 @@ export function MailingListsTable() {
         <Stack>
           {data.data.map((list) => (
             <Group key={list.mailing_list_id} noWrap spacing="xs">
-              <Image
-                src="/icons/grouplist.png"
-                width={24}
-                height={24}
-                alt="Mailing List"
-              />
+              <GroupListIcon width={24} height={24} alt="Mailing List" />
               <Text>{list.name}</Text>
             </Group>
           ))}

@@ -13,9 +13,7 @@ import {
   rem,
   ScrollArea,
   Text,
-  ThemeIcon,
   Tooltip,
-  UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
 import {
@@ -28,9 +26,12 @@ import {
 } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
 
-import { LoginWithEveOnlineButton } from "@jitaspace/ui";
+import { CalendarNeocomIcon, EveMailNeocomIcon } from "@jitaspace/eve-icons";
+import {
+  LoginWithEveOnlineButton,
+  TotalUnreadMailsIndicator,
+} from "@jitaspace/ui";
 
-import { TotalUnreadMailsIndicator } from "~/components/Indicator/TotalUnreadMailsIndicator";
 import UserButton from "./UserButton";
 
 const useStyles = createStyles((theme) => ({
@@ -164,27 +165,9 @@ export function LayoutHeader() {
   const pinned = useHeadroom({ fixedAt: 120 });
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
-  const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
+  //const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
   const { classes, theme } = useStyles();
-  const { data: session, status } = useSession();
-
-  const links = mockdata.map((item) => (
-    <UnstyledButton className={classes.subLink} key={item.title}>
-      <Group noWrap align="flex-start">
-        <ThemeIcon size={34} variant="default" radius="md">
-          <item.icon size={rem(22)} color={theme.fn.primaryColor()} />
-        </ThemeIcon>
-        <div>
-          <Text size="sm" fw={500}>
-            {item.title}
-          </Text>
-          <Text size="xs" color="dimmed">
-            {item.description}
-          </Text>
-        </div>
-      </Group>
-    </UnstyledButton>
-  ));
+  const { status } = useSession();
 
   return (
     <Box>
@@ -218,12 +201,7 @@ export function LayoutHeader() {
               >
                 <Link href="/mail" className={classes.link}>
                   <TotalUnreadMailsIndicator position="bottom-end" offset={8}>
-                    <Image
-                      src="/icons/evemail.png"
-                      alt="EveMail"
-                      width={32}
-                      height={32}
-                    />
+                    <EveMailNeocomIcon width={32} height={32} alt="EveMail" />
                   </TotalUnreadMailsIndicator>
                 </Link>
               </Tooltip>
@@ -234,12 +212,7 @@ export function LayoutHeader() {
                 openDelay={200}
               >
                 <Link href="/calendar" className={classes.link}>
-                  <Image
-                    src="/icons/calendar.png"
-                    alt="Calendar"
-                    width={32}
-                    height={32}
-                  />
+                  <CalendarNeocomIcon width={32} height={32} alt="Calendar" />
                 </Link>
               </Tooltip>
             </Group>
@@ -283,24 +256,14 @@ export function LayoutHeader() {
 
           <Link href="/mail" className={classes.link}>
             <Group>
-              <Image
-                src="/icons/evemail.png"
-                alt="EveMail"
-                width={32}
-                height={32}
-              />
+              <EveMailNeocomIcon width={32} height={32} alt="EveMail" />
               <Text>EveMail</Text>
             </Group>
           </Link>
 
           <Link href="/calendar" className={classes.link}>
             <Group>
-              <Image
-                src="/icons/calendar.png"
-                alt="Calendar"
-                width={32}
-                height={32}
-              />
+              <CalendarNeocomIcon width={32} height={32} alt="Calendar" />
               <Text>Calendar</Text>
             </Group>
           </Link>

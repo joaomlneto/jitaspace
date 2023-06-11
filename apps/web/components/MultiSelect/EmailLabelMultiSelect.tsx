@@ -13,10 +13,8 @@ import {
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { LabelName } from "@jitaspace/ui";
+import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
 import { humanLabelName } from "@jitaspace/utils";
-
-import { MailLabelIcon } from "~/components/Icon";
 
 type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data">;
 
@@ -27,7 +25,7 @@ export const EmailLabelMultiSelectItem = forwardRef<
   return (
     <Group ref={ref} {...others} position="apart" noWrap>
       <Group noWrap>
-        <MailLabelIcon labelId={value ?? 1} size={16} />
+        <MailLabelColorSwatch labelId={value ?? 1} size={16} />
         <LabelName labelId={value} />
       </Group>
       {unreadCount > 0 && <Badge>{unreadCount}</Badge>}
@@ -61,7 +59,7 @@ export function EmailLabelMultiSelectValue({
           borderRadius: theme.radius.sm,
         })}
       >
-        <MailLabelIcon labelId={value ?? 1} size={16} mr={10} />
+        <MailLabelColorSwatch labelId={value ?? 1} size={16} mr={10} />
         <LabelName sx={{ lineHeight: 1, fontSize: rem(12) }} labelId={value} />
 
         <CloseButton

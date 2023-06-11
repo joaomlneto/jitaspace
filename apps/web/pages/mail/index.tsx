@@ -1,5 +1,4 @@
 import React, { useEffect, type ReactElement } from "react";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import {
   ActionIcon,
@@ -21,6 +20,12 @@ import { NextSeo } from "next-seo";
 import useSWRInfinite from "swr/infinite";
 
 import { type GetCharactersCharacterIdMail200Item } from "@jitaspace/esi-client";
+import {
+  ComposeMailIcon,
+  EveMailTagIcon,
+  GroupListIcon,
+  InfoIcon,
+} from "@jitaspace/eve-icons";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxDataTable } from "~/components/MailboxTable";
@@ -74,7 +79,7 @@ export default function Page() {
             Authorization: `Bearer ${session?.accessToken}`,
           },
         }).then((r) => r.json()),
-      { refreshInterval: 1000, revalidateAll: true },
+      { refreshInterval: 10000, revalidateAll: true },
     );
 
   const mergedData = data?.flat() ?? [];
@@ -118,8 +123,7 @@ export default function Page() {
                       })
                     }
                   >
-                    <Image
-                      src="/icons/evemailcompose.png"
+                    <ComposeMailIcon
                       alt="Compose new message"
                       width={32}
                       height={32}
@@ -139,12 +143,7 @@ export default function Page() {
                       })
                     }
                   >
-                    <Image
-                      src="/icons/grouplist.png"
-                      alt="Mailing Lists"
-                      width={32}
-                      height={32}
-                    />
+                    <GroupListIcon alt="Mailing Lists" width={32} height={32} />
                   </ActionIcon>
                 </Tooltip>
                 <Tooltip label="Manage Labels">
@@ -160,12 +159,7 @@ export default function Page() {
                       })
                     }
                   >
-                    <Image
-                      src="/icons/evemailtag.png"
-                      alt="Labels"
-                      width={32}
-                      height={32}
-                    />
+                    <EveMailTagIcon alt="Labels" width={32} height={32} />
                   </ActionIcon>
                 </Tooltip>
                 <Tooltip label="Frequently Asked Questions">
@@ -181,12 +175,7 @@ export default function Page() {
                       })
                     }
                   >
-                    <Image
-                      src="/icons/info.png"
-                      alt="FAQ"
-                      width={32}
-                      height={32}
-                    />
+                    <InfoIcon alt="FAQ" width={32} height={32} />
                   </ActionIcon>
                 </Tooltip>
               </Group>
