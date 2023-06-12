@@ -5,7 +5,6 @@ import {
   Loader,
   MultiSelect,
   rem,
-  Text,
   type MultiSelectProps,
   type MultiSelectValueProps,
   type SelectItemProps,
@@ -57,13 +56,10 @@ export function EsiSearchMultiselectValue({
         })}
       >
         <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
-        {false && (
-          <EveEntityName
-            entityId={value}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
-          />
-        )}
-        <Text sx={{ lineHeight: 1, fontSize: rem(12) }}>ASDASD!</Text>
+        <EveEntityName
+          entityId={value}
+          sx={{ lineHeight: 1, fontSize: rem(12) }}
+        />
         <CloseButton
           onMouseDown={onRemove}
           variant="transparent"
