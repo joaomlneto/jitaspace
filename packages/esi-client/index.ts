@@ -32,3 +32,5 @@ export * from "./universe";
 export * from "./user-interface";
 export * from "./wallet";
 export * from "./wars";
+
+export * from "./scopes";
