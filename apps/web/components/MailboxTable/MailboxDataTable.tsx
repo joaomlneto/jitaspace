@@ -45,9 +45,10 @@ type Props = {
     isDeleted?: boolean;
   }[];
   mutate?: () => void;
+  className?: string;
 };
 
-export default function MailboxDataTable({ data, mutate }: Props) {
+export default function MailboxDataTable({ data, mutate, className }: Props) {
   const { data: session } = useSession();
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     session?.user?.id ?? 1,
@@ -63,6 +64,7 @@ export default function MailboxDataTable({ data, mutate }: Props) {
       highlightOnHover
       striped
       idAccessor="mail_id"
+      className={className}
       columns={[
         {
           title: "Sender",

@@ -1,6 +1,5 @@
 import React, { type ReactElement } from "react";
-import { Button, Container, Group } from "@mantine/core";
-import { openContextModal } from "@mantine/modals";
+import { Container, Group } from "@mantine/core";
 
 import { LabelManagementTable } from "~/components/EveMail";
 import { MailLayout } from "~/layouts";
@@ -10,18 +9,6 @@ export default function Page() {
     <Container>
       <Group position="apart">
         <h1>Manage Labels</h1>
-        <Button
-          onClick={() =>
-            openContextModal({
-              modal: "createMailLabel",
-              title: "Create Mail Label",
-              size: "md",
-              innerProps: {},
-            })
-          }
-        >
-          Create Label
-        </Button>
       </Group>
 
       <LabelManagementTable />

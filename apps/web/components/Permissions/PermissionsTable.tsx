@@ -31,7 +31,7 @@ type PermissionsTableProps = {
   scopes: (keyof typeof scopeDetails)[];
 };
 
-export default function PermissionsTable({ scopes }: PermissionsTableProps) {
+export function PermissionsTable({ scopes }: PermissionsTableProps) {
   return (
     <Stack>
       <Table>

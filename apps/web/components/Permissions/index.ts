@@ -1,3 +1,1 @@
-import PermissionsTable from "./PermissionsTable";
-
-export { PermissionsTable };
+export * from "./PermissionsTable";

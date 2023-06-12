@@ -1,4 +1,3 @@
-import { CreateMailLabelModal } from "~/components/Modals/CreateMailLabelModal";
 import { MailFaqModal } from "~/components/Modals/MailFaqModal";
 import { ManageMailLabelsModal } from "~/components/Modals/ManageMailLabelsModal";
 import { ComposeMailModal } from "./ComposeMailModal";
@@ -7,7 +6,6 @@ import { ViewMailMessageModal } from "./ViewMailMessageModal";
 
 const contextModals = {
   composeMail: ComposeMailModal,
-  createMailLabel: CreateMailLabelModal,
   mailFaq: MailFaqModal,
   manageMailLabels: ManageMailLabelsModal,
   viewMailMessage: ViewMailMessageModal,

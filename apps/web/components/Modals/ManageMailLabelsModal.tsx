@@ -40,7 +40,7 @@ export function ManageMailLabelsModal({
     },
   });
   return (
-    <Stack>
+    <Stack spacing="xl">
       <LabelManagementTable />
       <form
         onSubmit={form.onSubmit((values) => {

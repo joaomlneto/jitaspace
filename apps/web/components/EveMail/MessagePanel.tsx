@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Container, Group, Spoiler, Stack, Text } from "@mantine/core";
+import { Container, Group, Spoiler, Stack, Text } from "@mantine/core";
 import { useSession } from "next-auth/react";
 import ReactHtmlParser, { convertNodeToElement } from "react-html-parser";
 
@@ -12,6 +12,8 @@ import {
   EveMailRecipientAvatar,
   EveMailSenderAvatar,
   EveMailSenderName,
+  LabelName,
+  MailLabelColorSwatch,
 } from "@jitaspace/ui";
 
 function transformMailBody(
@@ -56,11 +58,15 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
   );
   return (
     <Stack>
-      <Group>ID: {messageId}</Group>
-      <Group>
-        From:
-        <EveMailSenderAvatar messageId={messageId} size="sm" radius="xl" />
-        <EveMailSenderName messageId={messageId} />
+      <Group position="apart">
+        <Group>
+          From:
+          <EveMailSenderAvatar messageId={messageId} size="sm" radius="xl" />
+          <EveMailSenderName messageId={messageId} />
+        </Group>
+        {mail?.data.timestamp && (
+          <Group>On {new Date(mail?.data.timestamp).toLocaleString()}</Group>
+        )}
       </Group>
       <Group align="start">
         <Spoiler
@@ -91,35 +97,28 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
           </Group>
         </Spoiler>
       </Group>
-      {mail?.data.timestamp && (
-        <Group align="start">
-          Date: {new Date(mail?.data.timestamp).toLocaleString()}
-        </Group>
-      )}
-      <Group align="start">Subject: {mail?.data.subject}</Group>
-      {mail?.data.labels && (
-        <Group align="start">
-          Labels:{" "}
-          {mail.data.labels
-            ?.map((labelIndex) =>
-              labels?.data.labels?.find(
-                (label) => label.label_id === labelIndex,
-              ),
-            )
-            .map(
-              (item) =>
-                item && (
-                  <Badge
-                    style={{ backgroundColor: item.color }}
-                    key={item.label_id}
-                    variant="outline"
-                  >
-                    {item.name}
-                  </Badge>
+      <Group position="apart">
+        <Group align="start">Subject: {mail?.data.subject}</Group>
+        {mail?.data.labels && (
+          <Group align="start">
+            {mail.data.labels
+              ?.map((labelIndex) =>
+                labels?.data.labels?.find(
+                  (label) => label.label_id === labelIndex,
                 ),
-            )}
-        </Group>
-      )}
+              )
+              .map(
+                (item) =>
+                  item && (
+                    <Group key={item.label_id} noWrap spacing="xs">
+                      <MailLabelColorSwatch labelId={item.label_id} size={16} />
+                      <LabelName labelId={item.label_id} />
+                    </Group>
+                  ),
+              )}
+          </Group>
+        )}
+      </Group>
       <Container>
         {ReactHtmlParser(mail?.data.body ?? "", {
           transform: transformMailBody,
