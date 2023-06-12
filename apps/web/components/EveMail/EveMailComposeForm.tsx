@@ -3,7 +3,6 @@ import {
   Alert,
   Anchor,
   Button,
-  Container,
   Grid,
   Group,
   Stack,
@@ -17,9 +16,9 @@ import { HttpStatusCode, type AxiosError } from "axios";
 import { useSession } from "next-auth/react";
 
 import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
+import { EmailRecipientSearchMultiSelect } from "@jitaspace/ui";
 
 import { MailMessageEditor } from "~/components/EveMail/MailMessageEditor";
-import { EmailRecipientSearchMultiSelect } from "~/components/MultiSelect";
 
 export type EveMailComposeFormProps = {
   onSend?: () => void;
@@ -176,14 +175,10 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
             <Button type="submit">Send</Button>
           </Grid.Col>
         </Grid>
-        <Container>{JSON.stringify(form.values.recipients)}</Container>
         <EmailRecipientSearchMultiSelect
           label="Recipients"
           value={form.values.recipients}
-          onChange={(value) => {
-            console.log("RECIPIENTS CHANGED TO", value);
-            form.setFieldValue("recipients", value);
-          }}
+          onChange={(value) => form.setFieldValue("recipients", value)}
         />
         <Stack spacing={0}>
           <MailMessageEditor

@@ -3,5 +3,6 @@ export * from "./Badge";
 export * from "./Button";
 export * from "./ColorSwatch";
 export * from "./Indicator";
+export * from "./MultiSelect";
 export * from "./Text";
 export * from "./hooks";

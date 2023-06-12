@@ -26,10 +26,10 @@ import {
   GroupListIcon,
   InfoIcon,
 } from "@jitaspace/eve-icons";
+import { EveMailLabelMultiSelect } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxDataTable } from "~/components/MailboxTable";
-import { EveMailLabelMultiSelect } from "~/components/MultiSelect";
 import { MailLayout } from "~/layouts";
 
 export default function Page() {

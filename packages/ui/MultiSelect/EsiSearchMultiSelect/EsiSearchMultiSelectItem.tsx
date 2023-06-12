@@ -9,7 +9,9 @@ import {
 } from "@mantine/core";
 
 import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client";
-import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
+
+import { EveEntityAvatar } from "../../Avatar";
+import { EveEntityName } from "../../Text";
 
 export type EsiSearchMultiSelectItemProps = SelectItemProps & {
   category: GetCharactersCharacterIdSearchCategoriesItem;

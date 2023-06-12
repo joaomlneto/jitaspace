@@ -6,15 +6,14 @@ import {
   type MultiSelectValueProps,
 } from "@mantine/core";
 
-import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
+import { EveEntityAvatar } from "../../Avatar";
+import { EveEntityName } from "../../Text";
 
-export function EmailLabelMultiSelectValue({
+export function EsiSearchMultiSelectValue({
   value,
   onRemove,
   ...others
-}: Omit<MultiSelectValueProps, "value"> & {
-  value: string | number;
-}) {
+}: MultiSelectValueProps & { value: string; category: string }) {
   return (
     <div {...others}>
       <Box
@@ -33,9 +32,11 @@ export function EmailLabelMultiSelectValue({
           borderRadius: theme.radius.sm,
         })}
       >
-        <MailLabelColorSwatch labelId={value ?? 1} size={16} mr={10} />
-        <LabelName sx={{ lineHeight: 1, fontSize: rem(12) }} labelId={value} />
-
+        <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
+        <EveEntityName
+          entityId={value}
+          sx={{ lineHeight: 1, fontSize: rem(12) }}
+        />
         <CloseButton
           onMouseDown={onRemove}
           variant="transparent"

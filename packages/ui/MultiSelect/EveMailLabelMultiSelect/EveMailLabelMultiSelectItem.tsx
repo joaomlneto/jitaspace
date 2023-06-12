@@ -1,7 +1,8 @@
 import React, { forwardRef } from "react";
 import { Badge, Group, type SelectItemProps } from "@mantine/core";
 
-import { LabelName, MailLabelColorSwatch } from "../../../../../packages/ui";
+import { MailLabelColorSwatch } from "../../ColorSwatch";
+import { LabelName } from "../../Text";
 
 export const EveMailLabelMultiSelectItem = forwardRef<
   HTMLDivElement,
