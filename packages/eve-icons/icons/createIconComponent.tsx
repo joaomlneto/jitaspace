@@ -1,7 +1,7 @@
 import { memo } from "react";
-import Image, { ImageProps, StaticImageData } from "next/image";
+import Image, { type ImageProps, type StaticImageData } from "next/image";
 
-import { IconVersion, useEveIconsConfig } from "../context";
+import { useEveIconsConfig, type IconVersion } from "../context";
 
 type EveIconProps = Omit<ImageProps, "src"> & {
   variant?: IconVersion;

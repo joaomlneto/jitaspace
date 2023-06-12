@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useContext, useMemo } from "react";
+import React, { useContext, useMemo, type PropsWithChildren } from "react";
 
 export const ICON_VERSIONS = ["castor", "incarna", "rhea"] as const;
 
@@ -12,7 +12,9 @@ type EveIconsContextType = {
 
 const defaultContext: EveIconsContextType = {
   iconVersion: DEFAULT_ICON_VERSION,
-  setIconVersion: () => {},
+  setIconVersion: () => {
+    /* do nothing */
+  },
 };
 
 const EveIconsContext =
