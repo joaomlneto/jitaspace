@@ -103,7 +103,7 @@ export default function Page() {
           <Group noWrap>
             {/* FIXME: We know the type of this entity! */}
             {event?.data.owner_id && (
-              <EveEntityAvatar id={event?.data.owner_id} size="sm" />
+              <EveEntityAvatar entityId={event?.data.owner_id} size="sm" />
             )}{" "}
             <Text>{event?.data.owner_name}</Text>
           </Group>

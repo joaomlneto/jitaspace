@@ -12,11 +12,11 @@ export const EveEntityName = ({
   category,
   ...otherProps
 }: EveEntityNameProps) => {
-  const { name, loading, error } = useEsiName(entityId, category);
+  const { name, loading } = useEsiName(entityId, category);
 
   if (loading) {
     return (
-      <Skeleton visible={loading}>
+      <Skeleton>
         <Text {...otherProps}>{name ?? "Unknown"}</Text>
       </Skeleton>
     );

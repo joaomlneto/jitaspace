@@ -3,7 +3,7 @@ import React from "react";
 import {
   EsiSearchMultiSelect,
   type EsiSearchMultiSelectProps,
-} from "~/components/MultiSelect/EsiSearchMultiSelect";
+} from "~/components/MultiSelect/EsiSearchMultiSelect/EsiSearchMultiSelect";
 
 export type EmailRecipientSearchMultiSelect = Omit<
   EsiSearchMultiSelectProps,

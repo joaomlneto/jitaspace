@@ -1,3 +1,3 @@
 export { EmailLabelMultiSelect } from "./EmailLabelMultiSelect";
-export { EsiSearchMultiSelect } from "./EsiSearchMultiSelect";
+export { EsiSearchMultiSelect } from "./EsiSearchMultiSelect/EsiSearchMultiSelect";
 export { EmailRecipientSearchMultiSelect } from "./EmailRecipientSearchMultiSelect";

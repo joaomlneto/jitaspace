@@ -41,5 +41,5 @@ export const EveMailSenderAvatar = ({
     );
   }
 
-  return <EveEntityAvatar id={mail?.data.from} {...otherProps} />;
+  return <EveEntityAvatar entityId={mail?.data.from} {...otherProps} />;
 };

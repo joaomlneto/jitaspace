@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
+import { Avatar, type AvatarProps } from "@mantine/core";
 
 import { esiImageSizeClamp, getAvatarSize } from "@jitaspace/utils";
 
@@ -26,25 +26,17 @@ export const EveImageServerAvatar = memo(
     const imageSize = esiImageSizeClamp(avatarSize);
 
     return (
-      <Skeleton
-        visible={!id || !variation || !size}
-        radius={avatarSize}
-        height={avatarSize}
-        width={avatarSize}
-        circle
-      >
-        <Avatar
-          src={
-            id && category && variation
-              ? `https://images.evetech.net/${category}/${id}/${variation}?size=${imageSize}`
-              : undefined
-          }
-          size={size}
-          radius={size}
-          alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
-          {...avatarProps}
-        />
-      </Skeleton>
+      <Avatar
+        src={
+          id && category && variation
+            ? `https://images.evetech.net/${category}/${id}/${variation}?size=${imageSize}`
+            : undefined
+        }
+        size={size}
+        radius={size}
+        alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
+        {...avatarProps}
+      />
     );
   },
 );

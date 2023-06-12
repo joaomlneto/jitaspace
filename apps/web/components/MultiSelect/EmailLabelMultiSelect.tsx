@@ -1,14 +1,11 @@
-import React, { forwardRef } from "react";
+import React from "react";
 import {
-  Badge,
   Box,
   CloseButton,
-  Group,
   MultiSelect,
   rem,
   type MultiSelectProps,
   type MultiSelectValueProps,
-  type SelectItemProps,
 } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
@@ -16,23 +13,9 @@ import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
 import { humanLabelName } from "@jitaspace/utils";
 
-type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data">;
+import { EmailLabelMultiSelectItem } from "~/components/MultiSelect/EsiSearchMultiSelect";
 
-export const EmailLabelMultiSelectItem = forwardRef<
-  HTMLDivElement,
-  SelectItemProps & { unreadCount: number }
->(({ value, unreadCount, ...others }, ref) => {
-  return (
-    <Group ref={ref} {...others} position="apart" noWrap>
-      <Group noWrap>
-        <MailLabelColorSwatch labelId={value ?? 1} size={16} />
-        <LabelName labelId={value} />
-      </Group>
-      {unreadCount > 0 && <Badge>{unreadCount}</Badge>}
-    </Group>
-  );
-});
-EmailLabelMultiSelectItem.displayName = "EmailLabelMultiSelectItem";
+type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data">;
 
 export function EmailLabelMultiSelectValue({
   value,

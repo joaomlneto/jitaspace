@@ -1,0 +1,44 @@
+import React, { forwardRef } from "react";
+import { Avatar, Badge, Group, rem, Text } from "@mantine/core";
+
+import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
+
+import { type EsiSearchMultiSelectItemProps } from "~/components/MultiSelect/EsiSearchMultiSelect/EsiSearchMultiSelect";
+
+export const EsiSearchMultiSelectItem = forwardRef<
+  HTMLDivElement,
+  EsiSearchMultiSelectItemProps
+>(({ value, category, ...others }, ref) => {
+  return (
+    <Group noWrap position="apart" ref={ref} {...others}>
+      <Group noWrap spacing="xs">
+        {value ? (
+          <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
+        ) : (
+          <Avatar size={16} mr={10} radius="xl" />
+        )}
+        {value ? (
+          <EveEntityName
+            entityId={value}
+            category={category}
+            sx={{ lineHeight: 1, fontSize: rem(12) }}
+          />
+        ) : (
+          <Text sx={{ lineHeight: 1, fontSize: rem(12) }}>Unknown</Text>
+        )}
+      </Group>
+      <Badge size="xs" variant="subtle">
+        {category}
+      </Badge>
+    </Group>
+  );
+});
+EsiSearchMultiSelectItem.displayName = "EsiSearchMultiselectItem";
+
+/*
+              <EveEntityName
+                entityId={value}
+                category={category}
+                sx={{ lineHeight: 1, fontSize: rem(12) }}
+              />
+*/

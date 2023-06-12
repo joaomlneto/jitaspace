@@ -1,35 +1,49 @@
 import { memo } from "react";
-import { Avatar, type AvatarProps } from "@mantine/core";
+import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 
 import { useEsiName } from "../hooks";
 import { AllianceAvatar } from "./AllianceAvatar";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
-import { EveImageServerAvatar } from "./EveImageServerAvatar";
 
 export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
-  id: string | number;
+  entityId: string | number;
 };
 
 export const EveEntityAvatar = memo(
-  ({ id, ...otherProps }: EveEntityAvatarProps) => {
-    const { category, loading, error } = useEsiName(id);
-    id = typeof id === "string" ? parseInt(id) : id;
+  ({ entityId, ...otherProps }: EveEntityAvatarProps) => {
+    const { category, loading, error } = useEsiName(entityId);
+    entityId = typeof entityId === "string" ? parseInt(entityId) : entityId;
+
+    if (loading) {
+      <Skeleton
+        radius={otherProps.radius}
+        height={otherProps.size}
+        width={otherProps.size}
+        circle
+      >
+        <Avatar
+          size={otherProps.size}
+          radius={otherProps.radius}
+          {...otherProps}
+        />
+      </Skeleton>;
+    }
 
     if (!category || error) {
-      return <EveImageServerAvatar {...otherProps} />;
+      return <Avatar {...otherProps} />;
     }
 
     if (category === "character" || category === "agent") {
-      return <CharacterAvatar characterId={id} {...otherProps} />;
+      return <CharacterAvatar characterId={entityId} {...otherProps} />;
     }
 
     if (category === "corporation") {
-      return <CorporationAvatar corporationId={id} {...otherProps} />;
+      return <CorporationAvatar corporationId={entityId} {...otherProps} />;
     }
 
     if (category === "alliance") {
-      return <AllianceAvatar allianceId={id} {...otherProps} />;
+      return <AllianceAvatar allianceId={entityId} {...otherProps} />;
     }
 
     // FIXME: Add more ranges!

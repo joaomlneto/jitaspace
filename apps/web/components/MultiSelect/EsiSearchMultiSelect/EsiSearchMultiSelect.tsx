@@ -1,10 +1,7 @@
-import React, { forwardRef } from "react";
+import React from "react";
 import {
-  Avatar,
-  Badge,
   Box,
   CloseButton,
-  Group,
   Loader,
   MultiSelect,
   rem,
@@ -20,14 +17,9 @@ import {
   useGetCharactersCharacterIdSearch,
   type GetCharactersCharacterIdSearchCategoriesItem,
 } from "@jitaspace/esi-client";
-import {
-  AllianceAvatar,
-  CharacterAvatar,
-  CorporationAvatar,
-  EveEntityAvatar,
-  EveEntityName,
-  TypeAvatar,
-} from "@jitaspace/ui";
+import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
+
+import { EsiSearchMultiSelectItem } from "./EsiSearchMultiSelectItem";
 
 export type EsiSearchMultiSelectProps = Omit<
   MultiSelectProps,
@@ -64,11 +56,14 @@ export function EsiSearchMultiselectValue({
           borderRadius: theme.radius.sm,
         })}
       >
-        <EveEntityAvatar id={value} size={16} mr={10} radius="xl" />
-        <EveEntityName
-          entityId={value}
-          sx={{ lineHeight: 1, fontSize: rem(12) }}
-        />
+        <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
+        {false && (
+          <EveEntityName
+            entityId={value}
+            sx={{ lineHeight: 1, fontSize: rem(12) }}
+          />
+        )}
+        <Text sx={{ lineHeight: 1, fontSize: rem(12) }}>ASDASD!</Text>
         <CloseButton
           onMouseDown={onRemove}
           variant="transparent"
@@ -80,61 +75,6 @@ export function EsiSearchMultiselectValue({
     </div>
   );
 }
-
-export const EsiSearchMultiSelectItem = forwardRef<
-  HTMLDivElement,
-  EsiSearchMultiSelectItemProps
->(({ value, category, ...others }, ref) => {
-  const AvatarComponent = () => {
-    // TODO: should support other categories for better performance!
-    if (!value) {
-      return <Avatar size={16} mr={10} radius="xl" />;
-    }
-    switch (category) {
-      case "alliance":
-        return (
-          <AllianceAvatar allianceId={value} size={16} mr={10} radius="xl" />
-        );
-      case "corporation":
-        return (
-          <CorporationAvatar
-            corporationId={value}
-            size={16}
-            mr={10}
-            radius="xl"
-          />
-        );
-      case "character":
-        return (
-          <CharacterAvatar characterId={value} size={16} mr={10} radius="xl" />
-        );
-      case "inventory_type":
-        return <TypeAvatar typeId={value} size={16} mr={10} radius="xl" />;
-      default:
-        return <EveEntityAvatar id={value} size={16} mr={10} radius="xl" />;
-    }
-  };
-  return (
-    <Group noWrap position="apart" ref={ref} {...others}>
-      <Group noWrap spacing="xs">
-        <AvatarComponent />
-        {value ? (
-          <EveEntityName
-            entityId={value}
-            category={category}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
-          />
-        ) : (
-          <Text>Unknown</Text>
-        )}
-      </Group>
-      <Badge size="xs" variant="subtle">
-        {category}
-      </Badge>
-    </Group>
-  );
-});
-EsiSearchMultiSelectItem.displayName = "EsiSearchMultiselectItem";
 
 export function EsiSearchMultiSelect({
   debounceTime,
