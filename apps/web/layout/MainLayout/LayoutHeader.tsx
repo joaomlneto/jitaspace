@@ -26,7 +26,7 @@ import {
 } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
 
-import { CalendarNeocomIcon, EveMailNeocomIcon } from "@jitaspace/eve-icons";
+import { CalendarIcon, EveMailIcon } from "@jitaspace/eve-icons";
 import {
   LoginWithEveOnlineButton,
   TotalUnreadMailsIndicator,
@@ -201,7 +201,7 @@ export function LayoutHeader() {
               >
                 <Link href="/mail" className={classes.link}>
                   <TotalUnreadMailsIndicator position="bottom-end" offset={8}>
-                    <EveMailNeocomIcon width={32} height={32} alt="EveMail" />
+                    <EveMailIcon width={32} height={32} alt="EveMail" />
                   </TotalUnreadMailsIndicator>
                 </Link>
               </Tooltip>
@@ -212,7 +212,7 @@ export function LayoutHeader() {
                 openDelay={200}
               >
                 <Link href="/calendar" className={classes.link}>
-                  <CalendarNeocomIcon width={32} height={32} alt="Calendar" />
+                  <CalendarIcon width={32} height={32} alt="Calendar" />
                 </Link>
               </Tooltip>
             </Group>
@@ -256,14 +256,14 @@ export function LayoutHeader() {
 
           <Link href="/mail" className={classes.link}>
             <Group>
-              <EveMailNeocomIcon width={32} height={32} alt="EveMail" />
+              <EveMailIcon width={32} height={32} alt="EveMail" />
               <Text>EveMail</Text>
             </Group>
           </Link>
 
           <Link href="/calendar" className={classes.link}>
             <Group>
-              <CalendarNeocomIcon width={32} height={32} alt="Calendar" />
+              <CalendarIcon width={32} height={32} alt="Calendar" />
               <Text>Calendar</Text>
             </Group>
           </Link>

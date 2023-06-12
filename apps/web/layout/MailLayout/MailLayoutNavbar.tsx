@@ -16,7 +16,7 @@ import { IconMailbox, IconMailFast, IconTag } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { EveMailNeocomIcon, EveMailTagIcon } from "@jitaspace/eve-icons";
+import { EveMailIcon, EveMailTagIcon } from "@jitaspace/eve-icons";
 import {
   CharacterAvatar,
   LabelName,
@@ -102,7 +102,7 @@ export default function MailLayoutNavbar() {
           <Group position="apart">
             <UnstyledButton component={Link} href="/">
               <Group>
-                <EveMailNeocomIcon width={32} height={32} alt="EveMail" />
+                <EveMailIcon width={32} height={32} alt="EveMail" />
                 <Text fw="bold">EveMail</Text>
               </Group>
             </UnstyledButton>

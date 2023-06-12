@@ -11,7 +11,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 
-import { CalendarNeocomIcon, EveMailNeocomIcon } from "@jitaspace/eve-icons";
+import { CalendarIcon, EveMailIcon } from "@jitaspace/eve-icons";
 
 import { MainLayout } from "~/layout";
 
@@ -26,7 +26,7 @@ const apps: {
     description:
       "Access your EVE Online correspondence whilst out of the game.",
     icon: ({ alt, ...otherProps }) => (
-      <EveMailNeocomIcon alt={alt ?? "Mail"} {...otherProps} />
+      <EveMailIcon alt={alt ?? "Mail"} {...otherProps} />
     ),
     href: "/mail",
   },
@@ -35,7 +35,7 @@ const apps: {
     description:
       "View upcoming events and meetings on your EVE Online calendar.",
     icon: ({ alt, ...otherProps }) => (
-      <CalendarNeocomIcon alt={alt ?? "Mail"} {...otherProps} />
+      <CalendarIcon alt={alt ?? "Mail"} {...otherProps} />
     ),
     href: "/calendar",
   },
@@ -44,7 +44,7 @@ const apps: {
     description:
       "Manage your skills and skills points on your EVE Online character.",
     icon: ({ alt, ...otherProps }) => (
-      <CalendarNeocomIcon alt={alt ?? "Mail"} {...otherProps} />
+      <CalendarIcon alt={alt ?? "Mail"} {...otherProps} />
     ),
     href: "/skills",
   },

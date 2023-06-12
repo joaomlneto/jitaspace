@@ -21,7 +21,7 @@ import useSWRInfinite from "swr/infinite";
 
 import { type GetCharactersCharacterIdMail200Item } from "@jitaspace/esi-client";
 import {
-  ComposeMailIcon,
+  EvemailComposeIcon,
   EveMailTagIcon,
   GroupListIcon,
   InfoIcon,
@@ -123,7 +123,7 @@ export default function Page() {
                       })
                     }
                   >
-                    <ComposeMailIcon
+                    <EvemailComposeIcon
                       alt="Compose new message"
                       width={32}
                       height={32}
