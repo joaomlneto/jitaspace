@@ -29,8 +29,8 @@ import {
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxDataTable } from "~/components/MailboxTable";
-import { EmailLabelMultiSelect } from "~/components/MultiSelect";
-import { MailLayout } from "~/layout";
+import { EveMailLabelMultiSelect } from "~/components/MultiSelect";
+import { MailLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
@@ -79,7 +79,7 @@ export default function Page() {
             Authorization: `Bearer ${session?.accessToken}`,
           },
         }).then((r) => r.json()),
-      { refreshInterval: 10000, revalidateAll: true },
+      { refreshInterval: 30000, revalidateAll: true },
     );
 
   const mergedData = data?.flat() ?? [];
@@ -99,13 +99,6 @@ export default function Page() {
           )}
           <Group>
             <Title order={1}>EveMail</Title>
-            {(isLoading || isValidating) && (
-              <Group>
-                <Loader size="xs" />
-                {isLoading && <Text>Loading</Text>}
-                {isValidating && <Text>Refreshing</Text>}
-              </Group>
-            )}
           </Group>
           <Grid align="flex-end" justify="space-between">
             <Grid.Col span="content">
@@ -178,10 +171,15 @@ export default function Page() {
                     <InfoIcon alt="FAQ" width={32} height={32} />
                   </ActionIcon>
                 </Tooltip>
+                {(isLoading || isValidating) && (
+                  <Tooltip label="Loading messages...">
+                    <Loader size="sm" />
+                  </Tooltip>
+                )}
               </Group>
             </Grid.Col>
             <Grid.Col span="content">
-              <EmailLabelMultiSelect
+              <EveMailLabelMultiSelect
                 size="xs"
                 style={{ minWidth: "240px" }}
                 label="Filter by label"

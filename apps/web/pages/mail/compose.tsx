@@ -1,8 +1,8 @@
 import React, { type ReactElement } from "react";
 import { Container, Title } from "@mantine/core";
 
-import { EveMailComposeForm } from "~/components/EveMail/EveMailComposeForm";
-import { MailLayout } from "~/layout";
+import { EveMailComposeForm } from "~/components/EveMail";
+import { MailLayout } from "~/layouts";
 
 export default function Page() {
   return (

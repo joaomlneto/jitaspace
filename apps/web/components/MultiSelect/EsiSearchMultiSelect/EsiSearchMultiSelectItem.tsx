@@ -1,9 +1,19 @@
 import React, { forwardRef } from "react";
-import { Avatar, Badge, Group, rem, Text } from "@mantine/core";
+import {
+  Avatar,
+  Badge,
+  Group,
+  rem,
+  Text,
+  type SelectItemProps,
+} from "@mantine/core";
 
+import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client";
 import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
 
-import { type EsiSearchMultiSelectItemProps } from "~/components/MultiSelect/EsiSearchMultiSelect/EsiSearchMultiSelect";
+export type EsiSearchMultiSelectItemProps = SelectItemProps & {
+  category: GetCharactersCharacterIdSearchCategoriesItem;
+};
 
 export const EsiSearchMultiSelectItem = forwardRef<
   HTMLDivElement,

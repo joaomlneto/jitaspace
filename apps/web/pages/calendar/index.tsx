@@ -23,7 +23,7 @@ import {
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
 
-import { MainLayout } from "~/layout";
+import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const { data: session } = useSession();

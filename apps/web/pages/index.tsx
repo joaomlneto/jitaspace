@@ -13,7 +13,7 @@ import {
 
 import { CalendarIcon, EveMailIcon } from "@jitaspace/eve-icons";
 
-import { MainLayout } from "~/layout";
+import { MainLayout } from "~/layouts";
 
 const apps: {
   title: string;

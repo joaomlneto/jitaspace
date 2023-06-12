@@ -1,14 +1,5 @@
 import React from "react";
-import {
-  Box,
-  CloseButton,
-  Loader,
-  MultiSelect,
-  rem,
-  type MultiSelectProps,
-  type MultiSelectValueProps,
-  type SelectItemProps,
-} from "@mantine/core";
+import { Loader, MultiSelect, type MultiSelectProps } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useSession } from "next-auth/react";
 
@@ -16,9 +7,9 @@ import {
   useGetCharactersCharacterIdSearch,
   type GetCharactersCharacterIdSearchCategoriesItem,
 } from "@jitaspace/esi-client";
-import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
 
 import { EsiSearchMultiSelectItem } from "./EsiSearchMultiSelectItem";
+import { EsiSearchMultiSelectValue } from "./EsiSearchMultiSelectValue";
 
 export type EsiSearchMultiSelectProps = Omit<
   MultiSelectProps,
@@ -27,50 +18,6 @@ export type EsiSearchMultiSelectProps = Omit<
   categories: GetCharactersCharacterIdSearchCategoriesItem[];
   debounceTime?: number;
 };
-
-export type EsiSearchMultiSelectItemProps = SelectItemProps & {
-  category: GetCharactersCharacterIdSearchCategoriesItem;
-};
-
-export function EsiSearchMultiselectValue({
-  value,
-  onRemove,
-  ...others
-}: MultiSelectValueProps & { value: string; category: string }) {
-  return (
-    <div {...others}>
-      <Box
-        sx={(theme) => ({
-          display: "flex",
-          cursor: "default",
-          alignItems: "center",
-          backgroundColor:
-            theme.colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
-          border: `${rem(1)} solid ${
-            theme.colorScheme === "dark"
-              ? theme.colors.dark[7]
-              : theme.colors.gray[4]
-          }`,
-          paddingLeft: theme.spacing.xs,
-          borderRadius: theme.radius.sm,
-        })}
-      >
-        <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
-        <EveEntityName
-          entityId={value}
-          sx={{ lineHeight: 1, fontSize: rem(12) }}
-        />
-        <CloseButton
-          onMouseDown={onRemove}
-          variant="transparent"
-          size={22}
-          iconSize={14}
-          tabIndex={-1}
-        />
-      </Box>
-    </div>
-  );
-}
 
 export function EsiSearchMultiSelect({
   debounceTime,
@@ -113,7 +60,7 @@ export function EsiSearchMultiSelect({
     ),
     // we need to include the already-selected items in the list, otherwise
     // the MultiSelect will not show them at all in the value field!
-    ...value.map((id) => ({
+    ...(otherProps.value ?? value).map((id) => ({
       label: id,
       value: id,
       category: undefined,
@@ -123,28 +70,30 @@ export function EsiSearchMultiSelect({
   const isLoadingData: boolean =
     isLoading || isValidating || searchValue !== debouncedSearchValue;
 
+  const onChange = (value: string[]) => {
+    setValue(value);
+    otherProps.onChange?.(value);
+  };
+
   return (
     <MultiSelect
       filter={(value: string, selected: boolean) => !selected}
       data={data}
       value={otherProps.value ?? value}
-      onChange={(value: string[]) => {
-        setValue(value);
-        otherProps.onChange?.(value);
-      }}
+      onChange={onChange}
       searchable
       searchValue={searchValue}
       onSearchChange={onSearchChange}
       itemComponent={EsiSearchMultiSelectItem}
-      valueComponent={EsiSearchMultiselectValue}
+      valueComponent={EsiSearchMultiSelectValue}
       clearSearchOnChange={false}
       rightSection={isLoadingData && <Loader size="sm" />}
       nothingFound={
-        searchValue.length >= 3
-          ? isLoadingData
-            ? "Searching…"
-            : "No results found"
-          : "Type at least 3 characters to search for results"
+        searchValue.length < 3
+          ? "Type at least 3 characters to search for results"
+          : isLoadingData
+          ? "Searching…"
+          : "No results found"
       }
       {...otherProps}
     />

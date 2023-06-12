@@ -19,7 +19,7 @@ import {
 } from "@jitaspace/esi-client";
 import { CharacterAvatar, CharacterName, EveEntityAvatar } from "@jitaspace/ui";
 
-import { MainLayout } from "~/layout";
+import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();

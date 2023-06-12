@@ -3,6 +3,7 @@ import {
   Alert,
   Anchor,
   Button,
+  Container,
   Grid,
   Group,
   Stack,
@@ -17,10 +18,10 @@ import { useSession } from "next-auth/react";
 
 import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
 
-import { MailMessageEditor } from "~/components/EveMail";
+import { MailMessageEditor } from "~/components/EveMail/MailMessageEditor";
 import { EmailRecipientSearchMultiSelect } from "~/components/MultiSelect";
 
-type EveMailComposeFormProps = {
+export type EveMailComposeFormProps = {
   onSend?: () => void;
 };
 
@@ -142,7 +143,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
               }
             })();
           },
-          onCancel() {
+          onClose() {
             showNotification({
               message: "Message not sent",
             });
@@ -175,15 +176,15 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
             <Button type="submit">Send</Button>
           </Grid.Col>
         </Grid>
-        <Grid>
-          <Grid.Col span="auto">
-            <EmailRecipientSearchMultiSelect
-              label="Recipients"
-              value={form.values.recipients}
-              onChange={(value) => form.setFieldValue("recipients", value)}
-            />
-          </Grid.Col>
-        </Grid>
+        <Container>{JSON.stringify(form.values.recipients)}</Container>
+        <EmailRecipientSearchMultiSelect
+          label="Recipients"
+          value={form.values.recipients}
+          onChange={(value) => {
+            console.log("RECIPIENTS CHANGED TO", value);
+            form.setFieldValue("recipients", value);
+          }}
+        />
         <Stack spacing={0}>
           <MailMessageEditor
             content={form.values.body}

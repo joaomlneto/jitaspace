@@ -10,7 +10,7 @@ import {
   Title,
 } from "@mantine/core";
 
-import { MainLayout } from "~/layout";
+import { MainLayout } from "~/layouts";
 
 const useStyles = createStyles((theme) => ({
   root: {

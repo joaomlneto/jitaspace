@@ -2,7 +2,7 @@ import React, { type ReactElement } from "react";
 import { Container, Title } from "@mantine/core";
 
 import { EveMailFaqAccordion } from "~/components/EveMail";
-import { MailLayout } from "~/layout";
+import { MailLayout } from "~/layouts";
 
 export default function Page() {
   return (

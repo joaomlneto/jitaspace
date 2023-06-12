@@ -1,6 +1,6 @@
-export { EveMailComposeForm } from "./EveMailComposeForm";
-export { MailingListsTable } from "./MailingListsTable";
-export { LabelManagementTable } from "./LabelManagementTable";
-export { EveMailFaqAccordion } from "./EveMailFaqAccordion";
-export { MessagePanel } from "./MessagePanel";
-export { MailMessageEditor } from "./MailMessageEditor";
+export * from "./EveMailComposeForm";
+export * from "./MailingListsTable";
+export * from "./LabelManagementTable";
+export * from "./EveMailFaqAccordion";
+export * from "./MessagePanel";
+export * from "./MailMessageEditor";

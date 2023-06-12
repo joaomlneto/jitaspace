@@ -2,20 +2,11 @@ import React from "react";
 import {
   Box,
   CloseButton,
-  MultiSelect,
   rem,
-  type MultiSelectProps,
   type MultiSelectValueProps,
 } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
-import { humanLabelName } from "@jitaspace/utils";
-
-import { EmailLabelMultiSelectItem } from "~/components/MultiSelect/EsiSearchMultiSelect";
-
-type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data">;
 
 export function EmailLabelMultiSelectValue({
   value,
@@ -54,36 +45,5 @@ export function EmailLabelMultiSelectValue({
         />
       </Box>
     </div>
-  );
-}
-
-export function EmailLabelMultiSelect(props: EmailLabelMultiSelectProps) {
-  const { data: session } = useSession();
-
-  const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    session?.user.id ?? 0,
-    undefined,
-    {
-      swr: {
-        enabled: !!session?.user?.id,
-      },
-    },
-  );
-  return (
-    <MultiSelect
-      label="Labels"
-      clearable
-      data={
-        labels?.data.labels?.map((label) => ({
-          value: `${label.label_id}`,
-          label: humanLabelName(label),
-          unreadCount: label.unread_count ?? 0,
-        })) ?? []
-      }
-      itemComponent={EmailLabelMultiSelectItem}
-      valueComponent={EmailLabelMultiSelectValue}
-      //placeholder="Choose labels"
-      {...props}
-    />
   );
 }

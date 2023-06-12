@@ -3,7 +3,7 @@ import { Button, Container, Group } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
 import { LabelManagementTable } from "~/components/EveMail";
-import { MailLayout } from "~/layout";
+import { MailLayout } from "~/layouts";
 
 export default function Page() {
   return (

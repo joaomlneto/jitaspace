@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { Container } from "@mantine/core";
 
 import { MessagePanel } from "~/components/EveMail";
-import { MailLayout } from "~/layout";
+import { MailLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();

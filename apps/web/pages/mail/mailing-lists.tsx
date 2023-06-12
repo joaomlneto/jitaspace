@@ -2,7 +2,7 @@ import React, { type ReactElement } from "react";
 import { Container, Stack, Title } from "@mantine/core";
 
 import { MailingListsTable } from "~/components/EveMail";
-import { MailLayout } from "~/layout";
+import { MailLayout } from "~/layouts";
 
 export default function Page() {
   return (
