@@ -10,3 +10,8 @@ export default function Page() {
 Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };
+
+Page.requiredScopes = [
+  "esi-skills.read_skills.v1",
+  "esi-skills.read_skillqueue.v1",
+];

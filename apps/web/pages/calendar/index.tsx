@@ -171,3 +171,8 @@ export default function Page() {
 Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };
+
+Page.requiredScopes = [
+  "esi-calendar.read_calendar_events.v1",
+  "esi-calendar.respond_calendar_events.v1",
+];

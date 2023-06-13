@@ -622,3 +622,7 @@ export const scopeDescriptions: {
   "esi-wallet.read_corporation_wallets.v1":
     "Allows reading of a character's corporation's wallets, journal and transaction history, if the character has roles to do so.",
 };
+
+export function getScopeDescription(scope: ESIScope): string {
+  return scopeDescriptions[scope] ?? "";
+}

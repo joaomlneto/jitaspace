@@ -47,15 +47,7 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         url: "https://login.eveonline.com/v2/oauth/authorize",
         params: {
-          scope: [
-            "esi-mail.organize_mail.v1",
-            "esi-mail.read_mail.v1",
-            "esi-mail.send_mail.v1",
-            "esi-search.search_structures.v1",
-            "esi-characters.read_contacts.v1",
-            "esi-calendar.read_calendar_events.v1",
-            "esi-calendar.respond_calendar_events.v1",
-          ].join(" "),
+          scope: [].join(" "),
         },
       },
       profile(profile: EVEOnlineProfile) {

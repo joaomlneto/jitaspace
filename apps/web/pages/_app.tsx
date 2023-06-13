@@ -15,14 +15,17 @@ import { Analytics } from "@vercel/analytics/react";
 import { SessionProvider, signIn, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 
+import { type ESIScope } from "@jitaspace/esi-client";
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
 import { contextModals } from "~/components/Modals";
+import { ScopeGuard } from "~/components/ScopeGuard";
 import RouterTransition from "../components/RouterTransition";
 import AxiosContextProvider from "../contexts/axios";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;
+  requiredScopes?: ESIScope[];
 };
 
 type AppPropsWithLayout = AppProps & {
@@ -46,6 +49,7 @@ export default function App({
   pageProps: { session, ...pageProps },
 }: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
+  const requiredScopes = Component.requiredScopes ?? [];
 
   useEffect(() => {
     if ((session as { error?: string })?.error === "RefreshAccessTokenError") {
@@ -97,7 +101,11 @@ export default function App({
                   modals={contextModals}
                   modalProps={{ centered: true }}
                 >
-                  {getLayout(<Component {...pageProps} />)}
+                  {getLayout(
+                    <ScopeGuard requiredScopes={requiredScopes}>
+                      <Component {...pageProps} />
+                    </ScopeGuard>,
+                  )}
                 </ModalsProvider>
               </MantineProvider>
             </EveIconsContextProvider>
