@@ -21,7 +21,7 @@
   "dependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.0.2",
     "@jitaspace/eslint-config": "^0.1.0",
-    "@manypkg/cli": "^0.20.0",
+    "@manypkg/cli": "^0.21.0",
     "@types/prettier": "^2.7.2",
     "eslint": "^8.39.0",
     "jitaspace": "link:",
