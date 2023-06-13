@@ -66,9 +66,7 @@ export function RequestPermissionsBanner({
   requiredScopes,
 }: RequestPermissionsBannerProps) {
   const { classes } = useStyles();
-  const { grantedScopes, error } = useTokenScopes();
-
-  console.log("GRANTED SCOPES IS", grantedScopes, error);
+  const { grantedScopes } = useTokenScopes();
 
   const [openGrantedScopesTable, { toggle: toggleGrantedScopesTable }] =
     useDisclosure(false);

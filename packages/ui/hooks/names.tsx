@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { createCache, useCache } from "@react-hook/cache";
-import { type AxiosError } from "axios";
 
 import {
   getAlliancesAllianceId,
@@ -58,25 +57,9 @@ const resolveNameOfKnownCategory = async (
       );
     case "agent":
     case "character":
-      return getCharactersCharacterId(Number(id), {}, {})
-        .then((data) => {
-          return data.data.name;
-        })
-        .catch((e) => {
-          console.log("XXX");
-          console.log("XXX");
-          console.log("XXX");
-          console.log("XXX");
-          console.log("XXX");
-          const response: { error: string } = (e as AxiosError).response
-            ?.data as {
-            error: string;
-          };
-          console.log("RESPONSE", response);
-          const errorMessage = response.error;
-          console.log("ERROR MESSAGE", errorMessage);
-          throw e;
-        });
+      return getCharactersCharacterId(Number(id), {}, {}).then((data) => {
+        return data.data.name;
+      });
     default:
       throw new Error(`Unknown category ${category}!`);
   }
