@@ -1,30 +1,9 @@
 import React from "react";
-import { Accordion, Group, List, Stack, Text, Title } from "@mantine/core";
-
-import { CharacterAvatar } from "@jitaspace/ui";
+import { Accordion, List, Stack, Text, Title } from "@mantine/core";
 
 export function EveMailFaqAccordion() {
   return (
     <Accordion variant="separated" p="xl">
-      <Accordion.Item value="about">
-        <Accordion.Control>
-          <Title order={4}>What is this website?</Title>
-        </Accordion.Control>
-        <Accordion.Panel>
-          <Stack>
-            <Text>
-              This is a simple website to allow you to view your EVE Online
-              correspondence whilst out of the game. This was a weekend project
-              to learn a bit more about Next.js and React. It is not perfect,
-              but it works. Let me know if something is broken!
-            </Text>
-            <Group spacing="xl" pl="xl" position="right" mr="xl" pr="xl">
-              <CharacterAvatar characterId={401563624} radius="xl" />
-              <Text>Joao Neto</Text>
-            </Group>
-          </Stack>
-        </Accordion.Panel>
-      </Accordion.Item>
       <Accordion.Item value="privacy">
         <Accordion.Control>
           <Title order={4}>Can you see my emails?</Title>
@@ -55,13 +34,6 @@ export function EveMailFaqAccordion() {
             <List.Item>
               Add privacy controls: if you just want to read emails, you should
               be able to just give enough scopes to do that.
-            </List.Item>
-            <List.Item>
-              Reduce API calls to ESI, as it is currently quite slow.
-            </List.Item>
-            <List.Item>
-              Improve the list of recipients when composing a message. Replace
-              the current Select component with a MultiSelect component.
             </List.Item>
           </List>
         </Accordion.Panel>
