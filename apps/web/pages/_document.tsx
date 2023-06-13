@@ -1,3 +1,4 @@
+import React from "react";
 import Document, {
   Head,
   Html,
@@ -5,7 +6,7 @@ import Document, {
   NextScript,
   type DocumentContext,
 } from "next/document";
-import { ServerStyles, createStylesServer } from "@mantine/next";
+import { createStylesServer, ServerStyles } from "@mantine/next";
 
 // optional: you can provide your cache as a first argument in createStylesServer function
 const stylesServer = createStylesServer();
@@ -29,7 +30,7 @@ export default class _Document extends Document {
     };
   }
 
-  render(): JSX.Element {
+  render(): React.ReactElement {
     return (
       <Html>
         <Head>
