@@ -10,10 +10,10 @@ import {
   postCharactersCharacterIdMailLabels,
   PostCharactersCharacterIdMailLabelsBodyColor,
 } from "@jitaspace/esi-client";
+import { MailLabelColorSelect } from "@jitaspace/ui";
 import { randomProperty } from "@jitaspace/utils";
 
 import { LabelManagementTable } from "~/components/EveMail";
-import { MailLabelColorSelect } from "~/components/Select";
 
 export function ManageMailLabelsModal({
   context,

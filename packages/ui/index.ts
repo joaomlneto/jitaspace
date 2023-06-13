@@ -4,5 +4,6 @@ export * from "./Button";
 export * from "./ColorSwatch";
 export * from "./Indicator";
 export * from "./MultiSelect";
+export * from "./Select";
 export * from "./Text";
 export * from "./hooks";

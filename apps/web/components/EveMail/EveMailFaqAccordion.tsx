@@ -3,8 +3,6 @@ import { Accordion, Group, List, Stack, Text, Title } from "@mantine/core";
 
 import { CharacterAvatar } from "@jitaspace/ui";
 
-import { PermissionsTable } from "~/components/Permissions";
-
 export function EveMailFaqAccordion() {
   return (
     <Accordion variant="separated" p="xl">
@@ -42,22 +40,6 @@ export function EveMailFaqAccordion() {
               return it to you.
             </Text>
           </Stack>
-        </Accordion.Panel>
-      </Accordion.Item>
-      <Accordion.Item value="scopes">
-        <Accordion.Control>
-          <Title order={4}>What scopes do you ask for, and why?</Title>
-        </Accordion.Control>
-        <Accordion.Panel>
-          <PermissionsTable
-            scopes={[
-              "esi-mail.read_mail.v1",
-              "esi-mail.organize_mail.v1",
-              "esi-mail.send_mail.v1",
-              "esi-search.search_structures.v1",
-              "esi-characters.read_contacts.v1",
-            ]}
-          />
         </Accordion.Panel>
       </Accordion.Item>
       <Accordion.Item value="roadmap">
