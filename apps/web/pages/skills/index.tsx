@@ -1,10 +1,17 @@
 import React, { type ReactElement } from "react";
-import { Container } from "@mantine/core";
+import { Container, Stack, Text, Title } from "@mantine/core";
 
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
-  return <Container>Success!</Container>;
+  return (
+    <Container>
+      <Stack spacing="xl">
+        <Title>Skills</Title>
+        <Text>Coming Soon!</Text>
+      </Stack>
+    </Container>
+  );
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
