@@ -210,21 +210,21 @@ export function LayoutHeader() {
             color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
 
-          <Link href="/mail" className={classes.link}>
+          <Link href="/mail" className={classes.link} onClick={closeDrawer}>
             <Group>
               <EveMailIcon width={32} height={32} alt="EveMail" />
               <Text>EveMail</Text>
             </Group>
           </Link>
 
-          <Link href="/calendar" className={classes.link}>
+          <Link href="/calendar" className={classes.link} onClick={closeDrawer}>
             <Group>
               <CalendarIcon width={32} height={32} alt="Calendar" />
               <Text>Calendar</Text>
             </Group>
           </Link>
 
-          <Link href="/skills" className={classes.link}>
+          <Link href="/skills" className={classes.link} onClick={closeDrawer}>
             <Group>
               <SkillsIcon width={32} height={32} alt="Skills" />
               <Text>Skills</Text>
