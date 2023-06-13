@@ -11,7 +11,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 
-import { CalendarIcon, EveMailIcon } from "@jitaspace/eve-icons";
+import { CalendarIcon, EveMailIcon, SkillsIcon } from "@jitaspace/eve-icons";
 
 import { MainLayout } from "~/layouts";
 
@@ -44,7 +44,7 @@ const apps: {
     description:
       "Manage your skills and skills points on your EVE Online character.",
     icon: ({ alt, ...otherProps }) => (
-      <CalendarIcon alt={alt ?? "Mail"} {...otherProps} />
+      <SkillsIcon alt={alt ?? "Mail"} {...otherProps} />
     ),
     href: "/skills",
   },

@@ -16,17 +16,9 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
-import {
-  IconBook,
-  IconChartPie3,
-  IconCode,
-  IconCoin,
-  IconFingerprint,
-  IconNotification,
-} from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
 
-import { CalendarIcon, EveMailIcon } from "@jitaspace/eve-icons";
+import { CalendarIcon, EveMailIcon, SkillsIcon } from "@jitaspace/eve-icons";
 import {
   LoginWithEveOnlineButton,
   TotalUnreadMailsIndicator,
@@ -86,21 +78,6 @@ const useStyles = createStyles((theme) => ({
     }),
   },
 
-  subLink: {
-    width: "100%",
-    padding: `${theme.spacing.xs} ${theme.spacing.md}`,
-    borderRadius: theme.radius.md,
-
-    ...theme.fn.hover({
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[7]
-          : theme.colors.gray[0],
-    }),
-
-    "&:active": theme.activeStyles,
-  },
-
   dropdownFooter: {
     backgroundColor:
       theme.colorScheme === "dark"
@@ -127,39 +104,6 @@ const useStyles = createStyles((theme) => ({
     },
   },
 }));
-
-const mockdata = [
-  {
-    icon: IconCode,
-    title: "Open source",
-    description: "This Pokémon’s cry is very loud and distracting",
-  },
-  {
-    icon: IconCoin,
-    title: "Free for everyone",
-    description: "The fluid of Smeargle’s tail secretions changes",
-  },
-  {
-    icon: IconBook,
-    title: "Documentation",
-    description: "Yanma is capable of seeing 360 degrees without",
-  },
-  {
-    icon: IconFingerprint,
-    title: "Security",
-    description: "The shell’s rounded shape and the grooves on its.",
-  },
-  {
-    icon: IconChartPie3,
-    title: "Analytics",
-    description: "This Pokémon uses its flying ability to quickly chase",
-  },
-  {
-    icon: IconNotification,
-    title: "Notifications",
-    description: "Combusken battles with the intensely hot flames it spews",
-  },
-];
 
 export function LayoutHeader() {
   const pinned = useHeadroom({ fixedAt: 120 });
@@ -205,6 +149,7 @@ export function LayoutHeader() {
                   </TotalUnreadMailsIndicator>
                 </Link>
               </Tooltip>
+
               <Tooltip
                 label="View upcoming events and meetings on your EVE Online calendar."
                 w={200}
@@ -213,6 +158,17 @@ export function LayoutHeader() {
               >
                 <Link href="/calendar" className={classes.link}>
                   <CalendarIcon width={32} height={32} alt="Calendar" />
+                </Link>
+              </Tooltip>
+
+              <Tooltip
+                label="View your character attributes, known skills and skill queue."
+                w={200}
+                multiline
+                openDelay={200}
+              >
+                <Link href="/skills" className={classes.link}>
+                  <SkillsIcon width={32} height={32} alt="Skills" />
                 </Link>
               </Tooltip>
             </Group>
@@ -265,6 +221,13 @@ export function LayoutHeader() {
             <Group>
               <CalendarIcon width={32} height={32} alt="Calendar" />
               <Text>Calendar</Text>
+            </Group>
+          </Link>
+
+          <Link href="/skills" className={classes.link}>
+            <Group>
+              <SkillsIcon width={32} height={32} alt="Skills" />
+              <Text>Skills</Text>
             </Group>
           </Link>
 

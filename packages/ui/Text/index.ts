@@ -6,3 +6,4 @@ export * from "./EveEntityName";
 export * from "./EveMailSenderName";
 export * from "./LabelName";
 export * from "./MailingListName";
+export * from "./TypeName";

@@ -3,12 +3,22 @@ import { useSession } from "next-auth/react";
 import { type ESIScope } from "@jitaspace/esi-client";
 
 export function useTokenScopes(): {
+  loading: boolean;
   error?: string;
   grantedScopes?: ESIScope[];
 } {
   const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return {
+      loading: true,
+      grantedScopes: [],
+    };
+  }
+
   if (status !== "authenticated")
     return {
+      loading: false,
       error: status,
       grantedScopes: [],
     };
@@ -17,6 +27,7 @@ export function useTokenScopes(): {
 
   if (!tokenPayload) {
     return {
+      loading: false,
       error: "token payload missing",
       grantedScopes: [],
     };
@@ -27,6 +38,7 @@ export function useTokenScopes(): {
   ) as { scp: ESIScope[] };
 
   return {
+    loading: false,
     grantedScopes: decodedPayload.scp,
   };
 }

@@ -23,6 +23,7 @@ import useSWRInfinite from "swr/infinite";
 import { type GetCharactersCharacterIdMail200Item } from "@jitaspace/esi-client";
 import {
   EvemailComposeIcon,
+  EveMailIcon,
   EveMailTagIcon,
   GroupListIcon,
   InfoIcon,
@@ -100,6 +101,7 @@ export default function Page() {
             </Container>
           )}
           <Group>
+            <EveMailIcon width={48} />
             <Title order={1}>EveMail</Title>
           </Group>
           <Grid align="flex-end" justify="space-between">

@@ -22,6 +22,7 @@ import {
   useGetCharactersCharacterIdCalendar,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
+import { CalendarIcon } from "@jitaspace/eve-icons";
 
 import { MainLayout } from "~/layouts";
 
@@ -63,6 +64,7 @@ export default function Page() {
     <Container>
       <Stack spacing="xl">
         <Group>
+          <CalendarIcon width={48} />
           <Title order={1}>Calendar</Title>
           {isLoading && <Loader />}
         </Group>

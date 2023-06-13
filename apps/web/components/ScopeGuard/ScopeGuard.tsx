@@ -1,19 +1,27 @@
-import { type PropsWithChildren } from "react";
+import { type PropsWithChildren, type ReactElement } from "react";
 
 import { type ESIScope } from "@jitaspace/esi-client";
 
 import { useTokenScopes } from "~/hooks";
 import { RequestPermissionsBanner } from "./RequestPermissionsBanner";
 
-type ScopeWallProps = {
+export type ScopeGuardProps = {
   requiredScopes: ESIScope[];
+  loadingScopesComponent?: ReactElement;
+  insufficientScopesComponent?: ReactElement;
 };
 
 export function ScopeGuard({
   requiredScopes,
+  loadingScopesComponent,
+  insufficientScopesComponent,
   children,
-}: PropsWithChildren<ScopeWallProps>) {
-  const { grantedScopes } = useTokenScopes();
+}: PropsWithChildren<ScopeGuardProps>) {
+  const { grantedScopes, loading } = useTokenScopes();
+
+  if (loading) {
+    return loadingScopesComponent ?? <div>Loading...</div>;
+  }
 
   if (
     requiredScopes.some(
@@ -21,7 +29,11 @@ export function ScopeGuard({
         !grantedScopes || !grantedScopes.includes(requiredScope),
     )
   ) {
-    return <RequestPermissionsBanner requiredScopes={requiredScopes} />;
+    return (
+      insufficientScopesComponent ?? (
+        <RequestPermissionsBanner requiredScopes={requiredScopes} />
+      )
+    );
   }
 
   return children;

@@ -5,6 +5,9 @@ import {
   getAlliancesAllianceId,
   getCharactersCharacterId,
   getCorporationsCorporationId,
+  getUniverseConstellationsConstellationId,
+  getUniverseRegionsRegionId,
+  getUniverseTypesTypeId,
   postUniverseNames,
   type GetCharactersCharacterIdSearchCategoriesItem,
 } from "@jitaspace/esi-client";
@@ -58,6 +61,20 @@ const resolveNameOfKnownCategory = async (
     case "agent":
     case "character":
       return getCharactersCharacterId(Number(id), {}, {}).then((data) => {
+        return data.data.name;
+      });
+    case "inventory_type":
+      return getUniverseTypesTypeId(Number(id), {}, {}).then((data) => {
+        return data.data.name;
+      });
+    case "constellation":
+      return getUniverseConstellationsConstellationId(Number(id), {}, {}).then(
+        (data) => {
+          return data.data.name;
+        },
+      );
+    case "region":
+      return getUniverseRegionsRegionId(Number(id), {}, {}).then((data) => {
         return data.data.name;
       });
     default:

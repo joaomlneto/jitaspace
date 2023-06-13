@@ -3,7 +3,7 @@ import Image, { type ImageProps, type StaticImageData } from "next/image";
 
 import { useEveIconsConfig, type IconVersion } from "../context";
 
-type EveIconProps = Omit<Partial<ImageProps>, "src"> & {
+export type EveIconProps = Omit<Partial<ImageProps>, "src"> & {
   variant?: IconVersion;
 };
 
