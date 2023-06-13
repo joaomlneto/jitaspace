@@ -32,7 +32,7 @@ export default class _Document extends Document {
 
   render(): React.ReactElement {
     return (
-      <Html>
+      <Html lang="en">
         <Head>
           <link
             rel="apple-touch-icon"
