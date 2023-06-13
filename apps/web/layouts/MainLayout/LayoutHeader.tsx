@@ -137,12 +137,7 @@ export function LayoutHeader() {
               spacing={0}
               className={classes.hiddenMobile}
             >
-              <Tooltip
-                label="View your EVE Online correspondence whilst out of the game."
-                w={200}
-                multiline
-                openDelay={200}
-              >
+              <Tooltip label="EveMail" multiline openDelay={200}>
                 <Link href="/mail" className={classes.link}>
                   <TotalUnreadMailsIndicator position="bottom-end" offset={8}>
                     <EveMailIcon width={32} height={32} alt="EveMail" />
@@ -150,23 +145,13 @@ export function LayoutHeader() {
                 </Link>
               </Tooltip>
 
-              <Tooltip
-                label="View upcoming events and meetings on your EVE Online calendar."
-                w={200}
-                multiline
-                openDelay={200}
-              >
+              <Tooltip label="Calendar" multiline openDelay={200}>
                 <Link href="/calendar" className={classes.link}>
                   <CalendarIcon width={32} height={32} alt="Calendar" />
                 </Link>
               </Tooltip>
 
-              <Tooltip
-                label="View your character attributes, known skills and skill queue."
-                w={200}
-                multiline
-                openDelay={200}
-              >
+              <Tooltip label="Skills" multiline openDelay={200}>
                 <Link href="/skills" className={classes.link}>
                   <SkillsIcon width={32} height={32} alt="Skills" />
                 </Link>
