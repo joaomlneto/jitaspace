@@ -4,7 +4,7 @@ import { type AvatarProps } from "@mantine/core";
 import { EveImageServerAvatar } from "./EveImageServerAvatar";
 
 export type TypeAvatarProps = Omit<AvatarProps, "src"> & {
-  typeId?: string;
+  typeId?: string | number;
   variation?: string;
 };
 

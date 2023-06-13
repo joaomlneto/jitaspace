@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import {
   Anchor,
   Container,
@@ -9,12 +10,12 @@ import {
   Timeline,
   UnstyledButton,
 } from "@mantine/core";
+import { IconExternalLink } from "@tabler/icons-react";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
-import { SkillsIcon } from "@jitaspace/eve-icons";
-import { TypeName } from "@jitaspace/ui";
+import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 export function SkillQueueTimeline() {
   const { data: session } = useSession();
@@ -47,7 +48,13 @@ export function SkillQueueTimeline() {
           {data?.data.map((entry) => (
             <Timeline.Item
               key={entry.skill_id}
-              bullet={<SkillsIcon width={24} />}
+              bullet={
+                <TypeAvatar
+                  typeId={entry.skill_id}
+                  variation="icon"
+                  size={24}
+                />
+              }
               title={
                 <Popover key={entry.skill_id}>
                   <Popover.Target>
@@ -120,6 +127,17 @@ export function SkillQueueTimeline() {
                           <Text size="sm">{entry.queue_position}</Text>
                         </Group>
                       )}
+                      <Anchor
+                        component={Link}
+                        href={`https://everef.net/type/${entry.skill_id}`}
+                        target="_blank"
+                        size="sm"
+                      >
+                        <Group spacing="xs">
+                          <IconExternalLink size={14} />
+                          <Anchor span>Open in EVE Ref</Anchor>
+                        </Group>
+                      </Anchor>
                     </Stack>
                   </Popover.Dropdown>
                 </Popover>
