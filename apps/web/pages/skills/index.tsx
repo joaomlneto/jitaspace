@@ -1,11 +1,12 @@
 import React, { type ReactElement } from "react";
-import { Container, Group, Stack, Title } from "@mantine/core";
+import { Container, Grid, Group, Stack, Title } from "@mantine/core";
 
 import { SkillsIcon } from "@jitaspace/eve-icons";
 
 import {
   CharacterAttributesRingProgress,
   SkillQueueTimeline,
+  SkillTree,
 } from "~/components/Skills";
 import { MainLayout } from "~/layouts";
 
@@ -18,7 +19,14 @@ export default function Page() {
           <Title>Skills</Title>
         </Group>
         <CharacterAttributesRingProgress />
-        <SkillQueueTimeline />
+        <Grid>
+          <Grid.Col span="auto">
+            <SkillTree />
+          </Grid.Col>
+          <Grid.Col span="content">
+            <SkillQueueTimeline />
+          </Grid.Col>
+        </Grid>
       </Stack>
     </Container>
   );

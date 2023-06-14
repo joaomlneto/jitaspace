@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 import { format } from "date-fns";
+import humanizeDuration from "humanize-duration";
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
@@ -119,7 +120,7 @@ export function SkillQueueTimeline() {
                           <Text size="sm">{entry.level_end_sp}</Text>
                         </Group>
                       )}
-                      {entry.queue_position && (
+                      {entry.queue_position !== undefined && (
                         <Group position="apart">
                           <Text size="sm" color="dimmed">
                             Queue Position
@@ -142,7 +143,20 @@ export function SkillQueueTimeline() {
                   </Popover.Dropdown>
                 </Popover>
               }
-            />
+            >
+              {entry.start_date && entry.finish_date && (
+                <Text size="sm">
+                  {humanizeDuration(
+                    new Date(entry.finish_date).getTime() -
+                      (entry.queue_position > 0
+                        ? new Date(entry.start_date)
+                        : new Date()
+                      ).getTime(),
+                    { largest: 2, units: ["d", "h", "m", "s"], round: true },
+                  )}
+                </Text>
+              )}
+            </Timeline.Item>
           ))}
         </Timeline>
       </Container>
