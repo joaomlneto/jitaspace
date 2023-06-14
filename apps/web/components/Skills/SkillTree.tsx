@@ -7,9 +7,8 @@ import {
   type GetCharactersCharacterIdSkills200SkillsItem,
   type GetUniverseTypesTypeId200,
 } from "@jitaspace/esi-client";
-import { TypeName } from "@jitaspace/ui";
+import { SkillBar, TypeName } from "@jitaspace/ui";
 
-import { SkillBar } from "~/components/Skills/SkillBar";
 import { useSkillTree } from "~/hooks";
 
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
