@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import Link from "next/link";
 import { Anchor, Group, Paper } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
@@ -10,7 +10,7 @@ interface AllianceCardProps {
   allianceId: string | number;
 }
 
-export function AllianceCard({ allianceId }: AllianceCardProps) {
+export const AllianceCard = memo(({ allianceId }: AllianceCardProps) => {
   return (
     <Paper
       radius="md"
@@ -49,4 +49,5 @@ export function AllianceCard({ allianceId }: AllianceCardProps) {
       </Anchor>
     </Paper>
   );
-}
+});
+AllianceCard.displayName = "AllianceCard";

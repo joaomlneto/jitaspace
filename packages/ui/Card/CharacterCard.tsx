@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import Link from "next/link";
 import { Anchor, Group, Paper } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
@@ -10,7 +10,7 @@ interface CharacterCardProps {
   characterId: string | number;
 }
 
-export function CharacterCard({ characterId }: CharacterCardProps) {
+export const CharacterCard = memo(({ characterId }: CharacterCardProps) => {
   return (
     <Paper
       radius="md"
@@ -49,4 +49,5 @@ export function CharacterCard({ characterId }: CharacterCardProps) {
       </Anchor>
     </Paper>
   );
-}
+});
+CharacterCard.displayName = "CharacterCard";

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Group, Paper, Text } from "@mantine/core";
 
 import { EveEntityAvatar } from "../Avatar";
@@ -11,7 +11,7 @@ interface EveEntityCardProps {
   entityId: string | number;
 }
 
-export function EveEntityCard({ entityId }: EveEntityCardProps) {
+export const EveEntityCard = memo(({ entityId }: EveEntityCardProps) => {
   const { name, category } = useEsiName(entityId);
 
   if (category === "alliance") return <AllianceCard allianceId={entityId} />;
@@ -37,4 +37,5 @@ export function EveEntityCard({ entityId }: EveEntityCardProps) {
       </Text>
     </Paper>
   );
-}
+});
+EveEntityCard.displayName = "EveEntityCard";

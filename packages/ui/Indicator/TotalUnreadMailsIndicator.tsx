@@ -1,10 +1,10 @@
-import React from "react";
+import React, { memo } from "react";
 import { Indicator, type IndicatorProps } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 
-export function TotalUnreadMailsIndicator(props: IndicatorProps) {
+export const TotalUnreadMailsIndicator = memo((props: IndicatorProps) => {
   const { data: session, status } = useSession();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
@@ -26,4 +26,5 @@ export function TotalUnreadMailsIndicator(props: IndicatorProps) {
       {...props}
     />
   );
-}
+});
+TotalUnreadMailsIndicator.displayName = "TotalUnreadMailsIndicator";

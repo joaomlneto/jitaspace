@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 
 import {
   EsiSearchMultiSelect,
@@ -9,13 +9,14 @@ export type EmailRecipientSearchMultiSelect = Omit<
   EsiSearchMultiSelectProps,
   "categories"
 >;
-export function EmailRecipientSearchMultiSelect(
-  props: EmailRecipientSearchMultiSelect,
-) {
-  return (
-    <EsiSearchMultiSelect
-      categories={["character", "corporation", "alliance"]}
-      {...props}
-    />
-  );
-}
+export const EmailRecipientSearchMultiSelect = memo(
+  (props: EmailRecipientSearchMultiSelect) => {
+    return (
+      <EsiSearchMultiSelect
+        categories={["character", "corporation", "alliance"]}
+        {...props}
+      />
+    );
+  },
+);
+EmailRecipientSearchMultiSelect.displayName = "EmailRecipientSearchMultiSelect";
