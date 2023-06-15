@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Accordion, Container, Group, Stack, Text } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
@@ -13,7 +13,7 @@ import { useSkillTree } from "~/hooks";
 
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 
-export function SkillTreeAccordion() {
+export const SkillTreeAccordion = memo(() => {
   const { data: session } = useSession();
   const { data: skillTree, loading, error } = useSkillTree();
   const {
@@ -150,4 +150,5 @@ export function SkillTreeAccordion() {
       </Accordion>
     </Container>
   );
-}
+});
+SkillTreeAccordion.displayName = "SkillTreeAccordion";
