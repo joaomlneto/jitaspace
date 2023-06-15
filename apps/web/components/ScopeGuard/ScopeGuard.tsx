@@ -19,7 +19,7 @@ export function ScopeGuard({
 }: PropsWithChildren<ScopeGuardProps>) {
   const { grantedScopes, loading } = useTokenScopes();
 
-  if (loading) {
+  if (requiredScopes.length > 0 && loading) {
     return loadingScopesComponent ?? <div>Loading...</div>;
   }
 

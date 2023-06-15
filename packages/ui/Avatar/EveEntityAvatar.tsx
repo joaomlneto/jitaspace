@@ -1,8 +1,12 @@
-import { memo } from "react";
+import React, { memo } from "react";
 import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
+
+import { UnknownIcon } from "@jitaspace/eve-icons";
+import { getAvatarSize } from "@jitaspace/utils";
 
 import { useEsiName } from "../hooks";
 import { AllianceAvatar } from "./AllianceAvatar";
+import { sizes } from "./Avatar.styles";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
 
@@ -31,7 +35,11 @@ export const EveEntityAvatar = memo(
     }
 
     if (!category || error) {
-      return <Avatar {...otherProps} />;
+      const size = getAvatarSize({
+        size: otherProps.size ?? "md",
+        sizes,
+      });
+      return <UnknownIcon width={size} height={size} />;
     }
 
     if (category === "character" || category === "agent") {
@@ -48,7 +56,6 @@ export const EveEntityAvatar = memo(
 
     // FIXME: Add more ranges!
 
-    // Resolve wtf this is in the worst possible way - via a POST request!
     return <Avatar {...otherProps} />;
   },
 );

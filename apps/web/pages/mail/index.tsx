@@ -31,8 +31,8 @@ import {
 import { EveMailLabelMultiSelect } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 
-import { MailboxDataTable } from "~/components/MailboxTable";
-import { EveMailMessageListSmall } from "~/components/MailboxTable/EveMailMessageListSmall";
+import { MailboxTable } from "~/components/EveMail";
+import { EveMailMessageListSmall } from "~/components/EveMail/EveMailMessageListSmall";
 import { MailLayout } from "~/layouts";
 
 export default function Page() {
@@ -210,10 +210,7 @@ export default function Page() {
           {data && (
             <>
               <MediaQuery smallerThan="md" styles={{ display: "none" }}>
-                <MailboxDataTable
-                  data={mergedData}
-                  mutate={() => void mutate()}
-                />
+                <MailboxTable data={mergedData} mutate={() => void mutate()} />
               </MediaQuery>
               <MediaQuery largerThan="md" styles={{ display: "none" }}>
                 <EveMailMessageListSmall

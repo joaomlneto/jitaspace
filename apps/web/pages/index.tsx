@@ -1,6 +1,6 @@
 import React, { type ReactElement } from "react";
 import Image, { type ImageProps } from "next/image";
-import Link from "next/link";
+import Link, { type LinkProps } from "next/link";
 import {
   Card,
   Container,
@@ -11,45 +11,19 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 
-import { CalendarIcon, EveMailIcon, SkillsIcon } from "@jitaspace/eve-icons";
+import { CharacterCard } from "@jitaspace/ui";
 
+import { jitaApps } from "~/config/apps";
 import { MainLayout } from "~/layouts";
 
-const apps: {
-  title: string;
+const devApps: {
+  name: string;
   description: string;
   icon: (props: Partial<Omit<ImageProps, "src">>) => React.ReactElement;
-  href: string;
+  url: LinkProps["href"];
 }[] = [
   {
-    title: "EveMail",
-    description:
-      "Access your EVE Online correspondence whilst out of the game.",
-    icon: ({ alt, ...otherProps }) => (
-      <EveMailIcon alt={alt ?? "Mail"} {...otherProps} />
-    ),
-    href: "/mail",
-  },
-  {
-    title: "Calendar",
-    description:
-      "View upcoming events and meetings on your EVE Online calendar.",
-    icon: ({ alt, ...otherProps }) => (
-      <CalendarIcon alt={alt ?? "Mail"} {...otherProps} />
-    ),
-    href: "/calendar",
-  },
-  {
-    title: "Skills",
-    description:
-      "Manage your skills and skills points on your EVE Online character.",
-    icon: ({ alt, ...otherProps }) => (
-      <SkillsIcon alt={alt ?? "Mail"} {...otherProps} />
-    ),
-    href: "/skills",
-  },
-  {
-    title: "An OpenAPI for the SDE",
+    name: "An OpenAPI for the SDE",
     description:
       "An OpenAPI specification for the EVE Online Static Data Export, making it easy to integrate into your web applications without the need for a database.",
     icon: ({ alt, ...otherProps }) => (
@@ -59,7 +33,7 @@ const apps: {
         {...otherProps}
       />
     ),
-    href: "https://sde.jita.space",
+    url: "https://sde.jita.space",
   },
 ];
 
@@ -123,11 +97,11 @@ export default function Page() {
         mt="xl"
         breakpoints={[{ maxWidth: "md", cols: 1 }]}
       >
-        {apps.map((feature) => (
+        {[...Object.values(jitaApps), ...devApps].map((feature) => (
           <UnstyledButton
             component={Link}
-            href={feature.href}
-            key={feature.title}
+            href={feature.url}
+            key={feature.name}
           >
             <Card shadow="md" radius="md" className={classes.card} padding="xl">
               <feature.icon
@@ -136,7 +110,7 @@ export default function Page() {
                 color={theme.fn.primaryColor()}
               />
               <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
-                {feature.title}
+                {feature.name}
               </Text>
               <Text fz="sm" c="dimmed" mt="sm">
                 {feature.description}
@@ -145,6 +119,9 @@ export default function Page() {
           </UnstyledButton>
         ))}
       </SimpleGrid>
+      <Container size="xs">
+        <CharacterCard characterId={401563624} />
+      </Container>
     </Container>
   );
 }

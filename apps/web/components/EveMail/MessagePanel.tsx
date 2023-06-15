@@ -8,8 +8,8 @@ import {
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
 import {
+  EveEntityAvatar,
   EveEntityName,
-  EveMailRecipientAvatar,
   EveMailSenderAvatar,
   EveMailSenderName,
   LabelName,
@@ -78,9 +78,8 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
             <Text>To:</Text>
             {mail?.data.recipients?.map((recipient) => (
               <Group noWrap key={recipient.recipient_id}>
-                <EveMailRecipientAvatar
-                  messageId={messageId}
-                  recipientId={recipient.recipient_id}
+                <EveEntityAvatar
+                  entityId={recipient.recipient_id}
                   size="sm"
                   radius="xl"
                 />

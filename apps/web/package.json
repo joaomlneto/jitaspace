@@ -65,6 +65,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-html-parser": "^2.0.2",
+    "sharp": "^0.32.1",
     "superjson": "1.12.3",
     "swr": "^2.1.5",
     "typescript": "5.1.3",
