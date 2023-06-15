@@ -11,8 +11,6 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 
-import { CharacterCard } from "@jitaspace/ui";
-
 import { jitaApps } from "~/config/apps";
 import { MainLayout } from "~/layouts";
 
@@ -119,9 +117,6 @@ export default function Page() {
           </UnstyledButton>
         ))}
       </SimpleGrid>
-      <Container size="xs">
-        <CharacterCard characterId={401563624} />
-      </Container>
     </Container>
   );
 }
