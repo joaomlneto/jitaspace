@@ -2,9 +2,11 @@ import React, { type ReactElement } from "react";
 import Image, { type ImageProps } from "next/image";
 import Link, { type LinkProps } from "next/link";
 import {
+  Badge,
   Card,
   Container,
   createStyles,
+  Group,
   rem,
   SimpleGrid,
   Text,
@@ -19,6 +21,7 @@ const devApps: {
   description: string;
   icon: (props: Partial<Omit<ImageProps, "src">>) => React.ReactElement;
   url: LinkProps["href"];
+  tags?: string[];
 }[] = [
   {
     name: "An OpenAPI for the SDE",
@@ -107,9 +110,14 @@ export default function Page() {
                 width={64}
                 color={theme.fn.primaryColor()}
               />
-              <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
-                {feature.name}
-              </Text>
+              <Group>
+                <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
+                  {feature.name}
+                </Text>
+                {feature.tags?.map((tag) => (
+                  <Badge key={tag}>{tag}</Badge>
+                ))}
+              </Group>
               <Text fz="sm" c="dimmed" mt="sm">
                 {feature.description}
               </Text>

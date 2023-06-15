@@ -13,6 +13,7 @@ export type JitaApp = {
   description: string;
   url: LinkProps["href"];
   icon: React.FC<EveIconProps>;
+  tags?: string[];
   scopes: {
     required?: ESIScope[];
     optional?: {
@@ -26,10 +27,10 @@ export type JitaApp = {
 export const jitaApps: Record<string, JitaApp> = {
   mail: {
     name: "EveMail",
-    url: "/mail",
-    icon: EveMailIcon,
     description:
       "Access your EVE Online correspondence whilst out of the game.",
+    url: "/mail",
+    icon: EveMailIcon,
     scopes: {
       required: ["esi-mail.read_mail.v1"],
       optional: [
@@ -54,10 +55,11 @@ export const jitaApps: Record<string, JitaApp> = {
   },
   calendar: {
     name: "Calendar",
-    url: "/calendar",
-    icon: CalendarIcon,
     description:
       "View upcoming events and meetings on your EVE Online calendar.",
+    url: "/calendar",
+    icon: CalendarIcon,
+    tags: ["beta"],
     scopes: {
       required: ["esi-calendar.read_calendar_events.v1"],
       optional: [
@@ -71,10 +73,11 @@ export const jitaApps: Record<string, JitaApp> = {
   },
   skills: {
     name: "Skills",
-    url: "/skills",
-    icon: SkillsIcon,
     description:
       "Manage your skills and skills points on your EVE Online character.",
+    url: "/skills",
+    icon: SkillsIcon,
+    tags: ["beta"],
     scopes: {
       required: ["esi-skills.read_skills.v1", "esi-skills.read_skillqueue.v1"],
     },
