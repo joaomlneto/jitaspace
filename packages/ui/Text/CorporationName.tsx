@@ -4,7 +4,7 @@ import { type TextProps } from "@mantine/core";
 import { EveEntityName } from "./EveEntityName";
 
 export type CorporationNameProps = TextProps & {
-  corporationId: string | number;
+  corporationId?: string | number;
 };
 
 export const CorporationName = memo(

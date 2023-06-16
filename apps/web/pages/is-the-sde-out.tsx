@@ -5,8 +5,10 @@ import {
   createStyles,
   rem,
   Stack,
+  Text,
   Title,
 } from "@mantine/core";
+import { format } from "date-fns";
 import useSwr from "swr";
 
 import { TimeAgoText } from "@jitaspace/ui";
@@ -72,7 +74,7 @@ export default function Page() {
   if (!data || isLoading) return "LOADING";
 
   const lastModifiedDate = new Date(data.lastModified);
-  const startOfJune = new Date(2023, 6, 1);
+  const startOfJune = new Date(2023, 5, 1);
   const sdeUpdated = lastModifiedDate > startOfJune;
 
   const lastCheckedOn = new Date(data.date);
@@ -108,10 +110,15 @@ export default function Page() {
         }}
       >
         <Stack align="center" p="xl" spacing="xl" style={{}}>
-          <Title align="center">NOT YET!</Title>
-          <Title order={3} align="center">
-            Last checked <TimeAgoText span date={lastCheckedOn} /> ago
+          <Title align="center">
+            {sdeUpdated ? "Viridian SDE Released!! Wee!" : "Not yet!"}
           </Title>
+          <Text align="center">
+            SDE last updated on {format(lastModifiedDate, "yyyy-MM-dd")}
+          </Text>
+          <Text align="center">
+            Last checked <TimeAgoText span date={lastCheckedOn} /> ago
+          </Text>
         </Stack>
       </Center>
     </Container>

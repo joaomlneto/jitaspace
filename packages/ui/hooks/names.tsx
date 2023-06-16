@@ -85,6 +85,7 @@ const resolveNameOfKnownCategory = async (
 // Creates a fetch cache w/ a max of 10000 entries for JSON requests
 const fetchCache = createCache(
   async (id, options: { category?: ResolvableEntityCategory }) => {
+    if (id.length === 0) throw new Error("No ID provided");
     let name: string | undefined;
 
     // let's figure out the category first
@@ -110,7 +111,7 @@ const fetchCache = createCache(
 );
 
 export function useEsiName(
-  id: string | number,
+  id?: string | number,
   category?: ResolvableEntityCategory,
 ): {
   name?: string;
@@ -121,7 +122,7 @@ export function useEsiName(
 } {
   const [{ status, value, error }, fetchName] = useCache(
     fetchCache,
-    typeof id === "string" ? id : id?.toString(),
+    id === undefined ? "" : typeof id === "string" ? id : id?.toString(),
     { category },
   );
 

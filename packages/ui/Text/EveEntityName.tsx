@@ -4,7 +4,7 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 import { useEsiName, type ResolvableEntityCategory } from "../hooks";
 
 export type EveEntityNameProps = TextProps & {
-  entityId: string | number;
+  entityId?: string | number;
   category?: ResolvableEntityCategory;
 };
 
@@ -12,7 +12,7 @@ export const EveEntityName = memo(
   ({ entityId, category, ...otherProps }: EveEntityNameProps) => {
     const { name, loading } = useEsiName(entityId, category);
 
-    if (loading) {
+    if (!entityId || loading) {
       return (
         <Skeleton>
           <Text {...otherProps}>{name ?? "Unknown"}</Text>

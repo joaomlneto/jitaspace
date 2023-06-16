@@ -4,6 +4,7 @@ export * from "./Badge";
 export * from "./Button";
 export * from "./Card";
 export * from "./ColorSwatch";
+export * from "./DateText";
 export * from "./Indicator";
 export * from "./MultiSelect";
 export * from "./Select";
