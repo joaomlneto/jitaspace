@@ -5,15 +5,16 @@ import { showNotification } from "@mantine/notifications";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 
-import { MessageMenu } from "~/components/EveMail/index";
-import { useGetCharactersCharacterIdMailLabels } from "../../../../packages/esi-client";
+import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import {
   EveMailSenderAvatar,
   EveMailSenderCard,
   EveMailSenderNameAnchor,
   LabelName,
   MailLabelColorSwatch,
-} from "../../../../packages/ui";
+} from "@jitaspace/ui";
+
+import { MessageMenu } from "~/components/EveMail/index";
 
 type MailboxTableProps = {
   data: {

@@ -12,12 +12,12 @@ import { showNotification } from "@mantine/notifications";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "../../../../packages/esi-client";
+import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import {
   EveMailSenderAvatar,
   EveMailSenderName,
   MailLabelColorSwatch,
-} from "../../../../packages/ui";
+} from "@jitaspace/ui";
 
 export type EmailListNarrowProps = TableProps & {
   data: {
