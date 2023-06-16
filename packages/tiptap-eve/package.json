@@ -1,0 +1,43 @@
+{
+  "name": "@jitaspace/tiptap-eve",
+  "description": "TipTap editor for EVE Online",
+  "version": "0.1.0",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@mantine/core": "^6.0.13",
+    "@mantine/hooks": "^6.0.13",
+    "@mantine/tiptap": "^6.0.13",
+    "@tabler/icons-react": "^2.22.0",
+    "@tiptap/extension-color": "^2.0.3",
+    "@tiptap/extension-link": "^2.0.3",
+    "@tiptap/extension-text-style": "^2.0.3",
+    "@tiptap/extension-underline": "^2.0.3",
+    "@tiptap/pm": "^2.0.3",
+    "@tiptap/react": "^2.0.3",
+    "@tiptap/starter-kit": "^2.0.3",
+    "@types/node": "20.3.0",
+    "@types/react": "18.2.12",
+    "@types/react-dom": "18.2.5",
+    "date-fns": "^2.30.0",
+    "embla-carousel-react": "8.0.0-rc07",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "^0.1.0",
+    "@types/node": "^18.15.11",
+    "@types/react": "^18.0.33",
+    "@types/react-dom": "^18.0.11",
+    "eslint": "^8.42.0",
+    "typescript": "^5.1.3"
+  }
+}
