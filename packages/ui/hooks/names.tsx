@@ -6,7 +6,11 @@ import {
   getCharactersCharacterId,
   getCorporationsCorporationId,
   getUniverseConstellationsConstellationId,
+  getUniverseFactions,
   getUniverseRegionsRegionId,
+  getUniverseStationsStationId,
+  getUniverseStructuresStructureId,
+  getUniverseSystemsSystemId,
   getUniverseTypesTypeId,
   postUniverseNames,
   type GetCharactersCharacterIdSearchCategoriesItem,
@@ -77,6 +81,28 @@ const resolveNameOfKnownCategory = async (
       return getUniverseRegionsRegionId(Number(id), {}, {}).then((data) => {
         return data.data.name;
       });
+    case "solar_system":
+      return getUniverseSystemsSystemId(Number(id), {}, {}).then((data) => {
+        return data.data.name;
+      });
+    case "faction":
+      return getUniverseFactions().then((data) => {
+        const faction = data.data.find(
+          (faction) => faction.faction_id == Number(id),
+        );
+        if (faction === undefined) throw new Error("Faction ID Invalid");
+        return faction.name;
+      });
+    case "station":
+      return getUniverseStationsStationId(Number(id), {}, {}).then((data) => {
+        return data.data.name;
+      });
+    case "structure":
+      return getUniverseStructuresStructureId(Number(id), {}, {}).then(
+        (data) => {
+          return data.data.name;
+        },
+      );
     default:
       throw new Error(`Unknown category ${category}!`);
   }
