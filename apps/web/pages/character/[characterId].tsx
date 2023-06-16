@@ -16,6 +16,7 @@ import {
   CorporationName,
 } from "@jitaspace/ui";
 
+import { MailMessageViewer } from "~/components/EveMail";
 import { MailLayout } from "~/layouts";
 
 export default function Page() {
@@ -28,7 +29,7 @@ export default function Page() {
   const { data: races } = useGetUniverseRaces();
 
   return (
-    <Container size="xs">
+    <Container size="sm">
       <Stack>
         <Group spacing="xl">
           <CharacterAvatar characterId={characterId} size="xl" radius={256} />
@@ -99,11 +100,11 @@ export default function Page() {
             }
           </Text>
         </Group>
-        <div
-          dangerouslySetInnerHTML={{
-            __html: character?.data.description ?? "No description",
-          }}
-        />
+        {character?.data && (
+          <MailMessageViewer
+            content={character?.data.description ?? "No description"}
+          />
+        )}
       </Stack>
     </Container>
   );

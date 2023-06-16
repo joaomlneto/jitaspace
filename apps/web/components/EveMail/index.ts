@@ -4,6 +4,7 @@ export * from "./LabelManagementTable";
 export * from "./EveMailFaqAccordion";
 export * from "./MessagePanel";
 export * from "./MailMessageEditor";
+export * from "./MailMessageViewer";
 export * from "./MessageMenu";
 export * from "./MailboxTable";
 export * from "./MessageMenu";

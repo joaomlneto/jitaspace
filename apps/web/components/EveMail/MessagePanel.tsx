@@ -16,6 +16,8 @@ import {
   MailLabelColorSwatch,
 } from "@jitaspace/ui";
 
+import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
+
 function transformMailBody(
   node: {
     type: string;
@@ -56,6 +58,7 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
       },
     },
   );
+
   return (
     <Stack>
       <Group position="apart">
@@ -118,11 +121,14 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
           </Group>
         )}
       </Group>
-      <Container>
-        {ReactHtmlParser(mail?.data.body ?? "", {
-          transform: transformMailBody,
-        })}
-      </Container>
+      {false && (
+        <Container>
+          {ReactHtmlParser(mail?.data.body ?? "", {
+            transform: transformMailBody,
+          })}
+        </Container>
+      )}
+      <MailMessageViewer content={mail?.data.body ?? ""} />
     </Stack>
   );
 }

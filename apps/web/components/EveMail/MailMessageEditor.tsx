@@ -1,14 +1,8 @@
+import React from "react";
 import { Stack, Text } from "@mantine/core";
-import {
-  Link,
-  RichTextEditor,
-  type RichTextEditorProps,
-} from "@mantine/tiptap";
-import { Color } from "@tiptap/extension-color";
-import TextStyle from "@tiptap/extension-text-style";
-import { Underline } from "@tiptap/extension-underline";
-import { useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
+import { RichTextEditor, type RichTextEditorProps } from "@mantine/tiptap";
+
+import { useEveEditor } from "@jitaspace/tiptap-eve";
 
 type EvemailEditorProps = Omit<RichTextEditorProps, "editor" | "children"> & {
   content: string;
@@ -20,13 +14,13 @@ export function MailMessageEditor({
   onContentUpdate,
   ...otherProps
 }: EvemailEditorProps) {
-  const editor = useEditor({
-    extensions: [StarterKit, TextStyle, Underline, Link, Color],
+  const editor = useEveEditor({
     content,
     onUpdate: ({ editor }) => {
       onContentUpdate(editor.getHTML());
     },
   });
+
   return (
     <Stack>
       <RichTextEditor editor={editor} {...otherProps} mih={200}>
