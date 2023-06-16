@@ -13,6 +13,7 @@ const config = {
     "@jitaspace/auth",
     "@jitaspace/esi-client",
     "@jitaspace/eve-icons",
+    "@jitaspace/tiptap-eve",
     "@jitaspace/ui",
     "@jitaspace/utils",
   ],

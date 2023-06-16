@@ -19,6 +19,7 @@
     "@jitaspace/auth": "*",
     "@jitaspace/esi-client": "*",
     "@jitaspace/eve-icons": "*",
+    "@jitaspace/tiptap-eve": "*",
     "@jitaspace/ui": "*",
     "@jitaspace/utils": "*",
     "@mantine/carousel": "^6.0.13",
