@@ -72,13 +72,15 @@ export default function Page() {
     },
   );
 
-  if (!data || isLoading) return "LOADING";
-
-  const lastModifiedDate = new Date(data.lastModified);
+  const lastModifiedDate: Date | undefined = data?.lastModified
+    ? new Date(data.lastModified)
+    : undefined;
   const startOfJune = new Date(2023, 5, 1);
-  const sdeUpdated = lastModifiedDate > startOfJune;
+  const sdeUpdated = lastModifiedDate && lastModifiedDate > startOfJune;
 
-  const lastCheckedOn = new Date(data.date);
+  const lastCheckedOn: Date | undefined = data?.date
+    ? new Date(data.date)
+    : undefined;
 
   return (
     <Container
@@ -112,14 +114,20 @@ export default function Page() {
       >
         <Stack align="center" p="xl" spacing="xl" style={{}}>
           <Title align="center">
-            {sdeUpdated ? "Viridian SDE Released!! Wee!" : "Not yet!"}
+            {isLoading && "Checking..."}
+            {!isLoading && sdeUpdated && "Viridian SDE Released!"}
+            {!isLoading && !sdeUpdated && "Not yet!"}
           </Title>
-          <Text align="center">
-            SDE last updated on {format(lastModifiedDate, "yyyy-MM-dd")}
-          </Text>
-          <Text align="center">
-            Last checked <TimeAgoText span date={lastCheckedOn} /> ago
-          </Text>
+          {lastModifiedDate && (
+            <Text align="center">
+              SDE last updated on {format(lastModifiedDate, "yyyy-MM-dd")}
+            </Text>
+          )}
+          {lastCheckedOn && (
+            <Text align="center">
+              Last checked <TimeAgoText span date={lastCheckedOn} /> ago
+            </Text>
+          )}
         </Stack>
       </Center>
     </Container>
