@@ -22,9 +22,7 @@ export const TimeAgoText = memo(
       };
     }, []);
 
-    const timeAgo = formatDistanceStrict(date, new Date(), {
-      includeSeconds: true,
-    });
+    const timeAgo = formatDistanceStrict(date, new Date());
 
     console.log("rerendering!");
 
