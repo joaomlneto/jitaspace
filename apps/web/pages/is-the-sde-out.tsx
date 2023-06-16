@@ -68,6 +68,7 @@ export default function Page() {
     (url: string) => fetch(url).then((res) => res.json()),
     {
       refreshInterval: 60 * 1000,
+      revalidateOnFocus: false,
     },
   );
 
