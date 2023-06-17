@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 
 import {
   getUniverseTypesTypeId,
+  useCategoryGroups,
   type GetUniverseCategoriesCategoryId200,
   type GetUniverseGroupsGroupId200,
   type GetUniverseTypesTypeId200,
   type GetUniverseTypesTypeIdQueryResult,
 } from "@jitaspace/esi-client";
-
-import { useCategoryGroups } from "~/hooks/useCategoryGroups";
 
 const SKILLS_CATEGORY = 16;
 

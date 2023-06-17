@@ -4,15 +4,21 @@ import {
   getUniverseGroupsGroupId,
   useGetUniverseCategoriesCategoryId,
   type GetUniverseGroupsGroupIdQueryResult,
-} from "@jitaspace/esi-client";
+} from "../client";
 
 export const useCategoryGroups = (
   categoryId: number | undefined,
-): {
-  loading: boolean;
-  error?: string;
-  data?: Record<string | number, GetUniverseGroupsGroupIdQueryResult>;
-} => {
+):
+  | {
+      loading: true;
+      error: undefined;
+      data: undefined;
+    }
+  | {
+      loading: false;
+      error?: string;
+      data: Record<string | number, GetUniverseGroupsGroupIdQueryResult>;
+    } => {
   const { data: category } = useGetUniverseCategoriesCategoryId(
     categoryId ?? 0,
     {},
@@ -41,6 +47,8 @@ export const useCategoryGroups = (
   if (groups === undefined) {
     return {
       loading: true,
+      data: undefined,
+      error: undefined,
     };
   }
 
