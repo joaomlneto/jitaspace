@@ -7,22 +7,20 @@ import {
   Container,
   Group,
   Indicator,
-  JsonInput,
   Loader,
   Stack,
   Table,
-  ThemeIcon,
   Title,
 } from "@mantine/core";
 import { Calendar } from "@mantine/dates";
-import { IconExclamationCircle } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 
 import {
   useGetCharactersCharacterIdCalendar,
+  type GetCharactersCharacterIdCalendar200Item,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
-import { CalendarIcon } from "@jitaspace/eve-icons";
+import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 
 import { MainLayout } from "~/layouts";
 
@@ -38,16 +36,19 @@ export default function Page() {
     },
   );
 
-  const eventsPerDate: { [date: string]: any[] } = {};
+  const eventsPerDate: {
+    [date: string]: GetCharactersCharacterIdCalendar200Item[];
+  } = {};
   if (events) {
     events.data.forEach((event) => {
-      const date = new Date(event.event_date!);
+      if (!event.event_date) return;
+      const date = new Date(event.event_date);
       date.setHours(0, 0, 0, 0);
       const dateString = date.getTime();
       if (!eventsPerDate[dateString]) {
         eventsPerDate[dateString] = [];
       }
-      eventsPerDate[dateString]!.push(event);
+      eventsPerDate[dateString]?.push(event);
     });
   }
 
@@ -68,30 +69,6 @@ export default function Page() {
           <Title order={1}>Calendar</Title>
           {isLoading && <Loader />}
         </Group>
-        {false && (
-          <JsonInput
-            value={JSON.stringify(
-              events?.data.map((event) => ({
-                ...event,
-                title: "<REDACTED>",
-                event_id: "<REDACTED>",
-              })) ?? [],
-              null,
-              2,
-            )}
-            readOnly
-            maxRows={20}
-            autosize
-          />
-        )}
-        {false && (
-          <JsonInput
-            value={JSON.stringify(eventsPerDate, null, 2)}
-            readOnly
-            maxRows={20}
-            autosize
-          />
-        )}
         <Center>
           <Calendar
             size="xl"
@@ -104,7 +81,6 @@ export default function Page() {
               const day = date.getDate();
               const dayEvents = eventsPerDate[date.getTime()] ?? [];
               const hasUnrespondedEvents = dayEvents.some(
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 (event) => event.event_response === "tentative",
               );
               return (
@@ -134,16 +110,7 @@ export default function Page() {
               <tr key={event.event_id}>
                 <td>
                   <Group noWrap align="end" spacing="xs">
-                    {event.importance === 1 && (
-                      <ThemeIcon
-                        color="red"
-                        variant="light"
-                        radius="xl"
-                        size="sm"
-                      >
-                        <IconExclamationCircle />
-                      </ThemeIcon>
-                    )}
+                    {event.importance === 1 && <WarningIcon width={20} />}
                     <Anchor
                       component={Link}
                       href={`/calendar/${event.event_id}`}
@@ -152,14 +119,19 @@ export default function Page() {
                     </Anchor>
                   </Group>
                 </td>
-                <td>{new Date(event.event_date!).toLocaleString()}</td>
                 <td>
-                  <Badge
-                    color={eventResponseColor[event.event_response!]}
-                    variant="light"
-                  >
-                    {event.event_response}
-                  </Badge>
+                  {event.event_date &&
+                    new Date(event.event_date).toLocaleString()}
+                </td>
+                <td>
+                  {event.event_response && (
+                    <Badge
+                      color={eventResponseColor[event.event_response]}
+                      variant="light"
+                    >
+                      {event.event_response}
+                    </Badge>
+                  )}
                 </td>
               </tr>
             ))}

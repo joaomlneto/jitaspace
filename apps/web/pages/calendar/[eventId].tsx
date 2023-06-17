@@ -18,12 +18,14 @@ import {
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
 import { CharacterAvatar, CharacterName, EveEntityAvatar } from "@jitaspace/ui";
+import { toArrayIfNot } from "@jitaspace/utils";
 
+import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
-  const eventId = parseInt(router.query.eventId as string);
+  const eventId = parseInt(toArrayIfNot(router.query.eventId)[0] ?? "");
   const { data: session } = useSession();
   const { data: event, isLoading: eventLoading } =
     useGetCharactersCharacterIdCalendarEventId(
@@ -84,6 +86,7 @@ export default function Page() {
           {loading && <Loader />}
         </Group>
         <Title order={4}>{event?.data.title}</Title>
+        <MailMessageViewer content={event?.data.text ?? ""} />
         <Group position="apart" mt="xl">
           <Text>Start</Text>
           <Text>
@@ -124,7 +127,7 @@ export default function Page() {
                   size="sm"
                   radius="xl"
                 />
-                <CharacterName characterId={attendee.character_id!} />
+                <CharacterName characterId={attendee.character_id} />
               </Group>
               <Badge
                 variant="light"
@@ -135,7 +138,6 @@ export default function Page() {
             </Group>
           ))}
         </Stack>
-        <div dangerouslySetInnerHTML={{ __html: event?.data.text ?? "" }} />
       </Stack>
     </Container>
   );
