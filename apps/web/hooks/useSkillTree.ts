@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 
 import {
-  getUniverseGroupsGroupId,
   getUniverseTypesTypeId,
-  useGetUniverseCategoriesCategoryId,
   type GetUniverseCategoriesCategoryId200,
   type GetUniverseGroupsGroupId200,
-  type GetUniverseGroupsGroupIdQueryResult,
   type GetUniverseTypesTypeId200,
   type GetUniverseTypesTypeIdQueryResult,
 } from "@jitaspace/esi-client";
+
+import { useCategoryGroups } from "~/hooks/useCategoryGroups";
 
 const SKILLS_CATEGORY = 16;
 
@@ -27,30 +26,11 @@ export function useSkillTree(): {
   error?: string;
   data?: SkillCategory;
 } {
-  const { data: category } =
-    useGetUniverseCategoriesCategoryId(SKILLS_CATEGORY);
-  const [groups, setGroups] = useState<
-    Record<string | number, GetUniverseGroupsGroupIdQueryResult>
-  >({});
+  const { data: groups } = useCategoryGroups(SKILLS_CATEGORY);
   const [types, setTypes] = useState<
     Record<string | number, GetUniverseTypesTypeIdQueryResult>
   >({});
   const [skillTree, setSkillTree] = useState<SkillCategory>();
-
-  // once we have the category, get its groups
-  useEffect(() => {
-    if (!category?.data) return;
-    const groupIds = category.data.groups;
-    const promises = groupIds.map((id) => getUniverseGroupsGroupId(id));
-    void Promise.all(promises).then((groups) =>
-      setGroups(
-        groups.reduce(
-          (acc, group) => ({ ...acc, [group.data.group_id]: group }),
-          {},
-        ),
-      ),
-    );
-  }, [category]);
 
   // once we have the groups, get their types
   useEffect(() => {
@@ -72,8 +52,9 @@ export function useSkillTree(): {
 
   // once we have all the types, build the tree
   useEffect(() => {
-    if (!types) return;
+    if (!types || !groups) return;
     if (Object.values(types).some((group) => group.data === undefined)) return;
+    console.log("RECOMPUTING HEAVY STUFF AGAIN!");
     const tree: SkillCategory = Object.values(groups).reduce(
       (acc, group) => ({
         ...acc,
