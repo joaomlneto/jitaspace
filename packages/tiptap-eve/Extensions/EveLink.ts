@@ -16,9 +16,10 @@ const CHARACTER_TYPE_IDS = [
 
 // FIXME: These should be configurable
 const renderEveHref = (href: string) => {
-  const PREFIX = "showinfo:";
-  if (href.startsWith(PREFIX)) {
-    const targetType = href.slice(PREFIX.length).split("//");
+  const INVENTORY_INFO_PREFIX = "showinfo:";
+
+  if (href.startsWith(INVENTORY_INFO_PREFIX)) {
+    const targetType = href.slice(INVENTORY_INFO_PREFIX.length).split("//");
     if (targetType.length === 1) {
       return `https://everef.net/type/${targetType[0]}`;
     }
@@ -42,6 +43,14 @@ const renderEveHref = (href: string) => {
     if (STATION_TYPE_IDS.includes(parseInt(targetType[0] ?? "")))
       return `http://evemaps.dotlan.net/station/${targetType[1]}`;
   }
+
+  const WAR_REPORT_PREFIX = "warReport:";
+  console.log("current prefix is", href);
+  if (href.startsWith(WAR_REPORT_PREFIX)) {
+    const warId = href.slice(WAR_REPORT_PREFIX.length);
+    return `https://zkillboard.com/war/${warId}`;
+  }
+
   return href;
 };
 
