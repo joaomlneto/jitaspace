@@ -1,8 +1,9 @@
 import React, { memo } from "react";
 import { Group, Paper, Text } from "@mantine/core";
 
+import { useEsiName } from "@jitaspace/esi-client";
+
 import { EveEntityAvatar } from "../Avatar";
-import { useEsiName } from "../hooks";
 import { AllianceCard } from "./AllianceCard";
 import { CharacterCard } from "./CharacterCard";
 import { CorporationCard } from "./CorporationCard";

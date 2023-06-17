@@ -1,10 +1,10 @@
 import React, { memo } from "react";
 import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 
+import { useEsiName } from "@jitaspace/esi-client";
 import { UnknownIcon } from "@jitaspace/eve-icons";
 import { getAvatarSize } from "@jitaspace/utils";
 
-import { useEsiName } from "../hooks";
 import { AllianceAvatar } from "./AllianceAvatar";
 import { sizes } from "./Avatar.styles";
 import { CharacterAvatar } from "./CharacterAvatar";
