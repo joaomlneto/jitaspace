@@ -13,9 +13,10 @@ const useStyles = createStyles((theme) => ({
 
 export type ScopesTableProps = {
   scopes: ESIScope[];
+  showRawScopeNames?: boolean;
 };
 
-export function ScopesTable({ scopes }: ScopesTableProps) {
+export function ScopesTable({ scopes, showRawScopeNames }: ScopesTableProps) {
   const { classes } = useStyles();
 
   const scopeData: {
@@ -41,17 +42,29 @@ export function ScopesTable({ scopes }: ScopesTableProps) {
       <tbody>
         {scopeData.map((scope) => (
           <tr key={scope.id}>
-            <td>
-              <Badge size="xs" variant="light" color="dark">
-                {scope.category}
-              </Badge>
-            </td>
-            <td>
-              <Badge size="xs" variant="light" color="dark">
-                {scope.permission}
-              </Badge>
-            </td>
-            {}
+            {!showRawScopeNames && (
+              <>
+                <td>
+                  <Badge size="xs" variant="light" color="dark">
+                    {scope.category}
+                  </Badge>
+                </td>
+                <td>
+                  <Badge size="xs" variant="light" color="dark">
+                    {scope.permission}
+                  </Badge>
+                </td>
+              </>
+            )}
+            {showRawScopeNames && (
+              <>
+                <td>
+                  <Badge size="xs" variant="light" color="dark">
+                    {scope.id}
+                  </Badge>
+                </td>
+              </>
+            )}
             <td align="left">{scope.description}</td>
           </tr>
         ))}
