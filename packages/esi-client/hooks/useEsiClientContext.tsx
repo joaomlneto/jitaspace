@@ -89,7 +89,7 @@ export const EsiClientContextProvider = memo(
           expires: tokenPayload?.exp,
           tokenExpirationDate,
           setAccessToken,
-          isTokenValid: accessToken !== undefined,
+          isTokenValid: !loading && accessToken !== undefined,
         }}
       >
         {props.children}
