@@ -1,10 +1,10 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect } from "react";
 import { Text, type TextProps } from "@mantine/core";
+import { useForceUpdate } from "@mantine/hooks";
 import { formatDistanceStrict } from "date-fns";
 
 type TimeAgoTextProps = TextProps & {
   date: Date;
-  // milliseconds
   updateInterval?: number;
   addSuffix?: boolean;
   unit?: "second" | "minute" | "hour" | "day" | "month" | "year";
@@ -20,13 +20,10 @@ export const TimeAgoText = memo(
     roundingMethod,
     ...otherProps
   }: TimeAgoTextProps) => {
-    const [_time, setTime] = useState(Date.now());
+    const forceUpdate = useForceUpdate();
 
     useEffect(() => {
-      const interval = setInterval(
-        () => setTime(Date.now()),
-        updateInterval ?? 1000,
-      );
+      const interval = setInterval(forceUpdate, updateInterval ?? 1000);
       return () => {
         clearInterval(interval);
       };
