@@ -1,5 +1,4 @@
 import { type PropsWithChildren, type ReactElement } from "react";
-import { useSession } from "next-auth/react";
 
 import { useEsiClientContext, type ESIScope } from "@jitaspace/esi-client";
 
@@ -17,10 +16,9 @@ export function ScopeGuard({
   insufficientScopesComponent,
   children,
 }: PropsWithChildren<ScopeGuardProps>) {
-  const { status } = useSession();
-  const { scopes: grantedScopes } = useEsiClientContext();
+  const { scopes: grantedScopes, loading } = useEsiClientContext();
 
-  if (status === "loading") {
+  if (loading) {
     return loadingScopesComponent ?? <div>Loading...</div>;
   }
 

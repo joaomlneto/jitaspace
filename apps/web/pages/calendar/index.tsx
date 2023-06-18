@@ -26,7 +26,6 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const { characterId, isTokenValid } = useEsiClientContext();
-  console.log("IS TOKEN VALID", isTokenValid, characterId);
   const { data: events, isLoading } = useGetCharactersCharacterIdCalendar(
     characterId ?? 1,
     {},

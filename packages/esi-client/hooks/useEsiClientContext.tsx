@@ -13,6 +13,7 @@ import { type ESIScope } from "../scopes";
 import { getEveSsoAccessTokenPayload } from "../utils";
 
 type EsiClientContext = {
+  loading: boolean;
   characterId?: number;
   characterName?: string;
   accessToken?: string;
@@ -24,6 +25,7 @@ type EsiClientContext = {
 };
 
 const defaultEsiClientContext: EsiClientContext = {
+  loading: true,
   setAccessToken: () => {
     /* empty */
   },
@@ -38,7 +40,7 @@ const EsiClientContext = createContext<EsiClientContext>(
 );
 export const EsiClientContextProvider = memo(
   (props: PropsWithChildren<{ accessToken?: string }>) => {
-    console.log("rerendering esi client context provider");
+    const [loading, setLoading] = useState<boolean>(true);
 
     const [accessToken, setAccessToken] = useState<string | undefined>(
       props.accessToken,
@@ -63,6 +65,7 @@ export const EsiClientContextProvider = memo(
 
     // Set the URL for the API server
     // https://orval.dev/guides/set-base-url
+    // FIXME: THIS SHOULD BE MOVED INTO AN INSTANCE OF AXIOS, NOT THE GLOBAL ONE!
     axios.defaults.baseURL = ESI_BASE_URL;
 
     useEffect(() => {
@@ -71,12 +74,14 @@ export const EsiClientContextProvider = memo(
         axios.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${accessToken}`;
+        setLoading(false);
       }
     }, [accessToken]);
 
     return (
       <EsiClientContext.Provider
         value={{
+          loading,
           accessToken,
           characterId: characterIdStr ? parseInt(characterIdStr) : undefined,
           characterName: tokenPayload?.name,
