@@ -13,9 +13,11 @@ import { useForm } from "@mantine/form";
 import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { HttpStatusCode, type AxiosError } from "axios";
-import { useSession } from "next-auth/react";
 
-import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
+import {
+  postCharactersCharacterIdMail,
+  useEsiClientContext,
+} from "@jitaspace/esi-client";
 import { EmailRecipientSearchMultiSelect } from "@jitaspace/ui";
 
 import { MailMessageEditor } from "~/components/EveMail/MailMessageEditor";
@@ -25,7 +27,7 @@ export type EveMailComposeFormProps = {
 };
 
 export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
   const form = useForm<{
     recipients: string[];
     subject: string;
@@ -53,12 +55,12 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
   const handleSend = async (values: typeof form.values) => {
     console.log("values:", values);
     try {
-      if (!session?.user.id) {
+      if (!isTokenValid || !characterId) {
         return showNotification({
           message: "Not logged in",
         });
       }
-      const result = await postCharactersCharacterIdMail(session.user.id, {
+      const result = await postCharactersCharacterIdMail(characterId, {
         approved_cost: 0,
         body: values.body,
         recipients: values.recipients.map((r) => ({
@@ -117,23 +119,20 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
           },
           onConfirm: () => {
             void (async () => {
-              if (!session?.user.id) {
+              if (!isTokenValid || !characterId) {
                 return showNotification({
                   message: "Not logged in",
                 });
               }
-              const result = await postCharactersCharacterIdMail(
-                session?.user.id,
-                {
-                  approved_cost: details.totalCost,
-                  body: values.body,
-                  recipients: values.recipients.map((r) => ({
-                    recipient_id: Number(r),
-                    recipient_type: "character",
-                  })),
-                  subject: values.subject,
-                },
-              );
+              const result = await postCharactersCharacterIdMail(characterId, {
+                approved_cost: details.totalCost,
+                body: values.body,
+                recipients: values.recipients.map((r) => ({
+                  recipient_id: Number(r),
+                  recipient_type: "character",
+                })),
+                subject: values.subject,
+              });
               if (result.status === HttpStatusCode.Created) {
                 showNotification({
                   message: `Message sent. You were charged ${details.totalCost} ISK for CSPA.`,

@@ -12,16 +12,20 @@ import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { Analytics } from "@vercel/analytics/react";
+import type { Session } from "next-auth";
 import { SessionProvider, signIn, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 
-import { type ESIScope } from "@jitaspace/esi-client";
+import {
+  EsiClientContextProvider,
+  useEsiClientContext,
+  type ESIScope,
+} from "@jitaspace/esi-client";
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
 import RouterTransition from "../components/RouterTransition";
-import AxiosContextProvider from "../contexts/axios";
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -30,19 +34,18 @@ type NextPageWithLayout = NextPage & {
 
 type AppPropsWithLayout = AppProps & {
   Component: NextPageWithLayout;
+  session: Session;
 };
 
-function NextAuthTokenExpirationHandler({ children }: PropsWithChildren) {
+/**
+ * Inject the token obtained from next-auth into our ESI Client
+ */
+const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
   const { data: session } = useSession();
-
-  useEffect(() => {
-    // @ts-expect-error: session.error is not defined in the session type
-    if (session?.error === "RefreshAccessTokenError") {
-      void signIn("eveonline"); // Force sign in to hopefully resolve error
-    }
-  }, [session]);
+  const { setAccessToken } = useEsiClientContext();
+  setAccessToken(session?.accessToken);
   return children;
-}
+};
 
 export default function App({
   Component,
@@ -57,11 +60,14 @@ export default function App({
       void signIn("eveonline"); // Force sign in to hopefully resolve error
     }
   }, [session]);
+  /*
+  const { setAccessToken } = useEsiClientContext();
+  setAccessToken(session?.accessToken);
+  */
 
   return (
     <>
       <Head>
-        <title>JitaSpace</title>
         <meta
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
@@ -71,7 +77,7 @@ export default function App({
       <DefaultSeo
         defaultTitle="Jita"
         titleTemplate="%s | Jita"
-        description="EveMail is a web application that allows you to view your EVE Online mail in a more modern and user-friendly way."
+        description="EVE Online Tools"
       />
 
       <Script
@@ -87,9 +93,10 @@ export default function App({
 
       {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */}
       <SessionProvider session={session}>
-        <NextAuthTokenExpirationHandler>
-          <AxiosContextProvider>
-            <EveIconsContextProvider iconVersion="rhea">
+        {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access */}
+        <EsiClientContextProvider accessToken={session?.accessToken}>
+          <EsiClientSSOAccessTokenInjector>
+            <EveIconsContextProvider /* iconVersion="rhea"*/>
               <MantineProvider
                 withGlobalStyles
                 withNormalizeCSS
@@ -109,8 +116,8 @@ export default function App({
                 </ModalsProvider>
               </MantineProvider>
             </EveIconsContextProvider>
-          </AxiosContextProvider>
-        </NextAuthTokenExpirationHandler>
+          </EsiClientSSOAccessTokenInjector>
+        </EsiClientContextProvider>
       </SessionProvider>
     </>
   );

@@ -9,9 +9,9 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
 import {
+  useEsiClientContext,
   useGetCharactersCharacterIdCalendarEventId,
   useGetCharactersCharacterIdCalendarEventIdAttendees,
   type GetCharactersCharacterIdCalendarEventIdAttendees200Item,
@@ -26,26 +26,26 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const eventId = parseInt(toArrayIfNot(router.query.eventId)[0] ?? "");
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
   const { data: event, isLoading: eventLoading } =
     useGetCharactersCharacterIdCalendarEventId(
-      session?.user?.id ?? 1,
+      characterId ?? 1,
       eventId,
       {},
       {
         swr: {
-          enabled: !!session?.user?.id,
+          enabled: isTokenValid,
         },
       },
     );
   const { data: attendees, isLoading: attendeesLoading } =
     useGetCharactersCharacterIdCalendarEventIdAttendees(
-      session?.user?.id ?? 1,
+      characterId ?? 1,
       eventId,
       {},
       {
         swr: {
-          enabled: !!session?.user?.id,
+          enabled: isTokenValid,
         },
       },
     );

@@ -1,9 +1,8 @@
 import React from "react";
-import { Container, Group, Spoiler, Stack, Text } from "@mantine/core";
-import { useSession } from "next-auth/react";
-import ReactHtmlParser, { convertNodeToElement } from "react-html-parser";
+import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
 import {
+  useEsiClientContext,
   useGetCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
@@ -18,43 +17,26 @@ import {
 
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 
-function transformMailBody(
-  node: {
-    type: string;
-    name?: string;
-    attribs?: Record<string, string>;
-    children: never[];
-  },
-  index: number,
-) {
-  if (node.type === "tag" && node.name === "font") {
-    if (node.attribs?.size) {
-      node.attribs.size = "";
-    }
-    return convertNodeToElement(node, index, transformMailBody);
-  }
-}
-
 export function MessagePanel({ messageId }: { messageId?: number }) {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    session?.user?.id ?? 1,
+    characterId ?? 1,
     undefined,
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );
 
   const { data: mail } = useGetCharactersCharacterIdMailMailId(
-    session?.user.id ?? 0,
+    characterId ?? 0,
     messageId ?? 0,
     undefined,
     {
       swr: {
-        enabled: !!session?.user.id && !!messageId,
+        enabled: isTokenValid && !!messageId,
       },
     },
   );
@@ -121,13 +103,6 @@ export function MessagePanel({ messageId }: { messageId?: number }) {
           </Group>
         )}
       </Group>
-      {false && (
-        <Container>
-          {ReactHtmlParser(mail?.data.body ?? "", {
-            transform: transformMailBody,
-          })}
-        </Container>
-      )}
       <MailMessageViewer content={mail?.data.body ?? ""} />
     </Stack>
   );

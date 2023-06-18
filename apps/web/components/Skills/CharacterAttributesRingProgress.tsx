@@ -11,9 +11,11 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { format } from "date-fns";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdAttributes } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdAttributes,
+} from "@jitaspace/esi-client";
 import {
   AttributesIcon,
   CharismaAttributeSmallIcon,
@@ -51,13 +53,13 @@ const icons: Record<CharacterAttribute, React.FC<EveIconProps>> = {
 };
 
 export function CharacterAttributesRingProgress() {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
   const { data, error, isLoading } = useGetCharactersCharacterIdAttributes(
-    session?.user?.id ?? 1,
+    characterId ?? 1,
     {},
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );

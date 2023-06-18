@@ -1,8 +1,10 @@
 import { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdMailLists,
+} from "@jitaspace/esi-client";
 
 export type MailingListNameProps = TextProps & {
   mailingListId?: number;
@@ -10,14 +12,14 @@ export type MailingListNameProps = TextProps & {
 
 export const MailingListName = memo(
   ({ mailingListId, ...otherProps }: MailingListNameProps) => {
-    const { data: session } = useSession();
+    const { characterId, isTokenValid } = useEsiClientContext();
 
     const { data, isLoading } = useGetCharactersCharacterIdMailLists(
-      session?.user.id ?? 1,
+      characterId ?? 1,
       undefined,
       {
         swr: {
-          enabled: !!session?.user.id,
+          enabled: isTokenValid,
         },
       },
     );

@@ -13,9 +13,9 @@ import {
   Title,
 } from "@mantine/core";
 import { Calendar } from "@mantine/dates";
-import { useSession } from "next-auth/react";
 
 import {
+  useEsiClientContext,
   useGetCharactersCharacterIdCalendar,
   type GetCharactersCharacterIdCalendar200Item,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
@@ -25,13 +25,14 @@ import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
+  console.log("IS TOKEN VALID", isTokenValid, characterId);
   const { data: events, isLoading } = useGetCharactersCharacterIdCalendar(
-    session?.user?.id ?? 1,
+    characterId ?? 1,
     {},
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );

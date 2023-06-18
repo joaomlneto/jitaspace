@@ -4,11 +4,11 @@ import { useForm } from "@mantine/form";
 import { type ContextModalProps } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { type AxiosError } from "axios";
-import { useSession } from "next-auth/react";
 
 import {
   postCharactersCharacterIdMailLabels,
   PostCharactersCharacterIdMailLabelsBodyColor,
+  useEsiClientContext,
 } from "@jitaspace/esi-client";
 import { MailLabelColorSelect } from "@jitaspace/ui";
 import { randomProperty } from "@jitaspace/utils";
@@ -21,7 +21,7 @@ export function ManageMailLabelsModal({
 }: ContextModalProps<{
   /* empty */
 }>) {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
   const form = useForm({
     initialValues: {
       name: "",
@@ -47,14 +47,14 @@ export function ManageMailLabelsModal({
           void (async (values) => {
             try {
               console.log(values);
-              if (!session?.user.id) {
+              if (!isTokenValid || !characterId) {
                 return showNotification({
                   title: "Error creating label",
                   message: `Error creating label ${values.name}: Not logged in`,
                 });
               }
               const result = await postCharactersCharacterIdMailLabels(
-                session?.user.id,
+                characterId,
                 {
                   name: values.name,
                   color: values.color,

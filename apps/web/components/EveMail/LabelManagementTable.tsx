@@ -2,24 +2,24 @@ import React from "react";
 import { Button, Group, Table, Text } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
-import { useSession } from "next-auth/react";
 
 import {
   deleteCharactersCharacterIdMailLabelsLabelId,
+  useEsiClientContext,
   useGetCharactersCharacterIdMailLabels,
 } from "@jitaspace/esi-client";
 import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
 export function LabelManagementTable() {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    session?.user.id ?? 0,
+    characterId ?? 0,
     undefined,
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );
@@ -61,7 +61,7 @@ export function LabelManagementTable() {
                       },
                       onConfirm: () =>
                         void (async () => {
-                          if (!session?.user.id) {
+                          if (!isTokenValid || !characterId) {
                             return showNotification({
                               title: "Error deleting label",
                               message: `Error deleting label ${label.name}: Not logged in`,
@@ -74,7 +74,7 @@ export function LabelManagementTable() {
                             });
                           }
                           await deleteCharactersCharacterIdMailLabelsLabelId(
-                            session?.user.id,
+                            characterId,
                             label.label_id,
                           );
                           showNotification({

@@ -11,10 +11,9 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { signIn } from "next-auth/react";
 
-import { type ESIScope } from "@jitaspace/esi-client";
+import { useEsiClientContext, type ESIScope } from "@jitaspace/esi-client";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
-import { useTokenScopes } from "~/hooks";
 import { ScopesTable } from "./ScopesTable";
 
 const useStyles = createStyles((theme) => ({
@@ -66,7 +65,7 @@ export function RequestPermissionsBanner({
   requiredScopes,
 }: RequestPermissionsBannerProps) {
   const { classes } = useStyles();
-  const { grantedScopes } = useTokenScopes();
+  const { scopes: grantedScopes } = useEsiClientContext();
 
   const [openGrantedScopesTable, { toggle: toggleGrantedScopesTable }] =
     useDisclosure(false);

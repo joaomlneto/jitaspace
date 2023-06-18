@@ -1,8 +1,10 @@
 import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailMailId } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdMailMailId,
+} from "@jitaspace/esi-client";
 
 import { EveEntityCard } from "./EveEntityCard";
 
@@ -12,15 +14,15 @@ export type EveMailSenderCardProps = {
 
 export const EveMailSenderCard = memo(
   ({ messageId }: EveMailSenderCardProps) => {
-    const { data: session } = useSession();
+    const { characterId, isTokenValid } = useEsiClientContext();
 
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
-      session?.user.id ?? 0,
+      characterId ?? 0,
       messageId ?? 0,
       undefined,
       {
         swr: {
-          enabled: !!session?.user.id && !!messageId,
+          enabled: isTokenValid && !!messageId,
         },
       },
     );

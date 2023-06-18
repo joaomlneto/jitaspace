@@ -13,19 +13,21 @@ import {
 import { IconExternalLink } from "@tabler/icons-react";
 import { format } from "date-fns";
 import humanizeDuration from "humanize-duration";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdSkillqueue,
+} from "@jitaspace/esi-client";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 export function SkillQueueTimeline() {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
   const { data, isLoading, error } = useGetCharactersCharacterIdSkillqueue(
-    session?.user?.id ?? 1,
+    characterId ?? 1,
     {},
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );

@@ -13,9 +13,12 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { IconMailbox, IconMailFast, IconTag } from "@tabler/icons-react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdMailLabels,
+} from "@jitaspace/esi-client";
 import { EveMailIcon, EveMailTagIcon } from "@jitaspace/eve-icons";
 import {
   CharacterAvatar,
@@ -70,14 +73,15 @@ const useStyles = createStyles((theme) => ({
 
 export default function MailLayoutNavbar() {
   const { classes } = useStyles();
-  const { data: session, status } = useSession();
+
+  const { characterId, isTokenValid } = useEsiClientContext();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    session?.user?.id ?? 1,
+    characterId ?? 1,
     undefined,
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );
@@ -112,7 +116,7 @@ export default function MailLayoutNavbar() {
 
         <Navbar.Section grow className={classes.links} component={ScrollArea}>
           <div className={classes.linksInner}>
-            {status === "authenticated" && (
+            {isTokenValid && (
               <>
                 <LinksGroup
                   link="/mail/compose"
@@ -193,8 +197,8 @@ export default function MailLayoutNavbar() {
         </Navbar.Section>
 
         <Navbar.Section className={classes.footer}>
-          {status === "authenticated" && <UserButton />}
-          {status === "unauthenticated" && (
+          {isTokenValid && <UserButton />}
+          {!isTokenValid && (
             <LoginWithEveOnlineButton
               width={NAVBAR_WIDTH - 16}
               onClick={() => {
@@ -202,7 +206,7 @@ export default function MailLayoutNavbar() {
               }}
             />
           )}
-          {status === "loading" && (
+          {!isTokenValid && (
             <Group p="md">
               <CharacterAvatar characterId={1} radius="xl" />
               <div style={{ flex: 1 }}>

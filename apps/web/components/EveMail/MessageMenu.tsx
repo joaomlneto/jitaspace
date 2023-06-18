@@ -9,11 +9,11 @@ import {
   IconMenu2,
   IconTrash,
 } from "@tabler/icons-react";
-import { useSession } from "next-auth/react";
 
 import {
   deleteCharactersCharacterIdMailMailId,
   putCharactersCharacterIdMailMailId,
+  useEsiClientContext,
   useGetCharactersCharacterIdMailLabels,
 } from "@jitaspace/esi-client";
 import { MailLabelColorSwatch } from "@jitaspace/ui";
@@ -44,13 +44,13 @@ export type MessageMenuProps = {
 };
 
 export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    session?.user?.id ?? 1,
+    characterId ?? 1,
     undefined,
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );
@@ -72,7 +72,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
               className="umami--click--modify-label-menu-item"
               onClick={() => {
                 void (async () => {
-                  if (session?.user.id === undefined) {
+                  if (characterId === undefined) {
                     return showNotification({
                       title: "Error",
                       message: "Not authenticated.",
@@ -86,7 +86,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                     });
                   }
                   await putCharactersCharacterIdMailMailId(
-                    session?.user.id,
+                    characterId,
                     mail.mail_id,
                     {
                       labels:
@@ -143,7 +143,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
           }
           onClick={() => {
             void (async () => {
-              if (session?.user.id === undefined) {
+              if (characterId === undefined) {
                 return showNotification({
                   title: "Error",
                   message: "Not authenticated.",
@@ -158,7 +158,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                 });
               }
               await putCharactersCharacterIdMailMailId(
-                session?.user.id,
+                characterId,
                 mail.mail_id,
                 {
                   read: !mail.is_read,
@@ -197,7 +197,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
               ),
               onConfirm: () =>
                 void (async () => {
-                  if (session?.user.id === undefined) {
+                  if (characterId === undefined) {
                     return showNotification({
                       title: "Error",
                       message: "Not authenticated.",
@@ -212,7 +212,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                     });
                   }
                   await deleteCharactersCharacterIdMailMailId(
-                    session?.user.id,
+                    characterId,
                     mail.mail_id,
                   );
                   data.find(

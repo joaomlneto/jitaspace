@@ -1,10 +1,10 @@
 import React from "react";
 import {
+  createStyles,
   Group,
   Menu,
   Text,
   UnstyledButton,
-  createStyles,
   type UnstyledButtonProps,
 } from "@mantine/core";
 import {
@@ -12,8 +12,9 @@ import {
   IconSettings,
   IconSwitchHorizontal,
 } from "@tabler/icons-react";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 
+import { useEsiClientContext } from "@jitaspace/esi-client";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 const useStyles = createStyles((theme) => ({
@@ -36,24 +37,20 @@ interface UserButtonProps extends UnstyledButtonProps {
   icon?: React.ReactNode;
 }
 
-export default function UserButton({ icon, ...others }: UserButtonProps) {
+export default function UserButton({ ...others }: UserButtonProps) {
   const { classes } = useStyles();
-  const { data: session } = useSession();
+  const { characterId, characterName } = useEsiClientContext();
 
   return (
     <Menu withArrow position="bottom" transitionProps={{ transition: "pop" }}>
       <Menu.Target>
         <UnstyledButton className={classes.user} {...others}>
           <Group>
-            <CharacterAvatar
-              characterId={session?.user.id}
-              radius="xl"
-              size="sm"
-            />
+            <CharacterAvatar characterId={characterId} radius="xl" size="sm" />
 
             <div style={{ flex: 1 }}>
               <Text size="sm" weight={500}>
-                {session?.user?.name}
+                {characterName}
               </Text>
             </div>
           </Group>

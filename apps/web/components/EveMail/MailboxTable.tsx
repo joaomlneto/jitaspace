@@ -3,9 +3,11 @@ import { Anchor, Group, Popover, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { format } from "date-fns";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdMailLabels,
+} from "@jitaspace/esi-client";
 import {
   EveMailSenderAvatar,
   EveMailSenderCard,
@@ -39,13 +41,13 @@ type MailboxTableProps = {
 };
 
 export function MailboxTable({ data, mutate, className }: MailboxTableProps) {
-  const { data: session } = useSession();
+  const { isTokenValid, characterId } = useEsiClientContext();
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    session?.user?.id ?? 1,
+    characterId ?? 1,
     undefined,
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );

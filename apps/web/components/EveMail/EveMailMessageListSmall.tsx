@@ -10,9 +10,11 @@ import {
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { format } from "date-fns";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdMailLabels,
+} from "@jitaspace/esi-client";
 import {
   EveMailSenderAvatar,
   EveMailSenderName,
@@ -44,13 +46,13 @@ export function EveMailMessageListSmall({
   data,
   ...otherProps
 }: EmailListNarrowProps) {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    session?.user?.id ?? 1,
+    characterId ?? 1,
     undefined,
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );

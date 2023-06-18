@@ -1,8 +1,8 @@
 import React, { memo } from "react";
 import { Accordion, Container, Group, Stack, Text } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
 import {
+  useEsiClientContext,
   useGetCharactersCharacterIdSkills,
   type GetCharactersCharacterIdSkills200SkillsItem,
   type GetUniverseTypesTypeId200,
@@ -14,18 +14,18 @@ import { useSkillTree } from "~/hooks";
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 
 export const SkillTreeAccordion = memo(() => {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
   const { data: skillTree, loading, error } = useSkillTree();
   const {
     data: skills,
     isLoading: skillsLoading,
     error: skillsError,
   } = useGetCharactersCharacterIdSkills(
-    session?.user?.id ?? 1,
+    characterId ?? 1,
     {},
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );

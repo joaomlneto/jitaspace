@@ -1,8 +1,10 @@
 import { memo } from "react";
 import { ColorSwatch, type ColorSwatchProps } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdMailLabels,
+} from "@jitaspace/esi-client";
 
 export type MailLabelColorSwatchProps = Omit<ColorSwatchProps, "color"> & {
   labelId?: string | number;
@@ -10,14 +12,14 @@ export type MailLabelColorSwatchProps = Omit<ColorSwatchProps, "color"> & {
 
 export const MailLabelColorSwatch = memo(
   ({ labelId, ...otherProps }: MailLabelColorSwatchProps) => {
-    const { data: session } = useSession();
+    const { characterId, isTokenValid } = useEsiClientContext();
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
-      session?.user?.id ?? 1,
+      characterId ?? 1,
       undefined,
       {
         swr: {
-          enabled: !!session?.user?.id,
+          enabled: isTokenValid,
         },
       },
     );

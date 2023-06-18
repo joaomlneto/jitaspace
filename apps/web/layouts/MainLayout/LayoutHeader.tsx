@@ -16,8 +16,9 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 
+import { useEsiClientContext } from "@jitaspace/esi-client";
 import { CalendarIcon, EveMailIcon, SkillsIcon } from "@jitaspace/eve-icons";
 import {
   LoginWithEveOnlineButton,
@@ -111,7 +112,7 @@ export function LayoutHeader() {
     useDisclosure(false);
   //const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
   const { classes, theme } = useStyles();
-  const { status } = useSession();
+  const { isTokenValid } = useEsiClientContext();
 
   return (
     <Box>
@@ -159,8 +160,8 @@ export function LayoutHeader() {
             </Group>
 
             <Group className={classes.hiddenMobile}>
-              {status === "authenticated" && <UserButton />}
-              {status === "unauthenticated" && (
+              {isTokenValid && <UserButton />}
+              {!isTokenValid && (
                 <LoginWithEveOnlineButton
                   size="small"
                   onClick={() => {
@@ -222,8 +223,8 @@ export function LayoutHeader() {
           />
 
           <Group position="center" grow pb="xl">
-            {status === "authenticated" && <UserButton />}
-            {status === "unauthenticated" && (
+            {isTokenValid && <UserButton />}
+            {!isTokenValid && (
               <LoginWithEveOnlineButton
                 size="small"
                 onClick={() => {

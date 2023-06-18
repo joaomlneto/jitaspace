@@ -16,11 +16,13 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { useSession } from "next-auth/react";
 import { NextSeo } from "next-seo";
 import useSWRInfinite from "swr/infinite";
 
-import { type GetCharactersCharacterIdMail200Item } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  type GetCharactersCharacterIdMail200Item,
+} from "@jitaspace/esi-client";
 import {
   EvemailComposeIcon,
   EveMailIcon,
@@ -38,7 +40,7 @@ import { MailLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const labels = router.query.labels;
-  const { data: session } = useSession();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
   const [selectedLabels, setSelectedLabels] = React.useState<string[]>([]);
 
@@ -55,7 +57,7 @@ export default function Page() {
         pageIndex,
         previousPageData: GetCharactersCharacterIdMail200Item[],
       ) {
-        if (!router.isReady || !session?.user.id) {
+        if (!router.isReady || !isTokenValid) {
           return null;
         }
         const params = new URLSearchParams();
@@ -71,15 +73,13 @@ export default function Page() {
         if (labels) {
           params.append("labels", labels.toString());
         }
-        return `https://esi.evetech.net/latest/characters/${
-          session?.user.id
-        }/mail/?${params.toString()}`;
+        return `https://esi.evetech.net/latest/characters/${characterId}/mail/?${params.toString()}`;
       },
       (url: string) =>
         fetch(url, {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         }).then((r) => r.json()),
       { refreshInterval: 30000, revalidateAll: true },

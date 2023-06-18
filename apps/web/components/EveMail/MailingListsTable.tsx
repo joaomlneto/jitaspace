@@ -1,19 +1,21 @@
 import React from "react";
 import { Alert, Container, Group, Stack, Text } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdMailLists,
+} from "@jitaspace/esi-client";
 import { GroupListIcon } from "@jitaspace/eve-icons";
 
 export function MailingListsTable() {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
 
   const { data, error } = useGetCharactersCharacterIdMailLists(
-    session?.user.id ?? 1,
+    characterId ?? 1,
     {},
     {
       swr: {
-        enabled: !!session?.user.id,
+        enabled: isTokenValid,
       },
     },
   );

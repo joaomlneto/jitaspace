@@ -1,9 +1,9 @@
 import React, { memo } from "react";
 import { Loader, MultiSelect, type MultiSelectProps } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import { useSession } from "next-auth/react";
 
 import {
+  useEsiClientContext,
   useGetCharactersCharacterIdSearch,
   type GetCharactersCharacterIdSearchCategoriesItem,
 } from "@jitaspace/esi-client";
@@ -21,7 +21,7 @@ export type EsiSearchMultiSelectProps = Omit<
 
 export const EsiSearchMultiSelect = memo(
   ({ debounceTime, ...otherProps }: EsiSearchMultiSelectProps) => {
-    const { data: session } = useSession();
+    const { characterId, isTokenValid } = useEsiClientContext();
     const [value, setValue] = React.useState<string[]>([]);
     const [searchValue, onSearchChange] = React.useState<string>("");
     const [debouncedSearchValue] = useDebouncedValue(
@@ -34,7 +34,7 @@ export const EsiSearchMultiSelect = memo(
       isLoading,
       isValidating,
     } = useGetCharactersCharacterIdSearch(
-      session?.user.id ?? 1,
+      characterId ?? 1,
       {
         // @ts-expect-error - This is a bug in the generated code
         categories: ["alliance", "corporation", "character"].join(","),
@@ -42,7 +42,7 @@ export const EsiSearchMultiSelect = memo(
       },
       {
         swr: {
-          enabled: !!session?.user.id && searchValue.length >= 3,
+          enabled: isTokenValid && searchValue.length >= 3,
         },
       },
     );

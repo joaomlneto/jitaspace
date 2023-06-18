@@ -11,8 +11,14 @@
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --noEmit"
   },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "react": "18.2.0"
+  },
   "devDependencies": {
     "@jitaspace/eslint-config": "^0.1.0",
+    "@types/node": "^18.15.11",
+    "@types/react": "^18.0.33",
     "eslint": "^8.42.0",
     "typescript": "^5.1.3"
   }

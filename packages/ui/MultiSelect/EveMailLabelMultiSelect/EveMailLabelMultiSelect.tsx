@@ -1,8 +1,10 @@
 import React, { memo } from "react";
 import { MultiSelect, type MultiSelectProps } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdMailLabels,
+} from "@jitaspace/esi-client";
 import { humanLabelName } from "@jitaspace/utils";
 
 import { EveMailLabelMultiSelectItem } from "./EveMailLabelMultiSelectItem";
@@ -12,14 +14,14 @@ type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data">;
 
 export const EveMailLabelMultiSelect = memo(
   (props: EmailLabelMultiSelectProps) => {
-    const { data: session } = useSession();
+    const { characterId, isTokenValid } = useEsiClientContext();
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
-      session?.user.id ?? 0,
+      characterId ?? 0,
       undefined,
       {
         swr: {
-          enabled: !!session?.user?.id,
+          enabled: isTokenValid,
         },
       },
     );

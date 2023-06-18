@@ -1,8 +1,7 @@
 import { type PropsWithChildren, type ReactElement } from "react";
 
-import { type ESIScope } from "@jitaspace/esi-client";
+import { useEsiClientContext, type ESIScope } from "@jitaspace/esi-client";
 
-import { useTokenScopes } from "~/hooks";
 import { RequestPermissionsBanner } from "./RequestPermissionsBanner";
 
 export type ScopeGuardProps = {
@@ -17,9 +16,9 @@ export function ScopeGuard({
   insufficientScopesComponent,
   children,
 }: PropsWithChildren<ScopeGuardProps>) {
-  const { grantedScopes, loading } = useTokenScopes();
+  const { scopes: grantedScopes, isTokenValid } = useEsiClientContext();
 
-  if (requiredScopes.length > 0 && loading) {
+  if (requiredScopes.length > 0 && !isTokenValid) {
     return loadingScopesComponent ?? <div>Loading...</div>;
   }
 

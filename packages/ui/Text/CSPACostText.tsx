@@ -1,8 +1,10 @@
 import { memo, useEffect, useState } from "react";
 import { Text, type TextProps } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
-import { postCharactersCharacterIdCspa } from "@jitaspace/esi-client";
+import {
+  postCharactersCharacterIdCspa,
+  useEsiClientContext,
+} from "@jitaspace/esi-client";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 export type CSPACostTextProps = TextProps & {
@@ -10,7 +12,7 @@ export type CSPACostTextProps = TextProps & {
 };
 export const CSPACostText = memo(
   ({ characterIds, ...otherProps }: CSPACostTextProps) => {
-    const { data: session } = useSession();
+    const { characterId } = useEsiClientContext();
     const [cost, setCost] = useState<number | null>(null);
 
     const characterIdsArray = toArrayIfNot(characterIds ?? []);
@@ -21,12 +23,12 @@ export const CSPACostText = memo(
       }
 
       void postCharactersCharacterIdCspa(
-        session?.user.id ?? 1,
+        characterId ?? 1,
         characterIdsArray.map((characterId) => Number(characterId)),
       ).then((data) => {
         setCost(data.data);
       });
-    }, [characterIdsArray, session?.user.id]);
+    }, [characterIdsArray, characterId]);
 
     return <Text {...otherProps}>{cost} ISK</Text>;
   },

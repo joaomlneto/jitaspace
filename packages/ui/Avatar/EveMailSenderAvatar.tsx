@@ -1,8 +1,10 @@
 import React, { memo } from "react";
 import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailMailId } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdMailMailId,
+} from "@jitaspace/esi-client";
 
 import { EveEntityAvatar } from "./index";
 
@@ -12,15 +14,15 @@ export type EveMailSenderAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const EveMailSenderAvatar = memo(
   ({ messageId, ...otherProps }: EveMailSenderAvatarProps) => {
-    const { data: session } = useSession();
+    const { characterId, isTokenValid } = useEsiClientContext();
 
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
-      session?.user.id ?? 0,
+      characterId ?? 0,
       messageId ?? 0,
       undefined,
       {
         swr: {
-          enabled: !!session?.user.id && !!messageId,
+          enabled: isTokenValid && !!messageId,
         },
       },
     );

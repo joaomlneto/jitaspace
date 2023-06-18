@@ -1,8 +1,10 @@
 import { memo } from "react";
 import { Text, type TextProps } from "@mantine/core";
-import { useSession } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import {
+  useEsiClientContext,
+  useGetCharactersCharacterIdMailLabels,
+} from "@jitaspace/esi-client";
 import { humanLabelName } from "@jitaspace/utils";
 
 export type LabelNameProps = TextProps & {
@@ -10,14 +12,14 @@ export type LabelNameProps = TextProps & {
 };
 
 export const LabelName = memo(({ labelId, ...otherProps }: LabelNameProps) => {
-  const { data: session } = useSession();
+  const { characterId, isTokenValid } = useEsiClientContext();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    session?.user?.id ?? 1,
+    characterId ?? 1,
     undefined,
     {
       swr: {
-        enabled: !!session?.user?.id,
+        enabled: isTokenValid,
       },
     },
   );
