@@ -60,10 +60,6 @@ export default function App({
       void signIn("eveonline"); // Force sign in to hopefully resolve error
     }
   }, [session]);
-  /*
-  const { setAccessToken } = useEsiClientContext();
-  setAccessToken(session?.accessToken);
-  */
 
   return (
     <>
