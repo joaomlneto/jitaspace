@@ -1,5 +1,7 @@
 import React from "react";
+import Link from "next/link";
 import {
+  Button,
   Center,
   Container,
   createStyles,
@@ -114,17 +116,30 @@ export default function Page() {
         <Stack align="center" p="xl" spacing="xl" style={{}}>
           <Title align="center">
             {isLoading && "Checking..."}
-            {!isLoading && sdeUpdated && "Viridian SDE Released!"}
+            {!isLoading && sdeUpdated && "Yes!"}
             {!isLoading && !sdeUpdated && "Not yet!"}
           </Title>
+          {!isLoading && sdeUpdated && (
+            <Button
+              variant="subtle"
+              component={Link}
+              href="https://eve-static-data-export.s3-eu-west-1.amazonaws.com/tranquility/sde.zip"
+            >
+              Download SDE
+            </Button>
+          )}
           {lastModifiedDate && (
-            <Text align="center">
-              SDE last updated on {format(lastModifiedDate, "yyyy-MM-dd")}
+            <Text align="center" size="lg">
+              SDE last updated on
+              <br />
+              <b>{format(lastModifiedDate, "yyyy-MM-dd")}</b>
             </Text>
           )}
           {lastCheckedOn && (
-            <Text align="center">
-              Last checked <TimeAgoText span date={lastCheckedOn} /> ago
+            <Text align="center" size="sm">
+              Last checked
+              <br />
+              <TimeAgoText span date={lastCheckedOn} /> ago
             </Text>
           )}
         </Stack>
