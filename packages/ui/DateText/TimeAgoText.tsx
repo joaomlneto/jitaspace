@@ -6,10 +6,20 @@ type TimeAgoTextProps = TextProps & {
   date: Date;
   // milliseconds
   updateInterval?: number;
+  addSuffix?: boolean;
+  unit?: "second" | "minute" | "hour" | "day" | "month" | "year";
+  roundingMethod?: "floor" | "ceil" | "round";
 };
 
 export const TimeAgoText = memo(
-  ({ updateInterval, date, ...otherProps }: TimeAgoTextProps) => {
+  ({
+    updateInterval,
+    date,
+    addSuffix,
+    unit,
+    roundingMethod,
+    ...otherProps
+  }: TimeAgoTextProps) => {
     const [_time, setTime] = useState(Date.now());
 
     useEffect(() => {
@@ -22,9 +32,11 @@ export const TimeAgoText = memo(
       };
     }, []);
 
-    const timeAgo = formatDistanceStrict(date, new Date());
-
-    console.log("rerendering!");
+    const timeAgo = formatDistanceStrict(date, new Date(), {
+      addSuffix,
+      unit,
+      roundingMethod,
+    });
 
     return <Text {...otherProps}>{timeAgo}</Text>;
   },
