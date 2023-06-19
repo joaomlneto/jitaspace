@@ -76,8 +76,8 @@ export default function Page() {
   const lastModifiedDate: Date | undefined = data?.lastModified
     ? new Date(data.lastModified)
     : undefined;
-  const startOfJune = new Date(2023, 5, 1);
-  const sdeUpdated = lastModifiedDate && lastModifiedDate > startOfJune;
+  //const startOfJune = new Date(2023, 5, 1);
+  const sdeUpdated = true; //lastModifiedDate && lastModifiedDate > startOfJune;
 
   const lastCheckedOn: Date | undefined = data?.date
     ? new Date(data.date)
@@ -125,7 +125,7 @@ export default function Page() {
               component={Link}
               href="https://eve-static-data-export.s3-eu-west-1.amazonaws.com/tranquility/sde.zip"
             >
-              Download SDE
+              Download the SDE
             </Button>
           )}
           {lastModifiedDate && (
