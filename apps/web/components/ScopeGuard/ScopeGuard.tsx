@@ -18,14 +18,18 @@ export function ScopeGuard({
 }: PropsWithChildren<ScopeGuardProps>) {
   const { scopes: grantedScopes, loading } = useEsiClientContext();
 
+  // If no scopes are required, just pass through.
+  if (requiredScopes.length === 0) return children;
+
+  // Are we still loading? If so, display something...
   if (loading) {
     return loadingScopesComponent ?? <div>Loading...</div>;
   }
 
+  // Scopes are missing! Do not display children.
   if (
     requiredScopes.some(
-      (requiredScope) =>
-        !grantedScopes || !grantedScopes.includes(requiredScope),
+      (requiredScope) => !grantedScopes.includes(requiredScope),
     )
   ) {
     return (
@@ -35,5 +39,6 @@ export function ScopeGuard({
     );
   }
 
+  // We are authenticated and have the required scopes. Render children.
   return children;
 }
