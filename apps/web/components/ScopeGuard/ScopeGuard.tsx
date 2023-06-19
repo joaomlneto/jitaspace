@@ -5,13 +5,13 @@ import { useEsiClientContext, type ESIScope } from "@jitaspace/esi-client";
 import { RequestPermissionsBanner } from "./RequestPermissionsBanner";
 
 export type ScopeGuardProps = {
-  requiredScopes: ESIScope[];
+  requiredScopes?: ESIScope[];
   loadingScopesComponent?: ReactElement;
   insufficientScopesComponent?: ReactElement;
 };
 
 export function ScopeGuard({
-  requiredScopes,
+  requiredScopes = [],
   loadingScopesComponent,
   insufficientScopesComponent,
   children,

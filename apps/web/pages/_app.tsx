@@ -56,7 +56,7 @@ export default function App({
   pageProps: { session, ...pageProps },
 }: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
-  const requiredScopes = Component.requiredScopes ?? [];
+  const requiredScopes = Component.requiredScopes;
 
   useEffect(() => {
     if ((session as { error?: string })?.error === "RefreshAccessTokenError") {
