@@ -10,6 +10,7 @@ import {
   Drawer,
   Group,
   Header,
+  Loader,
   rem,
   ScrollArea,
   Text,
@@ -111,7 +112,7 @@ export function LayoutHeader() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
   const { classes, theme } = useStyles();
-  const { isTokenValid } = useEsiClientContext();
+  const { isTokenValid, loading } = useEsiClientContext();
 
   return (
     <Box>
@@ -159,8 +160,14 @@ export function LayoutHeader() {
             </Group>
 
             <Group className={classes.hiddenMobile}>
-              {isTokenValid && <UserButton />}
-              {!isTokenValid && (
+              {loading && (
+                <Group>
+                  <Loader />
+                  <Text>Loading session…</Text>
+                </Group>
+              )}
+              {!loading && isTokenValid && <UserButton />}
+              {!loading && !isTokenValid && (
                 <LoginWithEveOnlineButton
                   size="small"
                   onClick={() => {
@@ -222,8 +229,14 @@ export function LayoutHeader() {
           />
 
           <Group position="center" grow pb="xl">
-            {isTokenValid && <UserButton />}
-            {!isTokenValid && (
+            {loading && (
+              <Group>
+                <Loader />
+                <Text>Loading session…</Text>
+              </Group>
+            )}
+            {!loading && isTokenValid && <UserButton />}
+            {!loading && !isTokenValid && (
               <LoginWithEveOnlineButton
                 size="small"
                 onClick={() => {
