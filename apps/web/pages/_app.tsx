@@ -41,9 +41,13 @@ type AppPropsWithLayout = AppProps & {
  * Inject the token obtained from next-auth into our ESI Client
  */
 const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
-  const { data: session } = useSession();
-  const { setAccessToken } = useEsiClientContext();
-  setAccessToken(session?.accessToken);
+  const { data: session, status } = useSession();
+  const { setAccessToken, setLoading } = useEsiClientContext();
+
+  useEffect(() => {
+    setAccessToken(session?.accessToken);
+    setLoading(status === "loading");
+  }, [session?.accessToken, setAccessToken, setLoading, status]);
   return children;
 };
 

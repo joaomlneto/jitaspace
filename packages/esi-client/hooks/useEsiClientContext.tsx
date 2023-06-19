@@ -19,15 +19,19 @@ type EsiClientContext = {
   accessToken?: string;
   scopes: ESIScope[];
   expires?: number;
-  setAccessToken: (accessToken?: string) => void;
   tokenExpirationDate?: Date;
   isTokenValid: boolean;
+  setAccessToken: (accessToken?: string) => void;
+  setLoading: (loading: boolean) => void;
 };
 
 const defaultEsiClientContext: EsiClientContext = {
   loading: true,
   setAccessToken: () => {
     /* empty */
+  },
+  setLoading: () => {
+    return;
   },
   scopes: [],
   isTokenValid: false,
@@ -90,6 +94,7 @@ export const EsiClientContextProvider = memo(
           tokenExpirationDate,
           setAccessToken,
           isTokenValid: !loading && accessToken !== undefined,
+          setLoading,
         }}
       >
         {props.children}
