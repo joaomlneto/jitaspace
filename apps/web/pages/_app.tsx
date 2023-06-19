@@ -42,12 +42,14 @@ type AppPropsWithLayout = AppProps & {
  */
 const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
   const { data: session, status } = useSession();
-  const { setAccessToken, setLoading } = useEsiClientContext();
+  const { setAuth } = useEsiClientContext();
 
   useEffect(() => {
-    setAccessToken(session?.accessToken);
-    setLoading(status === "loading");
-  }, [session?.accessToken, setAccessToken, setLoading, status]);
+    setAuth({
+      accessToken: session?.accessToken,
+      loading: status === "loading",
+    });
+  }, [session?.accessToken, setAuth, status]);
   return children;
 };
 

@@ -21,16 +21,26 @@ type EsiClientContext = {
   expires?: number;
   tokenExpirationDate?: Date;
   isTokenValid: boolean;
-  setAccessToken: (accessToken?: string) => void;
-  setLoading: (loading: boolean) => void;
+  //setAccessToken: (accessToken?: string) => void;
+  //setLoading: (loading: boolean) => void;
+  setAuth: ({
+    accessToken,
+    loading,
+  }: {
+    accessToken?: string;
+    loading: boolean;
+  }) => void;
 };
 
 const defaultEsiClientContext: EsiClientContext = {
   loading: true,
-  setAccessToken: () => {
-    /* empty */
+  /*setAccessToken: () => {
+    return;
   },
   setLoading: () => {
+    return;
+  },*/
+  setAuth: () => {
     return;
   },
   scopes: [],
@@ -46,13 +56,14 @@ export const EsiClientContextProvider = memo(
   (props: PropsWithChildren<{ accessToken?: string }>) => {
     const [loading, setLoading] = useState<boolean>(true);
 
-    const [accessToken, setAccessToken] = useState<string | undefined>(
-      props.accessToken,
-    );
+    const [auth, setAuth] = useState<{
+      accessToken?: string;
+      loading: boolean;
+    }>({ accessToken: props.accessToken, loading: false });
 
     const tokenPayload = useMemo(
-      () => getEveSsoAccessTokenPayload(accessToken),
-      [accessToken],
+      () => getEveSsoAccessTokenPayload(auth.accessToken),
+      [auth.accessToken],
     );
 
     const characterIdStr = useMemo(
@@ -73,28 +84,34 @@ export const EsiClientContextProvider = memo(
     axios.defaults.baseURL = ESI_BASE_URL;
 
     useEffect(() => {
-      if (accessToken) {
+      if (auth.accessToken) {
         console.log("injecting token in ESI Client");
         axios.defaults.headers.common[
           "Authorization"
-        ] = `Bearer ${accessToken}`;
+        ] = `Bearer ${auth.accessToken}`;
         setLoading(false);
       }
-    }, [accessToken]);
+    }, [auth.accessToken]);
+
+    const characterId = useMemo(
+      () => (characterIdStr ? parseInt(characterIdStr) : undefined),
+      [characterIdStr],
+    );
 
     return (
       <EsiClientContext.Provider
         value={{
-          loading,
-          accessToken,
-          characterId: characterIdStr ? parseInt(characterIdStr) : undefined,
+          loading: auth.loading,
+          accessToken: auth.accessToken,
+          characterId,
           characterName: tokenPayload?.name,
           scopes: tokenPayload?.scp ?? [],
           expires: tokenPayload?.exp,
           tokenExpirationDate,
-          setAccessToken,
-          isTokenValid: !loading && accessToken !== undefined,
-          setLoading,
+          //setAccessToken
+          isTokenValid: !loading && auth.accessToken !== undefined,
+          //setLoading,
+          setAuth,
         }}
       >
         {props.children}
