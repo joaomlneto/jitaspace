@@ -93,24 +93,17 @@ export const EsiClientContextProvider = memo(
       }
     }, [auth.accessToken]);
 
-    const characterId = useMemo(
-      () => (characterIdStr ? parseInt(characterIdStr) : undefined),
-      [characterIdStr],
-    );
-
     return (
       <EsiClientContext.Provider
         value={{
           loading: auth.loading,
           accessToken: auth.accessToken,
-          characterId,
+          characterId: characterIdStr ? parseInt(characterIdStr) : undefined,
           characterName: tokenPayload?.name,
           scopes: tokenPayload?.scp ?? [],
           expires: tokenPayload?.exp,
           tokenExpirationDate,
-          //setAccessToken
           isTokenValid: !loading && auth.accessToken !== undefined,
-          //setLoading,
           setAuth,
         }}
       >

@@ -162,7 +162,7 @@ export function LayoutHeader() {
             <Group className={classes.hiddenMobile}>
               {loading && (
                 <Group>
-                  <Loader />
+                  <Loader size="sm" />
                   <Text>Loading session…</Text>
                 </Group>
               )}
@@ -231,7 +231,7 @@ export function LayoutHeader() {
           <Group position="center" grow pb="xl">
             {loading && (
               <Group>
-                <Loader />
+                <Loader size="sm" />
                 <Text>Loading session…</Text>
               </Group>
             )}
