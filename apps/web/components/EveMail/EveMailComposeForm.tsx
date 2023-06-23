@@ -5,6 +5,7 @@ import {
   Button,
   Grid,
   Group,
+  JsonInput,
   Stack,
   Text,
   TextInput,
@@ -20,7 +21,7 @@ import {
 } from "@jitaspace/esi-client";
 import { EmailRecipientSearchMultiSelect } from "@jitaspace/ui";
 
-import { MailMessageEditor } from "~/components/EveMail/MailMessageEditor";
+import { MailMessageEditor } from "~/components/EveMail/Editor/MailMessageEditor";
 
 export type EveMailComposeFormProps = {
   onSend?: () => void;
@@ -40,7 +41,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
     },
     validate: {
       recipients: (value) => {
-        if (value.length === 0) {
+        if (value.length < 1) {
           return "At least one recipient is required";
         }
       },
@@ -176,20 +177,19 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
         </Grid>
         <EmailRecipientSearchMultiSelect
           label="Recipients"
-          value={form.values.recipients}
-          onChange={(value) => form.setFieldValue("recipients", value)}
+          {...form.getInputProps("recipients")}
         />
-        <Stack spacing={0}>
-          <MailMessageEditor
-            content={form.values.body}
-            onContentUpdate={(content) => form.setFieldValue("body", content)}
-          />
-          {form.errors.recipients && (
-            <Text size="xs" color="red">
-              {form.errors.body}
-            </Text>
-          )}
-        </Stack>
+        <MailMessageEditor
+          content={form.values.body}
+          onContentUpdate={(content) => form.setFieldValue("body", content)}
+        />
+        <JsonInput
+          label="RAW body"
+          value={form.values.body}
+          autosize
+          readOnly
+          maxRows={50}
+        />
       </Stack>
     </form>
   );

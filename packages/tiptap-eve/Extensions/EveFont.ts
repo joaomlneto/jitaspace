@@ -11,7 +11,7 @@ export interface FontColorMarkOptions {
   HTMLAttributes: Record<string, any>;
 }
 
-export const FontColorMark = Mark.create<FontColorMarkOptions>({
+export const EveFontColor = Mark.create<FontColorMarkOptions>({
   name: "EVEFontMark",
   addOptions() {
     return {

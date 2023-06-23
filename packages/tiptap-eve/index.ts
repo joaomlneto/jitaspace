@@ -3,19 +3,17 @@ import { Underline } from "@tiptap/extension-underline";
 import { useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
-import { EveLink, FontColorMark } from "./Extensions";
+import { EveFontColor, EveLink } from "./Extensions";
 
 export const useEveEditor: typeof useEditor = (options, ...others) =>
   useEditor(
     {
       extensions: [
-        StarterKit,
+        StarterKit.configure({}),
         TextStyle,
         Underline,
-        //Link,
         EveLink,
-        //FontNode,
-        FontColorMark,
+        EveFontColor,
       ],
       ...options,
     },

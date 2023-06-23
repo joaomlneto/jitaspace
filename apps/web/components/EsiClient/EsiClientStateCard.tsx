@@ -18,12 +18,10 @@ export function EsiClientStateCard() {
   const {
     loading,
     characterId,
-    characterName,
     scopes,
     isTokenValid,
     tokenExpirationDate,
     accessToken,
-    expires,
   } = useEsiClientContext();
 
   if (loading) {
