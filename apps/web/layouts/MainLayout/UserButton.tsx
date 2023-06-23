@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import {
   createStyles,
   Group,
@@ -7,14 +8,15 @@ import {
   UnstyledButton,
   type UnstyledButtonProps,
 } from "@mantine/core";
-import {
-  IconLogout,
-  IconSettings,
-  IconSwitchHorizontal,
-} from "@tabler/icons-react";
 import { signIn, signOut } from "next-auth/react";
 
 import { useEsiClientContext } from "@jitaspace/esi-client";
+import {
+  LogIcon,
+  RecruitmentIcon,
+  SettingsIcon,
+  TerminateIcon,
+} from "@jitaspace/eve-icons";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 const useStyles = createStyles((theme) => ({
@@ -57,20 +59,22 @@ export default function UserButton({ ...others }: UserButtonProps) {
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Label>Settings</Menu.Label>
-        <Menu.Item icon={<IconSettings size={14} stroke={1.5} />}>
+        <Menu.Item icon={<SettingsIcon width={20} />} disabled>
           Settings
         </Menu.Item>
+        <Link href="/dev">
+          <Menu.Item icon={<LogIcon width={20} />}>Developer Console</Menu.Item>
+        </Link>
         <Menu.Item
-          icon={<IconSwitchHorizontal size={14} stroke={1.5} />}
+          icon={<RecruitmentIcon width={20} />}
           onClick={() => {
             void signIn("eveonline");
           }}
         >
-          Change Character
+          Switch Character
         </Menu.Item>
         <Menu.Item
-          icon={<IconLogout size={14} stroke={1.5} />}
+          icon={<TerminateIcon width={20} />}
           onClick={() => {
             void signOut({ callbackUrl: "/", redirect: true });
           }}
