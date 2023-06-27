@@ -23,6 +23,7 @@ export default async function NextApiRouteHandler(
   >,
 ) {
   axios.defaults.baseURL = ESI_BASE_URL;
+
   const { categoryId } = req.query;
 
   const requestedCategoryId = parseInt(toArrayIfNot(categoryId)[0] ?? "");

@@ -23,6 +23,7 @@ export default async function NextApiRouteHandler(
   >,
 ) {
   axios.defaults.baseURL = ESI_BASE_URL;
+
   const { groupId } = req.query;
 
   const requestedGroupId = parseInt(toArrayIfNot(groupId)[0] ?? "");
