@@ -31,7 +31,7 @@ export default async function NextApiRouteHandler(
   }
 
   // get the details of all market groups
-  const limit = pLimit(100);
+  const limit = pLimit(300);
   const promises = marketGroupsResponse.data.map((marketGroupId) =>
     limit(() => getMarketsGroupsMarketGroupId(marketGroupId)),
   );
