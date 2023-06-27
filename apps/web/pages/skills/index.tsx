@@ -6,7 +6,7 @@ import { SkillsIcon } from "@jitaspace/eve-icons";
 import {
   CharacterAttributesRingProgress,
   SkillQueueTimeline,
-  SkillTreeAccordion,
+  SkillTreeNav,
 } from "~/components/Skills";
 import { MainLayout } from "~/layouts";
 
@@ -21,7 +21,7 @@ export default function Page() {
         <CharacterAttributesRingProgress />
         <Grid>
           <Grid.Col span="auto">
-            <SkillTreeAccordion />
+            <SkillTreeNav />
           </Grid.Col>
           <Grid.Col span="content">
             <SkillQueueTimeline />
