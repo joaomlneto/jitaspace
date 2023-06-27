@@ -1,5 +1,14 @@
 import React, { memo } from "react";
-import { Box, Container, Group, NavLink, Stack, Text } from "@mantine/core";
+import {
+  Box,
+  Container,
+  Group,
+  NavLink,
+  Skeleton,
+  Stack,
+  Text,
+  type NavLinkProps,
+} from "@mantine/core";
 
 import {
   useEsiClientContext,
@@ -7,139 +16,166 @@ import {
   type GetCharactersCharacterIdSkills200SkillsItem,
   type GetUniverseTypesTypeId200,
 } from "@jitaspace/esi-client";
-import { SkillBar, TypeName } from "@jitaspace/ui";
+import { SkillBar } from "@jitaspace/ui";
 
-import { useSkillTree } from "~/hooks";
+import {
+  usePrecomputedCategoryGroups,
+  usePrecomputedGroupTypes,
+} from "~/hooks";
 
+const SKILLS_CATEGORY_ID = 16;
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 
-export const SkillTreeNav = memo(() => {
-  const { characterId, isTokenValid } = useEsiClientContext();
-  const { data: skillTree, loading, error } = useSkillTree();
-  const {
-    data: skills,
-    isLoading: skillsLoading,
-    error: skillsError,
-  } = useGetCharactersCharacterIdSkills(
-    characterId ?? 1,
-    {},
-    {
-      swr: {
-        enabled: isTokenValid,
+type SkillTreeNavLinkProps = NavLinkProps & {
+  groupId: number;
+};
+
+const SkillTreeNavLink = memo(
+  ({ groupId, ...otherProps }: SkillTreeNavLinkProps) => {
+    const { characterId, isTokenValid } = useEsiClientContext();
+    const {
+      data: group,
+      isLoading: groupLoading,
+      error: groupError,
+    } = usePrecomputedGroupTypes(groupId);
+
+    const {
+      data: skills,
+      isLoading: skillsLoading,
+      error: skillsError,
+    } = useGetCharactersCharacterIdSkills(
+      characterId ?? 1,
+      {},
+      {
+        swr: {
+          enabled: isTokenValid,
+        },
       },
-    },
-  );
+    );
+
+    const loading = groupLoading || skillsLoading;
+    const error = groupError || skillsError;
+
+    const sortedTypeIds = Object.values(group?.types ?? [])
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((type) => type.type_id);
+
+    const characterSkillsIndex = skills?.data.skills.reduce((acc, skill) => {
+      acc[skill.skill_id] = skill;
+      return acc;
+    }, {} as Record<string, GetCharactersCharacterIdSkills200SkillsItem>);
+
+    const getSkillTrainingTimeMultiplier = (skill: GetUniverseTypesTypeId200) =>
+      skill.dogma_attributes?.find(
+        (attribute) =>
+          attribute.attribute_id === TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID,
+      )?.value ?? 1;
+
+    const getSPNeededForLevel = (
+      skill: GetUniverseTypesTypeId200,
+      level: number,
+    ) =>
+      Math.ceil(
+        250 *
+          getSkillTrainingTimeMultiplier(skill) *
+          Math.sqrt(32 ** (level - 1)),
+      );
+
+    const totalSPInGroup = Object.values(group?.types ?? []).reduce(
+      (acc, type) => {
+        return acc + getSPNeededForLevel(type, 5);
+      },
+      0,
+    );
+
+    const characterSPInGroup = Object.values(group?.types ?? []).reduce(
+      (acc, type) => {
+        const characterSkill = characterSkillsIndex?.[type.type_id];
+        if (!characterSkill) return acc;
+        return acc + characterSkill.skillpoints_in_skill;
+      },
+      0,
+    );
+
+    return (
+      <NavLink
+        key={groupId}
+        label={
+          <Group position="apart">
+            {/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */}
+            {error && <Text>Error loading skill group: {error.message}</Text>}
+            {!error && loading && (
+              <Skeleton w={200}>
+                <Text>Loading...</Text>
+              </Skeleton>
+            )}
+            {!error && !loading && <Text>{group?.name}</Text>}
+            {!error && !loading && (
+              <Text>
+                {characterSPInGroup.toLocaleString()} /{" "}
+                {totalSPInGroup.toLocaleString()} SP
+              </Text>
+            )}
+          </Group>
+        }
+        {...otherProps}
+      >
+        <Stack spacing="xs" my="md" mr="md">
+          {sortedTypeIds.map((typeId) => {
+            const type = group?.types[typeId];
+            const characterSkill = characterSkillsIndex?.[typeId];
+            if (!type) return "?";
+            return (
+              <Group key={typeId} position="apart">
+                <Group>
+                  <Text size="sm">{type.name}</Text>
+                </Group>
+                <Group>
+                  <Text size="xs" color="dimmed">
+                    {(
+                      characterSkill?.skillpoints_in_skill ?? 0
+                    ).toLocaleString()}{" "}
+                    / {getSPNeededForLevel(type, 5).toLocaleString()} SP
+                  </Text>
+                  <SkillBar
+                    activeLevel={characterSkill?.active_skill_level ?? 0}
+                  />
+                </Group>
+              </Group>
+            );
+          })}
+        </Stack>
+      </NavLink>
+    );
+  },
+);
+SkillTreeNavLink.displayName = "SkillTreeNavLink";
+
+export const SkillTreeNav = memo(() => {
+  const { data, isLoading, error } =
+    usePrecomputedCategoryGroups(SKILLS_CATEGORY_ID);
 
   const hideUnpublished = true;
 
-  if (loading || skillsLoading) return "Loading skill tree...";
+  if (isLoading) return "Loading skill tree...";
 
-  if (!skillTree || error || skillsError)
+  if (!data || error)
     return "Error loading skill tree: " + JSON.stringify(error);
 
   // get IDs of groups sorted by their respective names
-  const alphabeticallySortedGroupIds = Object.values(skillTree.groups ?? [])
+  const alphabeticallySortedGroupIds = Object.values(data.groups ?? [])
     .filter((group) => !hideUnpublished || group.published)
     .sort((a, b) => {
       return a.name.localeCompare(b.name);
     })
     .map(({ group_id }) => group_id);
 
-  // get IDs of types within each group sorted by their respective names
-  const alphabeticallySortedTypeIdsPerGroup: { [key: string]: number[] } = {};
-  alphabeticallySortedGroupIds.forEach((groupId) => {
-    alphabeticallySortedTypeIdsPerGroup[groupId] = Object.values(
-      (skillTree.groups[groupId] ?? { types: [] }).types,
-    )
-      .filter((type) => !hideUnpublished || type.published)
-      .sort((a, b) => {
-        return a.name.localeCompare(b.name);
-      })
-      .map(({ type_id }) => type_id);
-  });
-
-  const characterSkillsIndex = skills?.data.skills.reduce((acc, skill) => {
-    acc[skill.skill_id] = skill;
-    return acc;
-  }, {} as Record<string, GetCharactersCharacterIdSkills200SkillsItem>);
-
-  const getSkillTrainingTimeMultiplier = (skill: GetUniverseTypesTypeId200) =>
-    skill.dogma_attributes?.find(
-      (attribute) =>
-        attribute.attribute_id === TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID,
-    )?.value ?? 1;
-
-  const getSPNeededForLevel = (
-    skill: GetUniverseTypesTypeId200,
-    level: number,
-  ) =>
-    Math.ceil(
-      250 *
-        getSkillTrainingTimeMultiplier(skill) *
-        Math.sqrt(32 ** (level - 1)),
-    );
-
   return (
     <Container size="sm">
       <Box>
-        {alphabeticallySortedGroupIds.map((groupId) => {
-          const group = skillTree.groups[groupId];
-          if (group === undefined) return null;
-          const totalSPInGroup = Object.values(group.types).reduce(
-            (acc, type) => {
-              return acc + getSPNeededForLevel(type, 5);
-            },
-            0,
-          );
-          const characterSPInGroup = Object.values(group.types).reduce(
-            (acc, type) => {
-              const characterSkill = characterSkillsIndex?.[type.type_id];
-              if (!characterSkill) return acc;
-              return acc + characterSkill.skillpoints_in_skill;
-            },
-            0,
-          );
-          return (
-            <NavLink
-              key={groupId}
-              label={
-                <Group position="apart">
-                  <Text>{group.name}</Text>
-                  <Text>
-                    {characterSPInGroup.toLocaleString()} /{" "}
-                    {totalSPInGroup.toLocaleString()} SP
-                  </Text>
-                </Group>
-              }
-            >
-              <Stack spacing="xs">
-                {alphabeticallySortedTypeIdsPerGroup[groupId]?.map((typeId) => {
-                  const type = group.types[typeId];
-                  const characterSkill = characterSkillsIndex?.[typeId];
-                  if (!type) return "?";
-                  return (
-                    <Group key={typeId} position="apart">
-                      <Group>
-                        <TypeName typeId={typeId} size="sm" />
-                      </Group>
-                      <Group>
-                        <Text size="xs" color="dimmed">
-                          {(
-                            characterSkill?.skillpoints_in_skill ?? 0
-                          ).toLocaleString()}{" "}
-                          / {getSPNeededForLevel(type, 5).toLocaleString()} SP
-                        </Text>
-                        <SkillBar
-                          activeLevel={characterSkill?.active_skill_level ?? 0}
-                        />
-                      </Group>
-                    </Group>
-                  );
-                })}
-              </Stack>
-            </NavLink>
-          );
-        })}
+        {alphabeticallySortedGroupIds.map((groupId) => (
+          <SkillTreeNavLink key={groupId} groupId={groupId} />
+        ))}
       </Box>
     </Container>
   );

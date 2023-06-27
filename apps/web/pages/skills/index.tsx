@@ -20,11 +20,11 @@ export default function Page() {
         </Group>
         <CharacterAttributesRingProgress />
         <Grid>
-          <Grid.Col span="auto">
-            <SkillTreeNav />
-          </Grid.Col>
           <Grid.Col span="content">
             <SkillQueueTimeline />
+          </Grid.Col>
+          <Grid.Col span="auto" miw={690}>
+            <SkillTreeNav />
           </Grid.Col>
         </Grid>
       </Stack>
