@@ -1,5 +1,5 @@
 import { type NextApiRequest, type NextApiResponse } from "next";
-import { HttpStatusCode } from "axios";
+import axios, { HttpStatusCode } from "axios";
 
 import {
   getUniverseCategories,
@@ -9,7 +9,7 @@ import {
 } from "@jitaspace/esi-client";
 import { toArrayIfNot } from "@jitaspace/utils";
 
-import { TRANQUILITY_DOWNTIME_SECONDS } from "~/config/constants";
+import { ESI_BASE_URL, TRANQUILITY_DOWNTIME_SECONDS } from "~/config/constants";
 
 export default async function NextApiRouteHandler(
   req: NextApiRequest,
@@ -22,6 +22,7 @@ export default async function NextApiRouteHandler(
       }
   >,
 ) {
+  axios.defaults.baseURL = ESI_BASE_URL;
   const { categoryId } = req.query;
 
   const requestedCategoryId = parseInt(toArrayIfNot(categoryId)[0] ?? "");
