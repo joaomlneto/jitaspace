@@ -36,6 +36,7 @@ const SkillTreeNavLink = memo(
     const {
       data: group,
       isLoading: groupLoading,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       error: groupError,
     } = usePrecomputedGroupTypes(groupId);
 
@@ -54,6 +55,7 @@ const SkillTreeNavLink = memo(
     );
 
     const loading = groupLoading || skillsLoading;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const error = groupError || skillsError;
 
     const sortedTypeIds = Object.values(group?.types ?? [])

@@ -18,6 +18,7 @@ import { DefaultSeo } from "next-seo";
 
 import {
   EsiClientContextProvider,
+  JitaSpaceEsiClientContextProvider,
   useEsiClientContext,
   type ESIScope,
 } from "@jitaspace/esi-client";
@@ -25,6 +26,7 @@ import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
+import { MarketGroupsTreeProvider } from "~/hooks";
 import RouterTransition from "../components/RouterTransition";
 
 type NextPageWithLayout = NextPage & {
@@ -97,28 +99,32 @@ export default function App({
       <SessionProvider session={session}>
         {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access */}
         <EsiClientContextProvider accessToken={session?.accessToken}>
-          <EsiClientSSOAccessTokenInjector>
-            <EveIconsContextProvider /* iconVersion="rhea"*/>
-              <MantineProvider
-                withGlobalStyles
-                withNormalizeCSS
-                theme={{ colorScheme: "dark" }}
-              >
-                <Notifications />
-                <RouterTransition />
-                <ModalsProvider
-                  modals={contextModals}
-                  modalProps={{ centered: true }}
-                >
-                  {getLayout(
-                    <ScopeGuard requiredScopes={requiredScopes}>
-                      <Component {...pageProps} />
-                    </ScopeGuard>,
-                  )}
-                </ModalsProvider>
-              </MantineProvider>
-            </EveIconsContextProvider>
-          </EsiClientSSOAccessTokenInjector>
+          <JitaSpaceEsiClientContextProvider>
+            <EsiClientSSOAccessTokenInjector>
+              <MarketGroupsTreeProvider>
+                <EveIconsContextProvider /* iconVersion="rhea"*/>
+                  <MantineProvider
+                    withGlobalStyles
+                    withNormalizeCSS
+                    theme={{ colorScheme: "dark" }}
+                  >
+                    <Notifications />
+                    <RouterTransition />
+                    <ModalsProvider
+                      modals={contextModals}
+                      modalProps={{ centered: true }}
+                    >
+                      {getLayout(
+                        <ScopeGuard requiredScopes={requiredScopes}>
+                          <Component {...pageProps} />
+                        </ScopeGuard>,
+                      )}
+                    </ModalsProvider>
+                  </MantineProvider>
+                </EveIconsContextProvider>
+              </MarketGroupsTreeProvider>
+            </EsiClientSSOAccessTokenInjector>
+          </JitaSpaceEsiClientContextProvider>
         </EsiClientContextProvider>
       </SessionProvider>
     </>
