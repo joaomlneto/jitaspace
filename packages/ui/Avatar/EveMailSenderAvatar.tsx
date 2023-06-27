@@ -3,9 +3,13 @@ import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 
 import {
   useEsiClientContext,
+  useGetCharactersCharacterIdMailLists,
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
+import { GroupListIcon } from "@jitaspace/eve-icons";
+import { getAvatarSize } from "@jitaspace/utils";
 
+import { sizes } from "./Avatar.styles";
 import { EveEntityAvatar } from "./index";
 
 export type EveMailSenderAvatarProps = Omit<AvatarProps, "src"> & {
@@ -27,7 +31,18 @@ export const EveMailSenderAvatar = memo(
       },
     );
 
-    if (!mail?.data.from) {
+    const { data: mailingLists, isLoading: mailingListsLoading } =
+      useGetCharactersCharacterIdMailLists(
+        characterId ?? 1,
+        {},
+        {
+          swr: {
+            enabled: isTokenValid,
+          },
+        },
+      );
+
+    if (!mail?.data.from || mailingListsLoading) {
       return (
         <Skeleton
           visible={isLoading || !mail?.data.from}
@@ -38,6 +53,25 @@ export const EveMailSenderAvatar = memo(
         >
           <Avatar {...otherProps} />
         </Skeleton>
+      );
+    }
+
+    const mailingListMatch = mailingLists?.data.find(
+      (item) => item.mailing_list_id === mail?.data.from,
+    );
+
+    if (mailingListMatch) {
+      const avatarSize = getAvatarSize({
+        size: otherProps.size ?? "md",
+        sizes,
+      });
+      return (
+        <GroupListIcon
+          width={avatarSize}
+          height={avatarSize}
+          {...otherProps}
+          variant={undefined}
+        />
       );
     }
 
