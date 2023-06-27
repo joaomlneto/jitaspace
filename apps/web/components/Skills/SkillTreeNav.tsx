@@ -154,6 +154,7 @@ const SkillTreeNavLink = memo(
 SkillTreeNavLink.displayName = "SkillTreeNavLink";
 
 export const SkillTreeNav = memo(() => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { data, isLoading, error } =
     usePrecomputedCategoryGroups(SKILLS_CATEGORY_ID);
 

@@ -16,7 +16,6 @@ import humanizeDuration from "humanize-duration";
 
 import {
   useEsiClientContext,
-  useGetCharactersCharacterIdAttributes,
   useGetCharactersCharacterIdSkillqueue,
 } from "@jitaspace/esi-client";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
@@ -32,22 +31,9 @@ export function SkillQueueTimeline() {
       },
     },
   );
-  const {
-    data: attributesData,
-    error: attributesError,
-    isLoading: attributesLoading,
-  } = useGetCharactersCharacterIdAttributes(
-    characterId ?? 1,
-    {},
-    {
-      swr: {
-        enabled: isTokenValid,
-      },
-    },
-  );
 
-  if (isLoading || attributesLoading) return "LOADING";
-  if (error || attributesError) return "ERROR";
+  if (isLoading) return "LOADING";
+  if (error) return "ERROR";
 
   const skillLevelRomanNumeral = (n: number): string =>
     ({

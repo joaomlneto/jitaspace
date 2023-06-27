@@ -4,11 +4,9 @@ import { Container, Group, Stack, Title } from "@mantine/core";
 import { MarketIcon } from "@jitaspace/eve-icons";
 
 import { MarketGroupsNav } from "~/components/Market";
-import { usePrecomputedMarketGroups } from "~/hooks/usePrecomputedMarketGroups";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
-  const groups = usePrecomputedMarketGroups();
   return (
     <Container>
       <Stack spacing="xl">
