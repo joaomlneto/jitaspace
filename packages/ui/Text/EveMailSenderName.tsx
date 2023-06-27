@@ -3,6 +3,7 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 
 import {
   useEsiClientContext,
+  useGetCharactersCharacterIdMailLists,
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
 
@@ -26,12 +27,31 @@ export const EveMailSenderName = memo(
       },
     );
 
-    if (!mail?.data.from) {
+    const { data: mailingLists, isLoading: mailingListsLoading } =
+      useGetCharactersCharacterIdMailLists(
+        characterId ?? 1,
+        {},
+        {
+          swr: {
+            enabled: isTokenValid,
+          },
+        },
+      );
+
+    if (!mail?.data.from || mailingListsLoading) {
       return (
         <Skeleton visible={isLoading}>
           <Text {...otherProps}>Unknown</Text>
         </Skeleton>
       );
+    }
+
+    const mailingListMatch = mailingLists?.data.find(
+      (item) => item.mailing_list_id === mail?.data.from,
+    );
+
+    if (mailingListMatch) {
+      return <Text {...otherProps}>{mailingListMatch.name}</Text>;
     }
 
     return <EveEntityName entityId={mail?.data.from} {...otherProps} />;
