@@ -1,3 +1,4 @@
+import HardBreak from "@tiptap/extension-hard-break";
 import TextStyle from "@tiptap/extension-text-style";
 import { Underline } from "@tiptap/extension-underline";
 import { useEditor } from "@tiptap/react";
@@ -10,6 +11,13 @@ export const useEveEditor: typeof useEditor = (options, ...others) =>
     {
       extensions: [
         StarterKit.configure({}),
+        HardBreak.extend({
+          addKeyboardShortcuts() {
+            return {
+              Enter: () => this.editor.commands.setHardBreak(),
+            };
+          },
+        }),
         TextStyle,
         Underline,
         EveLink,

@@ -19,6 +19,7 @@
     "@tabler/icons-react": "^2.22.0",
     "@tiptap/extension-character-count": "^2.0.3",
     "@tiptap/extension-color": "^2.0.3",
+    "@tiptap/extension-hard-break": "^2.0.3",
     "@tiptap/extension-link": "^2.0.3",
     "@tiptap/extension-text-style": "^2.0.3",
     "@tiptap/extension-underline": "^2.0.3",
