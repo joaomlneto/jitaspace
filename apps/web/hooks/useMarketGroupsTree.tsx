@@ -36,10 +36,11 @@ type MarketGroupWithChildren = GetMarketsGroupsMarketGroupId200 & {
 
 export const MarketGroupsTreeProvider = memo(
   ({ children }: PropsWithChildren) => {
-    const { data } = usePrecomputedMarketGroups();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { data, isLoading, error } = usePrecomputedMarketGroups();
 
     const marketGroupsTree = useMemo(() => {
-      if (!data) {
+      if (!data || isLoading || error) {
         return {
           loading: true,
           data: {
@@ -48,7 +49,6 @@ export const MarketGroupsTreeProvider = memo(
           },
         };
       }
-      console.log("DOING HEAVY COMPUTATION");
 
       const augmentedEntries: Record<number, MarketGroupWithChildren> = {};
       Object.values(data.marketGroups).forEach((marketGroup, _index, array) => {
