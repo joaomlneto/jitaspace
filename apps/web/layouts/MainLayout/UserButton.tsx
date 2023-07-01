@@ -62,9 +62,9 @@ export default function UserButton({ ...others }: UserButtonProps) {
         <Menu.Item icon={<SettingsIcon width={20} />} disabled>
           Settings
         </Menu.Item>
-        <Link href="/dev">
-          <Menu.Item icon={<LogIcon width={20} />}>Developer Console</Menu.Item>
-        </Link>
+        <Menu.Item component={Link} href="/dev" icon={<LogIcon width={20} />}>
+          Developer Console
+        </Menu.Item>
         <Menu.Item
           icon={<RecruitmentIcon width={20} />}
           onClick={() => {
