@@ -1,5 +1,8 @@
 {
   "name": "JitaSpace WebApp",
   "buildCommand": "pnpm dlx turbo run build",
-  "installCommand": "pnpm install"
+  "installCommand": "pnpm install",
+  "env": {
+    "ENABLE_EXPERIMENTAL_COREPACK": "1"
+  }
 }
