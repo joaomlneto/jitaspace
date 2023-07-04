@@ -144,7 +144,6 @@ export function useEsiName(
   category?: ResolvableEntityCategory;
   loading: boolean;
   error?: string;
-  otherStuff?: object;
 } {
   const [{ status, value, error }, fetchName] = useCache(
     fetchCache,
@@ -165,7 +164,6 @@ export function useEsiName(
     loading: status === "loading",
     name: value?.name,
     category: value?.category as ResolvableEntityCategory,
-    //otherStuff: { status, value, error, cancel },
     error: error?.message,
   };
 }

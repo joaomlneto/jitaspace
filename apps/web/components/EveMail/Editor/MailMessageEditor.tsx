@@ -23,7 +23,8 @@ export function MailMessageEditor({
   const editor = useEveEditor({
     content,
     onUpdate: ({ editor }) => {
-      onContentUpdate(editor.getHTML());
+      // we remove the outermost <p></p> tag
+      onContentUpdate(editor.getHTML().substring(3, content.length - 4));
     },
   });
 
