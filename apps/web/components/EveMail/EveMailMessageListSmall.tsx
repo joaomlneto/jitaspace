@@ -121,6 +121,7 @@ export function EveMailMessageListSmall({
                     });
                   }}
                   fw={message.is_read ? "normal" : "bold"}
+                  lineClamp={1}
                 >
                   {message.subject !== undefined &&
                     (message.subject.length > 0 ? (

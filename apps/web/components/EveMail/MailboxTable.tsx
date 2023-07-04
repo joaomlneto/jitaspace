@@ -105,6 +105,7 @@ export function MailboxTable({ data, mutate, className }: MailboxTableProps) {
                     });
                   }}
                   fw={mail.is_read ? "normal" : "bold"}
+                  lineClamp={1}
                 >
                   {mail.subject !== undefined &&
                     (mail.subject.length > 0 ? (
