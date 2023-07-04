@@ -1,5 +1,6 @@
 import React, {
   useEffect,
+  useMemo,
   type PropsWithChildren,
   type ReactElement,
   type ReactNode,
@@ -18,6 +19,7 @@ import { DefaultSeo } from "next-seo";
 
 import {
   EsiClientContextProvider,
+  getEveSsoAccessTokenPayload,
   JitaSpaceEsiClientContextProvider,
   useEsiClientContext,
   type ESIScope,
@@ -43,8 +45,31 @@ type AppPropsWithLayout = AppProps & {
  * Inject the token obtained from next-auth into our ESI Client
  */
 const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const { setAuth } = useEsiClientContext();
+
+  // decode token payload
+  const tokenPayload = useMemo(
+    () => getEveSsoAccessTokenPayload(session?.accessToken),
+    [session?.accessToken],
+  );
+
+  // refresh token if
+  useEffect(() => {
+    if (!tokenPayload) return;
+    const expDate = new Date(tokenPayload.exp * 1000);
+    const timeUntilExpiration = () => expDate.getTime() - new Date().getTime();
+    console.log("time until expiration:", timeUntilExpiration());
+    const timer = setTimeout(() => {
+      console.log(
+        `updating session: token expires in ${
+          timeUntilExpiration() / 1000
+        } seconds`,
+      );
+      void update();
+    }, Math.max(timeUntilExpiration() - 30000, 5000));
+    return () => clearTimeout(timer);
+  }, [tokenPayload, update]);
 
   useEffect(() => {
     setAuth({
@@ -52,7 +77,8 @@ const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
       loading: status === "loading",
     });
   }, [session?.accessToken, setAuth, status]);
-  return children;
+
+  return useMemo(() => children, [children]);
 };
 
 export default function App({

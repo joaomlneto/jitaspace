@@ -10,6 +10,9 @@ import EVEOnlineProvider, {
 
 import { env } from "../env.mjs";
 
+// How much time before token expires we're willing to refresh it
+const REFRESH_TOKEN_BEFORE_EXP_TIME = 60000;
+
 /**
  * Module augmentation for `next-auth` types
  * Allows us to add custom properties to the `session` object
@@ -85,8 +88,11 @@ export const authOptions: NextAuthOptions = {
 
       //console.log('token ttl', (<number>token.accessTokenExpires - Date.now()) / 1000);
 
-      // return previous token if the access token has not expired yet
-      if (Date.now() < <number>token.accessTokenExpires) {
+      // return previous token if the access token has not expired yet (or is about to expire)
+      if (
+        Date.now() <
+        <number>token.accessTokenExpires - REFRESH_TOKEN_BEFORE_EXP_TIME
+      ) {
         return token;
       }
 

@@ -27,7 +27,7 @@ export const TimeAgoText = memo(
       return () => {
         clearInterval(interval);
       };
-    }, []);
+    }, [forceUpdate, updateInterval]);
 
     const timeAgo = formatDistanceStrict(date, new Date(), {
       addSuffix,
