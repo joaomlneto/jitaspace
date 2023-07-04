@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import Image from "next/image";
+import Image, { type ImageProps } from "next/image";
 import {
   createStyles,
   UnstyledButton,
@@ -26,10 +26,11 @@ export type LoginWithEveOnlineButtonProps = UnstyledButtonProps & {
   width?: number;
   size?: "large" | "small";
   onClick?: () => void;
+  imageProps?: Omit<ImageProps, "src" | "alt" | "width" | "height">;
 };
 
 export const LoginWithEveOnlineButton = memo(
-  (props: LoginWithEveOnlineButtonProps) => {
+  ({ imageProps, size, ...otherProps }: LoginWithEveOnlineButtonProps) => {
     const { classes } = useStyles();
     const theme = useMantineTheme();
 
@@ -37,23 +38,24 @@ export const LoginWithEveOnlineButton = memo(
       theme.colorScheme === "dark" ? "black" : "white"
     }-large.png`;
 
-    const defaultWidth = props.size === "large" ? 270 : 195;
-    const defaultHeight = props.size === "large" ? 45 : 30;
+    const defaultWidth = size === "large" ? 270 : 195;
+    const defaultHeight = size === "large" ? 45 : 30;
 
-    const width = props.width ?? defaultWidth;
+    const width = otherProps.width ?? defaultWidth;
     const height = (width / defaultWidth) * defaultHeight;
 
     return (
       <UnstyledButton
-        onClick={props.onClick}
+        onClick={otherProps.onClick}
         className={classes.user}
-        {...props}
+        {...otherProps}
       >
         <Image
           src={url}
           alt="Login with EVE Online"
           width={width}
           height={height}
+          {...imageProps}
         />
       </UnstyledButton>
     );

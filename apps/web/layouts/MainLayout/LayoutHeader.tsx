@@ -173,6 +173,9 @@ export function LayoutHeader() {
                   onClick={() => {
                     void signIn("eveonline");
                   }}
+                  imageProps={{
+                    priority: true,
+                  }}
                 />
               )}
             </Group>
