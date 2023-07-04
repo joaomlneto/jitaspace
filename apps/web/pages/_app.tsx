@@ -14,7 +14,7 @@ import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { Analytics } from "@vercel/analytics/react";
 import type { Session } from "next-auth";
-import { SessionProvider, signIn, useSession } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 
 import {
@@ -87,13 +87,6 @@ export default function App({
 }: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
   const requiredScopes = Component.requiredScopes;
-
-  useEffect(() => {
-    if ((session as { error?: string })?.error === "RefreshAccessTokenError") {
-      console.log("TOKEN EXPIRED!!!!!!!!!!!!!!!!!!");
-      void signIn("eveonline"); // Force sign in to hopefully resolve error
-    }
-  }, [session]);
 
   return (
     <>
