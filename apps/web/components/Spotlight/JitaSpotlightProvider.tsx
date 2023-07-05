@@ -79,7 +79,7 @@ export const JitaSpotlightProvider = memo(
     return useMemo(
       () => (
         <SpotlightProvider
-          shortcut={["mod + P", "mod + K", "/"]}
+          shortcut={["mod + P", "/"]}
           actions={actions}
           // @ts-expect-error extra field not compatible with type signature
           actionComponent={JitaSpotlightAction}

@@ -10,17 +10,25 @@ import {
   Drawer,
   Group,
   Header,
+  Kbd,
   Loader,
   rem,
   ScrollArea,
   Text,
   Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
+import { useSpotlight } from "@mantine/spotlight";
 import { signIn } from "next-auth/react";
 
 import { useEsiClientContext } from "@jitaspace/esi-client";
-import { CalendarIcon, EveMailIcon, SkillsIcon } from "@jitaspace/eve-icons";
+import {
+  CalendarIcon,
+  EveMailIcon,
+  PeopleAndPlacesIcon,
+  SkillsIcon,
+} from "@jitaspace/eve-icons";
 import {
   LoginWithEveOnlineButton,
   TotalUnreadMailsIndicator,
@@ -113,6 +121,7 @@ export function LayoutHeader() {
     useDisclosure(false);
   const { classes, theme } = useStyles();
   const { isTokenValid, loading } = useEsiClientContext();
+  const spotlight = useSpotlight();
 
   return (
     <Box>
@@ -156,6 +165,24 @@ export function LayoutHeader() {
                 <Link href="/skills" className={classes.link}>
                   <SkillsIcon width={32} height={32} alt="Skills" />
                 </Link>
+              </Tooltip>
+
+              <Tooltip
+                label={
+                  <Text>
+                    Search <br /> <Kbd size="xs">⌘</Kbd> +{" "}
+                    <Kbd size="xs">P</Kbd>
+                  </Text>
+                }
+                multiline
+                openDelay={200}
+              >
+                <UnstyledButton
+                  className={classes.link}
+                  onClick={() => spotlight.openSpotlight()}
+                >
+                  <PeopleAndPlacesIcon width={32} height={32} alt="Skills" />
+                </UnstyledButton>
               </Tooltip>
             </Group>
 
@@ -225,6 +252,19 @@ export function LayoutHeader() {
               <Text>Skills</Text>
             </Group>
           </Link>
+
+          <UnstyledButton
+            className={classes.link}
+            onClick={() => {
+              closeDrawer();
+              spotlight.openSpotlight();
+            }}
+          >
+            <Group>
+              <PeopleAndPlacesIcon width={32} height={32} alt="Search" />
+              <Text>Search</Text>
+            </Group>
+          </UnstyledButton>
 
           <Divider
             my="sm"
