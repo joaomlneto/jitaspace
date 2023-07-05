@@ -108,8 +108,8 @@ export default function Page({
                 {
                   type: "image/png",
                   alt: type?.data.name ?? `Type ${typeId}`,
-                  width: 512,
-                  height: 512,
+                  width: 64,
+                  height: 64,
                   url: ogImageUrl,
                   secureUrl: ogImageUrl,
                 },
