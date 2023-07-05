@@ -1,2 +1,3 @@
-export * from "./JitaSpotlightProvider";
 export * from "./JitaSpotlightAction";
+export * from "./JitaSpotlightActionsWrapper";
+export * from "./JitaSpotlightProvider";

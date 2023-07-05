@@ -8,9 +8,11 @@ import {
 } from "@mantine/spotlight";
 
 import { useEsiSearch } from "@jitaspace/esi-client";
-import { AgentFinderIcon } from "@jitaspace/eve-icons";
+import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
 
 import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
+import { JitaSpotlightActionsWrapper } from "~/components/Spotlight/JitaSpotlightActionsWrapper";
+import { jitaApps } from "~/config/apps";
 
 export const JitaSpotlightProvider = memo(
   ({ children }: Omit<SpotlightProviderProps, "actions">) => {
@@ -35,12 +37,27 @@ export const JitaSpotlightProvider = memo(
       ],
     });
 
+    const staticActions: SpotlightAction[] = useMemo(
+      () =>
+        Object.values(jitaApps).map((app) => ({
+          title: app.name,
+          type: "app",
+          group: "Apps",
+          onTrigger: () => {
+            void router.push(app.url);
+          },
+          icon: <app.icon width={38} />,
+        })) as SpotlightAction[],
+      [router],
+    );
+
     const esiActions: SpotlightAction[] = useMemo(
       () =>
         Object.entries(esiSearchData?.data ?? []).flatMap(
           ([category, entries]) =>
             entries.slice(0, 10).map((entityId) => ({
               title: `Entity ${entityId} - ${debouncedQuery}`,
+              type: "eve-entity",
               entityId: entityId,
               group: category.replace("_", " "),
               onTrigger: () => {
@@ -52,12 +69,12 @@ export const JitaSpotlightProvider = memo(
               },
             })),
         ),
-      [esiSearchData],
+      [debouncedQuery, esiSearchData?.data, router],
     );
 
     const actions: SpotlightAction[] = useMemo(
-      (): SpotlightAction[] => [...esiActions],
-      [esiActions],
+      (): SpotlightAction[] => [...staticActions, ...esiActions],
+      [esiActions, staticActions],
     );
     return useMemo(
       () => (
@@ -66,13 +83,14 @@ export const JitaSpotlightProvider = memo(
           actions={actions}
           // @ts-expect-error extra field not compatible with type signature
           actionComponent={JitaSpotlightAction}
-          searchIcon={<AgentFinderIcon width={32} height={32} />}
+          searchIcon={<PeopleAndPlacesIcon width={32} height={32} />}
           query={query}
-          limit={50}
+          limit={100}
           onQueryChange={(value) => {
             console.log("new query value:", value);
             setQuery(value);
           }}
+          actionsWrapperComponent={JitaSpotlightActionsWrapper}
         >
           {children}
         </SpotlightProvider>

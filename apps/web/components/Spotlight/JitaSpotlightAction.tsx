@@ -37,6 +37,7 @@ const useStyles = createStyles((theme) => ({
 
 type JitaSpotlightActionProps = Omit<SpotlightActionProps, "action"> & {
   action: SpotlightActionProps["action"] & {
+    type: "app" | "eve-entity";
     entityId: number;
   };
 };
@@ -55,6 +56,38 @@ export const JitaSpotlightAction = ({
     name: "Spotlight",
   });
 
+  // is this an EVE entity?
+  if (action.type === "eve-entity")
+    return (
+      <UnstyledButton
+        className={classes.action}
+        data-hovered={hovered || undefined}
+        tabIndex={-1}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={onTrigger}
+        {...others}
+      >
+        <Group noWrap>
+          {action.entityId && (
+            <Center>
+              <EveEntityAvatar radius="xl" entityId={action.entityId} />
+            </Center>
+          )}
+
+          <div style={{ flex: 1 }}>
+            <EveEntityName entityId={action.entityId} />
+
+            {action.description && (
+              <Text color="dimmed" size="xs">
+                {action.description}
+              </Text>
+            )}
+          </div>
+        </Group>
+      </UnstyledButton>
+    );
+
+  // otherwise it is an app!
   return (
     <UnstyledButton
       className={classes.action}
@@ -65,16 +98,10 @@ export const JitaSpotlightAction = ({
       {...others}
     >
       <Group noWrap>
-        {action.entityId && (
-          <Center>
-            <EveEntityAvatar radius="xl" entityId={action.entityId} />
-          </Center>
-        )}
+        <Center>{action.icon}</Center>
 
         <div style={{ flex: 1 }}>
-          <EveEntityName entityId={action.entityId}>
-            {action.title}
-          </EveEntityName>
+          <Text>{action.title}</Text>
 
           {action.description && (
             <Text color="dimmed" size="xs">
