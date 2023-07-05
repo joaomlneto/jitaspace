@@ -79,6 +79,7 @@ export const JitaSpotlightAction = ({
               "inventory_type",
               "solar_system",
               "station",
+              "structure",
             ].includes(action.category) && (
               <Center>
                 <EveEntityAvatar radius="xl" entityId={action.entityId} />

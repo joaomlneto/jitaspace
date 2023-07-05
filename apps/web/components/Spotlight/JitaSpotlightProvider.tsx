@@ -8,8 +8,10 @@ import {
 } from "@mantine/spotlight";
 
 import {
+  useEsiClientContext,
   useEsiSearch,
   type GetCharactersCharacterIdSearch200,
+  type GetCharactersCharacterIdSearchCategoriesItem,
 } from "@jitaspace/esi-client";
 import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
 
@@ -22,6 +24,7 @@ export const JitaSpotlightProvider = memo(
     const router = useRouter();
     const [query, setQuery] = useState<string>("");
     const [debouncedQuery] = useDebouncedValue(query, 1000);
+    const { scopes } = useEsiClientContext();
 
     const { data: esiSearchData } = useEsiSearch({
       query: debouncedQuery,
@@ -36,7 +39,9 @@ export const JitaSpotlightProvider = memo(
         "region",
         "solar_system",
         "station",
-        "structure",
+        ...((scopes.includes("esi-universe.read_structures.v1")
+          ? ["structure"]
+          : []) as GetCharactersCharacterIdSearchCategoriesItem[]),
       ],
     });
 

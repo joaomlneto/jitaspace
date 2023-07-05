@@ -9,6 +9,10 @@ export const JitaSpotlightActionsWrapper = memo(
     const { scopes } = useEsiClientContext();
 
     const canUseEsiSearch = scopes.includes("esi-search.search_structures.v1");
+    const canReadStructures = scopes.includes(
+      "esi-universe.read_structures.v1",
+    );
+
     return (
       <div>
         {children}
@@ -25,21 +29,33 @@ export const JitaSpotlightActionsWrapper = memo(
             }`,
           })}
         >
-          {canUseEsiSearch && (
-            <Text size="xs" color="dimmed">
-              EVE Search {canUseEsiSearch ? "enabled" : "disabled"}
-            </Text>
-          )}
-          {!canUseEsiSearch && (
-            <Tooltip
-              multiline
-              label="To enable you must be logged in and provide the esi-search.search_structures.v1 scope"
-            >
-              <Text size="xs" color="brown">
-                EVE Search disabled
+          <Group spacing="xs">
+            {canUseEsiSearch && (
+              <Text size="xs" color="dimmed">
+                ESI Search enabled.
               </Text>
-            </Tooltip>
-          )}
+            )}
+            {!canUseEsiSearch && (
+              <Tooltip
+                multiline
+                label="To enable you must be logged in and provide the esi-search.search_structures.v1 scope"
+              >
+                <Text size="xs" color="brown">
+                  ESI Search disabled.
+                </Text>
+              </Tooltip>
+            )}
+            {canUseEsiSearch && !canReadStructures && (
+              <Tooltip
+                multiline
+                label="To enable you must be logged in and provide the esi-universe.read_structures.v1 scope"
+              >
+                <Text size="xs" color="brown">
+                  Structure search disabled.
+                </Text>
+              </Tooltip>
+            )}
+          </Group>
           <Tooltip
             multiline
             label={
