@@ -6,13 +6,13 @@ import {
   Button,
   Container,
   Group,
-  JsonInput,
   List,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
+import { HttpStatusCode } from "axios";
 import { NextSeo } from "next-seo";
 
 import {
@@ -30,12 +30,10 @@ import { MailMessageViewer } from "~/components/EveMail";
 import { MailLayout } from "~/layouts";
 
 type PageProps = {
-  typeImageVariations: string[];
-  ogImageUrl: string;
-  typeName: string;
-  typeDescription: string;
+  ogImageUrl?: string;
+  typeName?: string;
+  typeDescription?: string;
 };
-
 export const getServerSideProps: GetServerSideProps<PageProps> = async (
   context,
 ) => {
@@ -43,31 +41,30 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
   // FIXME: these two calls should be made in parallel, not sequentially
   const typeInfo = await getUniverseTypesTypeId(parseInt(typeId));
   const typeImageVariations: string[] = typeId
-    ? ((await fetch(`https://images.evetech.net/types/${typeId}`).then((res) =>
-        res.json(),
+    ? ((await fetch(`https://images.evetech.net/types/${typeId}`).then(
+        (res) => {
+          return res.status === HttpStatusCode.NotFound ? [] : res.json();
+        },
       )) as string[])
     : [];
-  const ogVariation =
+  const ogVariation: string | undefined =
     !typeImageVariations || typeImageVariations?.includes("render")
       ? "render"
-      : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        typeImageVariations[0]!;
+      : typeImageVariations[0];
   context.res.setHeader(
     "Cache-Control",
     "public, s-maxage=86400, stale-while-revalidate=3600",
   );
   return {
     props: {
-      typeImageVariations,
       ogImageUrl: `https://images.evetech.net/types/${typeId}/${ogVariation}`,
-      typeName: typeInfo.data.name,
-      typeDescription: typeInfo.data.description,
+      typeName: typeInfo?.data?.name,
+      typeDescription: typeInfo?.data?.description,
     },
   };
 };
 
 export default function Page({
-  typeImageVariations,
   ogImageUrl,
   typeName,
   typeDescription,
@@ -89,9 +86,6 @@ export default function Page({
     }
     return str;
   };
-
-  console.log("TYPE OG IMAGE:", ogImageUrl);
-
   return (
     <>
       <NextSeo
@@ -100,16 +94,18 @@ export default function Page({
           title: typeName,
           description: typeDescription,
           url: `https://www.jita.space/type/${typeId}`,
-          images: [
-            {
-              type: "image/png",
-              alt: type?.data.name ?? `Type ${typeId}`,
-              width: 512,
-              height: 512,
-              url: ogImageUrl,
-              secureUrl: ogImageUrl,
-            },
-          ],
+          images: ogImageUrl
+            ? [
+                {
+                  type: "image/png",
+                  alt: type?.data.name ?? `Type ${typeId}`,
+                  width: 512,
+                  height: 512,
+                  url: ogImageUrl,
+                  secureUrl: ogImageUrl,
+                },
+              ]
+            : [],
           siteName: "Jita",
         }}
         twitter={{
@@ -120,13 +116,6 @@ export default function Page({
       />
       <Container size="sm">
         <Stack>
-          <JsonInput
-            label="RAW DATA"
-            value={JSON.stringify({ typeImageVariations, ogImageUrl }, null, 2)}
-            autosize
-            readOnly
-            maxRows={50}
-          />
           <Group spacing="xl">
             <TypeAvatar typeId={typeId} size="xl" radius={256} />
             <Title order={3}>
