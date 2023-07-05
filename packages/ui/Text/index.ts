@@ -18,4 +18,5 @@ export * from "./RaceName";
 export * from "./RegionName";
 export * from "./SolarSystemName";
 export * from "./StationName";
+export * from "./StructureName";
 export * from "./TypeName";

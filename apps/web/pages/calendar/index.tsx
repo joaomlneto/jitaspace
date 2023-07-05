@@ -65,7 +65,7 @@ export default function Page() {
         </Group>
         <Center>
           <Calendar
-            size="xl"
+            size="md"
             excludeDate={(date: Date) => {
               // return false if date is before today
               const startOfToday = new Date().setHours(0, 0, 0, 0);
@@ -74,14 +74,10 @@ export default function Page() {
             renderDay={(date: Date) => {
               const day = date.getDate();
               const dayEvents = eventsPerDate[date.getTime()] ?? [];
-              const hasUnrespondedEvents = dayEvents.some(
-                (event) => event.event_response === "tentative",
-              );
               return (
                 <Indicator
                   label={dayEvents.length}
                   size={16}
-                  color={hasUnrespondedEvents ? "red" : "green"}
                   offset={-2}
                   disabled={dayEvents.length === 0}
                 >

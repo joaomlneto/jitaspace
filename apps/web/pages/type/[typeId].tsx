@@ -35,35 +35,42 @@ type PageProps = {
   typeName?: string;
   typeDescription?: string;
 };
+
 export const getServerSideProps: GetServerSideProps<PageProps> = async (
   context,
 ) => {
-  axios.defaults.baseURL = ESI_BASE_URL;
-  const typeId = context.params?.typeId as string;
-  // FIXME: these two calls should be made in parallel, not sequentially
-  const typeInfo = await getUniverseTypesTypeId(parseInt(typeId));
-  const typeImageVariations: string[] = typeId
-    ? ((await fetch(`https://images.evetech.net/types/${typeId}`).then(
-        (res) => {
-          return res.status === HttpStatusCode.NotFound ? [] : res.json();
-        },
-      )) as string[])
-    : [];
-  const ogVariation: string | undefined =
-    !typeImageVariations || typeImageVariations?.includes("render")
-      ? "render"
-      : typeImageVariations[0];
-  context.res.setHeader(
-    "Cache-Control",
-    "public, s-maxage=86400, stale-while-revalidate=3600",
-  );
-  return {
-    props: {
-      ogImageUrl: `https://images.evetech.net/types/${typeId}/${ogVariation}`,
-      typeName: typeInfo?.data?.name,
-      typeDescription: typeInfo?.data?.description,
-    },
-  };
+  try {
+    axios.defaults.baseURL = ESI_BASE_URL;
+    const typeId = context.params?.typeId as string;
+    // FIXME: these two calls should be made in parallel, not sequentially
+    const typeInfo = await getUniverseTypesTypeId(parseInt(typeId));
+    const typeImageVariations: string[] = typeId
+      ? ((await fetch(`https://images.evetech.net/types/${typeId}`).then(
+          (res) => {
+            return res.status === HttpStatusCode.NotFound ? [] : res.json();
+          },
+        )) as string[])
+      : [];
+    const ogVariation: string | undefined =
+      !typeImageVariations || typeImageVariations?.includes("render")
+        ? "render"
+        : typeImageVariations[0];
+    context.res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=86400, stale-while-revalidate=3600",
+    );
+    return {
+      props: {
+        ogImageUrl: `https://images.evetech.net/types/${typeId}/${ogVariation}`,
+        typeName: typeInfo?.data?.name,
+        typeDescription: typeInfo?.data?.description,
+      },
+    };
+  } catch (e) {
+    return {
+      notFound: true,
+    };
+  }
 };
 
 export default function Page({
