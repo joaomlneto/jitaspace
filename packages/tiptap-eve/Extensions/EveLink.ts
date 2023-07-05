@@ -22,27 +22,23 @@ const renderEveHref = (href: string) => {
   if (href.startsWith(INVENTORY_INFO_PREFIX)) {
     const targetType = href.slice(INVENTORY_INFO_PREFIX.length).split("//");
     if (targetType.length === 1) {
-      return `https://everef.net/type/${targetType[0]}`;
+      return `/type/${targetType[0]}`;
     }
-    if (targetType[0] === "2")
-      return `http://evemaps.dotlan.net/corp/${targetType[1]}`;
+    if (targetType[0] === "2") return `/corporation/${targetType[1]}`;
 
-    if (targetType[0] === "3")
-      return `http://evemaps.dotlan.net/region/${targetType[1]}`;
+    if (targetType[0] === "3") return `/region/${targetType[1]}`;
 
     if (targetType[0] === "4") return `/constellation/${targetType[1]}`;
 
-    if (targetType[0] === "5")
-      return `http://evemaps.dotlan.net/system/${targetType[1]}`;
+    if (targetType[0] === "5") return `/system/${targetType[1]}`;
 
-    if (targetType[0] === "16159")
-      return `http://evemaps.dotlan.net/alliance/${targetType[1]}`;
+    if (targetType[0] === "16159") return `/alliance/${targetType[1]}`;
 
     if (CHARACTER_TYPE_IDS.includes(parseInt(targetType[0] ?? "")))
       return `/character/${targetType[1]}`;
 
     if (STATION_TYPE_IDS.includes(parseInt(targetType[0] ?? "")))
-      return `http://evemaps.dotlan.net/station/${targetType[1]}`;
+      return `/station/${targetType[1]}`;
   }
 
   if (href.startsWith(WAR_REPORT_PREFIX)) {
