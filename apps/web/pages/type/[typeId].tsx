@@ -12,7 +12,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
-import { HttpStatusCode } from "axios";
+import axios, { HttpStatusCode } from "axios";
 import { NextSeo } from "next-seo";
 
 import {
@@ -27,6 +27,7 @@ import {
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
+import { ESI_BASE_URL } from "~/config/constants";
 import { MailLayout } from "~/layouts";
 
 type PageProps = {
@@ -37,6 +38,7 @@ type PageProps = {
 export const getServerSideProps: GetServerSideProps<PageProps> = async (
   context,
 ) => {
+  axios.defaults.baseURL = ESI_BASE_URL;
   const typeId = context.params?.typeId as string;
   // FIXME: these two calls should be made in parallel, not sequentially
   const typeInfo = await getUniverseTypesTypeId(parseInt(typeId));
