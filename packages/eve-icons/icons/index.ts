@@ -21,6 +21,7 @@ export * from "./CargoContainerIcon";
 export * from "./CargoContainerLockedIcon";
 export * from "./CargoIcon";
 export * from "./CargoScanIcon";
+export * from "./CCPGamesIcon";
 export * from "./CertificatesIcon";
 export * from "./ChannelOperatorIcon";
 export * from "./CharacterSheetIcon";

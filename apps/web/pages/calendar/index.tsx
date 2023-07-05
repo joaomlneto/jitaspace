@@ -2,7 +2,6 @@ import React, { type ReactElement } from "react";
 import Link from "next/link";
 import {
   Anchor,
-  Badge,
   Center,
   Container,
   Group,
@@ -11,6 +10,7 @@ import {
   Stack,
   Table,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { Calendar } from "@mantine/dates";
 
@@ -18,9 +18,12 @@ import {
   useEsiClientContext,
   useGetCharactersCharacterIdCalendar,
   type GetCharactersCharacterIdCalendar200Item,
-  type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
+import {
+  CalendarEventOwnerAvatar,
+  CalendarEventResponseBadge,
+} from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
@@ -52,15 +55,6 @@ export default function Page() {
     });
   }
 
-  const eventResponseColor: {
-    [key in GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse]: string;
-  } = {
-    accepted: "green",
-    tentative: "yellow",
-    not_responded: "gray",
-    declined: "red",
-  };
-
   return (
     <Container>
       <Stack spacing="xl">
@@ -86,7 +80,7 @@ export default function Page() {
               return (
                 <Indicator
                   label={dayEvents.length}
-                  //size={8}
+                  size={16}
                   color={hasUnrespondedEvents ? "red" : "green"}
                   offset={-2}
                   disabled={dayEvents.length === 0}
@@ -109,14 +103,22 @@ export default function Page() {
             {events?.data?.map((event) => (
               <tr key={event.event_id}>
                 <td>
-                  <Group noWrap align="end" spacing="xs">
-                    {event.importance === 1 && <WarningIcon width={20} />}
-                    <Anchor
-                      component={Link}
-                      href={`/calendar/${event.event_id}`}
-                    >
-                      {event.title}
-                    </Anchor>
+                  <Group>
+                    <Tooltip label={"THIS IS THE END OF THE WORLD"}>
+                      <CalendarEventOwnerAvatar
+                        eventId={event.event_id}
+                        size="sm"
+                      />
+                    </Tooltip>
+                    <Group noWrap spacing="xs">
+                      {event.importance === 1 && <WarningIcon width={20} />}
+                      <Anchor
+                        component={Link}
+                        href={`/calendar/${event.event_id}`}
+                      >
+                        {event.title}
+                      </Anchor>
+                    </Group>
                   </Group>
                 </td>
                 <td>
@@ -124,14 +126,7 @@ export default function Page() {
                     new Date(event.event_date).toLocaleString()}
                 </td>
                 <td>
-                  {event.event_response && (
-                    <Badge
-                      color={eventResponseColor[event.event_response]}
-                      variant="light"
-                    >
-                      {event.event_response}
-                    </Badge>
-                  )}
+                  <CalendarEventResponseBadge eventId={event.event_id} />
                 </td>
               </tr>
             ))}

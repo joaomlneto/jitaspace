@@ -1,6 +1,15 @@
 import React, { type ReactElement } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
-import { Container, Group, Stack, Text, Title } from "@mantine/core";
+import {
+  Anchor,
+  Container,
+  Group,
+  List,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 
 import { useGetUniverseConstellationsConstellationId } from "@jitaspace/esi-client";
 import { ConstellationName, RegionName, SolarSystemName } from "@jitaspace/ui";
@@ -26,18 +35,25 @@ export default function Page() {
           <Group position="apart">
             <Text>Region</Text>
             <Group>
-              <RegionName regionId={constellation?.data.region_id} />
+              <Anchor
+                component={Link}
+                href={`/region/${constellation.data.region_id}`}
+              >
+                <RegionName span regionId={constellation?.data.region_id} />
+              </Anchor>
             </Group>
           </Group>
         )}
         Solar Systems:
-        <ul>
+        <List>
           {constellation?.data.systems.map((systemId) => (
-            <li key={systemId}>
-              <SolarSystemName solarSystemId={systemId} />
-            </li>
+            <List.Item key={systemId}>
+              <Anchor component={Link} href={`/system/${systemId}`}>
+                <SolarSystemName span solarSystemId={systemId} />
+              </Anchor>
+            </List.Item>
           ))}
-        </ul>
+        </List>
       </Stack>
     </Container>
   );

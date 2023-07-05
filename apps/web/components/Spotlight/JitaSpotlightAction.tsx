@@ -9,6 +9,7 @@ import {
 } from "@mantine/core";
 import { type SpotlightActionProps } from "@mantine/spotlight";
 
+import { type GetCharactersCharacterIdSearch200 } from "@jitaspace/esi-client";
 import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
 
 const useStyles = createStyles((theme) => ({
@@ -38,6 +39,7 @@ const useStyles = createStyles((theme) => ({
 type JitaSpotlightActionProps = Omit<SpotlightActionProps, "action"> & {
   action: SpotlightActionProps["action"] & {
     type: "app" | "eve-entity";
+    category?: keyof GetCharactersCharacterIdSearch200;
     entityId: number;
   };
 };
@@ -68,11 +70,20 @@ export const JitaSpotlightAction = ({
         {...others}
       >
         <Group noWrap>
-          {action.entityId && (
-            <Center>
-              <EveEntityAvatar radius="xl" entityId={action.entityId} />
-            </Center>
-          )}
+          {action.category &&
+            [
+              "agent",
+              "character",
+              "corporation",
+              "alliance",
+              "inventory_type",
+              "solar_system",
+              "station",
+            ].includes(action.category) && (
+              <Center>
+                <EveEntityAvatar radius="xl" entityId={action.entityId} />
+              </Center>
+            )}
 
           <div style={{ flex: 1 }}>
             <EveEntityName entityId={action.entityId} />

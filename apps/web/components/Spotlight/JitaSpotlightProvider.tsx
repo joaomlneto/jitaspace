@@ -7,7 +7,10 @@ import {
   type SpotlightProviderProps,
 } from "@mantine/spotlight";
 
-import { useEsiSearch } from "@jitaspace/esi-client";
+import {
+  useEsiSearch,
+  type GetCharactersCharacterIdSearch200,
+} from "@jitaspace/esi-client";
 import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
 
 import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
@@ -54,20 +57,52 @@ export const JitaSpotlightProvider = memo(
     const esiActions: SpotlightAction[] = useMemo(
       () =>
         Object.entries(esiSearchData?.data ?? []).flatMap(
-          ([category, entries]) =>
-            entries.slice(0, 10).map((entityId) => ({
+          ([categoryString, entries]) => {
+            const category =
+              categoryString as keyof GetCharactersCharacterIdSearch200;
+            return entries.slice(0, 10).map((entityId) => ({
               title: `Entity ${entityId} - ${debouncedQuery}`,
               type: "eve-entity",
+              category,
               entityId: entityId,
               group: category.replace("_", " "),
               onTrigger: () => {
                 switch (category) {
-                  case "character": {
+                  case "alliance":
+                    void router.push(`/alliance/${entityId}`);
+                    break;
+                  case "agent":
+                  case "character":
                     void router.push(`/character/${entityId}`);
-                  }
+                    break;
+                  case "corporation":
+                    void router.push(`/corporation/${entityId}`);
+                    break;
+                  case "faction":
+                    void router.push(`/faction/${entityId}`);
+                    break;
+                  case "constellation":
+                    void router.push(`/constellation/${entityId}`);
+                    break;
+                  case "inventory_type":
+                    void router.push(`/type/${entityId}`);
+                    break;
+                  case "region":
+                    void router.push(`/region/${entityId}`);
+                    break;
+                  case "solar_system":
+                    void router.push(`/system/${entityId}`);
+                    break;
+                  case "station":
+                    void router.push(`/station/${entityId}`);
+                    break;
+                  case "structure":
+                    void router.push(`/structure/${entityId}`);
+                    break;
                 }
               },
-            })),
+            }));
+          },
         ),
       [debouncedQuery, esiSearchData?.data, router],
     );
@@ -81,16 +116,13 @@ export const JitaSpotlightProvider = memo(
         <SpotlightProvider
           shortcut={["mod + P", "/"]}
           actions={actions}
+          limit={100}
+          query={query}
+          onQueryChange={setQuery}
+          searchIcon={<PeopleAndPlacesIcon width={32} height={32} />}
+          actionsWrapperComponent={JitaSpotlightActionsWrapper}
           // @ts-expect-error extra field not compatible with type signature
           actionComponent={JitaSpotlightAction}
-          searchIcon={<PeopleAndPlacesIcon width={32} height={32} />}
-          query={query}
-          limit={100}
-          onQueryChange={(value) => {
-            console.log("new query value:", value);
-            setQuery(value);
-          }}
-          actionsWrapperComponent={JitaSpotlightActionsWrapper}
         >
           {children}
         </SpotlightProvider>

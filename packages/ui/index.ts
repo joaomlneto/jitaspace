@@ -6,6 +6,7 @@ export * from "./Card";
 export * from "./ColorSwatch";
 export * from "./DateText";
 export * from "./Indicator";
+export * from "./Input";
 export * from "./MultiSelect";
 export * from "./Select";
 export * from "./SkillLevelBar";

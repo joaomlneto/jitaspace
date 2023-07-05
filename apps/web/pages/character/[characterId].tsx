@@ -1,6 +1,8 @@
 import React, { type ReactElement } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
-import { Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { IconExternalLink } from "@tabler/icons-react";
 
 import {
   useGetCharactersCharacterId,
@@ -50,6 +52,30 @@ export default function Page() {
           <Title order={3}>
             <CharacterName span characterId={characterId} />
           </Title>
+        </Group>
+        <Group>
+          <Link
+            href={`https://evewho.com/character/${characterId}`}
+            target="_blank"
+          >
+            <Button>
+              <Group spacing="xs">
+                <IconExternalLink size={14} />
+                EveWho
+              </Group>
+            </Button>
+          </Link>
+          <Link
+            href={`https://zkillboard.com/character/${characterId}`}
+            target="_blank"
+          >
+            <Button>
+              <Group spacing="xs">
+                <IconExternalLink size={14} />
+                zKillboard
+              </Group>
+            </Button>
+          </Link>
         </Group>
         {character?.data.corporation_id && (
           <Group position="apart">

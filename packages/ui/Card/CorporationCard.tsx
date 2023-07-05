@@ -1,7 +1,6 @@
 import React, { memo } from "react";
 import Link from "next/link";
 import { Anchor, Group, Paper } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
 
 import { CorporationAvatar } from "../Avatar";
 import { CorporationName } from "../Text";
@@ -44,7 +43,6 @@ export const CorporationCard = memo(
           size="sm"
         >
           <Group spacing="xs">
-            <IconExternalLink size={14} />
             <Anchor span>Open in EVE Who</Anchor>
           </Group>
         </Anchor>
