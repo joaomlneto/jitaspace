@@ -101,6 +101,20 @@ export default function App({
         defaultTitle="Jita"
         titleTemplate="%s | Jita"
         description="EVE Online Tools"
+        openGraph={{
+          url: "https://www.jita.space",
+          images: [
+            {
+              type: "image/png",
+              alt: "Jita Logo",
+              width: 176,
+              height: 168,
+              url: "https://www.jita.space/logo.png",
+              secureUrl: "https://www.jita.space/logo.png",
+            },
+          ],
+          siteName: "Jita",
+        }}
       />
 
       <Script
