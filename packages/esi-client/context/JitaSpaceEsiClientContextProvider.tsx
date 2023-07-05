@@ -1,16 +1,9 @@
-import { PropsWithChildren } from "react";
+import { type PropsWithChildren } from "react";
 
-import {
-  EsiClientContextProvider,
-  EsiClientStatisticsProvider,
-} from "../hooks";
+import { EsiClientContextProvider } from "../hooks";
 
 export function JitaSpaceEsiClientContextProvider({
   children,
 }: PropsWithChildren) {
-  return (
-    <EsiClientContextProvider>
-      <EsiClientStatisticsProvider>{children}</EsiClientStatisticsProvider>
-    </EsiClientContextProvider>
-  );
+  return <EsiClientContextProvider>{children}</EsiClientContextProvider>;
 }
