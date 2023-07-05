@@ -109,13 +109,17 @@ export default function App({
             {
               type: "image/png",
               alt: "Jita Logo",
-              width: 64,
-              height: 64,
+              width: 1200,
+              height: 630,
               url: "https://www.jita.space/api/opengraph/image",
               secureUrl: "https://www.jita.space/api/opengraph/image",
             },
           ],
           siteName: "Jita",
+        }}
+        twitter={{
+          cardType: "summary_large_image",
+          site: "https://www.jita.space",
         }}
         themeColor="#9bb4d0"
       />
