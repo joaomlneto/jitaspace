@@ -9,5 +9,6 @@ export * from "./RaceAvatar";
 export * from "./SolarSystemAvatar";
 export * from "./StarAvatar";
 export * from "./StationAvatar";
+export * from "./StructureAvatar";
 export * from "./TypeAvatar";
 export * from "./EveEntityAvatar";

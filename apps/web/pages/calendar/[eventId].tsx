@@ -17,7 +17,12 @@ import {
   type GetCharactersCharacterIdCalendarEventIdAttendees200Item,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
-import { CharacterAvatar, CharacterName, EveEntityAvatar } from "@jitaspace/ui";
+import {
+  CalendarEventOwnerAvatar,
+  CalendarEventOwnerName,
+  CharacterAvatar,
+  CharacterName,
+} from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailMessageViewer } from "~/components/EveMail";
@@ -104,11 +109,11 @@ export default function Page() {
         <Group position="apart">
           <Text>Owner</Text>
           <Group noWrap>
-            {/* FIXME: We know the type of this entity! */}
-            {event?.data.owner_id && (
-              <EveEntityAvatar entityId={event?.data.owner_id} size="sm" />
-            )}{" "}
-            <Text>{event?.data.owner_name}</Text>
+            <CalendarEventOwnerAvatar eventId={eventId} size="sm" />
+            <Text>
+              {event?.data.owner_name} {event?.data.owner_type}
+            </Text>
+            <CalendarEventOwnerName eventId={eventId} />
           </Group>
         </Group>
         <Group position="apart">

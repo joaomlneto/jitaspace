@@ -9,8 +9,10 @@ import { AllianceAvatar } from "./AllianceAvatar";
 import { sizes } from "./Avatar.styles";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
+import { FactionAvatar } from "./FactionAvatar";
 import { SolarSystemAvatar } from "./SolarSystemAvatar";
 import { StationAvatar } from "./StationAvatar";
+import { StructureAvatar } from "./StructureAvatar";
 import { TypeAvatar } from "./TypeAvatar";
 
 export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
@@ -69,7 +71,15 @@ export const EveEntityAvatar = memo(
       return <StationAvatar stationId={entityId} {...otherProps} />;
     }
 
-    // FIXME: Add more ranges!
+    if (category === "structure") {
+      return <StructureAvatar structureId={entityId} {...otherProps} />;
+    }
+
+    if (category === "faction") {
+      return <FactionAvatar factionId={entityId} {...otherProps} />;
+    }
+
+    // FIXME: Add more ranges! missing region and constellation
 
     return <Avatar {...otherProps} />;
   },

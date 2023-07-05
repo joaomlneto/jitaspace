@@ -2,6 +2,7 @@ import React, { type ReactElement } from "react";
 import Link from "next/link";
 import {
   Anchor,
+  Avatar,
   Center,
   Container,
   Group,
@@ -9,10 +10,12 @@ import {
   Loader,
   Stack,
   Table,
+  Text,
   Title,
   Tooltip,
 } from "@mantine/core";
 import { Calendar } from "@mantine/dates";
+import { format } from "date-fns";
 
 import {
   useEsiClientContext,
@@ -21,7 +24,10 @@ import {
 } from "@jitaspace/esi-client";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import {
+  CalendarEventAttendeesAvatarGroup,
+  CalendarEventHumanDurationText,
   CalendarEventOwnerAvatar,
+  CalendarEventOwnerName,
   CalendarEventResponseBadge,
 } from "@jitaspace/ui";
 
@@ -87,47 +93,79 @@ export default function Page() {
             }}
           />
         </Center>
-        <Table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Date</th>
-              <th>Response</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events?.data?.map((event) => (
-              <tr key={event.event_id}>
-                <td>
-                  <Group>
-                    <Tooltip label={"THIS IS THE END OF THE WORLD"}>
-                      <CalendarEventOwnerAvatar
-                        eventId={event.event_id}
-                        size="sm"
-                      />
-                    </Tooltip>
-                    <Group noWrap spacing="xs">
-                      {event.importance === 1 && <WarningIcon width={20} />}
-                      <Anchor
-                        component={Link}
-                        href={`/calendar/${event.event_id}`}
-                      >
-                        {event.title}
-                      </Anchor>
-                    </Group>
-                  </Group>
-                </td>
-                <td>
-                  {event.event_date &&
-                    new Date(event.event_date).toLocaleString()}
-                </td>
-                <td>
-                  <CalendarEventResponseBadge eventId={event.event_id} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
+        {Object.keys(eventsPerDate).map((dateString) => {
+          return (
+            <Stack key={dateString}>
+              <Title order={5}>
+                {format(new Date(parseInt(dateString)), "LLLL dd - EEEE")}
+              </Title>
+              <Table highlightOnHover striped>
+                <tbody>
+                  {eventsPerDate[dateString]?.map((event) => (
+                    <tr key={event.event_id}>
+                      <td width={10}>
+                        <Tooltip
+                          label={
+                            <CalendarEventHumanDurationText
+                              eventId={event.event_id}
+                            />
+                          }
+                        >
+                          <Text>
+                            {format(new Date(event.event_date ?? 0), "HH:mm")}
+                          </Text>
+                        </Tooltip>
+                      </td>
+                      <td>
+                        <Group noWrap>
+                          <Tooltip
+                            label={
+                              <CalendarEventOwnerName
+                                eventId={event.event_id}
+                              />
+                            }
+                          >
+                            <Avatar size="sm">
+                              <CalendarEventOwnerAvatar
+                                eventId={event.event_id}
+                                size="sm"
+                              />
+                            </Avatar>
+                          </Tooltip>
+                          <Group noWrap spacing="xs">
+                            {event.importance === 1 && (
+                              <WarningIcon width={20} />
+                            )}
+                            <Anchor
+                              component={Link}
+                              href={`/calendar/${event.event_id}`}
+                              lineClamp={1}
+                            >
+                              {event.title}
+                            </Anchor>
+                          </Group>
+                        </Group>
+                      </td>
+                      <td align="right" width={1}>
+                        <Group position="right">
+                          <CalendarEventAttendeesAvatarGroup
+                            eventId={event.event_id}
+                            limit={5}
+                            size="sm"
+                            radius="xl"
+                          />
+                        </Group>
+                      </td>
+                      <td align="right" width={1}>
+                        <CalendarEventResponseBadge eventId={event.event_id} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </Stack>
+          );
+        })}
       </Stack>
     </Container>
   );
