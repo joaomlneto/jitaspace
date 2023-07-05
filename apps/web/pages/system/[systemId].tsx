@@ -99,9 +99,7 @@ export default function Page() {
                 <List>
                   {moons?.map((moonId) => (
                     <List.Item key={moonId}>
-                      <Anchor component={Link} href={`/moon/${moonId}`}>
-                        <MoonName span moonId={moonId} />
-                      </Anchor>
+                      <MoonName moonId={moonId} />
                     </List.Item>
                   ))}
                 </List>
