@@ -1,10 +1,11 @@
 import { type NextRequest } from "next/server";
 import { ImageResponse } from "@vercel/og";
 
+/* eslint-disable @next/next/no-img-element,@typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-call */
+
 export const config = {
   runtime: "edge",
 };
-
 export default function handler(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -13,16 +14,12 @@ export default function handler(request: NextRequest) {
       ? `${searchParams.get("title")?.slice(0, 100)} | Jita`
       : "Jita";
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-call
     return new ImageResponse(
       (
         <div
           style={{
             backgroundImage:
-              "url('https://www.jita.space/jita-wallpaper-min.jpeg')",
-            backgroundSize: "",
-            backgroundColor: "rgba(77, 82, 86, 0.9)",
-            backgroundBlendMode: "multiply",
+              "linear-gradient(90deg, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0)), url('https://www.jita.space/og-background.jpg')",
             height: "100%",
             width: "100%",
             display: "flex",
@@ -42,14 +39,8 @@ export default function handler(request: NextRequest) {
             }}
           >
             <img
-              alt="Vercel"
-              height={200}
-              src="data:image/svg+xml,%3Csvg width='116' height='100' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M57.5 0L115 100H0L57.5 0z' /%3E%3C/svg%3E"
-              style={{ margin: "0 30px" }}
-              width={232}
-            />
-            <img
               src={`https://www.jita.space/logo.png`}
+              alt="Jita Logo"
               height={200}
               width={232}
             />
@@ -67,6 +58,18 @@ export default function handler(request: NextRequest) {
             }}
           >
             {title}
+          </div>
+          <div
+            style={{
+              fontSize: 32,
+              fontStyle: "normal",
+              color: "#aaa",
+              marginTop: 0,
+              padding: "0 120px",
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            EVE Online Tools
           </div>
         </div>
       ),
