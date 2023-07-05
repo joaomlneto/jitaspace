@@ -28,7 +28,7 @@ import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
-import { MarketGroupsTreeProvider } from "~/hooks";
+import { JitaSpotlightProvider } from "~/components/Spotlight";
 import RouterTransition from "../components/RouterTransition";
 
 type NextPageWithLayout = NextPage & {
@@ -120,15 +120,15 @@ export default function App({
         <EsiClientContextProvider accessToken={session?.accessToken}>
           <JitaSpaceEsiClientContextProvider>
             <EsiClientSSOAccessTokenInjector>
-              <MarketGroupsTreeProvider>
-                <EveIconsContextProvider /* iconVersion="rhea"*/>
-                  <MantineProvider
-                    withGlobalStyles
-                    withNormalizeCSS
-                    theme={{ colorScheme: "dark" }}
-                  >
-                    <Notifications />
-                    <RouterTransition />
+              <EveIconsContextProvider /* iconVersion="rhea"*/>
+                <MantineProvider
+                  withGlobalStyles
+                  withNormalizeCSS
+                  theme={{ colorScheme: "dark" }}
+                >
+                  <Notifications />
+                  <RouterTransition />
+                  <JitaSpotlightProvider>
                     <ModalsProvider
                       modals={contextModals}
                       modalProps={{ centered: true }}
@@ -139,9 +139,9 @@ export default function App({
                         </ScopeGuard>,
                       )}
                     </ModalsProvider>
-                  </MantineProvider>
-                </EveIconsContextProvider>
-              </MarketGroupsTreeProvider>
+                  </JitaSpotlightProvider>
+                </MantineProvider>
+              </EveIconsContextProvider>
             </EsiClientSSOAccessTokenInjector>
           </JitaSpaceEsiClientContextProvider>
         </EsiClientContextProvider>

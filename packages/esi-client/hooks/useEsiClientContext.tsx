@@ -85,10 +85,12 @@ export const EsiClientContextProvider = memo(
 
     useEffect(() => {
       if (auth.accessToken) {
-        console.log("injecting token in ESI Client");
+        //console.log("injecting token in ESI Client");
         axios.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${auth.accessToken}`;
+        /*axios.defaults.headers.common["User-Agent"] =
+          "https://www.jita.space - Joao Neto";*/
         setLoading(false);
       }
     }, [auth.accessToken]);

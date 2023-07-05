@@ -9,6 +9,7 @@ import { AllianceAvatar } from "./AllianceAvatar";
 import { sizes } from "./Avatar.styles";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
+import { TypeAvatar } from "./TypeAvatar";
 
 export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
   entityId: string | number;
@@ -52,6 +53,10 @@ export const EveEntityAvatar = memo(
 
     if (category === "alliance") {
       return <AllianceAvatar allianceId={entityId} {...otherProps} />;
+    }
+
+    if (category === "inventory_type") {
+      return <TypeAvatar typeId={entityId} {...otherProps} />;
     }
 
     // FIXME: Add more ranges!

@@ -3,8 +3,7 @@ import { Loader, MultiSelect, type MultiSelectProps } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
 import {
-  useEsiClientContext,
-  useGetCharactersCharacterIdSearch,
+  useEsiSearch,
   type GetCharactersCharacterIdSearchCategoriesItem,
 } from "@jitaspace/esi-client";
 
@@ -20,8 +19,7 @@ export type EsiSearchMultiSelectProps = Omit<
 };
 
 export const EsiSearchMultiSelect = memo(
-  ({ debounceTime, ...otherProps }: EsiSearchMultiSelectProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+  ({ categories, debounceTime, ...otherProps }: EsiSearchMultiSelectProps) => {
     const [value, setValue] = React.useState<string[]>([]);
     const [searchValue, onSearchChange] = React.useState<string>("");
     const [debouncedSearchValue] = useDebouncedValue(
@@ -33,19 +31,10 @@ export const EsiSearchMultiSelect = memo(
       data: searchResult,
       isLoading,
       isValidating,
-    } = useGetCharactersCharacterIdSearch(
-      characterId ?? 1,
-      {
-        // @ts-expect-error - This is a bug in the generated code
-        categories: ["alliance", "corporation", "character"].join(","),
-        search: debouncedSearchValue,
-      },
-      {
-        swr: {
-          enabled: isTokenValid && searchValue.length >= 3,
-        },
-      },
-    );
+    } = useEsiSearch({
+      query: debouncedSearchValue,
+      categories,
+    });
 
     const data = [
       ...Object.entries(searchResult?.data ?? []).flatMap(
