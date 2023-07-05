@@ -9,6 +9,8 @@ import { AllianceAvatar } from "./AllianceAvatar";
 import { sizes } from "./Avatar.styles";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
+import { SolarSystemAvatar } from "./SolarSystemAvatar";
+import { StationAvatar } from "./StationAvatar";
 import { TypeAvatar } from "./TypeAvatar";
 
 export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
@@ -57,6 +59,14 @@ export const EveEntityAvatar = memo(
 
     if (category === "inventory_type") {
       return <TypeAvatar typeId={entityId} {...otherProps} />;
+    }
+
+    if (category === "solar_system") {
+      return <SolarSystemAvatar solarSystemId={entityId} {...otherProps} />;
+    }
+
+    if (category === "station") {
+      return <StationAvatar stationId={entityId} {...otherProps} />;
     }
 
     // FIXME: Add more ranges!

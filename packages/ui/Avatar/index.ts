@@ -3,5 +3,8 @@ export * from "./CharacterAvatar";
 export * from "./CorporationAvatar";
 export * from "./EveImageServerAvatar";
 export * from "./EveMailSenderAvatar";
+export * from "./SolarSystemAvatar";
+export * from "./StarAvatar";
+export * from "./StationAvatar";
 export * from "./TypeAvatar";
 export * from "./EveEntityAvatar";

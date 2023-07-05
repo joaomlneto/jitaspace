@@ -6,7 +6,7 @@ import { esiImageSizeClamp, getAvatarSize } from "@jitaspace/utils";
 import { sizes } from "./Avatar.styles";
 
 export type EveImageServerAvatarProps = Omit<AvatarProps, "src"> & {
-  category?: string;
+  category?: "alliances" | "corporations" | "characters" | "types";
   id?: string | number | null;
   variation?: string;
 };

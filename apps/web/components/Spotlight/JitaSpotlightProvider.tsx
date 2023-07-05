@@ -1,4 +1,5 @@
 import { memo, useMemo, useState } from "react";
+import { useRouter } from "next/router";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
   SpotlightProvider,
@@ -9,10 +10,11 @@ import {
 import { useEsiSearch } from "@jitaspace/esi-client";
 import { AgentFinderIcon } from "@jitaspace/eve-icons";
 
-import { SpotlightActionComponent } from "~/components/Spotlight/SpotlightActionComponent";
+import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
 
 export const JitaSpotlightProvider = memo(
   ({ children }: Omit<SpotlightProviderProps, "actions">) => {
+    const router = useRouter();
     const [query, setQuery] = useState<string>("");
     const [debouncedQuery] = useDebouncedValue(query, 1000);
 
@@ -37,12 +39,16 @@ export const JitaSpotlightProvider = memo(
       () =>
         Object.entries(esiSearchData?.data ?? []).flatMap(
           ([category, entries]) =>
-            entries.slice(0, 5).map((entityId) => ({
+            entries.slice(0, 10).map((entityId) => ({
               title: `Entity ${entityId} - ${debouncedQuery}`,
               entityId: entityId,
               group: category.replace("_", " "),
               onTrigger: () => {
-                /* nothing for now */
+                switch (category) {
+                  case "character": {
+                    void router.push(`/character/${entityId}`);
+                  }
+                }
               },
             })),
         ),
@@ -58,7 +64,8 @@ export const JitaSpotlightProvider = memo(
         <SpotlightProvider
           shortcut={["mod + P", "mod + K", "/"]}
           actions={actions}
-          actionComponent={SpotlightActionComponent}
+          // @ts-expect-error extra field not compatible with type signature
+          actionComponent={JitaSpotlightAction}
           searchIcon={<AgentFinderIcon width={32} height={32} />}
           query={query}
           limit={50}

@@ -1,2 +1,2 @@
 export * from "./JitaSpotlightProvider";
-export * from "./SpotlightActionComponent";
+export * from "./JitaSpotlightAction";

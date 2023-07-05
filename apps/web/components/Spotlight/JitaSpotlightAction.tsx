@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Badge,
   Center,
   createStyles,
   Group,
@@ -35,15 +34,21 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-export const SpotlightActionComponent = ({
+type JitaSpotlightActionProps = Omit<SpotlightActionProps, "action"> & {
+  action: SpotlightActionProps["action"] & {
+    entityId: number;
+  };
+};
+
+export const JitaSpotlightAction = ({
   action,
   styles,
   classNames,
   hovered,
   onTrigger,
   ...others
-}: SpotlightActionProps) => {
-  const { classes } = useStyles(null, {
+}: JitaSpotlightActionProps) => {
+  const { classes } = useStyles(undefined, {
     styles,
     classNames,
     name: "Spotlight",
@@ -76,8 +81,6 @@ export const SpotlightActionComponent = ({
             </Text>
           )}
         </div>
-
-        {action.new && <Badge>new</Badge>}
       </Group>
     </UnstyledButton>
   );
