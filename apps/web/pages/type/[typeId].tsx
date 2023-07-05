@@ -1,10 +1,12 @@
 import React, { type ReactElement } from "react";
+import { type GetServerSideProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
   Button,
   Container,
   Group,
+  JsonInput,
   List,
   Stack,
   Text,
@@ -12,7 +14,6 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
-import useSWRImmutable from "swr/immutable";
 
 import { useGetUniverseTypesTypeId } from "@jitaspace/esi-client";
 import {
@@ -25,21 +26,39 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MailLayout } from "~/layouts";
 
-export default function Page() {
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const typeId = context.params?.typeId as string;
+  const typeImageVariations: string[] = typeId
+    ? ((await fetch(`https://images.evetech.net/types/${typeId}`).then((res) =>
+        res.json(),
+      )) as string[])
+    : [];
+  const ogVariation =
+    !typeImageVariations || typeImageVariations?.includes("render")
+      ? "render"
+      : typeImageVariations[0]!;
+  context.res.setHeader(
+    "Cache-Control",
+    "public, s-maxage=86400, stale-while-revalidate=3600",
+  );
+  return {
+    props: {
+      typeImageVariations,
+      ogImageUrl: `https://images.evetech.net/types/${typeId}/${ogVariation}`,
+    },
+  };
+};
+
+export default function Page({
+  typeImageVariations,
+  ogImageUrl,
+}: {
+  typeImageVariations: string[];
+  ogImageUrl: string;
+}) {
   const router = useRouter();
   const typeId = router.query.typeId as string;
   const { data: type } = useGetUniverseTypesTypeId(parseInt(typeId));
-
-  const { data: imageVariations } = useSWRImmutable<string[]>(
-    typeId ? `/api/esi/image-variants?category=types&id=${typeId}` : null,
-    (input: RequestInfo | URL, init?: RequestInit | undefined) =>
-      fetch(input, init).then((res) => res.json()),
-  );
-
-  const ogVariation =
-    !imageVariations || imageVariations?.includes("render")
-      ? "render"
-      : imageVariations[0]!;
 
   const sanitizeDescription = (str: string): string => {
     // FIXME: IS THIS CORRECT? THIS WILL CONSIDER THAT THE WHOLE EMAIL IS A "UNICODE BLOCK".
@@ -55,6 +74,8 @@ export default function Page() {
     return str;
   };
 
+  console.log("TYPE OG IMAGE:", ogImageUrl);
+
   return (
     <>
       <NextSeo
@@ -66,8 +87,8 @@ export default function Page() {
               alt: type?.data.name ?? `Type ${typeId}`,
               width: 512,
               height: 512,
-              url: `https://images.evetech.net/types/${typeId}/${ogVariation}`,
-              secureUrl: `https://images.evetech.net/types/${typeId}/${ogVariation}`,
+              url: ogImageUrl,
+              secureUrl: ogImageUrl,
             },
           ],
           siteName: "Jita",
@@ -80,6 +101,13 @@ export default function Page() {
       />
       <Container size="sm">
         <Stack>
+          <JsonInput
+            label="RAW DATA"
+            value={JSON.stringify({ typeImageVariations, ogImageUrl }, null, 2)}
+            autosize
+            readOnly
+            maxRows={50}
+          />
           <Group spacing="xl">
             <TypeAvatar typeId={typeId} size="xl" radius={256} />
             <Title order={3}>
