@@ -106,15 +106,7 @@ export default function Page() {
                 <List>
                   {asteroid_belts?.map((asteroidBeltId) => (
                     <List.Item key={asteroidBeltId}>
-                      <Anchor
-                        component={Link}
-                        href={`/asteroid-belt/${asteroidBeltId}`}
-                      >
-                        <AsteroidBeltName
-                          span
-                          asteroidBeltId={asteroidBeltId}
-                        />
-                      </Anchor>
+                      <AsteroidBeltName span asteroidBeltId={asteroidBeltId} />
                     </List.Item>
                   ))}
                 </List>
