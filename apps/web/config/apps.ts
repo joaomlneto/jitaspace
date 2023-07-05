@@ -59,7 +59,6 @@ export const jitaApps: Record<string, JitaApp> = {
       "View upcoming events and meetings on your EVE Online calendar.",
     url: "/calendar",
     icon: CalendarIcon,
-    tags: ["beta"],
     scopes: {
       required: ["esi-calendar.read_calendar_events.v1"],
       optional: [
