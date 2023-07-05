@@ -15,7 +15,10 @@ import {
 import { IconExternalLink } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
 
-import { useGetUniverseTypesTypeId } from "@jitaspace/esi-client";
+import {
+  getUniverseTypesTypeId,
+  useGetUniverseTypesTypeId,
+} from "@jitaspace/esi-client";
 import {
   DogmaAttributeName,
   DogmaEffectName,
@@ -26,8 +29,19 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MailLayout } from "~/layouts";
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
+type PageProps = {
+  typeImageVariations: string[];
+  ogImageUrl: string;
+  typeName: string;
+  typeDescription: string;
+};
+
+export const getServerSideProps: GetServerSideProps<PageProps> = async (
+  context,
+) => {
   const typeId = context.params?.typeId as string;
+  // FIXME: these two calls should be made in parallel, not sequentially
+  const typeInfo = await getUniverseTypesTypeId(parseInt(typeId));
   const typeImageVariations: string[] = typeId
     ? ((await fetch(`https://images.evetech.net/types/${typeId}`).then((res) =>
         res.json(),
@@ -36,7 +50,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const ogVariation =
     !typeImageVariations || typeImageVariations?.includes("render")
       ? "render"
-      : typeImageVariations[0]!;
+      : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        typeImageVariations[0]!;
   context.res.setHeader(
     "Cache-Control",
     "public, s-maxage=86400, stale-while-revalidate=3600",
@@ -45,6 +60,8 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     props: {
       typeImageVariations,
       ogImageUrl: `https://images.evetech.net/types/${typeId}/${ogVariation}`,
+      typeName: typeInfo.data.name,
+      typeDescription: typeInfo.data.description,
     },
   };
 };
@@ -52,10 +69,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 export default function Page({
   typeImageVariations,
   ogImageUrl,
-}: {
-  typeImageVariations: string[];
-  ogImageUrl: string;
-}) {
+  typeName,
+  typeDescription,
+}: PageProps) {
   const router = useRouter();
   const typeId = router.query.typeId as string;
   const { data: type } = useGetUniverseTypesTypeId(parseInt(typeId));
@@ -81,6 +97,9 @@ export default function Page({
       <NextSeo
         openGraph={{
           type: "article",
+          title: typeName,
+          description: typeDescription,
+          url: `https://www.jita.space/type/${typeId}`,
           images: [
             {
               type: "image/png",
@@ -95,7 +114,7 @@ export default function Page({
         }}
         twitter={{
           cardType: "summary",
-          site: "https://www.jita.space",
+          site: "https://www.jita.space/type/${typeId}",
         }}
         themeColor="#9bb4d0"
       />
