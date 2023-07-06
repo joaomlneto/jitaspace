@@ -1,21 +1,27 @@
 import React, { type ReactElement } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
+import {
+  Anchor,
+  Button,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import {
-  useGetCharactersCharacterId,
-  useGetUniverseBloodlines,
-  useGetUniverseRaces,
-} from "@jitaspace/esi-client";
+import { useGetCharactersCharacterId } from "@jitaspace/esi-client";
 import {
   AllianceAvatar,
   AllianceName,
+  BloodlineName,
   CharacterAvatar,
   CharacterName,
   CorporationAvatar,
   CorporationName,
+  RaceName,
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
@@ -27,8 +33,6 @@ export default function Page() {
   const { data: character } = useGetCharactersCharacterId(
     parseInt(characterId),
   );
-  const { data: bloodlines } = useGetUniverseBloodlines();
-  const { data: races } = useGetUniverseRaces();
 
   const sanitizeCharacterDescriptionString = (str: string): string => {
     // FIXME: IS THIS CORRECT? THIS WILL CONSIDER THAT THE WHOLE EMAIL IS A "UNICODE BLOCK".
@@ -85,7 +89,16 @@ export default function Page() {
                 corporationId={character?.data.corporation_id}
                 size="sm"
               />
-              <CorporationName corporationId={character?.data.corporation_id} />
+              <Anchor
+                component={Link}
+                href={`/corporation/${character?.data.corporation_id}`}
+                target="_blank"
+              >
+                <CorporationName
+                  span
+                  corporationId={character?.data.corporation_id}
+                />
+              </Anchor>
             </Group>
           </Group>
         )}
@@ -97,7 +110,13 @@ export default function Page() {
                 allianceId={character?.data.alliance_id}
                 size="sm"
               />
-              <AllianceName allianceId={character?.data.alliance_id} />
+              <Anchor
+                component={Link}
+                href={`/alliance/${character?.data.alliance_id}`}
+                target="_blank"
+              >
+                <AllianceName span allianceId={character?.data.alliance_id} />
+              </Anchor>
             </Group>
           </Group>
         )}
@@ -121,24 +140,18 @@ export default function Page() {
         </Group>
         <Group position="apart">
           <Text>Bloodline</Text>
-          <Text>
-            {
-              bloodlines?.data.find(
-                (bloodline) =>
-                  bloodline.bloodline_id === character?.data.bloodline_id,
-              )?.name
-            }
-          </Text>
+          <Anchor
+            component={Link}
+            href={`/bloodline/${character?.data.bloodline_id}`}
+          >
+            <BloodlineName bloodlineId={character?.data.bloodline_id} />
+          </Anchor>
         </Group>
         <Group position="apart">
           <Text>Race</Text>
-          <Text>
-            {
-              races?.data.find(
-                (race) => race.race_id === character?.data.race_id,
-              )?.name
-            }
-          </Text>
+          <Anchor component={Link} href={`/race/${character?.data.race_id}`}>
+            <RaceName span raceId={character?.data.race_id} />
+          </Anchor>
         </Group>
         {character?.data && (
           <MailMessageViewer

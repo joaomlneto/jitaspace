@@ -1,7 +1,15 @@
 import React, { type ReactElement } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
+import {
+  Anchor,
+  Button,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
 import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
@@ -92,7 +100,12 @@ export default function Page() {
                 allianceId={corporation?.data.alliance_id}
                 size="sm"
               />
-              <AllianceName allianceId={corporation?.data.alliance_id} />
+              <Anchor
+                component={Link}
+                href={`/alliance/${corporation?.data.alliance_id}`}
+              >
+                <AllianceName allianceId={corporation?.data.alliance_id} />
+              </Anchor>
             </Group>
           </Group>
         )}
