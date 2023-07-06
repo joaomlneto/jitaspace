@@ -92,7 +92,6 @@ export default function Page() {
               <Anchor
                 component={Link}
                 href={`/corporation/${character?.data.corporation_id}`}
-                target="_blank"
               >
                 <CorporationName
                   span
@@ -113,7 +112,6 @@ export default function Page() {
               <Anchor
                 component={Link}
                 href={`/alliance/${character?.data.alliance_id}`}
-                target="_blank"
               >
                 <AllianceName span allianceId={character?.data.alliance_id} />
               </Anchor>
