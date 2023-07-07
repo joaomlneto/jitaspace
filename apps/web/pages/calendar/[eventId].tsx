@@ -9,6 +9,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { NextSeo } from "next-seo";
 
 import {
   useEsiClientContext,
@@ -84,67 +85,74 @@ export default function Page() {
   );
 
   return (
-    <Container size="xl">
-      <Stack>
-        <Group>
-          <Title order={1}>Calendar</Title>
-          {loading && <Loader />}
-        </Group>
-        <Title order={4}>{event?.data.title}</Title>
-        <MailMessageViewer content={event?.data.text ?? ""} />
-        <Group position="apart" mt="xl">
-          <Text>Start</Text>
-          <Text>
-            {event?.data.date && new Date(event?.data.date).toLocaleString()}
-          </Text>
-        </Group>
-        <Group position="apart">
-          <Text>Duration</Text>
-          <Text>{event?.data.duration} minutes</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Importance</Text>
-          <Text>{event?.data.importance}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Owner</Text>
-          <Group noWrap>
-            <CalendarEventOwnerAvatar eventId={eventId} size="sm" />
-            <Text>
-              {event?.data.owner_name} {event?.data.owner_type}
-            </Text>
-            <CalendarEventOwnerName eventId={eventId} />
-          </Group>
-        </Group>
-        <Group position="apart">
-          <Text>Response</Text>
-          <Text>{event?.data.response}</Text>
-        </Group>
-        <Title order={4} mt="xl">
-          Attendees
-        </Title>
+    <>
+      <NextSeo
+        title={
+          event?.data ? `${event?.data.title} | Calendar` : "Calendar event"
+        }
+      />
+      <Container size="xl">
         <Stack>
-          {sortedAttendees.map((attendee) => (
-            <Group key={attendee.character_id} position="apart">
-              <Group key={attendee.event_response} noWrap>
-                <CharacterAvatar
-                  characterId={attendee.character_id}
-                  size="sm"
-                  radius="xl"
-                />
-                <CharacterName characterId={attendee.character_id} />
-              </Group>
-              <Badge
-                variant="light"
-                color={eventResponseColor[attendee.event_response!]}
-              >
-                {attendee.event_response}
-              </Badge>
+          <Group>
+            <Title order={1}>Calendar</Title>
+            {loading && <Loader />}
+          </Group>
+          <Title order={4}>{event?.data.title}</Title>
+          <MailMessageViewer content={event?.data.text ?? ""} />
+          <Group position="apart" mt="xl">
+            <Text>Start</Text>
+            <Text>
+              {event?.data.date && new Date(event?.data.date).toLocaleString()}
+            </Text>
+          </Group>
+          <Group position="apart">
+            <Text>Duration</Text>
+            <Text>{event?.data.duration} minutes</Text>
+          </Group>
+          <Group position="apart">
+            <Text>Importance</Text>
+            <Text>{event?.data.importance}</Text>
+          </Group>
+          <Group position="apart">
+            <Text>Owner</Text>
+            <Group noWrap>
+              <CalendarEventOwnerAvatar eventId={eventId} size="sm" />
+              <Text>
+                {event?.data.owner_name} {event?.data.owner_type}
+              </Text>
+              <CalendarEventOwnerName eventId={eventId} />
             </Group>
-          ))}
+          </Group>
+          <Group position="apart">
+            <Text>Response</Text>
+            <Text>{event?.data.response}</Text>
+          </Group>
+          <Title order={4} mt="xl">
+            Attendees
+          </Title>
+          <Stack>
+            {sortedAttendees.map((attendee) => (
+              <Group key={attendee.character_id} position="apart">
+                <Group key={attendee.event_response} noWrap>
+                  <CharacterAvatar
+                    characterId={attendee.character_id}
+                    size="sm"
+                    radius="xl"
+                  />
+                  <CharacterName characterId={attendee.character_id} />
+                </Group>
+                <Badge
+                  variant="light"
+                  color={eventResponseColor[attendee.event_response!]}
+                >
+                  {attendee.event_response}
+                </Badge>
+              </Group>
+            ))}
+          </Stack>
         </Stack>
-      </Stack>
-    </Container>
+      </Container>
+    </>
   );
 }
 

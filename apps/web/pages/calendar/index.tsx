@@ -16,6 +16,7 @@ import {
 } from "@mantine/core";
 import { Calendar } from "@mantine/dates";
 import { format } from "date-fns";
+import { NextSeo } from "next-seo";
 
 import {
   useEsiClientContext,
@@ -62,112 +63,117 @@ export default function Page() {
   }
 
   return (
-    <Container>
-      <Stack spacing="xl">
-        <Group>
-          <CalendarIcon width={48} />
-          <Title order={1}>Calendar</Title>
-          {isLoading && <Loader />}
-        </Group>
-        <Center>
-          <Calendar
-            size="md"
-            excludeDate={(date: Date) => {
-              // return false if date is before today
-              const startOfToday = new Date().setHours(0, 0, 0, 0);
-              return date.getTime() < startOfToday;
-            }}
-            renderDay={(date: Date) => {
-              const day = date.getDate();
-              const dayEvents = eventsPerDate[date.getTime()] ?? [];
-              return (
-                <Indicator
-                  label={dayEvents.length}
-                  size={16}
-                  offset={-2}
-                  disabled={dayEvents.length === 0}
-                >
-                  <div>{day}</div>
-                </Indicator>
-              );
-            }}
-          />
-        </Center>
-        {Object.keys(eventsPerDate).map((dateString) => {
-          return (
-            <Stack key={dateString}>
-              <Title order={5}>
-                {format(new Date(parseInt(dateString)), "LLLL dd - EEEE")}
-              </Title>
-              <Table highlightOnHover striped>
-                <tbody>
-                  {eventsPerDate[dateString]?.map((event) => (
-                    <tr key={event.event_id}>
-                      <td width={10}>
-                        <Tooltip
-                          label={
-                            <CalendarEventHumanDurationText
-                              eventId={event.event_id}
-                            />
-                          }
-                        >
-                          <Text>
-                            {format(new Date(event.event_date ?? 0), "HH:mm")}
-                          </Text>
-                        </Tooltip>
-                      </td>
-                      <td>
-                        <Group noWrap>
+    <>
+      <NextSeo title="Calendar" />
+      <Container>
+        <Stack spacing="xl">
+          <Group>
+            <CalendarIcon width={48} />
+            <Title order={1}>Calendar</Title>
+            {isLoading && <Loader />}
+          </Group>
+          <Center>
+            <Calendar
+              size="md"
+              excludeDate={(date: Date) => {
+                // return false if date is before today
+                const startOfToday = new Date().setHours(0, 0, 0, 0);
+                return date.getTime() < startOfToday;
+              }}
+              renderDay={(date: Date) => {
+                const day = date.getDate();
+                const dayEvents = eventsPerDate[date.getTime()] ?? [];
+                return (
+                  <Indicator
+                    label={dayEvents.length}
+                    size={16}
+                    offset={-2}
+                    disabled={dayEvents.length === 0}
+                  >
+                    <div>{day}</div>
+                  </Indicator>
+                );
+              }}
+            />
+          </Center>
+          {Object.keys(eventsPerDate).map((dateString) => {
+            return (
+              <Stack key={dateString}>
+                <Title order={5}>
+                  {format(new Date(parseInt(dateString)), "LLLL dd - EEEE")}
+                </Title>
+                <Table highlightOnHover striped>
+                  <tbody>
+                    {eventsPerDate[dateString]?.map((event) => (
+                      <tr key={event.event_id}>
+                        <td width={10}>
                           <Tooltip
                             label={
-                              <CalendarEventOwnerName
+                              <CalendarEventHumanDurationText
                                 eventId={event.event_id}
                               />
                             }
                           >
-                            <Avatar size="sm">
-                              <CalendarEventOwnerAvatar
-                                eventId={event.event_id}
-                                size="sm"
-                              />
-                            </Avatar>
+                            <Text>
+                              {format(new Date(event.event_date ?? 0), "HH:mm")}
+                            </Text>
                           </Tooltip>
-                          <Group noWrap spacing="xs">
-                            {event.importance === 1 && (
-                              <WarningIcon width={20} />
-                            )}
-                            <Anchor
-                              component={Link}
-                              href={`/calendar/${event.event_id}`}
-                              lineClamp={1}
+                        </td>
+                        <td>
+                          <Group noWrap>
+                            <Tooltip
+                              label={
+                                <CalendarEventOwnerName
+                                  eventId={event.event_id}
+                                />
+                              }
                             >
-                              {event.title}
-                            </Anchor>
+                              <Avatar size="sm">
+                                <CalendarEventOwnerAvatar
+                                  eventId={event.event_id}
+                                  size="sm"
+                                />
+                              </Avatar>
+                            </Tooltip>
+                            <Group noWrap spacing="xs">
+                              {event.importance === 1 && (
+                                <WarningIcon width={20} />
+                              )}
+                              <Anchor
+                                component={Link}
+                                href={`/calendar/${event.event_id}`}
+                                lineClamp={1}
+                              >
+                                {event.title}
+                              </Anchor>
+                            </Group>
                           </Group>
-                        </Group>
-                      </td>
-                      <td align="right" width={1}>
-                        <Group position="right">
-                          <CalendarEventAttendeesAvatarGroup
+                        </td>
+                        <td align="right" width={1}>
+                          <Group position="right">
+                            <CalendarEventAttendeesAvatarGroup
+                              eventId={event.event_id}
+                              limit={5}
+                              size="sm"
+                              radius="xl"
+                            />
+                          </Group>
+                        </td>
+                        <td align="right" width={1}>
+                          <CalendarEventResponseBadge
                             eventId={event.event_id}
-                            limit={5}
-                            size="sm"
-                            radius="xl"
                           />
-                        </Group>
-                      </td>
-                      <td align="right" width={1}>
-                        <CalendarEventResponseBadge eventId={event.event_id} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </Stack>
-          );
-        })}
-      </Stack>
-    </Container>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </Stack>
+            );
+          })}
+        </Stack>
+      </Container>
+    </>
   );
 }
 

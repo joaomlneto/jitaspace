@@ -1,5 +1,6 @@
 import React, { type ReactElement } from "react";
 import { Container, Title } from "@mantine/core";
+import { NextSeo } from "next-seo";
 
 import { EveMailComposeForm } from "~/components/EveMail";
 import { MailLayout } from "~/layouts";
@@ -14,7 +15,12 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return (
+    <MailLayout>
+      <NextSeo title="Compose New Message | EveMail" />
+      {page}
+    </MailLayout>
+  );
 };
 
 Page.requiredScopes = [
