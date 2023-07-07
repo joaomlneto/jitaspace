@@ -111,7 +111,7 @@ export default function Page() {
             </Group>
           </Group>
         )}
-        <Tabs>
+        <Tabs defaultValue="description">
           <Tabs.List>
             <Tabs.Tab value="description">Description</Tabs.Tab>
             <Tabs.Tab value="history">Alliance History</Tabs.Tab>
@@ -127,11 +127,13 @@ export default function Page() {
               />
             )}
           </Tabs.Panel>
-          <Tabs.Panel value="history">
+          <Tabs.Panel value="history" pt="xl">
             {
-              <CorporationAllianceHistoryTimeline
-                corporationId={corporationId}
-              />
+              <Container>
+                <CorporationAllianceHistoryTimeline
+                  corporationId={corporationId}
+                />
+              </Container>
             }
           </Tabs.Panel>
         </Tabs>
