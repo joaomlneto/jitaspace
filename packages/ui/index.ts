@@ -13,3 +13,4 @@ export * from "./MultiSelect";
 export * from "./Select";
 export * from "./SkillLevelBar";
 export * from "./Text";
+export * from "./Timeline";
