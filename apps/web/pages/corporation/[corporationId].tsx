@@ -16,6 +16,7 @@ import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
 import {
   AllianceAvatar,
   AllianceName,
+  CorporationAllianceHistoryTimeline,
   CorporationAvatar,
   CorporationName,
 } from "@jitaspace/ui";
@@ -118,6 +119,7 @@ export default function Page() {
             }
           />
         )}
+        <CorporationAllianceHistoryTimeline corporationId={corporationId} />
       </Stack>
     </Container>
   );
