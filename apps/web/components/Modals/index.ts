@@ -1,6 +1,7 @@
 import { MailFaqModal } from "~/components/Modals/MailFaqModal";
 import { ManageMailLabelsModal } from "~/components/Modals/ManageMailLabelsModal";
 import { ComposeMailModal } from "./ComposeMailModal";
+import { ViewCalendarEventModal } from "./ViewCalendarEventModal";
 import { ViewMailingListSubscriptionsModal } from "./ViewMailingListSubscriptionsModal";
 import { ViewMailMessageModal } from "./ViewMailMessageModal";
 
@@ -8,6 +9,7 @@ const contextModals = {
   composeMail: ComposeMailModal,
   mailFaq: MailFaqModal,
   manageMailLabels: ManageMailLabelsModal,
+  viewCalendarEvent: ViewCalendarEventModal,
   viewMailMessage: ViewMailMessageModal,
   viewMailingListSubscriptions: ViewMailingListSubscriptionsModal,
 };

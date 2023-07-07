@@ -1,5 +1,4 @@
 import React, { type ReactElement } from "react";
-import Link from "next/link";
 import {
   Anchor,
   Avatar,
@@ -15,6 +14,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { Calendar } from "@mantine/dates";
+import { openContextModal } from "@mantine/modals";
 import { format } from "date-fns";
 import { NextSeo } from "next-seo";
 
@@ -140,9 +140,22 @@ export default function Page() {
                                 <WarningIcon width={20} />
                               )}
                               <Anchor
-                                component={Link}
-                                href={`/calendar/${event.event_id}`}
                                 lineClamp={1}
+                                onClick={() =>
+                                  openContextModal({
+                                    modal: "viewCalendarEvent",
+                                    title: (
+                                      <Title order={4}>
+                                        {event.importance === 1 && (
+                                          <WarningIcon width={32} />
+                                        )}
+                                        {event.title}
+                                      </Title>
+                                    ),
+                                    size: "lg",
+                                    innerProps: { eventId: event.event_id },
+                                  })
+                                }
                               >
                                 {event.title}
                               </Anchor>
