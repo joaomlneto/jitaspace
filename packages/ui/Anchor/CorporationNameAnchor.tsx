@@ -1,4 +1,5 @@
 import { memo } from "react";
+import Link from "next/link";
 import { Anchor, type AnchorProps } from "@mantine/core";
 
 import { CorporationName } from "../Text";
@@ -10,8 +11,12 @@ export type CorporationNameAnchorProps = AnchorProps & {
 export const CorporationNameAnchor = memo(
   ({ corporationId, ...props }: CorporationNameAnchorProps) => {
     return (
-      <Anchor {...props}>
-        <CorporationName corporationId={corporationId} />
+      <Anchor
+        component={Link}
+        href={`/corporation/${corporationId}/`}
+        {...props}
+      >
+        <CorporationName span corporationId={corporationId} />
       </Anchor>
     );
   },

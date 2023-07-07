@@ -45,10 +45,10 @@ export default function Page() {
         <Group spacing="xl">
           <AllianceAvatar allianceId={allianceId} size="xl" radius={256} />
           <Title order={3}>
-            <Group>
+            <div style={{ flex: 1 }}>
               <AllianceName span allianceId={allianceId} />
               {alliance?.data.ticker && <Badge>{alliance?.data.ticker}</Badge>}
-            </Group>
+            </div>
           </Title>
         </Group>
         <Group>

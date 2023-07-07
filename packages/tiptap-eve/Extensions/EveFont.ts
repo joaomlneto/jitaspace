@@ -1,7 +1,7 @@
 import { getMarkAttributes, Mark, mergeAttributes } from "@tiptap/core";
 
 const fromEveColor = (eveColor: string): string => {
-  if (eveColor.startsWith("#ff")) {
+  if (eveColor.length === 9) {
     return `#${eveColor.slice(3)}`;
   }
   return eveColor;

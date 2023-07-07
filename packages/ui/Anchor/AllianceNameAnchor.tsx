@@ -1,4 +1,5 @@
 import { memo } from "react";
+import Link from "next/link";
 import { Anchor, type AnchorProps } from "@mantine/core";
 
 import { AllianceName } from "../Text";
@@ -10,8 +11,8 @@ export type AllianceNameAnchorProps = AnchorProps & {
 export const AllianceNameAnchor = memo(
   ({ allianceId, ...props }: AllianceNameAnchorProps) => {
     return (
-      <Anchor {...props}>
-        <AllianceName allianceId={allianceId} />
+      <Anchor component={Link} href={`/alliances/${allianceId}`} {...props}>
+        <AllianceName span allianceId={allianceId} />
       </Anchor>
     );
   },

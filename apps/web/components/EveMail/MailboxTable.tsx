@@ -1,8 +1,7 @@
 import React from "react";
-import { Anchor, Group, Popover, Table, Text } from "@mantine/core";
+import { Anchor, Group, Popover, Table } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
-import { format } from "date-fns";
 
 import {
   useEsiClientContext,
@@ -12,6 +11,7 @@ import {
   EveMailSenderAvatar,
   EveMailSenderCard,
   EveMailSenderNameAnchor,
+  FormattedDateText,
   LabelName,
   MailLabelColorSwatch,
 } from "@jitaspace/ui";
@@ -119,9 +119,10 @@ export function MailboxTable({ data, mutate, className }: MailboxTableProps) {
               </td>
               <td>
                 {mail.timestamp && (
-                  <Text fw={mail.is_read ? "normal" : "bold"}>
-                    {format(new Date(mail.timestamp), "yyyy-MM-dd HH:mm")}
-                  </Text>
+                  <FormattedDateText
+                    date={new Date(mail.timestamp)}
+                    fw={mail.is_read ? "normal" : "bold"}
+                  />
                 )}
               </td>
               <td>

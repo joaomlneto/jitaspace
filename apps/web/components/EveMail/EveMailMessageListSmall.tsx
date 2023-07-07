@@ -1,15 +1,7 @@
 import React from "react";
-import {
-  Anchor,
-  Group,
-  Stack,
-  Table,
-  Text,
-  type TableProps,
-} from "@mantine/core";
+import { Anchor, Group, Stack, Table, type TableProps } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
-import { format } from "date-fns";
 
 import {
   useEsiClientContext,
@@ -18,6 +10,7 @@ import {
 import {
   EveMailSenderAvatar,
   EveMailSenderName,
+  FormattedDateText,
   MailLabelColorSwatch,
 } from "@jitaspace/ui";
 
@@ -98,9 +91,15 @@ export function EveMailMessageListSmall({
                           ),
                       )}
                     {message.timestamp && (
-                      <Text fw={message.is_read ? "normal" : "bold"}>
-                        {format(new Date(message.timestamp), "LLL dd")}
-                      </Text>
+                      <FormattedDateText
+                        date={
+                          message.timestamp
+                            ? new Date(message.timestamp)
+                            : undefined
+                        }
+                        format="LLL dd"
+                        fw={message.is_read ? "normal" : "bold"}
+                      />
                     )}
                   </Group>
                 </Group>

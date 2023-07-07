@@ -18,11 +18,15 @@ import {
   type GetCharactersCharacterIdCalendarEventIdAttendees200Item,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
+import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import {
+  CalendarEventHumanDurationText,
   CalendarEventOwnerAvatar,
-  CalendarEventOwnerName,
+  CalendarEventResponseBadge,
   CharacterAvatar,
-  CharacterName,
+  CharacterNameAnchor,
+  EveEntityNameAnchor,
+  FormattedDateText,
 } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 
@@ -91,41 +95,39 @@ export default function Page() {
           event?.data ? `${event?.data.title} | Calendar` : "Calendar event"
         }
       />
-      <Container size="xl">
+      <Container>
         <Stack>
           <Group>
+            <CalendarIcon width={48} />
             <Title order={1}>Calendar</Title>
             {loading && <Loader />}
           </Group>
-          <Title order={4}>{event?.data.title}</Title>
+          <Title order={4}>
+            {event?.data.importance === 1 && <WarningIcon width={32} />}
+            {event?.data.title}
+          </Title>
           <MailMessageViewer content={event?.data.text ?? ""} />
           <Group position="apart" mt="xl">
-            <Text>Start</Text>
-            <Text>
-              {event?.data.date && new Date(event?.data.date).toLocaleString()}
-            </Text>
+            <Text>When</Text>
+            <FormattedDateText
+              date={event?.data.date ? new Date(event?.data.date) : undefined}
+              format="yyyy-MM-dd HH:mm"
+            />
           </Group>
           <Group position="apart">
             <Text>Duration</Text>
-            <Text>{event?.data.duration} minutes</Text>
-          </Group>
-          <Group position="apart">
-            <Text>Importance</Text>
-            <Text>{event?.data.importance}</Text>
+            <CalendarEventHumanDurationText eventId={eventId} />
           </Group>
           <Group position="apart">
             <Text>Owner</Text>
             <Group noWrap>
               <CalendarEventOwnerAvatar eventId={eventId} size="sm" />
-              <Text>
-                {event?.data.owner_name} {event?.data.owner_type}
-              </Text>
-              <CalendarEventOwnerName eventId={eventId} />
+              <EveEntityNameAnchor entityId={event?.data.owner_id} />
             </Group>
           </Group>
           <Group position="apart">
             <Text>Response</Text>
-            <Text>{event?.data.response}</Text>
+            <CalendarEventResponseBadge eventId={eventId} />
           </Group>
           <Title order={4} mt="xl">
             Attendees
@@ -139,11 +141,15 @@ export default function Page() {
                     size="sm"
                     radius="xl"
                   />
-                  <CharacterName characterId={attendee.character_id} />
+                  <CharacterNameAnchor characterId={attendee.character_id} />
                 </Group>
                 <Badge
                   variant="light"
-                  color={eventResponseColor[attendee.event_response!]}
+                  color={
+                    eventResponseColor[
+                      attendee.event_response ?? "not_responded"
+                    ]
+                  }
                 >
                   {attendee.event_response}
                 </Badge>
