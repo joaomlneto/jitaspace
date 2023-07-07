@@ -124,7 +124,7 @@ export default function Page() {
             <Text>{character?.data.gender === "male" ? "Male" : "Female"}</Text>
           </Group>
         )}
-        {character?.data.security_status && (
+        {character?.data.security_status !== undefined && (
           <Group position="apart">
             <Text>Security Status</Text>
             <Text>{character?.data.security_status}</Text>
