@@ -18,7 +18,10 @@ import {
 import { AllianceAvatar } from "../Avatar";
 import { AllianceName } from "../Text";
 
-type CorporationAllianceHistoryTimelineProps = TimelineProps & {
+type CorporationAllianceHistoryTimelineProps = Omit<
+  TimelineProps,
+  "children"
+> & {
   corporationId?: string | number;
 };
 export const CorporationAllianceHistoryTimeline = memo(

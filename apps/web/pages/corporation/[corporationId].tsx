@@ -7,6 +7,7 @@ import {
   Container,
   Group,
   Stack,
+  Tabs,
   Text,
   Title,
 } from "@mantine/core";
@@ -110,16 +111,30 @@ export default function Page() {
             </Group>
           </Group>
         )}
-        {corporation?.data && (
-          <MailMessageViewer
-            content={
-              corporation?.data.description
-                ? sanitizeDescription(corporation?.data.description)
-                : "No description"
+        <Tabs>
+          <Tabs.List>
+            <Tabs.Tab value="description">Description</Tabs.Tab>
+            <Tabs.Tab value="history">Alliance History</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="description">
+            {corporation?.data && (
+              <MailMessageViewer
+                content={
+                  corporation?.data.description
+                    ? sanitizeDescription(corporation?.data.description)
+                    : "No description"
+                }
+              />
+            )}
+          </Tabs.Panel>
+          <Tabs.Panel value="history">
+            {
+              <CorporationAllianceHistoryTimeline
+                corporationId={corporationId}
+              />
             }
-          />
-        )}
-        <CorporationAllianceHistoryTimeline corporationId={corporationId} />
+          </Tabs.Panel>
+        </Tabs>
       </Stack>
     </Container>
   );
