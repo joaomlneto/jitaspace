@@ -9,6 +9,7 @@ import {
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
 import {
+  CalendarEventAttendanceSelect,
   CalendarEventHumanDurationText,
   CalendarEventOwnerAvatar,
   CalendarEventResponseBadge,
@@ -25,7 +26,7 @@ export type CalendarEventPanelProps = {
 };
 
 export function CalendarEventPanel({ eventId }: CalendarEventPanelProps) {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, scopes } = useEsiClientContext();
   const { data: event, isLoading: eventLoading } =
     useGetCharactersCharacterIdCalendarEventId(
       characterId ?? 1,
@@ -49,6 +50,9 @@ export function CalendarEventPanel({ eventId }: CalendarEventPanelProps) {
       },
     );
 
+  const canRespondToEvents = scopes.includes(
+    "esi-calendar.respond_calendar_events.v1",
+  );
   const loading = eventLoading || attendeesLoading;
 
   const eventResponseColor: {
@@ -99,7 +103,11 @@ export function CalendarEventPanel({ eventId }: CalendarEventPanelProps) {
       </Group>
       <Group position="apart">
         <Text>Your Response</Text>
-        <CalendarEventResponseBadge eventId={eventId} />
+        {canRespondToEvents ? (
+          <CalendarEventAttendanceSelect eventId={eventId} size="xs" w={130} />
+        ) : (
+          <CalendarEventResponseBadge eventId={eventId} />
+        )}
       </Group>
       {event?.data.text && (
         <MailMessageViewer content={event?.data.text ?? ""} />

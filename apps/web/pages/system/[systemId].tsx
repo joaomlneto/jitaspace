@@ -18,6 +18,7 @@ import {
   AsteroidBeltName,
   ConstellationName,
   MoonName,
+  PlanetAvatar,
   PlanetName,
   SolarSystemName,
   StationName,
@@ -93,9 +94,12 @@ export default function Page() {
           {solarSystem?.data.planets?.map(
             ({ planet_id, moons, asteroid_belts }) => (
               <List.Item key={planet_id}>
-                <Anchor component={Link} href={`/planet/${planet_id}`}>
-                  <PlanetName span planetId={planet_id} />
-                </Anchor>
+                <Group>
+                  <PlanetAvatar planetId={planet_id} size="sm" />
+                  <Anchor component={Link} href={`/planet/${planet_id}`}>
+                    <PlanetName span planetId={planet_id} />
+                  </Anchor>
+                </Group>
                 <List>
                   {moons?.map((moonId) => (
                     <List.Item key={moonId}>

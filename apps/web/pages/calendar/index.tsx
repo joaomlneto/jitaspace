@@ -25,8 +25,10 @@ import {
 } from "@jitaspace/esi-client";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import {
+  CalendarEventAttendanceSelect,
   CalendarEventAttendeesAvatarGroup,
   CalendarEventHumanDurationText,
+  CalendarEventOwnerAnchor,
   CalendarEventOwnerAvatar,
   CalendarEventOwnerName,
   CalendarEventResponseBadge,
@@ -35,7 +37,7 @@ import {
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, scopes } = useEsiClientContext();
   const { data: events, isLoading } = useGetCharactersCharacterIdCalendar(
     characterId ?? 1,
     {},
@@ -44,6 +46,10 @@ export default function Page() {
         enabled: isTokenValid,
       },
     },
+  );
+
+  const canRespondToEvents = scopes.includes(
+    "esi-calendar.respond_calendar_events.v1",
   );
 
   const eventsPerDate: {
@@ -128,12 +134,16 @@ export default function Page() {
                                 />
                               }
                             >
-                              <Avatar size="sm">
-                                <CalendarEventOwnerAvatar
-                                  eventId={event.event_id}
-                                  size="sm"
-                                />
-                              </Avatar>
+                              <CalendarEventOwnerAnchor
+                                eventId={event.event_id}
+                              >
+                                <Avatar size="sm">
+                                  <CalendarEventOwnerAvatar
+                                    eventId={event.event_id}
+                                    size="sm"
+                                  />
+                                </Avatar>
+                              </CalendarEventOwnerAnchor>
                             </Tooltip>
                             <Group noWrap spacing="xs">
                               {event.importance === 1 && (
@@ -173,9 +183,17 @@ export default function Page() {
                           </Group>
                         </td>
                         <td align="right" width={1}>
-                          <CalendarEventResponseBadge
-                            eventId={event.event_id}
-                          />
+                          {canRespondToEvents ? (
+                            <CalendarEventAttendanceSelect
+                              eventId={event.event_id}
+                              size="xs"
+                              w={130}
+                            />
+                          ) : (
+                            <CalendarEventResponseBadge
+                              eventId={event.event_id}
+                            />
+                          )}
                         </td>
                       </tr>
                     ))}

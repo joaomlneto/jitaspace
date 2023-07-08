@@ -22,7 +22,7 @@ const eventResponseColor: {
 
 export const CalendarEventResponseBadge = memo(
   ({ eventId, ...otherProps }: CalendarEventResponseBadgeProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, scopes } = useEsiClientContext();
 
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
@@ -31,7 +31,10 @@ export const CalendarEventResponseBadge = memo(
         undefined,
         {
           swr: {
-            enabled: isTokenValid && !!eventId,
+            enabled:
+              isTokenValid &&
+              !!eventId &&
+              scopes.includes("esi-calendar.read_calendar_events.v1"),
           },
         },
       );
