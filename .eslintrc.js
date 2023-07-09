@@ -1,16 +1,12 @@
 /** @type {import("eslint").Linter.Config} */
 const config = {
   root: true,
-  extends: ["@jitaspace/eslint-config"], // uses the config in `packages/config/eslint`
+  extends: ["@jitaspace/eslint-config"], // uses the config in `packages/eslint-config`
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: "latest",
     tsconfigRootDir: __dirname,
-    project: [
-      "./tsconfig.json",
-      "./apps/*/tsconfig.json",
-      "./packages/*/tsconfig.json",
-    ],
+    project: true,
   },
   settings: {
     next: {
