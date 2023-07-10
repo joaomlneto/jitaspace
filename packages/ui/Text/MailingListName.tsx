@@ -23,6 +23,7 @@ export const MailingListName = memo(
         },
       },
     );
+
     return (
       <Skeleton visible={isLoading}>
         <Text {...otherProps}>

@@ -17,12 +17,8 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { NextSeo } from "next-seo";
-import useSWRInfinite from "swr/infinite";
 
-import {
-  useEsiClientContext,
-  type GetCharactersCharacterIdMail200Item,
-} from "@jitaspace/esi-client";
+import { useCharacterMails } from "@jitaspace/esi-client";
 import {
   EvemailComposeIcon,
   EveMailIcon,
@@ -33,14 +29,12 @@ import {
 import { EveMailLabelMultiSelect } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 
-import { MailboxTable } from "~/components/EveMail";
-import { EveMailMessageListSmall } from "~/components/EveMail/EveMailMessageListSmall";
+import { EveMailMessageListSmall, MailboxTable } from "~/components/EveMail";
 import { MailLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
   const labels = router.query.labels;
-  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
   const [selectedLabels, setSelectedLabels] = React.useState<string[]>([]);
 
@@ -50,51 +44,21 @@ export default function Page() {
     }
   }, [router.isReady, labels]);
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCharactersCharacterIdMail200Item[]>(
-      function getKey(
-        pageIndex,
-        previousPageData: GetCharactersCharacterIdMail200Item[],
-      ) {
-        if (!router.isReady || !isTokenValid) {
-          return null;
-        }
-        const params = new URLSearchParams();
-        if (pageIndex > 0) {
-          params.append(
-            "last_mail_id",
-            (previousPageData ?? [])
-              .slice(0, 50 * pageIndex)
-              .reduce((acc, msg) => Math.min(acc, msg.mail_id ?? acc), Infinity)
-              .toString(),
-          );
-        }
-        if (labels) {
-          params.append("labels", labels.toString());
-        }
-        return `https://esi.evetech.net/latest/characters/${characterId}/mail/?${params.toString()}`;
-      },
-      (url: string) =>
-        fetch(url, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }).then((r) => r.json()),
-      { refreshInterval: 30000, revalidateAll: true },
-    );
-
-  const mergedData = data?.flat() ?? [];
-
-  const hasMore = mergedData.length === 50 * size;
+  const {
+    messages,
+    hasMoreMessages,
+    loadMoreMessages,
+    isLoading,
+    mutate,
+    error,
+    isValidating,
+  } = useCharacterMails({ labels: selectedLabels.map(Number) });
 
   return (
     <Container size="xl">
       <Stack>
         {error && (
           <Container size="xs">
-            {/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */}
             <Alert title="Error loading messages">{error.message}</Alert>
           </Container>
         )}
@@ -205,31 +169,31 @@ export default function Page() {
             />
           </Grid.Col>
         </Grid>
-        {data && (
+        {messages.length > 0 && (
           <>
             <MediaQuery smallerThan="md" styles={{ display: "none" }}>
-              <MailboxTable data={mergedData} mutate={() => void mutate()} />
+              <MailboxTable data={messages} mutate={() => void mutate()} />
             </MediaQuery>
             <MediaQuery largerThan="md" styles={{ display: "none" }}>
               <EveMailMessageListSmall
-                data={mergedData}
+                data={messages}
                 mutate={() => void mutate()}
               />
             </MediaQuery>
           </>
         )}
-        {hasMore && (
-          <Button w="100%" onClick={() => void setSize(size + 1)}>
+        {hasMoreMessages && (
+          <Button w="100%" onClick={loadMoreMessages}>
             Load more messages
           </Button>
         )}
-        {(isLoading || isValidating) && !hasMore && (
+        {(isLoading || isValidating) && !hasMoreMessages && (
           <Group noWrap>
             <Loader size="sm" />
             <Text>Loading messages</Text>
           </Group>
         )}
-        {!isLoading && !isValidating && !hasMore && (
+        {!isLoading && !isValidating && !hasMoreMessages && (
           <Center>
             <Text color="dimmed">No more messages</Text>
           </Center>

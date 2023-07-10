@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
 
 import { type ResolvableEntityCategory } from "@jitaspace/esi-client";
@@ -9,10 +10,12 @@ import { EveEntityAnchor } from "./EveEntityAnchor";
 export type EveEntityNameAnchorProps = Omit<
   AnchorProps,
   "children" | "component" | "href"
-> & {
-  entityId?: string | number;
-  category?: ResolvableEntityCategory;
-};
+> &
+  Omit<LinkProps, "href"> &
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
+    entityId?: string | number;
+    category?: ResolvableEntityCategory;
+  };
 
 export const EveEntityNameAnchor = memo(
   ({ entityId, category, ...props }: EveEntityNameAnchorProps) => {

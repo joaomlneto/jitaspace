@@ -10,7 +10,12 @@ import {
 } from "@mantine/core";
 
 import { useEsiClientContext } from "@jitaspace/esi-client";
-import { CharacterAvatar, CharacterName, TimeAgoText } from "@jitaspace/ui";
+import {
+  CharacterAvatar,
+  CharacterName,
+  FormattedDateText,
+  TimeAgoText,
+} from "@jitaspace/ui";
 
 import { ScopesTable } from "~/components/ScopeGuard";
 
@@ -62,10 +67,10 @@ export function EsiClientStateCard() {
         <Text>Token expires</Text>
         <Group>
           {tokenExpirationDate && (
-            <Tooltip label={tokenExpirationDate?.toLocaleString()}>
-              <Text>
-                (<TimeAgoText span date={tokenExpirationDate} addSuffix />)
-              </Text>
+            <Tooltip label={<FormattedDateText date={tokenExpirationDate} />}>
+              <div>
+                <TimeAgoText span date={tokenExpirationDate} addSuffix />
+              </div>
             </Tooltip>
           )}
         </Group>

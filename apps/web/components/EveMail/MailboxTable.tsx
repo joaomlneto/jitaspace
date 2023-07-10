@@ -1,5 +1,5 @@
 import React from "react";
-import { Anchor, Group, Popover, Table } from "@mantine/core";
+import { Anchor, Group, Popover, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
@@ -8,9 +8,10 @@ import {
   useGetCharactersCharacterIdMailLabels,
 } from "@jitaspace/esi-client";
 import {
+  EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderCard,
-  EveMailSenderNameAnchor,
+  EveMailSenderName,
   FormattedDateText,
   LabelName,
   MailLabelColorSwatch,
@@ -76,10 +77,12 @@ export function MailboxTable({ data, mutate, className }: MailboxTableProps) {
                         size="sm"
                         radius="xl"
                       />
-                      <EveMailSenderNameAnchor
+                      <EveMailSenderAnchor
                         messageId={mail.mail_id}
                         fw={mail.is_read ? "normal" : "bold"}
-                      />
+                      >
+                        <EveMailSenderName messageId={mail.mail_id} />{" "}
+                      </EveMailSenderAnchor>
                     </Group>
                   </Popover.Target>
                   <Popover.Dropdown>
@@ -99,9 +102,12 @@ export function MailboxTable({ data, mutate, className }: MailboxTableProps) {
                     }
                     openContextModal({
                       modal: "viewMailMessage",
-                      title: mail.subject,
+                      title: <Text fw={700}>{mail.subject}</Text>,
                       size: "xl",
-                      innerProps: { messageId: mail.mail_id },
+                      innerProps: {
+                        messageId: mail.mail_id,
+                        hideSubject: true,
+                      },
                     });
                   }}
                   fw={mail.is_read ? "normal" : "bold"}
@@ -120,13 +126,16 @@ export function MailboxTable({ data, mutate, className }: MailboxTableProps) {
               <td>
                 {mail.timestamp && (
                   <FormattedDateText
+                    size="xs"
+                    style={{ whiteSpace: "nowrap" }}
                     date={new Date(mail.timestamp)}
                     fw={mail.is_read ? "normal" : "bold"}
+                    format="yyyy-MM-dd HH:mm"
                   />
                 )}
               </td>
               <td>
-                <Group spacing="xl">
+                <Group spacing="xs">
                   {mail.labels
                     ?.map((labelIndex) =>
                       labels?.data.labels?.find(
@@ -136,12 +145,12 @@ export function MailboxTable({ data, mutate, className }: MailboxTableProps) {
                     .map(
                       (item) =>
                         item && (
-                          <Group noWrap spacing="xs" key={item.label_id}>
+                          <Group noWrap spacing={4} key={item.label_id}>
                             <MailLabelColorSwatch
                               labelId={item.label_id}
-                              size={16}
+                              size={12}
                             />
-                            <LabelName labelId={item.label_id} />
+                            <LabelName size="xs" labelId={item.label_id} />
                           </Group>
                         ),
                     )}

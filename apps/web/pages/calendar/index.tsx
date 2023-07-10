@@ -2,6 +2,7 @@ import React, { type ReactElement } from "react";
 import {
   Anchor,
   Avatar,
+  Button,
   Center,
   Container,
   Group,
@@ -19,13 +20,11 @@ import { format } from "date-fns";
 import { NextSeo } from "next-seo";
 
 import {
-  useEsiClientContext,
-  useGetCharactersCharacterIdCalendar,
+  useCharacterCalendar,
   type GetCharactersCharacterIdCalendar200Item,
 } from "@jitaspace/esi-client";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import {
-  CalendarEventAttendanceSelect,
   CalendarEventAttendeesAvatarGroup,
   CalendarEventHumanDurationText,
   CalendarEventOwnerAnchor,
@@ -37,26 +36,14 @@ import {
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
-  const { characterId, isTokenValid, scopes } = useEsiClientContext();
-  const { data: events, isLoading } = useGetCharactersCharacterIdCalendar(
-    characterId ?? 1,
-    {},
-    {
-      swr: {
-        enabled: isTokenValid,
-      },
-    },
-  );
-
-  const canRespondToEvents = scopes.includes(
-    "esi-calendar.respond_calendar_events.v1",
-  );
+  const { events, isLoading, isValidating, hasMoreEvents, loadMoreEvents } =
+    useCharacterCalendar();
 
   const eventsPerDate: {
     [date: string]: GetCharactersCharacterIdCalendar200Item[];
   } = {};
   if (events) {
-    events.data.forEach((event) => {
+    events.forEach((event) => {
       if (!event.event_date) return;
       const date = new Date(event.event_date);
       date.setHours(0, 0, 0, 0);
@@ -183,17 +170,9 @@ export default function Page() {
                           </Group>
                         </td>
                         <td align="right" width={1}>
-                          {canRespondToEvents ? (
-                            <CalendarEventAttendanceSelect
-                              eventId={event.event_id}
-                              size="xs"
-                              w={130}
-                            />
-                          ) : (
-                            <CalendarEventResponseBadge
-                              eventId={event.event_id}
-                            />
-                          )}
+                          <CalendarEventResponseBadge
+                            eventId={event.event_id}
+                          />
                         </td>
                       </tr>
                     ))}
@@ -203,6 +182,24 @@ export default function Page() {
             );
           })}
         </Stack>
+        <Container my="xl">
+          {hasMoreEvents && (
+            <Button w="100%" onClick={loadMoreEvents}>
+              Load more events
+            </Button>
+          )}
+          {(isLoading || isValidating) && !hasMoreEvents && (
+            <Group noWrap>
+              <Loader size="sm" />
+              <Text>Loading events</Text>
+            </Group>
+          )}
+          {!isLoading && !isValidating && !hasMoreEvents && (
+            <Center>
+              <Text color="dimmed">No more events</Text>
+            </Center>
+          )}
+        </Container>
       </Container>
     </>
   );

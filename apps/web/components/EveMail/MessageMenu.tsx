@@ -40,7 +40,7 @@ type Message = {
 export type MessageMenuProps = {
   mail: Message;
   mutate?: () => void;
-  data: Message[];
+  data?: Message[];
 };
 
 export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
@@ -100,7 +100,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                   );
 
                   // optimistic update
-                  const item = data.find(
+                  const item = data?.find(
                     (item) => item.mail_id === mail.mail_id,
                   );
                   if (item) {
@@ -164,8 +164,10 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                   read: !mail.is_read,
                 },
               );
-              data.find((item) => item.mail_id === mail.mail_id)!.is_read =
-                !mail.is_read;
+              if (data) {
+                data.find((item) => item.mail_id === mail.mail_id)!.is_read =
+                  !mail.is_read;
+              }
               showNotification({
                 title: "Message Updated",
                 message: `Message marked successfully as ${
@@ -215,9 +217,11 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                     characterId,
                     mail.mail_id,
                   );
-                  data.find(
-                    (message) => message.mail_id === mail.mail_id,
-                  )!.isDeleted = true;
+                  if (data) {
+                    data.find(
+                      (message) => message.mail_id === mail.mail_id,
+                    )!.isDeleted = true;
+                  }
                   showNotification({
                     title: "Message Deleted",
                     message: `Message deleted successfully. It may take up to 30 seconds for the change to be visible.`,

@@ -53,7 +53,6 @@ export function CalendarEventPanel({ eventId }: CalendarEventPanelProps) {
   const canRespondToEvents = scopes.includes(
     "esi-calendar.respond_calendar_events.v1",
   );
-  const loading = eventLoading || attendeesLoading;
 
   const eventResponseColor: {
     [key in GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse]: string;

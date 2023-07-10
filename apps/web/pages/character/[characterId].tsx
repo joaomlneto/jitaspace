@@ -21,6 +21,7 @@ import {
   CharacterName,
   CorporationAvatar,
   CorporationName,
+  FormattedDateText,
   RaceName,
 } from "@jitaspace/ui";
 
@@ -130,12 +131,14 @@ export default function Page() {
             <Text>{character?.data.security_status}</Text>
           </Group>
         )}
-        <Group position="apart">
-          <Text>Birthday</Text>
-          <Text>
-            {new Date(character?.data.birthday ?? 0).toLocaleString()}
-          </Text>
-        </Group>
+        {character?.data.birthday && (
+          <Group position="apart">
+            <Text>Birthday</Text>
+            <Text>
+              <FormattedDateText date={new Date(character.data.birthday)} />
+            </Text>
+          </Group>
+        )}
         <Group position="apart">
           <Text>Bloodline</Text>
           <Anchor

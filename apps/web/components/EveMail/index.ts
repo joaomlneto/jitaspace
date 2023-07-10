@@ -1,6 +1,6 @@
 export * from "./Editor";
-
 export * from "./EveMailComposeForm";
+export * from "./EveMailMessageListSmall";
 export * from "./MailingListsTable";
 export * from "./LabelManagementTable";
 export * from "./EveMailFaqAccordion";

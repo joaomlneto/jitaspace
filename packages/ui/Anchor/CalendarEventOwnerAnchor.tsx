@@ -1,4 +1,5 @@
 import React, { memo } from "react";
+import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
 
 import {
@@ -8,9 +9,11 @@ import {
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
 
-export type CalendarEventOwnerAnchorProps = AnchorProps & {
-  eventId?: number;
-};
+export type CalendarEventOwnerAnchorProps = AnchorProps &
+  Omit<LinkProps, "href"> &
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
+    eventId?: number;
+  };
 
 export const CalendarEventOwnerAnchor = memo(
   ({ eventId, children, ...otherProps }: CalendarEventOwnerAnchorProps) => {

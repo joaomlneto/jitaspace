@@ -4,5 +4,5 @@ export * from "./CharacterNameAnchor";
 export * from "./CorporationNameAnchor";
 export * from "./EveEntityAnchor";
 export * from "./EveEntityNameAnchor";
-export * from "./EveMailSenderNameAnchor";
+export * from "./EveMailSenderAnchor";
 export * from "./TypeNameAnchor";

@@ -1,5 +1,12 @@
 import React from "react";
-import { Anchor, Group, Stack, Table, type TableProps } from "@mantine/core";
+import {
+  Anchor,
+  Group,
+  Stack,
+  Table,
+  Text,
+  type TableProps,
+} from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
@@ -8,6 +15,7 @@ import {
   useGetCharactersCharacterIdMailLabels,
 } from "@jitaspace/esi-client";
 import {
+  EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
   FormattedDateText,
@@ -66,10 +74,12 @@ export function EveMailMessageListSmall({
                       size="xs"
                       radius="xl"
                     />
-                    <EveMailSenderName
-                      messageId={message.mail_id}
-                      fw={message.is_read ? "normal" : "bold"}
-                    />
+                    <EveMailSenderAnchor messageId={message.mail_id}>
+                      <EveMailSenderName
+                        messageId={message.mail_id}
+                        fw={message.is_read ? "normal" : "bold"}
+                      />
+                    </EveMailSenderAnchor>
                   </Group>
                   <Group spacing="xs" position="apart">
                     {message.labels
@@ -114,9 +124,12 @@ export function EveMailMessageListSmall({
                     }
                     openContextModal({
                       modal: "viewMailMessage",
-                      title: message.subject,
+                      title: <Text fw={700}>{message.subject}</Text>,
                       size: "xl",
-                      innerProps: { messageId: message.mail_id },
+                      innerProps: {
+                        messageId: message.mail_id,
+                        hideSubject: true,
+                      },
                     });
                   }}
                   fw={message.is_read ? "normal" : "bold"}

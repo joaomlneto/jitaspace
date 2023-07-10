@@ -28,37 +28,9 @@ export function EveMailFaqAccordion() {
         <Accordion.Panel>
           <List>
             <List.Item>
-              Fix message formatting, both when composing messages, as well as
-              viewing messages.
-            </List.Item>
-            <List.Item>
-              Add privacy controls: if you just want to read emails, you should
-              be able to just give enough scopes to do that.
+              Fix message formatting when composing messages
             </List.Item>
           </List>
-        </Accordion.Panel>
-      </Accordion.Item>
-      <Accordion.Item value="legal">
-        <Accordion.Control>
-          <Title order={4}>Legal Notice</Title>
-        </Accordion.Control>
-        <Accordion.Panel>
-          <Text>
-            EVE Online and the EVE logo are the registered trademarks of CCP hf.
-            All rights are reserved worldwide. All other trademarks are the
-            property of their respective owners. EVE Online, the EVE logo, EVE
-            and all associated logos and designs are the intellectual property
-            of CCP hf. All artwork, screenshots, characters, vehicles,
-            storylines, world facts or other recognizable features of the
-            intellectual property relating to these trademarks are likewise the
-            intellectual property of CCP hf. CCP hf. has granted permission to
-            Jita to use EVE Online and all associated logos and designs for
-            promotional and information purposes on its website but does not
-            endorse, and is not in any way affiliated with, Jita. CCP is in no
-            way responsible for the content on or functioning of this website,
-            nor can it be liable for any damage arising from the use of this
-            website.
-          </Text>
         </Accordion.Panel>
       </Accordion.Item>
     </Accordion>
