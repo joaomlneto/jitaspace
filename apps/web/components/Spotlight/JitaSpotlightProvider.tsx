@@ -52,9 +52,11 @@ export const JitaSpotlightProvider = memo(
           type: "app",
           group: "Apps",
           onTrigger: () => {
-            void router.push(app.url);
+            if (app.url !== undefined) {
+              void router.push(app.url);
+            }
           },
-          icon: <app.icon width={38} />,
+          icon: <app.Icon width={38} />,
         })) as SpotlightAction[],
       [router],
     );

@@ -109,11 +109,13 @@ export default function Page() {
             key={feature.name}
           >
             <Card shadow="md" radius="md" className={classes.card} padding="xl">
-              <feature.icon
-                height={64}
-                width={64}
-                color={theme.fn.primaryColor()}
-              />
+              <Container m={0} p={0} w={64} h={64}>
+                <feature.Icon
+                  height={64}
+                  width={64}
+                  color={theme.fn.primaryColor()}
+                />
+              </Container>
               <Group>
                 <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
                   {feature.name}

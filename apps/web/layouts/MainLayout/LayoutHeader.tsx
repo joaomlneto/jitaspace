@@ -14,27 +14,18 @@ import {
   Loader,
   rem,
   ScrollArea,
+  Stack,
   Text,
   Title,
   Tooltip,
-  UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
-import { useSpotlight } from "@mantine/spotlight";
 
 import { useEsiClientContext } from "@jitaspace/esi-client";
-import {
-  CalendarIcon,
-  EveMailIcon,
-  PeopleAndPlacesIcon,
-  SkillsIcon,
-} from "@jitaspace/eve-icons";
-import {
-  LoginWithEveOnlineButton,
-  TotalUnreadMailsIndicator,
-} from "@jitaspace/ui";
+import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
+import { jitaApps } from "~/config/apps";
 import UserButton from "./UserButton";
 
 const useStyles = createStyles((theme) => ({
@@ -122,7 +113,6 @@ export function LayoutHeader() {
     useDisclosure(false);
   const { classes, theme } = useStyles();
   const { isTokenValid, loading } = useEsiClientContext();
-  const spotlight = useSpotlight();
 
   return (
     <Box>
@@ -148,43 +138,36 @@ export function LayoutHeader() {
               spacing={0}
               className={classes.hiddenMobile}
             >
-              <Tooltip label="EveMail" multiline openDelay={200}>
-                <Link href="/mail" className={classes.link}>
-                  <TotalUnreadMailsIndicator position="bottom-end" offset={8}>
-                    <EveMailIcon width={32} height={32} alt="EveMail" />
-                  </TotalUnreadMailsIndicator>
-                </Link>
-              </Tooltip>
-
-              <Tooltip label="Calendar" multiline openDelay={200}>
-                <Link href="/calendar" className={classes.link}>
-                  <CalendarIcon width={32} height={32} alt="Calendar" />
-                </Link>
-              </Tooltip>
-
-              <Tooltip label="Skills" multiline openDelay={200}>
-                <Link href="/skills" className={classes.link}>
-                  <SkillsIcon width={32} height={32} alt="Skills" />
-                </Link>
-              </Tooltip>
-
-              <Tooltip
-                label={
-                  <Text>
-                    Search <br /> <Kbd size="xs">⌘</Kbd> +{" "}
-                    <Kbd size="xs">P</Kbd>
-                  </Text>
-                }
-                multiline
-                openDelay={200}
-              >
-                <UnstyledButton
-                  className={classes.link}
-                  onClick={() => spotlight.openSpotlight()}
+              {Object.values(jitaApps).map((app) => (
+                <Tooltip
+                  key={app.name}
+                  color="dark"
+                  label={
+                    <Stack spacing={4} align="center">
+                      <Text>{app.name}</Text>
+                      {app.hotKey && (
+                        <Group spacing="xs">
+                          {app.hotKey.map((key) => (
+                            <Text span key={key}>
+                              <Kbd size="xs">{key}</Kbd>
+                            </Text>
+                          ))}
+                        </Group>
+                      )}
+                    </Stack>
+                  }
+                  multiline
+                  openDelay={200}
                 >
-                  <PeopleAndPlacesIcon width={32} height={32} alt="Skills" />
-                </UnstyledButton>
-              </Tooltip>
+                  <Link
+                    href={app.url ?? ""}
+                    onClick={app.onClick}
+                    className={classes.link}
+                  >
+                    <app.Icon width={32} height={32} alt="EveMail" />
+                  </Link>
+                </Tooltip>
+              ))}
             </Group>
 
             <Group className={classes.hiddenMobile}>
@@ -235,40 +218,22 @@ export function LayoutHeader() {
             my="sm"
             color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
-
-          <Link href="/mail" className={classes.link} onClick={closeDrawer}>
-            <Group>
-              <EveMailIcon width={32} height={32} alt="EveMail" />
-              <Text>EveMail</Text>
-            </Group>
-          </Link>
-
-          <Link href="/calendar" className={classes.link} onClick={closeDrawer}>
-            <Group>
-              <CalendarIcon width={32} height={32} alt="Calendar" />
-              <Text>Calendar</Text>
-            </Group>
-          </Link>
-
-          <Link href="/skills" className={classes.link} onClick={closeDrawer}>
-            <Group>
-              <SkillsIcon width={32} height={32} alt="Skills" />
-              <Text>Skills</Text>
-            </Group>
-          </Link>
-
-          <UnstyledButton
-            className={classes.link}
-            onClick={() => {
-              closeDrawer();
-              spotlight.openSpotlight();
-            }}
-          >
-            <Group>
-              <PeopleAndPlacesIcon width={32} height={32} alt="Search" />
-              <Text>Search</Text>
-            </Group>
-          </UnstyledButton>
+          {Object.values(jitaApps).map((app) => (
+            <Link
+              key={app.name}
+              href={app.url ?? ""}
+              className={classes.link}
+              onClick={() => {
+                closeDrawer();
+                app.onClick?.();
+              }}
+            >
+              <Group>
+                <app.Icon width={32} height={32} alt="EveMail" />
+                <Text>{app.name}</Text>
+              </Group>
+            </Link>
+          ))}
 
           <Divider
             my="sm"

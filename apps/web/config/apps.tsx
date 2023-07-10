@@ -1,3 +1,4 @@
+import React from "react";
 import { type LinkProps } from "next/link";
 import { openSpotlight } from "@mantine/spotlight";
 
@@ -9,6 +10,7 @@ import {
   SkillsIcon,
   type EveIconProps,
 } from "@jitaspace/eve-icons";
+import { TotalUnreadMailsIndicator } from "@jitaspace/ui";
 
 export type AppScopeSet = {
   reason: string;
@@ -21,8 +23,9 @@ export type JitaApp = {
   description: string;
   url?: LinkProps["href"];
   onClick?: () => void;
-  icon: React.FC<EveIconProps>;
+  Icon: (props: EveIconProps) => React.ReactElement;
   tags?: string[];
+  hotKey?: string[];
   scopes: {
     required?: AppScopeSet[];
     optional?: AppScopeSet[];
@@ -34,7 +37,11 @@ export const jitaApps: Record<string, JitaApp> = {
     name: "EveMail",
     description: "Access your correspondence whilst out of the game.",
     url: "/mail",
-    icon: EveMailIcon,
+    Icon: (props) => (
+      <TotalUnreadMailsIndicator position="bottom-end" offset={8}>
+        <EveMailIcon {...props} />
+      </TotalUnreadMailsIndicator>
+    ),
     scopes: {
       required: [
         {
@@ -67,7 +74,7 @@ export const jitaApps: Record<string, JitaApp> = {
     name: "Calendar",
     description: "View upcoming events and meetings on your calendar.",
     url: "/calendar",
-    icon: CalendarIcon,
+    Icon: (props) => React.createElement(CalendarIcon, props),
     scopes: {
       required: [
         {
@@ -89,7 +96,7 @@ export const jitaApps: Record<string, JitaApp> = {
     name: "Skills",
     description: "Manage your skills and skills points on your characters.",
     url: "/skills",
-    icon: SkillsIcon,
+    Icon: (props) => React.createElement(SkillsIcon, props),
     tags: ["beta"],
     scopes: {
       required: [
@@ -107,7 +114,8 @@ export const jitaApps: Record<string, JitaApp> = {
     onClick: () => {
       openSpotlight();
     },
-    icon: PeopleAndPlacesIcon,
+    Icon: (props) => React.createElement(PeopleAndPlacesIcon, props),
+    hotKey: ["⌘", "P"],
     scopes: {
       required: [
         {
