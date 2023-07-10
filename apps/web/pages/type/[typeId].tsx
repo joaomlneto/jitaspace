@@ -145,6 +145,17 @@ export default function Page({
                 </Group>
               </Button>
             </Link>
+            <Link
+              href={`https://evemarketer.com/types/${typeId}`}
+              target="_blank"
+            >
+              <Button>
+                <Group spacing="xs">
+                  <IconExternalLink size={14} />
+                  Eve Marketer
+                </Group>
+              </Button>
+            </Link>
           </Group>
           {type?.data.description && (
             <MailMessageViewer
