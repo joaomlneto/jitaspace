@@ -25,7 +25,9 @@ export type CalendarEventPanelProps = {
   eventId?: number;
 };
 
-export function CalendarEventPanel({ eventId }: CalendarEventPanelProps) {
+export function CalendarEventDetailsPanel({
+  eventId,
+}: CalendarEventPanelProps) {
   const { characterId, isTokenValid, scopes } = useEsiClientContext();
   const { data: event, isLoading: eventLoading } =
     useGetCharactersCharacterIdCalendarEventId(

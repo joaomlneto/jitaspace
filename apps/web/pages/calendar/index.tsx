@@ -1,21 +1,16 @@
 import React, { type ReactElement } from "react";
 import {
-  Anchor,
-  Avatar,
   Button,
   Center,
   Container,
   Group,
-  Indicator,
   Loader,
+  MediaQuery,
   Stack,
-  Table,
   Text,
   Title,
-  Tooltip,
 } from "@mantine/core";
-import { Calendar } from "@mantine/dates";
-import { openContextModal } from "@mantine/modals";
+import { openModal } from "@mantine/modals";
 import { format } from "date-fns";
 import { NextSeo } from "next-seo";
 
@@ -23,16 +18,10 @@ import {
   useCharacterCalendar,
   type GetCharactersCharacterIdCalendar200Item,
 } from "@jitaspace/esi-client";
-import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
-import {
-  CalendarEventAttendeesAvatarGroup,
-  CalendarEventHumanDurationText,
-  CalendarEventOwnerAnchor,
-  CalendarEventOwnerAvatar,
-  CalendarEventOwnerName,
-  CalendarEventResponseBadge,
-} from "@jitaspace/ui";
+import { CalendarIcon } from "@jitaspace/eve-icons";
 
+import { CalendarEventList } from "~/components/Calendar/CalendarEventList/CalendarEventList";
+import EventsCalendar from "~/components/Calendar/EventsCalendar";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
@@ -60,124 +49,45 @@ export default function Page() {
       <NextSeo title="Calendar" />
       <Container>
         <Stack spacing="xl">
-          <Group>
-            <CalendarIcon width={48} />
-            <Title order={1}>Calendar</Title>
-            {isLoading && <Loader />}
+          <Group position="apart">
+            <Group>
+              <CalendarIcon width={48} />
+              <Title order={1}>Calendar</Title>
+              {isLoading && <Loader />}
+            </Group>
+            <Button
+              size="xs"
+              onClick={() =>
+                openModal({
+                  title: "Calendar View",
+                  size: "md",
+                  children: (
+                    <Center>
+                      <MediaQuery smallerThan="md" styles={{ display: "none" }}>
+                        <EventsCalendar events={events} size="xl" />
+                      </MediaQuery>
+                      <MediaQuery largerThan="md" styles={{ display: "none" }}>
+                        <EventsCalendar events={events} size="sm" />
+                      </MediaQuery>
+                    </Center>
+                  ),
+                })
+              }
+            >
+              Calendar View
+            </Button>
           </Group>
-          <Center>
-            <Calendar
-              size="md"
-              excludeDate={(date: Date) => {
-                // return false if date is before today
-                const startOfToday = new Date().setHours(0, 0, 0, 0);
-                return date.getTime() < startOfToday;
-              }}
-              renderDay={(date: Date) => {
-                const day = date.getDate();
-                const dayEvents = eventsPerDate[date.getTime()] ?? [];
-                return (
-                  <Indicator
-                    label={dayEvents.length}
-                    size={16}
-                    offset={-2}
-                    disabled={dayEvents.length === 0}
-                  >
-                    <div>{day}</div>
-                  </Indicator>
-                );
-              }}
-            />
-          </Center>
           {Object.keys(eventsPerDate).map((dateString) => {
             return (
               <Stack key={dateString}>
                 <Title order={5}>
                   {format(new Date(parseInt(dateString)), "LLLL dd - EEEE")}
                 </Title>
-                <Table highlightOnHover striped>
-                  <tbody>
-                    {eventsPerDate[dateString]?.map((event) => (
-                      <tr key={event.event_id}>
-                        <td width={10}>
-                          <Tooltip
-                            label={
-                              <CalendarEventHumanDurationText
-                                eventId={event.event_id}
-                              />
-                            }
-                          >
-                            <Text>
-                              {format(new Date(event.event_date ?? 0), "HH:mm")}
-                            </Text>
-                          </Tooltip>
-                        </td>
-                        <td>
-                          <Group noWrap>
-                            <Tooltip
-                              label={
-                                <CalendarEventOwnerName
-                                  eventId={event.event_id}
-                                />
-                              }
-                            >
-                              <CalendarEventOwnerAnchor
-                                eventId={event.event_id}
-                              >
-                                <Avatar size="sm">
-                                  <CalendarEventOwnerAvatar
-                                    eventId={event.event_id}
-                                    size="sm"
-                                  />
-                                </Avatar>
-                              </CalendarEventOwnerAnchor>
-                            </Tooltip>
-                            <Group noWrap spacing="xs">
-                              {event.importance === 1 && (
-                                <WarningIcon width={20} />
-                              )}
-                              <Anchor
-                                lineClamp={1}
-                                onClick={() =>
-                                  openContextModal({
-                                    modal: "viewCalendarEvent",
-                                    title: (
-                                      <Title order={4}>
-                                        {event.importance === 1 && (
-                                          <WarningIcon width={32} />
-                                        )}
-                                        {event.title}
-                                      </Title>
-                                    ),
-                                    size: "lg",
-                                    innerProps: { eventId: event.event_id },
-                                  })
-                                }
-                              >
-                                {event.title}
-                              </Anchor>
-                            </Group>
-                          </Group>
-                        </td>
-                        <td align="right" width={1}>
-                          <Group position="right">
-                            <CalendarEventAttendeesAvatarGroup
-                              eventId={event.event_id}
-                              limit={5}
-                              size="sm"
-                              radius="xl"
-                            />
-                          </Group>
-                        </td>
-                        <td align="right" width={1}>
-                          <CalendarEventResponseBadge
-                            eventId={event.event_id}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
+                <CalendarEventList
+                  events={eventsPerDate[dateString] ?? []}
+                  highlightOnHover
+                  striped
+                />
               </Stack>
             );
           })}

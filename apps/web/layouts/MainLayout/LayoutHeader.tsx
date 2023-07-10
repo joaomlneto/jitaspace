@@ -29,6 +29,7 @@ import { jitaApps } from "~/config/apps";
 import UserButton from "./UserButton";
 
 const useStyles = createStyles((theme) => ({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   logo: {
     display: "flex",
     alignItems: "center",
@@ -54,6 +55,7 @@ const useStyles = createStyles((theme) => ({
     }),
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   link: {
     display: "flex",
     alignItems: "center",
