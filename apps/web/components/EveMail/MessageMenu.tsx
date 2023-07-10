@@ -171,7 +171,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
               showNotification({
                 title: "Message Updated",
                 message: `Message marked successfully as ${
-                  mail.is_read ? "Unread" : "Read"
+                  mail.is_read ? "Read" : "Unread"
                 }. It may take up to 30 seconds for the change to be visible.`,
               });
               mutate?.();
