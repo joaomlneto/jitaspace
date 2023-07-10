@@ -67,6 +67,11 @@ export const jitaApps: Record<string, JitaApp> = {
           description: "Lookup recipient in contacts when sending email.",
           scopes: ["esi-characters.read_contacts.v1"],
         },
+        {
+          reason: "Compose EveMail in-game",
+          description: "Allows you to continue composing your EveMail in-game.",
+          scopes: ["esi-ui.open_window.v1"],
+        },
       ],
     },
   },
@@ -132,3 +137,14 @@ export const jitaApps: Record<string, JitaApp> = {
     },
   },
 };
+
+export const extraJitaFeatures: AppScopeSet[] = [
+  {
+    reason: "Set in-game autopilot",
+    scopes: ["esi-ui.write_waypoint.v1"],
+  },
+  {
+    reason: "Open in-game windows",
+    scopes: ["esi-ui.open_window.v1"],
+  },
+];

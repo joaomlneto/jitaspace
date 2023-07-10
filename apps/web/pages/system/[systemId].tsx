@@ -20,6 +20,7 @@ import {
   MoonName,
   PlanetAvatar,
   PlanetName,
+  SetAutopilotDestinationActionIcon,
   SolarSystemName,
   SolarSystemSecurityStatusBadge,
   StationName,
@@ -42,6 +43,7 @@ export default function Page() {
             <Group>
               <SolarSystemName span solarSystemId={systemId} />
               <SolarSystemSecurityStatusBadge solarSystemId={systemId} />
+              <SetAutopilotDestinationActionIcon destinationId={systemId} />
             </Group>
           </Title>
         </Group>

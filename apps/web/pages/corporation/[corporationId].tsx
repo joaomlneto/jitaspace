@@ -20,6 +20,7 @@ import {
   CorporationAllianceHistoryTimeline,
   CorporationAvatar,
   CorporationName,
+  OpenInformationWindowActionIcon,
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
@@ -58,6 +59,7 @@ export default function Page() {
           <Title order={3}>
             <CorporationName span corporationId={corporationId} />
           </Title>
+          <OpenInformationWindowActionIcon entityId={corporationId} />
         </Group>
         <Group>
           <Link

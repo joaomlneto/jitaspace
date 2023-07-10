@@ -14,8 +14,10 @@ import { IconExternalLink } from "@tabler/icons-react";
 
 import { useGetUniverseStationsStationId } from "@jitaspace/esi-client";
 import {
+  EveEntityAnchor,
   EveEntityName,
   RaceName,
+  SetAutopilotDestinationActionIcon,
   SolarSystemName,
   SolarSystemSecurityStatusBadge,
   StationAvatar,
@@ -40,6 +42,7 @@ export default function Page() {
           <Title order={3}>
             <StationName span stationId={stationId} />
           </Title>
+          <SetAutopilotDestinationActionIcon destinationId={stationId} />
         </Group>
         <Group>
           <Link
@@ -83,7 +86,9 @@ export default function Page() {
         </Group>
         <Group position="apart">
           <Text>Owner</Text>
-          <EveEntityName entityId={station?.data.owner} />
+          <EveEntityAnchor entityId={station?.data.owner}>
+            <EveEntityName entityId={station?.data.owner} />
+          </EveEntityAnchor>
         </Group>
       </Stack>
     </Container>

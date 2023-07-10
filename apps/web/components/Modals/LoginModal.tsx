@@ -16,8 +16,12 @@ import { signIn } from "next-auth/react";
 import { type ESIScope } from "@jitaspace/esi-client";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
-import { AppCheckboxCard, ScopesTable } from "~/components/ScopeGuard";
-import { jitaApps } from "~/config/apps";
+import {
+  AppCheckboxCard,
+  AppScopeSetCheckboxCard,
+  ScopesTable,
+} from "~/components/ScopeGuard";
+import { extraJitaFeatures, jitaApps } from "~/config/apps";
 
 const allAppScopes = [
   ...Object.values(jitaApps).flatMap((app) =>
@@ -25,6 +29,7 @@ const allAppScopes = [
       (s) => s.scopes,
     ),
   ),
+  ...extraJitaFeatures.flatMap((f) => f.scopes),
 ];
 
 export function LoginModal({
@@ -83,7 +88,7 @@ export function LoginModal({
       {showAppSelector && (
         <>
           <Text size="sm" color="dimmed">
-            Select which apps you would like to enable and click the login
+            Select which features you would like to enable and click the login
             button.
           </Text>
           <Switch
@@ -107,6 +112,18 @@ export function LoginModal({
                 key={feature.name}
                 showScopeDetails={showAppScopeDetails}
               />
+            ))}
+            {extraJitaFeatures.map((feature) => (
+              <Container m={0} p={0} key={feature.reason}>
+                <Container m={0} p={0} key={feature.reason}>
+                  <AppScopeSetCheckboxCard
+                    selectedScopes={[...selectedScopes]}
+                    onScopeSelect={addScopes}
+                    onScopeDeselect={removeScopes}
+                    scopeSet={feature}
+                  />
+                </Container>
+              </Container>
             ))}
           </SimpleGrid>
 

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Badge, createStyles, Table } from "@mantine/core";
 
 import { getScopeDescription, type ESIScope } from "@jitaspace/esi-client";
@@ -24,18 +25,22 @@ export function ScopesTable({ scopes, showRawScopeNames }: ScopesTableProps) {
     category: string;
     permission: string;
     description: string;
-  }[] = scopes.map((scope: ESIScope) => {
-    const category = (scope.split(".")[0] ?? "").slice(4);
-    const permission = (scope.split(".")[1] ?? "")
-      .replaceAll("_", " ")
-      .replaceAll(category, "");
-    return {
-      id: scope,
-      category,
-      permission,
-      description: getScopeDescription(scope),
-    };
-  });
+  }[] = useMemo(
+    () =>
+      scopes.sort().map((scope: ESIScope) => {
+        const category = (scope.split(".")[0] ?? "").slice(4);
+        const permission = (scope.split(".")[1] ?? "")
+          .replaceAll("_", " ")
+          .replaceAll(category, "");
+        return {
+          id: scope,
+          category,
+          permission,
+          description: getScopeDescription(scope),
+        };
+      }),
+    [scopes],
+  );
 
   return (
     <Table fontSize="xs" className={classes.scopesTable} highlightOnHover>

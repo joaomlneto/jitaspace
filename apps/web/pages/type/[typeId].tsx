@@ -22,6 +22,7 @@ import {
 import {
   DogmaAttributeName,
   DogmaEffectName,
+  OpenMarketWindowActionIcon,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/ui";
@@ -130,6 +131,7 @@ export default function Page({
             <Title order={3}>
               <TypeName span typeId={typeId} />
             </Title>
+            <OpenMarketWindowActionIcon typeId={typeId} />
           </Group>
           <Group>
             <Link

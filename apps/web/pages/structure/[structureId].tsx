@@ -9,6 +9,7 @@ import {
 } from "@jitaspace/esi-client";
 import {
   EveEntityName,
+  SetAutopilotDestinationActionIcon,
   SolarSystemName,
   SolarSystemSecurityStatusBadge,
   StructureAvatar,
@@ -43,6 +44,7 @@ export default function Page() {
           <Title order={3}>
             <StructureName span structureId={structureId} />
           </Title>
+          <SetAutopilotDestinationActionIcon destinationId={structureId} />
         </Group>
         <Group position="apart">
           <Text>Solar System</Text>

@@ -1,3 +1,4 @@
+export * from "./ActionIcon";
 export * from "./Anchor";
 export * from "./Avatar";
 export * from "./AvatarGroup";

@@ -27,6 +27,7 @@ import {
   CorporationName,
   FactionAvatar,
   FactionName,
+  OpenInformationWindowActionIcon,
 } from "@jitaspace/ui";
 
 import { MailLayout } from "~/layouts";
@@ -45,11 +46,10 @@ export default function Page() {
         <Group spacing="xl">
           <AllianceAvatar allianceId={allianceId} size="xl" radius={256} />
           <Title order={3}>
-            <div style={{ flex: 1 }}>
-              <AllianceName span allianceId={allianceId} />
-              {alliance?.data.ticker && <Badge>{alliance?.data.ticker}</Badge>}
-            </div>
+            <AllianceName span allianceId={allianceId} />
           </Title>
+          {alliance?.data.ticker && <Badge>{alliance?.data.ticker}</Badge>}
+          <OpenInformationWindowActionIcon entityId={allianceId} />
         </Group>
         <Group>
           <Link

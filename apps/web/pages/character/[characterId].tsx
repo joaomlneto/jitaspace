@@ -22,6 +22,7 @@ import {
   CorporationAvatar,
   CorporationName,
   FormattedDateText,
+  OpenInformationWindowActionIcon,
   RaceName,
 } from "@jitaspace/ui";
 
@@ -57,6 +58,7 @@ export default function Page() {
           <Title order={3}>
             <CharacterName span characterId={characterId} />
           </Title>
+          <OpenInformationWindowActionIcon entityId={characterId} />
         </Group>
         <Group>
           <Link
