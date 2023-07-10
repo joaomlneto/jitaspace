@@ -20,19 +20,22 @@ import { AppCheckboxCard, ScopesTable } from "~/components/ScopeGuard";
 import { jitaApps } from "~/config/apps";
 
 const allAppScopes = [
-  ...Object.values(jitaApps).flatMap((app) => [
-    ...(app.scopes.required ?? []).flatMap((s) => s.scopes),
-    ...(app.scopes.optional ?? []).flatMap((s) => s.scopes),
-  ]),
-].filter((s) => s !== undefined);
+  ...Object.values(jitaApps).flatMap((app) =>
+    [...(app.scopes.required ?? []), ...(app.scopes.optional ?? [])].flatMap(
+      (s) => s.scopes,
+    ),
+  ),
+];
 
-export function LoginModal({ context, id }: ContextModalProps) {
+export function LoginModal({
+  innerProps,
+}: ContextModalProps<{ scopes?: ESIScope[] }>) {
   const [showAppSelector, { toggle: toggleAppSelector }] = useDisclosure(false);
   const [showScopesTable, { toggle }] = useDisclosure(false);
   const [showAppScopeDetails, { toggle: toggleAppScopeDetails }] =
     useDisclosure(false);
   const [selectedScopes, setSelectedScopes] = useState<Set<ESIScope>>(
-    new Set(allAppScopes),
+    new Set(innerProps.scopes ?? allAppScopes),
   );
 
   const addScopes = (newScopes: ESIScope[]) => {
@@ -87,7 +90,7 @@ export function LoginModal({ context, id }: ContextModalProps) {
             my="md"
             label="Advanced mode"
             checked={showAppScopeDetails}
-            onChange={(e) => toggleAppScopeDetails()}
+            onChange={() => toggleAppScopeDetails()}
           />
           <SimpleGrid
             cols={2}

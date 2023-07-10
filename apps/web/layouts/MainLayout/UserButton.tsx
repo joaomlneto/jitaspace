@@ -41,7 +41,7 @@ interface UserButtonProps extends UnstyledButtonProps {
 
 export default function UserButton({ ...others }: UserButtonProps) {
   const { classes } = useStyles();
-  const { characterId, characterName } = useEsiClientContext();
+  const { characterId, characterName, scopes } = useEsiClientContext();
 
   return (
     <Menu withArrow position="bottom" transitionProps={{ transition: "pop" }}>
@@ -68,7 +68,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
         <Menu.Item
           icon={<RecruitmentIcon width={20} />}
           onClick={() => {
-            void signIn("eveonline");
+            void signIn("eveonline", {}, { scope: scopes.join(" ") });
           }}
         >
           Switch Character
