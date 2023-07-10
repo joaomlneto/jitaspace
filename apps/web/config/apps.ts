@@ -1,66 +1,81 @@
 import { type LinkProps } from "next/link";
+import { openSpotlight } from "@mantine/spotlight";
 
 import { type ESIScope } from "@jitaspace/esi-client";
 import {
   CalendarIcon,
   EveMailIcon,
+  PeopleAndPlacesIcon,
   SkillsIcon,
   type EveIconProps,
 } from "@jitaspace/eve-icons";
 
+export type AppScopeSet = {
+  reason: string;
+  description?: string;
+  scopes: ESIScope[];
+};
+
 export type JitaApp = {
   name: string;
   description: string;
-  url: LinkProps["href"];
+  url?: LinkProps["href"];
+  onClick?: () => void;
   icon: React.FC<EveIconProps>;
   tags?: string[];
   scopes: {
-    required?: ESIScope[];
-    optional?: {
-      reason: string;
-      description?: string;
-      scopes: ESIScope[];
-    }[];
+    required?: AppScopeSet[];
+    optional?: AppScopeSet[];
   };
 };
 
 export const jitaApps: Record<string, JitaApp> = {
   mail: {
     name: "EveMail",
-    description:
-      "Access your EVE Online correspondence whilst out of the game.",
+    description: "Access your correspondence whilst out of the game.",
     url: "/mail",
     icon: EveMailIcon,
     scopes: {
-      required: ["esi-mail.read_mail.v1"],
+      required: [
+        {
+          reason: "Read Mail",
+          description: "Read EveMail",
+          scopes: ["esi-mail.read_mail.v1"],
+        },
+      ],
       optional: [
         {
           reason: "Organize Mail",
           description:
-            "Required to delete messages, marking them as read and unread and assigning and unassigning labels. It also allows you to create and delete labels.",
+            "Organize labels, assign labels to messages, delete messages.",
           scopes: ["esi-mail.organize_mail.v1"],
         },
         {
-          reason: "Sending Mail",
-          description:
-            "In addition to the base permission to send EveMails, we also require permissions to use the EVE Search API and to read your contacts.",
-          scopes: [
-            "esi-mail.send_mail.v1",
-            "esi-search.search_structures.v1",
-            "esi-characters.read_contacts.v1",
-          ],
+          reason: "Send Mail",
+          description: "Send EVEMails, lookup recipients to send messages to.",
+          scopes: ["esi-mail.send_mail.v1", "esi-search.search_structures.v1"],
+        },
+        {
+          reason: "Lookup recipient in contacts",
+          description: "Lookup recipient in contacts when sending email.",
+          scopes: ["esi-characters.read_contacts.v1"],
         },
       ],
     },
   },
   calendar: {
     name: "Calendar",
-    description:
-      "View upcoming events and meetings on your EVE Online calendar.",
+    description: "View upcoming events and meetings on your calendar.",
     url: "/calendar",
     icon: CalendarIcon,
     scopes: {
-      required: ["esi-calendar.read_calendar_events.v1"],
+      required: [
+        {
+          reason: "Read Calendar Events",
+          description: "Allows you to read calendar events.",
+          scopes: ["esi-calendar.read_calendar_events.v1"],
+        },
+      ],
       optional: [
         {
           reason: "Respond to Calendar Events",
@@ -72,13 +87,40 @@ export const jitaApps: Record<string, JitaApp> = {
   },
   skills: {
     name: "Skills",
-    description:
-      "Manage your skills and skills points on your EVE Online character.",
+    description: "Manage your skills and skills points on your characters.",
     url: "/skills",
     icon: SkillsIcon,
     tags: ["beta"],
     scopes: {
-      required: ["esi-skills.read_skills.v1", "esi-skills.read_skillqueue.v1"],
+      required: [
+        { reason: "Read Skills", scopes: ["esi-skills.read_skills.v1"] },
+        {
+          reason: "Read Skill Queue",
+          scopes: ["esi-skills.read_skillqueue.v1"],
+        },
+      ],
+    },
+  },
+  search: {
+    name: "Search",
+    description: "Search new eden for people and places.",
+    onClick: () => {
+      openSpotlight();
+    },
+    icon: PeopleAndPlacesIcon,
+    scopes: {
+      required: [
+        {
+          reason: "Search for people and places",
+          scopes: ["esi-search.search_structures.v1"],
+        },
+      ],
+      optional: [
+        {
+          reason: "Search for structures",
+          scopes: ["esi-universe.read_structures.v1"],
+        },
+      ],
     },
   },
 };

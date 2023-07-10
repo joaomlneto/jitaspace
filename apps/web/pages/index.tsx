@@ -10,6 +10,7 @@ import {
   rem,
   SimpleGrid,
   Text,
+  Title,
   UnstyledButton,
 } from "@mantine/core";
 
@@ -21,6 +22,7 @@ const devApps: {
   description: string;
   icon: (props: Partial<Omit<ImageProps, "src">>) => React.ReactElement;
   url: LinkProps["href"];
+  onClick?: () => void;
   tags?: string[];
 }[] = [
   {
@@ -65,7 +67,7 @@ const useStyles = createStyles((theme) => ({
   },
 
   card: {
-    minHeight: 250,
+    minHeight: 200,
     transition: "transform 0.2s",
     border: `${rem(1)} solid ${
       theme.colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[1]
@@ -92,16 +94,53 @@ export default function Page() {
 
   return (
     <Container size="lg">
+      <Title order={3}>Capsuleer Tools</Title>
       <SimpleGrid
         cols={2}
         spacing="xl"
-        mt="xl"
+        my="xl"
         breakpoints={[{ maxWidth: "md", cols: 1 }]}
       >
-        {[...Object.values(jitaApps), ...devApps].map((feature) => (
+        {Object.values(jitaApps).map((feature) => (
           <UnstyledButton
-            component={Link}
-            href={feature.url}
+            component={feature.url ? Link : Link}
+            href={feature.url ?? ""}
+            onClick={feature.onClick}
+            key={feature.name}
+          >
+            <Card shadow="md" radius="md" className={classes.card} padding="xl">
+              <feature.icon
+                height={64}
+                width={64}
+                color={theme.fn.primaryColor()}
+              />
+              <Group>
+                <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
+                  {feature.name}
+                </Text>
+                {feature.tags?.map((tag) => (
+                  <Badge key={tag}>{tag}</Badge>
+                ))}
+              </Group>
+              <Text fz="sm" c="dimmed" mt="sm">
+                {feature.description}
+              </Text>
+            </Card>
+          </UnstyledButton>
+        ))}
+      </SimpleGrid>
+      <Title order={3}>Development Tools</Title>
+      <SimpleGrid
+        cols={2}
+        spacing="xl"
+        my="xl"
+        breakpoints={[{ maxWidth: "md", cols: 1 }]}
+      >
+        {devApps.map((feature) => (
+          <UnstyledButton
+            component={feature.url ? Link : Link}
+            href={feature.url ?? ""}
+            onClick={feature.onClick}
             key={feature.name}
           >
             <Card shadow="md" radius="md" className={classes.card} padding="xl">
