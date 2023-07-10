@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import {
   Box,
   Burger,
@@ -96,6 +97,13 @@ const useStyles = createStyles((theme) => ({
     }`,
   },
 
+  selected: {
+    backgroundColor:
+      theme.colorScheme === "dark"
+        ? theme.colors.dark[5]
+        : theme.colors.gray[0],
+  },
+
   hiddenMobile: {
     [theme.fn.smallerThan("sm")]: {
       display: "none",
@@ -110,10 +118,11 @@ const useStyles = createStyles((theme) => ({
 }));
 
 export function LayoutHeader() {
+  const router = useRouter();
   const pinned = useHeadroom({ fixedAt: 120 });
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
-  const { classes, theme } = useStyles();
+  const { classes, theme, cx } = useStyles();
   const { isTokenValid, loading } = useEsiClientContext();
 
   return (
@@ -140,36 +149,43 @@ export function LayoutHeader() {
               spacing={0}
               className={classes.hiddenMobile}
             >
-              {Object.values(jitaApps).map((app) => (
-                <Tooltip
-                  key={app.name}
-                  color="dark"
-                  label={
-                    <Stack spacing={4} align="center">
-                      <Text>{app.name}</Text>
-                      {app.hotKey && (
-                        <Group spacing="xs">
-                          {app.hotKey.map((key) => (
-                            <Text span key={key}>
-                              <Kbd size="xs">{key}</Kbd>
-                            </Text>
-                          ))}
-                        </Group>
-                      )}
-                    </Stack>
-                  }
-                  multiline
-                  openDelay={200}
-                >
-                  <Link
-                    href={app.url ?? ""}
-                    onClick={app.onClick}
-                    className={classes.link}
+              {Object.values(jitaApps).map((app) => {
+                const isActive =
+                  app.url !== undefined &&
+                  router.pathname.startsWith(app.url.toString());
+                return (
+                  <Tooltip
+                    key={app.name}
+                    color="dark"
+                    label={
+                      <Stack spacing={4} align="center">
+                        <Text>{app.name}</Text>
+                        {app.hotKey && (
+                          <Group spacing="xs">
+                            {app.hotKey.map((key) => (
+                              <Text span key={key}>
+                                <Kbd size="xs">{key}</Kbd>
+                              </Text>
+                            ))}
+                          </Group>
+                        )}
+                      </Stack>
+                    }
+                    multiline
+                    openDelay={200}
                   >
-                    <app.Icon width={32} height={32} alt="EveMail" />
-                  </Link>
-                </Tooltip>
-              ))}
+                    <Link
+                      href={app.url ?? ""}
+                      onClick={app.onClick}
+                      className={cx(classes.link, {
+                        [classes.selected]: isActive,
+                      })}
+                    >
+                      <app.Icon width={32} height={32} alt="EveMail" />
+                    </Link>
+                  </Tooltip>
+                );
+              })}
             </Group>
 
             <Group className={classes.hiddenMobile}>
@@ -220,22 +236,29 @@ export function LayoutHeader() {
             my="sm"
             color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
-          {Object.values(jitaApps).map((app) => (
-            <Link
-              key={app.name}
-              href={app.url ?? ""}
-              className={classes.link}
-              onClick={() => {
-                closeDrawer();
-                app.onClick?.();
-              }}
-            >
-              <Group>
-                <app.Icon width={32} height={32} alt="EveMail" />
-                <Text>{app.name}</Text>
-              </Group>
-            </Link>
-          ))}
+          {Object.values(jitaApps).map((app) => {
+            const isActive =
+              app.url !== undefined &&
+              router.pathname.startsWith(app.url.toString());
+            return (
+              <Link
+                key={app.name}
+                href={app.url ?? ""}
+                className={cx(classes.link, {
+                  [classes.selected]: isActive,
+                })}
+                onClick={() => {
+                  closeDrawer();
+                  app.onClick?.();
+                }}
+              >
+                <Group>
+                  <app.Icon width={32} height={32} alt="EveMail" />
+                  <Text>{app.name}</Text>
+                </Group>
+              </Link>
+            );
+          })}
 
           <Divider
             my="sm"
