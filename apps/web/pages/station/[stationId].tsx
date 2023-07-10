@@ -17,6 +17,7 @@ import {
   EveEntityName,
   RaceName,
   SolarSystemName,
+  SolarSystemSecurityStatusBadge,
   StationAvatar,
   StationName,
   TypeName,
@@ -55,9 +56,18 @@ export default function Page() {
         </Group>
         <Group position="apart">
           <Text>Solar System</Text>
-          <Anchor component={Link} href={`/system/${station?.data.system_id}`}>
-            <SolarSystemName span solarSystemId={station?.data.system_id} />
-          </Anchor>
+          <Group spacing="xs">
+            <SolarSystemSecurityStatusBadge
+              solarSystemId={station?.data.system_id}
+              size="sm"
+            />
+            <Anchor
+              component={Link}
+              href={`/system/${station?.data.system_id}`}
+            >
+              <SolarSystemName span solarSystemId={station?.data.system_id} />
+            </Anchor>
+          </Group>
         </Group>
         <Group position="apart">
           <Text>Station Type</Text>

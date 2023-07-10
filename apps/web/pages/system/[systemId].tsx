@@ -21,6 +21,7 @@ import {
   PlanetAvatar,
   PlanetName,
   SolarSystemName,
+  SolarSystemSecurityStatusBadge,
   StationName,
 } from "@jitaspace/ui";
 
@@ -38,7 +39,10 @@ export default function Page() {
       <Stack>
         <Group spacing="xl">
           <Title order={3}>
-            <SolarSystemName span solarSystemId={systemId} />
+            <Group>
+              <SolarSystemName span solarSystemId={systemId} />
+              <SolarSystemSecurityStatusBadge solarSystemId={systemId} />
+            </Group>
           </Title>
         </Group>
         <Group>

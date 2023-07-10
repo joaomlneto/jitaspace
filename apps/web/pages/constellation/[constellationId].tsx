@@ -12,7 +12,12 @@ import {
 } from "@mantine/core";
 
 import { useGetUniverseConstellationsConstellationId } from "@jitaspace/esi-client";
-import { ConstellationName, RegionName, SolarSystemName } from "@jitaspace/ui";
+import {
+  ConstellationName,
+  RegionName,
+  SolarSystemName,
+  SolarSystemSecurityStatusBadge,
+} from "@jitaspace/ui";
 
 import { MailLayout } from "~/layouts";
 
@@ -48,9 +53,15 @@ export default function Page() {
         <List>
           {constellation?.data.systems.map((systemId) => (
             <List.Item key={systemId}>
-              <Anchor component={Link} href={`/system/${systemId}`}>
-                <SolarSystemName span solarSystemId={systemId} />
-              </Anchor>
+              <Group spacing="xs">
+                <SolarSystemSecurityStatusBadge
+                  solarSystemId={systemId}
+                  size="sm"
+                />
+                <Anchor component={Link} href={`/system/${systemId}`}>
+                  <SolarSystemName span solarSystemId={systemId} />
+                </Anchor>
+              </Group>
             </List.Item>
           ))}
         </List>

@@ -10,6 +10,7 @@ import {
 import {
   EveEntityName,
   SolarSystemName,
+  SolarSystemSecurityStatusBadge,
   StructureAvatar,
   StructureName,
   TypeName,
@@ -45,15 +46,21 @@ export default function Page() {
         </Group>
         <Group position="apart">
           <Text>Solar System</Text>
-          <Anchor
-            component={Link}
-            href={`/system/${structure?.data.solar_system_id}`}
-          >
-            <SolarSystemName
-              span
+          <Group spacing="xs">
+            <SolarSystemSecurityStatusBadge
               solarSystemId={structure?.data.solar_system_id}
+              size="sm"
             />
-          </Anchor>
+            <Anchor
+              component={Link}
+              href={`/system/${structure?.data.solar_system_id}`}
+            >
+              <SolarSystemName
+                span
+                solarSystemId={structure?.data.solar_system_id}
+              />
+            </Anchor>
+          </Group>
         </Group>
         <Group position="apart">
           <Text>Structure Type</Text>
