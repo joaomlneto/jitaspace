@@ -1,4 +1,5 @@
 import { type PropsWithChildren, type ReactElement } from "react";
+import { Group, Loader } from "@mantine/core";
 
 import { useEsiClientContext, type ESIScope } from "@jitaspace/esi-client";
 
@@ -23,7 +24,14 @@ export function ScopeGuard({
 
   // Are we still loading? If so, display something...
   if (loading) {
-    return loadingScopesComponent ?? <div>Loading...</div>;
+    return (
+      loadingScopesComponent ?? (
+        <Group>
+          <Loader size="sm" />
+          Loading session
+        </Group>
+      )
+    );
   }
 
   // Scopes are missing! Do not display children.

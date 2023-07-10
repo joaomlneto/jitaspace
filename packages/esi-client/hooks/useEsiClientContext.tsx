@@ -34,12 +34,6 @@ type EsiClientContext = {
 
 const defaultEsiClientContext: EsiClientContext = {
   loading: true,
-  /*setAccessToken: () => {
-    return;
-  },
-  setLoading: () => {
-    return;
-  },*/
   setAuth: () => {
     return;
   },
