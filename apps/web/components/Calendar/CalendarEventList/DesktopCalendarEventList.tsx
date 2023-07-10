@@ -100,7 +100,7 @@ export function DesktopCalendarEventList({
               </Group>
             </td>
             <td align="right" width={1}>
-              <CalendarEventResponseBadge eventId={event.event_id} />
+              <CalendarEventResponseBadge w={130} eventId={event.event_id} />
             </td>
           </tr>
         ))}

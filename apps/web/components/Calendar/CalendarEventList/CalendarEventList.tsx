@@ -15,10 +15,10 @@ type CalendarEventListProps = TableProps & {
 export function CalendarEventList(props: CalendarEventListProps) {
   return (
     <>
-      <MediaQuery smallerThan="md" styles={{ display: "none" }}>
+      <MediaQuery smallerThan="sm" styles={{ display: "none" }}>
         <DesktopCalendarEventList {...props} />
       </MediaQuery>
-      <MediaQuery largerThan="md" styles={{ display: "none" }}>
+      <MediaQuery largerThan="sm" styles={{ display: "none" }}>
         <MobileCalendarEventList {...props} />
       </MediaQuery>
     </>
