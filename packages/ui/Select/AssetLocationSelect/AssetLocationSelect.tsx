@@ -34,6 +34,7 @@ export const AssetLocationSelect = memo(
           }}
           miw={300}
           clearable
+          searchable
           {...otherProps}
         />
         {value}

@@ -1,4 +1,4 @@
-import React, { type ReactElement } from "react";
+import React, { useMemo, type ReactElement } from "react";
 import {
   Badge,
   Center,
@@ -43,27 +43,36 @@ export default function Page() {
   const filtersEnabled =
     filterForm.values.location_id !== null || filterForm.values.name !== "";
 
-  const entries = Object.values(assets ?? {})
-    .filter((asset) => asset.location_type !== "item")
-    .filter(
-      (asset) =>
-        filterForm.values.location_id === null ||
-        asset.location_id === filterForm.values.location_id,
-    )
-    .map((asset) => ({
-      typeName: getNameFromCache(asset.type_id),
-      ...asset,
-    }))
-    .filter(
-      (asset) =>
-        filterForm.values.name === "" ||
-        asset.typeName
-          ?.toLowerCase()
-          .includes(filterForm.values.name.toLowerCase()),
-    )
-    .sort((a, b) =>
-      (a.typeName ?? "").trim().localeCompare((b.typeName ?? "").trim()),
-    );
+  const entries = useMemo(
+    () =>
+      Object.values(assets ?? {})
+        .filter((asset) => asset.location_type !== "item")
+        .filter(
+          (asset) =>
+            filterForm.values.location_id === null ||
+            asset.location_id === filterForm.values.location_id,
+        )
+        .map((asset) => ({
+          typeName: getNameFromCache(asset.type_id),
+          ...asset,
+        }))
+        .filter(
+          (asset) =>
+            filterForm.values.name === "" ||
+            asset.typeName
+              ?.toLowerCase()
+              .includes(filterForm.values.name.toLowerCase()),
+        )
+        .sort((a, b) =>
+          (a.typeName ?? "").trim().localeCompare((b.typeName ?? "").trim()),
+        ),
+    [
+      assets,
+      filterForm.values.location_id,
+      filterForm.values.name,
+      getNameFromCache,
+    ],
+  );
 
   const ENTRIES_PER_PAGE = 100;
   const numPages = Math.ceil(entries.length / ENTRIES_PER_PAGE);
