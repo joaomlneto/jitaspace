@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import {
   Anchor,
+  Badge,
   Button,
   Container,
   Group,
@@ -59,6 +60,9 @@ export default function Page() {
           <Title order={3}>
             <CorporationName span corporationId={corporationId} />
           </Title>
+          {corporation?.data.ticker && (
+            <Badge>{corporation?.data.ticker}</Badge>
+          )}
           <OpenInformationWindowActionIcon entityId={corporationId} />
         </Group>
         <Group>
