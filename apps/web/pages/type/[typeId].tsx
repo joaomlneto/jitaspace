@@ -18,6 +18,7 @@ import { NextSeo } from "next-seo";
 import {
   getUniverseTypesTypeId,
   useGetUniverseTypesTypeId,
+  useMarketPrices,
 } from "@jitaspace/esi-client";
 import {
   DogmaAttributeName,
@@ -82,6 +83,7 @@ export default function Page({
   const router = useRouter();
   const typeId = router.query.typeId as string;
   const { data: type } = useGetUniverseTypesTypeId(parseInt(typeId));
+  const { data: marketPrices } = useMarketPrices();
 
   const sanitizeDescription = (str: string): string => {
     // FIXME: IS THIS CORRECT? THIS WILL CONSIDER THAT THE WHOLE EMAIL IS A "UNICODE BLOCK".
@@ -165,6 +167,30 @@ export default function Page({
                   : "No description"
               }
             />
+          )}
+          {marketPrices[typeId] && (
+            <>
+              <Group position="apart">
+                <Text>Average Price</Text>
+                <Text>
+                  {marketPrices[typeId].average_price.toLocaleString(
+                    undefined,
+                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+                  )}{" "}
+                  ISK
+                </Text>
+              </Group>
+              <Group position="apart">
+                <Text>Adjusted Price</Text>
+                <Text>
+                  {marketPrices[typeId].adjusted_price.toLocaleString(
+                    undefined,
+                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+                  )}{" "}
+                  ISK
+                </Text>
+              </Group>
+            </>
           )}
           {type?.data.dogma_attributes && (
             <Group position="apart" align="start">
