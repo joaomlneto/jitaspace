@@ -1,4 +1,5 @@
 export * from "./useCategoryGroups";
+export * from "./useCharacterAssets";
 export * from "./useCharacterCalendar";
 export * from "./useCharacterMails";
 export * from "./useEsiClientContext";

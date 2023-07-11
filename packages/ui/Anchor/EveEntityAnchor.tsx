@@ -25,6 +25,25 @@ export const EveEntityAnchor = memo(
 
     const url = useMemo(() => {
       if (!entityId || !category) return "#";
+      switch (category) {
+        case "agent":
+          return `/character/${entityId}`;
+        case "alliance":
+        case "character":
+        case "constellation":
+        case "corporation":
+        case "faction":
+        case "region":
+        case "station":
+        case "structure":
+          return `/${category}/${entityId}`;
+        case "inventory_type":
+          return `/type/${entityId}`;
+        case "solar_system":
+          return `/system/${entityId}`;
+        default:
+          return "#";
+      }
       return `/${category}/${entityId}`;
     }, [category, entityId]);
 

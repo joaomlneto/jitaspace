@@ -4,6 +4,7 @@ import { openSpotlight } from "@mantine/spotlight";
 
 import { type ESIScope } from "@jitaspace/esi-client";
 import {
+  AssetsIcon,
   CalendarIcon,
   EveMailIcon,
   PeopleAndPlacesIcon,
@@ -109,6 +110,28 @@ export const jitaApps: Record<string, JitaApp> = {
         {
           reason: "Read Skill Queue",
           scopes: ["esi-skills.read_skillqueue.v1"],
+        },
+      ],
+    },
+  },
+  assets: {
+    name: "Assets",
+    description: "View and manage your and your corporation's assets.",
+    url: "/assets",
+    Icon: (props) => React.createElement(AssetsIcon, props),
+    tags: ["beta"],
+    scopes: {
+      optional: [
+        {
+          reason: "View your character assets",
+          scopes: ["esi-assets.read_assets.v1"],
+        },
+        {
+          reason: "View your corporation assets",
+          scopes: [
+            "esi-characters.read_corporation_roles.v1",
+            "esi-assets.read_corporation_assets.v1",
+          ],
         },
       ],
     },

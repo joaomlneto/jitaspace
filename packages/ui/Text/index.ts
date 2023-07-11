@@ -1,4 +1,5 @@
 export * from "./AllianceName";
+export * from "./AssetLocationName";
 export * from "./AsteroidBeltName";
 export * from "./BloodlineName";
 export * from "./CalendarEventOwnerName";
