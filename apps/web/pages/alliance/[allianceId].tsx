@@ -120,24 +120,26 @@ export default function Page() {
               </Anchor>
             </Group>
           </Group>
-          <Group position="apart">
-            <Text>Executor</Text>
-            <Group noWrap>
-              <CorporationAvatar
-                corporationId={alliance?.data.executor_corporation_id}
-                size="sm"
-              />
-              <Anchor
-                component={Link}
-                href={`/corporation/${alliance?.data.executor_corporation_id}`}
-              >
-                <CorporationName
-                  span
+          {alliance?.data.executor_corporation_id && (
+            <Group position="apart">
+              <Text>Executor</Text>
+              <Group noWrap>
+                <CorporationAvatar
                   corporationId={alliance?.data.executor_corporation_id}
+                  size="sm"
                 />
-              </Anchor>
+                <Anchor
+                  component={Link}
+                  href={`/corporation/${alliance?.data.executor_corporation_id}`}
+                >
+                  <CorporationName
+                    span
+                    corporationId={alliance?.data.executor_corporation_id}
+                  />
+                </Anchor>
+              </Group>
             </Group>
-          </Group>
+          )}
           {alliance?.data.date_founded && (
             <Group position="apart">
               <Text>Founded on</Text>
