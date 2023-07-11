@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import {
+  GetIndustrySystems200ItemCostIndicesItemActivity,
   useGetIndustrySystems,
   type GetIndustrySystems200Item,
 } from "../client";
@@ -22,12 +23,30 @@ export function useSolarSystemCostIndices() {
   }, [arrayData?.data]);
 
   const ranges = useMemo(() => {
-    const ranges: Record<string, number> = {};
-      arrayData?.data.forEach((item) => {
-          ranges[item.solar_system_id] = item.cost_indices.cost_index;
-      });
-      return ranges;
-  }
+    const result = Object.values(
+      GetIndustrySystems200ItemCostIndicesItemActivity,
+    ).reduce((acc, activity) => {
+      acc[activity] = {
+        min: undefined,
+        max: undefined,
+      };
+      return acc;
+    }, {} as Record<GetIndustrySystems200ItemCostIndicesItemActivity, { min?: number; max?: number }>);
 
-  return { data, error, isLoading, isValidating };
+    Object.values(data).forEach((item) => {
+      item.cost_indices.forEach((index) => {
+        const { activity, cost_index } = index;
+        if (cost_index < (result[activity].min ?? Number.MAX_SAFE_INTEGER)) {
+          result[activity].min = cost_index;
+        }
+        if (cost_index > (result[activity].max ?? Number.MIN_SAFE_INTEGER)) {
+          result[activity].max = cost_index;
+        }
+      });
+    });
+
+    return result;
+  }, [data]);
+
+  return { data, ranges, error, isLoading, isValidating };
 }
