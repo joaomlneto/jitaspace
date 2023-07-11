@@ -6,7 +6,6 @@ import {
   Button,
   Container,
   Group,
-  JsonInput,
   List,
   Stack,
   Text,
@@ -18,6 +17,7 @@ import {
   useGetUniverseSystemsSystemId,
   useSolarSystemCostIndices,
 } from "@jitaspace/esi-client";
+import { IndustryIcon } from "@jitaspace/eve-icons";
 import {
   AsteroidBeltName,
   ConstellationName,
@@ -27,9 +27,11 @@ import {
   SetAutopilotDestinationActionIcon,
   SolarSystemName,
   SolarSystemSecurityStatusBadge,
+  StationAvatar,
   StationName,
 } from "@jitaspace/ui";
 
+import { StatsGrid } from "~/components/UI";
 import { MailLayout } from "~/layouts";
 
 export default function Page() {
@@ -39,23 +41,6 @@ export default function Page() {
     parseInt(systemId),
   );
   const { data: solarSystemCostIndicesData } = useSolarSystemCostIndices();
-
-  const stats = Object.values(solarSystemCostIndicesData)
-    .map((x) => x.cost_indices)
-    .reduce((acc, curr) => {
-      curr.forEach((x) => {
-        acc[x.activity + "_min"] = Math.min(
-          acc[x.activity + "_min"] ?? Number.MAX_SAFE_INTEGER,
-          x.cost_index,
-        );
-        acc[x.activity + "_max"] = Math.max(
-          acc[x.activity + "_max"] ?? Number.MIN_SAFE_INTEGER,
-          x.cost_index,
-        );
-      });
-
-      return acc;
-    }, {});
 
   return (
     <Container size="sm">
@@ -117,11 +102,11 @@ export default function Page() {
             </Group>
           </Group>
         )}
-        Planets:
-        <List>
+        <Title order={4}>Celestials</Title>
+        <Stack spacing="xs">
           {solarSystem?.data.planets?.map(
             ({ planet_id, moons, asteroid_belts }) => (
-              <List.Item key={planet_id}>
+              <Stack spacing="xs" key={planet_id}>
                 <Group>
                   <PlanetAvatar planetId={planet_id} size="sm" />
                   <Anchor component={Link} href={`/planet/${planet_id}`}>
@@ -142,37 +127,41 @@ export default function Page() {
                     </List.Item>
                   ))}
                 </List>
-              </List.Item>
+              </Stack>
             ),
           )}
-        </List>
-        <Text>Stations:</Text>
-        <List>
+        </Stack>
+        <Title order={4}>Stations</Title>
+        <Stack spacing="xs">
           {solarSystem?.data.stations?.map((stationId) => (
-            <List.Item key={stationId}>
+            <Group key={stationId} spacing="xs">
+              <StationAvatar size="sm" stationId={stationId} />
               <Anchor component={Link} href={`/station/${stationId}`}>
                 <StationName span stationId={stationId} />
               </Anchor>
-            </List.Item>
+            </Group>
           ))}
-        </List>
+        </Stack>
         {Object.hasOwn(solarSystemCostIndicesData, systemId) && (
           <>
-            <Text>Cost Indices</Text>
-            {solarSystemCostIndicesData[systemId]?.cost_indices.map(
-              (costIndex) => (
-                <Text key={costIndex.activity} tt="capitalize">
-                  {costIndex.activity.replaceAll("_", " ")}:{" "}
-                  {costIndex.cost_index}
-                </Text>
-              ),
-            )}
+            <Title order={4}>Industry Cost Indices</Title>
+            <StatsGrid
+              cols={3}
+              spacing="xs"
+              breakpoints={[
+                { maxWidth: "sm", cols: 2 },
+                { maxWidth: "xs", cols: 1 },
+              ]}
+              data={(
+                solarSystemCostIndicesData[systemId]?.cost_indices ?? []
+              ).map((index) => ({
+                icon: (props) => <IndustryIcon {...props} />,
+                title: index.activity.replaceAll("_", " "),
+                value: index.cost_index.toString(),
+              }))}
+            />
           </>
         )}
-        <>
-          <Text>STATS</Text>
-          <JsonInput value={JSON.stringify(stats, null, 2)} readOnly autosize />
-        </>
       </Stack>
     </Container>
   );
