@@ -3,29 +3,68 @@ import useSWRInfinite from "swr/infinite";
 
 import { ESI_BASE_URL } from "~/config/constants";
 import {
-  getGetCharactersCharacterIdAssetsKey,
-  type GetCharactersCharacterIdAssets200Item,
+  getGetCorporationsCorporationIdAssetsKey,
+  useGetCharactersCharacterId,
+  useGetCharactersCharacterIdRoles,
+  type GetCorporationsCorporationIdAssets200Item,
 } from "../client";
 import { useEsiClientContext } from "./useEsiClientContext";
 
-export function useCharacterAssets() {
+export function useCorporationAssets() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
+  const { data: characterData } = useGetCharactersCharacterId(
+    characterId ?? 0,
+    {},
+    { swr: { enabled: !!characterId } },
+  );
+
+  const { data: characterCorporationRolesData } =
+    useGetCharactersCharacterIdRoles(
+      characterId ?? 0,
+      {},
+      {
+        swr: {
+          enabled:
+            !!characterId &&
+            isTokenValid &&
+            scopes.includes("esi-characters.read_corporation_roles.v1"),
+        },
+      },
+    );
+
+  const isDirector = useMemo(
+    () =>
+      Object.values(characterCorporationRolesData?.data ?? {}).some((e) =>
+        e.includes("Director"),
+      ),
+    [characterCorporationRolesData?.data],
+  );
+
+  const corporationId = useMemo(
+    () => characterData?.data.corporation_id,
+    [characterData?.data.corporation_id],
+  );
+
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCharactersCharacterIdAssets200Item[], Error>(
+    useSWRInfinite<GetCorporationsCorporationIdAssets200Item[], Error>(
       function getKey(pageIndex) {
         if (
-          !characterId ||
+          !corporationId ||
           !isTokenValid ||
-          !scopes.includes("esi-assets.read_assets.v1")
+          !scopes.includes("esi-assets.read_corporation_assets.v1") ||
+          !scopes.includes("esi-characters.read_corporation_roles.v1") ||
+          !isDirector
         ) {
-          throw new Error("Insufficient permissions to read character assets");
+          throw new Error(
+            "Insufficient permissions to read corporation assets",
+          );
         }
 
         return () => {
           const [endpointUrl] =
-            getGetCharactersCharacterIdAssetsKey(characterId);
+            getGetCorporationsCorporationIdAssetsKey(corporationId);
           const queryParams = new URLSearchParams();
           queryParams.append("page", `${pageIndex + 1}`);
           return `${ESI_BASE_URL}${endpointUrl}?${queryParams.toString()}`;
@@ -50,7 +89,28 @@ export function useCharacterAssets() {
       { revalidateAll: true },
     );
 
-  const assets: Record<string, GetCharactersCharacterIdAssets200Item> =
+  const errorMessage = useMemo(() => {
+    if (error) {
+      return error.message;
+    }
+    if (!corporationId) {
+      return "Unable to get corporation ID";
+    }
+    if (!isTokenValid) {
+      return "Invalid token";
+    }
+    if (!scopes.includes("esi-assets.read_corporation_assets.v1")) {
+      return "Insufficient permissions to read corporation assets";
+    }
+    if (!scopes.includes("esi-characters.read_corporation_roles.v1")) {
+      return "Insufficient permissions to read corporation roles";
+    }
+    if (!isDirector) {
+      return "Character must have the corporation role of Director.";
+    }
+  }, [corporationId, error, isDirector, isTokenValid, scopes]);
+
+  const assets: Record<string, GetCorporationsCorporationIdAssets200Item> =
     useMemo(() => {
       const assetsList = data?.flat() ?? [];
       const assets = {};
@@ -66,7 +126,7 @@ export function useCharacterAssets() {
   const locations: Record<
     string,
     Pick<
-      GetCharactersCharacterIdAssets200Item,
+      GetCorporationsCorporationIdAssets200Item,
       "location_id" | "location_type"
     > & { items: number[] }
   > = useMemo(() => {
@@ -74,7 +134,7 @@ export function useCharacterAssets() {
     const locations: Record<
       string,
       Pick<
-        GetCharactersCharacterIdAssets200Item,
+        GetCorporationsCorporationIdAssets200Item,
         "location_id" | "location_type"
       > & { items: number[] }
     > = {};
@@ -98,6 +158,7 @@ export function useCharacterAssets() {
     assets,
     locations,
     error,
+    errorMessage,
     isLoading,
     isValidating,
     mutate,
