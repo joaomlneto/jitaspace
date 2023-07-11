@@ -32,11 +32,7 @@ export function useCharacterAssets() {
           const params: GetCharactersCharacterIdAssetsParams = {
             page: pageIndex + 1,
           };
-          const searchParams = new URLSearchParams();
-          Object.entries(params).forEach(([key, value]) =>
-            searchParams.append(key, value.toString()),
-          );
-          return `${ESI_BASE_URL}${endpointUrl}?${searchParams.toString()}`;
+          return `${ESI_BASE_URL}${endpointUrl}`;
         };
       },
       (url: string) =>
@@ -72,7 +68,7 @@ export function useCharacterAssets() {
       });
 
       return assets;
-    }, []);
+    }, [data]);
 
   const locations: Record<
     string,
@@ -95,11 +91,11 @@ export function useCharacterAssets() {
         };
       }
       // @ts-expect-error: item_id is fine to use as index...
-      locations[asset.location_id].items.push(asset.item_id);
+      locations[asset.location_id]?.items.push(asset.item_id);
     });
 
     return locations;
-  }, []);
+  }, [data]);
 
   return {
     assets,
