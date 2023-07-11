@@ -1,95 +1,87 @@
+import { useEffect, useMemo, useState } from "react";
+
 import {
-  createContext,
-  memo,
-  useContext,
-  useMemo,
-  type PropsWithChildren,
-} from "react";
+  getMarketsGroupsMarketGroupId,
+  useGetMarketsGroups,
+  type GetMarketsGroupsMarketGroupId200,
+} from "@jitaspace/esi-client";
 
-import { type GetMarketsGroupsMarketGroupId200 } from "@jitaspace/esi-client";
+export const useMarketGroups = () => {
+  // Fetch all IDs
+  const {
+    data: marketGroupIds,
+    isLoading: marketGroupIdsLoading,
+    error: marketGroupIdsError,
+  } = useGetMarketsGroups(
+    {},
+    {
+      swr: {
+        revalidateOnReconnect: false,
+        revalidateOnFocus: false,
+        revalidateIfStale: false,
+      },
+    },
+  );
 
-import { usePrecomputedMarketGroups } from "./usePrecomputedMarketGroups";
+  const [marketGroups, setMarketGroupsData] = useState<{
+    data: GetMarketsGroupsMarketGroupId200[];
+    loading: boolean;
+  }>({ data: [], loading: true });
 
-type MarketGroupsTreeContext = {
-  loading: boolean;
-  data: {
-    marketGroups: Record<number, MarketGroupWithChildren>;
-    rootGroups: number[];
+  useEffect(() => {
+    if (!marketGroupIds || marketGroupIdsLoading || marketGroupIdsError) {
+      return;
+    }
+
+    const fetchData = async () => {
+      setMarketGroupsData((s) => ({ ...s, loading: true }));
+      await Promise.all(
+        marketGroupIds.data.map(async (marketGroupId) => {
+          return await getMarketsGroupsMarketGroupId(marketGroupId);
+        }),
+      ).then((marketGroupsResponses) => {
+        setMarketGroupsData({
+          loading: false,
+          data: marketGroupsResponses.map(
+            (marketGroupResponse) => marketGroupResponse.data,
+          ),
+        });
+      });
+    };
+
+    void fetchData();
+  }, [marketGroupIds, marketGroupIdsError, marketGroupIdsLoading]);
+
+  const rootMarketGroupIds = useMemo(() => {
+    return (marketGroups.data ?? [])
+      .filter((marketGroup) => marketGroup.parent_group_id === undefined)
+      .map((marketGroup) => marketGroup.market_group_id);
+  }, [marketGroups]);
+
+  const marketGroupsTree = useMemo(() => {
+    const result: Record<
+      string,
+      GetMarketsGroupsMarketGroupId200 & { children: number[] }
+    > = {};
+
+    marketGroups.data.forEach((marketGroup) => {
+      result[marketGroup.market_group_id] = { ...marketGroup, children: [] };
+    });
+
+    marketGroups.data.forEach((marketGroup) => {
+      if (marketGroup.parent_group_id) {
+        result[marketGroup.parent_group_id]?.children.push(
+          marketGroup.market_group_id,
+        );
+      }
+    });
+
+    return result;
+  }, [marketGroups]);
+
+  return {
+    data: marketGroupsTree,
+    rootMarketGroupIds,
+    loading: marketGroups.loading,
   };
 };
-
-const defaultMarketGroupsTreeContext: MarketGroupsTreeContext = {
-  loading: true,
-  data: {
-    marketGroups: {},
-    rootGroups: [],
-  },
-};
-
-const MarketGroupsTreeContext = createContext<MarketGroupsTreeContext>(
-  defaultMarketGroupsTreeContext,
-);
-
-type MarketGroupWithChildren = GetMarketsGroupsMarketGroupId200 & {
-  children: number[];
-};
-
-export const MarketGroupsTreeProvider = memo(
-  ({ children }: PropsWithChildren) => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { data, isLoading, error } = usePrecomputedMarketGroups();
-
-    const marketGroupsTree = useMemo(() => {
-      if (!data || isLoading || error) {
-        return {
-          loading: true,
-          data: {
-            marketGroups: {},
-            rootGroups: [],
-          },
-        };
-      }
-
-      const augmentedEntries: Record<number, MarketGroupWithChildren> = {};
-      Object.values(data.marketGroups).forEach((marketGroup, _index, array) => {
-        augmentedEntries[marketGroup.market_group_id] = {
-          ...marketGroup,
-          children: array
-            .filter(
-              (entry) => entry.parent_group_id === marketGroup.market_group_id,
-            )
-            .map((entry) => entry.market_group_id),
-        };
-      });
-
-      return {
-        loading: false,
-        data: {
-          marketGroups: augmentedEntries,
-          rootGroups: Object.values(augmentedEntries)
-            .filter((entry) => entry.parent_group_id === undefined)
-            .map((entry) => entry.market_group_id),
-        },
-      };
-    }, [data]);
-
-    return (
-      <MarketGroupsTreeContext.Provider value={marketGroupsTree}>
-        {children}
-      </MarketGroupsTreeContext.Provider>
-    );
-  },
-);
-MarketGroupsTreeProvider.displayName = "MarketGroupsTreeProvider";
-
-export function useMarketGroupsTree() {
-  const ctx = useContext(MarketGroupsTreeContext);
-
-  if (!ctx) {
-    throw new Error(
-      "[@jitaspace/web] MarketGroupsTreeContext was not found in tree",
-    );
-  }
-
-  return ctx;
-}
