@@ -61,7 +61,9 @@ export default function Page() {
           ?.toLowerCase()
           .includes(filterForm.values.name.toLowerCase()),
     )
-    .sort((a, b) => (a.typeName ?? "").localeCompare(b.typeName ?? ""));
+    .sort((a, b) =>
+      (a.typeName ?? "").trim().localeCompare((b.typeName ?? "").trim()),
+    );
 
   const ENTRIES_PER_PAGE = 100;
   const numPages = Math.ceil(entries.length / ENTRIES_PER_PAGE);
