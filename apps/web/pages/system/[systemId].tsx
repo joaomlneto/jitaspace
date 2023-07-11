@@ -6,6 +6,7 @@ import {
   Button,
   Container,
   Group,
+  JsonInput,
   List,
   Stack,
   Text,
@@ -13,7 +14,10 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
+import {
+  useGetUniverseSystemsSystemId,
+  useSolarSystemCostIndices,
+} from "@jitaspace/esi-client";
 import {
   AsteroidBeltName,
   ConstellationName,
@@ -34,6 +38,24 @@ export default function Page() {
   const { data: solarSystem } = useGetUniverseSystemsSystemId(
     parseInt(systemId),
   );
+  const { data: solarSystemCostIndicesData } = useSolarSystemCostIndices();
+
+  const stats = Object.values(solarSystemCostIndicesData)
+    .map((x) => x.cost_indices)
+    .reduce((acc, curr) => {
+      curr.forEach((x) => {
+        acc[x.activity + "_min"] = Math.min(
+          acc[x.activity + "_min"] ?? Number.MAX_SAFE_INTEGER,
+          x.cost_index,
+        );
+        acc[x.activity + "_max"] = Math.max(
+          acc[x.activity + "_max"] ?? Number.MIN_SAFE_INTEGER,
+          x.cost_index,
+        );
+      });
+
+      return acc;
+    }, {});
 
   return (
     <Container size="sm">
@@ -124,7 +146,7 @@ export default function Page() {
             ),
           )}
         </List>
-        Stations:
+        <Text>Stations:</Text>
         <List>
           {solarSystem?.data.stations?.map((stationId) => (
             <List.Item key={stationId}>
@@ -134,6 +156,23 @@ export default function Page() {
             </List.Item>
           ))}
         </List>
+        {Object.hasOwn(solarSystemCostIndicesData, systemId) && (
+          <>
+            <Text>Cost Indices</Text>
+            {solarSystemCostIndicesData[systemId]?.cost_indices.map(
+              (costIndex) => (
+                <Text key={costIndex.activity} tt="capitalize">
+                  {costIndex.activity.replaceAll("_", " ")}:{" "}
+                  {costIndex.cost_index}
+                </Text>
+              ),
+            )}
+          </>
+        )}
+        <>
+          <Text>STATS</Text>
+          <JsonInput value={JSON.stringify(stats, null, 2)} readOnly autosize />
+        </>
       </Stack>
     </Container>
   );
