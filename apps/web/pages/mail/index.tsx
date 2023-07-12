@@ -23,7 +23,6 @@ import {
   EveMailIcon,
   EveMailTagIcon,
   GroupListIcon,
-  InfoIcon,
 } from "@jitaspace/eve-icons";
 import { EveMailLabelMultiSelect } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
@@ -118,22 +117,6 @@ export default function Page() {
                   }
                 >
                   <EveMailTagIcon alt="Labels" width={32} height={32} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label="Frequently Asked Questions">
-                <ActionIcon
-                  variant="default"
-                  size="lg"
-                  onClick={() =>
-                    modals.openContextModal({
-                      modal: "mailFaq",
-                      title: "Frequently Asked Questions",
-                      size: "xl",
-                      innerProps: {},
-                    })
-                  }
-                >
-                  <InfoIcon alt="FAQ" width={32} height={32} />
                 </ActionIcon>
               </Tooltip>
               {(isLoading || isValidating) && (
