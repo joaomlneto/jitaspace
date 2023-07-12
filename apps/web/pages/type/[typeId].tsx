@@ -173,7 +173,7 @@ export default function Page({
               <Group position="apart">
                 <Text>Average Price</Text>
                 <Text>
-                  {marketPrices[typeId].average_price.toLocaleString(
+                  {marketPrices[typeId]?.average_price?.toLocaleString(
                     undefined,
                     { minimumFractionDigits: 2, maximumFractionDigits: 2 },
                   )}{" "}
@@ -183,7 +183,7 @@ export default function Page({
               <Group position="apart">
                 <Text>Adjusted Price</Text>
                 <Text>
-                  {marketPrices[typeId].adjusted_price.toLocaleString(
+                  {marketPrices[typeId]?.adjusted_price?.toLocaleString(
                     undefined,
                     { minimumFractionDigits: 2, maximumFractionDigits: 2 },
                   )}{" "}
