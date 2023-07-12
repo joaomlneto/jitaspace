@@ -12,6 +12,7 @@ export * from "./DogmaEffectName";
 export * from "./EveEntityName";
 export * from "./EveMailSenderName";
 export * from "./FactionName";
+export * from "./ISKAmount";
 export * from "./LabelName";
 export * from "./MailingListName";
 export * from "./MoonName";

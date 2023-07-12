@@ -25,6 +25,7 @@ import {
   AssetLocationSelect,
   EveEntityAnchor,
   EveEntityName,
+  ISKAmount,
   TypeAnchor,
   TypeAvatar,
   TypeName,
@@ -133,7 +134,7 @@ export default function Page() {
             : `${(Object.keys(assets) ?? []).length} assets`}
         </Text>
         <Text size="sm" color="dimmed">
-          Total value: {totalPrice.toLocaleString()} ISK
+          Total value: <ISKAmount span amount={totalPrice} />
         </Text>
         {numUndefinedNames > 0 && (
           <Text color="red" size="sm">
@@ -186,13 +187,7 @@ export default function Page() {
                 </td>
                 <td>
                   {asset.price && (
-                    <Text align="right">
-                      {asset.price.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}{" "}
-                      ISK
-                    </Text>
+                    <ISKAmount align="right" amount={asset.price} />
                   )}
                 </td>
                 {filterForm.values.location_id === null && (
