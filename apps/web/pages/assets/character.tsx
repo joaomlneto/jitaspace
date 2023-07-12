@@ -75,7 +75,7 @@ export default function Page() {
         .sort((a, b) =>
           (a.typeName ?? "").trim().localeCompare((b.typeName ?? "").trim()),
         )
-        .sort((a, b) => (b.price ?? 0) - (a.price ?? 0)),
+        //.sort((a, b) => (b.price ?? 0) - (a.price ?? 0)),
     [
       assets,
       filterForm.values.location_id,
