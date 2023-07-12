@@ -9,7 +9,6 @@ import {
   Grid,
   Group,
   Loader,
-  MediaQuery,
   Stack,
   Text,
   Title,
@@ -29,7 +28,7 @@ import {
 import { EveMailLabelMultiSelect } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 
-import { EveMailMessageListSmall, MailboxTable } from "~/components/EveMail";
+import { MailboxTable } from "~/components/EveMail";
 import { MailLayout } from "~/layouts";
 
 export default function Page() {
@@ -170,17 +169,7 @@ export default function Page() {
           </Grid.Col>
         </Grid>
         {messages.length > 0 && (
-          <>
-            <MediaQuery smallerThan="md" styles={{ display: "none" }}>
-              <MailboxTable data={messages} mutate={() => void mutate()} />
-            </MediaQuery>
-            <MediaQuery largerThan="md" styles={{ display: "none" }}>
-              <EveMailMessageListSmall
-                data={messages}
-                mutate={() => void mutate()}
-              />
-            </MediaQuery>
-          </>
+          <MailboxTable data={messages} mutate={() => void mutate()} />
         )}
         {hasMoreMessages && (
           <Button w="100%" onClick={loadMoreMessages}>

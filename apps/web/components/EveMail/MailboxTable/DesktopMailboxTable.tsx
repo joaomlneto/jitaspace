@@ -17,31 +17,14 @@ import {
   MailLabelColorSwatch,
 } from "@jitaspace/ui";
 
-import { MessageMenu } from "~/components/EveMail/index";
+import { type MailboxTableProps } from "~/components/EveMail";
+import { MessageMenu } from "../MessageMenu";
 
-type MailboxTableProps = {
-  data: {
-    from?: number;
-    is_read?: boolean;
-    labels?: number[];
-    mail_id?: number;
-    recipients?: {
-      recipient_id: number;
-      recipient_type: string;
-    }[];
-    subject?: string;
-    timestamp?: string;
-    // This is a custom property that we add to the data
-    // to indicate whether the mail has been deleted or not.
-    // This is to try and be more responsive to the user, since the API
-    // takes up to 30 seconds to actually show changes.
-    isDeleted?: boolean;
-  }[];
-  mutate?: () => void;
-  className?: string;
-};
-
-export function MailboxTable({ data, mutate, className }: MailboxTableProps) {
+export const DesktopMailboxTable = ({
+  data,
+  mutate,
+  ...otherProps
+}: MailboxTableProps) => {
   const { isTokenValid, characterId } = useEsiClientContext();
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
@@ -53,7 +36,7 @@ export function MailboxTable({ data, mutate, className }: MailboxTableProps) {
     },
   );
   return (
-    <Table highlightOnHover striped className={className}>
+    <Table highlightOnHover striped {...otherProps}>
       <thead>
         <tr>
           <th>Sender</th>
@@ -166,4 +149,4 @@ export function MailboxTable({ data, mutate, className }: MailboxTableProps) {
       </tbody>
     </Table>
   );
-}
+};
