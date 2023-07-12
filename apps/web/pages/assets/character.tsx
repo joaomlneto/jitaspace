@@ -15,7 +15,11 @@ import {
 import { useForm } from "@mantine/form";
 import { usePagination } from "@mantine/hooks";
 
-import { useCharacterAssets, useEsiNamesCache } from "@jitaspace/esi-client";
+import {
+  useCharacterAssets,
+  useEsiNamesCache,
+  useMarketPrices,
+} from "@jitaspace/esi-client";
 import { AssetsIcon } from "@jitaspace/eve-icons";
 import {
   AssetLocationSelect,
@@ -37,6 +41,7 @@ export default function Page() {
     },
   });
   const cache = useEsiNamesCache();
+  const { data: marketPrices } = useMarketPrices();
 
   const getNameFromCache = (id: number) => cache[id]?.value?.name;
 
@@ -52,10 +57,14 @@ export default function Page() {
             filterForm.values.location_id === null ||
             asset.location_id === filterForm.values.location_id,
         )
-        .map((asset) => ({
-          typeName: getNameFromCache(asset.type_id),
-          ...asset,
-        }))
+        .map((asset) => {
+          const adjustedPrice = marketPrices[asset.type_id]?.adjusted_price;
+          return {
+            typeName: getNameFromCache(asset.type_id),
+            price: adjustedPrice ? adjustedPrice * asset.quantity : undefined,
+            ...asset,
+          };
+        })
         .filter(
           (asset) =>
             filterForm.values.name === "" ||
@@ -65,13 +74,19 @@ export default function Page() {
         )
         .sort((a, b) =>
           (a.typeName ?? "").trim().localeCompare((b.typeName ?? "").trim()),
-        ),
+        )
+        .sort((a, b) => (b.price ?? 0) - (a.price ?? 0)),
     [
       assets,
       filterForm.values.location_id,
       filterForm.values.name,
       getNameFromCache,
     ],
+  );
+
+  const totalPrice = useMemo(
+    () => entries.reduce((acc, { price }) => (price ? acc + price : acc), 0),
+    [entries],
   );
 
   const numUndefinedNames = entries.filter(
@@ -117,6 +132,9 @@ export default function Page() {
               } assets`
             : `${(Object.keys(assets) ?? []).length} assets`}
         </Text>
+        <Text size="sm" color="dimmed">
+          Total value: {totalPrice.toLocaleString()} ISK
+        </Text>
         {numUndefinedNames > 0 && (
           <Text color="red" size="sm">
             Failed to resolve names for {numUndefinedNames} items! This causes
@@ -133,12 +151,13 @@ export default function Page() {
             onChange={pagination.setPage}
           />
         </Center>
-        <Table highlightOnHover striped>
+        <Table highlightOnHover>
           <thead>
             <tr>
               <th>Item ID</th>
               <th>Qty</th>
               <th>Type</th>
+              <th>Price</th>
               {filterForm.values.location_id === null && <th>Location</th>}
             </tr>
           </thead>
@@ -164,6 +183,17 @@ export default function Page() {
                       {asset.is_blueprint_copy && <Badge size="xs">BPC</Badge>}
                     </Group>
                   </Group>
+                </td>
+                <td>
+                  {asset.price && (
+                    <Text align="right">
+                      {asset.price.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{" "}
+                      ISK
+                    </Text>
+                  )}
                 </td>
                 {filterForm.values.location_id === null && (
                   <td>
