@@ -6,10 +6,16 @@ import { MobileMailboxTable } from "./MobileMailboxTable";
 
 export type MailboxTableProps = TableProps & {
   data: {
+    from?: number;
     is_read?: boolean;
     labels?: number[];
     mail_id?: number;
-
+    recipients?: {
+      recipient_id: number;
+      recipient_type: string;
+    }[];
+    subject?: string;
+    timestamp?: string;
     // This is a custom property that we add to the data
     // to indicate whether the mail has been deleted or not.
     // This is to try and be more responsive to the user, since the API
