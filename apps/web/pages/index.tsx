@@ -67,7 +67,7 @@ const useStyles = createStyles((theme) => ({
   },
 
   card: {
-    minHeight: 200,
+    height: "100%",
     transition: "transform 0.2s",
     border: `${rem(1)} solid ${
       theme.colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[1]
@@ -96,10 +96,13 @@ export default function Page() {
     <Container size="lg">
       <Title order={3}>Capsuleer Tools</Title>
       <SimpleGrid
-        cols={2}
+        cols={3}
         spacing="xl"
         my="xl"
-        breakpoints={[{ maxWidth: "md", cols: 1 }]}
+        breakpoints={[
+          { maxWidth: "sm", cols: 2 },
+          { maxWidth: "xs", cols: 1 },
+        ]}
       >
         {Object.values(jitaApps).map((feature) => (
           <UnstyledButton
@@ -136,7 +139,10 @@ export default function Page() {
         cols={2}
         spacing="xl"
         my="xl"
-        breakpoints={[{ maxWidth: "md", cols: 1 }]}
+        breakpoints={[
+          { maxWidth: "sm", cols: 2 },
+          { maxWidth: "xs", cols: 1 },
+        ]}
       >
         {devApps.map((feature) => (
           <UnstyledButton
