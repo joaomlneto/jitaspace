@@ -23,7 +23,7 @@ export default function Page() {
   const router = useRouter();
   const structureId = router.query.structureId as string;
   const { isTokenValid, scopes } = useEsiClientContext();
-  const { data: structure, error } = useGetUniverseStructuresStructureId(
+  const { data: structure } = useGetUniverseStructuresStructureId(
     parseInt(structureId),
     {},
     {
