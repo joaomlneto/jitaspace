@@ -2,21 +2,19 @@ import { memo } from "react";
 import Link, { type LinkProps } from "next/link";
 import { Anchor, type AnchorProps } from "@mantine/core";
 
-import { AllianceName } from "../Text";
-
 export type AllianceNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
     allianceId: string | number;
   };
 
-export const AllianceNameAnchor = memo(
-  ({ allianceId, ...props }: AllianceNameAnchorProps) => {
+export const AllianceAnchor = memo(
+  ({ allianceId, children, ...otherProps }: AllianceNameAnchorProps) => {
     return (
-      <Anchor component={Link} href={`/alliances/${allianceId}`} {...props}>
-        <AllianceName span allianceId={allianceId} />
+      <Anchor component={Link} href={`/alliance/${allianceId}`} {...otherProps}>
+        {children}
       </Anchor>
     );
   },
 );
-AllianceNameAnchor.displayName = "AllianceNameAnchor";
+AllianceAnchor.displayName = "AllianceNameAnchor";
