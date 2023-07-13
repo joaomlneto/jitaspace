@@ -158,6 +158,17 @@ export default function Page({
                 </Group>
               </Button>
             </Link>
+            <Link
+              href={`https://evetycoon.com/market/${typeId}`}
+              target="_blank"
+            >
+              <Button>
+                <Group spacing="xs">
+                  <IconExternalLink size={14} />
+                  EVE Tycoon
+                </Group>
+              </Button>
+            </Link>
           </Group>
           {type?.data.description && (
             <MailMessageViewer
