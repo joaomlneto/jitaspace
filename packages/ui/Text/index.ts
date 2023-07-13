@@ -23,3 +23,5 @@ export * from "./SolarSystemName";
 export * from "./StationName";
 export * from "./StructureName";
 export * from "./TypeName";
+export * from "./WarAggressorName";
+export * from "./WarDefenderName";

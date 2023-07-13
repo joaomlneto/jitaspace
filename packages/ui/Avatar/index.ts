@@ -13,3 +13,5 @@ export * from "./StarAvatar";
 export * from "./StationAvatar";
 export * from "./StructureAvatar";
 export * from "./TypeAvatar";
+export * from "./WarAggressorAvatar";
+export * from "./WarDefenderAvatar";

@@ -19,7 +19,7 @@ import { StructureAvatar } from "./StructureAvatar";
 import { TypeAvatar } from "./TypeAvatar";
 
 export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
-  entityId: string | number;
+  entityId?: string | number;
   category?: ResolvableEntityCategory;
 };
 
@@ -32,7 +32,7 @@ export const EveEntityAvatar = memo(
     const { category, loading, error } = useEsiName(entityId, categoryHint);
     entityId = typeof entityId === "string" ? parseInt(entityId) : entityId;
 
-    if (loading) {
+    if (entityId === undefined || loading) {
       <Skeleton
         radius={otherProps.radius}
         height={otherProps.size}

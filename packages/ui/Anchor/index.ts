@@ -6,3 +6,5 @@ export * from "./EveEntityAnchor";
 export * from "./EveEntityNameAnchor";
 export * from "./EveMailSenderAnchor";
 export * from "./TypeAnchor";
+export * from "./WarAggressorAnchor";
+export * from "./WarDefenderAnchor";
