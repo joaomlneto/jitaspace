@@ -33,7 +33,7 @@ export const EveImageServerAvatar = memo(
             : undefined
         }
         size={size}
-        radius={size}
+        //radius={size}
         alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
         {...avatarProps}
       />
