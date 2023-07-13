@@ -1,6 +1,8 @@
 import React, { type ReactElement } from "react";
+import Link from "next/link";
 import { useRouter } from "next/router";
-import { Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { IconExternalLink } from "@tabler/icons-react";
 
 import { useGetWarsWarId } from "@jitaspace/esi-client";
 import { WarReportIcon } from "@jitaspace/eve-icons";
@@ -36,11 +38,35 @@ export default function Page() {
   return (
     <Container size="lg">
       <Stack>
-        <Group>
-          <WarReportIcon width={64} /> <Title order={1}>War Report</Title>
+        <Group position="apart">
+          <Group>
+            <WarReportIcon width={64} />
+            <Title order={1}>War Report</Title>
+          </Group>
+          <Group>
+            <Link href={`https://zkillboard.com/war/${warId}`} target="_blank">
+              <Button size="xs">
+                <Group spacing="xs">
+                  <IconExternalLink size={14} />
+                  zKillboard
+                </Group>
+              </Button>
+            </Link>
+            <Link
+              href={`https://evemaps.dotlan.net/war/${warId}`}
+              target="_blank"
+            >
+              <Button size="xs">
+                <Group spacing="xs">
+                  <IconExternalLink size={14} />
+                  DOTLAN EveMaps
+                </Group>
+              </Button>
+            </Link>
+          </Group>
         </Group>
         <Group position="apart">
-          <Group spacing="xl">
+          <Group spacing="xl" noWrap>
             <WarAggressorAvatar warId={warId} size="xl" />
             <div>
               <Group noWrap>
@@ -68,7 +94,7 @@ export default function Page() {
               }
             />
           </Group>
-          <Group spacing="xl">
+          <Group spacing="xl" noWrap>
             <WarDefenderAvatar warId={warId} size="xl" />
             <div>
               <Group noWrap>
@@ -97,6 +123,7 @@ export default function Page() {
             />
           </Group>
         </Group>
+
         {war && (
           <Group align="center" position="apart">
             <Text>Declared on</Text>
