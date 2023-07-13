@@ -9,5 +9,12 @@ export const CorporationContactsTable = ({
 }: Omit<ContactsTableProps, "contacts" | "labels">) => {
   const { data, labels } = useCorporationContacts();
 
-  return <ContactsTable contacts={data} labels={labels} {...otherProps} />;
+  return (
+    <ContactsTable
+      contacts={data}
+      labels={labels}
+      hideBlockedColumn
+      {...otherProps}
+    />
+  );
 };

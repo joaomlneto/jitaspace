@@ -9,5 +9,12 @@ export const AllianceContactsTable = ({
 }: Omit<ContactsTableProps, "contacts" | "labels">) => {
   const { data, labels } = useAllianceContacts();
 
-  return <ContactsTable contacts={data} labels={labels} {...otherProps} />;
+  return (
+    <ContactsTable
+      contacts={data}
+      labels={labels}
+      hideBlockedColumn
+      {...otherProps}
+    />
+  );
 };

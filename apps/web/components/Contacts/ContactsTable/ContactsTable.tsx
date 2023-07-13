@@ -24,9 +24,14 @@ export type ContactsTableProps = {
   labels?: (GetCharactersCharacterIdContactsLabels200Item &
     GetCorporationsCorporationIdContactsLabels200Item &
     GetAlliancesAllianceIdContactsLabels200Item)[];
+  hideBlockedColumn?: boolean;
 };
 
-export const ContactsTable = ({ contacts, labels }: ContactsTableProps) => {
+export const ContactsTable = ({
+  contacts,
+  labels,
+  hideBlockedColumn,
+}: ContactsTableProps) => {
   return (
     <Table highlightOnHover>
       <thead>
@@ -34,7 +39,7 @@ export const ContactsTable = ({ contacts, labels }: ContactsTableProps) => {
           <th>Name</th>
           <th>Labels</th>
           <th>Standing</th>
-          <th>Blocked?</th>
+          {!hideBlockedColumn && <th>Blocked?</th>}
         </tr>
       </thead>
       <tbody>
@@ -83,17 +88,19 @@ export const ContactsTable = ({ contacts, labels }: ContactsTableProps) => {
                 <td>
                   <StandingsBadge standing={contact.standing} size="sm" />
                 </td>
-                <td>
-                  {contact.is_blocked === undefined ? (
-                    <Text color="dimmed">
-                      <i>Unknown</i>
-                    </Text>
-                  ) : contact.is_blocked ? (
-                    "Yes"
-                  ) : (
-                    "No"
-                  )}
-                </td>
+                {!hideBlockedColumn && (
+                  <td>
+                    {contact.is_blocked === undefined ? (
+                      <Text color="dimmed">
+                        <i>Unknown</i>
+                      </Text>
+                    ) : contact.is_blocked ? (
+                      "Yes"
+                    ) : (
+                      "No"
+                    )}
+                  </td>
+                )}
               </tr>
             );
           })}
