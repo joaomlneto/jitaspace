@@ -5,10 +5,12 @@ import {
   Collapse,
   Container,
   createStyles,
+  Group,
   Text,
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { openContextModal } from "@mantine/modals";
 import { signIn } from "next-auth/react";
 
 import { useEsiClientContext, type ESIScope } from "@jitaspace/esi-client";
@@ -76,18 +78,21 @@ export function RequestPermissionsBanner({
 
   return (
     <Container className={classes.root}>
-      <Title className={classes.title}>Additional Permissions Required</Title>
+      <Title className={classes.title}>Insufficient Scopes</Title>
       <Text
         color="dimmed"
-        size="lg"
+        size="md"
         align="center"
         className={classes.description}
       >
         We must request additional scopes to continue.
         <br />
-        To continue, please sign in again with elevated permissions.
+        Click the login button to request them.
+        <br />
+        Alternatively, click the customize button to control which scopes are
+        requested.
       </Text>
-      <Center>
+      <Group spacing="md" position="center">
         <LoginWithEveOnlineButton
           size="small"
           onClick={() => {
@@ -100,7 +105,27 @@ export function RequestPermissionsBanner({
             );
           }}
         />
-      </Center>
+        <Button
+          size="xs"
+          variant="default"
+          onClick={() => {
+            openContextModal({
+              modal: "login",
+              title: <Title order={3}>Login</Title>,
+              size: "xl",
+              centered: false,
+              innerProps: {
+                scopes: [...new Set([...missingScopes, ...grantedScopes])],
+              },
+            });
+          }}
+        >
+          Customize
+        </Button>
+      </Group>
+      <Title order={4} align="center" mt="xl">
+        Missing Scopes
+      </Title>
       <ScopesTable scopes={missingScopes} />
       {(grantedScopes ?? []).length > 0 && (
         <>
