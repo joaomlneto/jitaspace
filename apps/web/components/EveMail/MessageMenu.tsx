@@ -86,6 +86,12 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                       message: "Message ID is undefined.",
                     });
                   }
+                  if (label.label_id === undefined) {
+                    return showNotification({
+                      title: "Error",
+                      message: "Label ID is undefined.",
+                    });
+                  }
                   await putCharactersCharacterIdMailMailId(
                     characterId,
                     mail.mail_id,
@@ -95,8 +101,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                           ? mail.labels?.filter(
                               (labelId) => labelId !== label.label_id,
                             )
-                          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                            [...(mail.labels ?? []), label.label_id!],
+                          : [...(mail.labels ?? []), label.label_id],
                     },
                   );
 
@@ -110,7 +115,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                         ? mail.labels?.filter(
                             (labelId) => labelId !== label.label_id,
                           )
-                        : [...(mail.labels ?? []), label.label_id!];
+                        : [...(mail.labels ?? []), label.label_id];
                   }
 
                   // Show a notification
@@ -166,8 +171,18 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                 },
               );
               if (data) {
-                data.find((item) => item.mail_id === mail.mail_id)!.is_read =
-                  !mail.is_read;
+                const entry = data.find(
+                  (item) => item.mail_id === mail.mail_id,
+                );
+                if (entry === undefined) {
+                  showNotification({
+                    title: "Error",
+                    message: "Message not found.",
+                    color: "red",
+                  });
+                } else {
+                  entry.is_read = !mail.is_read;
+                }
               }
               showNotification({
                 title: "Message Updated",
@@ -219,9 +234,18 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                     mail.mail_id,
                   );
                   if (data) {
-                    data.find(
+                    const entry = data.find(
                       (message) => message.mail_id === mail.mail_id,
-                    )!.isDeleted = true;
+                    );
+                    if (entry === undefined) {
+                      showNotification({
+                        title: "Error",
+                        message: "Message not found.",
+                        color: "red",
+                      });
+                    } else {
+                      entry.isDeleted = true;
+                    }
                   }
                   showNotification({
                     title: "Message Deleted",
