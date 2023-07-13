@@ -12,6 +12,8 @@ import Script from "next/script";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
 import type { Session } from "next-auth";
 import { SessionProvider, useSession } from "next-auth/react";
@@ -30,6 +32,8 @@ import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
 import RouterTransition from "../components/RouterTransition";
+
+const queryClient = new QueryClient();
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -135,38 +139,41 @@ export default function App({
 
       <Analytics />
 
-      {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */}
-      <SessionProvider session={session}>
-        {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access */}
-        <EsiClientContextProvider accessToken={session?.accessToken}>
-          <JitaSpaceEsiClientContextProvider>
-            <EsiClientSSOAccessTokenInjector>
-              <EveIconsContextProvider /* iconVersion="rhea"*/>
-                <MantineProvider
-                  withGlobalStyles
-                  withNormalizeCSS
-                  theme={{ colorScheme: "dark" }}
-                >
-                  <Notifications />
-                  <RouterTransition />
-                  <JitaSpotlightProvider>
-                    <ModalsProvider
-                      modals={contextModals}
-                      modalProps={{ centered: true }}
-                    >
-                      {getLayout(
-                        <ScopeGuard requiredScopes={requiredScopes}>
-                          <Component {...pageProps} />
-                        </ScopeGuard>,
-                      )}
-                    </ModalsProvider>
-                  </JitaSpotlightProvider>
-                </MantineProvider>
-              </EveIconsContextProvider>
-            </EsiClientSSOAccessTokenInjector>
-          </JitaSpaceEsiClientContextProvider>
-        </EsiClientContextProvider>
-      </SessionProvider>
+      <QueryClientProvider client={queryClient}>
+        <ReactQueryDevtools initialIsOpen={false} />
+        {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */}
+        <SessionProvider session={session}>
+          {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access */}
+          <EsiClientContextProvider accessToken={session?.accessToken}>
+            <JitaSpaceEsiClientContextProvider>
+              <EsiClientSSOAccessTokenInjector>
+                <EveIconsContextProvider /* iconVersion="rhea"*/>
+                  <MantineProvider
+                    withGlobalStyles
+                    withNormalizeCSS
+                    theme={{ colorScheme: "dark" }}
+                  >
+                    <Notifications />
+                    <RouterTransition />
+                    <JitaSpotlightProvider>
+                      <ModalsProvider
+                        modals={contextModals}
+                        modalProps={{ centered: true }}
+                      >
+                        {getLayout(
+                          <ScopeGuard requiredScopes={requiredScopes}>
+                            <Component {...pageProps} />
+                          </ScopeGuard>,
+                        )}
+                      </ModalsProvider>
+                    </JitaSpotlightProvider>
+                  </MantineProvider>
+                </EveIconsContextProvider>
+              </EsiClientSSOAccessTokenInjector>
+            </JitaSpaceEsiClientContextProvider>
+          </EsiClientContextProvider>
+        </SessionProvider>
+      </QueryClientProvider>
     </>
   );
 }
