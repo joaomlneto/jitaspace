@@ -1,6 +1,6 @@
 {
-  "name": "@jitaspace/esi-meta-client",
-  "description": "ESI Meta API Client for JitaSpace",
+  "name": "@jitaspace/sde-client",
+  "description": "Static Data Export API Client for JitaSpace",
   "version": "0.1.0",
   "main": "./index.ts",
   "types": "./index.ts",
