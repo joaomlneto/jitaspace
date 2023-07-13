@@ -61,7 +61,7 @@ export const ContactsTable = ({ contacts, labels }: ContactsTableProps) => {
                         category={contact.contact_type}
                       />
                     </EveEntityAnchor>
-                    {!contact.is_watched && (
+                    {contact.is_watched && (
                       <Badge variant="filled" size="xs">
                         watched
                       </Badge>
