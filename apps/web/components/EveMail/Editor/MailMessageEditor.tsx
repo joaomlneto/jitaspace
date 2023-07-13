@@ -2,13 +2,14 @@ import React from "react";
 import { Stack, Text } from "@mantine/core";
 import { RichTextEditor, type RichTextEditorProps } from "@mantine/tiptap";
 
+import { useEveEditor } from "@jitaspace/tiptap-eve";
+
 import { AllianceLinkControl } from "~/components/EveMail/Editor/AllianceLinkControl";
 import { CharacterLinkControl } from "~/components/EveMail/Editor/CharacterLinkControl";
 import { CorporationLinkControl } from "~/components/EveMail/Editor/CorporationLinkControl";
 import { ItemTypeLinkControl } from "~/components/EveMail/Editor/ItemTypeLinkControl";
 import { SolarSystemLinkControl } from "~/components/EveMail/Editor/SolarSystemLinkControl";
 import { StationLinkControl } from "~/components/EveMail/Editor/StationLinkControl";
-import { useEveEditor } from "../../../../../packages/tiptap-eve";
 
 type EvemailEditorProps = Omit<RichTextEditorProps, "editor" | "children"> & {
   content: string;

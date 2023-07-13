@@ -8,14 +8,14 @@ import {
   type GetCharactersCharacterIdContactsLabels200Item,
   type GetCorporationsCorporationIdContacts200Item,
   type GetCorporationsCorporationIdContactsLabels200Item,
-} from "../../../../../packages/esi-client";
+} from "@jitaspace/esi-client";
 import {
   EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
   StandingIndicator,
   StandingsBadge,
-} from "../../../../../packages/ui";
+} from "@jitaspace/ui";
 
 export type ContactsTableProps = {
   contacts?: (GetCharactersCharacterIdContacts200Item &

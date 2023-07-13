@@ -12,11 +12,9 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 
+import { AssetsIcon, CorporationAssetsIcon } from "@jitaspace/eve-icons";
+
 import { MainLayout } from "~/layouts";
-import {
-  AssetsIcon,
-  CorporationAssetsIcon,
-} from "../../../../packages/eve-icons";
 
 const useStyles = createStyles((theme) => ({
   title: {
