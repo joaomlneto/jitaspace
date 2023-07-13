@@ -1,1 +1,2 @@
-export { TotalUnreadMailsIndicator } from "./TotalUnreadMailsIndicator";
+export * from "./StandingIndicator";
+export * from "./TotalUnreadMailsIndicator";
