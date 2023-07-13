@@ -16,14 +16,22 @@ import {
   FormattedDateText,
   ISKAmount,
   OpenInformationWindowActionIcon,
+  WarAggressorAnchor,
+  WarAggressorAvatar,
+  WarAggressorName,
+  WarAggressorTickerBadge,
+  WarDefenderAnchor,
+  WarDefenderAvatar,
+  WarDefenderName,
+  WarDefenderTickerBadge,
 } from "@jitaspace/ui";
 
 import { MailLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
-  const warId = router.query.warId as string;
-  const { data: war } = useGetWarsWarId(parseInt(warId));
+  const warId = parseInt(router.query.warId as string);
+  const { data: war } = useGetWarsWarId(warId);
 
   return (
     <Container size="lg">
@@ -33,44 +41,15 @@ export default function Page() {
         </Group>
         <Group position="apart">
           <Group spacing="xl">
-            {war?.data.aggressor.alliance_id && (
-              <AllianceAvatar
-                allianceId={war.data.aggressor.alliance_id}
-                size="xl"
-              />
-            )}
-            {war?.data.aggressor.corporation_id && (
-              <CorporationAvatar
-                corporationId={war.data.aggressor.corporation_id}
-                size="xl"
-              />
-            )}
+            <WarAggressorAvatar warId={warId} size="xl" />
             <div>
               <Group noWrap>
                 <Title order={3}>
-                  {war?.data.aggressor.alliance_id && (
-                    <AllianceName
-                      span
-                      allianceId={war.data.aggressor.alliance_id}
-                    />
-                  )}
-                  {war?.data.aggressor.corporation_id && (
-                    <CorporationName
-                      span
-                      corporationId={war.data.aggressor.corporation_id}
-                    />
-                  )}
+                  <WarAggressorAnchor warId={warId}>
+                    <WarAggressorName span warId={warId} />
+                  </WarAggressorAnchor>
                 </Title>
-                {war?.data.aggressor.alliance_id && (
-                  <AllianceTickerBadge
-                    allianceId={war?.data.aggressor.alliance_id}
-                  />
-                )}
-                {war?.data.aggressor.corporation_id && (
-                  <CorporationTickerBadge
-                    corporationId={war?.data.aggressor.corporation_id}
-                  />
-                )}
+                <WarAggressorTickerBadge warId={warId} />
               </Group>
               <Text color="dimmed">Aggressor</Text>
               <Text color="dimmed">
@@ -90,44 +69,15 @@ export default function Page() {
             />
           </Group>
           <Group spacing="xl">
-            {war?.data.defender.alliance_id && (
-              <AllianceAvatar
-                allianceId={war.data.defender.alliance_id}
-                size="xl"
-              />
-            )}
-            {war?.data.defender.corporation_id && (
-              <CorporationAvatar
-                corporationId={war.data.defender.corporation_id}
-                size="xl"
-              />
-            )}
+            <WarDefenderAvatar warId={warId} size="xl" />
             <div>
               <Group noWrap>
                 <Title order={3}>
-                  {war?.data.defender.alliance_id && (
-                    <AllianceName
-                      span
-                      allianceId={war.data.defender.alliance_id}
-                    />
-                  )}
-                  {war?.data.defender.corporation_id && (
-                    <CorporationName
-                      span
-                      corporationId={war.data.defender.corporation_id}
-                    />
-                  )}
+                  <WarDefenderAnchor warId={warId}>
+                    <WarDefenderName span warId={warId} />
+                  </WarDefenderAnchor>
                 </Title>
-                {war?.data.defender.alliance_id && (
-                  <AllianceTickerBadge
-                    allianceId={war?.data.defender.alliance_id}
-                  />
-                )}
-                {war?.data.defender.corporation_id && (
-                  <CorporationTickerBadge
-                    corporationId={war?.data.defender.corporation_id}
-                  />
-                )}
+                <WarDefenderTickerBadge warId={warId} />
               </Group>
               <Text color="dimmed">Defender</Text>
               <Text color="dimmed">
