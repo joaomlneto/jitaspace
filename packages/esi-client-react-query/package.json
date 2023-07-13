@@ -1,0 +1,28 @@
+{
+  "name": "@jitaspace/esi-client-react-query",
+  "description": "ESI Client for JitaSpace",
+  "version": "0.1.0",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "download-schema": "curl -L http://esi.evetech.net/latest/swagger.json | jq 'del(.paths.\"/route/{origin}/{destination}/\")' > swagger.json",
+    "generate-client": "orval --config ./orval.config.ts",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "axios": "^1.4.0",
+    "react": "18.2.0"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "^0.1.0",
+    "@types/node": "^18.15.11",
+    "@types/react": "^18.0.33",
+    "eslint": "^8.42.0",
+    "orval": "^6.17.0",
+    "typescript": "^5.1.3"
+  }
+}
