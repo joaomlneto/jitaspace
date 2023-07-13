@@ -1,4 +1,4 @@
-import React, { useMemo, type ReactElement } from "react";
+import React, { useCallback, useMemo, type ReactElement } from "react";
 import {
   Badge,
   Center,
@@ -44,7 +44,10 @@ export default function Page() {
   const cache = useEsiNamesCache();
   const { data: marketPrices } = useMarketPrices();
 
-  const getNameFromCache = (id: number) => cache[id]?.value?.name;
+  const getNameFromCache = useCallback(
+    (id: number) => cache[id]?.value?.name,
+    [cache],
+  );
 
   const filtersEnabled =
     filterForm.values.location_id !== null || filterForm.values.name !== "";
@@ -82,6 +85,7 @@ export default function Page() {
       filterForm.values.location_id,
       filterForm.values.name,
       getNameFromCache,
+      marketPrices,
     ],
   );
 

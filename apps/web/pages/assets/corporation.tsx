@@ -1,4 +1,4 @@
-import React, { useMemo, type ReactElement } from "react";
+import React, { useCallback, useMemo, type ReactElement } from "react";
 import {
   Alert,
   Badge,
@@ -28,7 +28,7 @@ import {
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
-  const { assets, locations, isLoading, errorMessage } = useCorporationAssets();
+  const { assets, isLoading, errorMessage } = useCorporationAssets();
   const filterForm = useForm<{ location_id: number | null; name: string }>({
     initialValues: {
       location_id: null,
@@ -37,7 +37,10 @@ export default function Page() {
   });
   const cache = useEsiNamesCache();
 
-  const getNameFromCache = (id: number) => cache[id]?.value?.name;
+  const getNameFromCache = useCallback(
+    (id: number) => cache[id]?.value?.name,
+    [cache],
+  );
 
   const filtersEnabled =
     filterForm.values.location_id !== null || filterForm.values.name !== "";
