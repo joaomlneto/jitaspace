@@ -37,6 +37,8 @@
     "@mantine/tiptap": "^6.0.13",
     "@react-hook/cache": "^1.1.1",
     "@tabler/icons-react": "^2.22.0",
+    "@tanstack/react-query": "^4.29.19",
+    "@tanstack/react-query-devtools": "^4.29.19",
     "@tiptap/extension-color": "^2.0.3",
     "@tiptap/extension-link": "^2.0.3",
     "@tiptap/extension-text-style": "^2.0.3",
