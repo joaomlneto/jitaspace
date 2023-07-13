@@ -6,6 +6,7 @@ import { type ESIScope } from "@jitaspace/esi-client";
 import {
   AssetsIcon,
   CalendarIcon,
+  ContactsIcon,
   EveMailIcon,
   PeopleAndPlacesIcon,
   SkillsIcon,
@@ -94,6 +95,34 @@ export const jitaApps: Record<string, JitaApp> = {
           reason: "Respond to Calendar Events",
           description: "Allows you to respond to events on your calendar.",
           scopes: ["esi-calendar.respond_calendar_events.v1"],
+        },
+      ],
+    },
+  },
+  contacts: {
+    name: "Contacts",
+    description:
+      "View and manage your character's, corporation's and alliance's contacts.",
+    url: "/contacts",
+    Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
+    tags: ["beta"],
+    scopes: {
+      optional: [
+        {
+          reason: "Read Character Contacts",
+          scopes: ["esi-characters.read_contacts.v1"],
+        },
+        {
+          reason: "Read Corporation Contacts",
+          scopes: ["esi-corporations.read_contacts.v1"],
+        },
+        {
+          reason: "Read Alliance Contacts",
+          scopes: ["esi-alliances.read_contacts.v1"],
+        },
+        {
+          reason: "Update Character Contacts",
+          scopes: ["esi-characters.write_contacts.v1"],
         },
       ],
     },
