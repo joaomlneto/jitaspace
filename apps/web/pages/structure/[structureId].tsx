@@ -82,3 +82,5 @@ export default function Page() {
 Page.getLayout = function getLayout(page: ReactElement) {
   return <MailLayout>{page}</MailLayout>;
 };
+
+Page.requiredScopes = ["esi-universe.read_structures.v1"];
