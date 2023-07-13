@@ -1,8 +1,10 @@
 /** @type {import("eslint").Linter.Config} */
 const config = {
+  plugins: ["@tanstack/query"],
   extends: [
     "next",
     "turbo",
+    "plugin:@tanstack/eslint-plugin-query/recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:@typescript-eslint/recommended-requiring-type-checking",
     "prettier",
