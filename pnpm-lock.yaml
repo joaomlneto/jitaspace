@@ -284,6 +284,40 @@ importers:
 
   packages/esi-client-react-query:
     dependencies:
+      '@tanstack/react-query':
+        specifier: ^4.29.19
+        version: 4.29.19(react@18.2.0)
+      axios:
+        specifier: ^1.4.0
+        version: 1.4.0
+      react:
+        specifier: 18.2.0
+        version: 18.2.0
+    devDependencies:
+      '@jitaspace/eslint-config':
+        specifier: ^0.1.0
+        version: link:../eslint-config
+      '@types/node':
+        specifier: ^18.15.11
+        version: 18.15.11
+      '@types/react':
+        specifier: ^18.0.33
+        version: 18.2.12
+      eslint:
+        specifier: ^8.42.0
+        version: 8.42.0
+      orval:
+        specifier: ^6.17.0
+        version: 6.17.0(openapi-types@12.1.3)(typescript@5.1.3)
+      typescript:
+        specifier: ^5.1.3
+        version: 5.1.3
+
+  packages/esi-meta-client:
+    dependencies:
+      '@tanstack/react-query':
+        specifier: ^4.29.19
+        version: 4.29.19(react@18.2.0)
       axios:
         specifier: ^1.4.0
         version: 1.4.0
@@ -334,6 +368,9 @@ importers:
         specifier: 7.32.2
         version: 7.32.2(eslint@8.42.0)
     devDependencies:
+      '@tanstack/eslint-plugin-query':
+        specifier: ^4.29.9
+        version: 4.29.9
       eslint:
         specifier: ^8.42.0
         version: 8.42.0
@@ -2619,6 +2656,31 @@ packages:
 
   /@tabler/icons@2.22.0:
     resolution: {integrity: sha512-lOsGHqRPIKNARMWHHFkUUJH78C8ptQmUcDnumFBUI4YLRKFouKa7uAZL3ZfuH0HjDpOhsnWqUYZ7FhMCLcGpAQ==}
+    dev: false
+
+  /@tanstack/eslint-plugin-query@4.29.9:
+    resolution: {integrity: sha512-JlIZcs+zhl/ihta49iIbMCf3E8tSvGDqMIH+oItnYLOzWI7oiujXu7FYgna2E1V79KhR0PaxkPX6jHZLpvacgw==}
+    dev: true
+
+  /@tanstack/query-core@4.29.19:
+    resolution: {integrity: sha512-uPe1DukeIpIHpQi6UzIgBcXsjjsDaLnc7hF+zLBKnaUlh7jFE/A+P8t4cU4VzKPMFB/C970n/9SxtpO5hmIRgw==}
+    dev: false
+
+  /@tanstack/react-query@4.29.19(react@18.2.0):
+    resolution: {integrity: sha512-XiTIOHHQ5Cw1WUlHaD4fmVUMhoWjuNJlAeJGq7eM4BraI5z7y8WkZO+NR8PSuRnQGblpuVdjClQbDFtwxTtTUw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-native: '*'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
+    dependencies:
+      '@tanstack/query-core': 4.29.19
+      react: 18.2.0
+      use-sync-external-store: 1.2.0(react@18.2.0)
     dev: false
 
   /@tiptap/core@2.0.3(@tiptap/pm@2.0.3):
