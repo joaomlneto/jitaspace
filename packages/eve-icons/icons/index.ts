@@ -80,6 +80,8 @@ export * from "./TerminateIcon";
 export * from "./UnknownIcon";
 export * from "./WalletIcon";
 export * from "./WarningIcon";
+export * from "./WarReportIcon";
+export * from "./WarsIcon";
 export * from "./WillpowerAttributeSmallIcon";
 
 export * from "./createIconComponent";
