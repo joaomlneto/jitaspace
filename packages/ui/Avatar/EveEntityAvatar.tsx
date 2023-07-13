@@ -1,7 +1,10 @@
 import React, { memo } from "react";
 import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 
-import { useEsiName } from "@jitaspace/esi-client";
+import {
+  useEsiName,
+  type ResolvableEntityCategory,
+} from "@jitaspace/esi-client";
 import { UnknownIcon } from "@jitaspace/eve-icons";
 import { getAvatarSize } from "@jitaspace/utils";
 
@@ -17,11 +20,16 @@ import { TypeAvatar } from "./TypeAvatar";
 
 export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
   entityId: string | number;
+  category?: ResolvableEntityCategory;
 };
 
 export const EveEntityAvatar = memo(
-  ({ entityId, ...otherProps }: EveEntityAvatarProps) => {
-    const { category, loading, error } = useEsiName(entityId);
+  ({
+    entityId,
+    category: categoryHint,
+    ...otherProps
+  }: EveEntityAvatarProps) => {
+    const { category, loading, error } = useEsiName(entityId, categoryHint);
     entityId = typeof entityId === "string" ? parseInt(entityId) : entityId;
 
     if (loading) {
