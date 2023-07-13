@@ -85,6 +85,17 @@ export default function Page() {
               </Group>
             </Button>
           </Link>
+          <Link
+            href={`https://www.adam4eve.eu/location.php?id=${systemId}`}
+            target="_blank"
+          >
+            <Button>
+              <Group spacing="xs">
+                <IconExternalLink size={14} />
+                Adam4EVE
+              </Group>
+            </Button>
+          </Link>
         </Group>
         {solarSystem?.data.constellation_id && (
           <Group position="apart">

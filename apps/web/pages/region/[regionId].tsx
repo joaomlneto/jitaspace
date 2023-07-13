@@ -62,6 +62,17 @@ export default function Page() {
               </Group>
             </Button>
           </Link>
+          <Link
+            href={`https://www.adam4eve.eu/location.php?id=${regionId}`}
+            target="_blank"
+          >
+            <Button>
+              <Group spacing="xs">
+                <IconExternalLink size={14} />
+                Adam4EVE
+              </Group>
+            </Button>
+          </Link>
         </Group>
         {region?.data.description && (
           <MailMessageViewer content={region?.data.description} />
