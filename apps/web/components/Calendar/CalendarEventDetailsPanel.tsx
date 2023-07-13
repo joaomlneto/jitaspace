@@ -29,18 +29,17 @@ export function CalendarEventDetailsPanel({
   eventId,
 }: CalendarEventPanelProps) {
   const { characterId, isTokenValid, scopes } = useEsiClientContext();
-  const { data: event, isLoading: eventLoading } =
-    useGetCharactersCharacterIdCalendarEventId(
-      characterId ?? 1,
-      eventId ?? 1,
-      {},
-      {
-        swr: {
-          enabled: isTokenValid && eventId !== undefined,
-        },
+  const { data: event } = useGetCharactersCharacterIdCalendarEventId(
+    characterId ?? 1,
+    eventId ?? 1,
+    {},
+    {
+      swr: {
+        enabled: isTokenValid && eventId !== undefined,
       },
-    );
-  const { data: attendees, isLoading: attendeesLoading } =
+    },
+  );
+  const { data: attendees } =
     useGetCharactersCharacterIdCalendarEventIdAttendees(
       characterId ?? 1,
       eventId ?? 1,
