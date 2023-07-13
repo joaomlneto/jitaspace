@@ -43,7 +43,7 @@ const renderEveHref = (href: string) => {
 
   if (href.startsWith(WAR_REPORT_PREFIX)) {
     const warId = href.slice(WAR_REPORT_PREFIX.length);
-    return `https://zkillboard.com/war/${warId}`;
+    return `/war/${warId}`;
   }
 
   return href;
