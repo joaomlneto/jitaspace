@@ -1,3 +1,5 @@
+import withPWAInit from "@ducanh2912/next-pwa";
+
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
  * This is especially useful for Docker builds and Linting.
@@ -44,4 +46,8 @@ const config = {
   ],
 };
 
-export default config;
+const withPWA = withPWAInit({
+  dest: "public",
+});
+
+export default withPWA(config);

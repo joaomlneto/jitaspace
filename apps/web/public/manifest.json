@@ -1,0 +1,22 @@
+{
+  "name": "JitaSpace - EVE Online Tools",
+  "short_name": "JitaSpace",
+  "icons": [
+    {
+      "src": "/android-chrome-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#ABC2D9",
+  "background_color": "#ABC2D9",
+  "start_url": "https://www.jita.space/",
+  "display": "standalone",
+  "orientation": "portrait"
+}

@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@as-integrations/next": "^2.0.0",
+    "@ducanh2912/next-pwa": "^9.2.1",
     "@emotion/react": "^11.11.1",
     "@emotion/server": "^11.11.0",
     "@jitaspace/auth": "*",
