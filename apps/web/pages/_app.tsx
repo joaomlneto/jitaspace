@@ -128,6 +128,9 @@ export default function App({
         themeColor="#9bb4d0"
       />
 
+      {/* Progressive Web App (next-pwa) */}
+      <link rel="manifest" href="/manifest.json" />
+
       <Script
         strategy="afterInteractive"
         async
