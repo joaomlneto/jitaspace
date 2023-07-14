@@ -16,7 +16,7 @@ import {
   type GetCharactersCharacterIdSkills200SkillsItem,
   type GetUniverseTypesTypeId200,
 } from "@jitaspace/esi-client";
-import { SkillBar } from "@jitaspace/ui";
+import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
 
 import {
   usePrecomputedCategoryGroups,
@@ -130,7 +130,9 @@ const SkillTreeNavLink = memo(
             return (
               <Group key={typeId} position="apart">
                 <Group>
-                  <Text size="sm">{type.name}</Text>
+                  <TypeAnchor typeId={type.type_id}>
+                    <TypeName span typeId={type.type_id} size="sm"></TypeName>
+                  </TypeAnchor>
                 </Group>
                 <Group>
                   <Text size="xs" color="dimmed">
