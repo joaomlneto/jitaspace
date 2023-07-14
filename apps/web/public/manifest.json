@@ -3,14 +3,13 @@
   "short_name": "JitaSpace",
   "icons": [
     {
-      "src": "/android-chrome-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "src": "/logo-512-upscaled.png",
+      "sizes": "512x512",
+      "type": "image/png"
     },
     {
-      "src": "/apple-touch-icon-152x152.png",
-      "sizes": "152x152",
+      "src": "/logo-192-upscaled.png",
+      "sizes": "192x192",
       "type": "image/png"
     }
   ],
