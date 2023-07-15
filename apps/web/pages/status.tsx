@@ -32,19 +32,6 @@ export default function Page() {
     },
   );
 
-  const { data: tqClientData, isLoading: tqClientDataIsLoading } = useSwr<{
-    date: string | null;
-    build: string;
-    protected: boolean;
-    platforms: string[];
-  }>(
-    "/api/eveclient-version-tq",
-    (url: string) => fetch(url).then((res) => res.json()),
-    {
-      refreshInterval: 60 * 1000,
-    },
-  );
-
   const { data: vercelStatusData, isLoading: vercelStatusIsLoading } = useSwr<{
     page: {
       id: string;
@@ -143,13 +130,6 @@ export default function Page() {
         <Group position="apart">
           <Text>Server Version</Text>
           <Text>{tqStatus?.data.server_version}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Client Version</Text>
-          <Text>
-            {tqClientDataIsLoading && "Checking..."}
-            {!tqClientDataIsLoading && tqClientData?.build}
-          </Text>
         </Group>
         <Title order={3}>Static Data Export</Title>
         <Group position="apart">
