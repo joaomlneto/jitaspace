@@ -86,7 +86,6 @@ export default function Page() {
                 <CalendarEventList
                   events={eventsPerDate[dateString] ?? []}
                   highlightOnHover
-                  striped
                 />
               </Stack>
             );
