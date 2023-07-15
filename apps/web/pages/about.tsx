@@ -52,8 +52,8 @@ export default function Page() {
           <tbody>
             <tr>
               <td>In-game</td>
-              <td>
-                <Group spacing="xs" noWrap>
+              <td align="right">
+                <Group position="right" spacing="xs" noWrap>
                   <CharacterAvatar characterId={MY_CHARACTER_ID} size="sm" />
                   <CharacterAnchor characterId={MY_CHARACTER_ID}>
                     <CharacterName characterId={MY_CHARACTER_ID} />
@@ -63,7 +63,7 @@ export default function Page() {
             </tr>
             <tr>
               <td>Email</td>
-              <td>
+              <td align="right">
                 <Anchor component={Email} email="joao@jita.space">
                   Click to send email
                 </Anchor>
@@ -75,8 +75,9 @@ export default function Page() {
         <Text>
           Extremely grateful to all the folks who helped me out with this, both
           people that were willing to test my buggy code in the early stages, to
-          all the valuable discussions to the folks on the{" "}
+          all the valuable discussions with the folks at the{" "}
           <Anchor
+            span
             href="https://www.fuzzwork.co.uk/tweetfleet-slack-invites/"
             target="_blank"
           >
@@ -87,16 +88,94 @@ export default function Page() {
             EVE Online Discord
           </Anchor>
           . Some special mentions:
-          <List my="xs">
-            <List.Item>
-              Kenn from{" "}
-              <Anchor href="https://everef.net" target="_blank">
-                Eve Ref
-              </Anchor>
-              , for putting up with my questions in the early days, for sharing
-              his code, and for all the invaluable tips.
-            </List.Item>
-          </List>
+        </Text>
+        <List>
+          <List.Item>
+            Kenn from{" "}
+            <Anchor href="https://everef.net" target="_blank">
+              Eve Ref
+            </Anchor>
+            , for putting up with my questions, for sharing his code, and for
+            all the invaluable tips.
+          </List.Item>
+        </List>
+        <Text>
+          Written in{" "}
+          <Anchor href="https://www.typescriptlang.org/" target="_blank">
+            TypeScript
+          </Anchor>
+          , built with{" "}
+          <Anchor href="https://nextjs.org" target="_blank">
+            Next.js
+          </Anchor>{" "}
+          and hosted on{" "}
+          <Anchor href="https://vercel.com" target="_blank">
+            Vercel
+          </Anchor>
+          , powered by numerous open source libraries, such as:
+        </Text>
+        <List>
+          <List.Item>
+            <Anchor href="https://axios-http.com/" target="_blank">
+              axios
+            </Anchor>
+          </List.Item>
+          <List.Item>
+            <Anchor href="https://date-fns.org/" target="_blank">
+              date-fns
+            </Anchor>
+          </List.Item>
+          <List.Item>
+            <Anchor href="https://github.com/panva/jose" target="_blank">
+              jose
+            </Anchor>
+          </List.Item>
+          <List.Item>
+            <Anchor href="https://mantine.dev" target="_blank">
+              Mantine
+            </Anchor>
+          </List.Item>
+          <List.Item>
+            <Anchor href="https://ducanh-next-pwa.vercel.app/" target="_blank">
+              next-pwa
+            </Anchor>
+          </List.Item>
+          <List.Item>
+            <Anchor href="https://react.dev/" target="_blank">
+              React
+            </Anchor>
+          </List.Item>
+          <List.Item>
+            <Anchor href="https://swr.vercel.app/" target="_blank">
+              SWR
+            </Anchor>
+          </List.Item>
+          <List.Item>
+            <Anchor href="https://tabler-icons.io/" target="_blank">
+              Tabler Icons
+            </Anchor>
+          </List.Item>
+          <List.Item>
+            <Anchor href="https://tanstack.com/" target="_blank">
+              TanStack
+            </Anchor>
+          </List.Item>
+          <List.Item>
+            <Anchor href="https://tiptap.dev/" target="_blank">
+              Tiptap
+            </Anchor>
+          </List.Item>
+        </List>
+        …and several others!
+        <Text>
+          The source code for this website is open-source and available on{" "}
+          <Anchor
+            href="https://github.com/joaomlneto/jitaspace"
+            target="_blank"
+          >
+            GitHub
+          </Anchor>
+          .
         </Text>
         <Title order={3}>Copyright Notice</Title>
         <Text size="xs">

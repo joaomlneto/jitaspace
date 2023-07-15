@@ -20,6 +20,8 @@
     "@jitaspace/auth": "*",
     "@jitaspace/esi-client": "*",
     "@jitaspace/eve-icons": "*",
+    "@jitaspace/esi-meta-client": "*",
+    "@jitaspace/sde-client": "*",
     "@jitaspace/tiptap-eve": "*",
     "@jitaspace/ui": "*",
     "@jitaspace/utils": "*",

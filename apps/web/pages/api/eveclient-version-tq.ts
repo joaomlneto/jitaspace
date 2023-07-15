@@ -6,20 +6,25 @@ export default async function NextApiRouteHandler(
     | { error: string }
     | {
         date: string | null;
-        lastModified: string | null;
+        build: string;
+        protected: boolean;
+        platforms: string[];
       }
   >,
 ) {
   const sdeResponse = await fetch(
-    `https://eve-static-data-export.s3-eu-west-1.amazonaws.com/tranquility/sde.zip`,
-    {
-      method: "HEAD",
-    },
+    `https://binaries.eveonline.com/eveclient_TQ.json`,
   );
+
+  const body = (await sdeResponse.json()) as {
+    build: string;
+    protected: boolean;
+    platforms: string[];
+  };
 
   const response = {
     date: sdeResponse.headers.get("date"),
-    lastModified: sdeResponse.headers.get("last-modified"),
+    ...body,
   };
 
   return res

@@ -56,9 +56,15 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../../packages/esi-client
+      '@jitaspace/esi-meta-client':
+        specifier: '*'
+        version: link:../../packages/esi-meta-client
       '@jitaspace/eve-icons':
         specifier: '*'
         version: link:../../packages/eve-icons
+      '@jitaspace/sde-client':
+        specifier: '*'
+        version: link:../../packages/sde-client
       '@jitaspace/tiptap-eve':
         specifier: '*'
         version: link:../../packages/tiptap-eve

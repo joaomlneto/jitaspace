@@ -16,6 +16,9 @@ export default defineConfig({
     },
     input: {
       target: "https://esi.evetech.net/swagger.json",
+      filters: {
+        tags: ["Meta"],
+      },
     },
     hooks: {
       //afterAllFilesWrite: "prettier --write",
