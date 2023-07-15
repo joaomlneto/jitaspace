@@ -135,11 +135,10 @@ export default function App({
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
         />
+
         {/* Progressive Web App (next-pwa) */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>My awesome PWA app</title>
-        <meta name="description" content="Best PWA app in the world!" />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#9bb4d0" />
         <meta name="theme-color" content="#9bb4d0" />
