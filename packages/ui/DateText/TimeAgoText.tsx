@@ -1,7 +1,7 @@
 import { memo, useEffect } from "react";
 import { Text, type TextProps } from "@mantine/core";
 import { useForceUpdate } from "@mantine/hooks";
-import { formatDistanceStrict } from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
 
 type TimeAgoTextProps = TextProps & {
   date: Date;
@@ -29,7 +29,7 @@ export const TimeAgoText = memo(
       };
     }, [forceUpdate, updateInterval]);
 
-    const timeAgo = formatDistanceStrict(date, new Date(), {
+    const timeAgo = formatDistanceToNowStrict(date, {
       addSuffix,
       unit,
       roundingMethod,

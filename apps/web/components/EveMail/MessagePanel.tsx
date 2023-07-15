@@ -68,7 +68,7 @@ export function MessagePanel({
         <Group position="apart">
           <Group noWrap spacing="xs">
             From:
-            <EveMailSenderAvatar messageId={messageId} size="sm" radius="xl" />
+            <EveMailSenderAvatar messageId={messageId} size="sm" />
             <EveMailSenderAnchor messageId={messageId} target="_blank">
               <EveMailSenderName messageId={messageId} />
             </EveMailSenderAnchor>
@@ -100,7 +100,6 @@ export function MessagePanel({
                   <EveEntityAvatar
                     entityId={recipient.recipient_id}
                     size="sm"
-                    radius="xl"
                   />
                   {recipient.recipient_type === "mailing_list" ? (
                     <MailingListName mailingListId={recipient.recipient_id}>

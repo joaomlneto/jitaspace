@@ -55,11 +55,7 @@ export const DesktopMailboxTable = ({
                 <Popover width={250} withArrow shadow="md">
                   <Popover.Target>
                     <Group noWrap key={mail.mail_id}>
-                      <EveMailSenderAvatar
-                        messageId={mail.mail_id}
-                        size="sm"
-                        radius="xl"
-                      />
+                      <EveMailSenderAvatar messageId={mail.mail_id} size="sm" />
                       <EveMailSenderAnchor
                         messageId={mail.mail_id}
                         fw={mail.is_read ? "normal" : "bold"}

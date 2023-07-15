@@ -119,11 +119,7 @@ export function CalendarEventDetailsPanel({
         {sortedAttendees.map((attendee) => (
           <Group key={attendee.character_id} position="apart">
             <Group key={attendee.event_response} noWrap>
-              <CharacterAvatar
-                characterId={attendee.character_id}
-                size="sm"
-                radius="xl"
-              />
+              <CharacterAvatar characterId={attendee.character_id} size="sm" />
               <CharacterNameAnchor characterId={attendee.character_id} />
             </Group>
             <Badge

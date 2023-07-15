@@ -46,7 +46,6 @@ export const MobileMailboxTable = ({
                     <EveMailSenderAvatar
                       messageId={message.mail_id}
                       size="xs"
-                      radius="xl"
                     />
                     <EveMailSenderAnchor messageId={message.mail_id}>
                       <EveMailSenderName
