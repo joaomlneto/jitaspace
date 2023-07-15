@@ -13,8 +13,9 @@ import {
   CalendarEventHumanDurationText,
   CalendarEventOwnerAvatar,
   CalendarEventResponseBadge,
+  CharacterAnchor,
   CharacterAvatar,
-  CharacterNameAnchor,
+  CharacterName,
   EveEntityNameAnchor,
   FormattedDateText,
 } from "@jitaspace/ui";
@@ -120,7 +121,9 @@ export function CalendarEventDetailsPanel({
           <Group key={attendee.character_id} position="apart">
             <Group key={attendee.event_response} noWrap>
               <CharacterAvatar characterId={attendee.character_id} size="sm" />
-              <CharacterNameAnchor characterId={attendee.character_id} />
+              <CharacterAnchor characterId={attendee.character_id}>
+                <CharacterName span characterId={attendee.character_id} />
+              </CharacterAnchor>
             </Group>
             <Badge
               variant="light"

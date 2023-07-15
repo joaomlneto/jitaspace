@@ -1,6 +1,6 @@
 export * from "./AllianceAnchor";
 export * from "./CalendarEventOwnerAnchor";
-export * from "./CharacterNameAnchor";
+export * from "./CharacterAnchor";
 export * from "./CorporationAnchor";
 export * from "./EveEntityAnchor";
 export * from "./EveEntityNameAnchor";

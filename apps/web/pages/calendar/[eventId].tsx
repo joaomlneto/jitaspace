@@ -23,8 +23,9 @@ import {
   CalendarEventHumanDurationText,
   CalendarEventOwnerAvatar,
   CalendarEventResponseBadge,
+  CharacterAnchor,
   CharacterAvatar,
-  CharacterNameAnchor,
+  CharacterName,
   EveEntityNameAnchor,
   FormattedDateText,
 } from "@jitaspace/ui";
@@ -141,7 +142,9 @@ export default function Page() {
                     size="sm"
                     radius="xl"
                   />
-                  <CharacterNameAnchor characterId={attendee.character_id} />
+                  <CharacterAnchor characterId={attendee.character_id}>
+                    <CharacterName span characterId={attendee.character_id} />
+                  </CharacterAnchor>
                 </Group>
                 <Badge
                   variant="light"

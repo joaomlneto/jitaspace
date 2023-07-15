@@ -1,8 +1,8 @@
-import { memo } from "react";
+import React, { memo } from "react";
 import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
 
-import { EveEntityNameAnchor } from "./EveEntityNameAnchor";
+import { EveEntityAnchor } from "./EveEntityAnchor";
 
 export type CharacterNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
@@ -10,15 +10,17 @@ export type CharacterNameAnchorProps = AnchorProps &
     characterId?: string | number;
   };
 
-export const CharacterNameAnchor = memo(
-  ({ characterId, ...props }: CharacterNameAnchorProps) => {
+export const CharacterAnchor = memo(
+  ({ characterId, children, ...otherProps }: CharacterNameAnchorProps) => {
     return (
-      <EveEntityNameAnchor
+      <EveEntityAnchor
         entityId={characterId}
         category="character"
-        {...props}
-      />
+        {...otherProps}
+      >
+        {children}
+      </EveEntityAnchor>
     );
   },
 );
-CharacterNameAnchor.displayName = "CharacterNameAnchor";
+CharacterAnchor.displayName = "CharacterNameAnchor";
