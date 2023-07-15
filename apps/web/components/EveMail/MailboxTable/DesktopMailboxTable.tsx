@@ -36,7 +36,7 @@ export const DesktopMailboxTable = ({
     },
   );
   return (
-    <Table highlightOnHover striped {...otherProps}>
+    <Table highlightOnHover {...otherProps}>
       <thead>
         <tr>
           <th>Sender</th>

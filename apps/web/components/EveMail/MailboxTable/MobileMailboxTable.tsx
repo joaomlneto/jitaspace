@@ -35,7 +35,7 @@ export const MobileMailboxTable = ({
   const visibleMessages = data.filter((mail) => !mail.isDeleted);
 
   return (
-    <Table highlightOnHover striped {...otherProps}>
+    <Table highlightOnHover {...otherProps}>
       <tbody>
         {visibleMessages.map((message) => (
           <tr key={message.mail_id}>

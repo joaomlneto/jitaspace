@@ -25,7 +25,7 @@ export function LabelManagementTable() {
   );
 
   return (
-    <Table verticalSpacing="xs" highlightOnHover striped>
+    <Table verticalSpacing="xs" highlightOnHover>
       <thead>
         <tr>
           <th>Labels</th>
