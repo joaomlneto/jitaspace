@@ -15,15 +15,6 @@ export function MailMessageViewer({ content }: MailMessageViewerProps) {
     content,
   });
 
-  /*
-  return (
-    <Stack>
-      <RichTextEditor editor={editor} {...otherProps}>
-        <RichTextEditor.Content />
-      </RichTextEditor>
-    </Stack>
-  );*/
-
   return (
     <div
       dangerouslySetInnerHTML={{ __html: editor?.getHTML() ?? "Loading..." }}
