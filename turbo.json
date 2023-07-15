@@ -15,7 +15,7 @@
       "cache": false
     },
     "build": {
-      "dependsOn": ["^build", "^db:generate"],
+      "dependsOn": ["^build", "^db:generate", "orval:generate"],
       "outputs": [".next/**", ".expo/**"]
     },
     "lint": {},
@@ -25,6 +25,10 @@
     },
     "//#clean": {
       "cache": false
+    },
+    "orval:generate": {
+      "dependsOn": ["^build", "^db:generate"],
+      "outputs": ["generated/**", "generated/**"]
     },
     "type-check": {
       "dependsOn": ["^db:generate"],
