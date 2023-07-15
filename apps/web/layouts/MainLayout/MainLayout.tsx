@@ -1,7 +1,7 @@
 import React, { type PropsWithChildren } from "react";
 import { AppShell, createStyles, type AppShellProps } from "@mantine/core";
 
-import { LayoutFooter } from "./LayoutFooter";
+import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
 import { LayoutHeader } from "./LayoutHeader";
 
 const useStyles = createStyles(() => ({
@@ -24,7 +24,7 @@ export function MainLayout({
       {...otherProps}
     >
       {children}
-      <LayoutFooter />
+      <FooterWithLinks />
     </AppShell>
   );
 }

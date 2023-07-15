@@ -9,12 +9,25 @@ import {
   Text,
 } from "@mantine/core";
 
+const FOOTER_BREAKPOINT = "xs";
+const FOOTER_HEIGHT_DESKTOP = rem(51);
+const FOOTER_HEIGHT_MOBILE = rem(86);
+
 const useStyles = createStyles((theme) => ({
   footer: {
-    marginTop: theme.spacing.xl,
+    height: FOOTER_HEIGHT_MOBILE,
+    position: "absolute",
+    width: "100%",
+    marginTop: theme.spacing.md,
     borderTop: `${rem(1)} solid ${
       theme.colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[2]
     }`,
+    [theme.fn.largerThan(FOOTER_BREAKPOINT)]: {
+      height: FOOTER_HEIGHT_DESKTOP,
+    },
+    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
+      height: FOOTER_HEIGHT_MOBILE,
+    },
   },
 
   inner: {
@@ -24,14 +37,14 @@ const useStyles = createStyles((theme) => ({
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.md,
 
-    [theme.fn.smallerThan("xs")]: {
+    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
       flexDirection: "column-reverse",
     },
   },
 
   links: {
-    [theme.fn.smallerThan("xs")]: {
-      //marginBottom: theme.spacing.md,
+    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
+      marginBottom: theme.spacing.md,
     },
   },
 }));
