@@ -22,6 +22,13 @@ export function MainLayout({
       header={<LayoutHeader />}
       className={classes.container}
       {...otherProps}
+      styles={(_theme) => ({
+        main: {
+          margin: 0,
+          paddingLeft: 0,
+          paddingRight: 0,
+        },
+      })}
     >
       {children}
       <FooterWithLinks />
