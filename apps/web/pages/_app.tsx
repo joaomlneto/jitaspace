@@ -64,7 +64,6 @@ const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
     if (!tokenPayload) return;
     const expDate = new Date(tokenPayload.exp * 1000);
     const timeUntilExpiration = () => expDate.getTime() - new Date().getTime();
-    console.log("time until expiration:", timeUntilExpiration());
     const timer = setTimeout(() => {
       console.log(
         `updating session: token expires in ${
