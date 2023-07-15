@@ -11,8 +11,7 @@ import {
 
 const useStyles = createStyles((theme) => ({
   footer: {
-    //marginTop: rem(120),
-    marginTop: "auto",
+    marginTop: theme.spacing.xl,
     borderTop: `${rem(1)} solid ${
       theme.colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[2]
     }`,
@@ -22,25 +21,25 @@ const useStyles = createStyles((theme) => ({
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xl,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.md,
 
     [theme.fn.smallerThan("xs")]: {
-      flexDirection: "column",
+      flexDirection: "column-reverse",
     },
   },
 
   links: {
     [theme.fn.smallerThan("xs")]: {
-      marginTop: theme.spacing.md,
+      //marginBottom: theme.spacing.md,
     },
   },
 }));
 
 const links: { link: LinkProps["href"]; label: string }[] = [
   {
-    link: "/contact",
-    label: "Contact",
+    link: "/about",
+    label: "About",
   },
   {
     link: "/privacy",
@@ -69,7 +68,7 @@ export function FooterWithLinks() {
 
   return (
     <footer className={classes.footer}>
-      <Container className={classes.inner}>
+      <Container size="xl" className={classes.inner}>
         <Text color="dimmed" size="xs">
           All EVE-related materials are property of{" "}
           <Anchor
