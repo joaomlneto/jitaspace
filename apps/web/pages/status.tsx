@@ -9,6 +9,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { NextSeo } from "next-seo";
 import useSwr from "swr";
 
 import { useGetStatus as useGetTqStatus } from "@jitaspace/esi-client";
@@ -169,5 +170,10 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MainLayout>{page}</MainLayout>;
+  return (
+    <MainLayout>
+      <NextSeo title="Status" />
+      {page}
+    </MainLayout>
+  );
 };

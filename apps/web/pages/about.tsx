@@ -9,6 +9,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { NextSeo } from "next-seo";
 import { Email } from "react-obfuscate-email";
 
 import { CharacterAnchor, CharacterAvatar, CharacterName } from "@jitaspace/ui";
@@ -199,5 +200,10 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MainLayout>{page}</MainLayout>;
+  return (
+    <MainLayout>
+      <NextSeo title="About" />
+      {page}
+    </MainLayout>
+  );
 };
