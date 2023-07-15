@@ -65,13 +65,24 @@ export default function Page() {
     },
   );
 
-  const { data: tqStatus } = useGetTqStatus();
+  const { data: tqStatus } = useGetTqStatus(
+    {},
+    {
+      swr: {
+        refreshInterval: 10 * 1000,
+      },
+    },
+  );
 
-  const { data: esiStatus } = useGetMetaStatus();
+  const { data: esiStatus } = useGetMetaStatus(
+    {},
+    { query: { refetchInterval: 30 * 1000 } },
+  );
 
-  const sdeLastModifiedDate: Date | undefined = sdeData?.lastModified
-    ? new Date(sdeData.lastModified)
-    : undefined;
+  const sdeLastModifiedDate: Date | undefined = useMemo(
+    () => (sdeData?.lastModified ? new Date(sdeData.lastModified) : undefined),
+    [sdeData?.lastModified],
+  );
 
   const nonGreenEndpoints = useMemo(
     () => esiStatus?.filter((e) => e.status !== "green") ?? [],
