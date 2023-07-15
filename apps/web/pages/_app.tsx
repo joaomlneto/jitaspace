@@ -99,6 +99,31 @@ export default function App({
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
         />
+        {/* Progressive Web App (next-pwa) */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>My awesome PWA app</title>
+        <meta name="description" content="Best PWA app in the world!" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#9bb4d0" />
+        <meta name="theme-color" content="#9bb4d0" />
+        <link
+          rel="apple-touch-icon"
+          sizes="152x152"
+          href="/apple-touch-icon.png"
+        />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:url" content="https://www.jita.space" />
+        <meta name="twitter:title" content="Jita" />
+        <meta name="twitter:description" content="EVE Online Tools" />
+        <meta name="twitter:image" content="/logo.png" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Jita" />
+        <meta property="og:description" content="EVE Online Tools" />
+        <meta property="og:site_name" content="Jita" />
+        <meta property="og:url" content="https://www.jita.space" />
+        <meta property="og:image" content="/api/opengraph/image" />
       </Head>
 
       <DefaultSeo
@@ -127,9 +152,6 @@ export default function App({
         }}
         themeColor="#9bb4d0"
       />
-
-      {/* Progressive Web App (next-pwa) */}
-      <link rel="manifest" href="/manifest.json" />
 
       <Script
         strategy="afterInteractive"

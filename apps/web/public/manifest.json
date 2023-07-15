@@ -3,19 +3,20 @@
   "short_name": "JitaSpace",
   "icons": [
     {
-      "src": "/logo-512-upscaled.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    },
-    {
       "src": "/logo-192-upscaled.png",
       "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-512-upscaled.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ],
   "theme_color": "#ABC2D9",
   "background_color": "#ABC2D9",
-  "start_url": "https://www.jita.space/",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait"
 }
