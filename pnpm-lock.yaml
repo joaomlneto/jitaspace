@@ -212,6 +212,9 @@ importers:
       react-html-parser:
         specifier: ^2.0.2
         version: 2.0.2(react@18.2.0)
+      react-obfuscate-email:
+        specifier: ^1.1.2
+        version: 1.1.2(react@18.2.0)
       sharp:
         specifier: ^0.32.1
         version: 0.32.1
@@ -9091,6 +9094,15 @@ packages:
 
   /react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
+    dev: false
+
+  /react-obfuscate-email@1.1.2(react@18.2.0):
+    resolution: {integrity: sha512-P/c35IClgLtdwkzrD4bnDlfI5SAJKiINd+jJVW9ccfQ1k7l5mB69qplZfvZ4DPvRjdtYU3YeUvOLIdECzHiR6g==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=16'
+    dependencies:
+      react: 18.2.0
     dev: false
 
   /react-property@2.0.0:
