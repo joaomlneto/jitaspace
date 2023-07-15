@@ -4,6 +4,7 @@ import {
   CopyButton,
   Group,
   Loader,
+  Spoiler,
   Text,
   Title,
   Tooltip,
@@ -40,45 +41,70 @@ export function EsiClientStateCard() {
 
   return (
     <>
-      {accessToken && (
-        <CopyButton value={accessToken}>
-          {({ copied, copy }) => (
-            <Button color={copied ? "teal" : "blue"} onClick={copy}>
-              {copied ? "ESI Access Token Copied" : "Copy ESI Access Token"}
-            </Button>
-          )}
-        </CopyButton>
-      )}
-      <Group position="apart">
-        <Text>Token valid?</Text>
-        <Text>{isTokenValid ? "Yes" : "No"}</Text>
+      <Group grow>
+        {accessToken && (
+          <CopyButton value={accessToken}>
+            {({ copied, copy }) => (
+              <Button color={copied ? "teal" : "blue"} onClick={copy}>
+                {copied ? "ESI Access Token Copied" : "Copy ESI Access Token"}
+              </Button>
+            )}
+          </CopyButton>
+        )}
+        {characterId !== undefined && (
+          <CopyButton value={characterId.toString()}>
+            {({ copied, copy }) => (
+              <Button color={copied ? "teal" : "blue"} onClick={copy}>
+                {copied ? "Character ID Copied" : "Copy Character ID"}
+              </Button>
+            )}
+          </CopyButton>
+        )}
       </Group>
-      {characterId && (
+      <Group position="apart">
+        <Text>Authenticated</Text>
+
+        {characterId && (
+          <Tooltip
+            color="dark"
+            label={<Text size="sm">Character ID: {characterId}</Text>}
+          >
+            <Group>
+              <CharacterAvatar characterId={characterId} size="sm" />
+
+              <CharacterName characterId={characterId} />
+            </Group>
+          </Tooltip>
+        )}
+        {!characterId && <Text>No</Text>}
+      </Group>
+      {tokenExpirationDate && (
         <Group position="apart">
-          <Text>Authenticated as</Text>
+          <Text>Token expires</Text>
           <Group>
-            <CharacterAvatar characterId={characterId} radius="xl" />
-            <CharacterName characterId={characterId} />
-            <Text size="sm">{characterId}</Text>
+            {tokenExpirationDate && (
+              <Tooltip
+                color="dark"
+                label={<FormattedDateText date={tokenExpirationDate} />}
+              >
+                <div>
+                  <TimeAgoText span date={tokenExpirationDate} addSuffix />
+                </div>
+              </Tooltip>
+            )}
           </Group>
         </Group>
       )}
-      <Group position="apart">
-        <Text>Token expires</Text>
-        <Group>
-          {tokenExpirationDate && (
-            <Tooltip label={<FormattedDateText date={tokenExpirationDate} />}>
-              <div>
-                <TimeAgoText span date={tokenExpirationDate} addSuffix />
-              </div>
-            </Tooltip>
-          )}
-        </Group>
-      </Group>
       {scopes.length > 0 && (
         <>
           <Title order={6}>{scopes.length} scopes granted</Title>
-          <ScopesTable scopes={scopes} showRawScopeNames />
+          <Spoiler
+            maxHeight={0}
+            showLabel={<Text size="sm">Show list of scopes</Text>}
+            hideLabel={<Text size="sm">Hide list of scopes</Text>}
+          >
+            <ScopesTable scopes={scopes} showRawScopeNames />
+          </Spoiler>
         </>
       )}
     </>
