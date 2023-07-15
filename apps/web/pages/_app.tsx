@@ -18,6 +18,7 @@ import { Analytics } from "@vercel/analytics/react";
 import type { Session } from "next-auth";
 import { SessionProvider, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
+import { Workbox } from "workbox-window";
 
 import {
   EsiClientContextProvider,
