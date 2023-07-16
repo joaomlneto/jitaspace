@@ -1,10 +1,12 @@
-import React, { useMemo, type ReactElement } from "react";
+import React, { useMemo, useState, type ReactElement } from "react";
 import {
+  Anchor,
   Badge,
   ColorSwatch,
   Container,
   Group,
   Stack,
+  Switch,
   Table,
   Text,
   Title,
@@ -22,6 +24,8 @@ import { FormattedDateText } from "@jitaspace/ui";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
+  const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
+    useState<boolean>(false);
   const { data: sdeData, isLoading: sdeIsLoading } = useSwr<{
     lastModified: string;
     date: string;
@@ -73,8 +77,10 @@ export default function Page() {
   );
 
   const nonGreenEndpoints = useMemo(
-    () => esiStatus?.filter((e) => e.status !== "green") ?? [],
-    [esiStatus],
+    () =>
+      esiStatus?.filter((e) => showAllEsiEndpoints || e.status !== "green") ??
+      [],
+    [esiStatus, showAllEsiEndpoints],
   );
 
   // group esiStatus object by their tags
@@ -104,14 +110,18 @@ export default function Page() {
           <Group position="apart">
             <Text>Vercel Platform</Text>
             <Group>
-              {vercelStatusIsLoading && "Checking..."}
-              {vercelStatusData?.status.description}
+              <Anchor href="https://www.vercel-status.com">
+                {vercelStatusIsLoading && "Checking..."}
+                {vercelStatusData?.status.description}
+              </Anchor>
             </Group>
           </Group>
           <Group position="apart">
             <Text>SDE API Last Updated On</Text>
             {/* FIXME: shouldnt be hardcoded! :) */}
-            <Text>2023-06-20 09:50:05</Text>
+            <Anchor href="https://sde.jita.space">
+              <Text>2023-06-20 09:50:05</Text>
+            </Anchor>
           </Group>
         </Stack>
         <Stack spacing="xs">
@@ -152,25 +162,34 @@ export default function Page() {
                 : nonGreenEndpoints.length}
             </Text>
           </Group>
-          {sortedEsiStatusTags.map((tag) => (
-            <div key={tag}>
-              <Title order={6}>{tag}</Title>
-              <Table verticalSpacing={4} horizontalSpacing={4} fontSize="xs">
-                <tbody>
-                  {esiStatusByTag[tag]?.map((entry) => (
-                    <tr key={`${entry.method} ${entry.route}`}>
-                      <td width={1}>{entry.method.toUpperCase()}</td>
-                      <td>{entry.route}</td>
-                      <td align="right">{entry.endpoint}</td>
-                      <td align="right" width={1}>
-                        <ColorSwatch size={16} color={entry.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          ))}
+          <Stack spacing="xs">
+            <Switch
+              label="Show all ESI endpoints"
+              description="Toggle between showing all ESI endpoints or only those that are degraded"
+              checked={showAllEsiEndpoints}
+              onChange={(e) => setShowAllEsiEndpoints(e.currentTarget.checked)}
+            />
+
+            {sortedEsiStatusTags.map((tag) => (
+              <div key={tag}>
+                <Title order={6}>{tag}</Title>
+                <Table verticalSpacing={4} horizontalSpacing={4} fontSize="xs">
+                  <tbody>
+                    {esiStatusByTag[tag]?.map((entry) => (
+                      <tr key={`${entry.method} ${entry.route}`}>
+                        <td width={1}>{entry.method.toUpperCase()}</td>
+                        <td>{entry.route}</td>
+                        <td align="right">{entry.endpoint}</td>
+                        <td align="right" width={1}>
+                          <ColorSwatch size={16} color={entry.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              </div>
+            ))}
+          </Stack>
         </Stack>
       </Stack>
     </Container>
