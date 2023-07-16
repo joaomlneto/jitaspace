@@ -21,9 +21,9 @@ const MY_CHARACTER_ID = 401563624;
 export default function Page() {
   return (
     <Container size="sm">
-      <Stack>
+      <Stack spacing="xs">
         <Title>About</Title>
-        <Text>
+        <Text size="sm">
           This is just a simple website with a few tools for{" "}
           <Anchor href="https://www.eveonline.com" target="_blank">
             EVE Online
@@ -31,12 +31,12 @@ export default function Page() {
           I&apos;ve developed for fun, because I found them useful, and/or to
           learn and play with ESI and web technologies.
         </Text>
-        <Text>
+        <Text size="sm">
           If you have any feedback, questions, bug reports, feature requests or
           other suggestions, feel free to contact me through the following
           channels:
         </Text>
-        <Table highlightOnHover>
+        <Table highlightOnHover fontSize="sm">
           <tbody>
             <tr>
               <td>In-game</td>
@@ -60,35 +60,34 @@ export default function Page() {
           </tbody>
         </Table>
         <Title order={3}>Privacy Policy</Title>
-        We do not collect any of your EVE Online data, nor any personally
-        identifiable information. All data collected is anonymized — users
-        cannot be identified and are never tracked across websites. We collect
-        data for functional and statistical reasons only:
-        <Text>
-          <List>
-            <List.Item>
-              We collect the usual information (IP, browser, URL, location,
-              date) for statistical purposes. Information is processed and
-              stored by{" "}
-              <Anchor href="https://www.umami.is/">Umami Cloud</Anchor>, a
-              privacy-focused web analytics service. The information collected
-              is anonymized - users cannot be identified and are never tracked
-              across websites.
-            </List.Item>
-            <List.Item>
-              We use cookies and local storage to store your authentication and
-              preferences data.
-            </List.Item>
-            <List.Item>
-              Your EVE user information (EVE SSO access tokens, character data)
-              is not stored and is used exclusively for interactions with the
-              EVE Online Login and API services, both managed by{" "}
-              <Anchor href="https://www.ccpgames.com/">CCP Games</Anchor>.
-            </List.Item>
-          </List>
+        <Text size="sm">
+          We do not collect any of your EVE Online data, nor any personally
+          identifiable information. All data collected is anonymized — users
+          cannot be identified and are never tracked across websites. We collect
+          data for functional and statistical reasons only:
         </Text>
+        <List size="sm">
+          <List.Item>
+            We collect the usual information (IP, browser, URL, location, date)
+            for statistical purposes. Information is processed and stored by{" "}
+            <Anchor href="https://www.umami.is/">Umami Cloud</Anchor>, a
+            privacy-focused web analytics service. The information collected is
+            anonymized - users cannot be identified and are never tracked across
+            websites.
+          </List.Item>
+          <List.Item>
+            We use cookies and local storage to store your authentication and
+            preferences data.
+          </List.Item>
+          <List.Item>
+            Your EVE user information (EVE SSO access tokens, character data) is
+            not stored and is used exclusively for interactions with the EVE
+            Online Login and API services, both managed by{" "}
+            <Anchor href="https://www.ccpgames.com/">CCP Games</Anchor>.
+          </List.Item>
+        </List>
         <Title order={3}>Acknowledgements</Title>
-        <Text>
+        <Text size="sm">
           Extremely grateful to all the folks who helped me out with this, both
           people that were willing to test my buggy code in the early stages, to
           all the valuable discussions with the folks at the{" "}
@@ -105,7 +104,7 @@ export default function Page() {
           </Anchor>
           . Some special mentions:
         </Text>
-        <List>
+        <List size="sm">
           <List.Item>
             <Anchor href="https://www.hoboleaks.space" target="_blank">
               Inomares
@@ -121,7 +120,7 @@ export default function Page() {
             all the invaluable tips.
           </List.Item>
         </List>
-        <Text>
+        <Text size="sm">
           Written in{" "}
           <Anchor href="https://www.typescriptlang.org/" target="_blank">
             TypeScript
@@ -136,7 +135,7 @@ export default function Page() {
           </Anchor>
           , powered by numerous open source libraries, such as:
         </Text>
-        <List>
+        <List size="sm">
           <List.Item>
             <Anchor href="https://axios-http.com/" target="_blank">
               axios
@@ -188,8 +187,8 @@ export default function Page() {
             </Anchor>
           </List.Item>
         </List>
-        …and several others!
-        <Text>
+        <Text size="sm">…and many others!</Text>
+        <Text size="sm">
           The source code for this website is open-source and available on{" "}
           <Anchor
             href="https://github.com/joaomlneto/jitaspace"
@@ -200,7 +199,7 @@ export default function Page() {
           .
         </Text>
         <Title order={3}>Copyright Notice</Title>
-        <Text size="xs">
+        <Text size="sm">
           EVE Online, the EVE logo, EVE and all associated logos and designs are
           the intellectual property of CCP hf. All artwork, screenshots,
           characters, vehicles, storylines, world facts or other recognizable
