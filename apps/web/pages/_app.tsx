@@ -195,7 +195,7 @@ export default function App({
         src={"/analytics/script.js"}
         data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
         data-do-not-track="true"
-        data-domains="jita.space"
+        data-domains="www.jita.space"
       ></Script>
 
       <Analytics />
