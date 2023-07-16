@@ -55,10 +55,6 @@ const links: { link: LinkProps["href"]; label: string }[] = [
     label: "About",
   },
   {
-    link: "/privacy",
-    label: "Privacy",
-  },
-  {
     link: "/status",
     label: "Status",
   },
