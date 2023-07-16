@@ -32,19 +32,6 @@ export default function Page() {
           learn and play with ESI and web technologies.
         </Text>
         <Text>
-          This website respects your privacy: I do not collect any of your EVE
-          Online data, nor any personally identifiable information. All data
-          collected is completely anonymized — users cannot be identified and
-          are never tracked across websites. If your browser is configured to{" "}
-          <Anchor href="https://allaboutdnt.com/" target="_blank">
-            request to not be tracked
-          </Anchor>
-          , we will not collect any information. Check the{" "}
-          <Anchor href="/privacy">privacy policy</Anchor> for more details on
-          what we collect and why/how we use it.
-        </Text>
-        <Title order={3}>Contact</Title>
-        <Text>
           If you have any feedback, questions, bug reports, feature requests or
           other suggestions, feel free to contact me through the following
           channels:
@@ -72,7 +59,28 @@ export default function Page() {
             </tr>
           </tbody>
         </Table>
-        <Title order={3}>Credits</Title>
+        <Title order={3}>Privacy Policy</Title>
+        <Text>
+          <List>
+            <List.Item>
+              We collect the usual information (IP, browser, URL, location,
+              date) for statistical purposes. Information is processed and
+              stored by Umami Cloud, a privacy-focused web analytics service.
+              The information collected is anonymized - users cannot be
+              identified and are never tracked across websites.
+            </List.Item>
+            <List.Item>
+              We use cookies and local storage to store your authentication and
+              preferences.
+            </List.Item>
+            <List.Item>
+              Your EVE user information (EVE SSO access tokens, character data)
+              is not stored and is used exclusively for interactions with the
+              EVE Online API.
+            </List.Item>
+          </List>
+        </Text>
+        <Title order={3}>Acknowledgements</Title>
         <Text>
           Extremely grateful to all the folks who helped me out with this, both
           people that were willing to test my buggy code in the early stages, to
@@ -95,7 +103,7 @@ export default function Page() {
             <Anchor href="https://www.hoboleaks.space" target="_blank">
               Inomares
             </Anchor>
-            for all the prompt help complementing the data in ESI and SDE.
+            , for all the prompt help complementing the data in ESI and SDE.
           </List.Item>
           <List.Item>
             Kenn from{" "}
@@ -183,27 +191,6 @@ export default function Page() {
             GitHub
           </Anchor>
           .
-        </Text>
-        <Title order={3}>Privacy Policy</Title>
-        <Text>
-          <List>
-            <List.Item>
-              We collect the usual information (IP, browser, URL, location,
-              date) for statistical purposes. Information is processed and
-              stored by Umami Cloud, a privacy-focused web analytics service.
-              The information collected is anonymized - users cannot be
-              identified and are never tracked across websites.
-            </List.Item>
-            <List.Item>
-              We use cookies and local storage to store your authentication and
-              preferences.
-            </List.Item>
-            <List.Item>
-              Your EVE user information (EVE SSO access tokens, character data)
-              is not stored and is used exclusively for interactions with the
-              EVE Online API.
-            </List.Item>
-          </List>
         </Text>
         <Title order={3}>Copyright Notice</Title>
         <Text size="xs">
