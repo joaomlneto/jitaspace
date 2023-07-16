@@ -60,23 +60,30 @@ export default function Page() {
           </tbody>
         </Table>
         <Title order={3}>Privacy Policy</Title>
+        We do not collect any of your EVE Online data, nor any personally
+        identifiable information. All data collected is anonymized — users
+        cannot be identified and are never tracked across websites. We collect
+        data for functional and statistical reasons only:
         <Text>
           <List>
             <List.Item>
               We collect the usual information (IP, browser, URL, location,
               date) for statistical purposes. Information is processed and
-              stored by Umami Cloud, a privacy-focused web analytics service.
-              The information collected is anonymized - users cannot be
-              identified and are never tracked across websites.
+              stored by{" "}
+              <Anchor href="https://www.umami.is/">Umami Cloud</Anchor>, a
+              privacy-focused web analytics service. The information collected
+              is anonymized - users cannot be identified and are never tracked
+              across websites.
             </List.Item>
             <List.Item>
               We use cookies and local storage to store your authentication and
-              preferences.
+              preferences data.
             </List.Item>
             <List.Item>
               Your EVE user information (EVE SSO access tokens, character data)
               is not stored and is used exclusively for interactions with the
-              EVE Online API.
+              EVE Online Login and API services, both managed by{" "}
+              <Anchor href="https://www.ccpgames.com/">CCP Games</Anchor>.
             </List.Item>
           </List>
         </Text>
