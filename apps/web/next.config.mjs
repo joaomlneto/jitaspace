@@ -44,6 +44,10 @@ const config = {
     {
       "source": "/analytics/:match*",
       "destination": "https://analytics.umami.is/:match*", // Proxy to Umami
+    },
+    {
+      source: "/bookmarks",
+      destination: "https://github.com/esi/esi-issues/issues/1340"
     }
   ],
 };
