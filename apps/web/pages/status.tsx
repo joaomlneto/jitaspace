@@ -77,21 +77,21 @@ export default function Page() {
   );
 
   const nonGreenEndpoints = useMemo(
-    () =>
-      esiStatus?.filter((e) => showAllEsiEndpoints || e.status !== "green") ??
-      [],
-    [esiStatus, showAllEsiEndpoints],
+    () => esiStatus?.filter((e) => e.status !== "green") ?? [],
+    [esiStatus],
   );
 
   // group esiStatus object by their tags
   const esiStatusByTag = useMemo(() => {
     const result: Record<string, GetStatus200Item[]> = {};
-    Object.values(nonGreenEndpoints ?? {}).forEach((entry) => {
-      const tags = entry.tags ?? [];
-      tags.forEach((tag) => (result[tag] = [...(result[tag] ?? []), entry]));
-    });
+    (esiStatus ?? [])
+      .filter((entry) => showAllEsiEndpoints || entry.status !== "green")
+      .forEach((entry) => {
+        const tags = entry.tags ?? [];
+        tags.forEach((tag) => (result[tag] = [...(result[tag] ?? []), entry]));
+      });
     return result;
-  }, [nonGreenEndpoints]);
+  }, [esiStatus, showAllEsiEndpoints]);
 
   const sortedEsiStatusTags = useMemo(
     () =>
@@ -127,7 +127,7 @@ export default function Page() {
         <Stack spacing="xs">
           <Title order={3}>EVE Online</Title>
           <Group position="apart">
-            <Text>Tranquility - Players Online</Text>
+            <Text>Players Online</Text>
             <Group>
               {tqStatus?.data.vip && <Badge>VIP Mode</Badge>}
               <Text>{tqStatus?.data.players.toLocaleString()}</Text>
@@ -155,7 +155,7 @@ export default function Page() {
             </Text>
           </Group>
           <Group position="apart">
-            <Text>ESI Degraded Endpoints</Text>
+            <Text>Degraded ESI Endpoints</Text>
             <Text>
               {nonGreenEndpoints?.length === 0
                 ? "None"
