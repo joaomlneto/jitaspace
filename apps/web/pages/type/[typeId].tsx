@@ -30,7 +30,7 @@ import {
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { ESI_BASE_URL } from "~/config/constants";
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
 
 type PageProps = {
   ogImageUrl?: string;
@@ -101,6 +101,7 @@ export default function Page({
   return (
     <>
       <NextSeo
+        title={typeName}
         openGraph={{
           type: "article",
           title: typeName,
@@ -239,5 +240,5 @@ export default function Page({
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return <MainLayout>{page}</MainLayout>;
 };
