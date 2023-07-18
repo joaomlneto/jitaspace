@@ -125,7 +125,7 @@ export const jitaApps: Record<string, JitaApp> = {
           reason: "Update Character Contacts",
           scopes: ["esi-characters.write_contacts.v1"],
         },
-      },
+      ],
     },
   },
   fittings: {
