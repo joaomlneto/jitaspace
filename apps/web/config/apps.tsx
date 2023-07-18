@@ -184,7 +184,7 @@ export const jitaApps: Record<string, JitaApp> = {
             "esi-assets.read_corporation_assets.v1",
           ],
         },
-      ],
+      },
     },
   },
   search: {
