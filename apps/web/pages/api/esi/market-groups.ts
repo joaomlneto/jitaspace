@@ -67,6 +67,8 @@ export default async function NextApiRouteHandler(
     marketGroups: marketGroupsMap,
   };
 
+  // @ts-expect-error idk why json doesnt exist
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return,@typescript-eslint/no-unsafe-call
   return Response.json(response);
   /*
     .appendHeader(
