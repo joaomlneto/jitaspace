@@ -8,6 +8,7 @@ import {
   CalendarIcon,
   ContactsIcon,
   EveMailIcon,
+  FittingIcon,
   PeopleAndPlacesIcon,
   SkillsIcon,
   type EveIconProps,
