@@ -24,12 +24,14 @@ export const ShipFittingCardHeader = memo(
     const clipboard = useClipboard({ timeout: 2000 });
     return (
       <Group position="apart" p="xs">
-        <Group>
+        <Group noWrap>
           {shipTypeId && (
             <TypeAvatar typeId={shipTypeId} size="md" radius="xl" />
           )}
           <div>
-            <Text weight={500}>{shipName}</Text>
+            <Text weight={500} lineClamp={1}>
+              {shipName}
+            </Text>
             <TypeAnchor typeId={shipTypeId} target="_blank">
               <TypeName typeId={shipTypeId} size="xs" />
             </TypeAnchor>
