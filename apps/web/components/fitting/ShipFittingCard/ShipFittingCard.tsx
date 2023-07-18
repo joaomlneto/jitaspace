@@ -95,14 +95,31 @@ export const ShipFittingCard = memo(
         .sort((a, b) => a.flag.localeCompare(b.flag)),
     };
 
+    const serviceSlotModules = {
+      name: "Service Slots",
+      items: items
+        .filter(({ flag }) => flag.startsWith("ServiceSlot"))
+        .sort((a, b) => a.flag.localeCompare(b.flag)),
+    };
+
     const dronesSlotModules = {
-      name: "Drones",
+      name: "Drone Bay",
       items: items.filter(({ flag }) => flag === "DroneBay"),
+    };
+
+    const fightersSlotModules = {
+      name: "Fighter Bay",
+      items: items.filter(({ flag }) => flag === "FighterBay"),
     };
 
     const cargoholdSlotModules = {
       name: "Cargohold",
       items: items.filter(({ flag }) => flag === "Cargo"),
+    };
+
+    const invalidSlotModules = {
+      name: "Invalid",
+      items: items.filter(({ flag }) => flag === "Invalid"),
     };
 
     const moduleSections = [
@@ -111,8 +128,11 @@ export const ShipFittingCard = memo(
       lowSlotModules,
       rigSlotModules,
       subsystemSlotModules,
+      serviceSlotModules,
       dronesSlotModules,
+      fightersSlotModules,
       cargoholdSlotModules,
+      invalidSlotModules,
     ];
 
     return (
