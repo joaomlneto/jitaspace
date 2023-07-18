@@ -207,7 +207,7 @@ export const jitaApps: Record<string, JitaApp> = {
           reason: "Search for structures",
           scopes: ["esi-universe.read_structures.v1"],
         },
-      ],
+      },
     },
   },
 };
