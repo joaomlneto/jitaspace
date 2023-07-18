@@ -124,6 +124,27 @@ export const jitaApps: Record<string, JitaApp> = {
           reason: "Update Character Contacts",
           scopes: ["esi-characters.write_contacts.v1"],
         },
+      },
+    },
+  },
+  fittings: {
+    name: "Fittings",
+    description: "View and manage your character's ship fittings.",
+    url: "/fittings",
+    Icon: (props: EveIconProps) => React.createElement(FittingIcon, props),
+    tags: ["beta"],
+    scopes: {
+      required: [
+        {
+          reason: "Read Character Fittings",
+          scopes: ["esi-fittings.read_fittings.v1"],
+        },
+      ],
+      optional: [
+        {
+          reason: "Update Character Fittings",
+          scopes: ["esi-fittings.write_fittings.v1"],
+        },
       ],
     },
   },
