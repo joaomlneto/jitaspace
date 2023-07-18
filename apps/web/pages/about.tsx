@@ -43,7 +43,10 @@ export default function Page() {
               <td align="right">
                 <Group position="right" spacing="xs" noWrap>
                   <CharacterAvatar characterId={MY_CHARACTER_ID} size="sm" />
-                  <CharacterAnchor characterId={MY_CHARACTER_ID}>
+                  <CharacterAnchor
+                    characterId={MY_CHARACTER_ID}
+                    target="_blank"
+                  >
                     <CharacterName characterId={MY_CHARACTER_ID} />
                   </CharacterAnchor>
                 </Group>
@@ -70,10 +73,12 @@ export default function Page() {
           <List.Item>
             We collect the usual information (IP, browser, URL, location, date)
             for statistical purposes. Information is processed and stored by{" "}
-            <Anchor href="https://www.umami.is/">Umami Cloud</Anchor>, a
-            privacy-focused web analytics service. The information collected is
-            anonymized - users cannot be identified and are never tracked across
-            websites.
+            <Anchor href="https://www.umami.is/" target="_blank">
+              Umami Cloud
+            </Anchor>
+            , a privacy-focused web analytics service. The information collected
+            is anonymized - users cannot be identified and are never tracked
+            across websites.
           </List.Item>
           <List.Item>
             We use cookies and local storage to store your authentication and
@@ -83,7 +88,10 @@ export default function Page() {
             Your EVE user information (EVE SSO access tokens, character data) is
             not stored and is used exclusively for interactions with the EVE
             Online Login and API services, both managed by{" "}
-            <Anchor href="https://www.ccpgames.com/">CCP Games</Anchor>.
+            <Anchor href="https://www.ccpgames.com/" target="_blank">
+              CCP Games
+            </Anchor>
+            .
           </List.Item>
         </List>
         <Title order={3}>Acknowledgements</Title>
@@ -106,10 +114,14 @@ export default function Page() {
         </Text>
         <List size="sm">
           <List.Item>
-            <Anchor href="https://www.hoboleaks.space" target="_blank">
+            <CharacterAnchor characterId={90506825} target="_blank">
               Inomares
-            </Anchor>
-            , for all the prompt help complementing the data in ESI and SDE.
+            </CharacterAnchor>{" "}
+            for{" "}
+            <Anchor href="https://www.hoboleaks.space" target="_blank">
+              Hoboleaks
+            </Anchor>{" "}
+            and his diligence in helping fellow third party developers.
           </List.Item>
           <List.Item>
             Kenn from{" "}
@@ -118,6 +130,16 @@ export default function Page() {
             </Anchor>
             , for putting up with my questions, for sharing his code, and for
             all the invaluable tips.
+          </List.Item>
+          <List.Item>
+            <CharacterAnchor characterId={2113325640} target="_blank">
+              Nyx Viliana
+            </CharacterAnchor>{" "}
+            and the{" "}
+            <Anchor href="https://42outunis.com" target="_blank">
+              The Outuni Project
+            </Anchor>{" "}
+            incursions community, for some cool ideas and all the ISK.
           </List.Item>
         </List>
         <Text size="sm">
