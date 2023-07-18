@@ -131,7 +131,7 @@ export default function Page({
               href={`https://www.everef.net/type/${typeId}`}
               target="_blank"
             >
-              <Button>
+              <Button size="xs">
                 <Group spacing="xs">
                   <IconExternalLink size={14} />
                   Eve Ref
@@ -142,7 +142,7 @@ export default function Page({
               href={`https://evemarketer.com/types/${typeId}`}
               target="_blank"
             >
-              <Button>
+              <Button size="xs">
                 <Group spacing="xs">
                   <IconExternalLink size={14} />
                   Eve Marketer
@@ -153,7 +153,7 @@ export default function Page({
               href={`https://evetycoon.com/market/${typeId}`}
               target="_blank"
             >
-              <Button>
+              <Button size="xs">
                 <Group spacing="xs">
                   <IconExternalLink size={14} />
                   EVE Tycoon
