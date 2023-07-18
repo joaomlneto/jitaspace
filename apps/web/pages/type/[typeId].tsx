@@ -2,15 +2,7 @@ import React, { type ReactElement } from "react";
 import { type GetServerSideProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import {
-  Button,
-  Container,
-  Group,
-  List,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 import axios, { HttpStatusCode } from "axios";
 import { NextSeo } from "next-seo";
@@ -21,8 +13,6 @@ import {
   useMarketPrices,
 } from "@jitaspace/esi-client";
 import {
-  DogmaAttributeName,
-  DogmaEffectName,
   OpenMarketWindowActionIcon,
   TypeAvatar,
   TypeName,
@@ -203,35 +193,6 @@ export default function Page({
                 </Text>
               </Group>
             </>
-          )}
-          {type?.data.dogma_attributes && (
-            <Group position="apart" align="start">
-              <Text>Attributes</Text>
-              <List>
-                {type?.data.dogma_attributes?.map((attr) => (
-                  <List.Item key={attr.attribute_id}>
-                    <Group position="apart">
-                      <DogmaAttributeName attributeId={attr.attribute_id} />
-                      <Text>{attr.value}</Text>
-                    </Group>
-                  </List.Item>
-                ))}
-              </List>
-            </Group>
-          )}
-          {type?.data.dogma_effects && (
-            <Group position="apart" align="start">
-              <Text>Effects</Text>
-              <List>
-                {type?.data.dogma_effects?.map((effect) => (
-                  <List.Item key={effect.effect_id}>
-                    <Group position="apart">
-                      <DogmaEffectName effectId={effect.effect_id} />
-                    </Group>
-                  </List.Item>
-                ))}
-              </List>
-            </Group>
           )}
         </Stack>
       </Container>
