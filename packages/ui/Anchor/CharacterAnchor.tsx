@@ -6,7 +6,7 @@ import { EveEntityAnchor } from "./EveEntityAnchor";
 
 export type CharacterNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
     characterId?: string | number;
   };
 

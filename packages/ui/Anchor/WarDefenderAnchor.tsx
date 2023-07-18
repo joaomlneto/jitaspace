@@ -10,7 +10,7 @@ import { EveEntityAnchor } from "./EveEntityAnchor";
 
 export type WarDefenderAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
     warId: number;
   };
 

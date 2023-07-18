@@ -12,7 +12,7 @@ import { EveEntityAnchor } from "./EveEntityAnchor";
 
 export type EveMailSenderNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
     messageId?: number;
   };
 export const EveMailSenderAnchor = memo(

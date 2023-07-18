@@ -4,7 +4,7 @@ import { Anchor, type AnchorProps } from "@mantine/core";
 
 export type CorporationNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
     corporationId: string | number;
   };
 

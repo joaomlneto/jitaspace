@@ -12,7 +12,7 @@ export type EveEntityNameAnchorProps = Omit<
   "children" | "component" | "href"
 > &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
     entityId?: string | number;
     category?: ResolvableEntityCategory;
   };

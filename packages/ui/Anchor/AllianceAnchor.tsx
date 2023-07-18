@@ -4,7 +4,7 @@ import { Anchor, type AnchorProps } from "@mantine/core";
 
 export type AllianceNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
     allianceId: string | number;
   };
 

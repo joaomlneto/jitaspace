@@ -6,8 +6,8 @@ import { EveEntityAnchor } from "./EveEntityAnchor";
 
 export type TypeNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
-    typeId: number | string;
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+    typeId?: number | string;
   };
 
 export const TypeAnchor = memo(

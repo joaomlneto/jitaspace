@@ -11,7 +11,7 @@ import { EveEntityAnchor } from "./EveEntityAnchor";
 
 export type CalendarEventOwnerAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
     eventId?: number;
   };
 
