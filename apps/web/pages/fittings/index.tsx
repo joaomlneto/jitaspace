@@ -34,53 +34,55 @@ export default function Page() {
     },
   );
   return (
-    <Container size="sm">
+    <Container size="xs">
       <Stack>
         <Group>
           <FittingIcon width={48} />
           <Title order={1}>Fittings</Title>
         </Group>
-        {data?.data.map((fit) => (
-          <UnstyledButton
-            key={fit.fitting_id}
-            onClick={() => {
-              openContextModal({
-                modal: "fitting",
-                withCloseButton: false,
-                size: "sm",
-                padding: 0,
-                innerProps: {
-                  name: fit.name,
-                  description: fit.description,
-                  fittingId: fit.fitting_id,
-                  shipTypeId: fit.ship_type_id,
-                  items: fit.items.map((item) => ({
-                    typeId: item.type_id,
-                    flag: item.flag,
-                    quantity: item.quantity,
-                  })),
-                },
-                style: {
+        <Stack spacing="xs">
+          {data?.data.map((fit) => (
+            <UnstyledButton
+              key={fit.fitting_id}
+              onClick={() => {
+                openContextModal({
+                  modal: "fitting",
+                  withCloseButton: false,
+                  size: "sm",
                   padding: 0,
-                  margin: 0,
-                },
-              });
-            }}
-          >
-            <ShipFittingCard
-              name={fit.name}
-              description={fit.description}
-              fittingId={fit.fitting_id}
-              shipTypeId={fit.ship_type_id}
-              items={fit.items.map((item) => ({
-                typeId: item.type_id,
-                flag: item.flag,
-                quantity: item.quantity,
-              }))}
-              hideModules
-            />
-          </UnstyledButton>
-        ))}
+                  innerProps: {
+                    name: fit.name,
+                    description: fit.description,
+                    fittingId: fit.fitting_id,
+                    shipTypeId: fit.ship_type_id,
+                    items: fit.items.map((item) => ({
+                      typeId: item.type_id,
+                      flag: item.flag,
+                      quantity: item.quantity,
+                    })),
+                  },
+                  style: {
+                    padding: 0,
+                    margin: 0,
+                  },
+                });
+              }}
+            >
+              <ShipFittingCard
+                name={fit.name}
+                description={fit.description}
+                fittingId={fit.fitting_id}
+                shipTypeId={fit.ship_type_id}
+                items={fit.items.map((item) => ({
+                  typeId: item.type_id,
+                  flag: item.flag,
+                  quantity: item.quantity,
+                }))}
+                hideModules
+              />
+            </UnstyledButton>
+          ))}
+        </Stack>
         {false && (
           <JsonInput value={JSON.stringify(data, null, 2)} readOnly autosize />
         )}
