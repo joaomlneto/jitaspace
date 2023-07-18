@@ -1,12 +1,14 @@
-import { LoginModal } from "~/components/Modals/LoginModal";
-import { ManageMailLabelsModal } from "~/components/Modals/ManageMailLabelsModal";
 import { ComposeMailModal } from "./ComposeMailModal";
+import { FittingModal } from "./FittingModal";
+import { LoginModal } from "./LoginModal";
+import { ManageMailLabelsModal } from "./ManageMailLabelsModal";
 import { ViewCalendarEventModal } from "./ViewCalendarEventModal";
 import { ViewMailingListSubscriptionsModal } from "./ViewMailingListSubscriptionsModal";
 import { ViewMailMessageModal } from "./ViewMailMessageModal";
 
 const contextModals = {
   composeMail: ComposeMailModal,
+  fitting: FittingModal,
   login: LoginModal,
   manageMailLabels: ManageMailLabelsModal,
   viewCalendarEvent: ViewCalendarEventModal,
