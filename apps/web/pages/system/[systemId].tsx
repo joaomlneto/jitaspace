@@ -6,6 +6,7 @@ import {
   Button,
   Container,
   Group,
+  JsonInput,
   List,
   Stack,
   Text,
@@ -18,6 +19,7 @@ import {
   useSolarSystemCostIndices,
 } from "@jitaspace/esi-client";
 import { IndustryIcon } from "@jitaspace/eve-icons";
+import { useGetSolarSystemById } from "@jitaspace/sde-client";
 import {
   AsteroidBeltName,
   ConstellationName,
@@ -27,6 +29,13 @@ import {
   SetAutopilotDestinationActionIcon,
   SolarSystemName,
   SolarSystemSecurityStatusBadge,
+  StarAnchor,
+  StarAvatar,
+  StargateAvatar,
+  StargateDestinationAnchor,
+  StargateName,
+  StarName,
+  StationAnchor,
   StationAvatar,
   StationName,
 } from "@jitaspace/ui";
@@ -40,6 +49,7 @@ export default function Page() {
   const { data: solarSystem } = useGetUniverseSystemsSystemId(
     parseInt(systemId),
   );
+  const { data: sdeSolarSystem } = useGetSolarSystemById(parseInt(systemId));
   const { data: solarSystemCostIndicesData } = useSolarSystemCostIndices();
 
   return (
@@ -54,6 +64,11 @@ export default function Page() {
             </Group>
           </Title>
         </Group>
+        <JsonInput
+          value={JSON.stringify(sdeSolarSystem, null, 2)}
+          readOnly
+          autosize
+        />
         <Group>
           <Link
             href={`https://evemaps.dotlan.net/system/${systemId}`}
@@ -113,8 +128,82 @@ export default function Page() {
             </Group>
           </Group>
         )}
+        <Group position="apart">
+          <Text>Security Class</Text>
+          <Text>{solarSystem?.data.security_class}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Border System</Text>
+          <Text>{sdeSolarSystem?.border ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Corridor System</Text>
+          <Text>{sdeSolarSystem?.corridor ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Fringe System</Text>
+          <Text>{sdeSolarSystem?.fringe ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Trading Hub</Text>
+          <Text>{sdeSolarSystem?.hub ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>International System</Text>
+          <Text>{sdeSolarSystem?.international ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Regional System</Text>
+          <Text>{sdeSolarSystem?.regional ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Luminosity</Text>
+          <Text>{sdeSolarSystem?.luminosity}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Radius</Text>
+          <Text>{sdeSolarSystem?.radius}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Position</Text>
+          <Text>
+            {Object.entries(sdeSolarSystem?.center ?? {})
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(", ")}
+          </Text>
+        </Group>
+        <Title order={4}>Stations</Title>
+        <Stack spacing="xs">
+          {solarSystem?.data.stations?.map((stationId) => (
+            <Group key={stationId} spacing="xs">
+              <StationAvatar size="sm" stationId={stationId} />
+              <StationAnchor stationId={stationId}>
+                <StationName span stationId={stationId} />
+              </StationAnchor>
+            </Group>
+          ))}
+        </Stack>
+        <Title order={4}>Stargates</Title>
+        <Stack spacing="xs">
+          {solarSystem?.data.stargates?.map((stargateId) => (
+            <Group key={stargateId} spacing="xs">
+              <StargateAvatar size="sm" stargateId={stargateId} />
+              <StargateDestinationAnchor stargateId={stargateId}>
+                <StargateName span stargateId={stargateId} />
+              </StargateDestinationAnchor>
+            </Group>
+          ))}
+        </Stack>
         <Title order={4}>Celestials</Title>
         <Stack spacing="xs">
+          {solarSystem?.data.star_id && (
+            <Group>
+              <StarAvatar starId={solarSystem.data.star_id} size="sm" />
+              <StarAnchor starId={solarSystem.data.star_id}>
+                <StarName span starId={solarSystem.data.star_id} />
+              </StarAnchor>
+            </Group>
+          )}
           {solarSystem?.data.planets?.map(
             ({ planet_id, moons, asteroid_belts }) => (
               <Stack spacing="xs" key={planet_id}>
@@ -141,17 +230,6 @@ export default function Page() {
               </Stack>
             ),
           )}
-        </Stack>
-        <Title order={4}>Stations</Title>
-        <Stack spacing="xs">
-          {solarSystem?.data.stations?.map((stationId) => (
-            <Group key={stationId} spacing="xs">
-              <StationAvatar size="sm" stationId={stationId} />
-              <Anchor component={Link} href={`/station/${stationId}`}>
-                <StationName span stationId={stationId} />
-              </Anchor>
-            </Group>
-          ))}
         </Stack>
         {Object.hasOwn(solarSystemCostIndicesData, systemId) && (
           <>
