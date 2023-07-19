@@ -1,8 +1,4 @@
-import Axios from "axios";
-
-export const AXIOS_INSTANCE = Axios.create({
-  baseURL: "https://sde.jita.space/latest",
-});
+const baseURL = "https://sde.jita.space/latest";
 
 type CustomClient<T> = (data: {
   url: string;
@@ -15,11 +11,14 @@ type CustomClient<T> = (data: {
 
 export const useCustomClient = <T>(): CustomClient<T> => {
   return async ({ url, method, params, data }) => {
-    const response = await fetch(url + new URLSearchParams(params), {
-      method,
-      //headers: { ...data?.headers, Authorization: `Bearer ${token}` },
-      ...(data ? { body: JSON.stringify(data) } : {}),
-    });
+    const response = await fetch(
+      `${baseURL}${url}` + new URLSearchParams(params),
+      {
+        method,
+        //headers: { ...data?.headers },
+        ...(data ? { body: JSON.stringify(data) } : {}),
+      },
+    );
 
     return response.json();
   };
