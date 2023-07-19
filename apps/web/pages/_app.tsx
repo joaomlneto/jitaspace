@@ -194,7 +194,7 @@ export default function App({
         // /analytics is a proxy to the umami server - set in next.config.mjs
         src={"/analytics/script.js"}
         data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-        data-do-not-track="true"
+        //data-do-not-track="true"
         data-domains="www.jita.space"
       ></Script>
 
