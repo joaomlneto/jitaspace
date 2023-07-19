@@ -20,6 +20,8 @@ export * from "./PlanetName";
 export * from "./RaceName";
 export * from "./RegionName";
 export * from "./SolarSystemName";
+export * from "./StargateName";
+export * from "./StarName";
 export * from "./StationName";
 export * from "./StructureName";
 export * from "./TypeName";

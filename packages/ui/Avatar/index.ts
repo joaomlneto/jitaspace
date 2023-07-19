@@ -10,6 +10,7 @@ export * from "./PlanetAvatar";
 export * from "./RaceAvatar";
 export * from "./SolarSystemAvatar";
 export * from "./StarAvatar";
+export * from "./StargateAvatar";
 export * from "./StationAvatar";
 export * from "./StructureAvatar";
 export * from "./TypeAvatar";
