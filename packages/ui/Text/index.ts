@@ -17,6 +17,7 @@ export * from "./LabelName";
 export * from "./MailingListName";
 export * from "./MoonName";
 export * from "./PlanetName";
+export * from "./Position3DText";
 export * from "./RaceName";
 export * from "./RegionName";
 export * from "./SolarSystemName";
