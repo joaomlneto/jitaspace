@@ -545,6 +545,9 @@ importers:
       '@jitaspace/eve-icons':
         specifier: '*'
         version: link:../eve-icons
+      '@jitaspace/sde-client':
+        specifier: '*'
+        version: link:../sde-client
       '@jitaspace/utils':
         specifier: '*'
         version: link:../utils

@@ -16,6 +16,7 @@
     "@emotion/server": "^11.11.0",
     "@jitaspace/esi-client": "*",
     "@jitaspace/eve-icons": "*",
+    "@jitaspace/sde-client": "*",
     "@jitaspace/utils": "*",
     "@mantine/carousel": "^6.0.13",
     "@mantine/core": "^6.0.13",
