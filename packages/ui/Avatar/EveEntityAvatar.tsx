@@ -21,11 +21,13 @@ import { TypeAvatar } from "./TypeAvatar";
 export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
   entityId?: string | number;
   category?: ResolvableEntityCategory;
+  variation?: string;
 };
 
 export const EveEntityAvatar = memo(
   ({
     entityId,
+    variation,
     category: categoryHint,
     ...otherProps
   }: EveEntityAvatarProps) => {
@@ -68,7 +70,9 @@ export const EveEntityAvatar = memo(
     }
 
     if (category === "inventory_type") {
-      return <TypeAvatar typeId={entityId} {...otherProps} />;
+      return (
+        <TypeAvatar typeId={entityId} variation={variation} {...otherProps} />
+      );
     }
 
     if (category === "solar_system") {
