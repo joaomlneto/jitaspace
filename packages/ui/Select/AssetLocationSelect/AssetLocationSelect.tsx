@@ -9,7 +9,7 @@ export type AssetLocationSelectItemProps = Omit<SelectProps, "data">;
 
 export const AssetLocationSelect = memo(
   ({ ...otherProps }: AssetLocationSelectItemProps) => {
-    const { locations, isLoading } = useCharacterAssets();
+    const { locations } = useCharacterAssets();
     const [value, onChange] = useState<string | null>();
 
     const cache = useEsiNamesCache();
