@@ -1,4 +1,4 @@
-import React, { type ReactElement } from "react";
+import React, { useMemo, useState, type ReactElement } from "react";
 import {
   Container,
   Group,
@@ -15,11 +15,13 @@ import {
   useGetCharactersCharacterIdFittings,
 } from "@jitaspace/esi-client";
 import { FittingIcon } from "@jitaspace/eve-icons";
+import { EveEntitySelect } from "@jitaspace/ui";
 
 import { EsiCharacterShipFittingCard } from "~/components/fitting";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
+  const [selectedShipType, setSelectedShipType] = useState<string | null>(null);
   const { characterId, isTokenValid, scopes } = useEsiClientContext();
   const { data } = useGetCharactersCharacterIdFittings(
     characterId ?? 0,
@@ -33,6 +35,22 @@ export default function Page() {
       },
     },
   );
+
+  const shipTypeIds = useMemo(
+    () => [...new Set(data?.data.map((fitting) => fitting.ship_type_id) ?? [])],
+    [data?.data],
+  );
+
+  const filteredFittings = useMemo(
+    () =>
+      data?.data.filter(
+        (fit) =>
+          selectedShipType === null ||
+          fit.ship_type_id === parseInt(selectedShipType),
+      ) ?? [],
+    [data?.data, selectedShipType],
+  );
+
   return (
     <Container size="xs">
       <Stack>
@@ -40,8 +58,22 @@ export default function Page() {
           <FittingIcon width={48} />
           <Title order={1}>Fittings</Title>
         </Group>
+        <Group>
+          <EveEntitySelect
+            size="xs"
+            label="Filter by ship type"
+            entityIds={shipTypeIds.map((id) => ({
+              id,
+            }))}
+            searchable
+            allowDeselect
+            clearable
+            value={selectedShipType}
+            onChange={setSelectedShipType}
+          />
+        </Group>
         <Stack spacing="xs">
-          {data?.data.map((fit) => (
+          {filteredFittings.map((fit) => (
             <UnstyledButton
               key={fit.fitting_id}
               onClick={() => {
