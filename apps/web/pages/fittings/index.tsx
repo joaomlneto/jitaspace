@@ -16,7 +16,7 @@ import {
 } from "@jitaspace/esi-client";
 import { FittingIcon } from "@jitaspace/eve-icons";
 
-import { ShipFittingCard } from "~/components/fitting";
+import { EsiCharacterShipFittingCard } from "~/components/fitting";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
@@ -68,16 +68,8 @@ export default function Page() {
                 });
               }}
             >
-              <ShipFittingCard
-                name={fit.name}
-                description={fit.description}
+              <EsiCharacterShipFittingCard
                 fittingId={fit.fitting_id}
-                shipTypeId={fit.ship_type_id}
-                items={fit.items.map((item) => ({
-                  typeId: item.type_id,
-                  flag: item.flag,
-                  quantity: item.quantity,
-                }))}
                 hideModules
               />
             </UnstyledButton>
