@@ -6,7 +6,6 @@ import {
   Button,
   Container,
   Group,
-  JsonInput,
   List,
   Stack,
   Text,
@@ -22,11 +21,12 @@ import { IndustryIcon } from "@jitaspace/eve-icons";
 import { useGetSolarSystemById } from "@jitaspace/sde-client";
 import {
   AsteroidBeltName,
-  ConstellationName,
   MoonName,
   PlanetAvatar,
   PlanetName,
+  Position3DText,
   SetAutopilotDestinationActionIcon,
+  SolarSystemBreadcrumbs,
   SolarSystemName,
   SolarSystemSecurityStatusBadge,
   StarAnchor,
@@ -64,11 +64,7 @@ export default function Page() {
             </Group>
           </Title>
         </Group>
-        <JsonInput
-          value={JSON.stringify(sdeSolarSystem, null, 2)}
-          readOnly
-          autosize
-        />
+        <SolarSystemBreadcrumbs solarSystemId={systemId} />
         <Group>
           <Link
             href={`https://evemaps.dotlan.net/system/${systemId}`}
@@ -111,66 +107,6 @@ export default function Page() {
               </Group>
             </Button>
           </Link>
-        </Group>
-        {solarSystem?.data.constellation_id && (
-          <Group position="apart">
-            <Text>Constellation</Text>
-            <Group>
-              <Anchor
-                component={Link}
-                href={`/constellation/${solarSystem.data.constellation_id}`}
-              >
-                <ConstellationName
-                  span
-                  constellationId={solarSystem?.data.constellation_id}
-                />
-              </Anchor>
-            </Group>
-          </Group>
-        )}
-        <Group position="apart">
-          <Text>Security Class</Text>
-          <Text>{solarSystem?.data.security_class}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Border System</Text>
-          <Text>{sdeSolarSystem?.border ? "Yes" : "No"}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Corridor System</Text>
-          <Text>{sdeSolarSystem?.corridor ? "Yes" : "No"}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Fringe System</Text>
-          <Text>{sdeSolarSystem?.fringe ? "Yes" : "No"}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Trading Hub</Text>
-          <Text>{sdeSolarSystem?.hub ? "Yes" : "No"}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>International System</Text>
-          <Text>{sdeSolarSystem?.international ? "Yes" : "No"}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Regional System</Text>
-          <Text>{sdeSolarSystem?.regional ? "Yes" : "No"}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Luminosity</Text>
-          <Text>{sdeSolarSystem?.luminosity}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Radius</Text>
-          <Text>{sdeSolarSystem?.radius}</Text>
-        </Group>
-        <Group position="apart">
-          <Text>Position</Text>
-          <Text>
-            {Object.entries(sdeSolarSystem?.center ?? {})
-              .map(([k, v]) => `${k}: ${v}`)
-              .join(", ")}
-          </Text>
         </Group>
         <Title order={4}>Stations</Title>
         <Stack spacing="xs">
@@ -251,6 +187,71 @@ export default function Page() {
             />
           </>
         )}
+        <Group position="apart">
+          <Text>Security Class</Text>
+          <Text>{solarSystem?.data.security_class}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Luminosity</Text>
+          <Text>{sdeSolarSystem?.luminosity}</Text>
+        </Group>
+        {sdeSolarSystem?.radius && (
+          <Group position="apart">
+            <Text>Radius</Text>
+            <Text>{sdeSolarSystem?.radius.toLocaleString()} m</Text>
+          </Group>
+        )}
+        <Group position="apart">
+          <Text>Border System</Text>
+          <Text>{sdeSolarSystem?.border ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Corridor System</Text>
+          <Text>{sdeSolarSystem?.corridor ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Fringe System</Text>
+          <Text>{sdeSolarSystem?.fringe ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Trading Hub</Text>
+          <Text>{sdeSolarSystem?.hub ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>International System</Text>
+          <Text>{sdeSolarSystem?.international ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Regional System</Text>
+          <Text>{sdeSolarSystem?.regional ? "Yes" : "No"}</Text>
+        </Group>
+        <Group position="apart">
+          <Text>Position</Text>
+          <Position3DText
+            size="xs"
+            position={
+              sdeSolarSystem?.center as [number, number, number] | undefined
+            }
+          />
+        </Group>
+        <Group position="apart">
+          <Text>Min Coordinates</Text>
+          <Position3DText
+            size="xs"
+            position={
+              sdeSolarSystem?.min as [number, number, number] | undefined
+            }
+          />
+        </Group>
+        <Group position="apart">
+          <Text>Max Coordinates</Text>
+          <Position3DText
+            size="xs"
+            position={
+              sdeSolarSystem?.max as [number, number, number] | undefined
+            }
+          />
+        </Group>
       </Stack>
     </Container>
   );
