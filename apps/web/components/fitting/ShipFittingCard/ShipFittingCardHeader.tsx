@@ -25,9 +25,7 @@ export const ShipFittingCardHeader = memo(
     return (
       <Group position="apart" p="xs">
         <Group noWrap>
-          {shipTypeId && (
-            <TypeAvatar typeId={shipTypeId} size="md" radius="xl" />
-          )}
+          {shipTypeId && <TypeAvatar typeId={shipTypeId} size="md" />}
           <div>
             <Text weight={500} lineClamp={1}>
               {shipName}
