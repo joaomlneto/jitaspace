@@ -15,6 +15,7 @@ import {
 import { IconExternalLink } from "@tabler/icons-react";
 
 import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
+import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
   AllianceName,
@@ -33,20 +34,6 @@ export default function Page() {
   const { data: corporation } = useGetCorporationsCorporationId(
     parseInt(corporationId),
   );
-
-  const sanitizeDescription = (str: string): string => {
-    // FIXME: IS THIS CORRECT? THIS WILL CONSIDER THAT THE WHOLE THING IS A "UNICODE BLOCK".
-    //        THIS MIGHT BREAK BADLY IF MULTIPLE BLOCKS ARE ALLOWED TO EXIST WITHIN THE STRING!
-    if (str.startsWith("u'") && str.endsWith("'")) {
-      str = str.slice(2, -1);
-      str = str.replaceAll(/\\x[0-9a-fA-F]{2}/g, (str) => {
-        const charCode = parseInt(str.slice(2), 16);
-        return String.fromCharCode(charCode);
-      });
-      str = str.replaceAll(/\\'/g, "'");
-    }
-    return str;
-  };
 
   return (
     <Container size="sm">
@@ -127,7 +114,7 @@ export default function Page() {
               <MailMessageViewer
                 content={
                   corporation?.data.description
-                    ? sanitizeDescription(corporation?.data.description)
+                    ? sanitizeFormattedEveString(corporation?.data.description)
                     : "No description"
                 }
               />

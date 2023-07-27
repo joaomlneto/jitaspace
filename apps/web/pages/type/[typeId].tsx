@@ -12,6 +12,7 @@ import {
   useGetUniverseTypesTypeId,
   useMarketPrices,
 } from "@jitaspace/esi-client";
+import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   OpenMarketWindowActionIcon,
   TypeAvatar,
@@ -75,19 +76,6 @@ export default function Page({
   const { data: type } = useGetUniverseTypesTypeId(parseInt(typeId));
   const { data: marketPrices } = useMarketPrices();
 
-  const sanitizeDescription = (str: string): string => {
-    // FIXME: IS THIS CORRECT? THIS WILL CONSIDER THAT THE WHOLE EMAIL IS A "UNICODE BLOCK".
-    //        THIS MIGHT BREAK BADLY IF MULTIPLE BLOCKS ARE ALLOWED TO EXIST WITHIN THE STRING!
-    if (str.startsWith("u'") && str.endsWith("'")) {
-      str = str.slice(2, -1);
-      str = str.replaceAll(/\\x[0-9a-fA-F]{2}/g, (str) => {
-        const charCode = parseInt(str.slice(2), 16);
-        return String.fromCharCode(charCode);
-      });
-      str = str.replaceAll(/\\'/g, "'");
-    }
-    return str;
-  };
   return (
     <>
       <NextSeo
@@ -165,7 +153,7 @@ export default function Page({
             <MailMessageViewer
               content={
                 type.data.description
-                  ? sanitizeDescription(type.data.description)
+                  ? sanitizeFormattedEveString(type.data.description)
                   : "No description"
               }
             />

@@ -23,9 +23,6 @@ importers:
       eslint:
         specifier: ^8.39.0
         version: 8.42.0
-      jitaspace:
-        specifier: 'link:'
-        version: 'link:'
       prettier:
         specifier: ^2.8.7
         version: 2.8.8
