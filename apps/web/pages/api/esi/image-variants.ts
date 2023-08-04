@@ -25,5 +25,12 @@ export default async function NextApiRouteHandler(
 
   return res
     .appendHeader("Cache-Control", "public, max-age=86400")
+    .appendHeader("Access-Control-Allow-Origin", "*")
+    .appendHeader(
+      "Access-Control-Allow-Methods",
+      "POST, PUT, DELETE, GET, OPTIONS",
+    )
+    .appendHeader("Access-Control-Request-Method", "*")
+    .appendHeader("Access-Control-Allow-Headers", "Content-Type")
     .json(response);
 }
