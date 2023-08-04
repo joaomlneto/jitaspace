@@ -28,9 +28,8 @@ export default async function NextApiRouteHandler(
     .appendHeader("Access-Control-Allow-Origin", "*")
     .appendHeader(
       "Access-Control-Allow-Methods",
-      "POST, PUT, DELETE, GET, OPTIONS",
+      "POST, PUT, DELETE, GET, HEAD, OPTIONS",
     )
-    .appendHeader("Access-Control-Request-Method", "*")
     .appendHeader("Access-Control-Allow-Headers", "Content-Type")
     .json(response);
 }
