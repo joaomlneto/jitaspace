@@ -23,6 +23,10 @@ export default async function NextApiRouteHandler(
     `https://images.evetech.net/${query.data.category}/${query.data.id}`,
   ).then((res) => res.json())) as string[];
 
+  /***********************************************************
+   * ATTENTION: THIS API IS BEING USED BY CPPC T'AMBER!!!     *
+   *            LET HIM KNOW IF THERE ARE BREAKING CHANGES!!! *
+   ************************************************************/
   return res
     .appendHeader("Cache-Control", "public, max-age=86400")
     .appendHeader("Access-Control-Allow-Origin", "*")
