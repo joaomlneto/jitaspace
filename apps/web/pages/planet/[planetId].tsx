@@ -5,6 +5,7 @@ import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import { useGetUniversePlanetsPlanetId } from "@jitaspace/esi-client";
 import {
+  Position3DText,
   SolarSystemName,
   SolarSystemSecurityStatusBadge,
   TypeAvatar,
@@ -44,6 +45,15 @@ export default function Page() {
           <Anchor component={Link} href={`/type/${planet?.data.type_id}`}>
             <TypeName span typeId={planet?.data.type_id} />
           </Anchor>
+        </Group>
+        <Group position="apart">
+          <Text>Position</Text>
+          <Position3DText
+            size="xs"
+            position={
+              planet?.data.position as [number, number, number] | undefined
+            }
+          />
         </Group>
       </Stack>
     </Container>
