@@ -1,11 +1,11 @@
 import useSWRInfinite from "swr/infinite";
 
-import { ESI_BASE_URL } from "~/config/constants";
 import {
   getGetCharactersCharacterIdMailKey,
   type GetCharactersCharacterIdMail200Item,
   type GetCharactersCharacterIdMailParams,
 } from "../client";
+import { ESI_BASE_URL } from "../config/constants";
 import { useEsiClientContext } from "./useEsiClientContext";
 
 type useCharacterMailsProps = {

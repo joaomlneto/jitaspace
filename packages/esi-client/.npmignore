@@ -1,7 +1,7 @@
-src/client/
-src/config/
-src/context/
-src/hooks/
-src/scopes/
-src/utils/
+client/
+config/
+context/
+hooks/
+scopes/
+utils/
 index.ts

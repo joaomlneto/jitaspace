@@ -1,11 +1,11 @@
 import useSWRInfinite from "swr/infinite";
 
-import { ESI_BASE_URL } from "~/config/constants";
 import {
   getGetCharactersCharacterIdCalendarKey,
   type GetCharactersCharacterIdCalendar200Item,
   type GetCharactersCharacterIdCalendarParams,
 } from "../client";
+import { ESI_BASE_URL } from "../config/constants";
 import { useEsiClientContext } from "./useEsiClientContext";
 
 export function useCharacterCalendar() {

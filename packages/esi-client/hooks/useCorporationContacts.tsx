@@ -1,12 +1,12 @@
 import useSWRInfinite from "swr/infinite";
 
-import { ESI_BASE_URL } from "~/config/constants";
 import {
   getGetCorporationsCorporationIdContactsKey,
   useGetCharactersCharacterId,
   useGetCorporationsCorporationIdContactsLabels,
   type GetCorporationsCorporationIdContacts200Item,
 } from "../client";
+import { ESI_BASE_URL } from "../config/constants";
 import { useEsiClientContext } from "./useEsiClientContext";
 
 export function useCorporationContacts() {

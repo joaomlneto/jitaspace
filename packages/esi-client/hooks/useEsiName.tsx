@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { createCache, useCache } from "@react-hook/cache";
+import React, { useEffect, useMemo, useState } from "react";
+import { createCache, useCache, type CacheState } from "@react-hook/cache";
 
 import {
   getAlliancesAllianceId,
@@ -21,6 +21,11 @@ import {
   corporationIdRanges,
   isIdInRanges,
 } from "../utils";
+
+type EsiNameCacheValue = {
+  name: string;
+  category: GetCharactersCharacterIdSearchCategoriesItem;
+};
 
 export type ResolvableEntityCategory =
   GetCharactersCharacterIdSearchCategoriesItem;
@@ -108,6 +113,10 @@ const resolveNameOfKnownCategory = async (
   }
 };
 
+// <EsiNameCacheValue, Error, [options: {
+//     category?: GetCharactersCharacterIdSearchCategoriesItem | undefined;
+// }]>
+
 // Creates a fetch cache w/ a max of 10000 entries for JSON requests
 const fetchCache = createCache(
   async (id, options: { category?: ResolvableEntityCategory }) => {
@@ -133,7 +142,7 @@ const fetchCache = createCache(
     // otherwise, fetch it
     return { category, name: await resolveNameOfKnownCategory(id, category) };
   },
-  10000,
+  100000,
 );
 
 export function useEsiName(
@@ -170,4 +179,87 @@ export function useEsiName(
 
 export function useEsiNamesCache() {
   return fetchCache.readAll();
+}
+
+export function useEsiNamePrefetch(
+  entries: {
+    id: number | string;
+    category?: ResolvableEntityCategory;
+  }[],
+) {
+  useEffect(() => {
+    entries.forEach((entry) => {
+      void fetchCache.load(entry.id.toString(), { category: entry.category });
+    });
+  }, [entries]);
+}
+
+export function useEsiNames(
+  names: {
+    id: number;
+    category?: ResolvableEntityCategory;
+  }[],
+) {
+  const ids = useMemo(() => names.map((name) => name.id), [names]);
+  const keys = useMemo(() => ids.map((id) => id.toString()), [ids]);
+  const [state, setState] = useState<{
+    keys: string[];
+    cache: typeof fetchCache;
+    current: {
+      [key: string]: CacheState<EsiNameCacheValue, Error> | undefined;
+    };
+    //current: Record<string, CacheState<EsiNameCacheValue, Error> | undefined>;
+  }>(() => {
+    const current: {
+      [key: string]: CacheState<EsiNameCacheValue, Error> | undefined;
+    } = {};
+    keys.forEach((key) => (current[key] = fetchCache.read(key)));
+    console.log("initial current:", current);
+    return { keys, cache: fetchCache, current };
+  });
+
+  useEffect(() => {
+    let didUnsubscribe = false;
+
+    const checkForUpdates = (
+      value: CacheState<EsiNameCacheValue, Error> | undefined,
+    ) => {
+      console.log("got update:", value);
+      if (didUnsubscribe) return;
+      if (value === undefined) return;
+      setState((prev) => {
+        console.log("setting state");
+        // Bails if our key has changed from under us
+        if (!value?.id || !ids.includes(value.id)) return prev;
+        // Bails if our value hasn't changed
+        if (prev.current[value.id]?.value === value.value) return prev;
+        return {
+          ...prev,
+          current: {
+            ...prev.current,
+            [value.id]: value,
+          },
+        };
+      });
+    };
+
+    keys.forEach((key) => {
+      console.log("subscribing to updates for key", key);
+      state.cache.subscribe(key, checkForUpdates);
+    });
+
+    keys.forEach((key) => {
+      console.log("checking for updates to key", key);
+      checkForUpdates(state.cache.read(key));
+    });
+
+    return () => {
+      didUnsubscribe = true;
+      keys.forEach((key) => {
+        state.cache.unsubscribe(key, checkForUpdates);
+      });
+    };
+  }, [ids, keys, state.cache]);
+
+  return state;
 }

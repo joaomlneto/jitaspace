@@ -51,7 +51,9 @@ export default function Page() {
           <Position3DText
             size="xs"
             position={
-              planet?.data.position as [number, number, number] | undefined
+              (planet?.data.position
+                ? Object.values(planet?.data.position)
+                : undefined) as [number, number, number] | undefined
             }
           />
         </Group>
