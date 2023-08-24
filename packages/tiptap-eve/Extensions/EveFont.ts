@@ -1,7 +1,7 @@
 import { getMarkAttributes, Mark, mergeAttributes } from "@tiptap/core";
 
 const fromEveColor = (eveColor: string): string => {
-  if (eveColor.length === 9) {
+  if (eveColor && eveColor.length === 9) {
     return `#${eveColor.slice(3)}`;
   }
   return eveColor;
@@ -43,6 +43,7 @@ export const EveFontColor = Mark.create<FontColorMarkOptions>({
         {
           ...HTMLAttributes,
           style: `font-size:${HTMLAttributes.size}pt;color:${fromEveColor(
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
             HTMLAttributes.color,
           )}`,
         },
