@@ -21,14 +21,8 @@ import {
 import { ScopesTable } from "~/components/ScopeGuard";
 
 export function EsiClientStateCard() {
-  const {
-    loading,
-    characterId,
-    scopes,
-    isTokenValid,
-    tokenExpirationDate,
-    accessToken,
-  } = useEsiClientContext();
+  const { loading, characterId, scopes, tokenExpirationDate, accessToken } =
+    useEsiClientContext();
 
   if (loading) {
     return (

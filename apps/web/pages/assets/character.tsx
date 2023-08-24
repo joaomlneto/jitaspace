@@ -17,6 +17,7 @@ import { usePagination } from "@mantine/hooks";
 
 import {
   useCharacterAssets,
+  useEsiNamePrefetch,
   useEsiNamesCache,
   useMarketPrices,
 } from "@jitaspace/esi-client";
@@ -48,6 +49,21 @@ export default function Page() {
     (id: number) => cache[id]?.value?.name,
     [cache],
   );
+
+  useEsiNamePrefetch(
+    Object.values(assets ?? {}).map((asset) => ({
+      id: asset.type_id,
+      category: "inventory_type",
+    })),
+  );
+
+  /*
+  useEsiNames(
+    Object.values(assets ?? {}).map((asset) => ({
+      id: asset.type_id,
+      category: "inventory_type",
+    })),
+  );*/
 
   const filtersEnabled =
     filterForm.values.location_id !== null || filterForm.values.name !== "";
