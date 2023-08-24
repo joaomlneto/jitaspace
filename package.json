@@ -17,9 +17,12 @@
     "lint:fix": "turbo lint:fix && manypkg fix",
     "orval:generate": "turbo orval:generate",
     "type-check": "turbo type-check",
-    "preinstall": "npx only-allow pnpm"
+    "publish-packages": "turbo run build lint test && changeset version && changeset publish",
+    "preinstall": "npx only-allow pnpm",
+    "test": ""
   },
   "dependencies": {
+    "@changesets/cli": "^2.26.2",
     "@ianvs/prettier-plugin-sort-imports": "^4.0.2",
     "@jitaspace/eslint-config": "^0.1.0",
     "@manypkg/cli": "^0.21.0",

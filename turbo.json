@@ -16,7 +16,7 @@
     },
     "build": {
       "dependsOn": ["^build", "^db:generate", "orval:generate"],
-      "outputs": [".next/**", ".expo/**"]
+      "outputs": [".next/**", ".expo/**", "dist/**"]
     },
     "lint": {},
     "lint:fix": {},
@@ -30,6 +30,7 @@
       "dependsOn": ["^build", "^db:generate"],
       "outputs": ["generated/**", "generated/**"]
     },
+    "test": {},
     "type-check": {
       "dependsOn": ["^db:generate"],
       "cache": false
