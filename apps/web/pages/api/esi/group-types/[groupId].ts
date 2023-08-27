@@ -58,7 +58,7 @@ export default async function NextApiRouteHandler(
   //allGroupsIds.sort((a, b) => (a > b ? 1 : -1));
 
   // check if groupId is a valid category
-  if (!groupsResponse.data.includes(requestedGroupId)) {
+  if (!allGroupsIds.includes(requestedGroupId)) {
     return res
       .status(HttpStatusCode.NotFound)
       .json({ error: "Group not found" });
