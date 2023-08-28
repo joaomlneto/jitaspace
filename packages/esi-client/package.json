@@ -18,7 +18,7 @@
   "dependencies": {
     "@react-hook/cache": "^1.1.1",
     "axios": "^1.4.0",
-    "swr": "^2.2.1"
+    "swr": "^2.2.2"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "^0.1.0",
