@@ -22,7 +22,7 @@
     "@jitaspace/eslint-config": "^0.1.0",
     "@types/node": "^18.15.11",
     "@types/react": "^18.2.15",
-    "eslint": "^8.42.0",
+    "eslint": "^8.48.0",
     "orval": "^6.17.0",
     "typescript": "^5.1.3"
   }

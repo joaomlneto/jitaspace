@@ -27,7 +27,7 @@
     "@jitaspace/eslint-config": "^0.1.0",
     "@manypkg/cli": "^0.21.0",
     "@types/prettier": "^2.7.2",
-    "eslint": "^8.39.0",
+    "eslint": "^8.48.0",
     "prettier": "^2.8.7",
     "turbo": "^1.10.12",
     "typescript": "^5.1.3"

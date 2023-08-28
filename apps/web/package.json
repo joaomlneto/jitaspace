@@ -58,7 +58,7 @@
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.8",
     "embla-carousel-react": "8.0.0-rc07",
-    "eslint": "8.42.0",
+    "eslint": "^8.48.0",
     "eslint-config-next": "13.4.5",
     "humanize-duration": "^3.28.0",
     "jose": "^4.14.4",
@@ -88,7 +88,6 @@
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
     "@types/react-html-parser": "^2.0.2",
-    "dotenv-cli": "^7.2.1",
-    "eslint": "^8.39.0"
+    "dotenv-cli": "^7.2.1"
   }
 }
