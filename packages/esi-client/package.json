@@ -1,10 +1,10 @@
 {
   "name": "@jitaspace/esi-client",
   "description": "ESI Client for JitaSpace",
-  "version": "0.1.7",
+  "version": "0.2.1",
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.ts",
+  "types": "./dist/index.ts",
   "license": "MIT",
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs,iife --dts",
