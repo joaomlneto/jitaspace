@@ -65,7 +65,7 @@
     "mantine-datatable": "^2.6.0",
     "next": "^13.4.5",
     "next-auth": "^4.22.1",
-    "next-seo": "^6.0.0",
+    "next-seo": "^6.1.0",
     "nextjs-cors": "^2.1.2",
     "nextjs-routes": "^2.0.1",
     "p-limit": "^4.0.0",
