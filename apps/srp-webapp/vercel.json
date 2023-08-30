@@ -1,0 +1,9 @@
+{
+  "name": "JitaSpace WebApp",
+  "framework": "nextjs",
+  "buildCommand": "pnpm dlx turbo run build --filter=srp-webapp",
+  "installCommand": "pnpm install --store=node_modules/.pnpm-store",
+  "env": {
+    "ENABLE_EXPERIMENTAL_COREPACK": "1"
+  }
+}
