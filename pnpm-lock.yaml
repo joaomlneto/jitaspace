@@ -19,7 +19,7 @@ importers:
         version: 0.21.0
       '@turbo/gen':
         specifier: ^1.10.13
-        version: 1.10.13(@types/node@18.17.12)(typescript@5.1.3)
+        version: 1.10.13(@types/node@18.17.12)(typescript@5.2.2)
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
@@ -27,8 +27,8 @@ importers:
         specifier: ^1.10.13
         version: 1.10.13
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   apps/srp-webapp:
     dependencies:
@@ -109,7 +109,7 @@ importers:
         version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/tiptap':
         specifier: ^6.0.13
-        version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.22.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0)
+        version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.32.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0)
       '@next-auth/prisma-adapter':
         specifier: ^1.0.7
         version: 1.0.7(@prisma/client@5.2.0)(next-auth@4.22.1)
@@ -120,8 +120,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.22.0
-        version: 2.22.0(react@18.2.0)
+        specifier: ^2.32.0
+        version: 2.32.0(react@18.2.0)
       '@tanstack/react-query':
         specifier: ^4.29.19
         version: 4.29.19(react-dom@18.2.0)(react@18.2.0)
@@ -162,8 +162,8 @@ importers:
         specifier: ^10.38.1
         version: 10.38.1
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: 18.2.15
         version: 18.2.15
@@ -207,8 +207,8 @@ importers:
         specifier: ^4.22.1
         version: 4.22.1(next@13.4.5)(react-dom@18.2.0)(react@18.2.0)
       next-seo:
-        specifier: ^6.0.0
-        version: 6.0.0(next@13.4.5)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^6.1.0
+        version: 6.1.0(next@13.4.5)(react-dom@18.2.0)(react@18.2.0)
       nextjs-cors:
         specifier: ^2.1.2
         version: 2.1.2(next@13.4.5)
@@ -274,7 +274,7 @@ importers:
         specifier: ^5.1.1
         version: 5.2.0
       typescript:
-        specifier: ^5.1.3
+        specifier: ^5.2.2
         version: 5.2.2
 
   apps/web:
@@ -356,13 +356,13 @@ importers:
         version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/tiptap':
         specifier: ^6.0.13
-        version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.22.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0)
+        version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.32.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0)
       '@react-hook/cache':
         specifier: ^1.1.1
         version: 1.1.1(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.22.0
-        version: 2.22.0(react@18.2.0)
+        specifier: ^2.32.0
+        version: 2.32.0(react@18.2.0)
       '@tanstack/react-query':
         specifier: ^4.29.19
         version: 4.29.19(react-dom@18.2.0)(react@18.2.0)
@@ -391,8 +391,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3(@tiptap/pm@2.0.3)
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: 18.2.21
         version: 18.2.21
@@ -436,8 +436,8 @@ importers:
         specifier: ^4.22.1
         version: 4.22.1(next@13.4.5)(react-dom@18.2.0)(react@18.2.0)
       next-seo:
-        specifier: ^6.0.0
-        version: 6.0.0(next@13.4.5)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^6.1.0
+        version: 6.1.0(next@13.4.5)(react-dom@18.2.0)(react@18.2.0)
       nextjs-cors:
         specifier: ^2.1.2
         version: 2.1.2(next@13.4.5)
@@ -500,7 +500,7 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       typescript:
-        specifier: ^5.1.3
+        specifier: ^5.2.2
         version: 5.2.2
 
   packages/auth:
@@ -534,8 +534,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/esi-client:
     dependencies:
@@ -559,8 +559,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -578,10 +578,10 @@ importers:
         version: 18.2.0(react@18.2.0)
       tsup:
         specifier: ^7.2.0
-        version: 7.2.0(typescript@5.1.3)
+        version: 7.2.0(typescript@5.2.2)
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/esi-client-react-query:
     dependencies:
@@ -605,8 +605,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -615,13 +615,13 @@ importers:
         version: 8.48.0
       orval:
         specifier: ^6.17.0
-        version: 6.17.0(openapi-types@12.1.3)(typescript@5.1.3)
+        version: 6.17.0(openapi-types@12.1.3)(typescript@5.2.2)
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/esi-hooks:
     dependencies:
@@ -648,8 +648,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -667,10 +667,10 @@ importers:
         version: 18.2.0(react@18.2.0)
       tsup:
         specifier: ^7.2.0
-        version: 7.2.0(typescript@5.1.3)
+        version: 7.2.0(typescript@5.2.2)
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/esi-meta-client:
     dependencies:
@@ -694,8 +694,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -704,13 +704,13 @@ importers:
         version: 8.48.0
       orval:
         specifier: ^6.17.0
-        version: 6.17.0(openapi-types@12.1.3)(typescript@5.1.3)
+        version: 6.17.0(openapi-types@12.1.3)(typescript@5.2.2)
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/eve-icons:
     dependencies:
@@ -737,8 +737,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -749,8 +749,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/sde-client:
     dependencies:
@@ -774,8 +774,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -784,13 +784,13 @@ importers:
         version: 8.48.0
       orval:
         specifier: ^6.17.0
-        version: 6.17.0(openapi-types@12.1.3)(typescript@5.1.3)
+        version: 6.17.0(openapi-types@12.1.3)(typescript@5.2.2)
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/tiptap-eve:
     dependencies:
@@ -805,10 +805,10 @@ importers:
         version: 6.0.13(react@18.2.0)
       '@mantine/tiptap':
         specifier: ^6.0.13
-        version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.22.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0)
+        version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.32.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.22.0
-        version: 2.22.0(react@18.2.0)
+        specifier: ^2.32.0
+        version: 2.32.0(react@18.2.0)
       '@tiptap/extension-character-count':
         specifier: ^2.0.3
         version: 2.0.3(@tiptap/core@2.0.3)(@tiptap/pm@2.0.3)
@@ -837,8 +837,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3(@tiptap/pm@2.0.3)
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: 18.2.21
         version: 18.2.21
@@ -874,8 +874,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/ui:
     dependencies:
@@ -938,10 +938,10 @@ importers:
         version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/tiptap':
         specifier: ^6.0.13
-        version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.22.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0)
+        version: 6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.32.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.22.0
-        version: 2.22.0(react@18.2.0)
+        specifier: ^2.32.0
+        version: 2.32.0(react@18.2.0)
       '@tiptap/extension-color':
         specifier: ^2.0.3
         version: 2.0.3(@tiptap/core@2.0.3)(@tiptap/extension-text-style@2.0.3)
@@ -964,8 +964,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3(@tiptap/pm@2.0.3)
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: 18.2.21
         version: 18.2.21
@@ -1004,8 +1004,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   packages/utils:
     devDependencies:
@@ -1022,8 +1022,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       eslint:
         specifier: ^8.48.0
         version: 8.48.0
@@ -1031,8 +1031,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       typescript:
-        specifier: ^5.1.3
-        version: 5.1.3
+        specifier: ^5.2.2
+        version: 5.2.2
 
   tooling/eslint:
     dependencies:
@@ -3781,7 +3781,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@mantine/tiptap@6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.22.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0):
+  /@mantine/tiptap@6.0.13(@mantine/core@6.0.13)(@mantine/hooks@6.0.13)(@tabler/icons-react@2.32.0)(@tiptap/extension-link@2.0.3)(@tiptap/react@2.0.3)(react@18.2.0):
     resolution: {integrity: sha512-V2IXjrgJBXu+JSv3mNTDs5yGtSht5/5P9TE+/ItML0DyP6/xWi5tIXLOtAGn7SivFRfUbR6PZJckcJnSUUpEFA==}
     peerDependencies:
       '@mantine/core': 6.0.13
@@ -3794,7 +3794,7 @@ packages:
       '@mantine/core': 6.0.13(@emotion/react@11.11.1)(@mantine/hooks@6.0.13)(@types/react@18.2.15)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/hooks': 6.0.13(react@18.2.0)
       '@mantine/utils': 6.0.13(react@18.2.0)
-      '@tabler/icons-react': 2.22.0(react@18.2.0)
+      '@tabler/icons-react': 2.32.0(react@18.2.0)
       '@tiptap/extension-link': 2.0.3(@tiptap/core@2.0.3)(@tiptap/pm@2.0.3)
       '@tiptap/react': 2.0.3(@tiptap/core@2.0.3)(@tiptap/pm@2.0.3)(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
@@ -4849,18 +4849,18 @@ packages:
       defer-to-connect: 1.1.3
     dev: false
 
-  /@tabler/icons-react@2.22.0(react@18.2.0):
-    resolution: {integrity: sha512-9udRxrbsbWzUETur4jmbZQIZkH7jVA2GU7YnKYS7ZCUjdOHZZEhmsfJ/Gdbzz0gSRC3mU7SDMsKejun/IBjvpQ==}
+  /@tabler/icons-react@2.32.0(react@18.2.0):
+    resolution: {integrity: sha512-B6op3r/up+QRiB3CQOo8wqF5FNv+hG8dEWmBnO1v5KRjubGKLFRpBldQ6rjqfsdg/QW+jvcZQ5OMEEcA0tOPIA==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0
     dependencies:
-      '@tabler/icons': 2.22.0
+      '@tabler/icons': 2.32.0
       prop-types: 15.8.1
       react: 18.2.0
     dev: false
 
-  /@tabler/icons@2.22.0:
-    resolution: {integrity: sha512-lOsGHqRPIKNARMWHHFkUUJH78C8ptQmUcDnumFBUI4YLRKFouKa7uAZL3ZfuH0HjDpOhsnWqUYZ7FhMCLcGpAQ==}
+  /@tabler/icons@2.32.0:
+    resolution: {integrity: sha512-w1oNvrnqFipoBEy2/0X4/IHo2aLsijuz4QRi/HizxqiaoMfmWG5X2DpEYTw9WnGvFmixpu/rtQsQAr7Wr0Mc2w==}
     dev: false
 
   /@tanstack/match-sorter-utils@8.8.4:
@@ -5282,7 +5282,7 @@ packages:
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
     dev: false
 
-  /@turbo/gen@1.10.13(@types/node@18.17.12)(typescript@5.1.3):
+  /@turbo/gen@1.10.13(@types/node@18.17.12)(typescript@5.2.2):
     resolution: {integrity: sha512-fwGVjeun2i0RIdq/20d2wpatPw9vE4Mbk60uB8rk8NENDXn2JLfbsh00mZ5KAEX5ZQUibh6tD+B7xROV8Eb7dQ==}
     hasBin: true
     dependencies:
@@ -5294,7 +5294,7 @@ packages:
       minimatch: 9.0.3
       node-plop: 0.26.3
       proxy-agent: 6.3.0
-      ts-node: 10.9.1(@types/node@18.17.12)(typescript@5.1.3)
+      ts-node: 10.9.1(@types/node@18.17.12)(typescript@5.2.2)
       update-check: 1.5.4
       validate-npm-package-name: 5.0.0
     transitivePeerDependencies:
@@ -5461,9 +5461,6 @@ packages:
   /@types/node@12.20.55:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: false
-
-  /@types/node@18.15.11:
-    resolution: {integrity: sha512-E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==}
 
   /@types/node@18.17.12:
     resolution: {integrity: sha512-d6xjC9fJ/nSnfDeU0AMDsaJyb1iHsqCSOdi84w4u+SlN/UgQdY5tRhpMzaFYsI4mnpvgTivEaQd0yOUhAtOnEQ==}
@@ -9931,8 +9928,8 @@ packages:
       uuid: 8.3.2
     dev: false
 
-  /next-seo@6.0.0(next@13.4.5)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-jKKt1p1z4otMA28AyeoAONixVjdYmgFCWwpEFtu+DwRHQDllVX3RjtyXbuCQiUZEfQ9rFPBpAI90vDeLZlMBdg==}
+  /next-seo@6.1.0(next@13.4.5)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-iMBpFoJsR5zWhguHJvsoBDxDSmdYTHtnVPB1ij+CD0NReQCP78ZxxbdL9qkKIf4oEuZEqZkrjAQLB0bkII7RYA==}
     peerDependencies:
       next: ^8.1.1-canary.54 || >=9.0.0
       react: '>=16.0.0'
@@ -10384,7 +10381,7 @@ packages:
     resolution: {integrity: sha512-TvAWxi0nDe1j/rtMcWcIj94+Ffe6n7zhow33h40SKxmsmozs6dz/e+EajymfoFcHd7sxNn8yHM8839uixMOV6g==}
     dev: false
 
-  /orval@6.17.0(openapi-types@12.1.3)(typescript@5.1.3):
+  /orval@6.17.0(openapi-types@12.1.3)(typescript@5.2.2):
     resolution: {integrity: sha512-QeK/Zxk9ZnoL//br/2oe5HnB53safd5eKtncCc0/3HjQS2BRtJpAyH8q7sQRFPTV4ToG9duYSQrTjgTvTsLTnQ==}
     hasBin: true
     dependencies:
@@ -10407,7 +10404,7 @@ packages:
       lodash.uniq: 4.5.0
       openapi3-ts: 3.2.0
       string-argv: 0.3.2
-      tsconfck: 2.1.1(typescript@5.1.3)
+      tsconfck: 2.1.1(typescript@5.2.2)
     transitivePeerDependencies:
       - encoding
       - openapi-types
@@ -12523,7 +12520,7 @@ packages:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
     dev: true
 
-  /ts-node@10.9.1(@types/node@18.17.12)(typescript@5.1.3):
+  /ts-node@10.9.1(@types/node@18.17.12)(typescript@5.2.2):
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -12549,12 +12546,12 @@ packages:
       create-require: 1.1.1
       diff: 4.0.2
       make-error: 1.3.6
-      typescript: 5.1.3
+      typescript: 5.2.2
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
     dev: false
 
-  /tsconfck@2.1.1(typescript@5.1.3):
+  /tsconfck@2.1.1(typescript@5.2.2):
     resolution: {integrity: sha512-ZPCkJBKASZBmBUNqGHmRhdhM8pJYDdOXp4nRgj/O0JwUwsMq50lCDRQP/M5GBNAA0elPrq4gAeu4dkaVCuKWww==}
     engines: {node: ^14.13.1 || ^16 || >=18}
     hasBin: true
@@ -12564,7 +12561,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      typescript: 5.1.3
+      typescript: 5.2.2
     dev: true
 
   /tsconfig-paths@3.14.2:
@@ -12582,7 +12579,7 @@ packages:
   /tslib@2.5.3:
     resolution: {integrity: sha512-mSxlJJwl3BMEQCUNnxXBU9jP4JBktcEGhURcPR6VQVlnP0FdDEsIaz0C35dXNGLyRfrATNofF0F5p2KPxQgB+w==}
 
-  /tsup@7.2.0(typescript@5.1.3):
+  /tsup@7.2.0(typescript@5.2.2):
     resolution: {integrity: sha512-vDHlczXbgUvY3rWvqFEbSqmC1L7woozbzngMqTtL2PGBODTtWlRwGDDawhvWzr5c1QjKe4OAKqJGfE1xeXUvtQ==}
     engines: {node: '>=16.14'}
     hasBin: true
@@ -12612,7 +12609,7 @@ packages:
       source-map: 0.8.0-beta.0
       sucrase: 3.34.0
       tree-kill: 1.2.2
-      typescript: 5.1.3
+      typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
       - ts-node
@@ -12789,11 +12786,6 @@ packages:
       call-bind: 1.0.2
       for-each: 0.3.3
       is-typed-array: 1.1.10
-
-  /typescript@5.1.3:
-    resolution: {integrity: sha512-XH627E9vkeqhlZFQuL+UsyAXEnibT0kWR2FWONlr4sTjvxyJYnyefgrkyECLzM5NenmKzRAy2rR/OlYLA1HkZw==}
-    engines: {node: '>=14.17'}
-    hasBin: true
 
   /typescript@5.2.2:
     resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==}
