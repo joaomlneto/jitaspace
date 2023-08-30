@@ -41,9 +41,10 @@ type NextPageWithLayout = NextPage & {
   requiredScopes?: ESIScope[];
 };
 
-type AppPropsWithLayout = AppProps & {
-  Component: NextPageWithLayout;
+type AppPropsWithLayout = AppProps<{
   session: Session;
+}> & {
+  Component: NextPageWithLayout;
 };
 
 /**
@@ -202,9 +203,7 @@ export default function App({
 
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} />
-        {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment */}
         <SessionProvider session={session}>
-          {/* eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access */}
           <EsiClientContextProvider accessToken={session?.accessToken}>
             <JitaSpaceEsiClientContextProvider>
               <EsiClientSSOAccessTokenInjector>
