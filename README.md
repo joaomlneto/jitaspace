@@ -16,22 +16,29 @@ apps
   └─ web
       └─ Next.js 13 web application, hosted on Vercel
 packages
- ├─ auth
- |   └─ next-auth package preconfigured to use EVE SSO
- ├─ esi-client
-     └─ Generated Typescript/React client for ESI API
- ├─ esi-client
-     └─ Generated Typescript/React client for ESI Meta API
- ├─ eslint-config
-     └─ Base ESLint Configuration for this repository
- └─ eve-icons
-     └─ Collection of EVE Icons as react components
- └─ tiptap-eve
-     └─ Custom Tiptap (https://tiptap.dev) editor supporting EVE HTML syntax
- └─ ui
-     └─ React UI components
- └─ utils
-     └─ Diverse utilities that don't fit anywhere else
+  ├─ auth
+  |   └─ next-auth package preconfigured to use EVE SSO
+  ├─ esi-client
+      └─ Generated Typescript/React client for ESI API
+  ├─ esi-client
+      └─ Generated Typescript/React client for ESI Meta API
+  ├─ eslint-config
+      └─ Base ESLint Configuration for this repository
+  └─ eve-icons
+      └─ Collection of EVE Icons as react components
+  └─ tiptap-eve
+      └─ Custom Tiptap (https://tiptap.dev) editor supporting EVE HTML syntax
+  └─ ui
+      └─ React UI components
+  └─ utils
+      └─ Diverse utilities that don't fit anywhere else
+tooling
+  ├─ eslint
+  |   └─ shared, fine-grained, eslint presets
+  ├─ prettier
+  |   └─ shared prettier configuration
+  └─ typescript
+      └─ shared tsconfig you can extend from
 ```
 
 ## Quick Start

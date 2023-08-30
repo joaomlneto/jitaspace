@@ -45,9 +45,8 @@ export default async function NextApiRouteHandler(
   }
 
   // get the details of the category
-  const categoryResponse = await getUniverseCategoriesCategoryId(
-    requestedCategoryId,
-  );
+  const categoryResponse =
+    await getUniverseCategoriesCategoryId(requestedCategoryId);
 
   if (categoryResponse.status !== HttpStatusCode.Ok) {
     return res
@@ -87,7 +86,7 @@ export default async function NextApiRouteHandler(
   };
 
   return res
-    .appendHeader(
+    .setHeader(
       "Cache-Control",
       `public, s-maxage=${
         secondsUntilExpirationDate + TRANQUILITY_DOWNTIME_SECONDS

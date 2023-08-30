@@ -38,6 +38,6 @@ export default async function NextApiRouteHandler(
   };
 
   return res
-    .appendHeader("Cache-Control", "public, max-age=300") // 5 minutes
+    .setHeader("Cache-Control", "public, max-age=300") // 5 minutes
     .json(body);
 }

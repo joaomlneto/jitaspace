@@ -28,12 +28,12 @@ export default async function NextApiRouteHandler(
    *            LET HIM KNOW IF THERE ARE BREAKING CHANGES!!! *
    ************************************************************/
   return res
-    .appendHeader("Cache-Control", "public, max-age=86400")
-    .appendHeader("Access-Control-Allow-Origin", "*")
-    .appendHeader(
+    .setHeader("Cache-Control", "public, max-age=86400")
+    .setHeader("Access-Control-Allow-Origin", "*")
+    .setHeader(
       "Access-Control-Allow-Methods",
       "POST, PUT, DELETE, GET, HEAD, OPTIONS",
     )
-    .appendHeader("Access-Control-Allow-Headers", "Content-Type")
+    .setHeader("Access-Control-Allow-Headers", "Content-Type")
     .json(response);
 }

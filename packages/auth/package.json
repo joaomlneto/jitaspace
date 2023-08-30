@@ -17,8 +17,11 @@
     "react-dom": "18.2.0"
   },
   "devDependencies": {
-    "@jitaspace/eslint-config": "^0.1.0",
+    "@jitaspace/eslint-config": "*",
+    "@jitaspace/prettier-config": "*",
+    "@jitaspace/tsconfig": "*",
     "eslint": "^8.48.0",
+    "prettier": "^3.0.3",
     "typescript": "^5.1.3"
   }
 }

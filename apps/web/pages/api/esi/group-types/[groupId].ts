@@ -103,7 +103,7 @@ export default async function NextApiRouteHandler(
   };
 
   return res
-    .appendHeader(
+    .setHeader(
       "Cache-Control",
       `public, s-maxage=${
         secondsUntilExpirationDate + TRANQUILITY_DOWNTIME_SECONDS

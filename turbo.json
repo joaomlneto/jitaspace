@@ -2,6 +2,9 @@
   "$schema": "https://turborepo.org/schema.json",
   "globalDependencies": ["**/.env"],
   "pipeline": {
+    "topo": {
+      "dependsOn": ["^topo"]
+    },
     "db:generate": {
       "inputs": ["prisma/schema.prisma"],
       "cache": false
@@ -16,9 +19,15 @@
     },
     "build": {
       "dependsOn": ["^build", "^db:generate", "orval:generate"],
-      "outputs": [".next/**", ".expo/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts", ".expo/**", "dist/**"]
     },
-    "lint": {},
+    "format": {
+      "outputs": ["node_modules/.cache/.prettiercache"],
+      "outputMode": "new-only"
+    },
+    "lint": {
+      "dependsOn": ["^topo"],
+      "outputs": ["node_modules/.cache/.eslintcache"]},
     "lint:fix": {},
     "clean": {
       "cache": false
@@ -32,8 +41,8 @@
     },
     "test": {},
     "type-check": {
-      "dependsOn": ["^db:generate"],
-      "cache": false
+      "dependsOn": ["^topo"],
+      "outputs": ["node_modules/.cache/tsbuildinfo.json"]
     }
   },
   "globalEnv": [
