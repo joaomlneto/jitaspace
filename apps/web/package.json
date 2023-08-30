@@ -19,6 +19,7 @@
     "@emotion/server": "^11.11.0",
     "@jitaspace/auth": "*",
     "@jitaspace/esi-client": "*",
+    "@jitaspace/esi-hooks": "*",
     "@jitaspace/eve-icons": "*",
     "@jitaspace/esi-meta-client": "*",
     "@jitaspace/sde-client": "*",

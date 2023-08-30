@@ -1,7 +1,8 @@
 import { type PropsWithChildren, type ReactElement } from "react";
 import { Group, Loader } from "@mantine/core";
 
-import { useEsiClientContext, type ESIScope } from "@jitaspace/esi-client";
+import { type ESIScope } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { RequestPermissionsBanner } from "./RequestPermissionsBanner";
 

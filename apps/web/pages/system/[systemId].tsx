@@ -13,10 +13,8 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import {
-  useGetUniverseSystemsSystemId,
-  useSolarSystemCostIndices,
-} from "@jitaspace/esi-client";
+import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
+import { useSolarSystemCostIndices } from "@jitaspace/esi-hooks";
 import { IndustryIcon } from "@jitaspace/eve-icons";
 import { useGetSolarSystemById } from "@jitaspace/sde-client";
 import {

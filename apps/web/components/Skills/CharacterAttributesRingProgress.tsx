@@ -12,10 +12,8 @@ import {
 } from "@mantine/core";
 import { format } from "date-fns";
 
-import {
-  useEsiClientContext,
-  useGetCharactersCharacterIdAttributes,
-} from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdAttributes } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   AttributesIcon,
   CharismaAttributeSmallIcon,

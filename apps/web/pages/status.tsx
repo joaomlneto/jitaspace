@@ -21,6 +21,7 @@ import {
 } from "@jitaspace/esi-meta-client";
 import { FormattedDateText } from "@jitaspace/ui";
 
+import { EsiClientStateCard } from "~/components/EsiClient";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
@@ -106,7 +107,9 @@ export default function Page() {
       <Stack>
         <Stack spacing="xs">
           <Title>Status</Title>
-          <Title order={3}>Jita</Title>
+          <Title order={3}>Jita Frontend</Title>
+          <EsiClientStateCard />
+          <Title order={3}>Jita Backend</Title>
           <Group position="apart">
             <Text>Vercel Platform</Text>
             <Group>

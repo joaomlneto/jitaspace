@@ -1,10 +1,8 @@
 import { memo, useEffect, useState } from "react";
 import { Text, type TextProps } from "@mantine/core";
 
-import {
-  postCharactersCharacterIdCspa,
-  useEsiClientContext,
-} from "@jitaspace/esi-client";
+import { postCharactersCharacterIdCspa } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 export type CSPACostTextProps = TextProps & {

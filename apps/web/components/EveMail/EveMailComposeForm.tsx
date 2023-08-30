@@ -14,10 +14,8 @@ import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { HttpStatusCode, type AxiosError } from "axios";
 
-import {
-  postCharactersCharacterIdMail,
-  useEsiClientContext,
-} from "@jitaspace/esi-client";
+import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { EmailRecipientSearchMultiSelect } from "@jitaspace/ui";
 
 import { MailMessageEditor } from "~/components/EveMail/Editor/MailMessageEditor";

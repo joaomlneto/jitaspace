@@ -4,7 +4,7 @@ import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 import {
   useEsiName,
   type ResolvableEntityCategory,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-hooks";
 import { UnknownIcon } from "@jitaspace/eve-icons";
 import { getAvatarSize } from "@jitaspace/utils";
 

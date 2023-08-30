@@ -4,8 +4,9 @@ import useSWRInfinite from "swr/infinite";
 import {
   getGetCharactersCharacterIdAssetsKey,
   type GetCharactersCharacterIdAssets200Item,
-} from "../client";
-import { ESI_BASE_URL } from "../config/constants";
+} from "@jitaspace/esi-client";
+
+import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
 
 export function useCharacterAssets() {

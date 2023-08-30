@@ -14,10 +14,8 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { format } from "date-fns";
 import humanizeDuration from "humanize-duration";
 
-import {
-  useEsiClientContext,
-  useGetCharactersCharacterIdSkillqueue,
-} from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 export function SkillQueueTimeline() {

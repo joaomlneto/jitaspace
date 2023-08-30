@@ -11,11 +11,11 @@ import {
 } from "@mantine/core";
 
 import {
-  useEsiClientContext,
   useGetCharactersCharacterIdSkills,
   type GetCharactersCharacterIdSkills200SkillsItem,
   type GetUniverseTypesTypeId200,
 } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
 
 import {

@@ -4,7 +4,7 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 import {
   useEsiName,
   type ResolvableEntityCategory,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-hooks";
 
 export type EveEntityNameProps = TextProps & {
   entityId?: string | number;

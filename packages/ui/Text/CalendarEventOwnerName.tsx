@@ -1,10 +1,8 @@
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import {
-  useEsiClientContext,
-  useGetCharactersCharacterIdCalendarEventId,
-} from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 export type CalendarEventOwnerNameProps = TextProps & {
   eventId?: number;

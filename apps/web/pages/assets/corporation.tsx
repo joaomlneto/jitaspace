@@ -15,7 +15,7 @@ import {
 import { useForm } from "@mantine/form";
 import { usePagination } from "@mantine/hooks";
 
-import { useCorporationAssets, useEsiNamesCache } from "@jitaspace/esi-client";
+import { useCorporationAssets, useEsiNamesCache } from "@jitaspace/esi-hooks";
 import { AssetsIcon, AttentionIcon } from "@jitaspace/eve-icons";
 import {
   EveEntityAnchor,

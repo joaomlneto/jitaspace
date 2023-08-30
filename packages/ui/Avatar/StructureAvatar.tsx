@@ -1,10 +1,8 @@
 import React, { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import {
-  useEsiClientContext,
-  useGetUniverseStructuresStructureId,
-} from "@jitaspace/esi-client";
+import { useGetUniverseStructuresStructureId } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { TypeAvatar } from "./TypeAvatar";
 

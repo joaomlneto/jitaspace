@@ -1,10 +1,8 @@
 import React, { memo } from "react";
 import { Indicator, type IndicatorProps } from "@mantine/core";
 
-import {
-  useEsiClientContext,
-  useGetCharactersCharacterIdMailLabels,
-} from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 export const TotalUnreadMailsIndicator = memo((props: IndicatorProps) => {
   const { characterId, isTokenValid, scopes } = useEsiClientContext();

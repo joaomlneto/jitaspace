@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 
-import { useEsiClientContext } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   CharacterAvatar,
   CharacterName,

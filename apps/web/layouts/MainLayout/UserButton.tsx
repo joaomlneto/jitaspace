@@ -1,5 +1,4 @@
 import React from "react";
-import Link from "next/link";
 import {
   createStyles,
   Group,
@@ -10,9 +9,8 @@ import {
 } from "@mantine/core";
 import { signIn, signOut } from "next-auth/react";
 
-import { useEsiClientContext } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
-  LogIcon,
   RecruitmentIcon,
   SettingsIcon,
   TerminateIcon,
@@ -61,9 +59,6 @@ export default function UserButton({ ...others }: UserButtonProps) {
       <Menu.Dropdown>
         <Menu.Item icon={<SettingsIcon width={20} />} disabled>
           Settings
-        </Menu.Item>
-        <Menu.Item component={Link} href="/dev" icon={<LogIcon width={20} />}>
-          Developer Console
         </Menu.Item>
         <Menu.Item
           icon={<RecruitmentIcon width={20} />}

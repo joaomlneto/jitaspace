@@ -1,33 +1,39 @@
 import useSWRInfinite from "swr/infinite";
 
 import {
-  getGetCharactersCharacterIdContactsKey,
+  getGetCorporationsCorporationIdContactsKey,
+  useGetCharactersCharacterId,
   useGetCorporationsCorporationIdContactsLabels,
-  type GetCharactersCharacterIdContacts200Item,
-} from "../client";
-import { ESI_BASE_URL } from "../config/constants";
+  type GetCorporationsCorporationIdContacts200Item,
+} from "@jitaspace/esi-client";
+
+import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
 
-export function useCharacterContacts() {
+export function useCorporationContacts() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
+  const { data: characterData } = useGetCharactersCharacterId(characterId ?? 0);
+
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCharactersCharacterIdContacts200Item[], Error>(
+    useSWRInfinite<GetCorporationsCorporationIdContacts200Item[], Error>(
       function getKey(pageIndex) {
         if (
           !characterId ||
           !isTokenValid ||
-          !scopes.includes("esi-characters.read_contacts.v1")
+          !scopes.includes("esi-corporations.read_contacts.v1") ||
+          !characterData?.data.corporation_id
         ) {
           throw new Error(
-            "Insufficient permissions to read character contacts",
+            "Insufficient permissions to read corporation contacts",
           );
         }
 
         return () => {
-          const [endpointUrl] =
-            getGetCharactersCharacterIdContactsKey(characterId);
+          const [endpointUrl] = getGetCorporationsCorporationIdContactsKey(
+            characterData.data.corporation_id,
+          );
           const queryParams = new URLSearchParams();
           queryParams.append("page", `${pageIndex + 1}`);
           return `${ESI_BASE_URL}${endpointUrl}?${queryParams.toString()}`;
@@ -53,14 +59,15 @@ export function useCharacterContacts() {
     );
 
   const { data: labels } = useGetCorporationsCorporationIdContactsLabels(
-    characterId ?? 0,
+    characterData?.data.corporation_id ?? 0,
     {},
     {
       swr: {
         enabled:
           !!characterId &&
           isTokenValid &&
-          scopes.includes("esi-characters.read_contacts.v1"),
+          scopes.includes("esi-corporations.read_contacts.v1") &&
+          characterData?.data.corporation_id !== undefined,
         revalidateOnFocus: false,
       },
     },

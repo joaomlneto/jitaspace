@@ -3,10 +3,10 @@ import { type LinkProps } from "next/link";
 import { Anchor, type AnchorProps } from "@mantine/core";
 
 import {
-  useEsiClientContext,
   useGetCharactersCharacterIdMailLists,
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
 

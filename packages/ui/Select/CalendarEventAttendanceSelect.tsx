@@ -5,9 +5,9 @@ import { openConfirmModal } from "@mantine/modals";
 import {
   putCharactersCharacterIdCalendarEventId,
   PutCharactersCharacterIdCalendarEventIdBodyResponse,
-  useEsiClientContext,
   useGetCharactersCharacterIdCalendarEventId,
 } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 export type CalendarEventAttendanceSelect = Omit<SelectProps, "data"> & {
   eventId?: string | number;

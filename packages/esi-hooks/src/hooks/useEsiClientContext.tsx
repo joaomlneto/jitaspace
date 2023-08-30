@@ -9,7 +9,9 @@ import {
 } from "react";
 import axios from "axios";
 
-import { type ESIScope } from "../scopes";
+import { type ESIScope } from "@jitaspace/esi-client";
+
+import { ESI_BASE_URL } from "../config";
 import { getEveSsoAccessTokenPayload } from "../utils";
 
 type EsiClientContext = {
@@ -40,8 +42,6 @@ const defaultEsiClientContext: EsiClientContext = {
   scopes: [],
   isTokenValid: false,
 };
-
-const ESI_BASE_URL = "https://esi.evetech.net/latest";
 
 const EsiClientContext = createContext<EsiClientContext>(
   defaultEsiClientContext,

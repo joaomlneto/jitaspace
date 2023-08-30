@@ -1,36 +1,34 @@
 import useSWRInfinite from "swr/infinite";
 
 import {
-  getGetAlliancesAllianceIdContactsKey,
-  useGetAlliancesAllianceIdContactsLabels,
-  useGetCharactersCharacterId,
-  type GetAlliancesAllianceIdContacts200Item,
-} from "../client";
-import { ESI_BASE_URL } from "../config/constants";
+  getGetCharactersCharacterIdContactsKey,
+  useGetCorporationsCorporationIdContactsLabels,
+  type GetCharactersCharacterIdContacts200Item,
+} from "@jitaspace/esi-client";
+
+import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
 
-export function useAllianceContacts() {
+export function useCharacterContacts() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
-  const { data: characterData } = useGetCharactersCharacterId(characterId ?? 0);
-
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetAlliancesAllianceIdContacts200Item[], Error>(
+    useSWRInfinite<GetCharactersCharacterIdContacts200Item[], Error>(
       function getKey(pageIndex) {
         if (
           !characterId ||
           !isTokenValid ||
-          !scopes.includes("esi-alliances.read_contacts.v1") ||
-          characterData?.data.alliance_id === undefined
+          !scopes.includes("esi-characters.read_contacts.v1")
         ) {
-          throw new Error("Insufficient permissions to read alliance contacts");
+          throw new Error(
+            "Insufficient permissions to read character contacts",
+          );
         }
 
         return () => {
-          const [endpointUrl] = getGetAlliancesAllianceIdContactsKey(
-            characterData.data.alliance_id ?? 0,
-          );
+          const [endpointUrl] =
+            getGetCharactersCharacterIdContactsKey(characterId);
           const queryParams = new URLSearchParams();
           queryParams.append("page", `${pageIndex + 1}`);
           return `${ESI_BASE_URL}${endpointUrl}?${queryParams.toString()}`;
@@ -55,16 +53,15 @@ export function useAllianceContacts() {
       { revalidateAll: true },
     );
 
-  const { data: labels } = useGetAlliancesAllianceIdContactsLabels(
-    characterData?.data.alliance_id ?? 0,
+  const { data: labels } = useGetCorporationsCorporationIdContactsLabels(
+    characterId ?? 0,
     {},
     {
       swr: {
         enabled:
           !!characterId &&
           isTokenValid &&
-          scopes.includes("esi-alliances.read_contacts.v1") &&
-          characterData?.data.alliance_id !== undefined,
+          scopes.includes("esi-characters.read_contacts.v1"),
         revalidateOnFocus: false,
       },
     },

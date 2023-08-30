@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Text, type TextProps } from "@mantine/core";
 
-import { useCharacterAssets } from "@jitaspace/esi-client";
+import { useCharacterAssets } from "@jitaspace/esi-hooks";
 
 import { EveEntityName } from "./EveEntityName";
 

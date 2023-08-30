@@ -56,6 +56,9 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../../packages/esi-client
+      '@jitaspace/esi-hooks':
+        specifier: '*'
+        version: link:../../packages/esi-hooks
       '@jitaspace/esi-meta-client':
         specifier: '*'
         version: link:../../packages/esi-meta-client
@@ -346,6 +349,46 @@ importers:
         specifier: ^5.1.3
         version: 5.1.3
 
+  packages/esi-hooks:
+    dependencies:
+      '@react-hook/cache':
+        specifier: ^1.1.1
+        version: 1.1.1(react@18.2.0)
+      axios:
+        specifier: ^1.4.0
+        version: 1.4.0
+      swr:
+        specifier: ^2.2.2
+        version: 2.2.2(react@18.2.0)
+    devDependencies:
+      '@jitaspace/esi-client':
+        specifier: '*'
+        version: link:../esi-client
+      '@jitaspace/eslint-config':
+        specifier: ^0.1.0
+        version: link:../eslint-config
+      '@types/node':
+        specifier: ^18.15.11
+        version: 18.15.11
+      '@types/react':
+        specifier: ^18.2.15
+        version: 18.2.15
+      eslint:
+        specifier: ^8.48.0
+        version: 8.48.0
+      react:
+        specifier: ^18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: '>=18.2.0'
+        version: 18.2.0(react@18.2.0)
+      tsup:
+        specifier: ^7.2.0
+        version: 7.2.0(typescript@5.1.3)
+      typescript:
+        specifier: ^5.1.3
+        version: 5.1.3
+
   packages/esi-meta-client:
     dependencies:
       '@tanstack/react-query':
@@ -554,6 +597,9 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../esi-client
+      '@jitaspace/esi-hooks':
+        specifier: '*'
+        version: link:../esi-hooks
       '@jitaspace/eve-icons':
         specifier: '*'
         version: link:../eve-icons
@@ -4988,7 +5034,7 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
       '@typescript-eslint/types': 5.59.11
-      eslint-visitor-keys: 3.4.1
+      eslint-visitor-keys: 3.4.3
     dev: false
 
   /@vercel/analytics@1.0.1:
@@ -7022,11 +7068,6 @@ packages:
     dependencies:
       esrecurse: 4.3.0
       estraverse: 5.3.0
-
-  /eslint-visitor-keys@3.4.1:
-    resolution: {integrity: sha512-pZnmmLwYzf+kWaM/Qgrvpen51upAktaaiI01nsJD/Yr3lMOdNtq0cxkrrg16w64VtisN6okbs7Q8AfGqj4c9fA==}
-    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
-    dev: false
 
   /eslint-visitor-keys@3.4.3:
     resolution: {integrity: sha512-wpc+LXeiyiisxPlEkUzU6svyS1frIO3Mgxj1fdy7Pm8Ygzguax2N3Fa/D/ag1WqbOprdI+uY6wMUl8/a2G+iag==}
@@ -11543,7 +11584,7 @@ packages:
     deprecated: The library contains critical security issues and should not be used for production! The maintenance of the project has been discontinued. Consider migrating your code to isolated-vm.
     hasBin: true
     dependencies:
-      acorn: 8.8.2
+      acorn: 8.10.0
       acorn-walk: 8.2.0
     dev: true
 

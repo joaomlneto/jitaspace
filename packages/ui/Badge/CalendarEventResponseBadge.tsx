@@ -2,10 +2,10 @@ import React, { memo } from "react";
 import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
 
 import {
-  useEsiClientContext,
   useGetCharactersCharacterIdCalendarEventId,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 export type CalendarEventResponseBadgeProps = BadgeProps & {
   eventId?: number;

@@ -10,8 +10,8 @@ import { NextSeo } from "next-seo";
 import {
   getUniverseTypesTypeId,
   useGetUniverseTypesTypeId,
-  useMarketPrices,
 } from "@jitaspace/esi-client";
+import { useMarketPrices } from "@jitaspace/esi-hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   OpenMarketWindowActionIcon,

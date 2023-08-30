@@ -4,7 +4,7 @@ import {
   getUniverseGroupsGroupId,
   useGetUniverseCategoriesCategoryId,
   type GetUniverseGroupsGroupIdQueryResult,
-} from "../client";
+} from "@jitaspace/esi-client";
 
 export const useCategoryGroups = (
   categoryId: number | undefined,

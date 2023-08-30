@@ -1,4 +1,4 @@
-import { type ESIScope } from "../scopes";
+import { type ESIScope } from "@jitaspace/esi-client";
 
 export type EveSsoAccessTokenPayload = {
   scp: ESIScope[];

@@ -2,12 +2,12 @@ import React from "react";
 import { Badge, Group, Stack, Text, Title } from "@mantine/core";
 
 import {
-  useEsiClientContext,
   useGetCharactersCharacterIdCalendarEventId,
   useGetCharactersCharacterIdCalendarEventIdAttendees,
   type GetCharactersCharacterIdCalendarEventIdAttendees200Item,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   CalendarEventAttendanceSelect,
   CalendarEventHumanDurationText,

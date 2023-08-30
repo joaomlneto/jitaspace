@@ -14,10 +14,8 @@ import { openModal } from "@mantine/modals";
 import { format } from "date-fns";
 import { NextSeo } from "next-seo";
 
-import {
-  useCharacterCalendar,
-  type GetCharactersCharacterIdCalendar200Item,
-} from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client";
+import { useCharacterCalendar } from "@jitaspace/esi-hooks";
 import { CalendarIcon } from "@jitaspace/eve-icons";
 
 import { CalendarEventList } from "~/components/Calendar/CalendarEventList/CalendarEventList";

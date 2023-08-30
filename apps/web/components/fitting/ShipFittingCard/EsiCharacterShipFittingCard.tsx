@@ -1,10 +1,8 @@
 import { memo } from "react";
 import { type CardProps } from "@mantine/core";
 
-import {
-  useEsiClientContext,
-  useGetCharactersCharacterIdFittings,
-} from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { ShipFittingCard } from "~/components/fitting";
 

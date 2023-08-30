@@ -4,7 +4,7 @@ import {
   GetIndustrySystems200ItemCostIndicesItemActivity,
   useGetIndustrySystems,
   type GetIndustrySystems200Item,
-} from "../client";
+} from "@jitaspace/esi-client";
 
 export function useSolarSystemCostIndices() {
   const {

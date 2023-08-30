@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Select, type SelectProps } from "@mantine/core";
 
-import { useEsiNamesCache } from "@jitaspace/esi-client";
+import { useEsiNamesCache } from "@jitaspace/esi-hooks";
 
 import { EveEntitySelectItem } from "./EveEntitySelectItem";
 

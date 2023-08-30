@@ -10,10 +10,8 @@ import {
 import { openContextModal } from "@mantine/modals";
 import { NextSeo } from "next-seo";
 
-import {
-  useEsiClientContext,
-  useGetCharactersCharacterIdFittings,
-} from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { FittingIcon } from "@jitaspace/eve-icons";
 import { EveEntitySelect } from "@jitaspace/ui";
 

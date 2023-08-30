@@ -8,11 +8,10 @@ import {
 } from "@mantine/spotlight";
 
 import {
-  useEsiClientContext,
-  useEsiSearch,
   type GetCharactersCharacterIdSearch200,
   type GetCharactersCharacterIdSearchCategoriesItem,
 } from "@jitaspace/esi-client";
+import { useEsiClientContext, useEsiSearch } from "@jitaspace/esi-hooks";
 import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
 
 import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";

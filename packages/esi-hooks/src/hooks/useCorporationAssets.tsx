@@ -6,8 +6,9 @@ import {
   useGetCharactersCharacterId,
   useGetCharactersCharacterIdRoles,
   type GetCorporationsCorporationIdAssets200Item,
-} from "../client";
-import { ESI_BASE_URL } from "../config/constants";
+} from "@jitaspace/esi-client";
+
+import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
 
 export function useCorporationAssets() {

@@ -1,10 +1,8 @@
 import { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import {
-  useEsiClientContext,
-  useGetCharactersCharacterIdMailLists,
-} from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 export type MailingListNameProps = TextProps & {
   mailingListId?: number;

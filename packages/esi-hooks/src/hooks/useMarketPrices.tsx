@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 
-import { useGetMarketsPrices, type GetMarketsPrices200Item } from "../client";
+import {
+  useGetMarketsPrices,
+  type GetMarketsPrices200Item,
+} from "@jitaspace/esi-client";
 
 export function useMarketPrices() {
   const {

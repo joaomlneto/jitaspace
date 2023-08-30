@@ -3,10 +3,8 @@ import { Anchor, Group, Stack, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
-import {
-  useEsiClientContext,
-  useGetCharactersCharacterIdMailLabels,
-} from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   EveMailSenderAnchor,
   EveMailSenderAvatar,

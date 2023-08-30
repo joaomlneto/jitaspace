@@ -8,8 +8,8 @@ import { type AxiosError } from "axios";
 import {
   postCharactersCharacterIdMailLabels,
   PostCharactersCharacterIdMailLabelsBodyColor,
-  useEsiClientContext,
 } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { MailLabelColorSelect } from "@jitaspace/ui";
 import { randomProperty } from "@jitaspace/utils";
 

@@ -1,37 +1,36 @@
 import useSWRInfinite from "swr/infinite";
 
 import {
-  getGetCorporationsCorporationIdContactsKey,
+  getGetAlliancesAllianceIdContactsKey,
+  useGetAlliancesAllianceIdContactsLabels,
   useGetCharactersCharacterId,
-  useGetCorporationsCorporationIdContactsLabels,
-  type GetCorporationsCorporationIdContacts200Item,
-} from "../client";
-import { ESI_BASE_URL } from "../config/constants";
+  type GetAlliancesAllianceIdContacts200Item,
+} from "@jitaspace/esi-client";
+
+import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
 
-export function useCorporationContacts() {
+export function useAllianceContacts() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
   const { data: characterData } = useGetCharactersCharacterId(characterId ?? 0);
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCorporationsCorporationIdContacts200Item[], Error>(
+    useSWRInfinite<GetAlliancesAllianceIdContacts200Item[], Error>(
       function getKey(pageIndex) {
         if (
           !characterId ||
           !isTokenValid ||
-          !scopes.includes("esi-corporations.read_contacts.v1") ||
-          !characterData?.data.corporation_id
+          !scopes.includes("esi-alliances.read_contacts.v1") ||
+          characterData?.data.alliance_id === undefined
         ) {
-          throw new Error(
-            "Insufficient permissions to read corporation contacts",
-          );
+          throw new Error("Insufficient permissions to read alliance contacts");
         }
 
         return () => {
-          const [endpointUrl] = getGetCorporationsCorporationIdContactsKey(
-            characterData.data.corporation_id,
+          const [endpointUrl] = getGetAlliancesAllianceIdContactsKey(
+            characterData.data.alliance_id ?? 0,
           );
           const queryParams = new URLSearchParams();
           queryParams.append("page", `${pageIndex + 1}`);
@@ -57,16 +56,16 @@ export function useCorporationContacts() {
       { revalidateAll: true },
     );
 
-  const { data: labels } = useGetCorporationsCorporationIdContactsLabels(
-    characterData?.data.corporation_id ?? 0,
+  const { data: labels } = useGetAlliancesAllianceIdContactsLabels(
+    characterData?.data.alliance_id ?? 0,
     {},
     {
       swr: {
         enabled:
           !!characterId &&
           isTokenValid &&
-          scopes.includes("esi-corporations.read_contacts.v1") &&
-          characterData?.data.corporation_id !== undefined,
+          scopes.includes("esi-alliances.read_contacts.v1") &&
+          characterData?.data.alliance_id !== undefined,
         revalidateOnFocus: false,
       },
     },

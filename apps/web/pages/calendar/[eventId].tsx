@@ -12,12 +12,12 @@ import {
 import { NextSeo } from "next-seo";
 
 import {
-  useEsiClientContext,
   useGetCharactersCharacterIdCalendarEventId,
   useGetCharactersCharacterIdCalendarEventIdAttendees,
   type GetCharactersCharacterIdCalendarEventIdAttendees200Item,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
 } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import {
   CalendarEventHumanDurationText,

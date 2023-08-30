@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createCache, useCache, type CacheState } from "@react-hook/cache";
 
 import {
@@ -14,7 +14,8 @@ import {
   getUniverseTypesTypeId,
   postUniverseNames,
   type GetCharactersCharacterIdSearchCategoriesItem,
-} from "../client";
+} from "@jitaspace/esi-client";
+
 import {
   allianceIdRanges,
   characterIdRanges,

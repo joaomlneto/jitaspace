@@ -17,7 +17,7 @@ import {
 import { modals } from "@mantine/modals";
 import { NextSeo } from "next-seo";
 
-import { useCharacterMails } from "@jitaspace/esi-client";
+import { useCharacterMails } from "@jitaspace/esi-hooks";
 import {
   EvemailComposeIcon,
   EveMailIcon,

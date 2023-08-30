@@ -14,6 +14,7 @@ const config = {
   transpilePackages: [
     "@jitaspace/auth",
     "@jitaspace/esi-client",
+    "@jitaspace/esi-hooks",
     "@jitaspace/esi-meta-client",
     "@jitaspace/eve-icons",
     "@jitaspace/sde-client",

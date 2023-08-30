@@ -20,7 +20,7 @@ import {
   useEsiNamePrefetch,
   useEsiNamesCache,
   useMarketPrices,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-hooks";
 import { AssetsIcon } from "@jitaspace/eve-icons";
 import {
   AssetLocationSelect,

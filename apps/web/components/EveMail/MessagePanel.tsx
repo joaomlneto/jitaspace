@@ -2,10 +2,10 @@ import React from "react";
 import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
 import {
-  useEsiClientContext,
   useGetCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   EveEntityAnchor,
   EveEntityAvatar,

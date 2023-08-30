@@ -15,7 +15,7 @@ import {
 } from "@tabler/icons-react";
 import { signIn, signOut } from "next-auth/react";
 
-import { useEsiClientContext } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 const useStyles = createStyles((theme) => ({

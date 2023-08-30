@@ -4,8 +4,9 @@ import {
   getGetCharactersCharacterIdCalendarKey,
   type GetCharactersCharacterIdCalendar200Item,
   type GetCharactersCharacterIdCalendarParams,
-} from "../client";
-import { ESI_BASE_URL } from "../config/constants";
+} from "@jitaspace/esi-client";
+
+import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
 
 export function useCharacterCalendar() {

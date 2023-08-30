@@ -5,7 +5,7 @@ import { Anchor, Skeleton, type AnchorProps } from "@mantine/core";
 import {
   useEsiName,
   type ResolvableEntityCategory,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-hooks";
 
 export type EveEntityAnchorProps = Omit<AnchorProps, "component" | "href"> &
   Omit<LinkProps, "href"> &

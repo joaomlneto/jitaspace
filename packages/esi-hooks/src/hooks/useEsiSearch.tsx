@@ -2,7 +2,8 @@ import {
   useGetCharactersCharacterIdSearch,
   type GetCharactersCharacterIdSearchCategoriesItem,
   type LanguageParameter,
-} from "../client";
+} from "@jitaspace/esi-client";
+
 import { useEsiClientContext } from "./useEsiClientContext";
 
 export function useEsiSearch({

@@ -1,7 +1,7 @@
 import { memo, useState } from "react";
 import { Select, type SelectProps } from "@mantine/core";
 
-import { useCharacterAssets, useEsiNamesCache } from "@jitaspace/esi-client";
+import { useCharacterAssets, useEsiNamesCache } from "@jitaspace/esi-hooks";
 
 import { AssetLocationSelectItem } from "./AssetLocationSelectItem";
 
