@@ -19,17 +19,19 @@ packages
   ├─ auth
   |   └─ next-auth package preconfigured to use EVE SSO
   ├─ esi-client
-      └─ Generated Typescript/React client for ESI API
-  ├─ esi-client
-      └─ Generated Typescript/React client for ESI Meta API
-  ├─ eslint-config
-      └─ Base ESLint Configuration for this repository
-  └─ eve-icons
-      └─ Collection of EVE Icons as react components
-  └─ tiptap-eve
-      └─ Custom Tiptap (https://tiptap.dev) editor supporting EVE HTML syntax
-  └─ ui
-      └─ React UI components
+  |   └─ Generated Typescript/React client for ESI API
+  ├─ esi-hooks
+  |   └─ React hooks for high-level ESI interactions
+  ├─ esi-meta-client
+  |   └─ Generated Typescript/React client for ESI Meta API
+  ├─ eve-icons
+  |   └─ Collection of EVE Icons as react components
+  ├─ sde-client
+  |   └─ Generated Typescript/React client for ESI SDE API at https://sde.jita.space
+  ├─ tiptap-eve
+  |   └─ Custom Tiptap (https://tiptap.dev) editor supporting EVE HTML syntax
+  ├─ ui
+  |   └─ React UI components
   └─ utils
       └─ Diverse utilities that don't fit anywhere else
 tooling
