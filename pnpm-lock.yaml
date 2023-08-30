@@ -162,8 +162,8 @@ importers:
         specifier: ^10.38.1
         version: 10.38.1
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: 18.2.15
         version: 18.2.15
@@ -391,8 +391,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3(@tiptap/pm@2.0.3)
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: 18.2.21
         version: 18.2.21
@@ -559,8 +559,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -605,8 +605,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -648,8 +648,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -694,8 +694,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -737,8 +737,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -774,8 +774,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: ^18.2.21
         version: 18.2.21
@@ -837,8 +837,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3(@tiptap/pm@2.0.3)
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: 18.2.21
         version: 18.2.21
@@ -964,8 +964,8 @@ importers:
         specifier: ^2.0.3
         version: 2.0.3(@tiptap/pm@2.0.3)
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       '@types/react':
         specifier: 18.2.21
         version: 18.2.21
@@ -1022,8 +1022,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.15.11
-        version: 18.15.11
+        specifier: ^18.17.12
+        version: 18.17.12
       eslint:
         specifier: ^8.48.0
         version: 8.48.0
@@ -5461,9 +5461,6 @@ packages:
   /@types/node@12.20.55:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: false
-
-  /@types/node@18.15.11:
-    resolution: {integrity: sha512-E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==}
 
   /@types/node@18.17.12:
     resolution: {integrity: sha512-d6xjC9fJ/nSnfDeU0AMDsaJyb1iHsqCSOdi84w4u+SlN/UgQdY5tRhpMzaFYsI4mnpvgTivEaQd0yOUhAtOnEQ==}
