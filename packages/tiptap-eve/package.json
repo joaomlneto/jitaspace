@@ -16,7 +16,7 @@
     "@mantine/core": "^6.0.13",
     "@mantine/hooks": "^6.0.13",
     "@mantine/tiptap": "^6.0.13",
-    "@tabler/icons-react": "^2.22.0",
+    "@tabler/icons-react": "^2.32.0",
     "@tiptap/extension-character-count": "^2.0.3",
     "@tiptap/extension-color": "^2.0.3",
     "@tiptap/extension-hard-break": "^2.0.3",
