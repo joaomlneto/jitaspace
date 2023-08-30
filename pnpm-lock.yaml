@@ -303,10 +303,10 @@ importers:
         specifier: ^8.48.0
         version: 8.48.0
       react:
-        specifier: 18.2.0
+        specifier: ^18.2.0
         version: 18.2.0
       react-dom:
-        specifier: ^18.2.0
+        specifier: '>=18.2.0'
         version: 18.2.0(react@18.2.0)
       tsup:
         specifier: ^7.2.0
