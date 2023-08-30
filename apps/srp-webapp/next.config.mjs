@@ -40,23 +40,6 @@ const config = {
       },
     ],
   },
-
-  rewrites: async () => [
-    {
-      "source": "/analytics/:match*",
-      "destination": "https://analytics.umami.is/:match*", // Proxy to Umami
-    }
-  ],
-
-  async redirects() {
-    return ([
-        {
-          source: '/bookmarks',
-          destination: 'https://github.com/esi/esi-issues/issues/1340',
-          permanent: false
-        },
-    ])
-  }
 };
 
 const withPWA = withPWAInit({
