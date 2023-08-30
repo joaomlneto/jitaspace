@@ -1,4 +1,5 @@
+# https://github.com/vercel/turbo/issues/3340#issuecomment-1398011525
 packages:
-  - apps/**
-  - packages/**
-  - tooling/**
+  - apps/*
+  - packages/*
+  - tooling/*
