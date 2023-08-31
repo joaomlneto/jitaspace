@@ -114,7 +114,7 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(@prisma/client@5.2.0)(next-auth@4.22.1)
       '@prisma/client':
-        specifier: ^5.1.1
+        specifier: ^5.2.0
         version: 5.2.0(prisma@5.2.0)
       '@react-hook/cache':
         specifier: ^1.1.1
@@ -271,7 +271,7 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3
       prisma:
-        specifier: ^5.1.1
+        specifier: ^5.2.0
         version: 5.2.0
       typescript:
         specifier: ^5.2.2
