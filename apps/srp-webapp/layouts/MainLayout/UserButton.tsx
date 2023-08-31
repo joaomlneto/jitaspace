@@ -7,11 +7,19 @@ import {
   UnstyledButton,
   type UnstyledButtonProps,
 } from "@mantine/core";
+import { showNotification } from "@mantine/notifications";
 import { signIn, signOut } from "next-auth/react";
 
+import { useGetCharactersCharacterId } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
-import { RecruitmentIcon, TerminateIcon } from "@jitaspace/eve-icons";
+import {
+  CorporationIcon,
+  RecruitmentIcon,
+  TerminateIcon,
+} from "@jitaspace/eve-icons";
 import { CharacterAvatar } from "@jitaspace/ui";
+
+import { env } from "~/env.mjs";
 
 const useStyles = createStyles((theme) => ({
   user: {
@@ -36,6 +44,17 @@ interface UserButtonProps extends UnstyledButtonProps {
 export default function UserButton({ ...others }: UserButtonProps) {
   const { classes } = useStyles();
   const { characterId, characterName, scopes } = useEsiClientContext();
+  const { data: character } = useGetCharactersCharacterId(
+    characterId ?? 0,
+    {},
+    { swr: { enabled: !!characterId } },
+  );
+
+  const inSrpCorp =
+    character?.data.corporation_id.toString() ===
+    env.NEXT_PUBLIC_SRP_CORPORATION_ID;
+  const isManager =
+    inSrpCorp && scopes.includes("esi-characters.read_corporation_roles.v1");
 
   return (
     <Menu withArrow position="bottom" transitionProps={{ transition: "pop" }}>
@@ -53,6 +72,42 @@ export default function UserButton({ ...others }: UserButtonProps) {
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
+        {inSrpCorp && !isManager && (
+          <Menu.Item
+            icon={<CorporationIcon width={20} />}
+            onClick={() => {
+              showNotification({
+                message: "Log in as manager",
+              });
+              void signIn(
+                "eveonline",
+                {},
+                {
+                  scope: [
+                    ...scopes,
+                    "esi-characters.read_corporation_roles.v1",
+                    "esi-wallet.read_corporation_wallets.v1",
+                    "esi-ui.open_window.v1",
+                  ].join(" "),
+                },
+              );
+            }}
+          >
+            Log in as manager
+          </Menu.Item>
+        )}
+        {isManager && (
+          <Menu.Item
+            icon={<CorporationIcon width={20} />}
+            onClick={() => {
+              showNotification({
+                message: "Work in progress!",
+              });
+            }}
+          >
+            Administration
+          </Menu.Item>
+        )}
         <Menu.Item
           icon={<RecruitmentIcon width={20} />}
           onClick={() => {

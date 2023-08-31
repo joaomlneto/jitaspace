@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
 
-import { authOptions } from "@jitaspace/auth";
+import { authOptions } from "~/config/auth";
 
 export default NextAuth(authOptions);

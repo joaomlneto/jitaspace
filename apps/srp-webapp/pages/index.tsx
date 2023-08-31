@@ -1,6 +1,7 @@
 import React, { type ReactElement } from "react";
 import { GetServerSideProps } from "next";
 import { Container, JsonInput } from "@mantine/core";
+import { useSession } from "next-auth/react";
 
 import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
@@ -37,10 +38,10 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
 };
 
 export default function Page({ serverEnv }: PageProps) {
-  const xxx = useGetCorporationsCorporationId(
+  const { data: corporation } = useGetCorporationsCorporationId(
     parseInt(env.NEXT_PUBLIC_SRP_CORPORATION_ID),
   );
-  const { data: corporation } = xxx;
+  const { data: session } = useSession();
   return (
     <Container size="md">
       {corporation?.data && (
@@ -66,6 +67,11 @@ export default function Page({ serverEnv }: PageProps) {
           null,
           2,
         )}
+        autosize
+      />
+      <JsonInput
+        label="Session Data"
+        value={JSON.stringify(session, null, 2)}
         autosize
       />
     </Container>

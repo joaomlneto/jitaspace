@@ -260,12 +260,5 @@ export default async function NextApiRouteHandler(
       .map((module) => `${names[module.type_id]} x${module.quantity}`),
   ];
 
-  return res.json({
-    shipItemId: currentShip.ship_item_id,
-    shipName: currentShip.ship_name,
-    shipTypeId: currentShip.ship_type_id,
-    itemsInShip: modules,
-    names,
-    eft: eft.join("\n").trim(),
-  });
+  return res.json({});
 }
