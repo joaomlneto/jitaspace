@@ -1,7 +1,7 @@
-import * as jose from "jose";
 import { z } from "zod";
 
 import { getCorporationsCorporationIdWallets } from "@jitaspace/esi-client";
+import { getEveSsoAccessTokenPayload } from "@jitaspace/esi-hooks";
 
 import { env } from "~/env.mjs";
 import {
@@ -12,22 +12,17 @@ import {
 import { prisma } from "~/server/db";
 
 async function getValidAccessToken(): Promise<string> {
-  const x = await prisma.accountingTokens.findFirst();
-  const { characterId, accessToken, refreshToken } = x;
-  // Check if token is valid (signature, expiration)
-  const JWKS = jose.createRemoteJWKSet(
-    new URL("https://login.eveonline.com/oauth/jwks"),
-  );
-  const token = await jose.jwtVerify(accessToken, JWKS, {
-    issuer: "login.eveonline.com",
-    audience: "EVE Online",
-  });
-  if (!token.payload.sub) {
-    throw new Error("no subject found in token");
-  }
+  // get a token from the DB
+  const entry = await prisma.accountingTokens.findFirst();
+  if (!entry) throw new Error("no tokens available");
+  const { characterId, accessToken, refreshToken } = entry;
+
+  // decode token and get its payload
+  const payload = getEveSsoAccessTokenPayload(accessToken);
+  if (!payload) throw new Error("unable to get token payload");
 
   // if token is valid and is not expiring soon, return it.
-  if (Date.now() < Number(token.payload.sub) - 10000 /* 10 seconds */) {
+  if (Date.now() < Number(payload.sub) - 10000 /* 10 seconds */) {
     return accessToken;
   }
 
@@ -87,7 +82,7 @@ async function getValidAccessToken(): Promise<string> {
   }
 }
 
-export const exampleRouter = createTRPCRouter({
+export const walletRouter = createTRPCRouter({
   hello: publicProcedure
     .input(z.object({ text: z.string() }))
     .query(({ input }) => {
@@ -96,18 +91,12 @@ export const exampleRouter = createTRPCRouter({
       };
     }),
 
-  getAll: publicProcedure.query(({ ctx }) => {
-    return ctx.prisma.accountingTokens.findMany();
-  }),
-
   getCorporationWalletBalance: publicProcedure.query(async ({ ctx }) => {
-    const tokens = await ctx.prisma.accountingTokens.findMany();
-    const token = tokens[0];
-    if (!token) throw new Error("No tokens available!");
+    const accessToken = await getValidAccessToken();
 
     const result = await getCorporationsCorporationIdWallets(
       Number(env.NEXT_PUBLIC_SRP_CORPORATION_ID),
-      { token: token?.accessToken },
+      { token: accessToken },
     );
     const x = result.data;
     return x;
