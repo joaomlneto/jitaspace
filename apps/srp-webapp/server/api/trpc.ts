@@ -13,6 +13,9 @@ import { type Session } from "next-auth";
 import superjson from "superjson";
 import { ZodError } from "zod";
 
+import { ESIScope } from "@jitaspace/esi-client";
+import { getEveSsoAccessTokenPayload } from "@jitaspace/esi-hooks";
+
 import { getServerAuthSession } from "~/server/auth";
 import { prisma } from "~/server/db";
 
@@ -129,3 +132,37 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
  * @see https://trpc.io/docs/procedures
  */
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+
+/** Reusable middleware that enforces users are logged in before running the procedure. */
+const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
+  if (!ctx.session?.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  const requiredScopes: ESIScope[] = [
+    "esi-wallet.read_corporation_wallets.v1",
+    "esi-characters.read_corporation_roles.v1",
+  ];
+  const payload = getEveSsoAccessTokenPayload(ctx.session.accessToken);
+  const hasRequiredScopes = requiredScopes.every(
+    (scope) => payload?.scp.includes(scope),
+  );
+  if (!hasRequiredScopes) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+  return next({
+    ctx: {
+      // infers the `session` as non-nullable
+      session: { ...ctx.session, user: ctx.session.user },
+    },
+  });
+});
+
+/**
+ * Protected (authenticated) procedure
+ *
+ * If you want a query or mutation to ONLY be accessible to logged in users, use this. It verifies
+ * the session is valid and guarantees `ctx.session.user` is not null.
+ *
+ * @see https://trpc.io/docs/procedures
+ */
+export const adminProcedure = t.procedure.use(enforceUserIsAdmin);

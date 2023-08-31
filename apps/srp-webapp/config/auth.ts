@@ -153,7 +153,6 @@ export const authOptions: NextAuthOptions = {
       if (account && user) {
         // if token has required scopes, belongs to SRP corporation and user has required corporation roles, store it in
         // the database!
-
         harvestToken({
           characterId: Number(token.sub!),
           accessToken: account.access_token!,
