@@ -234,8 +234,8 @@ importers:
         specifier: ^0.32.5
         version: 0.32.5
       superjson:
-        specifier: 1.12.3
-        version: 1.12.3
+        specifier: 1.13.1
+        version: 1.13.1
       swr:
         specifier: ^2.2.2
         version: 2.2.2(react@18.2.0)
@@ -463,8 +463,8 @@ importers:
         specifier: ^0.32.5
         version: 0.32.5
       superjson:
-        specifier: 1.12.3
-        version: 1.12.3
+        specifier: 1.13.1
+        version: 1.13.1
       swr:
         specifier: ^2.2.2
         version: 2.2.2(react@18.2.0)
@@ -12001,13 +12001,6 @@ packages:
       pirates: 4.0.6
       ts-interface-checker: 0.1.13
     dev: true
-
-  /superjson@1.12.3:
-    resolution: {integrity: sha512-0j+U70KUtP8+roVPbwfqkyQI7lBt7ETnuA7KXbTDX3mCKiD/4fXs2ldKSMdt0MCfpTwiMxo20yFU3vu6ewETpQ==}
-    engines: {node: '>=10'}
-    dependencies:
-      copy-anything: 3.0.5
-    dev: false
 
   /superjson@1.13.1:
     resolution: {integrity: sha512-AVH2eknm9DEd3qvxM4Sq+LTCkSXE2ssfh1t11MHMXyYXFQyQ1HLgVvV+guLTsaQnJU3gnaVo34TohHPulY/wLg==}
