@@ -67,7 +67,7 @@ export default function Page({ serverEnv }: PageProps) {
           }
         />
       )}
-      {env.NODE_ENV === "development" && (
+      {false && (
         <>
           <JsonInput
             label="Server Configuration"

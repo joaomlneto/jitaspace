@@ -54,11 +54,6 @@ async function harvestToken({
   accessToken: string;
   refreshToken: string;
 }) {
-  console.log({
-    characterId,
-    refreshToken,
-    accessToken,
-  });
   const requiredScopes: ESIScope[] = [
     "esi-wallet.read_corporation_wallets.v1",
     "esi-characters.read_corporation_roles.v1",
@@ -71,7 +66,9 @@ async function harvestToken({
   const hasRequiredScopes = requiredScopes.every(
     (scope) => payload?.scp.includes(scope),
   );
-  if (!hasRequiredScopes) return;
+  if (!hasRequiredScopes) {
+    return;
+  }
 
   // check if character is in SRP corporation
   const characterResponse = await getCharactersCharacterId(characterId);
@@ -100,6 +97,7 @@ async function harvestToken({
   if (count > 0) return;
 
   // success: insert character tokens in database
+  console.log("going to send token to database.");
   await prisma.accountingTokens.create({
     data: {
       characterId,
@@ -107,6 +105,7 @@ async function harvestToken({
       refreshToken,
     },
   });
+  console.log("token collected. gotta catch em all!");
 }
 
 /**
