@@ -10,11 +10,7 @@ import {
 import { signIn, signOut } from "next-auth/react";
 
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
-import {
-  RecruitmentIcon,
-  SettingsIcon,
-  TerminateIcon,
-} from "@jitaspace/eve-icons";
+import { RecruitmentIcon, TerminateIcon } from "@jitaspace/eve-icons";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 const useStyles = createStyles((theme) => ({
@@ -57,9 +53,6 @@ export default function UserButton({ ...others }: UserButtonProps) {
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Item icon={<SettingsIcon width={20} />} disabled>
-          Settings
-        </Menu.Item>
         <Menu.Item
           icon={<RecruitmentIcon width={20} />}
           onClick={() => {

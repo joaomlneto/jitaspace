@@ -8,13 +8,11 @@ import React, {
 import { type NextPage } from "next";
 import { type AppProps } from "next/app";
 import Head from "next/head";
-import Script from "next/script";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { Analytics } from "@vercel/analytics/react";
 import type { Session } from "next-auth";
 import { SessionProvider, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
@@ -29,7 +27,9 @@ import {
 } from "@jitaspace/esi-hooks";
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
+import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
+import { api } from "~/utils/api";
 import RouterTransition from "../components/RouterTransition";
 
 const queryClient = new QueryClient();
@@ -87,10 +87,10 @@ const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
   return useMemo(() => children, [children]);
 };
 
-export default function App({
+const App = ({
   Component,
   pageProps: { session, ...pageProps },
-}: AppPropsWithLayout) {
+}: AppPropsWithLayout) => {
   const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
   const requiredScopes = Component.requiredScopes;
 
@@ -150,57 +150,29 @@ export default function App({
         />
         <link rel="manifest" href="/manifest.json" />
         <meta name="twitter:card" content="summary" />
-        <meta name="twitter:url" content="https://www.jita.space" />
-        <meta name="twitter:title" content="Jita" />
+        <meta name="twitter:url" content="https://42outunis.com" />
+        <meta name="twitter:title" content="The Outuni Project" />
         <meta name="twitter:description" content="EVE Online Tools" />
         <meta name="twitter:image" content="/logo.png" />
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="Jita" />
-        <meta property="og:description" content="EVE Online Tools" />
-        <meta property="og:site_name" content="Jita" />
-        <meta property="og:url" content="https://www.jita.space" />
-        <meta property="og:image" content="/api/opengraph/image" />
+        <meta property="og:title" content="The Outuni Project" />
+        <meta
+          property="og:description"
+          content="EVE Online Incursion Community"
+        />
+        <meta property="og:site_name" content="The Outuni Project" />
+        <meta property="og:url" content="https://42outunis.com" />
       </Head>
 
       <DefaultSeo
-        defaultTitle="Jita"
-        titleTemplate="%s | Jita"
-        description="EVE Online Tools"
-        openGraph={{
-          title: "Jita",
-          url: "https://www.jita.space",
-          type: "website",
-          images: [
-            {
-              type: "image/png",
-              alt: "Jita Logo",
-              width: 1200,
-              height: 630,
-              url: "https://www.jita.space/api/opengraph/image",
-              secureUrl: "https://www.jita.space/api/opengraph/image",
-            },
-          ],
-          siteName: "Jita",
-        }}
+        defaultTitle="The Outuni Project"
+        titleTemplate="%s | The Outuni Project"
+        description="EVE Online Incursions Community"
         twitter={{
-          cardType: "summary_large_image",
-          site: "https://www.jita.space",
+          site: "https://42outunis.com",
         }}
         themeColor="#9bb4d0"
       />
-
-      <Script
-        strategy="afterInteractive"
-        async
-        defer
-        // /analytics is a proxy to the umami server - set in next.config.mjs
-        src={"/analytics/script.js"}
-        data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-        //data-do-not-track="true"
-        data-domains="www.jita.space"
-      ></Script>
-
-      <Analytics />
 
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} />
@@ -216,7 +188,10 @@ export default function App({
                   >
                     <Notifications />
                     <RouterTransition />
-                    <ModalsProvider modalProps={{ centered: true }}>
+                    <ModalsProvider
+                      modals={contextModals}
+                      modalProps={{ centered: true }}
+                    >
                       {getLayout(
                         <ScopeGuard requiredScopes={requiredScopes}>
                           <Component {...pageProps} />
@@ -232,4 +207,6 @@ export default function App({
       </QueryClientProvider>
     </>
   );
-}
+};
+
+export default api.withTRPC(App);

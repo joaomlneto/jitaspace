@@ -12,8 +12,10 @@ const server = z.object({
       ? z.string().min(1)
       : z.string().min(1).optional(),
 
-  EVE_CLIENT_ID: z.string(),
-  EVE_CLIENT_SECRET: z.string(),
+  DATABASE_URL: z.string().min(1),
+
+  EVE_CLIENT_ID: z.string().min(1),
+  EVE_CLIENT_SECRET: z.string().min(1),
 });
 
 /**
@@ -21,15 +23,18 @@ const server = z.object({
  * built with invalid env vars. To expose them to the client, prefix them with `NEXT_PUBLIC_`.
  */
 const client = z.object({
+  NEXT_PUBLIC_SRP_CORPORATION_ID: z.string().min(1),
 });
 
 /**
  * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
- * middlewares) or client-side so we need to destruct manually.
+ * middlewares) or client-side, so we need to destruct manually.
  *
  * @type {Record<keyof z.infer<typeof server> | keyof z.infer<typeof client>, string | undefined>}
  */
 const processEnv = {
+  NEXT_PUBLIC_SRP_CORPORATION_ID: process.env.NEXT_PUBLIC_SRP_CORPORATION_ID,
+  DATABASE_URL: process.env.DATABASE_URL,
   NODE_ENV: process.env.NODE_ENV,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,

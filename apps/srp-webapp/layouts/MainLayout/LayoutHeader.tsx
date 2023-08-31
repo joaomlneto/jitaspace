@@ -14,10 +14,9 @@ import {
   rem,
   ScrollArea,
   Text,
-  Title,
 } from "@mantine/core";
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
-import { openContextModal } from "@mantine/modals";
+import { signIn } from "next-auth/react";
 
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
@@ -150,13 +149,13 @@ export function LayoutHeader() {
                 <LoginWithEveOnlineButton
                   size="small"
                   onClick={() => {
-                    openContextModal({
-                      modal: "login",
-                      title: <Title order={3}>Login</Title>,
-                      size: "xl",
-                      centered: false,
-                      innerProps: {},
-                    });
+                    void signIn(
+                      "eveonline",
+                      {},
+                      {
+                        scope: [].join(" "),
+                      },
+                    );
                   }}
                 />
               )}
@@ -200,12 +199,13 @@ export function LayoutHeader() {
                 size="small"
                 onClick={() => {
                   toggleDrawer();
-                  openContextModal({
-                    modal: "login",
-                    title: "Login",
-                    size: "xl",
-                    innerProps: {},
-                  });
+                  void signIn(
+                    "eveonline",
+                    {},
+                    {
+                      scope: [].join(" "),
+                    },
+                  );
                 }}
               />
             )}
