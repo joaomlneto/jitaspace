@@ -67,32 +67,37 @@ export default function Page({ serverEnv }: PageProps) {
           }
         />
       )}
-      <JsonInput
-        label="Server Configuration"
-        value={JSON.stringify(serverEnv, null, 2)}
-        autosize
-      />
-      <JsonInput
-        label="Client Configuration"
-        value={JSON.stringify(
-          {
-            NEXT_PUBLIC_SRP_CORPORATION_ID: env.NEXT_PUBLIC_SRP_CORPORATION_ID,
-          },
-          null,
-          2,
-        )}
-        autosize
-      />
-      <JsonInput
-        label="Session Data"
-        value={JSON.stringify(session, null, 2)}
-        autosize
-      />
-      <JsonInput
-        label="Wallet Balance"
-        value={JSON.stringify(corporationWalletBalance, null, 2)}
-        autosize
-      />
+      {env.NODE_ENV === "development" && (
+        <>
+          <JsonInput
+            label="Server Configuration"
+            value={JSON.stringify(serverEnv, null, 2)}
+            autosize
+          />
+          <JsonInput
+            label="Client Configuration"
+            value={JSON.stringify(
+              {
+                NEXT_PUBLIC_SRP_CORPORATION_ID:
+                  env.NEXT_PUBLIC_SRP_CORPORATION_ID,
+              },
+              null,
+              2,
+            )}
+            autosize
+          />
+          <JsonInput
+            label="Session Data"
+            value={JSON.stringify(session, null, 2)}
+            autosize
+          />
+          <JsonInput
+            label="Wallet Balance"
+            value={JSON.stringify(corporationWalletBalance, null, 2)}
+            autosize
+          />
+        </>
+      )}
     </Container>
   );
 }
