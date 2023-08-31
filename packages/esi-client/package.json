@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@react-hook/cache": "^1.1.1",
-    "axios": "^1.4.0",
+    "axios": "^1.5.0",
     "swr": "^2.2.2"
   },
   "devDependencies": {
