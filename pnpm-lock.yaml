@@ -189,8 +189,8 @@ importers:
         specifier: 8.0.0-rc12
         version: 8.0.0-rc12(react@18.2.0)
       humanize-duration:
-        specifier: ^3.28.0
-        version: 3.28.0
+        specifier: ^3.29.0
+        version: 3.29.0
       jose:
         specifier: ^4.14.4
         version: 4.14.4
@@ -418,8 +418,8 @@ importers:
         specifier: 8.0.0-rc12
         version: 8.0.0-rc12(react@18.2.0)
       humanize-duration:
-        specifier: ^3.28.0
-        version: 3.28.0
+        specifier: ^3.29.0
+        version: 3.29.0
       jose:
         specifier: ^4.14.4
         version: 4.14.4
@@ -8651,8 +8651,8 @@ packages:
     resolution: {integrity: sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==}
     engines: {node: '>=10.17.0'}
 
-  /humanize-duration@3.28.0:
-    resolution: {integrity: sha512-jMAxraOOmHuPbffLVDKkEKi/NeG8dMqP8lGRd6Tbf7JgAeG33jjgPWDbXXU7ypCI0o+oNKJFgbSB9FKVdWNI2A==}
+  /humanize-duration@3.29.0:
+    resolution: {integrity: sha512-G5wZGwYTLaQAmYqhfK91aw3xt6wNbJW1RnWDh4qP1PvF4T/jnkjx2RVhG5kzB2PGsYGTn+oSDBQp+dMdILLxcg==}
     dev: false
 
   /ibm-openapi-validator@0.97.5:
