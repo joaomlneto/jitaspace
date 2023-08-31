@@ -40,6 +40,13 @@ const config = {
       },
     ],
   },
+
+  rewrites: async () => [
+    {
+      "source": "/type/:match*",
+      "destination": "https://www.jita.space/:match*",
+    }
+  ],
 };
 
 const withPWA = withPWAInit({
