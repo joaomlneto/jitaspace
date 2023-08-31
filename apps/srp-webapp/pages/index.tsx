@@ -48,7 +48,7 @@ export default function Page({ serverEnv }: PageProps) {
   const { data: corporationWalletBalance } =
     api.wallet.getCorporationWalletBalance.useQuery();
 
-  const totalBalance = (corporationWalletBalance ?? []).reduce(
+  const totalBalance = corporationWalletBalance?.reduce(
     (total, division) => total + division.balance,
     0,
   );
