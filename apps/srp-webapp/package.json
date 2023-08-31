@@ -71,7 +71,7 @@
     "jwt-decode": "^3.1.2",
     "mantine-datatable": "^2.9.12",
     "next": "^13.4.19",
-    "next-auth": "^4.22.1",
+    "next-auth": "^4.23.1",
     "next-seo": "^6.1.0",
     "nextjs-cors": "^2.1.2",
     "nextjs-routes": "^2.0.1",
