@@ -11,38 +11,80 @@ import {
 } from "~/server/api/trpc";
 import { prisma } from "~/server/db";
 
-async function validateSsoToken(accessToken: string) {
+async function getValidAccessToken(): Promise<string> {
+  const x = await prisma.accountingTokens.findFirst();
+  const { characterId, accessToken, refreshToken } = x;
   // Check if token is valid (signature, expiration)
   const JWKS = jose.createRemoteJWKSet(
     new URL("https://login.eveonline.com/oauth/jwks"),
   );
-  const x = await jose.jwtVerify(accessToken, JWKS, {
+  const token = await jose.jwtVerify(accessToken, JWKS, {
     issuer: "login.eveonline.com",
     audience: "EVE Online",
   });
-  if (!x.payload.sub) {
+  if (!token.payload.sub) {
     throw new Error("no subject found in token");
   }
-}
 
-async function refreshAccessTokenIfExpired({
-  characterId,
-  accessToken,
-  refreshToken,
-}: {
-  characterId: string;
-  accessToken: string;
-  refreshToken: string;
-}): Promise<string> {
-  await validateSsoToken(accessToken);
-  // TODO: work in progress
-  return "";
-}
+  // if token is valid and is not expiring soon, return it.
+  if (Date.now() < Number(token.payload.sub) - 10000 /* 10 seconds */) {
+    return accessToken;
+  }
 
-async function getAccessToken() {
-  const token = await prisma.accountingTokens.findFirst();
-  if (!token) throw new Error("No tokens available");
-  return token;
+  // access token has expired or is about to, try to refresh it
+  try {
+    const url = "https://login.eveonline.com/v2/oauth/token";
+
+    // Base64 encode the client ID and secret
+    const headerString = `${env.EVE_CLIENT_ID}:${env.EVE_CLIENT_SECRET}`;
+    const buff = Buffer.from(headerString, "utf-8");
+    const authHeader = buff.toString("base64");
+
+    const refreshedTokensResponse = await fetch(url, {
+      method: "POST",
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshToken,
+      }),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${authHeader}`,
+        Host: "login.eveonline.com",
+      },
+    });
+
+    if (!refreshedTokensResponse.ok) {
+      throw new Error("error refreshing access token");
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const refreshedTokens: {
+      access_token: string;
+      expires_in: number;
+      refresh_token: string;
+    } = await refreshedTokensResponse.json();
+
+    // if tokens changed, update in database
+    if (
+      refreshedTokens.access_token !== accessToken ||
+      refreshedTokens.refresh_token !== refreshToken
+    ) {
+      console.log("UPDATING TOKENS IN DB");
+      await prisma.accountingTokens.update({
+        where: {
+          characterId: characterId,
+        },
+        data: {
+          accessToken: refreshedTokens.access_token,
+          refreshToken: refreshedTokens.refresh_token,
+        },
+      });
+    }
+
+    return refreshedTokens.access_token;
+  } catch (e) {
+    throw new Error("Error refreshing access token");
+  }
 }
 
 export const exampleRouter = createTRPCRouter({
