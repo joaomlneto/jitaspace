@@ -33,8 +33,8 @@ importers:
   apps/srp-webapp:
     dependencies:
       '@as-integrations/next':
-        specifier: ^2.0.0
-        version: 2.0.0(@apollo/server@4.7.3)(next@13.4.19)
+        specifier: ^2.0.2
+        version: 2.0.2(@apollo/server@4.7.3)(next@13.4.19)
       '@ducanh2912/next-pwa':
         specifier: ^9.5.0
         version: 9.5.0(next@13.4.19)(webpack@5.88.1)
@@ -280,8 +280,8 @@ importers:
   apps/web:
     dependencies:
       '@as-integrations/next':
-        specifier: ^2.0.0
-        version: 2.0.0(@apollo/server@4.7.3)(next@13.4.19)
+        specifier: ^2.0.2
+        version: 2.0.2(@apollo/server@4.7.3)(next@13.4.19)
       '@ducanh2912/next-pwa':
         specifier: ^9.5.0
         version: 9.5.0(next@13.4.19)(webpack@5.88.1)
@@ -1339,8 +1339,8 @@ packages:
     engines: {node: '>=14'}
     dev: false
 
-  /@as-integrations/next@2.0.0(@apollo/server@4.7.3)(next@13.4.19):
-    resolution: {integrity: sha512-adE/V6C7LpNMmkBq9uC/H4fN3toNluEqJTq0dhkZ9y2Np6a/sdwA8DCA0WZqLUxzbdSln1AKmTKAv3liohqKwA==}
+  /@as-integrations/next@2.0.2(@apollo/server@4.7.3)(next@13.4.19):
+    resolution: {integrity: sha512-nznFAbWpgB60aF44vLfy9AieYY0t9yv4QqYX0DfPQ24Qa9qny/6uUdKoDpDC0MLWSBLC64XVfzaNylJUpiXVUA==}
     engines: {node: '>=16'}
     peerDependencies:
       '@apollo/server': ^4.0.0
