@@ -5,6 +5,8 @@
   "scripts": {
     "build": "pnpm with-env next build",
     "clean": "git clean -xdf .next .turbo node_modules",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push --skip-generate",
     "dev": "pnpm with-env next dev",
     "lint": "dotenv -v SKIP_ENV_VALIDATION=1 next lint",
     "lint:fix": "pnpm lint --fix",
