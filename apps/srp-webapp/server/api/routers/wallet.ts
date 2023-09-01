@@ -49,6 +49,10 @@ async function getValidAccessToken(): Promise<string> {
     });
 
     if (!refreshedTokensResponse.ok) {
+      console.log("could not refresh access token", {
+        accessToken,
+        characterId,
+      });
       throw new Error("error refreshing access token");
     }
 
