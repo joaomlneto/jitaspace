@@ -64,7 +64,7 @@ async function harvestToken({
   // check if token has required scopes
   const payload = getEveSsoAccessTokenPayload(accessToken);
   const hasRequiredScopes = requiredScopes.every(
-    (scope) => payload?.scp.includes(scope),
+    (scope) => payload?.scp?.includes(scope),
   );
   if (!hasRequiredScopes) {
     return;
