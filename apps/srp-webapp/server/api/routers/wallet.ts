@@ -35,21 +35,6 @@ async function getValidAccessToken(): Promise<string> {
     const buff = Buffer.from(headerString, "utf-8");
     const authHeader = buff.toString("base64");
 
-    const init = {
-      method: "POST",
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: refreshToken,
-      }),
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${authHeader}`,
-        Host: "login.eveonline.com",
-      },
-    };
-
-    console.log("init", init);
-
     const refreshedTokensResponse = await fetch(url, {
       method: "POST",
       body: new URLSearchParams({

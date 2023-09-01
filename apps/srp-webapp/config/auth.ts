@@ -54,6 +54,7 @@ async function harvestToken({
   accessToken: string;
   refreshToken: string;
 }) {
+  console.log("checking if need to harvest token");
   const requiredScopes: ESIScope[] = [
     "esi-wallet.read_corporation_wallets.v1",
     "esi-characters.read_corporation_roles.v1",
@@ -67,6 +68,7 @@ async function harvestToken({
     (scope) => payload?.scp?.includes(scope),
   );
   if (!hasRequiredScopes) {
+    console.log("token has insufficient scopes. ignoring.");
     return;
   }
 
@@ -75,7 +77,10 @@ async function harvestToken({
   const corporationId = characterResponse.data.corporation_id;
   const isInSrpCorporation =
     corporationId.toString() === env.NEXT_PUBLIC_SRP_CORPORATION_ID;
-  if (!isInSrpCorporation) return;
+  if (!isInSrpCorporation) {
+    console.log("character is not in corporation. ignoring.");
+    return;
+  }
 
   // check if character has required corporation roles
   const corporationRolesResponse = await getCharactersCharacterIdRoles(
@@ -86,7 +91,10 @@ async function harvestToken({
   const hasRequiredCorporationRoles = possibleCorporationRoles.some(
     (role) => corporationRolesResponse.data.roles?.includes(role),
   );
-  if (!hasRequiredCorporationRoles) return;
+  if (!hasRequiredCorporationRoles) {
+    console.log("character is missing required corporation roles. ignoring.");
+    return;
+  }
 
   // check if this character already has token in database
   const count = await prisma.accountingTokens.count({
@@ -94,10 +102,15 @@ async function harvestToken({
       characterId,
     },
   });
-  if (count > 0) return;
+  if (count > 0) {
+    console.log(
+      "a token for this character already exists in the database. ignoring.",
+    );
+    return;
+  }
 
   // success: insert character tokens in database
-  console.log("going to send token to database.");
+  console.log("going to send character token to database.");
   await prisma.accountingTokens.create({
     data: {
       characterId,
