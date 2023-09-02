@@ -102,7 +102,10 @@ async function harvestToken({
   const corporationRolesResponse = await getCharactersCharacterIdRoles(
     characterId,
     {},
-    { headers: { Authorization: `Bearer ${accessToken}` } },
+    {
+      baseURL: ESI_BASE_URL,
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
   );
   const hasRequiredCorporationRoles = possibleCorporationRoles.some(
     (role) => corporationRolesResponse.data.roles?.includes(role),
