@@ -1,7 +1,10 @@
 import { z } from "zod";
 
 import { getCorporationsCorporationIdWallets } from "@jitaspace/esi-client";
-import { getEveSsoAccessTokenPayload } from "@jitaspace/esi-hooks";
+import {
+  ESI_BASE_URL,
+  getEveSsoAccessTokenPayload,
+} from "@jitaspace/esi-hooks";
 
 import { env } from "~/env.mjs";
 import {
@@ -102,6 +105,7 @@ export const walletRouter = createTRPCRouter({
     const result = await getCorporationsCorporationIdWallets(
       Number(env.NEXT_PUBLIC_SRP_CORPORATION_ID),
       { token: accessToken },
+      { baseURL: ESI_BASE_URL },
     );
     const x = result.data;
     return x;
