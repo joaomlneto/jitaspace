@@ -66,11 +66,13 @@ async function harvestToken({
     ["Director", "Accountant", "Junior_Accountant"];
 
   // check if token has required scopes
+  console.log("going to decode token", accessToken.slice(0, 50) + "...");
   const payload = getEveSsoAccessTokenPayload(accessToken);
   console.log("token decoded");
   const hasRequiredScopes = requiredScopes.every(
     (scope) => payload?.scp?.includes(scope),
   );
+  console.log("has required scopes?", hasRequiredScopes);
   if (!hasRequiredScopes) {
     console.log("token has insufficient scopes. ignoring.");
     return;
