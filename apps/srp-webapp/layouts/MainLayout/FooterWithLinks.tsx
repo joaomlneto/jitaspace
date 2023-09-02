@@ -1,6 +1,7 @@
 import React from "react";
 import Link, { type LinkProps } from "next/link";
 import {
+  ActionIcon,
   Anchor,
   Container,
   createStyles,
@@ -8,6 +9,8 @@ import {
   rem,
   Text,
 } from "@mantine/core";
+
+import { DiscordIcon, TeamspeakIcon } from "~/components/Icon";
 
 const FOOTER_BREAKPOINT = "xs";
 const FOOTER_HEIGHT_DESKTOP = rem(51);
@@ -32,7 +35,7 @@ const useStyles = createStyles((theme) => ({
 
   inner: {
     display: "flex",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
     paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.md,
@@ -51,12 +54,12 @@ const useStyles = createStyles((theme) => ({
 
 const links: { link: LinkProps["href"]; label: string }[] = [
   {
-    link: "/about",
-    label: "About",
+    link: "https://wiki.42outunis.com",
+    label: "Wiki",
   },
   {
-    link: "/status",
-    label: "Status",
+    link: "https://42outunis.com",
+    label: "Waitlist",
   },
 ];
 
@@ -70,6 +73,7 @@ export function FooterWithLinks() {
       href={link.link}
       size="xs"
       color="dimmed"
+      target="_blank"
     >
       {link.label}
     </Anchor>
@@ -90,7 +94,19 @@ export function FooterWithLinks() {
           </Anchor>
           .
         </Text>
-        {false && <Group className={classes.links}>{items}</Group>}
+        <Group className={classes.links}>
+          {items}
+          <Link href="https://discord.gg/D8pkZhE8DD" target="_blank">
+            <ActionIcon variant="transparent">
+              <DiscordIcon size={16} />
+            </ActionIcon>
+          </Link>
+          <Link href="ts3server://42outunis.com" target="_blank">
+            <ActionIcon variant="transparent">
+              <TeamspeakIcon size={16} />
+            </ActionIcon>
+          </Link>
+        </Group>
       </Container>
     </footer>
   );

@@ -21,6 +21,7 @@ import { signIn } from "next-auth/react";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
+import { AppLogo } from "~/components/Logo";
 import UserButton from "./UserButton";
 
 const useStyles = createStyles((theme) => ({
@@ -133,7 +134,7 @@ export function LayoutHeader() {
           <Group position="apart" sx={{ height: "100%" }}>
             <Link href="/" className={classes.logo}>
               <Group p="xs">
-                <Text>The Outuni Project</Text>
+                <AppLogo height={40} />
               </Group>
             </Link>
 
