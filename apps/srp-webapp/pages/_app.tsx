@@ -16,7 +16,6 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import type { Session } from "next-auth";
 import { SessionProvider, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
-import { Workbox } from "workbox-window";
 
 import { type ESIScope } from "@jitaspace/esi-client";
 import {
@@ -93,41 +92,6 @@ const App = ({
 }: AppPropsWithLayout) => {
   const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
   const requiredScopes = Component.requiredScopes;
-
-  // This hook only run once in browser after the component is rendered for the first time.
-  // It has same effect as the old componentDidMount lifecycle callback.
-  useEffect(() => {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      //const wb = window.workbox;
-      const wb = new Workbox("/sw.js");
-
-      wb.addEventListener("waiting", () => {
-        // `event.wasWaitingBeforeRegister` will be false if this is the first time the updated service worker is waiting.
-        // When `event.wasWaitingBeforeRegister` is true, a previously updated service worker is still waiting.
-        // You may want to customize the UI prompt accordingly.
-        // https://developer.chrome.com/docs/workbox/handling-service-worker-updates/#the-code-to-put-in-your-page
-        if (
-          confirm(
-            "A newer version of this web app is available, reload to update?",
-          )
-        ) {
-          wb.addEventListener("controlling", () => {
-            window.location.reload();
-          });
-
-          // Send a message to the waiting service worker, instructing it to activate.
-          wb.messageSkipWaiting();
-        } else {
-          console.log(
-            "User rejected to update SW, keeping the old version. New version will be automatically loaded when the app is opened next time.",
-          );
-        }
-      });
-
-      // never forget to call register as automatic registration is turned off in next.config.js
-      void wb.register();
-    }
-  }, []);
 
   return (
     <>

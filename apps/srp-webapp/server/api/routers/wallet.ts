@@ -14,6 +14,21 @@ import {
 } from "~/server/api/trpc";
 import { prisma } from "~/server/db";
 
+// given a date, return the number of seconds until that date
+// useful to compute Cache-Control's maxAge field from 'expires' headers
+export function secondsUntilExpires(expirationDate: string): number {
+  console.log("expiration string", expirationDate);
+  const now = new Date();
+  const expiration = new Date(expirationDate);
+  console.log("expiration date", expiration);
+  const ttl = Math.max(
+    1,
+    Math.ceil((expiration.getTime() - now.getTime()) / 1000),
+  );
+  console.log("diff in seconds", ttl);
+  return ttl;
+}
+
 async function getValidAccessToken(): Promise<string> {
   // get a token from the DB
   const entry = await prisma.accountingTokens.findFirst();
@@ -107,8 +122,23 @@ export const walletRouter = createTRPCRouter({
       { token: accessToken },
       { baseURL: ESI_BASE_URL },
     );
-    const x = result.data;
-    return x;
+
+    const expires = result.headers["expires"];
+    const ttl = secondsUntilExpires(expires);
+
+    ctx.res.setHeader(
+      "Cache-Control",
+      `s-maxage=${secondsUntilExpires(
+        expires,
+      )}, stale-while-revalidate=${3600}`,
+    );
+
+    return {
+      fetchedOn: result.headers["last-modified"],
+      expires: expires,
+      ttl: ttl,
+      divisions: result.data,
+    };
   }),
 
   getSecretMessage: protectedProcedure.query(() => {

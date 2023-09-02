@@ -7,10 +7,9 @@ import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 
 import { EveHtmlRenderer } from "~/components/EveHtmlRenderer";
-import { WalletBalance } from "~/components/WalletBalance";
+import { CorporationWalletBalance } from "~/components/WalletBalance/CorporationWalletBalance";
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
-import { api } from "~/utils/api";
 
 type PageProps = {
   serverEnv: {
@@ -45,18 +44,10 @@ export default function Page({ serverEnv }: PageProps) {
   );
   const { data: session } = useSession();
 
-  const { data: corporationWalletBalance } =
-    api.wallet.getCorporationWalletBalance.useQuery();
-
-  const totalBalance = corporationWalletBalance?.reduce(
-    (total, division) => total + division.balance,
-    0,
-  );
-
   return (
     <Container size="md">
       <Container size="xs">
-        <WalletBalance balance={totalBalance} division="SRP Fund" />
+        <CorporationWalletBalance />
       </Container>
       {corporation?.data && (
         <EveHtmlRenderer
@@ -89,11 +80,6 @@ export default function Page({ serverEnv }: PageProps) {
           <JsonInput
             label="Session Data"
             value={JSON.stringify(session, null, 2)}
-            autosize
-          />
-          <JsonInput
-            label="Wallet Balance"
-            value={JSON.stringify(corporationWalletBalance, null, 2)}
             autosize
           />
         </>
