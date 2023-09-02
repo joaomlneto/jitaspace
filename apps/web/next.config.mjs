@@ -52,7 +52,8 @@ const config = {
     return ([
         {
           source: '/bookmarks',
-          destination: 'https://github.com/esi/esi-issues/issues/1340',
+          //destination: 'https://github.com/esi/esi-issues/issues/1340',
+          destination: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
           permanent: false
         },
     ])
