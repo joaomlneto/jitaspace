@@ -37,7 +37,7 @@ export const WalletBalance = memo(
               {division}
             </Text>
             <Skeleton visible={balance === undefined}>
-              <Text weight={700} size="xl">
+              <Text weight={700} size="lg">
                 {(balance ?? 123456789012).toLocaleString()} ISK
               </Text>
             </Skeleton>
