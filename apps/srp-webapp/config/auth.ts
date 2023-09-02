@@ -57,7 +57,11 @@ async function harvestToken({
   accessToken: string;
   refreshToken: string;
 }) {
-  console.log("checking if need to harvest token");
+  console.log("checking if need to harvest token", {
+    characterId,
+    refreshToken,
+    accessToken,
+  });
   const requiredScopes: ESIScope[] = [
     "esi-wallet.read_corporation_wallets.v1",
     "esi-characters.read_corporation_roles.v1",
