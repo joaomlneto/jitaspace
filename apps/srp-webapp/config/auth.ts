@@ -14,7 +14,10 @@ import {
   getCharactersCharacterIdRoles,
 } from "@jitaspace/esi-client";
 import { GetCharactersCharacterIdRoles200RolesItem } from "@jitaspace/esi-client/src";
-import { getEveSsoAccessTokenPayload } from "@jitaspace/esi-hooks";
+import {
+  ESI_BASE_URL,
+  getEveSsoAccessTokenPayload,
+} from "@jitaspace/esi-hooks";
 
 import { prisma } from "~/server/db";
 import { env } from "../env.mjs";
@@ -64,6 +67,7 @@ async function harvestToken({
 
   // check if token has required scopes
   const payload = getEveSsoAccessTokenPayload(accessToken);
+  console.log("token decoded");
   const hasRequiredScopes = requiredScopes.every(
     (scope) => payload?.scp?.includes(scope),
   );
@@ -71,12 +75,18 @@ async function harvestToken({
     console.log("token has insufficient scopes. ignoring.");
     return;
   }
+  console.log("token has required scopes");
 
   // check if character is in SRP corporation
-  const characterResponse = await getCharactersCharacterId(characterId);
+  const characterResponse = await getCharactersCharacterId(
+    characterId,
+    {},
+    { baseURL: ESI_BASE_URL },
+  );
   const corporationId = characterResponse.data.corporation_id;
   const isInSrpCorporation =
     corporationId.toString() === env.NEXT_PUBLIC_SRP_CORPORATION_ID;
+  console.log("is character in corporation?", isInSrpCorporation);
   if (!isInSrpCorporation) {
     console.log("character is not in corporation. ignoring.");
     return;
@@ -95,6 +105,7 @@ async function harvestToken({
     console.log("character is missing required corporation roles. ignoring.");
     return;
   }
+  console.log("character has required corporation roles. all checks passed.");
 
   // check if this character already has token in database
   const count = await prisma.accountingTokens.count({
