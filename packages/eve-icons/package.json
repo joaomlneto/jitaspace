@@ -21,7 +21,7 @@
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
-    "@types/node": "^18.17.13",
+    "@types/node": "^18.17.14",
     "@types/react": "^18.2.21",
     "eslint": "^8.48.0",
     "prettier": "^3.0.3",
