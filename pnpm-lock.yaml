@@ -192,8 +192,8 @@ importers:
         specifier: ^3.29.0
         version: 3.29.0
       jose:
-        specifier: ^4.14.4
-        version: 4.14.4
+        specifier: ^4.14.5
+        version: 4.14.5
       jwt-decode:
         specifier: ^3.1.2
         version: 3.1.2
@@ -418,8 +418,8 @@ importers:
         specifier: ^3.29.0
         version: 3.29.0
       jose:
-        specifier: ^4.14.4
-        version: 4.14.4
+        specifier: ^4.14.5
+        version: 4.14.5
       jwt-decode:
         specifier: ^3.1.2
         version: 3.1.2
@@ -9116,8 +9116,8 @@ packages:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
     dev: false
 
-  /jose@4.14.4:
-    resolution: {integrity: sha512-j8GhLiKmUAh+dsFXlX1aJCbt5KMibuKb+d7j1JaOJG6s2UjX1PQlW+OKB/sD4a/5ZYF4RcmYmLSndOoU3Lt/3g==}
+  /jose@4.14.5:
+    resolution: {integrity: sha512-56ns1XlSI8d5V0t7hilPu8dMbE4YIwrTJU6e7bV1Abyu6oel4tSc4YmD742MoWV3U+vn7O0WlKpinzu2DP0HWw==}
     dev: false
 
   /joycon@3.1.1:
@@ -9746,7 +9746,7 @@ packages:
       '@babel/runtime': 7.22.5
       '@panva/hkdf': 1.1.1
       cookie: 0.5.0
-      jose: 4.14.4
+      jose: 4.14.5
       next: 13.4.19(@babel/core@7.22.1)(react-dom@18.2.0)(react@18.2.0)
       oauth: 0.9.15
       openid-client: 5.4.2
@@ -10105,7 +10105,7 @@ packages:
   /openid-client@5.4.2:
     resolution: {integrity: sha512-lIhsdPvJ2RneBm3nGBBhQchpe3Uka//xf7WPHTIglery8gnckvW7Bd9IaQzekzXJvWthCMyi/xVEyGW0RFPytw==}
     dependencies:
-      jose: 4.14.4
+      jose: 4.14.5
       lru-cache: 6.0.0
       object-hash: 2.2.0
       oidc-token-hash: 5.0.3
