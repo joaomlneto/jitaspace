@@ -135,8 +135,6 @@ export const walletRouter = createTRPCRouter({
 
     return {
       fetchedOn: result.headers["last-modified"],
-      expires: expires,
-      ttl: ttl,
       divisions: result.data,
     };
   }),

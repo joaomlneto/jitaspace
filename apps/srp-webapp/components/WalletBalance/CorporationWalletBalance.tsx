@@ -1,6 +1,7 @@
 import React, { memo } from "react";
-import { Stack, Text } from "@mantine/core";
+import { Group, Stack, Text, Tooltip } from "@mantine/core";
 
+import { InfoIcon } from "@jitaspace/eve-icons";
 import { TimeAgoText } from "@jitaspace/ui";
 
 import { WalletBalance } from "~/components/WalletBalance/WalletBalance";
@@ -19,14 +20,21 @@ export const CorporationWalletBalance = memo(() => {
     <Stack spacing="xs">
       <WalletBalance balance={totalBalance} division="SRP Fund" />
       {corporationWalletBalance && (
-        <Text color="dimmed" size="sm">
-          Updated{" "}
-          <TimeAgoText
-            span
-            date={new Date(corporationWalletBalance?.fetchedOn)}
-            addSuffix
-          />
-        </Text>
+        <Group spacing="xs">
+          <Text color="dimmed" size="sm">
+            Updated{" "}
+            <TimeAgoText
+              span
+              date={new Date(corporationWalletBalance?.fetchedOn)}
+              addSuffix
+            />
+          </Text>
+          <Tooltip label="Updates every 5 minutes" color="dark">
+            <div>
+              <InfoIcon width={20} />
+            </div>
+          </Tooltip>
+        </Group>
       )}
     </Stack>
   );
