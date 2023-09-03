@@ -51,10 +51,14 @@ export const walletRouter = createTRPCRouter({
       take: 50,
     });
     return result.map((dbResult) => {
+      const amount = dbResult.amount ? dbResult.amount.toNumber() : 0;
       return {
         id: dbResult.entryId,
         amount: dbResult.amount,
-        type: dbResult.entryType,
+        type:
+          dbResult.entryType === "player_donation" && amount % 15000000 == 0
+            ? "SRP Payment"
+            : dbResult.entryType,
         date: dbResult.date,
       };
     });
