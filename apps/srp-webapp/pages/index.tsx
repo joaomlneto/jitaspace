@@ -1,12 +1,24 @@
 import React, { type ReactElement } from "react";
 import { GetServerSideProps } from "next";
-import { Container, JsonInput } from "@mantine/core";
+import {
+  Button,
+  Center,
+  Container,
+  Spoiler,
+  Stack,
+  Title,
+} from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { useSession } from "next-auth/react";
 
 import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 
 import { EveHtmlRenderer } from "~/components/EveHtmlRenderer";
+import {
+  CharacterCorporationJournalEntriesTable,
+  PublicCorporationJournalEntriesTable,
+} from "~/components/Table";
 import { CorporationWalletBalance } from "~/components/WalletBalance/CorporationWalletBalance";
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
@@ -42,48 +54,55 @@ export default function Page({ serverEnv }: PageProps) {
   const { data: corporation } = useGetCorporationsCorporationId(
     parseInt(env.NEXT_PUBLIC_SRP_CORPORATION_ID),
   );
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
 
   return (
-    <Container size="md">
-      <Container size="xs">
-        <CorporationWalletBalance />
-      </Container>
-      {corporation?.data && (
-        <EveHtmlRenderer
-          content={
-            corporation?.data.description
-              ? sanitizeFormattedEveString(corporation?.data.description)
-              : "No description"
-          }
-        />
-      )}
-      {false && (
-        <>
-          <JsonInput
-            label="Server Configuration"
-            value={JSON.stringify(serverEnv, null, 2)}
-            autosize
-          />
-          <JsonInput
-            label="Client Configuration"
-            value={JSON.stringify(
-              {
-                NEXT_PUBLIC_SRP_CORPORATION_ID:
-                  env.NEXT_PUBLIC_SRP_CORPORATION_ID,
-              },
-              null,
-              2,
-            )}
-            autosize
-          />
-          <JsonInput
-            label="Session Data"
-            value={JSON.stringify(session, null, 2)}
-            autosize
-          />
-        </>
-      )}
+    <Container size="xs">
+      <Stack>
+        <Center>
+          <Button
+            variant="outline"
+            onClick={() =>
+              modals.open({
+                title: <Title order={3}>Terms and Conditions</Title>,
+                size: "lg",
+                children: (
+                  <EveHtmlRenderer
+                    content={
+                      corporation?.data.description
+                        ? sanitizeFormattedEveString(
+                            corporation?.data.description,
+                          )
+                        : "No description"
+                    }
+                  />
+                ),
+              })
+            }
+          >
+            Terms and conditions
+          </Button>
+        </Center>
+        <Container size="md">
+          <CorporationWalletBalance />
+        </Container>
+        {sessionStatus === "authenticated" && (
+          <>
+            <Title order={3}>My Payments</Title>
+            <Spoiler
+              maxHeight={330}
+              showLabel="Show more"
+              hideLabel="Show less"
+            >
+              <CharacterCorporationJournalEntriesTable />
+            </Spoiler>
+          </>
+        )}
+        <Title order={3}>Latest SRP Transactions</Title>
+        <Spoiler maxHeight={330} showLabel="Show more" hideLabel="Show less">
+          <PublicCorporationJournalEntriesTable />
+        </Spoiler>
+      </Stack>
     </Container>
   );
 }

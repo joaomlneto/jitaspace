@@ -1,109 +1,17 @@
 import { z } from "zod";
 
 import { getCorporationsCorporationIdWallets } from "@jitaspace/esi-client";
-import {
-  ESI_BASE_URL,
-  getEveSsoAccessTokenPayload,
-} from "@jitaspace/esi-hooks";
+import { ESI_BASE_URL } from "@jitaspace/esi-hooks";
 
 import { env } from "~/env.mjs";
 import {
+  adminProcedure,
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { prisma } from "~/server/db";
-
-// given a date, return the number of seconds until that date
-// useful to compute Cache-Control's maxAge field from 'expires' headers
-export function secondsUntilExpires(expirationDate: string): number {
-  console.log("expiration string", expirationDate);
-  const now = new Date();
-  const expiration = new Date(expirationDate);
-  console.log("expiration date", expiration);
-  const ttl = Math.max(
-    1,
-    Math.ceil((expiration.getTime() - now.getTime()) / 1000),
-  );
-  console.log("diff in seconds", ttl);
-  return ttl;
-}
-
-async function getValidAccessToken(): Promise<string> {
-  // get a token from the DB
-  const entry = await prisma.accountingTokens.findFirst();
-  if (!entry) throw new Error("no tokens available");
-  const { characterId, accessToken, refreshToken } = entry;
-
-  // decode token and get its payload
-  const payload = getEveSsoAccessTokenPayload(accessToken);
-  if (!payload) throw new Error("unable to get token payload");
-
-  // if token is valid and is not expiring soon, return it.
-  if (Date.now() < Number(payload.sub) - 10000 /* 10 seconds */) {
-    return accessToken;
-  }
-
-  // access token has expired or is about to, try to refresh it
-  try {
-    const url = "https://login.eveonline.com/v2/oauth/token";
-
-    // Base64 encode the client ID and secret
-    const headerString = `${env.EVE_CLIENT_ID}:${env.EVE_CLIENT_SECRET}`;
-    const buff = Buffer.from(headerString, "utf-8");
-    const authHeader = buff.toString("base64");
-
-    const refreshedTokensResponse = await fetch(url, {
-      method: "POST",
-      body: new URLSearchParams({
-        grant_type: "refresh_token",
-        refresh_token: refreshToken,
-      }),
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${authHeader}`,
-        Host: "login.eveonline.com",
-      },
-    });
-
-    if (!refreshedTokensResponse.ok) {
-      console.log("could not refresh access token", {
-        accessToken,
-        characterId,
-        response: refreshedTokensResponse,
-      });
-      throw new Error("error refreshing access token");
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const refreshedTokens: {
-      access_token: string;
-      expires_in: number;
-      refresh_token: string;
-    } = await refreshedTokensResponse.json();
-
-    // if tokens changed, update in database
-    if (
-      refreshedTokens.access_token !== accessToken ||
-      refreshedTokens.refresh_token !== refreshToken
-    ) {
-      console.log("UPDATING TOKENS IN DB");
-      await prisma.accountingTokens.update({
-        where: {
-          characterId: characterId,
-        },
-        data: {
-          accessToken: refreshedTokens.access_token,
-          refreshToken: refreshedTokens.refresh_token,
-        },
-      });
-    }
-
-    return refreshedTokens.access_token;
-  } catch (e) {
-    throw new Error("Error refreshing access token");
-  }
-}
+import { getTtlFromExpiresHeader } from "~/server/utils/getTtlFromExpiresHeader";
+import { getValidAccessToken } from "~/server/utils/getValidAccessToken";
 
 export const walletRouter = createTRPCRouter({
   hello: publicProcedure
@@ -124,13 +32,11 @@ export const walletRouter = createTRPCRouter({
     );
 
     const expires = result.headers["expires"];
-    const ttl = secondsUntilExpires(expires);
+    const ttl = getTtlFromExpiresHeader(expires);
 
     ctx.res.setHeader(
       "Cache-Control",
-      `s-maxage=${secondsUntilExpires(
-        expires,
-      )}, stale-while-revalidate=${3600}`,
+      `s-maxage=${ttl}, stale-while-revalidate=${3600}`,
     );
 
     return {
@@ -139,11 +45,38 @@ export const walletRouter = createTRPCRouter({
     };
   }),
 
+  getAnonymizedLatestTransactions: publicProcedure.query(async ({ ctx }) => {
+    const result = await ctx.prisma.corporationWalletJournalEntry.findMany({
+      orderBy: [{ entryId: "desc" }],
+      take: 50,
+    });
+    return result.map((dbResult) => {
+      return {
+        id: dbResult.entryId,
+        amount: dbResult.amount,
+        type: dbResult.entryType,
+        date: dbResult.date,
+      };
+    });
+  }),
+
+  getMyLatestTransactions: protectedProcedure.query(async ({ ctx }) => {
+    console.log("USER DATA", ctx.session.user);
+    const result = await ctx.prisma.corporationWalletJournalEntry.findMany({
+      where: {
+        firstPartyId: ctx.session.user.id,
+      },
+      orderBy: [{ entryId: "desc" }],
+      take: 50,
+    });
+    return result;
+  }),
+
   getSecretMessage: protectedProcedure.query(() => {
     return "you can now see this secret message (if you are authed)!";
   }),
 
-  getAdminMessage: protectedProcedure.query(() => {
+  getAdminMessage: adminProcedure.query(() => {
     return "you can now see this secret message (if you are an admin)!";
   }),
 });

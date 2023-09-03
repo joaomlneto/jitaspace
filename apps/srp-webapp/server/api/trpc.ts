@@ -148,6 +148,7 @@ const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
   const requiredScopes: ESIScope[] = [
     "esi-wallet.read_corporation_wallets.v1",
     "esi-characters.read_corporation_roles.v1",
+    "esi-corporations.read_corporation_membership.v1",
   ];
   const payload = getEveSsoAccessTokenPayload(ctx.session.accessToken);
   const hasRequiredScopes = requiredScopes.every(

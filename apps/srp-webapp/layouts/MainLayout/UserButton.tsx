@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import {
   createStyles,
   Group,
@@ -87,6 +88,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
                     ...scopes,
                     "esi-characters.read_corporation_roles.v1",
                     "esi-wallet.read_corporation_wallets.v1",
+                    "esi-corporations.read_corporation_membership.v1",
                     "esi-ui.open_window.v1",
                   ].join(" "),
                 },
@@ -98,6 +100,8 @@ export default function UserButton({ ...others }: UserButtonProps) {
         )}
         {isManager && (
           <Menu.Item
+            component={Link}
+            href="/admin"
             icon={<CorporationIcon width={20} />}
             onClick={() => {
               showNotification({
@@ -105,7 +109,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
               });
             }}
           >
-            Administration
+            <Text>Administration</Text>
           </Menu.Item>
         )}
         <Menu.Item

@@ -65,6 +65,7 @@ async function harvestToken({
   const requiredScopes: ESIScope[] = [
     "esi-wallet.read_corporation_wallets.v1",
     "esi-characters.read_corporation_roles.v1",
+    "esi-corporations.read_corporation_membership.v1",
   ];
   const possibleCorporationRoles: GetCharactersCharacterIdRoles200RolesItem[] =
     ["Director", "Accountant", "Junior_Accountant"];
