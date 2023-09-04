@@ -6,6 +6,7 @@ export * from "./CorporationAnchor";
 export * from "./EveEntityAnchor";
 export * from "./EveEntityNameAnchor";
 export * from "./EveMailSenderAnchor";
+export * from "./OpenInformationWindowAnchor";
 export * from "./RegionAnchor";
 export * from "./SolarSystemAnchor";
 export * from "./StarAnchor";
