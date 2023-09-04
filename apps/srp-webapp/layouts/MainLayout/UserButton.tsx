@@ -103,11 +103,6 @@ export default function UserButton({ ...others }: UserButtonProps) {
             component={Link}
             href="/admin"
             icon={<CorporationIcon width={20} />}
-            onClick={() => {
-              showNotification({
-                message: "Work in progress!",
-              });
-            }}
           >
             <Text>Administration</Text>
           </Menu.Item>

@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 import { getCorporationsCorporationIdWallets } from "@jitaspace/esi-client";
 import { ESI_BASE_URL } from "@jitaspace/esi-hooks";
 
@@ -14,14 +12,6 @@ import { getTtlFromExpiresHeader } from "~/server/utils/getTtlFromExpiresHeader"
 import { getValidAccessToken } from "~/server/utils/getValidAccessToken";
 
 export const walletRouter = createTRPCRouter({
-  hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input.text}`,
-      };
-    }),
-
   getCorporationWalletBalance: publicProcedure.query(async ({ ctx }) => {
     const accessToken = await getValidAccessToken();
 
@@ -69,7 +59,6 @@ export const walletRouter = createTRPCRouter({
   }),
 
   getMyLatestTransactions: protectedProcedure.query(async ({ ctx }) => {
-    console.log("USER DATA", ctx.session.user);
     const result = await ctx.prisma.corporationWalletJournalEntry.findMany({
       where: {
         firstPartyId: ctx.session.user.id,
@@ -80,11 +69,27 @@ export const walletRouter = createTRPCRouter({
     return result;
   }),
 
-  getSecretMessage: protectedProcedure.query(() => {
-    return "you can now see this secret message (if you are authed)!";
-  }),
+  getAllLatestTransactions: adminProcedure.query(async ({ ctx }) => {
+    const dbQueryResult =
+      await ctx.prisma.corporationWalletJournalEntry.findMany({
+        orderBy: [{ entryId: "desc" }],
+        take: 500,
+      });
 
-  getAdminMessage: adminProcedure.query(() => {
-    return "you can now see this secret message (if you are an admin)!";
+    return dbQueryResult.map((entry) => {
+      const amount = entry.amount ? entry.amount.toNumber() : 0;
+      const isSrpPayment =
+        entry.entryType === "player_donation" &&
+        amount % 15000000 == 0 &&
+        amount <= 180000000;
+      const numSrps = amount / 15000000;
+      return {
+        ...entry,
+        entryType: isSrpPayment
+          ? "SRP Payment" + (numSrps > 1 ? ` x ${numSrps}` : "")
+          : entry.entryType,
+        //reason: isSrpPayment ? "yes" : "no",
+      };
+    });
   }),
 });
