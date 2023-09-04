@@ -25,7 +25,7 @@ export const getServerSideProps: GetServerSideProps<{}> = async (context) => {
 
 export default function Page() {
   return (
-    <Container>
+    <Container size="lg">
       <AdminCorporationJournalEntriesTable />
     </Container>
   );

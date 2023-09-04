@@ -1,5 +1,5 @@
 import React from "react";
-import { Group, Table, Tooltip } from "@mantine/core";
+import { Group, Stack, Table, Tooltip } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
 import {
@@ -7,6 +7,7 @@ import {
   EveEntityName,
   FormattedDateText,
   ISKAmount,
+  OpenInformationWindowActionIcon,
   TimeAgoText,
 } from "@jitaspace/ui";
 
@@ -45,26 +46,38 @@ export function AdminCorporationJournalEntriesTable() {
               </Tooltip>
             </td>
             <td>
-              <Group spacing="xs">
-                <EveEntityAvatar
-                  entityId={transaction.firstPartyId ?? undefined}
-                  size="sm"
-                />
-                <EveEntityName
-                  entityId={transaction.firstPartyId ?? undefined}
-                />
-              </Group>
-              {transaction.contextId && (
-                <Group spacing="xs">
-                  <EveEntityAvatar
-                    entityId={transaction.contextId ?? undefined}
-                    size="sm"
-                  />
-                  <EveEntityName
-                    entityId={transaction.contextId ?? undefined}
+              <Stack>
+                <Group position="apart">
+                  <Group spacing="xs">
+                    <EveEntityAvatar
+                      entityId={transaction.firstPartyId ?? undefined}
+                      size="sm"
+                    />
+                    <EveEntityName
+                      entityId={transaction.firstPartyId ?? undefined}
+                    />
+                  </Group>
+                  <OpenInformationWindowActionIcon
+                    entityId={transaction.firstPartyId ?? undefined}
                   />
                 </Group>
-              )}
+                {transaction.contextId && (
+                  <Group position="apart">
+                    <Group spacing="xs">
+                      <EveEntityAvatar
+                        entityId={transaction.contextId ?? undefined}
+                        size="sm"
+                      />
+                      <EveEntityName
+                        entityId={transaction.contextId ?? undefined}
+                      />
+                    </Group>
+                    <OpenInformationWindowActionIcon
+                      entityId={transaction.contextId ?? undefined}
+                    />
+                  </Group>
+                )}
+              </Stack>
             </td>
             <td>
               {transaction.entryType
