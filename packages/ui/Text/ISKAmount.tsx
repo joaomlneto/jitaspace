@@ -20,7 +20,7 @@ export const ISKAmount = memo(
       ];
 
       const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-      const item = lookup.find((item) => amount >= item.value);
+      const item = lookup.find((item) => Math.abs(amount) >= item.value);
       if (!item) return "0";
       return (
         (amount / item.value).toFixed(digits).replace(rx, "$1") + item.symbol
