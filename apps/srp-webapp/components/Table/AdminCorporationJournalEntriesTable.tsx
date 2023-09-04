@@ -7,7 +7,7 @@ import {
   EveEntityName,
   FormattedDateText,
   ISKAmount,
-  OpenInformationWindowActionIcon,
+  OpenInformationWindowAnchor,
   TimeAgoText,
 } from "@jitaspace/ui";
 
@@ -47,34 +47,32 @@ export function AdminCorporationJournalEntriesTable() {
             </td>
             <td>
               <Stack>
-                <Group position="apart">
-                  <Group spacing="xs">
-                    <EveEntityAvatar
-                      entityId={transaction.firstPartyId ?? undefined}
-                      size="sm"
-                    />
+                <Group spacing="xs">
+                  <EveEntityAvatar
+                    entityId={transaction.firstPartyId ?? undefined}
+                    size="sm"
+                  />
+                  <OpenInformationWindowAnchor
+                    entityId={transaction.firstPartyId ?? undefined}
+                  >
                     <EveEntityName
                       entityId={transaction.firstPartyId ?? undefined}
                     />
-                  </Group>
-                  <OpenInformationWindowActionIcon
-                    entityId={transaction.firstPartyId ?? undefined}
-                  />
+                  </OpenInformationWindowAnchor>
                 </Group>
                 {transaction.contextId && (
-                  <Group position="apart">
-                    <Group spacing="xs">
-                      <EveEntityAvatar
-                        entityId={transaction.contextId ?? undefined}
-                        size="sm"
-                      />
+                  <Group spacing="xs">
+                    <EveEntityAvatar
+                      entityId={transaction.contextId ?? undefined}
+                      size="sm"
+                    />
+                    <OpenInformationWindowAnchor
+                      entityId={transaction.contextId ?? undefined}
+                    >
                       <EveEntityName
                         entityId={transaction.contextId ?? undefined}
                       />
-                    </Group>
-                    <OpenInformationWindowActionIcon
-                      entityId={transaction.contextId ?? undefined}
-                    />
+                    </OpenInformationWindowAnchor>
                   </Group>
                 )}
               </Stack>
