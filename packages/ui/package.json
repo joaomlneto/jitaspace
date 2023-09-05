@@ -32,7 +32,7 @@
     "@mantine/prism": "^6.0.20",
     "@mantine/spotlight": "^6.0.20",
     "@mantine/tiptap": "^6.0.20",
-    "@tabler/icons-react": "^2.32.0",
+    "@tabler/icons-react": "^2.33.0",
     "@tiptap/extension-color": "^2.1.8",
     "@tiptap/extension-link": "^2.1.8",
     "@tiptap/extension-text-style": "^2.1.8",
