@@ -11,20 +11,23 @@
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --noEmit"
   },
-  "dependencies": {
-    "@jitaspace/esi-client": "*",
-    "@jitaspace/utils": "*",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
-  },
   "devDependencies": {
+    "@jitaspace/esi-client": "*",
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
+    "@jitaspace/utils": "*",
     "@types/node": "^18.17.14",
     "@types/react": "^18.2.21",
     "eslint": "^8.48.0",
     "prettier": "^3.0.3",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "tsup": "^7.2.0",
     "typescript": "^5.2.2"
+  },
+  "peerDependencies": {
+    "react": ">=18.2.0",
+    "react-dom": ">=18.2.0"
   }
 }
