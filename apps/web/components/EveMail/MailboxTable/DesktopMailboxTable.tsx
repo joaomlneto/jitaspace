@@ -94,7 +94,7 @@ export const DesktopMailboxTable = ({
                     (mail.subject.length > 0 ? (
                       mail.subject
                     ) : (
-                      <Anchor fs="italic" fw={150} span>
+                      <Anchor fs="italic" fw={150} component="span">
                         (No Subject)
                       </Anchor>
                     ))}
@@ -114,10 +114,11 @@ export const DesktopMailboxTable = ({
               <td>
                 <Group spacing="xs">
                   {mail.labels
-                    ?.map((labelIndex) =>
-                      labels?.data.labels?.find(
-                        (label) => label.label_id === labelIndex,
-                      ),
+                    ?.map(
+                      (labelIndex) =>
+                        labels?.data.labels?.find(
+                          (label) => label.label_id === labelIndex,
+                        ),
                     )
                     .map(
                       (item) =>

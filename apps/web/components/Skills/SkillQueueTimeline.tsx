@@ -40,7 +40,7 @@ export function SkillQueueTimeline() {
       3: "III",
       4: "IV",
       5: "V",
-    }[n] ?? "[Invalid Level]");
+    })[n] ?? "[Invalid Level]";
 
   return (
     <Stack>
@@ -136,7 +136,7 @@ export function SkillQueueTimeline() {
                       >
                         <Group spacing="xs">
                           <IconExternalLink size={14} />
-                          <Anchor span>Open in EVE Ref</Anchor>
+                          <Anchor>Open in EVE Ref</Anchor>
                         </Group>
                       </Anchor>
                     </Stack>

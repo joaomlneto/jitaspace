@@ -100,7 +100,6 @@ export default function Page() {
           people that were willing to test my buggy code in the early stages, to
           all the valuable discussions with the folks at the{" "}
           <Anchor
-            span
             href="https://www.fuzzwork.co.uk/tweetfleet-slack-invites/"
             target="_blank"
           >

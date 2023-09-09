@@ -54,10 +54,11 @@ export const MobileMailboxTable = ({
                   </Group>
                   <Group spacing="xs" position="apart">
                     {message.labels
-                      ?.map((labelIndex) =>
-                        labels?.data.labels?.find(
-                          (label) => label.label_id === labelIndex,
-                        ),
+                      ?.map(
+                        (labelIndex) =>
+                          labels?.data.labels?.find(
+                            (label) => label.label_id === labelIndex,
+                          ),
                       )
                       .map(
                         (item) =>
@@ -110,7 +111,7 @@ export const MobileMailboxTable = ({
                     (message.subject.length > 0 ? (
                       message.subject
                     ) : (
-                      <Anchor fs="italic" fw={150} span>
+                      <Anchor fs="italic" fw={150} component="span">
                         (No Subject)
                       </Anchor>
                     ))}

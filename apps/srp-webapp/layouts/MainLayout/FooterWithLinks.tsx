@@ -86,8 +86,7 @@ export function FooterWithLinks() {
           All EVE-related materials are property of{" "}
           <Anchor
             color="dimmed"
-            span
-            href="https://ccpgames.com"
+            href="https://www.ccpgames.com"
             target="_blank"
           >
             CCP Games
