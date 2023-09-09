@@ -978,6 +978,12 @@ importers:
       embla-carousel-react:
         specifier: 8.0.0-rc12
         version: 8.0.0-rc12(react@18.2.0)
+      react:
+        specifier: 18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: 18.2.0
+        version: 18.2.0(react@18.2.0)
     devDependencies:
       '@jitaspace/eslint-config':
         specifier: '*'
@@ -997,15 +1003,6 @@ importers:
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: '>=18.2.0'
-        version: 18.2.0(react@18.2.0)
-      tsup:
-        specifier: ^7.2.0
-        version: 7.2.0(typescript@5.2.2)
       typescript:
         specifier: ^5.2.2
         version: 5.2.2
