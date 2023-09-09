@@ -43,7 +43,7 @@ export const CorporationCard = memo(
           size="sm"
         >
           <Group spacing="xs">
-            <Anchor span>Open in EVE Who</Anchor>
+            <Anchor>Open in EVE Who</Anchor>
           </Group>
         </Anchor>
       </Paper>

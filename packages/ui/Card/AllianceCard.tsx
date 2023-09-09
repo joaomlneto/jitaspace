@@ -44,7 +44,7 @@ export const AllianceCard = memo(({ allianceId }: AllianceCardProps) => {
       >
         <Group spacing="xs">
           <IconExternalLink size={14} />
-          <Anchor span>Open in EVE Who</Anchor>
+          <Anchor>Open in EVE Who</Anchor>
         </Group>
       </Anchor>
     </Paper>
