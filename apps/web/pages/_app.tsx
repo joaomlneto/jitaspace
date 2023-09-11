@@ -15,6 +15,8 @@ import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
+import { Provider } from "jotai";
+import { DevTools } from "jotai-devtools";
 import type { Session } from "next-auth";
 import { SessionProvider, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
@@ -65,14 +67,17 @@ const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
     if (!tokenPayload) return;
     const expDate = new Date(tokenPayload.exp * 1000);
     const timeUntilExpiration = () => expDate.getTime() - new Date().getTime();
-    const timer = setTimeout(() => {
-      console.log(
-        `updating session: token expires in ${
-          timeUntilExpiration() / 1000
-        } seconds`,
-      );
-      void update();
-    }, Math.max(timeUntilExpiration() - 30000, 5000));
+    const timer = setTimeout(
+      () => {
+        console.log(
+          `updating session: token expires in ${
+            timeUntilExpiration() / 1000
+          } seconds`,
+        );
+        void update();
+      },
+      Math.max(timeUntilExpiration() - 30000, 5000),
+    );
     return () => clearTimeout(timer);
   }, [tokenPayload, update]);
 
@@ -202,37 +207,40 @@ export default function App({
       <Analytics />
 
       <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} />
-        <SessionProvider session={session}>
-          <EsiClientContextProvider accessToken={session?.accessToken}>
-            <JitaSpaceEsiClientContextProvider>
-              <EsiClientSSOAccessTokenInjector>
-                <EveIconsContextProvider /* iconVersion="rhea"*/>
-                  <MantineProvider
-                    withGlobalStyles
-                    withNormalizeCSS
-                    theme={{ colorScheme: "dark" }}
-                  >
-                    <Notifications />
-                    <RouterTransition />
-                    <JitaSpotlightProvider>
-                      <ModalsProvider
-                        modals={contextModals}
-                        modalProps={{ centered: true }}
-                      >
-                        {getLayout(
-                          <ScopeGuard requiredScopes={requiredScopes}>
-                            <Component {...pageProps} />
-                          </ScopeGuard>,
-                        )}
-                      </ModalsProvider>
-                    </JitaSpotlightProvider>
-                  </MantineProvider>
-                </EveIconsContextProvider>
-              </EsiClientSSOAccessTokenInjector>
-            </JitaSpaceEsiClientContextProvider>
-          </EsiClientContextProvider>
-        </SessionProvider>
+        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+        <DevTools />
+        <Provider>
+          <SessionProvider session={session}>
+            <EsiClientContextProvider accessToken={session?.accessToken}>
+              <JitaSpaceEsiClientContextProvider>
+                <EsiClientSSOAccessTokenInjector>
+                  <EveIconsContextProvider /* iconVersion="rhea"*/>
+                    <MantineProvider
+                      withGlobalStyles
+                      withNormalizeCSS
+                      theme={{ colorScheme: "dark" }}
+                    >
+                      <Notifications />
+                      <RouterTransition />
+                      <JitaSpotlightProvider>
+                        <ModalsProvider
+                          modals={contextModals}
+                          modalProps={{ centered: true }}
+                        >
+                          {getLayout(
+                            <ScopeGuard requiredScopes={requiredScopes}>
+                              <Component {...pageProps} />
+                            </ScopeGuard>,
+                          )}
+                        </ModalsProvider>
+                      </JitaSpotlightProvider>
+                    </MantineProvider>
+                  </EveIconsContextProvider>
+                </EsiClientSSOAccessTokenInjector>
+              </JitaSpaceEsiClientContextProvider>
+            </EsiClientContextProvider>
+          </SessionProvider>
+        </Provider>
       </QueryClientProvider>
     </>
   );
