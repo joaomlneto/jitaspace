@@ -30,253 +30,6 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
-  apps/srp-webapp:
-    dependencies:
-      '@as-integrations/next':
-        specifier: ^2.0.2
-        version: 2.0.2(@apollo/server@4.9.3)(next@13.4.19)
-      '@ducanh2912/next-pwa':
-        specifier: ^9.5.0
-        version: 9.5.0(next@13.4.19)(webpack@5.88.1)
-      '@emotion/react':
-        specifier: ^11.11.1
-        version: 11.11.1(@types/react@18.2.21)(react@18.2.0)
-      '@emotion/server':
-        specifier: ^11.11.0
-        version: 11.11.0
-      '@jitaspace/auth':
-        specifier: '*'
-        version: link:../../packages/auth
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../../packages/esi-client
-      '@jitaspace/esi-hooks':
-        specifier: '*'
-        version: link:../../packages/esi-hooks
-      '@jitaspace/esi-meta-client':
-        specifier: '*'
-        version: link:../../packages/esi-meta-client
-      '@jitaspace/eve-icons':
-        specifier: '*'
-        version: link:../../packages/eve-icons
-      '@jitaspace/sde-client':
-        specifier: '*'
-        version: link:../../packages/sde-client
-      '@jitaspace/tiptap-eve':
-        specifier: '*'
-        version: link:../../packages/tiptap-eve
-      '@jitaspace/ui':
-        specifier: '*'
-        version: link:../../packages/ui
-      '@jitaspace/utils':
-        specifier: '*'
-        version: link:../../packages/utils
-      '@mantine/carousel':
-        specifier: ^6.0.20
-        version: 6.0.20(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(embla-carousel-react@8.0.0-rc12)(react@18.2.0)
-      '@mantine/core':
-        specifier: ^6.0.20
-        version: 6.0.20(@emotion/react@11.11.1)(@mantine/hooks@6.0.20)(@types/react@18.2.21)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/dates':
-        specifier: ^6.0.20
-        version: 6.0.20(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(dayjs@1.11.9)(react@18.2.0)
-      '@mantine/dropzone':
-        specifier: ^6.0.20
-        version: 6.0.20(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/form':
-        specifier: ^6.0.20
-        version: 6.0.20(react@18.2.0)
-      '@mantine/hooks':
-        specifier: ^6.0.20
-        version: 6.0.20(react@18.2.0)
-      '@mantine/modals':
-        specifier: ^6.0.20
-        version: 6.0.20(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/next':
-        specifier: ^6.0.20
-        version: 6.0.20(@emotion/react@11.11.1)(@emotion/server@11.11.0)(next@13.4.19)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/notifications':
-        specifier: ^6.0.20
-        version: 6.0.20(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/nprogress':
-        specifier: ^6.0.20
-        version: 6.0.20(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/prism':
-        specifier: ^6.0.20
-        version: 6.0.20(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/spotlight':
-        specifier: ^6.0.20
-        version: 6.0.20(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/tiptap':
-        specifier: ^6.0.20
-        version: 6.0.20(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(@tabler/icons-react@2.34.0)(@tiptap/extension-link@2.1.8)(@tiptap/react@2.1.8)(react@18.2.0)
-      '@next-auth/prisma-adapter':
-        specifier: ^1.0.7
-        version: 1.0.7(@prisma/client@5.2.0)(next-auth@4.23.1)
-      '@prisma/client':
-        specifier: ^5.2.0
-        version: 5.2.0(prisma@5.2.0)
-      '@react-hook/cache':
-        specifier: ^1.1.1
-        version: 1.1.1(react@18.2.0)
-      '@tabler/icons-react':
-        specifier: ^2.34.0
-        version: 2.34.0(react@18.2.0)
-      '@tanstack/react-query':
-        specifier: ^4.35.0
-        version: 4.35.0(react-dom@18.2.0)(react@18.2.0)
-      '@tanstack/react-query-devtools':
-        specifier: ^4.35.0
-        version: 4.35.0(@tanstack/react-query@4.35.0)(react-dom@18.2.0)(react@18.2.0)
-      '@tiptap/extension-color':
-        specifier: ^2.1.8
-        version: 2.1.8(@tiptap/core@2.1.8)(@tiptap/extension-text-style@2.1.8)
-      '@tiptap/extension-link':
-        specifier: ^2.1.8
-        version: 2.1.8(@tiptap/core@2.1.8)(@tiptap/pm@2.1.8)
-      '@tiptap/extension-text-style':
-        specifier: ^2.1.8
-        version: 2.1.8(@tiptap/core@2.1.8)
-      '@tiptap/extension-underline':
-        specifier: ^2.1.8
-        version: 2.1.8(@tiptap/core@2.1.8)
-      '@tiptap/pm':
-        specifier: ^2.1.8
-        version: 2.1.8
-      '@tiptap/react':
-        specifier: ^2.1.8
-        version: 2.1.8(@tiptap/core@2.1.8)(@tiptap/pm@2.1.8)(react-dom@18.2.0)(react@18.2.0)
-      '@tiptap/starter-kit':
-        specifier: ^2.1.8
-        version: 2.1.8(@tiptap/pm@2.1.8)
-      '@trpc/client':
-        specifier: ^10.38.1
-        version: 10.38.1(@trpc/server@10.38.1)
-      '@trpc/next':
-        specifier: ^10.38.1
-        version: 10.38.1(@tanstack/react-query@4.35.0)(@trpc/client@10.38.1)(@trpc/react-query@10.38.1)(@trpc/server@10.38.1)(next@13.4.19)(react-dom@18.2.0)(react@18.2.0)
-      '@trpc/react-query':
-        specifier: ^10.38.1
-        version: 10.38.1(@tanstack/react-query@4.35.0)(@trpc/client@10.38.1)(@trpc/server@10.38.1)(react-dom@18.2.0)(react@18.2.0)
-      '@trpc/server':
-        specifier: ^10.38.1
-        version: 10.38.1
-      '@types/node':
-        specifier: ^18.17.15
-        version: 18.17.15
-      '@types/react':
-        specifier: ^18.2.21
-        version: 18.2.21
-      '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
-      '@vercel/analytics':
-        specifier: ^1.0.2
-        version: 1.0.2
-      '@vercel/og':
-        specifier: ^0.5.13
-        version: 0.5.13
-      axios:
-        specifier: ^1.5.0
-        version: 1.5.0
-      date-fns:
-        specifier: ^2.30.0
-        version: 2.30.0
-      dayjs:
-        specifier: ^1.11.9
-        version: 1.11.9
-      embla-carousel-react:
-        specifier: 8.0.0-rc12
-        version: 8.0.0-rc12(react@18.2.0)
-      humanize-duration:
-        specifier: ^3.29.0
-        version: 3.29.0
-      jose:
-        specifier: ^4.14.6
-        version: 4.14.6
-      jwt-decode:
-        specifier: ^3.1.2
-        version: 3.1.2
-      mantine-datatable:
-        specifier: ^2.9.13
-        version: 2.9.13(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(react@18.2.0)
-      mantine-react-table:
-        specifier: ^1.2.1
-        version: 1.2.1(@emotion/react@11.11.1)(@mantine/core@6.0.20)(@mantine/dates@6.0.20)(@mantine/hooks@6.0.20)(@tabler/icons-react@2.34.0)(react-dom@18.2.0)(react@18.2.0)
-      next:
-        specifier: ^13.4.19
-        version: 13.4.19(@babel/core@7.22.1)(react-dom@18.2.0)(react@18.2.0)
-      next-auth:
-        specifier: ^4.23.1
-        version: 4.23.1(next@13.4.19)(react-dom@18.2.0)(react@18.2.0)
-      next-seo:
-        specifier: ^6.1.0
-        version: 6.1.0(next@13.4.19)(react-dom@18.2.0)(react@18.2.0)
-      nextjs-cors:
-        specifier: ^2.1.2
-        version: 2.1.2(next@13.4.19)
-      nextjs-routes:
-        specifier: ^2.0.1
-        version: 2.0.1(next@13.4.19)
-      p-limit:
-        specifier: ^4.0.0
-        version: 4.0.0
-      react:
-        specifier: 18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: 18.2.0
-        version: 18.2.0(react@18.2.0)
-      react-html-parser:
-        specifier: ^2.0.2
-        version: 2.0.2(react@18.2.0)
-      react-obfuscate-email:
-        specifier: ^1.1.2
-        version: 1.1.2(react@18.2.0)
-      sharp:
-        specifier: ^0.32.5
-        version: 0.32.5
-      superjson:
-        specifier: 1.13.1
-        version: 1.13.1
-      swr:
-        specifier: ^2.2.2
-        version: 2.2.2(react@18.2.0)
-      zod:
-        specifier: ^3.22.2
-        version: 3.22.2
-    devDependencies:
-      '@jitaspace/eslint-config':
-        specifier: '*'
-        version: link:../../tooling/eslint
-      '@jitaspace/prettier-config':
-        specifier: '*'
-        version: link:../../tooling/prettier
-      '@jitaspace/tsconfig':
-        specifier: '*'
-        version: link:../../tooling/tsconfig
-      '@types/humanize-duration':
-        specifier: ^3.27.1
-        version: 3.27.1
-      '@types/react-html-parser':
-        specifier: ^2.0.2
-        version: 2.0.2
-      dotenv-cli:
-        specifier: ^7.3.0
-        version: 7.3.0
-      eslint:
-        specifier: ^8.49.0
-        version: 8.49.0
-      prettier:
-        specifier: ^3.0.3
-        version: 3.0.3
-      prisma:
-        specifier: ^5.2.0
-        version: 5.2.0
-      typescript:
-        specifier: ^5.2.2
-        version: 5.2.2
-
   apps/web:
     dependencies:
       '@as-integrations/next':
@@ -3804,16 +3557,6 @@ packages:
       read-yaml-file: 1.1.0
     dev: false
 
-  /@next-auth/prisma-adapter@1.0.7(@prisma/client@5.2.0)(next-auth@4.23.1):
-    resolution: {integrity: sha512-Cdko4KfcmKjsyHFrWwZ//lfLUbcLqlyFqjd/nYE2m3aZ7tjMNUjpks47iw7NTCnXf+5UWz5Ypyt1dSs1EP5QJw==}
-    peerDependencies:
-      '@prisma/client': '>=2.26.0 || >=3'
-      next-auth: ^4
-    dependencies:
-      '@prisma/client': 5.2.0(prisma@5.2.0)
-      next-auth: 4.23.1(next@13.4.19)(react-dom@18.2.0)(react@18.2.0)
-    dev: false
-
   /@next/env@13.4.19:
     resolution: {integrity: sha512-FsAT5x0jF2kkhNkKkukhsyYOrRqtSxrEhfliniIq0bwWbuXLgyt3Gv0Ml+b91XwjwArmuP7NxCiGd++GGKdNMQ==}
     dev: false
@@ -4031,28 +3774,6 @@ packages:
   /@popperjs/core@2.11.8:
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
     dev: false
-
-  /@prisma/client@5.2.0(prisma@5.2.0):
-    resolution: {integrity: sha512-AiTjJwR4J5Rh6Z/9ZKrBBLel3/5DzUNntMohOy7yObVnVoTNVFi2kvpLZlFuKO50d7yDspOtW6XBpiAd0BVXbQ==}
-    engines: {node: '>=16.13'}
-    requiresBuild: true
-    peerDependencies:
-      prisma: '*'
-    peerDependenciesMeta:
-      prisma:
-        optional: true
-    dependencies:
-      '@prisma/engines-version': 5.2.0-25.2804dc98259d2ea960602aca6b8e7fdc03c1758f
-      prisma: 5.2.0
-    dev: false
-
-  /@prisma/engines-version@5.2.0-25.2804dc98259d2ea960602aca6b8e7fdc03c1758f:
-    resolution: {integrity: sha512-jsnKT5JIDIE01lAeCj2ghY9IwxkedhKNvxQeoyLs6dr4ZXynetD0vTy7u6wMJt8vVPv8I5DPy/I4CFaoXAgbtg==}
-    dev: false
-
-  /@prisma/engines@5.2.0:
-    resolution: {integrity: sha512-dT7FOLUCdZmq+AunLqB1Iz+ZH/IIS1Fz2THmKZQ6aFONrQD/BQ5ecJ7g2wGS2OgyUFf4OaLam6/bxmgdOBDqig==}
-    requiresBuild: true
 
   /@protobufjs/aspromise@1.1.2:
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -4750,36 +4471,6 @@ packages:
       use-sync-external-store: 1.2.0(react@18.2.0)
     dev: false
 
-  /@tanstack/react-table@8.9.8(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-ZUd+ZydvUP8+XLI+oQ3IcG6Pqq3vw94na3fViD/v0dsIVwgQaWanizeh+si/Pn/8eU0XgbSVU9VpejOJEbp/lg==}
-    engines: {node: '>=12'}
-    peerDependencies:
-      react: '>=16'
-      react-dom: '>=16'
-    dependencies:
-      '@tanstack/table-core': 8.9.8
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /@tanstack/react-virtual@3.0.0-beta.60(react@18.2.0):
-    resolution: {integrity: sha512-F0wL9+byp7lf/tH6U5LW0ZjBqs+hrMXJrj5xcIGcklI0pggvjzMNW9DdIBcyltPNr6hmHQ0wt8FDGe1n1ZAThA==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-    dependencies:
-      '@tanstack/virtual-core': 3.0.0-beta.60
-      react: 18.2.0
-    dev: false
-
-  /@tanstack/table-core@8.9.8:
-    resolution: {integrity: sha512-f2Y/BcJy3IBkdDxWEk6WX6zJSmCDBI5iS0icr5DyeSbWsbnfaBtOIaeBjfnTEedt9Kk3xPmfciA6uSNOQ1BEXA==}
-    engines: {node: '>=12'}
-    dev: false
-
-  /@tanstack/virtual-core@3.0.0-beta.60:
-    resolution: {integrity: sha512-QlCdhsV1+JIf0c0U6ge6SQmpwsyAT0oQaOSZk50AtEeAyQl9tQrd6qCHAslxQpgphrfe945abvKG8uYvw3hIGA==}
-    dev: false
-
   /@tiptap/core@2.1.8(@tiptap/pm@2.1.8):
     resolution: {integrity: sha512-QTGgqki7hkonLJ93gWqCUkD6cCAQ3rEX9gbMLwzfnegIZ+/BKLQYKYCozsEMZnMPXgdRrKuyRBOL+RH+IolMeA==}
     peerDependencies:
@@ -5085,55 +4776,6 @@ packages:
 
   /@tootallnate/quickjs-emscripten@0.23.0:
     resolution: {integrity: sha512-C5Mc6rdnsaJDjO3UpGW/CQTHtCKaYlScZTly4JIu97Jxo/odCiH0ITnDXSJPTOrEKk/ycSZ0AOgTmkDtkOsvIA==}
-    dev: false
-
-  /@trpc/client@10.38.1(@trpc/server@10.38.1):
-    resolution: {integrity: sha512-kY7ZV7Eco5SeFIGJX6OBg7AAKkiMt5+1N+GC7N1lTZszrw95ZiNgtkZ5TI6+Un4O+RqrOcqqast6MeExCoyZhQ==}
-    peerDependencies:
-      '@trpc/server': 10.38.1
-    dependencies:
-      '@trpc/server': 10.38.1
-    dev: false
-
-  /@trpc/next@10.38.1(@tanstack/react-query@4.35.0)(@trpc/client@10.38.1)(@trpc/react-query@10.38.1)(@trpc/server@10.38.1)(next@13.4.19)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-N5x5IBf0epm6q54GFq6fMk4E26IdLQtAI3J6UmtcVd91gZm4PKuWg5vcvVMGKGgMqwNe2rm5kpirtk7VDMUi0w==}
-    peerDependencies:
-      '@tanstack/react-query': ^4.18.0
-      '@trpc/client': 10.38.1
-      '@trpc/react-query': 10.38.1
-      '@trpc/server': 10.38.1
-      next: '*'
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
-    dependencies:
-      '@tanstack/react-query': 4.35.0(react-dom@18.2.0)(react@18.2.0)
-      '@trpc/client': 10.38.1(@trpc/server@10.38.1)
-      '@trpc/react-query': 10.38.1(@tanstack/react-query@4.35.0)(@trpc/client@10.38.1)(@trpc/server@10.38.1)(react-dom@18.2.0)(react@18.2.0)
-      '@trpc/server': 10.38.1
-      next: 13.4.19(@babel/core@7.22.1)(react-dom@18.2.0)(react@18.2.0)
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      react-ssr-prepass: 1.5.0(react@18.2.0)
-    dev: false
-
-  /@trpc/react-query@10.38.1(@tanstack/react-query@4.35.0)(@trpc/client@10.38.1)(@trpc/server@10.38.1)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-eNmNYDzfn4Xx5R94v/Z2vmNjsLo/CpgPyRBNARcO7wLwjpzLxRPsJKNfOB92RWB+QsPJxqeBGIS1IETg2yyu7w==}
-    peerDependencies:
-      '@tanstack/react-query': ^4.18.0
-      '@trpc/client': 10.38.1
-      '@trpc/server': 10.38.1
-      react: '>=16.8.0'
-      react-dom: '>=16.8.0'
-    dependencies:
-      '@tanstack/react-query': 4.35.0(react-dom@18.2.0)(react@18.2.0)
-      '@trpc/client': 10.38.1(@trpc/server@10.38.1)
-      '@trpc/server': 10.38.1
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
-  /@trpc/server@10.38.1:
-    resolution: {integrity: sha512-59mM0Jk3cnWBExSv4Z4cw/776MPwa+rcVNywnV5gyHyK/p5qHtis1b1JPYdTEQZ0zhR+6zeto14rTR51hg+Nuw==}
     dev: false
 
   /@tsconfig/node10@1.0.9:
@@ -9540,30 +9182,6 @@ packages:
       react: 18.2.0
     dev: false
 
-  /mantine-react-table@1.2.1(@emotion/react@11.11.1)(@mantine/core@6.0.20)(@mantine/dates@6.0.20)(@mantine/hooks@6.0.20)(@tabler/icons-react@2.34.0)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-o0hJ+kszbf2Y20qoqY5F9as3ikmWUOjewLPF/pA9pabbuFxqAO8gGVywRaoyqRCc4HHnGWEDY4iEM6nwGr+mGQ==}
-    engines: {node: '>=14'}
-    peerDependencies:
-      '@emotion/react': '>=11'
-      '@mantine/core': '>=6'
-      '@mantine/dates': '>=6'
-      '@mantine/hooks': '>=6'
-      '@tabler/icons-react': '>=2.23.0'
-      react: '>=18.0'
-      react-dom: '>=18.0'
-    dependencies:
-      '@emotion/react': 11.11.1(@types/react@18.2.21)(react@18.2.0)
-      '@mantine/core': 6.0.20(@emotion/react@11.11.1)(@mantine/hooks@6.0.20)(@types/react@18.2.21)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/dates': 6.0.20(@mantine/core@6.0.20)(@mantine/hooks@6.0.20)(dayjs@1.11.9)(react@18.2.0)
-      '@mantine/hooks': 6.0.20(react@18.2.0)
-      '@tabler/icons-react': 2.34.0(react@18.2.0)
-      '@tanstack/match-sorter-utils': 8.8.4
-      '@tanstack/react-table': 8.9.8(react-dom@18.2.0)(react@18.2.0)
-      '@tanstack/react-virtual': 3.0.0-beta.60(react@18.2.0)
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-    dev: false
-
   /map-obj@1.0.1:
     resolution: {integrity: sha512-7N/q3lyZ+LVCp7PzuxrJr4KMbBE2hW7BT7YNia330OFxIf4d3r5zVpicP2650l7CPN6RM9zOJRl3NGpqSiw3Eg==}
     engines: {node: '>=0.10.0'}
@@ -10643,14 +10261,6 @@ packages:
       react: 18.2.0
     dev: false
 
-  /prisma@5.2.0:
-    resolution: {integrity: sha512-FfFlpjVCkZwrqxDnP4smlNYSH1so+CbfjgdpioFzGGqlQAEm6VHAYSzV7jJgC3ebtY9dNOhDMS2+4/1DDSM7bQ==}
-    engines: {node: '>=16.13'}
-    hasBin: true
-    requiresBuild: true
-    dependencies:
-      '@prisma/engines': 5.2.0
-
   /process-nextick-args@2.0.1:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
     dev: false
@@ -11006,14 +10616,6 @@ packages:
       tslib: 2.5.3
       use-callback-ref: 1.3.0(@types/react@18.2.21)(react@18.2.0)
       use-sidecar: 1.1.2(@types/react@18.2.21)(react@18.2.0)
-    dev: false
-
-  /react-ssr-prepass@1.5.0(react@18.2.0):
-    resolution: {integrity: sha512-yFNHrlVEReVYKsLI5lF05tZoHveA5pGzjFbFJY/3pOqqjGOmMmqx83N4hIjN2n6E1AOa+eQEUxs3CgRnPmT0RQ==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-    dependencies:
-      react: 18.2.0
     dev: false
 
   /react-style-singleton@2.2.1(@types/react@18.2.21)(react@18.2.0):
