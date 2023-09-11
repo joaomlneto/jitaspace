@@ -1,5 +1,7 @@
 import withPWAInit from "@ducanh2912/next-pwa";
 
+import bundleAnalyzer from '@next/bundle-analyzer'
+
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
  * This is especially useful for Docker builds and Linting.
@@ -12,6 +14,7 @@ const config = {
 
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
+    'jotai-devtools',
     "@jitaspace/auth",
     "@jitaspace/esi-client",
     "@jitaspace/esi-hooks",
@@ -57,6 +60,10 @@ const config = {
           permanent: false
         },
     ])
+  },
+
+  experimental: {
+      swcPlugins: [['@swc-jotai/react-refresh', {}]]
   }
 };
 
@@ -64,4 +71,8 @@ const withPWA = withPWAInit({
   dest: "public",
 });
 
-export default withPWA(config);
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
+
+export default withBundleAnalyzer(withPWA(config));

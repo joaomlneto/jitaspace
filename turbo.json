@@ -29,6 +29,7 @@
       "dependsOn": ["^topo"],
       "outputs": ["node_modules/.cache/.eslintcache"]},
     "lint:fix": {},
+    "analyze": {},
     "clean": {
       "cache": false
     },
