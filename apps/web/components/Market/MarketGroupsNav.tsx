@@ -8,7 +8,7 @@ import {
   type NavLinkProps,
 } from "@mantine/core";
 
-import { useMarketGroups } from "~/hooks/useMarketGroupsTree";
+import { useMarketGroups } from "~/hooks/useMarketGroups";
 
 type MarketGroupsNavProps = NavLinkProps & {
   marketGroupId?: number;
