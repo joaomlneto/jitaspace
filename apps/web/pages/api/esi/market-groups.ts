@@ -6,10 +6,6 @@ import { type GetMarketsGroupsMarketGroupId200 } from "@jitaspace/esi-client";
 
 import { ESI_BASE_URL } from "~/config/constants";
 
-export const config = {
-  runtime: "edge",
-};
-
 export default async function NextApiRouteHandler(
   req: NextApiRequest,
   res: NextApiResponse<
