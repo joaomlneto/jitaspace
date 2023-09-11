@@ -26,7 +26,7 @@
     "@tiptap/pm": "^2.1.8",
     "@tiptap/react": "^2.1.8",
     "@tiptap/starter-kit": "^2.1.8",
-    "@types/node": "^18.17.14",
+    "@types/node": "^18.17.15",
     "@types/react": "18.2.21",
     "@types/react-dom": "18.2.7",
     "date-fns": "^2.30.0",
@@ -38,10 +38,10 @@
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
-    "@types/node": "^18.17.14",
+    "@types/node": "^18.17.15",
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
-    "eslint": "^8.48.0",
+    "eslint": "^8.49.0",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
   }
