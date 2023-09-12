@@ -31,3 +31,5 @@ export * from "./generated/universe";
 export * from "./generated/user-interface";
 export * from "./generated/wallet";
 export * from "./generated/wars";
+
+export * from "./scopes";
