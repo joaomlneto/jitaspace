@@ -1,5 +1,6 @@
 import React, { type ReactElement } from "react";
 import {
+  ActionIcon,
   Anchor,
   Container,
   Group,
@@ -9,11 +10,13 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { IconBrandDiscordFilled } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
 import { Email } from "react-obfuscate-email";
 
 import { CharacterAnchor, CharacterAvatar, CharacterName } from "@jitaspace/ui";
 
+import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
 
 const MY_CHARACTER_ID = 401563624;
@@ -50,6 +53,20 @@ export default function Page() {
                     <CharacterName characterId={MY_CHARACTER_ID} />
                   </CharacterAnchor>
                 </Group>
+              </td>
+            </tr>
+            <tr>
+              <td>Discord</td>
+              <td align="right">
+                <ActionIcon
+                  component="a"
+                  href={env.NEXT_PUBLIC_DISCORD_INVITE_LINK}
+                  target="_blank"
+                  size="sm"
+                  variant="light"
+                >
+                  <IconBrandDiscordFilled />
+                </ActionIcon>
               </td>
             </tr>
             <tr>

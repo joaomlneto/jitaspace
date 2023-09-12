@@ -1,13 +1,18 @@
 import React from "react";
 import Link, { type LinkProps } from "next/link";
 import {
+  ActionIcon,
   Anchor,
   Container,
   createStyles,
   Group,
   rem,
   Text,
+  Tooltip,
 } from "@mantine/core";
+import { IconBrandDiscordFilled } from "@tabler/icons-react";
+
+import { env } from "~/env.mjs";
 
 const FOOTER_BREAKPOINT = "xs";
 const FOOTER_HEIGHT_DESKTOP = rem(51);
@@ -89,7 +94,20 @@ export function FooterWithLinks() {
           </Anchor>
           .
         </Text>
-        <Group className={classes.links}>{items}</Group>
+        <Group className={classes.links}>
+          <Tooltip label="Join our Discord!" color="dark">
+            <ActionIcon
+              component="a"
+              href={env.NEXT_PUBLIC_DISCORD_INVITE_LINK}
+              target="_blank"
+              size="sm"
+              variant="light"
+            >
+              <IconBrandDiscordFilled />
+            </ActionIcon>
+          </Tooltip>
+          {items}
+        </Group>
       </Container>
     </footer>
   );

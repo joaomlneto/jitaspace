@@ -25,11 +25,13 @@ const client = z.object({
     process.env.NODE_ENV === "production"
       ? z.string().min(1)
       : z.string().min(1).optional(),
+
+  NEXT_PUBLIC_DISCORD_INVITE_LINK: z.string().url(),
 });
 
 /**
  * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
- * middlewares) or client-side so we need to destruct manually.
+ * middlewares) or client-side, so we need to destruct manually.
  *
  * @type {Record<keyof z.infer<typeof server> | keyof z.infer<typeof client>, string | undefined>}
  */
@@ -39,6 +41,7 @@ const processEnv = {
   EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
   EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
   NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
+  NEXT_PUBLIC_DISCORD_INVITE_LINK: process.env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
 };
 
 // Don't touch the part below
@@ -58,7 +61,7 @@ if (!!process.env.SKIP_ENV_VALIDATION === false) {
   const parsed = /** @type {MergedSafeParseReturn} */ (
     isServer
       ? merged.safeParse(processEnv) // on server we can validate all env vars
-      : client.safeParse(processEnv) // on client we can only validate the ones that are exposed
+      : client.safeParse(processEnv) // on the client we can only validate the ones that are exposed
   );
 
   if (parsed.success === false) {
