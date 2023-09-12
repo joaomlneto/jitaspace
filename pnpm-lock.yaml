@@ -50,6 +50,9 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../../packages/esi-client
+      '@jitaspace/esi-client-react-query':
+        specifier: '*'
+        version: link:../../packages/esi-client-react-query
       '@jitaspace/esi-hooks':
         specifier: '*'
         version: link:../../packages/esi-hooks
