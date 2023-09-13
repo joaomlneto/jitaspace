@@ -1,0 +1,38 @@
+{
+  "name": "@jitaspace/esi-client-kubb",
+  "description": "ESI Client for JitaSpace",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "download-schema": "curl -L http://esi.evetech.net/latest/swagger.json | jq 'del(.paths.\"/route/{origin}/{destination}/\")' > swagger.json",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "kubb:generate": "AXIOS_BASE=https://esi.evetech.net/latest kubb",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kubb/cli": "^1.8.2",
+    "@kubb/core": "^1.8.2",
+    "@kubb/swagger": "^1.8.2",
+    "@kubb/swagger-client": "^1.8.3",
+    "@kubb/swagger-tanstack-query": "^1.8.2",
+    "@kubb/swagger-ts": "^1.8.2",
+    "@tanstack/react-query": "^4.35.0",
+    "axios": "^1.5.0",
+    "react": "18.2.0"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "*",
+    "@jitaspace/prettier-config": "*",
+    "@jitaspace/tsconfig": "*",
+    "@types/node": "^18.17.15",
+    "@types/react": "^18.2.21",
+    "eslint": "^8.49.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2"
+  }
+}

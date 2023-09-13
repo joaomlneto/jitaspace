@@ -18,7 +18,7 @@
       "cache": false
     },
     "build": {
-      "dependsOn": ["^build", "^db:generate", "orval:generate"],
+      "dependsOn": ["^build", "^db:generate", "kubb:generate", "orval:generate"],
       "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts", ".expo/**", "dist/**"]
     },
     "format": {
@@ -35,6 +35,10 @@
     },
     "//#clean": {
       "cache": false
+    },
+    "kubb:generate": {
+      "dependsOn": ["^build", "^db:generate"],
+      "outputs": ["generated/**", "generated/**"]
     },
     "orval:generate": {
       "dependsOn": ["^build", "^db:generate"],
