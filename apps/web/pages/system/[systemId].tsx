@@ -6,10 +6,10 @@ import {
   Button,
   Container,
   Group,
-  List,
   Stack,
   Text,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
@@ -36,6 +36,7 @@ import {
   StationAnchor,
   StationAvatar,
   StationName,
+  TypeAvatar,
 } from "@jitaspace/ui";
 
 import { StatsGrid } from "~/components/UI";
@@ -140,28 +141,35 @@ export default function Page() {
           )}
           {solarSystem?.data.planets?.map(
             ({ planet_id, moons, asteroid_belts }) => (
-              <Stack spacing="xs" key={planet_id}>
-                <Group>
+              <Group key={planet_id}>
+                <Group noWrap>
                   <PlanetAvatar planetId={planet_id} size="sm" />
                   <Anchor component={Link} href={`/planet/${planet_id}`}>
                     <PlanetName span planetId={planet_id} />
                   </Anchor>
                 </Group>
-                <List>
+                <Group spacing="xs">
                   {moons?.map((moonId) => (
-                    <List.Item key={moonId}>
-                      <MoonName moonId={moonId} />
-                    </List.Item>
+                    <Tooltip label={<MoonName moonId={moonId} />} key={moonId}>
+                      <div>
+                        <TypeAvatar typeId={14} size="xs" />
+                      </div>
+                    </Tooltip>
                   ))}
-                </List>
-                <List>
                   {asteroid_belts?.map((asteroidBeltId) => (
-                    <List.Item key={asteroidBeltId}>
-                      <AsteroidBeltName span asteroidBeltId={asteroidBeltId} />
-                    </List.Item>
+                    <Tooltip
+                      label={
+                        <AsteroidBeltName asteroidBeltId={asteroidBeltId} />
+                      }
+                      key={asteroidBeltId}
+                    >
+                      <div>
+                        <TypeAvatar typeId={15} size="xs" />
+                      </div>
+                    </Tooltip>
                   ))}
-                </List>
-              </Stack>
+                </Group>
+              </Group>
             ),
           )}
         </Stack>
