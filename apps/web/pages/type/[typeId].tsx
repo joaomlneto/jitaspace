@@ -142,7 +142,7 @@ export default function Page({
         }}
         twitter={{
           cardType: "summary",
-          site: "https://www.jita.space/type/${typeId}",
+          site: `https://www.jita.space/type/${typeId}`,
         }}
         themeColor="#9bb4d0"
       />

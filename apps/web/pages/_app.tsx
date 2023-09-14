@@ -179,17 +179,21 @@ export default function App({
           images: [
             {
               type: "image/png",
-              alt: "Jita Logo",
-              width: 1200,
-              height: 630,
-              url: "https://www.jita.space/api/opengraph/image",
-              secureUrl: "https://www.jita.space/api/opengraph/image",
+              alt: "Jita",
+              //width: 1200,
+              //height: 630,
+              //url: "https://www.jita.space/api/opengraph/image",
+              //secureUrl: "https://www.jita.space/api/opengraph/image",
+              width: 176,
+              height: 168,
+              url: "https://www.jita.space/logo.png",
+              secureUrl: "https://www.jita.space/logo.png",
             },
           ],
           siteName: "Jita",
         }}
         twitter={{
-          cardType: "summary_large_image",
+          cardType: "summary",
           site: "https://www.jita.space",
         }}
         themeColor="#9bb4d0"
