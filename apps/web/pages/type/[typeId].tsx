@@ -17,7 +17,8 @@ import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   OpenMarketWindowActionIcon,
   TypeAvatar,
-  TypeName,
+  TypeInventoryBreadcrumbs,
+  TypeMarketBreadcrumbs,
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
@@ -149,12 +150,14 @@ export default function Page({
       <Container size="sm">
         <Stack>
           <Group spacing="xl">
-            <TypeAvatar typeId={typeId} size="xl" radius={256} />
-            <Title order={3}>
-              <TypeName span typeId={typeId} />
-            </Title>
+            <TypeAvatar typeId={typeId} size="lg" />
+            <Title order={1}>{typeName}</Title>
             <OpenMarketWindowActionIcon typeId={typeId} />
           </Group>
+          <Stack spacing={0}>
+            <TypeInventoryBreadcrumbs typeId={typeId} />
+            <TypeMarketBreadcrumbs typeId={typeId} />
+          </Stack>
           <Group>
             <Link
               href={`https://www.everef.net/type/${typeId}`}
