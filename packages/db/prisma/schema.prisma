@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
+}
+
+model MarketGroup {
+  marketGroupId       Int           @id
+  name                String
+  description         String
+  types               Type[]
+  parentMarketGroupId Int?
+  ParentMarketGroup   MarketGroup?  @relation("marketGroupParent", fields: [parentMarketGroupId], references: [marketGroupId])
+  children            MarketGroup[] @relation("marketGroupParent")
+}
+
+model Type {
+  typeId        Int         @id
+  marketGroupId Int
+  MarketGroup   MarketGroup @relation(fields: [marketGroupId], references: [marketGroupId])
+}
