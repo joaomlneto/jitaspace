@@ -75,9 +75,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     // check if the requested type exists
     const typeIds = await getUniverseTypes();
     if (!typeIds.data.includes(typeId)) {
-      return {
-        notFound: true,
-      };
+      throw Error("type does not exist");
     }
 
     // FIXME: these two calls should be made in parallel, not sequentially
@@ -104,6 +102,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
+      revalidate: 24 * 3600, // every 24 hours
     };
   }
 };
