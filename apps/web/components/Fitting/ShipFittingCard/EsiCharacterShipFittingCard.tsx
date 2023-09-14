@@ -4,7 +4,7 @@ import { type CardProps } from "@mantine/core";
 import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
-import { ShipFittingCard } from "~/components/fitting";
+import { ShipFittingCard } from "./ShipFittingCard";
 
 type EsiCharacterShipFittingCardProps = Omit<CardProps, "children"> & {
   fittingId: number;

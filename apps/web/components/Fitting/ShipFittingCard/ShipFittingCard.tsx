@@ -3,8 +3,8 @@ import { Card, createStyles, JsonInput, type CardProps } from "@mantine/core";
 
 import { type GetCharactersCharacterIdFittings200ItemItemsItemFlag } from "@jitaspace/esi-client";
 
-import { ShipFittingCardModulesSection } from "~/components/fitting/ShipFittingCard/ShipFittingCardModulesSection";
 import { ShipFittingCardHeader } from "./ShipFittingCardHeader";
+import { ShipFittingCardModulesSection } from "./ShipFittingCardModulesSection";
 
 const useStyles = createStyles((theme) => ({
   card: {

@@ -15,7 +15,7 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { FittingIcon } from "@jitaspace/eve-icons";
 import { EveEntitySelect } from "@jitaspace/ui";
 
-import { EsiCharacterShipFittingCard } from "~/components/fitting";
+import { EsiCharacterShipFittingCard } from "~/components/Fitting";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {

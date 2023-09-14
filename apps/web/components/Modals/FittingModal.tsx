@@ -4,7 +4,7 @@ import { type ContextModalProps } from "@mantine/modals";
 import {
   ShipFittingCard,
   type ShipFittingCardProps,
-} from "~/components/fitting";
+} from "~/components/Fitting";
 
 export function FittingModal({
   innerProps,
