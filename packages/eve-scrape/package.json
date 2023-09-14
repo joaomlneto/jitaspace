@@ -1,0 +1,32 @@
+{
+  "name": "@jitaspace/eve-scrape",
+  "description": "Scripts to scrape EVE Online information",
+  "version": "0.1.0",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs,iife --dts",
+    "clean": "rm -rf .turbo node_modules",
+    "dev": "pnpm build --watch",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --jsx react-jsx --noEmit",
+    "prepublish": "pnpm build"
+  },
+  "dependencies": {
+    "@jitaspace/db": "*",
+    "@jitaspace/esi-client": "*",
+    "@jitaspace/sde-client": "*"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "*",
+    "@jitaspace/prettier-config": "*",
+    "@jitaspace/tsconfig": "*",
+    "@types/node": "^18.17.15",
+    "eslint": "^8.49.0",
+    "prettier": "^3.0.3",
+    "tsup": "^7.2.0",
+    "typescript": "^5.2.2"
+  }
+}
