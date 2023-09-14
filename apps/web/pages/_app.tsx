@@ -153,6 +153,7 @@ export default function App({
           href="/apple-touch-icon.png"
         />
         <link rel="manifest" href="/manifest.json" />
+        {/*
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:url" content="https://www.jita.space" />
         <meta name="twitter:title" content="Jita" />
@@ -164,6 +165,7 @@ export default function App({
         <meta property="og:site_name" content="Jita" />
         <meta property="og:url" content="https://www.jita.space" />
         <meta property="og:image" content="/api/opengraph/image" />
+        */}
       </Head>
 
       <DefaultSeo
