@@ -47,11 +47,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
   // Get list of typeIDs from ESI
   const firstPage = await getUniverseTypes();
   let typeIds = [...firstPage.data];
+  // FIXME: THE FOLLOWING IS COMMENTED WHILE I SORT OUT GIGANTIC BUILD TIMES ON CICD
+  /*
   const numPages = firstPage.headers["x-pages"];
   for (let page = 2; page <= numPages; page++) {
     const result = await getUniverseTypes({ page });
     typeIds = [...typeIds, ...result.data];
   }
+  */
 
   return {
     paths: typeIds.map((typeId) => ({
@@ -89,11 +92,6 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       !typeImageVariations || typeImageVariations?.includes("render")
         ? "render"
         : typeImageVariations[0];
-    // As we migrated from serversideprops to staticprops, this is no longer available to us
-    /*context.res.setHeader(
-      "Cache-Control",
-      "public, s-maxage=86400, stale-while-revalidate=3600",
-    );*/
     return {
       props: {
         ogImageUrl: `https://images.evetech.net/types/${typeId}/${ogVariation}`,
