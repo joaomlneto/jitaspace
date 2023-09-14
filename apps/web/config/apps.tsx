@@ -9,6 +9,8 @@ import {
   ContactsIcon,
   EveMailIcon,
   FittingIcon,
+  ItemsIcon,
+  MapIcon,
   PeopleAndPlacesIcon,
   SkillsIcon,
   type EveIconProps,
@@ -209,6 +211,24 @@ export const jitaApps: Record<string, JitaApp> = {
         },
       ],
     },
+  },
+};
+
+export const universeApps: Record<string, JitaApp> = {
+  map: {
+    name: "Map",
+    description: "View the EVE Universe Map",
+    url: "/regions",
+    Icon: (props) => <MapIcon {...props} />,
+    scopes: {},
+  },
+  inventory: {
+    name: "Inventory",
+    description:
+      "Navigate EVE's inventory system, containing everything in the game.",
+    url: "/categories",
+    Icon: (props) => <ItemsIcon {...props} />,
+    scopes: {},
   },
 };
 
