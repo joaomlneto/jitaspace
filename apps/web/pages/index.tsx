@@ -14,7 +14,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 
-import { jitaApps } from "~/config/apps";
+import { jitaApps, universeApps } from "~/config/apps";
 import { MainLayout } from "~/layouts";
 
 const devApps: {
@@ -123,9 +123,45 @@ export default function Page() {
                 <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
                   {feature.name}
                 </Text>
-                {feature.tags?.map((tag) => (
-                  <Badge key={tag}>{tag}</Badge>
-                ))}
+                {feature.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}
+              </Group>
+              <Text fz="sm" c="dimmed" mt="sm">
+                {feature.description}
+              </Text>
+            </Card>
+          </UnstyledButton>
+        ))}
+      </SimpleGrid>
+      <Title order={3}>Universe</Title>
+      <SimpleGrid
+        cols={3}
+        spacing="xl"
+        my="xl"
+        breakpoints={[
+          { maxWidth: "sm", cols: 2 },
+          { maxWidth: "xs", cols: 1 },
+        ]}
+      >
+        {Object.values(universeApps).map((feature) => (
+          <UnstyledButton
+            component={feature.url ? Link : Link}
+            href={feature.url ?? ""}
+            onClick={feature.onClick}
+            key={feature.name}
+          >
+            <Card shadow="md" radius="md" className={classes.card} padding="xl">
+              <Container m={0} p={0} w={64} h={64}>
+                <feature.Icon
+                  height={64}
+                  width={64}
+                  color={theme.fn.primaryColor()}
+                />
+              </Container>
+              <Group>
+                <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
+                  {feature.name}
+                </Text>
+                {feature.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}
               </Group>
               <Text fz="sm" c="dimmed" mt="sm">
                 {feature.description}
@@ -161,9 +197,7 @@ export default function Page() {
                 <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
                   {feature.name}
                 </Text>
-                {feature.tags?.map((tag) => (
-                  <Badge key={tag}>{tag}</Badge>
-                ))}
+                {feature.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}
               </Group>
               <Text fz="sm" c="dimmed" mt="sm">
                 {feature.description}
