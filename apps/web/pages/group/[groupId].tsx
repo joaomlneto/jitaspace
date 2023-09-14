@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import {
   Container,
   Group,
+  Loader,
   SimpleGrid,
   Stack,
   Text,
@@ -105,6 +106,15 @@ export default function Page({ name, types }: PageProps) {
   const router = useRouter();
   const groupId = router.query.groupId as string;
   const { data: group } = useGetUniverseGroupsGroupId(parseInt(groupId));
+
+  if (router.isFallback) {
+    return (
+      <Group>
+        <Loader />
+        <Text>Loading type information...</Text>
+      </Group>
+    );
+  }
 
   const sortedTypes = (types ?? []).sort((a, b) =>
     a.name.localeCompare(b.name),
