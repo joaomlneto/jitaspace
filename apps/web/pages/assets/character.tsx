@@ -1,13 +1,11 @@
 import React, { useCallback, useMemo, type ReactElement } from "react";
 import {
-  Badge,
   Center,
   Container,
   Group,
   Loader,
   Pagination,
   Stack,
-  Table,
   Text,
   TextInput,
   Title,
@@ -22,16 +20,9 @@ import {
   useMarketPrices,
 } from "@jitaspace/esi-hooks";
 import { AssetsIcon } from "@jitaspace/eve-icons";
-import {
-  AssetLocationSelect,
-  EveEntityAnchor,
-  EveEntityName,
-  ISKAmount,
-  TypeAnchor,
-  TypeAvatar,
-  TypeName,
-} from "@jitaspace/ui";
+import { AssetLocationSelect, ISKAmount } from "@jitaspace/ui";
 
+import { AssetsTable } from "~/components/Assets";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
@@ -172,57 +163,9 @@ export default function Page() {
             onChange={pagination.setPage}
           />
         </Center>
-        <Table highlightOnHover>
-          <thead>
-            <tr>
-              <th>Item ID</th>
-              <th>Qty</th>
-              <th>Type</th>
-              <th>Price</th>
-              {filterForm.values.location_id === null && <th>Location</th>}
-            </tr>
-          </thead>
-          <tbody>
-            {entries.slice(offset, offset + ENTRIES_PER_PAGE).map((asset) => (
-              <tr key={asset.item_id}>
-                <td>
-                  <Text size="xs" color="dimmed">
-                    {asset.item_id}
-                  </Text>
-                </td>
-                <td align="right">{asset.quantity}</td>
-                <td>
-                  <Group spacing="xs" position="apart">
-                    <Group noWrap spacing="xs">
-                      <TypeAvatar size="xs" typeId={asset.type_id} />
-                      <TypeAnchor typeId={asset.type_id}>
-                        <TypeName typeId={asset.type_id} />
-                      </TypeAnchor>
-                    </Group>
-                    <Group spacing="xs" position="right">
-                      {asset.is_singleton && <Badge size="xs">assembled</Badge>}
-                      {asset.is_blueprint_copy && <Badge size="xs">BPC</Badge>}
-                    </Group>
-                  </Group>
-                </td>
-                <td>
-                  {asset.price && (
-                    <ISKAmount align="right" amount={asset.price} />
-                  )}
-                </td>
-                {filterForm.values.location_id === null && (
-                  <td>
-                    <Group spacing="xs">
-                      <EveEntityAnchor entityId={asset.location_id}>
-                        <EveEntityName entityId={asset.location_id} />
-                      </EveEntityAnchor>
-                    </Group>
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </Table>
+        <AssetsTable
+          assets={entries.slice(offset, offset + ENTRIES_PER_PAGE)}
+        />
       </Stack>
     </Container>
   );
