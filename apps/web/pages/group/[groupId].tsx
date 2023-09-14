@@ -43,8 +43,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
     };
   }
 
-  // Get list of categoryIDs from ESI
-  const groups = await getUniverseGroups();
+  // Get list of groupIds from ESI
+  const firstPage = await getUniverseGroups();
+  let groupIds = [...firstPage.data];
+  const numPages = firstPage.headers["x-pages"];
+  for (let page = 2; page <= numPages; page++) {
+    const result = await getUniverseGroups({ page });
+    groupIds = [...groupIds, ...result.data];
+  }
 
   return {
     // FIXME: THIS IS TOO SLOW! RE-ENABLE ONCE YOU FIGURE OUT HOW TO MAKE IT QUICKER
@@ -66,8 +72,14 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     const groupId = Number(context.params?.groupId as string);
 
     // check if the requested group exists
-    const groupIds = await getUniverseGroups();
-    if (!groupIds.data.includes(groupId)) {
+    const firstPage = await getUniverseGroups();
+    let groupIds = [...firstPage.data];
+    const numPages = firstPage.headers["x-pages"];
+    for (let page = 2; page <= numPages; page++) {
+      const result = await getUniverseGroups({ page });
+      groupIds = [...groupIds, ...result.data];
+    }
+    if (!groupIds.includes(groupId)) {
       return {
         notFound: true,
       };
