@@ -56,21 +56,22 @@ export const getStaticPaths: GetStaticPaths = async () => {
   // Get list of typeIDs from ESI
   const firstPage = await getUniverseTypes();
   let typeIds = [...firstPage.data];
-  // FIXME: THE FOLLOWING IS COMMENTED WHILE I SORT OUT GIGANTIC BUILD TIMES ON CICD
-  /*
   const numPages = firstPage.headers["x-pages"];
   for (let page = 2; page <= numPages; page++) {
     const result = await getUniverseTypes({ page });
     typeIds = [...typeIds, ...result.data];
   }
-  */
 
   return {
+    // FIXME: THIS IS TOO SLOW! RE-ENABLE ONCE YOU FIGURE OUT HOW TO MAKE IT QUICKER
+    paths: [],
+    /*
     paths: typeIds.map((typeId) => ({
       params: {
         typeId: `${typeId}`,
       },
     })),
+    */
     fallback: true, // if not statically generated, try to confirm if there is a new type
   };
 };
@@ -81,8 +82,14 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     const typeId = Number(context.params?.typeId as string);
 
     // check if the requested type exists
-    const typeIds = await getUniverseTypes();
-    if (!typeIds.data.includes(typeId)) {
+    const firstPage = await getUniverseTypes();
+    let typeIds = [...firstPage.data];
+    const numPages = firstPage.headers["x-pages"];
+    for (let page = 2; page <= numPages; page++) {
+      const result = await getUniverseTypes({ page });
+      typeIds = [...typeIds, ...result.data];
+    }
+    if (!typeIds.includes(typeId)) {
       throw Error("type does not exist");
     }
 
