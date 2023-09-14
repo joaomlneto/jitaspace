@@ -2,7 +2,15 @@ import React, { type ReactElement } from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
+import {
+  Button,
+  Container,
+  Group,
+  Loader,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 import axios, { HttpStatusCode } from "axios";
 import { NextSeo } from "next-seo";
@@ -116,6 +124,15 @@ export default function Page({
   const typeId = router.query.typeId as string;
   const { data: type } = useGetUniverseTypesTypeId(parseInt(typeId));
   const { data: marketPrices } = useMarketPrices();
+
+  if (router.isFallback) {
+    return (
+      <Group>
+        <Loader />
+        <Text>Loading type information...</Text>
+      </Group>
+    );
+  }
 
   return (
     <>
