@@ -1,5 +1,5 @@
 import React, { type ReactElement } from "react";
-import { type GetServerSideProps } from "next";
+import { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
@@ -8,6 +8,7 @@ import axios, { HttpStatusCode } from "axios";
 import { NextSeo } from "next-seo";
 
 import {
+  getUniverseTypes,
   getUniverseTypesTypeId,
   useGetUniverseTypesTypeId,
 } from "@jitaspace/esi-client";
@@ -21,6 +22,7 @@ import {
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { ESI_BASE_URL } from "~/config/constants";
+import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
 
 type PageProps = {
@@ -29,14 +31,53 @@ type PageProps = {
   typeDescription?: string;
 };
 
-export const getServerSideProps: GetServerSideProps<PageProps> = async (
-  context,
-) => {
+export const getStaticPaths: GetStaticPaths = async () => {
+  // FIXME: THIS SHOULD NOT BE NEEDED
+  axios.defaults.baseURL = ESI_BASE_URL;
+
+  // When this is true (in preview environments) don't prerender any static pages
+  // (faster builds, but slower initial page load)
+  if (env.NODE_ENV !== "production") {
+    return {
+      paths: [],
+      fallback: "blocking",
+    };
+  }
+
+  // Get list of typeIDs from ESI
+  const firstPage = await getUniverseTypes();
+  let typeIds = [...firstPage.data];
+  const numPages = firstPage.headers["x-pages"];
+  for (let page = 2; page <= numPages; page++) {
+    const result = await getUniverseTypes({ page });
+    typeIds = [...typeIds, ...result.data];
+  }
+
+  return {
+    paths: typeIds.map((typeId) => ({
+      params: {
+        typeId: `${typeId}`,
+      },
+    })),
+    fallback: true, // if not statically generated, try to confirm if there is a new type
+  };
+};
+
+export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
     axios.defaults.baseURL = ESI_BASE_URL;
-    const typeId = context.params?.typeId as string;
+    const typeId = Number(context.params?.typeId as string);
+
+    // check if the requested type exists
+    const typeIds = await getUniverseTypes();
+    if (!typeIds.data.includes(typeId)) {
+      return {
+        notFound: true,
+      };
+    }
+
     // FIXME: these two calls should be made in parallel, not sequentially
-    const typeInfo = await getUniverseTypesTypeId(parseInt(typeId));
+    const typeInfo = await getUniverseTypesTypeId(typeId);
     const typeImageVariations: string[] = typeId
       ? ((await fetch(`https://images.evetech.net/types/${typeId}`).then(
           (res) => {
@@ -48,16 +89,18 @@ export const getServerSideProps: GetServerSideProps<PageProps> = async (
       !typeImageVariations || typeImageVariations?.includes("render")
         ? "render"
         : typeImageVariations[0];
-    context.res.setHeader(
+    // As we migrated from serversideprops to staticprops, this is no longer available to us
+    /*context.res.setHeader(
       "Cache-Control",
       "public, s-maxage=86400, stale-while-revalidate=3600",
-    );
+    );*/
     return {
       props: {
         ogImageUrl: `https://images.evetech.net/types/${typeId}/${ogVariation}`,
         typeName: typeInfo?.data?.name,
         typeDescription: typeInfo?.data?.description,
       },
+      revalidate: 24 * 3600, // every 24 hours
     };
   } catch (e) {
     return {
