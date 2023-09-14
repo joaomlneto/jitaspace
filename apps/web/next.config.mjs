@@ -16,7 +16,8 @@ const config = {
   transpilePackages: [
     'jotai-devtools',
     "@jitaspace/auth",
-    "@jitaspace/esi-client",
+      "@jitaspace/db",
+      "@jitaspace/esi-client",
     "@jitaspace/esi-client-kubb",
     "@jitaspace/esi-hooks",
     "@jitaspace/esi-meta-client",
