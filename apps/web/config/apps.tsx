@@ -15,6 +15,7 @@ import {
   OpportunitiesTreeIcon,
   PeopleAndPlacesIcon,
   SkillsIcon,
+  WalletIcon,
   type EveIconProps,
 } from "@jitaspace/eve-icons";
 import { TotalUnreadMailsIndicator } from "@jitaspace/ui";
@@ -187,6 +188,25 @@ export const jitaApps: Record<string, JitaApp> = {
             "esi-characters.read_corporation_roles.v1",
             "esi-assets.read_corporation_assets.v1",
           ],
+        },
+      ],
+    },
+  },
+  wallet: {
+    name: "Wallet",
+    description: "View your character's and your corporation's wallet.",
+    url: "/wallet",
+    Icon: (props) => React.createElement(WalletIcon, props),
+    tags: ["beta"],
+    scopes: {
+      optional: [
+        {
+          reason: "View your character wallet",
+          scopes: ["esi-wallet.read_character_wallet.v1"],
+        },
+        {
+          reason: "View your corporation wallet",
+          scopes: ["esi-wallet.read_corporation_wallets.v1"],
         },
       ],
     },
