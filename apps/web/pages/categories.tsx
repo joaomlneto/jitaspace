@@ -52,7 +52,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 24 * 3600, // every 24 hours
+      revalidate: 3600, // every hour
     };
   }
 };
