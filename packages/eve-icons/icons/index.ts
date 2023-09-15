@@ -62,6 +62,7 @@ export * from "./LPStoreIcon";
 export * from "./MapIcon";
 export * from "./MarketIcon";
 export * from "./MemoryAttributeSmallIcon";
+export * from "./OpportunitiesTreeIcon";
 export * from "./PeopleAndPlacesIcon";
 export * from "./PerceptionAttributeSmallIcon";
 export * from "./QuestionIcon";
