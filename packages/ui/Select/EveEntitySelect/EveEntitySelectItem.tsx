@@ -39,6 +39,7 @@ export const EveEntitySelectItem = forwardRef<
             entityId={value}
             category={category}
             sx={{ lineHeight: 1, fontSize: rem(12) }}
+            lineClamp={1}
           />
         ) : (
           <Text sx={{ lineHeight: 1, fontSize: rem(12) }}>Unknown</Text>
