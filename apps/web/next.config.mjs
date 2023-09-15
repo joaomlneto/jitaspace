@@ -1,6 +1,5 @@
 import withPWAInit from "@ducanh2912/next-pwa";
-
-import bundleAnalyzer from '@next/bundle-analyzer'
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
@@ -14,10 +13,10 @@ const config = {
 
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
-    'jotai-devtools',
+    "jotai-devtools",
     "@jitaspace/auth",
-      "@jitaspace/db",
-      "@jitaspace/esi-client",
+    "@jitaspace/db",
+    "@jitaspace/esi-client",
     "@jitaspace/esi-client-kubb",
     "@jitaspace/esi-hooks",
     "@jitaspace/esi-meta-client",
@@ -48,25 +47,25 @@ const config = {
 
   rewrites: async () => [
     {
-      "source": "/analytics/:match*",
-      "destination": "https://analytics.umami.is/:match*", // Proxy to Umami
-    }
+      source: "/analytics/:match*",
+      destination: "https://analytics.umami.is/:match*", // Proxy to Umami
+    },
   ],
 
   async redirects() {
-    return ([
-        {
-          source: '/bookmarks',
-          //destination: 'https://github.com/esi/esi-issues/issues/1340',
-          destination: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-          permanent: false
-        },
-    ])
+    return [
+      {
+        source: "/bookmarks",
+        //destination: 'https://github.com/esi/esi-issues/issues/1340',
+        destination: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        permanent: false,
+      },
+    ];
   },
 
   experimental: {
-      swcPlugins: [['@swc-jotai/react-refresh', {}]]
-  }
+    swcPlugins: [["@swc-jotai/react-refresh", {}]],
+  },
 };
 
 const withPWA = withPWAInit({
@@ -74,7 +73,7 @@ const withPWA = withPWAInit({
 });
 
 const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-})
+  enabled: process.env.ANALYZE === "true",
+});
 
 export default withBundleAnalyzer(withPWA(config));
