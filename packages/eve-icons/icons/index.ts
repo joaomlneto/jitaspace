@@ -58,6 +58,7 @@ export * from "./IntelligenceAttributeSmallIcon";
 export * from "./ItemsIcon";
 export * from "./JournalIcon";
 export * from "./LogIcon";
+export * from "./LPStoreIcon";
 export * from "./MapIcon";
 export * from "./MarketIcon";
 export * from "./MemoryAttributeSmallIcon";
