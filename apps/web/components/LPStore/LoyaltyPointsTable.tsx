@@ -115,13 +115,21 @@ export const LoyaltyPointsTable = memo(
           accessorKey: "lp_cost",
           size: 40,
           filterVariant: "range-slider",
-          Cell: ({ renderedCellValue, row, cell }) => renderedCellValue,
+          mantineFilterRangeSliderProps: {
+            label: (value) => value?.toLocaleString?.(),
+          },
+          Cell: ({ renderedCellValue, row, cell }) => (
+            <Text>{row.original.lp_cost.toLocaleString()} LP</Text>
+          ),
         },
         {
           header: "ISK Cost",
           accessorKey: "isk_cost",
           size: 40,
           filterVariant: "range-slider",
+          mantineFilterRangeSliderProps: {
+            label: (value) => <ISKAmount amount={value} />,
+          },
           Cell: ({ renderedCellValue, row, cell }) => (
             <ISKAmount amount={row.original.isk_cost ?? 0} />
           ),
@@ -160,6 +168,7 @@ export const LoyaltyPointsTable = memo(
     const table = useMantineReactTable({
       columns,
       positionPagination: "top",
+      enableFacetedValues: true,
       data: offers, //must be memoized or stable (useState, useMemo, defined outside of this component, etc.)
       initialState: {
         density: "xs",
