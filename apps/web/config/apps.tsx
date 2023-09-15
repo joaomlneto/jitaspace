@@ -223,6 +223,7 @@ export const universeApps: Record<string, JitaApp> = {
     Icon: (props) => React.createElement(LPStoreIcon, props),
     hotKey: ["⌘", "P"],
     scopes: {},
+    tags: ["beta"],
   },
   map: {
     name: "Map",
