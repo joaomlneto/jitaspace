@@ -49,12 +49,12 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       props: {
         offers,
       },
-      revalidate: 24 * 3600,
+      revalidate: 24 * 3600, // every 24 hours
     };
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 30, // every 24 hours
+      revalidate: 30, // 30 seconds on error
     };
   }
 };
