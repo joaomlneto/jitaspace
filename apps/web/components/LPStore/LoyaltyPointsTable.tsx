@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from "react";
-import { ActionIcon, Group, Stack, Text, Tooltip } from "@mantine/core";
+import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import {
   MantineReactTable,
   useMantineReactTable,
@@ -62,23 +62,27 @@ export const LoyaltyPointsTable = memo(
             <Group>
               <Tooltip
                 label={
-                  <CorporationName corporationId={row.original.corporationId} />
+                  <CorporationName
+                    corporationId={row.original.corporationId}
+                    lineClamp={1}
+                  />
                 }
                 color="dark"
               >
-                <div>
+                <Group noWrap>
+                  <CorporationAvatar
+                    corporationId={row.original.corporationId}
+                    size="sm"
+                  />
                   <CorporationAnchor
                     corporationId={row.original.corporationId}
                     target="_blank"
                   >
-                    <ActionIcon size="sm">
-                      <CorporationAvatar
-                        corporationId={row.original.corporationId}
-                        size="sm"
-                      />
-                    </ActionIcon>
+                    <CorporationName
+                      corporationId={row.original.corporationId}
+                    />
                   </CorporationAnchor>
-                </div>
+                </Group>
               </Tooltip>
             </Group>
           ),
@@ -165,7 +169,6 @@ export const LoyaltyPointsTable = memo(
       ],
       [],
     );
-    // {ak_cost?: number, isk_cost: number, lp_cost: number, offer_id: number, quantity: number, required_items: GetLoyaltyStoresCorporationIdOffers200ItemRequiredItemsItem[], type_id: number}
 
     const table = useMantineReactTable({
       columns,
