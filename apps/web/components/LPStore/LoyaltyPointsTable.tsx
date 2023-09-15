@@ -171,7 +171,7 @@ export const LoyaltyPointsTable = memo(
           id: false,
           quantity: false,
         },
-        //showColumnFilters: true,
+        showColumnFilters: true,
       },
     });
 
