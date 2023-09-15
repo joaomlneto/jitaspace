@@ -54,14 +54,6 @@ export default function Page() {
     })),
   );
 
-  /*
-  useEsiNames(
-    Object.values(assets ?? {}).map((asset) => ({
-      id: asset.type_id,
-      category: "inventory_type",
-    })),
-  );*/
-
   const filtersEnabled =
     filterForm.values.location_id !== null || filterForm.values.name !== "";
 
@@ -92,7 +84,6 @@ export default function Page() {
         .sort((a, b) =>
           (a.typeName ?? "").trim().localeCompare((b.typeName ?? "").trim()),
         ),
-    //.sort((a, b) => (b.price ?? 0) - (a.price ?? 0)),
     [
       assets,
       filterForm.values.location_id,
