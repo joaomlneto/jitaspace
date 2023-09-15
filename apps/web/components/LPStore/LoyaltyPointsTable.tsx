@@ -93,6 +93,7 @@ export const LoyaltyPointsTable = memo(
           header: "Item",
           accessorKey: "type_id",
           size: 300,
+          enableColumnFilter: false,
           Cell: ({ renderedCellValue, row, cell }) => (
             <Group noWrap>
               <TypeAvatar typeId={row.original.type_id} size="sm" />
@@ -144,6 +145,7 @@ export const LoyaltyPointsTable = memo(
           header: "Required Items",
           accessorKey: "required_items",
           size: 300,
+          enableColumnFilter: false,
           Cell: ({ row, cell }) => (
             <Stack spacing="xs">
               {row.original.required_items.map(({ quantity, type_id }) => (
