@@ -1,70 +1,83 @@
-import React, { useCallback, useMemo, type ReactElement } from "react";
+import React, { useMemo, type ReactElement } from "react";
+import { GetStaticProps } from "next";
 import { Container, SimpleGrid, Stack, Title } from "@mantine/core";
+import axios from "axios";
 import { NextSeo } from "next-seo";
 
-import { useGetUniverseRegions } from "@jitaspace/esi-client-kubb";
-import { useEsiNamePrefetch, useEsiNamesCache } from "@jitaspace/esi-hooks";
+import {
+  getUniverseRegions,
+  getUniverseRegionsRegionId,
+  GetUniverseRegionsRegionId200,
+} from "@jitaspace/esi-client";
+import { ESI_BASE_URL } from "@jitaspace/esi-hooks";
 import { RegionAnchor, RegionName } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
-export default function Page() {
-  const { data: regionIds } = useGetUniverseRegions();
-  const cache = useEsiNamesCache();
+type PageProps = {
+  regions: GetUniverseRegionsRegionId200[];
+};
 
-  const getNameFromCache = useCallback(
-    (id: number) => cache[id]?.value?.name,
-    [cache],
-  );
+export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+  try {
+    // FIXME: THIS SHOULD NOT BE REQUIRED
+    axios.defaults.baseURL = ESI_BASE_URL;
 
-  useEsiNamePrefetch(
-    (regionIds ?? []).map((regionId) => ({
-      id: regionId,
-      category: "region",
-    })),
-  );
+    // Get all IDs for groups and tasks
+    const { data: regionIds } = await getUniverseRegions();
 
-  const entries = useMemo(
-    () =>
-      (regionIds ?? [])
-        .map((regionId) => ({
-          regionId,
-          name: getNameFromCache(regionId),
-        }))
-        .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
-    [regionIds, getNameFromCache],
-  );
+    // get data of all groups
+    const regions = await Promise.all(
+      regionIds.map(async (opportunityGroupId) =>
+        getUniverseRegionsRegionId(opportunityGroupId).then((res) => res.data),
+      ),
+    );
 
+    return {
+      props: {
+        regions,
+      },
+      revalidate: 24 * 3600, // every 24 hours
+    };
+  } catch (e) {
+    return {
+      notFound: true,
+      revalidate: 30, // 30 seconds on error
+    };
+  }
+};
+
+export default function Page({ regions }: PageProps) {
   const newEdenEntries = useMemo(
     () =>
-      entries.filter(
-        (region) => region.regionId >= 10000000 && region.regionId < 11000000,
+      regions.filter(
+        (region) => region.region_id >= 10000000 && region.region_id < 11000000,
       ),
-    [entries],
+    [regions],
   );
 
   const wormholeEntries = useMemo(
     () =>
-      entries.filter(
-        (region) => region.regionId >= 11000000 && region.regionId < 12000000,
+      regions.filter(
+        (region) => region.region_id >= 11000000 && region.region_id < 12000000,
       ),
-    [entries],
+    [regions],
   );
 
   const abyssalEntries = useMemo(
     () =>
-      entries.filter(
-        (region) => region.regionId >= 12000000 && region.regionId < 13000000,
+      regions.filter(
+        (region) => region.region_id >= 12000000 && region.region_id < 13000000,
       ),
-    [entries],
+    [regions],
   );
 
   const otherEntries = useMemo(
     () =>
-      entries.filter(
-        (region) => region.regionId < 10000000 || region.regionId >= 14000000,
+      regions.filter(
+        (region) => region.region_id < 10000000 || region.region_id >= 14000000,
       ),
-    [entries],
+    [regions],
   );
 
   return (
@@ -81,8 +94,8 @@ export default function Page() {
           ]}
         >
           {newEdenEntries.map((entry) => (
-            <RegionAnchor regionId={entry.regionId} key={entry.regionId}>
-              <RegionName regionId={entry.regionId} />
+            <RegionAnchor regionId={entry.region_id} key={entry.region_id}>
+              <RegionName regionId={entry.region_id} />
             </RegionAnchor>
           ))}
         </SimpleGrid>
@@ -96,8 +109,8 @@ export default function Page() {
           ]}
         >
           {wormholeEntries.map((entry) => (
-            <RegionAnchor regionId={entry.regionId} key={entry.regionId}>
-              <RegionName regionId={entry.regionId} />
+            <RegionAnchor regionId={entry.region_id} key={entry.region_id}>
+              <RegionName regionId={entry.region_id} />
             </RegionAnchor>
           ))}
         </SimpleGrid>
@@ -111,8 +124,8 @@ export default function Page() {
           ]}
         >
           {abyssalEntries.map((entry) => (
-            <RegionAnchor regionId={entry.regionId} key={entry.regionId}>
-              <RegionName regionId={entry.regionId} />
+            <RegionAnchor regionId={entry.region_id} key={entry.region_id}>
+              <RegionName regionId={entry.region_id} />
             </RegionAnchor>
           ))}
         </SimpleGrid>
@@ -126,8 +139,8 @@ export default function Page() {
           ]}
         >
           {otherEntries.map((entry) => (
-            <RegionAnchor regionId={entry.regionId} key={entry.regionId}>
-              <RegionName regionId={entry.regionId} />
+            <RegionAnchor regionId={entry.region_id} key={entry.region_id}>
+              <RegionName regionId={entry.region_id} />
             </RegionAnchor>
           ))}
         </SimpleGrid>
