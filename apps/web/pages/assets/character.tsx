@@ -1,4 +1,9 @@
-import React, { useCallback, useMemo, type ReactElement } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  type ReactElement,
+} from "react";
 import {
   Center,
   Container,
@@ -11,7 +16,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { usePagination } from "@mantine/hooks";
+import { useForceUpdate, usePagination, useTimeout } from "@mantine/hooks";
 
 import {
   useCharacterAssets,
@@ -26,6 +31,7 @@ import { AssetsTable } from "~/components/Assets";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
+  const forceUpdate = useForceUpdate();
   const { assets, isLoading } = useCharacterAssets();
   const filterForm = useForm<{ location_id: number | null; name: string }>({
     initialValues: {
@@ -101,9 +107,10 @@ export default function Page() {
     [entries],
   );
 
-  const numUndefinedNames = entries.filter(
-    (entry) => entry.typeName === undefined,
-  ).length;
+  const numUndefinedNames = useMemo(
+    () => entries.filter((entry) => entry.typeName === undefined).length,
+    [entries],
+  );
 
   // pagination
   const ENTRIES_PER_PAGE = 100;
@@ -111,13 +118,20 @@ export default function Page() {
   const pagination = usePagination({ total: numPages, siblings: 3 });
   const offset = ENTRIES_PER_PAGE * (pagination.active - 1);
 
+  // reload if some asset names are still missing
+  const { start } = useTimeout(() => forceUpdate(), 1000);
+
+  useEffect(() => {
+    if (numUndefinedNames > 0) start();
+  });
+
   return (
     <Container size="xl">
       <Stack>
         <Group>
           <AssetsIcon width={48} />
           <Title order={1}>Assets</Title>
-          {isLoading && <Loader />}
+          {(isLoading || numUndefinedNames > 0) && <Loader />}
         </Group>
         <Group align="end">
           <AssetLocationSelect
