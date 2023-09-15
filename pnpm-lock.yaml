@@ -406,8 +406,8 @@ importers:
         specifier: ^1.8.5
         version: 1.8.5(@types/node@18.17.16)(typescript@5.2.2)
       '@kubb/core':
-        specifier: ^1.8.2
-        version: 1.8.2
+        specifier: ^1.8.5
+        version: 1.8.5
       '@kubb/swagger':
         specifier: ^1.8.2
         version: 1.8.2(openapi-types@12.1.3)
