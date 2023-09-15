@@ -35,7 +35,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     return {
       props: {
-        regions,
+        regions: regions.sort((a, b) => a.name.localeCompare(b.name)),
       },
       revalidate: 24 * 3600, // every 24 hours
     };
