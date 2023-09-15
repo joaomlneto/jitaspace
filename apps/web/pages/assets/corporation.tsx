@@ -15,7 +15,12 @@ import {
 import { useForm } from "@mantine/form";
 import { usePagination } from "@mantine/hooks";
 
-import { useCorporationAssets, useEsiNamesCache } from "@jitaspace/esi-hooks";
+import {
+  useCorporationAssets,
+  useEsiNamePrefetch,
+  useEsiNamesCache,
+  useMarketPrices,
+} from "@jitaspace/esi-hooks";
 import { AssetsIcon, AttentionIcon } from "@jitaspace/eve-icons";
 import {
   EveEntityAnchor,
@@ -36,10 +41,18 @@ export default function Page() {
     },
   });
   const cache = useEsiNamesCache();
+  const { data: marketPrices } = useMarketPrices();
 
   const getNameFromCache = useCallback(
     (id: number) => cache[id]?.value?.name,
     [cache],
+  );
+
+  useEsiNamePrefetch(
+    Object.values(assets ?? {}).map((asset) => ({
+      id: asset.type_id,
+      category: "inventory_type",
+    })),
   );
 
   const filtersEnabled =
@@ -54,10 +67,14 @@ export default function Page() {
             filterForm.values.location_id === null ||
             asset.location_id === filterForm.values.location_id,
         )
-        .map((asset) => ({
-          typeName: getNameFromCache(asset.type_id),
-          ...asset,
-        }))
+        .map((asset) => {
+          const adjustedPrice = marketPrices[asset.type_id]?.adjusted_price;
+          return {
+            typeName: getNameFromCache(asset.type_id),
+            price: adjustedPrice ? adjustedPrice * asset.quantity : undefined,
+            ...asset,
+          };
+        })
         .filter(
           (asset) =>
             filterForm.values.name === "" ||
@@ -73,7 +90,13 @@ export default function Page() {
       filterForm.values.location_id,
       filterForm.values.name,
       getNameFromCache,
+      marketPrices,
     ],
+  );
+
+  const totalPrice = useMemo(
+    () => entries.reduce((acc, { price }) => (price ? acc + price : acc), 0),
+    [entries],
   );
 
   const numUndefinedNames = entries.filter(
@@ -91,7 +114,7 @@ export default function Page() {
       <Stack>
         <Group>
           <AssetsIcon width={48} />
-          <Title order={1}>Assets</Title>
+          <Title order={1}>Corporation Assets</Title>
           {isLoading && <Loader />}
         </Group>
         {errorMessage && (
