@@ -10,6 +10,7 @@ import {
   EveMailIcon,
   FittingIcon,
   ItemsIcon,
+  LPStoreIcon,
   MapIcon,
   PeopleAndPlacesIcon,
   SkillsIcon,
@@ -215,9 +216,17 @@ export const universeApps: Record<string, JitaApp> = {
       ],
     },
   },
+  lpstore: {
+    name: "LP Store",
+    description: "Search through the available LP Store offers.",
+    url: "/lp-store",
+    Icon: (props) => React.createElement(LPStoreIcon, props),
+    hotKey: ["⌘", "P"],
+    scopes: {},
+  },
   map: {
     name: "Map",
-    description: "View the EVE Universe Map",
+    description: "View the EVE Universe Map.",
     url: "/regions",
     Icon: (props) => <MapIcon {...props} />,
     scopes: {},
@@ -225,7 +234,7 @@ export const universeApps: Record<string, JitaApp> = {
   inventory: {
     name: "Inventory",
     description:
-      "Navigate EVE's inventory system, containing everything in the game.",
+      "Navigate EVE's inventory system, containing all items in the game.",
     url: "/categories",
     Icon: (props) => <ItemsIcon {...props} />,
     scopes: {},
