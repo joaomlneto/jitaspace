@@ -72,6 +72,7 @@
     "jotai-tanstack-query": "^0.7.2",
     "jwt-decode": "^3.1.2",
     "mantine-datatable": "^2.9.13",
+    "mantine-react-table": "^1.2.1",
     "next": "^13.4.19",
     "next-auth": "^4.23.1",
     "next-seo": "^6.1.0",
