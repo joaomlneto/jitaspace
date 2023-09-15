@@ -10,7 +10,7 @@ import {
   GetUniverseRegionsRegionId200,
 } from "@jitaspace/esi-client";
 import { ESI_BASE_URL } from "@jitaspace/esi-hooks";
-import { RegionAnchor, RegionName } from "@jitaspace/ui";
+import { RegionAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
@@ -48,102 +48,62 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 };
 
 export default function Page({ regions }: PageProps) {
-  const newEdenEntries = useMemo(
-    () =>
-      regions.filter(
-        (region) => region.region_id >= 10000000 && region.region_id < 11000000,
-      ),
-    [regions],
-  );
+  const galaxies: {
+    name: string;
+    filter: (region: GetUniverseRegionsRegionId200) => boolean;
+  }[] = [
+    {
+      name: "New Eden (K-Space)",
+      filter: (region) =>
+        region.region_id >= 10000000 && region.region_id < 11000000,
+    },
+    {
+      name: "Anoikis (W-Space)",
+      filter: (region) =>
+        region.region_id >= 11000000 && region.region_id < 12000000,
+    },
+    {
+      name: "Abyssal",
+      filter: (region) =>
+        region.region_id >= 12000000 && region.region_id < 13000000,
+    },
+    {
+      name: "Other",
+      filter: (region) =>
+        region.region_id < 10000000 || region.region_id >= 14000000,
+    },
+  ];
 
-  const wormholeEntries = useMemo(
-    () =>
-      regions.filter(
-        (region) => region.region_id >= 11000000 && region.region_id < 12000000,
-      ),
-    [regions],
-  );
-
-  const abyssalEntries = useMemo(
-    () =>
-      regions.filter(
-        (region) => region.region_id >= 12000000 && region.region_id < 13000000,
-      ),
-    [regions],
-  );
-
-  const otherEntries = useMemo(
-    () =>
-      regions.filter(
-        (region) => region.region_id < 10000000 || region.region_id >= 14000000,
-      ),
-    [regions],
-  );
+  const galaxyRegions = useMemo(() => {
+    return galaxies.map((galaxy) => ({
+      ...galaxy,
+      regions: regions.filter(galaxy.filter),
+    }));
+  }, [galaxies, regions]);
 
   return (
     <Container size="sm">
       <Stack>
         <Title>Regions</Title>
-        <Title order={3}>New Eden (K-Space)</Title>
-        <SimpleGrid
-          cols={4}
-          breakpoints={[
-            { maxWidth: "sm", cols: 3, spacing: "md" },
-            { maxWidth: "xs", cols: 2, spacing: "sm" },
-            { maxWidth: "25em", cols: 1, spacing: "sm" },
-          ]}
-        >
-          {newEdenEntries.map((entry) => (
-            <RegionAnchor regionId={entry.region_id} key={entry.region_id}>
-              <RegionName regionId={entry.region_id} />
-            </RegionAnchor>
-          ))}
-        </SimpleGrid>
-        <Title order={3}>Anoikis (W-Space)</Title>
-        <SimpleGrid
-          cols={4}
-          breakpoints={[
-            { maxWidth: "sm", cols: 3, spacing: "md" },
-            { maxWidth: "xs", cols: 2, spacing: "sm" },
-            { maxWidth: "25em", cols: 1, spacing: "sm" },
-          ]}
-        >
-          {wormholeEntries.map((entry) => (
-            <RegionAnchor regionId={entry.region_id} key={entry.region_id}>
-              <RegionName regionId={entry.region_id} />
-            </RegionAnchor>
-          ))}
-        </SimpleGrid>
-        <Title order={3}>Abyssal</Title>
-        <SimpleGrid
-          cols={4}
-          breakpoints={[
-            { maxWidth: "sm", cols: 3, spacing: "md" },
-            { maxWidth: "xs", cols: 2, spacing: "sm" },
-            { maxWidth: "25em", cols: 1, spacing: "sm" },
-          ]}
-        >
-          {abyssalEntries.map((entry) => (
-            <RegionAnchor regionId={entry.region_id} key={entry.region_id}>
-              <RegionName regionId={entry.region_id} />
-            </RegionAnchor>
-          ))}
-        </SimpleGrid>
-        <Title order={3}>Other</Title>
-        <SimpleGrid
-          cols={4}
-          breakpoints={[
-            { maxWidth: "sm", cols: 3, spacing: "md" },
-            { maxWidth: "xs", cols: 2, spacing: "sm" },
-            { maxWidth: "25em", cols: 1, spacing: "sm" },
-          ]}
-        >
-          {otherEntries.map((entry) => (
-            <RegionAnchor regionId={entry.region_id} key={entry.region_id}>
-              <RegionName regionId={entry.region_id} />
-            </RegionAnchor>
-          ))}
-        </SimpleGrid>
+        {galaxyRegions.map((galaxy) => (
+          <React.Fragment key={galaxy.name}>
+            <Title order={3}>{galaxy.name}</Title>
+            <SimpleGrid
+              cols={4}
+              breakpoints={[
+                { maxWidth: "sm", cols: 3, spacing: "md" },
+                { maxWidth: "xs", cols: 2, spacing: "sm" },
+                { maxWidth: "25em", cols: 1, spacing: "sm" },
+              ]}
+            >
+              {galaxy.regions.map((entry) => (
+                <RegionAnchor regionId={entry.region_id} key={entry.region_id}>
+                  {entry.name}
+                </RegionAnchor>
+              ))}
+            </SimpleGrid>
+          </React.Fragment>
+        ))}
       </Stack>
     </Container>
   );
