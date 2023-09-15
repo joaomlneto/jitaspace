@@ -110,7 +110,7 @@ export default function Page() {
             </Container>
             <Group>
               <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
-                Corporation Assets
+                Corporation Wallet
               </Text>
             </Group>
             <Text fz="sm" c="dimmed" mt="sm">
