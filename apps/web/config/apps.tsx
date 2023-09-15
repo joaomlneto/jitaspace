@@ -189,6 +189,9 @@ export const jitaApps: Record<string, JitaApp> = {
       ],
     },
   },
+};
+
+export const universeApps: Record<string, JitaApp> = {
   search: {
     name: "Search",
     description: "Search new eden for people and places.",
@@ -212,9 +215,6 @@ export const jitaApps: Record<string, JitaApp> = {
       ],
     },
   },
-};
-
-export const universeApps: Record<string, JitaApp> = {
   map: {
     name: "Map",
     description: "View the EVE Universe Map",
