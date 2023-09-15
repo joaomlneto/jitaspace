@@ -12,6 +12,7 @@ import {
   ItemsIcon,
   LPStoreIcon,
   MapIcon,
+  OpportunitiesTreeIcon,
   PeopleAndPlacesIcon,
   SkillsIcon,
   type EveIconProps,
@@ -238,6 +239,13 @@ export const universeApps: Record<string, JitaApp> = {
       "Navigate EVE's inventory system, containing all items in the game.",
     url: "/categories",
     Icon: (props) => <ItemsIcon {...props} />,
+    scopes: {},
+  },
+  opportunities: {
+    name: "Opportunities",
+    description: "View the Opportunities Tree.",
+    url: "/opportunities",
+    Icon: (props) => <OpportunitiesTreeIcon {...props} />,
     scopes: {},
   },
 };
