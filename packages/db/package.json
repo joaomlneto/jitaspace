@@ -26,6 +26,7 @@
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
     "@types/node": "^18.17.15",
+    "concurrently": "^8.2.1",
     "eslint": "^8.49.0",
     "prettier": "^3.0.3",
     "prisma": "^5.3.0",
