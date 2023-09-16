@@ -21,4 +21,122 @@ model Type {
   typeId        Int         @id
   marketGroupId Int
   MarketGroup   MarketGroup @relation(fields: [marketGroupId], references: [marketGroupId])
+  Station       Station[]
+}
+
+model DogmaAttribute {
+  attributeId  Int        @id
+  defaultValue Float?
+  description  String?
+  displayName  String?
+  highIsGood   Boolean?
+  iconId       Int?
+  name         String?
+  published    Boolean?
+  stackable    Boolean?
+  unitId       Int?
+  Icon         Icon?      @relation(fields: [iconId], references: [iconId])
+  DogmaUnit    DogmaUnit? @relation(fields: [unitId], references: [unitId])
+}
+
+model DogmaUnit {
+  unitId         Int              @id
+  displayName    String
+  description    String
+  DogmaAttribute DogmaAttribute[]
+}
+
+model Icon {
+  iconId         Int              @id
+  description    String
+  iconFile       String
+  DogmaAttribute DogmaAttribute[]
+}
+
+model Character {
+  characterId        Int           @id
+  // TODO
+  CorporationCeo     Corporation?  @relation("corporationCeo")
+  CorporationCreator Corporation[] @relation("corporationCreator")
+}
+
+model Alliance {
+  allianceId            Int          @id
+  CreatorCorporation    Corporation  @relation("allianceCreatorCorporation", fields: [creatorCorporationId], references: [corporationId])
+  creatorCorporationId  Int
+  dateFounded           DateTime
+  executorCorporation   Corporation? @relation("allianceExecutorCorporation", fields: [executorCorporationId], references: [corporationId])
+  executorCorporationId Int?         @unique
+  Faction               Faction?     @relation(fields: [factionId], references: [factionId])
+  factionId             Int?
+  MemberCorporation     Corporation? @relation("allianceMemberCorporation", fields: [memberCorporationId], references: [corporationId])
+  memberCorporationId   Int?         @unique
+  name                  String
+  ticker                String
+}
+
+// TODO
+model Faction {
+  factionId   Int           @id
+  Alliance    Alliance[]
+  Corporation Corporation[]
+}
+
+model Corporation {
+  corporationId    Int        @id
+  allianceId       Alliance?  @relation("allianceMemberCorporation")
+  Ceo              Character  @relation("corporationCeo", fields: [ceoId], references: [characterId])
+  ceoId            Int        @unique
+  Creator          Character  @relation("corporationCreator", fields: [creatorId], references: [characterId])
+  createdAlliances Alliance[] @relation("allianceCreatorCorporation")
+  executorAlliance Alliance?  @relation("allianceExecutorCorporation")
+  creatorId        Int
+  dateFounded      DateTime?
+  description      String?
+  Faction          Faction?   @relation(fields: [factionId], references: [factionId])
+  factionId        Int?
+  HomeStation      Station?   @relation(fields: [homeStationId], references: [stationId])
+  homeStationId    Int?
+  memberCount      Int
+  name             String
+  shares           Int?
+  taxRate          Float
+  ticker           String
+  url              String?
+  warEligible      Boolean?
+}
+
+model Station {
+  stationId               Int           @id
+  name                    String
+  CorporationHomeStations Corporation[]
+  StationSolarSystem      SolarSystem   @relation(fields: [systemId], references: [systemId])
+  systemId                Int
+  StationType             Type          @relation(fields: [typeId], references: [typeId])
+  typeId                  Int
+}
+
+// done:
+// alliance
+model Region {
+  regionId             Int             @id
+  name                 String
+  description          String?
+  RegionConstellations Constellation[]
+}
+
+model Constellation {
+  constellationId           Int           @id
+  name                      String
+  regionId                  Int
+  ConstellationRegion       Region?       @relation(fields: [regionId], references: [regionId])
+  ConstellationSolarSystems SolarSystem[]
+}
+
+model SolarSystem {
+  systemId        Int           @id
+  name            String
+  SystemStations  Station[]
+  Constellation   Constellation @relation(fields: [constellationId], references: [constellationId])
+  constellationId Int
 }
