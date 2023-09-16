@@ -62,9 +62,6 @@ importers:
       '@jitaspace/eve-icons':
         specifier: '*'
         version: link:../../packages/eve-icons
-      '@jitaspace/eve-scrape':
-        specifier: '*'
-        version: link:../../packages/eve-scrape
       '@jitaspace/sde-client':
         specifier: '*'
         version: link:../../packages/sde-client
@@ -418,8 +415,8 @@ importers:
         specifier: ^1.8.5
         version: 1.8.5(axios@1.5.0)(openapi-types@12.1.3)(typescript@5.2.2)
       '@kubb/swagger-tanstack-query':
-        specifier: ^1.8.2
-        version: 1.8.2(axios@1.5.0)(openapi-types@12.1.3)(typescript@5.2.2)
+        specifier: ^1.8.5
+        version: 1.8.5(axios@1.5.0)(openapi-types@12.1.3)(typescript@5.2.2)
       '@kubb/swagger-ts':
         specifier: ^1.8.2
         version: 1.8.2(openapi-types@12.1.3)(typescript@5.2.2)
@@ -3178,24 +3175,6 @@ packages:
       seedrandom: 3.0.5
     dev: false
 
-  /@kubb/swagger-client@1.8.2(axios@1.5.0)(openapi-types@12.1.3)(typescript@5.2.2):
-    resolution: {integrity: sha512-TiokvlkjOlOdtPK5HTn2PWHSttpwjnV7y0kzxjji8SLrV9zR7GzY63WVsyuJLU7MrB+tCbyVLYlxuzE6ucutTw==}
-    engines: {node: '>=18', pnpm: '>=8.3.0'}
-    peerDependencies:
-      axios: ^1.4.0
-    dependencies:
-      '@kubb/core': 1.8.2
-      '@kubb/swagger': 1.8.2(openapi-types@12.1.3)
-      '@kubb/swagger-ts': 1.8.2(openapi-types@12.1.3)(typescript@5.2.2)
-      '@kubb/ts-codegen': 1.8.2
-      axios: 1.5.0
-      change-case: 4.1.2
-    transitivePeerDependencies:
-      - encoding
-      - openapi-types
-      - typescript
-    dev: false
-
   /@kubb/swagger-client@1.8.5(axios@1.5.0)(openapi-types@12.1.3)(typescript@5.2.2):
     resolution: {integrity: sha512-0KcyL7fXmYdTZyTcA4H5ynnuQbQ1K/FAEDTTKGxPeNK6GgKdEcgW9OjbhfgsFEf+4bEZxEVPwJ3oktlGaPCr3Q==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
@@ -3214,15 +3193,15 @@ packages:
       - typescript
     dev: false
 
-  /@kubb/swagger-tanstack-query@1.8.2(axios@1.5.0)(openapi-types@12.1.3)(typescript@5.2.2):
-    resolution: {integrity: sha512-u9AKjKVTD2BZ0rQokzAwpH8v0XYYJYx0ZSBILN8b80Jjebk6ryy1PDpvBzPfPd33Fr3SItIroAcuZ0aQvsEt8w==}
+  /@kubb/swagger-tanstack-query@1.8.5(axios@1.5.0)(openapi-types@12.1.3)(typescript@5.2.2):
+    resolution: {integrity: sha512-79AHvFP/yg7kSSKmSWl+6DJUCxg8esbg3jIMiUE0UVmGBXx3TPx7AqHWMcZxULlKIPaL5jutq95tBBPmLE1uLg==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
-      '@kubb/core': 1.8.2
-      '@kubb/swagger': 1.8.2(openapi-types@12.1.3)
-      '@kubb/swagger-client': 1.8.2(axios@1.5.0)(openapi-types@12.1.3)(typescript@5.2.2)
-      '@kubb/swagger-ts': 1.8.2(openapi-types@12.1.3)(typescript@5.2.2)
-      '@kubb/ts-codegen': 1.8.2
+      '@kubb/core': 1.8.5
+      '@kubb/swagger': 1.8.5(openapi-types@12.1.3)
+      '@kubb/swagger-client': 1.8.5(axios@1.5.0)(openapi-types@12.1.3)(typescript@5.2.2)
+      '@kubb/swagger-ts': 1.8.5(openapi-types@12.1.3)(typescript@5.2.2)
+      '@kubb/ts-codegen': 1.8.5
       change-case: 4.1.2
     transitivePeerDependencies:
       - axios
