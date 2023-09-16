@@ -15,7 +15,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@ducanh2912/next-pwa": "^9.5.0",
+    "@ducanh2912/next-pwa": "^9.6.0",
     "@emotion/react": "^11.11.1",
     "@emotion/server": "^11.11.0",
     "@jitaspace/auth": "*",
