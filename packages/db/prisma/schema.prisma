@@ -8,13 +8,22 @@ datasource db {
   url          = env("DATABASE_URL")
 }
 
+model Character {
+  characterId        Int           @id
+  // TODO
+  CorporationCeo     Corporation?  @relation("corporationCeo")
+  CorporationCreator Corporation[] @relation("corporationCreator")
+  updatedAt          DateTime      @updatedAt()
+  isDeleted          Boolean       @default(false)
+}
+
 model MarketGroup {
   marketGroupId       Int           @id
   name                String
   description         String
   types               Type[]
   parentMarketGroupId Int?
-  ParentMarketGroup   MarketGroup?  @relation("marketGroupParent", fields: [parentMarketGroupId], references: [marketGroupId], onDelete: NoAction, onUpdate: NoAction)
+  ParentMarketGroup   MarketGroup?  @relation("marketGroupParent", fields: [parentMarketGroupId], references: [marketGroupId], onDelete: Restrict, onUpdate: Restrict)
   children            MarketGroup[] @relation("marketGroupParent")
   updatedAt           DateTime      @updatedAt()
   isDeleted           Boolean       @default(false)
@@ -22,15 +31,62 @@ model MarketGroup {
   @@index([parentMarketGroupId])
 }
 
+model Category {
+  categoryId Int      @id
+  Groups     Group[]
+  name       String
+  published  Boolean
+  updatedAt  DateTime @updatedAt()
+  isDeleted  Boolean  @default(false)
+}
+
+model Group {
+  groupId    Int      @id
+  Category   Category @relation(fields: [categoryId], references: [categoryId])
+  categoryId Int
+  name       String
+  published  Boolean
+  Type       Type[]
+  updatedAt  DateTime @updatedAt()
+  isDeleted  Boolean  @default(false)
+
+  @@index([categoryId])
+}
+
 model Type {
-  typeId        Int         @id
-  marketGroupId Int
-  MarketGroup   MarketGroup @relation(fields: [marketGroupId], references: [marketGroupId])
-  Station       Station[]
-  updatedAt     DateTime    @updatedAt()
-  isDeleted     Boolean     @default(false)
+  typeId          Int              @id
+  capacity        Float?
+  description     String           @db.Text
+  dogmaAttributes DogmaAttribute[]
+  dogmaEffects    DogmaEffect[]
+  Graphic         Graphic?         @relation(fields: [graphicId], references: [graphicId])
+  graphicId       Int?
+  Group           Group            @relation(fields: [groupId], references: [groupId])
+  groupId         Int
+  Icon            Icon?            @relation(fields: [iconId], references: [iconId])
+  iconId          Int?
+  marketGroupId   Int?
+  MarketGroup     MarketGroup?     @relation(fields: [marketGroupId], references: [marketGroupId])
+  mass            Float?
+  name            String           @db.Text
+  packagedVolume  Float?
+  portionSize     Int?
+  published       Boolean
+  radius          Float?
+  Station         Station[]
+  volume          Float?
+  updatedAt       DateTime         @updatedAt()
+  isDeleted       Boolean          @default(false)
 
   @@index([marketGroupId])
+  @@index([graphicId])
+  @@index([groupId])
+  @@index([iconId])
+}
+
+model Graphic {
+  graphicId Int    @id
+  Type      Type[]
 }
 
 model DogmaAttribute {
@@ -48,9 +104,15 @@ model DogmaAttribute {
   DogmaUnit    DogmaUnit? @relation(fields: [unitId], references: [unitId])
   updatedAt    DateTime   @updatedAt()
   isDeleted    Boolean    @default(false)
+  Types        Type[]
 
   @@index([unitId])
   @@index([iconId])
+}
+
+model DogmaEffect {
+  effectId Int    @id
+  Types    Type[]
 }
 
 model DogmaUnit {
@@ -69,15 +131,7 @@ model Icon {
   DogmaAttribute DogmaAttribute[]
   updatedAt      DateTime         @updatedAt()
   isDeleted      Boolean          @default(false)
-}
-
-model Character {
-  characterId        Int           @id
-  // TODO
-  CorporationCeo     Corporation?  @relation("corporationCeo")
-  CorporationCreator Corporation[] @relation("corporationCreator")
-  updatedAt          DateTime      @updatedAt()
-  isDeleted          Boolean       @default(false)
+  Type           Type[]
 }
 
 model Alliance {
