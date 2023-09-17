@@ -67,13 +67,14 @@ export const scrapeEsiSolarSystems = inngest.createFunction(
 
     const fromEsiToSchema = (
       solarSystem: GetUniverseSystemsSystemId200,
-    ): Omit<SolarSystem, "isDeleted" | "updatedAt"> => ({
+    ): Omit<SolarSystem, "updatedAt"> => ({
       solarSystemId: solarSystem.system_id,
       constellationId: solarSystem.constellation_id,
       name: solarSystem.name,
       securityClass: solarSystem.security_class ?? null,
       securityStatus: new Prisma.Decimal(solarSystem.security_status),
       starId: solarSystem.star_id ?? null,
+      isDeleted: false,
     });
 
     // create missing records
@@ -112,6 +113,9 @@ export const scrapeEsiSolarSystems = inngest.createFunction(
         },
       },
     });
+    logger.info(
+      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
+    );
 
     return {
       numCreated: createResult.count,

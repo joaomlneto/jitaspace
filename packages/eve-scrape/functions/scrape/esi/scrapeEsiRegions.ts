@@ -56,10 +56,11 @@ export const scrapeEsiRegions = inngest.createFunction(
 
     const fromEsiToSchema = (
       region: GetUniverseRegionsRegionId200,
-    ): Omit<Region, "isDeleted" | "updatedAt"> => ({
+    ): Omit<Region, "updatedAt"> => ({
       regionId: region.region_id,
       name: region.name,
       description: region.description ?? null,
+      isDeleted: false,
     });
 
     // create missing regions
@@ -98,6 +99,9 @@ export const scrapeEsiRegions = inngest.createFunction(
         },
       },
     });
+    logger.info(
+      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
+    );
 
     return {
       numCreated: createResult.count,

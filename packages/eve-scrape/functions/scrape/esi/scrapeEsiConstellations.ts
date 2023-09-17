@@ -63,10 +63,11 @@ export const scrapeEsiConstellations = inngest.createFunction(
 
     const fromEsiToSchema = (
       constellation: GetUniverseConstellationsConstellationId200,
-    ): Omit<Constellation, "isDeleted" | "updatedAt"> => ({
+    ): Omit<Constellation, "updatedAt"> => ({
       constellationId: constellation.constellation_id,
       name: constellation.name,
       regionId: constellation.region_id,
+      isDeleted: false,
     });
 
     // create missing records
@@ -105,6 +106,9 @@ export const scrapeEsiConstellations = inngest.createFunction(
         },
       },
     });
+    logger.info(
+      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
+    );
 
     return {
       numCreated: createResult.count,

@@ -17,6 +17,7 @@ export const scrapeEsiMarketGroups = inngest.createFunction(
   async ({ event, step, logger }) => {
     // Get all Market Group IDs
     const { data: marketGroupIds } = await getMarketsGroups();
+    //const marketGroupIds = marketGroupIds2.slice(0, 10);
     logger.info(`going to fetch ${marketGroupIds.length} market groups...`);
 
     // Get all Market Group details from ESI
@@ -62,19 +63,41 @@ export const scrapeEsiMarketGroups = inngest.createFunction(
 
     const fromEsiToSchema = (
       marketGroup: GetMarketsGroupsMarketGroupId200,
-    ): Omit<MarketGroup, "isDeleted" | "updatedAt"> => ({
+    ): Omit<MarketGroup, "updatedAt"> => ({
       marketGroupId: marketGroup.market_group_id,
       name: marketGroup.name,
-      parentMarketGroupId: null, //marketGroup.parent_group_id,
+      parentMarketGroupId: marketGroup.parent_group_id ?? null,
       description: marketGroup.description,
+      isDeleted: false,
     });
 
     // create missing market groups
     const createRecordsStartTime = performance.now();
-    const createResult = await prisma.marketGroup.createMany({
-      data: recordsToCreate.map(fromEsiToSchema),
-      skipDuplicates: true,
-    });
+    // due to self-referencing we need to parse them hierarchically
+    let existingIds = [...existingIdsInDb];
+    let remaining = recordsToCreate.map(fromEsiToSchema);
+    let numCreated = 0;
+    const canInsertRecord = (
+      marketGroup: Pick<MarketGroup, "marketGroupId" | "parentMarketGroupId">,
+    ) =>
+      marketGroup.parentMarketGroupId == null ||
+      existingIds.includes(marketGroup.parentMarketGroupId);
+    while (remaining.length > 0) {
+      const insertableRecords = remaining.filter((record) =>
+        canInsertRecord(record),
+      );
+      logger.info(`inserting batch of ${insertableRecords.length} records`);
+      const createResult = await prisma.marketGroup.createMany({
+        data: recordsToCreate.map(fromEsiToSchema),
+        skipDuplicates: true,
+      });
+      numCreated += createResult.count;
+      remaining = remaining.filter((record) => !canInsertRecord(record));
+      existingIds = [
+        ...existingIds,
+        ...insertableRecords.map((record) => record.marketGroupId),
+      ];
+    }
     logger.info(
       `created records in ${performance.now() - createRecordsStartTime}ms`,
     );
@@ -105,9 +128,12 @@ export const scrapeEsiMarketGroups = inngest.createFunction(
         },
       },
     });
+    logger.info(
+      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
+    );
 
     return {
-      numCreated: createResult.count,
+      numCreated,
       numUpdated: updateResult.length,
       numDeleted: deleteResult.count,
     };

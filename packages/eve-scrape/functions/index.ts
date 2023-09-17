@@ -1,17 +1,27 @@
 import {
+  scrapeEsiCategories,
   scrapeEsiConstellations,
+  scrapeEsiDogmaAttributes,
+  scrapeEsiGroups,
   scrapeEsiMarketGroups,
   scrapeEsiRegions,
   scrapeEsiSolarSystems,
+  scrapeEsiTypes,
+  scrapeEsiTypesPage,
 } from "./scrape";
 import { testPing } from "./test";
 
 export const functions = [
   testPing,
-  scrapeEsiMarketGroups,
+  scrapeEsiCategories,
   scrapeEsiConstellations,
+  scrapeEsiDogmaAttributes,
+  scrapeEsiGroups,
+  scrapeEsiMarketGroups,
   scrapeEsiRegions,
   scrapeEsiSolarSystems,
+  scrapeEsiTypes,
+  scrapeEsiTypesPage,
 ];
 
 export * from "./scrape";
