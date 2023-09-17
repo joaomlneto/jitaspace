@@ -15,7 +15,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@ducanh2912/next-pwa": "^9.5.0",
+    "@ducanh2912/next-pwa": "^9.6.0",
     "@emotion/react": "^11.11.1",
     "@emotion/server": "^11.11.0",
     "@jitaspace/auth": "*",
@@ -64,7 +64,7 @@
     "axios": "^1.5.0",
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.9",
-    "embla-carousel-react": "8.0.0-rc12",
+    "embla-carousel-react": "8.0.0-rc13",
     "humanize-duration": "^3.29.0",
     "jose": "^4.14.6",
     "jotai": "^2.4.2",
