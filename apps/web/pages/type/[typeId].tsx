@@ -49,7 +49,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   if (env.SKIP_BUILD_STATIC_GENERATION === "true") {
     return {
       paths: [],
-      fallback: "blocking",
+      fallback: true,
     };
   }
 
@@ -134,10 +134,12 @@ export default function Page({
 
   if (router.isFallback) {
     return (
-      <Group>
-        <Loader />
-        <Text>Loading type information...</Text>
-      </Group>
+      <Container size="sm">
+        <Group>
+          <Loader />
+          <Text>Loading type information...</Text>
+        </Group>
+      </Container>
     );
   }
 

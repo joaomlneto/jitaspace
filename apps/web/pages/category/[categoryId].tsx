@@ -1,9 +1,10 @@
-import React, { type ReactElement } from "react";
+import React, { useMemo, type ReactElement } from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import {
   Container,
   Group,
+  Loader,
   SimpleGrid,
   Stack,
   Text,
@@ -39,7 +40,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   if (env.SKIP_BUILD_STATIC_GENERATION === "true") {
     return {
       paths: [],
-      fallback: "blocking",
+      fallback: true,
     };
   }
 
@@ -97,9 +98,21 @@ export default function Page({ name, groups }: PageProps) {
     parseInt(categoryId),
   );
 
-  const sortedGroups = (groups ?? []).sort((a, b) =>
-    a.name.localeCompare(b.name),
+  const sortedGroups = useMemo(
+    () => (groups ?? []).sort((a, b) => a.name.localeCompare(b.name)),
+    [groups],
   );
+
+  if (router.isFallback) {
+    return (
+      <Container size="sm">
+        <Group>
+          <Loader />
+          <Text>Loading category information...</Text>
+        </Group>
+      </Container>
+    );
+  }
 
   return (
     <>

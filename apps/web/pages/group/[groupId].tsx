@@ -1,4 +1,4 @@
-import React, { type ReactElement } from "react";
+import React, { useMemo, type ReactElement } from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import {
@@ -39,7 +39,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   if (env.SKIP_BUILD_STATIC_GENERATION === "true") {
     return {
       paths: [],
-      fallback: "blocking",
+      fallback: true,
     };
   }
 
@@ -128,9 +128,21 @@ export default function Page({ name, types }: PageProps) {
     );
   }
 
-  const sortedTypes = (types ?? []).sort((a, b) =>
-    a.name.localeCompare(b.name),
+  const sortedTypes = useMemo(
+    () => (types ?? []).sort((a, b) => a.name.localeCompare(b.name)),
+    [types],
   );
+
+  if (router.isFallback) {
+    return (
+      <Container size="sm">
+        <Group>
+          <Loader />
+          <Text>Loading group information...</Text>
+        </Group>
+      </Container>
+    );
+  }
 
   return (
     <>
