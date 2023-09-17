@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "cockroachdb"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  relationMode = "prisma"
+  url          = env("DATABASE_URL")
 }
 
 model MarketGroup {
@@ -13,8 +14,12 @@ model MarketGroup {
   description         String
   types               Type[]
   parentMarketGroupId Int?
-  ParentMarketGroup   MarketGroup?  @relation("marketGroupParent", fields: [parentMarketGroupId], references: [marketGroupId])
+  ParentMarketGroup   MarketGroup?  @relation("marketGroupParent", fields: [parentMarketGroupId], references: [marketGroupId], onDelete: NoAction, onUpdate: NoAction)
   children            MarketGroup[] @relation("marketGroupParent")
+  updatedAt           DateTime      @updatedAt()
+  isDeleted           Boolean       @default(false)
+
+  @@index([parentMarketGroupId])
 }
 
 model Type {
@@ -22,6 +27,10 @@ model Type {
   marketGroupId Int
   MarketGroup   MarketGroup @relation(fields: [marketGroupId], references: [marketGroupId])
   Station       Station[]
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
+
+  @@index([marketGroupId])
 }
 
 model DogmaAttribute {
@@ -37,6 +46,11 @@ model DogmaAttribute {
   unitId       Int?
   Icon         Icon?      @relation(fields: [iconId], references: [iconId])
   DogmaUnit    DogmaUnit? @relation(fields: [unitId], references: [unitId])
+  updatedAt    DateTime   @updatedAt()
+  isDeleted    Boolean    @default(false)
+
+  @@index([unitId])
+  @@index([iconId])
 }
 
 model DogmaUnit {
@@ -44,6 +58,8 @@ model DogmaUnit {
   displayName    String
   description    String
   DogmaAttribute DogmaAttribute[]
+  updatedAt      DateTime         @updatedAt()
+  isDeleted      Boolean          @default(false)
 }
 
 model Icon {
@@ -51,6 +67,8 @@ model Icon {
   description    String
   iconFile       String
   DogmaAttribute DogmaAttribute[]
+  updatedAt      DateTime         @updatedAt()
+  isDeleted      Boolean          @default(false)
 }
 
 model Character {
@@ -58,6 +76,8 @@ model Character {
   // TODO
   CorporationCeo     Corporation?  @relation("corporationCeo")
   CorporationCreator Corporation[] @relation("corporationCreator")
+  updatedAt          DateTime      @updatedAt()
+  isDeleted          Boolean       @default(false)
 }
 
 model Alliance {
@@ -73,6 +93,11 @@ model Alliance {
   memberCorporationId   Int?         @unique
   name                  String
   ticker                String
+  updatedAt             DateTime     @updatedAt()
+  isDeleted             Boolean      @default(false)
+
+  @@index([creatorCorporationId])
+  @@index([factionId])
 }
 
 // TODO
@@ -80,6 +105,8 @@ model Faction {
   factionId   Int           @id
   Alliance    Alliance[]
   Corporation Corporation[]
+  updatedAt   DateTime      @updatedAt()
+  isDeleted   Boolean       @default(false)
 }
 
 model Corporation {
@@ -104,16 +131,27 @@ model Corporation {
   ticker           String
   url              String?
   warEligible      Boolean?
+  updatedAt        DateTime   @updatedAt()
+  isDeleted        Boolean    @default(false)
+
+  @@index([creatorId])
+  @@index([factionId])
+  @@index([homeStationId])
 }
 
 model Station {
   stationId               Int           @id
   name                    String
   CorporationHomeStations Corporation[]
-  StationSolarSystem      SolarSystem   @relation(fields: [systemId], references: [systemId])
-  systemId                Int
+  StationSolarSystem      SolarSystem   @relation(fields: [solarSystemId], references: [solarSystemId])
+  solarSystemId           Int
   StationType             Type          @relation(fields: [typeId], references: [typeId])
   typeId                  Int
+  updatedAt               DateTime      @updatedAt()
+  isDeleted               Boolean       @default(false)
+
+  @@index([solarSystemId])
+  @@index([typeId])
 }
 
 // done:
@@ -123,20 +161,63 @@ model Region {
   name                 String
   description          String?
   RegionConstellations Constellation[]
+  updatedAt            DateTime        @updatedAt()
+  isDeleted            Boolean         @default(false)
 }
 
+// TODO: Add missing "position" field
 model Constellation {
   constellationId           Int           @id
   name                      String
   regionId                  Int
   ConstellationRegion       Region?       @relation(fields: [regionId], references: [regionId])
   ConstellationSolarSystems SolarSystem[]
+  updatedAt                 DateTime      @updatedAt()
+  isDeleted                 Boolean       @default(false)
+
+  @@index([regionId])
 }
 
+// TODO add planets, position,
 model SolarSystem {
-  systemId        Int           @id
+  solarSystemId   Int           @id
   name            String
   SystemStations  Station[]
   Constellation   Constellation @relation(fields: [constellationId], references: [constellationId])
   constellationId Int
+  securityClass   String?
+  securityStatus  Decimal
+  Star            Star?         @relation(fields: [starId], references: [starId])
+  starId          Int?
+  // List of stargates that are located in this system
+  Stargate        Stargate[]    @relation("SolarSystemStargate")
+  // List of stargates that have this system as a destination
+  StargateOrigins Stargate[]    @relation("SolarSystemStargateDestination")
+  updatedAt       DateTime      @updatedAt()
+  isDeleted       Boolean       @default(false)
+
+  @@index([constellationId])
+  @@index([starId])
+}
+
+model Star {
+  starId      Int           @id
+  name        String
+  SolarSystem SolarSystem[]
+  updatedAt   DateTime      @updatedAt()
+  isDeleted   Boolean       @default(false)
+}
+
+model Stargate {
+  stargateId               Int         @id
+  name                     String
+  SolarSystem              SolarSystem @relation("SolarSystemStargate", fields: [solarSystemId], references: [solarSystemId])
+  solarSystemId            Int
+  DestinationSolarSystem   SolarSystem @relation("SolarSystemStargateDestination", fields: [destinationSolarSystemId], references: [solarSystemId])
+  destinationSolarSystemId Int
+  updatedAt                DateTime    @updatedAt()
+  isDeleted                Boolean     @default(false)
+
+  @@index([solarSystemId])
+  @@index([destinationSolarSystemId])
 }
