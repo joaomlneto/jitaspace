@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
-    "dev": "pnpm with-env pnpm dlx inngest-cli@latest dev",
+    "dev": "pnpm with-env inngest-cli dev",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --jsx react-jsx --noEmit",
@@ -17,7 +17,8 @@
     "@jitaspace/db": "*",
     "@jitaspace/esi-client": "*",
     "@jitaspace/sde-client": "*",
-    "inngest": "^2.6.0"
+    "inngest": "^2.6.0",
+    "p-limit": "^4.0.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "*",
@@ -25,6 +26,7 @@
     "@jitaspace/tsconfig": "*",
     "@types/node": "^18.17.17",
     "eslint": "^8.49.0",
+    "inngest-cli": "^0.16.7",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
   }
