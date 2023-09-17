@@ -17,7 +17,11 @@ const server = z.object({
   EVE_CLIENT_ID: z.string(),
   EVE_CLIENT_SECRET: z.string(),
 
-  SKIP_BUILD_STATIC_GENERATION: z.string()
+  INNGEST_SIGNING_KEY: process.env.NODE_ENV === "production"
+      ? z.string().min(1)
+      : z.string().min(1).optional(),
+
+  SKIP_BUILD_STATIC_GENERATION: z.string(),
 });
 
 /**
@@ -45,6 +49,7 @@ const processEnv = {
   DATABASE_URL: process.env.DATABASE_URL,
   EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
   EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
+  INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
   SKIP_BUILD_STATIC_GENERATION: process.env.SKIP_BUILD_STATIC_GENERATION,
   NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
   NEXT_PUBLIC_DISCORD_INVITE_LINK: process.env.NEXT_PUBLIC_DISCORD_INVITE_LINK,

@@ -21,6 +21,7 @@ const config = {
     "@jitaspace/esi-hooks",
     "@jitaspace/esi-meta-client",
     "@jitaspace/eve-icons",
+    "@jitaspace/eve-scrape",
     "@jitaspace/sde-client",
     "@jitaspace/tiptap-eve",
     "@jitaspace/ui",
