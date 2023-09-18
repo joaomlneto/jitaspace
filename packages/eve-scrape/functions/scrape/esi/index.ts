@@ -7,4 +7,3 @@ export * from "./scrapeEsiMarketGroups";
 export * from "./scrapeEsiRegions";
 export * from "./scrapeEsiSolarSystems";
 export * from "./scrapeEsiTypes";
-export * from "./scrapeEsiTypesPage";
