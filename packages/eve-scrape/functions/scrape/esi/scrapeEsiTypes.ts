@@ -50,8 +50,6 @@ export const scrapeEsiTypes = inngest.createFunction(
         },
       });
 
-      // XXX: free up resources? check if required
-      await prisma.$disconnect();
       return result;
     });
 
@@ -302,12 +300,9 @@ export const scrapeEsiTypes = inngest.createFunction(
           0,
         );
 
-        // XXX: free up resources? check if required
-        await prisma.$disconnect();
-
         return {
-          numCreated: createResult.count,
-          numUpdated: updateResult.flat().length,
+          numTypesCreated: createResult.count,
+          numTypesUpdated: updateResult.flat().length,
           numUpdatedAttributes,
           numDeletedAttributes,
           numUpdatedEffects,
