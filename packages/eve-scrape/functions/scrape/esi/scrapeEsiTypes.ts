@@ -10,57 +10,73 @@ import {
 import { inngest } from "../../../client";
 
 export type ScrapeTypesEventPayload = {
-  data: {};
+  data: {
+    batchSize?: number;
+  };
 };
 
 export const scrapeEsiTypes = inngest.createFunction(
   { name: "Scrape Types" },
   { event: "scrape/esi/types" },
-  async ({ step, logger }) => {
+  async ({ step, event, logger }) => {
+    const batchSize = event.data.batchSize ?? 200;
+
     // Get all Type IDs in ESI
-    const { numPages, allTypeIds } = await step.run(
+    const typeIds = await step.run(
       "Fetch number of pages and generate events",
       async () => {
         const firstPage = await getUniverseTypes();
         const numPages = Number(firstPage.headers["x-pages"]);
-        let allTypeIds = firstPage.data;
+        let typeIds = firstPage.data;
         for (let page = 2; page <= numPages; page++) {
-          allTypeIds.push(
+          typeIds.push(
             ...(await getUniverseTypes({ page }).then((res) => res.data)),
           );
         }
-        return { numPages, allTypeIds };
+        typeIds.sort((a, b) => a - b);
+        return typeIds;
       },
     );
 
-    const numDeleted = await step.run(
-      "Mark deleted types as such",
-      async () => {
-        return await prisma.type.updateMany({
-          data: {
-            isDeleted: true,
+    await step.run("Mark deleted types as such", async () => {
+      const result = await prisma.type.updateMany({
+        data: {
+          isDeleted: true,
+        },
+        where: {
+          typeId: {
+            notIn: typeIds,
           },
-          where: {
-            typeId: {
-              notIn: allTypeIds,
-            },
-          },
-        });
-      },
-    );
+        },
+      });
 
-    const BATCH_SIZE = 500;
-    const numBatches = Math.ceil(allTypeIds.length / BATCH_SIZE);
-    const limit = pLimit(10);
+      // XXX: free up resources? check if required
+      await prisma.$disconnect();
+      return result;
+    });
+
+    const numBatches = Math.ceil(typeIds.length / batchSize);
+    const limit = pLimit(20);
+    const batchTypeIds = (batchIndex: number) =>
+      typeIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
 
     // fetch all types in batches
     for (let i = 0; i < numBatches; i++) {
-      await step.run(`Fetch types batch ${i + 1}/${numBatches}`, async () => {
+      const thisBatchTypeIds = batchTypeIds(i);
+      const thisBatchFirst = thisBatchTypeIds[0];
+      const thisBatchLast = thisBatchTypeIds[thisBatchTypeIds.length - 1];
+      const stepName = `Batch ${
+        i + 1
+      }/${numBatches}: typeIds [${thisBatchFirst} - ${thisBatchLast}]`;
+      console.log("THIS BATCH TYPE IDs", thisBatchTypeIds);
+      console.log("THIS BATCH TYPE IDs LENGTH", thisBatchTypeIds.length);
+      await step.run(stepName, async () => {
         // Get page Types' details from ESI
-        const typeIds = allTypeIds.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
-        logger.info(`going to fetch ${typeIds.length} entries from ESI`);
+        logger.info(
+          `going to fetch ${thisBatchTypeIds.length} entries from ESI`,
+        );
         const fetchESIDetailsStartTime = performance.now();
-        const typesDetailsPromises = typeIds.map((typeId) =>
+        const typesDetailsPromises = thisBatchTypeIds.map((typeId) =>
           limit(async () => getUniverseTypesTypeId(typeId)),
         );
         const typeResponses = await Promise.all(typesDetailsPromises);
@@ -138,6 +154,10 @@ export const scrapeEsiTypes = inngest.createFunction(
           `updated records in ${performance.now() - updateRecordsStartTime}ms`,
         );
 
+        /**
+         * Deal with DogmaAttributes attached to the Type
+         */
+
         // delete attributes that no longer exist
         const deleteAttributesStartTime = performance.now();
         const deleteAttributesResult = await Promise.all(
@@ -170,14 +190,9 @@ export const scrapeEsiTypes = inngest.createFunction(
         const updateAttributesStartTime = performance.now();
         const updateAttributesResult = await Promise.all(
           types.map((type) =>
-            limit(async () =>
-              Promise.all(
-                (type.dogma_attributes ?? []).map((typeAttribute) => {
-                  console.log("upsert", {
-                    typeId: type.type_id,
-                    attributeId: typeAttribute.attribute_id,
-                    value: typeAttribute.value,
-                  });
+            Promise.all(
+              (type.dogma_attributes ?? []).map((typeAttribute) =>
+                limit(async () => {
                   return prisma.typeAttribute.upsert({
                     update: {
                       value: typeAttribute.value,
@@ -208,24 +223,99 @@ export const scrapeEsiTypes = inngest.createFunction(
             performance.now() - updateAttributesStartTime
           }ms`,
         );
-        const numUpdated = updateAttributesResult.reduce(
+        const numUpdatedAttributes = updateAttributesResult.reduce(
           (acc, arr) => acc + arr.length,
           0,
         );
-        console.log({
-          numUpdated,
-        });
+
+        /**
+         * Deal with DogmaEffects attached to the Type
+         */
+
+        // delete effects that no longer exist
+        const deleteEffectsStartTime = performance.now();
+        const deleteEffectsResult = await Promise.all(
+          types.map((type) =>
+            limit(async () =>
+              prisma.typeEffect.updateMany({
+                data: { isDeleted: true },
+                where: {
+                  typeId: type.type_id,
+                  effectId: {
+                    notIn: (type.dogma_effects ?? []).map(
+                      (typeEffects) => typeEffects.effect_id,
+                    ),
+                  },
+                },
+              }),
+            ),
+          ),
+        );
+        const numDeletedEffects = deleteEffectsResult
+          .map(({ count }) => count)
+          .reduce((acc, cur) => acc + cur, 0);
+        logger.info(
+          `deleted type effects in ${
+            performance.now() - deleteEffectsStartTime
+          }ms`,
+        );
+
+        // update type effects with new information
+        const updateEffectsStartTime = performance.now();
+        const updateEffectsResult = await Promise.all(
+          types.map((type) =>
+            Promise.all(
+              (type.dogma_effects ?? []).map((typeEffect) =>
+                limit(async () => {
+                  return prisma.typeEffect.upsert({
+                    update: {
+                      isDefault: typeEffect.is_default,
+                      isDeleted: false,
+                    },
+                    where: {
+                      typeId_effectId: {
+                        typeId: type.type_id,
+                        effectId: typeEffect.effect_id,
+                      },
+                      typeId: type.type_id,
+                      effectId: typeEffect.effect_id,
+                    },
+                    create: {
+                      typeId: type.type_id,
+                      effectId: typeEffect.effect_id,
+                      isDefault: typeEffect.is_default,
+                      isDeleted: false,
+                    },
+                  });
+                }),
+              ),
+            ),
+          ),
+        );
+        logger.info(
+          `updated type effects in ${
+            performance.now() - updateEffectsStartTime
+          }ms`,
+        );
+        const numUpdatedEffects = updateEffectsResult.reduce(
+          (acc, arr) => acc + arr.length,
+          0,
+        );
+
+        // XXX: free up resources? check if required
+        await prisma.$disconnect();
 
         return {
           numCreated: createResult.count,
-          numUpdated,
+          numUpdated: updateResult.flat().length,
+          numUpdatedAttributes,
           numDeletedAttributes,
+          numUpdatedEffects,
+          numDeletedEffects,
         };
       });
     }
 
-    return {
-      numDeleted: numDeleted.count,
-    };
+    return {};
   },
 );
