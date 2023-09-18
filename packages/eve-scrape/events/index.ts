@@ -9,7 +9,6 @@ import {
   ScrapeRegionEventPayload,
   ScrapeSdeMarketGroupsEventPayload,
   ScrapeSolarSystemsEventPayload,
-  ScrapeStationsEventPayload,
   ScrapeTypesEventPayload,
   ScrapeTypesPageEventPayload,
 } from "../functions";
@@ -24,7 +23,6 @@ export type Events = {
   "scrape/esi/market-groups": ScrapeMarketGroupsEventPayload;
   "scrape/esi/regions": ScrapeRegionEventPayload;
   "scrape/esi/solar-systems": ScrapeSolarSystemsEventPayload;
-  "scrape/esi/stations": ScrapeStationsEventPayload;
   "scrape/esi/types": ScrapeTypesEventPayload;
   "scrape/esi/types-page": ScrapeTypesPageEventPayload;
   "scrape/sde/market-groups": ScrapeSdeMarketGroupsEventPayload;
