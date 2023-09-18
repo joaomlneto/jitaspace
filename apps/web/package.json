@@ -58,7 +58,7 @@
     "date-fns": "^2.30.0",
     "dayjs": "^1.11.9",
     "embla-carousel-react": "8.0.0-rc13",
-    "humanize-duration": "^3.29.0",
+    "humanize-duration": "^3.30.0",
     "jose": "^4.14.6",
     "jotai": "^2.4.2",
     "jotai-cache": "^0.3.0",
