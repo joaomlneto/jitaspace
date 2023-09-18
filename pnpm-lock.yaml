@@ -620,8 +620,8 @@ importers:
         specifier: '*'
         version: link:../sde-client
       inngest:
-        specifier: ^2.6.0
-        version: 2.6.0(typescript@5.2.2)
+        specifier: ^2.6.1
+        version: 2.6.1(typescript@5.2.2)
       p-limit:
         specifier: ^4.0.0
         version: 4.0.0
@@ -6479,8 +6479,8 @@ packages:
     resolution: {integrity: sha512-VQ2MBenTq1fWZUH9DJNGti7kKv6EeAuYr3cLwxUWhIu1baTaXh4Ib5W2CqHVqib4/MqbYGJqiL3Zb8GJZr3l4g==}
     dev: false
 
-  /cross-fetch@3.1.8:
-    resolution: {integrity: sha512-cvA+JwZoU0Xq+h6WkMvAUqPEYy92Obet6UdKLfW60qn99ftItKjB5T+BkyWOFWe2pUyfQ+IJHmpOTznqk1M6Kg==}
+  /cross-fetch@4.0.0:
+    resolution: {integrity: sha512-e4a5N8lVvuLgAWgnCrLr2PP0YyDOTHa9H/Rj54dirp61qXnNq46m82bRhNqIA5VccJtWBvPTFRV3TtvHUKPB1g==}
     dependencies:
       node-fetch: 2.7.0
     transitivePeerDependencies:
@@ -8640,8 +8640,8 @@ packages:
       - supports-color
     dev: true
 
-  /inngest@2.6.0(typescript@5.2.2):
-    resolution: {integrity: sha512-IXC6HZfdcV0G8+Hs1gdTIx0e+7xo8OLOf/urBSLNGgkqFX/1tNgzhShP75lxxmN7eV2FFVt4BTL0bbwbcaqBZw==}
+  /inngest@2.6.1(typescript@5.2.2):
+    resolution: {integrity: sha512-kDiFlQe7+G7N7/8LacSct3Shf7umQnPEy+f3RoONSqxos0dtOzabSrZFfGvNcgyJ8AVFMXl+6DlEBwKJjF1X2A==}
     engines: {node: '>=14'}
     peerDependencies:
       typescript: '>=4.7.2'
@@ -8649,7 +8649,7 @@ packages:
       buffer: 6.0.3
       canonicalize: 1.0.8
       chalk: 4.1.2
-      cross-fetch: 3.1.8
+      cross-fetch: 4.0.0
       h3: 1.8.1
       hash.js: 1.1.7
       json-stringify-safe: 5.0.1
