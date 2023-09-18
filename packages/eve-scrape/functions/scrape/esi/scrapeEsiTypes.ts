@@ -19,7 +19,7 @@ export const scrapeEsiTypes = inngest.createFunction(
   { name: "Scrape Types" },
   { event: "scrape/esi/types" },
   async ({ step, event, logger }) => {
-    const batchSize = event.data.batchSize ?? 200;
+    const batchSize = event.data.batchSize ?? 100;
 
     // Get all Type IDs in ESI
     const typeIds = await step.run(
