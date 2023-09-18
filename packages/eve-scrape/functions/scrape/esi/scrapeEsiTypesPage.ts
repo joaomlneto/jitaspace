@@ -65,7 +65,6 @@ export const scrapeEsiTypesPage = inngest.createFunction(
 
     logger.info("records to create:", recordsToCreate.length);
     logger.info("records to update:", recordsToUpdate.length);
-    logger.info("records to delete:", recordsToDelete.length);
 
     const fromEsiToSchema = (
       type: GetUniverseTypesTypeId200,
@@ -103,7 +102,7 @@ export const scrapeEsiTypesPage = inngest.createFunction(
       recordsToUpdate.map((type) =>
         limit(async () =>
           prisma.type.update({
-            data: fromEsiToSchema(type),
+            data: { ...fromEsiToSchema(type) },
             where: { typeId: type.type_id },
           }),
         ),
@@ -112,23 +111,6 @@ export const scrapeEsiTypesPage = inngest.createFunction(
     logger.info(
       `updated records in ${performance.now() - updateRecordsStartTime}ms`,
     );
-
-    /*
-    // mark records as deleted if missing from ESI
-    const deleteRecordsStartTime = performance.now();
-    const deleteResult = await prisma.type.updateMany({
-      data: {
-        isDeleted: true,
-      },
-      where: {
-        typeId: {
-          in: recordsToDelete,
-        },
-      },
-    });
-    logger.info(
-      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
-    );*/
 
     return {
       numCreated: createResult.count,
