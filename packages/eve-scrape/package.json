@@ -17,7 +17,7 @@
     "@jitaspace/db": "*",
     "@jitaspace/esi-client": "*",
     "@jitaspace/sde-client": "*",
-    "inngest": "^2.6.0",
+    "inngest": "^2.6.1",
     "p-limit": "^4.0.0"
   },
   "devDependencies": {
