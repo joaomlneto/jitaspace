@@ -9,6 +9,8 @@ import {
   Stack,
   Text,
   UnstyledButton,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import { format } from "date-fns";
 
@@ -64,7 +66,8 @@ export function CharacterAttributesRingProgress() {
 
   if (isLoading) return "LOADING";
   if (error) return "ERROR";
-
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
   const normalizeAttributeToPercentage = (value: number) => {
     const zero = 0;
     const max = 40;
@@ -92,10 +95,10 @@ export function CharacterAttributesRingProgress() {
           />
 
           <div>
-            <Text color="dimmed" size="xs" transform="uppercase" weight={700}>
+            <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
               {attribute}
             </Text>
-            <Text weight={700} size="xl">
+            <Text fw={700} size="xl">
               {data?.data[attribute]}
             </Text>
           </div>
@@ -110,14 +113,7 @@ export function CharacterAttributesRingProgress() {
       new Date().getTime();
 
   return (
-    <SimpleGrid
-      cols={6}
-      breakpoints={[
-        { maxWidth: "lg", cols: 3 },
-        { maxWidth: "sm", cols: 2 },
-        { maxWidth: 500, cols: 1 },
-      ]}
-    >
+    <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 6 }}>
       {stats}
       <Popover>
         <Popover.Target>
@@ -126,32 +122,29 @@ export function CharacterAttributesRingProgress() {
               withBorder
               radius="md"
               p="xs"
-              sx={(theme) => ({
+              style={{
                 backgroundColor:
-                  theme.colors.dark[theme.colorScheme === "dark" ? 9 : 6],
+                  theme.colors.dark[colorScheme === "dark" ? 9 : 6],
                 color: "#fff",
+                /*
+                // FIXME MANTINE V7 MIGRATION
                 "&:hover": {
                   backgroundColor:
-                    theme.colors.dark[theme.colorScheme === "dark" ? 6 : 9],
-                },
-              })}
+                    theme.colors.dark[colorScheme === "dark" ? 6 : 9],
+                },*/
+              }}
             >
               <Group>
                 <AttributesIcon width={42} />
 
                 <Stack gap={0}>
                   <Group gap="xs" justify="apart">
-                    <Text
-                      color="dimmed"
-                      size="xs"
-                      transform="uppercase"
-                      weight={700}
-                    >
+                    <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
                       Remap
                     </Text>
                   </Group>
                   <Group gap="xs">
-                    <Text weight={700} size="xl">
+                    <Text fw={700} size="xl">
                       {remapCooldownElapsed
                         ? "Available"
                         : (data?.data.bonus_remaps ?? 0) > 0
