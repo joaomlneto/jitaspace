@@ -31,7 +31,6 @@ import {
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { ESI_BASE_URL } from "~/config/constants";
-import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
 
 type PageProps = {
@@ -41,38 +40,10 @@ type PageProps = {
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // FIXME: THIS SHOULD NOT BE NEEDED
-  axios.defaults.baseURL = ESI_BASE_URL;
-
-  // When this is true (in preview environments) don't prerender any static pages
-  // (faster builds, but slower initial page load)
-  if (env.SKIP_BUILD_STATIC_GENERATION === "true") {
-    return {
-      paths: [],
-      fallback: true,
-    };
-  }
-
-  // Get list of typeIDs from ESI
-  const firstPage = await getUniverseTypes();
-  let typeIds = [...firstPage.data];
-  const numPages = firstPage.headers["x-pages"];
-  for (let page = 2; page <= numPages; page++) {
-    const result = await getUniverseTypes({ page });
-    typeIds = [...typeIds, ...result.data];
-  }
-
+  // Do not pre-render any static pages - faster builds, but slower initial page load
   return {
-    // FIXME: THIS IS TOO SLOW! RE-ENABLE ONCE YOU FIGURE OUT HOW TO MAKE IT QUICKER
     paths: [],
-    /*
-    paths: typeIds.map((typeId) => ({
-      params: {
-        typeId: `${typeId}`,
-      },
-    })),
-    */
-    fallback: true, // if not statically generated, try to confirm if there is a new type
+    fallback: true,
   };
 };
 
