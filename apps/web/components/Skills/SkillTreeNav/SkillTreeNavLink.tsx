@@ -1,9 +1,9 @@
 import React, { memo, useMemo } from "react";
 import {
   Group,
+  Loader,
   NavLink,
   NavLinkProps,
-  Skeleton,
   Stack,
   Text,
 } from "@mantine/core";
@@ -36,12 +36,14 @@ type SkillTreeNavLinkProps = NavLinkProps & {
     }[];
   };
   showUnpublished?: boolean;
+  fetchNameFromEsi?: boolean;
 };
 
 export const SkillTreeNavLink = memo(
   ({
     group,
     showUnpublished = false,
+    fetchNameFromEsi = false,
     ...otherProps
   }: SkillTreeNavLinkProps) => {
     const { characterId, isTokenValid } = useEsiClientContext();
@@ -126,13 +128,9 @@ export const SkillTreeNavLink = memo(
         key={group.groupId}
         label={
           <Group position="apart">
-            {error && <Text>Error loading skill group: {error.message}</Text>}
-            {!error && loading && (
-              <Skeleton w={200}>
-                <Text>Loading...</Text>
-              </Skeleton>
-            )}
-            {!error && !loading && <Text>{group?.name}</Text>}
+            <Text>{group.name}</Text>
+            {error && <Text>Error: {error.message}</Text>}
+            {!error && loading && <Loader size="sm" />}
             {!error && !loading && (
               <Text>
                 {characterSPInGroup.toLocaleString()} /{" "}
@@ -146,12 +144,17 @@ export const SkillTreeNavLink = memo(
         <Stack spacing="xs" my="md" mr="md">
           {sortedTypes.map((type) => {
             const characterSkill = characterSkillsIndex?.[type.typeId];
-            if (!type) return "?";
             return (
               <Group key={type.typeId} position="apart">
                 <Group>
                   <TypeAnchor typeId={type.typeId}>
-                    <TypeName span typeId={type.typeId} size="sm" />
+                    {fetchNameFromEsi ? (
+                      <TypeName span typeId={type.typeId} size="sm" />
+                    ) : (
+                      <Text span size="sm">
+                        {type.name}
+                      </Text>
+                    )}
                   </TypeAnchor>
                 </Group>
                 <Group>

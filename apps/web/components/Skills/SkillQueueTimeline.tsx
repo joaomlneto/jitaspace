@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import Link from "next/link";
 import {
   Anchor,
@@ -18,7 +18,7 @@ import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
-export function SkillQueueTimeline() {
+export const SkillQueueTimeline = memo(() => {
   const { characterId, isTokenValid } = useEsiClientContext();
   const { data, isLoading, error } = useGetCharactersCharacterIdSkillqueue(
     characterId ?? 1,
@@ -162,4 +162,5 @@ export function SkillQueueTimeline() {
       </Container>
     </Stack>
   );
-}
+});
+SkillQueueTimeline.displayName = "SkillQueueTimeline";
