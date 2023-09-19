@@ -5,7 +5,6 @@ import {
   Container,
   Group,
   Loader,
-  MediaQuery,
   Stack,
   Text,
   Title,
@@ -61,12 +60,9 @@ export default function Page() {
                   size: "md",
                   children: (
                     <Center>
-                      <MediaQuery smallerThan="md" styles={{ display: "none" }}>
-                        <EventsCalendar events={events} size="xl" />
-                      </MediaQuery>
-                      <MediaQuery largerThan="md" styles={{ display: "none" }}>
-                        <EventsCalendar events={events} size="sm" />
-                      </MediaQuery>
+                      {/* FIXME MANTINE V7 MIGRATION */}
+                      <EventsCalendar events={events} size="xl" />
+                      <EventsCalendar events={events} size="sm" />
                     </Center>
                   ),
                 })

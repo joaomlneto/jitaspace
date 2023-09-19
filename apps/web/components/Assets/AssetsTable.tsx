@@ -54,7 +54,7 @@ export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
               </Group>
             </Table.Td>
             <Table.Td>
-              {asset.price && <ISKAmount align="right" amount={asset.price} />}
+              {asset.price && <ISKAmount ta="right" amount={asset.price} />}
             </Table.Td>
 
             <Table.Td>

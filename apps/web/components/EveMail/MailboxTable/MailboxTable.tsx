@@ -1,5 +1,5 @@
 import React from "react";
-import { MediaQuery, type TableProps } from "@mantine/core";
+import { type TableProps } from "@mantine/core";
 
 import { DesktopMailboxTable } from "./DesktopMailboxTable";
 import { MobileMailboxTable } from "./MobileMailboxTable";
@@ -28,12 +28,9 @@ export type MailboxTableProps = TableProps & {
 export const MailboxTable = (props: MailboxTableProps) => {
   return (
     <>
-      <MediaQuery smallerThan="md" styles={{ display: "none" }}>
-        <DesktopMailboxTable {...props} />
-      </MediaQuery>
-      <MediaQuery largerThan="md" styles={{ display: "none" }}>
-        <MobileMailboxTable {...props} />
-      </MediaQuery>
+      {/* FIXME MANTINE V7 MIGRATION */}
+      <DesktopMailboxTable {...props} />
+      <MobileMailboxTable {...props} />
     </>
   );
 };
