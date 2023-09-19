@@ -1,19 +1,5 @@
-import React from "react";
-import {
-  Anchor,
-  Avatar,
-  Group,
-  Stack,
-  Table,
-  Text,
-  Title,
-  Tooltip,
-  type TableProps,
-} from "@mantine/core";
-import { openContextModal } from "@mantine/modals";
-
-import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client";
-import { WarningIcon } from "@jitaspace/eve-icons";
+import {type GetCharactersCharacterIdCalendar200Item} from "@jitaspace/esi-client";
+import {WarningIcon} from "@jitaspace/eve-icons";
 import {
   CalendarEventAttendeesAvatarGroup,
   CalendarEventHumanDurationText,
@@ -23,6 +9,9 @@ import {
   CalendarEventResponseBadge,
   FormattedDateText,
 } from "@jitaspace/ui";
+import {Anchor, Avatar, Group, Stack, Table, type TableProps, Text, Title, Tooltip,} from "@mantine/core";
+import {openContextModal} from "@mantine/modals";
+import React from "react";
 
 type EventListProps = TableProps & {
   events: GetCharactersCharacterIdCalendar200Item[];
@@ -84,7 +73,7 @@ export function MobileCalendarEventList({
                     />
                   </Group>
                 </Group>
-                <Group wrap="nowrap" spacing="xs">
+                <Group wrap="nowrap" gap"xs">
                   {event.importance === 1 && <WarningIcon width={20} />}
                   <Anchor
                     lineClamp={1}

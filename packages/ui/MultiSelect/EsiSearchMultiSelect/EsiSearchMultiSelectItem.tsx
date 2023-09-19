@@ -1,17 +1,9 @@
-import React, { forwardRef } from "react";
-import {
-  Avatar,
-  Badge,
-  Group,
-  rem,
-  Text,
-  type SelectItemProps,
-} from "@mantine/core";
+import {type GetCharactersCharacterIdSearchCategoriesItem} from "@jitaspace/esi-client";
+import {Avatar, Badge, Group, rem, type SelectItemProps, Text,} from "@mantine/core";
+import React, {forwardRef} from "react";
 
-import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client";
-
-import { EveEntityAvatar } from "../../Avatar";
-import { EveEntityName } from "../../Text";
+import {EveEntityAvatar} from "../../Avatar";
+import {EveEntityName} from "../../Text";
 
 export type EsiSearchMultiSelectItemProps = SelectItemProps & {
   category: GetCharactersCharacterIdSearchCategoriesItem;
@@ -23,7 +15,7 @@ export const EsiSearchMultiSelectItem = forwardRef<
 >(({ value, category, ...others }, ref) => {
   return (
     <Group wrap="nowrap" position="apart" ref={ref} {...others}>
-      <Group wrap="nowrap" spacing="xs">
+      <Group wrap="nowrap" gap"xs">
         {value ? (
           <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
         ) : (

@@ -1,23 +1,13 @@
+import {type ESIScope} from "@jitaspace/esi-client";
+import {useEsiClientContext} from "@jitaspace/esi-hooks";
+import {LoginWithEveOnlineButton} from "@jitaspace/ui";
+import {Button, Center, Collapse, Container, createStyles, Group, Text, Title,} from "@mantine/core";
+import {useDisclosure} from "@mantine/hooks";
+import {openContextModal} from "@mantine/modals";
+import {signIn} from "next-auth/react";
 import React from "react";
-import {
-  Button,
-  Center,
-  Collapse,
-  Container,
-  createStyles,
-  Group,
-  Text,
-  Title,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { openContextModal } from "@mantine/modals";
-import { signIn } from "next-auth/react";
 
-import { type ESIScope } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
-import { LoginWithEveOnlineButton } from "@jitaspace/ui";
-
-import { ScopesTable } from "./ScopesTable";
+import {ScopesTable} from "./ScopesTable";
 
 const useStyles = createStyles((theme) => ({
   root: {
@@ -93,7 +83,7 @@ export function RequestPermissionsBanner({
         Alternatively, click the customize button to control which scopes are
         requested.
       </Text>
-      <Group spacing="md" position="center">
+      <Group gap"md" position="center">
         <LoginWithEveOnlineButton
           size="small"
           onClick={() => {

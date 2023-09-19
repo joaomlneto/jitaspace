@@ -1,9 +1,9 @@
-import React, { memo } from "react";
+import {Anchor, Group, Paper} from "@mantine/core";
 import Link from "next/link";
-import { Anchor, Group, Paper } from "@mantine/core";
+import React, {memo} from "react";
 
-import { CorporationAvatar } from "../Avatar";
-import { CorporationName } from "../Text";
+import {CorporationAvatar} from "../Avatar";
+import {CorporationName} from "../Text";
 
 interface CorporationCardProps {
   corporationId: string | number;
@@ -42,7 +42,7 @@ export const CorporationCard = memo(
           target="_blank"
           size="sm"
         >
-          <Group spacing="xs">
+          <Group gap"xs">
             <Anchor>Open in EVE Who</Anchor>
           </Group>
         </Anchor>

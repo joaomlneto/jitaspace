@@ -1,15 +1,7 @@
-import React, { memo } from "react";
-import { Badge, Group, Table, Text } from "@mantine/core";
-
-import { GetCharactersCharacterIdAssets200Item } from "@jitaspace/esi-client";
-import {
-  EveEntityAnchor,
-  EveEntityName,
-  ISKAmount,
-  TypeAnchor,
-  TypeAvatar,
-  TypeName,
-} from "@jitaspace/ui";
+import {GetCharactersCharacterIdAssets200Item} from "@jitaspace/esi-client";
+import {EveEntityAnchor, EveEntityName, ISKAmount, TypeAnchor, TypeAvatar, TypeName,} from "@jitaspace/ui";
+import {Badge, Group, Table, Text} from "@mantine/core";
+import React, {memo} from "react";
 
 type AssetsTableProps = {
   assets: (GetCharactersCharacterIdAssets200Item & {
@@ -40,14 +32,14 @@ export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
             </td>
             <td align="right">{asset.quantity}</td>
             <td>
-              <Group spacing="xs" position="apart">
-                <Group wrap="nowrap" spacing="xs">
+              <Group gap"xs" position="apart">
+                <Group wrap="nowrap" gap"xs">
                   <TypeAvatar size="xs" typeId={asset.type_id} />
                   <TypeAnchor typeId={asset.type_id}>
                     <TypeName typeId={asset.type_id} />
                   </TypeAnchor>
                 </Group>
-                <Group spacing="xs" position="right">
+                <Group gap"xs" position="right">
                   {asset.is_singleton && <Badge size="xs">assembled</Badge>}
                   {asset.is_blueprint_copy && <Badge size="xs">BPC</Badge>}
                 </Group>
@@ -58,7 +50,7 @@ export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
             </td>
 
             <td>
-              <Group spacing="xs">
+              <Group gap"xs">
                 <EveEntityAnchor entityId={asset.location_id}>
                   <EveEntityName entityId={asset.location_id} />
                 </EveEntityAnchor>

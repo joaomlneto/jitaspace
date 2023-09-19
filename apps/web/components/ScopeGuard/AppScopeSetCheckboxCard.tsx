@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import {type ESIScope} from "@jitaspace/esi-client";
+import {InfoIcon} from "@jitaspace/eve-icons";
 import {
   Badge,
   Checkbox,
@@ -12,11 +13,9 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
+import {useMemo} from "react";
 
-import { type ESIScope } from "@jitaspace/esi-client";
-import { InfoIcon } from "@jitaspace/eve-icons";
-
-import { type AppScopeSet } from "~/config/apps";
+import {type AppScopeSet} from "~/config/apps";
 
 const useStyles = createStyles((theme, { checked }: { checked: boolean }) => ({
   button: {
@@ -124,7 +123,7 @@ export function AppScopeSetCheckboxCard({
         )}
       </div>
 
-      <Group spacing={0} wrap="nowrap">
+      <Group gap{0} wrap="nowrap">
         <Checkbox
           checked={optionalScopeChecked}
           tabIndex={-1}
