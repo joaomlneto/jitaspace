@@ -102,9 +102,7 @@ export function MessagePanel({
                     size="sm"
                   />
                   {recipient.recipient_type === "mailing_list" ? (
-                    <MailingListName mailingListId={recipient.recipient_id}>
-                      Mailing List
-                    </MailingListName>
+                    <MailingListName mailingListId={recipient.recipient_id} />
                   ) : (
                     <EveEntityAnchor
                       entityId={recipient.recipient_id}
