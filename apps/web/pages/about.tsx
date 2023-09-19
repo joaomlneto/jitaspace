@@ -44,7 +44,7 @@ export default function Page() {
             <tr>
               <td>In-game</td>
               <td align="right">
-                <Group position="right" spacing="xs" noWrap>
+                <Group position="right" spacing="xs" wrap="nowrap">
                   <CharacterAvatar characterId={MY_CHARACTER_ID} size="sm" />
                   <CharacterAnchor
                     characterId={MY_CHARACTER_ID}

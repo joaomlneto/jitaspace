@@ -24,7 +24,7 @@ export const ShipFittingCardHeader = memo(
     const clipboard = useClipboard({ timeout: 2000 });
     return (
       <Group position="apart" p="xs">
-        <Group noWrap>
+        <Group wrap="nowrap">
           {shipTypeId && <TypeAvatar typeId={shipTypeId} size="md" />}
           <div>
             <Text weight={500} lineClamp={1}>

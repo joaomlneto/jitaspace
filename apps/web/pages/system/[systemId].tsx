@@ -140,7 +140,7 @@ export default function Page() {
           {solarSystem?.data.planets?.map(
             ({ planet_id, moons, asteroid_belts }) => (
               <Group key={planet_id}>
-                <Group noWrap>
+                <Group wrap="nowrap">
                   <PlanetAvatar planetId={planet_id} size="sm" />
                   <Anchor component={Link} href={`/planet/${planet_id}`}>
                     <PlanetName span planetId={planet_id} />

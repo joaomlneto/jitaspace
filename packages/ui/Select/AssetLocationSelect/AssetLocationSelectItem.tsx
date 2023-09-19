@@ -14,7 +14,7 @@ export const AssetLocationSelectItem = forwardRef<
     ref,
   ) => (
     <div ref={ref} {...other}>
-      <Group noWrap>
+      <Group wrap="nowrap">
         <Avatar />
         <div>
           <AssetLocationName locationId={value ?? undefined} size="sm" />

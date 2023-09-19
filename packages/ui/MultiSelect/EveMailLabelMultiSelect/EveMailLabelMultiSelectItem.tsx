@@ -9,8 +9,8 @@ export const EveMailLabelMultiSelectItem = forwardRef<
   SelectItemProps & { unreadCount: number }
 >(({ value, unreadCount, ...others }, ref) => {
   return (
-    <Group ref={ref} {...others} position="apart" noWrap>
-      <Group noWrap>
+    <Group ref={ref} {...others} position="apart" wrap="nowrap">
+      <Group wrap="nowrap">
         <MailLabelColorSwatch labelId={value ?? 1} size={16} />
         <LabelName labelId={value} />
       </Group>

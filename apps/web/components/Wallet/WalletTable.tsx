@@ -67,7 +67,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         size: 40,
         Cell: ({ renderedCellValue, row, cell }) => (
           <Group>
-            <Group noWrap>
+            <Group wrap="nowrap">
               <EveEntityAvatar
                 entityId={row.original.first_party_id}
                 size="sm"
@@ -89,7 +89,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         size: 40,
         Cell: ({ renderedCellValue, row, cell }) => (
           <Group>
-            <Group noWrap>
+            <Group wrap="nowrap">
               <EveEntityAvatar
                 entityId={row.original.second_party_id}
                 size="sm"
@@ -115,7 +115,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         size: 40,
         Cell: ({ cell }) => (
           <Group>
-            <Group noWrap>
+            <Group wrap="nowrap">
               <EveEntityAvatar entityId={cell.getValue<number>()} size="sm" />
               <EveEntityAnchor
                 entityId={cell.getValue<number>()}
@@ -174,7 +174,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         Cell: ({ renderedCellValue, row, cell }) =>
           row.original.tax_receiver_id ? (
             <Group>
-              <Group noWrap>
+              <Group wrap="nowrap">
                 <EveEntityAvatar
                   entityId={row.original.tax_receiver_id}
                   size="sm"

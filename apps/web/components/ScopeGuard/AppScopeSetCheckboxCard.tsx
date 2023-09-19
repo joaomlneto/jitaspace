@@ -124,7 +124,7 @@ export function AppScopeSetCheckboxCard({
         )}
       </div>
 
-      <Group spacing={0} noWrap>
+      <Group spacing={0} wrap="nowrap">
         <Checkbox
           checked={optionalScopeChecked}
           tabIndex={-1}

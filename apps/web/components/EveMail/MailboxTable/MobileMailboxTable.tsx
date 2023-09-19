@@ -40,7 +40,7 @@ export const MobileMailboxTable = ({
             <td>
               <Stack spacing="xs">
                 <Group position="apart" spacing="xs">
-                  <Group noWrap spacing="xs">
+                  <Group wrap="nowrap" spacing="xs">
                     <EveMailSenderAvatar
                       messageId={message.mail_id}
                       size="xs"
@@ -63,7 +63,11 @@ export const MobileMailboxTable = ({
                       .map(
                         (item) =>
                           item && (
-                            <Group noWrap spacing="xl" key={item.label_id}>
+                            <Group
+                              wrap="nowrap"
+                              spacing="xl"
+                              key={item.label_id}
+                            >
                               <MailLabelColorSwatch
                                 labelId={item.label_id}
                                 size={10}

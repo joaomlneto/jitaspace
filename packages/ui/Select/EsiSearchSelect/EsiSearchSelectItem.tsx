@@ -22,8 +22,8 @@ export const EsiSearchSelectItem = forwardRef<
   EsiSearchSelectItemProps
 >(({ value, category, ...others }, ref) => {
   return (
-    <Group noWrap position="apart" ref={ref} {...others}>
-      <Group noWrap spacing="xs">
+    <Group wrap="nowrap" position="apart" ref={ref} {...others}>
+      <Group wrap="nowrap" spacing="xs">
         {value ? (
           <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
         ) : (

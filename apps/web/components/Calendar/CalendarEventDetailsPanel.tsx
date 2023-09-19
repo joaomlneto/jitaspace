@@ -97,7 +97,7 @@ export function CalendarEventDetailsPanel({
       </Group>
       <Group position="apart">
         <Text>Owner</Text>
-        <Group noWrap>
+        <Group wrap="nowrap">
           <CalendarEventOwnerAvatar eventId={eventId} size="sm" />
           <EveEntityNameAnchor entityId={event?.data.owner_id} />
         </Group>
@@ -119,7 +119,7 @@ export function CalendarEventDetailsPanel({
       <Stack>
         {sortedAttendees.map((attendee) => (
           <Group key={attendee.character_id} position="apart">
-            <Group key={attendee.event_response} noWrap>
+            <Group key={attendee.event_response} wrap="nowrap">
               <CharacterAvatar characterId={attendee.character_id} size="sm" />
               <CharacterAnchor characterId={attendee.character_id}>
                 <CharacterName span characterId={attendee.character_id} />

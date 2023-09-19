@@ -69,7 +69,7 @@ export const LoyaltyPointsTable = memo(
                 }
                 color="dark"
               >
-                <Group noWrap>
+                <Group wrap="nowrap">
                   <CorporationAvatar
                     corporationId={row.original.corporationId}
                     size="sm"
@@ -99,7 +99,7 @@ export const LoyaltyPointsTable = memo(
           size: 300,
           enableColumnFilter: false,
           Cell: ({ renderedCellValue, row, cell }) => (
-            <Group noWrap>
+            <Group wrap="nowrap">
               <TypeAvatar typeId={row.original.type_id} size="sm" />
               {row.original.quantity !== 1 && (
                 <Text size="sm">{row.original.quantity}</Text>
@@ -153,7 +153,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => (
             <Stack spacing="xs">
               {row.original.required_items.map(({ quantity, type_id }) => (
-                <Group noWrap key={type_id}>
+                <Group wrap="nowrap" key={type_id}>
                   <TypeAvatar typeId={type_id} size="sm" />
                   {row.original.quantity !== 1 && (
                     <Text size="sm">{quantity}</Text>

@@ -66,10 +66,10 @@ export default function Page() {
           </Group>
         </Group>
         <Group position="apart">
-          <Group spacing="xl" noWrap>
+          <Group spacing="xl" wrap="nowrap">
             <WarAggressorAvatar warId={warId} size="xl" />
             <div>
-              <Group noWrap>
+              <Group wrap="nowrap">
                 <Title order={3}>
                   <WarAggressorAnchor warId={warId}>
                     <WarAggressorName span warId={warId} />
@@ -94,10 +94,10 @@ export default function Page() {
               }
             />
           </Group>
-          <Group spacing="xl" noWrap>
+          <Group spacing="xl" wrap="nowrap">
             <WarDefenderAvatar warId={warId} size="xl" />
             <div>
-              <Group noWrap>
+              <Group wrap="nowrap">
                 <Title order={3}>
                   <WarDefenderAnchor warId={warId}>
                     <WarDefenderName span warId={warId} />
@@ -171,7 +171,7 @@ export default function Page() {
         <Title order={4}>Allies ({(war?.data.allies ?? []).length})</Title>
         <Stack>
           {war?.data.allies?.map((ally) => (
-            <Group noWrap key={ally.alliance_id ?? ally.corporation_id}>
+            <Group wrap="nowrap" key={ally.alliance_id ?? ally.corporation_id}>
               {ally.alliance_id && (
                 <>
                   <AllianceAvatar allianceId={ally.alliance_id} size="sm" />

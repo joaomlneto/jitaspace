@@ -89,7 +89,7 @@ export default function Page() {
         <Stack spacing="xs">
           <Group position="apart">
             <Text>Creator</Text>
-            <Group noWrap>
+            <Group wrap="nowrap">
               <CharacterAvatar
                 characterId={alliance?.data.creator_id}
                 size="sm"
@@ -104,7 +104,7 @@ export default function Page() {
           </Group>
           <Group position="apart">
             <Text>Creator Corporation</Text>
-            <Group noWrap>
+            <Group wrap="nowrap">
               <CorporationAvatar
                 corporationId={alliance?.data.creator_corporation_id}
                 size="sm"
@@ -123,7 +123,7 @@ export default function Page() {
           {alliance?.data.executor_corporation_id && (
             <Group position="apart">
               <Text>Executor</Text>
-              <Group noWrap>
+              <Group wrap="nowrap">
                 <CorporationAvatar
                   corporationId={alliance?.data.executor_corporation_id}
                   size="sm"
@@ -154,7 +154,7 @@ export default function Page() {
           {alliance?.data.faction_id && (
             <Group position="apart">
               <Text>Factional Warfare</Text>
-              <Group noWrap>
+              <Group wrap="nowrap">
                 <FactionAvatar
                   factionId={alliance?.data.faction_id}
                   size="sm"
@@ -172,7 +172,7 @@ export default function Page() {
         <Title order={4}>Member Corporations</Title>
         <Stack>
           {allianceCorporations?.data.map((corporationId) => (
-            <Group noWrap key={corporationId}>
+            <Group wrap="nowrap" key={corporationId}>
               <CorporationAvatar corporationId={corporationId} size="sm" />
               <Anchor component={Link} href={`/corporation/${corporationId}`}>
                 <CorporationName span corporationId={corporationId} />

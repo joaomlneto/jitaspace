@@ -84,7 +84,7 @@ export function MobileCalendarEventList({
                     />
                   </Group>
                 </Group>
-                <Group noWrap spacing="xs">
+                <Group wrap="nowrap" spacing="xs">
                   {event.importance === 1 && <WarningIcon width={20} />}
                   <Anchor
                     lineClamp={1}

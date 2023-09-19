@@ -143,7 +143,7 @@ export function AppCheckboxCard({
           </Text>
         </div>
 
-        <Group spacing="xs" noWrap>
+        <Group spacing="xs" wrap="nowrap">
           {!showScopeDetails && (
             <Tooltip
               color="dark"

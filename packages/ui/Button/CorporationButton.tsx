@@ -48,7 +48,7 @@ export const CorporationButton = memo(
         className={classes.user}
         {...otherProps}
       >
-        <Group noWrap>
+        <Group wrap="nowrap">
           <CorporationAvatar
             corporationId={corporationId}
             radius="xl"

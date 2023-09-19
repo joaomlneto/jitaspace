@@ -58,7 +58,7 @@ export default function Page() {
         )}
         <Group position="apart">
           <Text>Corporation</Text>
-          <Group noWrap>
+          <Group wrap="nowrap">
             <CorporationAvatar corporationId={bloodline?.corporation_id} />
             <Anchor
               component={Link}
@@ -70,7 +70,7 @@ export default function Page() {
         </Group>
         <Group position="apart">
           <Text>Race</Text>
-          <Group noWrap>
+          <Group wrap="nowrap">
             <RaceAvatar raceId={bloodline?.race_id} />
             <Anchor component={Link} href={`/race/${bloodline?.race_id}`}>
               <RaceName raceId={bloodline?.race_id} />
@@ -79,7 +79,7 @@ export default function Page() {
         </Group>
         <Group position="apart">
           <Text>Corvette</Text>
-          <Group noWrap>
+          <Group wrap="nowrap">
             <TypeAvatar
               typeId={bloodline?.ship_type_id ?? undefined}
               radius="xl"
