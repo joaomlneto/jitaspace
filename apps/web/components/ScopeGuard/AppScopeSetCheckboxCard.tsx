@@ -1,51 +1,22 @@
-import {type ESIScope} from "@jitaspace/esi-client";
-import {InfoIcon} from "@jitaspace/eve-icons";
+import { useMemo } from "react";
 import {
   Badge,
   Checkbox,
   Code,
-  createStyles,
   Group,
-  rem,
   Stack,
   Text,
   ThemeIcon,
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
-import {useMemo} from "react";
+import cx from "clsx";
 
-import {type AppScopeSet} from "~/config/apps";
+import { type ESIScope } from "@jitaspace/esi-client";
+import { InfoIcon } from "@jitaspace/eve-icons";
 
-const useStyles = createStyles((theme, { checked }: { checked: boolean }) => ({
-  button: {
-    display: "flex",
-    alignItems: "center",
-    width: "100%",
-    transition: "background-color 150ms ease, border-color 150ms ease",
-    border: `${rem(1)} solid ${
-      checked
-        ? theme.fn.variant({ variant: "outline", color: theme.primaryColor })
-            .border
-        : theme.colorScheme === "dark"
-        ? theme.colors.dark[8]
-        : theme.colors.gray[3]
-    }`,
-    borderRadius: theme.radius.sm,
-    padding: theme.spacing.xs,
-    backgroundColor: checked
-      ? theme.fn.variant({ variant: "light", color: theme.primaryColor })
-          .background
-      : theme.colorScheme === "dark"
-      ? theme.colors.dark[8]
-      : theme.white,
-  },
-
-  body: {
-    flex: 1,
-    marginLeft: theme.spacing.xs,
-  },
-}));
+import { type AppScopeSet } from "~/config/apps";
+import classes from "./AppScopeSetCheckboxCard.module.css";
 
 export type AppScopeSetCheckboxCardProps = Omit<
   React.ComponentPropsWithoutRef<"button">,
@@ -75,8 +46,6 @@ export function AppScopeSetCheckboxCard({
     () => allAppScopes.every((scope) => selectedScopes.includes(scope)),
     [allAppScopes, selectedScopes],
   );
-
-  const { classes, cx } = useStyles({ checked: checked });
 
   const optionalScopeChecked = scopeSet.scopes.every((scope) =>
     selectedScopes.includes(scope),
@@ -113,17 +82,17 @@ export function AppScopeSetCheckboxCard({
         </ThemeIcon>
       </Tooltip>
       <div className={classes.body}>
-        <Text size="sm" sx={{ lineHeight: 1 }}>
+        <Text size="sm" style={{ lineHeight: 1 }}>
           {scopeSet.reason} {badge && <Badge size="xs">{badge}</Badge>}
         </Text>
         {showDescription && (
-          <Text color="dimmed" size="xs" sx={{ lineHeight: 1 }}>
+          <Text c="dimmed" size="xs" style={{ lineHeight: 1 }}>
             {scopeSet.description}
           </Text>
         )}
       </div>
 
-      <Group gap{0} wrap="nowrap">
+      <Group gap={0} wrap="nowrap">
         <Checkbox
           checked={optionalScopeChecked}
           tabIndex={-1}
