@@ -1,0 +1,50 @@
+/* FIXME MANTINE V7 MIGRATION */
+
+.wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    transition: background-color 150ms ease, border-color 150ms ease;
+    /*border: `${rem(1)} solid ${
+        checked || indeterminate
+          ? theme.fn.variant({ variant: "outline", color: theme.primaryColor })
+.border
+: theme.colorScheme === "dark"
+? theme.colors.dark[8]
+: theme.colors.gray[3]
+}`,
+    borderRadius: theme.radius.sm,
+    padding: theme.spacing.sm,
+    backgroundColor:
+    checked || indeterminate
+    ? theme.fn.variant({ variant: "light", color: theme.primaryColor })
+.background
+: theme.colorScheme === "dark"
+? theme.colors.dark[8]
+: theme.white,*/
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    transition: background-color 150ms ease, border-color 150ms ease;
+    /*
+    border: `${rem(1)} solid ${
+        theme.colorScheme === "dark"
+          ? theme.colors.dark[8]
+          : theme.colors.gray[3]
+      }`,
+    borderRadius: theme.radius.sm,
+    padding: theme.spacing.sm,
+    backgroundColor:
+    theme.colorScheme === "dark" ? theme.colors.dark[8] : theme.white,*/
+}
+
+.body {
+    flex: 1;
+    /*
+    margin-left: theme.spacing.md;
+    margin-right: theme.spacing.md;
+     */
+}

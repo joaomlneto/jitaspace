@@ -2,73 +2,21 @@ import { useMemo } from "react";
 import {
   Checkbox,
   Code,
-  createStyles,
   Group,
-  rem,
   Stack,
   Text,
   ThemeIcon,
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
+import cx from "clsx";
 
 import { type ESIScope } from "@jitaspace/esi-client";
 import { InfoIcon } from "@jitaspace/eve-icons";
 
 import { type JitaApp } from "~/config/apps";
+import classes from "./AppCheckboxCard.module.css";
 import { AppScopeSetCheckboxCard } from "./AppScopeSetCheckboxCard";
-
-const useStyles = createStyles(
-  (
-    theme,
-    { checked, indeterminate }: { checked: boolean; indeterminate: boolean },
-  ) => ({
-    wrapper: {
-      display: "flex",
-      alignItems: "center",
-      width: "100%",
-      transition: "background-color 150ms ease, border-color 150ms ease",
-      border: `${rem(1)} solid ${
-        checked || indeterminate
-          ? theme.fn.variant({ variant: "outline", color: theme.primaryColor })
-              .border
-          : theme.colorScheme === "dark"
-          ? theme.colors.dark[8]
-          : theme.colors.gray[3]
-      }`,
-      borderRadius: theme.radius.sm,
-      padding: theme.spacing.sm,
-      backgroundColor:
-        checked || indeterminate
-          ? theme.fn.variant({ variant: "light", color: theme.primaryColor })
-              .background
-          : theme.colorScheme === "dark"
-          ? theme.colors.dark[8]
-          : theme.white,
-    },
-    button: {
-      display: "flex",
-      alignItems: "center",
-      width: "100%",
-      transition: "background-color 150ms ease, border-color 150ms ease",
-      border: `${rem(1)} solid ${
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[8]
-          : theme.colors.gray[3]
-      }`,
-      borderRadius: theme.radius.sm,
-      padding: theme.spacing.sm,
-      backgroundColor:
-        theme.colorScheme === "dark" ? theme.colors.dark[8] : theme.white,
-    },
-
-    body: {
-      flex: 1,
-      marginLeft: theme.spacing.md,
-      marginRight: theme.spacing.md,
-    },
-  }),
-);
 
 export type AppCheckboxCardProps = Omit<
   React.ComponentPropsWithoutRef<"button">,
@@ -116,8 +64,6 @@ export function AppCheckboxCard({
     [allRequiredAppScopes, checked, selectedScopes],
   );
 
-  const { classes, cx } = useStyles({ checked, indeterminate });
-
   return (
     <Stack gap="xs" className={cx(classes.button, className)}>
       <UnstyledButton
@@ -135,10 +81,10 @@ export function AppCheckboxCard({
         <app.Icon width={40} />
 
         <div className={classes.body}>
-          <Text weight={500} size="sm" sx={{ lineHeight: 1 }} mb={5}>
+          <Text fw={500} size="sm" style={{ lineHeight: 1 }} mb={5}>
             {app.name}
           </Text>
-          <Text color="dimmed" size="xs" sx={{ lineHeight: 1.2 }}>
+          <Text c="dimmed" size="xs" style={{ lineHeight: 1.2 }}>
             {app.description}
           </Text>
         </div>
