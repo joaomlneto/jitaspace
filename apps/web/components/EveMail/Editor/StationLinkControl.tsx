@@ -1,11 +1,11 @@
 import React, { forwardRef } from "react";
 import {
   Button,
-  createStyles,
   Popover,
   px,
-  rem,
-  useComponentDefaultProps,
+  useMantineColorScheme,
+  useMantineTheme,
+  useProps,
   type PopoverProps,
 } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
@@ -19,52 +19,7 @@ import {
   ControlBase,
   type RichTextEditorControlBaseProps,
 } from "~/components/EveMail/Editor/ControlBase";
-
-const useStyles = createStyles((theme) => {
-  const colors = theme.fn.variant({ variant: "light" });
-  return {
-    linkEditor: {
-      display: "flex",
-    },
-
-    linkEditorInput: {
-      borderTopRightRadius: 0,
-      borderBottomRightRadius: 0,
-      borderRight: 0,
-    },
-
-    linkEditorExternalControl: {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.fn.rgba(theme.colors.dark[7], 0.5)
-          : theme.white,
-      border: `${rem(1)} solid ${
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[4]
-          : theme.colors.gray[4]
-      }`,
-      height: rem(24),
-      width: rem(24),
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      borderRadius: theme.fn.radius(),
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      "&[data-active]": {
-        backgroundColor: colors.background,
-        borderColor: colors.border,
-        color: colors.color,
-        ...theme.fn.hover({ background: colors.hover }),
-      },
-    },
-
-    linkEditorSave: {
-      borderTopLeftRadius: 0,
-      borderBottomLeftRadius: 0,
-    },
-  };
-});
+import classes from "./LinkControl.module.css";
 
 export interface RichTextEditorLinkControlProps
   extends Partial<RichTextEditorControlBaseProps> {
@@ -75,20 +30,19 @@ export interface RichTextEditorLinkControlProps
 const StationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
   size,
   ...others
+  // @ts-expect-error FIXME MANTINE V7 MIGRATION
 }) => <StationIcon width={px(size)} {...others} />;
 
 export const StationLinkControl = forwardRef<
   HTMLButtonElement,
   RichTextEditorLinkControlProps
 >((props, ref) => {
-  const { icon, ...others } = useComponentDefaultProps(
-    "RichTextEditorLinkControl",
-    {},
-    props,
-  );
+  const { icon, ...others } = useProps("RichTextEditorLinkControl", {}, props);
 
-  const { editor, classNames, styles, unstyled, variant } =
-    useRichTextEditorContext();
+  const { editor, unstyled } = useRichTextEditorContext();
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+  /*
   const { classes } = useStyles(undefined, {
     name: "RichTextEditor",
     classNames,
@@ -96,7 +50,7 @@ export const StationLinkControl = forwardRef<
     styles,
     unstyled,
     variant,
-  });
+  });*/
 
   const [stationId, setStationId] = useInputState("");
   const [opened, { open, close }] = useDisclosure(false);
@@ -117,9 +71,9 @@ export const StationLinkControl = forwardRef<
     void getUniverseStationsStationId(parseInt(stationId)).then((data) => {
       handleClose();
       stationId === ""
-        ? editor.chain().focus().extendMarkRange("link").unsetLink().run()
+        ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
         : editor
-            .chain()
+            ?.chain()
             .focus()
             .extendMarkRange("link")
             .setLink({
@@ -156,17 +110,17 @@ export const StationLinkControl = forwardRef<
           title="Link Station"
           onClick={handleOpen}
           active={editor?.isActive("link")}
-          unstyled={unstyled}
+          //unstyled={unstyled}
           {...others}
           ref={ref}
         />
       </Popover.Target>
 
       <Popover.Dropdown
-        sx={(theme) => ({
+        style={{
           backgroundColor:
-            theme.colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
-        })}
+            colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
+        }}
       >
         <div className={classes.linkEditor}>
           <EsiSearchSelect
