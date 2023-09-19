@@ -1,16 +1,7 @@
 import { useMemo } from "react";
-import { Badge, createStyles, Table } from "@mantine/core";
+import { Badge, Table, useMantineTheme } from "@mantine/core";
 
 import { getScopeDescription, type ESIScope } from "@jitaspace/esi-client";
-
-const useStyles = createStyles((theme) => ({
-  scopesTable: {
-    maxWidth: 800,
-    margin: "auto",
-    marginTop: theme.spacing.xl,
-    marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
-  },
-}));
 
 export type ScopesTableProps = {
   scopes: ESIScope[];
@@ -18,7 +9,7 @@ export type ScopesTableProps = {
 };
 
 export function ScopesTable({ scopes, showRawScopeNames }: ScopesTableProps) {
-  const { classes } = useStyles();
+  const theme = useMantineTheme();
 
   const scopeData: {
     id: ESIScope;
@@ -43,7 +34,16 @@ export function ScopesTable({ scopes, showRawScopeNames }: ScopesTableProps) {
   );
 
   return (
-    <Table fontSize="xs" className={classes.scopesTable} highlightOnHover>
+    <Table
+      fz="xs"
+      style={{
+        maxWidth: 800,
+        margin: "auto",
+        marginTop: theme.spacing.xl,
+        marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
+      }}
+      highlightOnHover
+    >
       <tbody>
         {scopeData.map((scope) => (
           <tr key={scope.id}>
