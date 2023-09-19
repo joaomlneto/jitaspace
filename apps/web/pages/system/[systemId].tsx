@@ -44,11 +44,9 @@ import { MailLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
-  const systemId = router.query.systemId as string;
-  const { data: solarSystem } = useGetUniverseSystemsSystemId(
-    parseInt(systemId),
-  );
-  const { data: sdeSolarSystem } = useGetSolarSystemById(parseInt(systemId));
+  const systemId = parseInt(router.query.systemId as string);
+  const { data: solarSystem } = useGetUniverseSystemsSystemId(systemId);
+  const { data: sdeSolarSystem } = useGetSolarSystemById(systemId);
   const { data: solarSystemCostIndicesData } = useSolarSystemCostIndices();
 
   return (
