@@ -40,14 +40,14 @@ export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
             </Table.Td>
             <Table.Td align="right">{asset.quantity}</Table.Td>
             <Table.Td>
-              <Group gap="xs" position="apart">
+              <Group gap="xs" justify="apart">
                 <Group wrap="nowrap" gap="xs">
                   <TypeAvatar size="xs" typeId={asset.type_id} />
                   <TypeAnchor typeId={asset.type_id}>
                     <TypeName typeId={asset.type_id} />
                   </TypeAnchor>
                 </Group>
-                <Group gap="xs" position="right">
+                <Group gap="xs" justify="right">
                   {asset.is_singleton && <Badge size="xs">assembled</Badge>}
                   {asset.is_blueprint_copy && <Badge size="xs">BPC</Badge>}
                 </Group>

@@ -168,14 +168,14 @@ export default function Page() {
                       </td>
                       <td align="right">{asset.quantity}</td>
                       <td>
-                        <Group gap="xs" position="apart">
+                        <Group gap="xs" justify="apart">
                           <Group wrap="nowrap" gap="xs">
                             <TypeAvatar size="xs" typeId={asset.type_id} />
                             <TypeAnchor typeId={asset.type_id}>
                               <TypeName typeId={asset.type_id} />
                             </TypeAnchor>
                           </Group>
-                          <Group gap="xs" position="right">
+                          <Group gap="xs" justify="right">
                             {asset.is_singleton && (
                               <Badge size="xs">assembled</Badge>
                             )}

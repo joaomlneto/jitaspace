@@ -136,7 +136,7 @@ export function LayoutHeader() {
         }}
       >
         <Container size="xl" h={60} p={0}>
-          <Group position="apart" sx={{ height: "100%" }}>
+          <Group justify="apart" sx={{ height: "100%" }}>
             <Link href="/" className={classes.logo}>
               <Group p="xs">
                 <Image src="/logo.png" alt="Jita logo" width={30} height={30} />
@@ -265,7 +265,7 @@ export function LayoutHeader() {
             color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
 
-          <Group position="center" grow pb="xl">
+          <Group justify="center" grow pb="xl">
             {loading && (
               <Group>
                 <Loader size="sm" />

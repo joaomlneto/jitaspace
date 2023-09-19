@@ -18,7 +18,7 @@ export const JitaSpotlightActionsWrapper = memo(
         {children}
         <Group
           gap="xs"
-          position="apart"
+          justify="apart"
           px={15}
           py="xs"
           sx={(theme) => ({

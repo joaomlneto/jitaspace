@@ -56,7 +56,7 @@ export default function Page() {
             }
           />
         )}
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Corporation</Text>
           <Group wrap="nowrap">
             <CorporationAvatar corporationId={bloodline?.corporation_id} />
@@ -68,7 +68,7 @@ export default function Page() {
             </Anchor>
           </Group>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Race</Text>
           <Group wrap="nowrap">
             <RaceAvatar raceId={bloodline?.race_id} />
@@ -77,7 +77,7 @@ export default function Page() {
             </Anchor>
           </Group>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Corvette</Text>
           <Group wrap="nowrap">
             <TypeAvatar
@@ -91,7 +91,7 @@ export default function Page() {
         </Group>
         {bloodline &&
           attributeNames.map((attributeName) => (
-            <Group key={attributeName} position="apart">
+            <Group key={attributeName} justify="apart">
               <Text>
                 {(attributeName as string)
                   .substring(0, 1)

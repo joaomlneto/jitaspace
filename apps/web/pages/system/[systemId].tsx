@@ -191,45 +191,45 @@ export default function Page() {
             />
           </>
         )}
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Security Class</Text>
           <Text>{solarSystem?.data.security_class}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Luminosity</Text>
           <Text>{sdeSolarSystem?.luminosity}</Text>
         </Group>
         {sdeSolarSystem?.radius && (
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Radius</Text>
             <Text>{sdeSolarSystem?.radius.toLocaleString()} m</Text>
           </Group>
         )}
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Border System</Text>
           <Text>{sdeSolarSystem?.border ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Corridor System</Text>
           <Text>{sdeSolarSystem?.corridor ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Fringe System</Text>
           <Text>{sdeSolarSystem?.fringe ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Trading Hub</Text>
           <Text>{sdeSolarSystem?.hub ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>International System</Text>
           <Text>{sdeSolarSystem?.international ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Regional System</Text>
           <Text>{sdeSolarSystem?.regional ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Position</Text>
           <Position3DText
             size="xs"
@@ -238,7 +238,7 @@ export default function Page() {
             }
           />
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Min Coordinates</Text>
           <Position3DText
             size="xs"
@@ -247,7 +247,7 @@ export default function Page() {
             }
           />
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Max Coordinates</Text>
           <Position3DText
             size="xs"

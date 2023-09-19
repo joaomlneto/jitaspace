@@ -135,7 +135,7 @@ export const DesktopMailboxTable = ({
                 </Group>
               </td>
               <td>
-                <Group position="right">
+                <Group justify="right">
                   <MessageMenu data={data} mail={mail} mutate={mutate} />
                 </Group>
               </td>

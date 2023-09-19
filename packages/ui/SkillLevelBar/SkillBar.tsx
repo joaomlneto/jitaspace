@@ -61,12 +61,12 @@ export const SkillBar = memo(
       <Tooltip
         label={
           <Stack spacing={0}>
-            <Group position="apart">
+            <Group justify="apart">
               <Text size="xs">Level trained:</Text>
               <Text size="xs">{activeLevel}</Text>
             </Group>
             {requiredLevel && (
-              <Group position="apart">
+              <Group justify="apart">
                 <Text size="xs">Level required:</Text>
                 <Text size="xs">{requiredLevel}</Text>
               </Group>

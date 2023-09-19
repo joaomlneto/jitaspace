@@ -110,7 +110,7 @@ export default function Page() {
           <Title order={3}>Jita Frontend</Title>
           <EsiClientStateCard />
           <Title order={3}>Jita Backend</Title>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Vercel Platform</Text>
             <Group>
               <Anchor href="https://www.vercel-status.com">
@@ -119,7 +119,7 @@ export default function Page() {
               </Anchor>
             </Group>
           </Group>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>SDE API Last Updated On</Text>
             {/* FIXME: shouldnt be hardcoded! :) */}
             <Anchor href="https://sde.jita.space">
@@ -129,14 +129,14 @@ export default function Page() {
         </Stack>
         <Stack spacing="xs">
           <Title order={3}>EVE Online</Title>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Players Online</Text>
             <Group>
               {tqStatus?.data.vip && <Badge>VIP Mode</Badge>}
               <Text>{tqStatus?.data.players.toLocaleString()}</Text>
             </Group>
           </Group>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Start Time</Text>
             <Text>
               {tqStatus && (
@@ -144,11 +144,11 @@ export default function Page() {
               )}
             </Text>
           </Group>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Server Version</Text>
             <Text>{tqStatus?.data.server_version}</Text>
           </Group>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>SDE Last Updated On</Text>
             <Text>
               {sdeIsLoading && "Checking..."}
@@ -157,7 +157,7 @@ export default function Page() {
               )}
             </Text>
           </Group>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Degraded ESI Endpoints</Text>
             <Text>
               {nonGreenEndpoints?.length === 0

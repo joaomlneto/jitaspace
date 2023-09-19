@@ -90,7 +90,7 @@ export function DesktopCalendarEventList({
               </Group>
             </td>
             <td align="right" width={1}>
-              <Group position="right">
+              <Group justify="right">
                 <CalendarEventAttendeesAvatarGroup
                   eventId={event.event_id}
                   limit={5}

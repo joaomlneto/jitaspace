@@ -200,7 +200,7 @@ export default function Page({
           )}
           {marketPrices[typeId] && (
             <>
-              <Group position="apart">
+              <Group justify="apart">
                 <Text>Average Price</Text>
                 <Text>
                   {marketPrices[typeId]?.average_price?.toLocaleString(
@@ -210,7 +210,7 @@ export default function Page({
                   ISK
                 </Text>
               </Group>
-              <Group position="apart">
+              <Group justify="apart">
                 <Text>Adjusted Price</Text>
                 <Text>
                   {marketPrices[typeId]?.adjusted_price?.toLocaleString(

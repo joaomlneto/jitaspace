@@ -37,7 +37,7 @@ export default function Page() {
           </Title>
         </Group>
         {constellation?.data.region_id && (
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Region</Text>
             <Group>
               <Anchor

@@ -101,7 +101,7 @@ export default function MailLayoutNavbar() {
         className={classes.navbar}
       >
         <Navbar.Section className={classes.header}>
-          <Group position="apart">
+          <Group justify="apart">
             <UnstyledButton component={Link} href="/">
               <Group>
                 <EveMailIcon width={32} height={32} alt="EveMail" />
@@ -158,7 +158,7 @@ export default function MailLayoutNavbar() {
                       customLabels.map((item, index) => ({
                         key: String(item.label_id ?? index),
                         label: (
-                          <Group position="apart">
+                          <Group justify="apart">
                             <Group>
                               <MailLabelColorSwatch
                                 labelId={item.label_id}
@@ -208,7 +208,7 @@ export default function MailLayoutNavbar() {
             <Group p="md">
               <CharacterAvatar characterId={1} radius="xl" />
               <div style={{ flex: 1 }}>
-                <Group position="apart">
+                <Group justify="apart">
                   <Text size="sm" weight={500}>
                     Loading...
                   </Text>

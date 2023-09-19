@@ -55,7 +55,7 @@ export function EsiClientStateCard() {
           </CopyButton>
         )}
       </Group>
-      <Group position="apart">
+      <Group justify="apart">
         <Text>Authenticated</Text>
 
         {characterId && (
@@ -73,7 +73,7 @@ export function EsiClientStateCard() {
         {!characterId && <Text>No</Text>}
       </Group>
       {tokenExpirationDate && (
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Token expires</Text>
           <Group>
             {tokenExpirationDate && (

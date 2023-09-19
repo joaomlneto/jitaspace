@@ -22,7 +22,7 @@ export const EveEntitySelectItem = forwardRef<
   EveEntitySelectItemProps
 >(({ value, category, ...others }, ref) => {
   return (
-    <Group wrap="nowrap" position="apart" ref={ref} {...others}>
+    <Group wrap="nowrap" justify="apart" ref={ref} {...others}>
       <Group wrap="nowrap" gap="xs">
         {value ? (
           <EveEntityAvatar

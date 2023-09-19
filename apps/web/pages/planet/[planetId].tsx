@@ -28,7 +28,7 @@ export default function Page() {
             <Text>{planet?.data.name}</Text>
           </Title>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Solar System</Text>
           <Group gap="xs">
             <SolarSystemSecurityStatusBadge
@@ -40,13 +40,13 @@ export default function Page() {
             </Anchor>
           </Group>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Planet Type</Text>
           <Anchor component={Link} href={`/type/${planet?.data.type_id}`}>
             <TypeName span typeId={planet?.data.type_id} />
           </Anchor>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Position</Text>
           <Position3DText
             size="xs"

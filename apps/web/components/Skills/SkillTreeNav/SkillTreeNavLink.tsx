@@ -125,7 +125,7 @@ export const SkillTreeNavLink = memo(
       <NavLink
         key={group.groupId}
         label={
-          <Group position="apart">
+          <Group justify="apart">
             <Text>{group.name}</Text>
             <Text>
               {loading ? (
@@ -143,7 +143,7 @@ export const SkillTreeNavLink = memo(
           {sortedTypes.map((type) => {
             const characterSkill = characterSkillsIndex?.[type.typeId];
             return (
-              <Group key={type.typeId} position="apart">
+              <Group key={type.typeId} justify="apart">
                 <Group>
                   <TypeAnchor typeId={type.typeId}>
                     {fetchNameFromEsi ? (

@@ -61,7 +61,7 @@ export function MessagePanel({
   return (
     <Stack>
       {!hideSender && (
-        <Group position="apart">
+        <Group justify="apart">
           <Group wrap="nowrap" gap="xs">
             From:
             <EveMailSenderAvatar messageId={messageId} size="sm" />
@@ -120,7 +120,7 @@ export function MessagePanel({
         </Group>
       )}
       {!hideLabels && (
-        <Group position="apart">
+        <Group justify="apart">
           {mail?.data.labels?.length === 0 && (
             <Text size="md" color="dimmed">
               No labels assigned
@@ -145,7 +145,7 @@ export function MessagePanel({
               )}
           </Group>
           {mail?.data && (
-            <Group position="right">
+            <Group justify="right">
               <MessageMenu mail={mail.data} />
             </Group>
           )}

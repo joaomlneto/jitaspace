@@ -28,7 +28,7 @@ export default function Page() {
             <Text>{star?.data.name}</Text>
           </Title>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Solar System</Text>
           <Group gap="xs">
             <SolarSystemSecurityStatusBadge
@@ -43,29 +43,29 @@ export default function Page() {
             </SolarSystemAnchor>
           </Group>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Star Type</Text>
           <TypeAnchor typeId={star?.data.type_id}>
             <TypeName span typeId={star?.data.type_id} />
           </TypeAnchor>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Age</Text>
           <Text>{star?.data.age}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Luminosity</Text>
           <Text>{star?.data.luminosity}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Radius</Text>
           <Text>{star?.data.radius}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Spectral Class</Text>
           <Text>{star?.data.spectral_class}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Temperature</Text>
           <Text>{star?.data.temperature}</Text>
         </Group>

@@ -8,7 +8,7 @@ import { MailLayout } from "~/layouts";
 export default function Page() {
   return (
     <Container>
-      <Group position="apart">
+      <Group justify="apart">
         <h1>Manage Labels</h1>
       </Group>
 

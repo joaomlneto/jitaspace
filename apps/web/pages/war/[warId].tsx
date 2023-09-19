@@ -38,7 +38,7 @@ export default function Page() {
   return (
     <Container size="lg">
       <Stack>
-        <Group position="apart">
+        <Group justify="apart">
           <Group>
             <WarReportIcon width={64} />
             <Title order={1}>War Report</Title>
@@ -65,7 +65,7 @@ export default function Page() {
             </Link>
           </Group>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Group gap="xl" wrap="nowrap">
             <WarAggressorAvatar warId={warId} size="xl" />
             <div>
@@ -125,7 +125,7 @@ export default function Page() {
         </Group>
 
         {war && (
-          <Group align="center" position="apart">
+          <Group align="center" justify="apart">
             <Text>Declared on</Text>
             <Text>
               <FormattedDateText date={new Date(war.data.declared)} />
@@ -133,7 +133,7 @@ export default function Page() {
           </Group>
         )}
         {war?.data.started && (
-          <Group align="center" position="apart">
+          <Group align="center" justify="apart">
             <Text>Started on</Text>
             <Text>
               <FormattedDateText date={new Date(war.data.started)} />
@@ -141,7 +141,7 @@ export default function Page() {
           </Group>
         )}
         {war?.data.retracted && (
-          <Group align="center" position="apart">
+          <Group align="center" justify="apart">
             <Text>Retracted on</Text>
             <Text>
               <FormattedDateText date={new Date(war.data.retracted)} />
@@ -149,7 +149,7 @@ export default function Page() {
           </Group>
         )}
         {war?.data.finished && (
-          <Group align="center" position="apart">
+          <Group align="center" justify="apart">
             <Text>Finished on</Text>
             <Text>
               <FormattedDateText date={new Date(war.data.finished)} />
@@ -157,13 +157,13 @@ export default function Page() {
           </Group>
         )}
         {war && (
-          <Group align="center" position="apart">
+          <Group align="center" justify="apart">
             <Text>Mutual</Text>
             <Text>{war.data.mutual ? "Yes" : "No"}</Text>
           </Group>
         )}
         {war && (
-          <Group align="center" position="apart">
+          <Group align="center" justify="apart">
             <Text>Open for allies</Text>
             <Text>{war.data.open_for_allies ? "Yes" : "No"}</Text>
           </Group>

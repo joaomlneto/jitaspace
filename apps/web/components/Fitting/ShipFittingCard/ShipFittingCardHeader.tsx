@@ -23,7 +23,7 @@ export const ShipFittingCardHeader = memo(
   ({ fitString, shipTypeId, shipName, tags }: ShipFittingCardHeaderProps) => {
     const clipboard = useClipboard({ timeout: 2000 });
     return (
-      <Group position="apart" p="xs">
+      <Group justify="apart" p="xs">
         <Group wrap="nowrap">
           {shipTypeId && <TypeAvatar typeId={shipTypeId} size="md" />}
           <div>

@@ -88,7 +88,7 @@ export default function Page() {
           </Link>
         </Group>
         {corporation?.data.alliance_id && (
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Alliance</Text>
             <Group>
               <AllianceAvatar

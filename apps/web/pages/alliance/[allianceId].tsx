@@ -87,7 +87,7 @@ export default function Page() {
           </Link>
         </Group>
         <Stack spacing="xs">
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Creator</Text>
             <Group wrap="nowrap">
               <CharacterAvatar
@@ -102,7 +102,7 @@ export default function Page() {
               </Anchor>
             </Group>
           </Group>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Creator Corporation</Text>
             <Group wrap="nowrap">
               <CorporationAvatar
@@ -121,7 +121,7 @@ export default function Page() {
             </Group>
           </Group>
           {alliance?.data.executor_corporation_id && (
-            <Group position="apart">
+            <Group justify="apart">
               <Text>Executor</Text>
               <Group wrap="nowrap">
                 <CorporationAvatar
@@ -141,7 +141,7 @@ export default function Page() {
             </Group>
           )}
           {alliance?.data.date_founded && (
-            <Group position="apart">
+            <Group justify="apart">
               <Text>Founded on</Text>
               <Text>
                 {format(
@@ -152,7 +152,7 @@ export default function Page() {
             </Group>
           )}
           {alliance?.data.faction_id && (
-            <Group position="apart">
+            <Group justify="apart">
               <Text>Factional Warfare</Text>
               <Group wrap="nowrap">
                 <FactionAvatar

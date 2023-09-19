@@ -28,7 +28,7 @@ export default function Page() {
           </Title>
         </Group>
         <Text>{race?.description}</Text>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Faction</Text>
           <Group>
             <FactionAvatar factionId={race?.alliance_id} radius={16} />

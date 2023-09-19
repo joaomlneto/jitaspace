@@ -44,7 +44,7 @@ export default function Page() {
           </Title>
           <SetAutopilotDestinationActionIcon destinationId={structureId} />
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Solar System</Text>
           <Group gap="xs">
             <SolarSystemSecurityStatusBadge
@@ -62,13 +62,13 @@ export default function Page() {
             </Anchor>
           </Group>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Structure Type</Text>
           <Anchor component={Link} href={`/type/${structure?.data.type_id}`}>
             <TypeName span typeId={structure?.data.type_id} />
           </Anchor>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Owner</Text>
           <EveEntityName entityId={structure?.data.owner_id} />
         </Group>

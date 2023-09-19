@@ -108,25 +108,25 @@ export default function Page() {
             {event?.data.title}
           </Title>
           <MailMessageViewer content={event?.data.text ?? ""} />
-          <Group position="apart" mt="xl">
+          <Group justify="apart" mt="xl">
             <Text>When</Text>
             <FormattedDateText
               date={event?.data.date ? new Date(event?.data.date) : undefined}
               format="yyyy-MM-dd HH:mm"
             />
           </Group>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Duration</Text>
             <CalendarEventHumanDurationText eventId={eventId} />
           </Group>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Owner</Text>
             <Group wrap="nowrap">
               <CalendarEventOwnerAvatar eventId={eventId} size="sm" />
               <EveEntityNameAnchor entityId={event?.data.owner_id} />
             </Group>
           </Group>
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Response</Text>
             <CalendarEventResponseBadge eventId={eventId} />
           </Group>
@@ -135,7 +135,7 @@ export default function Page() {
           </Title>
           <Stack>
             {sortedAttendees.map((attendee) => (
-              <Group key={attendee.character_id} position="apart">
+              <Group key={attendee.character_id} justify="apart">
                 <Group key={attendee.event_response} wrap="nowrap">
                   <CharacterAvatar
                     characterId={attendee.character_id}

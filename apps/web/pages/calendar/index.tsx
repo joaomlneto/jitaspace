@@ -47,7 +47,7 @@ export default function Page() {
       <NextSeo title="Calendar" />
       <Container>
         <Stack spacing="xl">
-          <Group position="apart">
+          <Group justify="apart">
             <Group>
               <CalendarIcon width={48} />
               <Title order={1}>Calendar</Title>

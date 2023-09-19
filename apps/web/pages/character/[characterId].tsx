@@ -72,7 +72,7 @@ export default function Page() {
           </Link>
         </Group>
         {character?.data.corporation_id && (
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Corporation</Text>
             <Group>
               <CorporationAvatar
@@ -92,7 +92,7 @@ export default function Page() {
           </Group>
         )}
         {character?.data.alliance_id && (
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Alliance</Text>
             <Group>
               <AllianceAvatar
@@ -109,26 +109,26 @@ export default function Page() {
           </Group>
         )}
         {character?.data.gender && (
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Gender</Text>
             <Text>{character?.data.gender === "male" ? "Male" : "Female"}</Text>
           </Group>
         )}
         {character?.data.security_status !== undefined && (
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Security Status</Text>
             <Text>{character?.data.security_status}</Text>
           </Group>
         )}
         {character?.data.birthday && (
-          <Group position="apart">
+          <Group justify="apart">
             <Text>Birthday</Text>
             <Text>
               <FormattedDateText date={new Date(character.data.birthday)} />
             </Text>
           </Group>
         )}
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Bloodline</Text>
           <Anchor
             component={Link}
@@ -137,7 +137,7 @@ export default function Page() {
             <BloodlineName bloodlineId={character?.data.bloodline_id} />
           </Anchor>
         </Group>
-        <Group position="apart">
+        <Group justify="apart">
           <Text>Race</Text>
           <Anchor component={Link} href={`/race/${character?.data.race_id}`}>
             <RaceName span raceId={character?.data.race_id} />
