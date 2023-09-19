@@ -146,7 +146,7 @@ export function LayoutHeader() {
 
             <Group
               sx={{ height: "100%" }}
-              spacing={0}
+              gap={0}
               className={classes.hiddenMobile}
             >
               {Object.values(jitaApps).map((app) => {
@@ -161,7 +161,7 @@ export function LayoutHeader() {
                       <Stack spacing={4} align="center">
                         <Text>{app.name}</Text>
                         {app.hotKey && (
-                          <Group spacing="xs">
+                          <Group gap="xs">
                             {app.hotKey.map((key) => (
                               <Text span key={key}>
                                 <Kbd size="xs">{key}</Kbd>

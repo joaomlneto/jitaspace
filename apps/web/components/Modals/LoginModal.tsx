@@ -74,7 +74,7 @@ export function LoginModal({
               }}
             />
           </Center>
-          <Group spacing="xs" position="center" my="xl">
+          <Group gap="xs" position="center" my="xl">
             <Button size="xs" variant="default" onClick={toggleAppSelector}>
               Customize
             </Button>

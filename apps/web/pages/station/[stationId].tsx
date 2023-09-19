@@ -37,7 +37,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <StationAvatar stationId={stationId} size="xl" radius={256} />
           <Title order={3}>
             <StationName span stationId={stationId} />
@@ -50,7 +50,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 DOTLAN EveMaps
               </Group>
@@ -59,7 +59,7 @@ export default function Page() {
         </Group>
         <Group position="apart">
           <Text>Solar System</Text>
-          <Group spacing="xs">
+          <Group gap="xs">
             <SolarSystemSecurityStatusBadge
               solarSystemId={station?.data.system_id}
               size="sm"

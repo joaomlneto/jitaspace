@@ -145,7 +145,7 @@ export default function Page({
       />
       <Container size="sm">
         <Stack>
-          <Group spacing="xl">
+          <Group gap="xl">
             <TypeAvatar typeId={typeId} size="lg" />
             <Title order={1}>{typeName}</Title>
             <OpenMarketWindowActionIcon typeId={typeId} />
@@ -160,7 +160,7 @@ export default function Page({
               target="_blank"
             >
               <Button size="xs">
-                <Group spacing="xs">
+                <Group gap="xs">
                   <IconExternalLink size={14} />
                   Eve Ref
                 </Group>
@@ -171,7 +171,7 @@ export default function Page({
               target="_blank"
             >
               <Button size="xs">
-                <Group spacing="xs">
+                <Group gap="xs">
                   <IconExternalLink size={14} />
                   Eve Marketer
                 </Group>
@@ -182,7 +182,7 @@ export default function Page({
               target="_blank"
             >
               <Button size="xs">
-                <Group spacing="xs">
+                <Group gap="xs">
                   <IconExternalLink size={14} />
                   EVE Tycoon
                 </Group>

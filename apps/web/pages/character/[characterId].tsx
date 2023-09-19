@@ -40,7 +40,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <CharacterAvatar characterId={characterId} size="xl" radius={256} />
           <Title order={3}>
             <CharacterName span characterId={characterId} />
@@ -53,7 +53,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 EveWho
               </Group>
@@ -64,7 +64,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 zKillboard
               </Group>

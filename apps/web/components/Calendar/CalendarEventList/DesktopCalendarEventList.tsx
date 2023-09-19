@@ -64,7 +64,7 @@ export function DesktopCalendarEventList({
                     </CalendarEventOwnerAnchor>
                   </Avatar>
                 </Tooltip>
-                <Group wrap="nowrap" spacing="xs">
+                <Group wrap="nowrap" gap="xs">
                   {event.importance === 1 && <WarningIcon width={20} />}
                   <Anchor
                     lineClamp={1}

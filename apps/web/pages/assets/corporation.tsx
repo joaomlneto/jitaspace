@@ -168,14 +168,14 @@ export default function Page() {
                       </td>
                       <td align="right">{asset.quantity}</td>
                       <td>
-                        <Group spacing="xs" position="apart">
-                          <Group wrap="nowrap" spacing="xs">
+                        <Group gap="xs" position="apart">
+                          <Group wrap="nowrap" gap="xs">
                             <TypeAvatar size="xs" typeId={asset.type_id} />
                             <TypeAnchor typeId={asset.type_id}>
                               <TypeName typeId={asset.type_id} />
                             </TypeAnchor>
                           </Group>
-                          <Group spacing="xs" position="right">
+                          <Group gap="xs" position="right">
                             {asset.is_singleton && (
                               <Badge size="xs">assembled</Badge>
                             )}
@@ -187,7 +187,7 @@ export default function Page() {
                       </td>
                       {filterForm.values.location_id === null && (
                         <td>
-                          <Group spacing="xs">
+                          <Group gap="xs">
                             <EveEntityAnchor entityId={asset.location_id}>
                               <EveEntityName entityId={asset.location_id} />
                             </EveEntityAnchor>

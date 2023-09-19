@@ -66,7 +66,7 @@ export default function Page() {
         </Group>
         <Grid align="flex-end" justify="space-between">
           <Grid.Col span="content">
-            <Group wrap="nowrap" spacing="xs">
+            <Group wrap="nowrap" gap="xs">
               <Tooltip label="Compose new message">
                 <ActionIcon
                   variant="default"

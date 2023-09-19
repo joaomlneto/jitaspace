@@ -66,7 +66,7 @@ export function MessagePanel({
     <Stack>
       {!hideSender && (
         <Group position="apart">
-          <Group wrap="nowrap" spacing="xs">
+          <Group wrap="nowrap" gap="xs">
             From:
             <EveMailSenderAvatar messageId={messageId} size="sm" />
             <EveMailSenderAnchor messageId={messageId} target="_blank">

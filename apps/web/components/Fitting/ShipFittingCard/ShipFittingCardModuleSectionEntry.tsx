@@ -12,7 +12,7 @@ export type ShipFittingCardModuleSectionEntryProps = {
 export const ShipFittingCardModuleSectionEntry = memo(
   ({ typeId, quantity, ammo }: ShipFittingCardModuleSectionEntryProps) => {
     return (
-      <Group wrap="nowrap" spacing="xs" py={0} my={0}>
+      <Group wrap="nowrap" gap="xs" py={0} my={0}>
         <TypeAvatar typeId={typeId} variation="icon" size="xs" />
         {quantity && quantity > 1 && (
           <Text size="xs" color="dimmed">

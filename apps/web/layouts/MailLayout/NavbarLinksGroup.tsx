@@ -92,8 +92,8 @@ export default function LinksGroup({
   ));
 
   const buttonContent = (
-    <Group position="apart" spacing={0}>
-      <Group spacing={0}>
+    <Group position="apart" gap={0}>
+      <Group gap={0}>
         <ThemeIcon variant="light" size={30}>
           {icon}
         </ThemeIcon>

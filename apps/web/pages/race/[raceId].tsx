@@ -21,7 +21,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <RaceAvatar raceId={raceId} size="xl" radius={256} />
           <Title order={3}>
             <RaceName span raceId={raceId} />

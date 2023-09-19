@@ -134,7 +134,7 @@ export const SkillQueueTimeline = memo(() => {
                         target="_blank"
                         size="sm"
                       >
-                        <Group spacing="xs">
+                        <Group gap="xs">
                           <IconExternalLink size={14} />
                           <Anchor>Open in EVE Ref</Anchor>
                         </Group>

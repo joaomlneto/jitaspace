@@ -26,7 +26,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <Title order={3}>
             <RegionName span regionId={regionId} />
           </Title>
@@ -37,7 +37,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 DOTLAN EveMaps
               </Group>
@@ -48,7 +48,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 zKillboard
               </Group>
@@ -56,7 +56,7 @@ export default function Page() {
           </Link>
           <Link href={`https://eveeye.com/?m=${regionId}`} target="_blank">
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 Eveeye
               </Group>
@@ -67,7 +67,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 Adam4EVE
               </Group>

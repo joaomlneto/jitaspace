@@ -112,7 +112,7 @@ export const DesktopMailboxTable = ({
                 )}
               </td>
               <td>
-                <Group spacing="xs">
+                <Group gap="xs">
                   {mail.labels
                     ?.map(
                       (labelIndex) =>
@@ -123,7 +123,7 @@ export const DesktopMailboxTable = ({
                     .map(
                       (item) =>
                         item && (
-                          <Group wrap="nowrap" spacing={4} key={item.label_id}>
+                          <Group wrap="nowrap" gap={4} key={item.label_id}>
                             <MailLabelColorSwatch
                               labelId={item.label_id}
                               size={12}

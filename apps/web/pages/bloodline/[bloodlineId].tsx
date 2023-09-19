@@ -42,7 +42,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <Title order={3}>
             <BloodlineName bloodlineId={bloodlineId} />
           </Title>

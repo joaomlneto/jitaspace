@@ -39,7 +39,7 @@ export function MobileCalendarEventList({
           <tr key={event.event_id}>
             <td>
               <Stack>
-                <Group position="apart" spacing="xs">
+                <Group position="apart" gap="xs">
                   <Group>
                     <Tooltip
                       label={
