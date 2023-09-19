@@ -1,5 +1,11 @@
-import {useGetCharactersCharacterIdMailLabels, useGetCharactersCharacterIdMailMailId,} from "@jitaspace/esi-client";
-import {useEsiClientContext} from "@jitaspace/esi-hooks";
+import React from "react";
+import { Group, Spoiler, Stack, Text } from "@mantine/core";
+
+import {
+  useGetCharactersCharacterIdMailLabels,
+  useGetCharactersCharacterIdMailMailId,
+} from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   EveEntityAnchor,
   EveEntityAvatar,
@@ -12,11 +18,9 @@ import {
   MailingListName,
   MailLabelColorSwatch,
 } from "@jitaspace/ui";
-import {Group, Spoiler, Stack, Text} from "@mantine/core";
-import React from "react";
 
-import {MailMessageViewer} from "~/components/EveMail/MailMessageViewer";
-import {MessageMenu} from "~/components/EveMail/MessageMenu";
+import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
+import { MessageMenu } from "~/components/EveMail/MessageMenu";
 
 export type MessagePanelProps = {
   messageId?: number;
@@ -89,7 +93,7 @@ export function MessagePanel({
               <Text size="sm">{`Show all ${mail?.data.recipients?.length} recipients`}</Text>
             }
           >
-            <Group gap"md" mb="xs">
+            <Group gap="md" mb="xs">
               <Text>To:</Text>
               {mail?.data.recipients?.map((recipient) => (
                 <Group wrap="nowrap" gap="xs" key={recipient.recipient_id}>

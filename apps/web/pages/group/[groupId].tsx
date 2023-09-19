@@ -1,20 +1,29 @@
+import React, { useMemo, type ReactElement } from "react";
+import { GetStaticPaths, GetStaticProps } from "next";
+import { useRouter } from "next/router";
+import {
+  Container,
+  Group,
+  Loader,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import axios from "axios";
+import { NextSeo } from "next-seo";
+
 import {
   getUniverseGroups,
   getUniverseGroupsGroupId,
   getUniverseTypesTypeId,
   useGetUniverseGroupsGroupId,
 } from "@jitaspace/esi-client";
-import {GroupBreadcrumbs, TypeAnchor, TypeAvatar} from "@jitaspace/ui";
-import {Container, Group, Loader, SimpleGrid, Stack, Text, Title,} from "@mantine/core";
-import axios from "axios";
-import {GetStaticPaths, GetStaticProps} from "next";
-import {NextSeo} from "next-seo";
-import {useRouter} from "next/router";
-import React, {type ReactElement, useMemo} from "react";
+import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
-import {ESI_BASE_URL} from "~/config/constants";
-import {env} from "~/env.mjs";
-import {MainLayout} from "~/layouts";
+import { ESI_BASE_URL } from "~/config/constants";
+import { env } from "~/env.mjs";
+import { MainLayout } from "~/layouts";
 
 type PageProps = {
   name?: string;
@@ -154,7 +163,7 @@ export default function Page({ name, types }: PageProps) {
       />
       <Container size="md">
         <Stack>
-          <Group gap"xl">
+          <Group gap="xl">
             <Title order={1}>{name}</Title>
           </Group>
           <GroupBreadcrumbs groupId={Number(groupId)} />

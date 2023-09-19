@@ -1,17 +1,28 @@
-import {useGetCharactersCharacterIdAttributes} from "@jitaspace/esi-client";
-import {useEsiClientContext} from "@jitaspace/esi-hooks";
+import React from "react";
+import {
+  Center,
+  Group,
+  Paper,
+  Popover,
+  RingProgress,
+  SimpleGrid,
+  Stack,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
+import { format } from "date-fns";
+
+import { useGetCharactersCharacterIdAttributes } from "@jitaspace/esi-client";
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   AttributesIcon,
   CharismaAttributeSmallIcon,
-  type EveIconProps,
   IntelligenceAttributeSmallIcon,
   MemoryAttributeSmallIcon,
   PerceptionAttributeSmallIcon,
   WillpowerAttributeSmallIcon,
+  type EveIconProps,
 } from "@jitaspace/eve-icons";
-import {Center, Group, Paper, Popover, RingProgress, SimpleGrid, Stack, Text, UnstyledButton,} from "@mantine/core";
-import {format} from "date-fns";
-import React from "react";
 
 const characterAttributes = [
   "charisma",
@@ -169,7 +180,7 @@ export function CharacterAttributesRingProgress() {
               </Group>
             )}
             {data?.data.accrued_remap_cooldown_date && (
-              <Group justify="apart" gap"xl">
+              <Group justify="apart" gap="xl">
                 <Text size="sm" color="dimmed">
                   Next remap
                 </Text>
@@ -182,7 +193,7 @@ export function CharacterAttributesRingProgress() {
               </Group>
             )}
             {data?.data.bonus_remaps && (
-              <Group justify="apart" gap"xl">
+              <Group justify="apart" gap="xl">
                 <Text size="sm" color="dimmed">
                   Bonus Remaps
                 </Text>
