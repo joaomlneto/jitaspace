@@ -1,0 +1,42 @@
+/* FIXME MANTINE V7 MIGRATION */
+.root {
+    padding-top: 80px;
+    padding-bottom: 80px;
+}
+
+.label {
+    text-align: center;
+    font-weight: 900;
+    font-size: 220px;
+    line-height: 1;
+    /*
+    marginBottom: theme.spacing.xl,
+    color:
+    theme.colorScheme === "dark"
+    ? theme.colors.dark[4]
+: theme.colors.gray[2],
+
+    [theme.fn.smallerThan("sm")]: {
+    fontSize: 120,
+},*/
+}
+
+.title {
+    /*font-family: Greycliff CF, ${theme.fontFamily},*/
+    text-align: center;
+    font-weight: 900;
+    font-size: 38pt;
+
+    /*
+    [theme.fn.smallerThan("sm")]: {
+        fontSize: 32,
+    },*/
+}
+
+.description {
+    max-width: 600px;
+    margin: auto;
+    /*
+    marginTop: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,*/
+}
