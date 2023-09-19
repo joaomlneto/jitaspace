@@ -3,7 +3,6 @@ import { Container, Group, Stack, Title } from "@mantine/core";
 
 import { MarketIcon } from "@jitaspace/eve-icons";
 
-import { MarketGroupsNav } from "~/components/Market";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
@@ -14,9 +13,6 @@ export default function Page() {
           <MarketIcon width={48} />
           <Title order={1}>Market</Title>
         </Group>
-        <Stack>
-          <MarketGroupsNav />
-        </Stack>
       </Stack>
     </Container>
   );

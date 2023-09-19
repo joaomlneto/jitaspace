@@ -1,13 +1,8 @@
 import React, { type ReactElement } from "react";
 import { GetStaticProps } from "next";
 import { Container, Grid, Group, Stack, Title } from "@mantine/core";
-import axios from "axios";
 
-import {
-  getUniverseCategoriesCategoryId,
-  getUniverseGroupsGroupId,
-  GetUniverseGroupsGroupId200,
-} from "@jitaspace/esi-client";
+import { prisma } from "@jitaspace/db";
 import { SkillsIcon } from "@jitaspace/eve-icons";
 
 import {
@@ -15,28 +10,56 @@ import {
   SkillQueueTimeline,
   SkillTreeNav,
 } from "~/components/Skills";
-import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
 
+const SKILLS_CATEGORY_ID = 16;
+
 type PageProps = {
-  groups: Record<number, GetUniverseGroupsGroupId200>;
+  groups: {
+    groupId: number;
+    name: string;
+    published: boolean;
+    types: {
+      typeId: number;
+      name: string;
+      description: string;
+      iconId: number | null;
+      graphicId: number | null;
+      published: boolean;
+      attributes: {
+        attributeId: number;
+        value: number;
+      }[];
+    }[];
+  }[];
 };
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
-  axios.defaults.baseURL = ESI_BASE_URL;
-
-  const SKILLS_CATEGORY_ID = 16;
-  const { data: category } =
-    await getUniverseCategoriesCategoryId(SKILLS_CATEGORY_ID);
-
-  const groupResponses = await Promise.all(
-    category.groups.map((groupId) => getUniverseGroupsGroupId(groupId)),
-  );
-
-  // restructure data into a map of group ids to group details
-  const groups: Record<number, GetUniverseGroupsGroupId200> = {};
-  groupResponses.forEach((res) => {
-    groups[res.data.group_id] = res.data;
+  const groups = await prisma.group.findMany({
+    select: {
+      groupId: true,
+      name: true,
+      published: true,
+      types: {
+        select: {
+          typeId: true,
+          name: true,
+          description: true,
+          iconId: true,
+          graphicId: true,
+          published: true,
+          attributes: {
+            select: {
+              attributeId: true,
+              value: true,
+            },
+          },
+        },
+      },
+    },
+    where: {
+      categoryId: SKILLS_CATEGORY_ID,
+    },
   });
 
   return {

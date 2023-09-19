@@ -11,31 +11,37 @@ import {
 } from "@mantine/core";
 
 import {
-  GetUniverseGroupsGroupId200,
   useGetCharactersCharacterIdSkills,
   type GetCharactersCharacterIdSkills200SkillsItem,
-  type GetUniverseTypesTypeId200,
 } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
 
-import { usePrecomputedGroupTypes } from "~/hooks";
-
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 
 type SkillTreeNavLinkProps = NavLinkProps & {
-  groupId: number;
+  group: {
+    groupId: number;
+    name: string;
+    published: boolean;
+    types: {
+      typeId: number;
+      name: string;
+      description: string;
+      iconId: number | null;
+      graphicId: number | null;
+      published: boolean;
+      attributes: {
+        attributeId: number;
+        value: number;
+      }[];
+    }[];
+  };
 };
 
 const SkillTreeNavLink = memo(
-  ({ groupId, ...otherProps }: SkillTreeNavLinkProps) => {
+  ({ group, ...otherProps }: SkillTreeNavLinkProps) => {
     const { characterId, isTokenValid } = useEsiClientContext();
-    const {
-      data: group,
-      isLoading: groupLoading,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      error: groupError,
-    } = usePrecomputedGroupTypes(groupId);
 
     const {
       data: skills,
@@ -51,13 +57,13 @@ const SkillTreeNavLink = memo(
       },
     );
 
-    const loading = groupLoading || skillsLoading;
+    const loading = skillsLoading;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const error = groupError || skillsError;
+    const error = skillsError;
 
-    const sortedTypeIds = Object.values(group?.types ?? [])
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .map((type) => type.type_id);
+    const sortedTypes = group.types.sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
 
     const characterSkillsIndex = skills?.data.skills.reduce(
       (acc, skill) => {
@@ -67,14 +73,24 @@ const SkillTreeNavLink = memo(
       {} as Record<string, GetCharactersCharacterIdSkills200SkillsItem>,
     );
 
-    const getSkillTrainingTimeMultiplier = (skill: GetUniverseTypesTypeId200) =>
-      skill.dogma_attributes?.find(
+    const getSkillTrainingTimeMultiplier = (skill: {
+      attributes: {
+        attributeId: number;
+        value: number;
+      }[];
+    }) =>
+      skill.attributes.find(
         (attribute) =>
-          attribute.attribute_id === TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID,
+          attribute.attributeId === TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID,
       )?.value ?? 1;
 
     const getSPNeededForLevel = (
-      skill: GetUniverseTypesTypeId200,
+      skill: {
+        attributes: {
+          attributeId: number;
+          value: number;
+        }[];
+      },
       level: number,
     ) =>
       Math.ceil(
@@ -92,7 +108,7 @@ const SkillTreeNavLink = memo(
 
     const characterSPInGroup = Object.values(group?.types ?? []).reduce(
       (acc, type) => {
-        const characterSkill = characterSkillsIndex?.[type.type_id];
+        const characterSkill = characterSkillsIndex?.[type.typeId];
         if (!characterSkill) return acc;
         return acc + characterSkill.skillpoints_in_skill;
       },
@@ -101,7 +117,7 @@ const SkillTreeNavLink = memo(
 
     return (
       <NavLink
-        key={groupId}
+        key={group.groupId}
         label={
           <Group position="apart">
             {/* eslint-disable-next-line @typescript-eslint/no-unsafe-member-access */}
@@ -123,15 +139,14 @@ const SkillTreeNavLink = memo(
         {...otherProps}
       >
         <Stack spacing="xs" my="md" mr="md">
-          {sortedTypeIds.map((typeId) => {
-            const type = group?.types[typeId];
-            const characterSkill = characterSkillsIndex?.[typeId];
+          {sortedTypes.map((type) => {
+            const characterSkill = characterSkillsIndex?.[type.typeId];
             if (!type) return "?";
             return (
-              <Group key={typeId} position="apart">
+              <Group key={type.typeId} position="apart">
                 <Group>
-                  <TypeAnchor typeId={type.type_id}>
-                    <TypeName span typeId={type.type_id} size="sm"></TypeName>
+                  <TypeAnchor typeId={type.typeId}>
+                    <TypeName span typeId={type.typeId} size="sm"></TypeName>
                   </TypeAnchor>
                 </Group>
                 <Group>
@@ -156,28 +171,44 @@ const SkillTreeNavLink = memo(
 SkillTreeNavLink.displayName = "SkillTreeNavLink";
 
 type SkillTreeNavProps = {
-  groups: Record<number, GetUniverseGroupsGroupId200>;
+  groups: {
+    groupId: number;
+    name: string;
+    published: boolean;
+    types: {
+      typeId: number;
+      name: string;
+      description: string;
+      iconId: number | null;
+      graphicId: number | null;
+      published: boolean;
+      attributes: {
+        attributeId: number;
+        value: number;
+      }[];
+    }[];
+  }[];
+  showUnpublished?: boolean;
 };
 
-export const SkillTreeNav = memo(({ groups }: SkillTreeNavProps) => {
-  const hideUnpublished = true;
+export const SkillTreeNav = memo(
+  ({ groups, showUnpublished = false }: SkillTreeNavProps) => {
+    // get IDs of groups sorted by their respective names
+    const alphabeticallySortedGroupIds = groups
+      .filter((group) => showUnpublished || group.published)
+      .sort((a, b) => {
+        return a.name.localeCompare(b.name);
+      });
 
-  // get IDs of groups sorted by their respective names
-  const alphabeticallySortedGroupIds = Object.values(groups ?? [])
-    .filter((group) => !hideUnpublished || group.published)
-    .sort((a, b) => {
-      return a.name.localeCompare(b.name);
-    })
-    .map(({ group_id }) => group_id);
-
-  return (
-    <Container size="sm">
-      <Box>
-        {alphabeticallySortedGroupIds.map((groupId) => (
-          <SkillTreeNavLink key={groupId} groupId={groupId} />
-        ))}
-      </Box>
-    </Container>
-  );
-});
+    return (
+      <Container size="sm">
+        <Box>
+          {alphabeticallySortedGroupIds.map((group) => (
+            <SkillTreeNavLink key={group.groupId} group={group} />
+          ))}
+        </Box>
+      </Container>
+    );
+  },
+);
 SkillTreeNav.displayName = "SkillTreeNav";
