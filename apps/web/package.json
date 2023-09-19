@@ -78,7 +78,7 @@
     "react-dom": "18.2.0",
     "react-html-parser": "^2.0.2",
     "react-obfuscate-email": "^1.1.2",
-    "sharp": "^0.32.5",
+    "sharp": "^0.32.6",
     "superjson": "1.13.1",
     "swr": "^2.2.2",
     "workbox-window": "^7.0.0",
