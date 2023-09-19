@@ -1,32 +1,11 @@
 import { memo, useMemo } from "react";
-import { Card, createStyles, JsonInput, type CardProps } from "@mantine/core";
+import { Card, JsonInput, type CardProps } from "@mantine/core";
 
 import { type GetCharactersCharacterIdFittings200ItemItemsItemFlag } from "@jitaspace/esi-client";
 
+import classes from "./ShipFittingCard.module.css";
 import { ShipFittingCardHeader } from "./ShipFittingCardHeader";
 import { ShipFittingCardModulesSection } from "./ShipFittingCardModulesSection";
-
-const useStyles = createStyles((theme) => ({
-  card: {
-    backgroundColor:
-      theme.colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
-  },
-
-  label: {
-    lineHeight: 1,
-    fontWeight: 700,
-    fontSize: theme.fontSizes.xs,
-    letterSpacing: -0.25,
-    textTransform: "uppercase",
-  },
-
-  section: {
-    //padding: theme.spacing.md,
-    borderTop: `1px solid ${
-      theme.colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[3]
-    }`,
-  },
-}));
 
 export type ShipFittingCardProps = Omit<CardProps, "children"> & {
   name?: string;
@@ -55,8 +34,6 @@ export const ShipFittingCard = memo(
     hideModules = false,
     ...otherProps
   }: ShipFittingCardProps) => {
-    const { classes } = useStyles();
-
     const highSlotModules = useMemo(
       () => ({
         name: "High Slots",
