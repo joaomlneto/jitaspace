@@ -101,7 +101,7 @@ export function AppScopeSetCheckboxCard({
         m={0}
         style={{ backgroundColor: "transparent" }}
         label={
-          <Stack spacing={4}>
+          <Stack gap={4}>
             {allAppScopes.map((scope) => (
               <Code key={scope}>{scope}</Code>
             ))}

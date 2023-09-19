@@ -106,7 +106,7 @@ export default function Page() {
           </Link>
         </Group>
         <Title order={4}>Stations</Title>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           {solarSystem?.data.stations?.map((stationId) => (
             <Group key={stationId} gap="xs">
               <StationAvatar size="sm" stationId={stationId} />
@@ -117,7 +117,7 @@ export default function Page() {
           ))}
         </Stack>
         <Title order={4}>Stargates</Title>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           {solarSystem?.data.stargates?.map((stargateId) => (
             <Group key={stargateId} gap="xs">
               <StargateAvatar size="sm" stargateId={stargateId} />
@@ -128,7 +128,7 @@ export default function Page() {
           ))}
         </Stack>
         <Title order={4}>Celestials</Title>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           {solarSystem?.data.star_id && (
             <Group>
               <StarAvatar starId={solarSystem.data.star_id} size="sm" />

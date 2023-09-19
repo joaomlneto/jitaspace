@@ -128,7 +128,7 @@ export default function Page({ name, groups }: PageProps) {
             <Title order={1}>{name}</Title>
           </Group>
           <CategoryBreadcrumbs categoryId={Number(categoryId)} />
-          <Stack spacing="xs">
+          <Stack gap="xs">
             <Title order={3}>Groups</Title>
             <SimpleGrid
               cols={3}

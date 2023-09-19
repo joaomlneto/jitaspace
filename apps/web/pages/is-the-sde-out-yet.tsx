@@ -113,7 +113,7 @@ export default function Page() {
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Stack align="center" p="xl" spacing="xl" style={{}}>
+        <Stack align="center" p="xl" gap="xl" style={{}}>
           <Title align="center">
             {isLoading && "Checking..."}
             {!isLoading && sdeUpdated && "Yes!"}

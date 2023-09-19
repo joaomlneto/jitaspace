@@ -70,7 +70,7 @@ export default function Page() {
             onChange={setSelectedShipType}
           />
         </Group>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           {filteredFittings.map((fit) => (
             <UnstyledButton
               key={fit.fitting_id}

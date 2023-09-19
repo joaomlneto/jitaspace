@@ -150,7 +150,7 @@ export default function Page({
             <Title order={1}>{typeName}</Title>
             <OpenMarketWindowActionIcon typeId={typeId} />
           </Group>
-          <Stack spacing={0}>
+          <Stack gap={0}>
             <TypeInventoryBreadcrumbs typeId={typeId} />
             <TypeMarketBreadcrumbs typeId={typeId} />
           </Stack>

@@ -8,7 +8,7 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   return (
     <Container>
-      <Stack spacing="xl">
+      <Stack gap="xl">
         <Group>
           <MarketIcon width={48} />
           <Title order={1}>Market</Title>

@@ -73,7 +73,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 export default function Page({ groups }: PageProps) {
   return (
     <Container size="xl">
-      <Stack spacing="xl">
+      <Stack gap="xl">
         <Group>
           <SkillsIcon width={48} />
           <Title>Skills</Title>

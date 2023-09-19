@@ -151,7 +151,7 @@ export const LoyaltyPointsTable = memo(
           size: 300,
           enableColumnFilter: false,
           Cell: ({ row, cell }) => (
-            <Stack spacing="xs">
+            <Stack gap="xs">
               {row.original.required_items.map(({ quantity, type_id }) => (
                 <Group wrap="nowrap" key={type_id}>
                   <TypeAvatar typeId={type_id} size="sm" />

@@ -38,7 +38,7 @@ export const MobileMailboxTable = ({
         {visibleMessages.map((message) => (
           <tr key={message.mail_id}>
             <td>
-              <Stack spacing="xs">
+              <Stack gap="xs">
                 <Group justify="apart" gap="xs">
                   <Group wrap="nowrap" gap="xs">
                     <EveMailSenderAvatar

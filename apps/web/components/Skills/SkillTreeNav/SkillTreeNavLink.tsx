@@ -139,7 +139,7 @@ export const SkillTreeNavLink = memo(
         }
         {...otherProps}
       >
-        <Stack spacing="xs" my="md" mr="md">
+        <Stack gap="xs" my="md" mr="md">
           {sortedTypes.map((type) => {
             const characterSkill = characterSkillsIndex?.[type.typeId];
             return (

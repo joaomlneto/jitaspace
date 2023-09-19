@@ -24,7 +24,7 @@ const MY_CHARACTER_ID = 401563624;
 export default function Page() {
   return (
     <Container size="sm">
-      <Stack spacing="xs">
+      <Stack gap="xs">
         <Title>About</Title>
         <Text size="sm">
           This is just a simple website with a few tools for{" "}

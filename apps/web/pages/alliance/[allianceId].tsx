@@ -86,7 +86,7 @@ export default function Page() {
             </Button>
           </Link>
         </Group>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           <Group justify="apart">
             <Text>Creator</Text>
             <Group wrap="nowrap">

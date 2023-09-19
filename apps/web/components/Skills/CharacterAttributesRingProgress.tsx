@@ -128,7 +128,7 @@ export function CharacterAttributesRingProgress() {
               <Group>
                 <AttributesIcon width={42} />
 
-                <Stack spacing={0}>
+                <Stack gap={0}>
                   <Group gap="xs" justify="apart">
                     <Text
                       color="dimmed"

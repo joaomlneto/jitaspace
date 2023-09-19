@@ -69,7 +69,7 @@ export const SkillQueueTimeline = memo(() => {
                     </UnstyledButton>
                   </Popover.Target>
                   <Popover.Dropdown>
-                    <Stack spacing="xs">
+                    <Stack gap="xs">
                       {entry.start_date && (
                         <Group justify="apart">
                           <Text size="sm" color="dimmed">
