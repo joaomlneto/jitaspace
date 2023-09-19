@@ -9,12 +9,12 @@ datasource db {
 }
 
 model Character {
-  characterId        Int           @id
+  characterId         Int           @id
   // TODO
-  CorporationCeo     Corporation?  @relation("corporationCeo")
-  CorporationCreator Corporation[] @relation("corporationCreator")
-  updatedAt          DateTime      @updatedAt()
-  isDeleted          Boolean       @default(false)
+  CorporationCeo      Corporation?  @relation("corporationCeo")
+  createdCorporations Corporation[] @relation("corporationCreator")
+  updatedAt           DateTime      @updatedAt()
+  isDeleted           Boolean       @default(false)
 }
 
 model MarketGroup {
@@ -23,7 +23,7 @@ model MarketGroup {
   description         String        @db.Text
   types               Type[]
   parentMarketGroupId Int?
-  ParentMarketGroup   MarketGroup?  @relation("marketGroupParent", fields: [parentMarketGroupId], references: [marketGroupId], onDelete: Restrict, onUpdate: Restrict)
+  parent              MarketGroup?  @relation("marketGroupParent", fields: [parentMarketGroupId], references: [marketGroupId], onDelete: Restrict, onUpdate: Restrict)
   children            MarketGroup[] @relation("marketGroupParent")
   updatedAt           DateTime      @updatedAt()
   isDeleted           Boolean       @default(false)
@@ -33,7 +33,7 @@ model MarketGroup {
 
 model Category {
   categoryId Int      @id
-  Groups     Group[]
+  groups     Group[]
   name       String
   published  Boolean
   updatedAt  DateTime @updatedAt()
@@ -42,11 +42,11 @@ model Category {
 
 model Group {
   groupId    Int      @id
-  Category   Category @relation(fields: [categoryId], references: [categoryId])
+  category   Category @relation(fields: [categoryId], references: [categoryId])
   categoryId Int
   name       String
   published  Boolean
-  Type       Type[]
+  types      Type[]
   updatedAt  DateTime @updatedAt()
   isDeleted  Boolean  @default(false)
 
@@ -58,27 +58,27 @@ model Type {
   capacity       Float?
   description    String          @db.Text
   dogmaEffects   DogmaEffect[]
-  Graphic        Graphic?        @relation(fields: [graphicId], references: [graphicId])
+  graphic        Graphic?        @relation(fields: [graphicId], references: [graphicId])
   graphicId      Int?
-  Group          Group           @relation(fields: [groupId], references: [groupId])
+  group          Group           @relation(fields: [groupId], references: [groupId])
   groupId        Int
-  Icon           Icon?           @relation(fields: [iconId], references: [iconId])
+  icon           Icon?           @relation(fields: [iconId], references: [iconId])
   iconId         Int?
   marketGroupId  Int?
-  MarketGroup    MarketGroup?    @relation(fields: [marketGroupId], references: [marketGroupId])
+  marketGroup    MarketGroup?    @relation(fields: [marketGroupId], references: [marketGroupId])
   mass           Float?
   name           String          @db.Text
   packagedVolume Float?
   portionSize    Int?
   published      Boolean
   radius         Float?
-  Station        Station[]
+  stations       Station[]
   volume         Float?
   updatedAt      DateTime        @updatedAt()
   isDeleted      Boolean         @default(false)
-  TypeAttributes TypeAttribute[]
-  TypeEffect     TypeEffect[]
-  Bloodline      Bloodline[]     @relation("BloodlineShipType")
+  attributes     TypeAttribute[]
+  effects        TypeEffect[]
+  bloodlines     Bloodline[]     @relation("BloodlineShipType")
 
   @@index([marketGroupId])
   @@index([graphicId])
@@ -87,8 +87,8 @@ model Type {
 }
 
 model TypeAttribute {
-  Type        Type           @relation(fields: [typeId], references: [typeId])
-  Attribute   DogmaAttribute @relation(fields: [attributeId], references: [attributeId])
+  type        Type           @relation(fields: [typeId], references: [typeId])
+  attribute   DogmaAttribute @relation(fields: [attributeId], references: [attributeId])
   typeId      Int
   attributeId Int
   value       Float
@@ -101,13 +101,13 @@ model TypeAttribute {
 }
 
 model TypeEffect {
-  Type        Type        @relation(fields: [typeId], references: [typeId])
-  typeId      Int
-  DogmaEffect DogmaEffect @relation(fields: [effectId], references: [effectId])
-  effectId    Int
-  isDefault   Boolean
-  updatedAt   DateTime    @updatedAt()
-  isDeleted   Boolean     @default(false)
+  type      Type        @relation(fields: [typeId], references: [typeId])
+  typeId    Int
+  effect    DogmaEffect @relation(fields: [effectId], references: [effectId])
+  effectId  Int
+  isDefault Boolean
+  updatedAt DateTime    @updatedAt()
+  isDeleted Boolean     @default(false)
 
   @@id([typeId, effectId])
   @@index([typeId])
@@ -116,7 +116,7 @@ model TypeEffect {
 
 model Graphic {
   graphicId Int    @id
-  Type      Type[]
+  types     Type[]
 }
 
 model DogmaAttribute {
@@ -149,22 +149,22 @@ model DogmaAttribute {
 
 model DogmaEffectCategory {
   effectCategoryId Int           @id
-  DogmaEffects     DogmaEffect[]
+  effects          DogmaEffect[]
 }
 
 model DogmaEffect {
   effectId                 Int                  @id
   description              String?              @db.Text
   disallowAutoRepeat       Boolean?
-  DischargeAttribute       DogmaAttribute?      @relation("DischargeAttribute", fields: [dischargeAttributeId], references: [attributeId])
+  dischargeAttribute       DogmaAttribute?      @relation("DischargeAttribute", fields: [dischargeAttributeId], references: [attributeId])
   dischargeAttributeId     Int?
   displayName              String?
-  DurationAttribute        DogmaAttribute?      @relation("DurationAttribute", fields: [durationAttributeId], references: [attributeId])
+  durationAttribute        DogmaAttribute?      @relation("DurationAttribute", fields: [durationAttributeId], references: [attributeId])
   durationAttributeId      Int?
-  EffectCategory           DogmaEffectCategory? @relation(fields: [effectCategoryId], references: [effectCategoryId])
+  effectCategory           DogmaEffectCategory? @relation(fields: [effectCategoryId], references: [effectCategoryId])
   effectCategoryId         Int?
   electronicChance         Boolean?
-  FalloffAttribute         DogmaAttribute?      @relation("FalloffAttribute", fields: [falloffAttributeId], references: [attributeId])
+  falloffAttribute         DogmaAttribute?      @relation("FalloffAttribute", fields: [falloffAttributeId], references: [attributeId])
   falloffAttributeId       Int?
   Icon                     Icon?                @relation(fields: [iconId], references: [iconId])
   iconId                   Int?
@@ -176,13 +176,13 @@ model DogmaEffect {
   postExpression           Int?
   preExpression            Int?
   published                Boolean?
-  RangeAttribute           DogmaAttribute?      @relation("RangeAttribute", fields: [rangeAttributeId], references: [attributeId])
+  rangeAttribute           DogmaAttribute?      @relation("RangeAttribute", fields: [rangeAttributeId], references: [attributeId])
   rangeAttributeId         Int?
   rangeChance              Boolean?
-  TrackingSpeedAttribute   DogmaAttribute?      @relation("TrackingSpeedAttribute", fields: [trackingSpeedAttributeId], references: [attributeId])
+  trackingSpeedAttribute   DogmaAttribute?      @relation("TrackingSpeedAttribute", fields: [trackingSpeedAttributeId], references: [attributeId])
   trackingSpeedAttributeId Int?
 
-  Types                Type[]
+  types                Type[]
   updatedAt            DateTime              @updatedAt()
   isDeleted            Boolean               @default(false)
   DogmaEffectModifiers DogmaEffectModifier[] @relation("DogmaEffectModifiers")
@@ -199,15 +199,15 @@ model DogmaEffect {
 }
 
 model DogmaEffectModifier {
-  Effect               DogmaEffect     @relation("DogmaEffectModifiers", fields: [effectId], references: [effectId])
+  effect               DogmaEffect     @relation("DogmaEffectModifiers", fields: [effectId], references: [effectId])
   effectId             Int
   domain               String?
-  TargetEffect         DogmaEffect?    @relation("ModifiedDogmaEffect", fields: [targetEffectId], references: [effectId])
+  targetEffect         DogmaEffect?    @relation("ModifiedDogmaEffect", fields: [targetEffectId], references: [effectId])
   targetEffectId       Int?
   func                 String
-  ModifiedAttribute    DogmaAttribute? @relation("DogmaEffectsModified", fields: [modifiedAttributeId], references: [attributeId])
+  modifiedAttribute    DogmaAttribute? @relation("DogmaEffectsModified", fields: [modifiedAttributeId], references: [attributeId])
   modifiedAttributeId  Int?
-  ModifyingAttribute   DogmaAttribute? @relation("DogmaEffectsModifying", fields: [modifyingAttributeId], references: [attributeId])
+  modifyingAttribute   DogmaAttribute? @relation("DogmaEffectsModifying", fields: [modifyingAttributeId], references: [attributeId])
   modifyingAttributeId Int?
   operator             Int?
 
@@ -219,36 +219,36 @@ model DogmaEffectModifier {
 }
 
 model DogmaUnit {
-  unitId          Int              @id
-  displayName     String
-  description     String           @db.Text
-  DogmaAttributes DogmaAttribute[]
-  updatedAt       DateTime         @updatedAt()
-  isDeleted       Boolean          @default(false)
+  unitId      Int              @id
+  displayName String
+  description String           @db.Text
+  attributes  DogmaAttribute[]
+  updatedAt   DateTime         @updatedAt()
+  isDeleted   Boolean          @default(false)
 }
 
 model Icon {
-  iconId          Int              @id
-  description     String           @db.Text
-  iconFile        String
-  DogmaAttributes DogmaAttribute[]
-  updatedAt       DateTime         @updatedAt()
-  isDeleted       Boolean          @default(false)
-  Type            Type[]
-  DogmaEffects    DogmaEffect[]
-  Ancestry        Ancestry[]       @relation("AncestryIcon")
+  iconId      Int              @id
+  description String           @db.Text
+  iconFile    String
+  updatedAt   DateTime         @updatedAt()
+  isDeleted   Boolean          @default(false)
+  attributes  DogmaAttribute[]
+  types       Type[]
+  effects     DogmaEffect[]
+  ancestries  Ancestry[]       @relation("AncestryIcon")
 }
 
 model Alliance {
   allianceId            Int          @id
-  CreatorCorporation    Corporation  @relation("allianceCreatorCorporation", fields: [creatorCorporationId], references: [corporationId])
+  creatorCorporation    Corporation  @relation("allianceCreatorCorporation", fields: [creatorCorporationId], references: [corporationId])
   creatorCorporationId  Int
   dateFounded           DateTime
   executorCorporation   Corporation? @relation("allianceExecutorCorporation", fields: [executorCorporationId], references: [corporationId])
   executorCorporationId Int?         @unique
-  Faction               Faction?     @relation(fields: [factionId], references: [factionId])
+  faction               Faction?     @relation(fields: [factionId], references: [factionId])
   factionId             Int?
-  MemberCorporation     Corporation? @relation("allianceMemberCorporation", fields: [memberCorporationId], references: [corporationId])
+  memberCorporations    Corporation? @relation("allianceMemberCorporation", fields: [memberCorporationId], references: [corporationId])
   memberCorporationId   Int?         @unique
   name                  String
   ticker                String
@@ -265,14 +265,14 @@ model Faction {
   name                 String
   description          String        @db.Text
   isUnique             Boolean
-  MilitiaCorporation   Corporation?  @relation("FactionMilitiaCorporation", fields: [militiaCorporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
+  militiaCorporation   Corporation?  @relation("FactionMilitiaCorporation", fields: [militiaCorporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
   militiaCorporationId Int?
-  Alliance             Alliance[]
-  Corporation          Corporation[] @relation("CorporationFaction")
-  FactionCorporation   Corporation   @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
+  alliances            Alliance[]
+  corporations         Corporation[] @relation("CorporationFaction")
+  factionCorporation   Corporation   @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
   corporationId        Int
   sizeFactor           Float
-  FactionSolarSystem   SolarSystem?  @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  solarSystem          SolarSystem?  @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId        Int?
   // do we need to store this?
   stationCount         Int
@@ -289,16 +289,16 @@ model Faction {
 model Corporation {
   corporationId    Int       @id
   allianceId       Alliance? @relation("allianceMemberCorporation")
-  Ceo              Character @relation("corporationCeo", fields: [ceoId], references: [characterId])
+  ceo              Character @relation("corporationCeo", fields: [ceoId], references: [characterId])
   ceoId            Int       @unique
-  Creator          Character @relation("corporationCreator", fields: [creatorId], references: [characterId])
+  creator          Character @relation("corporationCreator", fields: [creatorId], references: [characterId])
   executorAlliance Alliance? @relation("allianceExecutorCorporation")
   creatorId        Int
   dateFounded      DateTime?
   description      String?   @db.Text
-  Faction          Faction?  @relation("CorporationFaction", fields: [factionId], references: [factionId])
+  faction          Faction?  @relation("CorporationFaction", fields: [factionId], references: [factionId])
   factionId        Int?
-  HomeStation      Station?  @relation("CorporationHomeStation", fields: [homeStationId], references: [stationId], onDelete: NoAction, onUpdate: NoAction)
+  homeStation      Station?  @relation("CorporationHomeStation", fields: [homeStationId], references: [stationId], onDelete: NoAction, onUpdate: NoAction)
   homeStationId    Int?
   memberCount      Int
   name             String
@@ -311,9 +311,9 @@ model Corporation {
   updatedAt DateTime @updatedAt()
   isDeleted Boolean  @default(false)
 
-  CreatedAlliances    Alliance[]  @relation("allianceCreatorCorporation")
-  OwnedStations       Station[]   @relation("StationOwner")
-  Bloodline           Bloodline[] @relation("BloodlineCorporation")
+  createdAlliances    Alliance[]  @relation("allianceCreatorCorporation")
+  ownedStations       Station[]   @relation("StationOwner")
+  bloodlines          Bloodline[] @relation("BloodlineCorporation")
   CorporationFactions Faction[]   @relation("FactionCorporation")
   MilitiaFaction      Faction[]   @relation("FactionMilitiaCorporation")
 
@@ -325,23 +325,23 @@ model Corporation {
 model Station {
   stationId                Int              @id
   name                     String
-  CorporationHomeStations  Corporation[]    @relation("CorporationHomeStation")
-  StationSolarSystem       SolarSystem      @relation(fields: [solarSystemId], references: [solarSystemId])
+  corporationHomeStations  Corporation[]    @relation("CorporationHomeStation")
+  solarSystem              SolarSystem      @relation(fields: [solarSystemId], references: [solarSystemId])
   solarSystemId            Int
-  StationType              Type             @relation(fields: [typeId], references: [typeId])
+  stationType              Type             @relation(fields: [typeId], references: [typeId])
   typeId                   Int
   maxDockableShipVolume    Float
   officeRentalCost         Float
-  Owner                    Corporation?     @relation("StationOwner", fields: [ownerId], references: [corporationId])
+  owner                    Corporation?     @relation("StationOwner", fields: [ownerId], references: [corporationId])
   ownerId                  Int?
   // TODO add XYZ Position field
   updatedAt                DateTime         @updatedAt()
   isDeleted                Boolean          @default(false)
-  Race                     Race?            @relation("RaceStations", fields: [raceId], references: [raceId])
+  race                     Race?            @relation("RaceStations", fields: [raceId], references: [raceId])
   raceId                   Int?
   reprocessingEfficiency   Float
   reprocessingStationsTake Float
-  StationServices          StationService[]
+  stationServices          StationService[]
 
   @@index([solarSystemId])
   @@index([typeId])
@@ -352,35 +352,35 @@ model Station {
 model StationService {
   stationServiceId Int       @id
   name             String
-  Stations         Station[]
+  stations         Station[]
 }
 
 model Race {
-  raceId    Int         @id
-  Stations  Station[]   @relation("RaceStations")
-  Bloodline Bloodline[] @relation("BloodlineRace")
+  raceId     Int         @id
+  stations   Station[]   @relation("RaceStations")
+  bloodlines Bloodline[] @relation("BloodlineRace")
 }
 
 // done:
 // alliance
 model Region {
-  regionId             Int             @id
-  name                 String
-  description          String?         @db.Text
-  RegionConstellations Constellation[]
-  updatedAt            DateTime        @updatedAt()
-  isDeleted            Boolean         @default(false)
+  regionId       Int             @id
+  name           String
+  description    String?         @db.Text
+  updatedAt      DateTime        @updatedAt()
+  isDeleted      Boolean         @default(false)
+  constellations Constellation[]
 }
 
 // TODO: Add missing "position" field
 model Constellation {
-  constellationId           Int           @id
-  name                      String
-  regionId                  Int
-  ConstellationRegion       Region?       @relation(fields: [regionId], references: [regionId])
-  ConstellationSolarSystems SolarSystem[]
-  updatedAt                 DateTime      @updatedAt()
-  isDeleted                 Boolean       @default(false)
+  constellationId Int           @id
+  name            String
+  regionId        Int
+  region          Region?       @relation(fields: [regionId], references: [regionId])
+  solarSystems    SolarSystem[]
+  updatedAt       DateTime      @updatedAt()
+  isDeleted       Boolean       @default(false)
 
   @@index([regionId])
 }
@@ -389,39 +389,39 @@ model Constellation {
 model SolarSystem {
   solarSystemId       Int           @id
   name                String
-  SystemStations      Station[]
-  Constellation       Constellation @relation(fields: [constellationId], references: [constellationId])
+  stations            Station[]
+  constellation       Constellation @relation(fields: [constellationId], references: [constellationId])
   constellationId     Int
   securityClass       String?
   securityStatus      Decimal
-  Star                Star?         @relation(fields: [starId], references: [starId])
+  star                Star?         @relation("SolarSystemStar")
   starId              Int?
   // List of stargates that are located in this system
-  Stargate            Stargate[]    @relation("SolarSystemStargate")
+  stargate            Stargate[]    @relation("SolarSystemStargate")
   // List of stargates that have this system as a destination
   StargateOrigins     Stargate[]    @relation("SolarSystemStargateDestination")
   updatedAt           DateTime      @updatedAt()
   isDeleted           Boolean       @default(false)
-  SolarSystemFactions Faction[]     @relation("FactionSolarSystem")
+  solarSystemFactions Faction[]     @relation("FactionSolarSystem")
 
   @@index([constellationId])
-  @@index([starId])
 }
 
 model Star {
-  starId      Int           @id
-  name        String
-  SolarSystem SolarSystem[]
-  updatedAt   DateTime      @updatedAt()
-  isDeleted   Boolean       @default(false)
+  starId        Int         @id
+  name          String
+  solarSystem   SolarSystem @relation("SolarSystemStar", fields: [solarSystemId], references: [solarSystemId])
+  solarSystemId Int         @unique
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
 }
 
 model Stargate {
   stargateId               Int         @id
   name                     String
-  SolarSystem              SolarSystem @relation("SolarSystemStargate", fields: [solarSystemId], references: [solarSystemId])
+  solarSystem              SolarSystem @relation("SolarSystemStargate", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId            Int
-  DestinationSolarSystem   SolarSystem @relation("SolarSystemStargateDestination", fields: [destinationSolarSystemId], references: [solarSystemId])
+  destinationSolarSystem   SolarSystem @relation("SolarSystemStargateDestination", fields: [destinationSolarSystemId], references: [solarSystemId])
   destinationSolarSystemId Int
   updatedAt                DateTime    @updatedAt()
   isDeleted                Boolean     @default(false)
@@ -431,35 +431,35 @@ model Stargate {
 }
 
 model Ancestry {
-  ancestryId        Int       @id
-  name              String
-  shortDescription  String?   @db.Text
-  description       String    @db.Text
-  Icon              Icon?     @relation("AncestryIcon", fields: [iconId], references: [iconId])
-  iconId            Int?
-  AncestryBloodline Bloodline @relation("AncestryBloodline", fields: [bloodlineId], references: [bloodlineId])
-  bloodlineId       Int
+  ancestryId       Int       @id
+  name             String
+  shortDescription String?   @db.Text
+  description      String    @db.Text
+  icon             Icon?     @relation("AncestryIcon", fields: [iconId], references: [iconId])
+  iconId           Int?
+  bloodline        Bloodline @relation("AncestryBloodline", fields: [bloodlineId], references: [bloodlineId])
+  bloodlineId      Int
 
   @@index([iconId])
   @@index([bloodlineId])
 }
 
 model Bloodline {
-  bloodlineId          Int         @id
-  Ancestry             Ancestry[]  @relation("AncestryBloodline")
-  BloodlineCorporation Corporation @relation("BloodlineCorporation", fields: [corporationId], references: [corporationId])
-  corporationId        Int
-  name                 String
-  description          String      @db.Text
-  BloodlineShipType    Type        @relation("BloodlineShipType", fields: [shipTypeId], references: [typeId])
-  shipTypeId           Int
-  BloodlineRace        Race        @relation("BloodlineRace", fields: [raceId], references: [raceId])
-  charisma             Int
-  intelligence         Int
-  memory               Int
-  perception           Int
-  willpower            Int
-  raceId               Int
+  bloodlineId   Int         @id
+  ancestries    Ancestry[]  @relation("AncestryBloodline")
+  corporation   Corporation @relation("BloodlineCorporation", fields: [corporationId], references: [corporationId])
+  corporationId Int
+  name          String
+  description   String      @db.Text
+  shipType      Type        @relation("BloodlineShipType", fields: [shipTypeId], references: [typeId])
+  shipTypeId    Int
+  race          Race        @relation("BloodlineRace", fields: [raceId], references: [raceId])
+  raceId        Int
+  charisma      Int
+  intelligence  Int
+  memory        Int
+  perception    Int
+  willpower     Int
 
   @@index([corporationId])
   @@index([shipTypeId])
