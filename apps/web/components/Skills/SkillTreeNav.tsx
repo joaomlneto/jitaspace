@@ -11,6 +11,7 @@ import {
 } from "@mantine/core";
 
 import {
+  GetUniverseGroupsGroupId200,
   useGetCharactersCharacterIdSkills,
   type GetCharactersCharacterIdSkills200SkillsItem,
   type GetUniverseTypesTypeId200,
@@ -18,12 +19,8 @@ import {
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
 
-import {
-  usePrecomputedCategoryGroups,
-  usePrecomputedGroupTypes,
-} from "~/hooks";
+import { usePrecomputedGroupTypes } from "~/hooks";
 
-const SKILLS_CATEGORY_ID = 16;
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 
 type SkillTreeNavLinkProps = NavLinkProps & {
@@ -62,10 +59,13 @@ const SkillTreeNavLink = memo(
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((type) => type.type_id);
 
-    const characterSkillsIndex = skills?.data.skills.reduce((acc, skill) => {
-      acc[skill.skill_id] = skill;
-      return acc;
-    }, {} as Record<string, GetCharactersCharacterIdSkills200SkillsItem>);
+    const characterSkillsIndex = skills?.data.skills.reduce(
+      (acc, skill) => {
+        acc[skill.skill_id] = skill;
+        return acc;
+      },
+      {} as Record<string, GetCharactersCharacterIdSkills200SkillsItem>,
+    );
 
     const getSkillTrainingTimeMultiplier = (skill: GetUniverseTypesTypeId200) =>
       skill.dogma_attributes?.find(
@@ -155,20 +155,15 @@ const SkillTreeNavLink = memo(
 );
 SkillTreeNavLink.displayName = "SkillTreeNavLink";
 
-export const SkillTreeNav = memo(() => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const { data, isLoading, error } =
-    usePrecomputedCategoryGroups(SKILLS_CATEGORY_ID);
+type SkillTreeNavProps = {
+  groups: Record<number, GetUniverseGroupsGroupId200>;
+};
 
+export const SkillTreeNav = memo(({ groups }: SkillTreeNavProps) => {
   const hideUnpublished = true;
 
-  if (isLoading) return "Loading skill tree...";
-
-  if (!data || error)
-    return "Error loading skill tree: " + JSON.stringify(error);
-
   // get IDs of groups sorted by their respective names
-  const alphabeticallySortedGroupIds = Object.values(data.groups ?? [])
+  const alphabeticallySortedGroupIds = Object.values(groups ?? [])
     .filter((group) => !hideUnpublished || group.published)
     .sort((a, b) => {
       return a.name.localeCompare(b.name);
