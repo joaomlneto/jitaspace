@@ -1,7 +1,8 @@
-import {useEsiClientContext} from "@jitaspace/esi-hooks";
-import {InfoIcon} from "@jitaspace/eve-icons";
-import {Group, rem, Text, ThemeIcon, Tooltip} from "@mantine/core";
-import {memo, type PropsWithChildren} from "react";
+import { memo, type PropsWithChildren } from "react";
+import { Group, rem, Text, ThemeIcon, Tooltip } from "@mantine/core";
+
+import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { InfoIcon } from "@jitaspace/eve-icons";
 
 export const JitaSpotlightActionsWrapper = memo(
   ({ children }: PropsWithChildren) => {
@@ -16,7 +17,7 @@ export const JitaSpotlightActionsWrapper = memo(
       <div>
         {children}
         <Group
-          gap"xs"
+          gap="xs"
           position="apart"
           px={15}
           py="xs"
@@ -28,7 +29,7 @@ export const JitaSpotlightActionsWrapper = memo(
             }`,
           })}
         >
-          <Group gap"xs">
+          <Group gap="xs">
             {canUseEsiSearch && (
               <Text size="xs" color="dimmed">
                 ESI Search enabled.

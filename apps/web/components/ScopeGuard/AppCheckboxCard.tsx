@@ -1,5 +1,4 @@
-import {type ESIScope} from "@jitaspace/esi-client";
-import {InfoIcon} from "@jitaspace/eve-icons";
+import { useMemo } from "react";
 import {
   Checkbox,
   Code,
@@ -12,10 +11,12 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
-import {useMemo} from "react";
 
-import {type JitaApp} from "~/config/apps";
-import {AppScopeSetCheckboxCard} from "./AppScopeSetCheckboxCard";
+import { type ESIScope } from "@jitaspace/esi-client";
+import { InfoIcon } from "@jitaspace/eve-icons";
+
+import { type JitaApp } from "~/config/apps";
+import { AppScopeSetCheckboxCard } from "./AppScopeSetCheckboxCard";
 
 const useStyles = createStyles(
   (
@@ -142,7 +143,7 @@ export function AppCheckboxCard({
           </Text>
         </div>
 
-        <Group gap"xs" wrap="nowrap">
+        <Group gap="xs" wrap="nowrap">
           {!showScopeDetails && (
             <Tooltip
               color="dark"

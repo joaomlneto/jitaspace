@@ -1,6 +1,7 @@
-import {TypeAnchor, TypeAvatar, TypeName} from "@jitaspace/ui";
-import {Group, Text} from "@mantine/core";
-import {memo} from "react";
+import { memo } from "react";
+import { Group, Text } from "@mantine/core";
+
+import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
 
 export type ShipFittingCardModuleSectionEntryProps = {
   typeId: number;
@@ -22,7 +23,7 @@ export const ShipFittingCardModuleSectionEntry = memo(
           <TypeName span typeId={typeId} size="xs" lineClamp={1} />
         </TypeAnchor>
         {ammo && (
-          <Group wrap="nowrap" gap"xs" py={0} my={0}>
+          <Group wrap="nowrap" gap="xs" py={0} my={0}>
             <TypeAvatar typeId={ammo.typeId} variation="icon" size="xs" />
             <TypeName typeId={ammo.typeId} size="xs" color="dimmed" />
           </Group>

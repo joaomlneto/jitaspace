@@ -92,7 +92,7 @@ export function MessagePanel({
             <Group gap"md" mb="xs">
               <Text>To:</Text>
               {mail?.data.recipients?.map((recipient) => (
-                <Group wrap="nowrap" gap"xs" key={recipient.recipient_id}>
+                <Group wrap="nowrap" gap="xs" key={recipient.recipient_id}>
                   <EveEntityAvatar
                     entityId={recipient.recipient_id}
                     size="sm"
@@ -137,7 +137,7 @@ export function MessagePanel({
               .map(
                 (item) =>
                   item && (
-                    <Group key={item.label_id} wrap="nowrap" gap"xs">
+                    <Group key={item.label_id} wrap="nowrap" gap="xs">
                       <MailLabelColorSwatch labelId={item.label_id} size={12} />
                       <LabelName size="sm" labelId={item.label_id} />
                     </Group>

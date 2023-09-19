@@ -1,10 +1,10 @@
-import {Anchor, Group, Paper} from "@mantine/core";
-import {IconExternalLink} from "@tabler/icons-react";
+import React, { memo } from "react";
 import Link from "next/link";
-import React, {memo} from "react";
+import { Anchor, Group, Paper } from "@mantine/core";
+import { IconExternalLink } from "@tabler/icons-react";
 
-import {AllianceAvatar} from "../Avatar";
-import {AllianceName} from "../Text";
+import { AllianceAvatar } from "../Avatar";
+import { AllianceName } from "../Text";
 
 interface AllianceCardProps {
   allianceId: string | number;
@@ -42,7 +42,7 @@ export const AllianceCard = memo(({ allianceId }: AllianceCardProps) => {
         target="_blank"
         size="sm"
       >
-        <Group gap"xs">
+        <Group gap="xs">
           <IconExternalLink size={14} />
           <Anchor>Open in EVE Who</Anchor>
         </Group>

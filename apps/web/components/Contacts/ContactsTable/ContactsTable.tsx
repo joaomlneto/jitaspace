@@ -1,3 +1,6 @@
+import React from "react";
+import { Badge, Group, Table, Text } from "@mantine/core";
+
 import {
   type GetAlliancesAllianceIdContacts200Item,
   type GetAlliancesAllianceIdContactsLabels200Item,
@@ -6,9 +9,13 @@ import {
   type GetCorporationsCorporationIdContacts200Item,
   type GetCorporationsCorporationIdContactsLabels200Item,
 } from "@jitaspace/esi-client";
-import {EveEntityAnchor, EveEntityAvatar, EveEntityName, StandingIndicator, StandingsBadge,} from "@jitaspace/ui";
-import {Badge, Group, Table, Text} from "@mantine/core";
-import React from "react";
+import {
+  EveEntityAnchor,
+  EveEntityAvatar,
+  EveEntityName,
+  StandingIndicator,
+  StandingsBadge,
+} from "@jitaspace/ui";
 
 export type ContactsTableProps = {
   contacts?: (GetCharactersCharacterIdContacts200Item &
@@ -67,7 +74,7 @@ export const ContactsTable = ({
                   </Group>
                 </td>
                 <td>
-                  <Group gap"xs">
+                  <Group gap="xs">
                     {contact.label_ids?.map((labelId) => (
                       <Badge size="sm" key={labelId}>
                         {

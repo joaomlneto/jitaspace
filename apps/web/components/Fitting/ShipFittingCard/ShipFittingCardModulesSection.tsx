@@ -1,7 +1,14 @@
-import {Card, createStyles, Group, JsonInput, Stack, Text,} from "@mantine/core";
-import React, {memo} from "react";
+import React, { memo } from "react";
+import {
+  Card,
+  createStyles,
+  Group,
+  JsonInput,
+  Stack,
+  Text,
+} from "@mantine/core";
 
-import {ShipFittingCardModuleSectionEntry} from "./ShipFittingCardModuleSectionEntry";
+import { ShipFittingCardModuleSectionEntry } from "./ShipFittingCardModuleSectionEntry";
 
 const useStyles = createStyles((theme) => ({
   label: {
@@ -60,7 +67,7 @@ export const ShipFittingCardModulesSection = memo(
             />
           ))}
           {showEmptySlots && remainingSlots > 0 && (
-            <Group gap"xs" pl={26}>
+            <Group gap="xs" pl={26}>
               {remainingSlots > 0 && (
                 <Text size="xs" color="dimmed">
                   {remainingSlots} Empty Slots
@@ -69,7 +76,7 @@ export const ShipFittingCardModulesSection = memo(
             </Group>
           )}
           {showExcessModules && remainingSlots < 0 && (
-            <Group gap"xs" pl={26}>
+            <Group gap="xs" pl={26}>
               <Text size="xs" color="red">
                 Too many modules
               </Text>
