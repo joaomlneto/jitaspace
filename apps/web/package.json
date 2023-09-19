@@ -95,6 +95,9 @@
     "@types/react-html-parser": "^2.0.2",
     "dotenv-cli": "^7.3.0",
     "eslint": "^8.49.0",
+    "postcss": "^8.4.30",
+    "postcss-preset-mantine": "^1.7.0",
+    "postcss-simple-vars": "^7.0.1",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
   }
