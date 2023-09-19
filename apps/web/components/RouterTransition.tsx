@@ -1,3 +1,5 @@
+/* FIXME MANTINE V7 MIGRATION // THIS WHOLE FILE NEEDS FIXING... ITS TOO DIFFERENT FROM V6 */
+
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import {
@@ -25,7 +27,7 @@ function RouterTransition() {
     };
   }, [router, router.asPath]);
 
-  return <NavigationProgress progressLabel="Loading Page" autoReset={true} />;
+  return <NavigationProgress />;
 }
 
 export default RouterTransition;
