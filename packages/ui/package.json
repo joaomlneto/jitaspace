@@ -12,8 +12,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.1",
-    "@emotion/server": "^11.11.0",
     "@jitaspace/esi-client": "*",
     "@jitaspace/esi-hooks": "*",
     "@jitaspace/eve-icons": "*",
