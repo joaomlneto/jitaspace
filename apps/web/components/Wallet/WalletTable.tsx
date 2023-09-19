@@ -105,6 +105,29 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         ),
       },
       {
+        id: "otherParty",
+        header: "Other Party",
+        accessorFn: (row) => {
+          return (row.amount ?? 0) < 0
+            ? row.second_party_id
+            : row.first_party_id;
+        },
+        size: 40,
+        Cell: ({ cell }) => (
+          <Group>
+            <Group noWrap>
+              <EveEntityAvatar entityId={cell.getValue<number>()} size="sm" />
+              <EveEntityAnchor
+                entityId={cell.getValue<number>()}
+                target="_blank"
+              >
+                <EveEntityName entityId={cell.getValue<number>()} />
+              </EveEntityAnchor>
+            </Group>
+          </Group>
+        ),
+      },
+      {
         id: "amount",
         header: "Amount",
         accessorKey: "amount",
