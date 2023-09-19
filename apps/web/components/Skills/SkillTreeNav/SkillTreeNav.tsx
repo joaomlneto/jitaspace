@@ -12,8 +12,6 @@ type SkillTreeNavProps = {
       typeId: number;
       name: string;
       description: string;
-      iconId: number | null;
-      graphicId: number | null;
       published: boolean;
       attributes: {
         attributeId: number;

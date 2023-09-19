@@ -26,8 +26,6 @@ type SkillTreeNavLinkProps = NavLinkProps & {
       typeId: number;
       name: string;
       description: string;
-      iconId: number | null;
-      graphicId: number | null;
       published: boolean;
       attributes: {
         attributeId: number;
@@ -129,14 +127,14 @@ export const SkillTreeNavLink = memo(
         label={
           <Group position="apart">
             <Text>{group.name}</Text>
-            {error && <Text>Error: {error.message}</Text>}
-            {!error && loading && <Loader size="sm" />}
-            {!error && !loading && (
-              <Text>
-                {characterSPInGroup.toLocaleString()} /{" "}
-                {totalSPInGroup.toLocaleString()} SP
-              </Text>
-            )}
+            <Text>
+              {loading ? (
+                <Loader size="xs" />
+              ) : (
+                characterSPInGroup.toLocaleString()
+              )}{" "}
+              / {totalSPInGroup.toLocaleString()} SP
+            </Text>
           </Group>
         }
         {...otherProps}
