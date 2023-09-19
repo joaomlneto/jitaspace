@@ -97,12 +97,7 @@ export function LoginModal({
             checked={showAppScopeDetails}
             onChange={() => toggleAppScopeDetails()}
           />
-          <SimpleGrid
-            cols={2}
-            my="xl"
-            spacing={0}
-            breakpoints={[{ maxWidth: "sm", cols: 1 }]}
-          >
+          <SimpleGrid cols={{ base: 1, sm: 2 }} my="xl" spacing={0}>
             {[...Object.values(jitaApps)].map((feature) => (
               <AppCheckboxCard
                 app={feature}
