@@ -6,10 +6,10 @@ import Document, {
   NextScript,
   type DocumentContext,
 } from "next/document";
-import { createStylesServer, ServerStyles } from "@mantine/next";
+import { ColorSchemeScript } from "@mantine/core";
 
 // optional: you can provide your cache as a first argument in createStylesServer function
-const stylesServer = createStylesServer();
+//const stylesServer = createStylesServer();
 
 export default class _Document extends Document {
   static async getInitialProps(ctx: DocumentContext) {
@@ -21,11 +21,12 @@ export default class _Document extends Document {
       ...initialProps,
       styles: [
         initialProps.styles,
+        /*
         <ServerStyles
           html={initialProps.html}
-          server={stylesServer}
+          //server={stylesServer}
           key="styles"
-        />,
+        />,*/
       ],
     };
   }
@@ -57,6 +58,7 @@ export default class _Document extends Document {
           <meta name="application-name" content="Jita" />
           <meta name="msapplication-TileColor" content="#abc2d9" />
           <meta name="theme-color" content="#abc2d9" />
+          <ColorSchemeScript />
         </Head>
         <body>
           <Main />
