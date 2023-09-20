@@ -1,47 +1,18 @@
 import React, { memo } from "react";
 import {
-  createStyles,
   Grid,
   Group,
   Paper,
   rem,
   SimpleGrid,
   Text,
+  useMantineColorScheme,
+  useMantineTheme,
   type SimpleGridProps,
 } from "@mantine/core";
 import { IconArrowDownRight, IconArrowUpRight } from "@tabler/icons-react";
 
 import { type EveIconProps } from "@jitaspace/eve-icons";
-
-const useStyles = createStyles((theme) => ({
-  root: {
-    padding: `calc(${theme.spacing.md})`,
-  },
-
-  value: {
-    fontSize: rem(24),
-    fontWeight: 700,
-    lineHeight: 1,
-  },
-
-  diff: {
-    lineHeight: 1,
-    display: "flex",
-    alignItems: "center",
-  },
-
-  icon: {
-    color:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[3]
-        : theme.colors.gray[4],
-  },
-
-  title: {
-    fontWeight: 700,
-    textTransform: "uppercase",
-  },
-}));
 
 type StatsGridProps = SimpleGridProps & {
   data: {
@@ -54,7 +25,8 @@ type StatsGridProps = SimpleGridProps & {
 };
 
 export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
-  const { classes } = useStyles();
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
   const stats = data.map((stat) => {
     //const Icon = icons[stat.icon];
     const DiffIcon =
@@ -68,24 +40,51 @@ export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
       <Paper withBorder p="md" radius="md" key={stat.title}>
         <Grid>
           <Grid.Col span="auto">
-            <Text size="xs" color="dimmed" className={classes.title}>
+            <Text
+              size="xs"
+              c="dimmed"
+              style={{
+                fontWeight: 700,
+                textTransform: "uppercase",
+              }}
+            >
               {stat.title}
             </Text>
           </Grid.Col>
           {stat.icon && (
             <Grid.Col span="content">
-              <stat.icon width={32} className={classes.icon} />
+              <stat.icon
+                width={32}
+                style={{
+                  color:
+                    colorScheme === "dark"
+                      ? theme.colors.dark[3]
+                      : theme.colors.gray[4],
+                }}
+              />
             </Grid.Col>
           )}
         </Grid>
 
         <Group align="flex-end" gap="xs" mt={25}>
-          <Text className={classes.value}>{stat.value}</Text>
           <Text
-            color={stat.diff && stat.diff > 0 ? "teal" : "red"}
+            style={{
+              fontSize: rem(24),
+              fontWeight: 700,
+              lineHeight: 1,
+            }}
+          >
+            {stat.value}
+          </Text>
+          <Text
+            c={stat.diff && stat.diff > 0 ? "teal" : "red"}
             fz="sm"
             fw={500}
-            className={classes.diff}
+            style={{
+              lineHeight: 1,
+              display: "flex",
+              alignItems: "center",
+            }}
           >
             {stat.diff && <span>{stat.diff}%</span>}
             {DiffIcon && <DiffIcon size="1rem" stroke={1.5} />}
@@ -101,13 +100,13 @@ export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
     );
   });
   return (
-    <div className={classes.root}>
+    <div style={{ padding: `calc(${theme.spacing.md})` }}>
       <SimpleGrid
-        cols={4}
-        breakpoints={[
-          { maxWidth: "md", cols: 2 },
-          { maxWidth: "xs", cols: 1 },
-        ]}
+        cols={{
+          base: 1,
+          xs: 2,
+          md: 4,
+        }}
         {...otherProps}
       >
         {stats}
