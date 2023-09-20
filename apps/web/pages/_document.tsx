@@ -35,6 +35,7 @@ export default class _Document extends Document {
     return (
       <Html lang="en">
         <Head>
+          <ColorSchemeScript />
           <link
             rel="apple-touch-icon"
             sizes="152x152"
@@ -58,7 +59,6 @@ export default class _Document extends Document {
           <meta name="application-name" content="Jita" />
           <meta name="msapplication-TileColor" content="#abc2d9" />
           <meta name="theme-color" content="#abc2d9" />
-          <ColorSchemeScript />
         </Head>
         <body>
           <Main />
