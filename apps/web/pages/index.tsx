@@ -5,13 +5,14 @@ import {
   Badge,
   Card,
   Container,
-  createStyles,
   Group,
   rem,
   SimpleGrid,
   Text,
   Title,
   UnstyledButton,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 
 import { jitaApps, universeApps } from "~/config/apps";
@@ -40,69 +41,74 @@ const devApps: {
   },
 ];
 
-const useStyles = createStyles((theme) => ({
-  title: {
-    fontSize: rem(34),
-    fontWeight: 900,
-
-    [theme.fn.smallerThan("sm")]: {
-      fontSize: rem(24),
-    },
-  },
-
-  description: {
-    maxWidth: 600,
-    margin: "auto",
-
-    "&::after": {
-      content: '""',
-      display: "block",
-      backgroundColor: theme.fn.primaryColor(),
-      width: rem(45),
-      height: rem(2),
-      marginTop: theme.spacing.sm,
-      marginLeft: "auto",
-      marginRight: "auto",
-    },
-  },
-
-  card: {
-    height: "100%",
-    transition: "transform 0.2s",
-    border: `${rem(1)} solid ${
-      theme.colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[1]
-    }`,
-    "&:hover": {
-      transform: "scale(1.05)",
-    },
-  },
-
-  cardTitle: {
-    "&::after": {
-      content: '""',
-      display: "block",
-      backgroundColor: theme.fn.primaryColor(),
-      width: rem(45),
-      height: rem(2),
-      marginTop: theme.spacing.sm,
-    },
-  },
-}));
-
 export default function Page() {
-  const { classes, theme } = useStyles();
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+
+  const classes = {
+    title: {
+      fontSize: rem(34),
+      fontWeight: 900,
+
+      // FIXME MANTINE V7 MIGRATION
+      /*
+          [theme.fn.smallerThan("sm")]: {
+              fontSize: rem(24),
+          },*/
+    },
+
+    description: {
+      maxWidth: 600,
+      margin: "auto",
+
+      "&::after": {
+        content: '""',
+        display: "block",
+        backgroundColor: theme.primaryColor,
+        width: rem(45),
+        height: rem(2),
+        marginTop: theme.spacing.sm,
+        marginLeft: "auto",
+        marginRight: "auto",
+      },
+    },
+
+    card: {
+      height: "100%",
+      transition: "transform 0.2s",
+      border: `${rem(1)} solid ${
+        colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[1]
+      }`,
+      "&:hover": {
+        transform: "scale(1.05)",
+      },
+    },
+
+    cardTitle: {
+      // FIXME MANTINE V7 MIGRATION
+      /*
+      "&::after": {
+        content: '""',
+        display: "block",
+        backgroundColor: theme.primaryColor,
+        width: rem(45),
+        height: rem(2),
+        marginTop: theme.spacing.sm,
+      },*/
+    },
+  };
 
   return (
     <Container size="lg">
       <Title order={3}>Capsuleer Tools</Title>
       <SimpleGrid
-        cols={3}
+        cols={{
+          base: 1,
+          xs: 2,
+          sm: 3,
+        }}
         spacing="xl"
         my="xl"
-        breakpoints={[
-          { maxWidth: "sm", cols: 2 },
-          { maxWidth: "xs", cols: 1 },
-        ]}
       >
         {Object.values(jitaApps).map((feature) => (
           <UnstyledButton
@@ -111,16 +117,16 @@ export default function Page() {
             onClick={feature.onClick}
             key={feature.name}
           >
-            <Card shadow="md" radius="md" className={classes.card} padding="xl">
+            <Card shadow="md" radius="md" style={classes.card} padding="xl">
               <Container m={0} p={0} w={64} h={64}>
                 <feature.Icon
                   height={64}
                   width={64}
-                  color={theme.fn.primaryColor()}
+                  color={theme.primaryColor}
                 />
               </Container>
               <Group>
-                <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
+                <Text fz="lg" fw={500} style={classes.cardTitle} mt="md">
                   {feature.name}
                 </Text>
                 {feature.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}
@@ -134,13 +140,13 @@ export default function Page() {
       </SimpleGrid>
       <Title order={3}>Universe</Title>
       <SimpleGrid
-        cols={3}
+        cols={{
+          base: 1,
+          xs: 2,
+          sm: 3,
+        }}
         spacing="xl"
         my="xl"
-        breakpoints={[
-          { maxWidth: "sm", cols: 2 },
-          { maxWidth: "xs", cols: 1 },
-        ]}
       >
         {Object.values(universeApps).map((feature) => (
           <UnstyledButton
@@ -149,16 +155,16 @@ export default function Page() {
             onClick={feature.onClick}
             key={feature.name}
           >
-            <Card shadow="md" radius="md" className={classes.card} padding="xl">
+            <Card shadow="md" radius="md" style={classes.card} padding="xl">
               <Container m={0} p={0} w={64} h={64}>
                 <feature.Icon
                   height={64}
                   width={64}
-                  color={theme.fn.primaryColor()}
+                  color={theme.primaryColor}
                 />
               </Container>
               <Group>
-                <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
+                <Text fz="lg" fw={500} style={classes.cardTitle} mt="md">
                   {feature.name}
                 </Text>
                 {feature.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}
@@ -172,13 +178,12 @@ export default function Page() {
       </SimpleGrid>
       <Title order={3}>Development Tools</Title>
       <SimpleGrid
-        cols={2}
+        cols={{
+          base: 1,
+          xs: 2,
+        }}
         spacing="xl"
         my="xl"
-        breakpoints={[
-          { maxWidth: "sm", cols: 2 },
-          { maxWidth: "xs", cols: 1 },
-        ]}
       >
         {devApps.map((feature) => (
           <UnstyledButton
@@ -187,14 +192,10 @@ export default function Page() {
             onClick={feature.onClick}
             key={feature.name}
           >
-            <Card shadow="md" radius="md" className={classes.card} padding="xl">
-              <feature.icon
-                height={64}
-                width={64}
-                color={theme.fn.primaryColor()}
-              />
+            <Card shadow="md" radius="md" style={classes.card} padding="xl">
+              <feature.icon height={64} width={64} color={theme.primaryColor} />
               <Group>
-                <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
+                <Text fz="lg" fw={500} style={classes.cardTitle} mt="md">
                   {feature.name}
                 </Text>
                 {feature.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}

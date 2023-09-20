@@ -65,7 +65,8 @@ export default function Page() {
             }))}
             searchable
             allowDeselect
-            clearable
+            // FIXME MANTINE V7 MIGRATION
+            //clearable
             value={selectedShipType}
             onChange={setSelectedShipType}
           />

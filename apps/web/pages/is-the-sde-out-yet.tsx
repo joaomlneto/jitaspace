@@ -4,60 +4,58 @@ import {
   Button,
   Center,
   Container,
-  createStyles,
   rem,
   Stack,
   Text,
   Title,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import { format } from "date-fns";
 import useSwr from "swr";
 
 import { TimeAgoText } from "@jitaspace/ui";
 
-const useStyles = createStyles((theme) => ({
-  root: {
-    paddingTop: rem(80),
-    paddingBottom: rem(80),
-    position: "relative",
-  },
-
-  label: {
-    textAlign: "center",
-    fontWeight: 900,
-    fontSize: rem(220),
-    lineHeight: 1,
-    marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
-    color:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[4]
-        : theme.colors.gray[2],
-
-    [theme.fn.smallerThan("sm")]: {
-      fontSize: rem(120),
-    },
-  },
-
-  title: {
-    fontFamily: `Greycliff CF, ${theme.fontFamily}`,
-    textAlign: "center",
-    fontWeight: 900,
-    fontSize: rem(38),
-
-    [theme.fn.smallerThan("sm")]: {
-      fontSize: rem(32),
-    },
-  },
-
-  description: {
-    maxWidth: rem(500),
-    margin: "auto",
-    marginTop: theme.spacing.xl,
-    marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
-  },
-}));
 export default function Page() {
-  const { classes } = useStyles();
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+  const classes = {
+    label: {
+      textAlign: "center",
+      fontWeight: 900,
+      fontSize: rem(220),
+      lineHeight: 1,
+      marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
+      color:
+        colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[2],
+
+      // FIXME MANTINE V7 MIGRATION
+      /*
+      [theme.fn.smallerThan("sm")]: {
+        fontSize: rem(120),
+      },*/
+    },
+
+    title: {
+      fontFamily: `Greycliff CF, ${theme.fontFamily}`,
+      textAlign: "center",
+      fontWeight: 900,
+      fontSize: rem(38),
+
+      // FIXME MANTINE V7 MIGRATION
+      /*
+      [theme.fn.smallerThan("sm")]: {
+        fontSize: rem(32),
+      },*/
+    },
+
+    description: {
+      maxWidth: rem(500),
+      margin: "auto",
+      marginTop: theme.spacing.xl,
+      marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
+    },
+  };
 
   const uprisingImgSrc = "/wallpapers/uprising.jpg";
   const viridianImgSrc = "/wallpapers/viridian.jpg";
@@ -85,7 +83,6 @@ export default function Page() {
 
   return (
     <Container
-      className={classes.root}
       fluid
       size="xs"
       style={{
@@ -96,6 +93,9 @@ export default function Page() {
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
         backgroundPosition: "center",
+        paddingTop: rem(80),
+        paddingBottom: rem(80),
+        position: "relative",
       }}
       p={0}
       m={0}
@@ -114,7 +114,7 @@ export default function Page() {
         }}
       >
         <Stack align="center" p="xl" gap="xl" style={{}}>
-          <Title align="center">
+          <Title ta="center">
             {isLoading && "Checking..."}
             {!isLoading && sdeUpdated && "Yes!"}
             {!isLoading && !sdeUpdated && "Not yet!"}
@@ -129,14 +129,14 @@ export default function Page() {
             </Button>
           )}
           {lastModifiedDate && (
-            <Text align="center" size="lg">
+            <Text ta="center" size="lg">
               SDE last updated on
               <br />
               <b>{format(lastModifiedDate, "yyyy-MM-dd")}</b>
             </Text>
           )}
           {lastCheckedOn && (
-            <Text align="center" size="sm">
+            <Text ta="center" size="sm">
               Last checked
               <br />
               <TimeAgoText span date={lastCheckedOn} /> ago

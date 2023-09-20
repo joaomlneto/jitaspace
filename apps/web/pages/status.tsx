@@ -176,7 +176,7 @@ export default function Page() {
             {sortedEsiStatusTags.map((tag) => (
               <div key={tag}>
                 <Title order={6}>{tag}</Title>
-                <Table verticalSpacing={4} horizontalSpacing={4} fontSize="xs">
+                <Table verticalSpacing={4} horizontalSpacing={4} fz="xs">
                   <tbody>
                     {esiStatusByTag[tag]?.map((entry) => (
                       <tr key={`${entry.method} ${entry.route}`}>

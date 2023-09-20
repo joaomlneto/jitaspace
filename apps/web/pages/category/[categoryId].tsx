@@ -140,12 +140,12 @@ export default function Page({ name, groups }: PageProps) {
           <Stack gap="xs">
             <Title order={3}>Groups</Title>
             <SimpleGrid
-              cols={3}
+              cols={{
+                base: 1,
+                xs: 2,
+                md: 3,
+              }}
               spacing="xs"
-              breakpoints={[
-                { maxWidth: "md", cols: 2 },
-                { maxWidth: "xs", cols: 1 },
-              ]}
             >
               {sortedGroups.map((group) => (
                 <Group key={group.group_id}>

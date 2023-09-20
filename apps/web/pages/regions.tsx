@@ -89,12 +89,12 @@ export default function Page({ regions }: PageProps) {
           <React.Fragment key={galaxy.name}>
             <Title order={3}>{galaxy.name}</Title>
             <SimpleGrid
-              cols={4}
-              breakpoints={[
-                { maxWidth: "sm", cols: 3, spacing: "md" },
-                { maxWidth: "xs", cols: 2, spacing: "sm" },
-                { maxWidth: "25em", cols: 1, spacing: "sm" },
-              ]}
+              cols={{
+                base: 1,
+                "25em": 2,
+                xs: 3,
+                sm: 4,
+              }}
             >
               {galaxy.regions.map((entry) => (
                 <RegionAnchor regionId={entry.region_id} key={entry.region_id}>

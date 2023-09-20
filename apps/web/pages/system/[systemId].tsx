@@ -40,7 +40,7 @@ import {
 } from "@jitaspace/ui";
 
 import { StatsGrid } from "~/components/UI";
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
@@ -175,12 +175,12 @@ export default function Page() {
           <>
             <Title order={4}>Industry Cost Indices</Title>
             <StatsGrid
-              cols={3}
+              cols={{
+                base: 1,
+                xs: 2,
+                sm: 3,
+              }}
               spacing="xs"
-              breakpoints={[
-                { maxWidth: "sm", cols: 2 },
-                { maxWidth: "xs", cols: 1 },
-              ]}
               data={(
                 solarSystemCostIndicesData[systemId]?.cost_indices ?? []
               ).map((index) => ({
@@ -262,5 +262,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return <MainLayout>{page}</MainLayout>;
 };

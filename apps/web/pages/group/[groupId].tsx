@@ -169,9 +169,11 @@ export default function Page({ name, types }: PageProps) {
           <GroupBreadcrumbs groupId={Number(groupId)} />
           <Title order={3}>Types</Title>
           <SimpleGrid
-            cols={2}
+            cols={{
+              base: 1,
+              md: 2,
+            }}
             spacing="xs"
-            breakpoints={[{ maxWidth: "md", cols: 1 }]}
           >
             {sortedTypes.map((type) => (
               <Group wrap="nowrap" key={type.type_id}>
