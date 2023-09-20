@@ -1,31 +1,16 @@
 import React, { memo } from "react";
 import Link from "next/link";
 import {
-  createStyles,
   Group,
   Text,
   UnstyledButton,
+  useMantineColorScheme,
+  useMantineTheme,
   type UnstyledButtonProps,
 } from "@mantine/core";
 
 import { CorporationAvatar } from "../Avatar";
 import { CorporationName } from "../Text";
-
-const useStyles = createStyles((theme) => ({
-  user: {
-    display: "block",
-    width: "100%",
-    padding: theme.spacing.md,
-    color: theme.colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
-
-    "&:hover": {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[8]
-          : theme.colors.gray[0],
-    },
-  },
-}));
 
 export type CorporationButtonProps = UnstyledButtonProps & {
   corporationId?: string | number;
@@ -40,12 +25,28 @@ export const CorporationButton = memo(
     icon,
     ...otherProps
   }: CorporationButtonProps) => {
-    const { classes } = useStyles();
+    const theme = useMantineTheme();
+    const { colorScheme } = useMantineColorScheme();
+    const classes = {
+      user: {
+        display: "block",
+        width: "100%",
+        padding: theme.spacing.md,
+        color: colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
+
+        "&:hover": {
+          backgroundColor:
+            colorScheme === "dark"
+              ? theme.colors.dark[8]
+              : theme.colors.gray[0],
+        },
+      },
+    };
     return (
       <UnstyledButton
         component={Link}
         href={`/corporation/${corporationId}`}
-        className={classes.user}
+        style={classes.user}
         {...otherProps}
       >
         <Group wrap="nowrap">
@@ -56,11 +57,7 @@ export const CorporationButton = memo(
           />
 
           <div style={{ flex: 1 }}>
-            <CorporationName
-              corporationId={corporationId}
-              size="sm"
-              weight={500}
-            />
+            <CorporationName corporationId={corporationId} size="sm" fw={500} />
 
             <Text color="dimmed" size="xs">
               {description}

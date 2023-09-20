@@ -64,7 +64,8 @@ export const CalendarEventAttendanceSelect = memo(
         data={values}
         value={value}
         placeholder={"Not responded"}
-        clearable={false}
+        // FIXME MANTINE V7 MIGRATION
+        //clearable={false}
         onChange={(
           newValue: PutCharactersCharacterIdCalendarEventIdBodyResponse,
         ) => {

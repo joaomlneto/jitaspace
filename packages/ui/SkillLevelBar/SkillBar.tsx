@@ -1,27 +1,12 @@
-import {createStyles, Group, Stack, Text, Tooltip} from "@mantine/core";
-import {memo} from "react";
-
-const useStyles = createStyles((theme) => ({
-  trained: {
-    backgroundColor: theme.colorScheme === "dark" ? "#CCCCCC" : "#464646",
-  },
-
-  queued: {
-    backgroundColor: "#6CA5BC",
-  },
-
-  missing: {
-    backgroundColor: "#3E4846",
-  },
-
-  missingStrong: {
-    backGroundColor: "#EC655F",
-  },
-
-  notRequired: {
-    border: "1px solid #CCCCCC80",
-  },
-}));
+import { memo } from "react";
+import {
+  Group,
+  Stack,
+  Text,
+  Tooltip,
+  useMantineColorScheme,
+  useMantineTheme,
+} from "@mantine/core";
 
 export type SkillBarProps = {
   activeLevel?: number;
@@ -35,7 +20,29 @@ export const SkillBar = memo(
     requiredLevel = 5,
     requirementType = "missing",
   }: SkillBarProps) => {
-    const { classes } = useStyles();
+    const theme = useMantineTheme();
+    const { colorScheme } = useMantineColorScheme();
+    const classes = {
+      trained: {
+        backgroundColor: colorScheme === "dark" ? "#CCCCCC" : "#464646",
+      },
+
+      queued: {
+        backgroundColor: "#6CA5BC",
+      },
+
+      missing: {
+        backgroundColor: "#3E4846",
+      },
+
+      missingStrong: {
+        backGroundColor: "#EC655F",
+      },
+
+      notRequired: {
+        border: "1px solid #CCCCCC80",
+      },
+    };
 
     const isTrained = (level: number) => level <= activeLevel;
     const isRequired = (level: number) =>
@@ -48,12 +55,12 @@ export const SkillBar = memo(
           width: 8,
           height: 8,
           margin: "1px",
+          ...((level) => {
+            if (isTrained(level)) return classes.trained;
+            if (isRequired(level)) return classes[requirementType];
+            return classes.notRequired;
+          })(level),
         }}
-        className={((level) => {
-          if (isTrained(level)) return classes.trained;
-          if (isRequired(level)) return classes[requirementType];
-          return classes.notRequired;
-        })(level)}
       />
     );
 
@@ -74,9 +81,7 @@ export const SkillBar = memo(
           </Stack>
         }
       >
-        <Group gap{0}>
-          {[1, 2, 3, 4, 5].map((level) => getIcon(level))}
-        </Group>
+        <Group gap={0}>{[1, 2, 3, 4, 5].map((level) => getIcon(level))}</Group>
       </Tooltip>
     );
   },

@@ -5,9 +5,6 @@ import { useDebouncedValue } from "@mantine/hooks";
 import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client";
 import { useEsiSearch } from "@jitaspace/esi-hooks";
 
-import { EsiSearchMultiSelectItem } from "./EsiSearchMultiSelectItem";
-import { EsiSearchMultiSelectValue } from "./EsiSearchMultiSelectValue";
-
 export type EsiSearchMultiSelectProps = Omit<
   MultiSelectProps,
   "data" | "searchable" | "searchValue" | "onSearchChange"
@@ -62,24 +59,27 @@ export const EsiSearchMultiSelect = memo(
 
     return (
       <MultiSelect
-        filter={(value: string, selected: boolean) => !selected}
+        // FIXME MANTINE V7 MIGRATION
+        //filter={(value: string, selected: boolean) => !selected}
         data={data}
         value={otherProps.value ?? value}
         onChange={onChange}
         searchable
         searchValue={searchValue}
         onSearchChange={onSearchChange}
-        itemComponent={EsiSearchMultiSelectItem}
-        valueComponent={EsiSearchMultiSelectValue}
-        clearSearchOnChange={false}
+        // FIXME MANTINE V7 MIGRATION
+        //itemComponent={EsiSearchMultiSelectItem}
+        //valueComponent={EsiSearchMultiSelectValue}
+        //clearSearchOnChange={false}
         rightSection={isLoadingData && <Loader size="sm" />}
-        nothingFound={
+        // FIXME MANTINE V7 MIGRATION
+        /*nothingFound={
           searchValue.length < 3
             ? "Type at least 3 characters to search for results"
             : isLoadingData
             ? "Searching…"
             : "No results found"
-        }
+        }*/
         {...otherProps}
       />
     );

@@ -3,8 +3,6 @@ import { Select, type SelectProps } from "@mantine/core";
 
 import { useCharacterAssets, useEsiNamesCache } from "@jitaspace/esi-hooks";
 
-import { AssetLocationSelectItem } from "./AssetLocationSelectItem";
-
 export type AssetLocationSelectItemProps = Omit<SelectProps, "data">;
 
 export const AssetLocationSelect = memo(
@@ -18,6 +16,8 @@ export const AssetLocationSelect = memo(
     return (
       <>
         <Select
+          // FIXME MANTINE V7 MIGRATION
+          /*
           itemComponent={AssetLocationSelectItem}
           data={(Object.values(locations) ?? [])
             .filter((location) => location.location_type !== "item")
@@ -26,14 +26,15 @@ export const AssetLocationSelect = memo(
               label: `${getNameFromCache(location.location_id)} (${
                 location.location_type
               })`,
-            }))}
+            }))}*/
           value={otherProps.value ?? value}
           onChange={(value: string) => {
             otherProps.onChange?.(value);
             onChange(value);
           }}
           miw={300}
-          clearable
+          // FIXME MANTINE V7 MIGRATION
+          //clearable
           searchable
           {...otherProps}
         />

@@ -5,9 +5,6 @@ import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { humanLabelName } from "@jitaspace/utils";
 
-import { EveMailLabelMultiSelectItem } from "./EveMailLabelMultiSelectItem";
-import { EmailLabelMultiSelectValue } from "./EveMailLabelMultiSelectValue";
-
 type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data">;
 
 export const EveMailLabelMultiSelect = memo(
@@ -26,7 +23,8 @@ export const EveMailLabelMultiSelect = memo(
     return (
       <MultiSelect
         label="Labels"
-        clearable
+        // FIXME MANTINE V7 MIGRATION
+        //clearable
         data={
           labels?.data.labels?.map((label) => ({
             value: `${label.label_id}`,
@@ -34,8 +32,8 @@ export const EveMailLabelMultiSelect = memo(
             unreadCount: label.unread_count ?? 0,
           })) ?? []
         }
-        itemComponent={EveMailLabelMultiSelectItem}
-        valueComponent={EmailLabelMultiSelectValue}
+        //itemComponent={EveMailLabelMultiSelectItem}
+        //valueComponent={EmailLabelMultiSelectValue}
         //placeholder="Choose labels"
         {...props}
       />
