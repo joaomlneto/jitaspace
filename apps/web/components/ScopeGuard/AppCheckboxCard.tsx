@@ -126,7 +126,7 @@ export function AppCheckboxCard({
       >
         <app.Icon width={40} />
 
-        <div className={classes.body}>
+        <div style={classes.body}>
           <Text fw={500} size="sm" style={{ lineHeight: 1 }} mb={5}>
             {app.name}
           </Text>

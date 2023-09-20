@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
-import { showNotification } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 import { IconAppWindowFilled } from "@tabler/icons-react";
 
 import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
@@ -24,13 +24,13 @@ export const OpenInformationWindowActionIcon = memo(
           radius="xl"
           onClick={() => {
             if (!canSetDestination) {
-              showNotification({ message: "Insufficient permissions" });
+              notifications.show({ message: "Insufficient permissions" });
             } else {
               void postUiOpenwindowInformation({
                 target_id:
                   typeof entityId === "string" ? parseInt(entityId) : entityId,
               }).then(() => {
-                showNotification({
+                notifications.show({
                   message: "Information window opened in EVE client.",
                 });
               });

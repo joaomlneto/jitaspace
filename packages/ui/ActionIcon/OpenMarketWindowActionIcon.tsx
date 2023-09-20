@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
-import { showNotification } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 
 import { postUiOpenwindowMarketdetails } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
@@ -24,12 +24,12 @@ export const OpenMarketWindowActionIcon = memo(
           radius="xl"
           onClick={() => {
             if (!canSetDestination) {
-              showNotification({ message: "Insufficient permissions" });
+              notifications.show({ message: "Insufficient permissions" });
             } else {
               void postUiOpenwindowMarketdetails({
                 type_id: typeof typeId === "string" ? parseInt(typeId) : typeId,
               }).then(() => {
-                showNotification({
+                notifications.show({
                   message: "Market window opened in EVE client.",
                 });
               });

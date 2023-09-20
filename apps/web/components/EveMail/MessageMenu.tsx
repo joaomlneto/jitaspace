@@ -1,7 +1,7 @@
 import React from "react";
 import { ActionIcon, Group, Menu, Text } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
-import { showNotification } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
   IconMail,
@@ -74,14 +74,14 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
               onClick={() => {
                 void (async () => {
                   if (characterId === undefined) {
-                    return showNotification({
+                    return notifications.show({
                       title: "Error",
                       message: "Not authenticated.",
                       color: "red",
                     });
                   }
                   if (mail.mail_id === undefined) {
-                    return showNotification({
+                    return notifications.show({
                       title: "Error",
                       message: "Message ID is undefined.",
                     });
@@ -114,7 +114,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                   }
 
                   // Show a notification
-                  showNotification({
+                  notifications.show({
                     title: "Message Updated",
                     message: `Message updated successfully. It may take up to 30 seconds for the change to be visible.`,
                   });
@@ -145,7 +145,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
           onClick={() => {
             void (async () => {
               if (characterId === undefined) {
-                return showNotification({
+                return notifications.show({
                   title: "Error",
                   message: "Not authenticated.",
                   color: "red",
@@ -153,7 +153,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
               }
 
               if (mail.mail_id === undefined) {
-                return showNotification({
+                return notifications.show({
                   title: "Error",
                   message: "Message ID is undefined.",
                 });
@@ -169,7 +169,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                 data.find((item) => item.mail_id === mail.mail_id)!.is_read =
                   !mail.is_read;
               }
-              showNotification({
+              notifications.show({
                 title: "Message Updated",
                 message: `Message marked successfully as ${
                   mail.is_read ? "Read" : "Unread"
@@ -201,7 +201,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
               onConfirm: () =>
                 void (async () => {
                   if (characterId === undefined) {
-                    return showNotification({
+                    return notifications.show({
                       title: "Error",
                       message: "Not authenticated.",
                       color: "red",
@@ -209,7 +209,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                   }
 
                   if (mail.mail_id === undefined) {
-                    return showNotification({
+                    return notifications.show({
                       title: "Error",
                       message: "Message ID is undefined.",
                     });
@@ -223,7 +223,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                       (message) => message.mail_id === mail.mail_id,
                     )!.isDeleted = true;
                   }
-                  showNotification({
+                  notifications.show({
                     title: "Message Deleted",
                     message: `Message deleted successfully. It may take up to 30 seconds for the change to be visible.`,
                   });

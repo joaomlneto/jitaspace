@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Group, Table, Text } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
-import { showNotification } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 
 import {
   deleteCharactersCharacterIdMailLabelsLabelId,
@@ -62,13 +62,13 @@ export function LabelManagementTable() {
                       onConfirm: () =>
                         void (async () => {
                           if (!isTokenValid || !characterId) {
-                            return showNotification({
+                            return notifications.show({
                               title: "Error deleting label",
                               message: `Error deleting label ${label.name}: Not logged in`,
                             });
                           }
                           if (!label.label_id) {
-                            return showNotification({
+                            return notifications.show({
                               title: "Error deleting label",
                               message: `Error deleting label ${label.name}: No label id`,
                             });
@@ -77,7 +77,7 @@ export function LabelManagementTable() {
                             characterId,
                             label.label_id,
                           );
-                          showNotification({
+                          notifications.show({
                             title: "Label deleted",
                             message: `Label ${label.name} deleted. It make take up to 30 seconds to disappear from the list.`,
                           });

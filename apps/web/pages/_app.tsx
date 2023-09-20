@@ -11,6 +11,11 @@ import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
 import "@mantine/core/styles.css";
 
+import { ModalsProvider } from "@mantine/modals";
+import { Notifications } from "@mantine/notifications";
+
+import "@mantine/notifications/styles.css";
+
 import React, {
   useEffect,
   useMemo,
@@ -22,8 +27,6 @@ import { type NextPage } from "next";
 import { type AppProps } from "next/app";
 import Head from "next/head";
 import Script from "next/script";
-import { ModalsProvider } from "@mantine/modals";
-import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
@@ -139,6 +142,7 @@ export default function App({
 
   return (
     <MantineProvider defaultColorScheme="dark" theme={defaultTheme}>
+      <Notifications />
       <Head>
         <meta
           name="viewport"
@@ -225,7 +229,6 @@ export default function App({
               <JitaSpaceEsiClientContextProvider>
                 <EsiClientSSOAccessTokenInjector>
                   <EveIconsContextProvider /* iconVersion="rhea"*/>
-                    <Notifications />
                     <RouterTransition />
                     <JitaSpotlightProvider>
                       <ModalsProvider

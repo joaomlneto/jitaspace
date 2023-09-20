@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { openConfirmModal } from "@mantine/modals";
-import { showNotification } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 import { HttpStatusCode, type AxiosError } from "axios";
 
 import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
@@ -54,7 +54,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
     console.log("values:", values);
     try {
       if (!isTokenValid || !characterId) {
-        return showNotification({
+        return notifications.show({
           message: "Not logged in",
         });
       }
@@ -68,12 +68,12 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
         subject: values.subject,
       });
       if (result.status === HttpStatusCode.Created) {
-        showNotification({
+        notifications.show({
           message: "Message sent",
         });
         onSend?.();
       } else {
-        showNotification({
+        notifications.show({
           message: "Failed to send message",
         });
       }
@@ -118,7 +118,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
           onConfirm: () => {
             void (async () => {
               if (!isTokenValid || !characterId) {
-                return showNotification({
+                return notifications.show({
                   message: "Not logged in",
                 });
               }
@@ -132,7 +132,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
                 subject: values.subject,
               });
               if (result.status === HttpStatusCode.Created) {
-                showNotification({
+                notifications.show({
                   message: `Message sent. You were charged ${details.totalCost} ISK for CSPA.`,
                 });
                 onSend?.();
@@ -140,13 +140,13 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
             })();
           },
           onClose() {
-            showNotification({
+            notifications.show({
               message: "Message not sent",
             });
           },
         });
       } else {
-        showNotification({
+        notifications.show({
           message: "Error: " + errorMessage,
         });
       }

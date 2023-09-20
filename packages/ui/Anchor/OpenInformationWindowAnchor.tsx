@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { type LinkProps } from "next/link";
 import { Anchor, type AnchorProps } from "@mantine/core";
-import { showNotification } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 
 import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
@@ -22,14 +22,14 @@ export const OpenInformationWindowAnchor = memo(
         {...props}
         onClick={() => {
           if (!canOpenWindow) {
-            showNotification({ message: "Insufficient permissions" });
+            notifications.show({ message: "Insufficient permissions" });
             console.log({ canOpenWindow, scopes, isTokenValid });
           } else {
             void postUiOpenwindowInformation({
               target_id:
                 typeof entityId === "string" ? parseInt(entityId) : entityId,
             }).then(() => {
-              showNotification({
+              notifications.show({
                 message: "Information window opened in EVE client.",
               });
             });

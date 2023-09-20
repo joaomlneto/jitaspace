@@ -1,7 +1,7 @@
 import React from "react";
 import { Anchor, Group, Popover, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
-import { showNotification } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
@@ -71,7 +71,7 @@ export const DesktopMailboxTable = ({
                 <Anchor
                   onClick={() => {
                     if (!mail.mail_id) {
-                      showNotification({
+                      notifications.show({
                         title: "Error",
                         message: "Mail ID is not defined for this mail!?",
                       });

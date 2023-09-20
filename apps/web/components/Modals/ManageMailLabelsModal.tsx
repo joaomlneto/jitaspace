@@ -2,7 +2,7 @@ import React from "react";
 import { Button, Grid, Stack, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { type ContextModalProps } from "@mantine/modals";
-import { showNotification } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 import { type AxiosError } from "axios";
 
 import {
@@ -48,7 +48,7 @@ export function ManageMailLabelsModal({
             try {
               console.log(values);
               if (!isTokenValid || !characterId) {
-                return showNotification({
+                return notifications.show({
                   title: "Error creating label",
                   message: `Error creating label ${values.name}: Not logged in`,
                 });
@@ -62,19 +62,19 @@ export function ManageMailLabelsModal({
               );
 
               if (result.status >= 200 && result.status < 300) {
-                showNotification({
+                notifications.show({
                   title: "Label created",
                   message: `Label ${values.name} created. It make take up to 30 seconds to appear in the list.`,
                 });
                 context.closeModal(id);
               } else {
-                showNotification({
+                notifications.show({
                   title: "Error creating label",
                   message: `Error creating label ${values.name}: ${result.data}`,
                 });
               }
             } catch (e) {
-              showNotification({
+              notifications.show({
                 title: "Error creating label",
                 message: `Error creating label ${values.name}: ${
                   ((e as AxiosError).response?.data as { error?: unknown })
