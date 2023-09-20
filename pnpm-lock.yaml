@@ -19,7 +19,7 @@ importers:
         version: 0.21.0
       '@turbo/gen':
         specifier: ^1.10.14
-        version: 1.10.14(@types/node@18.17.17)(typescript@5.2.2)
+        version: 1.10.14(@types/node@18.17.18)(typescript@5.2.2)
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
@@ -135,8 +135,8 @@ importers:
         specifier: ^4.35.3
         version: 4.35.3(@tanstack/react-query@4.35.3)(react-dom@18.2.0)(react@18.2.0)
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: 18.2.22
         version: 18.2.22
@@ -318,8 +318,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       concurrently:
         specifier: ^8.2.1
         version: 8.2.1
@@ -358,8 +358,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -386,7 +386,7 @@ importers:
     dependencies:
       '@kubb/cli':
         specifier: ^1.8.5
-        version: 1.8.5(@types/node@18.17.17)(typescript@5.2.2)
+        version: 1.8.5(@types/node@18.17.18)(typescript@5.2.2)
       '@kubb/core':
         specifier: ^1.8.5
         version: 1.8.5
@@ -422,8 +422,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -459,8 +459,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -502,8 +502,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -548,8 +548,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -584,8 +584,8 @@ importers:
         specifier: '*'
         version: link:../utils
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -636,8 +636,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       eslint:
         specifier: ^8.49.0
         version: 8.49.0
@@ -673,8 +673,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -736,8 +736,8 @@ importers:
         specifier: ^2.1.10
         version: 2.1.10(@tiptap/pm@2.1.10)
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: 18.2.22
         version: 18.2.22
@@ -863,8 +863,8 @@ importers:
         specifier: ^2.1.10
         version: 2.1.10(@tiptap/pm@2.1.10)
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: 18.2.22
         version: 18.2.22
@@ -921,8 +921,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.17
-        version: 18.17.17
+        specifier: ^18.17.18
+        version: 18.17.18
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -2996,7 +2996,7 @@ packages:
       jsep: 1.3.8
     dev: true
 
-  /@kubb/cli@1.8.5(@types/node@18.17.17)(typescript@5.2.2):
+  /@kubb/cli@1.8.5(@types/node@18.17.18)(typescript@5.2.2):
     resolution: {integrity: sha512-869McKObfvzmyfasSJK2WvRWL4F/B1xO2G1r53WMvficYG2zy6/nEHEuIvXhfHYRTzX934GvhcPkAKyuq4oKWg==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     hasBin: true
@@ -3011,7 +3011,7 @@ packages:
       picocolors: 1.0.0
       pretty-error: 4.0.0
       string-argv: 0.3.2
-      ts-node: 10.9.1(@swc/core@1.3.82)(@types/node@18.17.17)(typescript@5.2.2)
+      ts-node: 10.9.1(@swc/core@1.3.82)(@types/node@18.17.18)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/helpers'
       - '@swc/wasm'
@@ -4257,7 +4257,7 @@ packages:
       '@stoplight/spectral-rulesets': 1.16.0
       '@stoplight/spectral-runtime': 1.1.2
       '@stoplight/types': 13.15.0
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
       pony-cause: 1.1.1
       rollup: 2.79.1
       tslib: 2.5.3
@@ -4277,7 +4277,7 @@ packages:
       '@stoplight/spectral-runtime': 1.1.2
       '@stoplight/types': 13.15.0
       '@stoplight/yaml': 4.2.3
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
       ajv: 8.12.0
       ast-types: 0.14.2
       astring: 1.8.6
@@ -4918,7 +4918,7 @@ packages:
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
     dev: false
 
-  /@turbo/gen@1.10.14(@types/node@18.17.17)(typescript@5.2.2):
+  /@turbo/gen@1.10.14(@types/node@18.17.18)(typescript@5.2.2):
     resolution: {integrity: sha512-g7ecPx0GCCTpnbH53blBGNk6pP4LhcWiTtR0kEprGkXpiHqjYDpOydz4JFoz9IC+Hj1Z28/+M7T/GfwJAjf0FQ==}
     hasBin: true
     dependencies:
@@ -4930,7 +4930,7 @@ packages:
       minimatch: 9.0.3
       node-plop: 0.26.3
       proxy-agent: 6.3.0
-      ts-node: 10.9.1(@swc/core@1.3.82)(@types/node@18.17.17)(typescript@5.2.2)
+      ts-node: 10.9.1(@swc/core@1.3.82)(@types/node@18.17.18)(typescript@5.2.2)
       update-check: 1.5.4
       validate-npm-package-name: 5.0.0
     transitivePeerDependencies:
@@ -4972,7 +4972,7 @@ packages:
   /@types/es-aggregate-error@1.0.2:
     resolution: {integrity: sha512-erqUpFXksaeR2kejKnhnjZjbFxUpGZx4Z7ydNL9ie8tEhXPiZTsLeUDJ6aR1F8j5wWUAtOAQWUqkc7givBJbBA==}
     dependencies:
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
     dev: true
 
   /@types/eslint-scope@3.7.4:
@@ -4999,14 +4999,14 @@ packages:
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
     dev: false
 
   /@types/htmlparser2@3.10.3:
     resolution: {integrity: sha512-XA74aD+acytofnZic9n83Rxy/IZ259299bYPx5SEyx7uymPi79lRyKDkhJlsuCaPHB7rEoTEhRN4Vm2G5WmHHg==}
     dependencies:
       '@types/domutils': 1.7.4
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
       domhandler: 2.4.2
     dev: true
 
@@ -5037,7 +5037,7 @@ packages:
   /@types/keyv@3.1.4:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
     dev: false
 
   /@types/lodash@4.14.198:
@@ -5056,8 +5056,8 @@ packages:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: false
 
-  /@types/node@18.17.17:
-    resolution: {integrity: sha512-cOxcXsQ2sxiwkykdJqvyFS+MLQPLvIdwh5l6gNg8qF6s+C7XSkEWOZjK+XhUZd+mYvHV/180g2cnCcIl4l06Pw==}
+  /@types/node@18.17.18:
+    resolution: {integrity: sha512-/4QOuy3ZpV7Ya1GTRz5CYSz3DgkKpyUptXuQ5PPce7uuyJAOR7r9FhkmxJfvcNUXyklbC63a+YvB3jxy7s9ngw==}
 
   /@types/normalize-package-data@2.4.1:
     resolution: {integrity: sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw==}
@@ -5101,13 +5101,13 @@ packages:
   /@types/resolve@1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
     dev: false
 
   /@types/responselike@1.0.0:
     resolution: {integrity: sha512-85Y2BjiufFzaMIlvJDvTTB8Fxl2xfLo4HgmHzVBz08w4wDePCTjYw66PdrolO0kzli3yam/YCgRufyo1DdQVTA==}
     dependencies:
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
     dev: false
 
   /@types/scheduler@0.16.3:
@@ -5128,7 +5128,7 @@ packages:
   /@types/through@0.0.30:
     resolution: {integrity: sha512-FvnCJljyxhPM3gkRgWmxmDZyAQSiBQQWLI0A0VFL0K7W1oRUrPJSqNO0NvTnLkBcotdlp3lKvaT0JrnyRDkzOg==}
     dependencies:
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
     dev: false
 
   /@types/tinycolor2@1.4.3:
@@ -9077,7 +9077,7 @@ packages:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
       merge-stream: 2.0.0
       supports-color: 7.2.0
     dev: false
@@ -9086,7 +9086,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: false
@@ -12641,7 +12641,7 @@ packages:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
     dev: true
 
-  /ts-node@10.9.1(@swc/core@1.3.82)(@types/node@18.17.17)(typescript@5.2.2):
+  /ts-node@10.9.1(@swc/core@1.3.82)(@types/node@18.17.18)(typescript@5.2.2):
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -12661,7 +12661,7 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 18.17.17
+      '@types/node': 18.17.18
       acorn: 8.10.0
       acorn-walk: 8.2.0
       arg: 4.1.3
