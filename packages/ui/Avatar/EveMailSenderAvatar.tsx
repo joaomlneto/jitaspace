@@ -70,6 +70,7 @@ export const EveMailSenderAvatar = memo(
           width={avatarSize}
           height={avatarSize}
           {...otherProps}
+          style={undefined} // FIXME MANTINE V7 MIGRATION
           variant={undefined}
         />
       );
