@@ -3,69 +3,69 @@ import Link from "next/link";
 import {
   Button,
   Container,
-  createStyles,
   Group,
   rem,
   Text,
   Title,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 
 import { MainLayout } from "~/layouts";
 
-const useStyles = createStyles((theme) => ({
-  root: {
-    paddingTop: rem(80),
-    paddingBottom: rem(80),
-  },
-
-  label: {
-    textAlign: "center",
-    fontWeight: 900,
-    fontSize: rem(220),
-    lineHeight: 1,
-    marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
-    color:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[4]
-        : theme.colors.gray[2],
-
-    [theme.fn.smallerThan("sm")]: {
-      fontSize: rem(120),
-    },
-  },
-
-  title: {
-    fontFamily: `Greycliff CF, ${theme.fontFamily}`,
-    textAlign: "center",
-    fontWeight: 900,
-    fontSize: rem(38),
-
-    [theme.fn.smallerThan("sm")]: {
-      fontSize: rem(32),
-    },
-  },
-
-  description: {
-    maxWidth: rem(500),
-    margin: "auto",
-    marginTop: theme.spacing.xl,
-    marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
-  },
-}));
-
 export default function Page() {
-  const { classes } = useStyles();
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+  const classes = {
+    root: {
+      paddingTop: rem(80),
+      paddingBottom: rem(80),
+    },
+
+    label: {
+      // FIXME MANTINE V7 MIGRATION
+      //textAlign: "center",
+      fontWeight: 900,
+      fontSize: rem(220),
+      lineHeight: 1,
+      marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
+      color:
+        colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[2],
+
+      // FIXME MANTINE V7 MIGRATION
+      /*
+      [theme.fn.smallerThan("sm")]: {
+        fontSize: rem(120),
+      },*/
+    },
+
+    title: {
+      fontFamily: `Greycliff CF, ${theme.fontFamily}`,
+      fontWeight: 900,
+      fontSize: rem(38),
+
+      // FIXME MANTINE V7 MIGRATION
+      /*
+      [theme.fn.smallerThan("sm")]: {
+        fontSize: rem(32),
+      },*/
+    },
+
+    description: {
+      maxWidth: rem(500),
+      margin: "auto",
+      marginTop: theme.spacing.xl,
+      marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
+    },
+  };
 
   return (
-    <Container className={classes.root}>
-      <div className={classes.label}>404</div>
-      <Title className={classes.title}>You have found a secret place.</Title>
-      <Text
-        color="dimmed"
-        size="lg"
-        align="center"
-        className={classes.description}
-      >
+    <Container style={classes.root}>
+      <div style={classes.label}>404</div>
+      <Title ta="center" style={classes.title}>
+        You have found a secret place.
+      </Title>
+      <Text c="dimmed" size="lg" ta="center" style={classes.description}>
         Unfortunately, this is only a 404 page. You may have mistyped the
         address, or the page has been moved to another URL.
       </Text>
