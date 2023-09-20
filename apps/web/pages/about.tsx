@@ -39,7 +39,7 @@ export default function Page() {
           other suggestions, feel free to contact me through the following
           channels:
         </Text>
-        <Table highlightOnHover fontSize="sm">
+        <Table highlightOnHover fz="sm">
           <tbody>
             <tr>
               <td>In-game</td>
