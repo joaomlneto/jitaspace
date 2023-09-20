@@ -3,6 +3,8 @@ import {
   Button,
   Popover,
   px,
+  rem,
+  rgba,
   useMantineColorScheme,
   useMantineTheme,
   useProps,
@@ -19,7 +21,6 @@ import {
   ControlBase,
   type RichTextEditorControlBaseProps,
 } from "~/components/EveMail/Editor/ControlBase";
-import classes from "./LinkControl.module.css";
 
 export interface RichTextEditorLinkControlProps
   extends Partial<RichTextEditorControlBaseProps> {
@@ -51,6 +52,46 @@ export const StationLinkControl = forwardRef<
     unstyled,
     variant,
   });*/
+
+  const classes = {
+    linkEditor: {
+      display: "flex",
+    },
+
+    linkEditorInput: {
+      borderTopRightRadius: 0,
+      borderBottomRightRadius: 0,
+      borderRight: 0,
+    },
+
+    linkEditorExternalControl: {
+      backgroundColor:
+        colorScheme === "dark" ? rgba(theme.colors.dark[7], 0.5) : theme.white,
+      border: `${rem(1)} solid ${
+        colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[4]
+      }`,
+      height: rem(24),
+      width: rem(24),
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: theme.radius,
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      "&[data-active]": {
+        backgroundColor: theme.colors.background,
+        borderColor: theme.colors.border,
+        color: theme.colors.color,
+        // FIXME MANTINE V7 MIGRATION
+        //...theme.fn.hover({ background: colors.hover }),
+      },
+    },
+
+    linkEditorSave: {
+      borderTopLeftRadius: 0,
+      borderBottomLeftRadius: 0,
+    },
+  };
 
   const [stationId, setStationId] = useInputState("");
   const [opened, { open, close }] = useDisclosure(false);
@@ -122,14 +163,14 @@ export const StationLinkControl = forwardRef<
             colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
         }}
       >
-        <div className={classes.linkEditor}>
+        <div style={classes.linkEditor}>
           <EsiSearchSelect
             categories={["station", "structure"]}
             placeholder="Search Station"
             type="url"
             value={stationId}
             onChange={setStationId}
-            classNames={{ input: classes.linkEditorInput }}
+            styles={{ input: classes.linkEditorInput }}
             onKeyDown={handleInputKeydown}
             unstyled={unstyled}
           />
@@ -137,7 +178,7 @@ export const StationLinkControl = forwardRef<
           <Button
             variant="default"
             onClick={setLink}
-            className={classes.linkEditorSave}
+            style={classes.linkEditorSave}
             unstyled={unstyled}
           >
             Save

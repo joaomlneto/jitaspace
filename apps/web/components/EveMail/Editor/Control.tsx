@@ -1,5 +1,11 @@
 import React, { forwardRef } from "react";
-import { UnstyledButton, useProps } from "@mantine/core";
+import {
+  rem,
+  UnstyledButton,
+  useMantineColorScheme,
+  useMantineTheme,
+  useProps,
+} from "@mantine/core";
 import {
   useRichTextEditorContext,
   type RichTextEditorControlProps,
@@ -23,15 +29,48 @@ export const Control = forwardRef<
   );
   const { unstyled } = useRichTextEditorContext();
 
-  /*
-  const { classes, cx } = useStyles(undefined, {
-    name: "RichTextEditor",
-    classNames,
-    // @ts-expect-error annoying type conversion issue
-    styles,
-    unstyled,
-    variant,
-  });*/
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+  const classes = {
+    control: {
+      backgroundColor:
+        colorScheme === "dark" ? theme.colors.dark[6] : theme.white,
+      minWidth: rem(26),
+      height: rem(26),
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      border: `${rem(1)} solid ${
+        colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[4]
+      }`,
+      borderRadius: theme.radius,
+      cursor: "default",
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      "&[data-interactive]": {
+        cursor: "pointer",
+        // FIXME MANTINE V7 MIGRATION
+        /*
+        ...theme.fn.hover({
+          backgroundColor:
+            theme.colorScheme === "dark"
+              ? theme.colors.dark[5]
+              : theme.colors.gray[0],
+        }),*/
+      },
+
+      "&[data-active]": {
+        backgroundColor: theme.colors.background,
+        color: theme.colors.color,
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        "&:hover": {
+          // FIXME MANTINE V7 MIGRATION
+          //...theme.fn.hover({ backgroundColor: colors.hover }),
+        },
+      },
+    },
+  };
 
   return (
     /* @ts-expect-error FIXME MANTINE V7 MIGRATION */
