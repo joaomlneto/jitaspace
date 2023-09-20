@@ -3,7 +3,8 @@ import {
   Box,
   CloseButton,
   rem,
-  type MultiSelectValueProps,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 
 import { EveEntityAvatar } from "../../Avatar";
@@ -12,34 +13,40 @@ import { EveEntityName } from "../../Text";
 export const EsiSearchMultiSelectValue = memo(
   ({
     value,
-    onRemove,
+    //onRemove,
     ...others
-  }: MultiSelectValueProps & { value: string; category: string }) => {
+  }: {
+    value: string;
+    category: string;
+  }) => {
+    const theme = useMantineTheme();
+    const { colorScheme } = useMantineColorScheme();
     return (
       <div {...others}>
         <Box
-          sx={(theme) => ({
+          style={{
             display: "flex",
             cursor: "default",
             alignItems: "center",
             backgroundColor:
-              theme.colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
+              colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
             border: `${rem(1)} solid ${
-              theme.colorScheme === "dark"
+              colorScheme === "dark"
                 ? theme.colors.dark[7]
                 : theme.colors.gray[4]
             }`,
             paddingLeft: theme.spacing.xs,
             borderRadius: theme.radius.sm,
-          })}
+          }}
         >
           <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
           <EveEntityName
             entityId={value}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
+            style={{ lineHeight: 1, fontSize: rem(12) }}
           />
+          {/* FIXME MANTINE V7 MIGRATION */}
           <CloseButton
-            onMouseDown={onRemove}
+            //onMouseDown={onRemove}
             variant="transparent"
             size={22}
             iconSize={14}

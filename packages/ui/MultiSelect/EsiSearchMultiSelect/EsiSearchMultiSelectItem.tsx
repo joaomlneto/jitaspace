@@ -1,20 +1,14 @@
 import React, { forwardRef } from "react";
-import {
-  Avatar,
-  Badge,
-  Group,
-  rem,
-  Text,
-  type SelectItemProps,
-} from "@mantine/core";
+import { Avatar, Badge, Group, rem, Text } from "@mantine/core";
 
 import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client";
 
 import { EveEntityAvatar } from "../../Avatar";
 import { EveEntityName } from "../../Text";
 
-export type EsiSearchMultiSelectItemProps = SelectItemProps & {
+export type EsiSearchMultiSelectItemProps = {
   category: GetCharactersCharacterIdSearchCategoriesItem;
+  value: number;
 };
 
 export const EsiSearchMultiSelectItem = forwardRef<
@@ -33,10 +27,10 @@ export const EsiSearchMultiSelectItem = forwardRef<
           <EveEntityName
             entityId={value}
             category={category}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
+            style={{ lineHeight: 1, fontSize: rem(12) }}
           />
         ) : (
-          <Text sx={{ lineHeight: 1, fontSize: rem(12) }}>Unknown</Text>
+          <Text style={{ lineHeight: 1, fontSize: rem(12) }}>Unknown</Text>
         )}
       </Group>
       <Badge size="xs" variant="subtle">
@@ -46,11 +40,3 @@ export const EsiSearchMultiSelectItem = forwardRef<
   );
 });
 EsiSearchMultiSelectItem.displayName = "EsiSearchMultiselectItem";
-
-/*
-              <EveEntityName
-                entityId={value}
-                category={category}
-                sx={{ lineHeight: 1, fontSize: rem(12) }}
-              />
-*/

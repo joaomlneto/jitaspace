@@ -1,12 +1,12 @@
 import React, { forwardRef } from "react";
-import { Badge, Group, type SelectItemProps } from "@mantine/core";
+import { Badge, Group } from "@mantine/core";
 
 import { MailLabelColorSwatch } from "../../ColorSwatch";
 import { LabelName } from "../../Text";
 
 export const EveMailLabelMultiSelectItem = forwardRef<
   HTMLDivElement,
-  SelectItemProps & { unreadCount: number }
+  { value: number; unreadCount: number }
 >(({ value, unreadCount, ...others }, ref) => {
   return (
     <Group ref={ref} {...others} justify="apart" wrap="nowrap">
