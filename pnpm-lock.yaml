@@ -574,9 +574,6 @@ importers:
 
   packages/eve-icons:
     devDependencies:
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../esi-client
       '@jitaspace/eslint-config':
         specifier: '*'
         version: link:../../tooling/eslint
@@ -586,9 +583,6 @@ importers:
       '@jitaspace/tsconfig':
         specifier: '*'
         version: link:../../tooling/tsconfig
-      '@jitaspace/utils':
-        specifier: '*'
-        version: link:../utils
       '@types/node':
         specifier: ^18.17.17
         version: 18.17.17
