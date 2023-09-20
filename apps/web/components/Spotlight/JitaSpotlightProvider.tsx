@@ -2,9 +2,9 @@ import { memo, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
-  SpotlightProvider,
-  type SpotlightAction,
-  type SpotlightProviderProps,
+  Spotlight,
+  SpotlightActionData,
+  SpotlightProps,
 } from "@mantine/spotlight";
 
 import {
@@ -12,14 +12,15 @@ import {
   type GetCharactersCharacterIdSearchCategoriesItem,
 } from "@jitaspace/esi-client";
 import { useEsiClientContext, useEsiSearch } from "@jitaspace/esi-hooks";
-import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
 
-import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
-import { JitaSpotlightActionsWrapper } from "~/components/Spotlight/JitaSpotlightActionsWrapper";
 import { jitaApps } from "~/config/apps";
 
+/**
+ * FIXME MANTINE V7 MIGRATION
+ * THIS FILE TO BE COMPLETELY RE-CHECKED AFTERWARDS!!! :(
+ */
 export const JitaSpotlightProvider = memo(
-  ({ children }: Omit<SpotlightProviderProps, "actions">) => {
+  ({ children }: Omit<SpotlightProps, "actions">) => {
     const router = useRouter();
     const [query, setQuery] = useState<string>("");
     const [debouncedQuery] = useDebouncedValue(query, 1000);
@@ -44,11 +45,12 @@ export const JitaSpotlightProvider = memo(
       ],
     });
 
-    const staticActions: SpotlightAction[] = useMemo(
+    const staticActions: SpotlightActionData[] = useMemo(
       () =>
         Object.values(jitaApps).map((app) => ({
+          id: `app/{app.name}`,
           title: app.name,
-          type: "app",
+          //type: "app",
           group: "Apps",
           onTrigger: () => {
             if (app.url !== undefined) {
@@ -56,19 +58,20 @@ export const JitaSpotlightProvider = memo(
             }
           },
           icon: <app.Icon width={38} />,
-        })) as SpotlightAction[],
+        })),
       [router],
     );
 
-    const esiActions: SpotlightAction[] = useMemo(
+    const esiActions: SpotlightActionData[] = useMemo(
       () =>
         Object.entries(esiSearchData?.data ?? []).flatMap(
           ([categoryString, entries]) => {
             const category =
               categoryString as keyof GetCharactersCharacterIdSearch200;
             return entries.slice(0, 10).map((entityId) => ({
+              id: `esi/${entityId}`,
               title: `Entity ${entityId} - ${debouncedQuery}`,
-              type: "eve-entity",
+              //type: "eve-entity",
               category,
               entityId: entityId,
               group: category.replace("_", " "),
@@ -113,25 +116,24 @@ export const JitaSpotlightProvider = memo(
       [debouncedQuery, esiSearchData?.data, router],
     );
 
-    const actions: SpotlightAction[] = useMemo(
-      (): SpotlightAction[] => [...staticActions, ...esiActions],
+    const actions: SpotlightActionData[] = useMemo(
+      (): SpotlightActionData[] => [...staticActions, ...esiActions],
       [esiActions, staticActions],
     );
     return useMemo(
       () => (
-        <SpotlightProvider
+        <Spotlight
           shortcut={["mod + P", "/"]}
           actions={actions}
           limit={100}
           query={query}
           onQueryChange={setQuery}
-          searchIcon={<PeopleAndPlacesIcon width={32} height={32} />}
-          actionsWrapperComponent={JitaSpotlightActionsWrapper}
-          // @ts-expect-error extra field not compatible with type signature
-          actionComponent={JitaSpotlightAction}
+          //searchIcon={<PeopleAndPlacesIcon width={32} height={32} />}
+          //actionsWrapperComponent={JitaSpotlightActionsWrapper}
+          //actionComponent={JitaSpotlightAction}
         >
           {children}
-        </SpotlightProvider>
+        </Spotlight>
       ),
       [actions, children, query],
     );

@@ -1,5 +1,13 @@
 import { memo, type PropsWithChildren } from "react";
-import { Group, rem, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import {
+  Group,
+  rem,
+  Text,
+  ThemeIcon,
+  Tooltip,
+  useMantineColorScheme,
+  useMantineTheme,
+} from "@mantine/core";
 
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { InfoIcon } from "@jitaspace/eve-icons";
@@ -13,6 +21,9 @@ export const JitaSpotlightActionsWrapper = memo(
       "esi-universe.read_structures.v1",
     );
 
+    const theme = useMantineTheme();
+    const { colorScheme } = useMantineColorScheme();
+
     return (
       <div>
         {children}
@@ -21,13 +32,13 @@ export const JitaSpotlightActionsWrapper = memo(
           justify="apart"
           px={15}
           py="xs"
-          sx={(theme) => ({
+          style={{
             borderTop: `${rem(1)} solid ${
-              theme.colorScheme === "dark"
+              colorScheme === "dark"
                 ? theme.colors.dark[4]
                 : theme.colors.gray[2]
             }`,
-          })}
+          }}
         >
           <Group gap="xs">
             {canUseEsiSearch && (
