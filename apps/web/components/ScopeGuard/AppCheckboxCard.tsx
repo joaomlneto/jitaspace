@@ -3,11 +3,14 @@ import {
   Checkbox,
   Code,
   Group,
+  rem,
   Stack,
   Text,
   ThemeIcon,
   Tooltip,
   UnstyledButton,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import cx from "clsx";
 
@@ -15,7 +18,6 @@ import { type ESIScope } from "@jitaspace/esi-client";
 import { InfoIcon } from "@jitaspace/eve-icons";
 
 import { type JitaApp } from "~/config/apps";
-import classes from "./AppCheckboxCard.module.css";
 import { AppScopeSetCheckboxCard } from "./AppScopeSetCheckboxCard";
 
 export type AppCheckboxCardProps = Omit<
@@ -63,6 +65,50 @@ export function AppCheckboxCard({
       allRequiredAppScopes.every((scope) => selectedScopes.includes(scope)),
     [allRequiredAppScopes, checked, selectedScopes],
   );
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+  const classes = {
+    wrapper: {
+      display: "flex",
+      alignItems: "center",
+      width: "100%",
+      transition: "background-color 150ms ease, border-color 150ms ease",
+      border: `${rem(1)} solid ${
+        checked || indeterminate
+          ? theme.primaryColor
+          : colorScheme === "dark"
+          ? theme.colors.dark[8]
+          : theme.colors.gray[3]
+      }`,
+      borderRadius: theme.radius.sm,
+      padding: theme.spacing.sm,
+      backgroundColor:
+        checked || indeterminate
+          ? theme.primaryColor
+          : colorScheme === "dark"
+          ? theme.colors.dark[8]
+          : theme.white,
+    },
+    button: {
+      display: "flex",
+      alignItems: "center",
+      width: "100%",
+      transition: "background-color 150ms ease, border-color 150ms ease",
+      border: `${rem(1)} solid ${
+        colorScheme === "dark" ? theme.colors.dark[8] : theme.colors.gray[3]
+      }`,
+      borderRadius: theme.radius.sm,
+      padding: theme.spacing.sm,
+      backgroundColor:
+        colorScheme === "dark" ? theme.colors.dark[8] : theme.white,
+    },
+
+    body: {
+      flex: 1,
+      marginLeft: theme.spacing.md,
+      marginRight: theme.spacing.md,
+    },
+  };
 
   return (
     <Stack gap="xs" className={cx(classes.button, className)}>

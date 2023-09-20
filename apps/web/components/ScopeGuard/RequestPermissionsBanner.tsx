@@ -7,6 +7,8 @@ import {
   Group,
   Text,
   Title,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
@@ -16,7 +18,6 @@ import { type ESIScope } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
-import classes from "./RequestPermissionsBanner.module.css";
 import { ScopesTable } from "./ScopesTable";
 
 export type RequestPermissionsBannerProps = {
@@ -26,6 +27,48 @@ export type RequestPermissionsBannerProps = {
 export function RequestPermissionsBanner({
   requiredScopes,
 }: RequestPermissionsBannerProps) {
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+  const classes = {
+    root: {
+      paddingTop: 80,
+      paddingBottom: 80,
+    },
+
+    label: {
+      textAlign: "center",
+      fontWeight: 900,
+      fontSize: 220,
+      lineHeight: 1,
+      marginBottom: theme.spacing.xl,
+      color:
+        colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[2],
+
+      // FIXME MANTINE V7 MIGRATION
+      /*
+      [theme.fn.smallerThan("sm")]: {
+        fontSize: 120,
+      },*/
+    },
+
+    title: {
+      fontFamily: `Greycliff CF, ${theme.fontFamily}`,
+
+      // FIXME MANTINE V7 MIGRATION
+      /*
+      [theme.fn.smallerThan("sm")]: {
+        fontSize: 32,
+      },*/
+    },
+
+    description: {
+      maxWidth: 600,
+      margin: "auto",
+      marginTop: theme.spacing.xl,
+      marginBottom: theme.spacing.xl,
+    },
+  };
+
   const { scopes: grantedScopes } = useEsiClientContext();
 
   const [openGrantedScopesTable, { toggle: toggleGrantedScopesTable }] =
@@ -36,9 +79,11 @@ export function RequestPermissionsBanner({
   );
 
   return (
-    <Container className={classes.root}>
-      <Title className={classes.title}>Insufficient Scopes</Title>
-      <Text c="dimmed" size="md" ta="center" className={classes.description}>
+    <Container style={classes.root}>
+      <Title fw={900} fz={38} ta="center" style={classes.title}>
+        Insufficient Scopes
+      </Title>
+      <Text c="dimmed" size="md" ta="center" style={classes.description}>
         We must request additional scopes to continue.
         <br />
         Click the login button to request them.
