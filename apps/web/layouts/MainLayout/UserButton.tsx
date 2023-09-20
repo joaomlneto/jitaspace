@@ -1,10 +1,11 @@
 import React from "react";
 import {
-  createStyles,
   Group,
   Menu,
   Text,
   UnstyledButton,
+  useMantineColorScheme,
+  useMantineTheme,
   type UnstyledButtonProps,
 } from "@mantine/core";
 import { signIn, signOut } from "next-auth/react";
@@ -17,39 +18,37 @@ import {
 } from "@jitaspace/eve-icons";
 import { CharacterAvatar } from "@jitaspace/ui";
 
-const useStyles = createStyles((theme) => ({
-  user: {
-    display: "block",
-    width: "100%",
-    padding: theme.spacing.md,
-    color: theme.colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
-
-    "&:hover": {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[6]
-          : theme.colors.gray[0],
-    },
-  },
-}));
-
 interface UserButtonProps extends UnstyledButtonProps {
   icon?: React.ReactNode;
 }
 
 export default function UserButton({ ...others }: UserButtonProps) {
-  const { classes } = useStyles();
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
+  const classes = {
+    user: {
+      display: "block",
+      width: "100%",
+      padding: theme.spacing.md,
+      color: colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
+
+      "&:hover": {
+        backgroundColor:
+          colorScheme === "dark" ? theme.colors.dark[6] : theme.colors.gray[0],
+      },
+    },
+  };
   const { characterId, characterName, scopes } = useEsiClientContext();
 
   return (
     <Menu withArrow position="bottom" transitionProps={{ transition: "pop" }}>
       <Menu.Target>
-        <UnstyledButton className={classes.user} {...others}>
+        <UnstyledButton style={classes.user} {...others}>
           <Group>
             <CharacterAvatar characterId={characterId} radius="xl" size="sm" />
 
             <div style={{ flex: 1 }}>
-              <Text size="sm" weight={500}>
+              <Text size="sm" fw={500}>
                 {characterName}
               </Text>
             </div>
@@ -57,11 +56,11 @@ export default function UserButton({ ...others }: UserButtonProps) {
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Item icon={<SettingsIcon width={20} />} disabled>
+        <Menu.Item leftSection={<SettingsIcon width={20} />} disabled>
           Settings
         </Menu.Item>
         <Menu.Item
-          icon={<RecruitmentIcon width={20} />}
+          leftSection={<RecruitmentIcon width={20} />}
           onClick={() => {
             void signIn("eveonline", {}, { scope: scopes.join(" ") });
           }}
@@ -69,7 +68,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
           Switch Character
         </Menu.Item>
         <Menu.Item
-          icon={<TerminateIcon width={20} />}
+          leftSection={<TerminateIcon width={20} />}
           onClick={() => {
             void signOut({ callbackUrl: "/", redirect: true });
           }}

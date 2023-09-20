@@ -4,11 +4,12 @@ import {
   ActionIcon,
   Anchor,
   Container,
-  createStyles,
   Group,
   rem,
   Text,
   Tooltip,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
@@ -17,42 +18,6 @@ import { env } from "~/env.mjs";
 const FOOTER_BREAKPOINT = "xs";
 const FOOTER_HEIGHT_DESKTOP = rem(51);
 const FOOTER_HEIGHT_MOBILE = rem(86);
-
-const useStyles = createStyles((theme) => ({
-  footer: {
-    height: FOOTER_HEIGHT_MOBILE,
-    position: "absolute",
-    width: "100%",
-    marginTop: theme.spacing.md,
-    borderTop: `${rem(1)} solid ${
-      theme.colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[2]
-    }`,
-    [theme.fn.largerThan(FOOTER_BREAKPOINT)]: {
-      height: FOOTER_HEIGHT_DESKTOP,
-    },
-    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
-      height: FOOTER_HEIGHT_MOBILE,
-    },
-  },
-
-  inner: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.md,
-
-    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
-      flexDirection: "column-reverse",
-    },
-  },
-
-  links: {
-    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
-      marginBottom: theme.spacing.md,
-    },
-  },
-}));
 
 const links: { link: LinkProps["href"]; label: string }[] = [
   {
@@ -66,7 +31,8 @@ const links: { link: LinkProps["href"]; label: string }[] = [
 ];
 
 export function FooterWithLinks() {
-  const { classes } = useStyles();
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
 
   const items = links.map((link) => (
     <Anchor
@@ -81,8 +47,43 @@ export function FooterWithLinks() {
   ));
 
   return (
-    <footer className={classes.footer}>
-      <Container size="xl" className={classes.inner}>
+    <footer
+      style={{
+        height: FOOTER_HEIGHT_MOBILE,
+        position: "absolute",
+        width: "100%",
+        marginTop: theme.spacing.md,
+        borderTop: `${rem(1)} solid ${
+          colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[2]
+        }`,
+        /**
+         * FIXME MANTINE V7 MIGRATION
+         */
+        /*
+        [theme.fn.largerThan(FOOTER_BREAKPOINT)]: {
+          height: FOOTER_HEIGHT_DESKTOP,
+        },
+        [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
+          height: FOOTER_HEIGHT_MOBILE,
+        },*/
+      }}
+    >
+      <Container
+        size="xl"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          paddingTop: theme.spacing.md,
+          paddingBottom: theme.spacing.md,
+
+          /* FIXME MANTINE V7 MIGRATION */
+          /*
+        [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
+          flexDirection: "column-reverse",
+        },*/
+        }}
+      >
         <Text color="dimmed" size="xs">
           All EVE-related materials are property of{" "}
           <Anchor
@@ -94,7 +95,17 @@ export function FooterWithLinks() {
           </Anchor>
           .
         </Text>
-        <Group className={classes.links}>
+        <Group
+          style={
+            {
+              // FIXME MANTINE V7 MIGRATION
+              /*
+          [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
+            marginBottom: theme.spacing.md,
+          },*/
+            }
+          }
+        >
           <Tooltip label="Join our Discord!" color="dark">
             <ActionIcon
               component="a"
