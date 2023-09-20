@@ -5,8 +5,6 @@ import { useDebouncedValue } from "@mantine/hooks";
 import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client";
 import { useEsiNamesCache, useEsiSearch } from "@jitaspace/esi-hooks";
 
-import { EsiSearchSelectItem } from "./EsiSearchSelectItem";
-
 export type EsiSearchSelectProps = Omit<
   SelectProps,
   "data" | "searchable" | "searchValue" | "onSearchChange"
@@ -56,22 +54,24 @@ export const EsiSearchSelect = memo(
 
     return (
       <Select
-        filter={() => true}
+        // FIXME MANTINE V7 MIGRATION
+        //filter={() => true}
         data={data}
         value={otherProps.value ?? value}
         onChange={onChange}
         searchable
         searchValue={searchValue}
         onSearchChange={onSearchChange}
-        itemComponent={EsiSearchSelectItem}
+        //itemComponent={EsiSearchSelectItem}
         rightSection={isLoadingData && <Loader size="sm" />}
+        /*
         nothingFound={
           (searchValue ?? "").length < 3
             ? "Type at least 3 characters to search for results"
             : isLoadingData
             ? "Searching…"
             : "No results found"
-        }
+        }*/
         {...otherProps}
       />
     );

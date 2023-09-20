@@ -1,20 +1,14 @@
 import React, { forwardRef } from "react";
-import {
-  Avatar,
-  Badge,
-  Group,
-  rem,
-  Text,
-  type SelectItemProps,
-} from "@mantine/core";
+import { Avatar, Badge, Group, rem, Text } from "@mantine/core";
 
 import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client";
 
 import { EveEntityAvatar } from "../../Avatar";
 import { EveEntityName } from "../../Text";
 
-export type EveEntitySelectItemProps = SelectItemProps & {
+export type EveEntitySelectItemProps = {
   category: GetCharactersCharacterIdSearchCategoriesItem;
+  value: number;
 };
 
 export const EveEntitySelectItem = forwardRef<
@@ -38,11 +32,11 @@ export const EveEntitySelectItem = forwardRef<
           <EveEntityName
             entityId={value}
             category={category}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
+            style={{ lineHeight: 1, fontSize: rem(12) }}
             lineClamp={1}
           />
         ) : (
-          <Text sx={{ lineHeight: 1, fontSize: rem(12) }}>Unknown</Text>
+          <Text style={{ lineHeight: 1, fontSize: rem(12) }}>Unknown</Text>
         )}
       </Group>
       <Badge size="xs" variant="subtle">

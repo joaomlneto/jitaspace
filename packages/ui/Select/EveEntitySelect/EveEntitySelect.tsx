@@ -3,8 +3,6 @@ import { Select, type SelectProps } from "@mantine/core";
 
 import { useEsiNamesCache } from "@jitaspace/esi-hooks";
 
-import { EveEntitySelectItem } from "./EveEntitySelectItem";
-
 export type EveEntitySelectProps = Omit<SelectProps, "data"> & {
   entityIds: {
     id: number | string;
@@ -28,7 +26,8 @@ export const EveEntitySelect = memo(
               "",
           }))
           .sort((a, b) => (a.label ?? "").localeCompare(b.label ?? ""))}
-        itemComponent={EveEntitySelectItem}
+        // FIXME MANTINE V7 MIGRATION
+        //itemComponent={EveEntitySelectItem}
         {...otherProps}
       />
     );

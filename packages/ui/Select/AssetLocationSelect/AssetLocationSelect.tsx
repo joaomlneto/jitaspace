@@ -3,7 +3,7 @@ import { Select, type SelectProps } from "@mantine/core";
 
 import { useCharacterAssets, useEsiNamesCache } from "@jitaspace/esi-hooks";
 
-export type AssetLocationSelectItemProps = Omit<SelectProps, "data">;
+export type AssetLocationSelectItemProps = Omit<SelectProps, "data" | "style">;
 
 export const AssetLocationSelect = memo(
   ({ ...otherProps }: AssetLocationSelectItemProps) => {
