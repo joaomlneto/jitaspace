@@ -67,12 +67,12 @@ export default function Page({ categories }: PageProps) {
       <Stack>
         <Title>Categories</Title>
         <SimpleGrid
-          cols={3}
+          cols={{
+            base: 1,
+            xs: 2,
+            sm: 3,
+          }}
           spacing="xs"
-          breakpoints={[
-            { maxWidth: "sm", cols: 2 },
-            { maxWidth: "xs", cols: 1 },
-          ]}
         >
           {sortedCategories.map((category) => (
             <Group key={category.category_id}>
