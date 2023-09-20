@@ -10,7 +10,7 @@
     line-height: 1;
     font-weight: 700;
     /*fontSize: theme.fontSizes.xs;*/
-    letter-spacing: -0.25px; // FIXME: px or rem?!
+    letter-spacing: -0.25px; /* FIXME: px or rem?! */
     text-transform: uppercase;
 }
 
