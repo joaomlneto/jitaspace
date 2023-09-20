@@ -1,7 +1,14 @@
 import React, { memo } from "react";
-import { Card, Group, JsonInput, Stack, Text } from "@mantine/core";
+import {
+  Card,
+  Group,
+  JsonInput,
+  Stack,
+  Text,
+  useMantineColorScheme,
+  useMantineTheme,
+} from "@mantine/core";
 
-import classes from "./ShipFittingCard.module.css";
 import { ShipFittingCardModuleSectionEntry } from "./ShipFittingCardModuleSectionEntry";
 
 type ShipFittingCardModulesSectionProps = {
@@ -24,15 +31,33 @@ export const ShipFittingCardModulesSection = memo(
     showEmptySlots,
     showExcessModules,
   }: ShipFittingCardModulesSectionProps) => {
+    const theme = useMantineTheme();
+    const { colorScheme } = useMantineColorScheme();
+    const classes = {
+      label: {
+        lineHeight: 1,
+        fontWeight: 700,
+        fontSize: theme.fontSizes.xs,
+        letterSpacing: -0.25,
+      },
+
+      section: {
+        padding: theme.spacing.xs,
+        borderTop: `1px solid ${
+          colorScheme === "dark" ? theme.colors.dark[4] : theme.colors.gray[3]
+        }`,
+      },
+    };
+
     const remainingSlots = numSlots
       ? numSlots -
         items.reduce((sum, module) => sum + (module.quantity ?? 1), 0)
       : 0;
 
     return (
-      <Card.Section m={0} p="xs" className={classes.section}>
+      <Card.Section m={0} p="xs" style={classes.section}>
         <Stack gap={0}>
-          <Text color="dimmed" className={classes.label} mb={4}>
+          <Text c="dimmed" style={classes.label} mb={4} tt="uppercase">
             {header}
           </Text>
           {items.map((module) => (
