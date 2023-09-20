@@ -1,3 +1,16 @@
+import { MantineProvider } from "@mantine/core";
+
+import { type ESIScope } from "@jitaspace/esi-client";
+import {
+  EsiClientContextProvider,
+  getEveSsoAccessTokenPayload,
+  JitaSpaceEsiClientContextProvider,
+  useEsiClientContext,
+} from "@jitaspace/esi-hooks";
+import { EveIconsContextProvider } from "@jitaspace/eve-icons";
+
+import "@mantine/core/styles.css";
+
 import React, {
   useEffect,
   useMemo,
@@ -9,7 +22,6 @@ import { type NextPage } from "next";
 import { type AppProps } from "next/app";
 import Head from "next/head";
 import Script from "next/script";
-import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -22,18 +34,10 @@ import { SessionProvider, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 import { Workbox } from "workbox-window";
 
-import { type ESIScope } from "@jitaspace/esi-client";
-import {
-  EsiClientContextProvider,
-  getEveSsoAccessTokenPayload,
-  JitaSpaceEsiClientContextProvider,
-  useEsiClientContext,
-} from "@jitaspace/esi-hooks";
-import { EveIconsContextProvider } from "@jitaspace/eve-icons";
-
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
+import { defaultTheme } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
 
 const queryClient = new QueryClient();
@@ -134,11 +138,11 @@ export default function App({
   }, []);
 
   return (
-    <>
+    <MantineProvider defaultColorScheme="dark" theme={defaultTheme}>
       <Head>
         <meta
           name="viewport"
-          content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
+          content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover" //user-scalable=no
         />
 
         {/* Progressive Web App (next-pwa) */}
@@ -211,37 +215,30 @@ export default function App({
       ></Script>
 
       <Analytics />
+      <DevTools />
 
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
-        <DevTools />
         <Provider>
           <SessionProvider session={session}>
             <EsiClientContextProvider accessToken={session?.accessToken}>
               <JitaSpaceEsiClientContextProvider>
                 <EsiClientSSOAccessTokenInjector>
                   <EveIconsContextProvider /* iconVersion="rhea"*/>
-                    <MantineProvider
-                      //withGlobalStyles
-                      //withNormalizeCSS
-                      //theme={{ colorScheme: "dark" }}
-                      defaultColorScheme="dark"
-                    >
-                      <Notifications />
-                      <RouterTransition />
-                      <JitaSpotlightProvider>
-                        <ModalsProvider
-                          modals={contextModals}
-                          modalProps={{ centered: true }}
-                        >
-                          {getLayout(
-                            <ScopeGuard requiredScopes={requiredScopes}>
-                              <Component {...pageProps} />
-                            </ScopeGuard>,
-                          )}
-                        </ModalsProvider>
-                      </JitaSpotlightProvider>
-                    </MantineProvider>
+                    <Notifications />
+                    <RouterTransition />
+                    <JitaSpotlightProvider>
+                      <ModalsProvider
+                        modals={contextModals}
+                        modalProps={{ centered: true }}
+                      >
+                        {getLayout(
+                          <ScopeGuard requiredScopes={requiredScopes}>
+                            <Component {...pageProps} />
+                          </ScopeGuard>,
+                        )}
+                      </ModalsProvider>
+                    </JitaSpotlightProvider>
                   </EveIconsContextProvider>
                 </EsiClientSSOAccessTokenInjector>
               </JitaSpaceEsiClientContextProvider>
@@ -249,6 +246,6 @@ export default function App({
           </SessionProvider>
         </Provider>
       </QueryClientProvider>
-    </>
+    </MantineProvider>
   );
 }
