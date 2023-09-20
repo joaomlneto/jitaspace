@@ -1,6 +1,12 @@
 import React, { memo } from "react";
 import Link from "next/link";
-import { Anchor, Group, Paper } from "@mantine/core";
+import {
+  Anchor,
+  Group,
+  Paper,
+  useMantineColorScheme,
+  useMantineTheme,
+} from "@mantine/core";
 
 import { CorporationAvatar } from "../Avatar";
 import { CorporationName } from "../Text";
@@ -11,15 +17,17 @@ interface CorporationCardProps {
 
 export const CorporationCard = memo(
   ({ corporationId }: CorporationCardProps) => {
+    const theme = useMantineTheme();
+    const { colorScheme } = useMantineColorScheme();
     return (
       <Paper
         radius="md"
         withBorder
         p="lg"
-        sx={(theme) => ({
+        style={{
           backgroundColor:
-            theme.colorScheme === "dark" ? theme.colors.dark[8] : theme.white,
-        })}
+            colorScheme === "dark" ? theme.colors.dark[8] : theme.white,
+        }}
       >
         <Group>
           <CorporationAvatar
@@ -33,7 +41,7 @@ export const CorporationCard = memo(
           corporationId={corporationId}
           ta="center"
           fz="lg"
-          weight={500}
+          fw={500}
           mt="md"
         />
         <Anchor
