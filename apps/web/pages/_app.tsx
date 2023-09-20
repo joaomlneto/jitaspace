@@ -222,9 +222,10 @@ export default function App({
                 <EsiClientSSOAccessTokenInjector>
                   <EveIconsContextProvider /* iconVersion="rhea"*/>
                     <MantineProvider
-                      withGlobalStyles
-                      withNormalizeCSS
-                      theme={{ colorScheme: "dark" }}
+                      //withGlobalStyles
+                      //withNormalizeCSS
+                      //theme={{ colorScheme: "dark" }}
+                      defaultColorScheme="dark"
                     >
                       <Notifications />
                       <RouterTransition />
