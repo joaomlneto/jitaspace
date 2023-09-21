@@ -17,6 +17,7 @@
     "@jitaspace/db": "*",
     "@jitaspace/esi-client": "*",
     "@jitaspace/sde-client": "*",
+    "axios": "^1.5.0",
     "inngest": "^2.6.1",
     "p-limit": "^4.0.0"
   },

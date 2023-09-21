@@ -619,6 +619,9 @@ importers:
       '@jitaspace/sde-client':
         specifier: '*'
         version: link:../sde-client
+      axios:
+        specifier: ^1.5.0
+        version: 1.5.0
       inngest:
         specifier: ^2.6.1
         version: 2.6.1(typescript@5.2.2)

@@ -1,3 +1,4 @@
+import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma, Type } from "@jitaspace/db";
@@ -47,6 +48,8 @@ export const scrapeEsiTypes = inngest.createFunction(
   { name: "Scrape Types" },
   { event: "scrape/esi/types" },
   async ({ step, event, logger }) => {
+    // FIXME: THIS SHOULD NOT BE NECESSARY
+    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 100;
 
     // Get all Type IDs in ESI
