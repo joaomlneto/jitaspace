@@ -79,6 +79,7 @@ model Type {
   attributes     TypeAttribute[]
   effects        TypeEffect[]
   bloodlines     Bloodline[]     @relation("BloodlineShipType")
+  Planet         Planet[]        @relation("PlanetType")
 
   @@index([marketGroupId])
   @@index([graphicId])
@@ -385,7 +386,7 @@ model Constellation {
   @@index([regionId])
 }
 
-// TODO add planets, position,
+// TODO add position,
 model SolarSystem {
   solarSystemId       Int           @id
   name                String
@@ -403,6 +404,7 @@ model SolarSystem {
   updatedAt           DateTime      @updatedAt()
   isDeleted           Boolean       @default(false)
   solarSystemFactions Faction[]     @relation("FactionSolarSystem")
+  Planet              Planet[]      @relation("PlanetSolarSystem")
 
   @@index([constellationId])
 }
@@ -416,6 +418,7 @@ model Star {
   isDeleted     Boolean     @default(false)
 }
 
+// TODO: Add missing "position" field
 model Stargate {
   stargateId               Int         @id
   name                     String
@@ -428,6 +431,21 @@ model Stargate {
 
   @@index([solarSystemId])
   @@index([destinationSolarSystemId])
+}
+
+// TODO: Add missing "position" field
+model Planet {
+  planetId      Int         @id
+  name          String
+  solarSystem   SolarSystem @relation("PlanetSolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  solarSystemId Int
+  type          Type        @relation("PlanetType", fields: [typeId], references: [typeId])
+  typeId        Int
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
+
+  @@index([solarSystemId])
+  @@index([typeId])
 }
 
 model Ancestry {
