@@ -1,11 +1,14 @@
-import { Category, prisma } from "@jitaspace/db";
+import axios from "axios";
+import pLimit from "p-limit";
+
+import { prisma } from "@jitaspace/db";
 import {
   getUniverseCategories,
   getUniverseCategoriesCategoryId,
-  GetUniverseCategoriesCategoryId200,
 } from "@jitaspace/esi-client";
 
 import { inngest } from "../../../client";
+import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export type ScrapeCategoriesEventPayload = {
   data: {};
@@ -14,101 +17,86 @@ export type ScrapeCategoriesEventPayload = {
 export const scrapeEsiCategories = inngest.createFunction(
   { name: "Scrape Categories" },
   { event: "scrape/esi/categories" },
-  async ({ logger }) => {
+  async ({}) => {
+    const stepStartTime = performance.now();
+    // FIXME: THIS SHOULD NOT BE NECESSARY
+    axios.defaults.baseURL = "https://esi.evetech.net/latest";
+
     // Get all Category IDs in ESI
-    const { data: categoryIds } = await getUniverseCategories();
-    logger.info(`going to fetch ${categoryIds.length} entries`);
+    const categoryIds = await getUniverseCategories().then((res) => res.data);
+    categoryIds.sort((a, b) => a - b);
 
-    // Get all Category details from ESI
-    const fetchESIDetailsStartTime = performance.now();
-    const categoriesResponses = await Promise.all(
-      categoryIds.map(async (categoryId) =>
-        getUniverseCategoriesCategoryId(categoryId),
-      ),
-    );
-    logger.info(
-      `fetched entries in ${performance.now() - fetchESIDetailsStartTime}`,
-    );
+    const limit = pLimit(20);
 
-    // extract bodies
-    const categories = categoriesResponses.map((res) => res.data);
-
-    // determine which records to be created/updated/removed
-    const existingIdsInDb = await prisma.category
-      .findMany({
-        select: {
-          categoryId: true,
-        },
-      })
-      .then((categories) => categories.map((category) => category.categoryId));
-
-    const recordsToCreate = categories.filter(
-      (category) => !existingIdsInDb.includes(category.category_id),
-    );
-    const recordsToUpdate = categories.filter((category) =>
-      existingIdsInDb.includes(category.category_id),
-    );
-    const recordsToDelete = existingIdsInDb.filter(
-      (categoryId) => !categoryIds.includes(categoryId),
-    );
-
-    logger.info("records to create:", recordsToCreate.length);
-    logger.info("records to update:", recordsToUpdate.length);
-    logger.info("records to delete:", recordsToDelete.length);
-
-    const fromEsiToSchema = (
-      category: GetUniverseCategoriesCategoryId200,
-    ): Omit<Category, "updatedAt"> => ({
-      categoryId: category.category_id,
-      name: category.name,
-      published: category.published,
-      isDeleted: false,
-    });
-
-    // create missing entries
-    const createRecordsStartTime = performance.now();
-    const createResult = await prisma.category.createMany({
-      data: recordsToCreate.map(fromEsiToSchema),
-      skipDuplicates: true,
-    });
-    logger.info(
-      `created records in ${performance.now() - createRecordsStartTime}ms`,
-    );
-
-    // update all entries with new data
-    const updateRecordsStartTime = performance.now();
-    const updateResult = await Promise.all(
-      recordsToUpdate.map((category) =>
-        prisma.category.update({
-          data: fromEsiToSchema(category),
-          where: { categoryId: category.category_id },
+    const categoryChanges = await updateTable({
+      fetchLocalEntries: async () =>
+        prisma.category
+          .findMany({
+            where: {
+              categoryId: {
+                in: categoryIds,
+              },
+            },
+          })
+          .then((entries) =>
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+          ),
+      fetchRemoteEntries: async () =>
+        Promise.all(
+          categoryIds.map((categoryId) =>
+            limit(async () =>
+              getUniverseCategoriesCategoryId(categoryId)
+                .then((res) => res.data)
+                .then((category) => ({
+                  categoryId: category.category_id,
+                  name: category.name,
+                  published: category.published,
+                  isDeleted: false,
+                })),
+            ),
+          ),
+        ),
+      batchCreate: (entries) =>
+        limit(() =>
+          prisma.category.createMany({
+            data: entries,
+          }),
+        ),
+      batchDelete: (entries) =>
+        prisma.category.updateMany({
+          data: {
+            isDeleted: true,
+          },
+          where: {
+            categoryId: {
+              in: entries.map((entry) => entry.categoryId),
+            },
+          },
         }),
-      ),
-    );
-    logger.info(
-      `updated records in ${performance.now() - updateRecordsStartTime}ms`,
-    );
-
-    // mark records as deleted if missing from ESI
-    const deleteRecordsStartTime = performance.now();
-    const deleteResult = await prisma.category.updateMany({
-      data: {
-        isDeleted: true,
-      },
-      where: {
-        categoryId: {
-          in: recordsToDelete,
-        },
-      },
+      batchUpdate: (entries) =>
+        Promise.all(
+          entries.map((entry) =>
+            limit(async () =>
+              prisma.category.update({
+                data: entry,
+                where: { categoryId: entry.categoryId },
+              }),
+            ),
+          ),
+        ),
+      idAccessor: (e) => e.categoryId,
     });
-    logger.info(
-      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
-    );
 
     return {
-      numCreated: createResult.count,
-      numUpdated: updateResult.length,
-      numDeleted: deleteResult.count,
+      stats: {
+        constellations: {
+          created: categoryChanges.created,
+          deleted: categoryChanges.deleted,
+          modified: categoryChanges.modified,
+          equal: categoryChanges.equal,
+        },
+      },
+      elapsed: performance.now() - stepStartTime,
     };
   },
 );
