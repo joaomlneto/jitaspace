@@ -1,131 +1,163 @@
+import axios from "axios";
 import pLimit from "p-limit";
 
-import { Group, prisma } from "@jitaspace/db";
+import { prisma } from "@jitaspace/db";
 import {
   getUniverseGroups,
   getUniverseGroupsGroupId,
-  GetUniverseGroupsGroupId200,
 } from "@jitaspace/esi-client";
 
 import { inngest } from "../../../client";
+import { BatchStepResult, CrudStatistics } from "../../../types";
+import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export type ScrapeGroupsEventPayload = {
-  data: {};
+  data: {
+    batchSize?: number;
+  };
 };
+type StatsKey = "groups";
 
 export const scrapeEsiGroups = inngest.createFunction(
   { name: "Scrape Groups" },
   { event: "scrape/esi/groups" },
-  async ({ logger }) => {
+  async ({ step, event, logger }) => {
+    // FIXME: THIS SHOULD NOT BE NECESSARY
+    axios.defaults.baseURL = "https://esi.evetech.net/latest";
+    const batchSize = event.data.batchSize ?? 500;
+
     // Get all Group IDs in ESI
-    const firstPage = await getUniverseGroups();
-    let groupIds = firstPage.data;
-    const numPages = firstPage.headers["x-pages"];
-    for (let page = 2; page <= numPages; page++) {
-      const result = await getUniverseGroups({ page });
-      groupIds.push(...result.data);
-    }
-    logger.info(`going to fetch ${groupIds.length} groupIds`);
+    const batches = await step.run("Fetch Group IDs", async () => {
+      const firstPage = await getUniverseGroups();
+      const numPages = Number(firstPage.headers["x-pages"]);
+      let groupIds = firstPage.data;
+      for (let page = 2; page <= numPages; page++) {
+        groupIds.push(
+          ...(await getUniverseGroups({ page }).then((res) => res.data)),
+        );
+      }
+      groupIds.sort((a, b) => a - b);
 
-    // Get all Group details from ESI
-    const fetchESIDetailsStartTime = performance.now();
+      const numBatches = Math.ceil(groupIds.length / batchSize);
+      const batchIds = (batchIndex: number) =>
+        groupIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
+      return [...Array(numBatches).keys()].map((batchId) => batchIds(batchId));
+    });
+
+    let results: BatchStepResult<StatsKey>[] = [];
     const limit = pLimit(20);
-    const groupsDetailsPromises = groupIds.map((groupId) =>
-      limit(async () => getUniverseGroupsGroupId(groupId)),
-    );
-    const groupsResponses = await Promise.all(groupsDetailsPromises);
-    logger.info(
-      `fetched ESI entries in ${performance.now() - fetchESIDetailsStartTime}`,
-    );
 
-    // extract bodies
-    const groups = groupsResponses.map((res) => res.data);
+    // update records in batches
+    for (let i = 0; i < batches.length; i++) {
+      const result = await step.run(
+        `Batch ${i + 1}/${batches.length}`,
+        async (): Promise<BatchStepResult<StatsKey>> => {
+          const stepStartTime = performance.now();
+          const thisBatchIds = batches[i]!;
 
-    // determine which records to be created/updated/removed
-    const existingIdsInDb = await prisma.group
-      .findMany({
-        select: {
-          groupId: true,
+          const groupChanges = await updateTable({
+            fetchLocalEntries: async () =>
+              prisma.group
+                .findMany({
+                  where: {
+                    groupId: {
+                      in: thisBatchIds,
+                    },
+                  },
+                })
+                .then((entries) =>
+                  entries.map((entry) =>
+                    excludeObjectKeys(entry, ["updatedAt"]),
+                  ),
+                ),
+            fetchRemoteEntries: async () =>
+              Promise.all(
+                thisBatchIds.map((groupId) =>
+                  limit(async () =>
+                    getUniverseGroupsGroupId(groupId)
+                      .then((res) => res.data)
+                      .then((group) => ({
+                        groupId: group.group_id,
+                        name: group.name,
+                        categoryId: group.category_id,
+                        published: group.published,
+                        isDeleted: false,
+                      })),
+                  ),
+                ),
+              ),
+            batchCreate: (entries) =>
+              limit(() =>
+                prisma.group.createMany({
+                  data: entries,
+                }),
+              ),
+            batchDelete: (entries) =>
+              prisma.group.updateMany({
+                data: {
+                  isDeleted: true,
+                },
+                where: {
+                  groupId: {
+                    in: entries.map((group) => group.groupId),
+                  },
+                },
+              }),
+            batchUpdate: (entries) =>
+              Promise.all(
+                entries.map((entry) =>
+                  limit(async () =>
+                    prisma.group.update({
+                      data: entry,
+                      where: { groupId: entry.groupId },
+                    }),
+                  ),
+                ),
+              ),
+            idAccessor: (e) => e.groupId,
+          });
+
+          return {
+            stats: {
+              groups: {
+                created: groupChanges.created,
+                deleted: groupChanges.deleted,
+                modified: groupChanges.modified,
+                equal: groupChanges.equal,
+              },
+            },
+            elapsed: performance.now() - stepStartTime,
+          };
         },
-      })
-      .then((groups) => groups.map((group) => group.groupId));
+      );
+      results.push(result);
+    }
 
-    const recordsToCreate = groups.filter(
-      (group) => !existingIdsInDb.includes(group.group_id),
-    );
-    const recordsToUpdate = groups.filter((group) =>
-      existingIdsInDb.includes(group.group_id),
-    );
-    const recordsToDelete = existingIdsInDb.filter(
-      (groupId) => !groupIds.includes(groupId),
-    );
-
-    logger.info("records to create:", recordsToCreate.length);
-    logger.info("records to update:", recordsToUpdate.length);
-    logger.info("records to delete:", recordsToDelete.length);
-
-    const fromEsiToSchema = (
-      group: GetUniverseGroupsGroupId200,
-    ): Omit<Group, "updatedAt"> => ({
-      groupId: group.group_id,
-      name: group.name,
-      categoryId: group.category_id,
-      published: group.published,
-      isDeleted: false,
-    });
-
-    // create missing rows
-    const createRecordsStartTime = performance.now();
-    const createResult = await prisma.group.createMany({
-      data: recordsToCreate.map(fromEsiToSchema),
-      skipDuplicates: true,
-    });
-    logger.info(
-      `created records in ${performance.now() - createRecordsStartTime}ms`,
-    );
-
-    // update all rows with new data
-    /*
-
-    const groupsDetailsPromises = groupIds.map((groupId) =>
-      limit(async () => getUniverseGroupsGroupId(groupId)),
-    );
-       */
-    const updateRecordsStartTime = performance.now();
-    const updateResult = await Promise.all(
-      recordsToUpdate.map((group) =>
-        limit(async () =>
-          prisma.group.update({
-            data: fromEsiToSchema(group),
-            where: { groupId: group.group_id },
-          }),
-        ),
-      ),
-    );
-    logger.info(
-      `updated records in ${performance.now() - updateRecordsStartTime}ms`,
-    );
-
-    // mark rows as deleted if missing from ESI
-    const deleteRecordsStartTime = performance.now();
-    const deleteResult = await prisma.group.updateMany({
-      data: {
-        isDeleted: true,
-      },
-      where: {
-        groupId: {
-          in: recordsToDelete,
+    return await step.run("Compute Aggregates", async () => {
+      const totals: BatchStepResult<StatsKey> = {
+        stats: {
+          groups: {
+            created: 0,
+            deleted: 0,
+            modified: 0,
+            equal: 0,
+          },
         },
-      },
+        elapsed: 0,
+      };
+      results.forEach((stepResult) => {
+        Object.entries(stepResult.stats).forEach(([category, value]) => {
+          Object.keys(value).forEach(
+            (op) =>
+              (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
+                stepResult.stats[category as StatsKey][
+                  op as keyof CrudStatistics
+                ]),
+          );
+        });
+        totals.elapsed += stepResult.elapsed;
+      });
+      return totals;
     });
-    logger.info(
-      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
-    );
-
-    return {
-      numCreated: createResult.count,
-      numUpdated: updateResult.length,
-      numDeleted: deleteResult.count,
-    };
   },
 );
