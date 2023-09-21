@@ -57,10 +57,6 @@ export const scrapeEsiTypes = inngest.createFunction(
         async (): Promise<BatchStepResult<StatsKey>> => {
           const stepStartTime = performance.now();
           const thisBatchTypeIds = batches[i]!;
-          // Get page Types' details from ESI
-          logger.info(
-            `going to fetch ${thisBatchTypeIds.length} entries from ESI`,
-          );
 
           const typeChanges = await updateTable({
             fetchLocalEntries: async () =>
