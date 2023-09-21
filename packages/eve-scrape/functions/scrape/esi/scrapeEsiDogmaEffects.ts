@@ -1,137 +1,181 @@
+import axios from "axios";
 import pLimit from "p-limit";
 
-import { DogmaEffect, prisma } from "@jitaspace/db";
+import { prisma } from "@jitaspace/db";
 import {
   getDogmaEffects,
   getDogmaEffectsEffectId,
-  GetDogmaEffectsEffectId200,
 } from "@jitaspace/esi-client";
 
 import { inngest } from "../../../client";
+import { BatchStepResult, CrudStatistics } from "../../../types";
+import { excludeObjectKeys, updateTable } from "../../../utils";
 
-export type ScrapeDogmaEffectsEventPayload = {
-  data: {};
+export type ScrapeDogmaAttributesEventPayload = {
+  data: {
+    batchSize?: number;
+  };
 };
 
-export const scrapeEsiDogmaEffects = inngest.createFunction(
+type StatsKey = "dogmaEffects";
+
+export const scrapeEsiDogmaAttributes = inngest.createFunction(
   { name: "Scrape Dogma Effects" },
   { event: "scrape/esi/dogma-effects" },
-  async ({ logger }) => {
+  async ({ step, event, logger }) => {
+    // FIXME: THIS SHOULD NOT BE NECESSARY
+    axios.defaults.baseURL = "https://esi.evetech.net/latest";
+    const batchSize = event.data.batchSize ?? 500;
+
     // Get all Dogma Effect IDs in ESI
-    const { data: dogmaEffectIds } = await getDogmaEffects();
-    logger.info(`going to fetch ${dogmaEffectIds.length} entries from ESI`);
+    const batches = await step.run("Fetch Dogma Effect IDs", async () => {
+      const effectIds = await getDogmaEffects().then((res) => res.data);
+      effectIds.sort((a, b) => a - b);
 
-    // Get all Dogma Effects' details from ESI
-    const fetchESIDetailsStartTime = performance.now();
-    const limit = pLimit(20);
-    const dogmaEffectsDetailsPromises = dogmaEffectIds.map((dogmaEffectId) =>
-      limit(async () => getDogmaEffectsEffectId(dogmaEffectId)),
-    );
-    const dogmaEffectsResponses = await Promise.all(
-      dogmaEffectsDetailsPromises,
-    );
-    logger.info(
-      `fetched ESI entries in ${performance.now() - fetchESIDetailsStartTime}`,
-    );
-
-    // extract bodies
-    const dogmaEffects = dogmaEffectsResponses.map((res) => res.data);
-
-    // determine which records to be created/updated/removed
-    const existingIdsInDb = await prisma.dogmaEffect
-      .findMany({
-        select: {
-          effectId: true,
-        },
-      })
-      .then((dogmaEffects) =>
-        dogmaEffects.map((dogmaEffect) => dogmaEffect.effectId),
+      const numBatches = Math.ceil(effectIds.length / batchSize);
+      const batchTypeIds = (batchIndex: number) =>
+        effectIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
+      return [...Array(numBatches).keys()].map((batchId) =>
+        batchTypeIds(batchId),
       );
-
-    const recordsToCreate = dogmaEffects.filter(
-      (dogmaEffect) => !existingIdsInDb.includes(dogmaEffect.effect_id),
-    );
-    const recordsToUpdate = dogmaEffects.filter((dogmaEffect) =>
-      existingIdsInDb.includes(dogmaEffect.effect_id),
-    );
-    const recordsToDelete = existingIdsInDb.filter(
-      (dogmaEffectId) => !dogmaEffectIds.includes(dogmaEffectId),
-    );
-
-    logger.info("records to create:", recordsToCreate.length);
-    logger.info("records to update:", recordsToUpdate.length);
-    logger.info("records to delete:", recordsToDelete.length);
-
-    const fromEsiToSchema = (
-      dogmaEffect: GetDogmaEffectsEffectId200,
-    ): Omit<DogmaEffect, "updatedAt"> => ({
-      effectId: dogmaEffect.effect_id,
-      name: dogmaEffect.name ?? null,
-      description: dogmaEffect.description ?? null,
-      published: dogmaEffect.published ?? null,
-      iconId: dogmaEffect.icon_id ?? null,
-      displayName: dogmaEffect.display_name ?? null,
-      disallowAutoRepeat: dogmaEffect.disallow_auto_repeat ?? null,
-      effectCategoryId: dogmaEffect.effect_category ?? null,
-      dischargeAttributeId: dogmaEffect.discharge_attribute_id ?? null,
-      durationAttributeId: dogmaEffect.duration_attribute_id ?? null,
-      electronicChance: dogmaEffect.electronic_chance ?? null,
-      falloffAttributeId: dogmaEffect.falloff_attribute_id ?? null,
-      isAssistance: dogmaEffect.is_assistance ?? null,
-      isOffensive: dogmaEffect.is_offensive ?? null,
-      isWarpSafe: dogmaEffect.is_warp_safe ?? null,
-      postExpression: dogmaEffect.post_expression ?? null,
-      preExpression: dogmaEffect.pre_expression ?? null,
-      rangeAttributeId: dogmaEffect.range_attribute_id ?? null,
-      rangeChance: dogmaEffect.range_chance ?? null,
-      trackingSpeedAttributeId: dogmaEffect.tracking_speed_attribute_id ?? null,
-      isDeleted: false,
     });
 
-    // create missing records
-    const createRecordsStartTime = performance.now();
-    const createResult = await prisma.dogmaEffect.createMany({
-      data: recordsToCreate.map(fromEsiToSchema),
-      skipDuplicates: true,
-    });
-    logger.info(
-      `created records in ${performance.now() - createRecordsStartTime}ms`,
-    );
+    let results: BatchStepResult<StatsKey>[] = [];
+    const limit = pLimit(20);
 
-    // update all records with new data
-    const updateRecordsStartTime = performance.now();
-    const updateResult = await Promise.all(
-      recordsToUpdate.map((dogmaEffect) =>
-        prisma.dogmaEffect.update({
-          data: fromEsiToSchema(dogmaEffect),
-          where: { effectId: dogmaEffect.effect_id },
-        }),
-      ),
-    );
-    logger.info(
-      `updated records in ${performance.now() - updateRecordsStartTime}ms`,
-    );
+    // update in batches
+    for (let i = 0; i < batches.length; i++) {
+      const result = await step.run(
+        `Batch ${i + 1}/${batches.length}`,
+        async (): Promise<BatchStepResult<StatsKey>> => {
+          const stepStartTime = performance.now();
+          const thisBatchIds = batches[i]!;
 
-    // mark records as deleted if missing from ESI
-    const deleteRecordsStartTime = performance.now();
-    const deleteResult = await prisma.dogmaEffect.updateMany({
-      data: {
-        isDeleted: true,
-      },
-      where: {
-        effectId: {
-          in: recordsToDelete,
+          const dogmaEffectsChanges = await updateTable({
+            fetchLocalEntries: async () =>
+              prisma.dogmaEffect
+                .findMany({
+                  where: {
+                    effectId: {
+                      in: thisBatchIds,
+                    },
+                  },
+                })
+                .then((entries) =>
+                  entries.map((entry) =>
+                    excludeObjectKeys(entry, ["updatedAt"]),
+                  ),
+                ),
+            fetchRemoteEntries: async () =>
+              Promise.all(
+                thisBatchIds.map((effectId) =>
+                  limit(async () =>
+                    getDogmaEffectsEffectId(effectId)
+                      .then((res) => res.data)
+                      .then((dogmaEffect) => ({
+                        effectId: dogmaEffect.effect_id,
+                        name: dogmaEffect.name ?? null,
+                        description: dogmaEffect.description ?? null,
+                        published: dogmaEffect.published ?? null,
+                        iconId: dogmaEffect.icon_id ?? null,
+                        displayName: dogmaEffect.display_name ?? null,
+                        disallowAutoRepeat:
+                          dogmaEffect.disallow_auto_repeat ?? null,
+                        effectCategoryId: dogmaEffect.effect_category ?? null,
+                        dischargeAttributeId:
+                          dogmaEffect.discharge_attribute_id ?? null,
+                        durationAttributeId:
+                          dogmaEffect.duration_attribute_id ?? null,
+                        electronicChance: dogmaEffect.electronic_chance ?? null,
+                        falloffAttributeId:
+                          dogmaEffect.falloff_attribute_id ?? null,
+                        isAssistance: dogmaEffect.is_assistance ?? null,
+                        isOffensive: dogmaEffect.is_offensive ?? null,
+                        isWarpSafe: dogmaEffect.is_warp_safe ?? null,
+                        postExpression: dogmaEffect.post_expression ?? null,
+                        preExpression: dogmaEffect.pre_expression ?? null,
+                        rangeAttributeId:
+                          dogmaEffect.range_attribute_id ?? null,
+                        rangeChance: dogmaEffect.range_chance ?? null,
+                        trackingSpeedAttributeId:
+                          dogmaEffect.tracking_speed_attribute_id ?? null,
+                        isDeleted: false,
+                      })),
+                  ),
+                ),
+              ),
+            batchCreate: (entries) =>
+              limit(() =>
+                prisma.dogmaEffect.createMany({
+                  data: entries,
+                }),
+              ),
+            batchDelete: (entries) =>
+              prisma.dogmaEffect.updateMany({
+                data: {
+                  isDeleted: true,
+                },
+                where: {
+                  effectId: {
+                    in: entries.map((entry) => entry.effectId),
+                  },
+                },
+              }),
+            batchUpdate: (entries) =>
+              Promise.all(
+                entries.map((entry) =>
+                  limit(async () =>
+                    prisma.dogmaEffect.update({
+                      data: entry,
+                      where: { effectId: entry.effectId },
+                    }),
+                  ),
+                ),
+              ),
+            idAccessor: (e) => e.effectId,
+          });
+
+          return {
+            stats: {
+              dogmaEffects: {
+                created: dogmaEffectsChanges.created,
+                deleted: dogmaEffectsChanges.deleted,
+                modified: dogmaEffectsChanges.modified,
+                equal: dogmaEffectsChanges.equal,
+              },
+            },
+            elapsed: performance.now() - stepStartTime,
+          };
         },
-      },
-    });
-    logger.info(
-      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
-    );
+      );
+      results.push(result);
+    }
 
-    return {
-      numCreated: createResult.count,
-      numUpdated: updateResult.length,
-      numDeleted: deleteResult.count,
-    };
+    return await step.run("Compute Aggregates", async () => {
+      const totals: BatchStepResult<StatsKey> = {
+        stats: {
+          dogmaEffects: {
+            created: 0,
+            deleted: 0,
+            modified: 0,
+            equal: 0,
+          },
+        },
+        elapsed: 0,
+      };
+      results.forEach((stepResult) => {
+        Object.entries(stepResult.stats).forEach(([category, value]) => {
+          Object.keys(value).forEach(
+            (op) =>
+              (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
+                stepResult.stats[category as StatsKey][
+                  op as keyof CrudStatistics
+                ]),
+          );
+        });
+        totals.elapsed += stepResult.elapsed;
+      });
+      return totals;
+    });
   },
 );
