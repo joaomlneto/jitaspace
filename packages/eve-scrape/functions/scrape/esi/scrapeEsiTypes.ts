@@ -190,7 +190,6 @@ export const scrapeEsiTypes = inngest.createFunction(
           );
 
           // update type attributes with new information
-          console.log({ modified: typeAttributesChanges.modified });
           await Promise.all(
             typeAttributesChanges.modified.map((typeAttribute) =>
               limit(async () =>
