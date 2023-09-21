@@ -1,131 +1,168 @@
+import axios from "axios";
 import pLimit from "p-limit";
 
-import { DogmaAttribute, prisma } from "@jitaspace/db";
+import { prisma } from "@jitaspace/db";
 import {
   getDogmaAttributes,
   getDogmaAttributesAttributeId,
-  GetDogmaAttributesAttributeId200,
 } from "@jitaspace/esi-client";
 
 import { inngest } from "../../../client";
+import { BatchStepResult, CrudStatistics } from "../../../types";
+import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export type ScrapeDogmaAttributesEventPayload = {
-  data: {};
+  data: {
+    batchSize?: number;
+  };
 };
+
+type StatsKey = "dogmaAttributes";
 
 export const scrapeEsiDogmaAttributes = inngest.createFunction(
   { name: "Scrape Dogma Attributes" },
   { event: "scrape/esi/dogma-attributes" },
-  async ({ logger }) => {
+  async ({ step, event, logger }) => {
+    // FIXME: THIS SHOULD NOT BE NECESSARY
+    axios.defaults.baseURL = "https://esi.evetech.net/latest";
+    const batchSize = event.data.batchSize ?? 500;
+
     // Get all Dogma Attribute IDs in ESI
-    const { data: dogmaAttributeIds } = await getDogmaAttributes();
-    logger.info(`going to fetch ${dogmaAttributeIds.length} entries from ESI`);
+    const batches = await step.run("Fetch Dogma Attribute IDs", async () => {
+      const attributeIds = await getDogmaAttributes().then((res) => res.data);
+      attributeIds.sort((a, b) => a - b);
 
-    // Get all Dogma Attribute details from ESI
-    const fetchESIDetailsStartTime = performance.now();
-    const limit = pLimit(20);
-    const domaAttributesDetailsPromises = dogmaAttributeIds.map(
-      (dogmaAttributeId) =>
-        limit(async () => getDogmaAttributesAttributeId(dogmaAttributeId)),
-    );
-    const domaAttributesResponses = await Promise.all(
-      domaAttributesDetailsPromises,
-    );
-    logger.info(
-      `fetched ESI entries in ${performance.now() - fetchESIDetailsStartTime}`,
-    );
-
-    // extract bodies
-    const dogmaAttributes = domaAttributesResponses.map((res) => res.data);
-
-    // determine which records to be created/updated/removed
-    const existingIdsInDb = await prisma.dogmaAttribute
-      .findMany({
-        select: {
-          attributeId: true,
-        },
-      })
-      .then((dogmaAttributes) =>
-        dogmaAttributes.map((dogmaAttribute) => dogmaAttribute.attributeId),
+      const numBatches = Math.ceil(attributeIds.length / batchSize);
+      const batchTypeIds = (batchIndex: number) =>
+        attributeIds.slice(
+          batchIndex * batchSize,
+          (batchIndex + 1) * batchSize,
+        );
+      return [...Array(numBatches).keys()].map((batchId) =>
+        batchTypeIds(batchId),
       );
-
-    const recordsToCreate = dogmaAttributes.filter(
-      (dogmaAttribute) =>
-        !existingIdsInDb.includes(dogmaAttribute.attribute_id),
-    );
-    const recordsToUpdate = dogmaAttributes.filter((dogmaAttribute) =>
-      existingIdsInDb.includes(dogmaAttribute.attribute_id),
-    );
-    const recordsToDelete = existingIdsInDb.filter(
-      (dogmaAttributeId) => !dogmaAttributeIds.includes(dogmaAttributeId),
-    );
-
-    logger.info("records to create:", recordsToCreate.length);
-    logger.info("records to update:", recordsToUpdate.length);
-    logger.info("records to delete:", recordsToDelete.length);
-
-    const fromEsiToSchema = (
-      dogmaAttribute: GetDogmaAttributesAttributeId200,
-    ): Omit<DogmaAttribute, "updatedAt"> => ({
-      attributeId: dogmaAttribute.attribute_id,
-      name: dogmaAttribute.name ?? null,
-      published: dogmaAttribute.published ?? null,
-      description: dogmaAttribute.description ?? null,
-      defaultValue: dogmaAttribute.default_value ?? null,
-      displayName: dogmaAttribute.display_name ?? null,
-      highIsGood: dogmaAttribute.high_is_good ?? null,
-      iconId: dogmaAttribute.icon_id ?? null,
-      stackable: dogmaAttribute.stackable ?? null,
-      unitId: dogmaAttribute.unit_id ?? null,
-      isDeleted: false,
     });
 
-    // create missing records
-    const createRecordsStartTime = performance.now();
-    const createResult = await prisma.dogmaAttribute.createMany({
-      data: recordsToCreate.map(fromEsiToSchema),
-      skipDuplicates: true,
-    });
-    logger.info(
-      `created records in ${performance.now() - createRecordsStartTime}ms`,
-    );
+    let results: BatchStepResult<StatsKey>[] = [];
+    const limit = pLimit(20);
 
-    // update all records with new data
-    const updateRecordsStartTime = performance.now();
-    const updateResult = await Promise.all(
-      recordsToUpdate.map((dogmaAttribute) =>
-        limit(async () =>
-          prisma.dogmaAttribute.update({
-            data: fromEsiToSchema(dogmaAttribute),
-            where: { attributeId: dogmaAttribute.attribute_id },
-          }),
-        ),
-      ),
-    );
-    logger.info(
-      `updated records in ${performance.now() - updateRecordsStartTime}ms`,
-    );
+    // update in batches
+    for (let i = 0; i < batches.length; i++) {
+      const result = await step.run(
+        `Batch ${i + 1}/${batches.length}`,
+        async (): Promise<BatchStepResult<StatsKey>> => {
+          const stepStartTime = performance.now();
+          const thisBatchIds = batches[i]!;
 
-    // mark records as deleted if missing from ESI
-    const deleteRecordsStartTime = performance.now();
-    const deleteResult = await prisma.dogmaAttribute.updateMany({
-      data: {
-        isDeleted: true,
-      },
-      where: {
-        attributeId: {
-          in: recordsToDelete,
+          const dogmaAttributesChanges = await updateTable({
+            fetchLocalEntries: async () =>
+              prisma.dogmaAttribute
+                .findMany({
+                  where: {
+                    attributeId: {
+                      in: thisBatchIds,
+                    },
+                  },
+                })
+                .then((entries) =>
+                  entries.map((entry) =>
+                    excludeObjectKeys(entry, ["updatedAt"]),
+                  ),
+                ),
+            fetchRemoteEntries: async () =>
+              Promise.all(
+                thisBatchIds.map((attributeId) =>
+                  limit(async () =>
+                    getDogmaAttributesAttributeId(attributeId)
+                      .then((res) => res.data)
+                      .then((dogmaAttribute) => ({
+                        attributeId: dogmaAttribute.attribute_id,
+                        name: dogmaAttribute.name ?? null,
+                        published: dogmaAttribute.published ?? null,
+                        description: dogmaAttribute.description ?? null,
+                        defaultValue: dogmaAttribute.default_value ?? null,
+                        displayName: dogmaAttribute.display_name ?? null,
+                        highIsGood: dogmaAttribute.high_is_good ?? null,
+                        iconId: dogmaAttribute.icon_id ?? null,
+                        stackable: dogmaAttribute.stackable ?? null,
+                        unitId: dogmaAttribute.unit_id ?? null,
+                        isDeleted: false,
+                      })),
+                  ),
+                ),
+              ),
+            batchCreate: (entries) =>
+              limit(() =>
+                prisma.dogmaAttribute.createMany({
+                  data: entries,
+                }),
+              ),
+            batchDelete: (entries) =>
+              prisma.dogmaAttribute.updateMany({
+                data: {
+                  isDeleted: true,
+                },
+                where: {
+                  attributeId: {
+                    in: entries.map((entry) => entry.attributeId),
+                  },
+                },
+              }),
+            batchUpdate: (entries) =>
+              Promise.all(
+                entries.map((entry) =>
+                  limit(async () =>
+                    prisma.dogmaAttribute.update({
+                      data: entry,
+                      where: { attributeId: entry.attributeId },
+                    }),
+                  ),
+                ),
+              ),
+            idAccessor: (e) => e.attributeId,
+          });
+
+          return {
+            stats: {
+              dogmaAttributes: {
+                created: dogmaAttributesChanges.created,
+                deleted: dogmaAttributesChanges.deleted,
+                modified: dogmaAttributesChanges.modified,
+                equal: dogmaAttributesChanges.equal,
+              },
+            },
+            elapsed: performance.now() - stepStartTime,
+          };
         },
-      },
-    });
-    logger.info(
-      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
-    );
+      );
+      results.push(result);
+    }
 
-    return {
-      numCreated: createResult.count,
-      numUpdated: updateResult.length,
-      numDeleted: deleteResult.count,
-    };
+    return await step.run("Compute Aggregates", async () => {
+      const totals: BatchStepResult<StatsKey> = {
+        stats: {
+          dogmaAttributes: {
+            created: 0,
+            deleted: 0,
+            modified: 0,
+            equal: 0,
+          },
+        },
+        elapsed: 0,
+      };
+      results.forEach((stepResult) => {
+        Object.entries(stepResult.stats).forEach(([category, value]) => {
+          Object.keys(value).forEach(
+            (op) =>
+              (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
+                stepResult.stats[category as StatsKey][
+                  op as keyof CrudStatistics
+                ]),
+          );
+        });
+        totals.elapsed += stepResult.elapsed;
+      });
+      return totals;
+    });
   },
 );
