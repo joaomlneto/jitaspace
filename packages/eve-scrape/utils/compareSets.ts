@@ -59,6 +59,18 @@ export const compareSets = <T>({
       ]),
     ].length
   ) {
+    console.log({
+      keysUnion: [
+        ...new Set([
+          ...keysBefore.map((x) => x.toString()),
+          ...keysAfter.map((x) => x.toString()),
+        ]),
+      ],
+      created,
+      deleted,
+      equal,
+      modified,
+    });
     throw Error("compareSets: input and output length do not match");
   }
 
