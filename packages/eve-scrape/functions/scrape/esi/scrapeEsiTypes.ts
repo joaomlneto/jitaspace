@@ -64,7 +64,7 @@ export const scrapeEsiTypes = inngest.createFunction(
       }
       typeIds.sort((a, b) => a - b);
 
-      const numBatches = 2; //Math.ceil(typeIds.length / batchSize); //FIXME
+      const numBatches = Math.ceil(typeIds.length / batchSize);
       const batchTypeIds = (batchIndex: number) =>
         typeIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
       const batches = [...Array(numBatches).keys()].map((batchId) =>
@@ -76,7 +76,7 @@ export const scrapeEsiTypes = inngest.createFunction(
 
     let results: BatchStepResult<StatsKey>[] = [];
 
-    // fetch all types in batches
+    // update types in batches
     for (let i = 0; i < batches.length; i++) {
       const result = await step.run(
         `Batch ${i + 1}/${batches.length}`,
