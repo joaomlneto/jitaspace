@@ -1,126 +1,170 @@
+import axios from "axios";
 import pLimit from "p-limit";
 
-import { Prisma, prisma, SolarSystem } from "@jitaspace/db";
+import { Prisma, prisma } from "@jitaspace/db";
 import {
   getUniverseSystems,
   getUniverseSystemsSystemId,
-  GetUniverseSystemsSystemId200,
 } from "@jitaspace/esi-client";
 
 import { inngest } from "../../../client";
+import { BatchStepResult, CrudStatistics } from "../../../types";
+import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export type ScrapeSolarSystemsEventPayload = {
-  data: {};
+  data: {
+    batchSize?: number;
+  };
 };
+
+type StatsKey = "solarSystems";
+/*
+  | "planets"
+  | "moons"
+  | "stations"
+  | "stargates"
+  | "starsates"
+  | "asteroidBelts";*/
 
 export const scrapeEsiSolarSystems = inngest.createFunction(
   { name: "Scrape Solar Systems" },
   { event: "scrape/esi/solar-systems" },
-  async ({ event, step, logger }) => {
-    // Get all Solar System IDs in ESI
-    const { data: solarSystemIds } = await getUniverseSystems();
-    logger.info(`going to fetch ${solarSystemIds.length} solar systems`);
+  async ({ step, event, logger }) => {
+    // FIXME: THIS SHOULD NOT BE NECESSARY
+    axios.defaults.baseURL = "https://esi.evetech.net/latest";
+    const batchSize = event.data.batchSize ?? 500;
 
-    // Get all Solar System details from ESI
-    const fetchESIDetailsStartTime = performance.now();
+    // Get all Solar System IDs in ESI
+    const batches = await step.run("Fetch Solar System IDs", async () => {
+      const solarSystemIds = await getUniverseSystems().then((res) => res.data);
+      solarSystemIds.sort((a, b) => a - b);
+
+      const numBatches = Math.ceil(solarSystemIds.length / batchSize);
+      const batchIds = (batchIndex: number) =>
+        solarSystemIds.slice(
+          batchIndex * batchSize,
+          (batchIndex + 1) * batchSize,
+        );
+      return [...Array(numBatches).keys()].map((batchId) => batchIds(batchId));
+    });
+
+    let results: BatchStepResult<StatsKey>[] = [];
     const limit = pLimit(20);
 
-    const solarSystemDetailsPromises = solarSystemIds.map((solarSystemId) =>
-      limit(async () => {
-        return getUniverseSystemsSystemId(solarSystemId);
-      }),
-    );
-    const solarSystemResponses = await Promise.all(solarSystemDetailsPromises);
-    logger.info(
-      `fetched ESI solar systems in ${
-        performance.now() - fetchESIDetailsStartTime
-      }`,
-    );
+    for (let i = 0; i < batches.length; i++) {
+      const result = await step.run(
+        `Batch ${i + 1}/${batches.length}`,
+        async (): Promise<BatchStepResult<StatsKey>> => {
+          const stepStartTime = performance.now();
+          const thisBatchIds = batches[i]!;
 
-    // extract bodies
-    const solarSystems = solarSystemResponses.map((res) => res.data);
+          const solarSystemChanges = await updateTable({
+            fetchLocalEntries: async () =>
+              prisma.solarSystem
+                .findMany({
+                  where: {
+                    solarSystemId: {
+                      in: thisBatchIds,
+                    },
+                  },
+                })
+                .then((entries) =>
+                  entries.map((entry) =>
+                    excludeObjectKeys(entry, ["updatedAt"]),
+                  ),
+                ),
+            fetchRemoteEntries: async () =>
+              Promise.all(
+                thisBatchIds.map((solarSystemId) =>
+                  limit(async () =>
+                    getUniverseSystemsSystemId(solarSystemId)
+                      .then((res) => res.data)
+                      .then((solarSystem) => ({
+                        solarSystemId: solarSystem.system_id,
+                        constellationId: solarSystem.constellation_id,
+                        name: solarSystem.name,
+                        securityClass: solarSystem.security_class ?? null,
+                        securityStatus: new Prisma.Decimal(
+                          solarSystem.security_status,
+                        ),
+                        starId: solarSystem.star_id ?? null,
+                        isDeleted: false,
+                      })),
+                  ),
+                ),
+              ),
+            batchCreate: (entries) =>
+              limit(() =>
+                prisma.solarSystem.createMany({
+                  data: entries,
+                }),
+              ),
+            batchDelete: (entries) =>
+              prisma.solarSystem.updateMany({
+                data: {
+                  isDeleted: true,
+                },
+                where: {
+                  solarSystemId: {
+                    in: entries.map((entry) => entry.solarSystemId),
+                  },
+                },
+              }),
+            batchUpdate: (entries) =>
+              Promise.all(
+                entries.map((entry) =>
+                  limit(async () =>
+                    prisma.solarSystem.update({
+                      data: entry,
+                      where: { solarSystemId: entry.solarSystemId },
+                    }),
+                  ),
+                ),
+              ),
+            idAccessor: (e) => e.solarSystemId,
+          });
 
-    // determine which records to be created/updated/removed
-    const existingIdsInDb = await prisma.solarSystem
-      .findMany({
-        select: {
-          solarSystemId: true,
+          return {
+            stats: {
+              solarSystems: {
+                created: solarSystemChanges.created,
+                deleted: solarSystemChanges.deleted,
+                modified: solarSystemChanges.modified,
+                equal: solarSystemChanges.equal,
+              },
+            },
+            elapsed: performance.now() - stepStartTime,
+          };
         },
-      })
-      .then((solarSystems) =>
-        solarSystems.map((solarSystem) => solarSystem.solarSystemId),
       );
+      results.push(result);
+    }
 
-    const recordsToCreate = solarSystems.filter(
-      (solarSystem) => !existingIdsInDb.includes(solarSystem.system_id),
-    );
-    const recordsToUpdate = solarSystems.filter((solarSystem) =>
-      existingIdsInDb.includes(solarSystem.system_id),
-    );
-    const recordsToDelete = existingIdsInDb.filter(
-      (solarSystemId) => !solarSystemIds.includes(solarSystemId),
-    );
-
-    logger.info("records to create:", recordsToCreate.length);
-    logger.info("records to update:", recordsToUpdate.length);
-    logger.info("records to delete:", recordsToDelete.length);
-
-    const fromEsiToSchema = (
-      solarSystem: GetUniverseSystemsSystemId200,
-    ): Omit<SolarSystem, "updatedAt"> => ({
-      solarSystemId: solarSystem.system_id,
-      constellationId: solarSystem.constellation_id,
-      name: solarSystem.name,
-      securityClass: solarSystem.security_class ?? null,
-      securityStatus: new Prisma.Decimal(solarSystem.security_status),
-      starId: solarSystem.star_id ?? null,
-      isDeleted: false,
-    });
-
-    // create missing records
-    const createRecordsStartTime = performance.now();
-    const createResult = await prisma.solarSystem.createMany({
-      data: recordsToCreate.map(fromEsiToSchema),
-      skipDuplicates: true,
-    });
-    logger.info(
-      `created records in ${performance.now() - createRecordsStartTime}ms`,
-    );
-
-    // update all records with new data
-    const updateRecordsStartTime = performance.now();
-    const updateResult = await Promise.all(
-      recordsToUpdate.map((solarSystem) =>
-        prisma.solarSystem.update({
-          data: fromEsiToSchema(solarSystem),
-          where: { solarSystemId: solarSystem.system_id },
-        }),
-      ),
-    );
-    logger.info(
-      `updated records in ${performance.now() - updateRecordsStartTime}ms`,
-    );
-
-    // mark records as deleted if missing from ESI
-    const deleteRecordsStartTime = performance.now();
-    const deleteResult = await prisma.solarSystem.updateMany({
-      data: {
-        isDeleted: true,
-      },
-      where: {
-        solarSystemId: {
-          in: recordsToDelete,
+    return await step.run("Compute Aggregates", async () => {
+      const totals: BatchStepResult<StatsKey> = {
+        stats: {
+          solarSystems: {
+            created: 0,
+            deleted: 0,
+            modified: 0,
+            equal: 0,
+          },
         },
-      },
+        elapsed: 0,
+      };
+      results.forEach((stepResult) => {
+        Object.entries(stepResult.stats).forEach(([category, value]) => {
+          Object.keys(value).forEach(
+            (op) =>
+              (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
+                stepResult.stats[category as StatsKey][
+                  op as keyof CrudStatistics
+                ]),
+          );
+        });
+        totals.elapsed += stepResult.elapsed;
+      });
+      return totals;
     });
-    logger.info(
-      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
-    );
-
-    return {
-      numCreated: createResult.count,
-      numUpdated: updateResult.length,
-      numDeleted: deleteResult.count,
-    };
   },
 );
