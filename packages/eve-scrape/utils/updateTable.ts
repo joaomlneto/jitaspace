@@ -4,7 +4,6 @@ import { recordsAreEqual } from "./recordsAreEqual";
 
 // FIXME: Add support for ETags!
 export const updateTable = async <
-  EsiType,
   DbType extends Record<string | number, any>,
   IdType extends string | number,
 >({
