@@ -1,11 +1,14 @@
-import { prisma, Region } from "@jitaspace/db";
+import axios from "axios";
+import pLimit from "p-limit";
+
+import { prisma } from "@jitaspace/db";
 import {
   getUniverseRegions,
   getUniverseRegionsRegionId,
-  GetUniverseRegionsRegionId200,
 } from "@jitaspace/esi-client";
 
 import { inngest } from "../../../client";
+import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export type ScrapeRegionEventPayload = {
   data: {};
@@ -14,99 +17,89 @@ export type ScrapeRegionEventPayload = {
 export const scrapeEsiRegions = inngest.createFunction(
   { name: "Scrape Regions" },
   { event: "scrape/esi/regions" },
-  async ({ event, step, logger }) => {
+
+  async ({}) => {
+    // FIXME: THIS SHOULD NOT BE NECESSARY
+    axios.defaults.baseURL = "https://esi.evetech.net/latest";
+
     // Get all Region IDs in ESI
-    const { data: regionIds } = await getUniverseRegions();
-    logger.info(`going to fetch ${regionIds.length} regions`);
+    const regionIds = await getUniverseRegions().then((res) => res.data);
+    regionIds.sort((a, b) => a - b);
 
-    // Get all Region details from ESI
-    const fetchESIDetailsStartTime = performance.now();
-    const regionResponses = await Promise.all(
-      regionIds.map(async (regionId) => getUniverseRegionsRegionId(regionId)),
-    );
-    logger.info(
-      `fetched ESI regions in ${performance.now() - fetchESIDetailsStartTime}`,
-    );
+    const limit = pLimit(20);
 
-    // extract bodies
-    const regions = regionResponses.map((res) => res.data);
+    const stepStartTime = performance.now();
+    const thisBatchIds = regionIds;
 
-    // determine which records to be created/updated/removed
-    const existingIdsInDb = await prisma.region
-      .findMany({
-        select: {
-          regionId: true,
-        },
-      })
-      .then((regions) => regions.map((region) => region.regionId));
-
-    const recordsToCreate = regions.filter(
-      (region) => !existingIdsInDb.includes(region.region_id),
-    );
-    const recordsToUpdate = regions.filter((region) =>
-      existingIdsInDb.includes(region.region_id),
-    );
-    const recordsToDelete = existingIdsInDb.filter(
-      (regionId) => !regionIds.includes(regionId),
-    );
-
-    logger.info("records to create:", recordsToCreate.length);
-    logger.info("records to update:", recordsToUpdate.length);
-    logger.info("records to delete:", recordsToDelete.length);
-
-    const fromEsiToSchema = (
-      region: GetUniverseRegionsRegionId200,
-    ): Omit<Region, "updatedAt"> => ({
-      regionId: region.region_id,
-      name: region.name,
-      description: region.description ?? null,
-      isDeleted: false,
-    });
-
-    // create missing regions
-    const createRecordsStartTime = performance.now();
-    const createResult = await prisma.region.createMany({
-      data: recordsToCreate.map(fromEsiToSchema),
-      skipDuplicates: true,
-    });
-    logger.info(
-      `created records in ${performance.now() - createRecordsStartTime}ms`,
-    );
-
-    // update all regions with new data
-    const updateRecordsStartTime = performance.now();
-    const updateResult = await Promise.all(
-      recordsToUpdate.map((region) =>
-        prisma.region.update({
-          data: fromEsiToSchema(region),
-          where: { regionId: region.region_id },
+    const regionChanges = await updateTable({
+      fetchLocalEntries: async () =>
+        prisma.region
+          .findMany({
+            where: {
+              regionId: {
+                in: thisBatchIds,
+              },
+            },
+          })
+          .then((entries) =>
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+          ),
+      fetchRemoteEntries: async () =>
+        Promise.all(
+          thisBatchIds.map((regionId) =>
+            limit(async () =>
+              getUniverseRegionsRegionId(regionId)
+                .then((res) => res.data)
+                .then((region) => ({
+                  regionId: region.region_id,
+                  name: region.name,
+                  description: region.description ?? null,
+                  isDeleted: false,
+                })),
+            ),
+          ),
+        ),
+      batchCreate: (entries) =>
+        limit(() =>
+          prisma.region.createMany({
+            data: entries,
+          }),
+        ),
+      batchDelete: (entries) =>
+        prisma.region.updateMany({
+          data: {
+            isDeleted: true,
+          },
+          where: {
+            regionId: {
+              in: entries.map((entry) => entry.regionId),
+            },
+          },
         }),
-      ),
-    );
-    logger.info(
-      `updated records in ${performance.now() - updateRecordsStartTime}ms`,
-    );
-
-    // mark regions as deleted if missing from ESI
-    const deleteRecordsStartTime = performance.now();
-    const deleteResult = await prisma.region.updateMany({
-      data: {
-        isDeleted: true,
-      },
-      where: {
-        regionId: {
-          in: recordsToDelete,
-        },
-      },
+      batchUpdate: (entries) =>
+        Promise.all(
+          entries.map((entry) =>
+            limit(async () =>
+              prisma.region.update({
+                data: entry,
+                where: { regionId: entry.regionId },
+              }),
+            ),
+          ),
+        ),
+      idAccessor: (e) => e.regionId,
     });
-    logger.info(
-      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
-    );
 
     return {
-      numCreated: createResult.count,
-      numUpdated: updateResult.length,
-      numDeleted: deleteResult.count,
+      stats: {
+        regions: {
+          created: regionChanges.created,
+          deleted: regionChanges.deleted,
+          modified: regionChanges.modified,
+          equal: regionChanges.equal,
+        },
+      },
+      elapsed: performance.now() - stepStartTime,
     };
   },
 );
