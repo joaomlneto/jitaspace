@@ -11,7 +11,7 @@ import { inngest } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-export type ScrapeDogmaAttributesEventPayload = {
+export type ScrapeDogmaEffectsEventPayload = {
   data: {
     batchSize?: number;
   };
@@ -19,7 +19,7 @@ export type ScrapeDogmaAttributesEventPayload = {
 
 type StatsKey = "dogmaEffects";
 
-export const scrapeEsiDogmaAttributes = inngest.createFunction(
+export const scrapeEsiDogmaEffects = inngest.createFunction(
   { name: "Scrape Dogma Effects" },
   { event: "scrape/esi/dogma-effects" },
   async ({ step, event, logger }) => {
