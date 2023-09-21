@@ -1,4 +1,4 @@
-export const compareSets = <T, Key extends keyof T>({
+export const compareSets = <T>({
   recordsBefore,
   recordsAfter,
   getId,
@@ -34,23 +34,33 @@ export const compareSets = <T, Key extends keyof T>({
 
   // get the records that are common to both sets
   const commonKeys = keysAfter.filter((key) => keysBefore.includes(key));
-  const commonRecordPairs = commonKeys.map((key) => ({
-    recordBefore: indexBefore[key]!,
-    recordAfter: indexAfter[key]!,
-  }));
+  const commonRecords = recordsAfter.filter((record) =>
+    commonKeys.includes(getId(record)),
+  );
 
   // determine which records did not change
-  const equal = commonRecordPairs
-    .filter(({ recordBefore, recordAfter }) =>
-      recordsAreEqual(recordBefore, recordAfter),
-    )
-    .map(({ recordBefore, recordAfter }) => recordAfter);
+  const equal = commonRecords.filter((record) =>
+    recordsAreEqual(indexBefore[getId(record)]!, record),
+  );
   const equalKeys = equal.map((record) => getId(record));
 
   // determine which records have been modified
-  const modified = recordsAfter.filter(
+  const modified = commonRecords.filter(
     (record) => !equalKeys.includes(getId(record)),
   );
+
+  // sanity check
+  if (
+    created.length + deleted.length + equal.length + modified.length !==
+    [
+      ...new Set([
+        ...keysBefore.map((x) => x.toString()),
+        ...keysAfter.map((x) => x.toString()),
+      ]),
+    ].length
+  ) {
+    throw Error("compareSets: input and output length do not match");
+  }
 
   return { created, deleted, equal, modified };
 };

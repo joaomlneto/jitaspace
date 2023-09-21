@@ -50,7 +50,7 @@ export const scrapeEsiTypes = inngest.createFunction(
   async ({ step, event, logger }) => {
     // FIXME: THIS SHOULD NOT BE NECESSARY
     axios.defaults.baseURL = "https://esi.evetech.net/latest";
-    const batchSize = event.data.batchSize ?? 100;
+    const batchSize = event.data.batchSize ?? 500;
 
     // Get all Type IDs in ESI
     const batches = await step.run("Fetch Type IDs", async () => {
@@ -67,21 +67,19 @@ export const scrapeEsiTypes = inngest.createFunction(
       const numBatches = Math.ceil(typeIds.length / batchSize);
       const batchTypeIds = (batchIndex: number) =>
         typeIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      const batches = [...Array(numBatches).keys()].map((batchId) =>
+      return [...Array(numBatches).keys()].map((batchId) =>
         batchTypeIds(batchId),
       );
-
-      return batches;
     });
 
     let results: BatchStepResult<StatsKey>[] = [];
+    const limit = pLimit(20);
 
     // update types in batches
     for (let i = 0; i < batches.length; i++) {
       const result = await step.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
-          const limit = pLimit(20);
           const thisBatchTypeIds = batches[i]!;
           // Get page Types' details from ESI
           logger.info(
@@ -118,10 +116,12 @@ export const scrapeEsiTypes = inngest.createFunction(
             getId: (t) => t.typeId,
             recordsAreEqual,
           });
-          const createResult = await prisma.type.createMany({
-            data: typeChanges.created,
-          });
-          const updateResult = await Promise.all(
+          await limit(() =>
+            prisma.type.createMany({
+              data: typeChanges.created,
+            }),
+          );
+          await Promise.all(
             typeChanges.modified.map((type) =>
               limit(async () =>
                 prisma.type.update({
@@ -131,7 +131,7 @@ export const scrapeEsiTypes = inngest.createFunction(
               ),
             ),
           );
-          const deleteResult = await prisma.type.updateMany({
+          await prisma.type.updateMany({
             data: {
               isDeleted: true,
             },
@@ -167,8 +167,13 @@ export const scrapeEsiTypes = inngest.createFunction(
             getId: (t) => `${t.typeId}:${t.attributeId}`,
             recordsAreEqual,
           });
+          await limit(() =>
+            prisma.typeAttribute.createMany({
+              data: typeAttributesChanges.created,
+            }),
+          );
           // XXX: We cannot batch these updates because we have a composite ID on this table
-          const deleteAttributesResult = await Promise.all(
+          await Promise.all(
             typeAttributesChanges.deleted.map((typeAttribute) =>
               limit(async () =>
                 prisma.typeAttribute.update({
@@ -185,7 +190,8 @@ export const scrapeEsiTypes = inngest.createFunction(
           );
 
           // update type attributes with new information
-          const updateAttributesResult = await Promise.all(
+          console.log({ modified: typeAttributesChanges.modified });
+          await Promise.all(
             typeAttributesChanges.modified.map((typeAttribute) =>
               limit(async () =>
                 prisma.typeAttribute.update({
@@ -225,8 +231,13 @@ export const scrapeEsiTypes = inngest.createFunction(
             getId: (t) => `${t.typeId}:${t.effectId}`,
             recordsAreEqual,
           });
+          await limit(() =>
+            prisma.typeEffect.createMany({
+              data: typeEffectsChanges.created,
+            }),
+          );
           // delete effects that no longer exist
-          const deleteEffectsResult = await Promise.all(
+          await Promise.all(
             typeEffectsChanges.deleted.map((typeEffect) =>
               limit(async () =>
                 prisma.typeEffect.update({
@@ -243,7 +254,7 @@ export const scrapeEsiTypes = inngest.createFunction(
           );
 
           // update type effects with new information
-          const updateEffectsResult = await Promise.all(
+          await Promise.all(
             typeEffectsChanges.modified.map((typeEffect) =>
               limit(async () =>
                 prisma.typeEffect.update({
@@ -287,7 +298,7 @@ export const scrapeEsiTypes = inngest.createFunction(
       results.push(result);
     }
 
-    const totals = await step.run("Compute Aggregates", async () => {
+    return await step.run("Compute Aggregates", async () => {
       let totals: BatchStepResult<StatsKey> = {
         stats: {
           types: {
@@ -325,7 +336,5 @@ export const scrapeEsiTypes = inngest.createFunction(
       });
       return totals;
     });
-
-    return totals;
   },
 );

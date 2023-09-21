@@ -94,10 +94,12 @@ export const scrapeEsiDogmaAttributes = inngest.createFunction(
     const updateRecordsStartTime = performance.now();
     const updateResult = await Promise.all(
       recordsToUpdate.map((dogmaAttribute) =>
-        prisma.dogmaAttribute.update({
-          data: fromEsiToSchema(dogmaAttribute),
-          where: { attributeId: dogmaAttribute.attribute_id },
-        }),
+        limit(async () =>
+          prisma.dogmaAttribute.update({
+            data: fromEsiToSchema(dogmaAttribute),
+            where: { attributeId: dogmaAttribute.attribute_id },
+          }),
+        ),
       ),
     );
     logger.info(
