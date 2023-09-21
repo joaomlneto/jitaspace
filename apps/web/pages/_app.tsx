@@ -11,7 +11,7 @@ import Head from "next/head";
 import Script from "next/script";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
-import { Notifications } from "@mantine/notifications";
+import { Notifications, showNotification } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
@@ -106,6 +106,13 @@ export default function App({
       const wb = new Workbox("/sw.js");
 
       wb.addEventListener("waiting", () => {
+        showNotification({
+          title: "Update Available",
+          message:
+            "A newer version of Jita is available. Simply reload to update.",
+          autoClose: false,
+        });
+        /*
         // `event.wasWaitingBeforeRegister` will be false if this is the first time the updated service worker is waiting.
         // When `event.wasWaitingBeforeRegister` is true, a previously updated service worker is still waiting.
         // You may want to customize the UI prompt accordingly.
@@ -125,7 +132,7 @@ export default function App({
           console.log(
             "User rejected to update SW, keeping the old version. New version will be automatically loaded when the app is opened next time.",
           );
-        }
+        }*/
       });
 
       // never forget to call register as automatic registration is turned off in next.config.js
