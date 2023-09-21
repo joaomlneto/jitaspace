@@ -1,141 +1,160 @@
-import { MarketGroup, prisma } from "@jitaspace/db";
+import axios from "axios";
+import pLimit from "p-limit";
+
+import { prisma } from "@jitaspace/db";
 import {
   getMarketsGroups,
   getMarketsGroupsMarketGroupId,
-  GetMarketsGroupsMarketGroupId200,
 } from "@jitaspace/esi-client";
 
 import { inngest } from "../../../client";
+import { BatchStepResult, CrudStatistics } from "../../../types";
+import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export type ScrapeMarketGroupsEventPayload = {
-  data: {};
+  data: {
+    batchSize?: number;
+  };
 };
+type StatsKey = "marketGroups";
 
 export const scrapeEsiMarketGroups = inngest.createFunction(
   { name: "Scrape Market Groups" },
   { event: "scrape/esi/market-groups" },
-  async ({ event, step, logger }) => {
-    // Get all Market Group IDs
-    const { data: marketGroupIds } = await getMarketsGroups();
-    //const marketGroupIds = marketGroupIds2.slice(0, 10);
-    logger.info(`going to fetch ${marketGroupIds.length} market groups...`);
+  async ({ step, event, logger }) => {
+    // FIXME: THIS SHOULD NOT BE NECESSARY
+    axios.defaults.baseURL = "https://esi.evetech.net/latest";
+    const batchSize = event.data.batchSize ?? 500;
 
-    // Get all Market Group details from ESI
-    const fetchESIDetailsStartTime = performance.now();
-    const marketGroupsResponses = await Promise.all(
-      marketGroupIds.map(async (marketGroupId) =>
-        getMarketsGroupsMarketGroupId(marketGroupId),
-      ),
-    );
-    logger.info(
-      `fetched ESI market groups in ${
-        performance.now() - fetchESIDetailsStartTime
-      }ms`,
-    );
+    // Get all Group IDs in ESI
+    const batches = await step.run("Fetch Market Group IDs", async () => {
+      const marketGroupIds = await getMarketsGroups().then((res) => res.data);
+      marketGroupIds.sort((a, b) => a - b);
 
-    // extract body
-    const marketGroups = marketGroupsResponses.map((res) => res.data);
-
-    // determine which records to be created/updated/removed
-    const existingIdsInDb = await prisma.marketGroup
-      .findMany({
-        select: {
-          marketGroupId: true,
-        },
-      })
-      .then((marketGroups) =>
-        marketGroups.map((marketGroup) => marketGroup.marketGroupId),
-      );
-
-    const recordsToCreate = marketGroups.filter(
-      (marketGroup) => !existingIdsInDb.includes(marketGroup.market_group_id),
-    );
-    const recordsToUpdate = marketGroups.filter((marketGroup) =>
-      existingIdsInDb.includes(marketGroup.market_group_id),
-    );
-    const recordsToDelete = existingIdsInDb.filter(
-      (marketGroupId) => !marketGroupIds.includes(marketGroupId),
-    );
-
-    logger.info("records to create:", recordsToCreate.length);
-    logger.info("records to update:", recordsToUpdate.length);
-    logger.info("records to delete:", recordsToDelete.length);
-
-    const fromEsiToSchema = (
-      marketGroup: GetMarketsGroupsMarketGroupId200,
-    ): Omit<MarketGroup, "updatedAt"> => ({
-      marketGroupId: marketGroup.market_group_id,
-      name: marketGroup.name,
-      parentMarketGroupId: marketGroup.parent_group_id ?? null,
-      description: marketGroup.description,
-      isDeleted: false,
+      const numBatches = Math.ceil(marketGroupIds.length / batchSize);
+      const batchIds = (batchIndex: number) =>
+        marketGroupIds.slice(
+          batchIndex * batchSize,
+          (batchIndex + 1) * batchSize,
+        );
+      return [...Array(numBatches).keys()].map((batchId) => batchIds(batchId));
     });
 
-    // create missing market groups
-    const createRecordsStartTime = performance.now();
-    // due to self-referencing we need to parse them hierarchically
-    let existingIds = [...existingIdsInDb];
-    let remaining = recordsToCreate.map(fromEsiToSchema);
-    let numCreated = 0;
-    const canInsertRecord = (
-      marketGroup: Pick<MarketGroup, "marketGroupId" | "parentMarketGroupId">,
-    ) =>
-      marketGroup.parentMarketGroupId == null ||
-      existingIds.includes(marketGroup.parentMarketGroupId);
-    while (remaining.length > 0) {
-      const insertableRecords = remaining.filter((record) =>
-        canInsertRecord(record),
+    let results: BatchStepResult<StatsKey>[] = [];
+    const limit = pLimit(20);
+
+    // update records in batches
+    for (let i = 0; i < batches.length; i++) {
+      const result = await step.run(
+        `Batch ${i + 1}/${batches.length}`,
+        async (): Promise<BatchStepResult<StatsKey>> => {
+          const stepStartTime = performance.now();
+          const thisBatchIds = batches[i]!;
+
+          const marketGroupChanges = await updateTable({
+            fetchLocalEntries: async () =>
+              prisma.marketGroup
+                .findMany({
+                  where: {
+                    marketGroupId: {
+                      in: thisBatchIds,
+                    },
+                  },
+                })
+                .then((entries) =>
+                  entries.map((entry) =>
+                    excludeObjectKeys(entry, ["updatedAt"]),
+                  ),
+                ),
+            fetchRemoteEntries: async () =>
+              Promise.all(
+                thisBatchIds.map((marketGroupId) =>
+                  limit(async () =>
+                    getMarketsGroupsMarketGroupId(marketGroupId)
+                      .then((res) => res.data)
+                      .then((marketGroup) => ({
+                        marketGroupId: marketGroup.market_group_id,
+                        name: marketGroup.name,
+                        parentMarketGroupId:
+                          marketGroup.parent_group_id ?? null,
+                        description: marketGroup.description,
+                        isDeleted: false,
+                      })),
+                  ),
+                ),
+              ),
+            batchCreate: (entries) =>
+              limit(() =>
+                prisma.marketGroup.createMany({
+                  data: entries,
+                }),
+              ),
+            batchDelete: (entries) =>
+              prisma.marketGroup.updateMany({
+                data: {
+                  isDeleted: true,
+                },
+                where: {
+                  marketGroupId: {
+                    in: entries.map((entry) => entry.marketGroupId),
+                  },
+                },
+              }),
+            batchUpdate: (entries) =>
+              Promise.all(
+                entries.map((entry) =>
+                  limit(async () =>
+                    prisma.marketGroup.update({
+                      data: entry,
+                      where: { marketGroupId: entry.marketGroupId },
+                    }),
+                  ),
+                ),
+              ),
+            idAccessor: (e) => e.marketGroupId,
+          });
+
+          return {
+            stats: {
+              marketGroups: {
+                created: marketGroupChanges.created,
+                deleted: marketGroupChanges.deleted,
+                modified: marketGroupChanges.modified,
+                equal: marketGroupChanges.equal,
+              },
+            },
+            elapsed: performance.now() - stepStartTime,
+          };
+        },
       );
-      logger.info(`inserting batch of ${insertableRecords.length} records`);
-      const createResult = await prisma.marketGroup.createMany({
-        data: recordsToCreate.map(fromEsiToSchema),
-        skipDuplicates: true,
-      });
-      numCreated += createResult.count;
-      remaining = remaining.filter((record) => !canInsertRecord(record));
-      existingIds = [
-        ...existingIds,
-        ...insertableRecords.map((record) => record.marketGroupId),
-      ];
+      results.push(result);
     }
-    logger.info(
-      `created records in ${performance.now() - createRecordsStartTime}ms`,
-    );
 
-    // update all market groups with new data
-    const updateRecordsStartTime = performance.now();
-    const updateResult = await Promise.all(
-      recordsToUpdate.map((marketGroup) =>
-        prisma.marketGroup.update({
-          data: fromEsiToSchema(marketGroup),
-          where: { marketGroupId: marketGroup.market_group_id },
-        }),
-      ),
-    );
-    logger.info(
-      `updated records in ${performance.now() - updateRecordsStartTime}ms`,
-    );
-
-    // mark market groups as deleted if missing from ESI
-    const deleteRecordsStartTime = performance.now();
-    const deleteResult = await prisma.marketGroup.updateMany({
-      data: {
-        isDeleted: true,
-      },
-      where: {
-        marketGroupId: {
-          in: recordsToDelete,
+    return await step.run("Compute Aggregates", async () => {
+      const totals: BatchStepResult<StatsKey> = {
+        stats: {
+          marketGroups: {
+            created: 0,
+            deleted: 0,
+            modified: 0,
+            equal: 0,
+          },
         },
-      },
+        elapsed: 0,
+      };
+      results.forEach((stepResult) => {
+        Object.entries(stepResult.stats).forEach(([category, value]) => {
+          Object.keys(value).forEach(
+            (op) =>
+              (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
+                stepResult.stats[category as StatsKey][
+                  op as keyof CrudStatistics
+                ]),
+          );
+        });
+        totals.elapsed += stepResult.elapsed;
+      });
+      return totals;
     });
-    logger.info(
-      `deleted records in ${performance.now() - deleteRecordsStartTime}ms`,
-    );
-
-    return {
-      numCreated,
-      numUpdated: updateResult.length,
-      numDeleted: deleteResult.count,
-    };
   },
 );
