@@ -18,7 +18,7 @@
     "@jitaspace/esi-client": "*",
     "@jitaspace/sde-client": "*",
     "axios": "^1.5.0",
-    "inngest": "^2.6.1",
+    "inngest": "^2.7.0",
     "p-limit": "^4.0.0"
   },
   "devDependencies": {
