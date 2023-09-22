@@ -110,7 +110,6 @@ export default function App({
           title: "Update Available",
           message:
             "A newer version of Jita is available. Simply reload to update.",
-          autoClose: false,
         });
         /*
         // `event.wasWaitingBeforeRegister` will be false if this is the first time the updated service worker is waiting.
