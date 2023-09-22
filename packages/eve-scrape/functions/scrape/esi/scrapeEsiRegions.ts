@@ -15,7 +15,12 @@ export type ScrapeRegionEventPayload = {
 };
 
 export const scrapeEsiRegions = inngest.createFunction(
-  { name: "Scrape Regions" },
+  {
+    name: "Scrape Regions",
+    concurrency: {
+      limit: 1,
+    },
+  },
   { event: "scrape/esi/regions" },
 
   async ({}) => {

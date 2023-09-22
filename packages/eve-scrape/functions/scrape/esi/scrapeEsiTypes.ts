@@ -20,7 +20,12 @@ export type ScrapeTypesEventPayload = {
 type StatsKey = "types" | "typeAttributes" | "typeEffects";
 
 export const scrapeEsiTypes = inngest.createFunction(
-  { name: "Scrape Types" },
+  {
+    name: "Scrape Types",
+    concurrency: {
+      limit: 1,
+    },
+  },
   { event: "scrape/esi/types" },
   async ({ step, event, logger }) => {
     // FIXME: THIS SHOULD NOT BE NECESSARY

@@ -15,7 +15,12 @@ export type ScrapeCategoriesEventPayload = {
 };
 
 export const scrapeEsiCategories = inngest.createFunction(
-  { name: "Scrape Categories" },
+  {
+    name: "Scrape Categories",
+    concurrency: {
+      limit: 1,
+    },
+  },
   { event: "scrape/esi/categories" },
   async ({}) => {
     const stepStartTime = performance.now();

@@ -15,7 +15,12 @@ export type ScrapeConstellationEventPayload = {
 };
 
 export const scrapeEsiConstellations = inngest.createFunction(
-  { name: "Scrape Constellations" },
+  {
+    name: "Scrape Constellations",
+    concurrency: {
+      limit: 1,
+    },
+  },
   { event: "scrape/esi/constellations" },
   async ({}) => {
     const stepStartTime = performance.now();

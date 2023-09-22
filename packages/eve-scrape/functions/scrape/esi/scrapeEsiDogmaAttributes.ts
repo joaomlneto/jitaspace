@@ -20,7 +20,12 @@ export type ScrapeDogmaAttributesEventPayload = {
 type StatsKey = "dogmaAttributes";
 
 export const scrapeEsiDogmaAttributes = inngest.createFunction(
-  { name: "Scrape Dogma Attributes" },
+  {
+    name: "Scrape Dogma Attributes",
+    concurrency: {
+      limit: 1,
+    },
+  },
   { event: "scrape/esi/dogma-attributes" },
   async ({ step, event, logger }) => {
     // FIXME: THIS SHOULD NOT BE NECESSARY

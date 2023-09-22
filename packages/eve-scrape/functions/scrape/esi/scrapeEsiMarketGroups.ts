@@ -19,7 +19,12 @@ export type ScrapeMarketGroupsEventPayload = {
 type StatsKey = "marketGroups";
 
 export const scrapeEsiMarketGroups = inngest.createFunction(
-  { name: "Scrape Market Groups" },
+  {
+    name: "Scrape Market Groups",
+    concurrency: {
+      limit: 1,
+    },
+  },
   { event: "scrape/esi/market-groups" },
   async ({ step, event, logger }) => {
     // FIXME: THIS SHOULD NOT BE NECESSARY
