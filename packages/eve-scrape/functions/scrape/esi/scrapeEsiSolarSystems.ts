@@ -36,6 +36,7 @@ export const scrapeEsiSolarSystems = inngest.createFunction(
     concurrency: {
       limit: 1,
     },
+    retries: 5,
   },
   { event: "scrape/esi/solar-systems" },
   async ({ step, event }) => {
