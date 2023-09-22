@@ -336,13 +336,13 @@ model Station {
   owner                    Corporation?     @relation("StationOwner", fields: [ownerId], references: [corporationId])
   ownerId                  Int?
   // TODO add XYZ Position field
-  updatedAt                DateTime         @updatedAt()
-  isDeleted                Boolean          @default(false)
   race                     Race?            @relation("RaceStations", fields: [raceId], references: [raceId])
   raceId                   Int?
   reprocessingEfficiency   Float
   reprocessingStationsTake Float
   stationServices          StationService[]
+  updatedAt                DateTime         @updatedAt()
+  isDeleted                Boolean          @default(false)
 
   @@index([solarSystemId])
   @@index([typeId])
@@ -397,10 +397,7 @@ model SolarSystem {
   securityStatus      Decimal
   star                Star?         @relation("SolarSystemStar")
   starId              Int?
-  // List of stargates that are located in this system
-  stargate            Stargate[]    @relation("SolarSystemStargate")
-  // List of stargates that have this system as a destination
-  StargateOrigins     Stargate[]    @relation("SolarSystemStargateDestination")
+  stargates           Stargate[]    @relation("SolarSystemStargate")
   updatedAt           DateTime      @updatedAt()
   isDeleted           Boolean       @default(false)
   solarSystemFactions Faction[]     @relation("FactionSolarSystem")
@@ -420,32 +417,58 @@ model Star {
 
 // TODO: Add missing "position" field
 model Stargate {
-  stargateId               Int         @id
-  name                     String
-  solarSystem              SolarSystem @relation("SolarSystemStargate", fields: [solarSystemId], references: [solarSystemId])
-  solarSystemId            Int
-  destinationSolarSystem   SolarSystem @relation("SolarSystemStargateDestination", fields: [destinationSolarSystemId], references: [solarSystemId])
-  destinationSolarSystemId Int
-  updatedAt                DateTime    @updatedAt()
-  isDeleted                Boolean     @default(false)
+  stargateId            Int         @id
+  name                  String
+  solarSystem           SolarSystem @relation("SolarSystemStargate", fields: [solarSystemId], references: [solarSystemId])
+  solarSystemId         Int
+  DestinationStargate   Stargate    @relation("StargateDestination", fields: [destinationStargateId], references: [stargateId], onDelete: NoAction, onUpdate: NoAction)
+  destinationStargateId Int         @unique
+  updatedAt             DateTime    @updatedAt()
+  isDeleted             Boolean     @default(false)
+  IncomingStargates     Stargate[]  @relation("StargateDestination")
 
   @@index([solarSystemId])
-  @@index([destinationSolarSystemId])
 }
 
 // TODO: Add missing "position" field
 model Planet {
-  planetId      Int         @id
+  planetId      Int            @id
   name          String
-  solarSystem   SolarSystem @relation("PlanetSolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  solarSystem   SolarSystem    @relation("PlanetSolarSystem", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId Int
-  type          Type        @relation("PlanetType", fields: [typeId], references: [typeId])
+  type          Type           @relation("PlanetType", fields: [typeId], references: [typeId])
   typeId        Int
-  updatedAt     DateTime    @updatedAt()
-  isDeleted     Boolean     @default(false)
+  updatedAt     DateTime       @updatedAt()
+  isDeleted     Boolean        @default(false)
+  moons         Moon[]         @relation("PlanetMoons")
+  asteroidBelts AsteroidBelt[] @relation("PlanetAsteroidBelts")
 
   @@index([solarSystemId])
   @@index([typeId])
+}
+
+// TODO: Add missing "position" field
+model Moon {
+  moonId    Int      @id
+  name      String
+  planet    Planet   @relation("PlanetMoons", fields: [planetId], references: [planetId])
+  planetId  Int
+  updatedAt DateTime @updatedAt()
+  isDeleted Boolean  @default(false)
+
+  @@index([planetId])
+}
+
+// TODO: Add missing "position" field
+model AsteroidBelt {
+  asteroidBeltId Int      @id
+  name           String
+  planet         Planet   @relation("PlanetAsteroidBelts", fields: [planetId], references: [planetId])
+  planetId       Int
+  updatedAt      DateTime @updatedAt()
+  isDeleted      Boolean  @default(false)
+
+  @@index([planetId])
 }
 
 model Ancestry {
