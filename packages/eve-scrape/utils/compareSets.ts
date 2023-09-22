@@ -1,4 +1,6 @@
-export const compareSets = <T>({
+import { env } from "../env.mjs";
+
+export const compareSets = <T extends object>({
   recordsBefore,
   recordsAfter,
   getId,
@@ -32,6 +34,27 @@ export const compareSets = <T>({
     (record) => !keysAfter.includes(getId(record)),
   );
 
+  // validate that object keys are the same
+  // this strangely causes the scrapeEsiTypes to crash due to "Maximum call stack size exceeded"
+  if (env.NODE_ENV === "development") {
+    const objKeysBefore = [
+      ...new Set(recordsBefore.flatMap((record) => Object.keys(record))),
+    ];
+    const objKeysAfter = [
+      ...new Set(recordsAfter.flatMap((record) => Object.keys(record))),
+    ];
+    objKeysBefore.sort((a, b) => a.localeCompare(b));
+    objKeysAfter.sort((a, b) => a.localeCompare(b));
+    if (!objKeysBefore.every((_, i) => objKeysBefore[i] == objKeysAfter[i])) {
+      console.log({
+        objKeysBefore,
+        objKeysAfter,
+        test: new Set(recordsAfter.flatMap((record) => Object.keys(record))),
+      });
+      throw Error("KEY SETS DO NOT MATCH");
+    }
+  }
+
   // get the records that are common to both sets
   const commonKeys = keysAfter.filter((key) => keysBefore.includes(key));
   const commonRecords = recordsAfter.filter((record) =>
@@ -48,6 +71,13 @@ export const compareSets = <T>({
   const modified = commonRecords.filter(
     (record) => !equalKeys.includes(getId(record)),
   );
+
+  /*
+  modified.map((record) => {
+    const before = indexBefore[getId(record)];
+    const after = indexAfter[getId(record)];
+    console.log({ before, after });
+  });*/
 
   // sanity check
   if (
