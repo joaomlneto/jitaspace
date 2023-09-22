@@ -1,0 +1,3 @@
+export const MAX_NUM_IDS_PER_FUNCTION_CALL = 25000;
+
+export const MAX_MOONS_PER_FUNCTION_CALL = 10000;

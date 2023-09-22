@@ -4,6 +4,8 @@ export * from "./scrapeEsiDogmaAttributes";
 export * from "./scrapeEsiDogmaEffects";
 export * from "./scrapeEsiGroups";
 export * from "./scrapeEsiMarketGroups";
+export * from "./scrapeEsiMoons";
+export * from "./scrapeEsiPlanets";
 export * from "./scrapeEsiRegions";
 export * from "./scrapeEsiSolarSystems";
 export * from "./scrapeEsiTypes";

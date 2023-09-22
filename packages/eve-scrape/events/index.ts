@@ -6,6 +6,8 @@ import {
   ScrapeDogmaEffectsEventPayload,
   ScrapeGroupsEventPayload,
   ScrapeMarketGroupsEventPayload,
+  ScrapeMoonsEventPayload,
+  ScrapePlanetsEventPayload,
   ScrapeRegionEventPayload,
   ScrapeSdeMarketGroupsEventPayload,
   ScrapeSolarSystemsEventPayload,
@@ -20,6 +22,8 @@ export type Events = {
   "scrape/esi/dogma-effects": ScrapeDogmaEffectsEventPayload;
   "scrape/esi/groups": ScrapeGroupsEventPayload;
   "scrape/esi/market-groups": ScrapeMarketGroupsEventPayload;
+  "scrape/esi/moons": ScrapeMoonsEventPayload;
+  "scrape/esi/planets": ScrapePlanetsEventPayload;
   "scrape/esi/regions": ScrapeRegionEventPayload;
   "scrape/esi/solar-systems": ScrapeSolarSystemsEventPayload;
   "scrape/esi/types": ScrapeTypesEventPayload;
