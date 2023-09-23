@@ -616,6 +616,9 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../esi-client
+      '@jitaspace/esi-client-kubb':
+        specifier: '*'
+        version: link:../esi-client-kubb
       '@jitaspace/sde-client':
         specifier: '*'
         version: link:../sde-client
