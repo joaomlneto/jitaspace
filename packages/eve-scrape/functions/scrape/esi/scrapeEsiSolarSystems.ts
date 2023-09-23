@@ -7,6 +7,7 @@ import {
   getUniverseMoonsMoonId,
   getUniversePlanetsPlanetId,
   getUniverseStargatesStargateId,
+  getUniverseStarsStarId,
   getUniverseStationsStationId,
   getUniverseSystems,
   getUniverseSystemsSystemId,
@@ -27,6 +28,7 @@ type StatsKey =
   | "planets"
   | "stargates"
   | "stations"
+  | "stars"
   | "moons"
   | "asteroidBelts";
 
@@ -93,6 +95,10 @@ export const scrapeEsiSolarSystems = inngest.createFunction(
           const thisBatchStationIds = esiSolarSystems.flatMap(
             (solarSystem) => solarSystem.stations ?? [],
           );
+
+          const thisBatchStarIds = esiSolarSystems
+            .map((solarSystem) => solarSystem.star_id)
+            .filter((x) => x) as number[]; // FIXME shouldnt need type casting
 
           const thisBatchMoons = thisBatchPlanets.flatMap((planet) =>
             (planet.moons ?? []).map((moonId) => ({
@@ -509,44 +515,82 @@ export const scrapeEsiSolarSystems = inngest.createFunction(
             idAccessor: (e) => e.asteroidBeltId,
           });
 
+          const starChanges = await updateTable({
+            fetchLocalEntries: async () =>
+              prisma.star
+                .findMany({
+                  where: {
+                    starId: {
+                      in: thisBatchStarIds,
+                    },
+                  },
+                })
+                .then((entries) =>
+                  entries.map((entry) =>
+                    excludeObjectKeys(entry, ["updatedAt"]),
+                  ),
+                ),
+            fetchRemoteEntries: async () =>
+              Promise.all(
+                thisBatchStarIds.map((starId) =>
+                  limit(async () =>
+                    getUniverseStarsStarId(starId)
+                      .then((res) => res.data)
+                      .then((star) => ({
+                        starId,
+                        name: star.name,
+                        solarSystemId: star.solar_system_id,
+                        age: BigInt(star.age),
+                        luminosity: new Prisma.Decimal(star.luminosity),
+                        radius: BigInt(star.radius),
+                        spectralClass: star.spectral_class,
+                        temperature: BigInt(star.temperature),
+                        typeId: star.type_id,
+                        isDeleted: false,
+                      })),
+                  ),
+                ),
+              ),
+            batchCreate: (entries) =>
+              limit(() =>
+                prisma.star.createMany({
+                  data: entries,
+                }),
+              ),
+            batchDelete: (entries) =>
+              prisma.star.updateMany({
+                data: {
+                  isDeleted: true,
+                },
+                where: {
+                  starId: {
+                    in: entries.map((entry) => entry.starId),
+                  },
+                },
+              }),
+            batchUpdate: (entries) =>
+              Promise.all(
+                entries.map((entry) =>
+                  limit(async () =>
+                    prisma.star.update({
+                      data: entry,
+                      where: { starId: entry.starId },
+                    }),
+                  ),
+                ),
+              ),
+            idAccessor: (e) => e.starId,
+          });
+
           return {
             stats: {
-              solarSystems: {
-                created: solarSystemChanges.created,
-                deleted: solarSystemChanges.deleted,
-                modified: solarSystemChanges.modified,
-                equal: solarSystemChanges.equal,
-              },
-              planets: {
-                created: planetChanges.created,
-                deleted: planetChanges.deleted,
-                modified: planetChanges.modified,
-                equal: planetChanges.equal,
-              },
-              stargates: {
-                created: stargateChanges.created,
-                deleted: stargateChanges.deleted,
-                modified: stargateChanges.modified,
-                equal: stargateChanges.equal,
-              },
-              stations: {
-                created: stationChanges.created,
-                deleted: stationChanges.deleted,
-                modified: stationChanges.modified,
-                equal: stationChanges.equal,
-              },
-              moons: {
-                created: moonChanges.created,
-                deleted: moonChanges.deleted,
-                modified: moonChanges.modified,
-                equal: moonChanges.equal,
-              },
-              asteroidBelts: {
-                created: asteroidBeltChanges.created,
-                deleted: asteroidBeltChanges.deleted,
-                modified: asteroidBeltChanges.modified,
-                equal: asteroidBeltChanges.equal,
-              },
+              solarSystems: solarSystemChanges,
+              planets: planetChanges,
+              stargates: stargateChanges,
+              stations: stationChanges,
+              stars: starChanges,
+              moons: moonChanges,
+              asteroidBelts: asteroidBeltChanges,
             },
             elapsed: performance.now() - stepStartTime,
           };
@@ -577,6 +621,12 @@ export const scrapeEsiSolarSystems = inngest.createFunction(
             equal: 0,
           },
           stations: {
+            created: 0,
+            deleted: 0,
+            modified: 0,
+            equal: 0,
+          },
+          stars: {
             created: 0,
             deleted: 0,
             modified: 0,
