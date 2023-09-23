@@ -8,13 +8,36 @@ datasource db {
   url          = env("DATABASE_URL")
 }
 
+enum CharacterGender {
+  male
+  female
+}
+
 model Character {
-  characterId         Int           @id
-  // TODO
-  CorporationCeo      Corporation?  @relation("corporationCeo")
-  createdCorporations Corporation[] @relation("corporationCreator")
-  updatedAt           DateTime      @updatedAt()
-  isDeleted           Boolean       @default(false)
+  characterId         Int             @id
+  birthday            DateTime
+  bloodline           Bloodline       @relation("CharacterBloodline", fields: [bloodlineId], references: [bloodlineId])
+  bloodlineId         Int
+  corporation         Corporation     @relation("CharacterCorporation", fields: [corporationId], references: [corporationId])
+  corporationId       Int
+  description         String?
+  faction             Faction?        @relation("CharacterFaction", fields: [factionId], references: [factionId])
+  factionId           Int?
+  gender              CharacterGender
+  name                String
+  race                Race            @relation("CharacterRace", fields: [raceId], references: [raceId])
+  raceId              Int
+  securityStatus      Float?
+  title               String?
+  CorporationCeo      Corporation[]   @relation("corporationCeo")
+  createdCorporations Corporation[]   @relation("corporationCreator")
+  updatedAt           DateTime        @updatedAt()
+  isDeleted           Boolean         @default(false)
+
+  @@index([bloodlineId])
+  @@index([corporationId])
+  @@index([factionId])
+  @@index([raceId])
 }
 
 model MarketGroup {
@@ -242,19 +265,19 @@ model Icon {
 
 model Alliance {
   allianceId            Int          @id
-  creatorCorporation    Corporation  @relation("allianceCreatorCorporation", fields: [creatorCorporationId], references: [corporationId])
+  creatorCorporation    Corporation  @relation("AllianceCreator", fields: [creatorCorporationId], references: [corporationId])
   creatorCorporationId  Int
   dateFounded           DateTime
-  executorCorporation   Corporation? @relation("allianceExecutorCorporation", fields: [executorCorporationId], references: [corporationId])
+  executorCorporation   Corporation? @relation("AllianceExecutor", fields: [executorCorporationId], references: [corporationId])
   executorCorporationId Int?         @unique
   faction               Faction?     @relation(fields: [factionId], references: [factionId])
   factionId             Int?
-  memberCorporations    Corporation? @relation("allianceMemberCorporation", fields: [memberCorporationId], references: [corporationId])
-  memberCorporationId   Int?         @unique
   name                  String
   ticker                String
   updatedAt             DateTime     @updatedAt()
   isDeleted             Boolean      @default(false)
+
+  memberCorporations Corporation[] @relation("CorporationAlliance")
 
   @@index([creatorCorporationId])
   @@index([factionId])
@@ -270,8 +293,8 @@ model Faction {
   militiaCorporationId Int?
   alliances            Alliance[]
   corporations         Corporation[] @relation("CorporationFaction")
-  factionCorporation   Corporation   @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
-  corporationId        Int
+  factionCorporation   Corporation?  @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
+  corporationId        Int?
   sizeFactor           Float
   solarSystem          SolarSystem?  @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId        Int?
@@ -281,6 +304,8 @@ model Faction {
   stationSystemCount   Int
   updatedAt            DateTime      @updatedAt()
   isDeleted            Boolean       @default(false)
+  Character            Character[]   @relation("CharacterFaction")
+  races                Race[]        @relation("RaceFaction")
 
   @@index([corporationId])
   @@index([militiaCorporationId])
@@ -288,39 +313,43 @@ model Faction {
 }
 
 model Corporation {
-  corporationId    Int       @id
-  allianceId       Alliance? @relation("allianceMemberCorporation")
-  ceo              Character @relation("corporationCeo", fields: [ceoId], references: [characterId])
-  ceoId            Int       @unique
-  creator          Character @relation("corporationCreator", fields: [creatorId], references: [characterId])
-  executorAlliance Alliance? @relation("allianceExecutorCorporation")
-  creatorId        Int
-  dateFounded      DateTime?
-  description      String?   @db.Text
-  faction          Faction?  @relation("CorporationFaction", fields: [factionId], references: [factionId])
-  factionId        Int?
-  homeStation      Station?  @relation("CorporationHomeStation", fields: [homeStationId], references: [stationId], onDelete: NoAction, onUpdate: NoAction)
-  homeStationId    Int?
-  memberCount      Int
-  name             String
-  shares           Int?
-  taxRate          Float
-  ticker           String
-  url              String?
-  warEligible      Boolean?
+  corporationId Int        @id
+  alliance      Alliance?  @relation("CorporationAlliance", fields: [allianceId], references: [allianceId], onUpdate: NoAction, onDelete: NoAction)
+  allianceId    Int?
+  ceo           Character? @relation("corporationCeo", fields: [ceoId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
+  ceoId         Int?
+  creator       Character? @relation("corporationCreator", fields: [creatorId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
+  creatorId     Int?
+  dateFounded   DateTime?
+  description   String?    @db.Text
+  faction       Faction?   @relation("CorporationFaction", fields: [factionId], references: [factionId])
+  factionId     Int?
+  homeStation   Station?   @relation("CorporationHomeStation", fields: [homeStationId], references: [stationId], onDelete: NoAction, onUpdate: NoAction)
+  homeStationId Int?
+  memberCount   Int
+  name          String
+  shares        BigInt?
+  taxRate       Float
+  ticker        String
+  url           String?    @db.Text
+  warEligible   Boolean?
 
   updatedAt DateTime @updatedAt()
   isDeleted Boolean  @default(false)
 
-  createdAlliances    Alliance[]  @relation("allianceCreatorCorporation")
+  executorAlliance    Alliance?   @relation("AllianceExecutor")
+  createdAlliances    Alliance[]  @relation("AllianceCreator")
   ownedStations       Station[]   @relation("StationOwner")
   bloodlines          Bloodline[] @relation("BloodlineCorporation")
   CorporationFactions Faction[]   @relation("FactionCorporation")
   MilitiaFaction      Faction[]   @relation("FactionMilitiaCorporation")
+  Character           Character[] @relation("CharacterCorporation")
 
   @@index([creatorId])
   @@index([factionId])
   @@index([homeStationId])
+  @@index([allianceId])
+  @@index([ceoId])
 }
 
 model Station {
@@ -357,9 +386,18 @@ model StationService {
 }
 
 model Race {
-  raceId     Int         @id
-  stations   Station[]   @relation("RaceStations")
-  bloodlines Bloodline[] @relation("BloodlineRace")
+  raceId      Int         @id
+  name        String
+  description String      @db.Text
+  faction     Faction?    @relation("RaceFaction", fields: [factionId], references: [factionId])
+  factionId   Int?
+  updatedAt   DateTime    @updatedAt()
+  isDeleted   Boolean     @default(false)
+  stations    Station[]   @relation("RaceStations")
+  bloodlines  Bloodline[] @relation("BloodlineRace")
+  characters  Character[] @relation("CharacterRace")
+
+  @@index([factionId])
 }
 
 // done:
@@ -480,6 +518,8 @@ model Ancestry {
   iconId           Int?
   bloodline        Bloodline @relation("AncestryBloodline", fields: [bloodlineId], references: [bloodlineId])
   bloodlineId      Int
+  updatedAt        DateTime  @updatedAt()
+  isDeleted        Boolean   @default(false)
 
   @@index([iconId])
   @@index([bloodlineId])
@@ -487,13 +527,12 @@ model Ancestry {
 
 model Bloodline {
   bloodlineId   Int         @id
-  ancestries    Ancestry[]  @relation("AncestryBloodline")
   corporation   Corporation @relation("BloodlineCorporation", fields: [corporationId], references: [corporationId])
   corporationId Int
   name          String
   description   String      @db.Text
-  shipType      Type        @relation("BloodlineShipType", fields: [shipTypeId], references: [typeId])
-  shipTypeId    Int
+  shipType      Type?       @relation("BloodlineShipType", fields: [shipTypeId], references: [typeId])
+  shipTypeId    Int?
   race          Race        @relation("BloodlineRace", fields: [raceId], references: [raceId])
   raceId        Int
   charisma      Int
@@ -501,6 +540,10 @@ model Bloodline {
   memory        Int
   perception    Int
   willpower     Int
+  Character     Character[] @relation("CharacterBloodline")
+  ancestries    Ancestry[]  @relation("AncestryBloodline")
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
 
   @@index([corporationId])
   @@index([shipTypeId])
