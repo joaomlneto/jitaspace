@@ -12,3 +12,4 @@ export * from "./useEsiName";
 export * from "./useEsiSearch";
 export * from "./useMarketPrices";
 export * from "./useSolarSystemCostIndices";
+export * from "./useTypeMarketOrders";
