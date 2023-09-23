@@ -12,6 +12,7 @@ import {
   ItemsIcon,
   LPStoreIcon,
   MapIcon,
+  MarketIcon,
   OpportunitiesTreeIcon,
   PeopleAndPlacesIcon,
   SkillsIcon,
@@ -252,6 +253,14 @@ export const universeApps: Record<string, JitaApp> = {
     url: "/regions",
     Icon: (props) => <MapIcon {...props} />,
     scopes: {},
+  },
+  market: {
+    name: "Market",
+    description: "Browse EVE's regional markets",
+    url: "/market",
+    Icon: (props) => <MarketIcon {...props} />,
+    scopes: {},
+    tags: ["beta"],
   },
   inventory: {
     name: "Inventory",
