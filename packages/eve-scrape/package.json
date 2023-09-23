@@ -27,7 +27,7 @@
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
     "@types/node": "^18.17.18",
-    "eslint": "^8.49.0",
+    "eslint": "^8.50.0",
     "inngest-cli": "^0.16.7",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
