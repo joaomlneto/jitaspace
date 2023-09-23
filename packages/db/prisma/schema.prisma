@@ -103,6 +103,7 @@ model Type {
   effects        TypeEffect[]
   bloodlines     Bloodline[]     @relation("BloodlineShipType")
   Planet         Planet[]        @relation("PlanetType")
+  Star           Star[]          @relation("StarType")
 
   @@index([marketGroupId])
   @@index([graphicId])
@@ -449,8 +450,17 @@ model Star {
   name          String
   solarSystem   SolarSystem @relation("SolarSystemStar", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId Int         @unique
+  age           BigInt
+  luminosity    Decimal
+  radius        BigInt
+  spectralClass String
+  temperature   BigInt
+  type          Type        @relation("StarType", fields: [typeId], references: [typeId])
+  typeId        Int
   updatedAt     DateTime    @updatedAt()
   isDeleted     Boolean     @default(false)
+
+  @@index([typeId])
 }
 
 // TODO: Add missing "position" field
