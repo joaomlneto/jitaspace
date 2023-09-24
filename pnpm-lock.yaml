@@ -19,7 +19,7 @@ importers:
         version: 0.21.0
       '@turbo/gen':
         specifier: ^1.10.14
-        version: 1.10.14(@types/node@18.17.18)(typescript@5.2.2)
+        version: 1.10.14(@types/node@18.17.19)(typescript@5.2.2)
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
@@ -115,7 +115,7 @@ importers:
         version: 6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/tiptap':
         specifier: ^6.0.21
-        version: 6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.34.0)(@tiptap/extension-link@2.1.11)(@tiptap/react@2.1.11)(react@18.2.0)
+        version: 6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.35.0)(@tiptap/extension-link@2.1.11)(@tiptap/react@2.1.11)(react@18.2.0)
       '@next/bundle-analyzer':
         specifier: ^13.5.2
         version: 13.5.2
@@ -123,8 +123,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.34.0
-        version: 2.34.0(react@18.2.0)
+        specifier: ^2.35.0
+        version: 2.35.0(react@18.2.0)
       '@tanstack/query-core':
         specifier: ^4.35.3
         version: 4.35.3
@@ -135,8 +135,8 @@ importers:
         specifier: ^4.35.3
         version: 4.35.3(@tanstack/react-query@4.35.3)(react-dom@18.2.0)(react@18.2.0)
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: 18.2.22
         version: 18.2.22
@@ -187,7 +187,7 @@ importers:
         version: 2.9.13(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(react@18.2.0)
       mantine-react-table:
         specifier: ^1.3.0
-        version: 1.3.0(@emotion/react@11.11.1)(@mantine/core@6.0.21)(@mantine/dates@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.34.0)(react-dom@18.2.0)(react@18.2.0)
+        version: 1.3.0(@emotion/react@11.11.1)(@mantine/core@6.0.21)(@mantine/dates@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.35.0)(react-dom@18.2.0)(react@18.2.0)
       next:
         specifier: ^13.5.2
         version: 13.5.2(@babel/core@7.22.1)(react-dom@18.2.0)(react@18.2.0)
@@ -318,8 +318,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       concurrently:
         specifier: ^8.2.1
         version: 8.2.1
@@ -358,8 +358,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -386,7 +386,7 @@ importers:
     dependencies:
       '@kubb/cli':
         specifier: ^1.9.1
-        version: 1.9.1(@types/node@18.17.18)(typescript@5.2.2)
+        version: 1.9.1(@types/node@18.17.19)(typescript@5.2.2)
       '@kubb/core':
         specifier: ^1.9.1
         version: 1.9.1
@@ -422,8 +422,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -459,8 +459,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -502,8 +502,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -548,8 +548,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -584,8 +584,8 @@ importers:
         specifier: '*'
         version: link:../utils
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -645,8 +645,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       eslint:
         specifier: ^8.50.0
         version: 8.50.0
@@ -682,8 +682,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -713,10 +713,10 @@ importers:
         version: 6.0.21(react@18.2.0)
       '@mantine/tiptap':
         specifier: ^6.0.21
-        version: 6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.34.0)(@tiptap/extension-link@2.1.11)(@tiptap/react@2.1.11)(react@18.2.0)
+        version: 6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.35.0)(@tiptap/extension-link@2.1.11)(@tiptap/react@2.1.11)(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.34.0
-        version: 2.34.0(react@18.2.0)
+        specifier: ^2.35.0
+        version: 2.35.0(react@18.2.0)
       '@tiptap/extension-character-count':
         specifier: ^2.1.11
         version: 2.1.11(@tiptap/core@2.1.11)(@tiptap/pm@2.1.11)
@@ -745,8 +745,8 @@ importers:
         specifier: ^2.1.11
         version: 2.1.11(@tiptap/pm@2.1.11)
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: 18.2.22
         version: 18.2.22
@@ -846,10 +846,10 @@ importers:
         version: 6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/tiptap':
         specifier: ^6.0.21
-        version: 6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.34.0)(@tiptap/extension-link@2.1.11)(@tiptap/react@2.1.11)(react@18.2.0)
+        version: 6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.35.0)(@tiptap/extension-link@2.1.11)(@tiptap/react@2.1.11)(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.34.0
-        version: 2.34.0(react@18.2.0)
+        specifier: ^2.35.0
+        version: 2.35.0(react@18.2.0)
       '@tiptap/extension-color':
         specifier: ^2.1.11
         version: 2.1.11(@tiptap/core@2.1.11)(@tiptap/extension-text-style@2.1.11)
@@ -872,8 +872,8 @@ importers:
         specifier: ^2.1.11
         version: 2.1.11(@tiptap/pm@2.1.11)
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: 18.2.22
         version: 18.2.22
@@ -930,8 +930,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.17.18
-        version: 18.17.18
+        specifier: ^18.17.19
+        version: 18.17.19
       '@types/react':
         specifier: ^18.2.22
         version: 18.2.22
@@ -954,8 +954,8 @@ importers:
         specifier: ^13.5.2
         version: 13.5.2
       '@types/eslint':
-        specifier: ^8.44.2
-        version: 8.44.2
+        specifier: ^8.44.3
+        version: 8.44.3
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.7.2
         version: 6.7.2(@typescript-eslint/parser@6.7.2)(eslint@8.50.0)(typescript@5.2.2)
@@ -2993,7 +2993,7 @@ packages:
       jsep: 1.3.8
     dev: true
 
-  /@kubb/cli@1.9.1(@types/node@18.17.18)(typescript@5.2.2):
+  /@kubb/cli@1.9.1(@types/node@18.17.19)(typescript@5.2.2):
     resolution: {integrity: sha512-kWXPoaCdXspwYAVbj1hPjMXQSgdSbd69VvJUo4NS0Vsm6OcTIzXpT870YuL91kecTbdl2VdyofPjboVtZYBhPQ==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     hasBin: true
@@ -3008,7 +3008,7 @@ packages:
       picocolors: 1.0.0
       pretty-error: 4.0.0
       string-argv: 0.3.2
-      ts-node: 10.9.1(@swc/core@1.3.82)(@types/node@18.17.18)(typescript@5.2.2)
+      ts-node: 10.9.1(@swc/core@1.3.82)(@types/node@18.17.19)(typescript@5.2.2)
     transitivePeerDependencies:
       - '@swc/helpers'
       - '@swc/wasm'
@@ -3360,7 +3360,7 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@mantine/tiptap@6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.34.0)(@tiptap/extension-link@2.1.11)(@tiptap/react@2.1.11)(react@18.2.0):
+  /@mantine/tiptap@6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.35.0)(@tiptap/extension-link@2.1.11)(@tiptap/react@2.1.11)(react@18.2.0):
     resolution: {integrity: sha512-SeVoMN+STXeeVTg2H4bxLJUjDuZ9ykAm6TSTqDi/vTRxp/v3aokAU8DCD8Z207DNXaRfZ50YByxfo1/uIyndYw==}
     peerDependencies:
       '@mantine/core': 6.0.21
@@ -3373,7 +3373,7 @@ packages:
       '@mantine/core': 6.0.21(@emotion/react@11.11.1)(@mantine/hooks@6.0.21)(@types/react@18.2.22)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/hooks': 6.0.21(react@18.2.0)
       '@mantine/utils': 6.0.21(react@18.2.0)
-      '@tabler/icons-react': 2.34.0(react@18.2.0)
+      '@tabler/icons-react': 2.35.0(react@18.2.0)
       '@tiptap/extension-link': 2.1.11(@tiptap/core@2.1.11)(@tiptap/pm@2.1.11)
       '@tiptap/react': 2.1.11(@tiptap/core@2.1.11)(@tiptap/pm@2.1.11)(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
@@ -4247,7 +4247,7 @@ packages:
       '@stoplight/spectral-rulesets': 1.16.0
       '@stoplight/spectral-runtime': 1.1.2
       '@stoplight/types': 13.15.0
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
       pony-cause: 1.1.1
       rollup: 2.79.1
       tslib: 2.5.3
@@ -4267,7 +4267,7 @@ packages:
       '@stoplight/spectral-runtime': 1.1.2
       '@stoplight/types': 13.15.0
       '@stoplight/yaml': 4.2.3
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
       ajv: 8.12.0
       ast-types: 0.14.2
       astring: 1.8.6
@@ -4497,18 +4497,18 @@ packages:
       defer-to-connect: 1.1.3
     dev: false
 
-  /@tabler/icons-react@2.34.0(react@18.2.0):
-    resolution: {integrity: sha512-HNNTdwwAW8IwUxLPY2HWFw+d7nPVByieamIx90qM1+Rq8UfvLjwsBFNcUKaJcfRFIAa80o4g6ZGy/NMD/Zw73A==}
+  /@tabler/icons-react@2.35.0(react@18.2.0):
+    resolution: {integrity: sha512-jK2zgtMF2+LSjtbjYsfer+ryz72TwyJqv3MsmCfEpQwP37u01xvmTlVhJ+ox3bV+trsgjojsldVDuB05JuXLaw==}
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0
     dependencies:
-      '@tabler/icons': 2.34.0
+      '@tabler/icons': 2.35.0
       prop-types: 15.8.1
       react: 18.2.0
     dev: false
 
-  /@tabler/icons@2.34.0:
-    resolution: {integrity: sha512-65GsJsT4ZBETWcdrNxbsjsbRoZvbVk3CcU2SafaElrzP1wpOeuAn9aELVEbxhdyZyP9dg2SCfgH6iAArJgp7lw==}
+  /@tabler/icons@2.35.0:
+    resolution: {integrity: sha512-qW/itKdmFvfGw6mAQ+cZy+2MYTXb0XdGAVhO3obYLJEfsSPMwQRO0S9ckFk1xMQX/Tj7REC3TEmWUBWNi3/o3g==}
     dev: false
 
   /@tanstack/match-sorter-utils@8.8.4:
@@ -4908,7 +4908,7 @@ packages:
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
     dev: false
 
-  /@turbo/gen@1.10.14(@types/node@18.17.18)(typescript@5.2.2):
+  /@turbo/gen@1.10.14(@types/node@18.17.19)(typescript@5.2.2):
     resolution: {integrity: sha512-g7ecPx0GCCTpnbH53blBGNk6pP4LhcWiTtR0kEprGkXpiHqjYDpOydz4JFoz9IC+Hj1Z28/+M7T/GfwJAjf0FQ==}
     hasBin: true
     dependencies:
@@ -4920,7 +4920,7 @@ packages:
       minimatch: 9.0.3
       node-plop: 0.26.3
       proxy-agent: 6.3.0
-      ts-node: 10.9.1(@swc/core@1.3.82)(@types/node@18.17.18)(typescript@5.2.2)
+      ts-node: 10.9.1(@swc/core@1.3.82)(@types/node@18.17.19)(typescript@5.2.2)
       update-check: 1.5.4
       validate-npm-package-name: 5.0.0
     transitivePeerDependencies:
@@ -4962,18 +4962,18 @@ packages:
   /@types/es-aggregate-error@1.0.2:
     resolution: {integrity: sha512-erqUpFXksaeR2kejKnhnjZjbFxUpGZx4Z7ydNL9ie8tEhXPiZTsLeUDJ6aR1F8j5wWUAtOAQWUqkc7givBJbBA==}
     dependencies:
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
     dev: true
 
   /@types/eslint-scope@3.7.4:
     resolution: {integrity: sha512-9K4zoImiZc3HlIp6AVUDE4CWYx22a+lhSZMYNpbjW04+YF0KWj4pJXnEMjdnFTiQibFFmElcsasJXDbdI/EPhA==}
     dependencies:
-      '@types/eslint': 8.44.2
+      '@types/eslint': 8.44.3
       '@types/estree': 1.0.1
     dev: false
 
-  /@types/eslint@8.44.2:
-    resolution: {integrity: sha512-sdPRb9K6iL5XZOmBubg8yiFp5yS/JdUDQsq5e6h95km91MCYMuvp7mh1fjPEYUhvHepKpZOjnEaMBR4PxjWDzg==}
+  /@types/eslint@8.44.3:
+    resolution: {integrity: sha512-iM/WfkwAhwmPff3wZuPLYiHX18HI24jU8k1ZSH7P8FHwxTjZ2P6CoX2wnF43oprR+YXJM6UUxATkNvyv/JHd+g==}
     dependencies:
       '@types/estree': 1.0.1
       '@types/json-schema': 7.0.12
@@ -4989,14 +4989,14 @@ packages:
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
     dev: false
 
   /@types/htmlparser2@3.10.3:
     resolution: {integrity: sha512-XA74aD+acytofnZic9n83Rxy/IZ259299bYPx5SEyx7uymPi79lRyKDkhJlsuCaPHB7rEoTEhRN4Vm2G5WmHHg==}
     dependencies:
       '@types/domutils': 1.7.4
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
       domhandler: 2.4.2
     dev: true
 
@@ -5027,7 +5027,7 @@ packages:
   /@types/keyv@3.1.4:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
     dev: false
 
   /@types/lodash@4.14.198:
@@ -5046,8 +5046,8 @@ packages:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: false
 
-  /@types/node@18.17.18:
-    resolution: {integrity: sha512-/4QOuy3ZpV7Ya1GTRz5CYSz3DgkKpyUptXuQ5PPce7uuyJAOR7r9FhkmxJfvcNUXyklbC63a+YvB3jxy7s9ngw==}
+  /@types/node@18.17.19:
+    resolution: {integrity: sha512-+pMhShR3Or5GR0/sp4Da7FnhVmTalWm81M6MkEldbwjETSaPalw138Z4KdpQaistvqQxLB7Cy4xwYdxpbSOs9Q==}
 
   /@types/normalize-package-data@2.4.1:
     resolution: {integrity: sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw==}
@@ -5091,13 +5091,13 @@ packages:
   /@types/resolve@1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
     dev: false
 
   /@types/responselike@1.0.0:
     resolution: {integrity: sha512-85Y2BjiufFzaMIlvJDvTTB8Fxl2xfLo4HgmHzVBz08w4wDePCTjYw66PdrolO0kzli3yam/YCgRufyo1DdQVTA==}
     dependencies:
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
     dev: false
 
   /@types/scheduler@0.16.3:
@@ -5118,7 +5118,7 @@ packages:
   /@types/through@0.0.30:
     resolution: {integrity: sha512-FvnCJljyxhPM3gkRgWmxmDZyAQSiBQQWLI0A0VFL0K7W1oRUrPJSqNO0NvTnLkBcotdlp3lKvaT0JrnyRDkzOg==}
     dependencies:
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
     dev: false
 
   /@types/tinycolor2@1.4.3:
@@ -9037,7 +9037,7 @@ packages:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
       merge-stream: 2.0.0
       supports-color: 7.2.0
     dev: false
@@ -9046,7 +9046,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: false
@@ -9583,7 +9583,7 @@ packages:
       react: 18.2.0
     dev: false
 
-  /mantine-react-table@1.3.0(@emotion/react@11.11.1)(@mantine/core@6.0.21)(@mantine/dates@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.34.0)(react-dom@18.2.0)(react@18.2.0):
+  /mantine-react-table@1.3.0(@emotion/react@11.11.1)(@mantine/core@6.0.21)(@mantine/dates@6.0.21)(@mantine/hooks@6.0.21)(@tabler/icons-react@2.35.0)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-ljAd9ZI7S89glI8OGbM5DsNHzInZPfigbeDXboR5gLGPuuseLVgezlVjqV1h8MUQkY06++d9ah9zsMLr2VNxlQ==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -9599,7 +9599,7 @@ packages:
       '@mantine/core': 6.0.21(@emotion/react@11.11.1)(@mantine/hooks@6.0.21)(@types/react@18.2.22)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/dates': 6.0.21(@mantine/core@6.0.21)(@mantine/hooks@6.0.21)(dayjs@1.11.10)(react@18.2.0)
       '@mantine/hooks': 6.0.21(react@18.2.0)
-      '@tabler/icons-react': 2.34.0(react@18.2.0)
+      '@tabler/icons-react': 2.35.0(react@18.2.0)
       '@tanstack/match-sorter-utils': 8.8.4
       '@tanstack/react-table': 8.10.0(react-dom@18.2.0)(react@18.2.0)
       '@tanstack/react-virtual': 3.0.0-beta.60(react@18.2.0)
@@ -12571,7 +12571,7 @@ packages:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
     dev: true
 
-  /ts-node@10.9.1(@swc/core@1.3.82)(@types/node@18.17.18)(typescript@5.2.2):
+  /ts-node@10.9.1(@swc/core@1.3.82)(@types/node@18.17.19)(typescript@5.2.2):
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
     peerDependencies:
@@ -12591,7 +12591,7 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 18.17.18
+      '@types/node': 18.17.19
       acorn: 8.10.0
       acorn-walk: 8.2.0
       arg: 4.1.3
