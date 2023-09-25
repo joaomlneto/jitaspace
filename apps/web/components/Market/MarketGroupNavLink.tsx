@@ -37,13 +37,13 @@ export const MarketGroupNavLink = memo(
 
     const sortedChildrenMarketGroups = useMemo(
       () =>
-        childrenMarketGroups.toSorted((a, b) => a.name.localeCompare(b.name)),
+        [...childrenMarketGroups].sort((a, b) => a.name.localeCompare(b.name)),
       [childrenMarketGroups],
     );
 
     const sortedChildrenTypes = useMemo(
       () =>
-        (marketGroup?.types ?? []).toSorted((a, b) =>
+        [...(marketGroup?.types ?? [])].sort((a, b) =>
           a.name.localeCompare(b.name),
         ),
       [],

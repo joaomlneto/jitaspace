@@ -88,7 +88,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     const rootMarketGroupIds = marketGroups
       .filter((marketGroup) => marketGroup.parentMarketGroupId === null)
-      .toSorted((a, b) => a.name.localeCompare(b.name))
+      .sort((a, b) => a.name.localeCompare(b.name))
       .map((marketGroup) => marketGroup.marketGroupId);
 
     return {

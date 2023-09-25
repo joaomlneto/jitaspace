@@ -148,7 +148,7 @@ export default function Page({ solarSystems }: PageProps) {
         value: solarSystemId,
         label: name,
       }))
-      .toSorted((a, b) => a.label.localeCompare(b.label));
+      .sort((a, b) => a.label.localeCompare(b.label));
   }, [solarSystems]);
 
   return (
