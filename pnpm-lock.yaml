@@ -206,6 +206,12 @@ importers:
       nextjs-routes:
         specifier: ^2.0.1
         version: 2.0.1(next@13.5.2)
+      ngraph.graph:
+        specifier: ^20.0.1
+        version: 20.0.1
+      ngraph.path:
+        specifier: ^1.5.0
+        version: 1.5.0
       p-limit:
         specifier: ^4.0.0
         version: 4.0.0
@@ -9976,6 +9982,20 @@ packages:
     dependencies:
       chokidar: 3.5.3
       next: 13.5.2(@babel/core@7.22.1)(react-dom@18.2.0)(react@18.2.0)
+    dev: false
+
+  /ngraph.events@1.2.2:
+    resolution: {integrity: sha512-JsUbEOzANskax+WSYiAPETemLWYXmixuPAlmZmhIbIj6FH/WDgEGCGnRwUQBK0GjOnVm8Ui+e5IJ+5VZ4e32eQ==}
+    dev: false
+
+  /ngraph.graph@20.0.1:
+    resolution: {integrity: sha512-VFsQ+EMkT+7lcJO1QP8Ik3w64WbHJl27Q53EO9hiFU9CRyxJ8HfcXtfWz/U8okuoYKDctbciL6pX3vG5dt1rYA==}
+    dependencies:
+      ngraph.events: 1.2.2
+    dev: false
+
+  /ngraph.path@1.5.0:
+    resolution: {integrity: sha512-2IdmqfBYq2zbGHtpmskdWF6x/nIWZkhfs1taMgg2waBJRn4xNqe7gBiRtD1YS5ZcKhp0trK+Gw94Rli2emMs1Q==}
     dev: false
 
   /nimma@0.2.2:

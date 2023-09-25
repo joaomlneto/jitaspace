@@ -73,6 +73,8 @@
     "next-sitemap": "^4.2.3",
     "nextjs-cors": "^2.1.2",
     "nextjs-routes": "^2.0.1",
+    "ngraph.graph": "^20.0.1",
+    "ngraph.path": "^1.5.0",
     "p-limit": "^4.0.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",

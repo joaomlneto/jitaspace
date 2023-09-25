@@ -238,6 +238,14 @@ export const universeApps: Record<string, JitaApp> = {
       ],
     },
   },
+  travel: {
+    name: "Travel Planner",
+    description: "Plan your trip across New Eden and beyond",
+    url: "/travel",
+    Icon: (props) => <MapIcon {...props} />,
+    scopes: {},
+    tags: ["beta"],
+  },
   lpstore: {
     name: "LP Store",
     description: "Search through the available LP Store offers.",
