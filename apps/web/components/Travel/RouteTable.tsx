@@ -53,14 +53,14 @@ export const RouteTable = memo(({ route }: RouteTableProps) => {
             Solar System
           </th>
           <th colSpan={2}>
-            <Text>
-              Kills (as of{" "}
+            <Text>Kill Statistics+</Text>
+            <Text size="xs">
+              Updated{" "}
               {killStatisticsDate && (
                 <TimeAgoText span date={killStatisticsDate} addSuffix />
               )}
-              )
+              . Updates hourly
             </Text>
-            <Text size="xs">Updates hourly</Text>
           </th>
           <th rowSpan={2} style={{ verticalAlign: "bottom" }}>
             Recent Kills
