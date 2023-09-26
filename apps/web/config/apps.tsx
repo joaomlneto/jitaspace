@@ -241,7 +241,7 @@ export const universeApps: Record<string, JitaApp> = {
   travel: {
     name: "Travel Planner",
     description: "Plan your trip across New Eden and beyond",
-    url: "/travel",
+    url: "/travel/jita/amarr",
     Icon: (props) => <MapIcon {...props} />,
     scopes: {},
     tags: ["beta"],
