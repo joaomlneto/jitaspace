@@ -20,14 +20,14 @@
     "@jitaspace/sde-client": "*",
     "axios": "^1.5.0",
     "decimal.js": "^10.4.3",
-    "inngest": "^2.7.0",
+    "inngest": "^2.7.1",
     "p-limit": "^4.0.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
-    "@types/node": "^18.17.19",
+    "@types/node": "^18.18.0",
     "eslint": "^8.50.0",
     "inngest-cli": "^0.16.7",
     "prettier": "^3.0.3",
