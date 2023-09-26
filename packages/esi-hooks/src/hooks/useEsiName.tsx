@@ -8,6 +8,7 @@ import {
   getUniverseConstellationsConstellationId,
   getUniverseFactions,
   getUniverseRegionsRegionId,
+  getUniverseStargatesStargateId,
   getUniverseStationsStationId,
   getUniverseStructuresStructureId,
   getUniverseSystemsSystemId,
@@ -21,15 +22,18 @@ import {
   characterIdRanges,
   corporationIdRanges,
   isIdInRanges,
+  stargateRanges,
+  stationRanges,
 } from "../utils";
 
 type EsiNameCacheValue = {
   name: string;
-  category: GetCharactersCharacterIdSearchCategoriesItem;
+  category: GetCharactersCharacterIdSearchCategoriesItem | "stargate";
 };
 
 export type ResolvableEntityCategory =
-  GetCharactersCharacterIdSearchCategoriesItem;
+  | GetCharactersCharacterIdSearchCategoriesItem
+  | "stargate";
 
 const inferCategoryFromId = (
   id: number,
@@ -45,14 +49,26 @@ const inferCategoryFromId = (
   if (isIdInRanges(id, allianceIdRanges)) {
     return "alliance";
   }
+
+  if (isIdInRanges(id, stargateRanges)) {
+    return "stargate";
+  }
+
+  if (isIdInRanges(id, stationRanges)) {
+    return "station";
+  }
 };
 
 const resolveNameOfUnknownCategory = async (
   id: number | string,
-): Promise<{ name?: string; category: ResolvableEntityCategory }> =>
+): Promise<{
+  name?: string;
+  category: GetCharactersCharacterIdSearchCategoriesItem;
+}> =>
   postUniverseNames([Number(id)], {}, {}).then((data) => ({
     name: data.data[0]?.name,
-    category: data.data[0]?.category as ResolvableEntityCategory,
+    category: data.data[0]
+      ?.category as GetCharactersCharacterIdSearchCategoriesItem,
   }));
 
 const resolveNameOfKnownCategory = async (
@@ -98,6 +114,10 @@ const resolveNameOfKnownCategory = async (
         );
         if (faction === undefined) throw new Error("Faction ID Invalid");
         return faction.name;
+      });
+    case "stargate":
+      return getUniverseStargatesStargateId(Number(id), {}, {}).then((data) => {
+        return data.data.name;
       });
     case "station":
       return getUniverseStationsStationId(Number(id), {}, {}).then((data) => {
