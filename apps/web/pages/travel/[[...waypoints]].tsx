@@ -17,7 +17,6 @@ import createGraph from "ngraph.graph";
 import path from "ngraph.path";
 
 import { prisma } from "@jitaspace/db";
-import { useGetUniverseSystemKills } from "@jitaspace/esi-client";
 import { MapIcon } from "@jitaspace/eve-icons";
 import { toArrayIfNot } from "@jitaspace/utils";
 
@@ -119,7 +118,7 @@ export default function Page({ solarSystems, waypoints }: PageProps) {
   const graph = useMemo(() => {
     const graph = createGraph();
     // create all nodes
-    Object.entries(solarSystems ?? {}).forEach(([v, { securityStatus }]) => {
+    Object.entries(solarSystems ?? {}).forEach(([v]) => {
       graph.addNode(v);
     });
     // create all edges
@@ -128,24 +127,6 @@ export default function Page({ solarSystems, waypoints }: PageProps) {
     });
     return graph;
   }, [solarSystems]);
-
-  const { data: systemKillsData } = useGetUniverseSystemKills();
-
-  const systemKills = useMemo(() => {
-    const index: Record<
-      string,
-      { npcKills: number; podKills: number; shipKills: number }
-    > = {};
-    systemKillsData?.data.forEach(
-      (system) =>
-        (index[system.system_id] = {
-          npcKills: system.npc_kills,
-          podKills: system.pod_kills,
-          shipKills: system.ship_kills,
-        }),
-    );
-    return index;
-  }, [systemKillsData]);
 
   const [source, setSource] = useState<string | null>(waypoints[0] ?? null);
   const [destination, setDestination] = useState<string | null>(
@@ -196,6 +177,7 @@ export default function Page({ solarSystems, waypoints }: PageProps) {
             searchable
             value={source}
             onChange={setSource}
+            hoverOnSearchChange
           />
           <Select
             label="To"
@@ -203,6 +185,7 @@ export default function Page({ solarSystems, waypoints }: PageProps) {
             searchable
             value={destination}
             onChange={setDestination}
+            hoverOnSearchChange
           />
         </Group>
         <SimpleGrid cols={2}>
