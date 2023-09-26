@@ -5,6 +5,7 @@ import {
   Container,
   Group,
   Loader,
+  SegmentedControl,
   Select,
   SimpleGrid,
   Slider,
@@ -12,6 +13,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import { useListState } from "@mantine/hooks";
 import { NextSeo } from "next-seo";
 import createGraph from "ngraph.graph";
 import path from "ngraph.path";
@@ -24,7 +26,7 @@ import { RouteTable } from "~/components/Travel";
 import { MainLayout } from "~/layouts";
 
 type PageProps = {
-  waypoints: string[];
+  initialWaypoints: string[];
   solarSystems: Record<
     number,
     { name: string; securityStatus: number; neighbors: number[] }
@@ -82,13 +84,13 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       );
     };
 
-    const waypoints = toArrayIfNot(context.params?.waypoints ?? [])
+    const initialWaypoints = toArrayIfNot(context.params?.waypoints ?? [])
       .map((waypoint) => parseWaypoint(waypoint))
       .filter((x) => x !== null) as string[]; // FIXME: should not need typecast
 
     return {
       props: {
-        waypoints,
+        initialWaypoints,
         solarSystems,
       },
       revalidate: 24 * 3600, // every 24 hours
@@ -101,7 +103,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   }
 };
 
-export default function Page({ solarSystems, waypoints }: PageProps) {
+export default function Page({ solarSystems, initialWaypoints }: PageProps) {
   const router = useRouter();
 
   if (router.isFallback) {
@@ -128,16 +130,15 @@ export default function Page({ solarSystems, waypoints }: PageProps) {
     return graph;
   }, [solarSystems]);
 
-  const [source, setSource] = useState<string | null>(waypoints[0] ?? null);
-  const [destination, setDestination] = useState<string | null>(
-    waypoints[1] ?? null,
-  );
+  const [waypoints, waypointHandlers] = useListState<string>(initialWaypoints);
 
+  const [routePreference, setRoutePreference] = useState<string>("Shortest");
   const [nullSecPenalty, setNullSecPenalty] = useState<number>(0);
   const [lowSecPenalty, setLowSecPenalty] = useState<number>(0);
+  const [highSecPenalty, setHighSecPenalty] = useState<number>(0);
 
   const route = useMemo(() => {
-    if (!graph || !source || !destination) return [];
+    if (!graph || waypoints.length < 2) return [];
     console.time("PATH FIND");
     const pathFinder = path.nba(graph, {
       distance(fromNode, toNode, link) {
@@ -146,13 +147,14 @@ export default function Page({ solarSystems, waypoints }: PageProps) {
           solarSystems[toNode.id].securityStatus;
         if (destinationSecurityStatus < 0) return 1 + nullSecPenalty;
         if (destinationSecurityStatus < 0.5) return 1 + lowSecPenalty;
+        if (destinationSecurityStatus >= 0.5) return 1 + highSecPenalty;
         return 1;
       },
     });
-    const route = pathFinder.find(destination, source);
+    const route = pathFinder.find(waypoints[1]!, waypoints[0]!);
     console.timeEnd("PATH FIND");
     return route;
-  }, [graph, source, destination, nullSecPenalty, lowSecPenalty]);
+  }, [graph, waypoints, nullSecPenalty, lowSecPenalty, highSecPenalty]);
 
   const solarSystemSelectData = useMemo(() => {
     return Object.entries(solarSystems ?? {})
@@ -170,48 +172,94 @@ export default function Page({ solarSystems, waypoints }: PageProps) {
           <MapIcon width={48} />
           <Title>Travel Planner</Title>
         </Group>
-        <Group>
-          <Select
-            label="From"
-            data={solarSystemSelectData}
-            searchable
-            value={source}
-            onChange={setSource}
-            hoverOnSearchChange
-          />
-          <Select
-            label="To"
-            data={solarSystemSelectData}
-            searchable
-            value={destination}
-            onChange={setDestination}
-            hoverOnSearchChange
-          />
+        <Group align="end">
+          {waypoints.map((waypoint, index) => (
+            <Select
+              label="Waypoint"
+              data={solarSystemSelectData}
+              searchable
+              value={waypoints[index]}
+              onChange={(value) => {
+                if (value === null) {
+                  waypointHandlers.remove(index);
+                } else {
+                  waypointHandlers.setItem(index, value);
+                }
+                router.push(
+                  `/travel/${waypoints
+                    .map((systemId) => solarSystems[systemId].name)
+                    .join("/")}`,
+                );
+              }}
+              hoverOnSearchChange
+              key={index}
+            />
+          ))}
+          <div>
+            <Text size="sm" fw={500}>
+              Prefer
+            </Text>
+            <SegmentedControl
+              value={routePreference}
+              data={["Shortest", "More Secure", "Less Secure", "Custom"]}
+              onChange={(value) => {
+                if (value === "Shortest") {
+                  setLowSecPenalty(0);
+                  setNullSecPenalty(0);
+                  setHighSecPenalty(0);
+                }
+                if (value === "More Secure") {
+                  setLowSecPenalty(100);
+                  setNullSecPenalty(100);
+                  setHighSecPenalty(0);
+                }
+                if (value === "Less Secure") {
+                  setLowSecPenalty(0);
+                  setNullSecPenalty(0);
+                  setHighSecPenalty(100);
+                }
+                setRoutePreference(value);
+              }}
+            />
+          </div>
         </Group>
-        <SimpleGrid cols={2}>
-          <Slider
-            label="Null Sec Penalty"
-            min={0}
-            max={100}
-            marks={[
-              { value: 0, label: "No penalty" },
-              { value: 100, label: "Avoid" },
-            ]}
-            value={nullSecPenalty}
-            onChange={setNullSecPenalty}
-          />
-          <Slider
-            label="Low Sec Penalty"
-            min={0}
-            max={100}
-            marks={[
-              { value: 0, label: "No penalty" },
-              { value: 100, label: "Avoid" },
-            ]}
-            value={lowSecPenalty}
-            onChange={setLowSecPenalty}
-          />
-        </SimpleGrid>
+        {routePreference === "Custom" && (
+          <SimpleGrid cols={3}>
+            <div style={{ padding: 20 }}>
+              <Text size="sm" fw={500}>
+                High Sec Penalty
+              </Text>
+              <Slider
+                min={0}
+                max={100}
+                value={highSecPenalty}
+                onChange={setHighSecPenalty}
+              />
+            </div>
+            <div style={{ padding: 20 }}>
+              <Text size="sm" fw={500}>
+                Low Sec Penalty
+              </Text>
+              <Slider
+                min={0}
+                max={100}
+                value={lowSecPenalty}
+                onChange={setLowSecPenalty}
+              />
+            </div>
+            <div style={{ padding: 20 }}>
+              <Text size="sm" fw={500}>
+                Null Sec Penalty
+              </Text>
+              <Slider
+                min={0}
+                max={100}
+                value={nullSecPenalty}
+                onChange={setNullSecPenalty}
+              />
+            </div>
+          </SimpleGrid>
+        )}
         {route?.length > 0 && (
           <>
             <Title order={3}>Path ({route.length - 1} jumps)</Title>

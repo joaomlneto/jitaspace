@@ -1,7 +1,8 @@
 import React, { memo, useMemo } from "react";
-import { Anchor, Group, Table, Text } from "@mantine/core";
+import { Anchor, Group, Table, Text, Tooltip } from "@mantine/core";
 
 import { useGetUniverseSystemKills } from "@jitaspace/esi-client";
+import { InfoIcon } from "@jitaspace/eve-icons";
 import {
   SolarSystemAnchor,
   SolarSystemName,
@@ -53,14 +54,25 @@ export const RouteTable = memo(({ route }: RouteTableProps) => {
             Solar System
           </th>
           <th colSpan={2}>
-            <Text>Kill Statistics+</Text>
-            <Text size="xs">
-              Updated{" "}
-              {killStatisticsDate && (
-                <TimeAgoText span date={killStatisticsDate} addSuffix />
-              )}
-              . Updates hourly
-            </Text>
+            <Group spacing="xs">
+              <Text>Kill Statistics </Text>
+              <Tooltip
+                color="dark"
+                label={
+                  <Text size="xs">
+                    Updated{" "}
+                    {killStatisticsDate && (
+                      <TimeAgoText span date={killStatisticsDate} addSuffix />
+                    )}
+                    . Updates hourly
+                  </Text>
+                }
+              >
+                <div>
+                  <InfoIcon width={20} />
+                </div>
+              </Tooltip>
+            </Group>
           </th>
           <th rowSpan={2} style={{ verticalAlign: "bottom" }}>
             Recent Kills
