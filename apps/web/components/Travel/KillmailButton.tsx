@@ -6,6 +6,10 @@ import { CombatLogIcon, MercenaryIcon, WarsIcon } from "@jitaspace/eve-icons";
 import {
   CharacterAvatar,
   CharacterName,
+  CorporationAvatar,
+  CorporationName,
+  FactionAvatar,
+  FactionName,
   TimeAgoText,
   TypeAvatar,
   TypeName,
@@ -67,11 +71,34 @@ export const KillmailButton = memo(
                 {data?.data.attackers.map((attacker) => (
                   <Group key={attacker.character_id}>
                     <Group>
-                      <CharacterAvatar
-                        characterId={attacker.character_id}
-                        size="sm"
-                      />
-                      <CharacterName characterId={attacker.character_id} />
+                      {attacker.character_id ? (
+                        <CharacterAvatar
+                          characterId={attacker.character_id}
+                          size="sm"
+                        />
+                      ) : attacker.corporation_id ? (
+                        <CorporationAvatar
+                          corporationId={attacker.corporation_id}
+                          size="sm"
+                        />
+                      ) : (
+                        <FactionAvatar
+                          factionId={attacker.faction_id}
+                          size="sm"
+                        />
+                      )}
+                      {attacker.character_id ? (
+                        <CharacterName characterId={attacker.character_id} />
+                      ) : attacker.corporation_id ? (
+                        <CorporationName
+                          corporationId={attacker.corporation_id}
+                        />
+                      ) : (
+                        <FactionName
+                          factionId={attacker.faction_id}
+                          size="sm"
+                        />
+                      )}
                     </Group>
                     <Group>
                       <TypeAvatar typeId={attacker.ship_type_id} size="sm" />
@@ -85,12 +112,21 @@ export const KillmailButton = memo(
             <Group spacing={4}>
               <MercenaryIcon width={32} />
               <Avatar.Group spacing="xs">
-                {data?.data.attackers.map((attacker) => (
-                  <CharacterAvatar
-                    characterId={attacker.character_id}
-                    size="sm"
-                  />
-                ))}
+                {data?.data.attackers.map((attacker) =>
+                  attacker.character_id ? (
+                    <CharacterAvatar
+                      characterId={attacker.character_id}
+                      size="sm"
+                    />
+                  ) : attacker.corporation_id ? (
+                    <CorporationAvatar
+                      corporationId={attacker.corporation_id}
+                      size="sm"
+                    />
+                  ) : (
+                    <FactionAvatar factionId={attacker.faction_id} size="sm" />
+                  ),
+                )}
               </Avatar.Group>
             </Group>
           </Tooltip>
