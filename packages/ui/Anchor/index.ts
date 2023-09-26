@@ -17,4 +17,5 @@ export * from "./StargateDestinationAnchor";
 export * from "./StationAnchor";
 export * from "./TypeAnchor";
 export * from "./WarAggressorAnchor";
+export * from "./WarAnchor";
 export * from "./WarDefenderAnchor";

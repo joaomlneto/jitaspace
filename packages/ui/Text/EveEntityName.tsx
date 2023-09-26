@@ -23,7 +23,7 @@ export const EveEntityName = memo(
       );
     }
 
-    // Resolve wtf this is in the worst possible way - via a POST request!
+    // Resolve wtf this is in the worst possible way - via a POST request!?
     return <Text {...otherProps}>{name ?? "Unknown"}</Text>;
   },
 );
