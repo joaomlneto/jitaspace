@@ -1,17 +1,17 @@
 import React, { useMemo, useState, type ReactElement } from "react";
-import { GetStaticProps } from "next";
+import { GetStaticPaths, GetStaticProps } from "next";
+import { useRouter } from "next/router";
 import {
   Container,
   Group,
-  JsonInput,
+  Loader,
   Select,
   SimpleGrid,
   Slider,
   Stack,
-  Table,
+  Text,
   Title,
 } from "@mantine/core";
-import axios from "axios";
 import { NextSeo } from "next-seo";
 import createGraph from "ngraph.graph";
 import path from "ngraph.path";
@@ -19,27 +19,29 @@ import path from "ngraph.path";
 import { prisma } from "@jitaspace/db";
 import { useGetUniverseSystemKills } from "@jitaspace/esi-client";
 import { MapIcon } from "@jitaspace/eve-icons";
-import {
-  SolarSystemAnchor,
-  SolarSystemName,
-  SolarSystemSecurityStatusBadge,
-} from "@jitaspace/ui";
+import { toArrayIfNot } from "@jitaspace/utils";
 
-import { ESI_BASE_URL } from "~/config/constants";
+import { RouteTable } from "~/components/Travel";
 import { MainLayout } from "~/layouts";
 
 type PageProps = {
+  waypoints: string[];
   solarSystems: Record<
     number,
     { name: string; securityStatus: number; neighbors: number[] }
   >;
 };
 
+export const getStaticPaths: GetStaticPaths = async () => {
+  // Do not pre-render any static pages - faster builds, but slower initial page load
+  return {
+    paths: [],
+    fallback: true,
+  };
+};
+
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    // FIXME: THIS SHOULD NOT BE REQUIRED
-    axios.defaults.baseURL = ESI_BASE_URL;
-
     const solarSystemsQuery = await prisma.solarSystem.findMany({
       select: {
         solarSystemId: true,
@@ -71,8 +73,23 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       };
     });
 
+    const parseWaypoint = (waypoint: string | undefined): string | null => {
+      return (
+        Object.entries(solarSystems).find(
+          ([solarSystemId, { name }]) =>
+            solarSystemId == waypoint ||
+            name.toLowerCase() == waypoint?.toLowerCase(),
+        )?.[0] ?? null
+      );
+    };
+
+    const waypoints = toArrayIfNot(context.params?.waypoints ?? [])
+      .map((waypoint) => parseWaypoint(waypoint))
+      .filter((x) => x !== null) as string[]; // FIXME: should not need typecast
+
     return {
       props: {
+        waypoints,
         solarSystems,
       },
       revalidate: 24 * 3600, // every 24 hours
@@ -85,18 +102,31 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   }
 };
 
-export default function Page({ solarSystems }: PageProps) {
-  const baseGraph = useMemo(() => {
-    const baseGraph = createGraph();
+export default function Page({ solarSystems, waypoints }: PageProps) {
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return (
+      <Container size="sm">
+        <Group>
+          <Loader />
+          <Text>Loading solar systems...</Text>
+        </Group>
+      </Container>
+    );
+  }
+
+  const graph = useMemo(() => {
+    const graph = createGraph();
     // create all nodes
-    Object.entries(solarSystems).forEach(([v, { securityStatus }]) => {
-      baseGraph.addNode(v);
+    Object.entries(solarSystems ?? {}).forEach(([v, { securityStatus }]) => {
+      graph.addNode(v);
     });
     // create all edges
-    Object.entries(solarSystems).forEach(([v, { neighbors }]) => {
-      neighbors.forEach((u) => baseGraph.addLink(v, u.toString()));
+    Object.entries(solarSystems ?? {}).forEach(([v, { neighbors }]) => {
+      neighbors.forEach((u) => graph.addLink(v, u.toString()));
     });
-    return baseGraph;
+    return graph;
   }, [solarSystems]);
 
   const { data: systemKillsData } = useGetUniverseSystemKills();
@@ -117,16 +147,18 @@ export default function Page({ solarSystems }: PageProps) {
     return index;
   }, [systemKillsData]);
 
-  const [source, setSource] = useState<string | null>(null);
-  const [destination, setDestination] = useState<string | null>(null);
+  const [source, setSource] = useState<string | null>(waypoints[0] ?? null);
+  const [destination, setDestination] = useState<string | null>(
+    waypoints[1] ?? null,
+  );
 
   const [nullSecPenalty, setNullSecPenalty] = useState<number>(0);
   const [lowSecPenalty, setLowSecPenalty] = useState<number>(0);
 
   const route = useMemo(() => {
-    if (!baseGraph || !source || !destination) return [];
-    //console.time("PATH FIND");
-    const result = path.nba(baseGraph, {
+    if (!graph || !source || !destination) return [];
+    console.time("PATH FIND");
+    const pathFinder = path.nba(graph, {
       distance(fromNode, toNode, link) {
         const destinationSecurityStatus =
           // @ts-expect-error this is guaranteed to succeed, type-wise
@@ -136,14 +168,13 @@ export default function Page({ solarSystems }: PageProps) {
         return 1;
       },
     });
-    //const x = result.find(30000142, 30002659);
-    const x = result.find(destination, source);
-    //console.timeEnd("PATH FIND");
-    return x;
-  }, [baseGraph, source, destination, nullSecPenalty, lowSecPenalty]);
+    const route = pathFinder.find(destination, source);
+    console.timeEnd("PATH FIND");
+    return route;
+  }, [graph, source, destination, nullSecPenalty, lowSecPenalty]);
 
   const solarSystemSelectData = useMemo(() => {
-    return Object.entries(solarSystems)
+    return Object.entries(solarSystems ?? {})
       .map(([solarSystemId, { name }]) => ({
         value: solarSystemId,
         label: name,
@@ -158,7 +189,6 @@ export default function Page({ solarSystems }: PageProps) {
           <MapIcon width={48} />
           <Title>Travel Planner</Title>
         </Group>
-        <Title order={3}>Settings</Title>
         <Group>
           <Select
             label="From"
@@ -202,54 +232,8 @@ export default function Page({ solarSystems }: PageProps) {
         {route?.length > 0 && (
           <>
             <Title order={3}>Path ({route.length - 1} jumps)</Title>
-            <Table highlightOnHover>
-              <thead>
-                <tr>
-                  <th>Jump</th>
-                  <th>Solar System</th>
-                  <th>NPC Kills</th>
-                  <th>Ship Kills</th>
-                  <th>Pod Kills</th>
-                </tr>
-              </thead>
-              <tbody>
-                {route.map((node, index) => (
-                  <tr key={node.id}>
-                    <td>{index == 0 ? "Start" : index}</td>
-                    <td>
-                      <Group>
-                        <SolarSystemSecurityStatusBadge
-                          solarSystemId={node.id}
-                        />
-                        <SolarSystemAnchor solarSystemId={node.id}>
-                          <SolarSystemName solarSystemId={node.id} />
-                        </SolarSystemAnchor>
-                      </Group>
-                    </td>
-                    <td>{systemKills[node.id]?.npcKills ?? 0}</td>
-                    <td>{systemKills[node.id]?.shipKills ?? 0}</td>
-                    <td>{systemKills[node.id]?.podKills ?? 0}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+            <RouteTable route={route} />
           </>
-        )}
-        {false && (
-          <JsonInput
-            value={JSON.stringify(
-              {
-                numNodes: baseGraph.getNodeCount(),
-                numLinks: baseGraph.getLinkCount(),
-                route,
-                solarSystems,
-              },
-              null,
-              2,
-            )}
-            autosize
-            maxRows={30}
-          />
         )}
       </Stack>
     </Container>
