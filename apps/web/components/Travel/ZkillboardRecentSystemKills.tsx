@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useState } from "react";
+import React, { memo, useMemo } from "react";
 import { Group, Loader, Spoiler, Stack, Text } from "@mantine/core";
 import { subHours } from "date-fns";
 import useSWR from "swr";
@@ -30,9 +30,18 @@ type ZkillboardKill = {
 
 export const ZkillboardRecentSystemKills = memo(
   ({ solarSystemId, pastSeconds = 3600 }: ZkillboardRecentSystemKillsProps) => {
-    const { data, error, isLoading, isValidating } = useSWR(
+    const { data, error, isLoading, isValidating } = useSWR<{
+      body: ZkillboardKill[] | undefined;
+      headers: Headers;
+    }>(
       `https://zkillboard.com/api/systemID/${solarSystemId}/pastSeconds/${pastSeconds}/`,
-      (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init),
+      (input: RequestInfo | URL, init?: RequestInit) =>
+        fetch(input, init).then(async (res) => {
+          const headers = res.headers;
+          const bodyClone = res.clone();
+          const body = (await bodyClone.json()) as ZkillboardKill[];
+          return { body, headers };
+        }),
       {
         //refreshInterval: 3000,
         errorRetryInterval: 2000,
@@ -44,10 +53,6 @@ export const ZkillboardRecentSystemKills = memo(
       },
     );
 
-    const [systemKills, setSystemKills] = useState<
-      ZkillboardKill[] | undefined
-    >();
-
     // retrieve the date of when result was generated
     const lastChecked = useMemo(() => {
       const expiresHeader = data?.headers?.get("Expires");
@@ -56,36 +61,22 @@ export const ZkillboardRecentSystemKills = memo(
       return subHours(expires, 1);
     }, [data]);
 
-    useEffect(() => {
-      if (!data) return;
-      const clonedData = data.clone();
-      const asyncSetTheData = async () => {
-        try {
-          const json = await clonedData.json();
-          setSystemKills(json);
-        } catch (e) {}
-      };
-      void asyncSetTheData();
-    }, [data]);
-
     const locations = useMemo(
-      () => [
-        ...new Set((systemKills ?? []).map((kill) => kill.zkb.locationID)),
-      ],
-      [systemKills],
+      () => [...new Set((data?.body ?? []).map((kill) => kill.zkb.locationID))],
+      [data?.body],
     );
 
     const locationKills = useMemo(() => {
       const index: Record<number, ZkillboardKill[]> = {};
       locations.forEach((location) => {
-        index[location] = (systemKills ?? []).filter(
+        index[location] = (data?.body ?? []).filter(
           (kill) => kill.zkb.locationID === location,
         );
       });
       return index;
-    }, [locations, systemKills]);
+    }, [locations, data?.body]);
 
-    if (isLoading || isValidating || systemKills === undefined)
+    if (isLoading || isValidating || data?.body === undefined)
       return (
         <Group>
           <Loader size="sm" />
@@ -111,12 +102,12 @@ export const ZkillboardRecentSystemKills = memo(
           <Spoiler
             maxHeight={0}
             hideLabel="Collapse"
-            showLabel={`Show ${(systemKills ?? []).length} kills`}
+            showLabel={`Show ${(data?.body ?? []).length} kills`}
           >
             {locations.map((location) => (
               <>
                 <EveEntityName entityId={location} />
-                {(systemKills ?? [])
+                {(data?.body ?? [])
                   .filter((kill) => kill.zkb.locationID === location)
                   .map((kill) => (
                     <Group>
