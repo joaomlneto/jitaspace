@@ -77,33 +77,44 @@ model Group {
 }
 
 model Type {
-  typeId         Int             @id
-  capacity       Float?
-  description    String          @db.Text
-  dogmaEffects   DogmaEffect[]
-  graphic        Graphic?        @relation(fields: [graphicId], references: [graphicId])
-  graphicId      Int?
-  group          Group           @relation(fields: [groupId], references: [groupId])
-  groupId        Int
-  icon           Icon?           @relation(fields: [iconId], references: [iconId])
-  iconId         Int?
-  marketGroupId  Int?
-  marketGroup    MarketGroup?    @relation(fields: [marketGroupId], references: [marketGroupId])
-  mass           Float?
-  name           String          @db.Text
-  packagedVolume Float?
-  portionSize    Int?
-  published      Boolean
-  radius         Float?
-  stations       Station[]
-  volume         Float?
-  updatedAt      DateTime        @updatedAt()
-  isDeleted      Boolean         @default(false)
-  attributes     TypeAttribute[]
-  effects        TypeEffect[]
-  bloodlines     Bloodline[]     @relation("BloodlineShipType")
-  Planet         Planet[]        @relation("PlanetType")
-  Star           Star[]          @relation("StarType")
+  typeId                          Int                             @id
+  capacity                        Float?
+  description                     String                          @db.Text
+  dogmaEffects                    DogmaEffect[]
+  graphic                         Graphic?                        @relation(fields: [graphicId], references: [graphicId])
+  graphicId                       Int?
+  group                           Group                           @relation(fields: [groupId], references: [groupId])
+  groupId                         Int
+  icon                            Icon?                           @relation(fields: [iconId], references: [iconId])
+  iconId                          Int?
+  marketGroup                     MarketGroup?                    @relation(fields: [marketGroupId], references: [marketGroupId])
+  marketGroupId                   Int?
+  mass                            Float?
+  name                            String                          @db.Text
+  packagedVolume                  Float?
+  portionSize                     Int?
+  published                       Boolean
+  radius                          Float?
+  stations                        Station[]
+  volume                          Float?
+  // This Type's Dogma Attributes
+  attributes                      TypeAttribute[]
+  // This Type's Dogma Effects
+  effects                         TypeEffect[]
+  // Bloodlines that use this type as a Corvette
+  bloodlines                      Bloodline[]                     @relation("BloodlineShipType")
+  // Planets that are of this type
+  Planet                          Planet[]                        @relation("PlanetType")
+  // Stars that are of this type
+  Star                            Star[]                          @relation("StarType")
+  // List of LP store offers where one can get this item
+  loyaltyStoreOffers              LoyaltyStoreOffer[]
+  // List of LP store offers that require this item
+  loyaltyStoreOffersRequiredItems LoyaltyStoreOfferRequiredItem[] @relation("LoyaltyStoreOfferRequiredItem")
+  // When was this record last updated
+  updatedAt                       DateTime                        @updatedAt()
+  // Was this item deleted
+  isDeleted                       Boolean                         @default(false)
 
   @@index([marketGroupId])
   @@index([graphicId])
@@ -558,4 +569,29 @@ model Bloodline {
   @@index([corporationId])
   @@index([shipTypeId])
   @@index([raceId])
+}
+
+model LoyaltyStoreOffer {
+  offerId                       Int                             @id
+  type                          Type                            @relation(fields: [typeId], references: [typeId])
+  typeId                        Int
+  quantity                      Int
+  akCost                        Int
+  iskCost                       Int
+  lpCost                        Int
+  LoyaltyStoreOfferRequiredItem LoyaltyStoreOfferRequiredItem[] @relation("LoyaltyStoreOfferRequiredItems")
+
+  @@index([typeId])
+}
+
+model LoyaltyStoreOfferRequiredItem {
+  offer    LoyaltyStoreOffer @relation("LoyaltyStoreOfferRequiredItems", fields: [offerId], references: [offerId])
+  type     Type              @relation("LoyaltyStoreOfferRequiredItem", fields: [typeId], references: [typeId])
+  offerId  Int
+  typeId   Int
+  quantity Int
+
+  @@id([offerId, typeId])
+  @@index([offerId])
+  @@index([typeId])
 }
