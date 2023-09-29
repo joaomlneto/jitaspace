@@ -394,8 +394,8 @@ importers:
         specifier: ^1.9.3
         version: 1.9.3(@types/node@18.18.0)(typescript@5.2.2)
       '@kubb/core':
-        specifier: ^1.9.2
-        version: 1.9.2
+        specifier: ^1.9.3
+        version: 1.9.3
       '@kubb/swagger':
         specifier: ^1.9.2
         version: 1.9.2(openapi-types@12.1.3)
