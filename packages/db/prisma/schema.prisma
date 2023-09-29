@@ -349,13 +349,14 @@ model Corporation {
   updatedAt DateTime @updatedAt()
   isDeleted Boolean  @default(false)
 
-  executorAlliance    Alliance?   @relation("AllianceExecutor")
-  createdAlliances    Alliance[]  @relation("AllianceCreator")
-  ownedStations       Station[]   @relation("StationOwner")
-  bloodlines          Bloodline[] @relation("BloodlineCorporation")
-  CorporationFactions Faction[]   @relation("FactionCorporation")
-  MilitiaFaction      Faction[]   @relation("FactionMilitiaCorporation")
-  Character           Character[] @relation("CharacterCorporation")
+  executorAlliance    Alliance?           @relation("AllianceExecutor")
+  createdAlliances    Alliance[]          @relation("AllianceCreator")
+  ownedStations       Station[]           @relation("StationOwner")
+  bloodlines          Bloodline[]         @relation("BloodlineCorporation")
+  CorporationFactions Faction[]           @relation("FactionCorporation")
+  MilitiaFaction      Faction[]           @relation("FactionMilitiaCorporation")
+  Character           Character[]         @relation("CharacterCorporation")
+  LoyaltyStoreOffer   LoyaltyStoreOffer[] @relation("CorporationLoyaltyStoreOffers")
 
   @@index([creatorId])
   @@index([factionId])
@@ -572,24 +573,31 @@ model Bloodline {
 }
 
 model LoyaltyStoreOffer {
-  offerId                       Int                             @id
-  type                          Type                            @relation(fields: [typeId], references: [typeId])
-  typeId                        Int
-  quantity                      Int
-  akCost                        Int
-  iskCost                       Int
-  lpCost                        Int
-  LoyaltyStoreOfferRequiredItem LoyaltyStoreOfferRequiredItem[] @relation("LoyaltyStoreOfferRequiredItems")
+  offerId       Int                             @id
+  corporation   Corporation                     @relation("CorporationLoyaltyStoreOffers", fields: [corporationId], references: [corporationId])
+  corporationId Int
+  type          Type                            @relation(fields: [typeId], references: [typeId])
+  typeId        Int
+  quantity      Int
+  akCost        Int?
+  iskCost       Int
+  lpCost        Int
+  requiredItems LoyaltyStoreOfferRequiredItem[] @relation("LoyaltyStoreOfferRequiredItems")
+  updatedAt     DateTime                        @updatedAt()
+  isDeleted     Boolean                         @default(false)
 
   @@index([typeId])
+  @@index([corporationId])
 }
 
 model LoyaltyStoreOfferRequiredItem {
-  offer    LoyaltyStoreOffer @relation("LoyaltyStoreOfferRequiredItems", fields: [offerId], references: [offerId])
-  type     Type              @relation("LoyaltyStoreOfferRequiredItem", fields: [typeId], references: [typeId])
-  offerId  Int
-  typeId   Int
-  quantity Int
+  offer     LoyaltyStoreOffer @relation("LoyaltyStoreOfferRequiredItems", fields: [offerId], references: [offerId])
+  type      Type              @relation("LoyaltyStoreOfferRequiredItem", fields: [typeId], references: [typeId])
+  offerId   Int
+  typeId    Int
+  quantity  Int
+  updatedAt DateTime          @updatedAt()
+  isDeleted Boolean           @default(false)
 
   @@id([offerId, typeId])
   @@index([offerId])
