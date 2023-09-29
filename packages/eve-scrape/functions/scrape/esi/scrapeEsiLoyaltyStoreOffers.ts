@@ -65,7 +65,7 @@ export const scrapeEsiLoyaltyStoreOffers = inngest.createFunction(
         prisma.loyaltyStoreOffer
           .findMany({
             where: {
-              offerId: { in: offerIds },
+              //offerId: { in: offerIds },
               corporationId: { in: corporationIds },
             },
           })
