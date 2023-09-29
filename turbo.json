@@ -9,6 +9,10 @@
       "inputs": ["prisma/schema.prisma"],
       "cache": false
     },
+    "db:generate:watch": {
+      "inputs": ["prisma/schema.prisma"],
+      "cache": false
+    },
     "db:push": {
       "inputs": ["prisma/schema.prisma"],
       "cache": false
