@@ -8,6 +8,7 @@ export * from "./scrapeEsiDogmaAttributes";
 export * from "./scrapeEsiDogmaEffects";
 export * from "./scrapeEsiFactions";
 export * from "./scrapeEsiGroups";
+export * from "./scrapeEsiLoyaltyStoreOffers";
 export * from "./scrapeEsiMarketGroups";
 export * from "./scrapeEsiMoons";
 export * from "./scrapeEsiNpcCorporations";

@@ -10,6 +10,7 @@ import {
   ScrapeDogmaEffectsEventPayload,
   ScrapeFactionsEventPayload,
   ScrapeGroupsEventPayload,
+  ScrapeLoyaltyStoreOffersEventPayload,
   ScrapeMarketGroupsEventPayload,
   ScrapeMoonsEventPayload,
   ScrapeNpcCorporationsEventPayload,
@@ -32,6 +33,7 @@ export type Events = {
   "scrape/esi/dogma-effects": ScrapeDogmaEffectsEventPayload;
   "scrape/esi/factions": ScrapeFactionsEventPayload;
   "scrape/esi/groups": ScrapeGroupsEventPayload;
+  "scrape/esi/loyalty-store-offers": ScrapeLoyaltyStoreOffersEventPayload;
   "scrape/esi/market-groups": ScrapeMarketGroupsEventPayload;
   "scrape/esi/moons": ScrapeMoonsEventPayload;
   "scrape/esi/npc-corporations": ScrapeNpcCorporationsEventPayload;

@@ -573,7 +573,7 @@ model Bloodline {
 }
 
 model LoyaltyStoreOffer {
-  offerId       Int                             @id
+  offerId       Int
   corporation   Corporation                     @relation("CorporationLoyaltyStoreOffers", fields: [corporationId], references: [corporationId])
   corporationId Int
   type          Type                            @relation(fields: [typeId], references: [typeId])
@@ -586,20 +586,22 @@ model LoyaltyStoreOffer {
   updatedAt     DateTime                        @updatedAt()
   isDeleted     Boolean                         @default(false)
 
+  @@id([offerId, corporationId])
   @@index([typeId])
   @@index([corporationId])
 }
 
 model LoyaltyStoreOfferRequiredItem {
-  offer     LoyaltyStoreOffer @relation("LoyaltyStoreOfferRequiredItems", fields: [offerId], references: [offerId])
-  type      Type              @relation("LoyaltyStoreOfferRequiredItem", fields: [typeId], references: [typeId])
-  offerId   Int
-  typeId    Int
-  quantity  Int
-  updatedAt DateTime          @updatedAt()
-  isDeleted Boolean           @default(false)
+  offer         LoyaltyStoreOffer @relation("LoyaltyStoreOfferRequiredItems", fields: [offerId, corporationId], references: [offerId, corporationId])
+  type          Type              @relation("LoyaltyStoreOfferRequiredItem", fields: [typeId], references: [typeId])
+  offerId       Int
+  corporationId Int
+  typeId        Int
+  quantity      Int
+  updatedAt     DateTime          @updatedAt()
+  isDeleted     Boolean           @default(false)
 
   @@id([offerId, typeId])
-  @@index([offerId])
+  @@index([offerId, corporationId])
   @@index([typeId])
 }

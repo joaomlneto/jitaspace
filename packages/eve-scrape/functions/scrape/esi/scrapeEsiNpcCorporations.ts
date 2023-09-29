@@ -21,10 +21,11 @@ export const scrapeEsiNpcCorporations = inngest.createFunction(
     concurrency: {
       limit: 1,
     },
+    retries: 5,
   },
   { event: "scrape/esi/npc-corporations" },
 
-  async () => {
+  async ({ step }) => {
     // FIXME: THIS SHOULD NOT BE NECESSARY
     axios.defaults.baseURL = "https://esi.evetech.net/latest";
 
@@ -44,6 +45,10 @@ export const scrapeEsiNpcCorporations = inngest.createFunction(
           getCorporationsCorporationId(corporationId).then((res) => ({
             corporationId,
             ...res.data,
+            // https://github.com/esi/esi-issues/issues/453
+            ceo_id: res.data.ceo_id == 1 ? null : res.data.ceo_id,
+            // https://github.com/esi/esi-issues/issues/1360
+            creator_id: res.data.creator_id == 1 ? null : res.data.creator_id,
           })),
         ),
       ),
@@ -51,12 +56,12 @@ export const scrapeEsiNpcCorporations = inngest.createFunction(
 
     const ceoIds = npcCorporations
       .map((corporation) => corporation.ceo_id)
-      // https://github.com/esi/esi-issues/issues/1360
-      .filter((ceoId) => ceoId !== 1);
+      // filter null records
+      .filter((ceoId) => ceoId) as number[]; // FIXME: should not need typecast
     const creatorIds = npcCorporations
       .map((corporation) => corporation.creator_id)
-      // https://github.com/esi/esi-issues/issues/453
-      .filter((ceoId) => ceoId !== 1);
+      // filter null records
+      .filter((creatorId) => creatorId) as number[]; // FIXME: should not need typecast
 
     const characterIds = [...new Set([...ceoIds, ...creatorIds])];
 
@@ -187,8 +192,9 @@ export const scrapeEsiNpcCorporations = inngest.createFunction(
             },
           },
         }),
-      batchUpdate: (entries) =>
-        Promise.all(
+      batchUpdate: (entries) => {
+        console.log("updating", entries);
+        return Promise.all(
           entries.map((entry) =>
             limit(async () =>
               prisma.corporation.update({
@@ -197,8 +203,17 @@ export const scrapeEsiNpcCorporations = inngest.createFunction(
               }),
             ),
           ),
-        ),
+        );
+      },
       idAccessor: (e) => e.corporationId,
+    });
+
+    // scrape NPC Corporations' Loyalty Point Store Offers
+    await step.sendEvent({
+      name: "scrape/esi/loyalty-store-offers",
+      data: {
+        corporationIds,
+      },
     });
 
     return {
