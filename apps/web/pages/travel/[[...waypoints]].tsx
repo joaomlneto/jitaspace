@@ -28,7 +28,7 @@ import { MainLayout } from "~/layouts";
 type PageProps = {
   initialWaypoints: string[];
   solarSystems: Record<
-    number,
+    string,
     { name: string; securityStatus: number; neighbors: number[] }
   >;
 };
@@ -61,7 +61,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     });
 
     const solarSystems: Record<
-      number,
+      string,
       { name: string; securityStatus: number; neighbors: number[] }
     > = {};
     solarSystemsQuery.forEach((solarSystem) => {
@@ -187,7 +187,7 @@ export default function Page({ solarSystems, initialWaypoints }: PageProps) {
                 }
                 router.push(
                   `/travel/${waypoints
-                    .map((systemId) => solarSystems[systemId].name)
+                    .map((systemId) => solarSystems[systemId]!.name)
                     .join("/")}`,
                 );
               }}
