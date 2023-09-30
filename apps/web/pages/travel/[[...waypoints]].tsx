@@ -74,7 +74,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       };
     });
 
-    const parseWaypoint = (waypoint: string | undefined): string | null => {
+    const parseWaypoint = (waypoint: string): string | null => {
       return (
         Object.entries(solarSystems).find(
           ([solarSystemId, { name }]) =>
@@ -85,7 +85,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     };
 
     const initialWaypoints = toArrayIfNot(context.params?.waypoints ?? [])
-      .map((waypoint) => parseWaypoint(waypoint))
+      .map((waypoint) => parseWaypoint(waypoint.replaceAll("_", " ")))
       .filter((x) => x !== null) as string[]; // FIXME: should not need typecast
 
     return {
