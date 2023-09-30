@@ -29,7 +29,7 @@ export const EveEntitySelectItem = forwardRef<
             entityId={value}
             size={24}
             mr={10}
-            variation="icon"
+            //variation="icon"
           />
         ) : (
           <Avatar size={16} mr={10} />
