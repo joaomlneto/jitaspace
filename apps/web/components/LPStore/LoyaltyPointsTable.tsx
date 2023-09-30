@@ -6,7 +6,6 @@ import {
   type MRT_ColumnDef,
 } from "mantine-react-table";
 
-import { GetLoyaltyStoresCorporationIdOffers200Item } from "@jitaspace/esi-client";
 import {
   CorporationAnchor,
   CorporationAvatar,
@@ -19,41 +18,78 @@ import {
 } from "@jitaspace/ui";
 
 type LoyaltyPointsTableProps = {
-  offers: (GetLoyaltyStoresCorporationIdOffers200Item & {
+  corporations: {
     corporationId: number;
-  })[];
+    name: string;
+  }[];
+  types: {
+    typeId: number;
+    name: string;
+  }[];
+  offers: {
+    offerId: number;
+    corporationId: number;
+    typeId: number;
+    quantity: number;
+    akCost: number | null;
+    lpCost: number;
+    iskCost: number;
+    requiredItems: {
+      typeId: number;
+      quantity: number;
+    }[];
+  }[];
 };
 
 export const LoyaltyPointsTable = memo(
-  ({ offers }: LoyaltyPointsTableProps) => {
-    const corporationIds = useMemo(
-      () => [...new Set(offers.map((offer) => offer.corporationId))],
-      [offers],
+  ({ corporations, types, offers }: LoyaltyPointsTableProps) => {
+    const sortedCorporations = useMemo(
+      () => corporations.sort((a, b) => a.name.localeCompare(b.name)),
+      [corporations],
+    );
+
+    const sortedTypes = useMemo(
+      () => types.sort((a, b) => a.name.localeCompare(b.name)),
+      [types],
     );
 
     const columns = useMemo<
-      MRT_ColumnDef<
-        GetLoyaltyStoresCorporationIdOffers200Item & {
-          corporationId: number;
-        }
-      >[]
+      MRT_ColumnDef<{
+        offerId: number;
+        corporationId: number;
+        typeId: number;
+        quantity: number;
+        akCost: number | null;
+        lpCost: number;
+        iskCost: number;
+        requiredItems: {
+          typeId: number;
+          quantity: number;
+        }[];
+      }>[]
     >(
       () => [
         {
           id: "id",
           header: "Offer ID",
-          accessorKey: "offer_id",
+          accessorKey: "offerId",
           size: 40,
         },
         {
-          header: "Corp",
+          header: "Corporation",
           accessorKey: "corporationId",
           size: 40,
           Filter: ({ column, header, table }) => {
             return (
               <EveEntitySelect
                 miw={200}
-                entityIds={corporationIds.map((id) => ({ id }))}
+                entityIds={sortedCorporations.map((corporation) => ({
+                  id: corporation.corporationId,
+                  name: corporation.name,
+                }))}
+                searchable
+                clearable
+                hoverOnSearchChange
                 onChange={column.setFilterValue}
               />
             );
@@ -95,21 +131,37 @@ export const LoyaltyPointsTable = memo(
         },
         {
           header: "Item",
-          accessorKey: "type_id",
+          accessorKey: "typeId",
           size: 300,
-          enableColumnFilter: false,
+          enableColumnFilter: true,
+          Filter: ({ column, header, table }) => {
+            return (
+              <EveEntitySelect
+                miw={250}
+                entityIds={sortedTypes.map((type) => ({
+                  id: type.typeId,
+                  name: type.name,
+                }))}
+                searchable
+                clearable
+                hoverOnSearchChange
+                onChange={column.setFilterValue}
+                limit={100}
+              />
+            );
+          },
           Cell: ({ renderedCellValue, row, cell }) => (
             <Group noWrap>
-              <TypeAvatar typeId={row.original.type_id} size="sm" />
+              <TypeAvatar typeId={row.original.typeId} size="sm" />
               {row.original.quantity !== 1 && (
                 <Text size="sm">{row.original.quantity}</Text>
               )}
-              <TypeAnchor typeId={row.original.type_id} target="_blank">
+              <TypeAnchor typeId={row.original.typeId} target="_blank">
                 <TypeName
                   span
-                  typeId={row.original.type_id}
+                  typeId={row.original.typeId}
                   size="sm"
-                  lineClamp={1}
+                  //lineClamp={1}
                 />
               </TypeAnchor>
             </Group>
@@ -117,49 +169,50 @@ export const LoyaltyPointsTable = memo(
         },
         {
           header: "LP Cost",
-          accessorKey: "lp_cost",
+          accessorKey: "lpCost",
           size: 40,
           filterVariant: "range-slider",
           mantineFilterRangeSliderProps: {
             label: (value) => value?.toLocaleString?.(),
           },
           Cell: ({ renderedCellValue, row, cell }) => (
-            <Text>{row.original.lp_cost.toLocaleString()} LP</Text>
+            <Text>{row.original.lpCost.toLocaleString()} LP</Text>
           ),
         },
         {
           header: "ISK Cost",
-          accessorKey: "isk_cost",
+          accessorKey: "iskCost",
           size: 40,
           filterVariant: "range-slider",
           mantineFilterRangeSliderProps: {
             label: (value) => <ISKAmount amount={value} />,
           },
           Cell: ({ renderedCellValue, row, cell }) => (
-            <ISKAmount amount={row.original.isk_cost ?? 0} />
+            <ISKAmount amount={row.original.iskCost ?? 0} />
           ),
         },
         {
           header: "AK Cost",
-          accessorKey: "ak_cost",
+          accessorKey: "akCost",
           size: 40,
           filterVariant: "range-slider",
         },
         {
           header: "Required Items",
-          accessorKey: "required_items",
+          accessorKey: "requiredItems",
           size: 300,
           enableColumnFilter: false,
+          enableSorting: false,
           Cell: ({ row, cell }) => (
             <Stack spacing="xs">
-              {row.original.required_items.map(({ quantity, type_id }) => (
-                <Group noWrap key={type_id}>
-                  <TypeAvatar typeId={type_id} size="sm" />
+              {row.original.requiredItems.map(({ quantity, typeId }) => (
+                <Group noWrap key={typeId}>
+                  <TypeAvatar typeId={typeId} size="sm" />
                   {row.original.quantity !== 1 && (
                     <Text size="sm">{quantity}</Text>
                   )}
-                  <TypeAnchor typeId={type_id} target="_blank">
-                    <TypeName span typeId={type_id} size="sm" lineClamp={1} />
+                  <TypeAnchor typeId={typeId} target="_blank">
+                    <TypeName span typeId={typeId} size="sm" lineClamp={1} />
                   </TypeAnchor>
                 </Group>
               ))}
@@ -177,6 +230,7 @@ export const LoyaltyPointsTable = memo(
       data: offers, //must be memoized or stable (useState, useMemo, defined outside of this component, etc.)
       initialState: {
         density: "xs",
+        sorting: [{ id: "id", desc: true }],
         pagination: {
           pageIndex: 0,
           pageSize: 25,
