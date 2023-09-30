@@ -403,8 +403,8 @@ importers:
         specifier: ^1.9.4
         version: 1.9.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
       '@kubb/swagger-tanstack-query':
-        specifier: ^1.9.2
-        version: 1.9.2(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
+        specifier: ^1.9.4
+        version: 1.9.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
       '@kubb/swagger-ts':
         specifier: ^1.9.2
         version: 1.9.2(openapi-types@12.1.3)(typescript@5.2.2)
@@ -3050,24 +3050,6 @@ packages:
       seedrandom: 3.0.5
     dev: false
 
-  /@kubb/swagger-client@1.9.2(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2):
-    resolution: {integrity: sha512-XeeAj9xWfWgm+q8iIXNQnduW+XCMU123FX5C10BlrUadgKHg+qXF/DWyJoGTVmXsbqvlp+1NZ4hW8nDs0C/tsw==}
-    engines: {node: '>=18', pnpm: '>=8.3.0'}
-    peerDependencies:
-      axios: ^1.4.0
-    dependencies:
-      '@kubb/core': 1.9.2
-      '@kubb/swagger': 1.9.2(openapi-types@12.1.3)
-      '@kubb/swagger-ts': 1.9.2(openapi-types@12.1.3)(typescript@5.2.2)
-      '@kubb/ts-codegen': 1.9.2
-      axios: 1.5.1
-      change-case: 4.1.2
-    transitivePeerDependencies:
-      - encoding
-      - openapi-types
-      - typescript
-    dev: false
-
   /@kubb/swagger-client@1.9.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2):
     resolution: {integrity: sha512-5JTaFk/tGjScVmtVj9FAP5yXuCRWOYd6W1Hagk6ia7qznVA8qHstguFFTI3mB+2BlLUqA/gU6qyTi2cRRZZqFA==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
@@ -3086,15 +3068,15 @@ packages:
       - typescript
     dev: false
 
-  /@kubb/swagger-tanstack-query@1.9.2(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2):
-    resolution: {integrity: sha512-6C4i+lVhH3Z5gcXnmG2zikqYU7cRvHsyq1w+X4DYYrqFfXeu1dBECVlQSJj+3j2IwQkr+wY+k1Wrkf8iKfuKZg==}
+  /@kubb/swagger-tanstack-query@1.9.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2):
+    resolution: {integrity: sha512-gkLm2M1m1Ax2+s+Ik+RjjVAZ2umKbCT26ak/0t5VyNyOhueUAjtWDekVBQwMCjFJI2oDVS2tc8kGJjrpxELRxA==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
-      '@kubb/core': 1.9.2
-      '@kubb/swagger': 1.9.2(openapi-types@12.1.3)
-      '@kubb/swagger-client': 1.9.2(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
-      '@kubb/swagger-ts': 1.9.2(openapi-types@12.1.3)(typescript@5.2.2)
-      '@kubb/ts-codegen': 1.9.2
+      '@kubb/core': 1.9.4
+      '@kubb/swagger': 1.9.4(openapi-types@12.1.3)
+      '@kubb/swagger-client': 1.9.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
+      '@kubb/swagger-ts': 1.9.4(openapi-types@12.1.3)(typescript@5.2.2)
+      '@kubb/ts-codegen': 1.9.4
       change-case: 4.1.2
     transitivePeerDependencies:
       - axios
