@@ -601,7 +601,7 @@ model LoyaltyStoreOfferRequiredItem {
   updatedAt     DateTime          @updatedAt()
   isDeleted     Boolean           @default(false)
 
-  @@id([offerId, typeId])
+  @@id([offerId, corporationId, typeId])
   @@index([offerId, corporationId])
   @@index([typeId])
 }
