@@ -17,8 +17,6 @@ export type ScrapeLoyaltyStoreOffersEventPayload = {
   };
 };
 
-type StatsKey = "loyaltyStoreOffers";
-
 export const scrapeEsiLoyaltyStoreOffers = inngest.createFunction(
   {
     name: "Scrape LoyaltyStoreOffers",
@@ -28,16 +26,14 @@ export const scrapeEsiLoyaltyStoreOffers = inngest.createFunction(
     retries: 5,
   },
   { event: "scrape/esi/loyalty-store-offers" },
-  async ({ step, event }) => {
+  async ({ event }) => {
     // FIXME: THIS SHOULD NOT BE NECESSARY
     axios.defaults.baseURL = "https://esi.evetech.net/latest";
 
-    const batchSize = event.data.batchSize ?? 1000;
     let corporationIds: number[] =
       event.data.corporationIds ??
       (await getCorporationsNpccorps().then((res) => res.data));
 
-    console.log({ corporationIds });
     const limit = pLimit(20);
 
     // Split IDs in batches
@@ -56,9 +52,13 @@ export const scrapeEsiLoyaltyStoreOffers = inngest.createFunction(
       )
     ).flat();
 
-    const offerIds = [
-      ...new Set(thisBatchLoyaltyStoreOffers.map((offer) => offer.offer_id)),
-    ];
+    const requiredItems = thisBatchLoyaltyStoreOffers.flatMap((offer) =>
+      offer.required_items.map((item) => ({
+        ...item,
+        offerId: offer.offer_id,
+        corporationId: offer.corporationId,
+      })),
+    );
 
     const loyaltyStoreOfferChanges = await updateTable({
       fetchLocalEntries: async () =>
@@ -83,12 +83,13 @@ export const scrapeEsiLoyaltyStoreOffers = inngest.createFunction(
           lpCost: offer.lp_cost,
           isDeleted: false,
         })),
-      batchCreate: (entries) =>
-        limit(() =>
+      batchCreate: (entries) => {
+        return limit(() =>
           prisma.loyaltyStoreOffer.createMany({
             data: entries,
           }),
-        ),
+        );
+      },
       batchDelete: (entries) =>
         prisma.loyaltyStoreOffer.updateMany({
           data: {
@@ -119,6 +120,69 @@ export const scrapeEsiLoyaltyStoreOffers = inngest.createFunction(
       idAccessor: (e) => `${e.offerId}:${e.corporationId}`,
     });
 
-    return loyaltyStoreOfferChanges;
+    const loyaltyStoreOfferRequiredItemsChanges = await updateTable({
+      fetchLocalEntries: async () =>
+        prisma.loyaltyStoreOfferRequiredItem
+          .findMany({
+            where: {
+              corporationId: { in: corporationIds },
+            },
+          })
+          .then((entries) =>
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+          ),
+      fetchRemoteEntries: async () =>
+        requiredItems.map((item) => ({
+          offerId: item.offerId,
+          corporationId: item.corporationId,
+          typeId: item.type_id,
+          quantity: item.quantity,
+          isDeleted: false,
+        })),
+      batchCreate: (entries) => {
+        return limit(() =>
+          prisma.loyaltyStoreOfferRequiredItem.createMany({
+            data: entries,
+          }),
+        );
+      },
+      batchDelete: (entries) =>
+        prisma.loyaltyStoreOfferRequiredItem.updateMany({
+          data: {
+            isDeleted: true,
+          },
+          where: {
+            offerId: {
+              in: entries.map((entry) => entry.offerId),
+            },
+          },
+        }),
+      batchUpdate: (entries) =>
+        Promise.all(
+          entries.map((entry) =>
+            limit(async () =>
+              prisma.loyaltyStoreOfferRequiredItem.update({
+                data: entry,
+                where: {
+                  offerId_corporationId_typeId: {
+                    offerId: entry.offerId,
+                    corporationId: entry.corporationId,
+                    typeId: entry.typeId,
+                  },
+                },
+              }),
+            ),
+          ),
+        ),
+      idAccessor: (e) => `${e.offerId}:${e.corporationId}:${e.typeId}`,
+    });
+
+    const elapsedTime = performance.now() - stepStartTime;
+
+    return {
+      loyaltyStoreOfferChanges,
+      loyaltyStoreOfferRequiredItemsChanges,
+      elapsedTime,
+    };
   },
 );

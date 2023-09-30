@@ -80,26 +80,28 @@ export const compareSets = <T extends object>({
   });*/
 
   // sanity check
-  if (
-    created.length + deleted.length + equal.length + modified.length !==
-    [
-      ...new Set([
-        ...keysBefore.map((x) => x.toString()),
-        ...keysAfter.map((x) => x.toString()),
-      ]),
-    ].length
-  ) {
+  const numInputs = [
+    ...new Set([
+      ...keysBefore.map((x) => x.toString()),
+      ...keysAfter.map((x) => x.toString()),
+    ]),
+  ].length;
+  const numOutputs =
+    created.length + deleted.length + equal.length + modified.length;
+  if (numOutputs !== numInputs) {
     console.log({
+      created,
+      deleted,
+      equal,
+      modified,
       keysUnion: [
         ...new Set([
           ...keysBefore.map((x) => x.toString()),
           ...keysAfter.map((x) => x.toString()),
         ]),
       ],
-      created,
-      deleted,
-      equal,
-      modified,
+      numInputs,
+      numOutputs,
     });
     throw Error("compareSets: input and output length do not match");
   }
