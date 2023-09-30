@@ -1,31 +1,25 @@
-import React, { type ReactElement } from "react";
+import React, { useMemo, type ReactElement } from "react";
 import { GetStaticProps } from "next";
-import { Container, Group, Stack, Title } from "@mantine/core";
+import Link from "next/link";
+import {
+  Anchor,
+  Container,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { NextSeo } from "next-seo";
 
 import { prisma } from "@jitaspace/db";
 import { LPStoreIcon } from "@jitaspace/eve-icons";
+import { CorporationAvatar } from "@jitaspace/ui";
 
-import { LoyaltyPointsTable } from "~/components/LPStore";
 import { MainLayout } from "~/layouts";
 
 type PageProps = {
   corporations: { corporationId: number; name: string }[];
-  types: { typeId: number; name: string }[];
-  //offers: Record<number, GetLoyaltyStoresCorporationIdOffers200Item[]>;
-  offers: {
-    offerId: number;
-    corporationId: number;
-    typeId: number;
-    quantity: number;
-    akCost: number | null;
-    lpCost: number;
-    iskCost: number;
-    requiredItems: {
-      typeId: number;
-      quantity: number;
-    }[];
-  }[];
 };
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
@@ -48,53 +42,9 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
     });
 
-    // get offers
-    const offers = await prisma.loyaltyStoreOffer.findMany({
-      select: {
-        offerId: true,
-        corporationId: true,
-        typeId: true,
-        quantity: true,
-        akCost: true,
-        lpCost: true,
-        iskCost: true,
-        requiredItems: {
-          select: {
-            quantity: true,
-            typeId: true,
-          },
-        },
-      },
-    });
-
-    const typeIds = offers.flatMap((offer) => [
-      offer.typeId,
-      ...offer.requiredItems.map((item) => item.typeId),
-    ]);
-
-    const types = await prisma.type.findMany({
-      select: {
-        typeId: true,
-        name: true,
-      },
-      where: {
-        typeId: {
-          in: typeIds,
-        },
-      },
-    });
-
-    console.log({
-      numOffers: offers.length,
-      numCorporations: corporations.length,
-      numTypes: types.length,
-    });
-
     return {
       props: {
         corporations,
-        types,
-        offers,
       },
       revalidate: 24 * 3600, // every 24 hours
     };
@@ -106,7 +56,11 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   }
 };
 
-export default function Page({ corporations, types, offers }: PageProps) {
+export default function Page({ corporations }: PageProps) {
+  const sortedCorporations = useMemo(
+    () => corporations.sort((a, b) => a.name.localeCompare(b.name)),
+    [corporations],
+  );
   return (
     <Container size="xl">
       <Stack>
@@ -114,11 +68,45 @@ export default function Page({ corporations, types, offers }: PageProps) {
           <LPStoreIcon width={48} />
           <Title>LP Store</Title>
         </Group>
-        <LoyaltyPointsTable
-          corporations={corporations}
-          offers={offers}
-          types={types}
-        />
+        <Title order={3}>
+          Select a corporation below or{" "}
+          <Anchor component={Link} href="/lp-store/all">
+            show all offers
+          </Anchor>
+        </Title>
+        <SimpleGrid
+          cols={4}
+          breakpoints={[
+            {
+              maxWidth: "lg",
+              cols: 3,
+            },
+            {
+              maxWidth: "md",
+              cols: 2,
+            },
+            {
+              maxWidth: "xs",
+              cols: 1,
+            },
+          ]}
+        >
+          {sortedCorporations.map((corporation) => (
+            <Anchor
+              component={Link}
+              href={`/lp-store/${corporation.name.replaceAll(" ", "_")}`}
+              key={corporation.corporationId}
+            >
+              <Group>
+                <CorporationAvatar
+                  corporationId={corporation.corporationId}
+                  size="sm"
+                />
+                <Text>{corporation.name}</Text>
+              </Group>
+            </Anchor>
+          ))}
+        </SimpleGrid>
       </Stack>
     </Container>
   );

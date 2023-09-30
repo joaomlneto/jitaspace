@@ -215,9 +215,56 @@ export const jitaApps: Record<string, JitaApp> = {
 };
 
 export const universeApps: Record<string, JitaApp> = {
+  lpstore: {
+    name: "LP Store",
+    description: "Search through the available LP Store offers.",
+    url: "/lp-store",
+    Icon: (props) => React.createElement(LPStoreIcon, props),
+    hotKey: ["⌘", "P"],
+    scopes: {},
+  },
+  map: {
+    name: "Map",
+    description: "View the EVE Universe Map.",
+    url: "/regions",
+    Icon: (props) => <MapIcon {...props} />,
+    scopes: {},
+  },
+  inventory: {
+    name: "Inventory",
+    description:
+      "Navigate EVE's inventory system, containing all items in the game.",
+    url: "/categories",
+    Icon: (props) => <ItemsIcon {...props} />,
+    scopes: {},
+  },
+  travel: {
+    name: "Travel Planner",
+    description: "Plan your trip across New Eden and beyond",
+    url: "/travel/jita/amarr",
+    Icon: (props) => <MapIcon {...props} />,
+    scopes: {},
+    tags: ["beta"],
+  },
+  opportunities: {
+    name: "Opportunities",
+    description: "View the Opportunities Tree.",
+    url: "/opportunities",
+    Icon: (props) => <OpportunitiesTreeIcon {...props} />,
+    scopes: {},
+  },
+  market: {
+    name: "Market",
+    description: "Browse EVE's regional markets",
+    url: "/market",
+    Icon: (props) => <MarketIcon {...props} />,
+    scopes: {},
+    tags: ["beta"],
+  },
   search: {
     name: "Search",
-    description: "Search new eden for people and places.",
+    description:
+      "Search new eden for people and places. Keyboard shortcut: Ctrl+P",
     onClick: () => {
       openSpotlight();
     },
@@ -237,53 +284,6 @@ export const universeApps: Record<string, JitaApp> = {
         },
       ],
     },
-  },
-  travel: {
-    name: "Travel Planner",
-    description: "Plan your trip across New Eden and beyond",
-    url: "/travel/jita/amarr",
-    Icon: (props) => <MapIcon {...props} />,
-    scopes: {},
-    tags: ["beta"],
-  },
-  lpstore: {
-    name: "LP Store",
-    description: "Search through the available LP Store offers.",
-    url: "/lp-store",
-    Icon: (props) => React.createElement(LPStoreIcon, props),
-    hotKey: ["⌘", "P"],
-    scopes: {},
-    tags: ["beta"],
-  },
-  map: {
-    name: "Map",
-    description: "View the EVE Universe Map.",
-    url: "/regions",
-    Icon: (props) => <MapIcon {...props} />,
-    scopes: {},
-  },
-  market: {
-    name: "Market",
-    description: "Browse EVE's regional markets",
-    url: "/market",
-    Icon: (props) => <MarketIcon {...props} />,
-    scopes: {},
-    tags: ["beta"],
-  },
-  inventory: {
-    name: "Inventory",
-    description:
-      "Navigate EVE's inventory system, containing all items in the game.",
-    url: "/categories",
-    Icon: (props) => <ItemsIcon {...props} />,
-    scopes: {},
-  },
-  opportunities: {
-    name: "Opportunities",
-    description: "View the Opportunities Tree.",
-    url: "/opportunities",
-    Icon: (props) => <OpportunitiesTreeIcon {...props} />,
-    scopes: {},
   },
 };
 

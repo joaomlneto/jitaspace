@@ -53,6 +53,30 @@ export const LoyaltyPointsTable = memo(
       [types],
     );
 
+    const typeNames = useMemo(() => {
+      const map: Record<number, string> = {};
+      types.forEach((type) => (map[type.typeId] = type.name));
+      return map;
+    }, types);
+
+    const corporationNames = useMemo(() => {
+      const map: Record<number, string> = {};
+      corporations.forEach(
+        (corporation) => (map[corporation.corporationId] = corporation.name),
+      );
+      return map;
+    }, corporations);
+
+    const augmentedOffers = useMemo(
+      () =>
+        offers.map((offer) => ({
+          ...offer,
+          typeName: typeNames[offer.typeId],
+          corporationName: corporationNames[offer.corporationId],
+        })),
+      [offers, typeNames, corporationNames],
+    );
+
     const columns = useMemo<
       MRT_ColumnDef<{
         offerId: number;
@@ -66,6 +90,8 @@ export const LoyaltyPointsTable = memo(
           typeId: number;
           quantity: number;
         }[];
+        typeName: string | undefined;
+        corporationName: string | undefined;
       }>[]
     >(
       () => [
@@ -79,6 +105,10 @@ export const LoyaltyPointsTable = memo(
           header: "Corporation",
           accessorKey: "corporationId",
           size: 40,
+          sortingFn: (a, b) =>
+            (a.original.corporationName ?? "").localeCompare(
+              b.original.corporationName ?? "",
+            ),
           Filter: ({ column, header, table }) => {
             return (
               <EveEntitySelect
@@ -134,6 +164,10 @@ export const LoyaltyPointsTable = memo(
           accessorKey: "typeId",
           size: 300,
           enableColumnFilter: true,
+          sortingFn: (a, b) =>
+            (a.original.typeName ?? "").localeCompare(
+              b.original.typeName ?? "",
+            ),
           Filter: ({ column, header, table }) => {
             return (
               <EveEntitySelect
@@ -146,7 +180,7 @@ export const LoyaltyPointsTable = memo(
                 clearable
                 hoverOnSearchChange
                 onChange={column.setFilterValue}
-                limit={100}
+                limit={500}
               />
             );
           },
@@ -227,7 +261,7 @@ export const LoyaltyPointsTable = memo(
       columns,
       positionPagination: "top",
       enableFacetedValues: true,
-      data: offers, //must be memoized or stable (useState, useMemo, defined outside of this component, etc.)
+      data: augmentedOffers, //must be memoized or stable (useState, useMemo, defined outside of this component, etc.)
       initialState: {
         density: "xs",
         sorting: [{ id: "id", desc: true }],
@@ -238,6 +272,8 @@ export const LoyaltyPointsTable = memo(
         columnVisibility: {
           id: false,
           quantity: false,
+          corporationId: sortedCorporations.length > 1,
+          akCost: offers.some((offer) => offer.akCost),
         },
         showColumnFilters: true,
       },
