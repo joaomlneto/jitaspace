@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
-    "download-schema": "curl -L http://esi.evetech.net/latest/swagger.json | jq 'del(.paths.\"/route/{origin}/{destination}/\")' > swagger.json",
+    "download-schema": "curl -L https://esi.evetech.net/latest/swagger.json | jq 'del(.paths.\"/route/{origin}/{destination}/\")' > swagger.json",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
     "kubb:generate": "AXIOS_BASE=https://esi.evetech.net/latest kubb",
