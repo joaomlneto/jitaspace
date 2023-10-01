@@ -3,6 +3,7 @@ import createSwagger from "@kubb/swagger";
 import createSwaggerClient from "@kubb/swagger-client";
 import createSwaggerTanstackQuery from "@kubb/swagger-tanstack-query";
 import createSwaggerTS from "@kubb/swagger-ts";
+import createSwaggerZod from "@kubb/swagger-zod";
 
 export default defineConfig(async () => {
   return {
@@ -21,9 +22,9 @@ export default defineConfig(async () => {
       }),
       createSwaggerTS({}),
       createSwaggerTanstackQuery({
-        //client: "./src/utils/use-custom-client",
         client: "./src/client",
       }),
+      createSwaggerZod({}),
     ],
   };
 });

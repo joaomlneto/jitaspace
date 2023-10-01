@@ -6880,7 +6880,7 @@
           "201": {
             "description": "Aggregate cost of sending a mail from the source character to the target characters, in ISK",
             "examples": {
-              "application/json": 2950
+              "application/json": 2950.0
             },
             "schema": {
               "description": "201 created number",
@@ -29804,7 +29804,7 @@
               "application/json": [
                 {
                   "amount": -1000,
-                  "balance": 100000,
+                  "balance": 100000.0,
                   "context_id": 2112625428,
                   "context_id_type": "character_id",
                   "date": "2016-10-24T09:00:00Z",
@@ -42547,7 +42547,7 @@
                   "faction_id": 1,
                   "is_unique": true,
                   "name": "Faction",
-                  "size_factor": 1,
+                  "size_factor": 1.0,
                   "solar_system_id": 123,
                   "station_count": 1000,
                   "station_system_count": 100
