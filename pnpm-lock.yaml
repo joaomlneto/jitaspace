@@ -174,8 +174,8 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(jotai@2.4.3)
       jotai-devtools:
-        specifier: ^0.6.2
-        version: 0.6.2(@emotion/react@11.11.1)(@types/react@18.2.24)(react-dom@18.2.0)(react@18.2.0)(redux@4.2.1)
+        specifier: ^0.6.3
+        version: 0.6.3(@emotion/react@11.11.1)(@types/react@18.2.24)(react-dom@18.2.0)(react@18.2.0)(redux@4.2.1)
       jotai-tanstack-query:
         specifier: ^0.7.2
         version: 0.7.2(@tanstack/query-core@4.35.3)(jotai@2.4.3)
@@ -9073,8 +9073,8 @@ packages:
       jotai: 2.4.3(@types/react@18.2.24)(react@18.2.0)
     dev: false
 
-  /jotai-devtools@0.6.2(@emotion/react@11.11.1)(@types/react@18.2.24)(react-dom@18.2.0)(react@18.2.0)(redux@4.2.1):
-    resolution: {integrity: sha512-iHKYt8V2T2Gh2DtGRpvpv2daVoFoHRJXqk5/LHnhFkJy9rMQuIGo4XgVu/v1ZMSvMzwDXdU3hDOQkfQWlDErUQ==}
+  /jotai-devtools@0.6.3(@emotion/react@11.11.1)(@types/react@18.2.24)(react-dom@18.2.0)(react@18.2.0)(redux@4.2.1):
+    resolution: {integrity: sha512-QPS6m2ft6laT5YrVlIlCzjRl1LYmwCtT3jL9TJcrlB5bUxqcls03CmNMRwVBpSOzx3WwiZVEmXALhlI1UvufPQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       '@emotion/react': '>=11.0.0'
@@ -9260,7 +9260,6 @@ packages:
       chalk: 3.0.0
       diff-match-patch: 1.0.5
     dev: false
-    bundledDependencies: []
 
   /jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
