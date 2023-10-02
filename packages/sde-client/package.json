@@ -25,7 +25,7 @@
     "@types/react": "^18.2.24",
     "eslint": "^8.50.0",
     "prettier": "^3.0.3",
-    "orval": "^6.17.0",
+    "orval": "^6.18.1",
     "typescript": "^5.2.2"
   }
 }
