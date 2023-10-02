@@ -22,7 +22,7 @@
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
-    "@types/node": "^18.18.1",
+    "@types/node": "^18.18.3",
     "@types/react": "^18.2.24",
     "eslint": "^8.50.0",
     "orval": "^6.18.1",
