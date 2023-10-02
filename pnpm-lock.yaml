@@ -504,6 +504,9 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../esi-client
+      '@jitaspace/esi-client-kubb':
+        specifier: '*'
+        version: link:../esi-client-kubb
       '@jitaspace/eslint-config':
         specifier: '*'
         version: link:../../tooling/eslint
@@ -583,6 +586,9 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../esi-client
+      '@jitaspace/esi-client-kubb':
+        specifier: '*'
+        version: link:../esi-client-kubb
       '@jitaspace/eslint-config':
         specifier: '*'
         version: link:../../tooling/eslint
@@ -808,6 +814,9 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../esi-client
+      '@jitaspace/esi-client-kubb':
+        specifier: '*'
+        version: link:../esi-client-kubb
       '@jitaspace/esi-hooks':
         specifier: '*'
         version: link:../esi-hooks
@@ -932,6 +941,9 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../esi-client
+      '@jitaspace/esi-client-kubb':
+        specifier: '*'
+        version: link:../esi-client-kubb
       '@jitaspace/eslint-config':
         specifier: '*'
         version: link:../../tooling/eslint

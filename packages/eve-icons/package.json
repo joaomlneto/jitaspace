@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@jitaspace/esi-client": "*",
+    "@jitaspace/esi-client-kubb": "*",
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
