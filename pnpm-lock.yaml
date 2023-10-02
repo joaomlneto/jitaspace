@@ -411,6 +411,9 @@ importers:
       '@kubb/swagger-zod':
         specifier: ^1.9.4
         version: 1.9.4(openapi-types@12.1.3)
+      '@kubb/swagger-zodios':
+        specifier: ^1.9.4
+        version: 1.9.4(openapi-types@12.1.3)
       '@tanstack/react-query':
         specifier: ^4.35.7
         version: 4.35.7(react-dom@18.2.0)(react@18.2.0)
@@ -3096,6 +3099,20 @@ packages:
     dependencies:
       '@kubb/core': 1.9.4
       '@kubb/swagger': 1.9.4(openapi-types@12.1.3)
+      '@kubb/ts-codegen': 1.9.4
+      change-case: 4.1.2
+    transitivePeerDependencies:
+      - encoding
+      - openapi-types
+    dev: false
+
+  /@kubb/swagger-zodios@1.9.4(openapi-types@12.1.3):
+    resolution: {integrity: sha512-QfZ+K9BwEFa2XKBYfGzYcQKaSnIImTaYhgosgogg8ioM4NZDR9BTIGaKfDrKqVDaw4WxczCgV+zZhOjhsOKMFQ==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    dependencies:
+      '@kubb/core': 1.9.4
+      '@kubb/swagger': 1.9.4(openapi-types@12.1.3)
+      '@kubb/swagger-zod': 1.9.4(openapi-types@12.1.3)
       '@kubb/ts-codegen': 1.9.4
       change-case: 4.1.2
     transitivePeerDependencies:

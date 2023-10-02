@@ -22,6 +22,7 @@
     "@kubb/swagger-tanstack-query": "^1.9.4",
     "@kubb/swagger-ts": "^1.9.4",
     "@kubb/swagger-zod": "^1.9.4",
+    "@kubb/swagger-zodios": "^1.9.4",
     "@tanstack/react-query": "^4.35.7",
     "axios": "^1.5.1",
     "react": "18.2.0"
