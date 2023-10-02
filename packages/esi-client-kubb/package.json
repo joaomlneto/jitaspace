@@ -24,8 +24,10 @@
     "@kubb/swagger-zod": "^1.9.4",
     "@kubb/swagger-zodios": "^1.9.4",
     "@tanstack/react-query": "^4.35.7",
+    "@zodios/core": "^10.9.6",
     "axios": "^1.5.1",
-    "react": "18.2.0"
+    "react": "18.2.0",
+    "zod": "^3.22.2"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "*",
