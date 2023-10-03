@@ -20,10 +20,15 @@ export type TypeInventoryBreadcrumbsProps = Omit<
   "children"
 > & {
   typeId?: string | number;
+  showType?: boolean;
 };
 
 export const TypeInventoryBreadcrumbs = memo(
-  ({ typeId, ...otherProps }: TypeInventoryBreadcrumbsProps) => {
+  ({
+    typeId,
+    showType = false,
+    ...otherProps
+  }: TypeInventoryBreadcrumbsProps) => {
     const { data: type } = useGetUniverseTypesTypeId(
       typeof typeId === "string" ? parseInt(typeId) : typeId ?? 0,
       {},
@@ -49,9 +54,11 @@ export const TypeInventoryBreadcrumbs = memo(
         <GroupAnchor groupId={type?.data.group_id}>
           <GroupName groupId={type?.data.group_id} />
         </GroupAnchor>
-        <TypeAnchor typeId={typeId}>
-          <TypeName typeId={typeId} />
-        </TypeAnchor>
+        {showType && (
+          <TypeAnchor typeId={typeId}>
+            <TypeName typeId={typeId} />
+          </TypeAnchor>
+        )}
       </Breadcrumbs>
     );
   },

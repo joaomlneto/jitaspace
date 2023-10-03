@@ -17,10 +17,11 @@ import { MarketGroupName, TypeName } from "../Text";
 
 export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   typeId?: string | number;
+  showType?: boolean;
 };
 
 export const TypeMarketBreadcrumbs = memo(
-  ({ typeId, ...otherProps }: TypeMarketBreadcrumbsProps) => {
+  ({ typeId, showType = false, ...otherProps }: TypeMarketBreadcrumbsProps) => {
     const { data: type } = useGetUniverseTypesTypeId(
       typeof typeId === "string" ? parseInt(typeId) : typeId ?? 0,
       {},
@@ -87,9 +88,11 @@ export const TypeMarketBreadcrumbs = memo(
             <MarketGroupName marketGroupId={marketGroup.market_group_id} />
           </MarketGroupAnchor>
         ))}
-        <TypeAnchor typeId={typeId}>
-          <TypeName typeId={typeId} />
-        </TypeAnchor>
+        {showType && (
+          <TypeAnchor typeId={typeId}>
+            <TypeName typeId={typeId} />
+          </TypeAnchor>
+        )}
       </Breadcrumbs>
     );
   },
