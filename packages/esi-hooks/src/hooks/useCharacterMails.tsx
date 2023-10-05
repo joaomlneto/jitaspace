@@ -2,9 +2,9 @@ import useSWRInfinite from "swr/infinite";
 
 import {
   getGetCharactersCharacterIdMailKey,
-  type GetCharactersCharacterIdMail200Item,
   type GetCharactersCharacterIdMailParams,
-} from "@jitaspace/esi-client";
+  type GetCharactersCharacterIdMailQueryResponse,
+} from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -18,10 +18,10 @@ export function useCharacterMails({ labels }: useCharacterMailsProps) {
     useEsiClientContext();
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCharactersCharacterIdMail200Item[], Error>(
+    useSWRInfinite<GetCharactersCharacterIdMailQueryResponse[], Error>(
       function getKey(
         pageIndex,
-        previousPageData: GetCharactersCharacterIdMail200Item[],
+        previousPageData: GetCharactersCharacterIdMailQueryResponse[],
       ) {
         if (
           !characterId ||

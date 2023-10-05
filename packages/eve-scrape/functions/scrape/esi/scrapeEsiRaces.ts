@@ -2,7 +2,7 @@ import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getUniverseRaces } from "@jitaspace/esi-client";
+import { getUniverseRaces } from "@jitaspace/esi-client-kubb";
 
 import { inngest } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";

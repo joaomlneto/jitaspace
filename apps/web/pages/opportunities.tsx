@@ -11,7 +11,7 @@ import {
   getOpportunitiesTasks,
   getOpportunitiesTasksTaskId,
   GetOpportunitiesTasksTaskId200,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { OpportunitiesTreeIcon } from "@jitaspace/eve-icons";
 
 import { MailMessageViewer } from "~/components/EveMail";

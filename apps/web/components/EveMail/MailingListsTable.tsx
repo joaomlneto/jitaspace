@@ -1,7 +1,7 @@
 import React from "react";
 import { Alert, Container, Group, Stack, Text } from "@mantine/core";
 
-import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { GroupListIcon } from "@jitaspace/eve-icons";
 

@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
-import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client-kubb";
 import { WarningIcon } from "@jitaspace/eve-icons";
 import {
   CalendarEventAttendeesAvatarGroup,

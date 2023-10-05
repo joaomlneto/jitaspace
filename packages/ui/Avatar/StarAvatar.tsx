@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetUniverseStarsStarId } from "@jitaspace/esi-client";
+import { useGetUniverseStarsStarId } from "@jitaspace/esi-client-kubb";
 
 import { TypeAvatar } from "./TypeAvatar";
 

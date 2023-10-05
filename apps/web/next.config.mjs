@@ -16,7 +16,6 @@ const config = {
     "jotai-devtools",
     "@jitaspace/auth",
     "@jitaspace/db",
-    "@jitaspace/esi-client",
     "@jitaspace/esi-client-kubb",
     "@jitaspace/esi-hooks",
     "@jitaspace/esi-meta-client",

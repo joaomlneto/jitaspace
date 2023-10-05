@@ -17,7 +17,7 @@ import { format } from "date-fns";
 import {
   useGetAlliancesAllianceId,
   useGetAlliancesAllianceIdCorporations,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import {
   AllianceAvatar,
   AllianceName,

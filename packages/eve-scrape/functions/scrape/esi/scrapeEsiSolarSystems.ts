@@ -11,7 +11,7 @@ import {
   getUniverseStationsStationId,
   getUniverseSystems,
   getUniverseSystemsSystemId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { inngest } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";

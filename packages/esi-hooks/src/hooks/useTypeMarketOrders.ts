@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 
 import {
   getMarketsRegionIdOrders,
-  GetMarketsRegionIdOrders200Item,
+  GetMarketsRegionIdOrdersQueryResponse,
   useGetUniverseRegions,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 export function useTypeMarketOrders(typeId?: number) {
   const [regionOrders, setRegionOrders] = useState<
-    Record<number, GetMarketsRegionIdOrders200Item[]>
+    Record<number, GetMarketsRegionIdOrdersQueryResponse[]>
   >([]);
   const { data: regions } = useGetUniverseRegions(
     {},

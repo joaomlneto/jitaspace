@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { type TextProps } from "@mantine/core";
 
-import { useGetWarsWarId } from "@jitaspace/esi-client";
+import { useGetWarsWarId } from "@jitaspace/esi-client-kubb";
 
 import { AllianceName } from "./AllianceName";
 import { CorporationName } from "./CorporationName";

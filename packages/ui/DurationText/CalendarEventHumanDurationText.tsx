@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 import type humanizeDuration from "humanize-duration";
 
-import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { HumanDurationText } from "./HumanDurationText";

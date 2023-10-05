@@ -5,7 +5,7 @@ import { Anchor, type AnchorProps } from "@mantine/core";
 import {
   useGetCharactersCharacterIdMailLists,
   useGetCharactersCharacterIdMailMailId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";

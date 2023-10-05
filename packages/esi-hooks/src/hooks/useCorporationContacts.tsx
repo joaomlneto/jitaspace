@@ -4,8 +4,8 @@ import {
   getGetCorporationsCorporationIdContactsKey,
   useGetCharactersCharacterId,
   useGetCorporationsCorporationIdContactsLabels,
-  type GetCorporationsCorporationIdContacts200Item,
-} from "@jitaspace/esi-client";
+  type GetCorporationsCorporationIdContactsQueryResponse,
+} from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -17,7 +17,7 @@ export function useCorporationContacts() {
   const { data: characterData } = useGetCharactersCharacterId(characterId ?? 0);
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCorporationsCorporationIdContacts200Item[], Error>(
+    useSWRInfinite<GetCorporationsCorporationIdContactsQueryResponse[], Error>(
       function getKey(pageIndex) {
         if (
           !characterId ||

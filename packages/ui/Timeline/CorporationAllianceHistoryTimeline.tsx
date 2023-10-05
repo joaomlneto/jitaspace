@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import {
   useGetCorporationsCorporationIdAlliancehistory,
   type GetCorporationsCorporationIdAlliancehistory200Item,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { AllianceAvatar } from "../Avatar";
 import { AllianceName } from "../Text";

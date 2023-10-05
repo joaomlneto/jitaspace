@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetCharactersCharacterId } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterId } from "@jitaspace/esi-client-kubb";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,

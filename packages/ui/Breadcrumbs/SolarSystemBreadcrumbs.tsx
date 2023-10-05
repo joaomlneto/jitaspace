@@ -4,7 +4,7 @@ import { Breadcrumbs, type BreadcrumbsProps } from "@mantine/core";
 import {
   useGetUniverseConstellationsConstellationId,
   useGetUniverseSystemsSystemId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import {
   ConstellationAnchor,

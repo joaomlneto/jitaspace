@@ -9,7 +9,7 @@ import {
 } from "@mantine/core";
 import { type SpotlightActionProps } from "@mantine/spotlight";
 
-import { type GetCharactersCharacterIdSearch200 } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdSearch200 } from "@jitaspace/esi-client-kubb";
 import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
 
 const useStyles = createStyles((theme) => ({

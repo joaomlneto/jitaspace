@@ -1,11 +1,12 @@
 import useSWRInfinite from "swr/infinite";
 
 import {
-  getGetAlliancesAllianceIdContactsKey,
+  getAlliancesAllianceIdContactsQueryKey,
+  GetAlliancesAllianceIdContactsQueryResponse,
+  useGetAlliancesAllianceId,
   useGetAlliancesAllianceIdContactsLabels,
   useGetCharactersCharacterId,
-  type GetAlliancesAllianceIdContacts200Item,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -17,7 +18,7 @@ export function useAllianceContacts() {
   const { data: characterData } = useGetCharactersCharacterId(characterId ?? 0);
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetAlliancesAllianceIdContacts200Item[], Error>(
+    useSWRInfinite<GetAlliancesAllianceIdContactsQueryResponse[], Error>(
       function getKey(pageIndex) {
         if (
           !characterId ||
@@ -29,7 +30,7 @@ export function useAllianceContacts() {
         }
 
         return () => {
-          const [endpointUrl] = getGetAlliancesAllianceIdContactsKey(
+          const [endpointUrl] = getAlliancesAllianceIdContactsQueryKey(
             characterData.data.alliance_id ?? 0,
           );
           const queryParams = new URLSearchParams();

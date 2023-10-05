@@ -2,7 +2,7 @@ import React from "react";
 import { Indicator } from "@mantine/core";
 import { Calendar, type CalendarProps } from "@mantine/dates";
 
-import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client-kubb";
 
 type CharacterMonthCalendarProps = CalendarProps & {
   events: GetCharactersCharacterIdCalendar200Item[];

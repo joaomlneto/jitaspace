@@ -2,7 +2,10 @@ import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getAlliances, getAlliancesAllianceId } from "@jitaspace/esi-client";
+import {
+  getAlliances,
+  getAlliancesAllianceId,
+} from "@jitaspace/esi-client-kubb";
 
 import { inngest } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";

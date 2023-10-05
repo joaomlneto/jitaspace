@@ -14,7 +14,7 @@ import {
   deleteCharactersCharacterIdMailMailId,
   putCharactersCharacterIdMailMailId,
   useGetCharactersCharacterIdMailLabels,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";

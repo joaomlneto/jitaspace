@@ -7,7 +7,7 @@ import {
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { GetMarketsRegionIdOrders200Item } from "@jitaspace/esi-client";
+import { GetMarketsRegionIdOrders200Item } from "@jitaspace/esi-client-kubb";
 import {
   EveEntityName,
   SolarSystemSecurityStatusBadge,

@@ -4,7 +4,7 @@ import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
 import {
   useGetCharactersCharacterIdCalendarEventId,
   type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 export type CalendarEventResponseBadgeProps = BadgeProps & {

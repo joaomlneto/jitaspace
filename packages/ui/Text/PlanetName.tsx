@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import { useGetUniversePlanetsPlanetId } from "@jitaspace/esi-client";
+import { useGetUniversePlanetsPlanetId } from "@jitaspace/esi-client-kubb";
 
 export type PlanetNameProps = TextProps & {
   planetId?: number;

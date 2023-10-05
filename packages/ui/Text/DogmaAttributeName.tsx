@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import { useGetDogmaAttributesAttributeId } from "@jitaspace/esi-client";
+import { useGetDogmaAttributesAttributeId } from "@jitaspace/esi-client-kubb";
 
 export type DogmaAttributeNameProps = TextProps & {
   attributeId?: number;

@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
 
-import { useGetWarsWarId } from "@jitaspace/esi-client";
+import { useGetWarsWarId } from "@jitaspace/esi-client-kubb";
 
 import { AllianceTickerBadge } from "./AllianceTickerBadge";
 import { CorporationTickerBadge } from "./CorporationTickerBadge";

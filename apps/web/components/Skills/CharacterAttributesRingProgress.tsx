@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { format } from "date-fns";
 
-import { useGetCharactersCharacterIdAttributes } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdAttributes } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   AttributesIcon,

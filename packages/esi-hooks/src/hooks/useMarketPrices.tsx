@@ -2,8 +2,8 @@ import { useMemo } from "react";
 
 import {
   useGetMarketsPrices,
-  type GetMarketsPrices200Item,
-} from "@jitaspace/esi-client";
+  type GetMarketsPricesQueryResponse,
+} from "@jitaspace/esi-client-kubb";
 
 export function useMarketPrices() {
   const {
@@ -14,7 +14,7 @@ export function useMarketPrices() {
   } = useGetMarketsPrices();
 
   const data = useMemo(() => {
-    const index: Record<string, GetMarketsPrices200Item> = {};
+    const index: Record<string, GetMarketsPricesQueryResponse> = {};
     arrayData?.data.forEach((item) => {
       index[item.type_id] = item;
     });

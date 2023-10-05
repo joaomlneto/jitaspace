@@ -7,7 +7,7 @@ import {
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { GetCharactersCharacterIdAssets200Item } from "@jitaspace/esi-client";
+import { GetCharactersCharacterIdAssets200Item } from "@jitaspace/esi-client-kubb";
 import {
   useEsiNamePrefetch,
   useEsiNamesCache,

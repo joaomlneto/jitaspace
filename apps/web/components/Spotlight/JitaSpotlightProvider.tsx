@@ -10,7 +10,7 @@ import {
 import {
   type GetCharactersCharacterIdSearch200,
   type GetCharactersCharacterIdSearchCategoriesItem,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext, useEsiSearch } from "@jitaspace/esi-hooks";
 import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
 

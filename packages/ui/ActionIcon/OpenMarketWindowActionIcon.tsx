@@ -2,7 +2,7 @@ import { memo } from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 
-import { postUiOpenwindowMarketdetails } from "@jitaspace/esi-client";
+import { postUiOpenwindowMarketdetails } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { MarketIcon } from "@jitaspace/eve-icons";
 

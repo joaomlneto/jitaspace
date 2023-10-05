@@ -6,7 +6,7 @@ import {
   putCharactersCharacterIdCalendarEventId,
   PutCharactersCharacterIdCalendarEventIdBodyResponse,
   useGetCharactersCharacterIdCalendarEventId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 export type CalendarEventAttendanceSelect = Omit<SelectProps, "data"> & {

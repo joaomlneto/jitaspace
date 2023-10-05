@@ -3,8 +3,8 @@ import useSWRInfinite from "swr/infinite";
 import {
   getGetCharactersCharacterIdContactsKey,
   useGetCorporationsCorporationIdContactsLabels,
-  type GetCharactersCharacterIdContacts200Item,
-} from "@jitaspace/esi-client";
+  type GetCharactersCharacterIdContactsQueryResponse,
+} from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -14,7 +14,7 @@ export function useCharacterContacts() {
     useEsiClientContext();
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCharactersCharacterIdContacts200Item[], Error>(
+    useSWRInfinite<GetCharactersCharacterIdContactsQueryResponse[], Error>(
       function getKey(pageIndex) {
         if (
           !characterId ||

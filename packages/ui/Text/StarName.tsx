@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Text, type TextProps } from "@mantine/core";
 
-import { useGetUniverseStarsStarId } from "@jitaspace/esi-client";
+import { useGetUniverseStarsStarId } from "@jitaspace/esi-client-kubb";
 
 export type StarNameProps = TextProps & {
   starId?: number;

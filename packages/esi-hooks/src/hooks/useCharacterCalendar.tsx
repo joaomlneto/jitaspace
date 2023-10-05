@@ -2,9 +2,9 @@ import useSWRInfinite from "swr/infinite";
 
 import {
   getGetCharactersCharacterIdCalendarKey,
-  type GetCharactersCharacterIdCalendar200Item,
   type GetCharactersCharacterIdCalendarParams,
-} from "@jitaspace/esi-client";
+  type GetCharactersCharacterIdCalendarQueryResponse,
+} from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -14,10 +14,10 @@ export function useCharacterCalendar() {
     useEsiClientContext();
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCharactersCharacterIdCalendar200Item[], Error>(
+    useSWRInfinite<GetCharactersCharacterIdCalendarQueryResponse[], Error>(
       function getKey(
         pageIndex,
-        previousPageData: GetCharactersCharacterIdCalendar200Item[],
+        previousPageData: GetCharactersCharacterIdCalendarQueryResponse[],
       ) {
         if (
           !characterId ||

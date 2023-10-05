@@ -1,4 +1,4 @@
-import { type GetCharactersCharacterIdMailLabels200LabelsItem } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdMailLabels200LabelsItem } from "@jitaspace/esi-client-kubb";
 
 export const SPECIAL_LABEL_IDS = [1, 2, 4, 8];
 

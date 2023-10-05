@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetUniverseRegionsRegionId } from "@jitaspace/esi-client";
+import { useGetUniverseRegionsRegionId } from "@jitaspace/esi-client-kubb";
 import { ConstellationName, RegionName } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";

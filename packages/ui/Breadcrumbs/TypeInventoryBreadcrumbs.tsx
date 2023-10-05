@@ -10,7 +10,7 @@ import {
 import {
   useGetUniverseGroupsGroupId,
   useGetUniverseTypesTypeId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { CategoryAnchor, GroupAnchor, TypeAnchor } from "../Anchor";
 import { CategoryName, GroupName, TypeName } from "../Text";

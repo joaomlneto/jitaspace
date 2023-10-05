@@ -8,7 +8,7 @@ import {
   getUniverseRegions,
   getUniverseRegionsRegionId,
   GetUniverseRegionsRegionId200,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { ESI_BASE_URL } from "@jitaspace/esi-hooks";
 import { RegionAnchor } from "@jitaspace/ui";
 

@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
 
-import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";

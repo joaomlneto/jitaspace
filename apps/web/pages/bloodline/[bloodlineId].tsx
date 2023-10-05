@@ -6,7 +6,7 @@ import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 import {
   useGetUniverseBloodlines,
   type GetUniverseBloodlines200Item,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   BloodlineName,

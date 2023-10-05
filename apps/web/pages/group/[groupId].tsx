@@ -18,7 +18,7 @@ import {
   getUniverseGroupsGroupId,
   getUniverseTypesTypeId,
   useGetUniverseGroupsGroupId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { ESI_BASE_URL } from "~/config/constants";

@@ -19,7 +19,7 @@ import {
   getUniverseGroupsGroupId,
   GetUniverseGroupsGroupId200,
   useGetUniverseCategoriesCategoryId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 import { ESI_BASE_URL } from "~/config/constants";

@@ -8,7 +8,7 @@ import {
   type SelectItemProps,
 } from "@mantine/core";
 
-import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client-kubb";
 
 import { EveEntityAvatar } from "../../Avatar";
 import { EveEntityName } from "../../Text";

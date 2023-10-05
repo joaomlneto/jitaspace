@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { Loader, MultiSelect, type MultiSelectProps } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
-import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client-kubb";
 import { useEsiSearch } from "@jitaspace/esi-hooks";
 
 import { EsiSearchMultiSelectItem } from "./EsiSearchMultiSelectItem";

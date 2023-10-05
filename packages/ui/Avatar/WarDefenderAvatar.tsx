@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetWarsWarId } from "@jitaspace/esi-client";
+import { useGetWarsWarId } from "@jitaspace/esi-client-kubb";
 
 import { AllianceAvatar } from "./AllianceAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";

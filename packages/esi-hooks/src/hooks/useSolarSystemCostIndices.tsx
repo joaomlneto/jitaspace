@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 
 import {
-  GetIndustrySystems200ItemCostIndicesItemActivity,
+  GetIndustrySystemsQueryResponseCostIndicesItemActivity,
   useGetIndustrySystems,
-  type GetIndustrySystems200Item,
-} from "@jitaspace/esi-client";
+  type GetIndustrySystemsQueryResponse,
+} from "@jitaspace/esi-client-kubb";
 
 export function useSolarSystemCostIndices() {
   const {
@@ -14,8 +14,8 @@ export function useSolarSystemCostIndices() {
     isValidating,
   } = useGetIndustrySystems();
 
-  const data: Record<string, GetIndustrySystems200Item> = useMemo(() => {
-    const index: Record<string, GetIndustrySystems200Item> = {};
+  const data: Record<string, GetIndustrySystemsQueryResponse> = useMemo(() => {
+    const index: Record<string, GetIndustrySystemsQueryResponse> = {};
     arrayData?.data.forEach((item) => {
       index[item.solar_system_id] = item;
     });
@@ -24,14 +24,20 @@ export function useSolarSystemCostIndices() {
 
   const ranges = useMemo(() => {
     const result = Object.values(
-      GetIndustrySystems200ItemCostIndicesItemActivity,
-    ).reduce((acc, activity) => {
-      acc[activity] = {
-        min: undefined,
-        max: undefined,
-      };
-      return acc;
-    }, {} as Record<GetIndustrySystems200ItemCostIndicesItemActivity, { min?: number; max?: number }>);
+      GetIndustrySystemsQueryResponseCostIndicesItemActivity,
+    ).reduce(
+      (acc, activity) => {
+        acc[activity] = {
+          min: undefined,
+          max: undefined,
+        };
+        return acc;
+      },
+      {} as Record<
+        GetIndustrySystemsQueryResponseCostIndicesItemActivity,
+        { min?: number; max?: number }
+      >,
+    );
 
     Object.values(data).forEach((item) => {
       item.cost_indices.forEach((index) => {

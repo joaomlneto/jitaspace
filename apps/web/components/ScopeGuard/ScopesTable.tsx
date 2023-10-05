@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Badge, createStyles, Table } from "@mantine/core";
 
-import { getScopeDescription, type ESIScope } from "@jitaspace/esi-client";
+import { getScopeDescription, type ESIScope } from "@jitaspace/esi-client-kubb";
 
 const useStyles = createStyles((theme) => ({
   scopesTable: {

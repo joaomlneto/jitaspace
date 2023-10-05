@@ -8,7 +8,7 @@ import {
   type GetCharactersCharacterIdContactsLabels200Item,
   type GetCorporationsCorporationIdContacts200Item,
   type GetCorporationsCorporationIdContactsLabels200Item,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import {
   EveEntityAnchor,
   EveEntityAvatar,

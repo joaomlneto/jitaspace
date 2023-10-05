@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
+import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client-kubb";
 
 export type GroupNameProps = TextProps & {
   groupId?: number;

@@ -2,7 +2,7 @@ import {
   useGetCharactersCharacterIdSearch,
   type GetCharactersCharacterIdSearchCategoriesItem,
   type LanguageParameter,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { useEsiClientContext } from "./useEsiClientContext";
 

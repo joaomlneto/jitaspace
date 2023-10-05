@@ -15,7 +15,7 @@ import {
   getUniverseCategories,
   getUniverseCategoriesCategoryId,
   GetUniverseCategoriesCategoryId200,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { CategoryAnchor } from "@jitaspace/ui";
 
 import { ESI_BASE_URL } from "~/config/constants";

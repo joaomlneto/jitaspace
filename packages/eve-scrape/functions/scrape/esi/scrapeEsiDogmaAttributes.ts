@@ -5,7 +5,7 @@ import { prisma } from "@jitaspace/db";
 import {
   getDogmaAttributes,
   getDogmaAttributesAttributeId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { inngest } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";

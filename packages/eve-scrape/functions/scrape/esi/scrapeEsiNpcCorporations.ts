@@ -6,7 +6,7 @@ import {
   getCharactersCharacterId,
   getCorporationsCorporationId,
   getCorporationsNpccorps,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { inngest } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";

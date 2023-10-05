@@ -1,7 +1,7 @@
 import React from "react";
 import { MediaQuery, type TableProps } from "@mantine/core";
 
-import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client-kubb";
 
 import {
   DesktopCalendarEventList,

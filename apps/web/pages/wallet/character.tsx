@@ -2,7 +2,7 @@ import React, { type ReactElement } from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
-import { useGetCharactersCharacterIdWalletJournal } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdWalletJournal } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { WalletIcon } from "@jitaspace/eve-icons";
 

@@ -1,7 +1,7 @@
 import { memo, useMemo } from "react";
 import { Card, createStyles, JsonInput, type CardProps } from "@mantine/core";
 
-import { type GetCharactersCharacterIdFittings200ItemItemsItemFlag } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdFittings200ItemItemsItemFlag } from "@jitaspace/esi-client-kubb";
 
 import { ShipFittingCardHeader } from "./ShipFittingCardHeader";
 import { ShipFittingCardModulesSection } from "./ShipFittingCardModulesSection";

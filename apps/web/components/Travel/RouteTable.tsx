@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from "react";
 import { Anchor, Group, Table, Text, Tooltip } from "@mantine/core";
 
-import { useGetUniverseSystemKills } from "@jitaspace/esi-client";
+import { useGetUniverseSystemKills } from "@jitaspace/esi-client-kubb";
 import { InfoIcon } from "@jitaspace/eve-icons";
 import {
   SolarSystemAnchor,

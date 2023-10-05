@@ -3,7 +3,7 @@ import { NonRetriableError } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getUniversePlanetsPlanetId } from "@jitaspace/esi-client";
+import { getUniversePlanetsPlanetId } from "@jitaspace/esi-client-kubb";
 
 import { inngest } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";

@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
+import { useGetCorporationsCorporationId } from "@jitaspace/esi-client-kubb";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,

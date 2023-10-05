@@ -22,7 +22,7 @@ import { SessionProvider, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 import { Workbox } from "workbox-window";
 
-import { type ESIScope } from "@jitaspace/esi-client";
+import { type ESIScope } from "@jitaspace/esi-client-kubb";
 import {
   EsiClientContextProvider,
   getEveSsoAccessTokenPayload,

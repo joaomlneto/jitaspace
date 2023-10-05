@@ -2,7 +2,7 @@ import React from "react";
 import { type LinkProps } from "next/link";
 import { openSpotlight } from "@mantine/spotlight";
 
-import { type ESIScope } from "@jitaspace/esi-client";
+import { type ESIScope } from "@jitaspace/esi-client-kubb";
 import {
   AssetsIcon,
   CalendarIcon,

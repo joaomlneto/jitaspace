@@ -6,7 +6,7 @@ import {
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { GetCharactersCharacterIdWalletJournal200Item } from "@jitaspace/esi-client";
+import { GetCharactersCharacterIdWalletJournal200Item } from "@jitaspace/esi-client-kubb";
 import {
   EveEntityAnchor,
   EveEntityAvatar,

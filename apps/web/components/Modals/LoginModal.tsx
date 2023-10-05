@@ -13,7 +13,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { type ContextModalProps } from "@mantine/modals";
 import { signIn } from "next-auth/react";
 
-import { type ESIScope } from "@jitaspace/esi-client";
+import { type ESIScope } from "@jitaspace/esi-client-kubb";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import {

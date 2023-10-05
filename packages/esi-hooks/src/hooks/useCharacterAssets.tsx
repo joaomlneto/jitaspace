@@ -3,8 +3,8 @@ import useSWRInfinite from "swr/infinite";
 
 import {
   getGetCharactersCharacterIdAssetsKey,
-  type GetCharactersCharacterIdAssets200Item,
-} from "@jitaspace/esi-client";
+  type GetCharactersCharacterIdAssetsQueryResponse,
+} from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -14,7 +14,7 @@ export function useCharacterAssets() {
     useEsiClientContext();
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCharactersCharacterIdAssets200Item[], Error>(
+    useSWRInfinite<GetCharactersCharacterIdAssetsQueryResponse[], Error>(
       function getKey(pageIndex) {
         if (
           !characterId ||
@@ -51,7 +51,7 @@ export function useCharacterAssets() {
       { revalidateAll: true },
     );
 
-  const assets: Record<string, GetCharactersCharacterIdAssets200Item> =
+  const assets: Record<string, GetCharactersCharacterIdAssetsQueryResponse> =
     useMemo(() => {
       const assetsList = data?.flat() ?? [];
       const assets = {};
@@ -67,7 +67,7 @@ export function useCharacterAssets() {
   const locations: Record<
     string,
     Pick<
-      GetCharactersCharacterIdAssets200Item,
+      GetCharactersCharacterIdAssetsQueryResponse,
       "location_id" | "location_type"
     > & { items: number[] }
   > = useMemo(() => {
@@ -75,7 +75,7 @@ export function useCharacterAssets() {
     const locations: Record<
       string,
       Pick<
-        GetCharactersCharacterIdAssets200Item,
+        GetCharactersCharacterIdAssetsQueryResponse,
         "location_id" | "location_type"
       > & { items: number[] }
     > = {};

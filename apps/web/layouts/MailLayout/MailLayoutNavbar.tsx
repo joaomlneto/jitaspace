@@ -15,7 +15,7 @@ import {
 import { IconMailbox, IconMailFast, IconTag } from "@tabler/icons-react";
 import { signIn } from "next-auth/react";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { EveMailIcon, EveMailTagIcon } from "@jitaspace/eve-icons";
 import {

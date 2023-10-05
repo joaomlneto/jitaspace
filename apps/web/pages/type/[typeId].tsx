@@ -19,7 +19,7 @@ import {
   getUniverseTypes,
   getUniverseTypesTypeId,
   useGetUniverseTypesTypeId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useMarketPrices } from "@jitaspace/esi-hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {

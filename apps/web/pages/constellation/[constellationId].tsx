@@ -11,7 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 
-import { useGetUniverseConstellationsConstellationId } from "@jitaspace/esi-client";
+import { useGetUniverseConstellationsConstellationId } from "@jitaspace/esi-client-kubb";
 import {
   ConstellationName,
   RegionName,

@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import { useGetUniverseCategoriesCategoryId } from "@jitaspace/esi-client";
+import { useGetUniverseCategoriesCategoryId } from "@jitaspace/esi-client-kubb";
 
 export type CategoryNameProps = TextProps & {
   categoryId?: number;

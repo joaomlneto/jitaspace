@@ -2,7 +2,7 @@ import { type NextApiRequest, type NextApiResponse } from "next";
 import axios, { HttpStatusCode } from "axios";
 import pLimit from "p-limit";
 
-import { type GetMarketsGroupsMarketGroupId200 } from "@jitaspace/esi-client";
+import { type GetMarketsGroupsMarketGroupId200 } from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "~/config/constants";
 

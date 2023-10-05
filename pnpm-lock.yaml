@@ -47,9 +47,6 @@ importers:
       '@jitaspace/db':
         specifier: '*'
         version: link:../../packages/db
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../../packages/esi-client
       '@jitaspace/esi-client-kubb':
         specifier: '*'
         version: link:../../packages/esi-client-kubb
@@ -507,9 +504,6 @@ importers:
         specifier: ^2.2.4
         version: 2.2.4(react@18.2.0)
     devDependencies:
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../esi-client
       '@jitaspace/esi-client-kubb':
         specifier: '*'
         version: link:../esi-client-kubb
@@ -589,9 +583,6 @@ importers:
 
   packages/eve-icons:
     devDependencies:
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../esi-client
       '@jitaspace/esi-client-kubb':
         specifier: '*'
         version: link:../esi-client-kubb
@@ -637,9 +628,6 @@ importers:
       '@jitaspace/db':
         specifier: '*'
         version: link:../db
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../esi-client
       '@jitaspace/esi-client-kubb':
         specifier: '*'
         version: link:../esi-client-kubb
@@ -817,9 +805,6 @@ importers:
       '@emotion/server':
         specifier: ^11.11.0
         version: 11.11.0
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../esi-client
       '@jitaspace/esi-client-kubb':
         specifier: '*'
         version: link:../esi-client-kubb
@@ -944,9 +929,6 @@ importers:
 
   packages/utils:
     devDependencies:
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../esi-client
       '@jitaspace/esi-client-kubb':
         specifier: '*'
         version: link:../esi-client-kubb

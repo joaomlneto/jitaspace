@@ -5,8 +5,8 @@ import {
   getGetCorporationsCorporationIdAssetsKey,
   useGetCharactersCharacterId,
   useGetCharactersCharacterIdRoles,
-  type GetCorporationsCorporationIdAssets200Item,
-} from "@jitaspace/esi-client";
+  type GetCorporationsCorporationIdAssetsQueryResponse,
+} from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -49,7 +49,7 @@ export function useCorporationAssets() {
   );
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCorporationsCorporationIdAssets200Item[], Error>(
+    useSWRInfinite<GetCorporationsCorporationIdAssetsQueryResponse[], Error>(
       function getKey(pageIndex) {
         if (
           !corporationId ||
@@ -111,23 +111,25 @@ export function useCorporationAssets() {
     }
   }, [corporationId, error, isDirector, isTokenValid, scopes]);
 
-  const assets: Record<string, GetCorporationsCorporationIdAssets200Item> =
-    useMemo(() => {
-      const assetsList = data?.flat() ?? [];
-      const assets = {};
+  const assets: Record<
+    string,
+    GetCorporationsCorporationIdAssetsQueryResponse
+  > = useMemo(() => {
+    const assetsList = data?.flat() ?? [];
+    const assets = {};
 
-      assetsList.forEach((asset) => {
-        // @ts-expect-error: item_id is fine to use as index...
-        assets[asset.item_id] = asset;
-      });
+    assetsList.forEach((asset) => {
+      // @ts-expect-error: item_id is fine to use as index...
+      assets[asset.item_id] = asset;
+    });
 
-      return assets;
-    }, [data]);
+    return assets;
+  }, [data]);
 
   const locations: Record<
     string,
     Pick<
-      GetCorporationsCorporationIdAssets200Item,
+      GetCorporationsCorporationIdAssetsQueryResponse,
       "location_id" | "location_type"
     > & { items: number[] }
   > = useMemo(() => {
@@ -135,7 +137,7 @@ export function useCorporationAssets() {
     const locations: Record<
       string,
       Pick<
-        GetCorporationsCorporationIdAssets200Item,
+        GetCorporationsCorporationIdAssetsQueryResponse,
         "location_id" | "location_type"
       > & { items: number[] }
     > = {};

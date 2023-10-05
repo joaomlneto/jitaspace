@@ -4,7 +4,7 @@ import { Group, Spoiler, Stack, Text } from "@mantine/core";
 import {
   useGetCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailMailId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   EveEntityAnchor,
@@ -132,10 +132,11 @@ export function MessagePanel({
           )}
           <Group align="start">
             {mail?.data.labels
-              ?.map((labelIndex) =>
-                labels?.data.labels?.find(
-                  (label) => label.label_id === labelIndex,
-                ),
+              ?.map(
+                (labelIndex) =>
+                  labels?.data.labels?.find(
+                    (label) => label.label_id === labelIndex,
+                  ),
               )
               .map(
                 (item) =>
