@@ -240,8 +240,8 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       zod:
-        specifier: ^3.22.2
-        version: 3.22.2
+        specifier: ^3.22.3
+        version: 3.22.3
     devDependencies:
       '@jitaspace/eslint-config':
         specifier: '*'
@@ -419,7 +419,7 @@ importers:
         version: 4.35.7(react-dom@18.2.0)(react@18.2.0)
       '@zodios/core':
         specifier: ^10.9.6
-        version: 10.9.6(axios@1.5.1)(zod@3.22.2)
+        version: 10.9.6(axios@1.5.1)(zod@3.22.3)
       axios:
         specifier: ^1.5.1
         version: 1.5.1
@@ -427,8 +427,8 @@ importers:
         specifier: 18.2.0
         version: 18.2.0
       zod:
-        specifier: ^3.22.2
-        version: 3.22.2
+        specifier: ^3.22.3
+        version: 3.22.3
     devDependencies:
       '@jitaspace/eslint-config':
         specifier: '*'
@@ -5448,14 +5448,14 @@ packages:
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
     dev: false
 
-  /@zodios/core@10.9.6(axios@1.5.1)(zod@3.22.2):
+  /@zodios/core@10.9.6(axios@1.5.1)(zod@3.22.3):
     resolution: {integrity: sha512-aH4rOdb3AcezN7ws8vDgBfGboZMk2JGGzEq/DtW65MhnRxyTGRuLJRWVQ/2KxDgWvV2F5oTkAS+5pnjKbl0n+A==}
     peerDependencies:
       axios: ^0.x || ^1.0.0
       zod: ^3.x
     dependencies:
       axios: 1.5.1
-      zod: 3.22.2
+      zod: 3.22.3
     dev: false
 
   /abort-controller@3.0.0:
@@ -13756,6 +13756,6 @@ packages:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
     dev: false
 
-  /zod@3.22.2:
-    resolution: {integrity: sha512-wvWkphh5WQsJbVk1tbx1l1Ly4yg+XecD+Mq280uBGt9wa5BKSWf4Mhp6GmrkPixhMxmabYY7RbzlwVP32pbGCg==}
+  /zod@3.22.3:
+    resolution: {integrity: sha512-EjIevzuJRiRPbVH4mGc8nApb/lVLKVpmUhAaR5R5doKGfAnGJ6Gr3CViAVjP+4FWSxCsybeWQdcgCtbX+7oZug==}
     dev: false
