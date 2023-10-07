@@ -1,10 +1,6 @@
 import useSWRInfinite from "swr/infinite";
 
-import {
-  getGetCharactersCharacterIdContactsKey,
-  useGetCorporationsCorporationIdContactsLabels,
-  type GetCharactersCharacterIdContactsQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+import { type GetCharactersCharacterIdContactsQueryResponse } from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -13,6 +9,7 @@ export function useCharacterContacts() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
+  /*
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
     useSWRInfinite<GetCharactersCharacterIdContactsQueryResponse[], Error>(
       function getKey(pageIndex) {
@@ -28,9 +25,7 @@ export function useCharacterContacts() {
 
         return () => {
           const [endpointUrl] =
-            getGetCharactersCharacterIdContactsKey(characterId);
-          const queryParams = new URLSearchParams();
-          queryParams.append("page", `${pageIndex + 1}`);
+            getCharactersCharacterIdContactsQueryKey(characterId, {page: pageIndex + 1});
           return `${ESI_BASE_URL}${endpointUrl}?${queryParams.toString()}`;
         };
       },
@@ -74,5 +69,14 @@ export function useCharacterContacts() {
     isLoading,
     isValidating,
     mutate,
+  };*/
+
+  return {
+    data: [],
+    labels: [],
+    error: undefined,
+    isLoading: true,
+    isValidating: false,
+    mutate: () => {},
   };
 }

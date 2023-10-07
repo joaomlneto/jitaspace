@@ -1,10 +1,6 @@
 import useSWRInfinite from "swr/infinite";
 
-import {
-  getGetCharactersCharacterIdCalendarKey,
-  type GetCharactersCharacterIdCalendarParams,
-  type GetCharactersCharacterIdCalendarQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -12,6 +8,8 @@ import { useEsiClientContext } from "./useEsiClientContext";
 export function useCharacterCalendar() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
+
+  /*
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
     useSWRInfinite<GetCharactersCharacterIdCalendarQueryResponse[], Error>(
@@ -78,5 +76,15 @@ export function useCharacterCalendar() {
     isLoading,
     isValidating,
     mutate,
+  };*/
+
+  return {
+    events: [],
+    hasMoreEvents: false,
+    loadMoreEvents: () => {},
+    error: undefined,
+    isLoading: true,
+    isValidating: false,
+    mutate: () => {},
   };
 }

@@ -1,5 +1,3 @@
-import useSWRInfinite from "swr/infinite";
-
 import {
   getAlliancesAllianceIdContactsQueryKey,
   GetAlliancesAllianceIdContactsQueryResponse,
@@ -15,6 +13,7 @@ export function useAllianceContacts() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
+  /*
   const { data: characterData } = useGetCharactersCharacterId(characterId ?? 0);
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
@@ -79,5 +78,13 @@ export function useAllianceContacts() {
     isLoading,
     isValidating,
     mutate,
+  };*/
+
+  return {
+    data: [],
+    labels: [],
+    isLoading: true,
+    isValidating: true,
+    mutate: () => {},
   };
 }

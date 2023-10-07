@@ -2,7 +2,8 @@ import { useMemo } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import {
-  getGetCharactersCharacterIdAssetsKey,
+  getCharactersCharacterIdAssetsQueryKey,
+  //getGetCharactersCharacterIdAssetsKey,
   type GetCharactersCharacterIdAssetsQueryResponse,
 } from "@jitaspace/esi-client-kubb";
 
@@ -12,6 +13,8 @@ import { useEsiClientContext } from "./useEsiClientContext";
 export function useCharacterAssets() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
+
+  /*
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
     useSWRInfinite<GetCharactersCharacterIdAssetsQueryResponse[], Error>(
@@ -25,10 +28,12 @@ export function useCharacterAssets() {
         }
 
         return () => {
-          const [endpointUrl] =
-            getGetCharactersCharacterIdAssetsKey(characterId);
-          const queryParams = new URLSearchParams();
-          queryParams.append("page", `${pageIndex + 1}`);
+          const [endpointUrl] = getCharactersCharacterIdAssetsQueryKey(
+            characterId,
+            {
+              page: pageIndex + 1,
+            },
+          );
           return `${ESI_BASE_URL}${endpointUrl}?${queryParams.toString()}`;
         };
       },
@@ -102,5 +107,14 @@ export function useCharacterAssets() {
     isLoading,
     isValidating,
     mutate,
+  };*/
+
+  return {
+    assets: [],
+    locations: [],
+    error: undefined,
+    isLoading: true,
+    isValidating: false,
+    mutate: () => {},
   };
 }

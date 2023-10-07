@@ -1,10 +1,6 @@
 import useSWRInfinite from "swr/infinite";
 
-import {
-  getGetCharactersCharacterIdMailKey,
-  type GetCharactersCharacterIdMailParams,
-  type GetCharactersCharacterIdMailQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+import { type GetCharactersCharacterIdMailQueryResponse } from "@jitaspace/esi-client-kubb";
 
 import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -17,6 +13,7 @@ export function useCharacterMails({ labels }: useCharacterMailsProps) {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
+  /*
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
     useSWRInfinite<GetCharactersCharacterIdMailQueryResponse[], Error>(
       function getKey(
@@ -81,5 +78,15 @@ export function useCharacterMails({ labels }: useCharacterMailsProps) {
     isLoading,
     isValidating,
     mutate,
+  };*/
+
+  return {
+    messages: [],
+    hasMoreMessages: false,
+    loadMoreMessages: () => {},
+    error: undefined,
+    isLoading: true,
+    isValidating: true,
+    mutate: () => {},
   };
 }

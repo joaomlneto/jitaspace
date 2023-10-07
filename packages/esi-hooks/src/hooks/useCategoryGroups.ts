@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import {
   getUniverseGroupsGroupId,
   useGetUniverseCategoriesCategoryId,
-  type GetUniverseGroupsGroupIdQueryResult,
+  type GetUniverseGroupsGroupIdQueryResponse,
 } from "@jitaspace/esi-client-kubb";
 
 export const useCategoryGroups = (
@@ -17,32 +17,33 @@ export const useCategoryGroups = (
   | {
       loading: false;
       error?: string;
-      data: Record<string | number, GetUniverseGroupsGroupIdQueryResult>;
+      data: Record<string | number, GetUniverseGroupsGroupIdQueryResponse>;
     } => {
   const { data: category } = useGetUniverseCategoriesCategoryId(
     categoryId ?? 0,
     {},
-    { swr: { enabled: categoryId !== undefined } },
+    {},
+    { query: { enabled: categoryId !== undefined } },
   );
   const [groups, setGroups] = useState<
-    Record<string | number, GetUniverseGroupsGroupIdQueryResult>
+    Record<string | number, GetUniverseGroupsGroupIdQueryResponse>
   >({});
 
   // once we have the category, get its groups
   useEffect(() => {
-    if (!category?.data) return;
+    if (!category) return;
     console.log("Recomputing Groups");
-    const groupIds = category.data.groups;
+    const groupIds = category.groups;
     const promises = groupIds.map((id) => getUniverseGroupsGroupId(id));
     void Promise.all(promises).then((groups) =>
       setGroups(
         groups.reduce(
-          (acc, group) => ({ ...acc, [group.data.group_id]: group }),
+          (acc, group) => ({ ...acc, [group.group_id]: group }),
           {},
         ),
       ),
     );
-  }, [category?.data]);
+  }, [category]);
 
   if (groups === undefined) {
     return {

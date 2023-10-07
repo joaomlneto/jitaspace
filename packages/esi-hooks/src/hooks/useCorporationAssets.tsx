@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import {
-  getGetCorporationsCorporationIdAssetsKey,
+  getCorporationsCorporationIdAssetsQueryKey,
   useGetCharactersCharacterId,
   useGetCharactersCharacterIdRoles,
   type GetCorporationsCorporationIdAssetsQueryResponse,
@@ -18,15 +18,17 @@ export function useCorporationAssets() {
   const { data: characterData } = useGetCharactersCharacterId(
     characterId ?? 0,
     {},
-    { swr: { enabled: !!characterId } },
+    {},
+    { query: { enabled: !!characterId } },
   );
 
   const { data: characterCorporationRolesData } =
     useGetCharactersCharacterIdRoles(
       characterId ?? 0,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled:
             !!characterId &&
             isTokenValid &&
@@ -37,10 +39,10 @@ export function useCorporationAssets() {
 
   const isDirector = useMemo(
     () =>
-      Object.values(characterCorporationRolesData?.data ?? {}).some((e) =>
+      Object.values(characterCorporationRolesData ?? {}).some((e) =>
         e.includes("Director"),
       ),
-    [characterCorporationRolesData?.data],
+    [characterCorporationRolesData],
   );
 
   const corporationId = useMemo(
