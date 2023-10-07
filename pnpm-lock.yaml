@@ -406,8 +406,8 @@ importers:
         specifier: ^1.9.5
         version: 1.9.5(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
       '@kubb/swagger-ts':
-        specifier: ^1.9.4
-        version: 1.9.4(openapi-types@12.1.3)(typescript@5.2.2)
+        specifier: ^1.9.5
+        version: 1.9.5(openapi-types@12.1.3)(typescript@5.2.2)
       '@kubb/swagger-zod':
         specifier: ^1.9.4
         version: 1.9.4(openapi-types@12.1.3)
@@ -3108,22 +3108,6 @@ packages:
       - encoding
       - openapi-types
       - typescript
-    dev: false
-
-  /@kubb/swagger-ts@1.9.4(openapi-types@12.1.3)(typescript@5.2.2):
-    resolution: {integrity: sha512-GZw/RAS0d3HJYReqAQLy7uvoPY//PIFM4uE7ej3ym9juiaMjFJ8BvqaSxeqTTvLYn2BKIXb7NY4QMUQc7lu+yA==}
-    engines: {node: '>=18', pnpm: '>=8.3.0'}
-    peerDependencies:
-      typescript: ^5.2.2
-    dependencies:
-      '@kubb/core': 1.9.4
-      '@kubb/swagger': 1.9.4(openapi-types@12.1.3)
-      '@kubb/ts-codegen': 1.9.4
-      change-case: 4.1.2
-      typescript: 5.2.2
-    transitivePeerDependencies:
-      - encoding
-      - openapi-types
     dev: false
 
   /@kubb/swagger-ts@1.9.5(openapi-types@12.1.3)(typescript@5.2.2):
