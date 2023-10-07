@@ -15,8 +15,6 @@ export default async function NextApiRouteHandler(
       }
   >,
 ) {
-  axios.defaults.baseURL = ESI_BASE_URL;
-
   // get list of market group IDs
   const marketGroupsResponse = await fetch(
     "https://esi.evetech.net/latest/markets/groups",

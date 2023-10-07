@@ -49,7 +49,6 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    axios.defaults.baseURL = ESI_BASE_URL;
     const typeId = Number(context.params?.typeId as string);
 
     // check if the requested type exists

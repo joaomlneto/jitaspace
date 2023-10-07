@@ -20,9 +20,6 @@ type PageProps = {
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    // FIXME: THIS SHOULD NOT BE REQUIRED
-    axios.defaults.baseURL = ESI_BASE_URL;
-
     // Get all IDs for groups and tasks
     const { data: regionIds } = await getUniverseRegions();
 

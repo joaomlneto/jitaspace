@@ -31,9 +31,6 @@ type PageProps = {
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // FIXME: THIS SHOULD NOT BE NEEDED
-  axios.defaults.baseURL = ESI_BASE_URL;
-
   // When this is true (in preview environments) don't prerender any static pages
   // (faster builds, but slower initial page load)
   if (env.SKIP_BUILD_STATIC_GENERATION === "true") {
@@ -68,7 +65,6 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    axios.defaults.baseURL = ESI_BASE_URL;
     const groupId = Number(context.params?.groupId as string);
 
     // check if the requested group exists
