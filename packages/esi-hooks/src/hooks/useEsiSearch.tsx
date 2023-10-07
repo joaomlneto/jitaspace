@@ -1,6 +1,6 @@
 import {
   useGetCharactersCharacterIdSearch,
-  type GetCharactersCharacterIdSearchCategoriesItem,
+  type GetCharactersCharacterIdSearchQueryParamsCategories,
   type LanguageParameter,
 } from "@jitaspace/esi-client-kubb";
 
@@ -13,7 +13,7 @@ export function useEsiSearch({
   language,
 }: {
   query: string;
-  categories: GetCharactersCharacterIdSearchCategoriesItem[];
+  categories: GetCharactersCharacterIdSearchQueryParamsCategories[];
   strict?: boolean;
   language?: LanguageParameter;
 }) {

@@ -1,19 +1,10 @@
-import useSWRInfinite from "swr/infinite";
-
-import {
-  getGetCorporationsCorporationIdContactsKey,
-  useGetCharactersCharacterId,
-  useGetCorporationsCorporationIdContactsLabels,
-  type GetCorporationsCorporationIdContactsQueryResponse,
-} from "@jitaspace/esi-client-kubb";
-
-import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
 
 export function useCorporationContacts() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
+  /*
   const { data: characterData } = useGetCharactersCharacterId(characterId ?? 0);
 
   const { data, error, isLoading, isValidating, size, setSize, mutate } =
@@ -80,5 +71,14 @@ export function useCorporationContacts() {
     isLoading,
     isValidating,
     mutate,
+  };*/
+
+  return {
+    data: [],
+    labels: [],
+    error: undefined,
+    isLoading: true,
+    isValidating: false,
+    mutate: () => {},
   };
 }
