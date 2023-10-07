@@ -27,8 +27,6 @@ export const scrapeEsiGroups = inngest.createFunction(
   },
   { event: "scrape/esi/groups" },
   async ({ step, event, logger }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 500;
 
     // Get all Group IDs in ESI

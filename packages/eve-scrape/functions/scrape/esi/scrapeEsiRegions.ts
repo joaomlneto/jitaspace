@@ -24,9 +24,6 @@ export const scrapeEsiRegions = inngest.createFunction(
   { event: "scrape/esi/regions" },
 
   async ({}) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
-
     // Get all Region IDs in ESI
     const regionIds = await getUniverseRegions().then((res) => res.data);
     regionIds.sort((a, b) => a - b);

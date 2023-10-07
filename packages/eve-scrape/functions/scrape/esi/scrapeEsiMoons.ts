@@ -28,8 +28,6 @@ export const scrapeEsiMoons = inngest.createFunction(
   },
   { event: "scrape/esi/moons" },
   async ({ step, event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 1000;
     const moonIds = event.data.moons;
 

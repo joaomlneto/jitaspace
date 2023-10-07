@@ -21,8 +21,6 @@ export const scrapeEsiAncestries = inngest.createFunction(
   { event: "scrape/esi/ancestries" },
   async () => {
     const stepStartTime = performance.now();
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
 
     const limit = pLimit(20);
 

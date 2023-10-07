@@ -28,8 +28,6 @@ export const scrapeEsiDogmaEffects = inngest.createFunction(
   },
   { event: "scrape/esi/dogma-effects" },
   async ({ step, event, logger }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 500;
 
     // Get all Dogma Effect IDs in ESI

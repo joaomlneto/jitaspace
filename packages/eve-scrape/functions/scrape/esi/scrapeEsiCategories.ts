@@ -24,8 +24,6 @@ export const scrapeEsiCategories = inngest.createFunction(
   { event: "scrape/esi/categories" },
   async ({}) => {
     const stepStartTime = performance.now();
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
 
     // Get all Category IDs in ESI
     const categoryIds = await getUniverseCategories().then((res) => res.data);

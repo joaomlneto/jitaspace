@@ -27,9 +27,6 @@ export const scrapeEsiLoyaltyStoreOffers = inngest.createFunction(
   },
   { event: "scrape/esi/loyalty-store-offers" },
   async ({ event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
-
     let corporationIds: number[] =
       event.data.corporationIds ??
       (await getCorporationsNpccorps().then((res) => res.data));

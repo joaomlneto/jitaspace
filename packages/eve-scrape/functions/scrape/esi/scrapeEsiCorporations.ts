@@ -28,9 +28,6 @@ export const scrapeEsiCorporations = inngest.createFunction(
   },
   { event: "scrape/esi/corporations" },
   async ({ step, event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
-
     const batchSize = event.data.batchSize ?? 1000;
     const corporationIds: number[] = event.data.corporationIds;
 

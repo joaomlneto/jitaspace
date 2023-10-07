@@ -29,8 +29,6 @@ export const scrapeEsiAlliances = inngest.createFunction(
   },
   { event: "scrape/esi/alliances" },
   async ({ step, event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 1000;
 
     // Get all Alliance IDs in ESI

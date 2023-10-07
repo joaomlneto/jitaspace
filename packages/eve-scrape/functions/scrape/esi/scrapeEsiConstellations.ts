@@ -24,8 +24,6 @@ export const scrapeEsiConstellations = inngest.createFunction(
   { event: "scrape/esi/constellations" },
   async ({}) => {
     const stepStartTime = performance.now();
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
 
     // Get all Constellation IDs in ESI
     const constellationIds = await getUniverseConstellations().then(

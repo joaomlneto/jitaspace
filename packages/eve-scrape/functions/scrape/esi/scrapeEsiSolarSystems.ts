@@ -42,8 +42,6 @@ export const scrapeEsiSolarSystems = inngest.createFunction(
   },
   { event: "scrape/esi/solar-systems" },
   async ({ step, event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 100;
 
     // Get all Solar System IDs in ESI

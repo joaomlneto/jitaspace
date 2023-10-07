@@ -29,8 +29,6 @@ export const scrapeEsiTypes = inngest.createFunction(
   },
   { event: "scrape/esi/types" },
   async ({ step, event, logger }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 500;
 
     // Get all Type IDs in ESI

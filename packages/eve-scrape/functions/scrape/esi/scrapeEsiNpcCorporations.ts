@@ -26,9 +26,6 @@ export const scrapeEsiNpcCorporations = inngest.createFunction(
   { event: "scrape/esi/npc-corporations" },
 
   async ({ step }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
-
     const stepStartTime = performance.now();
 
     // Get all NPC Corporation IDs in ESI
