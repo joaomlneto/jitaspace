@@ -452,46 +452,6 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
-  packages/esi-client-react-query:
-    dependencies:
-      '@tanstack/react-query':
-        specifier: ^4.35.7
-        version: 4.35.7(react-dom@18.2.0)(react@18.2.0)
-      axios:
-        specifier: ^1.5.1
-        version: 1.5.1
-      react:
-        specifier: 18.2.0
-        version: 18.2.0
-    devDependencies:
-      '@jitaspace/eslint-config':
-        specifier: '*'
-        version: link:../../tooling/eslint
-      '@jitaspace/prettier-config':
-        specifier: '*'
-        version: link:../../tooling/prettier
-      '@jitaspace/tsconfig':
-        specifier: '*'
-        version: link:../../tooling/tsconfig
-      '@types/node':
-        specifier: ^18.18.3
-        version: 18.18.3
-      '@types/react':
-        specifier: ^18.2.24
-        version: 18.2.24
-      eslint:
-        specifier: ^8.50.0
-        version: 8.50.0
-      orval:
-        specifier: ^6.18.1
-        version: 6.18.1(openapi-types@12.1.3)(typescript@5.2.2)
-      prettier:
-        specifier: ^3.0.3
-        version: 3.0.3
-      typescript:
-        specifier: ^5.2.2
-        version: 5.2.2
-
   packages/esi-hooks:
     dependencies:
       '@react-hook/cache':
@@ -500,9 +460,6 @@ importers:
       axios:
         specifier: ^1.5.1
         version: 1.5.1
-      swr:
-        specifier: ^2.2.4
-        version: 2.2.4(react@18.2.0)
     devDependencies:
       '@jitaspace/esi-client-kubb':
         specifier: '*'
