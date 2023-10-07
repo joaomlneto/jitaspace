@@ -24,6 +24,7 @@ export default defineConfig(async () => {
       createSwaggerTS({}),
       createSwaggerTanstackQuery({
         //client: "./src/client",
+        infinite: {},
       }),
       createSwaggerZod({}),
       createSwaggerZodios({}),
