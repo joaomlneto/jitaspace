@@ -409,8 +409,8 @@ importers:
         specifier: ^1.9.5
         version: 1.9.5(openapi-types@12.1.3)(typescript@5.2.2)
       '@kubb/swagger-zod':
-        specifier: ^1.9.4
-        version: 1.9.4(openapi-types@12.1.3)
+        specifier: ^1.9.5
+        version: 1.9.5(openapi-types@12.1.3)
       '@kubb/swagger-zodios':
         specifier: ^1.9.4
         version: 1.9.4(openapi-types@12.1.3)
@@ -3133,6 +3133,19 @@ packages:
       '@kubb/core': 1.9.4
       '@kubb/swagger': 1.9.4(openapi-types@12.1.3)
       '@kubb/ts-codegen': 1.9.4
+      change-case: 4.1.2
+    transitivePeerDependencies:
+      - encoding
+      - openapi-types
+    dev: false
+
+  /@kubb/swagger-zod@1.9.5(openapi-types@12.1.3):
+    resolution: {integrity: sha512-aS6qDkb5nzD0XYl+ev8E+XmtbxEZTekqvarebbvLmKT8brje09z2NyD0DLmdWX6LXD8aYYdzeeH/iHzJswAiZg==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    dependencies:
+      '@kubb/core': 1.9.5
+      '@kubb/swagger': 1.9.5(openapi-types@12.1.3)
+      '@kubb/ts-codegen': 1.9.5
       change-case: 4.1.2
     transitivePeerDependencies:
       - encoding
