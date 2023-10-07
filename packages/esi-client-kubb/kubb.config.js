@@ -19,11 +19,11 @@ export default defineConfig(async () => {
     plugins: [
       createSwagger({}),
       createSwaggerClient({
-        output: "./clients/axios",
+        //output: "./clients/axios",
       }),
       createSwaggerTS({}),
       createSwaggerTanstackQuery({
-        client: "./src/client",
+        //client: "./src/client",
       }),
       createSwaggerZod({}),
       createSwaggerZodios({}),
