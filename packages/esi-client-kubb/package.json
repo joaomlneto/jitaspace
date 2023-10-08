@@ -15,7 +15,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@kubb/cli": "^1.9.5",
+    "@kubb/cli": "^1.10.0",
     "@kubb/core": "^1.9.5",
     "@kubb/swagger": "^1.9.5",
     "@kubb/swagger-client": "^1.9.5",
