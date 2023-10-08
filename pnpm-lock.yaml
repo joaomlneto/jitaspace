@@ -397,8 +397,8 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0
       '@kubb/swagger':
-        specifier: ^1.9.5
-        version: 1.9.5(openapi-types@12.1.3)
+        specifier: ^1.10.0
+        version: 1.10.0(openapi-types@12.1.3)
       '@kubb/swagger-client':
         specifier: ^1.9.5
         version: 1.9.5(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
@@ -3149,6 +3149,21 @@ packages:
       '@kubb/swagger-zod': 1.9.5(openapi-types@12.1.3)
       '@kubb/ts-codegen': 1.9.5
       change-case: 4.1.2
+    transitivePeerDependencies:
+      - encoding
+      - openapi-types
+    dev: false
+
+  /@kubb/swagger@1.10.0(openapi-types@12.1.3):
+    resolution: {integrity: sha512-i4w/BBHm65TJeRc2byJqVMp7qdfGb7lbo+g0PCb4RAF8Yw/05e4i5wxUqnuKxoXEMm8pcPTFUH4PjZjJxuEDRA==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    dependencies:
+      '@apidevtools/swagger-parser': 10.1.0(openapi-types@12.1.3)
+      '@kubb/core': 1.10.0
+      change-case: 4.1.2
+      oas: 21.1.4
+      oas-normalize: 10.1.0
+      swagger2openapi: 7.0.8
     transitivePeerDependencies:
       - encoding
       - openapi-types
