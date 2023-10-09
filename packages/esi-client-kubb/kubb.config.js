@@ -6,6 +6,10 @@ import createSwaggerTS from "@kubb/swagger-ts";
 import createSwaggerZod from "@kubb/swagger-zod";
 import createSwaggerZodios from "@kubb/swagger-zodios";
 
+
+
+
+
 export default defineConfig(async () => {
   return {
     root: ".",
@@ -25,6 +29,7 @@ export default defineConfig(async () => {
       createSwaggerTanstackQuery({
         //client: "./src/client",
         infinite: {},
+        dataReturnType: "full",
       }),
       createSwaggerZod({}),
       createSwaggerZodios({}),
