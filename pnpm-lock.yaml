@@ -400,8 +400,8 @@ importers:
         specifier: ^1.10.0
         version: 1.10.0(openapi-types@12.1.3)
       '@kubb/swagger-client':
-        specifier: ^1.9.5
-        version: 1.9.5(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
+        specifier: ^1.10.0
+        version: 1.10.0(@types/react@18.2.25)(axios@1.5.1)(openapi-types@12.1.3)(react@18.2.0)(typescript@5.2.2)
       '@kubb/swagger-tanstack-query':
         specifier: ^1.9.5
         version: 1.9.5(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
@@ -3076,6 +3076,46 @@ packages:
       seedrandom: 3.0.5
     dev: false
 
+  /@kubb/react-template@1.10.0(@types/react@18.2.25)(react@18.2.0):
+    resolution: {integrity: sha512-hmBCJpXZGu7Un6p6HsL3MGu/QvEt8EQqsB5bPWmf6ZKoXfK+uSc9pkMrvvD8A4JYbG6iro+gCfdIVVJ/RRR8Kg==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    peerDependencies:
+      '@types/react': '>=18.2.25'
+      react: '>=18.2.0'
+    dependencies:
+      '@kubb/core': 1.10.0
+      '@kubb/ts-codegen': 1.10.0
+      '@types/react': 18.2.25
+      auto-bind: 4.0.0
+      react: 18.2.0
+      react-reconciler: 0.29.0(react@18.2.0)
+    dev: false
+
+  /@kubb/swagger-client@1.10.0(@types/react@18.2.25)(axios@1.5.1)(openapi-types@12.1.3)(react@18.2.0)(typescript@5.2.2):
+    resolution: {integrity: sha512-gp0KPW9rTPvwGsTuKpq1/UREEvZStMP4MbIJZlSsPeZ3uaAAA3fR2qrIHOzun1kGDkXhd1nfogY58ptrQgWayw==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    peerDependencies:
+      axios: ^1.4.0
+      react: ^18.2.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+    dependencies:
+      '@kubb/core': 1.10.0
+      '@kubb/react-template': 1.10.0(@types/react@18.2.25)(react@18.2.0)
+      '@kubb/swagger': 1.10.0(openapi-types@12.1.3)
+      '@kubb/swagger-ts': 1.10.0(openapi-types@12.1.3)(typescript@5.2.2)
+      '@kubb/ts-codegen': 1.10.0
+      axios: 1.5.1
+      change-case: 4.1.2
+      react: 18.2.0
+    transitivePeerDependencies:
+      - '@types/react'
+      - encoding
+      - openapi-types
+      - typescript
+    dev: false
+
   /@kubb/swagger-client@1.9.5(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2):
     resolution: {integrity: sha512-vqiU3BDAyPbUoU5ck/P2fqY+UASPG4bwJe/fzB8PItQ3EwYc4h+xpshjDagc60i2pSBhgrJp9znF0wUSXiXFmw==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
@@ -3109,6 +3149,22 @@ packages:
       - encoding
       - openapi-types
       - typescript
+    dev: false
+
+  /@kubb/swagger-ts@1.10.0(openapi-types@12.1.3)(typescript@5.2.2):
+    resolution: {integrity: sha512-bNGNc8g6L+tX5DUk2gzkYFI2XlHLxZTTzA5DXnBKhj4G3q0G/E0GrdXwXRdvxfC+OapEU6F8JU1r+U763jcPPA==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    peerDependencies:
+      typescript: ^5.2.2
+    dependencies:
+      '@kubb/core': 1.10.0
+      '@kubb/swagger': 1.10.0(openapi-types@12.1.3)
+      '@kubb/ts-codegen': 1.10.0
+      change-case: 4.1.2
+      typescript: 5.2.2
+    transitivePeerDependencies:
+      - encoding
+      - openapi-types
     dev: false
 
   /@kubb/swagger-ts@1.9.5(openapi-types@12.1.3)(typescript@5.2.2):
@@ -5832,6 +5888,11 @@ packages:
   /attr-accept@2.2.2:
     resolution: {integrity: sha512-7prDjvt9HmqiZ0cl5CRjtS84sEyhsHP2coDkaZKRKVfCDo9s7iw7ChVmar78Gu9pC4SoR/28wFu/G5JJhTnqEg==}
     engines: {node: '>=4'}
+    dev: false
+
+  /auto-bind@4.0.0:
+    resolution: {integrity: sha512-Hdw8qdNiqdJ8LqT0iK0sVzkFbzg6fhnQqqfWhBDxcHZvU75+B+ayzTy8x+k5Ix0Y92XOhOUlx74ps+bA6BeYMQ==}
+    engines: {node: '>=8'}
     dev: false
 
   /available-typed-arrays@1.0.5:
@@ -11328,6 +11389,17 @@ packages:
 
   /react-property@2.0.0:
     resolution: {integrity: sha512-kzmNjIgU32mO4mmH5+iUyrqlpFQhF8K2k7eZ4fdLSOPFrD1XgEuSBv9LDEgxRXTMBqMd8ppT0x6TIzqE5pdGdw==}
+    dev: false
+
+  /react-reconciler@0.29.0(react@18.2.0):
+    resolution: {integrity: sha512-wa0fGj7Zht1EYMRhKWwoo1H9GApxYLBuhoAuXN0TlltESAjDssB+Apf0T/DngVqaMyPypDmabL37vw/2aRM98Q==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      react: ^18.2.0
+    dependencies:
+      loose-envify: 1.4.0
+      react: 18.2.0
+      scheduler: 0.23.0
     dev: false
 
   /react-remove-scroll-bar@2.3.4(@types/react@18.2.25)(react@18.2.0):
