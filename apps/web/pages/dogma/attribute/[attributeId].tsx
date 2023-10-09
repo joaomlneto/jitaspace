@@ -240,7 +240,7 @@ export default function Page({
                     <td>
                       <Group spacing="xs">
                         <TypeAvatar size="sm" typeId={type.typeId} />
-                        <TypeAnchor typeId={type.typeId}>
+                        <TypeAnchor typeId={type.typeId} target="_blank">
                           <TypeName typeId={type.typeId} />
                         </TypeAnchor>
                       </Group>
