@@ -5,9 +5,10 @@ import pLimit from "p-limit";
 import { prisma } from "@jitaspace/db";
 import { getUniverseMoonsMoonId } from "@jitaspace/esi-client";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeMoonsEventPayload = {
   data: {
@@ -18,8 +19,9 @@ export type ScrapeMoonsEventPayload = {
 
 type StatsKey = "moons";
 
-export const scrapeEsiMoons = inngest.createFunction(
+export const scrapeEsiMoons = client.createFunction(
   {
+    id: "scrape-esi-moons",
     name: "Scrape Moons",
     concurrency: {
       limit: 1,

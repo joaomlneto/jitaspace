@@ -7,9 +7,10 @@ import {
   getMarketsGroupsMarketGroupId,
 } from "@jitaspace/esi-client";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeMarketGroupsEventPayload = {
   data: {
@@ -18,8 +19,9 @@ export type ScrapeMarketGroupsEventPayload = {
 };
 type StatsKey = "marketGroups";
 
-export const scrapeEsiMarketGroups = inngest.createFunction(
+export const scrapeEsiMarketGroups = client.createFunction(
   {
+    id: "scrape-esi-market-groups",
     name: "Scrape Market Groups",
     concurrency: {
       limit: 1,

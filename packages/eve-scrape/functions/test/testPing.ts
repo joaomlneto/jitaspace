@@ -1,13 +1,16 @@
-import { inngest } from "../../client";
+import { client } from "../../client";
 
 export type PingEventPayload = {
   data: {};
 };
 
-export const testPing = inngest.createFunction(
-  { name: "Ping" },
+export const testPing = client.createFunction(
+  {
+    id: "ping",
+    name: "Ping",
+  },
   { event: "ping" },
-  async ({ event, step }) => {
+  async ({ event }) => {
     return { event, body: "Pong!" };
   },
 );

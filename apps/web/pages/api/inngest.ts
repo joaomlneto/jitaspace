@@ -1,5 +1,9 @@
 import { serve } from "inngest/next";
 
-import { functions, inngest } from "@jitaspace/eve-scrape";
+import { client, functions } from "@jitaspace/eve-scrape";
 
-export default serve(inngest, functions);
+
+
+
+
+export default serve({ client, functions });

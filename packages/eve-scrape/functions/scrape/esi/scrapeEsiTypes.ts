@@ -7,9 +7,10 @@ import {
   getUniverseTypesTypeId,
 } from "@jitaspace/esi-client";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeTypesEventPayload = {
   data: {
@@ -19,8 +20,9 @@ export type ScrapeTypesEventPayload = {
 
 type StatsKey = "types" | "typeAttributes" | "typeEffects";
 
-export const scrapeEsiTypes = inngest.createFunction(
+export const scrapeEsiTypes = client.createFunction(
   {
+    id: "scrape-esi-types",
     name: "Scrape Types",
     concurrency: {
       limit: 1,

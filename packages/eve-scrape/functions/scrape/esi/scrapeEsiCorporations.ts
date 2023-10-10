@@ -5,9 +5,10 @@ import pLimit from "p-limit";
 import { prisma } from "@jitaspace/db";
 import { getCorporationsCorporationId } from "@jitaspace/esi-client";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeCorporationsEventPayload = {
   data: {
@@ -18,8 +19,9 @@ export type ScrapeCorporationsEventPayload = {
 
 type StatsKey = "corporations";
 
-export const scrapeEsiCorporations = inngest.createFunction(
+export const scrapeEsiCorporations = client.createFunction(
   {
+    id: "scrape-esi-corporations",
     name: "Scrape Corporations",
     concurrency: {
       limit: 1,

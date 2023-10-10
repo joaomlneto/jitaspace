@@ -7,9 +7,10 @@ import {
   getDogmaEffectsEffectId,
 } from "@jitaspace/esi-client";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeDogmaEffectsEventPayload = {
   data: {
@@ -19,8 +20,9 @@ export type ScrapeDogmaEffectsEventPayload = {
 
 type StatsKey = "dogmaEffects";
 
-export const scrapeEsiDogmaEffects = inngest.createFunction(
+export const scrapeEsiDogmaEffects = client.createFunction(
   {
+    id: "scrape-esi-dogma-effects",
     name: "Scrape Dogma Effects",
     concurrency: {
       limit: 1,

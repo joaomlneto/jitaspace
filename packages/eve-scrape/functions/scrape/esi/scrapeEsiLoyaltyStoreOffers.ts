@@ -7,8 +7,9 @@ import {
   getLoyaltyStoresCorporationIdOffers,
 } from "@jitaspace/esi-client";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeLoyaltyStoreOffersEventPayload = {
   data: {
@@ -17,8 +18,9 @@ export type ScrapeLoyaltyStoreOffersEventPayload = {
   };
 };
 
-export const scrapeEsiLoyaltyStoreOffers = inngest.createFunction(
+export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
   {
+    id: "scrape-esi-loyalty-store-offers",
     name: "Scrape LoyaltyStoreOffers",
     concurrency: {
       limit: 1,

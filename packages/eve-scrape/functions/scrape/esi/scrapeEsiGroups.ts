@@ -7,9 +7,10 @@ import {
   getUniverseGroupsGroupId,
 } from "@jitaspace/esi-client";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeGroupsEventPayload = {
   data: {
@@ -18,8 +19,9 @@ export type ScrapeGroupsEventPayload = {
 };
 type StatsKey = "groups";
 
-export const scrapeEsiGroups = inngest.createFunction(
+export const scrapeEsiGroups = client.createFunction(
   {
+    id: "scrape-esi-groups",
     name: "Scrape Groups",
     concurrency: {
       limit: 1,

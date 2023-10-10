@@ -4,15 +4,17 @@ import pLimit from "p-limit";
 import { prisma } from "@jitaspace/db";
 import { getUniverseBloodlines } from "@jitaspace/esi-client-kubb";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeBloodlinesEventPayload = {
   data: {};
 };
 
-export const scrapeEsiBloodlines = inngest.createFunction(
+export const scrapeEsiBloodlines = client.createFunction(
   {
+    id: "scrape-esi-bloodlines",
     name: "Scrape Bloodlines",
     concurrency: {
       limit: 1,
@@ -91,7 +93,7 @@ export const scrapeEsiBloodlines = inngest.createFunction(
     });
 
     // scrape the linked corporations
-    await step.sendEvent({
+    await step.sendEvent("fetch-bloodline-corporations", {
       name: "scrape/esi/corporations",
       data: {
         corporationIds: [

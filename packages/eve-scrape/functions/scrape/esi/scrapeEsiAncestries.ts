@@ -4,15 +4,17 @@ import pLimit from "p-limit";
 import { prisma } from "@jitaspace/db";
 import { getUniverseAncestries } from "@jitaspace/esi-client-kubb";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeAncestriesEventPayload = {
   data: {};
 };
 
-export const scrapeEsiAncestries = inngest.createFunction(
+export const scrapeEsiAncestries = client.createFunction(
   {
+    id: "scrape-esi-ancestries",
     name: "Scrape Ancestries",
     concurrency: {
       limit: 1,

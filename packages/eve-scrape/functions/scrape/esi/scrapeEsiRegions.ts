@@ -7,15 +7,17 @@ import {
   getUniverseRegionsRegionId,
 } from "@jitaspace/esi-client";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeRegionEventPayload = {
   data: {};
 };
 
-export const scrapeEsiRegions = inngest.createFunction(
+export const scrapeEsiRegions = client.createFunction(
   {
+    id: "scrape-esi-regions",
     name: "Scrape Regions",
     concurrency: {
       limit: 1,
