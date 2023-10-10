@@ -7,6 +7,7 @@ export * from "./scrapeEsiCorporations";
 export * from "./scrapeEsiDogmaAttributes";
 export * from "./scrapeEsiDogmaEffects";
 export * from "./scrapeEsiFactions";
+export * from "./scrapeEsiGraphics";
 export * from "./scrapeEsiGroups";
 export * from "./scrapeEsiLoyaltyStoreOffers";
 export * from "./scrapeEsiMarketGroups";
