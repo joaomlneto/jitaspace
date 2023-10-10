@@ -11,9 +11,11 @@ import { NextSeo } from "next-seo";
 
 import { prisma } from "@jitaspace/db";
 import { AttributesIcon } from "@jitaspace/eve-icons";
+import { DogmaEffectAnchor } from "@jitaspace/ui";
 
 import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   effects: Record<
@@ -103,6 +105,11 @@ export default function Page({ effects }: PageProps) {
         header: "Name",
         accessorKey: "name",
         size: 40,
+        Cell: ({ renderedCellValue, row, cell }) => (
+          <DogmaEffectAnchor effectId={row.original.effectId} target="_blank">
+            {row.original.name}
+          </DogmaEffectAnchor>
+        ),
       },
       {
         id: "displayName",
