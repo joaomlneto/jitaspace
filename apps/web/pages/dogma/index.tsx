@@ -12,9 +12,10 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 
-import { AttributesIcon, CorporationAssetsIcon } from "@jitaspace/eve-icons";
+import { AttributesIcon, OtherIcon } from "@jitaspace/eve-icons";
 
 import { MainLayout } from "~/layouts";
+
 
 const useStyles = createStyles((theme) => ({
   title: {
@@ -94,13 +95,15 @@ export default function Page() {
                 Dogma Attributes
               </Text>
             </Group>
-            <Text fz="sm" c="dimmed" mt="sm"></Text>
+            <Text fz="sm" c="dimmed" mt="sm">
+              View the characteristics of all the items in the game.
+            </Text>
           </Card>
         </UnstyledButton>
-        <UnstyledButton component={Link} href="/assets/corporation">
+        <UnstyledButton component={Link} href="/dogma/effects">
           <Card shadow="md" radius="md" className={classes.card} padding="xl">
             <Container m={0} p={0} w={64} h={64}>
-              <CorporationAssetsIcon
+              <OtherIcon
                 height={64}
                 width={64}
                 color={theme.fn.primaryColor()}
@@ -112,7 +115,7 @@ export default function Page() {
               </Text>
             </Group>
             <Text fz="sm" c="dimmed" mt="sm">
-              View your corporation assets.
+              View how characteristics of things affect other things.
             </Text>
           </Card>
         </UnstyledButton>

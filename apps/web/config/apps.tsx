@@ -5,6 +5,7 @@ import { openSpotlight } from "@mantine/spotlight";
 import { type ESIScope } from "@jitaspace/esi-client";
 import {
   AssetsIcon,
+  AttributesIcon,
   CalendarIcon,
   ContactsIcon,
   EveMailIcon,
@@ -258,6 +259,14 @@ export const universeApps: Record<string, JitaApp> = {
     description: "Browse EVE's regional markets",
     url: "/market",
     Icon: (props) => <MarketIcon {...props} />,
+    scopes: {},
+    tags: ["beta"],
+  },
+  dogma: {
+    name: "Dogma",
+    description: "View all attributes and effects",
+    url: "/dogma",
+    Icon: (props) => <AttributesIcon {...props} />,
     scopes: {},
     tags: ["beta"],
   },
