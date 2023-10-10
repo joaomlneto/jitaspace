@@ -4,6 +4,8 @@ export * from "./CategoryAnchor";
 export * from "./CharacterAnchor";
 export * from "./ConstellationAnchor";
 export * from "./CorporationAnchor";
+export * from "./DogmaAttributeAnchor";
+export * from "./DogmaEffectAnchor";
 export * from "./EveEntityAnchor";
 export * from "./EveEntityNameAnchor";
 export * from "./EveMailSenderAnchor";
