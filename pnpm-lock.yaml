@@ -403,8 +403,8 @@ importers:
         specifier: ^1.10.4
         version: 1.10.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
       '@kubb/swagger-tanstack-query':
-        specifier: ^1.10.0
-        version: 1.10.0(@types/react@18.2.28)(axios@1.5.1)(openapi-types@12.1.3)(react@18.2.0)(typescript@5.2.2)
+        specifier: ^1.10.4
+        version: 1.10.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
       '@kubb/swagger-ts':
         specifier: ^1.10.0
         version: 1.10.0(openapi-types@12.1.3)(typescript@5.2.2)
@@ -3076,21 +3076,6 @@ packages:
       seedrandom: 3.0.5
     dev: false
 
-  /@kubb/react-template@1.10.0(@types/react@18.2.28)(react@18.2.0):
-    resolution: {integrity: sha512-hmBCJpXZGu7Un6p6HsL3MGu/QvEt8EQqsB5bPWmf6ZKoXfK+uSc9pkMrvvD8A4JYbG6iro+gCfdIVVJ/RRR8Kg==}
-    engines: {node: '>=18', pnpm: '>=8.3.0'}
-    peerDependencies:
-      '@types/react': '>=18.2.25'
-      react: '>=18.2.0'
-    dependencies:
-      '@kubb/core': 1.10.0
-      '@kubb/ts-codegen': 1.10.0
-      '@types/react': 18.2.28
-      auto-bind: 4.0.0
-      react: 18.2.0
-      react-reconciler: 0.29.0(react@18.2.0)
-    dev: false
-
   /@kubb/react-template@1.10.4:
     resolution: {integrity: sha512-xHRP6Sb1wbqiDLyXfr1kjxX/X+hG4pZggxYwL80F/KzausryLxyFiy3qkOcTYQBtBHFKoTqNcIKRN4MRgoIMdg==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
@@ -3100,31 +3085,6 @@ packages:
       auto-bind: 4.0.0
       react: 18.2.0
       react-reconciler: 0.29.0(react@18.2.0)
-    dev: false
-
-  /@kubb/swagger-client@1.10.0(@types/react@18.2.28)(axios@1.5.1)(openapi-types@12.1.3)(react@18.2.0)(typescript@5.2.2):
-    resolution: {integrity: sha512-gp0KPW9rTPvwGsTuKpq1/UREEvZStMP4MbIJZlSsPeZ3uaAAA3fR2qrIHOzun1kGDkXhd1nfogY58ptrQgWayw==}
-    engines: {node: '>=18', pnpm: '>=8.3.0'}
-    peerDependencies:
-      axios: ^1.4.0
-      react: ^18.2.0
-    peerDependenciesMeta:
-      react:
-        optional: true
-    dependencies:
-      '@kubb/core': 1.10.0
-      '@kubb/react-template': 1.10.0(@types/react@18.2.28)(react@18.2.0)
-      '@kubb/swagger': 1.10.0(openapi-types@12.1.3)
-      '@kubb/swagger-ts': 1.10.0(openapi-types@12.1.3)(typescript@5.2.2)
-      '@kubb/ts-codegen': 1.10.0
-      axios: 1.5.1
-      change-case: 4.1.2
-      react: 18.2.0
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-      - openapi-types
-      - typescript
     dev: false
 
   /@kubb/swagger-client@1.10.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2):
@@ -3150,22 +3110,20 @@ packages:
       - typescript
     dev: false
 
-  /@kubb/swagger-tanstack-query@1.10.0(@types/react@18.2.28)(axios@1.5.1)(openapi-types@12.1.3)(react@18.2.0)(typescript@5.2.2):
-    resolution: {integrity: sha512-p1QXD9xMhJGC3VVXSWFsy6dGiEG2hJVv5MeqWunuLa8ZQ8ApkM0wj6rW+vq5WZT6qxd/TCClGYQ9pBHrXUIKjA==}
+  /@kubb/swagger-tanstack-query@1.10.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2):
+    resolution: {integrity: sha512-FWYiIMR3MHy0rUN10yw2xSYY04CVSqs0gmhUVQeJHsoRPz+vswsJFWNnUx33/Q4GG48XES3gxjogU901o7VZUw==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
-      '@kubb/core': 1.10.0
-      '@kubb/swagger': 1.10.0(openapi-types@12.1.3)
-      '@kubb/swagger-client': 1.10.0(@types/react@18.2.28)(axios@1.5.1)(openapi-types@12.1.3)(react@18.2.0)(typescript@5.2.2)
-      '@kubb/swagger-ts': 1.10.0(openapi-types@12.1.3)(typescript@5.2.2)
-      '@kubb/ts-codegen': 1.10.0
+      '@kubb/core': 1.10.4
+      '@kubb/swagger': 1.10.4(openapi-types@12.1.3)
+      '@kubb/swagger-client': 1.10.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
+      '@kubb/swagger-ts': 1.10.4(openapi-types@12.1.3)(typescript@5.2.2)
+      '@kubb/ts-codegen': 1.10.4
       change-case: 4.1.2
     transitivePeerDependencies:
-      - '@types/react'
       - axios
       - encoding
       - openapi-types
-      - react
       - typescript
     dev: false
 
