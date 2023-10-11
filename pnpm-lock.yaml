@@ -165,8 +165,8 @@ importers:
         specifier: ^3.30.0
         version: 3.30.0
       jose:
-        specifier: ^4.15.2
-        version: 4.15.2
+        specifier: ^4.15.3
+        version: 4.15.3
       jotai:
         specifier: ^2.4.3
         version: 2.4.3(@types/react@18.2.28)(react@18.2.0)
@@ -9200,8 +9200,8 @@ packages:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
     dev: false
 
-  /jose@4.15.2:
-    resolution: {integrity: sha512-IY73F228OXRl9ar3jJagh7Vnuhj/GzBunPiZP13K0lOl7Am9SoWW3kEzq3MCllJMTtZqHTiDXQvoRd4U95aU6A==}
+  /jose@4.15.3:
+    resolution: {integrity: sha512-RZJdL9Qjd1sqNdyiVteRGV/bnWtik/+PJh1JP4kT6+x1QQMn+7ryueRys5BEueuayvSVY8CWGCisCDazeRLTuw==}
     dev: false
 
   /jotai-cache@0.3.0(jotai@2.4.3):
@@ -10027,7 +10027,7 @@ packages:
       '@babel/runtime': 7.22.5
       '@panva/hkdf': 1.1.1
       cookie: 0.5.0
-      jose: 4.15.2
+      jose: 4.15.3
       next: 13.5.4(@babel/core@7.22.1)(react-dom@18.2.0)(react@18.2.0)
       oauth: 0.9.15
       openid-client: 5.4.2
@@ -10491,7 +10491,7 @@ packages:
   /openid-client@5.4.2:
     resolution: {integrity: sha512-lIhsdPvJ2RneBm3nGBBhQchpe3Uka//xf7WPHTIglery8gnckvW7Bd9IaQzekzXJvWthCMyi/xVEyGW0RFPytw==}
     dependencies:
-      jose: 4.15.2
+      jose: 4.15.3
       lru-cache: 6.0.0
       object-hash: 2.2.0
       oidc-token-hash: 5.0.3
