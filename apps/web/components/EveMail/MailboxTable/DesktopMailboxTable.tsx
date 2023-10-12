@@ -27,8 +27,9 @@ export const DesktopMailboxTable = ({
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
     undefined,
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },

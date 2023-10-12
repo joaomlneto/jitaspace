@@ -18,13 +18,18 @@ import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client-kub
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
+
+
+
+
 export const SkillQueueTimeline = memo(() => {
   const { characterId, isTokenValid } = useEsiClientContext();
   const { data, isLoading, error } = useGetCharactersCharacterIdSkillqueue(
     characterId ?? 1,
     {},
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },

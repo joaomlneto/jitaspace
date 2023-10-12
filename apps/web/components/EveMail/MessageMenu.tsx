@@ -19,6 +19,10 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
+
+
+
+
 type Message = {
   //from?: number;
   is_read?: boolean;
@@ -49,8 +53,9 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
     undefined,
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },

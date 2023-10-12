@@ -2,12 +2,12 @@ import React from "react";
 import { Badge, Group, Table, Text } from "@mantine/core";
 
 import {
-  type GetAlliancesAllianceIdContacts200Item,
-  type GetAlliancesAllianceIdContactsLabels200Item,
-  type GetCharactersCharacterIdContacts200Item,
-  type GetCharactersCharacterIdContactsLabels200Item,
-  type GetCorporationsCorporationIdContacts200Item,
-  type GetCorporationsCorporationIdContactsLabels200Item,
+  GetAlliancesAllianceIdContactsLabelsQueryResponse,
+  GetCharactersCharacterIdContactsLabelsQueryResponse,
+  GetCorporationsCorporationIdContactsLabelsQueryResponse,
+  type GetAlliancesAllianceIdContactsQueryResponse,
+  type GetCharactersCharacterIdContactsQueryResponse,
+  type GetCorporationsCorporationIdContactsQueryResponse,
 } from "@jitaspace/esi-client-kubb";
 import {
   EveEntityAnchor,
@@ -18,12 +18,12 @@ import {
 } from "@jitaspace/ui";
 
 export type ContactsTableProps = {
-  contacts?: (GetCharactersCharacterIdContacts200Item &
-    GetCorporationsCorporationIdContacts200Item &
-    GetAlliancesAllianceIdContacts200Item)[];
-  labels?: (GetCharactersCharacterIdContactsLabels200Item &
-    GetCorporationsCorporationIdContactsLabels200Item &
-    GetAlliancesAllianceIdContactsLabels200Item)[];
+  contacts?: (GetCharactersCharacterIdContactsQueryResponse[number] &
+    GetCorporationsCorporationIdContactsQueryResponse[number] &
+    GetAlliancesAllianceIdContactsQueryResponse[number])[];
+  labels?: (GetCharactersCharacterIdContactsLabelsQueryResponse[number] &
+    GetCorporationsCorporationIdContactsLabelsQueryResponse[number] &
+    GetAlliancesAllianceIdContactsLabelsQueryResponse[number])[];
   hideBlockedColumn?: boolean;
 };
 

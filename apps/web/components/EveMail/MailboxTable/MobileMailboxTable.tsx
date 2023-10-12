@@ -15,6 +15,7 @@ import {
 
 import { type MailboxTableProps } from "~/components/EveMail";
 
+
 export const MobileMailboxTable = ({
   data,
   ...otherProps
@@ -23,8 +24,9 @@ export const MobileMailboxTable = ({
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
     undefined,
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },

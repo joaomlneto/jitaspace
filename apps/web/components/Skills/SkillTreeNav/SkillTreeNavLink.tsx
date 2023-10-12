@@ -9,11 +9,15 @@ import {
 } from "@mantine/core";
 
 import {
-  GetCharactersCharacterIdSkills200SkillsItem,
+  GetCharactersCharacterIdSkillsQueryResponse,
   useGetCharactersCharacterIdSkills,
 } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
+
+
+
+
 
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 
@@ -53,8 +57,9 @@ export const SkillTreeNavLink = memo(
     } = useGetCharactersCharacterIdSkills(
       characterId ?? 1,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid,
         },
       },
@@ -76,7 +81,10 @@ export const SkillTreeNavLink = memo(
         acc[skill.skill_id] = skill;
         return acc;
       },
-      {} as Record<string, GetCharactersCharacterIdSkills200SkillsItem>,
+      {} as Record<
+        string,
+        GetCharactersCharacterIdSkillsQueryResponse["skills"][number]
+      >,
     );
 
     const getSkillTrainingTimeMultiplier = (skill: {

@@ -55,8 +55,9 @@ export function CharacterAttributesRingProgress() {
   const { data, error, isLoading } = useGetCharactersCharacterIdAttributes(
     characterId ?? 1,
     {},
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },

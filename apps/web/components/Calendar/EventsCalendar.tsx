@@ -2,10 +2,14 @@ import React from "react";
 import { Indicator } from "@mantine/core";
 import { Calendar, type CalendarProps } from "@mantine/dates";
 
-import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client-kubb";
+import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client-kubb";
+
+
+
+
 
 type CharacterMonthCalendarProps = CalendarProps & {
-  events: GetCharactersCharacterIdCalendar200Item[];
+  events: GetCharactersCharacterIdCalendarQueryResponse;
 };
 
 export default function EventsCalendar({
@@ -13,7 +17,7 @@ export default function EventsCalendar({
   ...otherProps
 }: CharacterMonthCalendarProps) {
   const eventsPerDate: {
-    [date: string]: GetCharactersCharacterIdCalendar200Item[];
+    [date: string]: GetCharactersCharacterIdCalendarQueryResponse;
   } = {};
 
   if (events) {

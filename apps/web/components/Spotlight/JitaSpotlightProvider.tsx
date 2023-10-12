@@ -8,8 +8,8 @@ import {
 } from "@mantine/spotlight";
 
 import {
-  type GetCharactersCharacterIdSearch200,
-  type GetCharactersCharacterIdSearchCategoriesItem,
+  type GetCharactersCharacterIdSearchQueryParamsCategories,
+  type GetCharactersCharacterIdSearchQueryResponse,
 } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext, useEsiSearch } from "@jitaspace/esi-hooks";
 import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
@@ -17,6 +17,7 @@ import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
 import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
 import { JitaSpotlightActionsWrapper } from "~/components/Spotlight/JitaSpotlightActionsWrapper";
 import { jitaApps } from "~/config/apps";
+
 
 export const JitaSpotlightProvider = memo(
   ({ children }: Omit<SpotlightProviderProps, "actions">) => {
@@ -40,7 +41,7 @@ export const JitaSpotlightProvider = memo(
         "station",
         ...((scopes.includes("esi-universe.read_structures.v1")
           ? ["structure"]
-          : []) as GetCharactersCharacterIdSearchCategoriesItem[]),
+          : []) as GetCharactersCharacterIdSearchQueryParamsCategories[]),
       ],
     });
 
@@ -65,7 +66,7 @@ export const JitaSpotlightProvider = memo(
         Object.entries(esiSearchData?.data ?? []).flatMap(
           ([categoryString, entries]) => {
             const category =
-              categoryString as keyof GetCharactersCharacterIdSearch200;
+              categoryString as keyof GetCharactersCharacterIdSearchQueryResponse;
             return entries.slice(0, 10).map((entityId) => ({
               title: `Entity ${entityId} - ${debouncedQuery}`,
               type: "eve-entity",

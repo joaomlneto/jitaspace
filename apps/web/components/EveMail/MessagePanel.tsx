@@ -44,8 +44,9 @@ export function MessagePanel({
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
     undefined,
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },
@@ -55,8 +56,9 @@ export function MessagePanel({
     characterId ?? 0,
     messageId ?? 0,
     undefined,
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid && !!messageId,
       },
     },

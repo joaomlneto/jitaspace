@@ -13,7 +13,7 @@ import { useDisclosure } from "@mantine/hooks";
 import { type ContextModalProps } from "@mantine/modals";
 import { signIn } from "next-auth/react";
 
-import { type ESIScope } from "@jitaspace/esi-client-kubb";
+import { type ESIScope } from "@jitaspace/esi-client";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import {
@@ -22,6 +22,7 @@ import {
   ScopesTable,
 } from "~/components/ScopeGuard";
 import { extraJitaFeatures, jitaApps } from "~/config/apps";
+
 
 const allAppScopes = [
   ...Object.values(jitaApps).flatMap((app) =>

@@ -11,14 +11,19 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
+
+
+
+
 export function LabelManagementTable() {
   const { characterId, isTokenValid } = useEsiClientContext();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 0,
     undefined,
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },

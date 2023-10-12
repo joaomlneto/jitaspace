@@ -5,14 +5,19 @@ import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client-kubb
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { GroupListIcon } from "@jitaspace/eve-icons";
 
+
+
+
+
 export function MailingListsTable() {
   const { characterId, isTokenValid } = useEsiClientContext();
 
   const { data, error } = useGetCharactersCharacterIdMailLists(
     characterId ?? 1,
     {},
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },
@@ -22,7 +27,7 @@ export function MailingListsTable() {
     <>
       {error && (
         <Container size="xs">
-          <Alert title="Error loading messages">{error.message}</Alert>
+          <Alert title="Error loading messages">Error loading messages</Alert>
         </Container>
       )}
       {data && (

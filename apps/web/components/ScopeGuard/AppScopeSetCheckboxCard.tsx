@@ -13,7 +13,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 
-import { type ESIScope } from "@jitaspace/esi-client-kubb";
+import { type ESIScope } from "@jitaspace/esi-client";
 import { InfoIcon } from "@jitaspace/eve-icons";
 
 import { type AppScopeSet } from "~/config/apps";

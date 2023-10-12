@@ -36,8 +36,8 @@ type KillButtonProps = {
 export const KillmailButton = memo(
   ({ killmailId, killmailHash }: KillButtonProps) => {
     const { data } = useGetKillmailsKillmailIdKillmailHash(
-      killmailId,
       killmailHash,
+      killmailId,
     );
     return (
       <Anchor
