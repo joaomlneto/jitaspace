@@ -6,10 +6,6 @@ import createSwaggerTS from "@kubb/swagger-ts";
 import createSwaggerZod from "@kubb/swagger-zod";
 import createSwaggerZodios from "@kubb/swagger-zodios";
 
-
-
-
-
 export default defineConfig(async () => {
   return {
     root: ".",
@@ -18,19 +14,19 @@ export default defineConfig(async () => {
       //path: "https://esi.evetech.net/latest/swagger.json",
     },
     output: {
-      path: "./src",
+      path: "./src/generated",
     },
     plugins: [
       createSwagger({}),
       createSwaggerClient({
-        //output: "./clients/axios",
+        client: "./src/client.ts",
         dataReturnType: "full",
       }),
       createSwaggerTS({}),
       createSwaggerTanstackQuery({
-        //client: "./src/client",
-        infinite: {},
+        client: "./src/client.ts",
         dataReturnType: "full",
+        infinite: {},
       }),
       createSwaggerZod({}),
       createSwaggerZodios({}),
