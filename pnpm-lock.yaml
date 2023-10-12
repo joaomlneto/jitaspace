@@ -47,6 +47,9 @@ importers:
       '@jitaspace/db':
         specifier: '*'
         version: link:../../packages/db
+      '@jitaspace/esi-client':
+        specifier: '*'
+        version: link:../../packages/esi-client
       '@jitaspace/esi-client-kubb':
         specifier: '*'
         version: link:../../packages/esi-client-kubb
@@ -461,6 +464,9 @@ importers:
         specifier: ^1.5.1
         version: 1.5.1
     devDependencies:
+      '@jitaspace/esi-client':
+        specifier: '*'
+        version: link:../esi-client
       '@jitaspace/esi-client-kubb':
         specifier: '*'
         version: link:../esi-client-kubb
