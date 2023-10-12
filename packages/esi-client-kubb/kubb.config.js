@@ -24,6 +24,7 @@ export default defineConfig(async () => {
       createSwagger({}),
       createSwaggerClient({
         //output: "./clients/axios",
+        dataReturnType: "full",
       }),
       createSwaggerTS({}),
       createSwaggerTanstackQuery({
