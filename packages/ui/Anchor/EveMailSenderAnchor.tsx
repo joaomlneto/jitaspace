@@ -10,6 +10,7 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
 
+
 export type EveMailSenderNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
@@ -21,9 +22,10 @@ export const EveMailSenderAnchor = memo(
     const { data: mail } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      undefined,
+      {},
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid && !!messageId,
         },
       },
@@ -31,9 +33,10 @@ export const EveMailSenderAnchor = memo(
 
     const { data: mailingLists } = useGetCharactersCharacterIdMailLists(
       characterId ?? 1,
-      undefined,
+      {},
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid,
         },
       },

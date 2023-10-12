@@ -6,6 +6,7 @@ import { useGetWarsWarId } from "@jitaspace/esi-client-kubb";
 import { AllianceTickerBadge } from "./AllianceTickerBadge";
 import { CorporationTickerBadge } from "./CorporationTickerBadge";
 
+
 type WarDefenderTickerBadgeProps = Omit<BadgeProps, "children"> & {
   warId?: number;
 };
@@ -15,7 +16,8 @@ export const WarDefenderTickerBadge = memo(
     const { data } = useGetWarsWarId(
       warId ?? 0,
       {},
-      { swr: { enabled: warId !== undefined } },
+      {},
+      { query: { enabled: warId !== undefined } },
     );
 
     if (data?.data.defender.alliance_id) {

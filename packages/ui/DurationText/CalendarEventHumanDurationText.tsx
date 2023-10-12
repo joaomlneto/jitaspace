@@ -7,6 +7,7 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { HumanDurationText } from "./HumanDurationText";
 
+
 export type CalendarEventHumanDurationTextProps = TextProps & {
   eventId?: number;
   options?: humanizeDuration.Options;
@@ -26,8 +27,9 @@ export const CalendarEventHumanDurationText = memo(
       characterId ?? 1,
       eventId ?? 1,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled:
             !!characterId &&
             !!eventId &&

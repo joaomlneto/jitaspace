@@ -2,16 +2,17 @@ import React, { memo } from "react";
 import { Loader, Select, type SelectProps } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
-import { type GetCharactersCharacterIdSearchCategoriesItem } from "@jitaspace/esi-client-kubb";
+import { type GetCharactersCharacterIdSearchQueryParamsCategories } from "@jitaspace/esi-client-kubb";
 import { useEsiNamesCache, useEsiSearch } from "@jitaspace/esi-hooks";
 
 import { EsiSearchSelectItem } from "./EsiSearchSelectItem";
+
 
 export type EsiSearchSelectProps = Omit<
   SelectProps,
   "data" | "searchable" | "searchValue" | "onSearchChange"
 > & {
-  categories: GetCharactersCharacterIdSearchCategoriesItem[];
+  categories: GetCharactersCharacterIdSearchQueryParamsCategories[];
   debounceTime?: number;
 };
 
@@ -26,11 +27,7 @@ export const EsiSearchSelect = memo(
 
     const names = useEsiNamesCache();
 
-    const {
-      data: searchResult,
-      isLoading,
-      isValidating,
-    } = useEsiSearch({
+    const { data: searchResult, isLoading } = useEsiSearch({
       query: debouncedSearchValue,
       categories,
     });
@@ -47,7 +44,7 @@ export const EsiSearchSelect = memo(
     ];
 
     const isLoadingData: boolean =
-      isLoading || isValidating || searchValue !== debouncedSearchValue;
+      isLoading || searchValue !== debouncedSearchValue;
 
     const onChange = (value: string) => {
       setValue(value);

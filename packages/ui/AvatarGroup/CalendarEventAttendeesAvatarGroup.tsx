@@ -13,6 +13,7 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { CharacterAvatar } from "../Avatar";
 import { CharacterName } from "../Text";
 
+
 type CalendarEventAttendeesAvatarGroupProps = AvatarProps & {
   eventId?: number;
   limit?: number;
@@ -32,8 +33,9 @@ export const CalendarEventAttendeesAvatarGroup = memo(
         characterId ?? 0,
         eventId ?? 0,
         {},
+        {},
         {
-          swr: {
+          query: {
             enabled: !!eventId && !!characterId && !!isTokenValid,
           },
         },

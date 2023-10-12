@@ -13,6 +13,7 @@ import {
 } from "../Anchor";
 import { ConstellationName, RegionName, SolarSystemName } from "../Text";
 
+
 export type SolarSystemBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   solarSystemId?: string | number;
 };
@@ -24,15 +25,17 @@ export const SolarSystemBreadcrumbs = memo(
         ? parseInt(solarSystemId)
         : solarSystemId ?? 0,
       {},
+      {},
       {
-        swr: { enabled: solarSystemId !== undefined },
+        query: { enabled: solarSystemId !== undefined },
       },
     );
     const { data: constellation } = useGetUniverseConstellationsConstellationId(
       solarSystem?.data.constellation_id ?? 0,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled: solarSystem?.data.constellation_id !== undefined,
         },
       },

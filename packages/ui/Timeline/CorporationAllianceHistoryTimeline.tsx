@@ -12,11 +12,12 @@ import { format } from "date-fns";
 
 import {
   useGetCorporationsCorporationIdAlliancehistory,
-  type GetCorporationsCorporationIdAlliancehistory200Item,
+  type GetCorporationsCorporationIdAlliancehistoryQueryResponse,
 } from "@jitaspace/esi-client-kubb";
 
 import { AllianceAvatar } from "../Avatar";
 import { AllianceName } from "../Text";
+
 
 type CorporationAllianceHistoryTimelineProps = Omit<
   TimelineProps,
@@ -31,10 +32,11 @@ export const CorporationAllianceHistoryTimeline = memo(
         ? parseInt(corporationId)
         : corporationId ?? 0,
       {},
-      { swr: { enabled: !!corporationId } },
+      {},
+      { query: { enabled: !!corporationId } },
     );
 
-    const parsedCorporationAllianceHistory: (GetCorporationsCorporationIdAlliancehistory200Item & {
+    const parsedCorporationAllianceHistory: (GetCorporationsCorporationIdAlliancehistoryQueryResponse[number] & {
       end_date?: string;
     })[] = useMemo(() => {
       if (!data?.data) return [];

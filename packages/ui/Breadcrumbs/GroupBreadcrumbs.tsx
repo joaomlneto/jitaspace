@@ -12,6 +12,7 @@ import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client-kubb";
 import { CategoryAnchor, GroupAnchor } from "../Anchor";
 import { CategoryName, GroupName } from "../Text";
 
+
 export type GroupBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   groupId?: number;
 };
@@ -21,8 +22,9 @@ export const GroupBreadcrumbs = memo(
     const { data: group } = useGetUniverseGroupsGroupId(
       groupId ?? 0,
       {},
+      {},
       {
-        swr: { enabled: groupId !== undefined },
+        query: { enabled: groupId !== undefined },
       },
     );
     return (

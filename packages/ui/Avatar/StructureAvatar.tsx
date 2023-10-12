@@ -6,6 +6,7 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { TypeAvatar } from "./TypeAvatar";
 
+
 export type StructureAvatarProps = Omit<AvatarProps, "src"> & {
   structureId?: string | number | null;
 };
@@ -18,8 +19,9 @@ export const StructureAvatar = memo(
         ? parseInt(structureId)
         : structureId ?? 1,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled:
             isTokenValid &&
             !!structureId &&

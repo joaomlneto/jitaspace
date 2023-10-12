@@ -3,6 +3,10 @@ import { Text, type TextProps } from "@mantine/core";
 
 import { useGetUniverseStargatesStargateId } from "@jitaspace/esi-client-kubb";
 
+
+
+
+
 export type StargateNameProps = TextProps & {
   stargateId?: number;
 };
@@ -11,7 +15,8 @@ export const StargateName = memo(
     const { data } = useGetUniverseStargatesStargateId(
       stargateId ?? 0,
       {},
-      { swr: { enabled: !!stargateId } },
+      {},
+      { query: { enabled: !!stargateId } },
     );
     return <Text {...otherProps}>{data?.data.name}</Text>;
   },

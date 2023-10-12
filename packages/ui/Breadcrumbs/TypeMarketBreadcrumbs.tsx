@@ -15,6 +15,7 @@ import {
 import { MarketGroupAnchor, TypeAnchor } from "../Anchor";
 import { MarketGroupName, TypeName } from "../Text";
 
+
 export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   typeId?: string | number;
   showType?: boolean;
@@ -25,8 +26,9 @@ export const TypeMarketBreadcrumbs = memo(
     const { data: type } = useGetUniverseTypesTypeId(
       typeof typeId === "string" ? parseInt(typeId) : typeId ?? 0,
       {},
+      {},
       {
-        swr: { enabled: typeId !== undefined },
+        query: { enabled: typeId !== undefined },
       },
     );
 

@@ -8,6 +8,7 @@ import { humanLabelName } from "@jitaspace/utils";
 import { EveMailLabelMultiSelectItem } from "./EveMailLabelMultiSelectItem";
 import { EmailLabelMultiSelectValue } from "./EveMailLabelMultiSelectValue";
 
+
 type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data">;
 
 export const EveMailLabelMultiSelect = memo(
@@ -16,9 +17,10 @@ export const EveMailLabelMultiSelect = memo(
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 0,
-      undefined,
+      {},
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid,
         },
       },

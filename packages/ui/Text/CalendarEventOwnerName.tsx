@@ -4,6 +4,10 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
+
+
+
+
 export type CalendarEventOwnerNameProps = TextProps & {
   eventId?: number;
 };
@@ -15,9 +19,10 @@ export const CalendarEventOwnerName = memo(
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        undefined,
+        {},
+        {},
         {
-          swr: {
+          query: {
             enabled: isTokenValid && !!eventId,
           },
         },

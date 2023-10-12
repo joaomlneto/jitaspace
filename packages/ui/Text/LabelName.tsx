@@ -5,6 +5,10 @@ import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client-kub
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { humanLabelName } from "@jitaspace/utils";
 
+
+
+
+
 export type LabelNameProps = TextProps & {
   labelId?: string | number;
 };
@@ -14,9 +18,10 @@ export const LabelName = memo(({ labelId, ...otherProps }: LabelNameProps) => {
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
-    undefined,
+    {},
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },

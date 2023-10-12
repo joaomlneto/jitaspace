@@ -7,6 +7,7 @@ import { AllianceName } from "./AllianceName";
 import { CorporationName } from "./CorporationName";
 import { EveEntityName } from "./EveEntityName";
 
+
 export type WarAggressorNameProps = TextProps & {
   warId?: number;
 };
@@ -16,7 +17,8 @@ export const WarAggressorName = memo(
     const { data } = useGetWarsWarId(
       warId ?? 0,
       {},
-      { swr: { enabled: warId !== undefined } },
+      {},
+      { query: { enabled: warId !== undefined } },
     );
 
     if (data?.data.aggressor.alliance_id)

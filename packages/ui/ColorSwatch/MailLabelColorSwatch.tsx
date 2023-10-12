@@ -4,6 +4,10 @@ import { ColorSwatch, type ColorSwatchProps } from "@mantine/core";
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
+
+
+
+
 export type MailLabelColorSwatchProps = Omit<ColorSwatchProps, "color"> & {
   labelId?: string | number;
 };
@@ -14,9 +18,10 @@ export const MailLabelColorSwatch = memo(
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 1,
-      undefined,
+      {},
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid,
         },
       },

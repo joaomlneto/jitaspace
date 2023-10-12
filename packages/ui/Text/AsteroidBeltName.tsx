@@ -3,6 +3,10 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 
 import { useGetUniverseAsteroidBeltsAsteroidBeltId } from "@jitaspace/esi-client-kubb";
 
+
+
+
+
 export type AsteroidBeltNameProps = TextProps & {
   asteroidBeltId?: number;
   planetId?: number;
@@ -14,7 +18,8 @@ export const AsteroidBeltName = memo(
     const { data, isLoading } = useGetUniverseAsteroidBeltsAsteroidBeltId(
       asteroidBeltId ?? 1,
       {},
-      { swr: { enabled: !!asteroidBeltId } },
+      {},
+      { query: { enabled: !!asteroidBeltId } },
     );
     if (isLoading)
       return (

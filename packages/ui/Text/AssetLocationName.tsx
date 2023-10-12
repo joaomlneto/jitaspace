@@ -12,6 +12,7 @@ export const AssetLocationName = memo(
   ({ locationId, ...otherProps }: AssetLocationNameProps) => {
     const { locations } = useCharacterAssets();
 
+    // @ts-expect-error hook temporarily disabled
     const location = locationId ? locations[locationId] : undefined;
 
     /**

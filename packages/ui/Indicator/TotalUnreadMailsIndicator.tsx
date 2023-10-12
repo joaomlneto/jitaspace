@@ -4,6 +4,10 @@ import { Indicator, type IndicatorProps } from "@mantine/core";
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
+
+
+
+
 export const TotalUnreadMailsIndicator = memo((props: IndicatorProps) => {
   const { characterId, isTokenValid, scopes } = useEsiClientContext();
 
@@ -11,9 +15,10 @@ export const TotalUnreadMailsIndicator = memo((props: IndicatorProps) => {
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
-    undefined,
+    {},
+    {},
     {
-      swr: {
+      query: {
         enabled: canMakeQuery,
       },
     },

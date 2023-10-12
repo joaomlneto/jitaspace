@@ -5,6 +5,7 @@ import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client-kubb";
 
 import { StarAvatar } from "./StarAvatar";
 
+
 export type SolarSystemAvatarProps = Omit<AvatarProps, "src"> & {
   solarSystemId?: string | number | null;
 };
@@ -16,8 +17,9 @@ export const SolarSystemAvatar = memo(
         ? parseInt(solarSystemId)
         : solarSystemId ?? 1,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled: !!solarSystemId,
         },
       },

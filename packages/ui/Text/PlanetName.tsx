@@ -3,6 +3,10 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 
 import { useGetUniversePlanetsPlanetId } from "@jitaspace/esi-client-kubb";
 
+
+
+
+
 export type PlanetNameProps = TextProps & {
   planetId?: number;
 };
@@ -12,7 +16,8 @@ export const PlanetName = memo(
     const { data, isLoading } = useGetUniversePlanetsPlanetId(
       planetId ?? 1,
       {},
-      { swr: { enabled: !!planetId } },
+      {},
+      { query: { enabled: !!planetId } },
     );
     if (isLoading)
       return (

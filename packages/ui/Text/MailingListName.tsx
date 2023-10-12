@@ -4,6 +4,10 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
+
+
+
+
 export type MailingListNameProps = TextProps & {
   mailingListId?: number;
 };
@@ -14,9 +18,10 @@ export const MailingListName = memo(
 
     const { data, isLoading } = useGetCharactersCharacterIdMailLists(
       characterId ?? 1,
-      undefined,
+      {},
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid,
         },
       },

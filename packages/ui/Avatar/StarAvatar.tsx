@@ -5,6 +5,7 @@ import { useGetUniverseStarsStarId } from "@jitaspace/esi-client-kubb";
 
 import { TypeAvatar } from "./TypeAvatar";
 
+
 export type StarAvatarProps = Omit<AvatarProps, "src"> & {
   starId?: string | number | null;
 };
@@ -13,7 +14,8 @@ export const StarAvatar = memo(({ starId, ...otherProps }: StarAvatarProps) => {
   const { data } = useGetUniverseStarsStarId(
     typeof starId === "string" ? parseInt(starId) : starId ?? 1,
     {},
-    { swr: { enabled: !!starId } },
+    {},
+    { query: { enabled: !!starId } },
   );
 
   return (

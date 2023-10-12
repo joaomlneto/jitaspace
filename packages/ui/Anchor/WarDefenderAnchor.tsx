@@ -8,6 +8,7 @@ import { AllianceAnchor } from "./AllianceAnchor";
 import { CorporationAnchor } from "./CorporationAnchor";
 import { EveEntityAnchor } from "./EveEntityAnchor";
 
+
 export type WarDefenderAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
@@ -19,7 +20,8 @@ export const WarDefenderAnchor = memo(
     const { data } = useGetWarsWarId(
       warId ?? 0,
       {},
-      { swr: { enabled: warId !== undefined } },
+      {},
+      { query: { enabled: warId !== undefined } },
     );
 
     if (data?.data.defender.alliance_id)

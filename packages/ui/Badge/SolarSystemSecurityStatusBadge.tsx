@@ -3,6 +3,10 @@ import { Badge, createStyles, Skeleton, type BadgeProps } from "@mantine/core";
 
 import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client-kubb";
 
+
+
+
+
 const useStyles = createStyles((theme) => ({
   "1.0": {
     backgroundColor: "#4072D9",
@@ -59,7 +63,8 @@ export const SolarSystemSecurityStatusBadge = memo(
         ? parseInt(solarSystemId)
         : solarSystemId ?? 0,
       {},
-      { swr: { enabled: !!solarSystemId } },
+      {},
+      { query: { enabled: !!solarSystemId } },
     );
 
     if (!solarSystemData) {

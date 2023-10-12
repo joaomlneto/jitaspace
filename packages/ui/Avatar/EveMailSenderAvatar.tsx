@@ -12,6 +12,7 @@ import { getAvatarSize } from "@jitaspace/utils";
 import { sizes } from "./Avatar.styles";
 import { EveEntityAvatar } from "./index";
 
+
 export type EveMailSenderAvatarProps = Omit<AvatarProps, "src"> & {
   messageId?: number;
 };
@@ -23,9 +24,10 @@ export const EveMailSenderAvatar = memo(
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      undefined,
+      {},
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid && !!messageId,
         },
       },
@@ -35,8 +37,9 @@ export const EveMailSenderAvatar = memo(
       useGetCharactersCharacterIdMailLists(
         characterId ?? 1,
         {},
+        {},
         {
-          swr: {
+          query: {
             enabled: isTokenValid,
           },
         },

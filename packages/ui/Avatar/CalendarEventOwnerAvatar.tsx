@@ -11,6 +11,7 @@ import {
   FactionAvatar,
 } from "./index";
 
+
 export type CalendarEventOwnerAvatarProps = Omit<AvatarProps, "src"> & {
   eventId?: number;
 };
@@ -23,9 +24,10 @@ export const CalendarEventOwnerAvatar = memo(
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        undefined,
+        {},
+        {},
         {
-          swr: {
+          query: {
             enabled: isTokenValid && !!eventId,
           },
         },

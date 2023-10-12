@@ -5,6 +5,7 @@ import { useCharacterAssets, useEsiNamesCache } from "@jitaspace/esi-hooks";
 
 import { AssetLocationSelectItem } from "./AssetLocationSelectItem";
 
+
 export type AssetLocationSelectItemProps = Omit<SelectProps, "data">;
 
 export const AssetLocationSelect = memo(
@@ -20,10 +21,14 @@ export const AssetLocationSelect = memo(
         <Select
           itemComponent={AssetLocationSelectItem}
           data={(Object.values(locations) ?? [])
+            // @ts-expect-error hook temporarily disabled
             .filter((location) => location.location_type !== "item")
             .map((location) => ({
+              // @ts-expect-error hook temporarily disabled
               value: location.location_id?.toString(),
+              // @ts-expect-error hook temporarily disabled
               label: `${getNameFromCache(location.location_id)} (${
+                // @ts-expect-error hook temporarily disabled
                 location.location_type
               })`,
             }))}

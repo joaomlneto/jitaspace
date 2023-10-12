@@ -3,6 +3,10 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 
 import { useGetDogmaAttributesAttributeId } from "@jitaspace/esi-client-kubb";
 
+
+
+
+
 export type DogmaAttributeNameProps = TextProps & {
   attributeId?: number;
 };
@@ -12,7 +16,8 @@ export const DogmaAttributeName = memo(
     const { data, isLoading } = useGetDogmaAttributesAttributeId(
       attributeId ?? 1,
       {},
-      { swr: { enabled: !!attributeId } },
+      {},
+      { query: { enabled: !!attributeId } },
     );
     if (isLoading)
       return (
