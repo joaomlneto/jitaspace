@@ -1,1 +1,0 @@
-export { MailLayout } from "./MailLayout";
