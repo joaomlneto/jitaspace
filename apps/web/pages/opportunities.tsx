@@ -1,28 +1,27 @@
 import React, { useMemo, type ReactElement } from "react";
 import { GetStaticProps } from "next";
 import { Accordion, Container, Group, Stack, Text, Title } from "@mantine/core";
-import axios from "axios";
 import { NextSeo } from "next-seo";
 
 import {
   getOpportunitiesGroups,
   getOpportunitiesGroupsGroupId,
-  GetOpportunitiesGroupsGroupId200,
+  GetOpportunitiesGroupsGroupIdQueryResponse,
   getOpportunitiesTasks,
   getOpportunitiesTasksTaskId,
-  GetOpportunitiesTasksTaskId200,
+  GetOpportunitiesTasksTaskIdQueryResponse,
 } from "@jitaspace/esi-client-kubb";
 import { OpportunitiesTreeIcon } from "@jitaspace/eve-icons";
 
 import { MailMessageViewer } from "~/components/EveMail";
-import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   opportunities: Record<
     number,
-    GetOpportunitiesGroupsGroupId200 & {
-      tasks: GetOpportunitiesTasksTaskId200[];
+    GetOpportunitiesGroupsGroupIdQueryResponse & {
+      tasks: GetOpportunitiesTasksTaskIdQueryResponse[];
     }
   >;
 };
@@ -51,8 +50,8 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     const opportunityGroups: Record<
       number,
-      GetOpportunitiesGroupsGroupId200 & {
-        tasks: GetOpportunitiesTasksTaskId200[];
+      GetOpportunitiesGroupsGroupIdQueryResponse & {
+        tasks: GetOpportunitiesTasksTaskIdQueryResponse[];
       }
     > = {};
     opportunityGroupsResponses.forEach((opportunityGroup) => {

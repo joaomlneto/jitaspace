@@ -10,7 +10,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import axios from "axios";
 import { NextSeo } from "next-seo";
 
 import {
@@ -21,9 +20,9 @@ import {
 } from "@jitaspace/esi-client-kubb";
 import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
-import { ESI_BASE_URL } from "~/config/constants";
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   name?: string;
@@ -43,7 +42,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   // Get list of groupIds from ESI
   const firstPage = await getUniverseGroups();
   let groupIds = [...firstPage.data];
-  const numPages = firstPage.headers["x-pages"];
+  const numPages = firstPage.headers?.["x-pages"];
   for (let page = 2; page <= numPages; page++) {
     const result = await getUniverseGroups({ page });
     groupIds = [...groupIds, ...result.data];
@@ -70,7 +69,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     // check if the requested group exists
     const firstPage = await getUniverseGroups();
     let groupIds = [...firstPage.data];
-    const numPages = firstPage.headers["x-pages"];
+    const numPages = firstPage.headers?.["x-pages"];
     for (let page = 2; page <= numPages; page++) {
       const result = await getUniverseGroups({ page });
       groupIds = [...groupIds, ...result.data];

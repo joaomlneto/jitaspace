@@ -1,21 +1,20 @@
 import React, { useMemo, type ReactElement } from "react";
 import { GetStaticProps } from "next";
 import { Container, SimpleGrid, Stack, Title } from "@mantine/core";
-import axios from "axios";
 import { NextSeo } from "next-seo";
 
 import {
   getUniverseRegions,
   getUniverseRegionsRegionId,
-  GetUniverseRegionsRegionId200,
+  GetUniverseRegionsRegionIdQueryResponse,
 } from "@jitaspace/esi-client-kubb";
-import { ESI_BASE_URL } from "@jitaspace/esi-hooks";
 import { RegionAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
-  regions: GetUniverseRegionsRegionId200[];
+  regions: GetUniverseRegionsRegionIdQueryResponse[];
 };
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
@@ -47,7 +46,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 export default function Page({ regions }: PageProps) {
   const galaxies: {
     name: string;
-    filter: (region: GetUniverseRegionsRegionId200) => boolean;
+    filter: (region: GetUniverseRegionsRegionIdQueryResponse) => boolean;
   }[] = [
     {
       name: "New Eden (K-Space)",

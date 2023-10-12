@@ -24,6 +24,7 @@ import { FormattedDateText } from "@jitaspace/ui";
 import { EsiClientStateCard } from "~/components/EsiClient";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
     useState<boolean>(false);
@@ -60,9 +61,10 @@ export default function Page() {
 
   const { data: tqStatus } = useGetTqStatus(
     {},
+    {},
     {
-      swr: {
-        refreshInterval: 10 * 1000,
+      query: {
+        refetchInterval: 10 * 1000,
       },
     },
   );

@@ -12,7 +12,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
-import axios, { HttpStatusCode } from "axios";
+import { HttpStatusCode } from "axios";
 import { NextSeo } from "next-seo";
 
 import {
@@ -30,8 +30,8 @@ import {
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
-import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   ogImageUrl?: string;
@@ -54,7 +54,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     // check if the requested type exists
     const firstPage = await getUniverseTypes();
     let typeIds = [...firstPage.data];
-    const numPages = firstPage.headers["x-pages"];
+    const numPages = firstPage.headers?.["x-pages"];
     for (let page = 2; page <= numPages; page++) {
       const result = await getUniverseTypes({ page });
       typeIds = [...typeIds, ...result.data];

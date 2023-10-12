@@ -13,7 +13,6 @@ import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications, showNotification } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
 import { Provider } from "jotai";
 import { DevTools } from "jotai-devtools";
@@ -22,7 +21,7 @@ import { SessionProvider, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 import { Workbox } from "workbox-window";
 
-import { type ESIScope } from "@jitaspace/esi-client-kubb";
+import { type ESIScope } from "@jitaspace/esi-client";
 import {
   EsiClientContextProvider,
   getEveSsoAccessTokenPayload,
@@ -35,8 +34,6 @@ import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
 import RouterTransition from "../components/RouterTransition";
-
-const queryClient = new QueryClient();
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -97,6 +94,8 @@ export default function App({
 }: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
   const requiredScopes = Component.requiredScopes;
+
+  const [queryClient] = React.useState(() => new QueryClient());
 
   // This hook only run once in browser after the component is rendered for the first time.
   // It has same effect as the old componentDidMount lifecycle callback.
@@ -219,7 +218,7 @@ export default function App({
       <Analytics />
 
       <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+        {/*<ReactQueryDevtools initialIsOpen={false} position="bottom-right" />*/}
         <DevTools />
         <Provider>
           <SessionProvider session={session}>

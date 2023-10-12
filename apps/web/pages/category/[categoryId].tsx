@@ -10,25 +10,24 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import axios from "axios";
 import { NextSeo } from "next-seo";
 
 import {
   getUniverseCategories,
   getUniverseCategoriesCategoryId,
   getUniverseGroupsGroupId,
-  GetUniverseGroupsGroupId200,
+  GetUniverseGroupsGroupIdQueryResponse,
   useGetUniverseCategoriesCategoryId,
 } from "@jitaspace/esi-client-kubb";
 import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
-import { ESI_BASE_URL } from "~/config/constants";
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   name?: string;
-  groups: GetUniverseGroupsGroupId200[];
+  groups: GetUniverseGroupsGroupIdQueryResponse[];
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {

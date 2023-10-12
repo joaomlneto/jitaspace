@@ -5,7 +5,7 @@ import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import {
   useGetUniverseBloodlines,
-  type GetUniverseBloodlines200Item,
+  type GetUniverseBloodlinesQueryResponse,
 } from "@jitaspace/esi-client-kubb";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -19,7 +19,7 @@ import {
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
@@ -31,7 +31,7 @@ export default function Page() {
     (bloodline) => bloodline.bloodline_id === parseInt(bloodlineId),
   );
 
-  const attributeNames: (keyof GetUniverseBloodlines200Item)[] = [
+  const attributeNames: (keyof GetUniverseBloodlinesQueryResponse[number])[] = [
     "charisma",
     "intelligence",
     "memory",
@@ -107,5 +107,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return <MainLayout>{page}</MainLayout>;
 };

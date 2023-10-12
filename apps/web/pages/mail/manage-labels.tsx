@@ -3,7 +3,8 @@ import { Container, Group } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
 import { LabelManagementTable } from "~/components/EveMail";
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
+
 
 export default function Page() {
   return (
@@ -19,10 +20,10 @@ export default function Page() {
 
 Page.getLayout = function getLayout(page: ReactElement) {
   return (
-    <MailLayout>
+    <MainLayout>
       <NextSeo title="Manage Labels | EveMail" />
       {page}
-    </MailLayout>
+    </MainLayout>
   );
 };
 

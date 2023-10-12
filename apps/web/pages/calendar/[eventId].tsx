@@ -14,8 +14,8 @@ import { NextSeo } from "next-seo";
 import {
   useGetCharactersCharacterIdCalendarEventId,
   useGetCharactersCharacterIdCalendarEventIdAttendees,
-  type GetCharactersCharacterIdCalendarEventIdAttendees200Item,
-  type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
+  type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse,
+  type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
 } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
@@ -43,8 +43,9 @@ export default function Page() {
       characterId ?? 1,
       eventId,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid,
         },
       },
@@ -54,8 +55,9 @@ export default function Page() {
       characterId ?? 1,
       eventId,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid,
         },
       },
@@ -64,7 +66,7 @@ export default function Page() {
   const loading = eventLoading || attendeesLoading;
 
   const eventResponseColor: {
-    [key in GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse]: string;
+    [key in GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse]: string;
   } = {
     accepted: "green",
     tentative: "yellow",
@@ -74,8 +76,8 @@ export default function Page() {
 
   const sortedAttendees = [...(attendees?.data ?? [])].sort(
     (
-      a: GetCharactersCharacterIdCalendarEventIdAttendees200Item,
-      b: GetCharactersCharacterIdCalendarEventIdAttendees200Item,
+      a: GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number],
+      b: GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number],
     ) => {
       if (!a.event_response) {
         return 1;
@@ -83,8 +85,8 @@ export default function Page() {
       if (!b.event_response) {
         return -1;
       }
-      return eventResponseColor[a.event_response].localeCompare(
-        eventResponseColor[b.event_response],
+      return (eventResponseColor[a.event_response] ?? "").localeCompare(
+        eventResponseColor[b.event_response] ?? "",
       );
     },
   );

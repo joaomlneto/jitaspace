@@ -28,7 +28,7 @@ import { EveMailLabelMultiSelect } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxTable } from "~/components/EveMail";
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
@@ -57,7 +57,7 @@ export default function Page() {
       <Stack>
         {error && (
           <Container size="xs">
-            <Alert title="Error loading messages">{error.message}</Alert>
+            <Alert title="Error loading messages">{error}</Alert>
           </Container>
         )}
         <Group>
@@ -177,10 +177,10 @@ export default function Page() {
 
 Page.getLayout = function getLayout(page: ReactElement) {
   return (
-    <MailLayout>
+    <MainLayout>
       <NextSeo title="EveMail" />
       {page}
-    </MailLayout>
+    </MainLayout>
   );
 };
 

@@ -14,7 +14,7 @@ import { openModal } from "@mantine/modals";
 import { format } from "date-fns";
 import { NextSeo } from "next-seo";
 
-import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client-kubb";
+import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client-kubb";
 import { useCharacterCalendar } from "@jitaspace/esi-hooks";
 import { CalendarIcon } from "@jitaspace/eve-icons";
 
@@ -22,16 +22,19 @@ import { CalendarEventList } from "~/components/Calendar/CalendarEventList/Calen
 import EventsCalendar from "~/components/Calendar/EventsCalendar";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const { events, isLoading, isValidating, hasMoreEvents, loadMoreEvents } =
     useCharacterCalendar();
 
   const eventsPerDate: {
-    [date: string]: GetCharactersCharacterIdCalendar200Item[];
+    [date: string]: GetCharactersCharacterIdCalendarQueryResponse;
   } = {};
   if (events) {
     events.forEach((event) => {
+      // @ts-expect-error hook temporarily disabled
       if (!event.event_date) return;
+      // @ts-expect-error hook temporarily disabled
       const date = new Date(event.event_date);
       date.setHours(0, 0, 0, 0);
       const dateString = date.getTime();
