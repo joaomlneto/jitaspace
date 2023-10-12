@@ -13,6 +13,7 @@ import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications, showNotification } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
 import { Provider } from "jotai";
 import { DevTools } from "jotai-devtools";
@@ -218,7 +219,7 @@ export default function App({
       <Analytics />
 
       <QueryClientProvider client={queryClient}>
-        {/*<ReactQueryDevtools initialIsOpen={false} position="bottom-right" />*/}
+        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
         <DevTools />
         <Provider>
           <SessionProvider session={session}>
