@@ -928,6 +928,9 @@ importers:
       '@next/eslint-plugin-next':
         specifier: ^13.5.4
         version: 13.5.4
+      '@tanstack/eslint-plugin-query':
+        specifier: ^4.36.1
+        version: 4.36.1(eslint@8.50.0)
       '@types/eslint':
         specifier: ^8.44.3
         version: 8.44.3
@@ -4536,6 +4539,14 @@ packages:
 
   /@tabler/icons@2.38.0:
     resolution: {integrity: sha512-icDKK6n8jUYAavHK+L2Xe0/tYjwZVS7uhVazhCMVjdm3RfJLFbeLSNEIWcYdGOg6QAock9yqWse8hnhvsy2M3w==}
+    dev: false
+
+  /@tanstack/eslint-plugin-query@4.36.1(eslint@8.50.0):
+    resolution: {integrity: sha512-qFIYV/BuwWzg0t5mSRMcb+rzrOVtCO9EizYxeClFxuFq/c54cNhAQCnDrA3iCxFz/fqRv7I9rxxnR/ZWkX15cQ==}
+    peerDependencies:
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
+    dependencies:
+      eslint: 8.50.0
     dev: false
 
   /@tanstack/match-sorter-utils@8.8.4:
