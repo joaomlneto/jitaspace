@@ -66,8 +66,8 @@ const resolveNameOfUnknownCategory = async (
   category: GetCharactersCharacterIdSearchQueryParamsCategories;
 }> =>
   postUniverseNames([Number(id)], {}, {}).then((data) => ({
-    name: data[0]?.name,
-    category: data[0]
+    name: data.data[0]?.name,
+    category: data.data[0]
       ?.category as GetCharactersCharacterIdSearchQueryParamsCategories,
   }));
 
@@ -78,38 +78,38 @@ const resolveNameOfKnownCategory = async (
   switch (category) {
     case "alliance":
       return getAlliancesAllianceId(Number(id), {}, {}).then(
-        (data) => data.name,
+        (data) => data.data.name,
       );
     case "corporation":
       return getCorporationsCorporationId(Number(id), {}, {}).then(
-        (data) => data.name,
+        (data) => data.data.name,
       );
     case "agent":
     case "character":
       return getCharactersCharacterId(Number(id), {}, {}).then((data) => {
-        return data.name;
+        return data.data.name;
       });
     case "inventory_type":
       return getUniverseTypesTypeId(Number(id), {}, {}).then((data) => {
-        return data.name;
+        return data.data.name;
       });
     case "constellation":
       return getUniverseConstellationsConstellationId(Number(id), {}, {}).then(
         (data) => {
-          return data.name;
+          return data.data.name;
         },
       );
     case "region":
       return getUniverseRegionsRegionId(Number(id), {}, {}).then((data) => {
-        return data.name;
+        return data.data.name;
       });
     case "solar_system":
       return getUniverseSystemsSystemId(Number(id), {}, {}).then((data) => {
-        return data.name;
+        return data.data.name;
       });
     case "faction":
       return getUniverseFactions().then((data) => {
-        const faction = data.find(
+        const faction = data.data.find(
           (faction) => faction.faction_id == Number(id),
         );
         if (faction === undefined) throw new Error("Faction ID Invalid");
@@ -117,16 +117,16 @@ const resolveNameOfKnownCategory = async (
       });
     case "stargate":
       return getUniverseStargatesStargateId(Number(id), {}, {}).then((data) => {
-        return data.name;
+        return data.data.name;
       });
     case "station":
       return getUniverseStationsStationId(Number(id), {}, {}).then((data) => {
-        return data.name;
+        return data.data.name;
       });
     case "structure":
       return getUniverseStructuresStructureId(Number(id), {}, {}).then(
         (data) => {
-          return data.name;
+          return data.data.name;
         },
       );
     default:

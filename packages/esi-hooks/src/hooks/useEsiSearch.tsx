@@ -1,7 +1,7 @@
 import {
+  GetCharactersCharacterIdSearchQueryParamsLanguage,
   useGetCharactersCharacterIdSearch,
   type GetCharactersCharacterIdSearchQueryParamsCategories,
-  type LanguageParameter,
 } from "@jitaspace/esi-client-kubb";
 
 import { useEsiClientContext } from "./useEsiClientContext";
@@ -15,7 +15,7 @@ export function useEsiSearch({
   query: string;
   categories: GetCharactersCharacterIdSearchQueryParamsCategories[];
   strict?: boolean;
-  language?: LanguageParameter;
+  language?: GetCharactersCharacterIdSearchQueryParamsLanguage;
 }) {
   const { isTokenValid, characterId } = useEsiClientContext();
   return useGetCharactersCharacterIdSearch(

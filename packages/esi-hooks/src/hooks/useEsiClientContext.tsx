@@ -9,7 +9,7 @@ import {
 } from "react";
 import axios from "axios";
 
-import { type ESIScope } from "@jitaspace/esi-client-kubb";
+import { type ESIScope } from "@jitaspace/esi-client";
 
 import { getEveSsoAccessTokenPayload } from "../utils";
 

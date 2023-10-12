@@ -1,20 +1,10 @@
-import { useMemo } from "react";
-import useSWRInfinite from "swr/infinite";
-
-import {
-  getCorporationsCorporationIdAssetsQueryKey,
-  useGetCharactersCharacterId,
-  useGetCharactersCharacterIdRoles,
-  type GetCorporationsCorporationIdAssetsQueryResponse,
-} from "@jitaspace/esi-client-kubb";
-
-import { ESI_BASE_URL } from "../config";
 import { useEsiClientContext } from "./useEsiClientContext";
 
 export function useCorporationAssets() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
+  /*
   const { data: characterData } = useGetCharactersCharacterId(
     characterId ?? 0,
     {},
@@ -39,7 +29,7 @@ export function useCorporationAssets() {
 
   const isDirector = useMemo(
     () =>
-      Object.values(characterCorporationRolesData ?? {}).some((e) =>
+      Object.values(characterCorporationRolesData?.data ?? {}).some((e) =>
         e.includes("Director"),
       ),
     [characterCorporationRolesData],
@@ -67,7 +57,7 @@ export function useCorporationAssets() {
 
         return () => {
           const [endpointUrl] =
-            getGetCorporationsCorporationIdAssetsKey(corporationId);
+            getCorporationsCorporationIdAssetsQueryKey(corporationId);
           const queryParams = new URLSearchParams();
           queryParams.append("page", `${pageIndex + 1}`);
           return `${ESI_BASE_URL}${endpointUrl}?${queryParams.toString()}`;
@@ -131,7 +121,7 @@ export function useCorporationAssets() {
   const locations: Record<
     string,
     Pick<
-      GetCorporationsCorporationIdAssetsQueryResponse,
+      GetCorporationsCorporationIdAssetsQueryResponse[number],
       "location_id" | "location_type"
     > & { items: number[] }
   > = useMemo(() => {
@@ -139,7 +129,7 @@ export function useCorporationAssets() {
     const locations: Record<
       string,
       Pick<
-        GetCorporationsCorporationIdAssetsQueryResponse,
+        GetCorporationsCorporationIdAssetsQueryResponse[number],
         "location_id" | "location_type"
       > & { items: number[] }
     > = {};
@@ -167,5 +157,15 @@ export function useCorporationAssets() {
     isLoading,
     isValidating,
     mutate,
+  };*/
+
+  return {
+    assets: [],
+    locations: [],
+    error: undefined,
+    errorMessage: "",
+    isLoading: true,
+    isValidating: false,
+    mutate: () => {},
   };
 }

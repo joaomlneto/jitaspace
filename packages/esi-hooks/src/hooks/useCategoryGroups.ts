@@ -33,12 +33,12 @@ export const useCategoryGroups = (
   useEffect(() => {
     if (!category) return;
     console.log("Recomputing Groups");
-    const groupIds = category.groups;
+    const groupIds = category.data.groups;
     const promises = groupIds.map((id) => getUniverseGroupsGroupId(id));
     void Promise.all(promises).then((groups) =>
       setGroups(
         groups.reduce(
-          (acc, group) => ({ ...acc, [group.group_id]: group }),
+          (acc, group) => ({ ...acc, [group.data.group_id]: group }),
           {},
         ),
       ),
