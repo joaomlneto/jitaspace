@@ -29,7 +29,7 @@
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
-    "@types/node": "^18.18.4",
+    "@types/node": "^18.18.5",
     "concurrently": "^8.2.1",
     "eslint": "^8.51.0",
     "prettier": "^3.0.3",
