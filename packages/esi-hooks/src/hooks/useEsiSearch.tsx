@@ -27,8 +27,9 @@ export function useEsiSearch({
       strict,
       language,
     },
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid && query.length >= 3,
       },
     },
