@@ -1,4 +1,3 @@
-import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -10,6 +9,7 @@ import {
 import { inngest } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeGroupsEventPayload = {
   data: {
@@ -32,7 +32,7 @@ export const scrapeEsiGroups = inngest.createFunction(
     // Get all Group IDs in ESI
     const batches = await step.run("Fetch Group IDs", async () => {
       const firstPage = await getUniverseGroups();
-      const numPages = Number(firstPage.headers["x-pages"]);
+      const numPages = Number(firstPage.headers?.["x-pages"]);
       let groupIds = firstPage.data;
       for (let page = 2; page <= numPages; page++) {
         groupIds.push(

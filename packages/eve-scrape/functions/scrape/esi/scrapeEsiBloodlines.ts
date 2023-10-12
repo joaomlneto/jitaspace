@@ -1,4 +1,3 @@
-import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -6,6 +5,7 @@ import { getUniverseBloodlines } from "@jitaspace/esi-client-kubb";
 
 import { inngest } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeBloodlinesEventPayload = {
   data: {};
@@ -25,7 +25,7 @@ export const scrapeEsiBloodlines = inngest.createFunction(
     const limit = pLimit(20);
 
     // Get all Bloodlines in ESI
-    const bloodlines = await getUniverseBloodlines();
+    const bloodlines = await getUniverseBloodlines().then((res) => res.data);
     const bloodlineIds = bloodlines.map((bloodline) => bloodline.bloodline_id);
 
     const bloodlineChanges = await updateTable({

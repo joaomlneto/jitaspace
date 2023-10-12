@@ -1,4 +1,3 @@
-import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -10,6 +9,7 @@ import {
 import { inngest } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeTypesEventPayload = {
   data: {
@@ -34,7 +34,7 @@ export const scrapeEsiTypes = inngest.createFunction(
     // Get all Type IDs in ESI
     const batches = await step.run("Fetch Type IDs", async () => {
       const firstPage = await getUniverseTypes();
-      const numPages = Number(firstPage.headers["x-pages"]);
+      const numPages = Number(firstPage.headers?.["x-pages"]);
       let typeIds = firstPage.data;
       for (let page = 2; page <= numPages; page++) {
         typeIds.push(
