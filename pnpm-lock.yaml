@@ -400,8 +400,8 @@ importers:
         specifier: ^1.11.1
         version: 1.11.1(@kubb/react@1.11.1)(openapi-types@12.1.3)
       '@kubb/swagger-client':
-        specifier: ^1.10.4
-        version: 1.10.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
+        specifier: ^1.11.1
+        version: 1.11.1(@kubb/react@1.11.1)(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
       '@kubb/swagger-tanstack-query':
         specifier: ^1.10.4
         version: 1.10.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
@@ -3140,6 +3140,29 @@ packages:
       - typescript
     dev: false
 
+  /@kubb/swagger-client@1.11.1(@kubb/react@1.11.1)(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2):
+    resolution: {integrity: sha512-MEhReTY5gewZzC9kwY1JEWck2TA4wq/3FE5Zh8LkWdsqk4sD/Npc2lFo/EHDvHCQKdRN49ucVVfsbhbvkbuWHw==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    peerDependencies:
+      '@kubb/react': 1.11.1
+      axios: ^1.4.0
+    peerDependenciesMeta:
+      axios:
+        optional: true
+    dependencies:
+      '@kubb/core': 1.11.1
+      '@kubb/parser': 1.11.1
+      '@kubb/react': 1.11.1
+      '@kubb/swagger': 1.11.1(@kubb/react@1.11.1)(openapi-types@12.1.3)
+      '@kubb/swagger-ts': 1.11.1(@kubb/react@1.11.1)(openapi-types@12.1.3)(typescript@5.2.2)
+      axios: 1.5.1
+      change-case: 4.1.2
+    transitivePeerDependencies:
+      - encoding
+      - openapi-types
+      - typescript
+    dev: false
+
   /@kubb/swagger-tanstack-query@1.10.4(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2):
     resolution: {integrity: sha512-FWYiIMR3MHy0rUN10yw2xSYY04CVSqs0gmhUVQeJHsoRPz+vswsJFWNnUx33/Q4GG48XES3gxjogU901o7VZUw==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
@@ -3185,6 +3208,23 @@ packages:
       change-case: 4.1.2
       typescript: 5.2.2
     transitivePeerDependencies:
+      - encoding
+      - openapi-types
+    dev: false
+
+  /@kubb/swagger-ts@1.11.1(@kubb/react@1.11.1)(openapi-types@12.1.3)(typescript@5.2.2):
+    resolution: {integrity: sha512-bnblFsy5pifsg+QWYQ4uMY8ErJS+d19zNXLpAbStXrFEGAYbcx0uvjK/UJ2fZkwCLEbKj5cP7lbPot70FHhtZA==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    peerDependencies:
+      typescript: ^5.2.2
+    dependencies:
+      '@kubb/core': 1.11.1
+      '@kubb/parser': 1.11.1
+      '@kubb/swagger': 1.11.1(@kubb/react@1.11.1)(openapi-types@12.1.3)
+      change-case: 4.1.2
+      typescript: 5.2.2
+    transitivePeerDependencies:
+      - '@kubb/react'
       - encoding
       - openapi-types
     dev: false
