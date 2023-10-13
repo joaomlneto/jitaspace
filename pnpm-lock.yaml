@@ -391,8 +391,8 @@ importers:
   packages/esi-client-kubb:
     dependencies:
       '@kubb/cli':
-        specifier: ^1.11.1
-        version: 1.11.1(@types/node@18.18.5)(typescript@5.2.2)
+        specifier: ^1.11.2
+        version: 1.11.2(@types/node@18.18.5)(typescript@5.2.2)
       '@kubb/core':
         specifier: ^1.11.1
         version: 1.11.1
@@ -3023,12 +3023,12 @@ packages:
       jsep: 1.3.8
     dev: true
 
-  /@kubb/cli@1.11.1(@types/node@18.18.5)(typescript@5.2.2):
-    resolution: {integrity: sha512-XbrXmcgnL7nP2Y9d1QT7O6p5xANY8pHZvoQb9LAW3ei3WVCM17d7u+UtwiaZBjLyma3ORqf1/S3poFVVKcJn8A==}
+  /@kubb/cli@1.11.2(@types/node@18.18.5)(typescript@5.2.2):
+    resolution: {integrity: sha512-FiRemNX+e8QNo6lmj1WAnzDOIGbZixeE/benFOP64PH089KsLscyKYaFXxtoZQ4+Z41j3B0wzoI0On7TerLjYQ==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     hasBin: true
     dependencies:
-      '@kubb/core': 1.11.1
+      '@kubb/core': 1.11.2
       cac: 6.7.14
       chokidar: 3.5.3
       cosmiconfig: 8.3.6(typescript@5.2.2)
@@ -3075,8 +3075,30 @@ packages:
       seedrandom: 3.0.5
     dev: false
 
+  /@kubb/core@1.11.2:
+    resolution: {integrity: sha512-+jOpY32j8SeSOK2ebIW9W/zaaHyL9FSoMXlw/gMX7saxyR/9mWLSrShGjfdx+cc6ArGiKHOM+h/jad2LrBkp8A==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    dependencies:
+      '@kubb/parser': 1.11.2
+      change-case: 4.1.2
+      directory-tree: 3.5.1
+      fs-extra: 11.1.1
+      js-runtime: 0.0.6
+      lodash.isequal: 4.5.0
+      natural-orderby: 3.0.2
+      picocolors: 1.0.0
+      seedrandom: 3.0.5
+    dev: false
+
   /@kubb/parser@1.11.1:
     resolution: {integrity: sha512-8XWpJp3cD1IontFUvD98KYKNKsXqnug3LglFR6KNKKjfDiYGrpTGBxONthx0p8qLZzFleOGCVCZAJucOuOCmqw==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    dependencies:
+      typescript: 5.2.2
+    dev: false
+
+  /@kubb/parser@1.11.2:
+    resolution: {integrity: sha512-puyu5FQo4Bk4nvlSjhnpeM9heO5aX2Fdo2ZRTmc7rsA7ucgGzfAuLfWuUndSztJzLeJ0UBNEjtvVDDHuRgkrNA==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
       typescript: 5.2.2
