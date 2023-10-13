@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@kubb/cli": "^1.11.2",
-    "@kubb/core": "^1.11.1",
+    "@kubb/core": "^1.11.2",
     "@kubb/swagger": "^1.11.1",
     "@kubb/swagger-client": "^1.11.1",
     "@kubb/swagger-tanstack-query": "^1.11.1",
