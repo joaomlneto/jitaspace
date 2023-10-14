@@ -10,10 +10,6 @@ import {
 } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
-
-
-
-
 export type CalendarEventAttendanceSelect = Omit<SelectProps, "data"> & {
   eventId?: string | number;
 };
@@ -24,12 +20,13 @@ export const CalendarEventAttendanceSelect = memo(
         (otherProps.value as PutCharactersCharacterIdCalendarEventIdMutationRequestResponse) ??
           null,
       );
-    const { characterId, isTokenValid, scopes } = useEsiClientContext();
+    const { characterId, isTokenValid, scopes, accessToken } =
+      useEsiClientContext();
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         typeof eventId === "string" ? parseInt(eventId) : eventId ?? 0,
-        {},
+        { token: accessToken },
         {},
         {
           query: {

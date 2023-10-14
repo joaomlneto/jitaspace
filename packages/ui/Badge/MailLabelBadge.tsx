@@ -4,20 +4,16 @@ import { Badge, type BadgeProps } from "@mantine/core";
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
-
-
-
-
 export type MailLabelBadgeProps = BadgeProps & {
   labelId?: string | number;
 };
 export const MailLabelBadge = memo(
   ({ labelId, ...otherProps }: MailLabelBadgeProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 1,
-      {},
+      { token: accessToken },
       {},
       {
         query: {

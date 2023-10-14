@@ -6,19 +6,18 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { TypeAvatar } from "./TypeAvatar";
 
-
 export type StructureAvatarProps = Omit<AvatarProps, "src"> & {
   structureId?: string | number | null;
 };
 
 export const StructureAvatar = memo(
   ({ structureId, ...otherProps }: StructureAvatarProps) => {
-    const { scopes, isTokenValid } = useEsiClientContext();
+    const { scopes, isTokenValid, accessToken } = useEsiClientContext();
     const { data } = useGetUniverseStructuresStructureId(
       typeof structureId === "string"
         ? parseInt(structureId)
         : structureId ?? 1,
-      {},
+      { token: accessToken },
       {},
       {
         query: {

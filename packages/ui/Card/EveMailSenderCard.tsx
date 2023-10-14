@@ -6,19 +6,18 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { EveEntityCard } from "./EveEntityCard";
 
-
 export type EveMailSenderCardProps = {
   messageId?: number;
 };
 
 export const EveMailSenderCard = memo(
   ({ messageId }: EveMailSenderCardProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      undefined,
+      { token: accessToken },
       {},
       {
         query: {

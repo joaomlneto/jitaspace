@@ -9,18 +9,17 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { EveEntityName } from "./index";
 
-
 export type EveMailSenderNameProps = TextProps & {
   messageId?: number;
 };
 export const EveMailSenderName = memo(
   ({ messageId, ...otherProps }: EveMailSenderNameProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      {},
+      { token: accessToken },
       {},
       {
         query: {
@@ -32,7 +31,7 @@ export const EveMailSenderName = memo(
     const { data: mailingLists, isLoading: mailingListsLoading } =
       useGetCharactersCharacterIdMailLists(
         characterId ?? 1,
-        {},
+        { token: accessToken },
         {},
         {
           query: {

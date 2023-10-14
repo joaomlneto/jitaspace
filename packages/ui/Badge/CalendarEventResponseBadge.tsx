@@ -7,10 +7,6 @@ import {
 } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
-
-
-
-
 export type CalendarEventResponseBadgeProps = BadgeProps & {
   eventId?: number;
 };
@@ -26,13 +22,14 @@ const eventResponseColor: {
 
 export const CalendarEventResponseBadge = memo(
   ({ eventId, ...otherProps }: CalendarEventResponseBadgeProps) => {
-    const { characterId, isTokenValid, scopes } = useEsiClientContext();
+    const { characterId, isTokenValid, scopes, accessToken } =
+      useEsiClientContext();
 
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        {},
+        { token: accessToken },
         {},
         {
           query: {

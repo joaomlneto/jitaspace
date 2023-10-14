@@ -12,7 +12,7 @@ type SetAutopilotDestinationActionIconProps = {
 
 export const SetAutopilotDestinationActionIcon = memo(
   ({ destinationId }: SetAutopilotDestinationActionIconProps) => {
-    const { isTokenValid, scopes } = useEsiClientContext();
+    const { isTokenValid, scopes, accessToken } = useEsiClientContext();
 
     const canSetDestination =
       !!destinationId &&
@@ -35,6 +35,7 @@ export const SetAutopilotDestinationActionIcon = memo(
                   typeof destinationId === "string"
                     ? parseInt(destinationId)
                     : destinationId,
+                token: accessToken,
               }).then(() => {
                 showNotification({
                   message: "Autopilot destination set.",

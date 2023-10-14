@@ -11,20 +11,19 @@ import {
   FactionAvatar,
 } from "./index";
 
-
 export type CalendarEventOwnerAvatarProps = Omit<AvatarProps, "src"> & {
   eventId?: number;
 };
 
 export const CalendarEventOwnerAvatar = memo(
   ({ eventId, ...otherProps }: CalendarEventOwnerAvatarProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        {},
+        { token: accessToken },
         {},
         {
           query: {

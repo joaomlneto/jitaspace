@@ -7,7 +7,6 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
 
-
 export type CalendarEventOwnerAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
@@ -16,11 +15,12 @@ export type CalendarEventOwnerAnchorProps = AnchorProps &
 
 export const CalendarEventOwnerAnchor = memo(
   ({ eventId, children, ...otherProps }: CalendarEventOwnerAnchorProps) => {
-    const { characterId, isTokenValid, scopes } = useEsiClientContext();
+    const { characterId, isTokenValid, scopes, accessToken } =
+      useEsiClientContext();
     const { data: event } = useGetCharactersCharacterIdCalendarEventId(
       characterId ?? 0,
-      typeof eventId === "string" ? parseInt(eventId) : eventId ?? 0,
-      {},
+      eventId ?? 0,
+      { token: accessToken },
       {},
       {
         query: {

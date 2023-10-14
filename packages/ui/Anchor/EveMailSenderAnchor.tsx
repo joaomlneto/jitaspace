@@ -10,7 +10,6 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
 
-
 export type EveMailSenderNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
@@ -18,11 +17,11 @@ export type EveMailSenderNameAnchorProps = AnchorProps &
   };
 export const EveMailSenderAnchor = memo(
   ({ messageId, children, ...props }: EveMailSenderNameAnchorProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
     const { data: mail } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      {},
+      { token: accessToken },
       {},
       {
         query: {
@@ -33,7 +32,7 @@ export const EveMailSenderAnchor = memo(
 
     const { data: mailingLists } = useGetCharactersCharacterIdMailLists(
       characterId ?? 1,
-      {},
+      { token: accessToken },
       {},
       {
         query: {
