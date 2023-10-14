@@ -8,16 +8,17 @@ import { humanLabelName } from "@jitaspace/utils";
 import { EveMailLabelMultiSelectItem } from "./EveMailLabelMultiSelectItem";
 import { EmailLabelMultiSelectValue } from "./EveMailLabelMultiSelectValue";
 
-
 type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data">;
 
 export const EveMailLabelMultiSelect = memo(
   (props: EmailLabelMultiSelectProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 0,
-      {},
+      {
+        token: accessToken,
+      },
       {},
       {
         query: {
