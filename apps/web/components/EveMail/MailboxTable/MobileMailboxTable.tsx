@@ -15,15 +15,14 @@ import {
 
 import { type MailboxTableProps } from "~/components/EveMail";
 
-
 export const MobileMailboxTable = ({
   data,
   ...otherProps
 }: MailboxTableProps) => {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
-    undefined,
+    { token: accessToken },
     {},
     {
       query: {

@@ -23,10 +23,10 @@ export const DesktopMailboxTable = ({
   mutate,
   ...otherProps
 }: MailboxTableProps) => {
-  const { isTokenValid, characterId } = useEsiClientContext();
+  const { isTokenValid, characterId, accessToken } = useEsiClientContext();
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
-    undefined,
+    { token: accessToken },
     {},
     {
       query: {

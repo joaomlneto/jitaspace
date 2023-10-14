@@ -39,11 +39,11 @@ export function MessagePanel({
   hideSender,
   hideSubject,
 }: MessagePanelProps) {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
-    undefined,
+    { token: accessToken },
     {},
     {
       query: {
@@ -55,7 +55,7 @@ export function MessagePanel({
   const { data: mail } = useGetCharactersCharacterIdMailMailId(
     characterId ?? 0,
     messageId ?? 0,
-    undefined,
+    { token: accessToken },
     {},
     {
       query: {
