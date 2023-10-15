@@ -5,10 +5,6 @@ import {
   type GetMarketsPricesQueryResponse,
 } from "@jitaspace/esi-client-kubb";
 
-
-
-
-
 export function useMarketPrices() {
   const { data: arrayData, error, isLoading } = useGetMarketsPrices();
 
