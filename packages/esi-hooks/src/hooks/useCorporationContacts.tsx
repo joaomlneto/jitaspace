@@ -1,84 +1,79 @@
+import { useMemo } from "react";
+import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
+
+import {
+  getCorporationsCorporationIdContacts,
+  useGetCharactersCharacterId,
+  useGetCorporationsCorporationIdContactsInfinite,
+  useGetCorporationsCorporationIdContactsLabels,
+} from "@jitaspace/esi-client-kubb";
+
 import { useEsiClientContext } from "./useEsiClientContext";
 
 export function useCorporationContacts() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
-  /*
-  const { data: characterData } = useGetCharactersCharacterId(characterId ?? 0);
+  const { data: character } = useGetCharactersCharacterId(
+    characterId ?? 0,
+    {},
+    {},
+    { query: { enabled: characterId !== undefined } },
+  );
 
-  const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCorporationsCorporationIdContactsQueryResponse[], Error>(
-      function getKey(pageIndex) {
-        if (
-          !characterId ||
-          !isTokenValid ||
-          !scopes.includes("esi-corporations.read_contacts.v1") ||
-          !characterData?.data.corporation_id
-        ) {
-          throw new Error(
-            "Insufficient permissions to read corporation contacts",
-          );
-        }
-
-        return () => {
-          const [endpointUrl] = getGetCorporationsCorporationIdContactsKey(
-            characterData.data.corporation_id,
-          );
-          const queryParams = new URLSearchParams();
-          queryParams.append("page", `${pageIndex + 1}`);
-          return `${ESI_BASE_URL}${endpointUrl}?${queryParams.toString()}`;
-        };
-      },
-      (url: string) =>
-        fetch(url, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }).then((r) => {
-          const numPagesString = r.headers.get("x-pages");
-          const numPages =
-            numPagesString !== null ? parseInt(numPagesString) : undefined;
-          if (numPages && numPages !== size) {
-            //setNumPages(numPages);
-            void setSize(numPages);
-          }
-          return r.json();
-        }),
-      { revalidateAll: true },
-    );
+  const corporationId = useMemo(
+    () => character?.data.corporation_id,
+    [character?.data],
+  );
 
   const { data: labels } = useGetCorporationsCorporationIdContactsLabels(
-    characterData?.data.corporation_id ?? 0,
+    corporationId ?? 0,
+    {},
     {},
     {
-      swr: {
+      query: {
         enabled:
           !!characterId &&
           isTokenValid &&
           scopes.includes("esi-corporations.read_contacts.v1") &&
-          characterData?.data.corporation_id !== undefined,
-        revalidateOnFocus: false,
+          corporationId !== undefined,
+        refetchOnWindowFocus: false,
       },
     },
   );
 
+  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
+    useGetCorporationsCorporationIdContactsInfinite(
+      corporationId ?? 0,
+      { token: accessToken },
+      {},
+      {
+        query: {
+          enabled:
+            characterId !== undefined &&
+            isTokenValid &&
+            scopes.includes("esi-corporations.read_contacts.v1") &&
+            corporationId !== undefined,
+          queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
+            getCorporationsCorporationIdContacts(corporationId ?? 0, {
+              page: pageParam,
+              token: accessToken,
+            }),
+          getNextPageParam: (lastPage, pages) => {
+            const numPages: number | undefined = lastPage.headers?.["x-pages"];
+            const nextPage = pages.length + 1;
+            if (nextPage > (numPages ?? 0)) return undefined;
+            return nextPage;
+          },
+        },
+      },
+    );
+
   return {
-    data: data?.flat() ?? [],
+    data: (data?.pages ?? []).flatMap((res) => res.data ?? []),
     labels: labels?.data ?? [],
     error,
     isLoading,
-    isValidating,
-    mutate,
-  };*/
-
-  return {
-    data: [],
-    labels: [],
-    error: undefined,
-    isLoading: true,
-    isValidating: false,
-    mutate: () => {},
+    mutate: refetch,
   };
 }
