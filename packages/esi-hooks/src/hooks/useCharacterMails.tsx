@@ -48,7 +48,7 @@ export function useCharacterMails({ labels = [] }: useCharacterMailsProps) {
               token: accessToken,
             });
           },
-          getNextPageParam: (lastPage, pages) => {
+          getNextPageParam: (lastPage) => {
             if (lastPage.data.length != 50) return undefined;
             return lastPage.data.reduce(
               (acc, msg) => Math.min(acc, msg.mail_id ?? acc),
