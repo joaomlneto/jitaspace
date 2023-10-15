@@ -22,7 +22,7 @@ export function useCharacterMails({ labels = [] }: useCharacterMailsProps) {
       getCharactersCharacterIdMailQueryKey(characterId ?? 0, {
         token: accessToken,
         // @ts-expect-error generated code parses this wrong as url param
-        labels: labels.join(","),
+        labels: labels !== undefined ? labels.join(",") : undefined,
       }),
     [characterId, labels, accessToken],
   );
@@ -39,15 +39,13 @@ export function useCharacterMails({ labels = [] }: useCharacterMailsProps) {
             isTokenValid &&
             scopes.includes("esi-mail.read_mail.v1"),
           queryKey,
-          queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) => {
-            console.log({ labels });
-            return getCharactersCharacterIdMail(characterId ?? 0, {
+          queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
+            getCharactersCharacterIdMail(characterId ?? 0, {
               last_mail_id: pageParam,
               // @ts-expect-error generated code parses this wrong as url param
               labels: labels !== undefined ? labels.join(",") : undefined,
               token: accessToken,
-            });
-          },
+            }),
           getNextPageParam: (lastPage) => {
             if (lastPage.data.length != 50) return undefined;
             return lastPage.data.reduce(
