@@ -39,7 +39,12 @@ export default defineConfig(async () => {
           { type: "tag", pattern: "WebUI" },
         ],
       }),
-      createSwaggerZod({}),
+      createSwaggerZod({
+        skipBy: [
+          { type: "tag", pattern: "Swagger" },
+          { type: "tag", pattern: "WebUI" },
+        ],
+      }),
       createSwaggerZodios({}),
     ],
   };

@@ -197,44 +197,46 @@ export default function Page() {
         </Group>
         <Group position="apart">
           <Text>Luminosity</Text>
-          <Text>{sdeSolarSystem?.luminosity}</Text>
+          <Text>{sdeSolarSystem?.data.luminosity}</Text>
         </Group>
-        {sdeSolarSystem?.radius && (
+        {sdeSolarSystem?.data.radius && (
           <Group position="apart">
             <Text>Radius</Text>
-            <Text>{sdeSolarSystem?.radius.toLocaleString()} m</Text>
+            <Text>{sdeSolarSystem.data.radius.toLocaleString()} m</Text>
           </Group>
         )}
         <Group position="apart">
           <Text>Border System</Text>
-          <Text>{sdeSolarSystem?.border ? "Yes" : "No"}</Text>
+          <Text>{sdeSolarSystem?.data.border ? "Yes" : "No"}</Text>
         </Group>
         <Group position="apart">
           <Text>Corridor System</Text>
-          <Text>{sdeSolarSystem?.corridor ? "Yes" : "No"}</Text>
+          <Text>{sdeSolarSystem?.data.corridor ? "Yes" : "No"}</Text>
         </Group>
         <Group position="apart">
           <Text>Fringe System</Text>
-          <Text>{sdeSolarSystem?.fringe ? "Yes" : "No"}</Text>
+          <Text>{sdeSolarSystem?.data.fringe ? "Yes" : "No"}</Text>
         </Group>
         <Group position="apart">
           <Text>Trading Hub</Text>
-          <Text>{sdeSolarSystem?.hub ? "Yes" : "No"}</Text>
+          <Text>{sdeSolarSystem?.data.hub ? "Yes" : "No"}</Text>
         </Group>
         <Group position="apart">
           <Text>International System</Text>
-          <Text>{sdeSolarSystem?.international ? "Yes" : "No"}</Text>
+          <Text>{sdeSolarSystem?.data.international ? "Yes" : "No"}</Text>
         </Group>
         <Group position="apart">
           <Text>Regional System</Text>
-          <Text>{sdeSolarSystem?.regional ? "Yes" : "No"}</Text>
+          <Text>{sdeSolarSystem?.data.regional ? "Yes" : "No"}</Text>
         </Group>
         <Group position="apart">
           <Text>Position</Text>
           <Position3DText
             size="xs"
             position={
-              sdeSolarSystem?.center as [number, number, number] | undefined
+              sdeSolarSystem?.data.center as
+                | [number, number, number]
+                | undefined
             }
           />
         </Group>
@@ -243,7 +245,7 @@ export default function Page() {
           <Position3DText
             size="xs"
             position={
-              sdeSolarSystem?.min as [number, number, number] | undefined
+              sdeSolarSystem?.data.min as [number, number, number] | undefined
             }
           />
         </Group>
@@ -252,7 +254,7 @@ export default function Page() {
           <Position3DText
             size="xs"
             position={
-              sdeSolarSystem?.max as [number, number, number] | undefined
+              sdeSolarSystem?.data.max as [number, number, number] | undefined
             }
           />
         </Group>
