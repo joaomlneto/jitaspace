@@ -32,7 +32,6 @@ import {
 
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const { assets, isLoading, errorMessage } = useCorporationAssets();
   const filterForm = useForm<{ location_id: number | null; name: string }>({
@@ -51,7 +50,6 @@ export default function Page() {
 
   useEsiNamePrefetch(
     Object.values(assets ?? {}).map((asset) => ({
-      // @ts-expect-error hook temporarily disabled
       id: asset.type_id,
       category: "inventory_type",
     })),
@@ -63,23 +61,17 @@ export default function Page() {
   const entries = useMemo(
     () =>
       Object.values(assets ?? {})
-        // @ts-expect-error hook temporarily disabled
         .filter((asset) => asset.location_type !== "item")
         .filter(
           (asset) =>
             filterForm.values.location_id === null ||
-            // @ts-expect-error hook temporarily disabled
             asset.location_id === filterForm.values.location_id,
         )
         .map((asset) => {
-          // @ts-expect-error hook temporarily disabled
           const adjustedPrice = marketPrices[asset.type_id]?.adjusted_price;
           return {
-            // @ts-expect-error hook temporarily disabled
             typeName: getNameFromCache(asset.type_id),
-            // @ts-expect-error hook temporarily disabled
             price: adjustedPrice ? adjustedPrice * asset.quantity : undefined,
-            // @ts-expect-error hook temporarily disabled
             ...asset,
           };
         })

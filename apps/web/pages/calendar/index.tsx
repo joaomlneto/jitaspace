@@ -22,9 +22,8 @@ import { CalendarEventList } from "~/components/Calendar/CalendarEventList/Calen
 import EventsCalendar from "~/components/Calendar/EventsCalendar";
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
-  const { events, isLoading, isValidating, hasMoreEvents, loadMoreEvents } =
+  const { events, isLoading, hasMoreEvents, loadMoreEvents } =
     useCharacterCalendar();
 
   const eventsPerDate: {
@@ -32,9 +31,7 @@ export default function Page() {
   } = {};
   if (events) {
     events.forEach((event) => {
-      // @ts-expect-error hook temporarily disabled
       if (!event.event_date) return;
-      // @ts-expect-error hook temporarily disabled
       const date = new Date(event.event_date);
       date.setHours(0, 0, 0, 0);
       const dateString = date.getTime();
@@ -94,17 +91,17 @@ export default function Page() {
         </Stack>
         <Container my="xl">
           {hasMoreEvents && (
-            <Button w="100%" onClick={loadMoreEvents}>
+            <Button w="100%" onClick={() => loadMoreEvents()}>
               Load more events
             </Button>
           )}
-          {(isLoading || isValidating) && !hasMoreEvents && (
+          {isLoading && !hasMoreEvents && (
             <Group noWrap>
               <Loader size="sm" />
               <Text>Loading events</Text>
             </Group>
           )}
-          {!isLoading && !isValidating && !hasMoreEvents && (
+          {!isLoading && !hasMoreEvents && (
             <Center>
               <Text color="dimmed">No more events</Text>
             </Center>
