@@ -15,12 +15,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@kubb/cli": "^1.11.4",
-    "@kubb/core": "^1.11.3",
+    "@kubb/cli": "^1.11.5",
+    "@kubb/core": "^1.11.5",
     "@kubb/swagger": "^1.11.1",
     "@kubb/swagger-client": "^1.11.1",
     "@kubb/swagger-tanstack-query": "^1.11.1",
-    "@kubb/swagger-ts": "^1.11.1",
+    "@kubb/swagger-ts": "^1.11.5",
     "@kubb/swagger-zod": "^1.10.0",
     "@kubb/swagger-zodios": "^1.10.0",
     "@tanstack/react-query": "^4.36.1",
