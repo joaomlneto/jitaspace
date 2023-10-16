@@ -17,7 +17,7 @@ import useSwr from "swr";
 import { useGetStatus as useGetTqStatus } from "@jitaspace/esi-client";
 import {
   useGetStatus as useGetMetaStatus,
-  type GetStatus200Item,
+  type GetStatusQueryResponse,
 } from "@jitaspace/esi-meta-client";
 import { FormattedDateText } from "@jitaspace/ui";
 
@@ -79,14 +79,14 @@ export default function Page() {
   );
 
   const nonGreenEndpoints = useMemo(
-    () => esiStatus?.filter((e) => e.status !== "green") ?? [],
+    () => esiStatus?.data.filter((e) => e.status !== "green") ?? [],
     [esiStatus],
   );
 
   // group esiStatus object by their tags
   const esiStatusByTag = useMemo(() => {
-    const result: Record<string, GetStatus200Item[]> = {};
-    (esiStatus ?? [])
+    const result: Record<string, GetStatusQueryResponse> = {};
+    (esiStatus?.data ?? [])
       .filter((entry) => showAllEsiEndpoints || entry.status !== "green")
       .forEach((entry) => {
         const tags = entry.tags ?? [];
