@@ -13,11 +13,10 @@ import { format } from "date-fns";
 import {
   useGetCorporationsCorporationIdAlliancehistory,
   type GetCorporationsCorporationIdAlliancehistoryQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import { AllianceAvatar } from "../Avatar";
 import { AllianceName } from "../Text";
-
 
 type CorporationAllianceHistoryTimelineProps = Omit<
   TimelineProps,

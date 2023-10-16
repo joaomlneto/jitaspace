@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 
 import {
-  GetIndustrySystemsQueryResponseCostIndicesActivity,
   getIndustrySystemsQueryResponseCostIndicesActivity,
+  GetIndustrySystemsQueryResponseCostIndicesActivity,
   useGetIndustrySystems,
   type GetIndustrySystemsQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 export function useSolarSystemCostIndices() {
   const { data: arrayData, error, isLoading } = useGetIndustrySystems();

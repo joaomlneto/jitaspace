@@ -2,12 +2,11 @@ import React, { memo } from "react";
 import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
 
-import { useGetWarsWarId } from "@jitaspace/esi-client-kubb";
+import { useGetWarsWarId } from "@jitaspace/esi-client";
 
 import { AllianceAnchor } from "./AllianceAnchor";
 import { CorporationAnchor } from "./CorporationAnchor";
 import { EveEntityAnchor } from "./EveEntityAnchor";
-
 
 export type WarAggressorAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &

@@ -7,11 +7,10 @@ import {
   getUniverseRegions,
   getUniverseRegionsRegionId,
   GetUniverseRegionsRegionIdQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { RegionAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   regions: GetUniverseRegionsRegionIdQueryResponse[];

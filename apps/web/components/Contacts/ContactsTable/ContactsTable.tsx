@@ -8,7 +8,7 @@ import {
   type GetAlliancesAllianceIdContactsQueryResponse,
   type GetCharactersCharacterIdContactsQueryResponse,
   type GetCorporationsCorporationIdContactsQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import {
   EveEntityAnchor,
   EveEntityAvatar,

@@ -16,7 +16,7 @@ import {
   useGetCharactersCharacterIdCalendarEventIdAttendees,
   type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse,
   type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import {

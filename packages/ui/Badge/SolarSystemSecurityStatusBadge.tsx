@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Badge, createStyles, Skeleton, type BadgeProps } from "@mantine/core";
 
-import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client-kubb";
+import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
 
 const useStyles = createStyles((theme) => ({
   "1.0": {

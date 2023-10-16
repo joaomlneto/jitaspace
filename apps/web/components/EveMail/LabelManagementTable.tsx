@@ -6,7 +6,7 @@ import { showNotification } from "@mantine/notifications";
 import {
   deleteCharactersCharacterIdMailLabelsLabelId,
   useGetCharactersCharacterIdMailLabels,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";

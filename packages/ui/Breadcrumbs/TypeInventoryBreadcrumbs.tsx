@@ -10,11 +10,10 @@ import {
 import {
   useGetUniverseGroupsGroupId,
   useGetUniverseTypesTypeId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import { CategoryAnchor, GroupAnchor, TypeAnchor } from "../Anchor";
 import { CategoryName, GroupName, TypeName } from "../Text";
-
 
 export type TypeInventoryBreadcrumbsProps = Omit<
   BreadcrumbsProps,

@@ -6,7 +6,7 @@ import {
   useGetCharactersCharacterId,
   useGetCorporationsCorporationIdContactsInfinite,
   useGetCorporationsCorporationIdContactsLabels,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import { useEsiClientContext } from "./useEsiClientContext";
 

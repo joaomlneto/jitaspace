@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from "react";
 import { Anchor, Group, Table, Text, Tooltip } from "@mantine/core";
 
-import { useGetUniverseSystemKills } from "@jitaspace/esi-client-kubb";
+import { useGetUniverseSystemKills } from "@jitaspace/esi-client";
 import { InfoIcon } from "@jitaspace/eve-icons";
 import {
   SolarSystemAnchor,
@@ -11,7 +11,6 @@ import {
 } from "@jitaspace/ui";
 
 import { ZkillboardRecentSystemKills } from "~/components/Travel/ZkillboardRecentSystemKills";
-
 
 type RouteTableProps = {
   route: {

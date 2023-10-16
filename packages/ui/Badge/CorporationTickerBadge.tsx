@@ -1,11 +1,7 @@
 import { memo } from "react";
 import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
 
-import { useGetCorporationsCorporationId } from "@jitaspace/esi-client-kubb";
-
-
-
-
+import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
 
 type CorporationTickerBadgeProps = Omit<BadgeProps, "children"> & {
   corporationId?: number | string;

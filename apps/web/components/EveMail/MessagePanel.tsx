@@ -4,7 +4,7 @@ import { Group, Spoiler, Stack, Text } from "@mantine/core";
 import {
   useGetCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailMailId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   EveEntityAnchor,

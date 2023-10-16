@@ -12,12 +12,11 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetUniverseRegionsRegionId } from "@jitaspace/esi-client-kubb";
+import { useGetUniverseRegionsRegionId } from "@jitaspace/esi-client";
 import { ConstellationName, RegionName } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
-
 
 export default function Page() {
   const router = useRouter();

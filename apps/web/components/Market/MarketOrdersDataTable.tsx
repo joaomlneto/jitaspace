@@ -7,16 +7,12 @@ import {
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { GetMarketsRegionIdOrdersQueryResponse } from "@jitaspace/esi-client-kubb";
+import { GetMarketsRegionIdOrdersQueryResponse } from "@jitaspace/esi-client";
 import {
   EveEntityName,
   SolarSystemSecurityStatusBadge,
   TimeAgoText,
 } from "@jitaspace/ui";
-
-
-
-
 
 type MarketOrdersDataTableProps = {
   orders: GetMarketsRegionIdOrdersQueryResponse;

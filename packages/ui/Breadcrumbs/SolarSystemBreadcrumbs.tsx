@@ -4,7 +4,7 @@ import { Breadcrumbs, type BreadcrumbsProps } from "@mantine/core";
 import {
   useGetUniverseConstellationsConstellationId,
   useGetUniverseSystemsSystemId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import {
   ConstellationAnchor,
@@ -12,7 +12,6 @@ import {
   SolarSystemAnchor,
 } from "../Anchor";
 import { ConstellationName, RegionName, SolarSystemName } from "../Text";
-
 
 export type SolarSystemBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   solarSystemId?: string | number;

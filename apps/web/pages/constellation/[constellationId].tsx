@@ -11,7 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 
-import { useGetUniverseConstellationsConstellationId } from "@jitaspace/esi-client-kubb";
+import { useGetUniverseConstellationsConstellationId } from "@jitaspace/esi-client";
 import {
   ConstellationName,
   RegionName,
@@ -20,7 +20,6 @@ import {
 } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
-
 
 export default function Page() {
   const router = useRouter();

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useGetUniversePlanetsPlanetId } from "@jitaspace/esi-client-kubb";
+import { useGetUniversePlanetsPlanetId } from "@jitaspace/esi-client";
 import {
   Position3DText,
   SolarSystemName,
@@ -13,7 +13,6 @@ import {
 } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
-
 
 export default function Page() {
   const router = useRouter();

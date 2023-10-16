@@ -10,12 +10,11 @@ import {
   getOpportunitiesTasks,
   getOpportunitiesTasksTaskId,
   GetOpportunitiesTasksTaskIdQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { OpportunitiesTreeIcon } from "@jitaspace/eve-icons";
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   opportunities: Record<

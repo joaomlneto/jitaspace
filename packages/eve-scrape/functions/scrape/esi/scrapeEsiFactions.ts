@@ -1,12 +1,10 @@
-import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getUniverseFactions } from "@jitaspace/esi-client-kubb";
+import { getUniverseFactions } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeFactionsEventPayload = {
   data: {};

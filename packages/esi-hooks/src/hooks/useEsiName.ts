@@ -15,7 +15,7 @@ import {
   getUniverseTypesTypeId,
   postUniverseNames,
   type GetCharactersCharacterIdSearchQueryParamsCategories,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import {
   allianceIdRanges,

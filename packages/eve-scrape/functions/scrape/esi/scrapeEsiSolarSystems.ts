@@ -1,4 +1,3 @@
-import axios from "axios";
 import pLimit from "p-limit";
 
 import { Prisma, prisma } from "@jitaspace/db";
@@ -11,7 +10,7 @@ import {
   getUniverseStationsStationId,
   getUniverseSystems,
   getUniverseSystemsSystemId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";

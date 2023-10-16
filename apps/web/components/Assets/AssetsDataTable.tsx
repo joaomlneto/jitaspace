@@ -7,17 +7,13 @@ import {
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { GetCharactersCharacterIdAssetsQueryResponse } from "@jitaspace/esi-client-kubb";
+import { GetCharactersCharacterIdAssetsQueryResponse } from "@jitaspace/esi-client";
 import {
   useEsiNamePrefetch,
   useEsiNamesCache,
   useMarketPrices,
 } from "@jitaspace/esi-hooks";
 import { ISKAmount, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
-
-
-
-
 
 type AssetsDataTableProps = {
   entries: GetCharactersCharacterIdAssetsQueryResponse;

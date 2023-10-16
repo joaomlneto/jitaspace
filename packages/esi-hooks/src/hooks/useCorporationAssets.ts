@@ -8,7 +8,7 @@ import {
   useGetCharactersCharacterId,
   useGetCharactersCharacterIdRoles,
   useGetCorporationsCorporationIdAssetsInfinite,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import { useEsiClientContext } from "./useEsiClientContext";
 

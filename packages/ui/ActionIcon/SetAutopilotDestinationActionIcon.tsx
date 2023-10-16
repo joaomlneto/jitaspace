@@ -3,7 +3,7 @@ import { ActionIcon, Tooltip } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { IconRocket } from "@tabler/icons-react";
 
-import { postUiAutopilotWaypoint } from "@jitaspace/esi-client-kubb";
+import { postUiAutopilotWaypoint } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 type SetAutopilotDestinationActionIconProps = {

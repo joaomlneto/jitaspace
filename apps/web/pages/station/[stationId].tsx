@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetUniverseStationsStationId } from "@jitaspace/esi-client-kubb";
+import { useGetUniverseStationsStationId } from "@jitaspace/esi-client";
 import {
   EveEntityAnchor,
   EveEntityName,

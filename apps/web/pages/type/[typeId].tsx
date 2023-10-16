@@ -19,7 +19,7 @@ import {
   getUniverseTypes,
   getUniverseTypesTypeId,
   useGetUniverseTypesTypeId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { useMarketPrices } from "@jitaspace/esi-hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -31,7 +31,6 @@ import {
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   ogImageUrl?: string;

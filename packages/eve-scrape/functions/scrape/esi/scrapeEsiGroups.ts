@@ -4,12 +4,11 @@ import { prisma } from "@jitaspace/db";
 import {
   getUniverseGroups,
   getUniverseGroupsGroupId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeGroupsEventPayload = {
   data: {

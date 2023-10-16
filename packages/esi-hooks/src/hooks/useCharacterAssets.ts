@@ -5,7 +5,7 @@ import {
   getCharactersCharacterIdAssets,
   GetCharactersCharacterIdAssetsQueryResponse,
   useGetCharactersCharacterIdAssetsInfinite,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import { useEsiClientContext } from "./useEsiClientContext";
 

@@ -11,7 +11,7 @@ import {
 import {
   GetCharactersCharacterIdSkillsQueryResponse,
   useGetCharactersCharacterIdSkills,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
 

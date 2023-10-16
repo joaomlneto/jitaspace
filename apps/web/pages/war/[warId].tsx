@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetWarsWarId } from "@jitaspace/esi-client-kubb";
+import { useGetWarsWarId } from "@jitaspace/esi-client";
 import { WarReportIcon } from "@jitaspace/eve-icons";
 import {
   AllianceAnchor,

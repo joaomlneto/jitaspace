@@ -1,3 +1,3 @@
-import { useGetAlliances } from "@jitaspace/esi-client-kubb";
+import { useGetAlliances } from "@jitaspace/esi-client";
 
 export const useAllianceIds = useGetAlliances;

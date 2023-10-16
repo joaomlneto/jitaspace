@@ -2,7 +2,7 @@ import { memo, useState } from "react";
 import { ActionIcon, ColorInput, type ColorInputProps } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 
-import { postCharactersCharacterIdMailLabelsMutationRequestColor } from "@jitaspace/esi-client-kubb";
+import { postCharactersCharacterIdMailLabelsMutationRequestColor } from "@jitaspace/esi-client";
 import { getRandomArrayEntry } from "@jitaspace/utils";
 
 export const MailLabelColorSelect = memo(

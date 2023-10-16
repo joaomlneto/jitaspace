@@ -1,10 +1,9 @@
 import { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetUniversePlanetsPlanetId } from "@jitaspace/esi-client-kubb";
+import { useGetUniversePlanetsPlanetId } from "@jitaspace/esi-client";
 
 import { TypeAvatar } from "./TypeAvatar";
-
 
 export type PlanetAvatarProps = Omit<AvatarProps, "src"> & {
   planetId?: string | number | null;

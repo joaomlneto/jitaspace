@@ -1,10 +1,9 @@
 import { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client-kubb";
+import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
 
 import { StarAvatar } from "./StarAvatar";
-
 
 export type SolarSystemAvatarProps = Omit<AvatarProps, "src"> & {
   solarSystemId?: string | number | null;

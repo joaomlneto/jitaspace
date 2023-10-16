@@ -17,7 +17,7 @@ const config = {
         "@jitaspace/auth",
         "@jitaspace/db",
         "@jitaspace/esi-metadata",
-        "@jitaspace/esi-client-kubb",
+        "@jitaspace/esi-client",
         "@jitaspace/esi-hooks",
         "@jitaspace/esi-meta-client",
         "@jitaspace/eve-icons",

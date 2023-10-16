@@ -1,11 +1,10 @@
 import { memo, useMemo } from "react";
 import { Card, createStyles, JsonInput, type CardProps } from "@mantine/core";
 
-import { type GetCharactersCharacterIdFittingsQueryResponseItemsFlag } from "@jitaspace/esi-client-kubb";
+import { type GetCharactersCharacterIdFittingsQueryResponseItemsFlag } from "@jitaspace/esi-client";
 
 import { ShipFittingCardHeader } from "./ShipFittingCardHeader";
 import { ShipFittingCardModulesSection } from "./ShipFittingCardModulesSection";
-
 
 const useStyles = createStyles((theme) => ({
   card: {

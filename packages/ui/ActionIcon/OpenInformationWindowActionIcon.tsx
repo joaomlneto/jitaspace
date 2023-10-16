@@ -3,7 +3,7 @@ import { ActionIcon, Tooltip } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { IconAppWindowFilled } from "@tabler/icons-react";
 
-import { postUiOpenwindowInformation } from "@jitaspace/esi-client-kubb";
+import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 type OpenInformationWindowActionIconProps = {

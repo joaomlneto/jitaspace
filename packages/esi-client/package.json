@@ -1,5 +1,5 @@
 {
-  "name": "@jitaspace/esi-client-kubb",
+  "name": "@jitaspace/esi-client",
   "description": "ESI Client for JitaSpace",
   "version": "0.1.0",
   "type": "module",

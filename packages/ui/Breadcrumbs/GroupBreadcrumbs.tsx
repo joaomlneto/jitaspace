@@ -7,11 +7,10 @@ import {
   type BreadcrumbsProps,
 } from "@mantine/core";
 
-import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client-kubb";
+import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 
 import { CategoryAnchor, GroupAnchor } from "../Anchor";
 import { CategoryName, GroupName } from "../Text";
-
 
 export type GroupBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   groupId?: number;

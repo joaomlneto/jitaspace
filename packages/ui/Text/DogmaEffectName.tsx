@@ -1,11 +1,7 @@
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import { useGetDogmaEffectsEffectId } from "@jitaspace/esi-client-kubb";
-
-
-
-
+import { useGetDogmaEffectsEffectId } from "@jitaspace/esi-client";
 
 export type DogmaEffectNameProps = TextProps & {
   effectId?: number;

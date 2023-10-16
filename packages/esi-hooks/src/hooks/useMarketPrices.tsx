@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import {
   useGetMarketsPrices,
   type GetMarketsPricesQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 export function useMarketPrices() {
   const { data: arrayData, error, isLoading } = useGetMarketsPrices();

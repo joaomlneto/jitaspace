@@ -9,12 +9,8 @@ import {
 } from "@mantine/core";
 import { type SpotlightActionProps } from "@mantine/spotlight";
 
-import { type GetCharactersCharacterIdSearchQueryResponse } from "@jitaspace/esi-client-kubb";
+import { type GetCharactersCharacterIdSearchQueryResponse } from "@jitaspace/esi-client";
 import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
-
-
-
-
 
 const useStyles = createStyles((theme) => ({
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

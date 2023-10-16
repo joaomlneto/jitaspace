@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetCorporationsCorporationId } from "@jitaspace/esi-client-kubb";
+import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
@@ -27,7 +27,6 @@ import {
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
-
 
 export default function Page() {
   const router = useRouter();

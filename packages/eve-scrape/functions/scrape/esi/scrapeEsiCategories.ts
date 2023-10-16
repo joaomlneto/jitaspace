@@ -1,15 +1,13 @@
-import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
 import {
   getUniverseCategories,
   getUniverseCategoriesCategoryId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeCategoriesEventPayload = {
   data: {};

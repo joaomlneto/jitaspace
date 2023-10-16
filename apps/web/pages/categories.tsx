@@ -14,11 +14,10 @@ import {
   getUniverseCategories,
   getUniverseCategoriesCategoryId,
   GetUniverseCategoriesCategoryIdQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { CategoryAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   categories: Record<number, GetUniverseCategoriesCategoryIdQueryResponse>;

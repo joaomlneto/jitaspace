@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useGetUniverseRaces } from "@jitaspace/esi-client-kubb";
+import { useGetUniverseRaces } from "@jitaspace/esi-client";
 import {
   FactionAvatar,
   FactionName,
@@ -12,7 +12,6 @@ import {
 } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
-
 
 export default function Page() {
   const router = useRouter();

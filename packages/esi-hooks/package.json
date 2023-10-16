@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@jitaspace/esi-metadata": "*",
-    "@jitaspace/esi-client-kubb": "*",
+    "@jitaspace/esi-client": "*",
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",

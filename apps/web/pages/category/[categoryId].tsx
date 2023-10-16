@@ -18,12 +18,11 @@ import {
   getUniverseGroupsGroupId,
   GetUniverseGroupsGroupIdQueryResponse,
   useGetUniverseCategoriesCategoryId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   name?: string;

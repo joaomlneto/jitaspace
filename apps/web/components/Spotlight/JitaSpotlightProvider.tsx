@@ -10,14 +10,13 @@ import {
 import {
   type GetCharactersCharacterIdSearchQueryParamsCategories,
   type GetCharactersCharacterIdSearchQueryResponse,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { useEsiClientContext, useEsiSearch } from "@jitaspace/esi-hooks";
 import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
 
 import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
 import { JitaSpotlightActionsWrapper } from "~/components/Spotlight/JitaSpotlightActionsWrapper";
 import { jitaApps } from "~/config/apps";
-
 
 export const JitaSpotlightProvider = memo(
   ({ children }: Omit<SpotlightProviderProps, "actions">) => {

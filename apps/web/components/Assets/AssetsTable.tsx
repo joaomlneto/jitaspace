@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Badge, Group, Table } from "@mantine/core";
 
-import { GetCharactersCharacterIdAssetsQueryResponse } from "@jitaspace/esi-client-kubb";
+import { GetCharactersCharacterIdAssetsQueryResponse } from "@jitaspace/esi-client";
 import {
   EveEntityAnchor,
   EveEntityName,

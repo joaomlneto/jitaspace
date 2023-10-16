@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 
-import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client-kubb";
+import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import {

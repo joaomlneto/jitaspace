@@ -11,7 +11,7 @@ import {
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
-import { getUniverseStationsStationId } from "@jitaspace/esi-client-kubb";
+import { getUniverseStationsStationId } from "@jitaspace/esi-client";
 import { StationIcon } from "@jitaspace/eve-icons";
 import { EsiSearchSelect } from "@jitaspace/ui";
 

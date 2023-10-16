@@ -2,11 +2,10 @@ import React, { memo } from "react";
 import { Loader, Select, type SelectProps } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
-import { type GetCharactersCharacterIdSearchQueryParamsCategories } from "@jitaspace/esi-client-kubb";
+import { type GetCharactersCharacterIdSearchQueryParamsCategories } from "@jitaspace/esi-client";
 import { useEsiNamesCache, useEsiSearch } from "@jitaspace/esi-hooks";
 
 import { EsiSearchSelectItem } from "./EsiSearchSelectItem";
-
 
 export type EsiSearchSelectProps = Omit<
   SelectProps,

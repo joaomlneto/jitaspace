@@ -18,7 +18,7 @@ import {
   getDogmaAttributesAttributeId,
   useGetDogmaAttributes,
   useGetDogmaAttributesAttributeId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
 

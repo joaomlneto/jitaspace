@@ -3,7 +3,7 @@ import { type LinkProps } from "next/link";
 import { Anchor, type AnchorProps } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 
-import { postUiOpenwindowInformation } from "@jitaspace/esi-client-kubb";
+import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 export type OpenInformationWindowAnchorProps = AnchorProps &

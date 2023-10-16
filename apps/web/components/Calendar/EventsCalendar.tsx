@@ -2,11 +2,7 @@ import React from "react";
 import { Indicator } from "@mantine/core";
 import { Calendar, type CalendarProps } from "@mantine/dates";
 
-import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client-kubb";
-
-
-
-
+import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client";
 
 type CharacterMonthCalendarProps = CalendarProps & {
   events: GetCharactersCharacterIdCalendarQueryResponse;

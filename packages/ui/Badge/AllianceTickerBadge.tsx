@@ -1,11 +1,7 @@
 import { memo } from "react";
 import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
 
-import { useGetAlliancesAllianceId } from "@jitaspace/esi-client-kubb";
-
-
-
-
+import { useGetAlliancesAllianceId } from "@jitaspace/esi-client";
 
 type AllianceTickerBadgeProps = Omit<BadgeProps, "children"> & {
   allianceId?: number | string;

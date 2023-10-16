@@ -14,7 +14,7 @@ import {
 import { NextSeo } from "next-seo";
 import useSwr from "swr";
 
-import { useGetStatus as useGetTqStatus } from "@jitaspace/esi-client-kubb";
+import { useGetStatus as useGetTqStatus } from "@jitaspace/esi-client";
 import {
   useGetStatus as useGetMetaStatus,
   type GetStatus200Item,
@@ -23,7 +23,6 @@ import { FormattedDateText } from "@jitaspace/ui";
 
 import { EsiClientStateCard } from "~/components/EsiClient";
 import { MainLayout } from "~/layouts";
-
 
 export default function Page() {
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =

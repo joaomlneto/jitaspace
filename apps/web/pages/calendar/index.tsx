@@ -14,7 +14,7 @@ import { openModal } from "@mantine/modals";
 import { format } from "date-fns";
 import { NextSeo } from "next-seo";
 
-import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client-kubb";
+import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client";
 import { useCharacterCalendar } from "@jitaspace/esi-hooks";
 import { CalendarIcon } from "@jitaspace/eve-icons";
 

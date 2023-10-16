@@ -1,4 +1,4 @@
-import { useGetCharactersCharacterIdCalendarInfinite } from "@jitaspace/esi-client-kubb";
+import { useGetCharactersCharacterIdCalendarInfinite } from "@jitaspace/esi-client";
 
 import { useEsiClientContext } from "./useEsiClientContext";
 

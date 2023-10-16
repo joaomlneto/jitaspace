@@ -4,7 +4,7 @@ import {
   getMarketsRegionIdOrders,
   GetMarketsRegionIdOrdersQueryResponse,
   useGetUniverseRegions,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 export function useTypeMarketOrders(typeId?: number) {
   const [regionOrders, setRegionOrders] = useState<

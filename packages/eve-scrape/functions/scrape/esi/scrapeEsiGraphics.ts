@@ -5,7 +5,7 @@ import { prisma } from "@jitaspace/db";
 import {
   getUniverseGraphics,
   getUniverseGraphicsGraphicId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";

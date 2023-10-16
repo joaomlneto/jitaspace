@@ -6,7 +6,7 @@ import {
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { GetCharactersCharacterIdWalletJournalQueryResponse } from "@jitaspace/esi-client-kubb";
+import { GetCharactersCharacterIdWalletJournalQueryResponse } from "@jitaspace/esi-client";
 import {
   EveEntityAnchor,
   EveEntityAvatar,
@@ -14,10 +14,6 @@ import {
   FormattedDateText,
   ISKAmount,
 } from "@jitaspace/ui";
-
-
-
-
 
 type WalletTableProps = {
   entries: GetCharactersCharacterIdWalletJournalQueryResponse;

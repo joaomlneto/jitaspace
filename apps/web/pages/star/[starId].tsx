@@ -2,7 +2,7 @@ import React, { type ReactElement } from "react";
 import { useRouter } from "next/router";
 import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useGetUniverseStarsStarId } from "@jitaspace/esi-client-kubb";
+import { useGetUniverseStarsStarId } from "@jitaspace/esi-client";
 import {
   SolarSystemAnchor,
   SolarSystemName,

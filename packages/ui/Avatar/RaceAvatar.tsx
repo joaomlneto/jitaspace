@@ -1,7 +1,7 @@
 import { memo, useMemo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetUniverseRaces } from "@jitaspace/esi-client-kubb";
+import { useGetUniverseRaces } from "@jitaspace/esi-client";
 
 import { FactionAvatar } from "./FactionAvatar";
 

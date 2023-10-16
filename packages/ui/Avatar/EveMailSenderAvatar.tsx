@@ -4,7 +4,7 @@ import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 import {
   useGetCharactersCharacterIdMailLists,
   useGetCharactersCharacterIdMailMailId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { GroupListIcon } from "@jitaspace/eve-icons";
 import { getAvatarSize } from "@jitaspace/utils";

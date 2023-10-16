@@ -19,7 +19,7 @@ import {
   getDogmaEffectsEffectId,
   useGetDogmaEffects,
   useGetDogmaEffectsEffectId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   DogmaAttributeAnchor,

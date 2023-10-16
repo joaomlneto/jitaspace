@@ -10,11 +10,10 @@ import {
 import {
   getMarketsGroupsMarketGroupId,
   useGetUniverseTypesTypeId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 
 import { MarketGroupAnchor, TypeAnchor } from "../Anchor";
 import { MarketGroupName, TypeName } from "../Text";
-
 
 export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   typeId?: string | number;

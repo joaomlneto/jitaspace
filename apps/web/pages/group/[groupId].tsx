@@ -17,12 +17,11 @@ import {
   getUniverseGroupsGroupId,
   getUniverseTypesTypeId,
   useGetUniverseGroupsGroupId,
-} from "@jitaspace/esi-client-kubb";
+} from "@jitaspace/esi-client";
 import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   name?: string;
