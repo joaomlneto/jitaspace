@@ -20,7 +20,7 @@
     "@kubb/swagger": "^1.11.1",
     "@kubb/swagger-client": "^1.11.1",
     "@kubb/swagger-tanstack-query": "^1.11.1",
-    "@kubb/swagger-ts": "^1.11.1",
+    "@kubb/swagger-ts": "^1.11.5",
     "@kubb/swagger-zod": "^1.10.0",
     "@kubb/swagger-zodios": "^1.10.0",
     "@tanstack/react-query": "^4.36.1",
