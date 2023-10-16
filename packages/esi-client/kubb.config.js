@@ -10,8 +10,10 @@ export default defineConfig(async () => {
   return {
     root: ".",
     input: {
-      path: "./swagger.json",
+      // Cannot use the spec directly, as the parser cannot parse the routes endpoint.
+      // We remove it using jq (see package.json scripts) before feeding it into kubb.
       //path: "https://esi.evetech.net/latest/swagger.json",
+      path: "./swagger.json",
     },
     output: {
       path: "./src/generated",
