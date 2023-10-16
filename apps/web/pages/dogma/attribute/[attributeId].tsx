@@ -18,14 +18,13 @@ import {
   getDogmaAttributesAttributeId,
   useGetDogmaAttributes,
   useGetDogmaAttributesAttributeId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { ESI_BASE_URL } from "~/config/constants";
-import { MailLayout } from "~/layouts";
-
+import { MainLayout } from "~/layouts";
 
 type PageProps = {
   name: string | null;
@@ -123,8 +122,9 @@ export default function Page({
   const { data: attribute } = useGetDogmaAttributesAttributeId(
     attributeId,
     {},
+    {},
     {
-      swr: {
+      query: {
         enabled: attributeIds?.data.includes(attributeId),
       },
     },
@@ -258,5 +258,5 @@ export default function Page({
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return <MainLayout>{page}</MainLayout>;
 };

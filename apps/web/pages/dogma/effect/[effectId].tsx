@@ -19,7 +19,7 @@ import {
   getDogmaEffectsEffectId,
   useGetDogmaEffects,
   useGetDogmaEffectsEffectId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   DogmaAttributeAnchor,
@@ -31,8 +31,7 @@ import {
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { ESI_BASE_URL } from "~/config/constants";
-import { MailLayout } from "~/layouts";
-
+import { MainLayout } from "~/layouts";
 
 type PageProps = {
   name: string | null;
@@ -137,8 +136,9 @@ export default function Page({
   const { data: effect } = useGetDogmaEffectsEffectId(
     effectId,
     {},
+    {},
     {
-      swr: {
+      query: {
         enabled: effectIds?.data.includes(effectId),
       },
     },
@@ -362,5 +362,5 @@ export default function Page({
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return <MainLayout>{page}</MainLayout>;
 };

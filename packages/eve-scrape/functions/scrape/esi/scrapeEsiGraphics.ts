@@ -5,11 +5,10 @@ import { prisma } from "@jitaspace/db";
 import {
   getUniverseGraphics,
   getUniverseGraphicsGraphicId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeGraphicsEventPayload = {
   data: {};
