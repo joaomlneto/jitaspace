@@ -2,7 +2,7 @@ import React, { type ReactElement } from "react";
 import { useRouter } from "next/router";
 import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useGetUniverseStarsStarId } from "@jitaspace/esi-client";
+import { useGetUniverseStarsStarId } from "@jitaspace/esi-client-kubb";
 import {
   SolarSystemAnchor,
   SolarSystemName,
@@ -12,7 +12,7 @@ import {
   TypeName,
 } from "@jitaspace/ui";
 
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
@@ -75,5 +75,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return <MainLayout>{page}</MainLayout>;
 };

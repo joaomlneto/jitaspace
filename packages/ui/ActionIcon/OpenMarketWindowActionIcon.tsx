@@ -2,7 +2,7 @@ import { memo } from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 
-import { postUiOpenwindowMarketdetails } from "@jitaspace/esi-client";
+import { postUiOpenwindowMarketdetails } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { MarketIcon } from "@jitaspace/eve-icons";
 
@@ -11,7 +11,7 @@ type OpenMarketWindowActionIconProps = {
 };
 export const OpenMarketWindowActionIcon = memo(
   ({ typeId }: OpenMarketWindowActionIconProps) => {
-    const { isTokenValid, scopes } = useEsiClientContext();
+    const { isTokenValid, scopes, accessToken } = useEsiClientContext();
 
     const canSetDestination =
       !!typeId && isTokenValid && scopes.includes("esi-ui.open_window.v1");
@@ -28,6 +28,7 @@ export const OpenMarketWindowActionIcon = memo(
             } else {
               void postUiOpenwindowMarketdetails({
                 type_id: typeof typeId === "string" ? parseInt(typeId) : typeId,
+                token: accessToken,
               }).then(() => {
                 showNotification({
                   message: "Market window opened in EVE client.",

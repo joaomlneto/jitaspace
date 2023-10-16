@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@jitaspace/db": "*",
-    "@jitaspace/esi-client": "*",
     "@jitaspace/esi-client-kubb": "*",
     "@jitaspace/sde-client": "*",
     "axios": "^1.5.1",

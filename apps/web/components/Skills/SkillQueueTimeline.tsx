@@ -14,17 +14,18 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { format } from "date-fns";
 import humanizeDuration from "humanize-duration";
 
-import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 export const SkillQueueTimeline = memo(() => {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
   const { data, isLoading, error } = useGetCharactersCharacterIdSkillqueue(
     characterId ?? 1,
+    { token: accessToken },
     {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },

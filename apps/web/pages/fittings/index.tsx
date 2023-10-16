@@ -10,7 +10,7 @@ import {
 import { openContextModal } from "@mantine/modals";
 import { NextSeo } from "next-seo";
 
-import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { FittingIcon } from "@jitaspace/eve-icons";
 import { EveEntitySelect } from "@jitaspace/ui";
@@ -20,12 +20,14 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const [selectedShipType, setSelectedShipType] = useState<string | null>(null);
-  const { characterId, isTokenValid, scopes } = useEsiClientContext();
+  const { characterId, isTokenValid, scopes, accessToken } =
+    useEsiClientContext();
   const { data } = useGetCharactersCharacterIdFittings(
     characterId ?? 0,
+    { token: accessToken },
     {},
     {
-      swr: {
+      query: {
         enabled:
           isTokenValid &&
           !!characterId &&

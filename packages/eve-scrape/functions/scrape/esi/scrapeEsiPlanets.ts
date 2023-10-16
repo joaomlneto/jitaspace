@@ -3,7 +3,7 @@ import { NonRetriableError } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getUniversePlanetsPlanetId } from "@jitaspace/esi-client";
+import { getUniversePlanetsPlanetId } from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
@@ -30,8 +30,6 @@ export const scrapeEsiPlanets = client.createFunction(
   },
   { event: "scrape/esi/planets" },
   async ({ step, event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 1000;
     const planetIds: number[] = event.data.planetIds;
 

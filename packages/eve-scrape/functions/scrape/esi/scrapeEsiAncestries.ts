@@ -1,4 +1,3 @@
-import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -23,13 +22,11 @@ export const scrapeEsiAncestries = client.createFunction(
   { event: "scrape/esi/ancestries" },
   async () => {
     const stepStartTime = performance.now();
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
 
     const limit = pLimit(20);
 
     // Get all Ancestries in ESI
-    const ancestries = await getUniverseAncestries();
+    const ancestries = await getUniverseAncestries().then((res) => res.data);
     const ancestryIds = ancestries.map((ancestry) => ancestry.id);
 
     const ancestryChanges = await updateTable({

@@ -28,7 +28,7 @@ import { EveMailLabelMultiSelect } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxTable } from "~/components/EveMail";
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
@@ -49,7 +49,6 @@ export default function Page() {
     isLoading,
     mutate,
     error,
-    isValidating,
   } = useCharacterMails({ labels: selectedLabels.map(Number) });
 
   return (
@@ -57,7 +56,9 @@ export default function Page() {
       <Stack>
         {error && (
           <Container size="xs">
-            <Alert title="Error loading messages">{error.message}</Alert>
+            <Alert title="Error loading messages">
+              Error loading messages.
+            </Alert>
           </Container>
         )}
         <Group>
@@ -119,7 +120,7 @@ export default function Page() {
                   <EveMailTagIcon alt="Labels" width={32} height={32} />
                 </ActionIcon>
               </Tooltip>
-              {(isLoading || isValidating) && (
+              {isLoading && (
                 <Tooltip label="Loading messages...">
                   <Loader size="sm" />
                 </Tooltip>
@@ -155,17 +156,17 @@ export default function Page() {
           <MailboxTable data={messages} mutate={() => void mutate()} />
         )}
         {hasMoreMessages && (
-          <Button w="100%" onClick={loadMoreMessages}>
+          <Button w="100%" onClick={() => loadMoreMessages()}>
             Load more messages
           </Button>
         )}
-        {(isLoading || isValidating) && !hasMoreMessages && (
+        {isLoading && !hasMoreMessages && (
           <Group noWrap>
             <Loader size="sm" />
             <Text>Loading messages</Text>
           </Group>
         )}
-        {!isLoading && !isValidating && !hasMoreMessages && (
+        {!isLoading && !hasMoreMessages && (
           <Center>
             <Text color="dimmed">No more messages</Text>
           </Center>
@@ -177,10 +178,10 @@ export default function Page() {
 
 Page.getLayout = function getLayout(page: ReactElement) {
   return (
-    <MailLayout>
+    <MainLayout>
       <NextSeo title="EveMail" />
       {page}
-    </MailLayout>
+    </MainLayout>
   );
 };
 

@@ -6,19 +6,20 @@ import { showNotification } from "@mantine/notifications";
 import {
   deleteCharactersCharacterIdMailLabelsLabelId,
   useGetCharactersCharacterIdMailLabels,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
 export function LabelManagementTable() {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 0,
-    undefined,
+    { token: accessToken },
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },
@@ -76,6 +77,9 @@ export function LabelManagementTable() {
                           await deleteCharactersCharacterIdMailLabelsLabelId(
                             characterId,
                             label.label_id,
+                            {
+                              token: accessToken,
+                            },
                           );
                           showNotification({
                             title: "Label deleted",

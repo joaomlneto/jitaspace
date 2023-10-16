@@ -2,7 +2,7 @@ import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getUniverseFactions } from "@jitaspace/esi-client";
+import { getUniverseFactions } from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
@@ -23,8 +23,6 @@ export const scrapeEsiFactions = client.createFunction(
   { event: "scrape/esi/factions" },
   async () => {
     const stepStartTime = performance.now();
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
 
     const limit = pLimit(20);
 

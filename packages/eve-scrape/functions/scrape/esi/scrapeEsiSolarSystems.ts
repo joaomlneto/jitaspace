@@ -11,7 +11,7 @@ import {
   getUniverseStationsStationId,
   getUniverseSystems,
   getUniverseSystemsSystemId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
@@ -43,8 +43,6 @@ export const scrapeEsiSolarSystems = client.createFunction(
   },
   { event: "scrape/esi/solar-systems" },
   async ({ step, event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 100;
 
     // Get all Solar System IDs in ESI

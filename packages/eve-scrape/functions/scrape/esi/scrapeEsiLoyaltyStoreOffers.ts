@@ -5,7 +5,7 @@ import { prisma } from "@jitaspace/db";
 import {
   getCorporationsNpccorps,
   getLoyaltyStoresCorporationIdOffers,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
@@ -29,9 +29,6 @@ export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
   },
   { event: "scrape/esi/loyalty-store-offers" },
   async ({ event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
-
     let corporationIds: number[] =
       event.data.corporationIds ??
       (await getCorporationsNpccorps().then((res) => res.data));

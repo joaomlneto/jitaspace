@@ -8,28 +8,24 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import axios from "axios";
 import { NextSeo } from "next-seo";
 
 import {
   getUniverseCategories,
   getUniverseCategoriesCategoryId,
-  GetUniverseCategoriesCategoryId200,
-} from "@jitaspace/esi-client";
+  GetUniverseCategoriesCategoryIdQueryResponse,
+} from "@jitaspace/esi-client-kubb";
 import { CategoryAnchor } from "@jitaspace/ui";
 
-import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
-  categories: Record<number, GetUniverseCategoriesCategoryId200>;
+  categories: Record<number, GetUniverseCategoriesCategoryIdQueryResponse>;
 };
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    // FIXME: THIS SHOULD NOT BE REQUIRED
-    axios.defaults.baseURL = ESI_BASE_URL;
-
     const { data: categoryIds } = await getUniverseCategories();
 
     const categoryResponses = await Promise.all(
@@ -38,7 +34,10 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       ),
     );
 
-    const categories: Record<number, GetUniverseCategoriesCategoryId200> = {};
+    const categories: Record<
+      number,
+      GetUniverseCategoriesCategoryIdQueryResponse
+    > = {};
     categoryResponses.forEach(
       (category) => (categories[category.data.category_id] = category.data),
     );

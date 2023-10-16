@@ -1,4 +1,3 @@
-import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -23,13 +22,11 @@ export const scrapeEsiBloodlines = client.createFunction(
   { event: "scrape/esi/bloodlines" },
   async ({ step }) => {
     const stepStartTime = performance.now();
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
 
     const limit = pLimit(20);
 
     // Get all Bloodlines in ESI
-    const bloodlines = await getUniverseBloodlines();
+    const bloodlines = await getUniverseBloodlines().then((res) => res.data);
     const bloodlineIds = bloodlines.map((bloodline) => bloodline.bloodline_id);
 
     const bloodlineChanges = await updateTable({

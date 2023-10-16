@@ -11,7 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 
-import { useGetUniverseConstellationsConstellationId } from "@jitaspace/esi-client";
+import { useGetUniverseConstellationsConstellationId } from "@jitaspace/esi-client-kubb";
 import {
   ConstellationName,
   RegionName,
@@ -19,7 +19,8 @@ import {
   SolarSystemSecurityStatusBadge,
 } from "@jitaspace/ui";
 
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
+
 
 export default function Page() {
   const router = useRouter();
@@ -71,5 +72,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return <MainLayout>{page}</MainLayout>;
 };

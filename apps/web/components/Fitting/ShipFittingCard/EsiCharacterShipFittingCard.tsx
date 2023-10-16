@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { type CardProps } from "@mantine/core";
 
-import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { ShipFittingCard } from "./ShipFittingCard";
@@ -14,12 +14,14 @@ type EsiCharacterShipFittingCardProps = Omit<CardProps, "children"> & {
 
 export const EsiCharacterShipFittingCard = memo(
   ({ fittingId, ...otherProps }: EsiCharacterShipFittingCardProps) => {
-    const { characterId, isTokenValid, scopes } = useEsiClientContext();
+    const { characterId, isTokenValid, scopes, accessToken } =
+      useEsiClientContext();
     const { data } = useGetCharactersCharacterIdFittings(
       characterId ?? 0,
+      { token: accessToken },
       {},
       {
-        swr: {
+        query: {
           enabled:
             isTokenValid &&
             !!characterId &&

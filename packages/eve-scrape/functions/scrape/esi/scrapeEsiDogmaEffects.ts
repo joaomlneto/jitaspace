@@ -5,7 +5,7 @@ import { prisma } from "@jitaspace/db";
 import {
   getDogmaEffects,
   getDogmaEffectsEffectId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
@@ -30,8 +30,6 @@ export const scrapeEsiDogmaEffects = client.createFunction(
   },
   { event: "scrape/esi/dogma-effects" },
   async ({ step, event, logger }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 500;
 
     // Get all Dogma Effect IDs in ESI

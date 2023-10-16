@@ -5,7 +5,7 @@ import { prisma } from "@jitaspace/db";
 import {
   getUniverseRegions,
   getUniverseRegionsRegionId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
@@ -26,9 +26,6 @@ export const scrapeEsiRegions = client.createFunction(
   { event: "scrape/esi/regions" },
 
   async ({}) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
-
     // Get all Region IDs in ESI
     const regionIds = await getUniverseRegions().then((res) => res.data);
     regionIds.sort((a, b) => a - b);

@@ -5,7 +5,7 @@ import { Anchor, type AnchorProps } from "@mantine/core";
 import {
   useGetCharactersCharacterIdMailLists,
   useGetCharactersCharacterIdMailMailId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
@@ -17,13 +17,14 @@ export type EveMailSenderNameAnchorProps = AnchorProps &
   };
 export const EveMailSenderAnchor = memo(
   ({ messageId, children, ...props }: EveMailSenderNameAnchorProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
     const { data: mail } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      undefined,
+      { token: accessToken },
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid && !!messageId,
         },
       },
@@ -31,9 +32,10 @@ export const EveMailSenderAnchor = memo(
 
     const { data: mailingLists } = useGetCharactersCharacterIdMailLists(
       characterId ?? 1,
-      undefined,
+      { token: accessToken },
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid,
         },
       },

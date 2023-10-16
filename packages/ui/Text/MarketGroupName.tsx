@@ -1,7 +1,11 @@
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import { useGetMarketsGroupsMarketGroupId } from "@jitaspace/esi-client";
+import { useGetMarketsGroupsMarketGroupId } from "@jitaspace/esi-client-kubb";
+
+
+
+
 
 export type MarketGroupNameProps = TextProps & {
   marketGroupId?: number;
@@ -12,7 +16,8 @@ export const MarketGroupName = memo(
     const { data, isLoading } = useGetMarketsGroupsMarketGroupId(
       marketGroupId ?? 1,
       {},
-      { swr: { enabled: !!marketGroupId } },
+      {},
+      { query: { enabled: !!marketGroupId } },
     );
     if (isLoading)
       return (

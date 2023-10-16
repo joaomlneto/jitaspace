@@ -5,7 +5,7 @@ import { prisma } from "@jitaspace/db";
 import {
   getUniverseCategories,
   getUniverseCategoriesCategoryId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
@@ -26,8 +26,6 @@ export const scrapeEsiCategories = client.createFunction(
   { event: "scrape/esi/categories" },
   async ({}) => {
     const stepStartTime = performance.now();
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
 
     // Get all Category IDs in ESI
     const categoryIds = await getUniverseCategories().then((res) => res.data);

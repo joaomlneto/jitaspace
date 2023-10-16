@@ -2,11 +2,11 @@ import React from "react";
 import { Badge, Group, Stack, Text, Title } from "@mantine/core";
 
 import {
+  GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse,
   useGetCharactersCharacterIdCalendarEventId,
   useGetCharactersCharacterIdCalendarEventIdAttendees,
-  type GetCharactersCharacterIdCalendarEventIdAttendees200Item,
-  type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
-} from "@jitaspace/esi-client";
+  type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   CalendarEventAttendanceSelect,
@@ -34,8 +34,9 @@ export function CalendarEventDetailsPanel({
     characterId ?? 1,
     eventId ?? 1,
     {},
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid && eventId !== undefined,
       },
     },
@@ -45,8 +46,9 @@ export function CalendarEventDetailsPanel({
       characterId ?? 1,
       eventId ?? 1,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid && eventId !== undefined,
         },
       },
@@ -57,7 +59,7 @@ export function CalendarEventDetailsPanel({
   );
 
   const eventResponseColor: {
-    [key in GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse]: string;
+    [key in GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse]: string;
   } = {
     accepted: "green",
     tentative: "yellow",
@@ -67,8 +69,8 @@ export function CalendarEventDetailsPanel({
 
   const sortedAttendees = [...(attendees?.data ?? [])].sort(
     (
-      a: GetCharactersCharacterIdCalendarEventIdAttendees200Item,
-      b: GetCharactersCharacterIdCalendarEventIdAttendees200Item,
+      a: GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number],
+      b: GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number],
     ) => {
       if (!a.event_response) {
         return 1;

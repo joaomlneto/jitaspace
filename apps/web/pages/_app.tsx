@@ -36,8 +36,6 @@ import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
 import RouterTransition from "../components/RouterTransition";
 
-const queryClient = new QueryClient();
-
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;
   requiredScopes?: ESIScope[];
@@ -97,6 +95,8 @@ export default function App({
 }: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
   const requiredScopes = Component.requiredScopes;
+
+  const [queryClient] = React.useState(() => new QueryClient());
 
   // This hook only run once in browser after the component is rendered for the first time.
   // It has same effect as the old componentDidMount lifecycle callback.

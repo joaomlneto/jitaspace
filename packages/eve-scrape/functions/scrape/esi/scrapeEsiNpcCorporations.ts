@@ -6,7 +6,7 @@ import {
   getCharactersCharacterId,
   getCorporationsCorporationId,
   getCorporationsNpccorps,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
@@ -28,9 +28,6 @@ export const scrapeEsiNpcCorporations = client.createFunction(
   { event: "scrape/esi/npc-corporations" },
 
   async ({ step }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
-
     const stepStartTime = performance.now();
 
     // Get all NPC Corporation IDs in ESI

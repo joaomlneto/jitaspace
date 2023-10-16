@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
+import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client-kubb";
 import { useSolarSystemCostIndices } from "@jitaspace/esi-hooks";
 import { IndustryIcon } from "@jitaspace/eve-icons";
 import { useGetSolarSystemById } from "@jitaspace/sde-client";
@@ -40,7 +40,7 @@ import {
 } from "@jitaspace/ui";
 
 import { StatsGrid } from "~/components/UI";
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
@@ -262,5 +262,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return <MainLayout>{page}</MainLayout>;
 };

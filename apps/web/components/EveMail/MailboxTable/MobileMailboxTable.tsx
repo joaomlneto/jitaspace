@@ -3,7 +3,7 @@ import { Anchor, Group, Stack, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   EveMailSenderAnchor,
@@ -19,12 +19,13 @@ export const MobileMailboxTable = ({
   data,
   ...otherProps
 }: MailboxTableProps) => {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
-    undefined,
+    { token: accessToken },
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },

@@ -14,7 +14,7 @@ import { openModal } from "@mantine/modals";
 import { format } from "date-fns";
 import { NextSeo } from "next-seo";
 
-import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client-kubb";
 import { useCharacterCalendar } from "@jitaspace/esi-hooks";
 import { CalendarIcon } from "@jitaspace/eve-icons";
 
@@ -23,11 +23,11 @@ import EventsCalendar from "~/components/Calendar/EventsCalendar";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
-  const { events, isLoading, isValidating, hasMoreEvents, loadMoreEvents } =
+  const { events, isLoading, hasMoreEvents, loadMoreEvents } =
     useCharacterCalendar();
 
   const eventsPerDate: {
-    [date: string]: GetCharactersCharacterIdCalendar200Item[];
+    [date: string]: GetCharactersCharacterIdCalendarQueryResponse;
   } = {};
   if (events) {
     events.forEach((event) => {
@@ -91,17 +91,17 @@ export default function Page() {
         </Stack>
         <Container my="xl">
           {hasMoreEvents && (
-            <Button w="100%" onClick={loadMoreEvents}>
+            <Button w="100%" onClick={() => loadMoreEvents()}>
               Load more events
             </Button>
           )}
-          {(isLoading || isValidating) && !hasMoreEvents && (
+          {isLoading && !hasMoreEvents && (
             <Group noWrap>
               <Loader size="sm" />
               <Text>Loading events</Text>
             </Group>
           )}
-          {!isLoading && !isValidating && !hasMoreEvents && (
+          {!isLoading && !hasMoreEvents && (
             <Center>
               <Text color="dimmed">No more events</Text>
             </Center>

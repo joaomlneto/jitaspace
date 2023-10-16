@@ -1,9 +1,10 @@
 import React, { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetUniverseStargatesStargateId } from "@jitaspace/esi-client";
+import { useGetUniverseStargatesStargateId } from "@jitaspace/esi-client-kubb";
 
 import { TypeAvatar } from "./TypeAvatar";
+
 
 export type StargateAvatarProps = Omit<AvatarProps, "src"> & {
   stargateId?: string | number | null;
@@ -14,8 +15,9 @@ export const StargateAvatar = memo(
     const { data } = useGetUniverseStargatesStargateId(
       typeof stargateId === "string" ? parseInt(stargateId) : stargateId ?? 1,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled: !!stargateId,
         },
       },

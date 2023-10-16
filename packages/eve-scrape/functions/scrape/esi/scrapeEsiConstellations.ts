@@ -5,7 +5,7 @@ import { prisma } from "@jitaspace/db";
 import {
   getUniverseConstellations,
   getUniverseConstellationsConstellationId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
@@ -26,8 +26,6 @@ export const scrapeEsiConstellations = client.createFunction(
   { event: "scrape/esi/constellations" },
   async ({}) => {
     const stepStartTime = performance.now();
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
 
     // Get all Constellation IDs in ESI
     const constellationIds = await getUniverseConstellations().then(

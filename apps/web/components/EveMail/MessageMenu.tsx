@@ -14,7 +14,7 @@ import {
   deleteCharactersCharacterIdMailMailId,
   putCharactersCharacterIdMailMailId,
   useGetCharactersCharacterIdMailLabels,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
@@ -45,12 +45,13 @@ export type MessageMenuProps = {
 };
 
 export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
   const { data: labels } = useGetCharactersCharacterIdMailLabels(
     characterId ?? 1,
-    undefined,
+    { token: accessToken },
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid,
       },
     },
@@ -98,6 +99,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                             [...(mail.labels ?? []), label.label_id!],
                     },
+                    { token: accessToken },
                   );
 
                   // optimistic update
@@ -164,6 +166,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                 {
                   read: !mail.is_read,
                 },
+                { token: accessToken },
               );
               if (data) {
                 data.find((item) => item.mail_id === mail.mail_id)!.is_read =
@@ -217,6 +220,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                   await deleteCharactersCharacterIdMailMailId(
                     characterId,
                     mail.mail_id,
+                    { token: accessToken },
                   );
                   if (data) {
                     data.find(

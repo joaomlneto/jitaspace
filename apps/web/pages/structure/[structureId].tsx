@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useGetUniverseStructuresStructureId } from "@jitaspace/esi-client";
+import { useGetUniverseStructuresStructureId } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   EveEntityName,
@@ -15,7 +15,7 @@ import {
   TypeName,
 } from "@jitaspace/ui";
 
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
@@ -24,8 +24,9 @@ export default function Page() {
   const { data: structure } = useGetUniverseStructuresStructureId(
     parseInt(structureId),
     {},
+    {},
     {
-      swr: {
+      query: {
         enabled:
           isTokenValid &&
           !!structureId &&
@@ -78,7 +79,7 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return <MainLayout>{page}</MainLayout>;
 };
 
 Page.requiredScopes = ["esi-universe.read_structures.v1"];

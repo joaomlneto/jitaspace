@@ -2,17 +2,18 @@ import { useEffect, useState } from "react";
 
 import {
   getMarketsRegionIdOrders,
-  GetMarketsRegionIdOrders200Item,
+  GetMarketsRegionIdOrdersQueryResponse,
   useGetUniverseRegions,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 export function useTypeMarketOrders(typeId?: number) {
   const [regionOrders, setRegionOrders] = useState<
-    Record<number, GetMarketsRegionIdOrders200Item[]>
+    Record<number, GetMarketsRegionIdOrdersQueryResponse>
   >([]);
   const { data: regions } = useGetUniverseRegions(
     {},
-    { swr: { enabled: typeId !== undefined } },
+    {},
+    { query: { enabled: typeId !== undefined } },
   );
 
   useEffect(() => {
@@ -26,13 +27,15 @@ export function useTypeMarketOrders(typeId?: number) {
       const firstPage = await getMarketsRegionIdOrders(regionId, {
         page: 1,
         type_id: typeId,
+        order_type: "all",
       });
       const orders = firstPage.data;
-      const numPages = firstPage.headers["x-pages"];
+      const numPages = firstPage.headers?.["x-pages"];
       for (let page = 2; page <= numPages; page++) {
         const pageResults = await getMarketsRegionIdOrders(regionId, {
           page,
           type_id: typeId,
+          order_type: "all",
         });
         orders.push(...pageResults.data);
       }

@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
-import { type GetCharactersCharacterIdCalendar200Item } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client-kubb";
 import { WarningIcon } from "@jitaspace/eve-icons";
 import {
   CalendarEventAttendeesAvatarGroup,
@@ -25,7 +25,7 @@ import {
 } from "@jitaspace/ui";
 
 type EventListProps = TableProps & {
-  events: GetCharactersCharacterIdCalendar200Item[];
+  events: GetCharactersCharacterIdCalendarQueryResponse;
 };
 
 export function MobileCalendarEventList({

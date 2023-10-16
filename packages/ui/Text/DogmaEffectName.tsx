@@ -1,7 +1,11 @@
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import { useGetDogmaEffectsEffectId } from "@jitaspace/esi-client";
+import { useGetDogmaEffectsEffectId } from "@jitaspace/esi-client-kubb";
+
+
+
+
 
 export type DogmaEffectNameProps = TextProps & {
   effectId?: number;
@@ -12,7 +16,8 @@ export const DogmaEffectName = memo(
     const { data, isLoading } = useGetDogmaEffectsEffectId(
       effectId ?? 1,
       {},
-      { swr: { enabled: !!effectId } },
+      {},
+      { query: { enabled: !!effectId } },
     );
     if (isLoading)
       return (

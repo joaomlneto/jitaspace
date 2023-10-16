@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from "react";
 import { Anchor, Group, Table, Text, Tooltip } from "@mantine/core";
 
-import { useGetUniverseSystemKills } from "@jitaspace/esi-client";
+import { useGetUniverseSystemKills } from "@jitaspace/esi-client-kubb";
 import { InfoIcon } from "@jitaspace/eve-icons";
 import {
   SolarSystemAnchor,
@@ -11,6 +11,7 @@ import {
 } from "@jitaspace/ui";
 
 import { ZkillboardRecentSystemKills } from "~/components/Travel/ZkillboardRecentSystemKills";
+
 
 type RouteTableProps = {
   route: {
@@ -38,7 +39,7 @@ export const RouteTable = memo(({ route }: RouteTableProps) => {
   }, [systemKillsData]);
 
   const killStatisticsDate: Date | undefined = useMemo(() => {
-    const headerValue = systemKillsData?.headers["last-modified"];
+    const headerValue = systemKillsData?.headers?.["last-modified"];
     if (headerValue) return new Date(headerValue);
     return undefined;
   }, [systemKillsData]);

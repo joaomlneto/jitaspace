@@ -11,8 +11,8 @@ import axios from "axios";
 
 import { type ESIScope } from "@jitaspace/esi-client";
 
-import { ESI_BASE_URL } from "../config";
 import { getEveSsoAccessTokenPayload } from "../utils";
+
 
 type EsiClientContext = {
   loading: boolean;
@@ -71,11 +71,6 @@ export const EsiClientContextProvider = memo(
     );
 
     // FIXME: MAKE TOKEN_VALID RETURN FALSE WHEN THE TOKEN EXPIRES
-
-    // Set the URL for the API server
-    // https://orval.dev/guides/set-base-url
-    // FIXME: THIS SHOULD BE MOVED INTO AN INSTANCE OF AXIOS, NOT THE GLOBAL ONE!
-    axios.defaults.baseURL = ESI_BASE_URL;
 
     useEffect(() => {
       if (auth.accessToken) {

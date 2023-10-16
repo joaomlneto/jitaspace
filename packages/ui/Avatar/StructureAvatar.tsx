@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetUniverseStructuresStructureId } from "@jitaspace/esi-client";
+import { useGetUniverseStructuresStructureId } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { TypeAvatar } from "./TypeAvatar";
@@ -12,14 +12,15 @@ export type StructureAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const StructureAvatar = memo(
   ({ structureId, ...otherProps }: StructureAvatarProps) => {
-    const { scopes, isTokenValid } = useEsiClientContext();
+    const { scopes, isTokenValid, accessToken } = useEsiClientContext();
     const { data } = useGetUniverseStructuresStructureId(
       typeof structureId === "string"
         ? parseInt(structureId)
         : structureId ?? 1,
+      { token: accessToken },
       {},
       {
-        swr: {
+        query: {
           enabled:
             isTokenValid &&
             !!structureId &&

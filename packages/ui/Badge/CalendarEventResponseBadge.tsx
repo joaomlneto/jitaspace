@@ -3,8 +3,8 @@ import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
 
 import {
   useGetCharactersCharacterIdCalendarEventId,
-  type GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse,
-} from "@jitaspace/esi-client";
+  type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 export type CalendarEventResponseBadgeProps = BadgeProps & {
@@ -12,7 +12,7 @@ export type CalendarEventResponseBadgeProps = BadgeProps & {
 };
 
 const eventResponseColor: {
-  [key in GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse]: string;
+  [key in GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse]: string;
 } = {
   accepted: "green",
   tentative: "yellow",
@@ -22,15 +22,17 @@ const eventResponseColor: {
 
 export const CalendarEventResponseBadge = memo(
   ({ eventId, ...otherProps }: CalendarEventResponseBadgeProps) => {
-    const { characterId, isTokenValid, scopes } = useEsiClientContext();
+    const { characterId, isTokenValid, scopes, accessToken } =
+      useEsiClientContext();
 
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        undefined,
+        { token: accessToken },
+        {},
         {
-          swr: {
+          query: {
             enabled:
               isTokenValid &&
               !!eventId &&
@@ -40,7 +42,7 @@ export const CalendarEventResponseBadge = memo(
       );
 
     const response = event?.data.response as
-      | GetCharactersCharacterIdCalendarEventIdAttendees200ItemEventResponse
+      | GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse
       | undefined;
 
     if (!response || isLoading) {

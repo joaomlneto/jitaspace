@@ -3,7 +3,7 @@ import { ActionIcon, Tooltip } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { IconRocket } from "@tabler/icons-react";
 
-import { postUiAutopilotWaypoint } from "@jitaspace/esi-client";
+import { postUiAutopilotWaypoint } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 type SetAutopilotDestinationActionIconProps = {
@@ -12,7 +12,7 @@ type SetAutopilotDestinationActionIconProps = {
 
 export const SetAutopilotDestinationActionIcon = memo(
   ({ destinationId }: SetAutopilotDestinationActionIconProps) => {
-    const { isTokenValid, scopes } = useEsiClientContext();
+    const { isTokenValid, scopes, accessToken } = useEsiClientContext();
 
     const canSetDestination =
       !!destinationId &&
@@ -35,6 +35,7 @@ export const SetAutopilotDestinationActionIcon = memo(
                   typeof destinationId === "string"
                     ? parseInt(destinationId)
                     : destinationId,
+                token: accessToken,
               }).then(() => {
                 showNotification({
                   message: "Autopilot destination set.",

@@ -3,7 +3,7 @@ import { ActionIcon, Tooltip } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import { IconAppWindowFilled } from "@tabler/icons-react";
 
-import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
+import { postUiOpenwindowInformation } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 type OpenInformationWindowActionIconProps = {
@@ -12,7 +12,7 @@ type OpenInformationWindowActionIconProps = {
 
 export const OpenInformationWindowActionIcon = memo(
   ({ entityId }: OpenInformationWindowActionIconProps) => {
-    const { isTokenValid, scopes } = useEsiClientContext();
+    const { isTokenValid, scopes, accessToken } = useEsiClientContext();
 
     const canSetDestination =
       !!entityId && isTokenValid && scopes.includes("esi-ui.open_window.v1");
@@ -29,6 +29,7 @@ export const OpenInformationWindowActionIcon = memo(
               void postUiOpenwindowInformation({
                 target_id:
                   typeof entityId === "string" ? parseInt(entityId) : entityId,
+                token: accessToken,
               }).then(() => {
                 showNotification({
                   message: "Information window opened in EVE client.",

@@ -2,7 +2,7 @@ import React, { type ReactElement } from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
-import { useGetCharactersCharacterIdWalletJournal } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdWalletJournal } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { WalletIcon } from "@jitaspace/eve-icons";
 
@@ -10,12 +10,14 @@ import { WalletTable } from "~/components/Wallet";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
-  const { characterId, scopes, isTokenValid } = useEsiClientContext();
+  const { characterId, scopes, isTokenValid, accessToken } =
+    useEsiClientContext();
   const { data } = useGetCharactersCharacterIdWalletJournal(
     characterId ?? 0,
+    { token: accessToken },
     {},
     {
-      swr: {
+      query: {
         enabled:
           isTokenValid &&
           characterId !== undefined &&

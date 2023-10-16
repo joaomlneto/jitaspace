@@ -4,7 +4,7 @@ import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 import {
   useGetCharactersCharacterIdMailLists,
   useGetCharactersCharacterIdMailMailId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { GroupListIcon } from "@jitaspace/eve-icons";
 import { getAvatarSize } from "@jitaspace/utils";
@@ -18,14 +18,15 @@ export type EveMailSenderAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const EveMailSenderAvatar = memo(
   ({ messageId, ...otherProps }: EveMailSenderAvatarProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      undefined,
+      { token: accessToken },
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid && !!messageId,
         },
       },
@@ -34,9 +35,10 @@ export const EveMailSenderAvatar = memo(
     const { data: mailingLists, isLoading: mailingListsLoading } =
       useGetCharactersCharacterIdMailLists(
         characterId ?? 1,
+        { token: accessToken },
         {},
         {
-          swr: {
+          query: {
             enabled: isTokenValid,
           },
         },

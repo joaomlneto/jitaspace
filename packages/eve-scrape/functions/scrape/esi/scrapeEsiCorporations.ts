@@ -3,7 +3,7 @@ import { NonRetriableError } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getCorporationsCorporationId } from "@jitaspace/esi-client";
+import { getCorporationsCorporationId } from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
@@ -30,9 +30,6 @@ export const scrapeEsiCorporations = client.createFunction(
   },
   { event: "scrape/esi/corporations" },
   async ({ step, event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
-
     const batchSize = event.data.batchSize ?? 1000;
     const corporationIds: number[] = event.data.corporationIds;
 

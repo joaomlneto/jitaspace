@@ -3,7 +3,7 @@ import { NonRetriableError } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getUniverseMoonsMoonId } from "@jitaspace/esi-client";
+import { getUniverseMoonsMoonId } from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
@@ -30,8 +30,6 @@ export const scrapeEsiMoons = client.createFunction(
   },
   { event: "scrape/esi/moons" },
   async ({ step, event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 1000;
     const moonIds = event.data.moons;
 

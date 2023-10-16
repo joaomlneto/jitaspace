@@ -1,7 +1,11 @@
 import { memo } from "react";
 import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
 
-import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
+import { useGetCorporationsCorporationId } from "@jitaspace/esi-client-kubb";
+
+
+
+
 
 type CorporationTickerBadgeProps = Omit<BadgeProps, "children"> & {
   corporationId?: number | string;
@@ -14,7 +18,8 @@ export const CorporationTickerBadge = memo(
         ? corporationId
         : Number(corporationId) ?? 0,
       {},
-      { swr: { enabled: corporationId !== undefined } },
+      {},
+      { query: { enabled: corporationId !== undefined } },
     );
 
     if (!data) {

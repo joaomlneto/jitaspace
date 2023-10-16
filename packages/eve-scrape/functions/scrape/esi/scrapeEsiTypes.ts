@@ -1,11 +1,10 @@
-import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
 import {
   getUniverseTypes,
   getUniverseTypesTypeId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
@@ -31,14 +30,12 @@ export const scrapeEsiTypes = client.createFunction(
   },
   { event: "scrape/esi/types" },
   async ({ step, event, logger }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 500;
 
     // Get all Type IDs in ESI
     const batches = await step.run("Fetch Type IDs", async () => {
       const firstPage = await getUniverseTypes();
-      const numPages = Number(firstPage.headers["x-pages"]);
+      const numPages = Number(firstPage.headers?.["x-pages"]);
       let typeIds = firstPage.data;
       for (let page = 2; page <= numPages; page++) {
         typeIds.push(

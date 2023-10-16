@@ -3,7 +3,7 @@ import { type LinkProps } from "next/link";
 import { Anchor, type AnchorProps } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 
-import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
+import { postUiOpenwindowInformation } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 export type OpenInformationWindowAnchorProps = AnchorProps &
@@ -14,7 +14,7 @@ export type OpenInformationWindowAnchorProps = AnchorProps &
 
 export const OpenInformationWindowAnchor = memo(
   ({ entityId, children, ...props }: OpenInformationWindowAnchorProps) => {
-    const { isTokenValid, scopes } = useEsiClientContext();
+    const { isTokenValid, scopes, accessToken } = useEsiClientContext();
     const canOpenWindow =
       !!entityId && isTokenValid && scopes.includes("esi-ui.open_window.v1");
     return (
@@ -28,6 +28,7 @@ export const OpenInformationWindowAnchor = memo(
             void postUiOpenwindowInformation({
               target_id:
                 typeof entityId === "string" ? parseInt(entityId) : entityId,
+              token: accessToken,
             }).then(() => {
               showNotification({
                 message: "Information window opened in EVE client.",

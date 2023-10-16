@@ -6,7 +6,7 @@ import {
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { GetCharactersCharacterIdWalletJournal200Item } from "@jitaspace/esi-client";
+import { GetCharactersCharacterIdWalletJournalQueryResponse } from "@jitaspace/esi-client-kubb";
 import {
   EveEntityAnchor,
   EveEntityAvatar,
@@ -15,13 +15,17 @@ import {
   ISKAmount,
 } from "@jitaspace/ui";
 
+
+
+
+
 type WalletTableProps = {
-  entries: GetCharactersCharacterIdWalletJournal200Item[];
+  entries: GetCharactersCharacterIdWalletJournalQueryResponse;
 };
 
 export const WalletTable = memo(({ entries }: WalletTableProps) => {
   const columns = useMemo<
-    MRT_ColumnDef<GetCharactersCharacterIdWalletJournal200Item>[]
+    MRT_ColumnDef<GetCharactersCharacterIdWalletJournalQueryResponse[number]>[]
   >(
     () => [
       {

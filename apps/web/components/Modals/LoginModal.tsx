@@ -23,6 +23,7 @@ import {
 } from "~/components/ScopeGuard";
 import { extraJitaFeatures, jitaApps } from "~/config/apps";
 
+
 const allAppScopes = [
   ...Object.values(jitaApps).flatMap((app) =>
     [...(app.scopes.required ?? []), ...(app.scopes.optional ?? [])].flatMap(

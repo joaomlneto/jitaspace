@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import { useGetUniverseRaces } from "@jitaspace/esi-client";
+import { useGetUniverseRaces } from "@jitaspace/esi-client-kubb";
 
 export type RaceNameProps = TextProps & {
   raceId?: string | number;

@@ -6,6 +6,7 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { RequestPermissionsBanner } from "./RequestPermissionsBanner";
 
+
 export type ScopeGuardProps = {
   requiredScopes?: ESIScope[];
   loadingScopesComponent?: ReactElement;

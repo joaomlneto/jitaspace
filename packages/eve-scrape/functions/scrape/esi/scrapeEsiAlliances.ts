@@ -2,7 +2,10 @@ import axios from "axios";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getAlliances, getAlliancesAllianceId } from "@jitaspace/esi-client";
+import {
+  getAlliances,
+  getAlliancesAllianceId,
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
@@ -28,8 +31,6 @@ export const scrapeEsiAlliances = client.createFunction(
   },
   { event: "scrape/esi/alliances" },
   async ({ step, event }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 1000;
 
     // Get all Alliance IDs in ESI

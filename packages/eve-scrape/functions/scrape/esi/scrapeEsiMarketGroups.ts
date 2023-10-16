@@ -5,7 +5,7 @@ import { prisma } from "@jitaspace/db";
 import {
   getMarketsGroups,
   getMarketsGroupsMarketGroupId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
@@ -29,8 +29,6 @@ export const scrapeEsiMarketGroups = client.createFunction(
   },
   { event: "scrape/esi/market-groups" },
   async ({ step, event, logger }) => {
-    // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
     const batchSize = event.data.batchSize ?? 500;
 
     // Get all Group IDs in ESI

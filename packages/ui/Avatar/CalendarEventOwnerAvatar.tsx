@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 
-import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import {
@@ -17,15 +17,16 @@ export type CalendarEventOwnerAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const CalendarEventOwnerAvatar = memo(
   ({ eventId, ...otherProps }: CalendarEventOwnerAvatarProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        undefined,
+        { token: accessToken },
+        {},
         {
-          swr: {
+          query: {
             enabled: isTokenValid && !!eventId,
           },
         },

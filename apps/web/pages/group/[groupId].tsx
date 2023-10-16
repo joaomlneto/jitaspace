@@ -10,7 +10,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import axios from "axios";
 import { NextSeo } from "next-seo";
 
 import {
@@ -18,12 +17,12 @@ import {
   getUniverseGroupsGroupId,
   getUniverseTypesTypeId,
   useGetUniverseGroupsGroupId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
-import { ESI_BASE_URL } from "~/config/constants";
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   name?: string;
@@ -31,9 +30,6 @@ type PageProps = {
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // FIXME: THIS SHOULD NOT BE NEEDED
-  axios.defaults.baseURL = ESI_BASE_URL;
-
   // When this is true (in preview environments) don't prerender any static pages
   // (faster builds, but slower initial page load)
   if (env.SKIP_BUILD_STATIC_GENERATION === "true") {
@@ -46,7 +42,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   // Get list of groupIds from ESI
   const firstPage = await getUniverseGroups();
   let groupIds = [...firstPage.data];
-  const numPages = firstPage.headers["x-pages"];
+  const numPages = firstPage.headers?.["x-pages"];
   for (let page = 2; page <= numPages; page++) {
     const result = await getUniverseGroups({ page });
     groupIds = [...groupIds, ...result.data];
@@ -68,13 +64,12 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    axios.defaults.baseURL = ESI_BASE_URL;
     const groupId = Number(context.params?.groupId as string);
 
     // check if the requested group exists
     const firstPage = await getUniverseGroups();
     let groupIds = [...firstPage.data];
-    const numPages = firstPage.headers["x-pages"];
+    const numPages = firstPage.headers?.["x-pages"];
     for (let page = 2; page <= numPages; page++) {
       const result = await getUniverseGroups({ page });
       groupIds = [...groupIds, ...result.data];

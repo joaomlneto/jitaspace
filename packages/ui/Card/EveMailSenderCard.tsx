@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
-import { useGetCharactersCharacterIdMailMailId } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdMailMailId } from "@jitaspace/esi-client-kubb";
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { EveEntityCard } from "./EveEntityCard";
@@ -12,14 +12,15 @@ export type EveMailSenderCardProps = {
 
 export const EveMailSenderCard = memo(
   ({ messageId }: EveMailSenderCardProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      undefined,
+      { token: accessToken },
+      {},
       {
-        swr: {
+        query: {
           enabled: isTokenValid && !!messageId,
         },
       },

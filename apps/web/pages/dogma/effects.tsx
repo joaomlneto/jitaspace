@@ -31,9 +31,6 @@ type PageProps = {
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    // FIXME: THIS SHOULD NOT BE REQUIRED
-    axios.defaults.baseURL = ESI_BASE_URL;
-
     const map: Record<
       number,
       {

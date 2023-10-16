@@ -19,6 +19,7 @@ import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import { ScopesTable } from "./ScopesTable";
 
+
 const useStyles = createStyles((theme) => ({
   root: {
     paddingTop: 80,

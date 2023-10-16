@@ -1,8 +1,8 @@
 import {
+  GetCharactersCharacterIdSearchQueryParamsLanguage,
   useGetCharactersCharacterIdSearch,
-  type GetCharactersCharacterIdSearchCategoriesItem,
-  type LanguageParameter,
-} from "@jitaspace/esi-client";
+  type GetCharactersCharacterIdSearchQueryParamsCategories,
+} from "@jitaspace/esi-client-kubb";
 
 import { useEsiClientContext } from "./useEsiClientContext";
 
@@ -13,11 +13,11 @@ export function useEsiSearch({
   language,
 }: {
   query: string;
-  categories: GetCharactersCharacterIdSearchCategoriesItem[];
+  categories: GetCharactersCharacterIdSearchQueryParamsCategories[];
   strict?: boolean;
-  language?: LanguageParameter;
+  language?: GetCharactersCharacterIdSearchQueryParamsLanguage;
 }) {
-  const { isTokenValid, characterId } = useEsiClientContext();
+  const { isTokenValid, characterId, accessToken } = useEsiClientContext();
   return useGetCharactersCharacterIdSearch(
     characterId ?? 1,
     {
@@ -26,9 +26,11 @@ export function useEsiSearch({
       search: query,
       strict,
       language,
+      token: accessToken,
     },
+    {},
     {
-      swr: {
+      query: {
         enabled: isTokenValid && query.length >= 3,
       },
     },

@@ -1,11 +1,12 @@
 import React, { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetWarsWarId } from "@jitaspace/esi-client";
+import { useGetWarsWarId } from "@jitaspace/esi-client-kubb";
 
 import { AllianceAvatar } from "./AllianceAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
 import { EveEntityAvatar } from "./EveEntityAvatar";
+
 
 export type WarAggressorAvatarProps = Omit<AvatarProps, "src"> & {
   warId?: number;
@@ -16,8 +17,9 @@ export const WarAggressorAvatar = memo(
     const { data } = useGetWarsWarId(
       typeof warId === "string" ? parseInt(warId) : warId ?? 0,
       {},
+      {},
       {
-        swr: {
+        query: {
           enabled: warId !== undefined,
         },
       },

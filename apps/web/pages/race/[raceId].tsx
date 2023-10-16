@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useGetUniverseRaces } from "@jitaspace/esi-client";
+import { useGetUniverseRaces } from "@jitaspace/esi-client-kubb";
 import {
   FactionAvatar,
   FactionName,
@@ -11,7 +11,8 @@ import {
   RaceName,
 } from "@jitaspace/ui";
 
-import { MailLayout } from "~/layouts";
+import { MainLayout } from "~/layouts";
+
 
 export default function Page() {
   const router = useRouter();
@@ -43,5 +44,5 @@ export default function Page() {
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MailLayout>{page}</MailLayout>;
+  return <MainLayout>{page}</MainLayout>;
 };

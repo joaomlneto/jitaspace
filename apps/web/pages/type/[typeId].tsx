@@ -12,14 +12,14 @@ import {
   Title,
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
-import axios, { HttpStatusCode } from "axios";
+import { HttpStatusCode } from "axios";
 import { NextSeo } from "next-seo";
 
 import {
   getUniverseTypes,
   getUniverseTypesTypeId,
   useGetUniverseTypesTypeId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 import { useMarketPrices } from "@jitaspace/esi-hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -30,8 +30,8 @@ import {
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
-import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   ogImageUrl?: string;
@@ -49,13 +49,12 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    axios.defaults.baseURL = ESI_BASE_URL;
     const typeId = Number(context.params?.typeId as string);
 
     // check if the requested type exists
     const firstPage = await getUniverseTypes();
     let typeIds = [...firstPage.data];
-    const numPages = firstPage.headers["x-pages"];
+    const numPages = firstPage.headers?.["x-pages"];
     for (let page = 2; page <= numPages; page++) {
       const result = await getUniverseTypes({ page });
       typeIds = [...typeIds, ...result.data];

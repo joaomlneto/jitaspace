@@ -10,10 +10,11 @@ import {
 import {
   useGetUniverseGroupsGroupId,
   useGetUniverseTypesTypeId,
-} from "@jitaspace/esi-client";
+} from "@jitaspace/esi-client-kubb";
 
 import { CategoryAnchor, GroupAnchor, TypeAnchor } from "../Anchor";
 import { CategoryName, GroupName, TypeName } from "../Text";
+
 
 export type TypeInventoryBreadcrumbsProps = Omit<
   BreadcrumbsProps,
@@ -32,15 +33,17 @@ export const TypeInventoryBreadcrumbs = memo(
     const { data: type } = useGetUniverseTypesTypeId(
       typeof typeId === "string" ? parseInt(typeId) : typeId ?? 0,
       {},
+      {},
       {
-        swr: { enabled: typeId !== undefined },
+        query: { enabled: typeId !== undefined },
       },
     );
     const { data: group } = useGetUniverseGroupsGroupId(
       type?.data.group_id ?? 0,
       {},
+      {},
       {
-        swr: { enabled: type?.data.group_id !== undefined },
+        query: { enabled: type?.data.group_id !== undefined },
       },
     );
     return (
