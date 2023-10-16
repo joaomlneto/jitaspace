@@ -1,10 +1,21 @@
+import { useMemo } from "react";
+import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
+
+import {
+  GetCharactersCharacterIdAssetsQueryResponse,
+  getCorporationsCorporationIdAssets,
+  GetCorporationsCorporationIdAssetsQueryResponse,
+  useGetCharactersCharacterId,
+  useGetCharactersCharacterIdRoles,
+  useGetCorporationsCorporationIdAssetsInfinite,
+} from "@jitaspace/esi-client-kubb";
+
 import { useEsiClientContext } from "./useEsiClientContext";
 
 export function useCorporationAssets() {
   const { isTokenValid, characterId, scopes, accessToken } =
     useEsiClientContext();
 
-  /*
   const { data: characterData } = useGetCharactersCharacterId(
     characterId ?? 0,
     {},
@@ -15,7 +26,7 @@ export function useCorporationAssets() {
   const { data: characterCorporationRolesData } =
     useGetCharactersCharacterIdRoles(
       characterId ?? 0,
-      {},
+      { token: accessToken },
       {},
       {
         query: {
@@ -40,51 +51,37 @@ export function useCorporationAssets() {
     [characterData?.data.corporation_id],
   );
 
-  const { data, error, isLoading, isValidating, size, setSize, mutate } =
-    useSWRInfinite<GetCorporationsCorporationIdAssetsQueryResponse[], Error>(
-      function getKey(pageIndex) {
-        if (
-          !corporationId ||
-          !isTokenValid ||
-          !scopes.includes("esi-assets.read_corporation_assets.v1") ||
-          !scopes.includes("esi-characters.read_corporation_roles.v1") ||
-          !isDirector
-        ) {
-          throw new Error(
-            "Insufficient permissions to read corporation assets",
-          );
-        }
-
-        return () => {
-          const [endpointUrl] =
-            getCorporationsCorporationIdAssetsQueryKey(corporationId);
-          const queryParams = new URLSearchParams();
-          queryParams.append("page", `${pageIndex + 1}`);
-          return `${ESI_BASE_URL}${endpointUrl}?${queryParams.toString()}`;
-        };
-      },
-      (url: string) =>
-        fetch(url, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
+  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
+    useGetCorporationsCorporationIdAssetsInfinite(
+      corporationId ?? 0,
+      { token: accessToken },
+      {},
+      {
+        query: {
+          enabled:
+            corporationId !== undefined &&
+            isTokenValid &&
+            scopes.includes("esi-assets.read_corporation_assets.v1") &&
+            scopes.includes("esi-characters.read_corporation_roles.v1") &&
+            isDirector,
+          queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
+            getCorporationsCorporationIdAssets(corporationId ?? 0, {
+              page: pageParam,
+              token: accessToken,
+            }),
+          getNextPageParam: (lastPage, pages) => {
+            const numPages: number | undefined = lastPage.headers?.["x-pages"];
+            const nextPage = pages.length + 1;
+            if (nextPage > (numPages ?? 0)) return undefined;
+            return nextPage;
           },
-        }).then((r) => {
-          const numPagesString = r.headers.get("x-pages");
-          const numPages =
-            numPagesString !== null ? parseInt(numPagesString) : undefined;
-          if (numPages && numPages !== size) {
-            //setNumPages(numPages);
-            void setSize(numPages);
-          }
-          return r.json();
-        }),
-      { revalidateAll: true },
+        },
+      },
     );
 
   const errorMessage = useMemo(() => {
     if (error) {
-      return error.message;
+      return "Error fetching data";
     }
     if (!corporationId) {
       return "Unable to get corporation ID";
@@ -105,9 +102,11 @@ export function useCorporationAssets() {
 
   const assets: Record<
     string,
-    GetCorporationsCorporationIdAssetsQueryResponse
+    GetCharactersCharacterIdAssetsQueryResponse[number]
   > = useMemo(() => {
-    const assetsList = data?.flat() ?? [];
+    const assetsList = (data?.pages.flat() ?? []).flatMap(
+      (entry) => entry.data,
+    );
     const assets = {};
 
     assetsList.forEach((asset) => {
@@ -125,7 +124,7 @@ export function useCorporationAssets() {
       "location_id" | "location_type"
     > & { items: number[] }
   > = useMemo(() => {
-    const locationsList = data?.flat() ?? [];
+    const locationsList = (data?.pages.flat() ?? []).flatMap((res) => res.data);
     const locations: Record<
       string,
       Pick<
@@ -155,17 +154,6 @@ export function useCorporationAssets() {
     error,
     errorMessage,
     isLoading,
-    isValidating,
-    mutate,
-  };*/
-
-  return {
-    assets: [],
-    locations: [],
-    error: undefined,
-    errorMessage: "",
-    isLoading: true,
-    isValidating: false,
-    mutate: () => {},
+    mutate: refetch,
   };
 }
