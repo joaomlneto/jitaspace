@@ -1,5 +1,5 @@
 import React, { memo } from "react";
-import { Badge, Group, Table, Text } from "@mantine/core";
+import { Badge, Group, Table } from "@mantine/core";
 
 import { GetCharactersCharacterIdAssetsQueryResponse } from "@jitaspace/esi-client-kubb";
 import {
@@ -10,10 +10,6 @@ import {
   TypeAvatar,
   TypeName,
 } from "@jitaspace/ui";
-
-
-
-
 
 type AssetsTableProps = {
   assets: (GetCharactersCharacterIdAssetsQueryResponse[number] & {
@@ -27,7 +23,6 @@ export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
     <Table highlightOnHover>
       <thead>
         <tr>
-          <th>Item ID</th>
           <th>Qty</th>
           <th>Type</th>
           <th>Price</th>
@@ -37,11 +32,6 @@ export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
       <tbody>
         {assets.map((asset) => (
           <tr key={asset.item_id}>
-            <td>
-              <Text size="xs" color="dimmed">
-                {asset.item_id}
-              </Text>
-            </td>
             <td align="right">{asset.quantity}</td>
             <td>
               <Group spacing="xs" position="apart">
