@@ -1,5 +1,5 @@
 ---
-"@jitaspace/esi-client": patch
+"@jitaspace/esi-metadata": patch
 ---
 
 package with tsup

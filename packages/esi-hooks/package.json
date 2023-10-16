@@ -19,7 +19,7 @@
     "axios": "^1.5.1"
   },
   "devDependencies": {
-    "@jitaspace/esi-client": "*",
+    "@jitaspace/esi-metadata": "*",
     "@jitaspace/esi-client-kubb": "*",
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",

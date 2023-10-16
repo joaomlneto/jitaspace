@@ -9,10 +9,9 @@ import {
 } from "react";
 import axios from "axios";
 
-import { type ESIScope } from "@jitaspace/esi-client";
+import { type ESIScope } from "@jitaspace/esi-metadata";
 
 import { getEveSsoAccessTokenPayload } from "../utils";
-
 
 type EsiClientContext = {
   loading: boolean;

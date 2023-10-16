@@ -1,6 +1,6 @@
 {
-  "name": "@jitaspace/esi-client",
-  "description": "ESI Client for JitaSpace",
+  "name": "@jitaspace/esi-metadata",
+  "description": "ESI Metadata",
   "version": "0.2.2",
   "type": "module",
   "main": "./src/index.ts",
@@ -14,8 +14,6 @@
     "prepublish": "pnpm build"
   },
   "dependencies": {
-    "@react-hook/cache": "^1.1.1",
-    "axios": "^1.5.1"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "*",

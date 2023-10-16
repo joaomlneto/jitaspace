@@ -47,9 +47,6 @@ importers:
       '@jitaspace/db':
         specifier: '*'
         version: link:../../packages/db
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../../packages/esi-client
       '@jitaspace/esi-client-kubb':
         specifier: '*'
         version: link:../../packages/esi-client-kubb
@@ -59,6 +56,9 @@ importers:
       '@jitaspace/esi-meta-client':
         specifier: '*'
         version: link:../../packages/esi-meta-client
+      '@jitaspace/esi-metadata':
+        specifier: '*'
+        version: link:../../packages/esi-metadata
       '@jitaspace/eve-icons':
         specifier: '*'
         version: link:../../packages/eve-icons
@@ -339,40 +339,6 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
-  packages/esi-client:
-    dependencies:
-      '@react-hook/cache':
-        specifier: ^1.1.1
-        version: 1.1.1(react@18.2.0)
-      axios:
-        specifier: ^1.5.1
-        version: 1.5.1
-    devDependencies:
-      '@jitaspace/eslint-config':
-        specifier: '*'
-        version: link:../../tooling/eslint
-      '@jitaspace/prettier-config':
-        specifier: '*'
-        version: link:../../tooling/prettier
-      '@jitaspace/tsconfig':
-        specifier: '*'
-        version: link:../../tooling/tsconfig
-      '@types/node':
-        specifier: ^18.18.5
-        version: 18.18.5
-      '@types/react':
-        specifier: ^18.2.28
-        version: 18.2.28
-      eslint:
-        specifier: ^8.51.0
-        version: 8.51.0
-      prettier:
-        specifier: ^3.0.3
-        version: 3.0.3
-      typescript:
-        specifier: ^5.2.2
-        version: 5.2.2
-
   packages/esi-client-kubb:
     dependencies:
       '@kubb/cli':
@@ -452,12 +418,12 @@ importers:
         specifier: ^1.5.1
         version: 1.5.1
     devDependencies:
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../esi-client
       '@jitaspace/esi-client-kubb':
         specifier: '*'
         version: link:../esi-client-kubb
+      '@jitaspace/esi-metadata':
+        specifier: '*'
+        version: link:../esi-metadata
       '@jitaspace/eslint-config':
         specifier: '*'
         version: link:../../tooling/eslint
@@ -522,6 +488,33 @@ importers:
       orval:
         specifier: ^6.18.1
         version: 6.18.1(openapi-types@12.1.3)(typescript@5.2.2)
+      prettier:
+        specifier: ^3.0.3
+        version: 3.0.3
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
+
+  packages/esi-metadata:
+    devDependencies:
+      '@jitaspace/eslint-config':
+        specifier: '*'
+        version: link:../../tooling/eslint
+      '@jitaspace/prettier-config':
+        specifier: '*'
+        version: link:../../tooling/prettier
+      '@jitaspace/tsconfig':
+        specifier: '*'
+        version: link:../../tooling/tsconfig
+      '@types/node':
+        specifier: ^18.18.5
+        version: 18.18.5
+      '@types/react':
+        specifier: ^18.2.28
+        version: 18.2.28
+      eslint:
+        specifier: ^8.51.0
+        version: 8.51.0
       prettier:
         specifier: ^3.0.3
         version: 3.0.3
