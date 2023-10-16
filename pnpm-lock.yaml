@@ -342,8 +342,8 @@ importers:
   packages/esi-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^1.11.5
-        version: 1.11.5(@types/node@18.18.5)(typescript@5.2.2)
+        specifier: ^1.11.6
+        version: 1.11.6(@types/node@18.18.5)(typescript@5.2.2)
       '@kubb/core':
         specifier: ^1.11.5
         version: 1.11.5
@@ -458,8 +458,8 @@ importers:
   packages/esi-meta-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^1.11.5
-        version: 1.11.5(@types/node@18.18.5)(typescript@5.2.2)
+        specifier: ^1.11.6
+        version: 1.11.6(@types/node@18.18.5)(typescript@5.2.2)
       '@kubb/core':
         specifier: ^1.11.5
         version: 1.11.5
@@ -640,8 +640,8 @@ importers:
   packages/sde-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^1.11.5
-        version: 1.11.5(@types/node@18.18.5)(typescript@5.2.2)
+        specifier: ^1.11.6
+        version: 1.11.6(@types/node@18.18.5)(typescript@5.2.2)
       '@kubb/core':
         specifier: ^1.11.5
         version: 1.11.5
@@ -2750,12 +2750,12 @@ packages:
     resolution: {integrity: sha512-4JQNk+3mVzK3xh2rqd6RB4J46qUR19azEHBneZyTZM+c456qOrbbM/5xcR8huNCCcbVt7+UmizG6GuUvPvKUYg==}
     dev: false
 
-  /@kubb/cli@1.11.5(@types/node@18.18.5)(typescript@5.2.2):
-    resolution: {integrity: sha512-Oca2AwEJ0nhDEbZ+jZUchx07gdCHyazEBJM04MSRLKVpr6ePfs5VwTGZqs+JPkg+CHaoVsEdryhkBCGh4LIZkg==}
+  /@kubb/cli@1.11.6(@types/node@18.18.5)(typescript@5.2.2):
+    resolution: {integrity: sha512-FcD2xBPauWK53UmMZ9rGDmaW5H9d6n2d8EMI3utCfr6uFwRo2xO3z081UdgJ36YJ7MVry6qFPBjaCeUxh1zbZg==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     hasBin: true
     dependencies:
-      '@kubb/core': 1.11.5
+      '@kubb/core': 1.11.6
       cac: 6.7.14
       chokidar: 3.5.3
       cosmiconfig: 8.3.6(typescript@5.2.2)
@@ -2787,8 +2787,30 @@ packages:
       seedrandom: 3.0.5
     dev: false
 
+  /@kubb/core@1.11.6:
+    resolution: {integrity: sha512-xMh5FOFPSDNfaMTHV+xLXZfRTBJ5a2hsRyGejr6cHgZnuOKi/PAf2AYzW8YfPKLrElPS3WxYtS2weIIdCrsT5Q==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    dependencies:
+      '@kubb/parser': 1.11.6
+      change-case: 4.1.2
+      directory-tree: 3.5.1
+      fs-extra: 11.1.1
+      js-runtime: 0.0.6
+      lodash.isequal: 4.5.0
+      natural-orderby: 3.0.2
+      picocolors: 1.0.0
+      seedrandom: 3.0.5
+    dev: false
+
   /@kubb/parser@1.11.5:
     resolution: {integrity: sha512-pjEPinDlsK4oub4JmXQFtkTid/I4dYSYlrGAotIwnogMcxVVF16C261n7kvfEs+mVfL9+Buwb/tjw2sfC+ZukQ==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    dependencies:
+      typescript: 5.2.2
+    dev: false
+
+  /@kubb/parser@1.11.6:
+    resolution: {integrity: sha512-9XbClJDIvMjkzLC8sGxJpKFAubC/RGEzuF63zi/wCkUyaIpT5QFq9PKgsT612i4BcoHkKg6ikehT+P8rFNIQwg==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
       typescript: 5.2.2
