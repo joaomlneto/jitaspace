@@ -4,15 +4,17 @@ import pLimit from "p-limit";
 import { prisma } from "@jitaspace/db";
 import { getUniverseFactions } from "@jitaspace/esi-client-kubb";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeFactionsEventPayload = {
   data: {};
 };
 
-export const scrapeEsiFactions = inngest.createFunction(
+export const scrapeEsiFactions = client.createFunction(
   {
+    id: "scrape-esi-factions",
     name: "Scrape Factions",
     concurrency: {
       limit: 1,

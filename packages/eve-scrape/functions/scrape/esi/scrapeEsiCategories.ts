@@ -7,15 +7,17 @@ import {
   getUniverseCategoriesCategoryId,
 } from "@jitaspace/esi-client-kubb";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeCategoriesEventPayload = {
   data: {};
 };
 
-export const scrapeEsiCategories = inngest.createFunction(
+export const scrapeEsiCategories = client.createFunction(
   {
+    id: "scrape-esi-categories",
     name: "Scrape Categories",
     concurrency: {
       limit: 1,

@@ -151,8 +151,17 @@ model TypeEffect {
 }
 
 model Graphic {
-  graphicId Int    @id
-  types     Type[]
+  graphicId      Int      @id
+  collisionFile  String?
+  graphicFile    String?
+  iconFolder     String?
+  sofDna         String?
+  sofFactionName String?
+  sofHullName    String?
+  sofRaceName    String?
+  types          Type[]
+  updatedAt      DateTime @updatedAt()
+  isDeleted      Boolean  @default(false)
 }
 
 model DogmaAttribute {

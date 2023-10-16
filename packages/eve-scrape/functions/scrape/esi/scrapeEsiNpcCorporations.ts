@@ -8,15 +8,17 @@ import {
   getCorporationsNpccorps,
 } from "@jitaspace/esi-client-kubb";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeNpcCorporationsEventPayload = {
   data: {};
 };
 
-export const scrapeEsiNpcCorporations = inngest.createFunction(
+export const scrapeEsiNpcCorporations = client.createFunction(
   {
+    id: "scrape-esi-npc-corporations",
     name: "Scrape NPC Corporations",
     concurrency: {
       limit: 1,
@@ -206,7 +208,7 @@ export const scrapeEsiNpcCorporations = inngest.createFunction(
     });
 
     // scrape NPC Corporations' Loyalty Point Store Offers
-    await step.sendEvent({
+    await step.sendEvent("fetch-esi-loyalty-store-offers", {
       name: "scrape/esi/loyalty-store-offers",
       data: {
         corporationIds,

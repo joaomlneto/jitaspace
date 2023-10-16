@@ -4,15 +4,17 @@ import pLimit from "p-limit";
 import { prisma } from "@jitaspace/db";
 import { getUniverseRaces } from "@jitaspace/esi-client-kubb";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeRacesEventPayload = {
   data: {};
 };
 
-export const scrapeEsiRaces = inngest.createFunction(
+export const scrapeEsiRaces = client.createFunction(
   {
+    id: "scrape-esi-races",
     name: "Scrape Races",
     concurrency: {
       limit: 1,

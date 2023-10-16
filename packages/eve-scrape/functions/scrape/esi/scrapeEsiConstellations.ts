@@ -7,15 +7,17 @@ import {
   getUniverseConstellationsConstellationId,
 } from "@jitaspace/esi-client-kubb";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeConstellationEventPayload = {
   data: {};
 };
 
-export const scrapeEsiConstellations = inngest.createFunction(
+export const scrapeEsiConstellations = client.createFunction(
   {
+    id: "scrape-esi-constellations",
     name: "Scrape Constellations",
     concurrency: {
       limit: 1,

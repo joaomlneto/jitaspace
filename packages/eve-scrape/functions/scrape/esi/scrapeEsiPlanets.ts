@@ -5,9 +5,10 @@ import pLimit from "p-limit";
 import { prisma } from "@jitaspace/db";
 import { getUniversePlanetsPlanetId } from "@jitaspace/esi-client-kubb";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapePlanetsEventPayload = {
   data: {
@@ -18,8 +19,9 @@ export type ScrapePlanetsEventPayload = {
 
 type StatsKey = "planets";
 
-export const scrapeEsiPlanets = inngest.createFunction(
+export const scrapeEsiPlanets = client.createFunction(
   {
+    id: "scrape-esi-planets",
     name: "Scrape Planets",
     concurrency: {
       limit: 1,

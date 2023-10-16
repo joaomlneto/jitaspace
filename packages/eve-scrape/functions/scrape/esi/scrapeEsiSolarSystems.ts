@@ -13,7 +13,7 @@ import {
   getUniverseSystemsSystemId,
 } from "@jitaspace/esi-client-kubb";
 
-import { inngest } from "../../../client";
+import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
@@ -32,8 +32,9 @@ type StatsKey =
   | "moons"
   | "asteroidBelts";
 
-export const scrapeEsiSolarSystems = inngest.createFunction(
+export const scrapeEsiSolarSystems = client.createFunction(
   {
+    id: "scrape-esi-solar-systems",
     name: "Scrape Solar Systems",
     concurrency: {
       limit: 1,

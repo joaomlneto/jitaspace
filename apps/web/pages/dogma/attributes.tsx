@@ -11,9 +11,11 @@ import { NextSeo } from "next-seo";
 
 import { prisma } from "@jitaspace/db";
 import { AttributesIcon } from "@jitaspace/eve-icons";
+import { DogmaAttributeAnchor } from "@jitaspace/ui";
 
 import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   attributes: Record<
@@ -101,6 +103,14 @@ export default function Page({ attributes }: PageProps) {
         header: "Name",
         accessorKey: "name",
         size: 40,
+        Cell: ({ renderedCellValue, row, cell }) => (
+          <DogmaAttributeAnchor
+            attributeId={row.original.attributeId}
+            target="_blank"
+          >
+            {row.original.name}
+          </DogmaAttributeAnchor>
+        ),
       },
       {
         id: "displayName",
