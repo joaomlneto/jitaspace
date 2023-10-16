@@ -210,7 +210,8 @@ export function useEsiNamePrefetch(
 ) {
   useEffect(() => {
     entries.forEach((entry) => {
-      void fetchCache.load(entry.id.toString(), { category: entry.category });
+      if (entry.id)
+        void fetchCache.load(entry.id.toString(), { category: entry.category });
     });
   }, [entries]);
 }
