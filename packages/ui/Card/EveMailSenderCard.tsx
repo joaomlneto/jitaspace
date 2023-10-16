@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailMailId } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 import { EveEntityCard } from "./EveEntityCard";
 

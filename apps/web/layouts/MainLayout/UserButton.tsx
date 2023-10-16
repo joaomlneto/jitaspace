@@ -9,12 +9,12 @@ import {
 } from "@mantine/core";
 import { signIn, signOut } from "next-auth/react";
 
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   RecruitmentIcon,
   SettingsIcon,
   TerminateIcon,
 } from "@jitaspace/eve-icons";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 const useStyles = createStyles((theme) => ({

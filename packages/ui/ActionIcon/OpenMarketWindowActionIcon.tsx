@@ -3,8 +3,8 @@ import { ActionIcon, Tooltip } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 
 import { postUiOpenwindowMarketdetails } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { MarketIcon } from "@jitaspace/eve-icons";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 type OpenMarketWindowActionIconProps = {
   typeId?: string | number;

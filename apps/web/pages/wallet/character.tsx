@@ -3,8 +3,8 @@ import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
 import { useGetCharactersCharacterIdWalletJournal } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { WalletIcon } from "@jitaspace/eve-icons";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 import { WalletTable } from "~/components/Wallet";
 import { MainLayout } from "~/layouts";

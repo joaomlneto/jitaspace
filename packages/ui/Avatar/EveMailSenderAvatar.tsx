@@ -5,8 +5,8 @@ import {
   useGetCharactersCharacterIdMailLists,
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { GroupListIcon } from "@jitaspace/eve-icons";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import { getAvatarSize } from "@jitaspace/utils";
 
 import { sizes } from "./Avatar.styles";

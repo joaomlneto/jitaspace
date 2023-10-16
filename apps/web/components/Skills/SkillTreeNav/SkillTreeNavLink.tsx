@@ -12,7 +12,7 @@ import {
   GetCharactersCharacterIdSkillsQueryResponse,
   useGetCharactersCharacterIdSkills,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
 
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;

@@ -23,7 +23,7 @@ import {
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
 
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import { jitaApps } from "~/config/apps";

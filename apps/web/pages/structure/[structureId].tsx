@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import { useGetUniverseStructuresStructureId } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import {
   EveEntityName,
   SetAutopilotDestinationActionIcon,

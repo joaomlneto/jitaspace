@@ -15,7 +15,7 @@ import { showNotification } from "@mantine/notifications";
 import { HttpStatusCode, type AxiosError } from "axios";
 
 import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import { EmailRecipientSearchMultiSelect } from "@jitaspace/ui";
 
 import { MailMessageEditor } from "~/components/EveMail/Editor/MailMessageEditor";

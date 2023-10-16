@@ -14,8 +14,8 @@ import {
 } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
-import { useTypeMarketOrders } from "@jitaspace/esi-hooks";
 import { MarketIcon } from "@jitaspace/eve-icons";
+import { useTypeMarketOrders } from "@jitaspace/hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 import { MarketGroupNavLink, MarketOrdersDataTable } from "~/components/Market";

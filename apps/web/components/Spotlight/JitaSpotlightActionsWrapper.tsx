@@ -1,8 +1,8 @@
 import { memo, type PropsWithChildren } from "react";
 import { Group, rem, Text, ThemeIcon, Tooltip } from "@mantine/core";
 
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { InfoIcon } from "@jitaspace/eve-icons";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 export const JitaSpotlightActionsWrapper = memo(
   ({ children }: PropsWithChildren) => {

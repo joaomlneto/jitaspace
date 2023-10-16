@@ -15,13 +15,13 @@ import {
 import { useForm } from "@mantine/form";
 import { usePagination } from "@mantine/hooks";
 
+import { AssetsIcon, AttentionIcon } from "@jitaspace/eve-icons";
 import {
   useCorporationAssets,
   useEsiNamePrefetch,
   useEsiNamesCache,
   useMarketPrices,
-} from "@jitaspace/esi-hooks";
-import { AssetsIcon, AttentionIcon } from "@jitaspace/eve-icons";
+} from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,

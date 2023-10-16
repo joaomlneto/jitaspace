@@ -3,7 +3,7 @@ import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
 
 import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
 

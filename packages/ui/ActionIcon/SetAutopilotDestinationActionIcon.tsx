@@ -4,7 +4,7 @@ import { showNotification } from "@mantine/notifications";
 import { IconRocket } from "@tabler/icons-react";
 
 import { postUiAutopilotWaypoint } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 type SetAutopilotDestinationActionIconProps = {
   destinationId?: string | number;

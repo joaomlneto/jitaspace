@@ -15,7 +15,7 @@ import { format } from "date-fns";
 import humanizeDuration from "humanize-duration";
 
 import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 export const SkillQueueTimeline = memo(() => {

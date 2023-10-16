@@ -20,7 +20,7 @@ import {
   getUniverseTypesTypeId,
   useGetUniverseTypesTypeId,
 } from "@jitaspace/esi-client";
-import { useMarketPrices } from "@jitaspace/esi-hooks";
+import { useMarketPrices } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   OpenMarketWindowActionIcon,

@@ -50,9 +50,6 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../../packages/esi-client
-      '@jitaspace/esi-hooks':
-        specifier: '*'
-        version: link:../../packages/esi-hooks
       '@jitaspace/esi-meta-client':
         specifier: '*'
         version: link:../../packages/esi-meta-client
@@ -65,6 +62,9 @@ importers:
       '@jitaspace/eve-scrape':
         specifier: '*'
         version: link:../../packages/eve-scrape
+      '@jitaspace/hooks':
+        specifier: '*'
+        version: link:../../packages/esi-hooks
       '@jitaspace/sde-client':
         specifier: '*'
         version: link:../../packages/sde-client
@@ -800,12 +800,12 @@ importers:
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../esi-client
-      '@jitaspace/esi-hooks':
-        specifier: '*'
-        version: link:../esi-hooks
       '@jitaspace/eve-icons':
         specifier: '*'
         version: link:../eve-icons
+      '@jitaspace/hooks':
+        specifier: '*'
+        version: link:../esi-hooks
       '@jitaspace/sde-client':
         specifier: '*'
         version: link:../sde-client

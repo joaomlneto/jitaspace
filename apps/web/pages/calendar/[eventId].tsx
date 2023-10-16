@@ -17,8 +17,8 @@ import {
   type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse,
   type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import {
   CalendarEventHumanDurationText,
   CalendarEventOwnerAvatar,

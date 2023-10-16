@@ -11,8 +11,8 @@ import {
   type GetCharactersCharacterIdSearchQueryParamsCategories,
   type GetCharactersCharacterIdSearchQueryResponse,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext, useEsiSearch } from "@jitaspace/esi-hooks";
 import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
+import { useEsiClientContext, useEsiSearch } from "@jitaspace/hooks";
 
 import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
 import { JitaSpotlightActionsWrapper } from "~/components/Spotlight/JitaSpotlightActionsWrapper";

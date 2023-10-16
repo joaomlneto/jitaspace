@@ -15,8 +15,8 @@ import { format } from "date-fns";
 import { NextSeo } from "next-seo";
 
 import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client";
-import { useCharacterCalendar } from "@jitaspace/esi-hooks";
 import { CalendarIcon } from "@jitaspace/eve-icons";
+import { useCharacterCalendar } from "@jitaspace/hooks";
 
 import { CalendarEventList } from "~/components/Calendar/CalendarEventList/CalendarEventList";
 import EventsCalendar from "~/components/Calendar/EventsCalendar";

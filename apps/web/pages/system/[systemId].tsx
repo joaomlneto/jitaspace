@@ -14,8 +14,8 @@ import {
 import { IconExternalLink } from "@tabler/icons-react";
 
 import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
-import { useSolarSystemCostIndices } from "@jitaspace/esi-hooks";
 import { IndustryIcon } from "@jitaspace/eve-icons";
+import { useSolarSystemCostIndices } from "@jitaspace/hooks";
 import { useGetSolarSystemById } from "@jitaspace/sde-client";
 import {
   AsteroidBeltName,

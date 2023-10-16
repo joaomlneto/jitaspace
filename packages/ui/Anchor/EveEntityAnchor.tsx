@@ -2,10 +2,7 @@ import { memo, useMemo } from "react";
 import Link, { type LinkProps } from "next/link";
 import { Anchor, Skeleton, type AnchorProps } from "@mantine/core";
 
-import {
-  useEsiName,
-  type ResolvableEntityCategory,
-} from "@jitaspace/esi-hooks";
+import { useEsiName, type ResolvableEntityCategory } from "@jitaspace/hooks";
 
 export type EveEntityAnchorProps = Omit<AnchorProps, "component" | "href"> &
   Omit<LinkProps, "href"> &

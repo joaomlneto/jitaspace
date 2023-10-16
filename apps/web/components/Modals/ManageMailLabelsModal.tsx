@@ -9,7 +9,7 @@ import {
   postCharactersCharacterIdMailLabels,
   postCharactersCharacterIdMailLabelsMutationRequestColor,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import { MailLabelColorSelect } from "@jitaspace/ui";
 import { randomProperty } from "@jitaspace/utils";
 

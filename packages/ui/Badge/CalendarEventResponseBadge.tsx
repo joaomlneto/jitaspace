@@ -5,7 +5,7 @@ import {
   useGetCharactersCharacterIdCalendarEventId,
   type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 export type CalendarEventResponseBadgeProps = BadgeProps & {
   eventId?: number;

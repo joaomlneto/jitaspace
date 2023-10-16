@@ -13,8 +13,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
 import { signIn } from "next-auth/react";
 
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { type ESIScope } from "@jitaspace/esi-metadata";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import { ScopesTable } from "./ScopesTable";

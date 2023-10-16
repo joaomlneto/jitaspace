@@ -1,10 +1,7 @@
 import { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import {
-  useEsiName,
-  type ResolvableEntityCategory,
-} from "@jitaspace/esi-hooks";
+import { useEsiName, type ResolvableEntityCategory } from "@jitaspace/hooks";
 
 export type EveEntityNameProps = TextProps & {
   entityId?: string | number;

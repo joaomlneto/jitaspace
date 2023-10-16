@@ -5,7 +5,7 @@ import {
   useGetCharactersCharacterIdMailLabels,
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityAvatar,

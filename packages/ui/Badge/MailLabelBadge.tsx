@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Badge, type BadgeProps } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 export type MailLabelBadgeProps = BadgeProps & {
   labelId?: string | number;

@@ -1,6 +1,6 @@
 import React from "react";
 
-import { useCorporationContacts } from "@jitaspace/esi-hooks";
+import { useCorporationContacts } from "@jitaspace/hooks";
 
 import { ContactsTable, type ContactsTableProps } from "./ContactsTable";
 

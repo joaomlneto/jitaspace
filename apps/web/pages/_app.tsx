@@ -22,14 +22,14 @@ import { SessionProvider, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 import { Workbox } from "workbox-window";
 
+import { type ESIScope } from "@jitaspace/esi-metadata";
+import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 import {
   EsiClientContextProvider,
   getEveSsoAccessTokenPayload,
   JitaSpaceEsiClientContextProvider,
   useEsiClientContext,
-} from "@jitaspace/esi-hooks";
-import { type ESIScope } from "@jitaspace/esi-metadata";
-import { EveIconsContextProvider } from "@jitaspace/eve-icons";
+} from "@jitaspace/hooks";
 
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";

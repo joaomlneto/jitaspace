@@ -4,7 +4,7 @@ import { Anchor, type AnchorProps } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 
 import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 export type OpenInformationWindowAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &

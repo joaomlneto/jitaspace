@@ -13,7 +13,6 @@ import {
 import { format } from "date-fns";
 
 import { useGetCharactersCharacterIdAttributes } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import {
   AttributesIcon,
   CharismaAttributeSmallIcon,
@@ -23,6 +22,7 @@ import {
   WillpowerAttributeSmallIcon,
   type EveIconProps,
 } from "@jitaspace/eve-icons";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 const characterAttributes = [
   "charisma",

@@ -8,7 +8,7 @@ import {
 } from "@mantine/core";
 
 import { useGetCharactersCharacterIdCalendarEventIdAttendees } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 import { CharacterAvatar } from "../Avatar";
 import { CharacterName } from "../Text";

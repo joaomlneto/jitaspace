@@ -12,7 +12,7 @@ import {
   useEsiNamePrefetch,
   useEsiNamesCache,
   useMarketPrices,
-} from "@jitaspace/esi-hooks";
+} from "@jitaspace/hooks";
 import { ISKAmount, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 type AssetsDataTableProps = {

@@ -18,13 +18,13 @@ import {
 import { useForm } from "@mantine/form";
 import { useForceUpdate, usePagination, useTimeout } from "@mantine/hooks";
 
+import { AssetsIcon } from "@jitaspace/eve-icons";
 import {
   useCharacterAssets,
   useEsiNamePrefetch,
   useEsiNamesCache,
   useMarketPrices,
-} from "@jitaspace/esi-hooks";
-import { AssetsIcon } from "@jitaspace/eve-icons";
+} from "@jitaspace/hooks";
 import { AssetLocationSelect, ISKAmount } from "@jitaspace/ui";
 
 import { AssetsTable } from "~/components/Assets";

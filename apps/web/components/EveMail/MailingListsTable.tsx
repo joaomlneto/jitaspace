@@ -2,8 +2,8 @@ import React from "react";
 import { Alert, Container, Group, Stack, Text } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { GroupListIcon } from "@jitaspace/eve-icons";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 export function MailingListsTable() {
   const { characterId, isTokenValid, accessToken } = useEsiClientContext();

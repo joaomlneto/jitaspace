@@ -1,5 +1,5 @@
 {
-  "name": "@jitaspace/esi-hooks",
+  "name": "@jitaspace/hooks",
   "description": "ESI React Hooks",
   "version": "0.1.1",
   "type": "module",

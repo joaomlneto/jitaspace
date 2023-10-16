@@ -17,13 +17,13 @@ import {
 import { modals } from "@mantine/modals";
 import { NextSeo } from "next-seo";
 
-import { useCharacterMails } from "@jitaspace/esi-hooks";
 import {
   EvemailComposeIcon,
   EveMailIcon,
   EveMailTagIcon,
   GroupListIcon,
 } from "@jitaspace/eve-icons";
+import { useCharacterMails } from "@jitaspace/hooks";
 import { EveMailLabelMultiSelect } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 

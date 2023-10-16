@@ -4,7 +4,7 @@ import { showNotification } from "@mantine/notifications";
 import { IconAppWindowFilled } from "@tabler/icons-react";
 
 import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/esi-hooks";
+import { useEsiClientContext } from "@jitaspace/hooks";
 
 type OpenInformationWindowActionIconProps = {
   entityId?: string | number;
