@@ -17,7 +17,7 @@ export function useEsiSearch({
   strict?: boolean;
   language?: GetCharactersCharacterIdSearchQueryParamsLanguage;
 }) {
-  const { isTokenValid, characterId } = useEsiClientContext();
+  const { isTokenValid, characterId, accessToken } = useEsiClientContext();
   return useGetCharactersCharacterIdSearch(
     characterId ?? 1,
     {
@@ -26,6 +26,7 @@ export function useEsiSearch({
       search: query,
       strict,
       language,
+      token: accessToken,
     },
     {},
     {

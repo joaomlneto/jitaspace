@@ -51,10 +51,10 @@ const icons: Record<CharacterAttribute, React.FC<EveIconProps>> = {
 };
 
 export function CharacterAttributesRingProgress() {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
   const { data, error, isLoading } = useGetCharactersCharacterIdAttributes(
     characterId ?? 1,
-    {},
+    { token: accessToken },
     {},
     {
       query: {

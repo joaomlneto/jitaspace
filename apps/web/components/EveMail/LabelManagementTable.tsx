@@ -77,6 +77,9 @@ export function LabelManagementTable() {
                           await deleteCharactersCharacterIdMailLabelsLabelId(
                             characterId,
                             label.label_id,
+                            {
+                              token: accessToken,
+                            },
                           );
                           showNotification({
                             title: "Label deleted",

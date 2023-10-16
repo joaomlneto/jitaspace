@@ -9,12 +9,12 @@ import { WalletIcon } from "@jitaspace/eve-icons";
 import { WalletTable } from "~/components/Wallet";
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
-  const { characterId, scopes, isTokenValid } = useEsiClientContext();
+  const { characterId, scopes, isTokenValid, accessToken } =
+    useEsiClientContext();
   const { data } = useGetCharactersCharacterIdWalletJournal(
     characterId ?? 0,
-    {},
+    { token: accessToken },
     {},
     {
       query: {

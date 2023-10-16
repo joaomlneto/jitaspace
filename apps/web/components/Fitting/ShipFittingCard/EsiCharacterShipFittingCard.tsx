@@ -6,7 +6,6 @@ import { useEsiClientContext } from "@jitaspace/esi-hooks";
 
 import { ShipFittingCard } from "./ShipFittingCard";
 
-
 type EsiCharacterShipFittingCardProps = Omit<CardProps, "children"> & {
   fittingId: number;
   hideHeader?: boolean;
@@ -15,10 +14,11 @@ type EsiCharacterShipFittingCardProps = Omit<CardProps, "children"> & {
 
 export const EsiCharacterShipFittingCard = memo(
   ({ fittingId, ...otherProps }: EsiCharacterShipFittingCardProps) => {
-    const { characterId, isTokenValid, scopes } = useEsiClientContext();
+    const { characterId, isTokenValid, scopes, accessToken } =
+      useEsiClientContext();
     const { data } = useGetCharactersCharacterIdFittings(
       characterId ?? 0,
-      {},
+      { token: accessToken },
       {},
       {
         query: {

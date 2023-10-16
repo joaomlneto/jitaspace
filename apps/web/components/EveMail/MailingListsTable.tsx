@@ -5,16 +5,12 @@ import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client-kubb
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { GroupListIcon } from "@jitaspace/eve-icons";
 
-
-
-
-
 export function MailingListsTable() {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
   const { data, error } = useGetCharactersCharacterIdMailLists(
     characterId ?? 1,
-    {},
+    { token: accessToken },
     {},
     {
       query: {

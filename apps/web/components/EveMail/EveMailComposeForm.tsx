@@ -25,7 +25,7 @@ export type EveMailComposeFormProps = {
 };
 
 export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
   const form = useForm<{
     recipients: string[];
     subject: string;
@@ -58,15 +58,19 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
           message: "Not logged in",
         });
       }
-      const result = await postCharactersCharacterIdMail(characterId, {
-        approved_cost: 0,
-        body: values.body,
-        recipients: values.recipients.map((r) => ({
-          recipient_id: Number(r),
-          recipient_type: "character",
-        })),
-        subject: values.subject,
-      });
+      const result = await postCharactersCharacterIdMail(
+        characterId,
+        {
+          approved_cost: 0,
+          body: values.body,
+          recipients: values.recipients.map((r) => ({
+            recipient_id: Number(r),
+            recipient_type: "character",
+          })),
+          subject: values.subject,
+        },
+        { token: accessToken },
+      );
       if (result.status === HttpStatusCode.Created) {
         showNotification({
           message: "Message sent",
@@ -122,15 +126,19 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
                   message: "Not logged in",
                 });
               }
-              const result = await postCharactersCharacterIdMail(characterId, {
-                approved_cost: details.totalCost,
-                body: values.body,
-                recipients: values.recipients.map((r) => ({
-                  recipient_id: Number(r),
-                  recipient_type: "character",
-                })),
-                subject: values.subject,
-              });
+              const result = await postCharactersCharacterIdMail(
+                characterId,
+                {
+                  approved_cost: details.totalCost,
+                  body: values.body,
+                  recipients: values.recipients.map((r) => ({
+                    recipient_id: Number(r),
+                    recipient_type: "character",
+                  })),
+                  subject: values.subject,
+                },
+                { token: accessToken },
+              );
               if (result.status === HttpStatusCode.Created) {
                 showNotification({
                   message: `Message sent. You were charged ${details.totalCost} ISK for CSPA.`,

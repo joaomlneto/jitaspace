@@ -1,3 +1,5 @@
+export * from "./alliance";
+
 export * from "./useAllianceContacts";
 export * from "./useCharacterAssets";
 export * from "./useCharacterCalendar";

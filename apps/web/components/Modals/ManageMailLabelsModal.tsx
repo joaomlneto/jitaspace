@@ -15,14 +15,13 @@ import { randomProperty } from "@jitaspace/utils";
 
 import { LabelManagementTable } from "~/components/EveMail";
 
-
 export function ManageMailLabelsModal({
   context,
   id,
 }: ContextModalProps<{
   /* empty */
 }>) {
-  const { characterId, isTokenValid } = useEsiClientContext();
+  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
   const form = useForm({
     initialValues: {
       name: "",
@@ -61,6 +60,9 @@ export function ManageMailLabelsModal({
                 {
                   name: values.name,
                   color: values.color,
+                },
+                {
+                  token: accessToken,
                 },
               );
 

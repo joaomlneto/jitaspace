@@ -15,10 +15,6 @@ import {
 import { useEsiClientContext } from "@jitaspace/esi-hooks";
 import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
 
-
-
-
-
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 
 type SkillTreeNavLinkProps = NavLinkProps & {
@@ -48,7 +44,7 @@ export const SkillTreeNavLink = memo(
     fetchNameFromEsi = false,
     ...otherProps
   }: SkillTreeNavLinkProps) => {
-    const { characterId, isTokenValid } = useEsiClientContext();
+    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
     const {
       data: skills,
@@ -56,7 +52,7 @@ export const SkillTreeNavLink = memo(
       error: skillsError,
     } = useGetCharactersCharacterIdSkills(
       characterId ?? 1,
-      {},
+      { token: accessToken },
       {},
       {
         query: {

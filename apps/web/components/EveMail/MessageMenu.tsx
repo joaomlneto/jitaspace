@@ -99,6 +99,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                             [...(mail.labels ?? []), label.label_id!],
                     },
+                    { token: accessToken },
                   );
 
                   // optimistic update
@@ -165,6 +166,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                 {
                   read: !mail.is_read,
                 },
+                { token: accessToken },
               );
               if (data) {
                 data.find((item) => item.mail_id === mail.mail_id)!.is_read =
@@ -218,6 +220,7 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                   await deleteCharactersCharacterIdMailMailId(
                     characterId,
                     mail.mail_id,
+                    { token: accessToken },
                   );
                   if (data) {
                     data.find(

@@ -18,13 +18,13 @@ import { EveEntitySelect } from "@jitaspace/ui";
 import { EsiCharacterShipFittingCard } from "~/components/Fitting";
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const [selectedShipType, setSelectedShipType] = useState<string | null>(null);
-  const { characterId, isTokenValid, scopes } = useEsiClientContext();
+  const { characterId, isTokenValid, scopes, accessToken } =
+    useEsiClientContext();
   const { data } = useGetCharactersCharacterIdFittings(
     characterId ?? 0,
-    {},
+    { token: accessToken },
     {},
     {
       query: {
