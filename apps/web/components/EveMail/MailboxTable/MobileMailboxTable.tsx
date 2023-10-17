@@ -101,6 +101,7 @@ export const MobileMailboxTable = ({
                       size: "xl",
                       innerProps: {
                         messageId: message.mail_id,
+                        data: data,
                         hideSubject: true,
                       },
                     });

@@ -19,10 +19,12 @@ import {
   MailLabelColorSwatch,
 } from "@jitaspace/ui";
 
+import { MailboxTableProps } from "~/components/EveMail/MailboxTable";
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 import { MessageMenu } from "~/components/EveMail/MessageMenu";
 
 export type MessagePanelProps = {
+  data: MailboxTableProps["data"];
   messageId?: number;
   hideLabels?: boolean;
   hideMessage?: boolean;
@@ -32,6 +34,7 @@ export type MessagePanelProps = {
 };
 
 export function MessagePanel({
+  data,
   messageId,
   hideLabels,
   hideMessage,
@@ -152,7 +155,7 @@ export function MessagePanel({
           </Group>
           {mail?.data && (
             <Group position="right">
-              <MessageMenu mail={mail.data} />
+              <MessageMenu data={data} mail={mail.data} />
             </Group>
           )}
         </Group>

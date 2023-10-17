@@ -84,6 +84,7 @@ export const DesktopMailboxTable = ({
                       size: "xl",
                       innerProps: {
                         messageId: mail.mail_id,
+                        data: data,
                         hideSubject: true,
                       },
                     });
