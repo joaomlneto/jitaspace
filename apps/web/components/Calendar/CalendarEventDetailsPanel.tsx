@@ -29,11 +29,12 @@ export type CalendarEventPanelProps = {
 export function CalendarEventDetailsPanel({
   eventId,
 }: CalendarEventPanelProps) {
-  const { characterId, isTokenValid, scopes } = useEsiClientContext();
+  const { characterId, isTokenValid, scopes, accessToken } =
+    useEsiClientContext();
   const { data: event } = useGetCharactersCharacterIdCalendarEventId(
     characterId ?? 1,
     eventId ?? 1,
-    {},
+    { token: accessToken },
     {},
     {
       query: {
@@ -45,7 +46,7 @@ export function CalendarEventDetailsPanel({
     useGetCharactersCharacterIdCalendarEventIdAttendees(
       characterId ?? 1,
       eventId ?? 1,
-      {},
+      { token: accessToken },
       {},
       {
         query: {

@@ -84,6 +84,7 @@ export const CalendarEventAttendanceSelect = memo(
                 characterId ?? 0,
                 typeof eventId === "string" ? parseInt(eventId) : eventId ?? 0,
                 { response: newValue },
+                { token: accessToken },
               );
             },
           });

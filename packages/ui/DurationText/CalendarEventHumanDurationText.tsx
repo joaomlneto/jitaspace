@@ -17,7 +17,8 @@ export const CalendarEventHumanDurationText = memo(
     options,
     ...otherProps
   }: CalendarEventHumanDurationTextProps) => {
-    const { characterId, scopes, isTokenValid } = useEsiClientContext();
+    const { characterId, scopes, isTokenValid, accessToken } =
+      useEsiClientContext();
     const {
       data: event,
       isLoading,
@@ -25,7 +26,7 @@ export const CalendarEventHumanDurationText = memo(
     } = useGetCharactersCharacterIdCalendarEventId(
       characterId ?? 1,
       eventId ?? 1,
-      {},
+      { token: accessToken },
       {},
       {
         query: {
