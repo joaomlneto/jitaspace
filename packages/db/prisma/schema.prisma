@@ -192,6 +192,14 @@ model DogmaAttribute {
   @@index([iconId])
 }
 
+model DogmaAttributeCategory {
+  attributeCategoryId Int @id
+  name        String
+  description String?
+  updatedAt              DateTime              @updatedAt()
+  isDeleted              Boolean               @default(false)
+}
+
 model DogmaEffectCategory {
   effectCategoryId Int           @id
   effects          DogmaEffect[]

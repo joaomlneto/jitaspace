@@ -19,6 +19,7 @@ import {
   scrapeEsiRegions,
   scrapeEsiSolarSystems,
   scrapeEsiTypes,
+  scrapeSdeDogmaAttributeCategories,
   scrapeSdeDogmaUnits,
 } from "./scrape";
 import { testPing } from "./test";
@@ -45,6 +46,7 @@ export const functions = [
   scrapeEsiRegions,
   scrapeEsiSolarSystems,
   scrapeEsiTypes,
+  scrapeSdeDogmaAttributeCategories,
   scrapeSdeDogmaUnits,
 ];
 

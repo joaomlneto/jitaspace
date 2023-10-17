@@ -12,8 +12,6 @@ export type ScrapeDogmaUnitsEventPayload = {
   };
 };
 
-type StatsKey = "dogmaAttributes";
-
 export const scrapeSdeDogmaUnits = client.createFunction(
   {
     id: "scrape-sde-dogma-units",
