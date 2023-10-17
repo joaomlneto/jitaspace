@@ -8,6 +8,7 @@ import {
   ScrapeCorporationsEventPayload,
   ScrapeDogmaAttributesEventPayload,
   ScrapeDogmaEffectsEventPayload,
+  ScrapeDogmaUnitsEventPayload,
   ScrapeFactionsEventPayload,
   ScrapeGraphicsEventPayload,
   ScrapeGroupsEventPayload,
@@ -44,4 +45,5 @@ export type Events = {
   "scrape/esi/regions": ScrapeRegionEventPayload;
   "scrape/esi/solar-systems": ScrapeSolarSystemsEventPayload;
   "scrape/esi/types": ScrapeTypesEventPayload;
+  "scrape/sde/dogma-units": ScrapeDogmaUnitsEventPayload;
 };

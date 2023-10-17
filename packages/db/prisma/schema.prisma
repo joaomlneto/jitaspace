@@ -265,8 +265,9 @@ model DogmaEffectModifier {
 
 model DogmaUnit {
   unitId      Int              @id
-  displayName String
-  description String           @db.Text
+  name        String
+  displayName String?
+  description String?
   attributes  DogmaAttribute[]
   updatedAt   DateTime         @updatedAt()
   isDeleted   Boolean          @default(false)
