@@ -256,8 +256,8 @@ importers:
         specifier: ^3.27.2
         version: 3.27.2
       '@types/react-html-parser':
-        specifier: ^2.0.3
-        version: 2.0.3
+        specifier: ^2.0.4
+        version: 2.0.4
       dotenv-cli:
         specifier: ^7.3.0
         version: 7.3.0
@@ -4334,8 +4334,8 @@ packages:
       '@types/react': 18.2.28
     dev: false
 
-  /@types/react-html-parser@2.0.3:
-    resolution: {integrity: sha512-pDinuMjC+u4BDTit6VW7Rwot1ToIrzlRK/Eymssndfuamno6ydf7UdyzXz+VjNdf2xtSUSuW1bYHk7S/SecikA==}
+  /@types/react-html-parser@2.0.4:
+    resolution: {integrity: sha512-RV2ZIwJcgD+s+VawKuTcnyINE9i0u4OgvgWg0+BI5osGC69FMioBIgCmFibqryFDRbHfIOoT9Q9JvUpXZ+3zWg==}
     dependencies:
       '@types/htmlparser2': 3.10.3
       '@types/react': 18.2.28
