@@ -253,8 +253,8 @@ importers:
         specifier: ^0.1.0
         version: 0.1.0
       '@types/humanize-duration':
-        specifier: ^3.27.1
-        version: 3.27.1
+        specifier: ^3.27.2
+        version: 3.27.2
       '@types/react-html-parser':
         specifier: ^2.0.3
         version: 2.0.3
@@ -907,8 +907,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/humanize-duration':
-        specifier: ^3.27.1
-        version: 3.27.1
+        specifier: ^3.27.2
+        version: 3.27.2
       eslint:
         specifier: ^8.51.0
         version: 8.51.0
@@ -4259,8 +4259,8 @@ packages:
       domhandler: 2.4.2
     dev: true
 
-  /@types/humanize-duration@3.27.1:
-    resolution: {integrity: sha512-K3e+NZlpCKd6Bd/EIdqjFJRFHbrq5TzPPLwREk5Iv/YoIjQrs6ljdAUCo+Lb2xFlGNOjGSE0dqsVD19cZL137w==}
+  /@types/humanize-duration@3.27.2:
+    resolution: {integrity: sha512-KOGjfVAD8CHMgXL6z96f7eCNRFUENKa2BG87l7JsSg9ZA6lRFsipZ0faF4kKFqnzxirVgXmOnWqTLAKUog1h/g==}
     dev: true
 
   /@types/inquirer@6.5.0:
