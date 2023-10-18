@@ -283,7 +283,7 @@ model DogmaUnit {
 
 model Icon {
   iconId      Int              @id
-  description String           @db.Text
+  description String?
   iconFile    String
   updatedAt   DateTime         @updatedAt()
   isDeleted   Boolean          @default(false)

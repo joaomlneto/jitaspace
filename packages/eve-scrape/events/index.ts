@@ -13,6 +13,7 @@ import {
   ScrapeFactionsEventPayload,
   ScrapeGraphicsEventPayload,
   ScrapeGroupsEventPayload,
+  ScrapeIconsEventPayload,
   ScrapeLoyaltyStoreOffersEventPayload,
   ScrapeMarketGroupsEventPayload,
   ScrapeMoonsEventPayload,
@@ -48,4 +49,5 @@ export type Events = {
   "scrape/esi/types": ScrapeTypesEventPayload;
   "scrape/sde/dogma-attribute-categories": ScrapeDogmaAttributeCategoriesEventPayload;
   "scrape/sde/dogma-units": ScrapeDogmaUnitsEventPayload;
+  "scrape/sde/icons": ScrapeIconsEventPayload;
 };

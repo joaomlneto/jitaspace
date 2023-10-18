@@ -21,6 +21,7 @@ import {
   scrapeEsiTypes,
   scrapeSdeDogmaAttributeCategories,
   scrapeSdeDogmaUnits,
+  scrapeSdeIcons,
 } from "./scrape";
 import { testPing } from "./test";
 
@@ -48,6 +49,7 @@ export const functions = [
   scrapeEsiTypes,
   scrapeSdeDogmaAttributeCategories,
   scrapeSdeDogmaUnits,
+  scrapeSdeIcons,
 ];
 
 export * from "./scrape";
