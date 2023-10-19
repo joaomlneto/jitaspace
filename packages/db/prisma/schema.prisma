@@ -202,6 +202,9 @@ model DogmaAttributeCategory {
 
 model DogmaEffectCategory {
   effectCategoryId Int           @id
+  name             String
+  updatedAt        DateTime      @updatedAt()
+  isDeleted        Boolean       @default(false)
   effects          DogmaEffect[]
 }
 
