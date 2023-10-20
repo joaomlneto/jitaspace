@@ -606,8 +606,8 @@ importers:
         specifier: ^10.4.3
         version: 10.4.3
       inngest:
-        specifier: ^3.2.1
-        version: 3.2.1(typescript@5.2.2)
+        specifier: ^3.3.0
+        version: 3.3.0(typescript@5.2.2)
       p-limit:
         specifier: ^4.0.0
         version: 4.0.0
@@ -7480,8 +7480,8 @@ packages:
       - supports-color
     dev: true
 
-  /inngest@3.2.1(typescript@5.2.2):
-    resolution: {integrity: sha512-zhGpCt0k8WMoz2n6Mjv3Xfz2w7K6U+azMeA9ccXsv8Imk5C40NoTBtSOsSdo61kk/GsWQC3hc4CTAPCpBJCa/A==}
+  /inngest@3.3.0(typescript@5.2.2):
+    resolution: {integrity: sha512-vY2QNynmlqUB6FkhbOgiY8gU8J9UpRhSJFGhr9oZcuNmINoPOHczzfvZKr+1jLAqsGMl1q83cokYWaJ9coYAnQ==}
     engines: {node: '>=14'}
     peerDependencies:
       typescript: '>=4.7.2'
