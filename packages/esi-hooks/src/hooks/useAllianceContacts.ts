@@ -28,7 +28,7 @@ export function useAllianceContacts() {
 
   const { data: labels } = useGetAlliancesAllianceIdContactsLabels(
     allianceId ?? 0,
-    {},
+    { token: accessToken },
     {},
     {
       query: {

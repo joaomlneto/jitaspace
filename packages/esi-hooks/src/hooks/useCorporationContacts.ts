@@ -28,7 +28,7 @@ export function useCorporationContacts() {
 
   const { data: labels } = useGetCorporationsCorporationIdContactsLabels(
     corporationId ?? 0,
-    {},
+    { token: accessToken },
     {},
     {
       query: {
