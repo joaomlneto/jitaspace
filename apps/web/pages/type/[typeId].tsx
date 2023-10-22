@@ -32,6 +32,7 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   ogImageUrl?: string;
   typeName?: string;
@@ -161,17 +162,6 @@ export default function Page({
                 <Group spacing="xs">
                   <IconExternalLink size={14} />
                   Eve Ref
-                </Group>
-              </Button>
-            </Link>
-            <Link
-              href={`https://evemarketer.com/types/${typeId}`}
-              target="_blank"
-            >
-              <Button size="xs">
-                <Group spacing="xs">
-                  <IconExternalLink size={14} />
-                  Eve Marketer
                 </Group>
               </Button>
             </Link>
