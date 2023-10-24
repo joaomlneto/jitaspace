@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider     = "mysql"
-  relationMode = "prisma"
-  url          = env("DATABASE_URL")
+  provider = "cockroachdb"
+  url      = env("DATABASE_URL")
 }
 
 enum CharacterGender {
@@ -33,6 +32,7 @@ model Character {
   createdCorporations Corporation[]   @relation("corporationCreator")
   updatedAt           DateTime        @updatedAt()
   isDeleted           Boolean         @default(false)
+  Agent               Agent?          @relation("AgentCharacter")
 
   @@index([bloodlineId])
   @@index([corporationId])
@@ -43,7 +43,7 @@ model Character {
 model MarketGroup {
   marketGroupId       Int           @id
   name                String
-  description         String        @db.Text
+  description         String
   types               Type[]
   parentMarketGroupId Int?
   parent              MarketGroup?  @relation("marketGroupParent", fields: [parentMarketGroupId], references: [marketGroupId], onDelete: Restrict, onUpdate: Restrict)
@@ -79,7 +79,7 @@ model Group {
 model Type {
   typeId                          Int                             @id
   capacity                        Float?
-  description                     String                          @db.Text
+  description                     String
   dogmaEffects                    DogmaEffect[]
   graphic                         Graphic?                        @relation(fields: [graphicId], references: [graphicId])
   graphicId                       Int?
@@ -90,7 +90,7 @@ model Type {
   marketGroup                     MarketGroup?                    @relation(fields: [marketGroupId], references: [marketGroupId])
   marketGroupId                   Int?
   mass                            Float?
-  name                            String                          @db.Text
+  name                            String
   packagedVolume                  Float?
   portionSize                     Int?
   published                       Boolean
@@ -115,6 +115,7 @@ model Type {
   updatedAt                       DateTime                        @updatedAt()
   // Was this item deleted
   isDeleted                       Boolean                         @default(false)
+  Stargate                        Stargate[]                      @relation("StargateType")
 
   @@index([marketGroupId])
   @@index([graphicId])
@@ -167,7 +168,7 @@ model Graphic {
 model DogmaAttribute {
   attributeId            Int                   @id
   defaultValue           Float?
-  description            String?               @db.Text
+  description            String?
   displayName            String?
   highIsGood             Boolean?
   iconId                 Int?
@@ -193,11 +194,11 @@ model DogmaAttribute {
 }
 
 model DogmaAttributeCategory {
-  attributeCategoryId Int @id
-  name        String
-  description String?
-  updatedAt              DateTime              @updatedAt()
-  isDeleted              Boolean               @default(false)
+  attributeCategoryId Int      @id
+  name                String
+  description         String?
+  updatedAt           DateTime @updatedAt()
+  isDeleted           Boolean  @default(false)
 }
 
 model DogmaEffectCategory {
@@ -210,7 +211,7 @@ model DogmaEffectCategory {
 
 model DogmaEffect {
   effectId                 Int                  @id
-  description              String?              @db.Text
+  description              String?
   disallowAutoRepeat       Boolean?
   dischargeAttribute       DogmaAttribute?      @relation("DischargeAttribute", fields: [dischargeAttributeId], references: [attributeId])
   dischargeAttributeId     Int?
@@ -320,7 +321,7 @@ model Alliance {
 model Faction {
   factionId            Int           @id
   name                 String
-  description          String        @db.Text
+  description          String
   isUnique             Boolean
   militiaCorporation   Corporation?  @relation("FactionMilitiaCorporation", fields: [militiaCorporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
   militiaCorporationId Int?
@@ -346,30 +347,28 @@ model Faction {
 }
 
 model Corporation {
-  corporationId Int        @id
-  alliance      Alliance?  @relation("CorporationAlliance", fields: [allianceId], references: [allianceId], onUpdate: NoAction, onDelete: NoAction)
-  allianceId    Int?
-  ceo           Character? @relation("corporationCeo", fields: [ceoId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
-  ceoId         Int?
-  creator       Character? @relation("corporationCreator", fields: [creatorId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
-  creatorId     Int?
-  dateFounded   DateTime?
-  description   String?    @db.Text
-  faction       Faction?   @relation("CorporationFaction", fields: [factionId], references: [factionId])
-  factionId     Int?
-  homeStation   Station?   @relation("CorporationHomeStation", fields: [homeStationId], references: [stationId], onDelete: NoAction, onUpdate: NoAction)
-  homeStationId Int?
-  memberCount   Int
-  name          String
-  shares        BigInt?
-  taxRate       Float
-  ticker        String
-  url           String?    @db.Text
-  warEligible   Boolean?
-
-  updatedAt DateTime @updatedAt()
-  isDeleted Boolean  @default(false)
-
+  corporationId       Int                 @id
+  alliance            Alliance?           @relation("CorporationAlliance", fields: [allianceId], references: [allianceId], onUpdate: NoAction, onDelete: NoAction)
+  allianceId          Int?
+  ceo                 Character?          @relation("corporationCeo", fields: [ceoId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
+  ceoId               Int?
+  creator             Character?          @relation("corporationCreator", fields: [creatorId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
+  creatorId           Int?
+  dateFounded         DateTime?
+  description         String?
+  faction             Faction?            @relation("CorporationFaction", fields: [factionId], references: [factionId])
+  factionId           Int?
+  homeStation         Station?            @relation("CorporationHomeStation", fields: [homeStationId], references: [stationId], onDelete: NoAction, onUpdate: NoAction)
+  homeStationId       Int?
+  memberCount         Int
+  name                String
+  shares              BigInt?
+  taxRate             Float
+  ticker              String
+  url                 String?
+  warEligible         Boolean?
+  updatedAt           DateTime            @updatedAt()
+  isDeleted           Boolean             @default(false)
   executorAlliance    Alliance?           @relation("AllianceExecutor")
   createdAlliances    Alliance[]          @relation("AllianceCreator")
   ownedStations       Station[]           @relation("StationOwner")
@@ -389,9 +388,8 @@ model Corporation {
 model Station {
   stationId                Int              @id
   name                     String
-  corporationHomeStations  Corporation[]    @relation("CorporationHomeStation")
-  solarSystem              SolarSystem      @relation(fields: [solarSystemId], references: [solarSystemId])
-  solarSystemId            Int
+  solarSystem              SolarSystem?     @relation(fields: [solarSystemId], references: [solarSystemId])
+  solarSystemId            Int?
   stationType              Type             @relation(fields: [typeId], references: [typeId])
   typeId                   Int
   maxDockableShipVolume    Float
@@ -399,13 +397,15 @@ model Station {
   owner                    Corporation?     @relation("StationOwner", fields: [ownerId], references: [corporationId])
   ownerId                  Int?
   // TODO add XYZ Position field
+  // TODO add station services
   race                     Race?            @relation("RaceStations", fields: [raceId], references: [raceId])
   raceId                   Int?
   reprocessingEfficiency   Float
   reprocessingStationsTake Float
-  stationServices          StationService[]
   updatedAt                DateTime         @updatedAt()
   isDeleted                Boolean          @default(false)
+  stationServices          StationService[]
+  corporationHomeStations  Corporation[]    @relation("CorporationHomeStation")
 
   @@index([solarSystemId])
   @@index([typeId])
@@ -415,14 +415,17 @@ model Station {
 
 model StationService {
   stationServiceId Int       @id
-  name             String
+  name             String?
+  description      String?
+  updatedAt        DateTime  @updatedAt()
+  isDeleted        Boolean   @default(false)
   stations         Station[]
 }
 
 model Race {
   raceId      Int         @id
   name        String
-  description String      @db.Text
+  description String?
   faction     Faction?    @relation("RaceFaction", fields: [factionId], references: [factionId])
   factionId   Int?
   updatedAt   DateTime    @updatedAt()
@@ -439,7 +442,7 @@ model Race {
 model Region {
   regionId       Int             @id
   name           String
-  description    String?         @db.Text
+  description    String?
   updatedAt      DateTime        @updatedAt()
   isDeleted      Boolean         @default(false)
   constellations Constellation[]
@@ -502,11 +505,13 @@ model Stargate {
   name                  String
   solarSystem           SolarSystem @relation("SolarSystemStargate", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId         Int
-  DestinationStargate   Stargate    @relation("StargateDestination", fields: [destinationStargateId], references: [stargateId], onDelete: NoAction, onUpdate: NoAction)
-  destinationStargateId Int         @unique
+  DestinationStargate   Stargate?   @relation("StargateDestination", fields: [destinationStargateId], references: [stargateId], onDelete: NoAction, onUpdate: NoAction)
+  destinationStargateId Int?        @unique
   updatedAt             DateTime    @updatedAt()
   isDeleted             Boolean     @default(false)
-  IncomingStargates     Stargate[]  @relation("StargateDestination")
+  IncomingStargate      Stargate?   @relation("StargateDestination")
+  type                  Type        @relation("StargateType", fields: [typeId], references: [typeId])
+  typeId                Int
 
   @@index([solarSystemId])
 }
@@ -555,8 +560,8 @@ model AsteroidBelt {
 model Ancestry {
   ancestryId       Int       @id
   name             String
-  shortDescription String?   @db.Text
-  description      String    @db.Text
+  shortDescription String?
+  description      String
   icon             Icon?     @relation("AncestryIcon", fields: [iconId], references: [iconId])
   iconId           Int?
   bloodline        Bloodline @relation("AncestryBloodline", fields: [bloodlineId], references: [bloodlineId])
@@ -573,7 +578,7 @@ model Bloodline {
   corporation   Corporation @relation("BloodlineCorporation", fields: [corporationId], references: [corporationId])
   corporationId Int
   name          String
-  description   String      @db.Text
+  description   String
   shipType      Type?       @relation("BloodlineShipType", fields: [shipTypeId], references: [typeId])
   shipTypeId    Int?
   race          Race        @relation("BloodlineRace", fields: [raceId], references: [raceId])
@@ -600,9 +605,9 @@ model LoyaltyStoreOffer {
   type          Type                            @relation(fields: [typeId], references: [typeId])
   typeId        Int
   quantity      Int
-  akCost        Int?
-  iskCost       Int
-  lpCost        Int
+  akCost        BigInt?
+  iskCost       BigInt
+  lpCost        BigInt
   requiredItems LoyaltyStoreOfferRequiredItem[] @relation("LoyaltyStoreOfferRequiredItems")
   updatedAt     DateTime                        @updatedAt()
   isDeleted     Boolean                         @default(false)
@@ -625,4 +630,45 @@ model LoyaltyStoreOfferRequiredItem {
   @@id([offerId, corporationId, typeId])
   @@index([offerId, corporationId])
   @@index([typeId])
+}
+
+// TODO add fields: war_id
+model Killmail {
+  killmailId     Int      @id
+  hash           String
+  metadataLoaded Boolean  @default(false)
+  updatedAt      DateTime @updatedAt()
+  isDeleted      Boolean  @default(false)
+}
+
+model AgentType {
+  agentTypeId Int      @id
+  name        String
+  updatedAt   DateTime @updatedAt()
+  isDeleted   Boolean  @default(false)
+  Agents      Agent[]  @relation("AgentType")
+}
+
+model NpcCorporationDivision {
+  npcCorporationDivisionId Int      @id
+  name                     String?
+  internalName             String
+  leaderTypeName           String?
+  updatedAt                DateTime @updatedAt()
+  isDeleted                Boolean  @default(false)
+  Agent                    Agent[]  @relation("AgentDivision")
+}
+
+model Agent {
+  Character       Character              @relation("AgentCharacter", fields: [characterId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
+  characterId     Int                    @id
+  AgentType       AgentType              @relation("AgentType", fields: [agentTypeId], references: [agentTypeId])
+  agentTypeId     Int
+  AgentDivision   NpcCorporationDivision @relation("AgentDivision", fields: [agentDivisionId], references: [npcCorporationDivisionId])
+  agentDivisionId Int
+  isLocator       Boolean
+  level           Int
+  location        Int // ???!!! FIXME: This is a station? Confirm!
+  updatedAt       DateTime               @updatedAt()
+  isDeleted       Boolean                @default(false)
 }
