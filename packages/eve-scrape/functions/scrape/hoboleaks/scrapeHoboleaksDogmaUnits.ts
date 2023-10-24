@@ -1,42 +1,46 @@
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getAllDogmaUnitIds, getDogmaUnitById } from "@jitaspace/sde-client";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeDogmaUnitsEventPayload = {
-  data: {
-    batchSize?: number;
-  };
+  data: {};
 };
 
-export const scrapeSdeDogmaUnits = client.createFunction(
+export const scrapeHoboleaksDogmaUnits = client.createFunction(
   {
-    id: "scrape-sde-dogma-units",
+    id: "scrape-hoboleaks-dogma-units",
     name: "Scrape Dogma Units",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/sde/dogma-units" },
-  async ({ step, event, logger }) => {
+  { event: "scrape/hoboleaks/dogma-units" },
+  async ({}) => {
     const stepStartTime = performance.now();
 
-    // Get all Dogma Attribute IDs in SDE (via Hoboleaks)
-    const unitIds = await getAllDogmaUnitIds().then((res) => res.data);
-    unitIds.sort((a, b) => a - b);
+    // Get all Dogma Units in Hoboleaks
+    const dogmaUnits: Record<
+      number,
+      { displayName?: string; description?: string; name: string }
+    > = await fetch("https://sde.hoboleaks.space/tq/dogmaunits.json").then(
+      (res) => res.json(),
+    );
+
+    const dogmaUnitIds = Object.keys(dogmaUnits).map((k) => Number(k));
 
     const limit = pLimit(20);
 
-    const dogmaUnitsChanges = await updateTable({
+    const agentTypeChanges = await updateTable({
       fetchLocalEntries: async () =>
         prisma.dogmaUnit
           .findMany({
             where: {
               unitId: {
-                in: unitIds,
+                in: dogmaUnitIds,
               },
             },
           })
@@ -44,21 +48,13 @@ export const scrapeSdeDogmaUnits = client.createFunction(
             entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
           ),
       fetchRemoteEntries: async () =>
-        Promise.all(
-          unitIds.map((unitId) =>
-            limit(async () =>
-              getDogmaUnitById(unitId)
-                .then((res) => res.data)
-                .then((dogmaUnit) => ({
-                  unitId: unitId,
-                  name: dogmaUnit.name,
-                  description: dogmaUnit.description ?? null,
-                  displayName: dogmaUnit.displayName ?? null,
-                  isDeleted: false,
-                })),
-            ),
-          ),
-        ),
+        Object.entries(dogmaUnits).map(([unitId, dogmaUnit]) => ({
+          unitId: Number(unitId),
+          name: dogmaUnit.name,
+          description: dogmaUnit.description ?? null,
+          displayName: dogmaUnit.displayName ?? null,
+          isDeleted: false,
+        })),
       batchCreate: (entries) =>
         limit(() =>
           prisma.dogmaUnit.createMany({
@@ -92,7 +88,7 @@ export const scrapeSdeDogmaUnits = client.createFunction(
 
     return {
       stats: {
-        dogmaUnitsChanges,
+        agentTypeChanges,
       },
       elapsed: performance.now() - stepStartTime,
     };

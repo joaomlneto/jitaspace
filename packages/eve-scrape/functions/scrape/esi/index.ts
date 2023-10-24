@@ -17,4 +17,6 @@ export * from "./scrapeEsiPlanets";
 export * from "./scrapeEsiRaces";
 export * from "./scrapeEsiRegions";
 export * from "./scrapeEsiSolarSystems";
+export * from "./scrapeEsiStargates";
+export * from "./scrapeEsiStations";
 export * from "./scrapeEsiTypes";

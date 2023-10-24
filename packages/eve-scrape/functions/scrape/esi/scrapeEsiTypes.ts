@@ -10,6 +10,7 @@ import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeTypesEventPayload = {
   data: {
     batchSize?: number;
@@ -62,6 +63,15 @@ export const scrapeEsiTypes = client.createFunction(
           const stepStartTime = performance.now();
           const thisBatchTypeIds = batches[i]!;
 
+          const iconIds = await prisma.icon
+            .findMany({
+              select: {
+                iconId: true,
+              },
+            })
+            .then((entries) => entries.map((entry) => entry.iconId));
+          let numEntriesMissingIcon = 0;
+
           const typeChanges = await updateTable({
             fetchLocalEntries: async () =>
               prisma.type
@@ -85,7 +95,15 @@ export const scrapeEsiTypes = client.createFunction(
                       .then((res) => res.data)
                       .then((type) => ({
                         typeId: type.type_id,
-                        iconId: type.icon_id ?? null,
+                        iconId: (() => {
+                          if (type.icon_id && !iconIds.includes(type.icon_id)) {
+                            numEntriesMissingIcon++;
+                            console.warn("Type is missing icon entry", type);
+                          }
+                          return type.icon_id && iconIds.includes(type.icon_id)
+                            ? type.icon_id
+                            : null;
+                        })(),
                         name: type.name,
                         description: type.description,
                         published: type.published,

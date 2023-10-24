@@ -2,11 +2,15 @@ import { NonRetriableError } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
-import { getCorporationsCorporationId } from "@jitaspace/esi-client";
+import {
+  getCharactersCharacterId,
+  getCorporationsCorporationId,
+} from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
 
 export type ScrapeCorporationsEventPayload = {
   data: {
@@ -67,6 +71,97 @@ export const scrapeEsiCorporations = client.createFunction(
               ),
             ),
           );
+
+          const characterIds = thisBatchCorporations
+            .flatMap((corporation) => [
+              corporation.ceo_id,
+              corporation.creator_id,
+            ])
+            .filter((characterId) => characterId !== 1);
+
+          const characters = await Promise.all(
+            characterIds.map((characterId) =>
+              limit(async () =>
+                getCharactersCharacterId(characterId).then((res) => ({
+                  characterId,
+                  ...res.data,
+                })),
+              ),
+            ),
+          );
+
+          // bootstrap missing corporationIds
+          const corporationIdsInDb = await prisma.corporation.createMany({
+            data: thisBatchCorporations.map((corporation) => ({
+              corporationId: corporation.corporationId,
+              memberCount: corporation.member_count,
+              name: corporation.name,
+              taxRate: corporation.tax_rate,
+              ticker: corporation.ticker,
+            })),
+            skipDuplicates: true,
+          });
+
+          const characterChanges = await updateTable({
+            fetchLocalEntries: async () =>
+              prisma.character
+                .findMany({
+                  where: {
+                    characterId: {
+                      in: characterIds,
+                    },
+                  },
+                })
+                .then((entries) =>
+                  entries.map((entry) =>
+                    excludeObjectKeys(entry, ["updatedAt"]),
+                  ),
+                ),
+            fetchRemoteEntries: async () =>
+              characters.map((character) => ({
+                characterId: character.characterId,
+                birthday: new Date(character.birthday),
+                bloodlineId: character.bloodline_id,
+                corporationId: character.corporation_id,
+                description: character.description ?? null,
+                factionId: character.faction_id ?? null,
+                gender: character.gender,
+                name: character.name,
+                raceId: character.race_id,
+                securityStatus: character.security_status ?? null,
+                title: character.title ?? null,
+                isDeleted: false,
+              })),
+            batchCreate: (entries) =>
+              limit(() =>
+                prisma.character.createMany({
+                  data: entries,
+                }),
+              ),
+            batchDelete: (entries) =>
+              prisma.character.updateMany({
+                data: {
+                  isDeleted: true,
+                },
+                where: {
+                  characterId: {
+                    in: entries.map((entry) => entry.characterId),
+                  },
+                },
+              }),
+            batchUpdate: (entries) =>
+              Promise.all(
+                entries.map((entry) =>
+                  limit(async () =>
+                    prisma.character.update({
+                      data: entry,
+                      where: { characterId: entry.characterId },
+                    }),
+                  ),
+                ),
+              ),
+            idAccessor: (e) => e.characterId,
+          });
 
           const corporationChanges = await updateTable({
             fetchLocalEntries: async () =>

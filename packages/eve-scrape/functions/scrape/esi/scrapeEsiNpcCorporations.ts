@@ -10,6 +10,7 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeNpcCorporationsEventPayload = {
   data: {};
 };
@@ -72,6 +73,18 @@ export const scrapeEsiNpcCorporations = client.createFunction(
         ),
       ),
     );
+
+    // bootstrap missing corporationIds
+    const corporationIdsInDb = await prisma.corporation.createMany({
+      data: npcCorporations.map((corporation) => ({
+        corporationId: corporation.corporationId,
+        memberCount: corporation.member_count,
+        name: corporation.name,
+        taxRate: corporation.tax_rate,
+        ticker: corporation.ticker,
+      })),
+      skipDuplicates: true,
+    });
 
     /**
      * NPC Corporation CEOs

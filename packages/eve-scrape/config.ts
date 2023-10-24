@@ -1,3 +1,4 @@
 export const MAX_NUM_IDS_PER_FUNCTION_CALL = 25000;
-
 export const MAX_MOONS_PER_FUNCTION_CALL = 10000;
+export const MAX_ESI_PARALLELISM = 20;
+export const MAX_DB_PARALLELISM = 20;

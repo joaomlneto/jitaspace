@@ -1,5 +1,7 @@
 import {
   PingEventPayload,
+  ScrapeAgentsEventPayload,
+  ScrapeAgentTypesEventPayload,
   ScrapeAlliancesEventPayload,
   ScrapeAncestriesEventPayload,
   ScrapeBloodlinesEventPayload,
@@ -18,11 +20,17 @@ import {
   ScrapeLoyaltyStoreOffersEventPayload,
   ScrapeMarketGroupsEventPayload,
   ScrapeMoonsEventPayload,
+  ScrapeNpcCorporationDivisionsEventPayload,
   ScrapeNpcCorporationsEventPayload,
   ScrapePlanetsEventPayload,
   ScrapeRacesEventPayload,
+  ScrapeRecentKillsEventPayload,
   ScrapeRegionEventPayload,
+  ScrapeSdeRacesEventPayload,
   ScrapeSolarSystemsEventPayload,
+  ScrapeStargatesEventPayload,
+  ScrapeStationServicesEventPayload,
+  ScrapeStationsEventPayload,
   ScrapeTypesEventPayload,
 } from "../functions";
 
@@ -47,9 +55,18 @@ export type Events = {
   "scrape/esi/races": ScrapeRacesEventPayload;
   "scrape/esi/regions": ScrapeRegionEventPayload;
   "scrape/esi/solar-systems": ScrapeSolarSystemsEventPayload;
+  "scrape/esi/stargates": ScrapeStargatesEventPayload;
+  "scrape/esi/stations": ScrapeStationsEventPayload;
   "scrape/esi/types": ScrapeTypesEventPayload;
+  "scrape/hoboleaks/agent-types": ScrapeAgentTypesEventPayload;
   "scrape/hoboleaks/dogma-effect-categories": ScrapeDogmaEffectCategoriesEventPayload;
+  "scrape/hoboleaks/dogma-units": ScrapeDogmaUnitsEventPayload;
+  "scrape/sde/agents": ScrapeAgentsEventPayload;
   "scrape/sde/dogma-attribute-categories": ScrapeDogmaAttributeCategoriesEventPayload;
   "scrape/sde/dogma-units": ScrapeDogmaUnitsEventPayload;
   "scrape/sde/icons": ScrapeIconsEventPayload;
+  "scrape/sde/npc-corporation-divisions": ScrapeNpcCorporationDivisionsEventPayload;
+  "scrape/sde/races": ScrapeSdeRacesEventPayload;
+  "scrape/sde/station-services": ScrapeStationServicesEventPayload;
+  "scrape/zkillboard/recent-kills": ScrapeRecentKillsEventPayload;
 };

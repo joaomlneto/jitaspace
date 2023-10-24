@@ -9,6 +9,7 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeDogmaAttributeCategoriesEventPayload = {
   data: {
     batchSize?: number;
@@ -27,7 +28,7 @@ export const scrapeSdeDogmaAttributeCategories = client.createFunction(
   async ({ step, event, logger }) => {
     const stepStartTime = performance.now();
 
-    // Get all Dogma Attribute Category IDs in SDE (via Hoboleaks)
+    // Get all Dogma Attribute Category IDs in SDE
     const dogmaAttributeCategoryIds =
       await getAllDogmaAttributeCategoryIds().then((res) => res.data);
     dogmaAttributeCategoryIds.sort((a, b) => a - b);

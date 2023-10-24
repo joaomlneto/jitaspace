@@ -9,6 +9,7 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeLoyaltyStoreOffersEventPayload = {
   data: {
     corporationIds?: number[];
@@ -75,9 +76,9 @@ export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
           corporationId: offer.corporationId,
           typeId: offer.type_id,
           quantity: offer.quantity,
-          akCost: offer.ak_cost ?? null,
-          iskCost: offer.isk_cost,
-          lpCost: offer.lp_cost,
+          akCost: offer.ak_cost ? BigInt(offer.ak_cost) : null,
+          iskCost: BigInt(offer.isk_cost),
+          lpCost: BigInt(offer.lp_cost),
           isDeleted: false,
         })),
       batchCreate: (entries) => {

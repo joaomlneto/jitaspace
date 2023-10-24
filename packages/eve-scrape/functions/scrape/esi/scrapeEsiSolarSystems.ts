@@ -5,9 +5,7 @@ import {
   getUniverseAsteroidBeltsAsteroidBeltId,
   getUniverseMoonsMoonId,
   getUniversePlanetsPlanetId,
-  getUniverseStargatesStargateId,
   getUniverseStarsStarId,
-  getUniverseStationsStationId,
   getUniverseSystems,
   getUniverseSystemsSystemId,
 } from "@jitaspace/esi-client";
@@ -25,8 +23,7 @@ export type ScrapeSolarSystemsEventPayload = {
 type StatsKey =
   | "solarSystems"
   | "planets"
-  | "stargates"
-  | "stations"
+  //| "stations"
   | "stars"
   | "moons"
   | "asteroidBelts";
@@ -42,7 +39,7 @@ export const scrapeEsiSolarSystems = client.createFunction(
   },
   { event: "scrape/esi/solar-systems" },
   async ({ step, event }) => {
-    const batchSize = event.data.batchSize ?? 100;
+    const batchSize = event.data.batchSize ?? 20;
 
     // Get all Solar System IDs in ESI
     const batches = await step.run("Fetch Solar System IDs", async () => {
@@ -58,13 +55,16 @@ export const scrapeEsiSolarSystems = client.createFunction(
       return [...Array(numBatches).keys()].map((batchId) => batchIds(batchId));
     });
 
-    let results: BatchStepResult<StatsKey>[] = [];
+    let results: (BatchStepResult<StatsKey> & {
+      stargateIds: number[];
+      stationIds: number[];
+    })[] = [];
     const limit = pLimit(20);
 
     for (let i = 0; i < batches.length; i++) {
       const result = await step.run(
         `Batch ${i + 1}/${batches.length}`,
-        async (): Promise<BatchStepResult<StatsKey>> => {
+        async (): Promise<(typeof results)[number]> => {
           const stepStartTime = performance.now();
           const thisBatchIds = batches[i]!;
 
@@ -260,136 +260,75 @@ export const scrapeEsiSolarSystems = client.createFunction(
             idAccessor: (e) => e.planetId,
           });
 
-          const stargateChanges = await updateTable({
-            fetchLocalEntries: async () =>
-              prisma.stargate
-                .findMany({
-                  where: {
-                    stargateId: {
-                      in: thisBatchStargateIds,
-                    },
-                  },
-                })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt"]),
-                  ),
-                ),
-            fetchRemoteEntries: async () =>
-              Promise.all(
-                thisBatchStargateIds.map((stargateId) =>
-                  limit(async () =>
-                    getUniverseStargatesStargateId(stargateId)
-                      .then((res) => res.data)
-                      .then((stargate) => ({
-                        stargateId: stargate.stargate_id,
-                        name: stargate.name,
-                        solarSystemId: stargate.system_id,
-                        destinationStargateId: stargate.destination.stargate_id,
-                        isDeleted: false,
-                      })),
-                  ),
-                ),
-              ),
-            batchCreate: (entries) =>
-              limit(() =>
-                prisma.stargate.createMany({
-                  data: entries,
-                }),
-              ),
-            batchDelete: (entries) =>
-              prisma.stargate.updateMany({
-                data: {
-                  isDeleted: true,
-                },
-                where: {
-                  stargateId: {
-                    in: entries.map((entry) => entry.stargateId),
-                  },
-                },
-              }),
-            batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.stargate.update({
-                      data: entry,
-                      where: { stargateId: entry.stargateId },
-                    }),
-                  ),
-                ),
-              ),
-            idAccessor: (e) => e.stargateId,
-          });
-
-          const stationChanges = await updateTable({
-            fetchLocalEntries: async () =>
-              prisma.station
-                .findMany({
-                  where: {
-                    stationId: {
-                      in: thisBatchStationIds,
-                    },
-                  },
-                })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt"]),
-                  ),
-                ),
-            fetchRemoteEntries: async () =>
-              Promise.all(
-                thisBatchStationIds.map((stationId) =>
-                  limit(async () =>
-                    getUniverseStationsStationId(stationId)
-                      .then((res) => res.data)
-                      .then((station) => ({
-                        stationId: station.station_id,
-                        name: station.name,
-                        solarSystemId: station.system_id,
-                        typeId: station.type_id,
-                        maxDockableShipVolume: station.max_dockable_ship_volume,
-                        officeRentalCost: station.office_rental_cost,
-                        ownerId: station.owner ?? null,
-                        raceId: station.race_id ?? null,
-                        reprocessingEfficiency: station.reprocessing_efficiency,
-                        reprocessingStationsTake:
-                          station.reprocessing_stations_take,
-                        isDeleted: false,
-                      })),
-                  ),
-                ),
-              ),
-            batchCreate: (entries) =>
-              limit(() =>
-                prisma.station.createMany({
-                  data: entries,
-                }),
-              ),
-            batchDelete: (entries) =>
-              prisma.station.updateMany({
-                data: {
-                  isDeleted: true,
-                },
-                where: {
-                  stationId: {
-                    in: entries.map((entry) => entry.stationId),
-                  },
-                },
-              }),
-            batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.station.update({
-                      data: entry,
-                      where: { stationId: entry.stationId },
-                    }),
-                  ),
-                ),
-              ),
-            idAccessor: (e) => e.stationId,
-          });
+          /*
+                              const stationChanges = await updateTable({
+                                fetchLocalEntries: async () =>
+                                  prisma.station
+                                    .findMany({
+                                      where: {
+                                        stationId: {
+                                          in: thisBatchStationIds,
+                                        },
+                                      },
+                                    })
+                                    .then((entries) =>
+                                      entries.map((entry) =>
+                                        excludeObjectKeys(entry, ["updatedAt"]),
+                                      ),
+                                    ),
+                                fetchRemoteEntries: async () =>
+                                  Promise.all(
+                                    thisBatchStationIds.map((stationId) =>
+                                      limit(async () =>
+                                        getUniverseStationsStationId(stationId)
+                                          .then((res) => res.data)
+                                          .then((station) => ({
+                                            stationId: station.station_id,
+                                            name: station.name,
+                                            solarSystemId: station.system_id,
+                                            typeId: station.type_id,
+                                            maxDockableShipVolume: station.max_dockable_ship_volume,
+                                            officeRentalCost: station.office_rental_cost,
+                                            ownerId: station.owner ?? null,
+                                            raceId: station.race_id ?? null,
+                                            reprocessingEfficiency: station.reprocessing_efficiency,
+                                            reprocessingStationsTake:
+                                              station.reprocessing_stations_take,
+                                            isDeleted: false,
+                                          })),
+                                      ),
+                                    ),
+                                  ),
+                                batchCreate: (entries) =>
+                                  limit(() =>
+                                    prisma.station.createMany({
+                                      data: entries,
+                                    }),
+                                  ),
+                                batchDelete: (entries) =>
+                                  prisma.station.updateMany({
+                                    data: {
+                                      isDeleted: true,
+                                    },
+                                    where: {
+                                      stationId: {
+                                        in: entries.map((entry) => entry.stationId),
+                                      },
+                                    },
+                                  }),
+                                batchUpdate: (entries) =>
+                                  Promise.all(
+                                    entries.map((entry) =>
+                                      limit(async () =>
+                                        prisma.station.update({
+                                          data: entry,
+                                          where: { stationId: entry.stationId },
+                                        }),
+                                      ),
+                                    ),
+                                  ),
+                                idAccessor: (e) => e.stationId,
+                              });*/
 
           const moonChanges = await updateTable({
             fetchLocalEntries: async () =>
@@ -584,12 +523,13 @@ export const scrapeEsiSolarSystems = client.createFunction(
             stats: {
               solarSystems: solarSystemChanges,
               planets: planetChanges,
-              stargates: stargateChanges,
-              stations: stationChanges,
+              //stations: stationChanges,
               stars: starChanges,
               moons: moonChanges,
               asteroidBelts: asteroidBeltChanges,
             },
+            stargateIds: thisBatchStargateIds,
+            stationIds: thisBatchStationIds,
             elapsed: performance.now() - stepStartTime,
           };
         },
@@ -597,67 +537,73 @@ export const scrapeEsiSolarSystems = client.createFunction(
       results.push(result);
     }
 
-    return await step.run("Compute Aggregates", async () => {
-      const totals: BatchStepResult<StatsKey> = {
-        stats: {
-          solarSystems: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
-          planets: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
-          stargates: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
-          stations: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
-          stars: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
-          moons: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
-          asteroidBelts: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
-        },
-        elapsed: 0,
-      };
-      results.forEach((stepResult) => {
-        Object.entries(stepResult.stats).forEach(([category, value]) => {
-          Object.keys(value).forEach(
-            (op) =>
-              (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
-                stepResult.stats[category as StatsKey][
-                  op as keyof CrudStatistics
-                ]),
-          );
-        });
-        totals.elapsed += stepResult.elapsed;
-      });
-      return totals;
+    // scrape Stargates
+    await step.sendEvent("fetch-esi-stargates", {
+      name: "scrape/esi/stargates",
+      data: {
+        stargateIds: [
+          ...new Set(results.flatMap((result) => result.stargateIds)),
+        ],
+      },
     });
+
+    // scrape Stations
+    await step.sendEvent("fetch-esi-stations", {
+      name: "scrape/esi/stations",
+      data: {
+        stationIds: [
+          ...new Set(results.flatMap((result) => result.stationIds)),
+        ],
+      },
+    });
+
+    const totals: BatchStepResult<StatsKey> = {
+      stats: {
+        solarSystems: {
+          created: 0,
+          deleted: 0,
+          modified: 0,
+          equal: 0,
+        },
+        planets: {
+          created: 0,
+          deleted: 0,
+          modified: 0,
+          equal: 0,
+        },
+        stars: {
+          created: 0,
+          deleted: 0,
+          modified: 0,
+          equal: 0,
+        },
+        moons: {
+          created: 0,
+          deleted: 0,
+          modified: 0,
+          equal: 0,
+        },
+        asteroidBelts: {
+          created: 0,
+          deleted: 0,
+          modified: 0,
+          equal: 0,
+        },
+      },
+      elapsed: 0,
+    };
+    results.forEach((stepResult) => {
+      Object.entries(stepResult.stats).forEach(([category, value]) => {
+        Object.keys(value).forEach(
+          (op) =>
+            (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
+              stepResult.stats[category as StatsKey][
+                op as keyof CrudStatistics
+              ]),
+        );
+      });
+      totals.elapsed += stepResult.elapsed;
+    });
+    return totals;
   },
 );
