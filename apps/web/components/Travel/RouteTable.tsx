@@ -12,6 +12,7 @@ import {
 
 import { ZkillboardRecentSystemKills } from "~/components/Travel/ZkillboardRecentSystemKills";
 
+
 type RouteTableProps = {
   route: {
     id: number | string;
@@ -37,10 +38,10 @@ export const RouteTable = memo(({ route }: RouteTableProps) => {
     return index;
   }, [systemKillsData]);
 
-  const killStatisticsDate: Date | undefined = useMemo(() => {
+  const killStatisticsDate: Date | null = useMemo(() => {
     const headerValue = systemKillsData?.headers?.["last-modified"];
     if (headerValue) return new Date(headerValue);
-    return undefined;
+    return null;
   }, [systemKillsData]);
 
   return (

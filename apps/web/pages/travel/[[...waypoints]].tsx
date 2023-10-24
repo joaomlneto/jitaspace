@@ -25,6 +25,7 @@ import { toArrayIfNot } from "@jitaspace/utils";
 import { RouteTable } from "~/components/Travel";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   initialWaypoints: string[];
   solarSystems: Record<
@@ -50,11 +51,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
         securityStatus: true,
         stargates: {
           select: {
-            DestinationStargate: {
-              select: {
-                solarSystemId: true,
-              },
-            },
+            destinationStargateId: true,
           },
         },
       },
@@ -69,7 +66,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
         name: solarSystem.name,
         securityStatus: solarSystem.securityStatus.toNumber(),
         neighbors: solarSystem.stargates.flatMap(
-          (stargate) => stargate.DestinationStargate.solarSystemId,
+          (stargate) => stargate.destinationStargateId!,
         ),
       };
     });

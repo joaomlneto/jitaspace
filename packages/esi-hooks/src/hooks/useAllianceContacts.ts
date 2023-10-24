@@ -22,7 +22,7 @@ export function useAllianceContacts() {
   );
 
   const allianceId = useMemo(
-    () => character?.data.alliance_id,
+    () => character?.data.alliance_id ?? null,
     [character?.data.alliance_id],
   );
 

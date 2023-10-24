@@ -15,6 +15,7 @@ import {
 import { MarketGroupAnchor, TypeAnchor } from "../Anchor";
 import { MarketGroupName, TypeName } from "../Text";
 
+
 export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   typeId?: string | number;
   showType?: boolean;
@@ -52,7 +53,7 @@ export const TypeMarketBreadcrumbs = memo(
         missingMarketGroupId =
           marketGroups[missingMarketGroupId]!.parent_group_id;
       }
-      return missingMarketGroupId;
+      return missingMarketGroupId ?? null;
     }, [type, marketGroups]);
 
     /**

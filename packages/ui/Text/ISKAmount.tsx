@@ -1,6 +1,10 @@
 import React, { memo, useMemo } from "react";
 import { Skeleton, Text, Tooltip, type TextProps } from "@mantine/core";
 
+
+
+
+
 export type ISKAmountProps = TextProps & {
   amount?: number;
   digits?: number;
@@ -10,7 +14,7 @@ export type ISKAmountProps = TextProps & {
 export const ISKAmount = memo(
   ({ amount, digits = 1, ...otherProps }: ISKAmountProps) => {
     const formattedAmount = useMemo(() => {
-      if (amount === undefined) return undefined;
+      if (amount === undefined) return null;
       const lookup = [
         { value: 1e12, symbol: "T" },
         { value: 1e9, symbol: "B" },

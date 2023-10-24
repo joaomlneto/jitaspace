@@ -605,7 +605,7 @@ model LoyaltyStoreOffer {
   type          Type                            @relation(fields: [typeId], references: [typeId])
   typeId        Int
   quantity      Int
-  akCost        BigInt?
+  akCost        Int?
   iskCost       BigInt
   lpCost        BigInt
   requiredItems LoyaltyStoreOfferRequiredItem[] @relation("LoyaltyStoreOfferRequiredItems")

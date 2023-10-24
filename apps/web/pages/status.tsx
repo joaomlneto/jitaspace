@@ -24,6 +24,7 @@ import { FormattedDateText } from "@jitaspace/ui";
 import { EsiClientStateCard } from "~/components/EsiClient";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
     useState<boolean>(false);
@@ -73,8 +74,8 @@ export default function Page() {
     { query: { refetchInterval: 30 * 1000 } },
   );
 
-  const sdeLastModifiedDate: Date | undefined = useMemo(
-    () => (sdeData?.lastModified ? new Date(sdeData.lastModified) : undefined),
+  const sdeLastModifiedDate: Date | null = useMemo(
+    () => (sdeData?.lastModified ? new Date(sdeData.lastModified) : null),
     [sdeData?.lastModified],
   );
 
@@ -153,7 +154,7 @@ export default function Page() {
             <Text>SDE Last Updated On</Text>
             <Text>
               {sdeIsLoading && "Checking..."}
-              {!sdeIsLoading && (
+              {!sdeIsLoading && sdeLastModifiedDate && (
                 <FormattedDateText date={sdeLastModifiedDate} />
               )}
             </Text>

@@ -22,7 +22,7 @@ export function useCorporationContacts() {
   );
 
   const corporationId = useMemo(
-    () => character?.data.corporation_id,
+    () => character?.data.corporation_id ?? null,
     [character?.data],
   );
 

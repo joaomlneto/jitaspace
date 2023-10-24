@@ -13,6 +13,7 @@ import { type ESIScope } from "@jitaspace/esi-metadata";
 
 import { getEveSsoAccessTokenPayload } from "../utils";
 
+
 type EsiClientContext = {
   loading: boolean;
   characterId?: number;
@@ -20,7 +21,7 @@ type EsiClientContext = {
   accessToken?: string;
   scopes: ESIScope[];
   expires?: number;
-  tokenExpirationDate?: Date;
+  tokenExpirationDate: Date | null;
   isTokenValid: boolean;
   //setAccessToken: (accessToken?: string) => void;
   //setLoading: (loading: boolean) => void;
@@ -40,6 +41,7 @@ const defaultEsiClientContext: EsiClientContext = {
   },
   scopes: [],
   isTokenValid: false,
+  tokenExpirationDate: null,
 };
 
 const EsiClientContext = createContext<EsiClientContext>(
@@ -60,12 +62,12 @@ export const EsiClientContextProvider = memo(
     );
 
     const characterIdStr = useMemo(
-      () => tokenPayload?.sub.split(":")[2],
+      () => tokenPayload?.sub.split(":")[2] ?? null,
       [tokenPayload],
     );
 
     const tokenExpirationDate = useMemo(
-      () => (tokenPayload?.exp ? new Date(tokenPayload.exp * 1000) : undefined),
+      () => (tokenPayload?.exp ? new Date(tokenPayload.exp * 1000) : null),
       [tokenPayload],
     );
 

@@ -76,7 +76,7 @@ export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
           corporationId: offer.corporationId,
           typeId: offer.type_id,
           quantity: offer.quantity,
-          akCost: offer.ak_cost ? BigInt(offer.ak_cost) : null,
+          akCost: offer.ak_cost ?? null,
           iskCost: BigInt(offer.isk_cost),
           lpCost: BigInt(offer.lp_cost),
           isDeleted: false,

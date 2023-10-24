@@ -22,6 +22,7 @@ import { LoyaltyPointsTable } from "~/components/LPStore";
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   corporation: { corporationId: number; name: string };
   types: { typeId: number; name: string }[];
@@ -171,7 +172,11 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       props: {
         corporation,
         types,
-        offers,
+        offers: offers.map((offer) => ({
+          ...offer,
+          iskCost: Number(offer.iskCost),
+          lpCost: Number(offer.lpCost),
+        })),
       },
       revalidate: 24 * 3600, // every 24 hours
     };

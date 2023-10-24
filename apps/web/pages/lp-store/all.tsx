@@ -17,6 +17,7 @@ import { LPStoreIcon } from "@jitaspace/eve-icons";
 import { LoyaltyPointsTable } from "~/components/LPStore";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   corporations: { corporationId: number; name: string }[];
   types: { typeId: number; name: string }[];
@@ -95,7 +96,11 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       props: {
         corporations,
         types,
-        offers,
+        offers: offers.map((offer) => ({
+          ...offer,
+          iskCost: Number(offer.iskCost),
+          lpCost: Number(offer.lpCost),
+        })),
       },
       revalidate: 24 * 3600, // every 24 hours
     };

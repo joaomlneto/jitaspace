@@ -47,7 +47,7 @@ export function useCorporationAssets() {
   );
 
   const corporationId = useMemo(
-    () => characterData?.data.corporation_id,
+    () => characterData?.data.corporation_id ?? null,
     [characterData?.data.corporation_id],
   );
 
@@ -98,6 +98,7 @@ export function useCorporationAssets() {
     if (!isDirector) {
       return "Character must have the corporation role of Director.";
     }
+    return null;
   }, [corporationId, error, isDirector, isTokenValid, scopes]);
 
   const assets: Record<

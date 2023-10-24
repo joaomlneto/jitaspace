@@ -36,6 +36,7 @@ import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
 import RouterTransition from "../components/RouterTransition";
 
+
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;
   requiredScopes?: ESIScope[];
@@ -86,7 +87,7 @@ const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
     });
   }, [session?.accessToken, setAuth, status]);
 
-  return useMemo(() => children, [children]);
+  return children;
 };
 
 export default function App({

@@ -7,6 +7,7 @@ import { EveEntityName, TimeAgoText } from "@jitaspace/ui";
 
 import { KillmailButton } from "./KillmailButton";
 
+
 type ZkillboardRecentSystemKillsProps = {
   solarSystemId: number | string;
   pastSeconds?: number;
@@ -56,7 +57,7 @@ export const ZkillboardRecentSystemKills = memo(
     // retrieve the date of when result was generated
     const lastChecked = useMemo(() => {
       const expiresHeader = data?.headers?.get("Expires");
-      if (expiresHeader == null) return undefined;
+      if (expiresHeader == null) return null;
       const expires = new Date(expiresHeader);
       return subHours(expires, 1);
     }, [data]);

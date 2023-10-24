@@ -5,6 +5,7 @@ import { useGetUniverseRaces } from "@jitaspace/esi-client";
 
 import { FactionAvatar } from "./FactionAvatar";
 
+
 export type RaceAvatarProps = Omit<AvatarProps, "src"> & {
   raceId?: string | number | null;
 };
@@ -13,7 +14,7 @@ export const RaceAvatar = memo(({ raceId, ...otherProps }: RaceAvatarProps) => {
   const { data } = useGetUniverseRaces();
 
   const race = useMemo(
-    () => data?.data.find((r) => r.race_id == raceId),
+    () => data?.data.find((r) => r.race_id == raceId) ?? null,
     [data?.data, raceId],
   );
 
