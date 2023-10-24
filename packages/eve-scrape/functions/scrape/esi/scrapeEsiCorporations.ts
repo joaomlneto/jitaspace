@@ -91,7 +91,7 @@ export const scrapeEsiCorporations = client.createFunction(
           );
 
           // bootstrap missing corporationIds
-          const corporationIdsInDb = await prisma.corporation.createMany({
+          await prisma.corporation.createMany({
             data: thisBatchCorporations.map((corporation) => ({
               corporationId: corporation.corporationId,
               memberCount: corporation.member_count,
@@ -232,12 +232,7 @@ export const scrapeEsiCorporations = client.createFunction(
 
           return {
             stats: {
-              corporations: {
-                created: corporationChanges.created,
-                deleted: corporationChanges.deleted,
-                modified: corporationChanges.modified,
-                equal: corporationChanges.equal,
-              },
+              corporations: corporationChanges,
             },
             elapsed: performance.now() - stepStartTime,
           };

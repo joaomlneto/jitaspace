@@ -1,4 +1,4 @@
-import pLimit, { LimitFunction } from "p-limit";
+import pLimit from "p-limit";
 
 import { Character, prisma } from "@jitaspace/db";
 import { GetCharactersCharacterIdQueryResponse } from "@jitaspace/esi-client";
@@ -8,10 +8,9 @@ import { excludeObjectKeys, updateTable } from "../utils";
 
 
 export const convertEsiCharacterToDomain = (
-  characterId: number,
-  character: GetCharactersCharacterIdQueryResponse,
+  character: GetCharactersCharacterIdQueryResponse & { characterId: number },
 ): Omit<Character, "updatedAt"> => ({
-  characterId: characterId,
+  characterId: character.characterId,
   birthday: new Date(character.birthday),
   bloodlineId: character.bloodline_id,
   corporationId: character.corporation_id,
@@ -29,13 +28,8 @@ export const mergeEsiEntriesIntoCharactersTable = (
   characters: (GetCharactersCharacterIdQueryResponse & {
     characterId: number;
   })[],
-  limit?: LimitFunction,
 ) =>
-  mergeEntriesIntoCharactersTable(
-    characters.map((character) =>
-      convertEsiCharacterToDomain(character.characterId, character),
-    ),
-  );
+  mergeEntriesIntoCharactersTable(characters.map(convertEsiCharacterToDomain));
 
 export const mergeEntriesIntoCharactersTable = (
   characters: Omit<Character, "updatedAt">[],
