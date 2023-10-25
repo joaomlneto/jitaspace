@@ -59,7 +59,7 @@
     "embla-carousel-react": "8.0.0-rc14",
     "humanize-duration": "^3.30.0",
     "jose": "^4.15.4",
-    "jotai": "^2.4.3",
+    "jotai": "^2.5.0",
     "jotai-cache": "^0.3.0",
     "jotai-devtools": "^0.7.0",
     "jotai-tanstack-query": "^0.7.2",
