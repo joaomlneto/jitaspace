@@ -228,8 +228,8 @@ importers:
         specifier: ^0.32.6
         version: 0.32.6
       superjson:
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 2.2.0
+        version: 2.2.0
       swr:
         specifier: ^2.2.4
         version: 2.2.4(react@18.2.0)
@@ -10873,8 +10873,8 @@ packages:
       copy-anything: 3.0.5
     dev: false
 
-  /superjson@2.0.0:
-    resolution: {integrity: sha512-W3n+NJ7TFjaLle8ihIIvsr/bbuKpnxeatsyjmhy7iSkom+/cshaHziCQAWXrHGWJVQSQFDOuES6C3nSEvcbrQg==}
+  /superjson@2.2.0:
+    resolution: {integrity: sha512-vSr6kwT/LY3T1+JaZllIGFp5+qEYyCw/s6EMgR8TulTwRbKETuVIqN4RTurPBTU/HlEpP0ytN3srB2vjjeBRoQ==}
     engines: {node: '>=16'}
     dependencies:
       copy-anything: 3.0.5

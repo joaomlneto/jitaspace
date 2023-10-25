@@ -80,7 +80,7 @@
     "react-html-parser": "^2.0.2",
     "react-obfuscate-email": "^1.1.2",
     "sharp": "^0.32.6",
-    "superjson": "2.0.0",
+    "superjson": "2.2.0",
     "swr": "^2.2.4",
     "workbox-window": "^7.0.0",
     "zod": "^3.22.4"
