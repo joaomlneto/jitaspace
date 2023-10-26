@@ -19,7 +19,7 @@
     "@jitaspace/sde-client": "*",
     "axios": "^1.5.1",
     "decimal.js": "^10.4.3",
-    "inngest": "^3.3.0",
+    "inngest": "^3.4.1",
     "p-limit": "^4.0.0"
   },
   "devDependencies": {
