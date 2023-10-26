@@ -345,8 +345,8 @@ importers:
         specifier: ^1.14.3
         version: 1.14.3(@types/node@18.18.6)(typescript@5.2.2)
       '@kubb/core':
-        specifier: ^1.14.3
-        version: 1.14.3
+        specifier: ^1.14.5
+        version: 1.14.5
       '@kubb/swagger':
         specifier: ^1.14.3
         version: 1.14.3(@kubb/react@1.14.3)(openapi-types@12.1.3)
@@ -458,8 +458,8 @@ importers:
         specifier: ^1.14.3
         version: 1.14.3(@types/node@18.18.6)(typescript@5.2.2)
       '@kubb/core':
-        specifier: ^1.14.3
-        version: 1.14.3
+        specifier: ^1.14.5
+        version: 1.14.5
       '@kubb/swagger':
         specifier: ^1.14.3
         version: 1.14.3(@kubb/react@1.14.3)(openapi-types@12.1.3)
@@ -637,8 +637,8 @@ importers:
         specifier: ^1.14.3
         version: 1.14.3(@types/node@18.18.6)(typescript@5.2.2)
       '@kubb/core':
-        specifier: ^1.14.3
-        version: 1.14.3
+        specifier: ^1.14.5
+        version: 1.14.5
       '@kubb/swagger':
         specifier: ^1.14.3
         version: 1.14.3(@kubb/react@1.14.3)(openapi-types@12.1.3)
@@ -2780,8 +2780,32 @@ packages:
       semver: 7.5.4
     dev: false
 
+  /@kubb/core@1.14.5:
+    resolution: {integrity: sha512-n7+mHbBz4hdjtdIcOvqFtKCBJvqm0kQQnpqwU+A6mFC8sERFr3Iwr0dkHG5Nev3mVP6RBFwYAdL3fHGXKiIz5g==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    dependencies:
+      '@kubb/parser': 1.14.5
+      change-case: 4.1.2
+      directory-tree: 3.5.1
+      find-up: 6.3.0
+      fs-extra: 11.1.1
+      js-runtime: 0.0.6
+      lodash.isequal: 4.5.0
+      natural-orderby: 3.0.2
+      picocolors: 1.0.0
+      seedrandom: 3.0.5
+      semver: 7.5.4
+    dev: false
+
   /@kubb/parser@1.14.3:
     resolution: {integrity: sha512-sL1JiXXPYC5Hfdy6SKzoc4+SKdQs+eze9Vp3qXbiAGdK4zIXEoIH8vWGpvmJs2+6v1t6kdVkn9oMF2HiYs+Gsg==}
+    engines: {node: '>=18', pnpm: '>=8.3.0'}
+    dependencies:
+      typescript: 5.2.2
+    dev: false
+
+  /@kubb/parser@1.14.5:
+    resolution: {integrity: sha512-WPs3iqGNfkcgjGSIEaOZJKq/lhHW9hmumVS2yrzJ7PX/i8mXUBUac6Xj5lFoKc6kAY0QCdudpD5guOh35Bg2lA==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
       typescript: 5.2.2
