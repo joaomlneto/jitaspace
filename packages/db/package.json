@@ -9,7 +9,7 @@
     "clean": "rm -rf .turbo node_modules",
     "db:studio": "prisma studio --browser none",
     "db:generate": "prisma generate",
-    "db:generate:watch": "pnpm with-env db:generate --watch",
+    "db:generate:watch": "pnpm with-env prisma generate --watch",
     "db:push": "pnpm with-env prisma db push --skip-generate",
     "db:migrate:deploy": "pnpm with-env prisma migrate deploy",
     "db:migrate:dev": "pnpm with-env prisma migrate dev",
