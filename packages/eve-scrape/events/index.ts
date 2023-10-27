@@ -11,6 +11,7 @@ import {
   ScrapeDogmaAttributeCategoriesEventPayload,
   ScrapeDogmaAttributesEventPayload,
   ScrapeDogmaEffectCategoriesEventPayload,
+  ScrapeDogmaEffectModifiersEventPayload,
   ScrapeDogmaEffectsEventPayload,
   ScrapeDogmaUnitsEventPayload,
   ScrapeFactionsEventPayload,
@@ -63,6 +64,7 @@ export type Events = {
   "scrape/hoboleaks/dogma-units": ScrapeDogmaUnitsEventPayload;
   "scrape/sde/agents": ScrapeAgentsEventPayload;
   "scrape/sde/dogma-attribute-categories": ScrapeDogmaAttributeCategoriesEventPayload;
+  "scrape/sde/dogma-effect-modifiers": ScrapeDogmaEffectModifiersEventPayload;
   "scrape/sde/dogma-units": ScrapeDogmaUnitsEventPayload;
   "scrape/sde/icons": ScrapeIconsEventPayload;
   "scrape/sde/npc-corporation-divisions": ScrapeNpcCorporationDivisionsEventPayload;

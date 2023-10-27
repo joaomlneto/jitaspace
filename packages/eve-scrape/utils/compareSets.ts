@@ -1,4 +1,7 @@
+import { NonRetriableError } from "inngest";
+
 import { env } from "../env.mjs";
+
 
 export const compareSets = <T extends object>({
   recordsBefore,
@@ -73,11 +76,11 @@ export const compareSets = <T extends object>({
   );
 
   /*
-  modified.map((record) => {
-    const before = indexBefore[getId(record)];
-    const after = indexAfter[getId(record)];
-    console.log({ before, after });
-  });*/
+    modified.map((record) => {
+      const before = indexBefore[getId(record)];
+      const after = indexAfter[getId(record)];
+      console.log({ before, after });
+    });*/
 
   // sanity check
   const numInputs = [
@@ -103,7 +106,9 @@ export const compareSets = <T extends object>({
       numInputs,
       numOutputs,
     });
-    throw Error("compareSets: input and output length do not match");
+    throw new NonRetriableError(
+      "compareSets: input and output length do not match",
+    );
   }
 
   return { created, deleted, equal, modified };

@@ -64,14 +64,15 @@ model Category {
 }
 
 model Group {
-  groupId    Int      @id
-  category   Category @relation(fields: [categoryId], references: [categoryId])
-  categoryId Int
-  name       String
-  published  Boolean
-  types      Type[]
-  updatedAt  DateTime @updatedAt()
-  isDeleted  Boolean  @default(false)
+  groupId             Int                   @id
+  category            Category              @relation(fields: [categoryId], references: [categoryId])
+  categoryId          Int
+  name                String
+  published           Boolean
+  types               Type[]
+  updatedAt           DateTime              @updatedAt()
+  isDeleted           Boolean               @default(false)
+  DogmaEffectModifier DogmaEffectModifier[] @relation("DogmaEffectModifierGroup")
 
   @@index([categoryId])
 }
@@ -258,6 +259,7 @@ model DogmaEffect {
 model DogmaEffectModifier {
   effect               DogmaEffect     @relation("DogmaEffectModifiers", fields: [effectId], references: [effectId])
   effectId             Int
+  modifierIndex        Int
   domain               String?
   targetEffect         DogmaEffect?    @relation("ModifiedDogmaEffect", fields: [targetEffectId], references: [effectId])
   targetEffectId       Int?
@@ -267,8 +269,13 @@ model DogmaEffectModifier {
   modifyingAttribute   DogmaAttribute? @relation("DogmaEffectsModifying", fields: [modifyingAttributeId], references: [attributeId])
   modifyingAttributeId Int?
   operator             Int?
+  group                Group?          @relation("DogmaEffectModifierGroup", fields: [groupId], references: [groupId])
+  groupId              Int?
+  skillTypeId          Int?
+  updatedAt            DateTime        @updatedAt()
+  isDeleted            Boolean         @default(false)
 
-  @@id([effectId])
+  @@id([effectId, modifierIndex])
   @@index([effectId])
   @@index([targetEffectId])
   @@index([modifiedAttributeId])
