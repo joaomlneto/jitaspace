@@ -413,6 +413,7 @@ model Station {
   isDeleted                Boolean          @default(false)
   stationServices          StationService[]
   corporationHomeStations  Corporation[]    @relation("CorporationHomeStation")
+  Agent                    Agent[]          @relation("AgentStation")
 
   @@index([solarSystemId])
   @@index([typeId])
@@ -675,7 +676,8 @@ model Agent {
   agentDivisionId Int
   isLocator       Boolean
   level           Int
-  location        Int // ???!!! FIXME: This is a station? Confirm!
+  station         Station                @relation("AgentStation", fields: [stationId], references: [stationId])
+  stationId       Int
   updatedAt       DateTime               @updatedAt()
   isDeleted       Boolean                @default(false)
 }

@@ -71,7 +71,7 @@ export const scrapeSdeAgents = client.createFunction(
                   agentDivisionId: agent.divisionID,
                   isLocator: agent.isLocator,
                   level: agent.level,
-                  location: agent.locationID,
+                  stationId: agent.locationID,
                   isDeleted: false,
                 })),
             ),
