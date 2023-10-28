@@ -30,6 +30,7 @@ import {
   scrapeSdeIcons,
   scrapeSdeNpcCorporationDivisions,
   scrapeSdeRaces,
+  scrapeSdeResearchAgents,
   scrapeSdeStationServices,
   scrapeZkillboardRecentKills,
 } from "./scrape";
@@ -68,6 +69,7 @@ export const functions = [
   scrapeSdeIcons,
   scrapeSdeNpcCorporationDivisions,
   scrapeSdeRaces,
+  scrapeSdeResearchAgents,
   scrapeSdeStationServices,
   scrapeZkillboardRecentKills,
 ];

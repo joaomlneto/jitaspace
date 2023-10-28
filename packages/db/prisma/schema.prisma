@@ -33,6 +33,7 @@ model Character {
   updatedAt           DateTime        @updatedAt()
   isDeleted           Boolean         @default(false)
   Agent               Agent?          @relation("AgentCharacter")
+  researchAgents      ResearchAgent[] @relation("ResearchAgentCharacter")
 
   @@index([bloodlineId])
   @@index([corporationId])
@@ -117,6 +118,8 @@ model Type {
   // Was this item deleted
   isDeleted                       Boolean                         @default(false)
   Stargate                        Stargate[]                      @relation("StargateType")
+  AgentInSpace                    AgentInSpace[]                  @relation("AgentInSpaceType")
+  ResearchAgentSkills             ResearchAgentSkills[]           @relation("ResearchAgentSkillType")
 
   @@index([marketGroupId])
   @@index([graphicId])
@@ -471,20 +474,21 @@ model Constellation {
 
 // TODO add position,
 model SolarSystem {
-  solarSystemId       Int           @id
+  solarSystemId       Int            @id
   name                String
   stations            Station[]
-  constellation       Constellation @relation(fields: [constellationId], references: [constellationId])
+  constellation       Constellation  @relation(fields: [constellationId], references: [constellationId])
   constellationId     Int
   securityClass       String?
   securityStatus      Decimal
-  star                Star?         @relation("SolarSystemStar")
+  star                Star?          @relation("SolarSystemStar")
   starId              Int?
-  stargates           Stargate[]    @relation("SolarSystemStargate")
-  updatedAt           DateTime      @updatedAt()
-  isDeleted           Boolean       @default(false)
-  solarSystemFactions Faction[]     @relation("FactionSolarSystem")
-  Planet              Planet[]      @relation("PlanetSolarSystem")
+  stargates           Stargate[]     @relation("SolarSystemStargate")
+  updatedAt           DateTime       @updatedAt()
+  isDeleted           Boolean        @default(false)
+  solarSystemFactions Faction[]      @relation("FactionSolarSystem")
+  Planet              Planet[]       @relation("PlanetSolarSystem")
+  AgentInSpace        AgentInSpace[] @relation("AgentInSpaceSolarSystem")
 
   @@index([constellationId])
 }
@@ -678,6 +682,39 @@ model Agent {
   level           Int
   station         Station                @relation("AgentStation", fields: [stationId], references: [stationId])
   stationId       Int
+  agentsInSpace   AgentInSpace[]         @relation("AgentInSpace")
   updatedAt       DateTime               @updatedAt()
   isDeleted       Boolean                @default(false)
+}
+
+model AgentInSpace {
+  agent         Agent       @relation("AgentInSpace", fields: [characterId], references: [characterId])
+  characterId   Int         @id
+  dungeonId     Int
+  solarSystem   SolarSystem @relation("AgentInSpaceSolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  solarSystemId Int
+  spawnPointId  Int
+  type          Type        @relation("AgentInSpaceType", fields: [typeId], references: [typeId])
+  typeId        Int
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
+}
+
+model ResearchAgent {
+  agent       Character             @relation("ResearchAgentCharacter", fields: [characterId], references: [characterId])
+  characterId Int                   @id
+  skills      ResearchAgentSkills[] @relation("ResearchAgentSkills")
+  updatedAt   DateTime              @updatedAt()
+  isDeleted   Boolean               @default(false)
+}
+
+model ResearchAgentSkills {
+  agent       ResearchAgent @relation("ResearchAgentSkills", fields: [characterId], references: [characterId])
+  characterId Int
+  skill       Type          @relation("ResearchAgentSkillType", fields: [typeId], references: [typeId])
+  typeId      Int
+  updatedAt   DateTime      @updatedAt()
+  isDeleted   Boolean       @default(false)
+
+  @@id([characterId, typeId])
 }
