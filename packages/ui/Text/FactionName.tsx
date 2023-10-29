@@ -3,8 +3,9 @@ import { type TextProps } from "@mantine/core";
 
 import { EveEntityName } from "./EveEntityName";
 
+
 export type FactionNameProps = TextProps & {
-  factionId?: string | number;
+  factionId?: string | number | null;
 };
 
 export const FactionName = memo(

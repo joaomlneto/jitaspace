@@ -9,6 +9,7 @@ export * from "./DogmaEffectAnchor";
 export * from "./EveEntityAnchor";
 export * from "./EveEntityNameAnchor";
 export * from "./EveMailSenderAnchor";
+export * from "./FactionAnchor";
 export * from "./GroupAnchor";
 export * from "./MarketGroupAnchor";
 export * from "./OpenInformationWindowAnchor";

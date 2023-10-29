@@ -4,10 +4,14 @@ import { Anchor, Skeleton, type AnchorProps } from "@mantine/core";
 
 import { useEsiName, type ResolvableEntityCategory } from "@jitaspace/hooks";
 
+
+
+
+
 export type EveEntityAnchorProps = Omit<AnchorProps, "component" | "href"> &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
-    entityId?: string | number;
+    entityId?: string | number | null;
     category?: ResolvableEntityCategory;
   };
 
@@ -18,7 +22,7 @@ export const EveEntityAnchor = memo(
     children,
     ...props
   }: EveEntityAnchorProps) => {
-    const { category } = useEsiName(entityId, categoryHint);
+    const { category } = useEsiName(entityId ?? undefined, categoryHint);
 
     const url = useMemo(() => {
       if (!entityId || !category) return "#";

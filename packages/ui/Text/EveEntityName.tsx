@@ -3,14 +3,18 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 
 import { useEsiName, type ResolvableEntityCategory } from "@jitaspace/hooks";
 
+
+
+
+
 export type EveEntityNameProps = TextProps & {
-  entityId?: string | number;
+  entityId?: string | number | null;
   category?: ResolvableEntityCategory;
 };
 
 export const EveEntityName = memo(
   ({ entityId, category, ...otherProps }: EveEntityNameProps) => {
-    const { name, loading } = useEsiName(entityId, category);
+    const { name, loading } = useEsiName(entityId ?? undefined, category);
 
     if (!entityId || loading) {
       return (
