@@ -15,9 +15,11 @@ import {
   getUniverseCategoriesCategoryId,
   GetUniverseCategoriesCategoryIdQueryResponse,
 } from "@jitaspace/esi-client";
+import { ItemsIcon } from "@jitaspace/eve-icons";
 import { CategoryAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   categories: Record<number, GetUniverseCategoriesCategoryIdQueryResponse>;
@@ -63,7 +65,10 @@ export default function Page({ categories }: PageProps) {
   return (
     <Container size="md">
       <Stack>
-        <Title>Categories</Title>
+        <Group>
+          <ItemsIcon width={48} />
+          <Title>Categories</Title>
+        </Group>
         <SimpleGrid
           cols={3}
           spacing="xs"

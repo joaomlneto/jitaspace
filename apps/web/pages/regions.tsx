@@ -1,6 +1,6 @@
 import React, { useMemo, type ReactElement } from "react";
 import { GetStaticProps } from "next";
-import { Container, SimpleGrid, Stack, Title } from "@mantine/core";
+import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
 import {
@@ -8,9 +8,11 @@ import {
   getUniverseRegionsRegionId,
   GetUniverseRegionsRegionIdQueryResponse,
 } from "@jitaspace/esi-client";
+import { MapIcon } from "@jitaspace/eve-icons";
 import { RegionAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   regions: GetUniverseRegionsRegionIdQueryResponse[];
@@ -79,7 +81,10 @@ export default function Page({ regions }: PageProps) {
   return (
     <Container size="sm">
       <Stack>
-        <Title>Regions</Title>
+        <Group>
+          <MapIcon width={48} />
+          <Title>Regions</Title>
+        </Group>
         {galaxyRegions.map((galaxy) => (
           <React.Fragment key={galaxy.name}>
             <Title order={3}>{galaxy.name}</Title>
