@@ -4,6 +4,7 @@ import { openSpotlight } from "@mantine/spotlight";
 
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import {
+  AgentFinderIcon,
   AssetsIcon,
   AttributesIcon,
   CalendarIcon,
@@ -238,6 +239,14 @@ export const universeApps: Record<string, JitaApp> = {
     url: "/categories",
     Icon: (props) => <ItemsIcon {...props} />,
     scopes: {},
+  },
+  agents: {
+    name: "Agents",
+    description: "Browse all agents in the EVE Universe",
+    url: "/agents",
+    Icon: (props) => <AgentFinderIcon {...props} />,
+    scopes: {},
+    tags: ["beta"],
   },
   travel: {
     name: "Travel Planner",

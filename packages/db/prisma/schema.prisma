@@ -663,7 +663,7 @@ model AgentType {
 
 model NpcCorporationDivision {
   npcCorporationDivisionId Int      @id
-  name                     String?
+  name                     String
   internalName             String
   leaderTypeName           String?
   updatedAt                DateTime @updatedAt()

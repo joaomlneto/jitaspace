@@ -8,3 +8,12 @@ export function randomProperty<V>(obj: Record<string | number | symbol, V>): V {
   const randomKey = keys[randomIndex] as keyof typeof obj;
   return obj[randomKey] as V;
 }
+
+export function removeUndefinedFields<T>(
+  obj: Record<string, T>,
+): Record<string, T> {
+  Object.keys(obj).forEach((key) =>
+    obj[key] === undefined ? delete obj[key] : {},
+  );
+  return obj;
+}
