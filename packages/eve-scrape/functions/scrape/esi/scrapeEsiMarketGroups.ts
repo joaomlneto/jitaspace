@@ -104,7 +104,7 @@ export const scrapeEsiMarketGroups = client.createFunction(
           // create the missing entries!
           await limit(() =>
             prisma.marketGroup.createMany({
-              data: entries,
+              data: creatableEntries,
             }),
           );
 
