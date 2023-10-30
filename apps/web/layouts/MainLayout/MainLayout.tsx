@@ -2,7 +2,8 @@ import React, { type PropsWithChildren } from "react";
 import { AppShell, createStyles, type AppShellProps } from "@mantine/core";
 
 import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
-import { LayoutHeader } from "./LayoutHeader";
+import { HeaderWithMegaMenus } from "~/layouts/MainLayout/HeaderWithMegaMenus";
+
 
 const useStyles = createStyles(() => ({
   container: {
@@ -19,7 +20,7 @@ export function MainLayout({
   const { classes } = useStyles();
   return (
     <AppShell
-      header={<LayoutHeader />}
+      header={<HeaderWithMegaMenus />}
       className={classes.container}
       {...otherProps}
       styles={(_theme) => ({

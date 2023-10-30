@@ -1,6 +1,6 @@
 import React from "react";
+import Image from "next/image";
 import { type LinkProps } from "next/link";
-import { openSpotlight } from "@mantine/spotlight";
 
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import {
@@ -16,7 +16,6 @@ import {
   MapIcon,
   MarketIcon,
   OpportunitiesTreeIcon,
-  PeopleAndPlacesIcon,
   SkillsIcon,
   WalletIcon,
   type EveIconProps,
@@ -110,8 +109,7 @@ export const jitaApps: Record<string, JitaApp> = {
   },
   contacts: {
     name: "Contacts",
-    description:
-      "View and manage your character's, corporation's and alliance's contacts.",
+    description: "View and manage your character's contacts.",
     url: "/contacts",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     tags: ["beta"],
@@ -216,6 +214,95 @@ export const jitaApps: Record<string, JitaApp> = {
   },
 };
 
+export const corporationApps: Record<string, JitaApp> = {
+  contacts: {
+    name: "Contacts",
+    description: "View and manage your corporation's contacts.",
+    url: "/contacts",
+    Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
+    tags: ["beta"],
+    scopes: {
+      optional: [
+        {
+          reason: "Read Character Contacts",
+          scopes: ["esi-characters.read_contacts.v1"],
+        },
+        {
+          reason: "Read Corporation Contacts",
+          scopes: ["esi-corporations.read_contacts.v1"],
+        },
+        {
+          reason: "Read Alliance Contacts",
+          scopes: ["esi-alliances.read_contacts.v1"],
+        },
+        {
+          reason: "Update Character Contacts",
+          scopes: ["esi-characters.write_contacts.v1"],
+        },
+      ],
+    },
+  },
+  assets: {
+    name: "Assets",
+    description: "View and manage your corporation's assets.",
+    url: "/assets",
+    Icon: (props) => React.createElement(AssetsIcon, props),
+    tags: ["beta"],
+    scopes: {
+      optional: [
+        {
+          reason: "View your character assets",
+          scopes: ["esi-assets.read_assets.v1"],
+        },
+        {
+          reason: "View your corporation assets",
+          scopes: [
+            "esi-characters.read_corporation_roles.v1",
+            "esi-assets.read_corporation_assets.v1",
+          ],
+        },
+      ],
+    },
+  },
+  wallet: {
+    name: "Wallet",
+    description: "View your corporation's wallet balance and transactions.",
+    url: "/wallet",
+    Icon: (props) => React.createElement(WalletIcon, props),
+    tags: ["beta"],
+    scopes: {
+      optional: [
+        {
+          reason: "View your character wallet",
+          scopes: ["esi-wallet.read_character_wallet.v1"],
+        },
+        {
+          reason: "View your corporation wallet",
+          scopes: ["esi-wallet.read_corporation_wallets.v1"],
+        },
+      ],
+    },
+  },
+};
+
+export const allianceApps: Record<string, JitaApp> = {
+  contacts: {
+    name: "Contacts",
+    description: "View and manage your alliance's contacts.",
+    url: "/contacts",
+    Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
+    tags: ["beta"],
+    scopes: {
+      optional: [
+        {
+          reason: "Read Alliance Contacts",
+          scopes: ["esi-alliances.read_contacts.v1"],
+        },
+      ],
+    },
+  },
+};
+
 export const universeApps: Record<string, JitaApp> = {
   lpstore: {
     name: "LP Store",
@@ -227,7 +314,7 @@ export const universeApps: Record<string, JitaApp> = {
   },
   map: {
     name: "Map",
-    description: "View the EVE Universe Map.",
+    description: "Browse the regions, constellations and solar systems.",
     url: "/regions",
     Icon: (props) => <MapIcon {...props} />,
     scopes: {},
@@ -258,7 +345,7 @@ export const universeApps: Record<string, JitaApp> = {
   },
   opportunities: {
     name: "Opportunities",
-    description: "View the Opportunities Tree.",
+    description: "View EVE Online's Opportunities Tree.",
     url: "/opportunities",
     Icon: (props) => <OpportunitiesTreeIcon {...props} />,
     scopes: {},
@@ -273,12 +360,13 @@ export const universeApps: Record<string, JitaApp> = {
   },
   dogma: {
     name: "Dogma",
-    description: "View all attributes and effects",
+    description: "View all attributes and effects in the game.",
     url: "/dogma",
     Icon: (props) => <AttributesIcon {...props} />,
     scopes: {},
     tags: ["beta"],
   },
+  /*
   search: {
     name: "Search",
     description:
@@ -302,6 +390,22 @@ export const universeApps: Record<string, JitaApp> = {
         },
       ],
     },
+  },*/
+};
+
+export const devApps: Record<string, JitaApp> = {
+  sde: {
+    name: "SDE REST API",
+    description:
+      "A REST API with an OpenAPI specification for EVE Online's Static Data Export.",
+    url: "https://sde.jita.space",
+    Icon: (props) =>
+      React.createElement(Image, {
+        src: "https://images.evetech.net/types/60753/icon?size=64",
+        alt: "SDE OpenAPI",
+      }),
+    hotKey: ["⌘", "P"],
+    scopes: {},
   },
 };
 
