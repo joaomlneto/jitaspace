@@ -54,7 +54,7 @@ export default async function NextApiRouteHandler(
       new URL("https://login.eveonline.com/oauth/jwks"),
     );
     await jose.jwtVerify(token, JWKS, {
-      issuer: "login.eveonline.com",
+      issuer: "https://login.eveonline.com",
       audience: "EVE Online",
     });
   } catch (e) {
