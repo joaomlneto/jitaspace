@@ -102,6 +102,11 @@ export const scrapeSdeNpcCorporationDivisions = client.createFunction(
       idAccessor: (e) => e.npcCorporationDivisionId,
     });
 
+    await step.sendEvent("Function Finished", {
+      name: "scrape/sde/npc-corporation-divisions.finished",
+      data: {},
+    });
+
     return {
       stats: {
         corporationDivisionChanges,

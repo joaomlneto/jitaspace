@@ -7,6 +7,7 @@ import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeAlliancesEventPayload = {
   data: {
     batchSize?: number;
@@ -162,12 +163,17 @@ export const scrapeEsiAlliances = client.createFunction(
 
     // TODO: scrape linked characters
     /*
-    await step.sendEvent({
-      name: "scrape/esi/corporations",
-      data: {
-        corporationIds: results.flatMap((result) => result.corporationIds),
-      },
-    });*/
+        await step.sendEvent({
+          name: "scrape/esi/corporations",
+          data: {
+            corporationIds: results.flatMap((result) => result.corporationIds),
+          },
+        });*/
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/alliances.finished",
+      data: {},
+    });
 
     const totals: BatchStepResult<StatsKey> = {
       stats: {

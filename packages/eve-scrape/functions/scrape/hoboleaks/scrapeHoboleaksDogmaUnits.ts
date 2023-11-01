@@ -19,7 +19,7 @@ export const scrapeHoboleaksDogmaUnits = client.createFunction(
     },
   },
   { event: "scrape/hoboleaks/dogma-units" },
-  async ({}) => {
+  async ({ step }) => {
     const stepStartTime = performance.now();
 
     // Get all Dogma Units in Hoboleaks
@@ -84,6 +84,11 @@ export const scrapeHoboleaksDogmaUnits = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.unitId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/hoboleaks/dogma-units.finished",
+      data: {},
     });
 
     return {

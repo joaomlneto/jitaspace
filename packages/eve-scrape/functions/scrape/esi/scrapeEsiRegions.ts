@@ -9,6 +9,7 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeRegionEventPayload = {
   data: {};
 };
@@ -23,7 +24,7 @@ export const scrapeEsiRegions = client.createFunction(
   },
   { event: "scrape/esi/regions" },
 
-  async ({}) => {
+  async ({ step }) => {
     // Get all Region IDs in ESI
     const regionIds = await getUniverseRegions().then((res) => res.data);
     regionIds.sort((a, b) => a - b);
@@ -90,6 +91,11 @@ export const scrapeEsiRegions = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.regionId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/regions.finished",
+      data: {},
     });
 
     return {

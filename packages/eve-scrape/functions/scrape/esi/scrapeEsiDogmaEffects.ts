@@ -10,6 +10,7 @@ import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeDogmaEffectsEventPayload = {
   data: {
     batchSize?: number;
@@ -154,31 +155,35 @@ export const scrapeEsiDogmaEffects = client.createFunction(
       results.push(result);
     }
 
-    return await step.run("Compute Aggregates", async () => {
-      const totals: BatchStepResult<StatsKey> = {
-        stats: {
-          dogmaEffects: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
+    const totals: BatchStepResult<StatsKey> = {
+      stats: {
+        dogmaEffects: {
+          created: 0,
+          deleted: 0,
+          modified: 0,
+          equal: 0,
         },
-        elapsed: 0,
-      };
-      results.forEach((stepResult) => {
-        Object.entries(stepResult.stats).forEach(([category, value]) => {
-          Object.keys(value).forEach(
-            (op) =>
-              (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
-                stepResult.stats[category as StatsKey][
-                  op as keyof CrudStatistics
-                ]),
-          );
-        });
-        totals.elapsed += stepResult.elapsed;
+      },
+      elapsed: 0,
+    };
+    results.forEach((stepResult) => {
+      Object.entries(stepResult.stats).forEach(([category, value]) => {
+        Object.keys(value).forEach(
+          (op) =>
+            (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
+              stepResult.stats[category as StatsKey][
+                op as keyof CrudStatistics
+              ]),
+        );
       });
-      return totals;
+      totals.elapsed += stepResult.elapsed;
     });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/dogma-effects.finished",
+      data: {},
+    });
+
+    return totals;
   },
 );

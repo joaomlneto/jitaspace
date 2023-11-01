@@ -6,6 +6,7 @@ import { getAllIconIds, getIconById } from "@jitaspace/sde-client";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeIconsEventPayload = {
   data: {
     batchSize?: number;
@@ -89,6 +90,11 @@ export const scrapeSdeIcons = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.iconId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/sde/icons.finished",
+      data: {},
     });
 
     return {

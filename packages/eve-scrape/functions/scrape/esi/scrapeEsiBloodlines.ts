@@ -6,6 +6,7 @@ import { getUniverseBloodlines } from "@jitaspace/esi-client";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeBloodlinesEventPayload = {
   data: {};
 };
@@ -96,6 +97,11 @@ export const scrapeEsiBloodlines = client.createFunction(
           ...new Set(bloodlines.map((bloodline) => bloodline.corporation_id)),
         ],
       },
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/bloodlines.finished",
+      data: {},
     });
 
     return {

@@ -9,6 +9,7 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeCategoriesEventPayload = {
   data: {};
 };
@@ -22,7 +23,7 @@ export const scrapeEsiCategories = client.createFunction(
     },
   },
   { event: "scrape/esi/categories" },
-  async ({}) => {
+  async ({ step }) => {
     const stepStartTime = performance.now();
 
     // Get all Category IDs in ESI
@@ -88,6 +89,11 @@ export const scrapeEsiCategories = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.categoryId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/categories.finished",
+      data: {},
     });
 
     return {

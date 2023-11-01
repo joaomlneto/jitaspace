@@ -5,6 +5,7 @@ import { prisma } from "@jitaspace/db";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeDogmaEffectCategoriesEventPayload = {
   data: {};
 };
@@ -18,7 +19,7 @@ export const scrapeHoboleaksDogmaEffectCategories = client.createFunction(
     },
   },
   { event: "scrape/hoboleaks/dogma-effect-categories" },
-  async ({}) => {
+  async ({ step }) => {
     const stepStartTime = performance.now();
 
     // Get all Dogma Effect Categories in Hoboleaks
@@ -82,6 +83,11 @@ export const scrapeHoboleaksDogmaEffectCategories = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.effectCategoryId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/hoboleaks/dogma-effect-categories.finished",
+      data: {},
     });
 
     return {

@@ -218,12 +218,9 @@ export const scrapeEsiNpcCorporations = client.createFunction(
       idAccessor: (e) => e.corporationId,
     });
 
-    // scrape NPC Corporations' Loyalty Point Store Offers
-    await step.sendEvent("fetch-esi-loyalty-store-offers", {
-      name: "scrape/esi/loyalty-store-offers",
-      data: {
-        corporationIds,
-      },
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/npc-corporations.finished",
+      data: {},
     });
 
     return {

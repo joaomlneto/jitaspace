@@ -27,7 +27,7 @@ export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
     retries: 5,
   },
   { event: "scrape/esi/loyalty-store-offers" },
-  async ({ event }) => {
+  async ({ event, step }) => {
     let corporationIds: number[] =
       event.data.corporationIds ??
       (await getCorporationsNpccorps().then((res) => res.data));
@@ -176,6 +176,11 @@ export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
     });
 
     const elapsedTime = performance.now() - stepStartTime;
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/loyalty-store-offers.finished",
+      data: {},
+    });
 
     return {
       loyaltyStoreOfferChanges,

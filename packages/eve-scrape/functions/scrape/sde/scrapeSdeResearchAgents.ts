@@ -165,6 +165,11 @@ export const scrapeSdeResearchAgents = client.createFunction(
       idAccessor: (e) => `${e.characterId}:${e.typeId}`,
     });
 
+    await step.sendEvent("Function Finished", {
+      name: "scrape/sde/research-agents.finished",
+      data: {},
+    });
+
     return {
       stats: {
         characterChanges,

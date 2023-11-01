@@ -9,6 +9,7 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeConstellationEventPayload = {
   data: {};
 };
@@ -22,7 +23,7 @@ export const scrapeEsiConstellations = client.createFunction(
     },
   },
   { event: "scrape/esi/constellations" },
-  async ({}) => {
+  async ({ step }) => {
     const stepStartTime = performance.now();
 
     // Get all Constellation IDs in ESI
@@ -90,6 +91,11 @@ export const scrapeEsiConstellations = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.constellationId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/constellations.finished",
+      data: {},
     });
 
     return {

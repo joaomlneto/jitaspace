@@ -147,20 +147,20 @@ export const scrapeEsiStargates = client.createFunction(
               //throw new NonRetriableError("XXX");
               // step two: update the stargates with their respective links
               /*
-                await Promise.all(
-                  entries.map((entry) =>
-                    limit(async () =>
-                      prisma.stargate.update({
-                        data: {
-                          destinationStargateId: entry.destinationStargateId,
-                        },
-                        where: {
-                          stargateId: entry.stargateId,
-                        },
-                      }),
-                    ),
-                  ),
-                );*/
+                              await Promise.all(
+                                entries.map((entry) =>
+                                  limit(async () =>
+                                    prisma.stargate.update({
+                                      data: {
+                                        destinationStargateId: entry.destinationStargateId,
+                                      },
+                                      where: {
+                                        stargateId: entry.stargateId,
+                                      },
+                                    }),
+                                  ),
+                                ),
+                              );*/
             },
             batchDelete: (entries) =>
               prisma.stargate.updateMany({
@@ -221,6 +221,12 @@ export const scrapeEsiStargates = client.createFunction(
       });
       totals.elapsed += stepResult.elapsed;
     });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/stargates.finished",
+      data: {},
+    });
+
     return totals;
   },
 );

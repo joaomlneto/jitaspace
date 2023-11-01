@@ -10,6 +10,7 @@ import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeDogmaAttributesEventPayload = {
   data: {
     batchSize?: number;
@@ -200,6 +201,12 @@ export const scrapeEsiDogmaAttributes = client.createFunction(
       totals.numEntriesMissingIcon += stepResult.numEntriesMissingIcon;
       totals.elapsed += stepResult.elapsed;
     });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/dogma-attributes.finished",
+      data: {},
+    });
+
     return totals;
   },
 );

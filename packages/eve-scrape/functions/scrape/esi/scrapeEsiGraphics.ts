@@ -10,6 +10,7 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeGraphicsEventPayload = {
   data: {};
 };
@@ -23,7 +24,7 @@ export const scrapeEsiGraphics = client.createFunction(
     },
   },
   { event: "scrape/esi/graphics" },
-  async ({}) => {
+  async ({ step }) => {
     const stepStartTime = performance.now();
     // FIXME: THIS SHOULD NOT BE NECESSARY
     axios.defaults.baseURL = "https://esi.evetech.net/latest";
@@ -96,6 +97,11 @@ export const scrapeEsiGraphics = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.graphicId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/graphics.finished",
+      data: {},
     });
 
     return {

@@ -1,3 +1,4 @@
+import { bootstrapDatabase } from "./bootstrap";
 import {
   scrapeEsiAlliances,
   scrapeEsiAncestries,
@@ -37,7 +38,7 @@ import {
 import { testPing } from "./test";
 
 export const functions = [
-  testPing,
+  bootstrapDatabase,
   scrapeEsiAlliances,
   scrapeEsiAncestries,
   scrapeEsiBloodlines,
@@ -72,7 +73,9 @@ export const functions = [
   scrapeSdeResearchAgents,
   scrapeSdeStationServices,
   scrapeZkillboardRecentKills,
+  testPing,
 ];
 
 export * from "./scrape";
 export * from "./test";
+export * from "./bootstrap";

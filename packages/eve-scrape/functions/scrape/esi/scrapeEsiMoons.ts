@@ -8,6 +8,7 @@ import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeMoonsEventPayload = {
   data: {
     moons: { moonId: number; planetId: number }[];
@@ -156,6 +157,12 @@ export const scrapeEsiMoons = client.createFunction(
       });
       totals.elapsed += stepResult.elapsed;
     });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/moons.finished",
+      data: {},
+    });
+
     return totals;
   },
 );

@@ -139,6 +139,11 @@ export const scrapeEsiMarketGroups = client.createFunction(
       idAccessor: (e) => e.marketGroupId,
     });
 
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/market-groups.finished",
+      data: {},
+    });
+
     return {
       stats: {
         marketGroups: {

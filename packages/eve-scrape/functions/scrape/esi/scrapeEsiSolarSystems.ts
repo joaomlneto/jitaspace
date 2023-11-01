@@ -261,74 +261,74 @@ export const scrapeEsiSolarSystems = client.createFunction(
           });
 
           /*
-                              const stationChanges = await updateTable({
-                                fetchLocalEntries: async () =>
-                                  prisma.station
-                                    .findMany({
-                                      where: {
-                                        stationId: {
-                                          in: thisBatchStationIds,
-                                        },
-                                      },
-                                    })
-                                    .then((entries) =>
-                                      entries.map((entry) =>
-                                        excludeObjectKeys(entry, ["updatedAt"]),
-                                      ),
-                                    ),
-                                fetchRemoteEntries: async () =>
-                                  Promise.all(
-                                    thisBatchStationIds.map((stationId) =>
-                                      limit(async () =>
-                                        getUniverseStationsStationId(stationId)
-                                          .then((res) => res.data)
-                                          .then((station) => ({
-                                            stationId: station.station_id,
-                                            name: station.name,
-                                            solarSystemId: station.system_id,
-                                            typeId: station.type_id,
-                                            maxDockableShipVolume: station.max_dockable_ship_volume,
-                                            officeRentalCost: station.office_rental_cost,
-                                            ownerId: station.owner ?? null,
-                                            raceId: station.race_id ?? null,
-                                            reprocessingEfficiency: station.reprocessing_efficiency,
-                                            reprocessingStationsTake:
-                                              station.reprocessing_stations_take,
-                                            isDeleted: false,
-                                          })),
-                                      ),
-                                    ),
-                                  ),
-                                batchCreate: (entries) =>
-                                  limit(() =>
-                                    prisma.station.createMany({
-                                      data: entries,
-                                    }),
-                                  ),
-                                batchDelete: (entries) =>
-                                  prisma.station.updateMany({
-                                    data: {
-                                      isDeleted: true,
-                                    },
-                                    where: {
-                                      stationId: {
-                                        in: entries.map((entry) => entry.stationId),
-                                      },
-                                    },
-                                  }),
-                                batchUpdate: (entries) =>
-                                  Promise.all(
-                                    entries.map((entry) =>
-                                      limit(async () =>
-                                        prisma.station.update({
-                                          data: entry,
-                                          where: { stationId: entry.stationId },
-                                        }),
-                                      ),
-                                    ),
-                                  ),
-                                idAccessor: (e) => e.stationId,
-                              });*/
+                                        const stationChanges = await updateTable({
+                                          fetchLocalEntries: async () =>
+                                            prisma.station
+                                              .findMany({
+                                                where: {
+                                                  stationId: {
+                                                    in: thisBatchStationIds,
+                                                  },
+                                                },
+                                              })
+                                              .then((entries) =>
+                                                entries.map((entry) =>
+                                                  excludeObjectKeys(entry, ["updatedAt"]),
+                                                ),
+                                              ),
+                                          fetchRemoteEntries: async () =>
+                                            Promise.all(
+                                              thisBatchStationIds.map((stationId) =>
+                                                limit(async () =>
+                                                  getUniverseStationsStationId(stationId)
+                                                    .then((res) => res.data)
+                                                    .then((station) => ({
+                                                      stationId: station.station_id,
+                                                      name: station.name,
+                                                      solarSystemId: station.system_id,
+                                                      typeId: station.type_id,
+                                                      maxDockableShipVolume: station.max_dockable_ship_volume,
+                                                      officeRentalCost: station.office_rental_cost,
+                                                      ownerId: station.owner ?? null,
+                                                      raceId: station.race_id ?? null,
+                                                      reprocessingEfficiency: station.reprocessing_efficiency,
+                                                      reprocessingStationsTake:
+                                                        station.reprocessing_stations_take,
+                                                      isDeleted: false,
+                                                    })),
+                                                ),
+                                              ),
+                                            ),
+                                          batchCreate: (entries) =>
+                                            limit(() =>
+                                              prisma.station.createMany({
+                                                data: entries,
+                                              }),
+                                            ),
+                                          batchDelete: (entries) =>
+                                            prisma.station.updateMany({
+                                              data: {
+                                                isDeleted: true,
+                                              },
+                                              where: {
+                                                stationId: {
+                                                  in: entries.map((entry) => entry.stationId),
+                                                },
+                                              },
+                                            }),
+                                          batchUpdate: (entries) =>
+                                            Promise.all(
+                                              entries.map((entry) =>
+                                                limit(async () =>
+                                                  prisma.station.update({
+                                                    data: entry,
+                                                    where: { stationId: entry.stationId },
+                                                  }),
+                                                ),
+                                              ),
+                                            ),
+                                          idAccessor: (e) => e.stationId,
+                                        });*/
 
           const moonChanges = await updateTable({
             fetchLocalEntries: async () =>
@@ -604,6 +604,12 @@ export const scrapeEsiSolarSystems = client.createFunction(
       });
       totals.elapsed += stepResult.elapsed;
     });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/solar-systems.finished",
+      data: {},
+    });
+
     return totals;
   },
 );

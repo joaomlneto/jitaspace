@@ -105,6 +105,11 @@ export const scrapeSdeDogmaEffectModifiers = client.createFunction(
       idAccessor: (e) => `${e.effectId}:${e.modifierIndex}`,
     });
 
+    await step.sendEvent("Function Finished", {
+      name: "scrape/sde/dogma-effect-modifiers.finished",
+      data: {},
+    });
+
     return {
       stats: {
         dogmaAttributeCategoryChanges,

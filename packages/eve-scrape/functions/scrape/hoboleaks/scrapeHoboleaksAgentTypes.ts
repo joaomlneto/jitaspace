@@ -19,7 +19,7 @@ export const scrapeHoboleaksAgentTypes = client.createFunction(
     },
   },
   { event: "scrape/hoboleaks/agent-types" },
-  async ({}) => {
+  async ({ step }) => {
     const stepStartTime = performance.now();
 
     // Get all Agent Types in Hoboleaks
@@ -79,6 +79,11 @@ export const scrapeHoboleaksAgentTypes = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.agentTypeId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/hoboleaks/agent-types.finished",
+      data: {},
     });
 
     return {

@@ -176,6 +176,12 @@ export const scrapeEsiStations = client.createFunction(
       });
       totals.elapsed += stepResult.elapsed;
     });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/stations.finished",
+      data: {},
+    });
+
     return totals;
   },
 );

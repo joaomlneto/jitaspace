@@ -328,43 +328,47 @@ export const scrapeEsiTypes = client.createFunction(
       results.push(result);
     }
 
-    return await step.run("Compute Aggregates", async () => {
-      const totals: BatchStepResult<StatsKey> = {
-        stats: {
-          types: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
-          typeAttributes: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
-          typeEffects: {
-            created: 0,
-            deleted: 0,
-            modified: 0,
-            equal: 0,
-          },
+    const totals: BatchStepResult<StatsKey> = {
+      stats: {
+        types: {
+          created: 0,
+          deleted: 0,
+          modified: 0,
+          equal: 0,
         },
-        elapsed: 0,
-      };
-      results.forEach((stepResult) => {
-        Object.entries(stepResult.stats).forEach(([category, value]) => {
-          Object.keys(value).forEach(
-            (op) =>
-              (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
-                stepResult.stats[category as StatsKey][
-                  op as keyof CrudStatistics
-                ]),
-          );
-        });
-        totals.elapsed += stepResult.elapsed;
+        typeAttributes: {
+          created: 0,
+          deleted: 0,
+          modified: 0,
+          equal: 0,
+        },
+        typeEffects: {
+          created: 0,
+          deleted: 0,
+          modified: 0,
+          equal: 0,
+        },
+      },
+      elapsed: 0,
+    };
+    results.forEach((stepResult) => {
+      Object.entries(stepResult.stats).forEach(([category, value]) => {
+        Object.keys(value).forEach(
+          (op) =>
+            (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
+              stepResult.stats[category as StatsKey][
+                op as keyof CrudStatistics
+              ]),
+        );
       });
-      return totals;
+      totals.elapsed += stepResult.elapsed;
     });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/types.finished",
+      data: {},
+    });
+
+    return totals;
   },
 );

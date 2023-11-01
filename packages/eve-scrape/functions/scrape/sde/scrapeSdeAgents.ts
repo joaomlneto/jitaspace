@@ -180,6 +180,11 @@ export const scrapeSdeAgents = client.createFunction(
       idAccessor: (e) => e.characterId,
     });
 
+    await step.sendEvent("Function Finished", {
+      name: "scrape/sde/agents.finished",
+      data: {},
+    });
+
     return {
       stats: {
         agentChanges,

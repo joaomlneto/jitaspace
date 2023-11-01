@@ -94,6 +94,11 @@ export const scrapeSdeDogmaAttributeCategories = client.createFunction(
       idAccessor: (e) => e.attributeCategoryId,
     });
 
+    await step.sendEvent("Function Finished", {
+      name: "scrape/sde/dogma-attribute-categories.finished",
+      data: {},
+    });
+
     return {
       stats: {
         dogmaAttributeCategoryChanges,

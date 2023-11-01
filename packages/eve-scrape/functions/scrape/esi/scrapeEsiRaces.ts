@@ -6,6 +6,7 @@ import { getUniverseRaces } from "@jitaspace/esi-client";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeRacesEventPayload = {
   data: {};
 };
@@ -19,7 +20,7 @@ export const scrapeEsiRaces = client.createFunction(
     },
   },
   { event: "scrape/esi/races" },
-  async () => {
+  async ({ step }) => {
     const stepStartTime = performance.now();
 
     const limit = pLimit(20);
@@ -79,6 +80,11 @@ export const scrapeEsiRaces = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.raceId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/races.finished",
+      data: {},
     });
 
     return {

@@ -6,6 +6,7 @@ import { getUniverseAncestries } from "@jitaspace/esi-client";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeAncestriesEventPayload = {
   data: {};
 };
@@ -19,7 +20,7 @@ export const scrapeEsiAncestries = client.createFunction(
     },
   },
   { event: "scrape/esi/ancestries" },
-  async () => {
+  async ({ step }) => {
     const stepStartTime = performance.now();
 
     const limit = pLimit(20);
@@ -81,6 +82,11 @@ export const scrapeEsiAncestries = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.ancestryId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/ancestries.finished",
+      data: {},
     });
 
     return {

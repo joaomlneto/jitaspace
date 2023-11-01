@@ -6,6 +6,7 @@ import { getUniverseFactions } from "@jitaspace/esi-client";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeFactionsEventPayload = {
   data: {};
 };
@@ -19,7 +20,7 @@ export const scrapeEsiFactions = client.createFunction(
     },
   },
   { event: "scrape/esi/factions" },
-  async () => {
+  async ({ step }) => {
     const stepStartTime = performance.now();
 
     const limit = pLimit(20);
@@ -85,6 +86,11 @@ export const scrapeEsiFactions = client.createFunction(
           ),
         ),
       idAccessor: (e) => e.factionId,
+    });
+
+    await step.sendEvent("Function Finished", {
+      name: "scrape/esi/factions.finished",
+      data: {},
     });
 
     return {

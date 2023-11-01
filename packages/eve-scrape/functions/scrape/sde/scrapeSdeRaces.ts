@@ -94,6 +94,11 @@ export const scrapeSdeRaces = client.createFunction(
       idAccessor: (e) => e.raceId,
     });
 
+    await step.sendEvent("Function Finished", {
+      name: "scrape/sde/races.finished",
+      data: {},
+    });
+
     return {
       stats: {
         racesChanges,

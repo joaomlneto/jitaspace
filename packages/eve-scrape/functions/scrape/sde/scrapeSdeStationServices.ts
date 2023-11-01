@@ -97,6 +97,11 @@ export const scrapeSdeStationServices = client.createFunction(
       idAccessor: (e) => e.stationServiceId,
     });
 
+    await step.sendEvent("Function Finished", {
+      name: "scrape/sde/station-services.finished",
+      data: {},
+    });
+
     return {
       stats: {
         stationServicesChanges,
