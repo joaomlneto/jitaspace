@@ -12,16 +12,17 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetUniverseRegionsRegionId } from "@jitaspace/esi-client";
+import { useRegion } from "@jitaspace/hooks";
 import { ConstellationName, RegionName } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const router = useRouter();
-  const regionId = router.query.regionId as string;
-  const { data: region } = useGetUniverseRegionsRegionId(parseInt(regionId));
+  const regionId = parseInt(router.query.regionId as string);
+  const { data: region } = useRegion(regionId);
 
   return (
     <Container size="sm">

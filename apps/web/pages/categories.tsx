@@ -13,16 +13,16 @@ import { NextSeo } from "next-seo";
 import {
   getUniverseCategories,
   getUniverseCategoriesCategoryId,
-  GetUniverseCategoriesCategoryIdQueryResponse,
 } from "@jitaspace/esi-client";
 import { ItemsIcon } from "@jitaspace/eve-icons";
+import { Category } from "@jitaspace/hooks";
 import { CategoryAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
 
 type PageProps = {
-  categories: Record<number, GetUniverseCategoriesCategoryIdQueryResponse>;
+  categories: Record<number, Category>;
 };
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
@@ -35,10 +35,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       ),
     );
 
-    const categories: Record<
-      number,
-      GetUniverseCategoriesCategoryIdQueryResponse
-    > = {};
+    const categories: Record<number, Category> = {};
     categoryResponses.forEach(
       (category) => (categories[category.data.category_id] = category.data),
     );

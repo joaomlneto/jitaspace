@@ -6,16 +6,16 @@ import { NextSeo } from "next-seo";
 import {
   getUniverseRegions,
   getUniverseRegionsRegionId,
-  GetUniverseRegionsRegionIdQueryResponse,
 } from "@jitaspace/esi-client";
 import { MapIcon } from "@jitaspace/eve-icons";
+import { Region } from "@jitaspace/hooks";
 import { RegionAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
 
 type PageProps = {
-  regions: GetUniverseRegionsRegionIdQueryResponse[];
+  regions: Region[];
 };
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
@@ -47,7 +47,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 export default function Page({ regions }: PageProps) {
   const galaxies: {
     name: string;
-    filter: (region: GetUniverseRegionsRegionIdQueryResponse) => boolean;
+    filter: (region: Region) => boolean;
   }[] = [
     {
       name: "New Eden (K-Space)",

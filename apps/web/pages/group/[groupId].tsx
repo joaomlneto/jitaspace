@@ -16,12 +16,12 @@ import {
   getUniverseGroups,
   getUniverseGroupsGroupId,
   getUniverseTypesTypeId,
-  useGetUniverseGroupsGroupId,
 } from "@jitaspace/esi-client";
 import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   name?: string;
@@ -111,16 +111,6 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 export default function Page({ name, types }: PageProps) {
   const router = useRouter();
   const groupId = router.query.groupId as string;
-  const { data: group } = useGetUniverseGroupsGroupId(parseInt(groupId));
-
-  if (router.isFallback) {
-    return (
-      <Group>
-        <Loader />
-        <Text>Loading type information...</Text>
-      </Group>
-    );
-  }
 
   const sortedTypes = useMemo(
     () => (types ?? []).sort((a, b) => a.name.localeCompare(b.name)),

@@ -17,9 +17,8 @@ import { prisma } from "@jitaspace/db";
 import {
   getDogmaEffects,
   getDogmaEffectsEffectId,
-  useGetDogmaEffects,
-  useGetDogmaEffectsEffectId,
 } from "@jitaspace/esi-client";
+import { useDogmaEffect } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   DogmaAttributeAnchor,
@@ -32,6 +31,7 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   name: string | null;
@@ -131,18 +131,7 @@ export default function Page({
   const router = useRouter();
   const effectId = Number(router.query.effectId as string);
 
-  const { data: effectIds } = useGetDogmaEffects();
-
-  const { data: effect } = useGetDogmaEffectsEffectId(
-    effectId,
-    {},
-    {},
-    {
-      query: {
-        enabled: effectIds?.data.includes(effectId),
-      },
-    },
-  );
+  const { data: effect } = useDogmaEffect(effectId);
 
   const sortedGroups = useMemo(
     () => (groups ?? []).sort((a, b) => a.name.localeCompare(b.name)),

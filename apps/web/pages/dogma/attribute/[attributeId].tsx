@@ -16,15 +16,15 @@ import { prisma } from "@jitaspace/db";
 import {
   getDogmaAttributes,
   getDogmaAttributesAttributeId,
-  useGetDogmaAttributes,
-  useGetDogmaAttributesAttributeId,
 } from "@jitaspace/esi-client";
+import { useDogmaAttribute } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   name: string | null;
@@ -117,18 +117,7 @@ export default function Page({
   const router = useRouter();
   const attributeId = Number(router.query.attributeId as string);
 
-  const { data: attributeIds } = useGetDogmaAttributes();
-
-  const { data: attribute } = useGetDogmaAttributesAttributeId(
-    attributeId,
-    {},
-    {},
-    {
-      query: {
-        enabled: attributeIds?.data.includes(attributeId),
-      },
-    },
-  );
+  const { data: attribute } = useDogmaAttribute(attributeId);
 
   const sortedTypes = useMemo(
     () => (types ?? []).sort((a, b) => a.name.localeCompare(b.name)),

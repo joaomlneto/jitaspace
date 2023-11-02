@@ -18,9 +18,8 @@ import { NextSeo } from "next-seo";
 import {
   getUniverseTypes,
   getUniverseTypesTypeId,
-  useGetUniverseTypesTypeId,
 } from "@jitaspace/esi-client";
-import { useMarketPrices } from "@jitaspace/hooks";
+import { useMarketPrices, useType } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   OpenMarketWindowActionIcon,
@@ -98,8 +97,8 @@ export default function Page({
   typeDescription,
 }: PageProps) {
   const router = useRouter();
-  const typeId = router.query.typeId as string;
-  const { data: type } = useGetUniverseTypesTypeId(parseInt(typeId));
+  const typeId = parseInt(router.query.typeId as string);
+  const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();
 
   if (router.isFallback) {

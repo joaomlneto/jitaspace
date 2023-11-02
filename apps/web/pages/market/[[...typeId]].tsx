@@ -3,7 +3,6 @@ import { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import {
   AppShell,
-  Box,
   Container,
   Group,
   Loader,
@@ -19,8 +18,8 @@ import { useTypeMarketOrders } from "@jitaspace/hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 import { MarketGroupNavLink, MarketOrdersDataTable } from "~/components/Market";
-import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   marketGroups: Record<
@@ -127,6 +126,8 @@ export default function Page({ marketGroups, rootMarketGroupIds }: PageProps) {
     [mergedRegionalOrders],
   );
 
+  // TODO FIXME: Resolve location without causing errors (private structures)
+
   if (router.isFallback) {
     return (
       <Container size="sm">
@@ -138,6 +139,7 @@ export default function Page({ marketGroups, rootMarketGroupIds }: PageProps) {
       </Container>
     );
   }
+
   return (
     <Container size="xl">
       <AppShell
@@ -155,24 +157,12 @@ export default function Page({ marketGroups, rootMarketGroupIds }: PageProps) {
           </Navbar>
         }
       >
-        {/* Your application here */}
         <Stack spacing="xl">
           <Group>
             <MarketIcon width={48} />
             <Title order={1}>Market</Title>
           </Group>
           <Group>
-            {false && (
-              <Box w={320}>
-                {rootMarketGroupIds?.map((marketGroupId) => (
-                  <MarketGroupNavLink
-                    marketGroups={marketGroups}
-                    marketGroupId={marketGroupId}
-                    key={marketGroupId}
-                  />
-                ))}
-              </Box>
-            )}
             <Container>
               {typeId && (
                 <Stack>
@@ -182,12 +172,6 @@ export default function Page({ marketGroups, rootMarketGroupIds }: PageProps) {
                       <TypeName span typeId={typeId} />
                     </Title>
                   </Group>
-                  {env.NODE_ENV !== "production" && (
-                    <Text>
-                      TODO: Resolve location without causing errors (private
-                      structures).
-                    </Text>
-                  )}
                   <Title order={3}>Sell Orders</Title>
                   <MarketOrdersDataTable orders={sellOrders} />
                   <Title order={3}>Buy Orders</Title>

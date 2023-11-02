@@ -1,7 +1,7 @@
 import React from "react";
 import { type ContextModalProps } from "@mantine/modals";
 
-import { useCharacterCurrentFit } from "@jitaspace/hooks/src/hooks/useCharacterCurrentFit";
+import { useCharacterCurrentFit } from "@jitaspace/hooks";
 
 import { ShipFittingCard } from "~/components/Fitting";
 

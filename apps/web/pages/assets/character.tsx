@@ -28,7 +28,9 @@ import {
 import { AssetLocationSelect, ISKAmount } from "@jitaspace/ui";
 
 import { AssetsTable } from "~/components/Assets";
+import { AssetsDataTable } from "~/components/Assets/AssetsDataTable";
 import { MainLayout } from "~/layouts";
+
 
 export default function Page() {
   const forceUpdate = useForceUpdate();
@@ -110,11 +112,12 @@ export default function Page() {
   const offset = ENTRIES_PER_PAGE * (pagination.active - 1);
 
   // reload if some asset names are still missing
-  const { start } = useTimeout(() => forceUpdate(), 1000);
+  const { start, clear } = useTimeout(() => forceUpdate(), 1000);
 
   useEffect(() => {
     if (numUndefinedNames > 0) start();
-  });
+    else clear();
+  }, [numUndefinedNames, start]);
 
   return (
     <Container size="xl">
@@ -168,8 +171,13 @@ export default function Page() {
             onChange={pagination.setPage}
           />
         </Center>
-        <AssetsTable
-          assets={entries.slice(offset, offset + ENTRIES_PER_PAGE)}
+        {false && (
+          <AssetsTable
+            assets={entries.slice(offset, offset + ENTRIES_PER_PAGE)}
+          />
+        )}
+        <AssetsDataTable
+          entries={entries.slice(offset, offset + ENTRIES_PER_PAGE)}
         />
       </Stack>
     </Container>

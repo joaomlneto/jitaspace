@@ -1,7 +1,6 @@
 import React, { useMemo, type ReactElement } from "react";
 import { GetStaticProps } from "next";
 import { Container, Group, Stack, Title } from "@mantine/core";
-import axios from "axios";
 import {
   MantineReactTable,
   useMantineReactTable,
@@ -13,7 +12,6 @@ import { prisma } from "@jitaspace/db";
 import { AttributesIcon } from "@jitaspace/eve-icons";
 import { DogmaEffectAnchor } from "@jitaspace/ui";
 
-import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
 
 

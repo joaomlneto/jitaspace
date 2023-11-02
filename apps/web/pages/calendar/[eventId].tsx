@@ -11,14 +11,13 @@ import {
 } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
-import {
-  useGetCharactersCharacterIdCalendarEventId,
-  useGetCharactersCharacterIdCalendarEventIdAttendees,
-  type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse,
-  type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
-} from "@jitaspace/esi-client";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import {
+  CalendarEventAttendee,
+  CalendarEventAttendeeResponse,
+  useCalendarEvent,
+  useCalendarEventAttendees,
+} from "@jitaspace/hooks";
 import {
   CalendarEventHumanDurationText,
   CalendarEventOwnerAvatar,
@@ -37,36 +36,14 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const eventId = parseInt(toArrayIfNot(router.query.eventId)[0] ?? "");
-  const { characterId, isTokenValid } = useEsiClientContext();
-  const { data: event, isLoading: eventLoading } =
-    useGetCharactersCharacterIdCalendarEventId(
-      characterId ?? 1,
-      eventId,
-      {},
-      {},
-      {
-        query: {
-          enabled: isTokenValid,
-        },
-      },
-    );
+  const { data: event, isLoading: eventLoading } = useCalendarEvent(eventId);
   const { data: attendees, isLoading: attendeesLoading } =
-    useGetCharactersCharacterIdCalendarEventIdAttendees(
-      characterId ?? 1,
-      eventId,
-      {},
-      {},
-      {
-        query: {
-          enabled: isTokenValid,
-        },
-      },
-    );
+    useCalendarEventAttendees(eventId);
 
   const loading = eventLoading || attendeesLoading;
 
   const eventResponseColor: {
-    [key in GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse]: string;
+    [key in CalendarEventAttendeeResponse]: string;
   } = {
     accepted: "green",
     tentative: "yellow",
@@ -75,10 +52,7 @@ export default function Page() {
   };
 
   const sortedAttendees = [...(attendees?.data ?? [])].sort(
-    (
-      a: GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number],
-      b: GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number],
-    ) => {
+    (a: CalendarEventAttendee, b: CalendarEventAttendee) => {
       if (!a.event_response) {
         return 1;
       }

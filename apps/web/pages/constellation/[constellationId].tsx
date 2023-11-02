@@ -11,7 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 
-import { useGetUniverseConstellationsConstellationId } from "@jitaspace/esi-client";
+import { useConstellation } from "@jitaspace/hooks";
 import {
   ConstellationName,
   RegionName,
@@ -21,12 +21,11 @@ import {
 
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const router = useRouter();
-  const constellationId = router.query.constellationId as string;
-  const { data: constellation } = useGetUniverseConstellationsConstellationId(
-    parseInt(constellationId),
-  );
+  const constellationId = parseInt(router.query.constellationId as string);
+  const { data: constellation } = useConstellation(constellationId);
 
   return (
     <Container size="sm">

@@ -1,6 +1,6 @@
 import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useEsiClientContext } from "../useEsiClientContext";
 
 
 export const useCharacterFittings = () => {

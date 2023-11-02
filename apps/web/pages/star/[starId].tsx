@@ -2,7 +2,7 @@ import React, { type ReactElement } from "react";
 import { useRouter } from "next/router";
 import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useGetUniverseStarsStarId } from "@jitaspace/esi-client";
+import { useStar } from "@jitaspace/hooks";
 import {
   SolarSystemAnchor,
   SolarSystemName,
@@ -16,8 +16,8 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
-  const starId = router.query.starId as string;
-  const { data: star } = useGetUniverseStarsStarId(parseInt(starId));
+  const starId = parseInt(router.query.starId as string);
+  const { data: star } = useStar(starId);
 
   return (
     <Container size="sm">

@@ -3,8 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useGetUniverseStructuresStructureId } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useStructure } from "@jitaspace/hooks";
 import {
   EveEntityName,
   SetAutopilotDestinationActionIcon,
@@ -19,21 +18,8 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
-  const structureId = router.query.structureId as string;
-  const { isTokenValid, scopes } = useEsiClientContext();
-  const { data: structure } = useGetUniverseStructuresStructureId(
-    parseInt(structureId),
-    {},
-    {},
-    {
-      query: {
-        enabled:
-          isTokenValid &&
-          !!structureId &&
-          scopes.includes("esi-universe.read_structures.v1"),
-      },
-    },
-  );
+  const structureId = parseInt(router.query.structureId as string);
+  const { data: structure } = useStructure(structureId);
 
   return (
     <Container size="sm">

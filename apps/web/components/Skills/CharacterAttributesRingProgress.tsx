@@ -24,7 +24,7 @@ import {
 } from "@jitaspace/eve-icons";
 import { useEsiClientContext } from "@jitaspace/hooks";
 
-const characterAttributes = [
+export const characterAttributes = [
   "charisma",
   "intelligence",
   "memory",

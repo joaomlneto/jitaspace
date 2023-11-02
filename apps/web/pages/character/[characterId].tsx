@@ -32,10 +32,8 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
-  const characterId = router.query.characterId as string;
-  const { data: character } = useGetCharactersCharacterId(
-    parseInt(characterId),
-  );
+  const characterId = parseInt(router.query.characterId as string);
+  const { data: character } = useGetCharactersCharacterId(characterId);
 
   return (
     <Container size="sm">

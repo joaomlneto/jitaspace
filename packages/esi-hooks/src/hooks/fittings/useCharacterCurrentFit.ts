@@ -2,9 +2,9 @@ import { useMemo } from "react";
 
 import { GetCharactersCharacterIdFittingsQueryResponseItemsFlag } from "@jitaspace/esi-client";
 
-import { useCharacterAssets } from "./useCharacterAssets";
-import { useCharacterCurrentShip } from "./useCharacterCurrentShip";
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useCharacterAssets } from "../useCharacterAssets";
+import { useCharacterCurrentShip } from "../useCharacterCurrentShip";
+import { useEsiClientContext } from "../useEsiClientContext";
 
 
 export const useCharacterCurrentFit = () => {

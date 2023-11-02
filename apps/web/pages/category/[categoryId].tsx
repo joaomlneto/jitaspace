@@ -16,17 +16,17 @@ import {
   getUniverseCategories,
   getUniverseCategoriesCategoryId,
   getUniverseGroupsGroupId,
-  GetUniverseGroupsGroupIdQueryResponse,
-  useGetUniverseCategoriesCategoryId,
 } from "@jitaspace/esi-client";
+import { Group as EsiGroup } from "@jitaspace/hooks";
 import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   name?: string;
-  groups: GetUniverseGroupsGroupIdQueryResponse[];
+  groups: EsiGroup[];
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -77,7 +77,6 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       revalidate: 24 * 3600, // every 24 hours
     };
   } catch (e) {
-    console.log("no such category");
     return {
       notFound: true,
       revalidate: 3600, // every hour
@@ -87,10 +86,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
 export default function Page({ name, groups }: PageProps) {
   const router = useRouter();
-  const categoryId = router.query.categoryId as string;
-  const { data: category } = useGetUniverseCategoriesCategoryId(
-    parseInt(categoryId),
-  );
+  const categoryId = parseInt(router.query.categoryId as string);
 
   const sortedGroups = useMemo(
     () => (groups ?? []).sort((a, b) => a.name.localeCompare(b.name)),

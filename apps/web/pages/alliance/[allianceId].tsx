@@ -15,9 +15,9 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { format } from "date-fns";
 
 import {
-  useGetAlliancesAllianceId,
-  useGetAlliancesAllianceIdCorporations,
-} from "@jitaspace/esi-client";
+  useAllianceInformation,
+  useAllianceMemberCorporations,
+} from "@jitaspace/hooks";
 import {
   AllianceAvatar,
   AllianceName,
@@ -34,11 +34,10 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
-  const allianceId = router.query.allianceId as string;
-  const { data: alliance } = useGetAlliancesAllianceId(parseInt(allianceId));
-  const { data: allianceCorporations } = useGetAlliancesAllianceIdCorporations(
-    parseInt(allianceId),
-  );
+  const allianceId = parseInt(router.query.allianceId as string);
+  const { data: alliance } = useAllianceInformation(allianceId);
+  const { data: allianceCorporations } =
+    useAllianceMemberCorporations(allianceId);
 
   return (
     <Container size="sm">

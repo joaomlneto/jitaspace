@@ -14,20 +14,20 @@ import { openModal } from "@mantine/modals";
 import { format } from "date-fns";
 import { NextSeo } from "next-seo";
 
-import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client";
 import { CalendarIcon } from "@jitaspace/eve-icons";
-import { useCharacterCalendar } from "@jitaspace/hooks";
+import { CalendarEvent, useCharacterCalendar } from "@jitaspace/hooks";
 
 import { CalendarEventList } from "~/components/Calendar/CalendarEventList/CalendarEventList";
 import EventsCalendar from "~/components/Calendar/EventsCalendar";
 import { MainLayout } from "~/layouts";
+
 
 export default function Page() {
   const { events, isLoading, hasMoreEvents, loadMoreEvents } =
     useCharacterCalendar();
 
   const eventsPerDate: {
-    [date: string]: GetCharactersCharacterIdCalendarQueryResponse;
+    [date: string]: CalendarEvent[];
   } = {};
   if (events) {
     events.forEach((event) => {

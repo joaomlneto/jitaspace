@@ -2,29 +2,15 @@ import React, { type ReactElement } from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
-import { useGetCharactersCharacterIdWalletJournal } from "@jitaspace/esi-client";
 import { WalletIcon } from "@jitaspace/eve-icons";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useCharacterWalletJournal } from "@jitaspace/hooks";
 
 import { WalletTable } from "~/components/Wallet";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
-  const { characterId, scopes, isTokenValid, accessToken } =
-    useEsiClientContext();
-  const { data } = useGetCharactersCharacterIdWalletJournal(
-    characterId ?? 0,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled:
-          isTokenValid &&
-          characterId !== undefined &&
-          scopes.includes("esi-wallet.read_character_wallet.v1"),
-      },
-    },
-  );
+  const { data } = useCharacterWalletJournal();
 
   return (
     <Container size="xl">

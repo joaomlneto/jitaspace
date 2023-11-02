@@ -6,21 +6,21 @@ import { NextSeo } from "next-seo";
 import {
   getOpportunitiesGroups,
   getOpportunitiesGroupsGroupId,
-  GetOpportunitiesGroupsGroupIdQueryResponse,
   getOpportunitiesTasks,
   getOpportunitiesTasksTaskId,
-  GetOpportunitiesTasksTaskIdQueryResponse,
 } from "@jitaspace/esi-client";
 import { OpportunitiesTreeIcon } from "@jitaspace/eve-icons";
+import { OpportunityGroup, OpportunityTask } from "@jitaspace/hooks";
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   opportunities: Record<
     number,
-    GetOpportunitiesGroupsGroupIdQueryResponse & {
-      tasks: GetOpportunitiesTasksTaskIdQueryResponse[];
+    OpportunityGroup & {
+      tasks: OpportunityTask[];
     }
   >;
 };
@@ -49,8 +49,8 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     const opportunityGroups: Record<
       number,
-      GetOpportunitiesGroupsGroupIdQueryResponse & {
-        tasks: GetOpportunitiesTasksTaskIdQueryResponse[];
+      OpportunityGroup & {
+        tasks: OpportunityTask[];
       }
     > = {};
     opportunityGroupsResponses.forEach((opportunityGroup) => {

@@ -4,8 +4,8 @@ import { useRouter } from "next/router";
 import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetWarsWarId } from "@jitaspace/esi-client";
 import { WarReportIcon } from "@jitaspace/eve-icons";
+import { useWar } from "@jitaspace/hooks";
 import {
   AllianceAnchor,
   AllianceAvatar,
@@ -33,7 +33,7 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const warId = parseInt(router.query.warId as string);
-  const { data: war } = useGetWarsWarId(warId);
+  const { data: war } = useWar(warId);
 
   return (
     <Container size="lg">

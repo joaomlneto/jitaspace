@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { type CardProps } from "@mantine/core";
 
-import { useCharacterCurrentFit } from "@jitaspace/hooks/src/hooks/useCharacterCurrentFit";
+import { useCharacterCurrentFit } from "@jitaspace/hooks";
 
 import { ShipFittingCard } from "./ShipFittingCard";
 

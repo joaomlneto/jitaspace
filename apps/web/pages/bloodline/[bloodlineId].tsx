@@ -3,10 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import {
-  useGetUniverseBloodlines,
-  type GetUniverseBloodlinesQueryResponse,
-} from "@jitaspace/esi-client";
+import { useBloodline } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   BloodlineName,
@@ -19,25 +16,15 @@ import {
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
+import { characterAttributes } from "~/components/Skills";
 import { MainLayout } from "~/layouts";
+
 
 export default function Page() {
   const router = useRouter();
-  const bloodlineId = router.query.bloodlineId as string;
+  const bloodlineId = parseInt(router.query.bloodlineId as string);
 
-  const { data: bloodlines } = useGetUniverseBloodlines();
-
-  const bloodline = bloodlines?.data.find(
-    (bloodline) => bloodline.bloodline_id === parseInt(bloodlineId),
-  );
-
-  const attributeNames: (keyof GetUniverseBloodlinesQueryResponse[number])[] = [
-    "charisma",
-    "intelligence",
-    "memory",
-    "perception",
-    "willpower",
-  ];
+  const { data: bloodline } = useBloodline(bloodlineId);
 
   return (
     <Container size="sm">
@@ -90,7 +77,7 @@ export default function Page() {
           </Group>
         </Group>
         {bloodline &&
-          attributeNames.map((attributeName) => (
+          characterAttributes.map((attributeName) => (
             <Group key={attributeName} position="apart">
               <Text>
                 {(attributeName as string)

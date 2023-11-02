@@ -13,9 +13,8 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
 import { IndustryIcon } from "@jitaspace/eve-icons";
-import { useSolarSystemCostIndices } from "@jitaspace/hooks";
+import { useSolarSystem, useSolarSystemCostIndices } from "@jitaspace/hooks";
 import { useGetSolarSystemById } from "@jitaspace/sde-client";
 import {
   AsteroidBeltName,
@@ -45,7 +44,7 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const systemId = parseInt(router.query.systemId as string);
-  const { data: solarSystem } = useGetUniverseSystemsSystemId(systemId);
+  const { data: solarSystem } = useSolarSystem(systemId);
   const { data: sdeSolarSystem } = useGetSolarSystemById(systemId);
   const { data: solarSystemCostIndicesData } = useSolarSystemCostIndices();
 

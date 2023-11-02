@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
+import { useCorporation } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
@@ -28,12 +28,11 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const router = useRouter();
-  const corporationId = router.query.corporationId as string;
-  const { data: corporation } = useGetCorporationsCorporationId(
-    parseInt(corporationId),
-  );
+  const corporationId = parseInt(router.query.corporationId as string);
+  const { data: corporation } = useCorporation(corporationId);
 
   return (
     <Container size="sm">

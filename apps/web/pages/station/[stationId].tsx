@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetUniverseStationsStationId } from "@jitaspace/esi-client";
+import { useStation } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,
@@ -29,10 +29,8 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
-  const stationId = router.query.stationId as string;
-  const { data: station } = useGetUniverseStationsStationId(
-    parseInt(stationId),
-  );
+  const stationId = parseInt(router.query.stationId as string);
+  const { data: station } = useStation(stationId);
 
   return (
     <Container size="sm">

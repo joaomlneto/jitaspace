@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useGetUniverseRaces } from "@jitaspace/esi-client";
+import { useRace } from "@jitaspace/hooks";
 import {
   FactionAvatar,
   FactionName,
@@ -13,11 +13,12 @@ import {
 
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const router = useRouter();
-  const raceId = router.query.raceId as string;
-  const { data } = useGetUniverseRaces();
-  const race = data?.data.find((r) => r.race_id == parseInt(raceId));
+  const raceId = parseInt(router.query.raceId as string);
+
+  const { data: race } = useRace(raceId);
   return (
     <Container size="sm">
       <Stack>
