@@ -76,6 +76,7 @@ export default function Page() {
           <FittingIcon width={48} />
           <Title order={1}>Fittings</Title>
         </Group>
+        <Title order={4}>Current Ship Fitting</Title>
         {hasScopesForCurrentFit ? (
           <UnstyledButton
             onClick={() => {
@@ -99,6 +100,7 @@ export default function Page() {
             Insufficient permissions to get current fit of character.
           </Text>
         )}
+        <Title order={4}>Saved Fittings</Title>
         <Group>
           <EveEntitySelect
             size="xs"
