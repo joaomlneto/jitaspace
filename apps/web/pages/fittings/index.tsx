@@ -4,6 +4,7 @@ import {
   Group,
   JsonInput,
   Stack,
+  Text,
   Title,
   UnstyledButton,
 } from "@mantine/core";
@@ -11,12 +12,17 @@ import { openContextModal } from "@mantine/modals";
 import { NextSeo } from "next-seo";
 
 import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client";
+import { ESIScope } from "@jitaspace/esi-metadata";
 import { FittingIcon } from "@jitaspace/eve-icons";
 import { useEsiClientContext } from "@jitaspace/hooks";
 import { EveEntitySelect } from "@jitaspace/ui";
 
-import { EsiCharacterShipFittingCard } from "~/components/Fitting";
+import {
+  EsiCharacterShipFittingCard,
+  EsiCurrentShipFittingCard,
+} from "~/components/Fitting";
 import { MainLayout } from "~/layouts";
+
 
 export default function Page() {
   const [selectedShipType, setSelectedShipType] = useState<string | null>(null);
@@ -51,6 +57,18 @@ export default function Page() {
     [data?.data, selectedShipType],
   );
 
+  const requiredScopesForCurrentFit: ESIScope[] = [
+    "esi-assets.read_assets.v1",
+    "esi-location.read_ship_type.v1",
+  ];
+  const hasScopesForCurrentFit = useMemo(
+    () =>
+      requiredScopesForCurrentFit.every((requiredScope) =>
+        scopes.includes(requiredScope),
+      ),
+    [scopes],
+  );
+
   return (
     <Container size="xs">
       <Stack>
@@ -58,6 +76,29 @@ export default function Page() {
           <FittingIcon width={48} />
           <Title order={1}>Fittings</Title>
         </Group>
+        {hasScopesForCurrentFit ? (
+          <UnstyledButton
+            onClick={() => {
+              openContextModal({
+                modal: "currentShipFitting",
+                withCloseButton: false,
+                size: "sm",
+                padding: 0,
+                innerProps: {},
+                style: {
+                  padding: 0,
+                  margin: 0,
+                },
+              });
+            }}
+          >
+            <EsiCurrentShipFittingCard hideModules />
+          </UnstyledButton>
+        ) : (
+          <Text color="dimmed" size="sm">
+            Insufficient permissions to get current fit of character.
+          </Text>
+        )}
         <Group>
           <EveEntitySelect
             size="xs"

@@ -1,3 +1,4 @@
+import { CurrentShipFittingModal } from "~/components/Modals/CurrentShipFittingModal";
 import { ComposeMailModal } from "./ComposeMailModal";
 import { FittingModal } from "./FittingModal";
 import { LoginModal } from "./LoginModal";
@@ -6,8 +7,10 @@ import { ViewCalendarEventModal } from "./ViewCalendarEventModal";
 import { ViewMailingListSubscriptionsModal } from "./ViewMailingListSubscriptionsModal";
 import { ViewMailMessageModal } from "./ViewMailMessageModal";
 
+
 const contextModals = {
   composeMail: ComposeMailModal,
+  currentShipFitting: CurrentShipFittingModal,
   fitting: FittingModal,
   login: LoginModal,
   manageMailLabels: ManageMailLabelsModal,
