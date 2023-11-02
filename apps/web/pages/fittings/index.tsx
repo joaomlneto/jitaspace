@@ -11,10 +11,9 @@ import {
 import { openContextModal } from "@mantine/modals";
 import { NextSeo } from "next-seo";
 
-import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client";
 import { ESIScope } from "@jitaspace/esi-metadata";
 import { FittingIcon } from "@jitaspace/eve-icons";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useCharacterFittings, useEsiClientContext } from "@jitaspace/hooks";
 import { EveEntitySelect } from "@jitaspace/ui";
 
 import {
@@ -28,19 +27,7 @@ export default function Page() {
   const [selectedShipType, setSelectedShipType] = useState<string | null>(null);
   const { characterId, isTokenValid, scopes, accessToken } =
     useEsiClientContext();
-  const { data } = useGetCharactersCharacterIdFittings(
-    characterId ?? 0,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled:
-          isTokenValid &&
-          !!characterId &&
-          scopes.includes("esi-fittings.read_fittings.v1"),
-      },
-    },
-  );
+  const { data } = useCharacterFittings();
 
   const shipTypeIds = useMemo(
     () => [...new Set(data?.data.map((fitting) => fitting.ship_type_id) ?? [])],

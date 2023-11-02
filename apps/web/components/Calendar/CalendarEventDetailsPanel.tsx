@@ -2,12 +2,11 @@ import React from "react";
 import { Badge, Group, Stack, Text, Title } from "@mantine/core";
 
 import {
-  GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse,
-  useGetCharactersCharacterIdCalendarEventId,
-  useGetCharactersCharacterIdCalendarEventIdAttendees,
-  type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
-} from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+  CalendarEventAttendee,
+  CalendarEventAttendeeResponse,
+  useCalendarEvent,
+  useCalendarEventAttendees,
+} from "@jitaspace/hooks";
 import {
   CalendarEventAttendanceSelect,
   CalendarEventHumanDurationText,
@@ -23,44 +22,17 @@ import {
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 
 export type CalendarEventPanelProps = {
-  eventId?: number;
+  eventId: number;
 };
 
 export function CalendarEventDetailsPanel({
   eventId,
 }: CalendarEventPanelProps) {
-  const { characterId, isTokenValid, scopes, accessToken } =
-    useEsiClientContext();
-  const { data: event } = useGetCharactersCharacterIdCalendarEventId(
-    characterId ?? 1,
-    eventId ?? 1,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled: isTokenValid && eventId !== undefined,
-      },
-    },
-  );
-  const { data: attendees } =
-    useGetCharactersCharacterIdCalendarEventIdAttendees(
-      characterId ?? 1,
-      eventId ?? 1,
-      { token: accessToken },
-      {},
-      {
-        query: {
-          enabled: isTokenValid && eventId !== undefined,
-        },
-      },
-    );
-
-  const canRespondToEvents = scopes.includes(
-    "esi-calendar.respond_calendar_events.v1",
-  );
+  const { data: event, canRespondToEvents } = useCalendarEvent(eventId);
+  const { data: attendees } = useCalendarEventAttendees(eventId);
 
   const eventResponseColor: {
-    [key in GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse]: string;
+    [key in CalendarEventAttendeeResponse]: string;
   } = {
     accepted: "green",
     tentative: "yellow",
@@ -69,10 +41,7 @@ export function CalendarEventDetailsPanel({
   };
 
   const sortedAttendees = [...(attendees?.data ?? [])].sort(
-    (
-      a: GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number],
-      b: GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number],
-    ) => {
+    (a: CalendarEventAttendee, b: CalendarEventAttendee) => {
       if (!a.event_response) {
         return 1;
       }

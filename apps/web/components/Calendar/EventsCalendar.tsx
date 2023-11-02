@@ -3,6 +3,11 @@ import { Indicator } from "@mantine/core";
 import { Calendar, type CalendarProps } from "@mantine/dates";
 
 import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client";
+import { CalendarEvent } from "@jitaspace/hooks";
+
+
+
+
 
 type CharacterMonthCalendarProps = CalendarProps & {
   events: GetCharactersCharacterIdCalendarQueryResponse;
@@ -13,7 +18,7 @@ export default function EventsCalendar({
   ...otherProps
 }: CharacterMonthCalendarProps) {
   const eventsPerDate: {
-    [date: string]: GetCharactersCharacterIdCalendarQueryResponse;
+    [date: string]: CalendarEvent[];
   } = {};
 
   if (events) {

@@ -11,8 +11,8 @@ import {
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
-import { type GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client";
 import { WarningIcon } from "@jitaspace/eve-icons";
+import { CalendarEvent } from "@jitaspace/hooks";
 import {
   CalendarEventAttendeesAvatarGroup,
   CalendarEventHumanDurationText,
@@ -24,7 +24,7 @@ import {
 } from "@jitaspace/ui";
 
 type EventListProps = TableProps & {
-  events: GetCharactersCharacterIdCalendarQueryResponse;
+  events: CalendarEvent[];
 };
 
 export function DesktopCalendarEventList({
@@ -68,21 +68,23 @@ export function DesktopCalendarEventList({
                   {event.importance === 1 && <WarningIcon width={20} />}
                   <Anchor
                     lineClamp={1}
-                    onClick={() =>
-                      openContextModal({
-                        modal: "viewCalendarEvent",
-                        title: (
-                          <Title order={4}>
-                            {event.importance === 1 && (
-                              <WarningIcon width={32} />
-                            )}
-                            {event.title}
-                          </Title>
-                        ),
-                        size: "lg",
-                        innerProps: { eventId: event.event_id },
-                      })
-                    }
+                    onClick={() => {
+                      if (event.event_id) {
+                        openContextModal({
+                          modal: "viewCalendarEvent",
+                          title: (
+                            <Title order={4}>
+                              {event.importance === 1 && (
+                                <WarningIcon width={32} />
+                              )}
+                              {event.title}
+                            </Title>
+                          ),
+                          size: "lg",
+                          innerProps: { eventId: event.event_id },
+                        });
+                      }
+                    }}
                   >
                     {event.title}
                   </Anchor>
