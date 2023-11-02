@@ -14,7 +14,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 
-import { jitaApps, universeApps } from "~/config/apps";
+import { characterApps, universeApps } from "~/config/apps";
 import { MainLayout } from "~/layouts";
 
 const devApps: {
@@ -104,7 +104,7 @@ export default function Page() {
           { maxWidth: "xs", cols: 1 },
         ]}
       >
-        {Object.values(jitaApps).map((feature) => (
+        {Object.values(characterApps).map((feature) => (
           <UnstyledButton
             component={feature.url ? Link : Link}
             href={feature.url ?? ""}

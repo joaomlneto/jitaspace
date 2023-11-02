@@ -5,10 +5,13 @@ import { type LinkProps } from "next/link";
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import {
   AgentFinderIcon,
+  AlliancesIcon,
   AssetsIcon,
   AttributesIcon,
   CalendarIcon,
+  CharacterSheetIcon,
   ContactsIcon,
+  CorporationIcon,
   EveMailIcon,
   FittingIcon,
   ItemsIcon,
@@ -42,7 +45,7 @@ export type JitaApp = {
   };
 };
 
-export const jitaApps: Record<string, JitaApp> = {
+export const characterApps: Record<string, JitaApp> = {
   mail: {
     name: "EveMail",
     description: "Access your correspondence whilst out of the game.",
@@ -367,30 +370,30 @@ export const universeApps: Record<string, JitaApp> = {
     tags: ["beta"],
   },
   /*
-  search: {
-    name: "Search",
-    description:
-      "Search new eden for people and places. Keyboard shortcut: Ctrl+P",
-    onClick: () => {
-      openSpotlight();
-    },
-    Icon: (props) => React.createElement(PeopleAndPlacesIcon, props),
-    hotKey: ["⌘", "P"],
-    scopes: {
-      required: [
-        {
-          reason: "Search for people and places",
-          scopes: ["esi-search.search_structures.v1"],
-        },
-      ],
-      optional: [
-        {
-          reason: "Search for structures",
-          scopes: ["esi-universe.read_structures.v1"],
-        },
-      ],
-    },
-  },*/
+                                search: {
+                                  name: "Search",
+                                  description:
+                                    "Search new eden for people and places. Keyboard shortcut: Ctrl+P",
+                                  onClick: () => {
+                                    openSpotlight();
+                                  },
+                                  Icon: (props) => React.createElement(PeopleAndPlacesIcon, props),
+                                  hotKey: ["⌘", "P"],
+                                  scopes: {
+                                    required: [
+                                      {
+                                        reason: "Search for people and places",
+                                        scopes: ["esi-search.search_structures.v1"],
+                                      },
+                                    ],
+                                    optional: [
+                                      {
+                                        reason: "Search for structures",
+                                        scopes: ["esi-universe.read_structures.v1"],
+                                      },
+                                    ],
+                                  },
+                                },*/
 };
 
 export const devApps: Record<string, JitaApp> = {
@@ -403,6 +406,7 @@ export const devApps: Record<string, JitaApp> = {
       React.createElement(Image, {
         src: "https://images.evetech.net/types/60753/icon?size=64",
         alt: "SDE OpenAPI",
+        ...props,
       }),
     hotKey: ["⌘", "P"],
     scopes: {},
@@ -419,3 +423,43 @@ export const extraJitaFeatures: AppScopeSet[] = [
     scopes: ["esi-ui.open_window.v1"],
   },
 ];
+
+export const jitaApps: Record<
+  string,
+  {
+    apps: Record<string, JitaApp>;
+    name: string;
+    Icon: (props: EveIconProps) => React.ReactElement;
+  }
+> = {
+  character: {
+    apps: characterApps,
+    name: "Character",
+    Icon: (props) => <CharacterSheetIcon {...props} />,
+  },
+  corporation: {
+    apps: corporationApps,
+    name: "Corporation",
+    Icon: (props) => <CorporationIcon {...props} />,
+  },
+  alliance: {
+    apps: allianceApps,
+    name: "Alliance",
+    Icon: (props) => <AlliancesIcon {...props} />,
+  },
+  universe: {
+    apps: universeApps,
+    name: "Universe",
+    Icon: (props) => <MapIcon {...props} />,
+  },
+  developer: {
+    apps: devApps,
+    name: "Developer",
+    Icon: (props) =>
+      React.createElement(Image, {
+        src: "https://images.evetech.net/types/60753/icon?size=64",
+        alt: "SDE OpenAPI",
+        ...props,
+      }),
+  },
+};

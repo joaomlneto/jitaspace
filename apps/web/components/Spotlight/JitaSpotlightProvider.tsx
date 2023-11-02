@@ -16,7 +16,8 @@ import { useEsiClientContext, useEsiSearch } from "@jitaspace/hooks";
 
 import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
 import { JitaSpotlightActionsWrapper } from "~/components/Spotlight/JitaSpotlightActionsWrapper";
-import { jitaApps } from "~/config/apps";
+import { characterApps } from "~/config/apps";
+
 
 export const JitaSpotlightProvider = memo(
   ({ children }: Omit<SpotlightProviderProps, "actions">) => {
@@ -46,7 +47,7 @@ export const JitaSpotlightProvider = memo(
 
     const staticActions: SpotlightAction[] = useMemo(
       () =>
-        Object.values(jitaApps).map((app) => ({
+        Object.values(characterApps).map((app) => ({
           title: app.name,
           type: "app",
           group: "Apps",

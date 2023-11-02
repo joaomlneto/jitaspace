@@ -6,6 +6,7 @@ import {
   Box,
   Burger,
   Center,
+  Collapse,
   Container,
   createStyles,
   Divider,
@@ -24,6 +25,7 @@ import {
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
 import { openSpotlight } from "@mantine/spotlight";
+import { IconChevronDown } from "@tabler/icons-react";
 
 import {
   CharacterSheetIcon,
@@ -36,8 +38,8 @@ import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import {
   allianceApps,
+  characterApps,
   corporationApps,
-  jitaApps,
   universeApps,
 } from "~/config/apps";
 import UserButton from "./UserButton";
@@ -116,11 +118,23 @@ export function HeaderWithMegaMenus() {
   const pinned = useHeadroom({ fixedAt: 120 });
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
+  const [
+    mobileCharacterAppsOpened,
+    { toggle: toggleMobileCharacterApps, close: closeMobileCharacterApps },
+  ] = useDisclosure(false);
+  const [
+    mobileCorporationAppsOpened,
+    { toggle: toggleMobileCorporationApps, close: closeMobileCorporationApps },
+  ] = useDisclosure(false);
+  const [
+    mobileUniverseAppsOpened,
+    { toggle: toggleMobileUniverseApps, close: closeMobileUniverseApps },
+  ] = useDisclosure(false);
   const { classes, theme, cx } = useStyles();
   const { isTokenValid, loading } = useEsiClientContext();
 
   return (
-    <Box>
+    <Box pb="xs">
       <Header
         height={60}
         px="md"
@@ -130,12 +144,12 @@ export function HeaderWithMegaMenus() {
         }}
       >
         <Container size="xl" h={60} p={0}>
-          <Group position="apart" sx={{ height: "100%" }}>
-            <Link href="/" className={classes.link}>
-              <Group p="xs">
+          <Group position="apart" h="100%" spacing={0}>
+            <Group p="xs">
+              <Link href="/" className={classes.link}>
                 <Image src="/logo.png" alt="Jita logo" width={30} height={30} />
-              </Group>
-            </Link>
+              </Link>
+            </Group>
 
             <Group
               sx={{ height: "100%" }}
@@ -174,7 +188,7 @@ export function HeaderWithMegaMenus() {
                   />
 
                   <SimpleGrid cols={2} spacing={0}>
-                    {Object.entries(jitaApps).map(([appKey, app]) => (
+                    {Object.entries(characterApps).map(([appKey, app]) => (
                       <UnstyledButton
                         component={Link}
                         href={app.url ?? "#"}
@@ -393,38 +407,130 @@ export function HeaderWithMegaMenus() {
         opened={drawerOpened}
         onClose={closeDrawer}
         size="100%"
-        padding="md"
+        p={0}
         title="Navigation"
         className={classes.hiddenDesktop}
         zIndex={1000000}
-        position="top"
       >
-        <ScrollArea h={`calc(100vh - ${rem(70)})`} mx="-md">
+        <ScrollArea h={`calc(100vh - ${rem(60)})`} mx="-md">
           <Divider
             my="sm"
             color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
-          {Object.values(jitaApps).map((app) => {
-            const isActive =
-              app.url !== undefined &&
-              router.pathname.startsWith(app.url.toString());
-            return (
-              <Link
-                key={app.name}
-                href={app.url ?? ""}
-                className={classes.link}
-                onClick={() => {
-                  closeDrawer();
-                  app.onClick?.();
-                }}
+
+          <UnstyledButton
+            className={classes.link}
+            onClick={toggleMobileCharacterApps}
+          >
+            <Center inline>
+              <Group spacing="xs">
+                <CharacterSheetIcon width={32} />
+                <Box component="span" mr={5}>
+                  Character Apps
+                </Box>
+              </Group>
+              <IconChevronDown size={16} color={theme.fn.primaryColor()} />
+            </Center>
+          </UnstyledButton>
+          <Collapse in={mobileCharacterAppsOpened} px="xs">
+            {Object.entries(characterApps).map(([appKey, app]) => (
+              <UnstyledButton
+                component={Link}
+                href={app.url ?? "#"}
+                className={classes.subLink}
+                key={appKey}
+                onClick={() => closeDrawer()}
               >
-                <Group>
-                  <app.Icon width={32} height={32} alt="EveMail" />
-                  <Text>{app.name}</Text>
+                <Group noWrap align="flex-start">
+                  <app.Icon width={32} />
+                  <div>
+                    <Text size="sm" fw={500}>
+                      {app.name}
+                    </Text>
+                    <Text size="xs" color="dimmed" lineClamp={2}>
+                      {app.description}
+                    </Text>
+                  </div>
                 </Group>
-              </Link>
-            );
-          })}
+              </UnstyledButton>
+            ))}
+          </Collapse>
+
+          <UnstyledButton
+            className={classes.link}
+            onClick={toggleMobileCorporationApps}
+          >
+            <Center inline>
+              <Group spacing="xs">
+                <CorporationIcon width={32} />
+                <Box component="span" mr={5}>
+                  Corporation Apps
+                </Box>
+              </Group>
+              <IconChevronDown size={16} color={theme.fn.primaryColor()} />
+            </Center>
+          </UnstyledButton>
+          <Collapse in={mobileCorporationAppsOpened} px="xs">
+            {Object.entries(corporationApps).map(([appKey, app]) => (
+              <UnstyledButton
+                component={Link}
+                href={app.url ?? "#"}
+                className={classes.subLink}
+                key={appKey}
+                onClick={() => closeDrawer()}
+              >
+                <Group noWrap align="flex-start">
+                  <app.Icon width={32} />
+                  <div>
+                    <Text size="sm" fw={500}>
+                      {app.name}
+                    </Text>
+                    <Text size="xs" color="dimmed" lineClamp={2}>
+                      {app.description}
+                    </Text>
+                  </div>
+                </Group>
+              </UnstyledButton>
+            ))}
+          </Collapse>
+
+          <UnstyledButton
+            className={classes.link}
+            onClick={toggleMobileUniverseApps}
+          >
+            <Center inline>
+              <Group spacing="xs">
+                <MapIcon width={32} />
+                <Box component="span" mr={5}>
+                  Universe Apps
+                </Box>
+              </Group>
+              <IconChevronDown size={16} color={theme.fn.primaryColor()} />
+            </Center>
+          </UnstyledButton>
+          <Collapse in={mobileUniverseAppsOpened} px="xs">
+            {Object.entries(universeApps).map(([appKey, app]) => (
+              <UnstyledButton
+                component={Link}
+                href={app.url ?? "#"}
+                className={classes.subLink}
+                key={appKey}
+                onClick={() => closeDrawer()}
+              >
+                <Group noWrap align="flex-start">
+                  <app.Icon width={32} />
+                  <div>
+                    <Text size="sm" fw={500}>
+                      {app.name}
+                    </Text>
+                    <Text size="xs" color="dimmed" lineClamp={2}>
+                      {app.description}
+                    </Text>
+                  </div>
+                </Group>
+              </UnstyledButton>
+            ))}
+          </Collapse>
 
           <Divider
             my="sm"

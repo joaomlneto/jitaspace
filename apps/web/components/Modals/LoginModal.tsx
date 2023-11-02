@@ -21,10 +21,11 @@ import {
   AppScopeSetCheckboxCard,
   ScopesTable,
 } from "~/components/ScopeGuard";
-import { extraJitaFeatures, jitaApps } from "~/config/apps";
+import { characterApps, extraJitaFeatures } from "~/config/apps";
+
 
 const allAppScopes = [
-  ...Object.values(jitaApps).flatMap((app) =>
+  ...Object.values(characterApps).flatMap((app) =>
     [...(app.scopes.required ?? []), ...(app.scopes.optional ?? [])].flatMap(
       (s) => s.scopes,
     ),
@@ -103,7 +104,7 @@ export function LoginModal({
             spacing={0}
             breakpoints={[{ maxWidth: "sm", cols: 1 }]}
           >
-            {[...Object.values(jitaApps)].map((feature) => (
+            {[...Object.values(characterApps)].map((feature) => (
               <AppCheckboxCard
                 app={feature}
                 selectedScopes={[...selectedScopes]}

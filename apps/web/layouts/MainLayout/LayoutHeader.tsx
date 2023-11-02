@@ -26,7 +26,7 @@ import { openContextModal } from "@mantine/modals";
 import { useEsiClientContext } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
-import { jitaApps } from "~/config/apps";
+import { characterApps } from "~/config/apps";
 import UserButton from "./UserButton";
 
 const useStyles = createStyles((theme) => ({
@@ -149,7 +149,7 @@ export function LayoutHeader() {
               spacing={0}
               className={classes.hiddenMobile}
             >
-              {Object.values(jitaApps).map((app) => {
+              {Object.values(characterApps).map((app) => {
                 const isActive =
                   app.url !== undefined &&
                   router.pathname.startsWith(app.url.toString());
@@ -236,7 +236,7 @@ export function LayoutHeader() {
             my="sm"
             color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
-          {Object.values(jitaApps).map((app) => {
+          {Object.values(characterApps).map((app) => {
             const isActive =
               app.url !== undefined &&
               router.pathname.startsWith(app.url.toString());
