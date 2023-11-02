@@ -422,6 +422,18 @@ export const extraJitaFeatures: AppScopeSet[] = [
     reason: "Open in-game windows",
     scopes: ["esi-ui.open_window.v1"],
   },
+  {
+    reason: "Read character online status",
+    scopes: ["esi-location.read_online.v1"],
+  },
+  {
+    reason: "Read current ship",
+    scopes: ["esi-location.read_ship_type.v1"],
+  },
+  {
+    reason: "Read character current location",
+    scopes: ["esi-location.read_location.v1"],
+  },
 ];
 
 export const jitaApps: Record<
