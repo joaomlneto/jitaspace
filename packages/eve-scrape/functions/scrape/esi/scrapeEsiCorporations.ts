@@ -183,7 +183,8 @@ export const scrapeEsiCorporations = client.createFunction(
                 corporationId: corporation.corporationId,
                 allianceId: corporation.alliance_id ?? null,
                 ceoId: corporation.ceo_id,
-                creatorId: corporation.creator_id ?? null,
+                creatorId:
+                  corporation.creator_id !== 1 ? corporation.creator_id : null,
                 dateFounded: corporation.date_founded
                   ? new Date(corporation.date_founded)
                   : null,
