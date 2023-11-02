@@ -1,6 +1,7 @@
 import { useGetCharactersCharacterIdCalendarInfinite } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useEsiClientContext } from "../useEsiClientContext";
+
 
 export function useCharacterCalendar() {
   const { isTokenValid, characterId, scopes, accessToken } =
