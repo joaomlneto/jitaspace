@@ -6,6 +6,7 @@ export * from "./usePlanet";
 export * from "./useRace";
 export * from "./useRegion";
 export * from "./useSolarSystem";
+export * from "./useAllSolarSystemKills";
 export * from "./useStar";
 export * from "./useStation";
 export * from "./useStructure";

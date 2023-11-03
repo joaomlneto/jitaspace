@@ -8,6 +8,7 @@ import { useEsiSearch } from "@jitaspace/hooks";
 import { EsiSearchMultiSelectItem } from "./EsiSearchMultiSelectItem";
 import { EsiSearchMultiSelectValue } from "./EsiSearchMultiSelectValue";
 
+
 export type EsiSearchMultiSelectProps = Omit<
   MultiSelectProps,
   "data" | "searchable" | "searchValue" | "onSearchChange"
@@ -25,10 +26,12 @@ export const EsiSearchMultiSelect = memo(
       debounceTime ?? 1000,
     );
 
-    const { data: searchResult, isLoading } = useEsiSearch({
-      query: debouncedSearchValue,
-      categories,
-    });
+    const { data: searchResult, isLoading } = useEsiSearch(
+      debouncedSearchValue,
+      {
+        categories,
+      },
+    );
 
     const data = [
       ...Object.entries(searchResult?.data ?? []).flatMap(

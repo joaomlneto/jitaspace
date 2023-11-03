@@ -14,34 +14,27 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { format } from "date-fns";
 import humanizeDuration from "humanize-duration";
 
-import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useCharacterSkillQueue } from "@jitaspace/hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
+
+
+
+
+const skillLevelRomanNumeral = (n: number): string =>
+  ({
+    1: "I",
+    2: "II",
+    3: "III",
+    4: "IV",
+    5: "V",
+  })[n] ?? "[Invalid Level]";
+
 export const SkillQueueTimeline = memo(() => {
-  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
-  const { data, isLoading, error } = useGetCharactersCharacterIdSkillqueue(
-    characterId ?? 1,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled: isTokenValid,
-      },
-    },
-  );
+  const { data, isLoading, error } = useCharacterSkillQueue();
 
   if (isLoading) return "LOADING";
   if (error) return "ERROR";
-
-  const skillLevelRomanNumeral = (n: number): string =>
-    ({
-      1: "I",
-      2: "II",
-      3: "III",
-      4: "IV",
-      5: "V",
-    })[n] ?? "[Invalid Level]";
 
   return (
     <Stack>

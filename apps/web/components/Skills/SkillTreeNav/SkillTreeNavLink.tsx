@@ -8,12 +8,12 @@ import {
   Text,
 } from "@mantine/core";
 
-import {
-  GetCharactersCharacterIdSkillsQueryResponse,
-  useGetCharactersCharacterIdSkills,
-} from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { CharacterSkill, useCharacterSkills } from "@jitaspace/hooks";
 import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
+
+
+
+
 
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 
@@ -44,25 +44,11 @@ export const SkillTreeNavLink = memo(
     fetchNameFromEsi = false,
     ...otherProps
   }: SkillTreeNavLinkProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
-
     const {
       data: skills,
       isLoading: skillsLoading,
       error: skillsError,
-    } = useGetCharactersCharacterIdSkills(
-      characterId ?? 1,
-      { token: accessToken },
-      {},
-      {
-        query: {
-          enabled: isTokenValid,
-        },
-      },
-    );
-
-    const loading = skillsLoading;
-    const error = skillsError;
+    } = useCharacterSkills();
 
     const sortedTypes = useMemo(
       () =>
@@ -77,10 +63,7 @@ export const SkillTreeNavLink = memo(
         acc[skill.skill_id] = skill;
         return acc;
       },
-      {} as Record<
-        string,
-        GetCharactersCharacterIdSkillsQueryResponse["skills"][number]
-      >,
+      {} as Record<string, CharacterSkill>,
     );
 
     const getSkillTrainingTimeMultiplier = (skill: {
@@ -132,7 +115,7 @@ export const SkillTreeNavLink = memo(
           <Group position="apart">
             <Text>{group.name}</Text>
             <Text>
-              {loading ? (
+              {skillsLoading ? (
                 <Loader size="xs" />
               ) : (
                 characterSPInGroup.toLocaleString()

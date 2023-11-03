@@ -1,8 +1,8 @@
 import React, { memo, useMemo } from "react";
 import { Anchor, Group, Table, Text, Tooltip } from "@mantine/core";
 
-import { useGetUniverseSystemKills } from "@jitaspace/esi-client";
 import { InfoIcon } from "@jitaspace/eve-icons";
+import { useAllSolarSystemKills } from "@jitaspace/hooks";
 import {
   SolarSystemAnchor,
   SolarSystemName,
@@ -20,7 +20,7 @@ type RouteTableProps = {
 };
 
 export const RouteTable = memo(({ route }: RouteTableProps) => {
-  const { data: systemKillsData } = useGetUniverseSystemKills();
+  const { data: systemKillsData } = useAllSolarSystemKills();
 
   const systemKills = useMemo(() => {
     const index: Record<

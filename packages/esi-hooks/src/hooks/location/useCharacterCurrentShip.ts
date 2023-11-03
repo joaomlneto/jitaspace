@@ -1,7 +1,7 @@
 import { useGetCharactersCharacterIdShip } from "@jitaspace/esi-client";
 import { ESIScope } from "@jitaspace/esi-metadata";
 
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useEsiClientContext } from "../useEsiClientContext";
 
 
 export const useCharacterCurrentShip = () => {

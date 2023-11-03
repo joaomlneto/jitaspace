@@ -13,11 +13,14 @@ import {
 import {
   deleteCharactersCharacterIdMailMailId,
   putCharactersCharacterIdMailMailId,
-  useGetCharactersCharacterIdMailLabels,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useCharacterMailLabels, useEsiClientContext } from "@jitaspace/hooks";
 import { MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
+
+
+
+
 
 type Message = {
   //from?: number;
@@ -46,16 +49,7 @@ export type MessageMenuProps = {
 
 export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
   const { characterId, isTokenValid, accessToken } = useEsiClientContext();
-  const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    characterId ?? 1,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled: isTokenValid,
-      },
-    },
-  );
+  const { data: labels } = useCharacterMailLabels();
 
   return (
     <Menu>

@@ -1,7 +1,12 @@
-import { useGetCharactersCharacterIdWalletJournal } from "@jitaspace/esi-client";
+import {
+  GetCharactersCharacterIdWalletJournalQueryResponse,
+  useGetCharactersCharacterIdWalletJournal,
+} from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useEsiClientContext } from "../useEsiClientContext";
 
+export type CharacterWalletJournalEntry =
+  GetCharactersCharacterIdWalletJournalQueryResponse[number];
 
 export const useCharacterWalletJournal = () => {
   const { characterId, scopes, isTokenValid, accessToken } =

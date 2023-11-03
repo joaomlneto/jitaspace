@@ -1,11 +1,7 @@
 import React from "react";
 import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
-import {
-  useGetCharactersCharacterIdMailLabels,
-  useGetCharactersCharacterIdMailMailId,
-} from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useCharacterMail, useCharacterMailLabels } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityAvatar,
@@ -42,30 +38,8 @@ export function MessagePanel({
   hideSender,
   hideSubject,
 }: MessagePanelProps) {
-  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
-
-  const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    characterId ?? 1,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled: isTokenValid,
-      },
-    },
-  );
-
-  const { data: mail } = useGetCharactersCharacterIdMailMailId(
-    characterId ?? 0,
-    messageId ?? 0,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled: isTokenValid && !!messageId,
-      },
-    },
-  );
+  const { data: labels } = useCharacterMailLabels();
+  const { data: mail } = useCharacterMail(messageId);
 
   return (
     <Stack>

@@ -3,27 +3,16 @@ import { Button, Group, Table, Text } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
-import {
-  deleteCharactersCharacterIdMailLabelsLabelId,
-  useGetCharactersCharacterIdMailLabels,
-} from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useCharacterMailLabels } from "@jitaspace/hooks";
 import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
-export function LabelManagementTable() {
-  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
 
-  const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    characterId ?? 0,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled: isTokenValid,
-      },
-    },
-  );
+
+
+
+export function LabelManagementTable() {
+  const { data: labels, deleteLabel } = useCharacterMailLabels();
 
   return (
     <Table verticalSpacing="xs" highlightOnHover>
@@ -62,29 +51,24 @@ export function LabelManagementTable() {
                       },
                       onConfirm: () =>
                         void (async () => {
-                          if (!isTokenValid || !characterId) {
-                            return showNotification({
-                              title: "Error deleting label",
-                              message: `Error deleting label ${label.name}: Not logged in`,
-                            });
-                          }
                           if (!label.label_id) {
                             return showNotification({
                               title: "Error deleting label",
                               message: `Error deleting label ${label.name}: No label id`,
                             });
                           }
-                          await deleteCharactersCharacterIdMailLabelsLabelId(
-                            characterId,
-                            label.label_id,
-                            {
-                              token: accessToken,
-                            },
-                          );
-                          showNotification({
-                            title: "Label deleted",
-                            message: `Label ${label.name} deleted. It make take up to 30 seconds to disappear from the list.`,
-                          });
+                          const result = await deleteLabel(label.label_id);
+                          if (result.success) {
+                            showNotification({
+                              title: "Label deleted",
+                              message: `Label ${label.name} deleted. It make take up to 30 seconds to disappear from the list.`,
+                            });
+                          } else {
+                            showNotification({
+                              title: "Error deleting label",
+                              message: result.error,
+                            });
+                          }
                         })(),
                     });
                   }}

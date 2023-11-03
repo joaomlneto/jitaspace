@@ -3,8 +3,7 @@ import { Anchor, Group, Stack, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useCharacterMailLabels } from "@jitaspace/hooks";
 import {
   EveMailSenderAnchor,
   EveMailSenderAvatar,
@@ -19,17 +18,7 @@ export const MobileMailboxTable = ({
   data,
   ...otherProps
 }: MailboxTableProps) => {
-  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
-  const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    characterId ?? 1,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled: isTokenValid,
-      },
-    },
-  );
+  const { data: labels } = useCharacterMailLabels();
 
   const visibleMessages = data.filter((mail) => !mail.isDeleted);
 

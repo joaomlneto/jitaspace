@@ -14,11 +14,11 @@ import {
 import { NextSeo } from "next-seo";
 import useSwr from "swr";
 
-import { useGetStatus as useGetTqStatus } from "@jitaspace/esi-client";
 import {
   useGetStatus as useGetMetaStatus,
   type GetStatusQueryResponse,
 } from "@jitaspace/esi-meta-client";
+import { useServerStatus } from "@jitaspace/hooks";
 import { FormattedDateText } from "@jitaspace/ui";
 
 import { EsiClientStateCard } from "~/components/EsiClient";
@@ -59,15 +59,7 @@ export default function Page() {
     },
   );
 
-  const { data: tqStatus } = useGetTqStatus(
-    {},
-    {},
-    {
-      query: {
-        refetchInterval: 10 * 1000,
-      },
-    },
-  );
+  const { data: tqStatus } = useServerStatus();
 
   const { data: esiStatus } = useGetMetaStatus(
     {},

@@ -2,17 +2,15 @@ import { useMemo } from "react";
 
 import { GetCharactersCharacterIdFittingsQueryResponseItemsFlag } from "@jitaspace/esi-client";
 
-import { useCharacterAssets } from "../useCharacterAssets";
-import { useCharacterCurrentShip } from "../useCharacterCurrentShip";
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useCharacterAssets } from "../assets";
+import { useCharacterCurrentShip } from "../location";
 
+
+export type FittingItemFlag =
+  GetCharactersCharacterIdFittingsQueryResponseItemsFlag;
 
 export const useCharacterCurrentFit = () => {
-  const { characterId, isTokenValid, scopes, accessToken } =
-    useEsiClientContext();
-
   const { data: ship } = useCharacterCurrentShip();
-
   const { assets } = useCharacterAssets();
 
   const modules = useMemo(() => {
@@ -22,15 +20,12 @@ export const useCharacterCurrentFit = () => {
     );
   }, [ship, assets]);
 
-  //const shipName
-
   return {
     name: ship?.data.ship_name,
     shipTypeId: ship?.data.ship_type_id,
     items: modules?.map((module) => ({
       ...module,
-      location_flag:
-        module.location_flag as GetCharactersCharacterIdFittingsQueryResponseItemsFlag,
+      location_flag: module.location_flag as FittingItemFlag,
     })),
   };
 };

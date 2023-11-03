@@ -9,8 +9,12 @@ import {
 } from "@mantine/core";
 import { type SpotlightActionProps } from "@mantine/spotlight";
 
-import { type GetCharactersCharacterIdSearchQueryResponse } from "@jitaspace/esi-client";
+import { EsiSearchCategory } from "@jitaspace/hooks";
 import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
+
+
+
+
 
 const useStyles = createStyles((theme) => ({
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -39,7 +43,7 @@ const useStyles = createStyles((theme) => ({
 type JitaSpotlightActionProps = Omit<SpotlightActionProps, "action"> & {
   action: SpotlightActionProps["action"] & {
     type: "app" | "eve-entity";
-    category?: keyof GetCharactersCharacterIdSearchQueryResponse;
+    category?: EsiSearchCategory;
     entityId: number;
   };
 };

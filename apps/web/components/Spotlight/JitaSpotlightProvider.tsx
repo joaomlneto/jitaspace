@@ -7,12 +7,12 @@ import {
   type SpotlightProviderProps,
 } from "@mantine/spotlight";
 
-import {
-  type GetCharactersCharacterIdSearchQueryParamsCategories,
-  type GetCharactersCharacterIdSearchQueryResponse,
-} from "@jitaspace/esi-client";
 import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
-import { useEsiClientContext, useEsiSearch } from "@jitaspace/hooks";
+import {
+  EsiSearchCategory,
+  useEsiClientContext,
+  useEsiSearch,
+} from "@jitaspace/hooks";
 
 import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
 import { JitaSpotlightActionsWrapper } from "~/components/Spotlight/JitaSpotlightActionsWrapper";
@@ -26,24 +26,7 @@ export const JitaSpotlightProvider = memo(
     const [debouncedQuery] = useDebouncedValue(query, 1000);
     const { scopes } = useEsiClientContext();
 
-    const { data: esiSearchData } = useEsiSearch({
-      query: debouncedQuery,
-      categories: [
-        "agent",
-        "alliance",
-        "character",
-        "constellation",
-        "corporation",
-        "faction",
-        "inventory_type",
-        "region",
-        "solar_system",
-        "station",
-        ...((scopes.includes("esi-universe.read_structures.v1")
-          ? ["structure"]
-          : []) as GetCharactersCharacterIdSearchQueryParamsCategories[]),
-      ],
-    });
+    const { data: esiSearchData } = useEsiSearch(debouncedQuery);
 
     const staticActions: SpotlightAction[] = useMemo(
       () =>
@@ -65,8 +48,7 @@ export const JitaSpotlightProvider = memo(
       () =>
         Object.entries(esiSearchData?.data ?? []).flatMap(
           ([categoryString, entries]) => {
-            const category =
-              categoryString as keyof GetCharactersCharacterIdSearchQueryResponse;
+            const category = categoryString as EsiSearchCategory;
             return entries.slice(0, 10).map((entityId) => ({
               title: `Entity ${entityId} - ${debouncedQuery}`,
               type: "eve-entity",

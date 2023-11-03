@@ -7,6 +7,7 @@ import { useEsiNamesCache, useEsiSearch } from "@jitaspace/hooks";
 
 import { EsiSearchSelectItem } from "./EsiSearchSelectItem";
 
+
 export type EsiSearchSelectProps = Omit<
   SelectProps,
   "data" | "searchable" | "searchValue" | "onSearchChange"
@@ -26,10 +27,12 @@ export const EsiSearchSelect = memo(
 
     const names = useEsiNamesCache();
 
-    const { data: searchResult, isLoading } = useEsiSearch({
-      query: debouncedSearchValue,
-      categories,
-    });
+    const { data: searchResult, isLoading } = useEsiSearch(
+      debouncedSearchValue,
+      {
+        categories,
+      },
+    );
 
     const data = [
       ...Object.entries(searchResult?.data ?? []).flatMap(

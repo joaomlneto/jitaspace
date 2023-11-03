@@ -12,7 +12,6 @@ import {
 } from "@mantine/core";
 import { format } from "date-fns";
 
-import { useGetCharactersCharacterIdAttributes } from "@jitaspace/esi-client";
 import {
   AttributesIcon,
   CharismaAttributeSmallIcon,
@@ -22,7 +21,7 @@ import {
   WillpowerAttributeSmallIcon,
   type EveIconProps,
 } from "@jitaspace/eve-icons";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useCharacterAttributes } from "@jitaspace/hooks/src/hooks/skills";
 
 export const characterAttributes = [
   "charisma",
@@ -51,17 +50,7 @@ const icons: Record<CharacterAttribute, React.FC<EveIconProps>> = {
 };
 
 export function CharacterAttributesRingProgress() {
-  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
-  const { data, error, isLoading } = useGetCharactersCharacterIdAttributes(
-    characterId ?? 1,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled: isTokenValid,
-      },
-    },
-  );
+  const { data, error, isLoading } = useCharacterAttributes();
 
   if (isLoading) return "LOADING";
   if (error) return "ERROR";

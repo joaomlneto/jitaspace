@@ -3,8 +3,7 @@ import { Anchor, Group, Popover, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useCharacterMailLabels } from "@jitaspace/hooks";
 import {
   EveMailSenderAnchor,
   EveMailSenderAvatar,
@@ -23,17 +22,7 @@ export const DesktopMailboxTable = ({
   mutate,
   ...otherProps
 }: MailboxTableProps) => {
-  const { isTokenValid, characterId, accessToken } = useEsiClientContext();
-  const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    characterId ?? 1,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled: isTokenValid,
-      },
-    },
-  );
+  const { data: labels } = useCharacterMailLabels();
   return (
     <Table highlightOnHover {...otherProps}>
       <thead>

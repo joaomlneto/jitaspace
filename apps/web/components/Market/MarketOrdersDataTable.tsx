@@ -7,22 +7,24 @@ import {
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { GetMarketsRegionIdOrdersQueryResponse } from "@jitaspace/esi-client";
+import { RegionalMarketOrder } from "@jitaspace/hooks";
 import {
   EveEntityName,
   SolarSystemSecurityStatusBadge,
   TimeAgoText,
 } from "@jitaspace/ui";
 
+
+
+
+
 type MarketOrdersDataTableProps = {
-  orders: GetMarketsRegionIdOrdersQueryResponse;
+  orders: RegionalMarketOrder[];
 };
 
 export const MarketOrdersDataTable = memo(
   ({ orders }: MarketOrdersDataTableProps) => {
-    const columns = useMemo<
-      MRT_ColumnDef<GetMarketsRegionIdOrdersQueryResponse[number]>[]
-    >(
+    const columns = useMemo<MRT_ColumnDef<RegionalMarketOrder>[]>(
       () => [
         {
           id: "orderId",

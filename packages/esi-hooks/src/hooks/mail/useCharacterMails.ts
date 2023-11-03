@@ -7,7 +7,8 @@ import {
   useGetCharactersCharacterIdMailInfinite,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useEsiClientContext } from "../useEsiClientContext";
+
 
 type useCharacterMailsProps = {
   labels?: number[];

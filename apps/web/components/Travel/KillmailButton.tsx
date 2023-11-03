@@ -11,8 +11,8 @@ import {
   Tooltip,
 } from "@mantine/core";
 
-import { useGetKillmailsKillmailIdKillmailHash } from "@jitaspace/esi-client";
 import { CombatLogIcon, MercenaryIcon, WarsIcon } from "@jitaspace/eve-icons";
+import { useKillmail } from "@jitaspace/hooks";
 import {
   CharacterAvatar,
   CharacterName,
@@ -35,10 +35,7 @@ type KillButtonProps = {
 
 export const KillmailButton = memo(
   ({ killmailId, killmailHash }: KillButtonProps) => {
-    const { data } = useGetKillmailsKillmailIdKillmailHash(
-      killmailHash,
-      killmailId,
-    );
+    const { data } = useKillmail(killmailHash, killmailId);
     return (
       <Anchor
         component={Link}

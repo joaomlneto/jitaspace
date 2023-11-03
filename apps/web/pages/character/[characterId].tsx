@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useGetCharactersCharacterId } from "@jitaspace/esi-client";
+import { useCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
@@ -33,7 +33,7 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const characterId = parseInt(router.query.characterId as string);
-  const { data: character } = useGetCharactersCharacterId(characterId);
+  const { data: character } = useCharacter(characterId);
 
   return (
     <Container size="sm">
