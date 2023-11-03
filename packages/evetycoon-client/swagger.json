@@ -1,0 +1,470 @@
+{
+  "openapi": "3.1.0",
+  "x-stoplight": {
+    "id": "2eir8tsgm785c"
+  },
+  "info": {
+    "title": "EVE Tycoon",
+    "version": "1.0",
+    "summary": "EVE Tycoon API",
+    "description": ""
+  },
+  "servers": [
+    {
+      "url": "https://evetycoon.com/api",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/v1/market/stats/{regionId}/{typeId}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "integer"
+          },
+          "name": "regionId",
+          "in": "path",
+          "required": true,
+          "description": "Region ID"
+        },
+        {
+          "schema": {
+            "type": "integer"
+          },
+          "name": "typeId",
+          "in": "path",
+          "required": true,
+          "description": "Type ID"
+        }
+      ],
+      "get": {
+        "summary": "Get Type Market Statistics",
+        "description": "Returns price and volume stats for an item type in a specific region.\n\nThese are stats for all orders for a given type in in a specific region. Some orders are excluded from these stats: buy orders which have a price less than 10% of the maximum buy order, and sell orders that have a price greater than 10 times the smallest sell order. This is done to stop outliers (ie. scam sell orders, or 0.01 ISK buy orders) from affecting the averages. The thresholds used and the amount of orders that were eliminated are provided. The price is computed as a \"five percent\" average. For buy orders, this is the average price of the top 5% of buy orders (by volume). For sell orders, it's the average price of the bottom 5% (by volume).",
+        "tags": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "buyVolume": {
+                      "type": "integer"
+                    },
+                    "sellVolume": {
+                      "type": "integer"
+                    },
+                    "buyOrders": {
+                      "type": "integer"
+                    },
+                    "sellOrders": {
+                      "type": "integer"
+                    },
+                    "buyOutliers": {
+                      "type": "integer"
+                    },
+                    "sellOutliers": {
+                      "type": "integer"
+                    },
+                    "buyThreshold": {
+                      "type": "integer"
+                    },
+                    "sellThreshold": {
+                      "type": "integer"
+                    },
+                    "buyAvgFivePercent": {
+                      "type": "number"
+                    },
+                    "sellAvgFivePercent": {
+                      "type": "number"
+                    }
+                  },
+                  "x-examples": {
+                    "Example 1": {
+                      "buyVolume": 215581,
+                      "sellVolume": 831898,
+                      "buyOrders": 203,
+                      "sellOrders": 451,
+                      "buyOutliers": 117,
+                      "sellOutliers": 3,
+                      "buyThreshold": 248100,
+                      "sellThreshold": 25920000,
+                      "buyAvgFivePercent": 2477927.729845069,
+                      "sellAvgFivePercent": 2598726.2134294575
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-market-stats",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "systemId",
+            "description": "Filter by Solar System ID"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "locationId",
+            "description": "location ID (station, structure) to filter on"
+          }
+        ]
+      }
+    },
+    "/v1/market/orders/{typeId}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "typeId",
+          "in": "path",
+          "required": true,
+          "description": "item type ID"
+        }
+      ],
+      "get": {
+        "summary": "Get Type Market Orders",
+        "tags": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "x-examples": {
+                    "Example 1": {
+                      "itemType": {
+                        "typeID": 44992,
+                        "groupID": 1875,
+                        "typeName": "PLEX",
+                        "iconID": 21481,
+                        "marketGroupID": 1923,
+                        "description": "something",
+                        "published": 1
+                      },
+                      "systems": {
+                        "30005197": {
+                          "solarSystemID": 30005197,
+                          "solarSystemName": "Atreen",
+                          "security": 0.4589116
+                        },
+                        "30005198": {
+                          "solarSystemID": 30005198,
+                          "solarSystemName": "Atreen2",
+                          "security": 0.9989116
+                        }
+                      },
+                      "stationNames": {
+                        "60001168": "Kador Prime IX - Moon 2 - Kaalakiota Corporation Factory",
+                        "60009361": "Blameston VI - Moon 2 - Federal Freight Storage",
+                        "60013975": "Palas II - Royal Khanid Navy Assembly Plant"
+                      },
+                      "structureNames": {
+                        "1031287233650": "Boystin - Ana's Ale House",
+                        "1029209158478": "Perimeter - Tranquility T2 Refinery",
+                        "1021628175407": "Boystin - Gravity Well"
+                      },
+                      "orders": [
+                        {
+                          "duration": 90,
+                          "isBuyOrder": true,
+                          "issued": 1609087678000,
+                          "locationId": 1025026043977,
+                          "minVolume": 1,
+                          "orderId": 5882771494,
+                          "price": 1699000,
+                          "range": "_40",
+                          "systemId": 30002782,
+                          "regionId": 10000033,
+                          "typeId": 44992,
+                          "volumeRemain": 1000,
+                          "volumeTotal": 1000
+                        },
+                        {
+                          "duration": 1,
+                          "isBuyOrder": false,
+                          "issued": 1609087678000,
+                          "locationId": 1025026043977,
+                          "minVolume": 1,
+                          "orderId": 5882771494,
+                          "price": 1699000,
+                          "range": "_40",
+                          "systemId": 30002782,
+                          "regionId": 10000033,
+                          "typeId": 44992,
+                          "volumeRemain": 1000,
+                          "volumeTotal": 1000
+                        }
+                      ]
+                    }
+                  },
+                  "properties": {
+                    "itemType": {
+                      "type": "object",
+                      "properties": {
+                        "typeID": {
+                          "type": "integer"
+                        },
+                        "groupID": {
+                          "type": "integer"
+                        },
+                        "typeName": {
+                          "type": "string"
+                        },
+                        "iconID": {
+                          "type": "integer"
+                        },
+                        "marketGroupID": {
+                          "type": "integer"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "published": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "systems": {
+                      "type": "object",
+                      "properties": {
+                        "30005197": {
+                          "type": "object",
+                          "properties": {
+                            "solarSystemID": {
+                              "type": "integer"
+                            },
+                            "solarSystemName": {
+                              "type": "string"
+                            },
+                            "security": {
+                              "type": "number"
+                            }
+                          }
+                        },
+                        "30005198": {
+                          "type": "object",
+                          "properties": {
+                            "solarSystemID": {
+                              "type": "integer"
+                            },
+                            "solarSystemName": {
+                              "type": "string"
+                            },
+                            "security": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "stationNames": {
+                      "type": "object",
+                      "properties": {
+                        "60001168": {
+                          "type": "string"
+                        },
+                        "60009361": {
+                          "type": "string"
+                        },
+                        "60013975": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "structureNames": {
+                      "type": "object",
+                      "properties": {
+                        "1031287233650": {
+                          "type": "string"
+                        },
+                        "1029209158478": {
+                          "type": "string"
+                        },
+                        "1021628175407": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "orders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "duration": {
+                            "type": "integer"
+                          },
+                          "isBuyOrder": {
+                            "type": "boolean"
+                          },
+                          "issued": {
+                            "type": "integer"
+                          },
+                          "locationId": {
+                            "type": "integer"
+                          },
+                          "minVolume": {
+                            "type": "integer"
+                          },
+                          "orderId": {
+                            "type": "integer"
+                          },
+                          "price": {
+                            "type": "integer"
+                          },
+                          "range": {
+                            "type": "string"
+                          },
+                          "systemId": {
+                            "type": "integer"
+                          },
+                          "regionId": {
+                            "type": "integer"
+                          },
+                          "typeId": {
+                            "type": "integer"
+                          },
+                          "volumeRemain": {
+                            "type": "integer"
+                          },
+                          "volumeTotal": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-type-market-orders",
+        "description": "Get current order book (across all regions) for an item type, as well as metadata about the type itself and all the relevant system, station, and structure metatada.\n\nThis is the endpoint used by the market browser. It includes all the active orders for an item type in the entire game (unless you use any of the filter params), as well as all the metadata required to display them. This includes the names and sec status of all the systems that have an order, as well as NPC station and (public) player structure names that have orders. See the ESI docs for field descriptions.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "regionId",
+            "description": "region ID to filter on"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "systemId",
+            "description": "system ID to filter on"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "locationId",
+            "description": "location ID (station, structure) to filter on"
+          }
+        ]
+      }
+    },
+    "/v1/market/history/{regionId}/{typeId}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "regionId",
+          "in": "path",
+          "required": true,
+          "description": "region ID"
+        },
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "typeId",
+          "in": "path",
+          "required": true,
+          "description": "type ID"
+        }
+      ],
+      "get": {
+        "summary": "Get Type Regional Price History",
+        "tags": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "date": {
+                        "type": "integer"
+                      },
+                      "regionId": {
+                        "type": "integer"
+                      },
+                      "typeId": {
+                        "type": "integer"
+                      },
+                      "average": {
+                        "type": "integer"
+                      },
+                      "highest": {
+                        "type": "number"
+                      },
+                      "lowest": {
+                        "type": "integer"
+                      },
+                      "orderCount": {
+                        "type": "integer"
+                      },
+                      "volume": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "x-examples": {
+                    "Example 1": [
+                      {
+                        "date": 1572566400000,
+                        "regionId": 10000002,
+                        "typeId": 44992,
+                        "average": 3470120,
+                        "highest": 3590112.17,
+                        "lowest": 3461404,
+                        "orderCount": 2168,
+                        "volume": 1153189
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-type-market-history",
+        "description": "Returns the price history of an item in a particular region.\n\nThis is the endpoint used by the history graph in the market browser. This is a mirror of the ESI region market history endpoint, except it can be queried by type ID. See the ESI docs for field descriptions.\n"
+      }
+    }
+  },
+  "components": {
+    "schemas": {}
+  }
+}
