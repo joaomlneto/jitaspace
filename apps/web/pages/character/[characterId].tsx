@@ -7,7 +7,6 @@ import {
   Button,
   Container,
   Group,
-  JsonInput,
   Stack,
   Text,
   Title,
@@ -71,12 +70,6 @@ export default function Page() {
           )}
           <OpenInformationWindowActionIcon entityId={characterId} />
         </Group>
-        <JsonInput
-          value={JSON.stringify(character, null, 2)}
-          maxRows={30}
-          autosize
-        />
-
         <Group>
           <Link
             href={`https://evewho.com/character/${characterId}`}
