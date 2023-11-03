@@ -585,6 +585,70 @@ importers:
         specifier: ^5.2.2
         version: 5.2.2
 
+  packages/evetycoon-client:
+    dependencies:
+      '@kubb/cli':
+        specifier: ^1.14.3
+        version: 1.14.3(@types/node@18.18.6)(typescript@5.2.2)
+      '@kubb/core':
+        specifier: ^1.14.3
+        version: 1.14.3
+      '@kubb/swagger':
+        specifier: ^1.14.3
+        version: 1.14.3(@kubb/react@1.14.3)(openapi-types@12.1.3)
+      '@kubb/swagger-client':
+        specifier: ^1.14.3
+        version: 1.14.3(@kubb/react@1.14.3)(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
+      '@kubb/swagger-tanstack-query':
+        specifier: ^1.14.3
+        version: 1.14.3(@kubb/react@1.14.3)(axios@1.5.1)(openapi-types@12.1.3)(typescript@5.2.2)
+      '@kubb/swagger-ts':
+        specifier: ^1.14.3
+        version: 1.14.3(@kubb/react@1.14.3)(openapi-types@12.1.3)(typescript@5.2.2)
+      '@kubb/swagger-zod':
+        specifier: ^1.14.3
+        version: 1.14.3(@kubb/react@1.14.3)(openapi-types@12.1.3)
+      '@kubb/swagger-zodios':
+        specifier: ^1.14.3
+        version: 1.14.3(@kubb/react@1.14.3)(openapi-types@12.1.3)
+      '@zodios/core':
+        specifier: ^10.9.6
+        version: 10.9.6(axios@1.5.1)(zod@3.22.4)
+      axios:
+        specifier: ^1.5.1
+        version: 1.5.1
+      react:
+        specifier: 18.2.0
+        version: 18.2.0
+      zod:
+        specifier: ^3.22.4
+        version: 3.22.4
+    devDependencies:
+      '@jitaspace/eslint-config':
+        specifier: '*'
+        version: link:../../tooling/eslint
+      '@jitaspace/prettier-config':
+        specifier: '*'
+        version: link:../../tooling/prettier
+      '@jitaspace/tsconfig':
+        specifier: '*'
+        version: link:../../tooling/tsconfig
+      '@types/node':
+        specifier: ^18.18.6
+        version: 18.18.6
+      '@types/react':
+        specifier: ^18.2.33
+        version: 18.2.33
+      eslint:
+        specifier: ^8.51.0
+        version: 8.51.0
+      prettier:
+        specifier: ^3.0.3
+        version: 3.0.3
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
+
   packages/hooks:
     dependencies:
       '@jitaspace/esi-client':
