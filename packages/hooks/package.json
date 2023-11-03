@@ -14,13 +14,14 @@
     "prepublish": "pnpm build"
   },
   "dependencies": {
+    "@jitaspace/esi-client": "*",
     "@jitaspace/esi-metadata": "*",
+    "@jitaspace/sde-client": "*",
     "@react-hook/cache": "^1.1.1",
     "@tanstack/react-query": "^4.36.1",
     "axios": "^1.5.1"
   },
   "devDependencies": {
-    "@jitaspace/esi-client": "*",
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",

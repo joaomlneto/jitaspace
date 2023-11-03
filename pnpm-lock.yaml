@@ -587,6 +587,15 @@ importers:
 
   packages/hooks:
     dependencies:
+      '@jitaspace/esi-client':
+        specifier: '*'
+        version: link:../esi-client
+      '@jitaspace/esi-metadata':
+        specifier: '*'
+        version: link:../esi-metadata
+      '@jitaspace/sde-client':
+        specifier: '*'
+        version: link:../sde-client
       '@react-hook/cache':
         specifier: ^1.1.1
         version: 1.1.1(react@18.2.0)
@@ -597,12 +606,6 @@ importers:
         specifier: ^1.5.1
         version: 1.5.1
     devDependencies:
-      '@jitaspace/esi-client':
-        specifier: '*'
-        version: link:../esi-client
-      '@jitaspace/esi-metadata':
-        specifier: '*'
-        version: link:../esi-metadata
       '@jitaspace/eslint-config':
         specifier: '*'
         version: link:../../tooling/eslint

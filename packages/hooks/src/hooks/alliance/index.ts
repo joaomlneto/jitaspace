@@ -1,3 +1,3 @@
-export * from "./useAllianceIds";
-export * from "./useAllianceInformation";
-export * from "./useAllianceMemberCorporations";
+export * from "./useEsiAllianceIds";
+export * from "./useEsiAllianceInformation";
+export * from "./useEsiAllianceMemberCorporations";

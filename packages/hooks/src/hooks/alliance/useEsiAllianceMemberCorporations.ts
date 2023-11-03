@@ -1,4 +1,8 @@
 import { useGetAlliancesAllianceIdCorporations } from "@jitaspace/esi-client";
 
-export const useAllianceMemberCorporations =
+
+
+
+
+export const useEsiAllianceMemberCorporations =
   useGetAlliancesAllianceIdCorporations;
