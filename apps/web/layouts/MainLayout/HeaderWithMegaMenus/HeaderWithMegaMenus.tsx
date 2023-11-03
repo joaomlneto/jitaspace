@@ -64,11 +64,11 @@ export function HeaderWithMegaMenus() {
       >
         <Container size="xl" h={60} p={0}>
           <Group position="apart" h="100%" spacing={0}>
-            <Group py="xs" px="md" className={classes.link}>
-              <Link href="/">
+            <Link href="/">
+              <Group py="xs" px="md" className={classes.link}>
                 <Image src="/logo.png" alt="Jita logo" width={30} height={30} />
-              </Link>
-            </Group>
+              </Group>
+            </Link>
 
             <Group
               sx={{ height: "100%" }}
