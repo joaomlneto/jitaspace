@@ -16,7 +16,6 @@ type PageProps = {
     characterId: number;
     name: string;
     corporationId: number;
-    factionId?: number;
     agentTypeId: number;
     agentDivisionId: number;
     isLocator: boolean;
@@ -39,7 +38,6 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
               corporation: {
                 select: {
                   corporationId: true,
-                  factionId: true,
                 },
               },
             },
@@ -56,7 +54,6 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
           characterId: agent.characterId,
           name: agent.Character.name,
           corporationId: agent.Character.corporation.corporationId,
-          factionId: agent.Character.corporation.factionId ?? undefined,
           agentTypeId: agent.agentTypeId,
           agentDivisionId: agent.agentDivisionId,
           isLocator: agent.isLocator,

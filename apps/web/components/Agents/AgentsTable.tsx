@@ -13,10 +13,8 @@ import {
   CorporationAnchor,
   CorporationAvatar,
   CorporationName,
-  FactionAnchor,
-  FactionAvatar,
-  FactionName,
   StationAnchor,
+  StationAvatar,
   StationName,
 } from "@jitaspace/ui";
 
@@ -24,7 +22,6 @@ export type Agent = {
   characterId: number;
   name: string;
   corporationId: number;
-  factionId?: number;
   agentTypeId: number;
   agentDivisionId: number;
   isLocator: boolean;
@@ -108,22 +105,6 @@ export const AgentsTable = ({
         ),
       },
       {
-        id: "faction",
-        header: "Faction",
-        accessorKey: "factionId",
-        Cell: ({ renderedCellValue, row, cell }) => (
-          <Group>
-            <Group noWrap>
-              {row.original.factionId}
-              <FactionAvatar factionId={row.original.factionId} size="sm" />
-              <FactionAnchor factionId={row.original.factionId} target="_blank">
-                <FactionName factionId={row.original.factionId} />
-              </FactionAnchor>
-            </Group>
-          </Group>
-        ),
-      },
-      {
         id: "type",
         header: "Type",
         accessorKey: "agentTypeId",
@@ -159,9 +140,12 @@ export const AgentsTable = ({
         header: "Location",
         accessorKey: "stationId",
         Cell: ({ renderedCellValue, row, cell }) => (
-          <StationAnchor target="_blank" stationId={row.original.stationId}>
-            <StationName stationId={row.original.stationId} />
-          </StationAnchor>
+          <Group noWrap spacing="xs">
+            <StationAvatar stationId={row.original.stationId} size="xs" />
+            <StationAnchor target="_blank" stationId={row.original.stationId}>
+              <StationName stationId={row.original.stationId} />
+            </StationAnchor>
+          </Group>
         ),
       },
     ],

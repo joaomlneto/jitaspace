@@ -29,6 +29,9 @@ import {
   RaceName,
   SolarSystemAnchor,
   SolarSystemName,
+  StationAnchor,
+  StationAvatar,
+  StationName,
   TypeAnchor,
   TypeAvatar,
   TypeName,
@@ -55,7 +58,7 @@ export default function Page() {
     <Container size="sm">
       <Stack>
         <Group spacing="xl">
-          <CharacterAvatar characterId={characterId} />
+          <CharacterAvatar characterId={characterId} size="xl" radius={256} />
           <Title order={3}>
             <CharacterName span characterId={characterId} />
           </Title>
@@ -182,8 +185,13 @@ export default function Page() {
               <Text>{character.level}</Text>
             </Group>
             <Group position="apart">
-              <Text>Agent Location</Text>
-              <Text>{character.locationId}</Text>
+              <Text>Agent Station</Text>
+              <Group noWrap spacing="xs">
+                <StationAvatar stationId={character.locationId} size="xs" />
+                <StationAnchor stationId={character.locationId} target="_blank">
+                  <StationName stationId={character.locationId} />
+                </StationAnchor>
+              </Group>
             </Group>
             {character.isResearchAgent && (
               <Group position="apart">
