@@ -3,16 +3,19 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import {
   Anchor,
+  Badge,
   Button,
   Container,
   Group,
+  JsonInput,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useEsiCharacter } from "@jitaspace/hooks";
+import { useCharacter } from "@jitaspace/hooks";
+import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
@@ -25,6 +28,11 @@ import {
   FormattedDateText,
   OpenInformationWindowActionIcon,
   RaceName,
+  SolarSystemAnchor,
+  SolarSystemName,
+  TypeAnchor,
+  TypeAvatar,
+  TypeName,
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
@@ -33,18 +41,42 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const characterId = parseInt(router.query.characterId as string);
-  const { data: character } = useEsiCharacter(characterId);
+
+  const { data: character } = useCharacter(characterId);
+
+  const { data: agentDivision } = useGetNpcCorporationDivisionById(
+    character?.type === "agent" ? character.agentDivisionId : 0,
+    { query: { enabled: character?.type === "agent" } },
+  );
+  if (router.isFallback) {
+    return "Loading character";
+  }
 
   return (
     <Container size="sm">
       <Stack>
         <Group spacing="xl">
-          <CharacterAvatar characterId={characterId} size="xl" radius={256} />
+          <CharacterAvatar characterId={characterId} />
           <Title order={3}>
             <CharacterName span characterId={characterId} />
           </Title>
+          {character?.isNpc && (
+            <Badge>
+              {character.type === "agent"
+                ? character.isResearchAgent
+                  ? "Research Agent"
+                  : "Agent"
+                : "NPC"}
+            </Badge>
+          )}
           <OpenInformationWindowActionIcon entityId={characterId} />
         </Group>
+        <JsonInput
+          value={JSON.stringify(character, null, 2)}
+          maxRows={30}
+          autosize
+        />
+
         <Group>
           <Link
             href={`https://evewho.com/character/${characterId}`}
@@ -69,60 +101,57 @@ export default function Page() {
             </Button>
           </Link>
         </Group>
-        {character?.data.corporation_id && (
+        {character?.corporationId && (
           <Group position="apart">
             <Text>Corporation</Text>
             <Group>
               <CorporationAvatar
-                corporationId={character?.data.corporation_id}
+                corporationId={character?.corporationId}
                 size="sm"
               />
               <Anchor
                 component={Link}
-                href={`/corporation/${character?.data.corporation_id}`}
+                href={`/corporation/${character?.corporationId}`}
               >
                 <CorporationName
                   span
-                  corporationId={character?.data.corporation_id}
+                  corporationId={character?.corporationId}
                 />
               </Anchor>
             </Group>
           </Group>
         )}
-        {character?.data.alliance_id && (
+        {character?.allianceId && (
           <Group position="apart">
             <Text>Alliance</Text>
             <Group>
-              <AllianceAvatar
-                allianceId={character?.data.alliance_id}
-                size="sm"
-              />
+              <AllianceAvatar allianceId={character?.allianceId} size="sm" />
               <Anchor
                 component={Link}
-                href={`/alliance/${character?.data.alliance_id}`}
+                href={`/alliance/${character?.allianceId}`}
               >
-                <AllianceName span allianceId={character?.data.alliance_id} />
+                <AllianceName span allianceId={character?.allianceId} />
               </Anchor>
             </Group>
           </Group>
         )}
-        {character?.data.gender && (
+        {character?.gender && (
           <Group position="apart">
             <Text>Gender</Text>
-            <Text>{character?.data.gender === "male" ? "Male" : "Female"}</Text>
+            <Text>{character?.gender === "male" ? "Male" : "Female"}</Text>
           </Group>
         )}
-        {character?.data.security_status !== undefined && (
+        {character?.securityStatus !== undefined && (
           <Group position="apart">
             <Text>Security Status</Text>
-            <Text>{character?.data.security_status}</Text>
+            <Text>{character?.securityStatus}</Text>
           </Group>
         )}
-        {character?.data.birthday && (
+        {character?.birthday && (
           <Group position="apart">
             <Text>Birthday</Text>
             <Text>
-              <FormattedDateText date={new Date(character.data.birthday)} />
+              <FormattedDateText date={character.birthday} />
             </Text>
           </Group>
         )}
@@ -130,22 +159,95 @@ export default function Page() {
           <Text>Bloodline</Text>
           <Anchor
             component={Link}
-            href={`/bloodline/${character?.data.bloodline_id}`}
+            href={`/bloodline/${character?.bloodlineId}`}
           >
-            <BloodlineName bloodlineId={character?.data.bloodline_id} />
+            <BloodlineName bloodlineId={character?.bloodlineId} />
           </Anchor>
         </Group>
         <Group position="apart">
           <Text>Race</Text>
-          <Anchor component={Link} href={`/race/${character?.data.race_id}`}>
-            <RaceName span raceId={character?.data.race_id} />
+          <Anchor component={Link} href={`/race/${character?.raceId}`}>
+            <RaceName span raceId={character?.raceId} />
           </Anchor>
         </Group>
-        {character?.data && (
+        {character?.type === "agent" && (
+          <>
+            <Group position="apart">
+              <Text>Agent Division</Text>
+              <Text>{agentDivision?.data.nameID.en}</Text>
+            </Group>
+            <Group position="apart">
+              <Text>Agent Type</Text>
+              <Text>{character.agentTypeId}</Text>
+            </Group>
+            <Group position="apart">
+              <Text>Is Locator Agent?</Text>
+              <Text>{character.isLocator ? "Yes" : "No"}</Text>
+            </Group>
+            <Group position="apart">
+              <Text>Agent Level</Text>
+              <Text>{character.level}</Text>
+            </Group>
+            <Group position="apart">
+              <Text>Agent Location</Text>
+              <Text>{character.locationId}</Text>
+            </Group>
+            {character.isResearchAgent && (
+              <Group position="apart">
+                <Text>Research Agent Skills</Text>
+                <Stack spacing="xs">
+                  {character.researchSkills?.map((typeId) => (
+                    <Group noWrap spacing="xs" key={typeId}>
+                      <TypeAvatar typeId={typeId} size="xs" />
+                      <TypeAnchor typeId={typeId} target="_blank">
+                        <TypeName typeId={typeId} />
+                      </TypeAnchor>
+                    </Group>
+                  ))}
+                </Stack>
+              </Group>
+            )}
+            {character.isInSpace && (
+              <>
+                <Group position="apart">
+                  <Text>Dungeon</Text>
+                  <Text>{character.dungeonId}</Text>
+                </Group>
+                <Group position="apart">
+                  <Text>Spawn Point</Text>
+                  <Text>{character.spawnPointId}</Text>
+                </Group>
+                <Group position="apart">
+                  <Text>Solar System</Text>
+                  <Group>
+                    <SolarSystemAnchor
+                      solarSystemId={character.solarSystemId}
+                      target="_blank"
+                    >
+                      <SolarSystemName
+                        solarSystemId={character.solarSystemId}
+                      />
+                    </SolarSystemAnchor>
+                  </Group>
+                </Group>
+                <Group position="apart">
+                  <Text>Type</Text>
+                  <Group>
+                    <TypeAvatar typeId={character.typeId} size="xs" />
+                    <TypeAnchor typeId={character.typeId} target="_blank">
+                      <TypeName typeId={character.typeId} />
+                    </TypeAnchor>
+                  </Group>
+                </Group>
+              </>
+            )}
+          </>
+        )}
+        {character && (
           <MailMessageViewer
             content={
-              character?.data.description
-                ? sanitizeFormattedEveString(character?.data.description)
+              character?.description
+                ? sanitizeFormattedEveString(character?.description)
                 : "No description"
             }
           />
