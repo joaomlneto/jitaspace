@@ -657,6 +657,9 @@ importers:
       '@jitaspace/esi-metadata':
         specifier: '*'
         version: link:../esi-metadata
+      '@jitaspace/evetycoon-client':
+        specifier: '*'
+        version: link:../evetycoon-client
       '@jitaspace/sde-client':
         specifier: '*'
         version: link:../sde-client
