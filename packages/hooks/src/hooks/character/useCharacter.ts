@@ -33,14 +33,21 @@ export type AgentInSpace = {
   typeId: number;
 };
 
+export type ResearchAgent = {
+  researchSkills: number[];
+};
+
 export type AgentCharacter = {
   agentTypeId: number;
   corporationId: number;
   agentDivisionId: number;
   isLocator: boolean;
+  isResearchAgent: boolean;
+  researchSkills?: number[];
   level: number;
   locationId: number;
-} & PlayerCharacter;
+} & PlayerCharacter &
+  (({ isInSpace: true } & AgentInSpace) | { isInSpace: false });
 
 export type Character =
   | ({
@@ -132,6 +139,40 @@ export const useCharacter = (
     [esiCharacter.data],
   );
 
+  const researchAgentData:
+    | (ResearchAgent & { isResearchAgent: true })
+    | { isResearchAgent: false } = useMemo(
+    () =>
+      isResearchAgent && researchAgent.data?.data
+        ? {
+            isResearchAgent: true,
+            researchSkills: researchAgent.data.data.skills.map(
+              (skill) => skill.typeID,
+            ),
+          }
+        : { isResearchAgent: false },
+
+    [isResearchAgent, researchAgent.data?.data],
+  );
+
+  const agentInSpaceData:
+    | (AgentInSpace & { isInSpace: true })
+    | {
+        isInSpace: false;
+      } = useMemo(
+    () =>
+      isAgentInSpace && agentInSpace.data?.data
+        ? {
+            isInSpace: true,
+            dungeonId: agentInSpace.data.data.dungeonID,
+            solarSystemId: agentInSpace.data.data.solarSystemID,
+            spawnPointId: agentInSpace.data.data.spawnPointID,
+            typeId: agentInSpace.data.data.typeID,
+          }
+        : { isInSpace: false },
+    [isAgentInSpace, agentInSpace.data?.data],
+  );
+
   const mergedAgentData: (AgentCharacter & { type: "agent" }) | null = useMemo(
     () =>
       isAgent && agent.data && esiCharacter.data
@@ -148,6 +189,8 @@ export const useCharacter = (
             locationId: agent.data.data.locationID,
             name: esiCharacter.data.data.name,
             raceId: esiCharacter.data.data.race_id,
+            ...researchAgentData,
+            ...agentInSpaceData,
           }
         : null,
     [agent.data?.data],
