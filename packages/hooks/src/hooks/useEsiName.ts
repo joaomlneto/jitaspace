@@ -16,7 +16,6 @@ import {
   postUniverseNames,
   type GetCharactersCharacterIdSearchQueryParamsCategories,
 } from "@jitaspace/esi-client";
-
 import {
   allianceIdRanges,
   characterIdRanges,
@@ -24,7 +23,7 @@ import {
   isIdInRanges,
   stargateRanges,
   stationRanges,
-} from "../utils";
+} from "@jitaspace/esi-metadata";
 
 type EsiNameCacheValue = {
   name: string;
