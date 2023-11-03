@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { Badge, Group, Table } from "@mantine/core";
 
-import { GetCharactersCharacterIdAssetsQueryResponse } from "@jitaspace/esi-client";
+import { CharacterAsset } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,
@@ -11,8 +11,12 @@ import {
   TypeName,
 } from "@jitaspace/ui";
 
+
+
+
+
 type AssetsTableProps = {
-  assets: (GetCharactersCharacterIdAssetsQueryResponse[number] & {
+  assets: (CharacterAsset & {
     name?: string;
     price?: number;
   })[];

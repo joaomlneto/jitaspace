@@ -2,13 +2,13 @@ import React from "react";
 import { Badge, Group, Table, Text } from "@mantine/core";
 
 import {
-  GetAlliancesAllianceIdContactsLabelsQueryResponse,
-  GetCharactersCharacterIdContactsLabelsQueryResponse,
-  GetCorporationsCorporationIdContactsLabelsQueryResponse,
-  type GetAlliancesAllianceIdContactsQueryResponse,
-  type GetCharactersCharacterIdContactsQueryResponse,
-  type GetCorporationsCorporationIdContactsQueryResponse,
-} from "@jitaspace/esi-client";
+  AllianceContact,
+  AllianceContactLabel,
+  CharacterContact,
+  CharacterContactLabel,
+  CorporationContact,
+  CorporationContactLabel,
+} from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityAvatar,
@@ -18,12 +18,10 @@ import {
 } from "@jitaspace/ui";
 
 export type ContactsTableProps = {
-  contacts?: (GetCharactersCharacterIdContactsQueryResponse[number] &
-    GetCorporationsCorporationIdContactsQueryResponse[number] &
-    GetAlliancesAllianceIdContactsQueryResponse[number])[];
-  labels?: (GetCharactersCharacterIdContactsLabelsQueryResponse[number] &
-    GetCorporationsCorporationIdContactsLabelsQueryResponse[number] &
-    GetAlliancesAllianceIdContactsLabelsQueryResponse[number])[];
+  contacts?: (AllianceContact & CorporationContact & CharacterContact)[];
+  labels?: (AllianceContactLabel &
+    CorporationContactLabel &
+    CharacterContactLabel)[];
   hideBlockedColumn?: boolean;
 };
 

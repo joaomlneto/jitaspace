@@ -3,11 +3,19 @@ import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
 
 import {
   getCharactersCharacterIdContacts,
+  GetCharactersCharacterIdContactsLabelsQueryResponse,
+  GetCharactersCharacterIdContactsQueryResponse,
   useGetCharactersCharacterIdContactsInfinite,
   useGetCharactersCharacterIdContactsLabels,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useEsiClientContext } from "../useEsiClientContext";
+
+export type CharacterContact =
+  GetCharactersCharacterIdContactsQueryResponse[number];
+
+export type CharacterContactLabel =
+  GetCharactersCharacterIdContactsLabelsQueryResponse[number];
 
 export function useCharacterContacts() {
   const { isTokenValid, characterId, scopes, accessToken } =

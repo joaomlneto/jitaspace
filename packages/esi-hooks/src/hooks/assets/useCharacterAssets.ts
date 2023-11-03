@@ -7,7 +7,10 @@ import {
   useGetCharactersCharacterIdAssetsInfinite,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useEsiClientContext } from "../useEsiClientContext";
+
+export type CharacterAsset =
+  GetCharactersCharacterIdAssetsQueryResponse[number];
 
 export function useCharacterAssets() {
   const { isTokenValid, characterId, scopes, accessToken } =

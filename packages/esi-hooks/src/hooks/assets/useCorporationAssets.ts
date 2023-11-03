@@ -10,7 +10,7 @@ import {
   useGetCorporationsCorporationIdAssetsInfinite,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useEsiClientContext } from "../useEsiClientContext";
 
 export function useCorporationAssets() {
   const { isTokenValid, characterId, scopes, accessToken } =

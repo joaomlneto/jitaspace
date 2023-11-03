@@ -7,16 +7,20 @@ import {
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { GetCharactersCharacterIdAssetsQueryResponse } from "@jitaspace/esi-client";
 import {
+  CharacterAsset,
   useEsiNamePrefetch,
   useEsiNamesCache,
   useMarketPrices,
 } from "@jitaspace/hooks";
 import { ISKAmount, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
+
+
+
+
 type AssetsDataTableProps = {
-  entries: GetCharactersCharacterIdAssetsQueryResponse;
+  entries: CharacterAsset[];
 };
 
 export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {

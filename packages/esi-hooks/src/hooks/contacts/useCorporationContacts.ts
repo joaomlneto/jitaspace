@@ -3,12 +3,20 @@ import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
 
 import {
   getCorporationsCorporationIdContacts,
+  GetCorporationsCorporationIdContactsLabelsQueryResponse,
+  GetCorporationsCorporationIdContactsQueryResponse,
   useGetCharactersCharacterId,
   useGetCorporationsCorporationIdContactsInfinite,
   useGetCorporationsCorporationIdContactsLabels,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useEsiClientContext } from "../useEsiClientContext";
+
+export type CorporationContact =
+  GetCorporationsCorporationIdContactsQueryResponse[number];
+
+export type CorporationContactLabel =
+  GetCorporationsCorporationIdContactsLabelsQueryResponse[number];
 
 export function useCorporationContacts() {
   const { isTokenValid, characterId, scopes, accessToken } =
