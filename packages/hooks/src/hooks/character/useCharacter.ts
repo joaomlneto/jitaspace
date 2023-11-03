@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import { GetCharactersCharacterIdQueryResponseGender } from "@jitaspace/esi-client";
+import { isIdInRanges, npcCharacterIdRanges } from "@jitaspace/esi-metadata";
 import {
   useGetAgentInSpaceById,
   useGetAllAgentIds,
@@ -49,11 +50,12 @@ export type AgentCharacter = {
 } & PlayerCharacter &
   (({ isInSpace: true } & AgentInSpace) | { isInSpace: false });
 
-export type Character =
+export type Character = (
   | ({
       type: "player";
     } & PlayerCharacter)
-  | ({ type: "agent" } & AgentCharacter);
+  | ({ type: "agent" } & AgentCharacter)
+) & { isNpc: boolean };
 
 export const useCharacter = (
   characterId: number,
@@ -70,6 +72,11 @@ export const useCharacter = (
   const isAgent = useMemo(
     () => agentIds.data?.data.includes(characterId) ?? false,
     [agentIds.data?.data, characterId],
+  );
+
+  const isNpc = useMemo(
+    () => isIdInRanges(characterId, npcCharacterIdRanges),
+    [characterId],
   );
 
   const agent = useSdeAgent(characterId, {
@@ -104,39 +111,12 @@ export const useCharacter = (
     query: { enabled: isResearchAgent },
   });
 
-  const error =
-    esiCharacter.error ??
-    agentIds.error ??
-    agent.error ??
-    agentInSpaceIds.error ??
-    agentInSpace.error ??
-    researchAgentIds.error ??
-    researchAgent.error;
-
-  const isError =
-    esiCharacter.isError ||
-    agentIds.isError ||
-    agent.isError ||
-    agentInSpaceIds.isError ||
-    agentInSpace.isError ||
-    researchAgentIds.isError ||
-    researchAgent.isError;
-
-  const isLoading =
-    esiCharacter.isLoading ||
-    agentIds.isLoading ||
-    (isAgent && agent.isLoading) ||
-    (isAgent && agentInSpaceIds.isLoading) ||
-    (isAgentInSpace && agentInSpace.isLoading) ||
-    (isAgent && researchAgentIds.isLoading) ||
-    (isResearchAgent && researchAgent.isLoading);
-
   const characterBirthdayDate = useMemo(
     () =>
       esiCharacter.data?.data.birthday
         ? new Date(esiCharacter.data.data.birthday)
         : null,
-    [esiCharacter.data],
+    [esiCharacter.data?.data.birthday],
   );
 
   const researchAgentData:
@@ -173,11 +153,14 @@ export const useCharacter = (
     [isAgentInSpace, agentInSpace.data?.data],
   );
 
-  const mergedAgentData: (AgentCharacter & { type: "agent" }) | null = useMemo(
+  const mergedAgentData:
+    | (AgentCharacter & { type: "agent"; isNpc: boolean })
+    | null = useMemo(
     () =>
       isAgent && agent.data && esiCharacter.data
         ? {
             type: "agent",
+            isNpc,
             agentTypeId: agent.data.data.agentTypeID,
             agentDivisionId: agent.data.data.divisionID,
             birthday: characterBirthdayDate,
@@ -193,30 +176,65 @@ export const useCharacter = (
             ...agentInSpaceData,
           }
         : null,
-    [agent.data?.data],
+    [agent.data?.data, researchAgentData, agentInSpaceData, isNpc],
   );
 
-  const mergedPlayerData: (PlayerCharacter & { type: "player" }) | null =
-    useMemo(
-      () =>
-        esiCharacter.data
-          ? {
-              type: "player",
-              birthday: characterBirthdayDate,
-              bloodlineId: esiCharacter.data.data.bloodline_id,
-              corporationId: esiCharacter.data.data.corporation_id,
-              gender: esiCharacter.data.data.gender,
-              name: esiCharacter.data.data.name,
-              raceId: esiCharacter.data.data.race_id,
-            }
-          : null,
-      [esiCharacter.data],
-    );
+  const mergedPlayerData:
+    | (PlayerCharacter & { type: "player"; isNpc: boolean })
+    | null = useMemo(
+    () =>
+      esiCharacter.data
+        ? {
+            type: "player",
+            isNpc,
+            birthday: characterBirthdayDate,
+            bloodlineId: esiCharacter.data.data.bloodline_id,
+            corporationId: esiCharacter.data.data.corporation_id,
+            gender: esiCharacter.data.data.gender,
+            name: esiCharacter.data.data.name,
+            raceId: esiCharacter.data.data.race_id,
+          }
+        : null,
+    [esiCharacter.data, isNpc],
+  );
+
+  const error =
+    esiCharacter.error ??
+    agentIds.error ??
+    agent.error ??
+    agentInSpaceIds.error ??
+    agentInSpace.error ??
+    researchAgentIds.error ??
+    researchAgent.error;
+
+  const isError =
+    esiCharacter.isError ||
+    agentIds.isError ||
+    agent.isError ||
+    agentInSpaceIds.isError ||
+    agentInSpace.isError ||
+    researchAgentIds.isError ||
+    researchAgent.isError;
+
+  const isLoading =
+    esiCharacter.isLoading ||
+    agentIds.isLoading ||
+    (isAgent && agent.isLoading) ||
+    (isAgent && agentInSpaceIds.isLoading) ||
+    (isAgentInSpace && agentInSpace.isLoading) ||
+    (isAgent && researchAgentIds.isLoading) ||
+    (isResearchAgent && researchAgent.isLoading) ||
+    (!isError && !mergedAgentData && !mergedPlayerData);
+
+  const data: Character | undefined = useMemo(
+    () => mergedAgentData ?? mergedPlayerData ?? undefined,
+    [mergedAgentData, mergedPlayerData],
+  );
 
   return {
     error,
     isError,
     isLoading,
-    data: mergedAgentData ?? mergedPlayerData ?? undefined,
+    data,
   };
 };

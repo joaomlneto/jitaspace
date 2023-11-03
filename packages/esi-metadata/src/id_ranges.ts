@@ -1,3 +1,5 @@
+export const npcCharacterIdRanges: [number, number][] = [[3000000, 4000000]];
+
 export const characterIdRanges: [number, number][] = [
   [3000000, 4000000],
   [90000000, 98000000],
