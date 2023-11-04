@@ -18,6 +18,8 @@ import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   DogmaAttributeAnchor,
   DogmaAttributeName,
+  DogmaEffectAnchor,
+  DogmaEffectName,
   TypeAnchor,
   TypeAvatar,
   TypeName,
@@ -36,6 +38,18 @@ type PageProps = {
     name: string;
     isDefault: boolean;
     groupId: number;
+  }[];
+  modifiers: {
+    modifierIndex: number;
+    domain: string | null;
+    targetEffectId: number | null;
+    func: string;
+    modifiedAttributeId: number | null;
+    modifyingAttributeId: number | null;
+    operator: number | null;
+    groupId: number | null;
+    skillTypeId: number | null;
+    isDeleted: boolean;
   }[];
   groups: { groupId: number; name: string }[];
 };
@@ -71,6 +85,23 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
             isDefault: true,
           },
         },
+        DogmaEffectModifiers: {
+          select: {
+            modifierIndex: true,
+            domain: true,
+            targetEffectId: true,
+            func: true,
+            modifiedAttributeId: true,
+            modifyingAttributeId: true,
+            operator: true,
+            groupId: true,
+            skillTypeId: true,
+            isDeleted: true,
+          },
+          orderBy: {
+            modifierIndex: "asc",
+          },
+        },
       },
       where: {
         effectId: effectId,
@@ -99,6 +130,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
         name: effect.displayName || effect.name || null,
         description: effect.description || null,
         published: effect.published ?? null,
+        modifiers: effect.DogmaEffectModifiers,
         types: effect.TypeEffect.map((entry) => ({
           ...entry.type,
           isDefault: entry.isDefault,
@@ -119,6 +151,7 @@ export default function Page({
   name,
   description,
   published,
+  modifiers,
   types,
   groups,
 }: PageProps) {
@@ -311,7 +344,79 @@ export default function Page({
           </Group>
         )}
         <Title order={4}>Modifiers</Title>
-        <i>Coming soon</i>
+        <Table highlightOnHover striped fontSize="xs">
+          <tbody>
+            {modifiers.map((modifier) => (
+              <tr key={modifier.modifierIndex}>
+                <td>
+                  {modifier.groupId && (
+                    <Group position="apart">
+                      <Text>Effect Group ID</Text>
+                      <Text>{modifier.groupId}</Text>
+                    </Group>
+                  )}
+                  {modifier.modifyingAttributeId && (
+                    <Group position="apart">
+                      <Text>Modifying Attribute</Text>
+                      <DogmaAttributeAnchor
+                        attributeId={modifier.modifyingAttributeId}
+                        target="_blank"
+                      >
+                        <DogmaAttributeName
+                          attributeId={modifier.modifyingAttributeId}
+                        />
+                      </DogmaAttributeAnchor>
+                    </Group>
+                  )}
+                  {modifier.modifiedAttributeId && (
+                    <Group position="apart">
+                      <Text>Modified Attribute</Text>
+                      <DogmaAttributeAnchor
+                        attributeId={modifier.modifiedAttributeId}
+                        target="_blank"
+                      >
+                        <DogmaAttributeName
+                          attributeId={modifier.modifiedAttributeId}
+                        />
+                      </DogmaAttributeAnchor>
+                    </Group>
+                  )}
+                  {modifier.targetEffectId && (
+                    <Group position="apart">
+                      <Text>Target Effect</Text>
+                      <DogmaEffectAnchor
+                        effectId={modifier.targetEffectId}
+                        target="_blank"
+                      >
+                        <DogmaEffectName effectId={modifier.targetEffectId} />
+                      </DogmaEffectAnchor>
+                    </Group>
+                  )}
+                  {modifier.skillTypeId && (
+                    <Group position="apart">
+                      <Text>Skill</Text>
+                      <TypeAnchor typeId={modifier.skillTypeId} target="_blank">
+                        <TypeName typeId={modifier.skillTypeId} />
+                      </TypeAnchor>
+                    </Group>
+                  )}
+                  <Group position="apart">
+                    <Text>Domain</Text>
+                    <Text>{modifier.domain}</Text>
+                  </Group>
+                  <Group position="apart">
+                    <Text>Function</Text>
+                    <Text>{modifier.func}</Text>
+                  </Group>
+                  <Group position="apart">
+                    <Text>Operator</Text>
+                    <Text>{modifier.operator}</Text>
+                  </Group>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
         <Title order={4}>Types</Title>
         <Stack spacing="xs">
           {sortedGroups.map((group) => (

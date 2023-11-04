@@ -3,6 +3,10 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 
 import { useGetDogmaAttributesAttributeId } from "@jitaspace/esi-client";
 
+
+
+
+
 export type DogmaAttributeNameProps = TextProps & {
   attributeId?: number;
 };
@@ -22,7 +26,11 @@ export const DogmaAttributeName = memo(
         </Skeleton>
       );
     return (
-      <Text {...otherProps}>{data?.data.display_name ?? data?.data.name}</Text>
+      <Text {...otherProps}>
+        {data?.data.display_name ||
+          data?.data.name ||
+          `Unnamed Attribute ${attributeId}`}
+      </Text>
     );
   },
 );
