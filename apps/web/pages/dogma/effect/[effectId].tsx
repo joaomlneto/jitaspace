@@ -344,7 +344,7 @@ export default function Page({
           </Group>
         )}
         <Title order={4}>Modifiers</Title>
-        <Table highlightOnHover striped fontSize="xs">
+        <Table highlightOnHover fontSize="xs">
           <tbody>
             {modifiers.map((modifier) => (
               <tr key={modifier.modifierIndex}>
