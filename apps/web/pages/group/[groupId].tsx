@@ -15,7 +15,6 @@ import { NextSeo } from "next-seo";
 import { prisma } from "@jitaspace/db";
 import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
-import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
 
 
@@ -25,28 +24,10 @@ type PageProps = {
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // When this is true (in preview environments) don't prerender any static pages
-  // (faster builds, but slower initial page load)
-  if (env.SKIP_BUILD_STATIC_GENERATION === "true") {
-    return {
-      paths: [],
-      fallback: true,
-    };
-  }
-
-  const groupIds = await prisma.group.findMany({
-    select: {
-      groupId: true,
-    },
-  });
-
+  // Do not pre-render any static pages - faster builds, but slower initial page load
   return {
-    paths: groupIds.map(({ groupId }) => ({
-      params: {
-        groupId: `${groupId}`,
-      },
-    })),
-    fallback: true, // if not statically generated, try to confirm if there is a new category
+    paths: [],
+    fallback: true,
   };
 };
 
