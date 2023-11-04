@@ -12,12 +12,7 @@ import {
 } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
-import {
-  getUniverseCategories,
-  getUniverseCategoriesCategoryId,
-  getUniverseGroupsGroupId,
-} from "@jitaspace/esi-client";
-import { Group as EsiGroup } from "@jitaspace/hooks";
+import { prisma } from "@jitaspace/db";
 import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 import { env } from "~/env.mjs";
@@ -26,7 +21,7 @@ import { MainLayout } from "~/layouts";
 
 type PageProps = {
   name?: string;
-  groups: EsiGroup[];
+  groups: { groupId: number; name: string }[];
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -39,13 +34,14 @@ export const getStaticPaths: GetStaticPaths = async () => {
     };
   }
 
-  // Get list of categoryIDs from ESI
-  const categories = await getUniverseCategories();
+  const categories = await prisma.category.findMany({
+    select: { categoryId: true },
+  });
 
   return {
-    paths: (categories.data ?? []).map((categoryId) => ({
+    paths: categories.map((category) => ({
       params: {
-        categoryId: `${categoryId}`,
+        categoryId: `${category.categoryId}`,
       },
     })),
     fallback: true, // if not statically generated, try to confirm if there is a new category
@@ -56,23 +52,26 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
     const categoryId = Number(context.params?.categoryId as string);
 
-    // check if the requested category exists
-    const categoryIds = await getUniverseCategories();
-    if (!categoryIds.data.includes(categoryId)) {
-      throw Error("category does not exist");
-    }
-
-    // get info about the category
-    const category = await getUniverseCategoriesCategoryId(categoryId);
-    // get info about its groups
-    const groups = await Promise.all(
-      category.data.groups.map((groupId) => getUniverseGroupsGroupId(groupId)),
-    );
+    const category = await prisma.category.findUniqueOrThrow({
+      select: {
+        categoryId: true,
+        name: true,
+        groups: {
+          select: {
+            groupId: true,
+            name: true,
+          },
+        },
+      },
+      where: {
+        categoryId: categoryId,
+      },
+    });
 
     return {
       props: {
-        name: category?.data?.name,
-        groups: groups.map((response) => response.data),
+        name: category.name,
+        groups: category.groups,
       },
       revalidate: 24 * 3600, // every 24 hours
     };
@@ -138,8 +137,8 @@ export default function Page({ name, groups }: PageProps) {
               ]}
             >
               {sortedGroups.map((group) => (
-                <Group key={group.group_id}>
-                  <GroupAnchor groupId={group.group_id} key={group.group_id}>
+                <Group key={group.groupId}>
+                  <GroupAnchor groupId={group.groupId} key={group.groupId}>
                     <Text>{group.name}</Text>
                   </GroupAnchor>
                 </Group>

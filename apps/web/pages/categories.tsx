@@ -10,35 +10,28 @@ import {
 } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
-import {
-  getUniverseCategories,
-  getUniverseCategoriesCategoryId,
-} from "@jitaspace/esi-client";
+import { prisma } from "@jitaspace/db";
 import { ItemsIcon } from "@jitaspace/eve-icons";
-import { Category } from "@jitaspace/hooks";
 import { CategoryAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
 
 type PageProps = {
-  categories: Record<number, Category>;
+  categories: { categoryId: number; name: string }[];
 };
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    const { data: categoryIds } = await getUniverseCategories();
-
-    const categoryResponses = await Promise.all(
-      categoryIds.map((categoryId) =>
-        getUniverseCategoriesCategoryId(categoryId),
-      ),
-    );
-
-    const categories: Record<number, Category> = {};
-    categoryResponses.forEach(
-      (category) => (categories[category.data.category_id] = category.data),
-    );
+    const categories = await prisma.category.findMany({
+      select: {
+        categoryId: true,
+        name: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
 
     return {
       props: {
@@ -55,10 +48,6 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 };
 
 export default function Page({ categories }: PageProps) {
-  const sortedCategories = Object.values(categories).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
-
   return (
     <Container size="md">
       <Stack>
@@ -74,9 +63,9 @@ export default function Page({ categories }: PageProps) {
             { maxWidth: "xs", cols: 1 },
           ]}
         >
-          {sortedCategories.map((category) => (
-            <Group key={category.category_id}>
-              <CategoryAnchor categoryId={category.category_id}>
+          {categories.map((category) => (
+            <Group key={category.categoryId}>
+              <CategoryAnchor categoryId={category.categoryId}>
                 <Text>{category.name}</Text>
               </CategoryAnchor>
             </Group>

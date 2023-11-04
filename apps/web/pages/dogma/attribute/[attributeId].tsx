@@ -10,19 +10,13 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import axios from "axios";
 
 import { prisma } from "@jitaspace/db";
-import {
-  getDogmaAttributes,
-  getDogmaAttributesAttributeId,
-} from "@jitaspace/esi-client";
 import { useDogmaAttribute } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
-import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
 
 
@@ -44,27 +38,27 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    axios.defaults.baseURL = ESI_BASE_URL;
     const attributeId = Number(context.params?.attributeId as string);
 
-    // check if the requested attribute exists
-    let attributeIds = await getDogmaAttributes().then((res) => res.data);
-    if (!attributeIds.includes(attributeId)) {
-      throw Error("attribute does not exist");
-    }
-
-    const attribute = await getDogmaAttributesAttributeId(attributeId);
-
-    const attributeTypes = await prisma.typeAttribute.findMany({
+    const attribute = await prisma.dogmaAttribute.findUniqueOrThrow({
       select: {
-        type: {
+        attributeId: true,
+        name: true,
+        displayName: true,
+        description: true,
+        published: true,
+        TypeAttributes: {
           select: {
-            typeId: true,
-            name: true,
-            groupId: true,
+            type: {
+              select: {
+                typeId: true,
+                name: true,
+                groupId: true,
+              },
+            },
+            value: true,
           },
         },
-        value: true,
       },
       where: {
         attributeId: attributeId,
@@ -72,8 +66,9 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     });
 
     const groupIds = [
-      ...new Set(attributeTypes.map((type) => type.type.groupId)),
+      ...new Set(attribute.TypeAttributes.map((type) => type.type.groupId)),
     ];
+
     const groups = await prisma.group.findMany({
       select: {
         groupId: true,
@@ -84,14 +79,17 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
           in: groupIds,
         },
       },
+      orderBy: {
+        name: "asc",
+      },
     });
 
     return {
       props: {
-        name: attribute.data.display_name ?? attribute.data.name ?? null,
-        description: attribute.data.description ?? null,
-        published: attribute.data.published ?? null,
-        types: attributeTypes.map((entry) => ({
+        name: attribute.displayName ?? attribute.name ?? null,
+        description: attribute.description,
+        published: attribute.published,
+        types: attribute.TypeAttributes.map((entry) => ({
           ...entry.type,
           value: entry.value,
         })),
@@ -102,7 +100,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 900, // every 15 minutes
+      revalidate: 3600, // every hour
     };
   }
 };
@@ -118,16 +116,6 @@ export default function Page({
   const attributeId = Number(router.query.attributeId as string);
 
   const { data: attribute } = useDogmaAttribute(attributeId);
-
-  const sortedTypes = useMemo(
-    () => (types ?? []).sort((a, b) => a.name.localeCompare(b.name)),
-    [types],
-  );
-
-  const sortedGroups = useMemo(
-    () => (groups ?? []).sort((a, b) => a.name.localeCompare(b.name)),
-    [groups],
-  );
 
   const groupTypes = useMemo(() => {
     const map: Record<number, (typeof types)[number][]> = {};
@@ -218,7 +206,7 @@ export default function Page({
         )}
         <Title order={4}>Types:</Title>
         <Stack spacing="xs">
-          {sortedGroups.map((group) => (
+          {groups.map((group) => (
             <div key={group.groupId}>
               <Title order={6} mb={8}>
                 {group.name}

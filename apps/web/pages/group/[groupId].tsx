@@ -12,11 +12,7 @@ import {
 } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
-import {
-  getUniverseGroups,
-  getUniverseGroupsGroupId,
-  getUniverseTypesTypeId,
-} from "@jitaspace/esi-client";
+import { prisma } from "@jitaspace/db";
 import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { env } from "~/env.mjs";
@@ -25,7 +21,7 @@ import { MainLayout } from "~/layouts";
 
 type PageProps = {
   name?: string;
-  types: { type_id: number; name: string }[];
+  types: { typeId: number; name: string }[];
 };
 
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -38,25 +34,18 @@ export const getStaticPaths: GetStaticPaths = async () => {
     };
   }
 
-  // Get list of groupIds from ESI
-  const firstPage = await getUniverseGroups();
-  let groupIds = [...firstPage.data];
-  const numPages = firstPage.headers?.["x-pages"];
-  for (let page = 2; page <= numPages; page++) {
-    const result = await getUniverseGroups({ page });
-    groupIds = [...groupIds, ...result.data];
-  }
+  const groupIds = await prisma.group.findMany({
+    select: {
+      groupId: true,
+    },
+  });
 
   return {
-    // FIXME: THIS IS TOO SLOW! RE-ENABLE ONCE YOU FIGURE OUT HOW TO MAKE IT QUICKER
-    paths: [],
-    /*
-    paths: groups.data.map((groupId) => ({
+    paths: groupIds.map(({ groupId }) => ({
       params: {
         groupId: `${groupId}`,
       },
     })),
-    */
     fallback: true, // if not statically generated, try to confirm if there is a new category
   };
 };
@@ -65,34 +54,26 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
     const groupId = Number(context.params?.groupId as string);
 
-    // check if the requested group exists
-    const firstPage = await getUniverseGroups();
-    let groupIds = [...firstPage.data];
-    const numPages = firstPage.headers?.["x-pages"];
-    for (let page = 2; page <= numPages; page++) {
-      const result = await getUniverseGroups({ page });
-      groupIds = [...groupIds, ...result.data];
-    }
-    if (!groupIds.includes(groupId)) {
-      return {
-        notFound: true,
-      };
-    }
-
-    // get info about the group
-    const group = await getUniverseGroupsGroupId(groupId);
-    // get info about its groups
-    const types = await Promise.all(
-      group.data.types.map((typeId) => getUniverseTypesTypeId(typeId)),
-    );
+    const group = await prisma.group.findUniqueOrThrow({
+      select: {
+        groupId: true,
+        name: true,
+        types: {
+          select: {
+            typeId: true,
+            name: true,
+          },
+        },
+      },
+      where: {
+        groupId: groupId,
+      },
+    });
 
     return {
       props: {
-        name: group?.data?.name,
-        types: (types ?? []).map((response) => ({
-          type_id: response.data.type_id,
-          name: response.data.name,
-        })),
+        name: group.name,
+        types: group.types ?? [],
       },
       revalidate: 24 * 3600, // every 24 hours
     };
@@ -103,7 +84,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     );
     return {
       notFound: true,
-      revalidate: 3600, // every hour
+      revalidate: 3600, // at most once every hour
     };
   }
 };
@@ -158,9 +139,9 @@ export default function Page({ name, types }: PageProps) {
             breakpoints={[{ maxWidth: "md", cols: 1 }]}
           >
             {sortedTypes.map((type) => (
-              <Group noWrap key={type.type_id}>
-                <TypeAvatar typeId={type.type_id} size="sm" />
-                <TypeAnchor typeId={type.type_id}>
+              <Group noWrap key={type.typeId}>
+                <TypeAvatar typeId={type.typeId} size="sm" />
+                <TypeAnchor typeId={type.typeId}>
                   <Text>{type.name}</Text>
                 </TypeAnchor>
               </Group>

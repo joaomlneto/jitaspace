@@ -15,10 +15,7 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { HttpStatusCode } from "axios";
 import { NextSeo } from "next-seo";
 
-import {
-  getUniverseTypes,
-  getUniverseTypesTypeId,
-} from "@jitaspace/esi-client";
+import { prisma } from "@jitaspace/db";
 import { useMarketPrices, useType } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -50,20 +47,17 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
     const typeId = Number(context.params?.typeId as string);
 
-    // check if the requested type exists
-    const firstPage = await getUniverseTypes();
-    let typeIds = [...firstPage.data];
-    const numPages = firstPage.headers?.["x-pages"];
-    for (let page = 2; page <= numPages; page++) {
-      const result = await getUniverseTypes({ page });
-      typeIds = [...typeIds, ...result.data];
-    }
-    if (!typeIds.includes(typeId)) {
-      throw Error("type does not exist");
-    }
+    const type = await prisma.type.findUniqueOrThrow({
+      select: {
+        typeId: true,
+        name: true,
+        description: true,
+      },
+      where: {
+        typeId: typeId,
+      },
+    });
 
-    // FIXME: these two calls should be made in parallel, not sequentially
-    const typeInfo = await getUniverseTypesTypeId(typeId);
     const typeImageVariations: string[] = typeId
       ? ((await fetch(`https://images.evetech.net/types/${typeId}`).then(
           (res) => {
@@ -71,22 +65,24 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
           },
         )) as string[])
       : [];
-    const ogVariation: string | undefined =
-      !typeImageVariations || typeImageVariations?.includes("render")
-        ? "render"
+
+    const variation: string | undefined =
+      !typeImageVariations || typeImageVariations?.includes("icon")
+        ? "icon"
         : typeImageVariations[0];
+
     return {
       props: {
-        ogImageUrl: `https://images.evetech.net/types/${typeId}/${ogVariation}`,
-        typeName: typeInfo?.data?.name,
-        typeDescription: typeInfo?.data?.description,
+        ogImageUrl: `https://images.evetech.net/types/${typeId}/${variation}`,
+        typeName: type.name,
+        typeDescription: type.description,
       },
       revalidate: 24 * 3600, // every 24 hours
     };
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 900, // every 15 minutes
+      revalidate: 3600, // every hour
     };
   }
 };

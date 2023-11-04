@@ -3,36 +3,32 @@ import { GetStaticProps } from "next";
 import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
-import {
-  getUniverseRegions,
-  getUniverseRegionsRegionId,
-} from "@jitaspace/esi-client";
+import { prisma } from "@jitaspace/db";
 import { MapIcon } from "@jitaspace/eve-icons";
-import { Region } from "@jitaspace/hooks";
 import { RegionAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
 
 type PageProps = {
-  regions: Region[];
+  regions: { regionId: number; name: string }[];
 };
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    // Get all IDs for groups and tasks
-    const { data: regionIds } = await getUniverseRegions();
-
-    // get data of all groups
-    const regions = await Promise.all(
-      regionIds.map(async (opportunityGroupId) =>
-        getUniverseRegionsRegionId(opportunityGroupId).then((res) => res.data),
-      ),
-    );
+    const regions = await prisma.region.findMany({
+      select: {
+        regionId: true,
+        name: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
 
     return {
       props: {
-        regions: regions.sort((a, b) => a.name.localeCompare(b.name)),
+        regions,
       },
       revalidate: 24 * 3600, // every 24 hours
     };
@@ -47,27 +43,27 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 export default function Page({ regions }: PageProps) {
   const galaxies: {
     name: string;
-    filter: (region: Region) => boolean;
+    filter: (region: { regionId: number; name: string }) => boolean;
   }[] = [
     {
       name: "New Eden (K-Space)",
       filter: (region) =>
-        region.region_id >= 10000000 && region.region_id < 11000000,
+        region.regionId >= 10000000 && region.regionId < 11000000,
     },
     {
       name: "Anoikis (W-Space)",
       filter: (region) =>
-        region.region_id >= 11000000 && region.region_id < 12000000,
+        region.regionId >= 11000000 && region.regionId < 12000000,
     },
     {
       name: "Abyssal",
       filter: (region) =>
-        region.region_id >= 12000000 && region.region_id < 13000000,
+        region.regionId >= 12000000 && region.regionId < 13000000,
     },
     {
       name: "Other",
       filter: (region) =>
-        region.region_id < 10000000 || region.region_id >= 14000000,
+        region.regionId < 10000000 || region.regionId >= 14000000,
     },
   ];
 
@@ -97,7 +93,7 @@ export default function Page({ regions }: PageProps) {
               ]}
             >
               {galaxy.regions.map((entry) => (
-                <RegionAnchor regionId={entry.region_id} key={entry.region_id}>
+                <RegionAnchor regionId={entry.regionId} key={entry.regionId}>
                   {entry.name}
                 </RegionAnchor>
               ))}

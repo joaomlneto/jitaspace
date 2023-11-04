@@ -11,13 +11,8 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import axios from "axios";
 
 import { prisma } from "@jitaspace/db";
-import {
-  getDogmaEffects,
-  getDogmaEffectsEffectId,
-} from "@jitaspace/esi-client";
 import { useDogmaEffect } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -29,7 +24,6 @@ import {
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
-import { ESI_BASE_URL } from "~/config/constants";
 import { MainLayout } from "~/layouts";
 
 
@@ -56,34 +50,36 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   try {
-    axios.defaults.baseURL = ESI_BASE_URL;
     const effectId = Number(context.params?.effectId as string);
 
-    // check if the requested effect exists
-    let effectIds = await getDogmaEffects().then((res) => res.data);
-    if (!effectIds.includes(effectId)) {
-      throw Error("effect does not exist");
-    }
-
-    const effect = await getDogmaEffectsEffectId(effectId);
-
-    const effectTypes = await prisma.typeEffect.findMany({
+    const effect = await prisma.dogmaEffect.findUniqueOrThrow({
       select: {
-        type: {
+        effectId: true,
+        name: true,
+        displayName: true,
+        description: true,
+        published: true,
+        TypeEffect: {
           select: {
-            typeId: true,
-            name: true,
-            groupId: true,
+            type: {
+              select: {
+                typeId: true,
+                name: true,
+                groupId: true,
+              },
+            },
+            isDefault: true,
           },
         },
-        isDefault: true,
       },
       where: {
         effectId: effectId,
       },
     });
 
-    const groupIds = [...new Set(effectTypes.map((type) => type.type.groupId))];
+    const groupIds = [
+      ...new Set(effect.TypeEffect.map((type) => type.type.groupId)),
+    ];
     const groups = await prisma.group.findMany({
       select: {
         groupId: true,
@@ -96,16 +92,14 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
     });
 
-    console.log(effect.data);
-
     return {
       props: {
         // We use || instead of ?? due to display_name and description being empty strings
         // When they are empty strings, we want to use a fallback value
-        name: effect.data.display_name || effect.data.name || null,
-        description: effect.data.description || null,
-        published: effect.data.published ?? null,
-        types: effectTypes.map((entry) => ({
+        name: effect.displayName || effect.name || null,
+        description: effect.description || null,
+        published: effect.published ?? null,
+        types: effect.TypeEffect.map((entry) => ({
           ...entry.type,
           isDefault: entry.isDefault,
         })),
