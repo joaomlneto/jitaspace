@@ -1,41 +1,145 @@
 import React, { type ReactElement } from "react";
-import { Container, Group, Stack, Tabs, Title } from "@mantine/core";
+import Link from "next/link";
+import {
+  Card,
+  Container,
+  createStyles,
+  Group,
+  rem,
+  SimpleGrid,
+  Text,
+  Title,
+  UnstyledButton,
+} from "@mantine/core";
 import { NextSeo } from "next-seo";
 
 import { ContactsIcon } from "@jitaspace/eve-icons";
 
-import { AllianceContactsTable } from "~/components/Contacts/ContactsTable/AllianceContactsTable";
-import { CharacterContactsTable } from "~/components/Contacts/ContactsTable/CharacterContactsTable";
-import { CorporationContactsTable } from "~/components/Contacts/ContactsTable/CorporationContactsTable";
 import { MainLayout } from "~/layouts";
 
+
+const useStyles = createStyles((theme) => ({
+  title: {
+    fontSize: rem(34),
+    fontWeight: 900,
+
+    [theme.fn.smallerThan("sm")]: {
+      fontSize: rem(24),
+    },
+  },
+
+  description: {
+    maxWidth: 600,
+    margin: "auto",
+
+    "&::after": {
+      content: '""',
+      display: "block",
+      backgroundColor: theme.fn.primaryColor(),
+      width: rem(45),
+      height: rem(2),
+      marginTop: theme.spacing.sm,
+      marginLeft: "auto",
+      marginRight: "auto",
+    },
+  },
+
+  card: {
+    minHeight: 200,
+    transition: "transform 0.2s",
+    border: `${rem(1)} solid ${
+      theme.colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[1]
+    }`,
+    "&:hover": {
+      transform: "scale(1.05)",
+    },
+  },
+
+  cardTitle: {
+    "&::after": {
+      content: '""',
+      display: "block",
+      backgroundColor: theme.fn.primaryColor(),
+      width: rem(45),
+      height: rem(2),
+      marginTop: theme.spacing.sm,
+    },
+  },
+}));
+
 export default function Page() {
+  const { classes, theme } = useStyles();
+
   return (
-    <Container size="sm">
-      <Stack>
-        <Group>
-          <ContactsIcon width={48} />
-          <Title order={1}>Contacts</Title>
-        </Group>
-        <Tabs keepMounted={false} defaultValue="character">
-          <Tabs.List>
-            <Tabs.Tab value="character">Character</Tabs.Tab>
-            <Tabs.Tab value="corporation">Corporation</Tabs.Tab>
-            <Tabs.Tab value="alliance">Alliance</Tabs.Tab>
-          </Tabs.List>
-          <Tabs.Panel value="character">
-            <CharacterContactsTable />
-          </Tabs.Panel>
-
-          <Tabs.Panel value="corporation">
-            <CorporationContactsTable />
-          </Tabs.Panel>
-
-          <Tabs.Panel value="alliance">
-            <AllianceContactsTable />
-          </Tabs.Panel>
-        </Tabs>
-      </Stack>
+    <Container size="lg">
+      <Group>
+        <ContactsIcon width={48} />
+        <Title order={1}>Contacts</Title>
+      </Group>
+      <SimpleGrid
+        cols={3}
+        spacing="xl"
+        my="xl"
+        breakpoints={[{ maxWidth: "md", cols: 1 }]}
+      >
+        <UnstyledButton component={Link} href="/contacts/character">
+          <Card shadow="md" radius="md" className={classes.card} padding="xl">
+            <Container m={0} p={0} w={64} h={64}>
+              <ContactsIcon
+                height={64}
+                width={64}
+                color={theme.fn.primaryColor()}
+              />
+            </Container>
+            <Group>
+              <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
+                Character Contacts
+              </Text>
+            </Group>
+            <Text fz="sm" c="dimmed" mt="sm">
+              View your character's contacts.
+            </Text>
+          </Card>
+        </UnstyledButton>
+        <UnstyledButton component={Link} href="/contacts/corporation">
+          <Card shadow="md" radius="md" className={classes.card} padding="xl">
+            <Container m={0} p={0} w={64} h={64}>
+              <ContactsIcon
+                height={64}
+                width={64}
+                color={theme.fn.primaryColor()}
+              />
+            </Container>
+            <Group>
+              <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
+                Corporation Contacts
+              </Text>
+            </Group>
+            <Text fz="sm" c="dimmed" mt="sm">
+              View your corporation's contacts.
+            </Text>
+          </Card>
+        </UnstyledButton>
+        <UnstyledButton component={Link} href="/contacts/alliance">
+          <Card shadow="md" radius="md" className={classes.card} padding="xl">
+            <Container m={0} p={0} w={64} h={64}>
+              <ContactsIcon
+                height={64}
+                width={64}
+                color={theme.fn.primaryColor()}
+              />
+            </Container>
+            <Group>
+              <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
+                Alliance Contacts
+              </Text>
+            </Group>
+            <Text fz="sm" c="dimmed" mt="sm">
+              View your alliance's contacts.
+            </Text>
+          </Card>
+        </UnstyledButton>
+      </SimpleGrid>
     </Container>
   );
 }

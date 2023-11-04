@@ -113,7 +113,7 @@ export const characterApps: Record<string, JitaApp> = {
   contacts: {
     name: "Contacts",
     description: "View and manage your character's contacts.",
-    url: "/contacts",
+    url: "/contacts/character",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     tags: ["beta"],
     scopes: {
@@ -176,8 +176,8 @@ export const characterApps: Record<string, JitaApp> = {
   },
   assets: {
     name: "Assets",
-    description: "View and manage your and your corporation's assets.",
-    url: "/assets",
+    description: "View and manage your character's assets.",
+    url: "/assets/character",
     Icon: (props) => React.createElement(AssetsIcon, props),
     tags: ["beta"],
     scopes: {
@@ -199,7 +199,7 @@ export const characterApps: Record<string, JitaApp> = {
   wallet: {
     name: "Wallet",
     description: "View your character's and your corporation's wallet.",
-    url: "/wallet",
+    url: "/wallet/character",
     Icon: (props) => React.createElement(WalletIcon, props),
     tags: ["beta"],
     scopes: {
@@ -221,7 +221,7 @@ export const corporationApps: Record<string, JitaApp> = {
   contacts: {
     name: "Contacts",
     description: "View and manage your corporation's contacts.",
-    url: "/contacts",
+    url: "/contacts/corporation",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     tags: ["beta"],
     scopes: {
@@ -248,7 +248,7 @@ export const corporationApps: Record<string, JitaApp> = {
   assets: {
     name: "Assets",
     description: "View and manage your corporation's assets.",
-    url: "/assets",
+    url: "/assets/corporation",
     Icon: (props) => React.createElement(AssetsIcon, props),
     tags: ["beta"],
     scopes: {
@@ -270,7 +270,7 @@ export const corporationApps: Record<string, JitaApp> = {
   wallet: {
     name: "Wallet",
     description: "View your corporation's wallet balance and transactions.",
-    url: "/wallet",
+    url: "/wallet/corporation",
     Icon: (props) => React.createElement(WalletIcon, props),
     tags: ["beta"],
     scopes: {
@@ -292,7 +292,7 @@ export const allianceApps: Record<string, JitaApp> = {
   contacts: {
     name: "Contacts",
     description: "View and manage your alliance's contacts.",
-    url: "/contacts",
+    url: "/contacts/alliance",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
     tags: ["beta"],
     scopes: {
