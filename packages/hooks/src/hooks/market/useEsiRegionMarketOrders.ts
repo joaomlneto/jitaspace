@@ -5,4 +5,4 @@ import {
 
 export type RegionalMarketOrder = GetMarketsRegionIdOrdersQueryResponse[number];
 
-export const useRegionMarketOrders = useGetMarketsRegionIdOrders;
+export const useEsiRegionMarketOrders = useGetMarketsRegionIdOrders;
