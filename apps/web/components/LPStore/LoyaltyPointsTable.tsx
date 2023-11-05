@@ -371,7 +371,7 @@ export const LoyaltyPointsTable = memo(
         },
         {
           id: "jita5psell",
-          header: "Item Jita 5% Sell Price",
+          header: "Jita 5% Sell Price",
           accessorKey: "marketStats.sell.percentile",
           size: 10,
           Cell: ({ row, cell }) => {
@@ -381,7 +381,7 @@ export const LoyaltyPointsTable = memo(
           },
         },
         {
-          header: "Item Jita Sell Volume",
+          header: "Jita Sell Volume",
           accessorKey: "marketStats.sell.volume",
           size: 10,
           mantineTableBodyCellProps: {
@@ -436,7 +436,7 @@ export const LoyaltyPointsTable = memo(
         },
         {
           id: "jita5pbuy",
-          header: "Item Jita 5% Buy Price",
+          header: "Jita 5% Buy Price",
           accessorKey: "marketStats.buy.percentile",
           size: 10,
           Cell: ({ row, cell }) => {
@@ -446,7 +446,7 @@ export const LoyaltyPointsTable = memo(
           },
         },
         {
-          header: "Item Jita Buy Volume",
+          header: "Jita Buy Volume",
           accessorKey: "marketStats.buy.volume",
           size: 10,
           mantineTableBodyCellProps: {
@@ -501,7 +501,7 @@ export const LoyaltyPointsTable = memo(
         },
         {
           id: "jitasplit",
-          header: "Item Jita Split",
+          header: "Jita Split",
           size: 10,
           accessorFn: (row) =>
             row.marketStats?.buy && row.marketStats?.sell
