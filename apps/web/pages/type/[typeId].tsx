@@ -1,11 +1,13 @@
-import React, { type ReactElement } from "react";
+import React, { useState, type ReactElement } from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
+  Anchor,
   Button,
   Container,
   Group,
+  JsonInput,
   Loader,
   Stack,
   Text,
@@ -16,9 +18,14 @@ import { HttpStatusCode } from "axios";
 import { NextSeo } from "next-seo";
 
 import { prisma } from "@jitaspace/db";
-import { useMarketPrices, useType } from "@jitaspace/hooks";
+import {
+  useFuzzworkTypeMarketStats,
+  useMarketPrices,
+  useType,
+} from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
+  ISKAmount,
   OpenMarketWindowActionIcon,
   TypeAvatar,
   TypeInventoryBreadcrumbs,
@@ -30,6 +37,7 @@ import { MainLayout } from "~/layouts";
 
 
 type PageProps = {
+  typeId: number;
   ogImageUrl?: string;
   typeName?: string;
   typeDescription?: string;
@@ -73,6 +81,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     return {
       props: {
+        typeId,
         ogImageUrl: `https://images.evetech.net/types/${typeId}/${variation}`,
         typeName: type.name,
         typeDescription: type.description,
@@ -88,16 +97,19 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 };
 
 export default function Page({
+  typeId,
   ogImageUrl,
   typeName,
   typeDescription,
 }: PageProps) {
   const router = useRouter();
-  const typeId = parseInt(router.query.typeId as string);
+  console.log({ typeId });
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();
+  const [regionId, setRegionId] = useState(10000002);
+  const { data: marketStats } = useFuzzworkTypeMarketStats(typeId, regionId);
 
-  if (router.isFallback) {
+  if (!typeId || router.isFallback) {
     return (
       <Container size="sm">
         <Group>
@@ -203,6 +215,46 @@ export default function Page({
                   ISK
                 </Text>
               </Group>
+              {marketStats && (
+                <>
+                  <Title order={6}>
+                    Market Statistics (powered by{" "}
+                    <Anchor href="https://www.fuzzwork.co.uk" target="_blank">
+                      fuzzwork.co.uk
+                    </Anchor>
+                    )
+                  </Title>
+                  <Group position="apart">
+                    <Text>Jita Buy</Text>
+                    <Text>
+                      <ISKAmount amount={marketStats.buy.percentile} />
+                    </Text>
+                  </Group>
+                  <Group position="apart">
+                    <Text>Jita Split</Text>
+                    <Text>
+                      <ISKAmount
+                        amount={
+                          (marketStats.buy.percentile +
+                            marketStats.sell.percentile) /
+                          2
+                        }
+                      />
+                    </Text>
+                  </Group>
+                  <Group position="apart">
+                    <Text>Jita Sell</Text>
+                    <Text>
+                      <ISKAmount amount={marketStats.sell.percentile} />
+                    </Text>
+                  </Group>
+                </>
+              )}
+              <JsonInput
+                value={JSON.stringify(marketStats, null, 2)}
+                autosize
+                maxRows={20}
+              />
             </>
           )}
         </Stack>
