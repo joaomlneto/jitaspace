@@ -7,6 +7,10 @@ import {
 } from "mantine-react-table";
 
 import {
+  FuzzworkTypeMarketAggregate,
+  useFuzzworkRegionalMarketAggregates,
+} from "@jitaspace/hooks";
+import {
   CorporationAnchor,
   CorporationAvatar,
   CorporationName,
@@ -53,6 +57,10 @@ export const LoyaltyPointsTable = memo(
       [types],
     );
 
+    const typeIds = useMemo(() => types.map((type) => type.typeId), [types]);
+
+    const marketStats = useFuzzworkRegionalMarketAggregates(typeIds, 10000002);
+
     const typeNames = useMemo(() => {
       const map: Record<number, string> = {};
       types.forEach((type) => (map[type.typeId] = type.name));
@@ -71,10 +79,15 @@ export const LoyaltyPointsTable = memo(
       () =>
         offers.map((offer) => ({
           ...offer,
+          requiredItems: offer.requiredItems.map((item) => ({
+            ...item,
+            marketStats: marketStats.data?.[item.typeId],
+          })),
           typeName: typeNames[offer.typeId],
           corporationName: corporationNames[offer.corporationId],
+          marketStats: marketStats.data?.[offer.typeId],
         })),
-      [offers, typeNames, corporationNames],
+      [offers, typeNames, corporationNames, marketStats.data],
     );
 
     const columns = useMemo<
@@ -89,9 +102,11 @@ export const LoyaltyPointsTable = memo(
         requiredItems: {
           typeId: number;
           quantity: number;
+          marketStats?: FuzzworkTypeMarketAggregate;
         }[];
         typeName: string | undefined;
         corporationName: string | undefined;
+        marketStats?: FuzzworkTypeMarketAggregate;
       }>[]
     >(
       () => [
@@ -239,19 +254,178 @@ export const LoyaltyPointsTable = memo(
           enableSorting: false,
           Cell: ({ row, cell }) => (
             <Stack spacing="xs">
-              {row.original.requiredItems.map(({ quantity, typeId }) => (
-                <Group noWrap key={typeId}>
-                  <TypeAvatar typeId={typeId} size="sm" />
-                  {row.original.quantity !== 1 && (
-                    <Text size="sm">{quantity}</Text>
-                  )}
-                  <TypeAnchor typeId={typeId} target="_blank">
-                    <TypeName span typeId={typeId} size="sm" lineClamp={1} />
-                  </TypeAnchor>
-                </Group>
-              ))}
+              {row.original.requiredItems.map(
+                ({ quantity, typeId, marketStats }) => (
+                  <Group noWrap key={typeId} position="apart">
+                    <Group noWrap>
+                      <TypeAvatar typeId={typeId} size="sm" />
+                      {row.original.quantity !== 1 && (
+                        <Text size="sm">{quantity}</Text>
+                      )}
+                      <TypeAnchor typeId={typeId} target="_blank">
+                        <TypeName
+                          span
+                          typeId={typeId}
+                          size="sm"
+                          lineClamp={1}
+                        />
+                      </TypeAnchor>
+                    </Group>
+                    {marketStats && (
+                      <ISKAmount amount={marketStats.buy.percentile} />
+                    )}
+                  </Group>
+                ),
+              )}
             </Stack>
           ),
+        },
+        {
+          id: "jita5pbuy",
+          header: "Item Jita 5% Buy Price",
+          accessorKey: "marketStats.buy.percentile",
+          Cell: ({ row, cell }) => {
+            const amount = cell.getValue<number | undefined>();
+            if (amount === undefined) return null;
+            return <ISKAmount align="right" amount={amount} />;
+          },
+        },
+        {
+          header: "Item Jita Buy Volume",
+          accessorKey: "marketStats.buy.volume",
+        },
+        {
+          id: "reqitemsjita5pbuy",
+          header: "Required Items Jita 5% Buy",
+          accessorFn: (row) =>
+            row.requiredItems
+              .map((item) => item.marketStats?.buy.percentile ?? 0)
+              .reduce((a, b) => a + b, 0),
+          Cell: ({ row, cell }) => {
+            const amount = cell.getValue<number | undefined>();
+            if (amount === undefined) return null;
+            return <ISKAmount align="right" amount={amount} />;
+          },
+        },
+        {
+          id: "jita5pbuyprofit",
+          header: "Jita 5% Buy Profit",
+          accessorFn: (row) =>
+            (row.marketStats?.buy.percentile ?? 0) -
+            row.requiredItems
+              .map((item) => item.marketStats?.buy.percentile ?? 0)
+              .reduce((a, b) => a + b, 0),
+          Cell: ({ row, cell }) => {
+            const amount = cell.getValue<number | undefined>();
+            if (amount === undefined) return null;
+            return <ISKAmount align="right" amount={amount} />;
+          },
+        },
+        {
+          id: "jita5pbuyisklp",
+          header: "Jita 5% Buy ISK/LP",
+          accessorFn: (row) =>
+            ((row.marketStats?.buy.percentile ?? 0) -
+              (row.iskCost ?? 0) -
+              row.requiredItems
+                .map((item) => item.marketStats?.buy.percentile ?? 0)
+                .reduce((a, b) => a + b, 0)) /
+            row.lpCost,
+          Cell: ({ row, cell }) => {
+            const amount = cell.getValue<number | undefined>();
+            if (amount === undefined) return null;
+            return <Text align="right">{amount.toFixed(0)} ISK/LP</Text>;
+          },
+        },
+        {
+          id: "jitasplit",
+          header: "Item Jita Split",
+          accessorFn: (row) =>
+            row.marketStats?.buy && row.marketStats?.sell
+              ? (row.marketStats.buy.percentile +
+                  row.marketStats.sell.percentile) /
+                2
+              : null,
+          Cell: ({ row, cell }) => {
+            const amount = cell.getValue<number | undefined>();
+            if (amount === undefined) return null;
+            return <ISKAmount align="right" amount={amount} />;
+          },
+        },
+        {
+          id: "reqitemsjitasplit",
+          header: "Required Items Jita 5% Split",
+          accessorFn: (row) =>
+            row.requiredItems
+              .map(
+                (item) =>
+                  ((item.marketStats?.buy.percentile ?? 0) +
+                    (item.marketStats?.sell.percentile ?? 0)) /
+                  2,
+              )
+              .reduce((a, b) => a + b, 0),
+          Cell: ({ row, cell }) => {
+            const amount = cell.getValue<number | undefined>();
+            if (amount === undefined) return null;
+            return <ISKAmount align="right" amount={amount} />;
+          },
+        },
+        {
+          id: "jita5psell",
+          header: "Item Jita 5% Sell Price",
+          accessorKey: "marketStats.sell.percentile",
+          Cell: ({ row, cell }) => {
+            const amount = cell.getValue<number | undefined>();
+            if (amount === undefined) return null;
+            return <ISKAmount align="right" amount={amount} />;
+          },
+        },
+        {
+          header: "Item Jita Sell Volume",
+          accessorKey: "marketStats.sell.volume",
+        },
+        {
+          id: "reqitemsjita5psell",
+          header: "Required Items Jita 5% Sell",
+          accessorFn: (row) =>
+            row.requiredItems
+              .map((item) => item.marketStats?.sell.percentile ?? 0)
+              .reduce((a, b) => a + b, 0),
+          Cell: ({ row, cell }) => {
+            const amount = cell.getValue<number | undefined>();
+            if (amount === undefined) return null;
+            return <ISKAmount align="right" amount={amount} />;
+          },
+        },
+        {
+          id: "jita5psellprofit",
+          header: "Jita 5% Sell Profit",
+          accessorFn: (row) =>
+            (row.marketStats?.sell.percentile ?? 0) -
+            row.requiredItems
+              .map((item) => item.marketStats?.sell.percentile ?? 0)
+              .reduce((a, b) => a + b, 0),
+          Cell: ({ row, cell }) => {
+            const amount = cell.getValue<number | undefined>();
+            if (amount === undefined) return null;
+            return <ISKAmount align="right" amount={amount} />;
+          },
+        },
+        {
+          id: "jita5psellisklp",
+          header: "Jita 5% Sell ISK/LP",
+          accessorFn: (row) =>
+            ((row.marketStats?.sell.percentile ?? 0) -
+              (row.iskCost ?? 0) -
+              row.requiredItems
+                .map((item) => item.marketStats?.sell.percentile ?? 0)
+                .reduce((a, b) => a + b, 0)) /
+            row.lpCost,
+          Cell: ({ row, cell }) => {
+            const amount = cell.getValue<number | undefined>();
+            if (amount === undefined) return null;
+            return <Text align="right">{amount.toFixed(0)} ISK/LP</Text>;
+          },
         },
       ],
       [],
@@ -274,8 +448,16 @@ export const LoyaltyPointsTable = memo(
           quantity: false,
           corporationId: sortedCorporations.length > 1,
           akCost: offers.some((offer) => offer.akCost),
+          jita5pbuy: false,
+          reqitemsjita5pbuy: false,
+          jita5pbuyprofit: false,
+          jitasplit: false,
+          reqitemsjitasplit: false,
+          jita5psell: false,
+          reqitemsjita5psell: false,
+          jita5psellprofit: false,
         },
-        showColumnFilters: true,
+        //showColumnFilters: true,
       },
     });
 
