@@ -31,7 +31,7 @@ export const ISKAmount = memo(
       );
     }, [amount, digits]);
 
-    if (amount === undefined)
+    if (amount == null)
       return (
         <Skeleton>
           <Text {...otherProps}>123456789</Text>
