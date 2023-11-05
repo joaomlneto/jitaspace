@@ -1,0 +1,142 @@
+{
+  "openapi": "3.1.0",
+  "x-stoplight": {
+    "id": "ghpchccg2fvj6"
+  },
+  "info": {
+    "title": "Fuzzworks Market API",
+    "version": "1.0",
+    "contact": {
+      "name": "Steve Ronuken",
+      "url": "https://www.fuzzwork.co.uk"
+    },
+    "description": "Fuzzwork's Market API"
+  },
+  "servers": [
+    {
+      "url": "https://market.fuzzwork.co.uk",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/aggregates/": {
+      "get": {
+        "summary": "Get Market Aggregates",
+        "tags": [
+          "market"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "buy": {
+                        "weightedAverage": {
+                          "type": "string"
+                        },
+                        "max": {
+                          "type": "string"
+                        },
+                        "min": {
+                          "type": "string"
+                        },
+                        "stddev": {
+                          "type": "string"
+                        },
+                        "median": {
+                          "type": "string"
+                        },
+                        "volume": {
+                          "type": "string"
+                        },
+                        "orderCount": {
+                          "type": "string"
+                        },
+                        "percentile": {
+                          "type": "string"
+                        }
+                      },
+                      "sell": {
+                        "weightedAverage": {
+                          "type": "string"
+                        },
+                        "max": {
+                          "type": "string"
+                        },
+                        "min": {
+                          "type": "string"
+                        },
+                        "stddev": {
+                          "type": "string"
+                        },
+                        "median": {
+                          "type": "string"
+                        },
+                        "volume": {
+                          "type": "string"
+                        },
+                        "orderCount": {
+                          "type": "string"
+                        },
+                        "percentile": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "operationId": "get-aggregates",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "region",
+            "description": "Region ID"
+          },
+          {
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "system",
+            "description": "Solar System ID"
+          },
+          {
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "station",
+            "description": "Station ID"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "types",
+            "description": "Comma separated list of Type IDs",
+            "required": true
+          }
+        ],
+        "description": "Get Aggregate statistics for a set of given types, based on the set of orders in a given region, solar system or station."
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "market"
+    }
+  ]
+}
