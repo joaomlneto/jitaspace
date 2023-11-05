@@ -17,6 +17,7 @@
     "@jitaspace/esi-client": "*",
     "@jitaspace/esi-metadata": "*",
     "@jitaspace/evetycoon-client": "*",
+    "@jitaspace/fuzzworks-market-client": "*",
     "@jitaspace/sde-client": "*",
     "@react-hook/cache": "^1.1.1",
     "@tanstack/react-query": "^4.36.1",
