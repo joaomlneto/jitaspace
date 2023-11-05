@@ -203,8 +203,8 @@ export default function Page({ corporation, types, offers }: PageProps) {
   }
 
   return (
-    <Container size="xl">
-      <Stack>
+    <>
+      <Container size="xl">
         <Breadcrumbs>
           <Group>
             <LPStoreIcon width={48} />
@@ -217,13 +217,17 @@ export default function Page({ corporation, types, offers }: PageProps) {
             <Title>{corporation.name}</Title>
           </Group>
         </Breadcrumbs>
-        <LoyaltyPointsTable
-          corporations={[corporation]}
-          offers={offers}
-          types={types}
-        />
+      </Container>
+      <Stack mt="xl">
+        <Container fluid>
+          <LoyaltyPointsTable
+            corporations={[corporation]}
+            offers={offers}
+            types={types}
+          />
+        </Container>
       </Stack>
-    </Container>
+    </>
   );
 }
 
