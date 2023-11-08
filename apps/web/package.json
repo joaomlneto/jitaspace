@@ -55,7 +55,6 @@
     "@vercel/og": "^0.5.20",
     "axios": "^1.6.0",
     "date-fns": "^2.30.0",
-    "dayjs": "^1.11.10",
     "embla-carousel-react": "8.0.0-rc14",
     "humanize-duration": "^3.30.0",
     "jose": "^4.15.4",
