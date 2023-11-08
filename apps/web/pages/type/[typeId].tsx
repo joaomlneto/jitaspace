@@ -7,7 +7,6 @@ import {
   Button,
   Container,
   Group,
-  JsonInput,
   Loader,
   Stack,
   Text,
@@ -250,11 +249,6 @@ export default function Page({
                   </Group>
                 </>
               )}
-              <JsonInput
-                value={JSON.stringify(marketStats, null, 2)}
-                autosize
-                maxRows={20}
-              />
             </>
           )}
         </Stack>
