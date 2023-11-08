@@ -18,14 +18,24 @@ apps
 packages
   ├─ auth
   |   └─ next-auth package preconfigured to use EVE SSO
+  ├─ db
+  |   └─ database client and utilities, based on Prisma
   ├─ esi-client
   |   └─ Generated Typescript/React client for ESI API
-  ├─ hooks
-  |   └─ React hooks for high-level ESI interactions
   ├─ esi-meta-client
   |   └─ Generated Typescript/React client for ESI Meta API
+  ├─ esi-metadata
+  |   └─ A bunch of ESI metadata, such as scopes, ID ranges, mapping of endpoints to scopes, …
   ├─ eve-icons
   |   └─ Collection of EVE Icons as react components
+  ├─ eve-scrape
+  |   └─ Background jobs, using Inngest
+  ├─ evetycoon-client
+  |   └─ Generated Typescript/React client for EveTycoon API (DOES NOT WORK DUE TO CORS)
+  ├─ fuzzworks-market-client
+  |   └─ Generated Typescript/React client for Fuzzwork Enterprises Market API
+  ├─ hooks
+  |   └─ React hooks for high-level ESI interactions
   ├─ sde-client
   |   └─ Generated Typescript/React client for ESI SDE API at https://sde.jita.space
   ├─ tiptap-eve
