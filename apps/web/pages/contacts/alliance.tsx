@@ -4,21 +4,28 @@ import { NextSeo } from "next-seo";
 
 import { ContactsIcon } from "@jitaspace/eve-icons";
 
-import { AllianceContactsTable } from "~/components/Contacts/ContactsTable/AllianceContactsTable";
+import { AllianceContactsDataTable } from "~/components/Contacts";
 import { MainLayout } from "~/layouts";
 
 
 export default function Page() {
   return (
-    <Container size="sm">
-      <Stack>
+    <>
+      <Container size="xl">
         <Group>
           <ContactsIcon width={48} />
           <Title order={1}>Alliance Contacts</Title>
         </Group>
-        <AllianceContactsTable />
+      </Container>
+
+      <Stack mt="xl">
+        <Container fluid>
+          <Stack>
+            <AllianceContactsDataTable />
+          </Stack>
+        </Container>
       </Stack>
-    </Container>
+    </>
   );
 }
 

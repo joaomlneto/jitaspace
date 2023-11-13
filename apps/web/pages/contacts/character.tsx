@@ -4,21 +4,28 @@ import { NextSeo } from "next-seo";
 
 import { ContactsIcon } from "@jitaspace/eve-icons";
 
-import { CharacterContactsTable } from "~/components/Contacts/ContactsTable/CharacterContactsTable";
+import { CharacterContactsDataTable } from "~/components/Contacts";
 import { MainLayout } from "~/layouts";
 
 
 export default function Page() {
   return (
-    <Container size="sm">
-      <Stack>
+    <>
+      <Container size="xl">
         <Group>
           <ContactsIcon width={48} />
-          <Title order={1}>Contacts</Title>
+          <Title order={1}>Character Contacts</Title>
         </Group>
-        <CharacterContactsTable />
+      </Container>
+
+      <Stack mt="xl">
+        <Container fluid>
+          <Stack>
+            <CharacterContactsDataTable />
+          </Stack>
+        </Container>
       </Stack>
-    </Container>
+    </>
   );
 }
 
