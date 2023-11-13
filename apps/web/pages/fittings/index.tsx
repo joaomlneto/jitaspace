@@ -2,7 +2,6 @@ import React, { useMemo, useState, type ReactElement } from "react";
 import {
   Container,
   Group,
-  JsonInput,
   Stack,
   Text,
   Title,
@@ -25,8 +24,7 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const [selectedShipType, setSelectedShipType] = useState<string | null>(null);
-  const { characterId, isTokenValid, scopes, accessToken } =
-    useEsiClientContext();
+  const { scopes } = useEsiClientContext();
   const { data } = useCharacterFittings();
 
   const shipTypeIds = useMemo(
@@ -137,9 +135,6 @@ export default function Page() {
             </UnstyledButton>
           ))}
         </Stack>
-        {false && (
-          <JsonInput value={JSON.stringify(data, null, 2)} readOnly autosize />
-        )}
       </Stack>
     </Container>
   );

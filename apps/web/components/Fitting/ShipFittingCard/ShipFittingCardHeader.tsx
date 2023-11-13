@@ -12,6 +12,10 @@ import { IconClipboard, IconClipboardCheck } from "@tabler/icons-react";
 
 import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
 
+
+
+
+
 type ShipFittingCardHeaderProps = {
   fitString?: string;
   shipName?: string;
@@ -25,7 +29,7 @@ export const ShipFittingCardHeader = memo(
     return (
       <Group position="apart" p="xs">
         <Group noWrap>
-          {shipTypeId && <TypeAvatar typeId={shipTypeId} size="md" />}
+          <TypeAvatar typeId={shipTypeId} size="md" variation="icon" />
           <div>
             <Text weight={500} lineClamp={1}>
               {shipName}
