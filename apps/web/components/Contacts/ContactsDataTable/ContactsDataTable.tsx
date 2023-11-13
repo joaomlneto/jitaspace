@@ -31,6 +31,9 @@ export type ContactsDataTableProps = {
   hideWatchedColumn?: boolean;
 };
 
+const capitalizeFirstLetter = (s: string) =>
+  s.charAt(0).toUpperCase() + s.slice(1);
+
 export const ContactsDataTable = memo(
   ({
     contacts,
@@ -59,6 +62,8 @@ export const ContactsDataTable = memo(
           header: "Contact Type",
           accessorKey: "contact_type",
           size: 40,
+          filterVariant: "select",
+          Cell: ({ cell }) => capitalizeFirstLetter(cell.getValue<string>()),
         },
         {
           id: "name",
@@ -89,7 +94,8 @@ export const ContactsDataTable = memo(
         {
           id: "isWatched",
           header: "Watchlist",
-          accessorKey: "is_watched",
+          accessorFn: (row) => row.is_watched ?? false,
+          filterVariant: "checkbox",
           Cell: ({ cell }) =>
             cell.getValue<boolean>() ? (
               <Badge variant="filled" size="xs">
@@ -131,12 +137,19 @@ export const ContactsDataTable = memo(
           id: "standings",
           header: "Standings",
           accessorKey: "standing",
+          filterVariant: "range-slider",
+          filterFn: "betweenInclusive",
+          mantineFilterRangeSliderProps: {
+            min: -10,
+            max: 10,
+            step: 0.1,
+          },
           Cell: ({ cell }) => (
-            <StandingsBadge standing={cell.getValue<number>()} size="sm" />
+            <StandingsBadge standing={cell.getValue<number>()} />
           ),
         },
       ],
-      [],
+      [labelName],
     );
 
     const table = useMantineReactTable({
