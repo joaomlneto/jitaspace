@@ -35,19 +35,23 @@ export function useEsiSearch(
     characterId ?? 1,
     {
       // @ts-expect-error - This is a bug in the generated code
-      categories: categories?.join(",") ?? [
-        "agent",
-        "alliance",
-        "character",
-        "constellation",
-        "corporation",
-        "faction",
-        "inventory_type",
-        "region",
-        "solar_system",
-        "station",
-        ...((canSearchStructures ? ["structure"] : []) as EsiSearchCategory[]),
-      ],
+      categories: (
+        categories ?? [
+          "agent",
+          "alliance",
+          "character",
+          "constellation",
+          "corporation",
+          "faction",
+          "inventory_type",
+          "region",
+          "solar_system",
+          "station",
+          ...((canSearchStructures
+            ? ["structure"]
+            : []) as EsiSearchCategory[]),
+        ]
+      )?.join(","),
       search: query,
       strict,
       language,
