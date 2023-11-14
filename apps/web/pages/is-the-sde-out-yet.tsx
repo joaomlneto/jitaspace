@@ -15,6 +15,10 @@ import useSwr from "swr";
 
 import { TimeAgoText } from "@jitaspace/ui";
 
+
+
+
+
 const useStyles = createStyles((theme) => ({
   root: {
     paddingTop: rem(80),
@@ -59,8 +63,8 @@ const useStyles = createStyles((theme) => ({
 export default function Page() {
   const { classes } = useStyles();
 
-  const uprisingImgSrc = "/wallpapers/uprising.jpg";
-  const viridianImgSrc = "/wallpapers/viridian.jpg";
+  const currentImgSrc = "/wallpapers/viridian.jpg";
+  const nextImgSrc = "/wallpapers/havoc.jpg";
 
   const { data, isLoading } = useSwr<{
     lastModified: string;
@@ -76,8 +80,10 @@ export default function Page() {
   const lastModifiedDate: Date | undefined = data?.lastModified
     ? new Date(data.lastModified)
     : undefined;
-  //const startOfJune = new Date(2023, 5, 1);
-  const sdeUpdated = true; //lastModifiedDate && lastModifiedDate > startOfJune;
+  const expansionReleaseDate = new Date(2023, 11, 13);
+  const sdeUpdated =
+    lastModifiedDate &&
+    lastModifiedDate.getTime() >= expansionReleaseDate.getTime();
 
   const lastCheckedOn: Date | undefined = data?.date
     ? new Date(data.date)
@@ -90,9 +96,7 @@ export default function Page() {
       size="xs"
       style={{
         height: "100vh",
-        backgroundImage: `url('${
-          sdeUpdated ? viridianImgSrc : uprisingImgSrc
-        }')`,
+        backgroundImage: `url('${sdeUpdated ? nextImgSrc : currentImgSrc}')`,
         backgroundRepeat: "no-repeat",
         backgroundSize: "cover",
         backgroundPosition: "center",
