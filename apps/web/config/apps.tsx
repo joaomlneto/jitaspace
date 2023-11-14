@@ -215,6 +215,24 @@ export const characterApps: Record<string, JitaApp> = {
       ],
     },
   },
+  /*
+  notifications: {
+    name: "Notifications",
+    description: "View your character in-game notifications",
+    url: "/notifications",
+    Icon: (props: EveIconProps) => React.createElement(MemberIcon, props),
+    tags: ["beta"],
+    scopes: {
+      required: [
+        {
+          reason: "Read Character Notifications",
+          description:
+            "Allows you to read a character's in-game notifications.",
+          scopes: ["esi-characters.read_notifications.v1"],
+        },
+      ],
+    },
+  },*/
 };
 
 export const corporationApps: Record<string, JitaApp> = {
