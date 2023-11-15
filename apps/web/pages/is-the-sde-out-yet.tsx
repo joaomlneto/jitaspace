@@ -80,7 +80,7 @@ export default function Page() {
   const lastModifiedDate: Date | undefined = data?.lastModified
     ? new Date(data.lastModified)
     : undefined;
-  const expansionReleaseDate = new Date(2023, 11, 13);
+  const expansionReleaseDate = new Date(2023, 10 /* 0 (Jan) to 11 (Dec) */, 13);
   const sdeUpdated =
     lastModifiedDate &&
     lastModifiedDate.getTime() >= expansionReleaseDate.getTime();
