@@ -66,7 +66,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
         akCost: true,
         lpCost: true,
         iskCost: true,
-        // There was a bug that caused this query to fail. Workaround is to get requiredItems manually below.
+        // FIXME: There was a bug that caused this query to fail. Workaround is to get requiredItems manually below.
         // See: https://github.com/joaomlneto/jitaspace/issues/309
         /*
         requiredItems: {
@@ -96,6 +96,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       ),
     }));
 
+    // TODO: make this more efficient? Could maybe "select distinct" from the requiredItems table directly.
     /*
     const typeIds = offers.flatMap((offer) => [
       offer.typeId,
