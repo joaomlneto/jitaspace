@@ -23,7 +23,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@prisma/client": "^5.5.2"
+    "@prisma/client": "^5.6.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "*",
@@ -33,7 +33,7 @@
     "concurrently": "^8.2.2",
     "eslint": "^8.53.0",
     "prettier": "^3.0.3",
-    "prisma": "^5.5.2",
+    "prisma": "^5.6.0",
     "typescript": "^5.2.2"
   }
 }
