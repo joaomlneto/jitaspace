@@ -57,7 +57,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
     });
 
     // get offers
-    const offers = await prisma.loyaltyStoreOffer.findMany({
+    const offersWithoutRequiredItems = await prisma.loyaltyStoreOffer.findMany({
       select: {
         offerId: true,
         corporationId: true,
@@ -66,19 +66,42 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
         akCost: true,
         lpCost: true,
         iskCost: true,
+        // There was a bug that caused this query to fail. Workaround is to get requiredItems manually below.
+        // See: https://github.com/joaomlneto/jitaspace/issues/309
+        /*
         requiredItems: {
           select: {
             quantity: true,
             typeId: true,
           },
-        },
+        }, //*/
       },
     });
 
+    const requiredItems = await prisma.loyaltyStoreOfferRequiredItem.findMany({
+      select: {
+        typeId: true,
+        quantity: true,
+        offerId: true,
+        corporationId: true,
+      },
+    });
+
+    const offers = offersWithoutRequiredItems.map((offer) => ({
+      ...offer,
+      requiredItems: requiredItems.filter(
+        (item) =>
+          item.offerId === offer.offerId &&
+          item.corporationId === offer.corporationId,
+      ),
+    }));
+
+    /*
     const typeIds = offers.flatMap((offer) => [
       offer.typeId,
       ...offer.requiredItems.map((item) => item.typeId),
-    ]);
+    ]);*/
+    const typeIds = [...new Set(requiredItems.map((item) => item.typeId))];
 
     const types = await prisma.type.findMany({
       select: {
