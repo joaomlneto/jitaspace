@@ -38,7 +38,6 @@ export const compareSets = <T extends object>({
   );
 
   // validate that object keys are the same
-  // this strangely causes the scrapeEsiTypes to crash due to "Maximum call stack size exceeded"
   if (env.NODE_ENV === "development") {
     const objKeysBefore = [
       ...new Set(recordsBefore.flatMap((record) => Object.keys(record))),

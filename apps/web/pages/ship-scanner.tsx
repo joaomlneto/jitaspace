@@ -1,13 +1,17 @@
-import React, { ReactElement, useState } from "react";
+import React, { ReactElement, useMemo, useState } from "react";
+import { GetStaticProps } from "next";
 import {
   ActionIcon,
   Badge,
   Button,
   Container,
   FocusTrap,
+  Group,
   HoverCard,
+  JsonInput,
   SimpleGrid,
   Stack,
+  Text,
   Textarea,
   Title,
   UnstyledButton,
@@ -17,11 +21,72 @@ import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
 
-import { useType } from "@jitaspace/hooks";
-import { EveEntitySelect } from "@jitaspace/ui";
+import { prisma } from "@jitaspace/db";
+import { getCharactersCharacterIdFittingsQueryResponseItemsFlag } from "@jitaspace/esi-client";
+import {
+  FittingItemFlag,
+  useEsiTypeIdsFromNames,
+  useType,
+} from "@jitaspace/hooks";
+import { EveEntitySelect, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { ShipFittingCard } from "~/components/Fitting";
 import { MainLayout } from "~/layouts";
+
+type PageProps = {
+  ships: {
+    id: number;
+    name: string;
+  }[];
+};
+
+const SHIP_CATEGORY_ID = 6;
+
+export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+  try {
+    const shipGroups = await prisma.category.findUniqueOrThrow({
+      select: {
+        groups: {
+          select: {
+            groupId: true,
+            name: true,
+          },
+        },
+      },
+      where: {
+        categoryId: SHIP_CATEGORY_ID,
+      },
+    });
+
+    const shipGroupIds = shipGroups.groups.map((group) => group.groupId);
+
+    const shipTypes = await prisma.type.findMany({
+      select: {
+        typeId: true,
+        name: true,
+      },
+      where: {
+        groupId: {
+          in: shipGroupIds,
+        },
+        published: true,
+      },
+      orderBy: [{ name: "asc" }],
+    });
+
+    return {
+      props: {
+        ships: shipTypes.map((type) => ({ id: type.typeId, name: type.name })),
+      },
+      revalidate: 24 * 3600,
+    };
+  } catch (e) {
+    return {
+      notFound: true,
+      revalidate: 3600, // every hour
+    };
+  }
+};
 
 const SCAN_CATEGORIES = [
   "High Power Slots",
@@ -111,13 +176,85 @@ function mergeScans(scans: ScanResult[]) {
   return result;
 }
 
-export default function Page() {
-  const [ship, setShip] = useState<string | null>(null);
+function convertScan(scan: ScanResult) {
+  const items: {
+    flag: FittingItemFlag;
+    name: string;
+    quantity?: number;
+  }[] = [];
+  scan.highSlots.forEach((item, index) => {
+    const flag = `HiSlot${index}`;
+    if (flag in getCharactersCharacterIdFittingsQueryResponseItemsFlag)
+      items.push({
+        name: item.name,
+        quantity: item.quantity,
+        // @ts-ignore this is guaranteed to exist
+        flag,
+      });
+  });
+  scan.midSlots.forEach((item, index) => {
+    const flag = `MedSlot${index}`;
+    if (flag in getCharactersCharacterIdFittingsQueryResponseItemsFlag)
+      items.push({
+        name: item.name,
+        quantity: item.quantity,
+        // @ts-ignore this is guaranteed to exist
+        flag,
+      });
+  });
+  scan.lowSlots.forEach((item, index) => {
+    const flag = `LoSlot${index}`;
+    if (flag in getCharactersCharacterIdFittingsQueryResponseItemsFlag)
+      items.push({
+        name: item.name,
+        quantity: item.quantity,
+        // @ts-ignore this is guaranteed to exist
+        flag,
+      });
+  });
+  scan.rigSlots.forEach((item, index) => {
+    const flag = `RigSlot${index}`;
+    if (flag in getCharactersCharacterIdFittingsQueryResponseItemsFlag)
+      items.push({
+        name: item.name,
+        quantity: item.quantity,
+        // @ts-ignore this is guaranteed to exist
+        flag,
+      });
+  });
+  scan.charges.forEach((item, index) => {
+    const flag = `RigSlot${index}`;
+    if (flag in getCharactersCharacterIdFittingsQueryResponseItemsFlag)
+      items.push({
+        name: item.name,
+        quantity: item.quantity,
+        // @ts-ignore this is guaranteed to exist
+        flag,
+      });
+  });
+  return items;
+}
+
+function mergeAndConvertScans(scans: ScanResult[]) {
+  const mergedScans = mergeScans(scans);
+  return convertScan(mergedScans);
+}
+
+export default function Page({ ships }: PageProps) {
+  const [shipTypeId, setShipTypeId] = useState<number | undefined>();
   const [scans, setScans] = useState<ScanResult[]>([]);
-  const { data: shipData } = useType(ship);
+  const { data: shipData } = useType(
+    shipTypeId ?? 0,
+    {},
+    {},
+    { query: { enabled: shipTypeId !== undefined } },
+  );
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
-  const mergedScans = mergeScans(scans);
+  const mergedScans = useMemo(() => mergeScans(scans), [scans]);
+  const scanItems = useMemo(() => mergeAndConvertScans(scans), [scans]);
+
+  const xx = useEsiTypeIdsFromNames(scanItems.map((item) => item.name));
 
   const handlePaste: React.ClipboardEventHandler = (event) => {
     event.preventDefault();
@@ -133,22 +270,34 @@ export default function Page() {
     }
   };
   return (
-    <Container size="sm">
+    <Container size="sm" onPaste={handlePaste}>
       <Stack>
-        <Title>Ship Scanning Helper</Title>
+        <Group>
+          <TypeAvatar typeId={443} size={48} />
+          <Title>Ship Scanning Helper</Title>
+        </Group>
+        <Text color="dimmed">
+          This tool helps you combine the results of multiple results from a{" "}
+          <TypeAnchor typeId={443} target="_blank">
+            Ship Scanner
+          </TypeAnchor>{" "}
+          into a ship fitting.
+        </Text>
         <SimpleGrid cols={2} breakpoints={[{ maxWidth: "xs", cols: 1 }]}>
           <Stack>
             <FocusTrap active={true}>
               <EveEntitySelect
                 autoFocus
                 label="Select a ship"
+                searchable
                 placeholder={"Which ship are you scanning?"}
-                entityIds={[{ id: 641 }, { id: 642 }, { id: 649 }]}
+                entityIds={ships}
                 onChange={(value) => {
                   inputRef.current?.focus();
-                  setShip(value);
+                  setShipTypeId(value ? Number(value) : 670);
                 }}
-                value={ship}
+                value={shipTypeId?.toString()}
+                hoverOnSearchChange
               />
             </FocusTrap>
             <Textarea
@@ -205,25 +354,21 @@ export default function Page() {
                         </UnstyledButton>
                       </HoverCard.Target>
                       <HoverCard.Dropdown m={0} p={0}>
-                        {false && (
-                          <ShipFittingCard
-                            shipTypeId={Number(ship)}
-                            fit={{
-                              shipName: `Scanned ${shipData?.name ?? "Ship"}`,
-                              typeName: shipData?.name ?? "",
-                              ...scan,
-                              subsystemSlots: [],
-                              cargoHold: [],
-                              droneBay: [],
-                            }}
-                          />
-                        )}
+                        <ShipFittingCard
+                          shipTypeId={shipTypeId ? Number(shipTypeId) : 670}
+                          items={convertScan(scan).map((item) => ({
+                            ...item,
+                            typeId: xx.data?.find(
+                              (type) => type.name == item.name,
+                            )?.id!,
+                          }))}
+                        />
                       </HoverCard.Dropdown>
                     </HoverCard>
                   ))}
                 </SimpleGrid>
                 <Button
-                  disabled={!ship || scans.length === 0}
+                  disabled={!shipTypeId || scans.length === 0}
                   variant="outline"
                   color="red"
                   onClick={() => {
@@ -246,33 +391,35 @@ export default function Page() {
             )}
           </Stack>
           <Stack>
-            {false && (
-              <ShipFittingCard
-                shipTypeId={ship ? Number(ship) : undefined}
-                fit={{
-                  shipName: `Scanned ${shipData?.data.name ?? "Ship"}`,
-                  typeName: shipData?.data.name ?? "Unknown Ship Type",
-                  ...mergedScans,
-                  subsystemSlots: [],
-                  cargoHold: [],
-                  droneBay: [],
-                  //charges: scans.flatMap(scan => scan.charges),
-                }}
-                showEmptySections
-                showEmptySlots
-                showExcessModules
-              />
-            )}
+            <ShipFittingCard
+              shipTypeId={shipTypeId ? Number(shipTypeId) : 670}
+              //showEmptySections
+              //showEmptySlots
+              //showExcessModules
+              items={scanItems.map((item) => ({
+                ...item,
+                typeId: xx.data?.find((type) => type.name == item.name)?.id!,
+              }))}
+            />
           </Stack>
         </SimpleGrid>
       </Stack>
+      {false && (
+        <JsonInput
+          label="IDs from Names"
+          value={JSON.stringify(xx, null, 2)}
+          readOnly
+          autosize
+          maxRows={40}
+        />
+      )}
       {false && (
         <JsonInput
           label="Scans"
           value={JSON.stringify(scans, null, 2)}
           readOnly
           autosize
-          maxRows={10}
+          maxRows={40}
         />
       )}
       {false && (
