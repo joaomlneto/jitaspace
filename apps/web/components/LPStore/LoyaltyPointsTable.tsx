@@ -264,11 +264,9 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => (
             <Stack spacing="xs">
               {row.original.requiredItems.map(({ quantity, typeId }) => (
-                <Group key={typeId} noWrap>
+                <Group key={typeId} noWrap spacing="xs">
                   <TypeAvatar typeId={typeId} size="sm" />
-                  {row.original.quantity !== 1 && (
-                    <Text size="sm">{quantity}</Text>
-                  )}
+                  {quantity !== 1 && <Text size="sm">{quantity}</Text>}
                   <TypeAnchor typeId={typeId} target="_blank">
                     <TypeName span typeId={typeId} size="sm" lineClamp={1} />
                   </TypeAnchor>
@@ -394,7 +392,11 @@ export const LoyaltyPointsTable = memo(
           size: 10,
           accessorFn: (row) =>
             row.requiredItems
-              .map((item) => item.marketStats?.sell.percentile ?? 0)
+              .map(
+                (item) =>
+                  (item.marketStats?.sell.percentile ?? 0) *
+                  (item.quantity ?? 1),
+              )
               .reduce((a, b) => a + b, 0),
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
@@ -409,7 +411,11 @@ export const LoyaltyPointsTable = memo(
           accessorFn: (row) =>
             (row.marketStats?.sell.percentile ?? 0) -
             row.requiredItems
-              .map((item) => item.marketStats?.sell.percentile ?? 0)
+              .map(
+                (item) =>
+                  (item.marketStats?.sell.percentile ?? 0) *
+                  (item.quantity ?? 1),
+              )
               .reduce((a, b) => a + b, 0),
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
@@ -425,7 +431,11 @@ export const LoyaltyPointsTable = memo(
             ((row.marketStats?.sell.percentile ?? 0) -
               (row.iskCost ?? 0) -
               row.requiredItems
-                .map((item) => item.marketStats?.sell.percentile ?? 0)
+                .map(
+                  (item) =>
+                    (item.marketStats?.sell.percentile ?? 0) *
+                    (item.quantity ?? 1),
+                )
                 .reduce((a, b) => a + b, 0)) /
             row.lpCost,
           Cell: ({ row, cell }) => {
@@ -459,7 +469,11 @@ export const LoyaltyPointsTable = memo(
           size: 10,
           accessorFn: (row) =>
             row.requiredItems
-              .map((item) => item.marketStats?.buy.percentile ?? 0)
+              .map(
+                (item) =>
+                  (item.marketStats?.buy.percentile ?? 0) *
+                  (item.quantity ?? 1),
+              )
               .reduce((a, b) => a + b, 0),
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
@@ -474,7 +488,11 @@ export const LoyaltyPointsTable = memo(
           accessorFn: (row) =>
             (row.marketStats?.buy.percentile ?? 0) -
             row.requiredItems
-              .map((item) => item.marketStats?.buy.percentile ?? 0)
+              .map(
+                (item) =>
+                  (item.marketStats?.buy.percentile ?? 0) *
+                  (item.quantity ?? 1),
+              )
               .reduce((a, b) => a + b, 0),
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
@@ -490,7 +508,11 @@ export const LoyaltyPointsTable = memo(
             ((row.marketStats?.buy.percentile ?? 0) -
               (row.iskCost ?? 0) -
               row.requiredItems
-                .map((item) => item.marketStats?.buy.percentile ?? 0)
+                .map(
+                  (item) =>
+                    (item.marketStats?.buy.percentile ?? 0) *
+                    (item.quantity ?? 1),
+                )
                 .reduce((a, b) => a + b, 0)) /
             row.lpCost,
           Cell: ({ row, cell }) => {
@@ -523,9 +545,10 @@ export const LoyaltyPointsTable = memo(
             row.requiredItems
               .map(
                 (item) =>
-                  ((item.marketStats?.buy.percentile ?? 0) +
+                  (((item.marketStats?.buy.percentile ?? 0) +
                     (item.marketStats?.sell.percentile ?? 0)) /
-                  2,
+                    2) *
+                  (item.quantity ?? 1),
               )
               .reduce((a, b) => a + b, 0),
           Cell: ({ row, cell }) => {
