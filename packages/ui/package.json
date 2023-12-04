@@ -51,8 +51,8 @@
     "@jitaspace/tsconfig": "*",
     "@types/humanize-duration": "^3.27.2",
     "@types/node": "^18.18.8",
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
+    "@types/react": "^18.2.41",
+    "@types/react-dom": "^18.2.17",
     "eslint": "^8.53.0",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
