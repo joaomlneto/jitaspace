@@ -174,8 +174,8 @@ importers:
         specifier: ^14.0.3
         version: 14.0.3(@babel/core@7.22.1)(react-dom@18.2.0)(react@18.2.0)
       next-auth:
-        specifier: ^4.24.4
-        version: 4.24.4(next@14.0.3)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^4.24.5
+        version: 4.24.5(next@14.0.3)(react-dom@18.2.0)(react@18.2.0)
       next-seo:
         specifier: ^6.4.0
         version: 6.4.0(next@14.0.3)(react-dom@18.2.0)(react@18.2.0)
@@ -274,8 +274,8 @@ importers:
         specifier: ^14.0.3
         version: 14.0.3(@babel/core@7.22.1)(react-dom@18.2.0)(react@18.2.0)
       next-auth:
-        specifier: ^4.24.4
-        version: 4.24.4(next@14.0.3)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^4.24.5
+        version: 4.24.5(next@14.0.3)(react-dom@18.2.0)(react@18.2.0)
       react:
         specifier: 18.2.0
         version: 18.2.0
@@ -2625,7 +2625,7 @@ packages:
     resolution: {integrity: sha512-m4HEDZleaaCH+XgDDsPF15Ht6wTLsgDTeR3WYj9Q/k76JtWhrJjcP4+/XlG8LGT/Rol9qUfOIztXeA84ATpqPQ==}
     dependencies:
       '@babel/helper-module-imports': 7.22.5
-      '@babel/runtime': 7.22.5
+      '@babel/runtime': 7.23.2
       '@emotion/hash': 0.9.1
       '@emotion/memoize': 0.8.1
       '@emotion/serialize': 1.1.2
@@ -3965,7 +3965,7 @@ packages:
     peerDependencies:
       redux: ^3.1.0 || ^4.0.0
     dependencies:
-      '@babel/runtime': 7.22.5
+      '@babel/runtime': 7.23.2
       immutable: 4.3.4
       redux: 4.2.1
     dev: false
@@ -9054,8 +9054,8 @@ packages:
     engines: {node: '>= 0.4.0'}
     dev: false
 
-  /next-auth@4.24.4(next@14.0.3)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-5DGffi+OpkbU62vPQIJ1z+hFnmow+ec5Qrn9m6eoglIO51m0DlrmLxBduZEwKAYDEg9k2joi1yelgmq1vqK3aQ==}
+  /next-auth@4.24.5(next@14.0.3)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-3RafV3XbfIKk6rF6GlLE4/KxjTcuMCifqrmD+98ejFq73SRoj2rmzoca8u764977lH/Q7jo6Xu6yM+Re1Mz/Og==}
     peerDependencies:
       next: ^12.2.5 || ^13 || ^14
       nodemailer: ^6.6.5
@@ -9065,7 +9065,7 @@ packages:
       nodemailer:
         optional: true
     dependencies:
-      '@babel/runtime': 7.22.5
+      '@babel/runtime': 7.23.2
       '@panva/hkdf': 1.1.1
       cookie: 0.5.0
       jose: 4.15.4
@@ -10166,7 +10166,7 @@ packages:
   /react-base16-styling@0.9.1:
     resolution: {integrity: sha512-1s0CY1zRBOQ5M3T61wetEpvQmsYSNtWEcdYzyZNxKa8t7oDvaOn9d21xrGezGAHFWLM7SHcktPuPTrvoqxSfKw==}
     dependencies:
-      '@babel/runtime': 7.22.5
+      '@babel/runtime': 7.23.2
       '@types/base16': 1.0.2
       '@types/lodash': 4.14.198
       base16: 1.0.0
@@ -10201,7 +10201,7 @@ packages:
     peerDependencies:
       react: '>=16.13.1'
     dependencies:
-      '@babel/runtime': 7.22.5
+      '@babel/runtime': 7.23.2
       react: 18.2.0
     dev: false
 
@@ -10224,7 +10224,7 @@ packages:
       '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
-      '@babel/runtime': 7.22.5
+      '@babel/runtime': 7.23.2
       '@types/lodash': 4.14.198
       '@types/react': 18.2.41
       react: 18.2.0
