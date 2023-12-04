@@ -16,16 +16,16 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@kubb/cli": "^1.14.6",
-    "@kubb/core": "^1.14.6",
-    "@kubb/swagger": "^1.14.6",
-    "@kubb/swagger-client": "^1.14.6",
-    "@kubb/swagger-tanstack-query": "^1.14.6",
-    "@kubb/swagger-ts": "^1.14.6",
-    "@kubb/swagger-zod": "^1.14.6",
-    "@kubb/swagger-zodios": "^1.14.6",
+    "@kubb/cli": "^1.14.9",
+    "@kubb/core": "^1.14.9",
+    "@kubb/swagger": "^1.14.9",
+    "@kubb/swagger-client": "^1.14.9",
+    "@kubb/swagger-tanstack-query": "^1.14.9",
+    "@kubb/swagger-ts": "^1.14.9",
+    "@kubb/swagger-zod": "^1.14.9",
+    "@kubb/swagger-zodios": "^1.14.9",
     "@zodios/core": "^10.9.6",
-    "axios": "^1.6.0",
+    "axios": "^1.6.2",
     "react": "18.2.0",
     "zod": "^3.22.4"
   },
@@ -33,10 +33,10 @@
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
-    "@types/node": "^18.18.8",
+    "@types/node": "^18.19.2",
     "@types/react": "^18.2.41",
-    "eslint": "^8.53.0",
-    "prettier": "^3.0.3",
-    "typescript": "^5.2.2"
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.3.2"
   }
 }
