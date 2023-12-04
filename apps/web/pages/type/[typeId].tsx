@@ -102,7 +102,6 @@ export default function Page({
   typeDescription,
 }: PageProps) {
   const router = useRouter();
-  console.log({ typeId });
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();
   const [regionId, setRegionId] = useState(10000002);

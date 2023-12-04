@@ -17,7 +17,6 @@
     "kubb:generate": "turbo kubb:generate",
     "lint": "turbo lint --continue -- --cache --cache-location 'node_modules/.cache/.eslintcache' && manypkg check",
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location 'node_modules/.cache/.eslintcache' && manypkg fix",
-    "orval:generate": "turbo orval:generate",
     "type-check": "turbo type-check",
     "publish-packages": "turbo run build lint test && changeset version && changeset publish",
     "preinstall": "npx only-allow pnpm",

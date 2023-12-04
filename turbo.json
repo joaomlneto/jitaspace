@@ -1,20 +1,30 @@
 {
   "$schema": "https://turborepo.org/schema.json",
-  "globalDependencies": ["**/.env"],
+  "globalDependencies": [
+    "**/.env"
+  ],
   "pipeline": {
     "topo": {
-      "dependsOn": ["^topo"]
+      "dependsOn": [
+        "^topo"
+      ]
     },
     "db:generate": {
-      "inputs": ["prisma/schema.prisma"],
+      "inputs": [
+        "prisma/schema.prisma"
+      ],
       "cache": false
     },
     "db:generate:watch": {
-      "inputs": ["prisma/schema.prisma"],
+      "inputs": [
+        "prisma/schema.prisma"
+      ],
       "cache": false
     },
     "db:push": {
-      "inputs": ["prisma/schema.prisma"],
+      "inputs": [
+        "prisma/schema.prisma"
+      ],
       "cache": false
     },
     "dev": {
@@ -22,16 +32,33 @@
       "cache": false
     },
     "build": {
-      "dependsOn": ["^build", "^db:generate", "kubb:generate", "orval:generate"],
-      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts", ".expo/**", "dist/**"]
+      "dependsOn": [
+        "^build",
+        "^db:generate",
+        "kubb:generate"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "next-env.d.ts",
+        ".expo/**",
+        "dist/**"
+      ]
     },
     "format": {
-      "outputs": ["node_modules/.cache/.prettiercache"],
+      "outputs": [
+        "node_modules/.cache/.prettiercache"
+      ],
       "outputMode": "new-only"
     },
     "lint": {
-      "dependsOn": ["^topo"],
-      "outputs": ["node_modules/.cache/.eslintcache"]},
+      "dependsOn": [
+        "^topo"
+      ],
+      "outputs": [
+        "node_modules/.cache/.eslintcache"
+      ]
+    },
     "lint:fix": {},
     "analyze": {},
     "clean": {
@@ -41,17 +68,23 @@
       "cache": false
     },
     "kubb:generate": {
-      "dependsOn": ["^build", "^db:generate"],
-      "outputs": ["generated/**", "generated/**"]
-    },
-    "orval:generate": {
-      "dependsOn": ["^build", "^db:generate"],
-      "outputs": ["generated/**", "generated/**"]
+      "dependsOn": [
+        "^build",
+        "^db:generate"
+      ],
+      "outputs": [
+        "generated/**",
+        "generated/**"
+      ]
     },
     "test": {},
     "type-check": {
-      "dependsOn": ["^topo"],
-      "outputs": ["node_modules/.cache/tsbuildinfo.json"]
+      "dependsOn": [
+        "^topo"
+      ],
+      "outputs": [
+        "node_modules/.cache/tsbuildinfo.json"
+      ]
     }
   },
   "globalEnv": [
