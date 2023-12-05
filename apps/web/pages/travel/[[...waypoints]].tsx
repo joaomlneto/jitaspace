@@ -51,7 +51,11 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
         securityStatus: true,
         stargates: {
           select: {
-            destinationStargateId: true,
+            DestinationStargate: {
+              select: {
+                solarSystemId: true,
+              },
+            },
           },
         },
       },
@@ -66,7 +70,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
         name: solarSystem.name,
         securityStatus: solarSystem.securityStatus.toNumber(),
         neighbors: solarSystem.stargates.flatMap(
-          (stargate) => stargate.destinationStargateId!,
+          (stargate) => stargate.DestinationStargate!.solarSystemId!,
         ),
       };
     });
@@ -117,8 +121,8 @@ export default function Page({ solarSystems, initialWaypoints }: PageProps) {
   const graph = useMemo(() => {
     const graph = createGraph();
     // create all nodes
-    Object.entries(solarSystems ?? {}).forEach(([v]) => {
-      graph.addNode(v);
+    Object.entries(solarSystems ?? {}).forEach(([v, solarSystem]) => {
+      graph.addNode(v, solarSystem);
     });
     // create all edges
     Object.entries(solarSystems ?? {}).forEach(([v, { neighbors }]) => {
@@ -139,9 +143,7 @@ export default function Page({ solarSystems, initialWaypoints }: PageProps) {
     console.time("PATH FIND");
     const pathFinder = path.nba(graph, {
       distance(fromNode, toNode, link) {
-        const destinationSecurityStatus =
-          // @ts-expect-error this is guaranteed to succeed, type-wise
-          solarSystems[toNode.id].securityStatus;
+        const destinationSecurityStatus = toNode.data.securityStatus;
         if (destinationSecurityStatus < 0) return 1 + nullSecPenalty;
         if (destinationSecurityStatus < 0.5) return 1 + lowSecPenalty;
         if (destinationSecurityStatus >= 0.5) return 1 + highSecPenalty;
