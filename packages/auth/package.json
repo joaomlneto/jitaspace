@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@hapi/iron": "^7.0.1",
     "@jitaspace/esi-metadata": "*",
     "next": "^14.0.3",
     "next-auth": "^4.24.5",
