@@ -29,7 +29,7 @@ export const useEsiUniverseIdsFromNames = (names: string[]) => {
 
   useEffect(() => {
     const fetchIds = async () => {
-      const f = await postUniverseIds(JSON.stringify(sortedNames));
+      const f = await postUniverseIds(sortedNames);
       if (f.status >= 400) {
         setResult({
           loading: false,
