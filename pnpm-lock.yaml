@@ -41,6 +41,9 @@ importers:
       '@emotion/server':
         specifier: ^11.11.0
         version: 11.11.0
+      '@hapi/iron':
+        specifier: ^7.0.1
+        version: 7.0.1
       '@jitaspace/auth':
         specifier: '*'
         version: link:../../packages/auth

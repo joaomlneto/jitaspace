@@ -18,6 +18,7 @@
     "@ducanh2912/next-pwa": "^9.7.2",
     "@emotion/react": "^11.11.1",
     "@emotion/server": "^11.11.0",
+    "@hapi/iron": "^7.0.1",
     "@jitaspace/auth": "*",
     "@jitaspace/db": "*",
     "@jitaspace/esi-client": "*",
