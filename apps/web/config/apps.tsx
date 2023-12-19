@@ -23,7 +23,6 @@ import {
   WalletIcon,
   type EveIconProps,
 } from "@jitaspace/eve-icons";
-import { TotalUnreadMailsIndicator } from "@jitaspace/ui";
 
 export type AppScopeSet = {
   reason: string;
@@ -50,11 +49,7 @@ export const characterApps: Record<string, JitaApp> = {
     name: "EveMail",
     description: "Access your correspondence whilst out of the game.",
     url: "/mail",
-    Icon: (props) => (
-      <TotalUnreadMailsIndicator position="bottom-end" offset={8}>
-        <EveMailIcon {...props} />
-      </TotalUnreadMailsIndicator>
-    ),
+    Icon: (props) => <EveMailIcon {...props} />,
     scopes: {
       required: [
         {
