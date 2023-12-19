@@ -13,7 +13,6 @@ const config = {
 
     /** Enables hot reloading for local packages without a build step */
     transpilePackages: [
-        "jotai-devtools",
         "@jitaspace/auth",
         "@jitaspace/db",
         "@jitaspace/esi-metadata",
@@ -62,10 +61,6 @@ const config = {
                 permanent: false,
             },
         ];
-    },
-
-    experimental: {
-        swcPlugins: [["@swc-jotai/react-refresh", {}]],
     },
 };
 
