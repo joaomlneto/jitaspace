@@ -15,21 +15,15 @@ import { Notifications, showNotification } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
-import { Provider } from "jotai";
-import { DevTools } from "jotai-devtools";
 import type { Session } from "next-auth";
 import { SessionProvider, useSession } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 import { Workbox } from "workbox-window";
+import z from "zod";
 
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
-import {
-  EsiClientContextProvider,
-  getEveSsoAccessTokenPayload,
-  JitaSpaceEsiClientContextProvider,
-  useEsiClientContext,
-} from "@jitaspace/hooks";
+import { getEveSsoAccessTokenPayload, useAuthStore } from "@jitaspace/hooks";
 
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
@@ -53,7 +47,7 @@ type AppPropsWithLayout = AppProps<{
  */
 const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
   const { data: session, status, update } = useSession();
-  const { setAuth } = useEsiClientContext();
+  const { addCharacter, characters } = useAuthStore();
 
   // decode token payload
   const tokenPayload = useMemo(
@@ -61,7 +55,7 @@ const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
     [session?.accessToken],
   );
 
-  // refresh token if
+  // refresh token if expired or close to expiring
   useEffect(() => {
     if (!tokenPayload) return;
     const expDate = new Date(tokenPayload.exp * 1000);
@@ -80,12 +74,85 @@ const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
     return () => clearTimeout(timer);
   }, [tokenPayload, update]);
 
+  /*
   useEffect(() => {
     setAuth({
       accessToken: session?.accessToken,
       loading: status === "loading",
     });
-  }, [session?.accessToken, setAuth, status]);
+  }, [session?.accessToken, setAuth, status]);*/
+
+  // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  // Below are things for the new React Auth module supporting multiple characters
+  // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+  // This useEffect is here to import the current next-auth token (if available)
+  useEffect(() => {
+    if (session) {
+      console.log({ session });
+      addCharacter({
+        accessToken: session.accessToken,
+        refreshToken: session.encryptedRefreshToken,
+      });
+    }
+  }, [session?.accessToken, session?.encryptedRefreshToken]);
+
+  // this refreshes tokens that expired or are close to expiring
+  useEffect(() => {
+    console.log("TokenManagerV2-useEffect!");
+    if (!characters) return;
+    console.log("detected characters!");
+    const timeUntilExpiration = () => {
+      const now = new Date().getTime();
+      return Math.min(
+        ...Object.values(characters).map(
+          (character) =>
+            new Date(character.accessTokenExpirationDate).getTime() - now,
+        ),
+      );
+    };
+    console.log("time until expiration", timeUntilExpiration());
+    const timer = setTimeout(
+      () => {
+        console.log(
+          `updating session: token expires in ${
+            timeUntilExpiration() / 1000
+          } seconds`,
+        );
+        //void update();
+        const now = new Date().getTime();
+        const candidateCharacters = Object.values(characters).filter(
+          (character) =>
+            new Date(character.accessTokenExpirationDate).getTime() - now <
+            30000 + 10000 /* account for some clock drift */,
+        );
+        console.log("tokens to update", candidateCharacters);
+        candidateCharacters.forEach((character) => {
+          fetch("/api/auth2/refresh", {
+            method: "POST",
+            body: character.refreshToken,
+          })
+            .then((res) => res.json())
+            .then((res) => {
+              const responseSchema = z.object({
+                accessToken: z.string(),
+                refreshTokenData: z.string(),
+              });
+              const { accessToken, refreshTokenData } =
+                responseSchema.parse(res);
+              addCharacter({
+                accessToken,
+                refreshToken: refreshTokenData,
+              });
+            });
+        });
+      },
+      Math.max(timeUntilExpiration() - 30000, 1000),
+    );
+    return () => clearTimeout(timer);
+  }, [characters]);
+
+  // TODO: another useEffect for when a token does expire, blocking it from being used to send requests to ESI!!!
 
   return children;
 };
@@ -97,7 +164,7 @@ export default function App({
   const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
   const requiredScopes = Component.requiredScopes;
 
-  const [queryClient] = React.useState(() => new QueryClient());
+  const [queryClient, setQueryClient] = React.useState(() => new QueryClient());
 
   // This hook only run once in browser after the component is rendered for the first time.
   // It has same effect as the old componentDidMount lifecycle callback.
@@ -221,39 +288,33 @@ export default function App({
 
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
-        <DevTools />
-        <Provider>
-          <SessionProvider session={session}>
-            <EsiClientContextProvider accessToken={session?.accessToken}>
-              <JitaSpaceEsiClientContextProvider>
-                <EsiClientSSOAccessTokenInjector>
-                  <EveIconsContextProvider /* iconVersion="rhea"*/>
-                    <MantineProvider
-                      withGlobalStyles
-                      withNormalizeCSS
-                      theme={{ colorScheme: "dark" }}
-                    >
-                      <Notifications />
-                      <RouterTransition />
-                      <JitaSpotlightProvider>
-                        <ModalsProvider
-                          modals={contextModals}
-                          modalProps={{ centered: true }}
-                        >
-                          {getLayout(
-                            <ScopeGuard requiredScopes={requiredScopes}>
-                              <Component {...pageProps} />
-                            </ScopeGuard>,
-                          )}
-                        </ModalsProvider>
-                      </JitaSpotlightProvider>
-                    </MantineProvider>
-                  </EveIconsContextProvider>
-                </EsiClientSSOAccessTokenInjector>
-              </JitaSpaceEsiClientContextProvider>
-            </EsiClientContextProvider>
-          </SessionProvider>
-        </Provider>
+
+        <SessionProvider session={session}>
+          <EsiClientSSOAccessTokenInjector>
+            <EveIconsContextProvider /* iconVersion="rhea"*/>
+              <MantineProvider
+                withGlobalStyles
+                withNormalizeCSS
+                theme={{ colorScheme: "dark" }}
+              >
+                <Notifications />
+                <RouterTransition />
+                <JitaSpotlightProvider>
+                  <ModalsProvider
+                    modals={contextModals}
+                    modalProps={{ centered: true }}
+                  >
+                    {getLayout(
+                      <ScopeGuard requiredScopes={requiredScopes}>
+                        <Component {...pageProps} />
+                      </ScopeGuard>,
+                    )}
+                  </ModalsProvider>
+                </JitaSpotlightProvider>
+              </MantineProvider>
+            </EveIconsContextProvider>
+          </EsiClientSSOAccessTokenInjector>
+        </SessionProvider>
       </QueryClientProvider>
     </>
   );
