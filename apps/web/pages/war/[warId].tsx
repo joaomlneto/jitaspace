@@ -5,7 +5,7 @@ import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
 import { WarReportIcon } from "@jitaspace/eve-icons";
-import { useWar } from "@jitaspace/hooks";
+import { useSelectedCharacter, useWar } from "@jitaspace/hooks";
 import {
   AllianceAnchor,
   AllianceAvatar,
@@ -33,6 +33,7 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const warId = parseInt(router.query.warId as string);
+  const character = useSelectedCharacter();
   const { data: war } = useWar(warId);
 
   return (
@@ -87,12 +88,15 @@ export default function Page() {
               </Text>
             </div>
 
-            <OpenInformationWindowActionIcon
-              entityId={
-                war?.data.aggressor.corporation_id ??
-                war?.data.aggressor.alliance_id
-              }
-            />
+            {character && (
+              <OpenInformationWindowActionIcon
+                characterId={character.characterId}
+                entityId={
+                  war?.data.aggressor.corporation_id ??
+                  war?.data.aggressor.alliance_id
+                }
+              />
+            )}
           </Group>
           <Group spacing="xl" noWrap>
             <WarDefenderAvatar warId={warId} size="xl" />
@@ -115,12 +119,15 @@ export default function Page() {
               </Text>
             </div>
 
-            <OpenInformationWindowActionIcon
-              entityId={
-                war?.data.aggressor.corporation_id ??
-                war?.data.aggressor.alliance_id
-              }
-            />
+            {character && (
+              <OpenInformationWindowActionIcon
+                characterId={character.characterId}
+                entityId={
+                  war?.data.aggressor.corporation_id ??
+                  war?.data.aggressor.alliance_id
+                }
+              />
+            )}
           </Group>
         </Group>
 

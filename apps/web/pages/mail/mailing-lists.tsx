@@ -2,16 +2,19 @@ import React, { type ReactElement } from "react";
 import { Container, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
+import { useSelectedCharacter } from "@jitaspace/hooks";
+
 import { MailingListsTable } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
 
 export default function Page() {
+  const character = useSelectedCharacter();
   return (
     <Container>
       <Stack>
         <Title order={1}>Mailing List Subscriptions</Title>
-        <MailingListsTable />
+        {character && <MailingListsTable characterId={character.characterId} />}
       </Stack>
     </Container>
   );

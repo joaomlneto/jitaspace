@@ -14,7 +14,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useCorporation } from "@jitaspace/hooks";
+import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
@@ -32,6 +32,7 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const corporationId = parseInt(router.query.corporationId as string);
+  const character = useSelectedCharacter();
   const { data: corporation } = useCorporation(corporationId);
 
   return (
@@ -49,7 +50,12 @@ export default function Page() {
           {corporation?.data.ticker && (
             <Badge>{corporation?.data.ticker}</Badge>
           )}
-          <OpenInformationWindowActionIcon entityId={corporationId} />
+          {character && (
+            <OpenInformationWindowActionIcon
+              characterId={character.characterId}
+              entityId={corporationId}
+            />
+          )}
         </Group>
         <Group>
           <Link

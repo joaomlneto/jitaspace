@@ -12,7 +12,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useStation } from "@jitaspace/hooks";
+import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,
@@ -30,6 +30,7 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const stationId = parseInt(router.query.stationId as string);
+  const character = useSelectedCharacter();
   const { data: station } = useStation(stationId);
 
   return (
@@ -40,7 +41,12 @@ export default function Page() {
           <Title order={3}>
             <StationName span stationId={stationId} />
           </Title>
-          <SetAutopilotDestinationActionIcon destinationId={stationId} />
+          {character && (
+            <SetAutopilotDestinationActionIcon
+              characterId={character.characterId}
+              destinationId={stationId}
+            />
+          )}
         </Group>
         <Group>
           <Link

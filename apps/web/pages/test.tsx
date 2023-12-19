@@ -2,7 +2,7 @@ import React, { useMemo, type ReactElement } from "react";
 import { Container, Group, JsonInput, Text, Title } from "@mantine/core";
 import { useSession } from "next-auth/react";
 
-import { useMultipleSessions } from "@jitaspace/hooks";
+import { useAuthStore } from "@jitaspace/hooks";
 import { CharacterAvatar, TimeAgoText } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
@@ -10,7 +10,7 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const { data: session, status, update } = useSession();
-  const x = useMultipleSessions();
+  const x = useAuthStore();
   const characters = useMemo(
     () =>
       Object.values(x.characters ?? {}).map((char) => ({

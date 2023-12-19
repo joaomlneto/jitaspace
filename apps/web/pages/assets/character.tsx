@@ -24,6 +24,7 @@ import {
   useEsiNamePrefetch,
   useEsiNamesCache,
   useMarketPrices,
+  useSelectedCharacter,
 } from "@jitaspace/hooks";
 import { AssetLocationSelect, ISKAmount } from "@jitaspace/ui";
 
@@ -34,7 +35,8 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const forceUpdate = useForceUpdate();
-  const { assets, isLoading } = useCharacterAssets();
+  const character = useSelectedCharacter();
+  const { assets, isLoading } = useCharacterAssets(character?.characterId);
   const filterForm = useForm<{ location_id: number | null; name: string }>({
     initialValues: {
       location_id: null,

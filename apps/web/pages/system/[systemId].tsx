@@ -14,7 +14,11 @@ import {
 import { IconExternalLink } from "@tabler/icons-react";
 
 import { IndustryIcon } from "@jitaspace/eve-icons";
-import { useSolarSystem, useSolarSystemCostIndices } from "@jitaspace/hooks";
+import {
+  useSelectedCharacter,
+  useSolarSystem,
+  useSolarSystemCostIndices,
+} from "@jitaspace/hooks";
 import { useGetSolarSystemById } from "@jitaspace/sde-client";
 import {
   AsteroidBeltName,
@@ -44,6 +48,7 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const systemId = parseInt(router.query.systemId as string);
+  const character = useSelectedCharacter();
   const { data: solarSystem } = useSolarSystem(systemId);
   const { data: sdeSolarSystem } = useGetSolarSystemById(systemId);
   const { data: solarSystemCostIndicesData } = useSolarSystemCostIndices();
@@ -56,7 +61,12 @@ export default function Page() {
             <Group>
               <SolarSystemName span solarSystemId={systemId} />
               <SolarSystemSecurityStatusBadge solarSystemId={systemId} />
-              <SetAutopilotDestinationActionIcon destinationId={systemId} />
+              {character && (
+                <SetAutopilotDestinationActionIcon
+                  characterId={character.characterId}
+                  destinationId={systemId}
+                />
+              )}
             </Group>
           </Title>
         </Group>

@@ -21,6 +21,7 @@ import {
   useEsiNamePrefetch,
   useEsiNamesCache,
   useMarketPrices,
+  useSelectedCharacter,
 } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
@@ -32,8 +33,12 @@ import {
 
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
-  const { assets, isLoading, errorMessage } = useCorporationAssets();
+  const character = useSelectedCharacter();
+  const { assets, isLoading, errorMessage } = useCorporationAssets(
+    character?.corporationId,
+  );
   const filterForm = useForm<{ location_id: number | null; name: string }>({
     initialValues: {
       location_id: null,

@@ -1,7 +1,9 @@
 import React, { type ReactElement } from "react";
 import Image, { type ImageProps } from "next/image";
 import Link, { type LinkProps } from "next/link";
+import { useRouter } from "next/router";
 import {
+  ActionIcon,
   Badge,
   Card,
   Container,
@@ -9,10 +11,22 @@ import {
   Group,
   rem,
   SimpleGrid,
+  Stack,
   Text,
   Title,
   UnstyledButton,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
+import { IconCircleX, IconFocus } from "@tabler/icons-react";
+
+import { EveMailIcon } from "@jitaspace/eve-icons";
+import { useAuthStore } from "@jitaspace/hooks";
+import {
+  CharacterAnchor,
+  CharacterAvatar,
+  CharacterName,
+  TotalUnreadMailsIndicator,
+} from "@jitaspace/ui";
 
 import { characterApps, universeApps } from "~/config/apps";
 import { MainLayout } from "~/layouts";
@@ -90,10 +104,84 @@ const useStyles = createStyles((theme) => ({
 }));
 
 export default function Page() {
+  const router = useRouter();
   const { classes, theme } = useStyles();
+  const { characters, removeCharacter, selectCharacter, selectedCharacter } =
+    useAuthStore();
 
   return (
     <Container size="lg">
+      {selectedCharacter && (
+        <>
+          <Title order={4}>Selected Character</Title>
+          <Group>
+            <CharacterAvatar characterId={selectedCharacter} size="sm" />
+            <CharacterAnchor characterId={selectedCharacter}>
+              <CharacterName characterId={selectedCharacter} />
+            </CharacterAnchor>
+          </Group>
+        </>
+      )}
+      <Title order={3}>Your Characters</Title>
+      <Stack my="md" spacing="xs">
+        {Object.values(characters).map((character) => (
+          <Group position="apart" key={character.characterId}>
+            <Group>
+              <CharacterAvatar characterId={character.characterId} size="sm" />
+              <CharacterAnchor characterId={character.characterId}>
+                <CharacterName characterId={character.characterId} />
+              </CharacterAnchor>
+            </Group>
+            <Group>
+              <ActionIcon
+                radius="xl"
+                variant="subtle"
+                onClick={() => {
+                  selectCharacter(character.characterId);
+                  router.push("/mail");
+                }}
+              >
+                <TotalUnreadMailsIndicator
+                  characterId={character.characterId}
+                  offset={8}
+                >
+                  <EveMailIcon width={32} />
+                </TotalUnreadMailsIndicator>
+              </ActionIcon>
+              <ActionIcon
+                radius="xl"
+                variant="subtle"
+                onClick={() => {
+                  selectCharacter(character.characterId);
+                }}
+              >
+                <IconFocus />
+              </ActionIcon>
+              <ActionIcon
+                radius="xl"
+                variant="subtle"
+                onClick={() =>
+                  modals.openConfirmModal({
+                    title: `Log out ${character.accessTokenPayload.name}?`,
+                    children: (
+                      <Text size="sm">
+                        Are you sure you want to log out from character{" "}
+                        {character.accessTokenPayload.name}?
+                      </Text>
+                    ),
+                    labels: { confirm: "Confirm", cancel: "Cancel" },
+                    onConfirm: () => {
+                      removeCharacter(character.characterId);
+                    },
+                  })
+                }
+              >
+                <IconCircleX />
+              </ActionIcon>
+            </Group>
+          </Group>
+        ))}
+      </Stack>
       <Title order={3}>Capsuleer Tools</Title>
       <SimpleGrid
         cols={3}

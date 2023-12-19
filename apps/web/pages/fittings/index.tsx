@@ -12,7 +12,7 @@ import { NextSeo } from "next-seo";
 
 import { ESIScope } from "@jitaspace/esi-metadata";
 import { FittingIcon } from "@jitaspace/eve-icons";
-import { useCharacterFittings, useEsiClientContext } from "@jitaspace/hooks";
+import { useCharacterFittings, useSelectedCharacter } from "@jitaspace/hooks";
 import { EveEntitySelect } from "@jitaspace/ui";
 
 import {
@@ -24,8 +24,8 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const [selectedShipType, setSelectedShipType] = useState<string | null>(null);
-  const { scopes } = useEsiClientContext();
-  const { data } = useCharacterFittings();
+  const character = useSelectedCharacter();
+  const { data } = useCharacterFittings(character?.characterId);
 
   const shipTypeIds = useMemo(
     () => [...new Set(data?.data.map((fitting) => fitting.ship_type_id) ?? [])],
@@ -48,10 +48,11 @@ export default function Page() {
   ];
   const hasScopesForCurrentFit = useMemo(
     () =>
-      requiredScopesForCurrentFit.every((requiredScope) =>
-        scopes.includes(requiredScope),
+      requiredScopesForCurrentFit.every(
+        (requiredScope) =>
+          character?.accessTokenPayload.scp.includes(requiredScope),
       ),
-    [scopes],
+    [requiredScopesForCurrentFit, character?.accessTokenPayload.scp],
   );
 
   return (
@@ -62,7 +63,7 @@ export default function Page() {
           <Title order={1}>Fittings</Title>
         </Group>
         <Title order={4}>Current Ship Fitting</Title>
-        {hasScopesForCurrentFit ? (
+        {character && hasScopesForCurrentFit ? (
           <UnstyledButton
             onClick={() => {
               openContextModal({
@@ -70,7 +71,7 @@ export default function Page() {
                 withCloseButton: false,
                 size: "sm",
                 padding: 0,
-                innerProps: {},
+                innerProps: { characterId: character.characterId },
                 style: {
                   padding: 0,
                   margin: 0,
@@ -78,7 +79,10 @@ export default function Page() {
               });
             }}
           >
-            <EsiCurrentShipFittingCard hideModules />
+            <EsiCurrentShipFittingCard
+              characterId={character.characterId}
+              hideModules
+            />
           </UnstyledButton>
         ) : (
           <Text color="dimmed" size="sm">
@@ -128,10 +132,13 @@ export default function Page() {
                 });
               }}
             >
-              <EsiCharacterShipFittingCard
-                fittingId={fit.fitting_id}
-                hideModules
-              />
+              {character && (
+                <EsiCharacterShipFittingCard
+                  characterId={character.characterId}
+                  fittingId={fit.fitting_id}
+                  hideModules
+                />
+              )}
             </UnstyledButton>
           ))}
         </Stack>

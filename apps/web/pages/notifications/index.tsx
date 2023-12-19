@@ -12,7 +12,10 @@ import { IconMail, IconMailOpened } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
 
 import { MemberIcon } from "@jitaspace/eve-icons";
-import { useEsiCharacterNotifications } from "@jitaspace/hooks";
+import {
+  useEsiCharacterNotifications,
+  useSelectedCharacter,
+} from "@jitaspace/hooks";
 import {
   EveEntityAvatar,
   EveEntityName,
@@ -24,7 +27,8 @@ import { MainLayout } from "~/layouts";
 
 
 export default function Page() {
-  const { data } = useEsiCharacterNotifications();
+  const character = useSelectedCharacter();
+  const { data } = useEsiCharacterNotifications(character?.characterId);
   return (
     <Container size="xl">
       <Stack>

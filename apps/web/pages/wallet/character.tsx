@@ -3,14 +3,18 @@ import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
 import { WalletIcon } from "@jitaspace/eve-icons";
-import { useCharacterWalletJournal } from "@jitaspace/hooks";
+import {
+  useCharacterWalletJournal,
+  useSelectedCharacter,
+} from "@jitaspace/hooks";
 
 import { WalletTable } from "~/components/Wallet";
 import { MainLayout } from "~/layouts";
 
 
 export default function Page() {
-  const { data } = useCharacterWalletJournal();
+  const character = useSelectedCharacter();
+  const { data } = useCharacterWalletJournal(character?.characterId);
 
   return (
     <Container size="xl">

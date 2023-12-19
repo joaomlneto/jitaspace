@@ -15,7 +15,11 @@ import { format } from "date-fns";
 import { NextSeo } from "next-seo";
 
 import { CalendarIcon } from "@jitaspace/eve-icons";
-import { CalendarEvent, useCharacterCalendar } from "@jitaspace/hooks";
+import {
+  CalendarEvent,
+  useCharacterCalendar,
+  useSelectedCharacter,
+} from "@jitaspace/hooks";
 
 import { CalendarEventList } from "~/components/Calendar/CalendarEventList/CalendarEventList";
 import EventsCalendar from "~/components/Calendar/EventsCalendar";
@@ -23,8 +27,9 @@ import { MainLayout } from "~/layouts";
 
 
 export default function Page() {
+  const character = useSelectedCharacter();
   const { events, isLoading, hasMoreEvents, loadMoreEvents } =
-    useCharacterCalendar();
+    useCharacterCalendar(character?.characterId);
 
   const eventsPerDate: {
     [date: string]: CalendarEvent[];
@@ -81,10 +86,13 @@ export default function Page() {
                 <Title order={5}>
                   {format(new Date(parseInt(dateString)), "LLLL dd - EEEE")}
                 </Title>
-                <CalendarEventList
-                  events={eventsPerDate[dateString] ?? []}
-                  highlightOnHover
-                />
+                {character && (
+                  <CalendarEventList
+                    characterId={character.characterId}
+                    events={eventsPerDate[dateString] ?? []}
+                    highlightOnHover
+                  />
+                )}
               </Stack>
             );
           })}

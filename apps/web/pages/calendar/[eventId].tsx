@@ -17,6 +17,7 @@ import {
   CalendarEventAttendeeResponse,
   useCalendarEvent,
   useCalendarEventAttendees,
+  useSelectedCharacter,
 } from "@jitaspace/hooks";
 import {
   CalendarEventHumanDurationText,
@@ -36,9 +37,13 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const eventId = parseInt(toArrayIfNot(router.query.eventId)[0] ?? "");
-  const { data: event, isLoading: eventLoading } = useCalendarEvent(eventId);
+  const character = useSelectedCharacter();
+  const { data: event, isLoading: eventLoading } = useCalendarEvent(
+    character?.characterId,
+    eventId,
+  );
   const { data: attendees, isLoading: attendeesLoading } =
-    useCalendarEventAttendees(eventId);
+    useCalendarEventAttendees(character?.characterId, eventId);
 
   const loading = eventLoading || attendeesLoading;
 
@@ -93,18 +98,34 @@ export default function Page() {
           </Group>
           <Group position="apart">
             <Text>Duration</Text>
-            <CalendarEventHumanDurationText eventId={eventId} />
+            {character && (
+              <CalendarEventHumanDurationText
+                characterId={character.characterId}
+                eventId={eventId}
+              />
+            )}
           </Group>
           <Group position="apart">
             <Text>Owner</Text>
             <Group noWrap>
-              <CalendarEventOwnerAvatar eventId={eventId} size="sm" />
+              {character && (
+                <CalendarEventOwnerAvatar
+                  characterId={character.characterId}
+                  eventId={eventId}
+                  size="sm"
+                />
+              )}
               <EveEntityNameAnchor entityId={event?.data.owner_id} />
             </Group>
           </Group>
           <Group position="apart">
             <Text>Response</Text>
-            <CalendarEventResponseBadge eventId={eventId} />
+            {character && (
+              <CalendarEventResponseBadge
+                characterId={character.characterId}
+                eventId={eventId}
+              />
+            )}
           </Group>
           <Title order={4} mt="xl">
             Attendees

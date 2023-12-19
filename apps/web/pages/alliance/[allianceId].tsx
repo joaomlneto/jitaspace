@@ -17,6 +17,7 @@ import { format } from "date-fns";
 import {
   useEsiAllianceInformation,
   useEsiAllianceMemberCorporations,
+  useSelectedCharacter,
 } from "@jitaspace/hooks";
 import {
   AllianceAvatar,
@@ -34,6 +35,7 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
+  const character = useSelectedCharacter();
   const allianceId = parseInt(router.query.allianceId as string);
   const { data: alliance } = useEsiAllianceInformation(allianceId);
   const { data: allianceCorporations } =
@@ -48,7 +50,12 @@ export default function Page() {
             <AllianceName span allianceId={allianceId} />
           </Title>
           {alliance?.data.ticker && <Badge>{alliance?.data.ticker}</Badge>}
-          <OpenInformationWindowActionIcon entityId={allianceId} />
+          {character !== null && (
+            <OpenInformationWindowActionIcon
+              characterId={character.characterId}
+              entityId={allianceId}
+            />
+          )}
         </Group>
         <Group>
           <Link

@@ -13,7 +13,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useCharacter } from "@jitaspace/hooks";
+import { useCharacter, useSelectedCharacter } from "@jitaspace/hooks";
 import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
@@ -44,6 +44,8 @@ export default function Page() {
   const router = useRouter();
   const characterId = parseInt(router.query.characterId as string);
 
+  const selectedCharacter = useSelectedCharacter();
+
   const { data: character } = useCharacter(characterId);
 
   const { data: agentDivision } = useGetNpcCorporationDivisionById(
@@ -71,7 +73,12 @@ export default function Page() {
                 : "NPC"}
             </Badge>
           )}
-          <OpenInformationWindowActionIcon entityId={characterId} />
+          {selectedCharacter && (
+            <OpenInformationWindowActionIcon
+              characterId={selectedCharacter.characterId}
+              entityId={characterId}
+            />
+          )}
         </Group>
         <Group>
           <Link

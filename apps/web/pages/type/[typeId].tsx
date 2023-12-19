@@ -20,6 +20,7 @@ import { prisma } from "@jitaspace/db";
 import {
   useFuzzworkTypeMarketStats,
   useMarketPrices,
+  useSelectedCharacter,
   useType,
 } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
@@ -102,6 +103,7 @@ export default function Page({
   typeDescription,
 }: PageProps) {
   const router = useRouter();
+  const character = useSelectedCharacter();
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();
   const [regionId, setRegionId] = useState(10000002);
@@ -152,7 +154,12 @@ export default function Page({
           <Group spacing="xl">
             <TypeAvatar typeId={typeId} size="lg" />
             <Title order={1}>{typeName}</Title>
-            <OpenMarketWindowActionIcon typeId={typeId} />
+            {character && (
+              <OpenMarketWindowActionIcon
+                characterId={character.characterId}
+                typeId={typeId}
+              />
+            )}
           </Group>
           <Stack spacing={0}>
             <TypeInventoryBreadcrumbs typeId={typeId} />

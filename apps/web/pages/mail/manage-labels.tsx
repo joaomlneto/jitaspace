@@ -2,18 +2,23 @@ import React, { type ReactElement } from "react";
 import { Container, Group } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
+import { useSelectedCharacter } from "@jitaspace/hooks";
+
 import { LabelManagementTable } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
 
 export default function Page() {
+  const character = useSelectedCharacter();
   return (
     <Container>
       <Group position="apart">
         <h1>Manage Labels</h1>
       </Group>
 
-      <LabelManagementTable />
+      {character && (
+        <LabelManagementTable characterId={character.characterId} />
+      )}
     </Container>
   );
 }

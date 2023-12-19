@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useStructure } from "@jitaspace/hooks";
+import { useSelectedCharacter, useStructure } from "@jitaspace/hooks";
 import {
   EveEntityName,
   SetAutopilotDestinationActionIcon,
@@ -19,6 +19,7 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const structureId = parseInt(router.query.structureId as string);
+  const character = useSelectedCharacter();
   const { data: structure } = useStructure(structureId);
 
   return (
@@ -29,7 +30,12 @@ export default function Page() {
           <Title order={3}>
             <StructureName span structureId={structureId} />
           </Title>
-          <SetAutopilotDestinationActionIcon destinationId={structureId} />
+          {character && (
+            <SetAutopilotDestinationActionIcon
+              characterId={character.characterId}
+              destinationId={structureId}
+            />
+          )}
         </Group>
         <Group position="apart">
           <Text>Solar System</Text>

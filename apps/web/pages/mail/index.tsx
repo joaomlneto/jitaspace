@@ -23,7 +23,7 @@ import {
   EveMailTagIcon,
   GroupListIcon,
 } from "@jitaspace/eve-icons";
-import { useCharacterMails } from "@jitaspace/hooks";
+import { useCharacterMails, useSelectedCharacter } from "@jitaspace/hooks";
 import { EveMailLabelMultiSelect } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 
@@ -33,6 +33,7 @@ import { MainLayout } from "~/layouts";
 export default function Page() {
   const router = useRouter();
   const labels = router.query.labels;
+  const character = useSelectedCharacter();
 
   const [selectedLabels, setSelectedLabels] = React.useState<string[]>([]);
 
@@ -49,7 +50,7 @@ export default function Page() {
     isLoading,
     mutate,
     error,
-  } = useCharacterMails({ labels: selectedLabels.map(Number) });
+  } = useCharacterMails(character?.characterId, selectedLabels.map(Number));
 
   return (
     <Container size="xl">
@@ -128,32 +129,39 @@ export default function Page() {
             </Group>
           </Grid.Col>
           <Grid.Col span="content">
-            <EveMailLabelMultiSelect
-              size="xs"
-              style={{ minWidth: "240px" }}
-              label="Filter by label"
-              value={selectedLabels}
-              onChange={(value: string[]) => {
-                setSelectedLabels(value);
-                void router.push(
-                  {
-                    pathname: router.pathname,
-                    query: {
-                      labels: value,
+            {character && (
+              <EveMailLabelMultiSelect
+                characterId={character.characterId}
+                size="xs"
+                style={{ minWidth: "240px" }}
+                label="Filter by label"
+                value={selectedLabels}
+                onChange={(value: string[]) => {
+                  setSelectedLabels(value);
+                  void router.push(
+                    {
+                      pathname: router.pathname,
+                      query: {
+                        labels: value,
+                      },
                     },
-                  },
-                  undefined,
-                  {
-                    shallow: true,
-                  },
-                );
-              }}
-              defaultValue={selectedLabels}
-            />
+                    undefined,
+                    {
+                      shallow: true,
+                    },
+                  );
+                }}
+                defaultValue={selectedLabels}
+              />
+            )}
           </Grid.Col>
         </Grid>
-        {messages.length > 0 && (
-          <MailboxTable data={messages} mutate={() => void mutate()} />
+        {character && messages.length > 0 && (
+          <MailboxTable
+            characterId={character.characterId}
+            data={messages}
+            mutate={() => void mutate()}
+          />
         )}
         {hasMoreMessages && (
           <Button w="100%" onClick={() => loadMoreMessages()}>

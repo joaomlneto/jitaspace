@@ -4,6 +4,7 @@ import { Container, Grid, Group, Stack, Title } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
 import { SkillsIcon } from "@jitaspace/eve-icons";
+import { useSelectedCharacter } from "@jitaspace/hooks";
 
 import {
   CharacterAttributesRingProgress,
@@ -11,6 +12,7 @@ import {
   SkillTreeNav,
 } from "~/components/Skills";
 import { MainLayout } from "~/layouts";
+
 
 const SKILLS_CATEGORY_ID = 16;
 
@@ -71,6 +73,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 };
 
 export default function Page({ groups }: PageProps) {
+  const character = useSelectedCharacter();
   return (
     <Container size="xl">
       <Stack spacing="xl">
@@ -78,13 +81,24 @@ export default function Page({ groups }: PageProps) {
           <SkillsIcon width={48} />
           <Title>Skills</Title>
         </Group>
-        <CharacterAttributesRingProgress />
+        {character && (
+          <CharacterAttributesRingProgress
+            characterId={character.characterId}
+          />
+        )}
         <Grid>
           <Grid.Col span="content">
-            <SkillQueueTimeline />
+            {character && (
+              <SkillQueueTimeline characterId={character.characterId} />
+            )}
           </Grid.Col>
           <Grid.Col span="auto" miw={690}>
-            <SkillTreeNav groups={groups} />
+            {character && (
+              <SkillTreeNav
+                characterId={character.characterId}
+                groups={groups}
+              />
+            )}
           </Grid.Col>
         </Grid>
       </Stack>
