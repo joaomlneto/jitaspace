@@ -86,6 +86,10 @@ const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
   // Below are things for the new React Auth module supporting multiple characters
   // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
+  useEffect(() => {
+    useAuthStore.persist.rehydrate();
+  }, []);
+
   // This useEffect is here to import the current next-auth token (if available)
   useEffect(() => {
     if (session) {

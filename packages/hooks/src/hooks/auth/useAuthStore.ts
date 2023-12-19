@@ -111,7 +111,7 @@ export const useAuthStore = create(
     }),
     {
       name: "jitaspace-auth",
-      //skipHydration: true,
+      skipHydration: true,
     },
   ),
 );
