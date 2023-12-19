@@ -6,37 +6,47 @@ import {
   useGetCharactersCharacterIdMailLists,
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
+
 
 export type EveMailSenderNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+    characterId: number;
     messageId?: number;
   };
 export const EveMailSenderAnchor = memo(
-  ({ messageId, children, ...props }: EveMailSenderNameAnchorProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+  ({
+    characterId,
+    messageId,
+    children,
+    ...props
+  }: EveMailSenderNameAnchorProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-mail.read_mail.v1"],
+    });
     const { data: mail } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled: isTokenValid && !!messageId,
+          enabled: accessToken !== null && !!messageId,
         },
       },
     );
 
     const { data: mailingLists } = useGetCharactersCharacterIdMailLists(
       characterId ?? 1,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled: isTokenValid,
+          enabled: accessToken !== null,
         },
       },
     );

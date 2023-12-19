@@ -3,22 +3,27 @@ import { Skeleton, Text, type TextProps } from "@mantine/core";
 import type humanizeDuration from "humanize-duration";
 
 import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
 
 import { HumanDurationText } from "./HumanDurationText";
 
+
 export type CalendarEventHumanDurationTextProps = TextProps & {
+  characterId: number;
   eventId?: number;
   options?: humanizeDuration.Options;
 };
 export const CalendarEventHumanDurationText = memo(
   ({
+    characterId,
     eventId,
     options,
     ...otherProps
   }: CalendarEventHumanDurationTextProps) => {
-    const { characterId, scopes, isTokenValid, accessToken } =
-      useEsiClientContext();
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-calendar.read_calendar_events.v1"],
+    });
     const {
       data: event,
       isLoading,
@@ -26,15 +31,11 @@ export const CalendarEventHumanDurationText = memo(
     } = useGetCharactersCharacterIdCalendarEventId(
       characterId ?? 1,
       eventId ?? 1,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled:
-            !!characterId &&
-            !!eventId &&
-            isTokenValid &&
-            scopes.includes("esi-calendar.read_calendar_events.v1"),
+          enabled: !!eventId && accessToken !== null,
         },
       },
     );

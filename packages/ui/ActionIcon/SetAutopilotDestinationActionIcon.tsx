@@ -4,20 +4,25 @@ import { showNotification } from "@mantine/notifications";
 import { IconRocket } from "@tabler/icons-react";
 
 import { postUiAutopilotWaypoint } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
+
+
+
+
 
 type SetAutopilotDestinationActionIconProps = {
+  characterId: number;
   destinationId?: string | number;
 };
 
 export const SetAutopilotDestinationActionIcon = memo(
-  ({ destinationId }: SetAutopilotDestinationActionIconProps) => {
-    const { isTokenValid, scopes, accessToken } = useEsiClientContext();
+  ({ characterId, destinationId }: SetAutopilotDestinationActionIconProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-ui.write_waypoint.v1"],
+    });
 
-    const canSetDestination =
-      !!destinationId &&
-      isTokenValid &&
-      scopes.includes("esi-ui.write_waypoint.v1");
+    const canSetDestination = !!destinationId && accessToken !== null;
 
     return (
       <Tooltip color="dark" label="Set autopilot destination">
@@ -28,15 +33,21 @@ export const SetAutopilotDestinationActionIcon = memo(
             if (!canSetDestination) {
               showNotification({ message: "Insufficient permissions" });
             } else {
-              void postUiAutopilotWaypoint({
-                add_to_beginning: false,
-                clear_other_waypoints: true,
-                destination_id:
-                  typeof destinationId === "string"
-                    ? parseInt(destinationId)
-                    : destinationId,
-                token: accessToken,
-              }).then(() => {
+              void postUiAutopilotWaypoint(
+                {
+                  add_to_beginning: false,
+                  clear_other_waypoints: true,
+                  destination_id:
+                    typeof destinationId === "string"
+                      ? parseInt(destinationId)
+                      : destinationId,
+                },
+                {
+                  headers: {
+                    ...authHeaders,
+                  },
+                },
+              ).then(() => {
                 showNotification({
                   message: "Autopilot destination set.",
                 });
@@ -51,4 +62,4 @@ export const SetAutopilotDestinationActionIcon = memo(
   },
 );
 SetAutopilotDestinationActionIcon.displayName =
-  "SetAutopilodDestinationActionIcon";
+  "SetAutopilotDestinationActionIcon";

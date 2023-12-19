@@ -2,24 +2,32 @@ import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
 import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
+
+
+
+
 
 export type CalendarEventOwnerNameProps = TextProps & {
+  characterId: number;
   eventId?: number;
 };
 export const CalendarEventOwnerName = memo(
-  ({ eventId, ...otherProps }: CalendarEventOwnerNameProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+  ({ characterId, eventId, ...otherProps }: CalendarEventOwnerNameProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-calendar.read_calendar_events.v1"],
+    });
 
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        { token: accessToken },
         {},
+        { ...authHeaders },
         {
           query: {
-            enabled: isTokenValid && !!eventId,
+            enabled: accessToken !== null && !!eventId,
           },
         },
       );

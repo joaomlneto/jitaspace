@@ -4,17 +4,24 @@ import { showNotification } from "@mantine/notifications";
 
 import { postUiOpenwindowMarketdetails } from "@jitaspace/esi-client";
 import { MarketIcon } from "@jitaspace/eve-icons";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
+
+
+
+
 
 type OpenMarketWindowActionIconProps = {
+  characterId: number;
   typeId?: string | number;
 };
 export const OpenMarketWindowActionIcon = memo(
-  ({ typeId }: OpenMarketWindowActionIconProps) => {
-    const { isTokenValid, scopes, accessToken } = useEsiClientContext();
+  ({ characterId, typeId }: OpenMarketWindowActionIconProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-ui.open_window.v1"],
+    });
 
-    const canSetDestination =
-      !!typeId && isTokenValid && scopes.includes("esi-ui.open_window.v1");
+    const canSetDestination = !!typeId && accessToken !== null;
 
     return (
       <Tooltip color="dark" label="Open market window in the EVE client.">
@@ -26,10 +33,17 @@ export const OpenMarketWindowActionIcon = memo(
             if (!canSetDestination) {
               showNotification({ message: "Insufficient permissions" });
             } else {
-              void postUiOpenwindowMarketdetails({
-                type_id: typeof typeId === "string" ? parseInt(typeId) : typeId,
-                token: accessToken,
-              }).then(() => {
+              void postUiOpenwindowMarketdetails(
+                {
+                  type_id:
+                    typeof typeId === "string" ? parseInt(typeId) : typeId,
+                },
+                {
+                  headers: {
+                    ...authHeaders,
+                  },
+                },
+              ).then(() => {
                 showNotification({
                   message: "Market window opened in EVE client.",
                 });

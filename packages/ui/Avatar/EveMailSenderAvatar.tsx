@@ -6,28 +6,33 @@ import {
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
 import { GroupListIcon } from "@jitaspace/eve-icons";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
 import { getAvatarSize } from "@jitaspace/utils";
 
 import { sizes } from "./Avatar.styles";
 import { EveEntityAvatar } from "./index";
 
+
 export type EveMailSenderAvatarProps = Omit<AvatarProps, "src"> & {
+  characterId: number;
   messageId?: number;
 };
 
 export const EveMailSenderAvatar = memo(
-  ({ messageId, ...otherProps }: EveMailSenderAvatarProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+  ({ characterId, messageId, ...otherProps }: EveMailSenderAvatarProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-mail.read_mail.v1"],
+    });
 
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled: isTokenValid && !!messageId,
+          enabled: accessToken !== null && !!messageId,
         },
       },
     );
@@ -35,11 +40,11 @@ export const EveMailSenderAvatar = memo(
     const { data: mailingLists, isLoading: mailingListsLoading } =
       useGetCharactersCharacterIdMailLists(
         characterId ?? 1,
-        { token: accessToken },
         {},
+        { ...authHeaders },
         {
           query: {
-            enabled: isTokenValid,
+            enabled: accessToken !== null,
           },
         },
       );

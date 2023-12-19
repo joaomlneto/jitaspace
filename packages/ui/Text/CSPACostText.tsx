@@ -2,15 +2,18 @@ import { memo, useEffect, useState } from "react";
 import { Text, type TextProps } from "@mantine/core";
 
 import { postCharactersCharacterIdCspa } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
 import { toArrayIfNot } from "@jitaspace/utils";
 
+
+
+
+
 export type CSPACostTextProps = TextProps & {
+  characterId: number;
   characterIds?: number | number[];
 };
 export const CSPACostText = memo(
-  ({ characterIds, ...otherProps }: CSPACostTextProps) => {
-    const { characterId } = useEsiClientContext();
+  ({ characterId, characterIds, ...otherProps }: CSPACostTextProps) => {
     const [cost, setCost] = useState<number | null>(null);
 
     const characterIdsArray = toArrayIfNot(characterIds ?? []);

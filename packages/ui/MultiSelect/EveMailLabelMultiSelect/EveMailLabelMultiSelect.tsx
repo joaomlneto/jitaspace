@@ -1,30 +1,37 @@
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import { MultiSelect, type MultiSelectProps } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
 import { humanLabelName } from "@jitaspace/utils";
 
 import { EveMailLabelMultiSelectItem } from "./EveMailLabelMultiSelectItem";
 import { EmailLabelMultiSelectValue } from "./EveMailLabelMultiSelectValue";
 
-type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data">;
+
+type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data"> & {
+  characterId: number;
+};
 
 export const EveMailLabelMultiSelect = memo(
-  (props: EmailLabelMultiSelectProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
-
+  ({ characterId, ...otherProps }: EmailLabelMultiSelectProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-mail.read_mail.v1"],
+    });
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 0,
-      {
-        token: accessToken,
-      },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled: isTokenValid,
+          enabled: accessToken !== null,
         },
       },
+    );
+    const valueComponent = useMemo(
+      () => EmailLabelMultiSelectValue(characterId),
+      [characterId],
     );
     return (
       <MultiSelect
@@ -34,13 +41,14 @@ export const EveMailLabelMultiSelect = memo(
           labels?.data.labels?.map((label) => ({
             value: `${label.label_id}`,
             label: humanLabelName(label),
+            characterId,
             unreadCount: label.unread_count ?? 0,
           })) ?? []
         }
         itemComponent={EveMailLabelMultiSelectItem}
-        valueComponent={EmailLabelMultiSelectValue}
+        valueComponent={valueComponent}
         //placeholder="Choose labels"
-        {...props}
+        {...otherProps}
       />
     );
   },

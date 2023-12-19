@@ -4,32 +4,48 @@ import { Anchor, type AnchorProps } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 
 import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
+
+
+
+
 
 export type OpenInformationWindowAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+    characterId: number;
     entityId?: string | number;
   };
 
 export const OpenInformationWindowAnchor = memo(
-  ({ entityId, children, ...props }: OpenInformationWindowAnchorProps) => {
-    const { isTokenValid, scopes, accessToken } = useEsiClientContext();
-    const canOpenWindow =
-      !!entityId && isTokenValid && scopes.includes("esi-ui.open_window.v1");
+  ({
+    characterId,
+    entityId,
+    children,
+    ...props
+  }: OpenInformationWindowAnchorProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-ui.open_window.v1"],
+    });
+
+    const canOpenWindow = !!entityId && accessToken !== null;
+
     return (
       <Anchor
         {...props}
         onClick={() => {
           if (!canOpenWindow) {
             showNotification({ message: "Insufficient permissions" });
-            console.log({ canOpenWindow, scopes, isTokenValid });
+            console.log({ canOpenWindow });
           } else {
-            void postUiOpenwindowInformation({
-              target_id:
-                typeof entityId === "string" ? parseInt(entityId) : entityId,
-              token: accessToken,
-            }).then(() => {
+            void postUiOpenwindowInformation(
+              {
+                target_id:
+                  typeof entityId === "string" ? parseInt(entityId) : entityId,
+              },
+              { headers: { ...authHeaders } },
+            ).then(() => {
               showNotification({
                 message: "Information window opened in EVE client.",
               });

@@ -4,18 +4,25 @@ import { showNotification } from "@mantine/notifications";
 import { IconAppWindowFilled } from "@tabler/icons-react";
 
 import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
+
+
+
+
 
 type OpenInformationWindowActionIconProps = {
+  characterId: number;
   entityId?: string | number;
 };
 
 export const OpenInformationWindowActionIcon = memo(
-  ({ entityId }: OpenInformationWindowActionIconProps) => {
-    const { isTokenValid, scopes, accessToken } = useEsiClientContext();
+  ({ characterId, entityId }: OpenInformationWindowActionIconProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-ui.open_window.v1"],
+    });
 
-    const canSetDestination =
-      !!entityId && isTokenValid && scopes.includes("esi-ui.open_window.v1");
+    const canSetDestination = !!entityId && accessToken !== null;
 
     return (
       <Tooltip color="dark" label="Open information window in the EVE client.">
@@ -26,11 +33,15 @@ export const OpenInformationWindowActionIcon = memo(
             if (!canSetDestination) {
               showNotification({ message: "Insufficient permissions" });
             } else {
-              void postUiOpenwindowInformation({
-                target_id:
-                  typeof entityId === "string" ? parseInt(entityId) : entityId,
-                token: accessToken,
-              }).then(() => {
+              void postUiOpenwindowInformation(
+                {
+                  target_id:
+                    typeof entityId === "string"
+                      ? parseInt(entityId)
+                      : entityId,
+                },
+                { headers: { ...authHeaders } },
+              ).then(() => {
                 showNotification({
                   message: "Information window opened in EVE client.",
                 });

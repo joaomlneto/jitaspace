@@ -8,39 +8,46 @@ import {
   PutCharactersCharacterIdCalendarEventIdMutationRequestResponse,
   useGetCharactersCharacterIdCalendarEventId,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
+
+
+
+
 
 export type CalendarEventAttendanceSelect = Omit<SelectProps, "data"> & {
+  characterId: number;
   eventId?: string | number;
 };
 export const CalendarEventAttendanceSelect = memo(
-  ({ eventId, ...otherProps }: CalendarEventAttendanceSelect) => {
+  ({ characterId, eventId, ...otherProps }: CalendarEventAttendanceSelect) => {
     const [value, setValue] =
       useState<PutCharactersCharacterIdCalendarEventIdMutationRequestResponse | null>(
         (otherProps.value as PutCharactersCharacterIdCalendarEventIdMutationRequestResponse) ??
           null,
       );
-    const { characterId, isTokenValid, scopes, accessToken } =
-      useEsiClientContext();
+
+    const { character, accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-calendar.read_calendar_events.v1"],
+    });
+
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         typeof eventId === "string" ? parseInt(eventId) : eventId ?? 0,
-        { token: accessToken },
         {},
+        { ...authHeaders },
         {
           query: {
-            enabled:
-              !!eventId &&
-              isTokenValid &&
-              scopes.includes("esi-calendar.read_calendar_events.v1"),
+            enabled: !!eventId && accessToken !== null,
           },
         },
       );
 
-    const canRespondToEvents = scopes.includes(
-      "esi-calendar.respond_calendar_events.v1",
-    );
+    const canRespondToEvents =
+      character?.accessTokenPayload.scp.includes(
+        "esi-calendar.respond_calendar_events.v1",
+      ) ?? false;
 
     useEffect(() => {
       if (value === null && event?.data.response) {
@@ -84,7 +91,8 @@ export const CalendarEventAttendanceSelect = memo(
                 characterId ?? 0,
                 typeof eventId === "string" ? parseInt(eventId) : eventId ?? 0,
                 { response: newValue },
-                { token: accessToken },
+                {},
+                { headers: { ...authHeaders } },
               );
             },
           });

@@ -3,31 +3,37 @@ import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
 
 import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
+
 
 export type CalendarEventOwnerAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+    characterId: number;
     eventId?: number;
   };
 
 export const CalendarEventOwnerAnchor = memo(
-  ({ eventId, children, ...otherProps }: CalendarEventOwnerAnchorProps) => {
-    const { characterId, isTokenValid, scopes, accessToken } =
-      useEsiClientContext();
+  ({
+    characterId,
+    eventId,
+    children,
+    ...otherProps
+  }: CalendarEventOwnerAnchorProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-calendar.read_calendar_events.v1"],
+    });
     const { data: event } = useGetCharactersCharacterIdCalendarEventId(
       characterId ?? 0,
       eventId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled:
-            !!eventId &&
-            isTokenValid &&
-            scopes.includes("esi-calendar.read_calendar_events.v1"),
+          enabled: !!eventId && accessToken !== null,
         },
       },
     );

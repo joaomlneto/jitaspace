@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 
 import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
 
 import {
   AllianceAvatar,
@@ -11,23 +11,28 @@ import {
   FactionAvatar,
 } from "./index";
 
+
 export type CalendarEventOwnerAvatarProps = Omit<AvatarProps, "src"> & {
+  characterId: number;
   eventId?: number;
 };
 
 export const CalendarEventOwnerAvatar = memo(
-  ({ eventId, ...otherProps }: CalendarEventOwnerAvatarProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+  ({ eventId, characterId, ...otherProps }: CalendarEventOwnerAvatarProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-calendar.read_calendar_events.v1"],
+    });
 
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        { token: accessToken },
         {},
+        { ...authHeaders },
         {
           query: {
-            enabled: isTokenValid && !!eventId,
+            enabled: accessToken !== null && !!eventId,
           },
         },
       );

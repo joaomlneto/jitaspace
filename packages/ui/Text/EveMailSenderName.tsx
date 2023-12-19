@@ -5,25 +5,30 @@ import {
   useGetCharactersCharacterIdMailLists,
   useGetCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
 
 import { EveEntityName } from "./index";
 
+
 export type EveMailSenderNameProps = TextProps & {
+  characterId: number;
   messageId?: number;
 };
 export const EveMailSenderName = memo(
-  ({ messageId, ...otherProps }: EveMailSenderNameProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+  ({ characterId, messageId, ...otherProps }: EveMailSenderNameProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-mail.read_mail.v1"],
+    });
 
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled: isTokenValid && !!messageId,
+          enabled: accessToken !== null && !!messageId,
         },
       },
     );
@@ -31,11 +36,11 @@ export const EveMailSenderName = memo(
     const { data: mailingLists, isLoading: mailingListsLoading } =
       useGetCharactersCharacterIdMailLists(
         characterId ?? 1,
-        { token: accessToken },
         {},
+        { ...authHeaders },
         {
           query: {
-            enabled: isTokenValid,
+            enabled: accessToken !== null,
           },
         },
       );

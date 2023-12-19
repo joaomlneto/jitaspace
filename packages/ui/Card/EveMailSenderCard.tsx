@@ -2,26 +2,31 @@ import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailMailId } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
 
 import { EveEntityCard } from "./EveEntityCard";
 
+
 export type EveMailSenderCardProps = {
+  characterId: number;
   messageId?: number;
 };
 
 export const EveMailSenderCard = memo(
-  ({ messageId }: EveMailSenderCardProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+  ({ characterId, messageId }: EveMailSenderCardProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-mail.read_mail.v1"],
+    });
 
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled: isTokenValid && !!messageId,
+          enabled: accessToken !== null && !!messageId,
         },
       },
     );

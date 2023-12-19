@@ -8,34 +8,40 @@ import {
 } from "@mantine/core";
 
 import { useGetCharactersCharacterIdCalendarEventIdAttendees } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
 
 import { CharacterAvatar } from "../Avatar";
 import { CharacterName } from "../Text";
 
+
 type CalendarEventAttendeesAvatarGroupProps = AvatarProps & {
+  characterId: number;
   eventId?: number;
   limit?: number;
   spacing?: MantineNumberSize;
 };
 export const CalendarEventAttendeesAvatarGroup = memo(
   ({
+    characterId,
     eventId,
     limit,
     spacing,
     ...otherProps
   }: CalendarEventAttendeesAvatarGroupProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-calendar.read_calendar_events.v1"],
+    });
 
     const { data: attendees } =
       useGetCharactersCharacterIdCalendarEventIdAttendees(
         characterId ?? 0,
         eventId ?? 0,
-        { token: accessToken },
         {},
+        { ...authHeaders },
         {
           query: {
-            enabled: !!eventId && !!characterId && !!isTokenValid,
+            enabled: !!eventId && !!characterId && accessToken !== null,
           },
         },
       );

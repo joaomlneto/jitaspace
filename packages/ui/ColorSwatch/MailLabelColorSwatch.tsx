@@ -2,23 +2,31 @@ import { memo } from "react";
 import { ColorSwatch, type ColorSwatchProps } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
+
+
+
+
 
 export type MailLabelColorSwatchProps = Omit<ColorSwatchProps, "color"> & {
+  characterId: number;
   labelId?: string | number;
 };
 
 export const MailLabelColorSwatch = memo(
-  ({ labelId, ...otherProps }: MailLabelColorSwatchProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+  ({ characterId, labelId, ...otherProps }: MailLabelColorSwatchProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-mail.read_mail.v1"],
+    });
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 1,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled: isTokenValid,
+          enabled: !!labelId && accessToken !== null,
         },
       },
     );

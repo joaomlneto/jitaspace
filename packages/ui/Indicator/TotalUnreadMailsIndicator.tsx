@@ -2,31 +2,41 @@ import React, { memo } from "react";
 import { Indicator, type IndicatorProps } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
 
-export const TotalUnreadMailsIndicator = memo((props: IndicatorProps) => {
-  const { characterId, isTokenValid, scopes, accessToken } =
-    useEsiClientContext();
 
-  const canMakeQuery = isTokenValid && scopes.includes("esi-mail.read_mail.v1");
 
-  const { data: labels } = useGetCharactersCharacterIdMailLabels(
-    characterId ?? 1,
-    { token: accessToken },
-    {},
-    {
-      query: {
-        enabled: canMakeQuery,
+
+
+type TotalUnreadMailsIndicatorProps = IndicatorProps & {
+  characterId: number;
+};
+
+export const TotalUnreadMailsIndicator = memo(
+  ({ characterId, ...otherProps }: TotalUnreadMailsIndicatorProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-mail.read_mail.v1"],
+    });
+
+    const { data: labels } = useGetCharactersCharacterIdMailLabels(
+      characterId ?? 1,
+      {},
+      { ...authHeaders },
+      {
+        query: {
+          enabled: accessToken !== null,
+        },
       },
-    },
-  );
+    );
 
-  return (
-    <Indicator
-      disabled={!canMakeQuery || labels?.data.total_unread_count === 0}
-      label={`${labels?.data.total_unread_count ?? ""}`}
-      {...props}
-    />
-  );
-});
+    return (
+      <Indicator
+        disabled={accessToken === null || labels?.data.total_unread_count === 0}
+        label={`${labels?.data.total_unread_count ?? ""}`}
+        {...otherProps}
+      />
+    );
+  },
+);
 TotalUnreadMailsIndicator.displayName = "TotalUnreadMailsIndicator";

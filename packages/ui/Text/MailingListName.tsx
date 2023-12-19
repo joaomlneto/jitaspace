@@ -2,23 +2,31 @@ import { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
+
+
+
+
 
 export type MailingListNameProps = TextProps & {
+  characterId: number;
   mailingListId?: number;
 };
 
 export const MailingListName = memo(
-  ({ mailingListId, ...otherProps }: MailingListNameProps) => {
-    const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+  ({ characterId, mailingListId, ...otherProps }: MailingListNameProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-mail.read_mail.v1"],
+    });
 
     const { data, isLoading } = useGetCharactersCharacterIdMailLists(
       characterId ?? 1,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled: isTokenValid,
+          enabled: accessToken !== null,
         },
       },
     );

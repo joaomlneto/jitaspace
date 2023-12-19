@@ -5,9 +5,14 @@ import {
   useGetCharactersCharacterIdCalendarEventId,
   type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken } from "@jitaspace/hooks";
+
+
+
+
 
 export type CalendarEventResponseBadgeProps = BadgeProps & {
+  characterId: number;
   eventId?: number;
 };
 
@@ -21,22 +26,25 @@ const eventResponseColor: {
 };
 
 export const CalendarEventResponseBadge = memo(
-  ({ eventId, ...otherProps }: CalendarEventResponseBadgeProps) => {
-    const { characterId, isTokenValid, scopes, accessToken } =
-      useEsiClientContext();
+  ({
+    characterId,
+    eventId,
+    ...otherProps
+  }: CalendarEventResponseBadgeProps) => {
+    const { accessToken, authHeaders } = useAccessToken({
+      characterId,
+      scopes: ["esi-calendar.read_calendar_events.v1"],
+    });
 
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        { token: accessToken },
         {},
+        { ...authHeaders },
         {
           query: {
-            enabled:
-              isTokenValid &&
-              !!eventId &&
-              scopes.includes("esi-calendar.read_calendar_events.v1"),
+            enabled: accessToken !== null && !!eventId,
           },
         },
       );
