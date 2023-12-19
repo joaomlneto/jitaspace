@@ -15,7 +15,7 @@ import {
   CorporationIcon,
   MapIcon,
 } from "@jitaspace/eve-icons";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import { characterApps, corporationApps, universeApps } from "~/config/apps";
@@ -33,7 +33,7 @@ export type MobileHeaderDrawerProps = {
 export const MobileHeaderDrawer = memo(
   ({ opened, toggle, close }: MobileHeaderDrawerProps) => {
     const { classes, theme } = useStyles();
-    const { isTokenValid, loading } = useEsiClientContext();
+    const characterIds = useAuthenticatedCharacterIds();
     return (
       <>
         <Drawer
@@ -75,14 +75,14 @@ export const MobileHeaderDrawer = memo(
             />
 
             <Group position="center" grow pb="xl">
-              {loading && (
+              {false && (
                 <Group>
                   <Loader size="sm" />
                   <Text>Loading session…</Text>
                 </Group>
               )}
-              {!loading && isTokenValid && <UserButton />}
-              {!loading && !isTokenValid && (
+              {characterIds.length > 0 && <UserButton />}
+              {characterIds.length === 0 && (
                 <LoginWithEveOnlineButton
                   size="small"
                   onClick={() => {

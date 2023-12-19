@@ -23,7 +23,7 @@ import {
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
 
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useSelectedCharacter } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import { characterApps } from "~/config/apps";
@@ -123,7 +123,8 @@ export function LayoutHeader() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
   const { classes, theme, cx } = useStyles();
-  const { isTokenValid, loading } = useEsiClientContext();
+
+  const character = useSelectedCharacter();
 
   return (
     <Box>
@@ -189,14 +190,14 @@ export function LayoutHeader() {
             </Group>
 
             <Group className={classes.hiddenMobile}>
-              {loading && (
+              {false && (
                 <Group>
                   <Loader size="sm" />
                   <Text>Loading session…</Text>
                 </Group>
               )}
-              {!loading && isTokenValid && <UserButton />}
-              {!loading && !isTokenValid && (
+              {character !== null && <UserButton />}
+              {character === null && (
                 <LoginWithEveOnlineButton
                   size="small"
                   onClick={() => {
@@ -266,14 +267,14 @@ export function LayoutHeader() {
           />
 
           <Group position="center" grow pb="xl">
-            {loading && (
+            {false && (
               <Group>
                 <Loader size="sm" />
                 <Text>Loading session…</Text>
               </Group>
             )}
-            {!loading && isTokenValid && <UserButton />}
-            {!loading && !isTokenValid && (
+            {character !== null && <UserButton />}
+            {character === null && (
               <LoginWithEveOnlineButton
                 size="small"
                 onClick={() => {

@@ -25,7 +25,7 @@ import {
   MapIcon,
   PeopleAndPlacesIcon,
 } from "@jitaspace/eve-icons";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import {
@@ -44,7 +44,7 @@ export function HeaderWithMegaMenus() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
   const { classes } = useStyles();
-  const { isTokenValid, loading } = useEsiClientContext();
+  const characterIds = useAuthenticatedCharacterIds();
   const pinned = useHeadroom({
     fixedAt: 120,
     onRelease: () => {
@@ -113,14 +113,14 @@ export function HeaderWithMegaMenus() {
             </Group>
 
             <Group className={classes.hiddenMobile}>
-              {loading && (
+              {false && (
                 <Group>
                   <Loader size="sm" />
                   <Text>Loading session…</Text>
                 </Group>
               )}
-              {!loading && isTokenValid && <UserButton />}
-              {!loading && !isTokenValid && (
+              {characterIds.length > 0 && <UserButton />}
+              {characterIds.length === 0 && (
                 <LoginWithEveOnlineButton
                   size="small"
                   onClick={() => {

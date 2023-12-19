@@ -7,15 +7,20 @@ import {
   UnstyledButton,
   type UnstyledButtonProps,
 } from "@mantine/core";
-import { signIn, signOut } from "next-auth/react";
+import { openContextModal } from "@mantine/modals";
+import { signOut } from "next-auth/react";
 
 import {
   RecruitmentIcon,
   SettingsIcon,
   TerminateIcon,
 } from "@jitaspace/eve-icons";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAuthStore, useSelectedCharacter } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
+
+
+
+
 
 const useStyles = createStyles((theme) => ({
   user: {
@@ -39,7 +44,13 @@ interface UserButtonProps extends UnstyledButtonProps {
 
 export default function UserButton({ ...others }: UserButtonProps) {
   const { classes } = useStyles();
-  const { characterId, characterName, scopes } = useEsiClientContext();
+  const character = useSelectedCharacter();
+  const { characters, selectCharacter } = useAuthStore();
+
+  if (!character) return "not logged in";
+
+  const characterId = character.characterId;
+  const characterName = character.accessTokenPayload.name;
 
   return (
     <Menu withArrow position="bottom" transitionProps={{ transition: "pop" }}>
@@ -57,16 +68,42 @@ export default function UserButton({ ...others }: UserButtonProps) {
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
+        {Object.keys(characters).length > 1 && (
+          <>
+            <Menu.Label>Switch Character</Menu.Label>
+            {Object.values(characters)
+              .filter((character) => character.characterId !== characterId)
+              .map((character) => (
+                <Menu.Item
+                  icon={
+                    <CharacterAvatar
+                      characterId={character.characterId}
+                      size={20}
+                    />
+                  }
+                  onClick={() => selectCharacter(character.characterId)}
+                >
+                  {character.accessTokenPayload.name}
+                </Menu.Item>
+              ))}
+            <Menu.Divider />
+          </>
+        )}
         <Menu.Item icon={<SettingsIcon width={20} />} disabled>
           Settings
         </Menu.Item>
         <Menu.Item
           icon={<RecruitmentIcon width={20} />}
           onClick={() => {
-            void signIn("eveonline", {}, { scope: scopes.join(" ") });
+            openContextModal({
+              modal: "login",
+              title: "Login",
+              size: "xl",
+              innerProps: {},
+            });
           }}
         >
-          Switch Character
+          Add Character
         </Menu.Item>
         <Menu.Item
           icon={<TerminateIcon width={20} />}
