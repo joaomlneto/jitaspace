@@ -9,9 +9,9 @@ import { useCharacterCurrentShip } from "../location";
 export type FittingItemFlag =
   GetCharactersCharacterIdFittingsQueryResponseItemsFlag;
 
-export const useCharacterCurrentFit = () => {
-  const { data: ship } = useCharacterCurrentShip();
-  const { assets } = useCharacterAssets();
+export const useCharacterCurrentFit = (characterId: number) => {
+  const { data: ship } = useCharacterCurrentShip(characterId);
+  const { assets } = useCharacterAssets(characterId);
 
   const modules = useMemo(() => {
     if (!ship) return null;

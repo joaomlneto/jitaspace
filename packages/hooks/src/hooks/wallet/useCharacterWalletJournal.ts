@@ -3,24 +3,23 @@ import {
   useGetCharactersCharacterIdWalletJournal,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 export type CharacterWalletJournalEntry =
   GetCharactersCharacterIdWalletJournalQueryResponse[number];
 
-export const useCharacterWalletJournal = () => {
-  const { characterId, scopes, isTokenValid, accessToken } =
-    useEsiClientContext();
+export const useCharacterWalletJournal = (characterId?: number) => {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-wallet.read_character_wallet.v1"],
+  });
   return useGetCharactersCharacterIdWalletJournal(
     characterId ?? 0,
-    { token: accessToken },
     {},
+    { ...authHeaders },
     {
       query: {
-        enabled:
-          isTokenValid &&
-          characterId !== undefined &&
-          scopes.includes("esi-wallet.read_character_wallet.v1"),
+        enabled: characterId !== undefined && accessToken !== null,
       },
     },
   );

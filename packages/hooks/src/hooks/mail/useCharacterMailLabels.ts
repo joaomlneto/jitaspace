@@ -5,26 +5,30 @@ import {
   useGetCharactersCharacterIdMailLabels,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
-export function useCharacterMailLabels() {
-  const { characterId, isTokenValid, accessToken, scopes } =
-    useEsiClientContext();
+export function useCharacterMailLabels(characterId: number) {
+  const { accessToken, authHeaders, character } = useAccessToken({
+    characterId,
+    scopes: ["esi-mail.read_mail.v1"],
+  });
 
   const labels = useGetCharactersCharacterIdMailLabels(
     characterId ?? 0,
-    { token: accessToken },
     {},
+    { ...authHeaders },
     {
       query: {
-        enabled: isTokenValid && scopes.includes("esi-mail.read_mail.v1"),
+        enabled: accessToken !== null,
       },
     },
   );
 
   const canDeleteLabel = useMemo(
-    () => isTokenValid && scopes.includes("esi-mail.organize_mail.v1"),
-    [isTokenValid, scopes],
+    () =>
+      character?.accessTokenPayload.scp.includes("esi-mail.organize_mail.v1") ??
+      false,
+    [character?.accessTokenPayload],
   );
 
   const deleteLabel = async (
@@ -45,9 +49,16 @@ export function useCharacterMailLabels() {
       return { success: false, error: "Label does not exist" };
     }
 
-    await deleteCharactersCharacterIdMailLabelsLabelId(characterId!, labelId, {
-      token: accessToken,
-    });
+    await deleteCharactersCharacterIdMailLabelsLabelId(
+      characterId!,
+      labelId,
+      {},
+      {
+        headers: {
+          ...authHeaders,
+        },
+      },
+    );
 
     // TODO mutate the labels state in React Query
 

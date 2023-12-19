@@ -4,7 +4,7 @@ import {
   useGetCharactersCharacterIdCalendarEventIdAttendees,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 export type CalendarEventAttendee =
   GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number];
@@ -12,21 +12,26 @@ export type CalendarEventAttendee =
 export type CalendarEventAttendeeResponse =
   GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse;
 
-export const useCalendarEventAttendees = (eventId: number) => {
-  const { characterId, isTokenValid, scopes, accessToken } =
-    useEsiClientContext();
+export const useCalendarEventAttendees = (
+  characterId?: number,
+  eventId?: number,
+) => {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-calendar.read_calendar_events.v1"],
+  });
 
   return useGetCharactersCharacterIdCalendarEventIdAttendees(
-    characterId ?? 1,
-    eventId,
-    { token: accessToken },
+    characterId ?? 0,
+    eventId ?? 0,
     {},
+    { ...authHeaders },
     {
       query: {
         enabled:
-          isTokenValid &&
+          characterId !== undefined &&
           eventId !== undefined &&
-          scopes.includes("esi-calendar.read_calendar_events.v1"),
+          accessToken !== null,
       },
     },
   );

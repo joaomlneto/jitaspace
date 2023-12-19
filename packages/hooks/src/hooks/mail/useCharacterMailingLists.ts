@@ -1,18 +1,21 @@
 import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 
-export function useCharacterMailingLists() {
-  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+export function useCharacterMailingLists(characterId: number) {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-mail.read_mail.v1"],
+  });
 
   return useGetCharactersCharacterIdMailLists(
     characterId ?? 1,
-    { token: accessToken },
     {},
+    { ...authHeaders },
     {
       query: {
-        enabled: isTokenValid,
+        enabled: accessToken !== null,
       },
     },
   );

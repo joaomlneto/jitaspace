@@ -9,7 +9,7 @@ import {
   useGetCharactersCharacterIdContactsLabels,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 export type CharacterContact =
   GetCharactersCharacterIdContactsQueryResponse[number];
@@ -17,20 +17,19 @@ export type CharacterContact =
 export type CharacterContactLabel =
   GetCharactersCharacterIdContactsLabelsQueryResponse[number];
 
-export function useCharacterContacts() {
-  const { isTokenValid, characterId, scopes, accessToken } =
-    useEsiClientContext();
+export function useCharacterContacts(characterId: number) {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-characters.read_contacts.v1"],
+  });
 
   const { data: labels } = useGetCharactersCharacterIdContactsLabels(
     characterId ?? 0,
     {},
-    {},
+    { ...authHeaders },
     {
       query: {
-        enabled:
-          !!characterId &&
-          isTokenValid &&
-          scopes.includes("esi-characters.read_contacts.v1"),
+        enabled: !!characterId && accessToken !== null,
         refetchOnWindowFocus: false,
       },
     },
@@ -39,19 +38,20 @@ export function useCharacterContacts() {
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCharactersCharacterIdContactsInfinite(
       characterId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled:
-            characterId !== undefined &&
-            isTokenValid &&
-            scopes.includes("esi-characters.read_contacts.v1"),
+          enabled: characterId !== undefined && accessToken !== null,
           queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
-            getCharactersCharacterIdContacts(characterId ?? 0, {
-              page: pageParam,
-              token: accessToken,
-            }),
+            getCharactersCharacterIdContacts(
+              characterId ?? 0,
+              {
+                page: pageParam,
+              },
+              {},
+              { headers: { ...authHeaders } },
+            ),
           getNextPageParam: (lastPage, pages) => {
             const numPages: number | undefined = lastPage.headers?.["x-pages"];
             const nextPage = pages.length + 1;

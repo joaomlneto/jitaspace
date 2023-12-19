@@ -7,31 +7,34 @@ import {
   useGetCharactersCharacterIdAssetsInfinite,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 export type CharacterAsset =
   GetCharactersCharacterIdAssetsQueryResponse[number];
 
-export function useCharacterAssets() {
-  const { isTokenValid, characterId, scopes, accessToken } =
-    useEsiClientContext();
+export const useCharacterAssets = (characterId?: number) => {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-assets.read_assets.v1"],
+  });
 
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCharactersCharacterIdAssetsInfinite(
       characterId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled:
-            characterId !== undefined &&
-            isTokenValid &&
-            scopes.includes("esi-assets.read_assets.v1"),
+          enabled: characterId !== undefined && accessToken !== null,
           queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
-            getCharactersCharacterIdAssets(characterId ?? 0, {
-              page: pageParam,
-              token: accessToken,
-            }),
+            getCharactersCharacterIdAssets(
+              characterId ?? 0,
+              {
+                page: pageParam,
+              },
+              {},
+              { headers: { ...authHeaders } },
+            ),
           getNextPageParam: (lastPage, pages) => {
             const numPages: number | undefined = lastPage.headers?.["x-pages"];
             const nextPage = pages.length + 1;
@@ -102,4 +105,4 @@ export function useCharacterAssets() {
     isLoading,
     mutate: refetch,
   };
-}
+};

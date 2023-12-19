@@ -1,21 +1,20 @@
 import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 
-export const useCharacterSkillQueue = () => {
-  const { characterId, isTokenValid, accessToken, scopes } =
-    useEsiClientContext();
+export const useCharacterSkillQueue = (characterId: number) => {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-skills.read_skillqueue.v1"],
+  });
   return useGetCharactersCharacterIdSkillqueue(
     characterId ?? 1,
-    { token: accessToken },
     {},
+    { ...authHeaders },
     {
       query: {
-        enabled:
-          isTokenValid &&
-          !!characterId &&
-          scopes.includes("esi-skills.read_skillqueue.v1"),
+        enabled: !!characterId && accessToken !== null,
       },
     },
   );

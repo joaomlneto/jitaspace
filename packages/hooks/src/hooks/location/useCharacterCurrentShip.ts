@@ -1,24 +1,20 @@
 import { useGetCharactersCharacterIdShip } from "@jitaspace/esi-client";
-import { ESIScope } from "@jitaspace/esi-metadata";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 
-export const useCharacterCurrentShip = () => {
-  const { characterId, isTokenValid, scopes, accessToken } =
-    useEsiClientContext();
-  const requiredScopes: ESIScope[] = ["esi-location.read_ship_type.v1"];
+export const useCharacterCurrentShip = (characterId: number) => {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-location.read_ship_type.v1"],
+  });
   return useGetCharactersCharacterIdShip(
     characterId ?? 0,
-    { token: accessToken },
     {},
+    { ...authHeaders },
     {
       query: {
-        enabled:
-          isTokenValid &&
-          requiredScopes.every((requiredScope) =>
-            scopes.includes(requiredScope),
-          ),
+        enabled: accessToken !== null,
       },
     },
   );

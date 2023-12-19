@@ -1,21 +1,20 @@
 import { useGetCharactersCharacterIdNotifications } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 
-export const useEsiCharacterNotifications = () => {
-  const { characterId, isTokenValid, scopes, accessToken } =
-    useEsiClientContext();
+export const useEsiCharacterNotifications = (characterId?: number) => {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-characters.read_notifications.v1"],
+  });
   return useGetCharactersCharacterIdNotifications(
     characterId ?? 0,
-    { token: accessToken },
     {},
+    { ...authHeaders },
     {
       query: {
-        enabled:
-          isTokenValid &&
-          characterId !== undefined &&
-          scopes.includes("esi-characters.read_notifications.v1"),
+        enabled: characterId !== null && accessToken !== null,
       },
     },
   );

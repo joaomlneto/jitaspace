@@ -5,70 +5,35 @@ import {
   GetCharactersCharacterIdAssetsQueryResponse,
   getCorporationsCorporationIdAssets,
   GetCorporationsCorporationIdAssetsQueryResponse,
-  useGetCharactersCharacterId,
-  useGetCharactersCharacterIdRoles,
   useGetCorporationsCorporationIdAssetsInfinite,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
-export function useCorporationAssets() {
-  const { isTokenValid, characterId, scopes, accessToken } =
-    useEsiClientContext();
-
-  const { data: characterData } = useGetCharactersCharacterId(
-    characterId ?? 0,
-    {},
-    {},
-    { query: { enabled: !!characterId } },
-  );
-
-  const { data: characterCorporationRolesData } =
-    useGetCharactersCharacterIdRoles(
-      characterId ?? 0,
-      { token: accessToken },
-      {},
-      {
-        query: {
-          enabled:
-            !!characterId &&
-            isTokenValid &&
-            scopes.includes("esi-characters.read_corporation_roles.v1"),
-        },
-      },
-    );
-
-  const isDirector = useMemo(
-    () =>
-      Object.values(characterCorporationRolesData?.data ?? {}).some((e) =>
-        e.includes("Director"),
-      ),
-    [characterCorporationRolesData],
-  );
-
-  const corporationId = useMemo(
-    () => characterData?.data.corporation_id ?? null,
-    [characterData?.data.corporation_id],
-  );
+export const useCorporationAssets = (corporationId?: number) => {
+  const { accessToken, authHeaders } = useAccessToken({
+    corporationId,
+    scopes: ["esi-assets.read_corporation_assets.v1"],
+    roles: ["Director"],
+  });
 
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCorporationsCorporationIdAssetsInfinite(
       corporationId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled:
-            corporationId !== undefined &&
-            isTokenValid &&
-            scopes.includes("esi-assets.read_corporation_assets.v1") &&
-            scopes.includes("esi-characters.read_corporation_roles.v1") &&
-            isDirector,
+          enabled: corporationId !== undefined && accessToken !== null,
           queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
-            getCorporationsCorporationIdAssets(corporationId ?? 0, {
-              page: pageParam,
-              token: accessToken,
-            }),
+            getCorporationsCorporationIdAssets(
+              corporationId ?? 0,
+              {
+                page: pageParam,
+              },
+              {},
+              { headers: { ...authHeaders } },
+            ),
           getNextPageParam: (lastPage, pages) => {
             const numPages: number | undefined = lastPage.headers?.["x-pages"];
             const nextPage = pages.length + 1;
@@ -86,20 +51,11 @@ export function useCorporationAssets() {
     if (!corporationId) {
       return "Unable to get corporation ID";
     }
-    if (!isTokenValid) {
-      return "Invalid token";
-    }
-    if (!scopes.includes("esi-assets.read_corporation_assets.v1")) {
-      return "Insufficient permissions to read corporation assets";
-    }
-    if (!scopes.includes("esi-characters.read_corporation_roles.v1")) {
-      return "Insufficient permissions to read corporation roles";
-    }
-    if (!isDirector) {
-      return "Character must have the corporation role of Director.";
+    if (accessToken === null) {
+      return "Token not available";
     }
     return null;
-  }, [corporationId, error, isDirector, isTokenValid, scopes]);
+  }, [corporationId, error, accessToken]);
 
   const assets: Record<
     string,
@@ -157,4 +113,4 @@ export function useCorporationAssets() {
     isLoading,
     mutate: refetch,
   };
-}
+};

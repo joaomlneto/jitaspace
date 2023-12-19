@@ -1,12 +1,10 @@
-import { useMemo } from "react";
-
 import {
   GetCharactersCharacterIdSearchQueryParamsLanguage,
   GetCharactersCharacterIdSearchQueryResponse,
   useGetCharactersCharacterIdSearch,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "./useEsiClientContext";
+import { useAccessToken } from "./auth";
 
 export type EsiSearchCategory =
   keyof GetCharactersCharacterIdSearchQueryResponse;
@@ -23,16 +21,12 @@ export function useEsiSearch(
     language?: GetCharactersCharacterIdSearchQueryParamsLanguage;
   } = {},
 ) {
-  const { isTokenValid, characterId, accessToken, scopes } =
-    useEsiClientContext();
-
-  const canSearchStructures = useMemo(
-    () => scopes.includes("esi-universe.read_structures.v1"),
-    [scopes],
-  );
+  const { character, accessToken, authHeaders } = useAccessToken({
+    scopes: ["esi-search.search_structures.v1"],
+  });
 
   const searchResult = useGetCharactersCharacterIdSearch(
-    characterId ?? 1,
+    character?.characterId ?? 0,
     {
       // @ts-expect-error - This is a bug in the generated code
       categories: (
@@ -47,26 +41,20 @@ export function useEsiSearch(
           "region",
           "solar_system",
           "station",
-          ...((canSearchStructures
-            ? ["structure"]
-            : []) as EsiSearchCategory[]),
+          "structure",
         ]
       )?.join(","),
       search: query,
       strict,
       language,
-      token: accessToken,
     },
-    {},
+    { ...authHeaders },
     {
       query: {
-        enabled:
-          isTokenValid &&
-          query.length >= 3 &&
-          scopes.includes("esi-search.search_structures.v1"),
+        enabled: accessToken !== null && query.length >= 3,
       },
     },
   );
 
-  return { ...searchResult, canSearchStructures };
+  return { ...searchResult, canSearchStructures: accessToken !== null };
 }

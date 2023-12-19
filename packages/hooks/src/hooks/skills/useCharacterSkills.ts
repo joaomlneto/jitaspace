@@ -3,26 +3,25 @@ import {
   useGetCharactersCharacterIdSkills,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 
 export type CharacterSkill =
   GetCharactersCharacterIdSkillsQueryResponse["skills"][number];
 
-export const useCharacterSkills = () => {
-  const { characterId, isTokenValid, accessToken, scopes } =
-    useEsiClientContext();
+export const useCharacterSkills = (characterId: number) => {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-skills.read_skills.v1"],
+  });
 
   return useGetCharactersCharacterIdSkills(
     characterId ?? 1,
-    { token: accessToken },
     {},
+    { ...authHeaders },
     {
       query: {
-        enabled:
-          isTokenValid &&
-          !!characterId &&
-          scopes.includes("esi-skills.read_skills.v1"),
+        enabled: !!characterId && accessToken !== null,
       },
     },
   );

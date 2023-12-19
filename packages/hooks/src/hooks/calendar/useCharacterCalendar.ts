@@ -1,23 +1,22 @@
 import { useGetCharactersCharacterIdCalendarInfinite } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 
-export function useCharacterCalendar() {
-  const { isTokenValid, characterId, scopes, accessToken } =
-    useEsiClientContext();
+export const useCharacterCalendar = (characterId?: number) => {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-calendar.read_calendar_events.v1"],
+  });
 
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCharactersCharacterIdCalendarInfinite(
       characterId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled:
-            characterId !== undefined &&
-            isTokenValid &&
-            scopes.includes("esi-calendar.read_calendar_events.v1"),
+          enabled: characterId !== undefined && accessToken !== null,
           getNextPageParam: (lastPage) => {
             if (lastPage.data.length != 50) return undefined;
             return lastPage.data.reduce(
@@ -37,4 +36,4 @@ export function useCharacterCalendar() {
     isLoading,
     mutate: refetch,
   };
-}
+};

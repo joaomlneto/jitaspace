@@ -1,22 +1,21 @@
 import { useGetCharactersCharacterIdFittings } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 
-export const useCharacterFittings = () => {
-  const { characterId, isTokenValid, scopes, accessToken } =
-    useEsiClientContext();
+export const useCharacterFittings = (characterId?: number) => {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-fittings.read_fittings.v1"],
+  });
 
   return useGetCharactersCharacterIdFittings(
     characterId ?? 0,
-    { token: accessToken },
     {},
+    { ...authHeaders },
     {
       query: {
-        enabled:
-          isTokenValid &&
-          !!characterId &&
-          scopes.includes("esi-fittings.read_fittings.v1"),
+        enabled: characterId !== undefined && accessToken !== null,
       },
     },
   );

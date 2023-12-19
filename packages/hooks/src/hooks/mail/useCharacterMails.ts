@@ -7,21 +7,17 @@ import {
   useGetCharactersCharacterIdMailInfinite,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
-
-type useCharacterMailsProps = {
-  labels?: number[];
-};
-
-export function useCharacterMails({ labels = [] }: useCharacterMailsProps) {
-  const { isTokenValid, characterId, scopes, accessToken } =
-    useEsiClientContext();
+export function useCharacterMails(characterId?: number, labels: number[] = []) {
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-mail.read_mail.v1"],
+  });
 
   const queryKey = useMemo(
     () =>
       getCharactersCharacterIdMailQueryKey(characterId ?? 0, {
-        token: accessToken,
         // @ts-expect-error generated code parses this wrong as url param
         labels: labels !== undefined ? labels.join(",") : undefined,
       }),
@@ -31,22 +27,23 @@ export function useCharacterMails({ labels = [] }: useCharacterMailsProps) {
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCharactersCharacterIdMailInfinite(
       characterId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled:
-            characterId !== undefined &&
-            isTokenValid &&
-            scopes.includes("esi-mail.read_mail.v1"),
+          enabled: characterId !== undefined && accessToken !== null,
           queryKey,
           queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
-            getCharactersCharacterIdMail(characterId ?? 0, {
-              last_mail_id: pageParam,
-              // @ts-expect-error generated code parses this wrong as url param
-              labels: labels !== undefined ? labels.join(",") : undefined,
-              token: accessToken,
-            }),
+            getCharactersCharacterIdMail(
+              characterId ?? 0,
+              {
+                last_mail_id: pageParam,
+                // @ts-expect-error generated code parses this wrong as url param
+                labels: labels !== undefined ? labels.join(",") : undefined,
+              },
+              {},
+              { headers: { ...authHeaders } },
+            ),
           getNextPageParam: (lastPage) => {
             if (lastPage.data.length != 50) return undefined;
             return lastPage.data.reduce(

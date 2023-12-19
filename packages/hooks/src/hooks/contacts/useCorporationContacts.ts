@@ -1,16 +1,14 @@
-import { useMemo } from "react";
 import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
 
 import {
   getCorporationsCorporationIdContacts,
   GetCorporationsCorporationIdContactsLabelsQueryResponse,
   GetCorporationsCorporationIdContactsQueryResponse,
-  useGetCharactersCharacterId,
   useGetCorporationsCorporationIdContactsInfinite,
   useGetCorporationsCorporationIdContactsLabels,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 export type CorporationContact =
   GetCorporationsCorporationIdContactsQueryResponse[number];
@@ -18,33 +16,19 @@ export type CorporationContact =
 export type CorporationContactLabel =
   GetCorporationsCorporationIdContactsLabelsQueryResponse[number];
 
-export function useCorporationContacts() {
-  const { isTokenValid, characterId, scopes, accessToken } =
-    useEsiClientContext();
-
-  const { data: character } = useGetCharactersCharacterId(
-    characterId ?? 0,
-    {},
-    {},
-    { query: { enabled: characterId !== undefined } },
-  );
-
-  const corporationId = useMemo(
-    () => character?.data.corporation_id ?? null,
-    [character?.data],
-  );
+export function useCorporationContacts(corporationId: number) {
+  const { accessToken, authHeaders } = useAccessToken({
+    corporationId,
+    scopes: ["esi-corporations.read_contacts.v1"],
+  });
 
   const { data: labels } = useGetCorporationsCorporationIdContactsLabels(
     corporationId ?? 0,
-    { token: accessToken },
     {},
+    { ...authHeaders },
     {
       query: {
-        enabled:
-          !!characterId &&
-          isTokenValid &&
-          scopes.includes("esi-corporations.read_contacts.v1") &&
-          corporationId !== undefined,
+        enabled: !!corporationId && accessToken !== null,
         refetchOnWindowFocus: false,
       },
     },
@@ -53,20 +37,20 @@ export function useCorporationContacts() {
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCorporationsCorporationIdContactsInfinite(
       corporationId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled:
-            characterId !== undefined &&
-            isTokenValid &&
-            scopes.includes("esi-corporations.read_contacts.v1") &&
-            corporationId !== undefined,
+          enabled: !!corporationId && accessToken !== null,
           queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
-            getCorporationsCorporationIdContacts(corporationId ?? 0, {
-              page: pageParam,
-              token: accessToken,
-            }),
+            getCorporationsCorporationIdContacts(
+              corporationId ?? 0,
+              {
+                page: pageParam,
+              },
+              {},
+              { headers: { ...authHeaders } },
+            ),
           getNextPageParam: (lastPage, pages) => {
             const numPages: number | undefined = lastPage.headers?.["x-pages"];
             const nextPage = pages.length + 1;

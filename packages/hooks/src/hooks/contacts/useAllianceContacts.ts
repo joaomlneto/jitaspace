@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
 
 import {
@@ -7,10 +6,9 @@ import {
   GetAlliancesAllianceIdContactsQueryResponse,
   useGetAlliancesAllianceIdContactsInfinite,
   useGetAlliancesAllianceIdContactsLabels,
-  useGetCharactersCharacterId,
 } from "@jitaspace/esi-client";
 
-import { useEsiClientContext } from "../useEsiClientContext";
+import { useAccessToken } from "../auth";
 
 export type AllianceContact =
   GetAlliancesAllianceIdContactsQueryResponse[number];
@@ -18,33 +16,19 @@ export type AllianceContact =
 export type AllianceContactLabel =
   GetAlliancesAllianceIdContactsLabelsQueryResponse[number];
 
-export function useAllianceContacts() {
-  const { isTokenValid, characterId, scopes, accessToken } =
-    useEsiClientContext();
-
-  const { data: character } = useGetCharactersCharacterId(
-    characterId ?? 0,
-    {},
-    {},
-    { query: { enabled: characterId !== undefined } },
-  );
-
-  const allianceId = useMemo(
-    () => character?.data.alliance_id ?? null,
-    [character?.data.alliance_id],
-  );
+export function useAllianceContacts(allianceId: number) {
+  const { accessToken, authHeaders } = useAccessToken({
+    allianceId,
+    scopes: ["esi-alliances.read_contacts.v1"],
+  });
 
   const { data: labels } = useGetAlliancesAllianceIdContactsLabels(
     allianceId ?? 0,
-    { token: accessToken },
     {},
+    { ...authHeaders },
     {
       query: {
-        enabled:
-          !!characterId &&
-          isTokenValid &&
-          scopes.includes("esi-alliances.read_contacts.v1") &&
-          allianceId !== undefined,
+        enabled: !!allianceId && accessToken !== null,
         refetchOnWindowFocus: false,
       },
     },
@@ -53,20 +37,20 @@ export function useAllianceContacts() {
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetAlliancesAllianceIdContactsInfinite(
       allianceId ?? 0,
-      { token: accessToken },
       {},
+      { ...authHeaders },
       {
         query: {
-          enabled:
-            characterId !== undefined &&
-            isTokenValid &&
-            scopes.includes("esi-alliances.read_contacts.v1") &&
-            allianceId !== undefined,
+          enabled: accessToken !== null && allianceId !== undefined,
           queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
-            getAlliancesAllianceIdContacts(allianceId ?? 0, {
-              page: pageParam,
-              token: accessToken,
-            }),
+            getAlliancesAllianceIdContacts(
+              allianceId ?? 0,
+              {
+                page: pageParam,
+              },
+              {},
+              { headers: { ...authHeaders } },
+            ),
           getNextPageParam: (lastPage, pages) => {
             const numPages: number | undefined = lastPage.headers?.["x-pages"];
             const nextPage = pages.length + 1;
