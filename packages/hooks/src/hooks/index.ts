@@ -18,7 +18,6 @@ export * from "./wallet";
 export * from "./wars";
 
 export * from "./useCorporation";
-export * from "./useEsiClientContext";
 export * from "./useEsiClientStatistics";
 export * from "./useEsiName";
 export * from "./useEsiSearch";
