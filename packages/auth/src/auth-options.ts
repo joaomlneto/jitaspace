@@ -9,9 +9,28 @@ import EVEOnlineProvider, {
 } from "next-auth/providers/eveonline";
 
 import { env } from "../env.mjs";
+import {
+  getEveSsoAccessTokenPayload,
+  refreshEveSsoToken,
+  sealDataWithAuthSecret,
+} from "../utils";
+
 
 // How much time before token expires we're willing to refresh it
 const REFRESH_TOKEN_BEFORE_EXP_TIME = 60000;
+
+const encryptRefreshToken = async (
+  accessToken: string,
+  refreshToken: string,
+) => {
+  const payload = getEveSsoAccessTokenPayload(accessToken);
+  if (!payload) throw new Error("Error getting access token payload");
+  if (!refreshToken) throw new Error("No refresh token provided!");
+  return await sealDataWithAuthSecret({
+    accessTokenExpiration: payload.exp,
+    refreshToken,
+  });
+};
 
 /**
  * Module augmentation for `next-auth` types
@@ -28,6 +47,7 @@ declare module "next-auth" {
       id: number;
     } & DefaultSession["user"];
     accessToken: string;
+    encryptedRefreshToken: string;
   }
 
   // interface User {
@@ -64,15 +84,18 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    session({
+    async session({
       session,
       token,
     }: {
       session: Session;
-      token: JWT & { accessToken?: string };
+      token: JWT & { accessToken?: string; refreshToken?: string };
     }) {
       session.user.id = Number(token.sub!);
       session.accessToken = token.accessToken!;
+      console.log({ token });
+      // @ts-expect-error token does not have this property and im not sure where to add it
+      session.encryptedRefreshToken = token.encryptedRefreshToken;
       return session;
     },
     async jwt({ token, user, account }) {
@@ -81,12 +104,13 @@ export const authOptions: NextAuthOptions = {
         return {
           accessToken: account.access_token,
           accessTokenExpires: account.expires_at! * 1000,
-          refreshToken: account.refresh_token,
+          encryptedRefreshToken: await encryptRefreshToken(
+            account.access_token!,
+            account.refresh_token!,
+          ),
           ...token,
         };
       }
-
-      //console.log('token ttl', (<number>token.accessTokenExpires - Date.now()) / 1000);
 
       // return previous token if the access token has not expired yet (or is about to expire)
       if (
@@ -98,42 +122,21 @@ export const authOptions: NextAuthOptions = {
 
       // access token has expired, try to refresh it
       try {
-        const url = "https://login.eveonline.com/v2/oauth/token";
-
-        // Base64 encode the client ID and secret
-        const headerString = `${env.EVE_CLIENT_ID}:${env.EVE_CLIENT_SECRET}`;
-        const buff = Buffer.from(headerString, "utf-8");
-        const authHeader = buff.toString("base64");
-
-        const refreshedTokensResponse = await fetch(url, {
-          method: "POST",
-          body: new URLSearchParams({
-            grant_type: "refresh_token",
-            refresh_token: token.refreshToken as string,
-          }),
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            Authorization: `Basic ${authHeader}`,
-            Host: "login.eveonline.com",
-          },
+        const refreshedTokens = await refreshEveSsoToken({
+          eveClientId: env.EVE_CLIENT_ID,
+          eveClientSecret: env.EVE_CLIENT_SECRET,
+          refreshToken: token.refreshToken as string,
         });
-
-        if (!refreshedTokensResponse.ok) {
-          throw new Error("error refreshing access token");
-        }
-
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const refreshedTokens: {
-          access_token: string;
-          expires_in: number;
-          refresh_token: string;
-        } = await refreshedTokensResponse.json();
 
         return {
           ...token,
           accessToken: refreshedTokens.access_token,
           accessTokenExpires: Date.now() + refreshedTokens.expires_in * 1000,
           refreshToken: refreshedTokens.refresh_token ?? token.refreshToken, // fall back to old refresh token
+          encryptedRefreshToken: await encryptRefreshToken(
+            refreshedTokens.access_token,
+            refreshedTokens.refresh_token ?? token.refreshToken,
+          ),
         };
       } catch (e) {
         console.error("error refreshing access token", e);
