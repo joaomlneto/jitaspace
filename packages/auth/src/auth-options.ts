@@ -121,6 +121,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       // access token has expired, try to refresh it
+      throw new Error("next-auth refresh code is to be removed!");
       try {
         const refreshedTokens = await refreshEveSsoToken({
           eveClientId: env.EVE_CLIENT_ID,
