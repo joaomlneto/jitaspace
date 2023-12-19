@@ -10,6 +10,7 @@ import {
 
 
 type CalendarEventListProps = TableProps & {
+  characterId: number;
   events: CalendarEvent[];
 };
 

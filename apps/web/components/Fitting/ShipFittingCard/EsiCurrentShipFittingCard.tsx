@@ -7,13 +7,14 @@ import { ShipFittingCard } from "./ShipFittingCard";
 
 
 type EsiCurrentShipFittingCardProps = Omit<CardProps, "children"> & {
+  characterId: number;
   hideHeader?: boolean;
   hideModules?: boolean;
 };
 
 export const EsiCurrentShipFittingCard = memo(
-  ({ ...otherProps }: EsiCurrentShipFittingCardProps) => {
-    const fit = useCharacterCurrentFit();
+  ({ characterId, ...otherProps }: EsiCurrentShipFittingCardProps) => {
+    const fit = useCharacterCurrentFit(characterId);
 
     return (
       <ShipFittingCard

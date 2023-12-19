@@ -9,11 +9,12 @@ import {
   postCharactersCharacterIdMailLabels,
   postCharactersCharacterIdMailLabelsMutationRequestColor,
 } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken, useSelectedCharacter } from "@jitaspace/hooks";
 import { MailLabelColorSelect } from "@jitaspace/ui";
 import { randomProperty } from "@jitaspace/utils";
 
 import { LabelManagementTable } from "~/components/EveMail";
+
 
 export function ManageMailLabelsModal({
   context,
@@ -21,7 +22,12 @@ export function ManageMailLabelsModal({
 }: ContextModalProps<{
   /* empty */
 }>) {
-  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+  const character = useSelectedCharacter();
+  const characterId = character?.characterId;
+  const { accessToken, authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-mail.organize_mail.v1"],
+  });
   const form = useForm({
     initialValues: {
       name: "",
@@ -43,13 +49,13 @@ export function ManageMailLabelsModal({
   });
   return (
     <Stack spacing="xl">
-      <LabelManagementTable />
+      {characterId && <LabelManagementTable characterId={characterId} />}
       <form
         onSubmit={form.onSubmit((values) => {
           void (async (values) => {
             try {
               console.log(values);
-              if (!isTokenValid || !characterId) {
+              if (accessToken === null || !characterId) {
                 return showNotification({
                   title: "Error creating label",
                   message: `Error creating label ${values.name}: Not logged in`,

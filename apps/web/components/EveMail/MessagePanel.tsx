@@ -20,6 +20,7 @@ import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 import { MessageMenu } from "~/components/EveMail/MessageMenu";
 
 export type MessagePanelProps = {
+  characterId: number;
   data: MailboxTableProps["data"];
   messageId?: number;
   hideLabels?: boolean;
@@ -30,6 +31,7 @@ export type MessagePanelProps = {
 };
 
 export function MessagePanel({
+  characterId,
   data,
   messageId,
   hideLabels,
@@ -38,8 +40,8 @@ export function MessagePanel({
   hideSender,
   hideSubject,
 }: MessagePanelProps) {
-  const { data: labels } = useCharacterMailLabels();
-  const { data: mail } = useCharacterMail(messageId);
+  const { data: labels } = useCharacterMailLabels(characterId);
+  const { data: mail } = useCharacterMail(characterId, messageId);
 
   return (
     <Stack>
@@ -47,9 +49,20 @@ export function MessagePanel({
         <Group position="apart">
           <Group noWrap spacing="xs">
             From:
-            <EveMailSenderAvatar messageId={messageId} size="sm" />
-            <EveMailSenderAnchor messageId={messageId} target="_blank">
-              <EveMailSenderName messageId={messageId} />
+            <EveMailSenderAvatar
+              characterId={characterId}
+              messageId={messageId}
+              size="sm"
+            />
+            <EveMailSenderAnchor
+              characterId={characterId}
+              messageId={messageId}
+              target="_blank"
+            >
+              <EveMailSenderName
+                characterId={characterId}
+                messageId={messageId}
+              />
             </EveMailSenderAnchor>
           </Group>
           {mail?.data.timestamp && (
@@ -81,7 +94,10 @@ export function MessagePanel({
                     size="sm"
                   />
                   {recipient.recipient_type === "mailing_list" ? (
-                    <MailingListName mailingListId={recipient.recipient_id}>
+                    <MailingListName
+                      characterId={characterId}
+                      mailingListId={recipient.recipient_id}
+                    >
                       Mailing List
                     </MailingListName>
                   ) : (
@@ -121,15 +137,27 @@ export function MessagePanel({
                 (item) =>
                   item && (
                     <Group key={item.label_id} noWrap spacing="xs">
-                      <MailLabelColorSwatch labelId={item.label_id} size={12} />
-                      <LabelName size="sm" labelId={item.label_id} />
+                      <MailLabelColorSwatch
+                        characterId={characterId}
+                        labelId={item.label_id}
+                        size={12}
+                      />
+                      <LabelName
+                        characterId={characterId}
+                        size="sm"
+                        labelId={item.label_id}
+                      />
                     </Group>
                   ),
               )}
           </Group>
           {mail?.data && (
             <Group position="right">
-              <MessageMenu data={data} mail={mail.data} />
+              <MessageMenu
+                characterId={characterId}
+                data={data}
+                mail={mail.data}
+              />
             </Group>
           )}
         </Group>

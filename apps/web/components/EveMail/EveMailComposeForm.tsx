@@ -15,17 +15,23 @@ import { showNotification } from "@mantine/notifications";
 import { HttpStatusCode, type AxiosError } from "axios";
 
 import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken, useSelectedCharacter } from "@jitaspace/hooks";
 import { EmailRecipientSearchMultiSelect } from "@jitaspace/ui";
 
 import { MailMessageEditor } from "~/components/EveMail/Editor/MailMessageEditor";
+
 
 export type EveMailComposeFormProps = {
   onSend?: () => void;
 };
 
 export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
-  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
+  const selectedCharacter = useSelectedCharacter();
+  const characterId = selectedCharacter?.characterId;
+  const { authHeaders, accessToken } = useAccessToken({
+    characterId: characterId,
+    scopes: ["esi-mail.send_mail.v1"],
+  });
   const form = useForm<{
     recipients: string[];
     subject: string;
@@ -53,7 +59,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
   const handleSend = async (values: typeof form.values) => {
     console.log("values:", values);
     try {
-      if (!isTokenValid || !characterId) {
+      if (accessToken === null || !characterId) {
         return showNotification({
           message: "Not logged in",
         });
@@ -121,7 +127,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
           },
           onConfirm: () => {
             void (async () => {
-              if (!isTokenValid || !characterId) {
+              if (accessToken === null || !characterId) {
                 return showNotification({
                   message: "Not logged in",
                 });

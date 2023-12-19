@@ -25,10 +25,12 @@ import {
 } from "@jitaspace/ui";
 
 type EventListProps = TableProps & {
+  characterId: number;
   events: CalendarEvent[];
 };
 
 export function MobileCalendarEventList({
+  characterId,
   events,
   ...otherProps
 }: EventListProps) {
@@ -44,6 +46,7 @@ export function MobileCalendarEventList({
                     <Tooltip
                       label={
                         <CalendarEventHumanDurationText
+                          characterId={characterId}
                           eventId={event.event_id}
                         />
                       }
@@ -58,12 +61,19 @@ export function MobileCalendarEventList({
                     </Tooltip>
                     <Tooltip
                       label={
-                        <CalendarEventOwnerName eventId={event.event_id} />
+                        <CalendarEventOwnerName
+                          characterId={characterId}
+                          eventId={event.event_id}
+                        />
                       }
                     >
                       <Avatar size="sm">
-                        <CalendarEventOwnerAnchor eventId={event.event_id}>
+                        <CalendarEventOwnerAnchor
+                          characterId={characterId}
+                          eventId={event.event_id}
+                        >
                           <CalendarEventOwnerAvatar
+                            characterId={characterId}
                             eventId={event.event_id}
                             size="sm"
                           />
@@ -73,12 +83,14 @@ export function MobileCalendarEventList({
                   </Group>
                   <Group position="right">
                     <CalendarEventAttendeesAvatarGroup
+                      characterId={characterId}
                       eventId={event.event_id}
                       limit={3}
                       size="sm"
                       radius="xl"
                     />
                     <CalendarEventResponseBadge
+                      characterId={characterId}
                       size="xs"
                       eventId={event.event_id}
                     />
@@ -101,7 +113,7 @@ export function MobileCalendarEventList({
                             </Title>
                           ),
                           size: "lg",
-                          innerProps: { eventId: event.event_id },
+                          innerProps: { characterId, eventId: event.event_id },
                         });
                       }
                     }}

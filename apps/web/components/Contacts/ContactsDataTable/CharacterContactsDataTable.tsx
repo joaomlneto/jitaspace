@@ -8,10 +8,18 @@ import {
 } from "./ContactsDataTable";
 
 
+export type CharacterContactsDataTableProps = Omit<
+  ContactsDataTableProps,
+  "contacts" | "labels"
+> & {
+  characterId: number;
+};
+
 export const CharacterContactsDataTable = ({
+  characterId,
   ...otherProps
-}: Omit<ContactsDataTableProps, "contacts" | "labels">) => {
-  const { data, labels } = useCharacterContacts();
+}: CharacterContactsDataTableProps) => {
+  const { data, labels } = useCharacterContacts(characterId);
 
   return <ContactsDataTable contacts={data} labels={labels} {...otherProps} />;
 };

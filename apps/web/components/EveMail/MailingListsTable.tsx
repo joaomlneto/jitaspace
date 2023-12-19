@@ -8,8 +8,12 @@ import { useCharacterMailingLists } from "@jitaspace/hooks";
 
 
 
-export function MailingListsTable() {
-  const { data, error } = useCharacterMailingLists();
+export type MailingListsTableProps = {
+  characterId: number;
+};
+
+export function MailingListsTable({ characterId }: MailingListsTableProps) {
+  const { data, error } = useCharacterMailingLists(characterId);
 
   return (
     <>

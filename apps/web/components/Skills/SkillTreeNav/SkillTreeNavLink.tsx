@@ -18,6 +18,7 @@ import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 
 type SkillTreeNavLinkProps = NavLinkProps & {
+  characterId: number;
   group: {
     groupId: number;
     name: string;
@@ -39,6 +40,7 @@ type SkillTreeNavLinkProps = NavLinkProps & {
 
 export const SkillTreeNavLink = memo(
   ({
+    characterId,
     group,
     showUnpublished = false,
     fetchNameFromEsi = false,
@@ -48,7 +50,7 @@ export const SkillTreeNavLink = memo(
       data: skills,
       isLoading: skillsLoading,
       error: skillsError,
-    } = useCharacterSkills();
+    } = useCharacterSkills(characterId);
 
     const sortedTypes = useMemo(
       () =>

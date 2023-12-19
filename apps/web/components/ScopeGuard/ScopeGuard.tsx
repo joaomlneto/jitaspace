@@ -1,10 +1,10 @@
-import { type PropsWithChildren, type ReactElement } from "react";
-import { Group, Loader } from "@mantine/core";
+import { useMemo, type PropsWithChildren, type ReactElement } from "react";
 
 import { type ESIScope } from "@jitaspace/esi-metadata";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useSelectedCharacter } from "@jitaspace/hooks";
 
 import { RequestPermissionsBanner } from "./RequestPermissionsBanner";
+
 
 export type ScopeGuardProps = {
   requiredScopes?: ESIScope[];
@@ -18,22 +18,14 @@ export function ScopeGuard({
   insufficientScopesComponent,
   children,
 }: PropsWithChildren<ScopeGuardProps>) {
-  const { scopes: grantedScopes, loading } = useEsiClientContext();
+  const selectedCharacter = useSelectedCharacter();
+  const grantedScopes = useMemo(
+    () => selectedCharacter?.accessTokenPayload.scp ?? [],
+    [selectedCharacter],
+  );
 
   // If no scopes are required, just pass through.
   if (requiredScopes.length === 0) return children;
-
-  // Are we still loading? If so, display something...
-  if (loading) {
-    return (
-      loadingScopesComponent ?? (
-        <Group>
-          <Loader size="sm" />
-          Loading session
-        </Group>
-      )
-    );
-  }
 
   // Scopes are missing! Do not display children.
   if (

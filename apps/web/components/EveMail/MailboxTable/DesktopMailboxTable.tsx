@@ -18,11 +18,12 @@ import { type MailboxTableProps } from "~/components/EveMail";
 import { MessageMenu } from "../MessageMenu";
 
 export const DesktopMailboxTable = ({
+  characterId,
   data,
   mutate,
   ...otherProps
 }: MailboxTableProps) => {
-  const { data: labels } = useCharacterMailLabels();
+  const { data: labels } = useCharacterMailLabels(characterId);
   return (
     <Table highlightOnHover {...otherProps}>
       <thead>
@@ -43,17 +44,28 @@ export const DesktopMailboxTable = ({
                 <Popover width={250} withArrow shadow="md">
                   <Popover.Target>
                     <Group noWrap key={mail.mail_id}>
-                      <EveMailSenderAvatar messageId={mail.mail_id} size="sm" />
+                      <EveMailSenderAvatar
+                        characterId={characterId}
+                        messageId={mail.mail_id}
+                        size="sm"
+                      />
                       <EveMailSenderAnchor
+                        characterId={characterId}
                         messageId={mail.mail_id}
                         fw={mail.is_read ? "normal" : "bold"}
                       >
-                        <EveMailSenderName messageId={mail.mail_id} />{" "}
+                        <EveMailSenderName
+                          characterId={characterId}
+                          messageId={mail.mail_id}
+                        />{" "}
                       </EveMailSenderAnchor>
                     </Group>
                   </Popover.Target>
                   <Popover.Dropdown>
-                    <EveMailSenderCard messageId={mail.mail_id} />
+                    <EveMailSenderCard
+                      characterId={characterId}
+                      messageId={mail.mail_id}
+                    />
                   </Popover.Dropdown>
                 </Popover>
               </td>
@@ -72,6 +84,7 @@ export const DesktopMailboxTable = ({
                       title: <Text fw={700}>{mail.subject}</Text>,
                       size: "xl",
                       innerProps: {
+                        characterId,
                         messageId: mail.mail_id,
                         data: data,
                         hideSubject: true,
@@ -116,10 +129,15 @@ export const DesktopMailboxTable = ({
                         item && (
                           <Group noWrap spacing={4} key={item.label_id}>
                             <MailLabelColorSwatch
+                              characterId={characterId}
                               labelId={item.label_id}
                               size={12}
                             />
-                            <LabelName size="xs" labelId={item.label_id} />
+                            <LabelName
+                              characterId={characterId}
+                              size="xs"
+                              labelId={item.label_id}
+                            />
                           </Group>
                         ),
                     )}
@@ -127,7 +145,12 @@ export const DesktopMailboxTable = ({
               </td>
               <td>
                 <Group position="right">
-                  <MessageMenu data={data} mail={mail} mutate={mutate} />
+                  <MessageMenu
+                    characterId={characterId}
+                    data={data}
+                    mail={mail}
+                    mutate={mutate}
+                  />
                 </Group>
               </td>
             </tr>

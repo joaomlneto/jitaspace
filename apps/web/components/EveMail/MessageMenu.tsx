@@ -14,7 +14,7 @@ import {
   deleteCharactersCharacterIdMailMailId,
   putCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
-import { useCharacterMailLabels, useEsiClientContext } from "@jitaspace/hooks";
+import { useAccessToken, useCharacterMailLabels } from "@jitaspace/hooks";
 import { MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
@@ -42,14 +42,23 @@ type Message = {
 };
 
 export type MessageMenuProps = {
+  characterId: number;
   mail: Message;
   mutate?: () => void;
   data?: Message[];
 };
 
-export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
-  const { characterId, isTokenValid, accessToken } = useEsiClientContext();
-  const { data: labels } = useCharacterMailLabels();
+export function MessageMenu({
+  characterId,
+  mail,
+  mutate,
+  data,
+}: MessageMenuProps) {
+  const { authHeaders } = useAccessToken({
+    characterId,
+    scopes: ["esi-mail.organize_mail.v1"],
+  });
+  const { data: labels } = useCharacterMailLabels(characterId);
 
   return (
     <Menu>
@@ -93,7 +102,12 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                             [...(mail.labels ?? []), label.label_id!],
                     },
-                    { token: accessToken },
+                    {},
+                    {
+                      headers: {
+                        ...authHeaders,
+                      },
+                    },
                   );
 
                   // optimistic update
@@ -119,7 +133,11 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
               }}
             >
               <Group>
-                <MailLabelColorSwatch labelId={label.label_id} size={16}>
+                <MailLabelColorSwatch
+                  characterId={characterId}
+                  labelId={label.label_id}
+                  size={16}
+                >
                   {label.label_id && mail.labels?.includes(label.label_id) && (
                     <IconCheck size={16} />
                   )}
@@ -160,7 +178,10 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                 {
                   read: !mail.is_read,
                 },
-                { token: accessToken },
+                {},
+                {
+                  headers: { ...authHeaders },
+                },
               );
               if (data) {
                 data.find((item) => item.mail_id === mail.mail_id)!.is_read =
@@ -214,7 +235,12 @@ export function MessageMenu({ mail, mutate, data }: MessageMenuProps) {
                   await deleteCharactersCharacterIdMailMailId(
                     characterId,
                     mail.mail_id,
-                    { token: accessToken },
+                    {},
+                    {
+                      headers: {
+                        ...authHeaders,
+                      },
+                    },
                   );
                   if (data) {
                     data.find(

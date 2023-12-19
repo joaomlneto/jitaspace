@@ -11,8 +11,14 @@ import { isSpecialLabelId } from "@jitaspace/utils";
 
 
 
-export function LabelManagementTable() {
-  const { data: labels, deleteLabel } = useCharacterMailLabels();
+export type LabelManagementTableProps = {
+  characterId: number;
+};
+
+export function LabelManagementTable({
+  characterId,
+}: LabelManagementTableProps) {
+  const { data: labels, deleteLabel } = useCharacterMailLabels(characterId);
 
   return (
     <Table verticalSpacing="xs" highlightOnHover>
@@ -27,8 +33,12 @@ export function LabelManagementTable() {
           <tr key={label.label_id}>
             <td>
               <Group>
-                <MailLabelColorSwatch labelId={label.label_id} size={16} />
-                <LabelName labelId={label.label_id} />
+                <MailLabelColorSwatch
+                  characterId={characterId}
+                  labelId={label.label_id}
+                  size={16}
+                />
+                <LabelName characterId={characterId} labelId={label.label_id} />
               </Group>
             </td>
             <td align="right">

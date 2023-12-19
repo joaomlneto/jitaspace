@@ -1,12 +1,20 @@
-import { memo, type PropsWithChildren } from "react";
+import { memo, useMemo, type PropsWithChildren } from "react";
 import { Group, rem, Text, ThemeIcon, Tooltip } from "@mantine/core";
 
 import { InfoIcon } from "@jitaspace/eve-icons";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useSelectedCharacter } from "@jitaspace/hooks";
+
+
+
+
 
 export const JitaSpotlightActionsWrapper = memo(
   ({ children }: PropsWithChildren) => {
-    const { scopes } = useEsiClientContext();
+    const selectedCharacter = useSelectedCharacter();
+    const scopes = useMemo(
+      () => selectedCharacter?.accessTokenPayload.scp ?? [],
+      [selectedCharacter],
+    );
 
     const canUseEsiSearch = scopes.includes("esi-search.search_structures.v1");
     const canReadStructures = scopes.includes(

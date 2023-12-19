@@ -3,8 +3,11 @@ import { type ContextModalProps } from "@mantine/modals";
 
 import { MailingListsTable } from "~/components/EveMail";
 
-export function ViewMailingListSubscriptionsModal({}: ContextModalProps<{
-  /* empty */
+
+export function ViewMailingListSubscriptionsModal({
+  innerProps,
+}: ContextModalProps<{
+  characterId: number;
 }>) {
-  return <MailingListsTable />;
+  return <MailingListsTable characterId={innerProps.characterId} />;
 }

@@ -8,10 +8,18 @@ import {
 } from "./ContactsDataTable";
 
 
+export type AllianceContactsDataTableProps = Omit<
+  ContactsDataTableProps,
+  "contacts" | "labels"
+> & {
+  allianceId: number;
+};
+
 export const AllianceContactsDataTable = ({
+  allianceId,
   ...otherProps
-}: Omit<ContactsDataTableProps, "contacts" | "labels">) => {
-  const { data, labels } = useAllianceContacts();
+}: AllianceContactsDataTableProps) => {
+  const { data, labels } = useAllianceContacts(allianceId);
 
   return (
     <ContactsDataTable

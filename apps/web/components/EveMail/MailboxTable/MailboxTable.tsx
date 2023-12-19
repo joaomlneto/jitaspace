@@ -4,7 +4,9 @@ import { MediaQuery, type TableProps } from "@mantine/core";
 import { DesktopMailboxTable } from "./DesktopMailboxTable";
 import { MobileMailboxTable } from "./MobileMailboxTable";
 
+
 export type MailboxTableProps = TableProps & {
+  characterId: number;
   data: {
     from?: number;
     is_read?: boolean;

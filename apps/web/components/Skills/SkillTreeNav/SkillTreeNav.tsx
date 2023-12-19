@@ -3,7 +3,9 @@ import { Box, Container } from "@mantine/core";
 
 import { SkillTreeNavLink } from "./SkillTreeNavLink";
 
+
 type SkillTreeNavProps = {
+  characterId: number;
   groups: {
     groupId: number;
     name: string;
@@ -23,7 +25,7 @@ type SkillTreeNavProps = {
 };
 
 export const SkillTreeNav = memo(
-  ({ groups, showUnpublished = false }: SkillTreeNavProps) => {
+  ({ characterId, groups, showUnpublished = false }: SkillTreeNavProps) => {
     // get IDs of groups sorted by their respective names
     const alphabeticallySortedGroupIds = groups
       .filter((group) => showUnpublished || group.published)
@@ -36,6 +38,7 @@ export const SkillTreeNav = memo(
         <Box>
           {alphabeticallySortedGroupIds.map((group) => (
             <SkillTreeNavLink
+              characterId={characterId}
               key={group.groupId}
               group={group}
               showUnpublished={showUnpublished}

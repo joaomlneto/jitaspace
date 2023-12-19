@@ -1,30 +1,14 @@
 import React from "react";
-import {
-  Button,
-  CopyButton,
-  Group,
-  Loader,
-  Spoiler,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { Group, Loader, Text } from "@mantine/core";
 
-import { useEsiClientContext } from "@jitaspace/hooks";
-import {
-  CharacterAvatar,
-  CharacterName,
-  FormattedDateText,
-  TimeAgoText,
-} from "@jitaspace/ui";
 
-import { ScopesTable } from "~/components/ScopeGuard";
+
+
 
 export function EsiClientStateCard() {
-  const { loading, characterId, scopes, tokenExpirationDate, accessToken } =
-    useEsiClientContext();
+  // TODO: Migrate to new ESI React Client Library
 
-  if (loading) {
+  if (true) {
     return (
       <Group>
         <Loader />
@@ -33,6 +17,7 @@ export function EsiClientStateCard() {
     );
   }
 
+  /*
   return (
     <>
       <Group grow>
@@ -102,5 +87,5 @@ export function EsiClientStateCard() {
         </>
       )}
     </>
-  );
+  );*/
 }

@@ -8,11 +8,7 @@ import {
 } from "@mantine/spotlight";
 
 import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
-import {
-  EsiSearchCategory,
-  useEsiClientContext,
-  useEsiSearch,
-} from "@jitaspace/hooks";
+import { EsiSearchCategory, useEsiSearch } from "@jitaspace/hooks";
 
 import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
 import { JitaSpotlightActionsWrapper } from "~/components/Spotlight/JitaSpotlightActionsWrapper";
@@ -24,7 +20,6 @@ export const JitaSpotlightProvider = memo(
     const router = useRouter();
     const [query, setQuery] = useState<string>("");
     const [debouncedQuery] = useDebouncedValue(query, 1000);
-    const { scopes } = useEsiClientContext();
 
     const { data: esiSearchData } = useEsiSearch(debouncedQuery);
 

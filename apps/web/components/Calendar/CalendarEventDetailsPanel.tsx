@@ -22,14 +22,19 @@ import {
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 
 export type CalendarEventPanelProps = {
+  characterId: number;
   eventId: number;
 };
 
 export function CalendarEventDetailsPanel({
+  characterId,
   eventId,
 }: CalendarEventPanelProps) {
-  const { data: event, canRespondToEvents } = useCalendarEvent(eventId);
-  const { data: attendees } = useCalendarEventAttendees(eventId);
+  const { data: event, canRespondToEvents } = useCalendarEvent(
+    characterId,
+    eventId,
+  );
+  const { data: attendees } = useCalendarEventAttendees(characterId, eventId);
 
   const eventResponseColor: {
     [key in CalendarEventAttendeeResponse]: string;
@@ -65,21 +70,36 @@ export function CalendarEventDetailsPanel({
       </Group>
       <Group position="apart">
         <Text>Duration</Text>
-        <CalendarEventHumanDurationText eventId={eventId} />
+        <CalendarEventHumanDurationText
+          characterId={characterId}
+          eventId={eventId}
+        />
       </Group>
       <Group position="apart">
         <Text>Owner</Text>
         <Group noWrap>
-          <CalendarEventOwnerAvatar eventId={eventId} size="sm" />
+          <CalendarEventOwnerAvatar
+            characterId={characterId}
+            eventId={eventId}
+            size="sm"
+          />
           <EveEntityNameAnchor entityId={event?.data.owner_id} />
         </Group>
       </Group>
       <Group position="apart">
         <Text>Your Response</Text>
         {canRespondToEvents ? (
-          <CalendarEventAttendanceSelect eventId={eventId} size="xs" w={130} />
+          <CalendarEventAttendanceSelect
+            characterId={characterId}
+            eventId={eventId}
+            size="xs"
+            w={130}
+          />
         ) : (
-          <CalendarEventResponseBadge eventId={eventId} />
+          <CalendarEventResponseBadge
+            characterId={characterId}
+            eventId={eventId}
+          />
         )}
       </Group>
       {event?.data.text && (

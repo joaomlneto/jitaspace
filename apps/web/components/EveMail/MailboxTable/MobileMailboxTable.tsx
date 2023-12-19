@@ -15,10 +15,11 @@ import {
 import { type MailboxTableProps } from "~/components/EveMail";
 
 export const MobileMailboxTable = ({
+  characterId,
   data,
   ...otherProps
 }: MailboxTableProps) => {
-  const { data: labels } = useCharacterMailLabels();
+  const { data: labels } = useCharacterMailLabels(characterId);
 
   const visibleMessages = data.filter((mail) => !mail.isDeleted);
 
@@ -32,11 +33,16 @@ export const MobileMailboxTable = ({
                 <Group position="apart" spacing="xs">
                   <Group noWrap spacing="xs">
                     <EveMailSenderAvatar
+                      characterId={characterId}
                       messageId={message.mail_id}
                       size="xs"
                     />
-                    <EveMailSenderAnchor messageId={message.mail_id}>
+                    <EveMailSenderAnchor
+                      characterId={characterId}
+                      messageId={message.mail_id}
+                    >
                       <EveMailSenderName
+                        characterId={characterId}
                         messageId={message.mail_id}
                         fw={message.is_read ? "normal" : "bold"}
                       />
@@ -55,6 +61,7 @@ export const MobileMailboxTable = ({
                           item && (
                             <Group noWrap spacing="xl" key={item.label_id}>
                               <MailLabelColorSwatch
+                                characterId={characterId}
                                 labelId={item.label_id}
                                 size={10}
                                 key={item.label_id}
@@ -89,6 +96,7 @@ export const MobileMailboxTable = ({
                       title: <Text fw={700}>{message.subject}</Text>,
                       size: "xl",
                       innerProps: {
+                        characterId,
                         messageId: message.mail_id,
                         data: data,
                         hideSubject: true,

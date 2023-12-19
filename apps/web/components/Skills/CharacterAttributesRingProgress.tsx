@@ -49,8 +49,14 @@ const icons: Record<CharacterAttribute, React.FC<EveIconProps>> = {
   willpower: WillpowerAttributeSmallIcon,
 };
 
-export function CharacterAttributesRingProgress() {
-  const { data, error, isLoading } = useCharacterAttributes();
+type CharacterAttributesRingProgressProps = {
+  characterId: number;
+};
+
+export function CharacterAttributesRingProgress({
+  characterId,
+}: CharacterAttributesRingProgressProps) {
+  const { data, error, isLoading } = useCharacterAttributes(characterId);
 
   if (isLoading) return "LOADING";
   if (error) return "ERROR";
@@ -145,8 +151,8 @@ export function CharacterAttributesRingProgress() {
                       {remapCooldownElapsed
                         ? "Available"
                         : (data?.data.bonus_remaps ?? 0) > 0
-                        ? "Bonus"
-                        : "No"}
+                          ? "Bonus"
+                          : "No"}
                     </Text>
                   </Group>
                 </Stack>

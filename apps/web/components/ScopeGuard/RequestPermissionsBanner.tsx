@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Button,
   Center,
@@ -14,10 +14,11 @@ import { openContextModal } from "@mantine/modals";
 import { signIn } from "next-auth/react";
 
 import { type ESIScope } from "@jitaspace/esi-metadata";
-import { useEsiClientContext } from "@jitaspace/hooks";
+import { useSelectedCharacter } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import { ScopesTable } from "./ScopesTable";
+
 
 const useStyles = createStyles((theme) => ({
   root: {
@@ -68,7 +69,11 @@ export function RequestPermissionsBanner({
   requiredScopes,
 }: RequestPermissionsBannerProps) {
   const { classes } = useStyles();
-  const { scopes: grantedScopes } = useEsiClientContext();
+  const selectedCharacter = useSelectedCharacter();
+  const grantedScopes = useMemo(
+    () => selectedCharacter?.accessTokenPayload.scp ?? [],
+    [selectedCharacter],
+  );
 
   const [openGrantedScopesTable, { toggle: toggleGrantedScopesTable }] =
     useDisclosure(false);

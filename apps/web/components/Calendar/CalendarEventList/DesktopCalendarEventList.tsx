@@ -24,10 +24,12 @@ import {
 } from "@jitaspace/ui";
 
 type EventListProps = TableProps & {
+  characterId: number;
   events: CalendarEvent[];
 };
 
 export function DesktopCalendarEventList({
+  characterId,
   events,
   ...otherProps
 }: EventListProps) {
@@ -39,7 +41,10 @@ export function DesktopCalendarEventList({
             <td width={10}>
               <Tooltip
                 label={
-                  <CalendarEventHumanDurationText eventId={event.event_id} />
+                  <CalendarEventHumanDurationText
+                    characterId={characterId}
+                    eventId={event.event_id}
+                  />
                 }
               >
                 <Text>
@@ -53,11 +58,20 @@ export function DesktopCalendarEventList({
             <td>
               <Group noWrap>
                 <Tooltip
-                  label={<CalendarEventOwnerName eventId={event.event_id} />}
+                  label={
+                    <CalendarEventOwnerName
+                      characterId={characterId}
+                      eventId={event.event_id}
+                    />
+                  }
                 >
                   <Avatar size="sm">
-                    <CalendarEventOwnerAnchor eventId={event.event_id}>
+                    <CalendarEventOwnerAnchor
+                      characterId={characterId}
+                      eventId={event.event_id}
+                    >
                       <CalendarEventOwnerAvatar
+                        characterId={characterId}
                         eventId={event.event_id}
                         size="sm"
                       />
@@ -81,7 +95,7 @@ export function DesktopCalendarEventList({
                             </Title>
                           ),
                           size: "lg",
-                          innerProps: { eventId: event.event_id },
+                          innerProps: { characterId, eventId: event.event_id },
                         });
                       }
                     }}
@@ -94,6 +108,7 @@ export function DesktopCalendarEventList({
             <td align="right" width={1}>
               <Group position="right">
                 <CalendarEventAttendeesAvatarGroup
+                  characterId={characterId}
                   eventId={event.event_id}
                   limit={5}
                   size="sm"
@@ -102,7 +117,11 @@ export function DesktopCalendarEventList({
               </Group>
             </td>
             <td align="right" width={1}>
-              <CalendarEventResponseBadge w={130} eventId={event.event_id} />
+              <CalendarEventResponseBadge
+                characterId={characterId}
+                w={130}
+                eventId={event.event_id}
+              />
             </td>
           </tr>
         ))}
