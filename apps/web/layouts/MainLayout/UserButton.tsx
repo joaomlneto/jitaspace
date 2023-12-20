@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   createStyles,
   Group,
@@ -47,6 +47,14 @@ export default function UserButton({ ...others }: UserButtonProps) {
   const character = useSelectedCharacter();
   const { characters, selectCharacter } = useAuthStore();
 
+  const sortedCharacters = useMemo(
+    () =>
+      Object.values(characters).sort((a, b) =>
+        a.accessTokenPayload.name.localeCompare(b.accessTokenPayload.name),
+      ),
+    [characters],
+  );
+
   if (!character) return "not logged in";
 
   const characterId = character.characterId;
@@ -68,10 +76,10 @@ export default function UserButton({ ...others }: UserButtonProps) {
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
-        {Object.keys(characters).length > 1 && (
+        {sortedCharacters.length > 1 && (
           <>
             <Menu.Label>Switch Character</Menu.Label>
-            {Object.values(characters)
+            {sortedCharacters
               .filter((character) => character.characterId !== characterId)
               .map((character) => (
                 <Menu.Item
