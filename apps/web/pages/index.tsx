@@ -17,7 +17,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconCircleX, IconFocus } from "@tabler/icons-react";
+import { IconCircleX } from "@tabler/icons-react";
 
 import { EveMailIcon } from "@jitaspace/eve-icons";
 import { useAuthStore } from "@jitaspace/hooks";
@@ -111,28 +111,16 @@ export default function Page() {
 
   return (
     <Container size="lg">
-      {selectedCharacter && (
-        <>
-          <Title order={4}>Selected Character</Title>
-          <Group>
-            <CharacterAvatar characterId={selectedCharacter} size="sm" />
-            <CharacterAnchor characterId={selectedCharacter}>
-              <CharacterName characterId={selectedCharacter} />
-            </CharacterAnchor>
-          </Group>
-        </>
-      )}
-      <Title order={3}>Your Characters</Title>
       <Stack my="md" spacing="xs">
         {Object.values(characters).map((character) => (
           <Group position="apart" key={character.characterId}>
-            <Group>
+            <Group noWrap spacing="xs">
               <CharacterAvatar characterId={character.characterId} size="sm" />
               <CharacterAnchor characterId={character.characterId}>
                 <CharacterName characterId={character.characterId} />
               </CharacterAnchor>
             </Group>
-            <Group>
+            <Group noWrap spacing="xs">
               <ActionIcon
                 radius="xl"
                 variant="subtle"
@@ -147,15 +135,6 @@ export default function Page() {
                 >
                   <EveMailIcon width={32} />
                 </TotalUnreadMailsIndicator>
-              </ActionIcon>
-              <ActionIcon
-                radius="xl"
-                variant="subtle"
-                onClick={() => {
-                  selectCharacter(character.characterId);
-                }}
-              >
-                <IconFocus />
               </ActionIcon>
               <ActionIcon
                 radius="xl"
