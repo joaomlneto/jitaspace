@@ -61,7 +61,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
           new Set(attribute.values.map((type) => type.value)).size > 1,
       )
       .map((entry) => entry.attributeId);
-  }, attributeTypeValues);
+  }, [attributeTypeValues]);
 
   const { data: attributes } = useDogmaAttributes(nonEqualAttributeIds ?? []);
 
@@ -82,8 +82,8 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
           <th>Attribute</th>
           {sortedTypes.map((type) => (
             <th key={type.type_id}>
-              <Group noWrap>
-                <TypeAvatar typeId={type.type_id} />
+              <Group spacing="xs">
+                <TypeAvatar typeId={type.type_id} size="sm" />
                 <TypeAnchor typeId={type.type_id} target="_blank">
                   <TypeName typeId={type.type_id} />
                 </TypeAnchor>
@@ -116,19 +116,22 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
         </tbody>
       </Table>
       <JsonInput
+        label="Types, sorted alphabetically by name"
         value={JSON.stringify(sortedTypes, null, 2)}
         autosize
-        maxRows={30}
+        maxRows={20}
       />
       <JsonInput
+        label="Attribute Ids (whose values differ between at least two of the Types)"
         value={JSON.stringify(nonEqualAttributeIds, null, 2)}
         autosize
-        maxRows={30}
+        maxRows={20}
       />
       <JsonInput
+        label="Attributes (whose values differ between at least two of the Types)"
         value={JSON.stringify(attributes, null, 2)}
         autosize
-        maxRows={30}
+        maxRows={20}
       />
     </>
   );
