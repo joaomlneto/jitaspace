@@ -6,6 +6,10 @@ import createSwaggerTS from "@kubb/swagger-ts";
 import createSwaggerZod from "@kubb/swagger-zod";
 import createSwaggerZodios from "@kubb/swagger-zodios";
 
+
+
+
+
 export default defineConfig(async () => {
   return {
     root: ".",
@@ -18,29 +22,33 @@ export default defineConfig(async () => {
     plugins: [
       createSwagger({}),
       createSwaggerClient({
-        client: "./src/client.ts",
+        client: {
+          importPath: "./src/client.ts",
+        },
         dataReturnType: "full",
-        skipBy: [
+        exclude: [
           { type: "tag", pattern: "Swagger" },
           { type: "tag", pattern: "WebUI" },
         ],
       }),
       createSwaggerTS({
-        skipBy: [
+        exclude: [
           { type: "tag", pattern: "Swagger" },
           { type: "tag", pattern: "WebUI" },
         ],
       }),
       createSwaggerTanstackQuery({
-        client: "./src/client.ts",
+        client: {
+          importPath: "./src/client.ts",
+        },
         dataReturnType: "full",
-        skipBy: [
+        exclude: [
           { type: "tag", pattern: "Swagger" },
           { type: "tag", pattern: "WebUI" },
         ],
       }),
       createSwaggerZod({
-        skipBy: [
+        exclude: [
           { type: "tag", pattern: "Swagger" },
           { type: "tag", pattern: "WebUI" },
         ],

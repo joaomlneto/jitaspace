@@ -22,12 +22,16 @@ export default defineConfig(async () => {
     plugins: [
       createSwagger({}),
       createSwaggerClient({
-        client: "./src/client.ts",
+        client: {
+          importPath: "./src/client.ts",
+        },
         dataReturnType: "full",
       }),
       createSwaggerTS({}),
       createSwaggerTanstackQuery({
-        client: "./src/client.ts",
+        client: {
+          importPath: "./src/client.ts",
+        },
         dataReturnType: "full",
         infinite: {},
       }),
