@@ -8,12 +8,13 @@ import EVEOnlineProvider, {
   type EVEOnlineProfile,
 } from "next-auth/providers/eveonline";
 
-import { env } from "../env.mjs";
 import {
   getEveSsoAccessTokenPayload,
   refreshEveSsoToken,
-  sealDataWithAuthSecret,
-} from "../utils";
+} from "@jitaspace/auth-utils";
+
+import { env } from "../env.mjs";
+import { sealDataWithAuthSecret } from "../utils";
 
 
 // How much time before token expires we're willing to refresh it

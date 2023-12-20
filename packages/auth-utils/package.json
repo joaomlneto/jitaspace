@@ -1,5 +1,5 @@
 {
-  "name": "@jitaspace/auth",
+  "name": "@jitaspace/auth-utils",
   "version": "0.1.0",
   "main": "./index.ts",
   "types": "./index.ts",
@@ -11,8 +11,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@hapi/iron": "^7.0.1",
-    "@jitaspace/auth-utils": "*",
     "@jitaspace/esi-metadata": "*",
     "next": "^14.0.3",
     "next-auth": "^4.24.5",

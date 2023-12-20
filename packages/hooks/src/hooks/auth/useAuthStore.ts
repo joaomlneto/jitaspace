@@ -5,7 +5,7 @@ import { persist } from "zustand/middleware";
 import {
   EveSsoAccessTokenPayload,
   getEveSsoAccessTokenPayload,
-} from "@jitaspace/auth";
+} from "@jitaspace/auth-utils";
 import {
   GetCharactersCharacterIdRolesQueryResponseRoles,
   postCharactersAffiliation,

@@ -261,6 +261,46 @@ importers:
       '@hapi/iron':
         specifier: ^7.0.1
         version: 7.0.1
+      '@jitaspace/auth-utils':
+        specifier: '*'
+        version: link:../auth-utils
+      '@jitaspace/esi-metadata':
+        specifier: '*'
+        version: link:../esi-metadata
+      next:
+        specifier: ^14.0.3
+        version: 14.0.3(@babel/core@7.22.1)(react-dom@18.2.0)(react@18.2.0)
+      next-auth:
+        specifier: ^4.24.5
+        version: 4.24.5(next@14.0.3)(react-dom@18.2.0)(react@18.2.0)
+      react:
+        specifier: 18.2.0
+        version: 18.2.0
+      react-dom:
+        specifier: 18.2.0
+        version: 18.2.0(react@18.2.0)
+    devDependencies:
+      '@jitaspace/eslint-config':
+        specifier: '*'
+        version: link:../../tooling/eslint
+      '@jitaspace/prettier-config':
+        specifier: '*'
+        version: link:../../tooling/prettier
+      '@jitaspace/tsconfig':
+        specifier: '*'
+        version: link:../../tooling/tsconfig
+      eslint:
+        specifier: ^8.55.0
+        version: 8.55.0
+      prettier:
+        specifier: ^3.1.0
+        version: 3.1.0
+      typescript:
+        specifier: ^5.3.2
+        version: 5.3.2
+
+  packages/auth-utils:
+    dependencies:
       '@jitaspace/esi-metadata':
         specifier: '*'
         version: link:../esi-metadata
@@ -703,9 +743,9 @@ importers:
 
   packages/hooks:
     dependencies:
-      '@jitaspace/auth':
+      '@jitaspace/auth-utils':
         specifier: '*'
-        version: link:../auth
+        version: link:../auth-utils
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../esi-client

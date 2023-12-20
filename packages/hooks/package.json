@@ -14,7 +14,7 @@
     "prepublish": "pnpm build"
   },
   "dependencies": {
-    "@jitaspace/auth": "*",
+    "@jitaspace/auth-utils": "*",
     "@jitaspace/esi-client": "*",
     "@jitaspace/esi-metadata": "*",
     "@jitaspace/evetycoon-client": "*",
