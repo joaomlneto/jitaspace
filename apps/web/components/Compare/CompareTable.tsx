@@ -77,7 +77,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
 
   return (
     <>
-      <Table>
+      <Table highlightOnHover>
         <thead>
           <th>Attribute</th>
           {sortedTypes.map((type) => (
