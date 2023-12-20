@@ -65,9 +65,7 @@ const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
 
   // this refreshes tokens that expired or are close to expiring
   useEffect(() => {
-    console.log("TokenManagerV2-useEffect!");
     if (!characters) return;
-    console.log("detected characters!");
     const timeUntilExpiration = () => {
       const now = new Date().getTime();
       return Math.min(
