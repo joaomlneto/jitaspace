@@ -13,3 +13,4 @@ export * from "./useStar";
 export * from "./useStation";
 export * from "./useStructure";
 export * from "./useType";
+export * from "./useTypes";
