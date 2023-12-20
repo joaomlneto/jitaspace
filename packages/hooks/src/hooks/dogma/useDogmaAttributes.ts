@@ -18,16 +18,17 @@ export const useDogmaAttributes = (
 
   useEffect(() => {
     const fetchResults = async () => {
-      const result = await Promise.all(
+      const responses = await Promise.all(
         attributeIds.map((typeId) =>
-          getDogmaAttributesAttributeId(typeId, params, headers).then((res) =>
-            setResults((state) => ({
-              ...state,
-              [res.data.attribute_id]: res.data,
-            })),
-          ),
+          getDogmaAttributesAttributeId(typeId, params, headers),
         ),
       );
+      const results: Record<
+        number,
+        GetDogmaAttributesAttributeIdQueryResponse
+      > = {};
+      responses.forEach((res) => (results[res.data.attribute_id] = res.data));
+      setResults(results);
     };
     void fetchResults();
   }, [attributeIds, params, headers]);
