@@ -703,6 +703,9 @@ importers:
 
   packages/hooks:
     dependencies:
+      '@jitaspace/auth':
+        specifier: '*'
+        version: link:../auth
       '@jitaspace/esi-client':
         specifier: '*'
         version: link:../esi-client

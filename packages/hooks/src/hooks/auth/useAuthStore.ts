@@ -3,14 +3,16 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 import {
+  EveSsoAccessTokenPayload,
+  getEveSsoAccessTokenPayload,
+} from "@jitaspace/auth";
+import {
   GetCharactersCharacterIdRolesQueryResponseRoles,
   postCharactersAffiliation,
 } from "@jitaspace/esi-client";
 
-import {
-  EveSsoAccessTokenPayload,
-  getEveSsoAccessTokenPayload,
-} from "../../utils";
+
+
 
 
 export type CharacterSsoSession = {
