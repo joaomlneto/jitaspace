@@ -17,6 +17,12 @@
       ]
     },
     {
+      "groupName": "Kubb",
+      "matchPackagePrefixes": [
+        "@kubb/"
+      ]
+    },
+    {
       "matchPackagePatterns": [
         "^@jitaspace/"
       ],
