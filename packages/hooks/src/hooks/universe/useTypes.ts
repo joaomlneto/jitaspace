@@ -18,16 +18,14 @@ export const useTypes = (
 
   useEffect(() => {
     const fetchResults = async () => {
-      const result = await Promise.all(
+      const responses = await Promise.all(
         typeIds.map((typeId) =>
-          getUniverseTypesTypeId(typeId, params, headers).then((res) =>
-            setResults((state) => ({
-              ...state,
-              [res.data.type_id]: res.data,
-            })),
-          ),
+          getUniverseTypesTypeId(typeId, params, headers),
         ),
       );
+      const results: Record<number, GetUniverseTypesTypeIdQueryResponse> = {};
+      responses.forEach((res) => (results[res.data.type_id] = res.data));
+      setResults(results);
     };
     void fetchResults();
   }, [typeIds, params, headers]);
