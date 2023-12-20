@@ -4,6 +4,7 @@ import Link, { type LinkProps } from "next/link";
 import { useRouter } from "next/router";
 import {
   ActionIcon,
+  Anchor,
   Badge,
   Card,
   Container,
@@ -16,7 +17,7 @@ import {
   Title,
   UnstyledButton,
 } from "@mantine/core";
-import { modals } from "@mantine/modals";
+import { modals, openContextModal } from "@mantine/modals";
 import { IconCircleX } from "@tabler/icons-react";
 
 import { EveMailIcon } from "@jitaspace/eve-icons";
@@ -160,6 +161,21 @@ export default function Page() {
             </Group>
           </Group>
         ))}
+        <Group noWrap spacing="xs">
+          <CharacterAvatar characterId={1} size="sm" />
+          <Anchor
+            onClick={() => {
+              openContextModal({
+                modal: "login",
+                title: "Login",
+                size: "xl",
+                innerProps: {},
+              });
+            }}
+          >
+            Add character
+          </Anchor>
+        </Group>
       </Stack>
       <Title order={3}>Capsuleer Tools</Title>
       <SimpleGrid
