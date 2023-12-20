@@ -52,7 +52,7 @@
     "@vercel/analytics": "^1.1.1",
     "@vercel/og": "^0.5.20",
     "axios": "^1.6.2",
-    "date-fns": "^2.30.0",
+    "date-fns": "^3.0.1",
     "embla-carousel-react": "8.0.0-rc15",
     "humanize-duration": "^3.31.0",
     "jose": "^4.15.4",
