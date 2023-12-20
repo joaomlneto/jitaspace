@@ -1,6 +1,5 @@
 import React, {
   useEffect,
-  useMemo,
   type PropsWithChildren,
   type ReactElement,
   type ReactNode,
@@ -23,7 +22,7 @@ import z from "zod";
 
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
-import { getEveSsoAccessTokenPayload, useAuthStore } from "@jitaspace/hooks";
+import { useAuthStore } from "@jitaspace/hooks";
 
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
@@ -48,43 +47,6 @@ type AppPropsWithLayout = AppProps<{
 const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
   const { data: session, status, update } = useSession();
   const { addCharacter, characters } = useAuthStore();
-
-  // decode token payload
-  const tokenPayload = useMemo(
-    () => getEveSsoAccessTokenPayload(session?.accessToken),
-    [session?.accessToken],
-  );
-
-  // refresh token if expired or close to expiring
-  useEffect(() => {
-    if (!tokenPayload) return;
-    const expDate = new Date(tokenPayload.exp * 1000);
-    const timeUntilExpiration = () => expDate.getTime() - new Date().getTime();
-    const timer = setTimeout(
-      () => {
-        console.log(
-          `updating session: token expires in ${
-            timeUntilExpiration() / 1000
-          } seconds`,
-        );
-        void update();
-      },
-      Math.max(timeUntilExpiration() - 30000, 5000),
-    );
-    return () => clearTimeout(timer);
-  }, [tokenPayload, update]);
-
-  /*
-  useEffect(() => {
-    setAuth({
-      accessToken: session?.accessToken,
-      loading: status === "loading",
-    });
-  }, [session?.accessToken, setAuth, status]);*/
-
-  // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-  // Below are things for the new React Auth module supporting multiple characters
-  // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
   useEffect(() => {
     useAuthStore.persist.rehydrate();
