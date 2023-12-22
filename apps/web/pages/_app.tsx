@@ -251,7 +251,7 @@ export default function App({
       <Analytics />
 
       <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+        <ReactQueryDevtools initialIsOpen={false} />
 
         <SessionProvider session={session}>
           <EsiClientSSOAccessTokenInjector>
