@@ -396,6 +396,9 @@ importers:
       '@kubb/swagger-zodios':
         specifier: ^2.0.6
         version: 2.0.6(@kubb/react@2.0.6)
+      '@tanstack/react-query':
+        specifier: ^5.14.2
+        version: 5.14.2(react@18.2.0)
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.6.2)(zod@3.22.4)
@@ -460,6 +463,9 @@ importers:
       '@kubb/swagger-zodios':
         specifier: ^2.0.6
         version: 2.0.6(@kubb/react@2.0.6)
+      '@tanstack/react-query':
+        specifier: ^5.14.2
+        version: 5.14.2(react@18.2.0)
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.6.2)(zod@3.22.4)
@@ -639,6 +645,9 @@ importers:
       '@kubb/swagger-zodios':
         specifier: ^2.0.6
         version: 2.0.6(@kubb/react@2.0.6)
+      '@tanstack/react-query':
+        specifier: ^5.14.2
+        version: 5.14.2(react@18.2.0)
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.6.2)(zod@3.22.4)
@@ -703,6 +712,9 @@ importers:
       '@kubb/swagger-zodios':
         specifier: ^2.0.6
         version: 2.0.6(@kubb/react@2.0.6)
+      '@tanstack/react-query':
+        specifier: ^5.14.2
+        version: 5.14.2(react@18.2.0)
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.6.2)(zod@3.22.4)
@@ -831,6 +843,9 @@ importers:
       '@kubb/swagger-zodios':
         specifier: ^2.0.6
         version: 2.0.6(@kubb/react@2.0.6)
+      '@tanstack/react-query':
+        specifier: ^5.14.2
+        version: 5.14.2(react@18.2.0)
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.6.2)(zod@3.22.4)
