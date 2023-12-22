@@ -26,14 +26,14 @@ export default defineConfig(async () => {
       createSwagger({}),
       createSwaggerClient({
         client: {
-          importPath: "./src/client.ts",
+          importPath: "../../client",
         },
         dataReturnType: "full",
       }),
       createSwaggerTS({}),
       createSwaggerTanstackQuery({
         client: {
-          importPath: "./src/client.ts",
+          importPath: "../../client",
         },
         dataReturnType: "full",
         infinite: {},

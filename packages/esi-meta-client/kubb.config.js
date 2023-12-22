@@ -23,7 +23,7 @@ export default defineConfig(async () => {
       createSwagger({}),
       createSwaggerClient({
         client: {
-          importPath: "./src/client.ts",
+          importPath: "../../client",
         },
         dataReturnType: "full",
         exclude: [
@@ -39,7 +39,7 @@ export default defineConfig(async () => {
       }),
       createSwaggerTanstackQuery({
         client: {
-          importPath: "./src/client.ts",
+          importPath: "../../client",
         },
         dataReturnType: "full",
         exclude: [
