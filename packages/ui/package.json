@@ -12,7 +12,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.1",
+    "@emotion/react": "^11.11.3",
     "@emotion/server": "^11.11.0",
     "@jitaspace/esi-client": "*",
     "@jitaspace/hooks": "*",
@@ -32,7 +32,7 @@
     "@mantine/prism": "^6.0.21",
     "@mantine/spotlight": "^6.0.21",
     "@mantine/tiptap": "^6.0.21",
-    "@tabler/icons-react": "^2.42.0",
+    "@tabler/icons-react": "^2.44.0",
     "@tiptap/extension-color": "^2.1.13",
     "@tiptap/extension-link": "^2.1.13",
     "@tiptap/extension-text-style": "^2.1.13",
@@ -40,8 +40,8 @@
     "@tiptap/pm": "^2.1.13",
     "@tiptap/react": "^2.1.13",
     "@tiptap/starter-kit": "^2.1.13",
-    "date-fns": "^3.0.1",
-    "embla-carousel-react": "8.0.0-rc15",
+    "date-fns": "^3.0.6",
+    "embla-carousel-react": "8.0.0-rc17",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
@@ -50,11 +50,11 @@
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
     "@types/humanize-duration": "^3.27.3",
-    "@types/node": "^18.19.2",
+    "@types/node": "^18.19.4",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
-    "eslint": "^8.55.0",
-    "prettier": "^3.1.0",
-    "typescript": "^5.3.2"
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3"
   }
 }
