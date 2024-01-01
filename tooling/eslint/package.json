@@ -15,14 +15,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@next/eslint-plugin-next": "^14.0.3",
-    "@tanstack/eslint-plugin-query": "^5.12.1",
-    "@types/eslint": "^8.44.8",
-    "@typescript-eslint/eslint-plugin": "^6.13.2",
-    "@typescript-eslint/parser": "^6.13.2",
+    "@next/eslint-plugin-next": "^14.0.4",
+    "@tanstack/eslint-plugin-query": "^5.14.6",
+    "@types/eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
     "eslint-config-prettier": "^9.1.0",
-    "eslint-config-turbo": "^1.10.16",
-    "eslint-plugin-import": "^2.29.0",
+    "eslint-config-turbo": "^1.11.2",
+    "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0"
@@ -30,8 +30,8 @@
   "devDependencies": {
     "@jitaspace/prettier-config": "^0.1.0",
     "@jitaspace/tsconfig": "^0.1.0",
-    "eslint": "^8.55.0",
-    "typescript": "^5.3.2"
+    "eslint": "^8.56.0",
+    "typescript": "^5.3.3"
   },
   "eslintConfig": {
     "root": true,
