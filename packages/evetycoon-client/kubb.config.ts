@@ -33,7 +33,6 @@ export default defineConfig(async () => {
           importPath: "../../client",
         },
         dataReturnType: "full",
-        infinite: {},
       }),
       createSwaggerZod({}),
       createSwaggerZodios({}),

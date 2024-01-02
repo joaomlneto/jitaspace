@@ -23,7 +23,7 @@ export default defineConfig(async () => {
       path: "./src/generated",
     },
     plugins: [
-      createSwagger({}),
+      createSwagger({ validate: true }),
       createSwaggerClient({
         client: {
           importPath: "../../client",
@@ -32,11 +32,44 @@ export default defineConfig(async () => {
       }),
       createSwaggerTS({}),
       createSwaggerTanstackQuery({
+        framework: "react",
         client: {
           importPath: "../../client",
         },
         dataReturnType: "full",
-        infinite: {},
+        override: [
+          {
+            type: "path",
+            pattern: "^/characters/{character_id}/calendar/$",
+            options: {
+              infinite: {
+                queryParam: "from_event",
+                // FIXME: This is not valid! Needs to be overriden when using the generated code!
+                initialPageParam: 0,
+              },
+            },
+          },
+          {
+            type: "path",
+            pattern: "^/characters/{character_id}/assets/$",
+            options: {
+              infinite: {
+                queryParam: "page",
+                initialPageParam: 1,
+              },
+            },
+          },
+          {
+            type: "path",
+            pattern: "^/alliances/{alliance_id}/contacts/$",
+            options: {
+              infinite: {
+                queryParam: "page",
+                initialPageParam: 1,
+              },
+            },
+          },
+        ],
       }),
       createSwaggerZod({}),
       createSwaggerZodios({}),
