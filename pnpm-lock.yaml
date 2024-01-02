@@ -153,8 +153,8 @@ importers:
         specifier: ^3.31.0
         version: 3.31.0
       jose:
-        specifier: ^4.15.4
-        version: 4.15.4
+        specifier: ^5.2.0
+        version: 5.2.0
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
@@ -8460,6 +8460,10 @@ packages:
 
   /jose@4.15.4:
     resolution: {integrity: sha512-W+oqK4H+r5sITxfxpSU+MMdr/YSWGvgZMQDIsNoBDGGy4i7GBPTtvFKibQzW06n3U3TqHjhvBJsirShsEJ6eeQ==}
+    dev: false
+
+  /jose@5.2.0:
+    resolution: {integrity: sha512-oW3PCnvyrcm1HMvGTzqjxxfnEs9EoFOFWi2HsEGhlFVOXxTE3K9GKWVMFoFw06yPUqwpvEWic1BmtUZBI/tIjw==}
     dev: false
 
   /js-runtime@0.0.7:
