@@ -6,11 +6,15 @@ import createSwaggerTS from "@kubb/swagger-ts";
 import createSwaggerZod from "@kubb/swagger-zod";
 import createSwaggerZodios from "@kubb/swagger-zodios";
 
+
+
+
+
 export default defineConfig(async () => {
   return {
     root: ".",
     input: {
-      path: "https://esi.evetech.net/swagger.json",
+      path: "./swagger.json",
     },
     output: {
       path: "./src/generated",
@@ -18,33 +22,19 @@ export default defineConfig(async () => {
     plugins: [
       createSwagger({}),
       createSwaggerClient({
-        client: "./src/client.ts",
+        client: {
+          importPath: "../../client",
+        },
         dataReturnType: "full",
-        skipBy: [
-          { type: "tag", pattern: "Swagger" },
-          { type: "tag", pattern: "WebUI" },
-        ],
       }),
-      createSwaggerTS({
-        skipBy: [
-          { type: "tag", pattern: "Swagger" },
-          { type: "tag", pattern: "WebUI" },
-        ],
-      }),
+      createSwaggerTS({}),
       createSwaggerTanstackQuery({
-        client: "./src/client.ts",
+        client: {
+          importPath: "../../client",
+        },
         dataReturnType: "full",
-        skipBy: [
-          { type: "tag", pattern: "Swagger" },
-          { type: "tag", pattern: "WebUI" },
-        ],
       }),
-      createSwaggerZod({
-        skipBy: [
-          { type: "tag", pattern: "Swagger" },
-          { type: "tag", pattern: "WebUI" },
-        ],
-      }),
+      createSwaggerZod({}),
       createSwaggerZodios({}),
     ],
   };

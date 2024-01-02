@@ -14,7 +14,7 @@ export default defineConfig(async () => {
   return {
     root: ".",
     input: {
-      path: "./swagger.json",
+      path: "https://esi.evetech.net/swagger.json",
     },
     output: {
       path: "./src/generated",
@@ -22,16 +22,37 @@ export default defineConfig(async () => {
     plugins: [
       createSwagger({}),
       createSwaggerClient({
-        client: "./src/client.ts",
+        client: {
+          importPath: "../../client",
+        },
         dataReturnType: "full",
+        exclude: [
+          { type: "tag", pattern: "Swagger" },
+          { type: "tag", pattern: "WebUI" },
+        ],
       }),
-      createSwaggerTS({}),
+      createSwaggerTS({
+        exclude: [
+          { type: "tag", pattern: "Swagger" },
+          { type: "tag", pattern: "WebUI" },
+        ],
+      }),
       createSwaggerTanstackQuery({
-        client: "./src/client.ts",
+        client: {
+          importPath: "../../client",
+        },
         dataReturnType: "full",
-        infinite: {},
+        exclude: [
+          { type: "tag", pattern: "Swagger" },
+          { type: "tag", pattern: "WebUI" },
+        ],
       }),
-      createSwaggerZod({}),
+      createSwaggerZod({
+        exclude: [
+          { type: "tag", pattern: "Swagger" },
+          { type: "tag", pattern: "WebUI" },
+        ],
+      }),
       createSwaggerZodios({}),
     ],
   };

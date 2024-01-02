@@ -6,11 +6,15 @@ import createSwaggerTS from "@kubb/swagger-ts";
 import createSwaggerZod from "@kubb/swagger-zod";
 import createSwaggerZodios from "@kubb/swagger-zodios";
 
+
+
+
+
 export default defineConfig(async () => {
   return {
     root: ".",
     input: {
-      path: "http://sde.jita.space/latest/swagger.json",
+      path: "./swagger.json",
     },
     output: {
       path: "./src/generated",
@@ -18,12 +22,16 @@ export default defineConfig(async () => {
     plugins: [
       createSwagger({}),
       createSwaggerClient({
-        client: "./src/client.ts",
+        client: {
+          importPath: "../../client",
+        },
         dataReturnType: "full",
       }),
       createSwaggerTS({}),
       createSwaggerTanstackQuery({
-        client: "./src/client.ts",
+        client: {
+          importPath: "../../client",
+        },
         dataReturnType: "full",
       }),
       createSwaggerZod({}),
