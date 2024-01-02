@@ -19,6 +19,7 @@ import { CharacterAnchor, CharacterAvatar, CharacterName } from "@jitaspace/ui";
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
 
+
 const MY_CHARACTER_ID = 401563624;
 
 export default function Page() {
@@ -44,7 +45,7 @@ export default function Page() {
             <tr>
               <td>In-game</td>
               <td align="right">
-                <Group position="right" spacing="xs" noWrap>
+                <Group position="right" spacing="xs" wrap="nowrap">
                   <CharacterAvatar characterId={MY_CHARACTER_ID} size="sm" />
                   <CharacterAnchor
                     characterId={MY_CHARACTER_ID}

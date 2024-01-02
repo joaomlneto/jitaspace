@@ -120,7 +120,7 @@ export default function Page({ name, types }: PageProps) {
             breakpoints={[{ maxWidth: "md", cols: 1 }]}
           >
             {sortedTypes.map((type) => (
-              <Group noWrap key={type.typeId}>
+              <Group wrap="nowrap" key={type.typeId}>
                 <TypeAvatar typeId={type.typeId} size="sm" />
                 <TypeAnchor typeId={type.typeId}>
                   <Text>{type.name}</Text>

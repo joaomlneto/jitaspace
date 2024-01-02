@@ -71,7 +71,7 @@ export const ContactsDataTable = memo(
           accessorKey: "contact_id",
           size: 40,
           Cell: ({ row }) => (
-            <Group noWrap>
+            <Group wrap="nowrap">
               <StandingIndicator standing={row.original.standing}>
                 <EveEntityAvatar
                   entityId={row.original.contact_id}

@@ -65,7 +65,7 @@ export const MarketOrdersDataTable = memo(
           header: "Location",
           accessorKey: "location_id",
           Cell: ({ renderedCellValue, row, cell }) => (
-            <Group noWrap>
+            <Group wrap="nowrap">
               <SolarSystemSecurityStatusBadge
                 solarSystemId={row.original.system_id}
               />

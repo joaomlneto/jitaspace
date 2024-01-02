@@ -43,7 +43,7 @@ export const DesktopMailboxTable = ({
               <td>
                 <Popover width={250} withArrow shadow="md">
                   <Popover.Target>
-                    <Group noWrap key={mail.mail_id}>
+                    <Group wrap="nowrap" key={mail.mail_id}>
                       <EveMailSenderAvatar
                         characterId={characterId}
                         messageId={mail.mail_id}
@@ -127,7 +127,7 @@ export const DesktopMailboxTable = ({
                     .map(
                       (item) =>
                         item && (
-                          <Group noWrap spacing={4} key={item.label_id}>
+                          <Group wrap="nowrap" spacing={4} key={item.label_id}>
                             <MailLabelColorSwatch
                               characterId={characterId}
                               labelId={item.label_id}

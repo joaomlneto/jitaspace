@@ -193,7 +193,7 @@ export default function Page() {
             </Group>
             <Group position="apart">
               <Text>Agent Station</Text>
-              <Group noWrap spacing="xs">
+              <Group wrap="nowrap" spacing="xs">
                 <StationAvatar stationId={character.locationId} size="xs" />
                 <StationAnchor stationId={character.locationId} target="_blank">
                   <StationName stationId={character.locationId} />
@@ -205,7 +205,7 @@ export default function Page() {
                 <Text>Research Agent Skills</Text>
                 <Stack spacing="xs">
                   {character.researchSkills?.map((typeId) => (
-                    <Group noWrap spacing="xs" key={typeId}>
+                    <Group wrap="nowrap" spacing="xs" key={typeId}>
                       <TypeAvatar typeId={typeId} size="xs" />
                       <TypeAnchor typeId={typeId} target="_blank">
                         <TypeName typeId={typeId} />

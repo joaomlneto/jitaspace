@@ -39,7 +39,7 @@ export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
             <td align="right">{asset.quantity}</td>
             <td>
               <Group spacing="xs" position="apart">
-                <Group noWrap spacing="xs">
+                <Group wrap="nowrap" spacing="xs">
                   <TypeAvatar size="xs" typeId={asset.type_id} />
                   <TypeAnchor typeId={asset.type_id}>
                     <TypeName typeId={asset.type_id} />

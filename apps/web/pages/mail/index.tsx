@@ -68,7 +68,7 @@ export default function Page() {
         </Group>
         <Grid align="flex-end" justify="space-between">
           <Grid.Col span="content">
-            <Group noWrap spacing="xs">
+            <Group wrap="nowrap" spacing="xs">
               <Tooltip label="Compose new message">
                 <ActionIcon
                   variant="default"
@@ -169,7 +169,7 @@ export default function Page() {
           </Button>
         )}
         {isLoading && !hasMoreMessages && (
-          <Group noWrap>
+          <Group wrap="nowrap">
             <Loader size="sm" />
             <Text>Loading messages</Text>
           </Group>

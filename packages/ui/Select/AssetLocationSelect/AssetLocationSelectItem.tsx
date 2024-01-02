@@ -4,6 +4,7 @@ import { Avatar, Group } from "@mantine/core";
 import { AssetLocationName } from "../../Text";
 import { type AssetLocationSelectItemProps } from "./AssetLocationSelect";
 
+
 export const AssetLocationSelectItem = forwardRef<
   HTMLDivElement,
   AssetLocationSelectItemProps
@@ -14,7 +15,7 @@ export const AssetLocationSelectItem = forwardRef<
     ref,
   ) => (
     <div ref={ref} {...other}>
-      <Group noWrap>
+      <Group wrap="nowrap">
         <Avatar />
         <div>
           <AssetLocationName locationId={value ?? undefined} size="sm" />
