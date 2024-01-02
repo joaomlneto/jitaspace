@@ -61,6 +61,16 @@ export default defineConfig(async () => {
           },
           {
             type: "path",
+            pattern: "^/corporations/{corporation_id}/assets/$",
+            options: {
+              infinite: {
+                queryParam: "page",
+                initialPageParam: 1,
+              },
+            },
+          },
+          {
+            type: "path",
             pattern: "^/alliances/{alliance_id}/contacts/$",
             options: {
               infinite: {
