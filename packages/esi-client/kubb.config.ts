@@ -69,6 +69,37 @@ export default defineConfig(async () => {
               },
             },
           },
+          {
+            type: "path",
+            pattern: "^/characters/{character_id}/contacts/$",
+            options: {
+              infinite: {
+                queryParam: "page",
+                initialPageParam: 1,
+              },
+            },
+          },
+          {
+            type: "path",
+            pattern: "^/corporations/{corporation_id}/contacts/$",
+            options: {
+              infinite: {
+                queryParam: "page",
+                initialPageParam: 1,
+              },
+            },
+          },
+          {
+            type: "path",
+            pattern: "^/characters/{character_id}/mail/$",
+            options: {
+              infinite: {
+                queryParam: "last_mail_id",
+                // FIXME: This is not valid! Needs to be overriden when using the generated code!
+                initialPageParam: 0,
+              },
+            },
+          },
         ],
       }),
       createSwaggerZod({}),
