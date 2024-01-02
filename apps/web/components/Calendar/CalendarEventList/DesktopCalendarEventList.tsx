@@ -56,7 +56,7 @@ export function DesktopCalendarEventList({
               </Tooltip>
             </td>
             <td>
-              <Group noWrap>
+              <Group wrap="nowrap">
                 <Tooltip
                   label={
                     <CalendarEventOwnerName
@@ -78,7 +78,7 @@ export function DesktopCalendarEventList({
                     </CalendarEventOwnerAnchor>
                   </Avatar>
                 </Tooltip>
-                <Group noWrap spacing="xs">
+                <Group wrap="nowrap" spacing="xs">
                   {event.importance === 1 && <WarningIcon width={20} />}
                   <Anchor
                     lineClamp={1}

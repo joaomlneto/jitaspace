@@ -104,7 +104,7 @@ export default function Page() {
             </Button>
           )}
           {isLoading && !hasMoreEvents && (
-            <Group noWrap>
+            <Group wrap="nowrap">
               <Loader size="sm" />
               <Text>Loading events</Text>
             </Group>

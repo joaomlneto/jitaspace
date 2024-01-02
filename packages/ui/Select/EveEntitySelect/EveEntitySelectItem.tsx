@@ -13,6 +13,7 @@ import { type GetCharactersCharacterIdSearchQueryParamsCategories } from "@jitas
 import { EveEntityAvatar } from "../../Avatar";
 import { EveEntityName } from "../../Text";
 
+
 export type EveEntitySelectItemProps = SelectItemProps & {
   category: GetCharactersCharacterIdSearchQueryParamsCategories;
 };
@@ -22,8 +23,8 @@ export const EveEntitySelectItem = forwardRef<
   EveEntitySelectItemProps
 >(({ value, category, ...others }, ref) => {
   return (
-    <Group noWrap position="apart" ref={ref} {...others}>
-      <Group noWrap spacing="xs">
+    <Group wrap="nowrap" position="apart" ref={ref} {...others}>
+      <Group wrap="nowrap" spacing="xs">
         {value ? (
           <EveEntityAvatar
             entityId={value}

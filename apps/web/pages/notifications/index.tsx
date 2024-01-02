@@ -41,7 +41,7 @@ export default function Page() {
             {data?.data.map((notification) => (
               <tr key={notification.notification_id}>
                 <td>
-                  <Group noWrap spacing="xs">
+                  <Group wrap="nowrap" spacing="xs">
                     <EveEntityAvatar entityId={notification.sender_id} />
                     <EveEntityName entityId={notification.sender_id} />
                   </Group>

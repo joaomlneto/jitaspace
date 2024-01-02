@@ -68,7 +68,7 @@ export const AgentsTable = ({
         accessorKey: "name",
         Cell: ({ renderedCellValue, row, cell }) => (
           <Group>
-            <Group noWrap>
+            <Group wrap="nowrap">
               <CharacterAvatar
                 characterId={row.original.characterId}
                 size="sm"
@@ -89,7 +89,7 @@ export const AgentsTable = ({
         accessorKey: "corporationId",
         Cell: ({ renderedCellValue, row, cell }) => (
           <Group>
-            <Group noWrap>
+            <Group wrap="nowrap">
               <CorporationAvatar
                 corporationId={row.original.corporationId}
                 size="sm"
@@ -140,7 +140,7 @@ export const AgentsTable = ({
         header: "Location",
         accessorKey: "stationId",
         Cell: ({ renderedCellValue, row, cell }) => (
-          <Group noWrap spacing="xs">
+          <Group wrap="nowrap" spacing="xs">
             <StationAvatar stationId={row.original.stationId} size="xs" />
             <StationAnchor target="_blank" stationId={row.original.stationId}>
               <StationName stationId={row.original.stationId} />

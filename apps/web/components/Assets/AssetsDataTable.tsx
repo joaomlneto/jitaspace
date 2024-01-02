@@ -98,7 +98,7 @@ export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {
         size: 300,
         enableColumnFilter: false,
         Cell: ({ renderedCellValue, row, cell }) => (
-          <Group noWrap>
+          <Group wrap="nowrap">
             <TypeAvatar typeId={row.original.type_id} size="sm" />
             <TypeAnchor
               typeId={row.original.type_id}

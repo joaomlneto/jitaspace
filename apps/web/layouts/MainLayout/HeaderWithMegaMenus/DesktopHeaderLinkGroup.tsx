@@ -72,7 +72,7 @@ export const DesktopHeaderLinkGroup = memo(
                 className={classes.subLink}
                 key={appKey}
               >
-                <Group noWrap align="flex-start">
+                <Group wrap="nowrap" align="flex-start">
                   <app.Icon width={40} />
                   <div>
                     <Text size="sm" fw={500}>

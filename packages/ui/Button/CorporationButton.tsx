@@ -11,6 +11,7 @@ import {
 import { CorporationAvatar } from "../Avatar";
 import { CorporationName } from "../Text";
 
+
 const useStyles = createStyles((theme) => ({
   user: {
     display: "block",
@@ -48,7 +49,7 @@ export const CorporationButton = memo(
         className={classes.user}
         {...otherProps}
       >
-        <Group noWrap>
+        <Group wrap="nowrap">
           <CorporationAvatar
             corporationId={corporationId}
             radius="xl"

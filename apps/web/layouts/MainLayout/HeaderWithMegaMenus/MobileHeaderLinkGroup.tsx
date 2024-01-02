@@ -57,7 +57,7 @@ export const MobileHeaderLinkGroup = memo(
               key={appKey}
               onClick={() => onNavigation?.()}
             >
-              <Group noWrap align="flex-start">
+              <Group wrap="nowrap" align="flex-start">
                 <app.Icon width={32} />
                 <div>
                   <Text size="sm" fw={500}>

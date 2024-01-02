@@ -73,7 +73,7 @@ export const JitaSpotlightAction = ({
         onClick={onTrigger}
         {...others}
       >
-        <Group noWrap>
+        <Group wrap="nowrap">
           {action.category &&
             [
               "agent",
@@ -113,7 +113,7 @@ export const JitaSpotlightAction = ({
       onClick={onTrigger}
       {...others}
     >
-      <Group noWrap>
+      <Group wrap="nowrap">
         <Center>{action.icon}</Center>
 
         <div style={{ flex: 1 }}>
