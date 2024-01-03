@@ -115,7 +115,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
                 , where CSPA charges may not be calculated correctly before the
                 message is sent.
               </Alert>
-              <Group position="apart">
+              <Group justify="space-between">
                 <Text>New CSPA Cost</Text>
                 <Text>{details.totalCost.toLocaleString()} ISK</Text>
               </Group>

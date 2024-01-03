@@ -200,45 +200,45 @@ export default function Page() {
             />
           </>
         )}
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Security Class</Text>
           <Text>{solarSystem?.data.security_class}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Luminosity</Text>
           <Text>{sdeSolarSystem?.data.luminosity}</Text>
         </Group>
         {sdeSolarSystem?.data.radius && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Radius</Text>
             <Text>{sdeSolarSystem.data.radius.toLocaleString()} m</Text>
           </Group>
         )}
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Border System</Text>
           <Text>{sdeSolarSystem?.data.border ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Corridor System</Text>
           <Text>{sdeSolarSystem?.data.corridor ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Fringe System</Text>
           <Text>{sdeSolarSystem?.data.fringe ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Trading Hub</Text>
           <Text>{sdeSolarSystem?.data.hub ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>International System</Text>
           <Text>{sdeSolarSystem?.data.international ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Regional System</Text>
           <Text>{sdeSolarSystem?.data.regional ? "Yes" : "No"}</Text>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Position</Text>
           <Position3DText
             size="xs"
@@ -249,7 +249,7 @@ export default function Page() {
             }
           />
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Min Coordinates</Text>
           <Position3DText
             size="xs"
@@ -258,7 +258,7 @@ export default function Page() {
             }
           />
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Max Coordinates</Text>
           <Position3DText
             size="xs"

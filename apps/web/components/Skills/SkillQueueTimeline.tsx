@@ -70,7 +70,7 @@ export const SkillQueueTimeline = memo(
                     <Popover.Dropdown>
                       <Stack gap="xs">
                         {entry.start_date && (
-                          <Group position="apart">
+                          <Group justify="space-between">
                             <Text size="sm" color="dimmed">
                               Start date
                             </Text>
@@ -83,7 +83,7 @@ export const SkillQueueTimeline = memo(
                           </Group>
                         )}
                         {entry.finish_date && (
-                          <Group position="apart">
+                          <Group justify="space-between">
                             <Text size="sm" color="dimmed">
                               Finish date
                             </Text>
@@ -96,7 +96,7 @@ export const SkillQueueTimeline = memo(
                           </Group>
                         )}
                         {entry.training_start_sp && (
-                          <Group position="apart">
+                          <Group justify="space-between">
                             <Text size="sm" color="dimmed">
                               Training Start SP
                             </Text>
@@ -104,7 +104,7 @@ export const SkillQueueTimeline = memo(
                           </Group>
                         )}
                         {entry.level_start_sp && (
-                          <Group position="apart">
+                          <Group justify="space-between">
                             <Text size="sm" color="dimmed">
                               Level Start SP
                             </Text>
@@ -112,7 +112,7 @@ export const SkillQueueTimeline = memo(
                           </Group>
                         )}
                         {entry.level_end_sp && (
-                          <Group position="apart">
+                          <Group justify="space-between">
                             <Text size="sm" color="dimmed">
                               Level End SP
                             </Text>
@@ -120,7 +120,7 @@ export const SkillQueueTimeline = memo(
                           </Group>
                         )}
                         {entry.queue_position !== undefined && (
-                          <Group position="apart">
+                          <Group justify="space-between">
                             <Text size="sm" color="dimmed">
                               Queue Position
                             </Text>

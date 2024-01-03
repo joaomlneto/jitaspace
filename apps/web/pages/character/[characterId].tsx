@@ -105,7 +105,7 @@ export default function Page() {
           </Link>
         </Group>
         {character?.corporationId && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Corporation</Text>
             <Group>
               <CorporationAvatar
@@ -125,7 +125,7 @@ export default function Page() {
           </Group>
         )}
         {character?.allianceId && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Alliance</Text>
             <Group>
               <AllianceAvatar allianceId={character?.allianceId} size="sm" />
@@ -139,26 +139,26 @@ export default function Page() {
           </Group>
         )}
         {character?.gender && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Gender</Text>
             <Text>{character?.gender === "male" ? "Male" : "Female"}</Text>
           </Group>
         )}
         {character?.securityStatus !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Security Status</Text>
             <Text>{character?.securityStatus}</Text>
           </Group>
         )}
         {character?.birthday && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Birthday</Text>
             <Text>
               <FormattedDateText date={character.birthday} />
             </Text>
           </Group>
         )}
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Bloodline</Text>
           <Anchor
             component={Link}
@@ -167,7 +167,7 @@ export default function Page() {
             <BloodlineName bloodlineId={character?.bloodlineId} />
           </Anchor>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Race</Text>
           <Anchor component={Link} href={`/race/${character?.raceId}`}>
             <RaceName span raceId={character?.raceId} />
@@ -175,23 +175,23 @@ export default function Page() {
         </Group>
         {character?.type === "agent" && (
           <>
-            <Group position="apart">
+            <Group justify="space-between">
               <Text>Agent Division</Text>
               <Text>{agentDivision?.data.nameID.en}</Text>
             </Group>
-            <Group position="apart">
+            <Group justify="space-between">
               <Text>Agent Type</Text>
               <Text>{character.agentTypeId}</Text>
             </Group>
-            <Group position="apart">
+            <Group justify="space-between">
               <Text>Is Locator Agent?</Text>
               <Text>{character.isLocator ? "Yes" : "No"}</Text>
             </Group>
-            <Group position="apart">
+            <Group justify="space-between">
               <Text>Agent Level</Text>
               <Text>{character.level}</Text>
             </Group>
-            <Group position="apart">
+            <Group justify="space-between">
               <Text>Agent Station</Text>
               <Group wrap="nowrap" gap="xs">
                 <StationAvatar stationId={character.locationId} size="xs" />
@@ -201,7 +201,7 @@ export default function Page() {
               </Group>
             </Group>
             {character.isResearchAgent && (
-              <Group position="apart">
+              <Group justify="space-between">
                 <Text>Research Agent Skills</Text>
                 <Stack gap="xs">
                   {character.researchSkills?.map((typeId) => (
@@ -217,15 +217,15 @@ export default function Page() {
             )}
             {character.isInSpace && (
               <>
-                <Group position="apart">
+                <Group justify="space-between">
                   <Text>Dungeon</Text>
                   <Text>{character.dungeonId}</Text>
                 </Group>
-                <Group position="apart">
+                <Group justify="space-between">
                   <Text>Spawn Point</Text>
                   <Text>{character.spawnPointId}</Text>
                 </Group>
-                <Group position="apart">
+                <Group justify="space-between">
                   <Text>Solar System</Text>
                   <Group>
                     <SolarSystemAnchor
@@ -238,7 +238,7 @@ export default function Page() {
                     </SolarSystemAnchor>
                   </Group>
                 </Group>
-                <Group position="apart">
+                <Group justify="space-between">
                   <Text>Type</Text>
                   <Group>
                     <TypeAvatar typeId={character.typeId} size="xs" />

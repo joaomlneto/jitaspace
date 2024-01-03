@@ -25,6 +25,7 @@ import { CalendarEventList } from "~/components/Calendar/CalendarEventList/Calen
 import EventsCalendar from "~/components/Calendar/EventsCalendar";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const character = useSelectedCharacter();
   const { events, isLoading, hasMoreEvents, loadMoreEvents } =
@@ -51,7 +52,7 @@ export default function Page() {
       <NextSeo title="Calendar" />
       <Container>
         <Stack gap="xl">
-          <Group position="apart">
+          <Group justify="space-between">
             <Group>
               <CalendarIcon width={48} />
               <Title order={1}>Calendar</Title>

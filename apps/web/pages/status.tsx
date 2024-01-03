@@ -24,6 +24,7 @@ import { FormattedDateText } from "@jitaspace/ui";
 import { EsiClientStateCard } from "~/components/EsiClient";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
     useState<boolean>(false);
@@ -103,7 +104,7 @@ export default function Page() {
           <Title order={3}>Jita Frontend</Title>
           <EsiClientStateCard />
           <Title order={3}>Jita Backend</Title>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Vercel Platform</Text>
             <Group>
               <Anchor href="https://www.vercel-status.com">
@@ -112,7 +113,7 @@ export default function Page() {
               </Anchor>
             </Group>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>SDE API Last Updated On</Text>
             {/* FIXME: shouldnt be hardcoded! :) */}
             <Anchor href="https://sde.jita.space">
@@ -122,14 +123,14 @@ export default function Page() {
         </Stack>
         <Stack gap="xs">
           <Title order={3}>EVE Online</Title>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Players Online</Text>
             <Group>
               {tqStatus?.data.vip && <Badge>VIP Mode</Badge>}
               <Text>{tqStatus?.data.players.toLocaleString()}</Text>
             </Group>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Start Time</Text>
             <Text>
               {tqStatus && (
@@ -137,11 +138,11 @@ export default function Page() {
               )}
             </Text>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Server Version</Text>
             <Text>{tqStatus?.data.server_version}</Text>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>SDE Last Updated On</Text>
             <Text>
               {sdeIsLoading && "Checking..."}
@@ -150,7 +151,7 @@ export default function Page() {
               )}
             </Text>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Degraded ESI Endpoints</Text>
             <Text>
               {nonGreenEndpoints?.length === 0

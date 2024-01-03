@@ -28,6 +28,7 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const router = useRouter();
   const corporationId = parseInt(router.query.corporationId as string);
@@ -92,7 +93,7 @@ export default function Page() {
           </Link>
         </Group>
         {corporation?.data.alliance_id && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Alliance</Text>
             <Group>
               <AllianceAvatar

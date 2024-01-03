@@ -19,6 +19,7 @@ import { MailMessageViewer } from "~/components/EveMail";
 import { characterAttributes } from "~/components/Skills";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const router = useRouter();
   const bloodlineId = parseInt(router.query.bloodlineId as string);
@@ -42,7 +43,7 @@ export default function Page() {
             }
           />
         )}
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Corporation</Text>
           <Group wrap="nowrap">
             <CorporationAvatar corporationId={bloodline?.corporation_id} />
@@ -54,7 +55,7 @@ export default function Page() {
             </Anchor>
           </Group>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Race</Text>
           <Group wrap="nowrap">
             <RaceAvatar raceId={bloodline?.race_id} />
@@ -63,7 +64,7 @@ export default function Page() {
             </Anchor>
           </Group>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Corvette</Text>
           <Group wrap="nowrap">
             <TypeAvatar
@@ -77,7 +78,7 @@ export default function Page() {
         </Group>
         {bloodline &&
           characterAttributes.map((attributeName) => (
-            <Group key={attributeName} position="apart">
+            <Group key={attributeName} justify="space-between">
               <Text>
                 {(attributeName as string)
                   .substring(0, 1)

@@ -12,7 +12,7 @@ export default function Page() {
   const character = useSelectedCharacter();
   return (
     <Container>
-      <Group position="apart">
+      <Group justify="space-between">
         <h1>Manage Labels</h1>
       </Group>
 

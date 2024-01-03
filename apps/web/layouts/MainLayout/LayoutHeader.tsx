@@ -137,7 +137,7 @@ export function LayoutHeader() {
         }}
       >
         <Container size="xl" h={60} p={0}>
-          <Group position="apart" sx={{ height: "100%" }}>
+          <Group justify="space-between" sx={{ height: "100%" }}>
             <Link href="/" className={classes.logo}>
               <Group p="xs">
                 <Image src="/logo.png" alt="Jita logo" width={30} height={30} />

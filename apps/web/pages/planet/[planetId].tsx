@@ -14,6 +14,7 @@ import {
 
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const router = useRouter();
   const planetId = parseInt(router.query.planetId as string);
@@ -28,7 +29,7 @@ export default function Page() {
             <Text>{planet?.data.name}</Text>
           </Title>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Solar System</Text>
           <Group gap="xs">
             <SolarSystemSecurityStatusBadge
@@ -40,13 +41,13 @@ export default function Page() {
             </Anchor>
           </Group>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Planet Type</Text>
           <Anchor component={Link} href={`/type/${planet?.data.type_id}`}>
             <TypeName span typeId={planet?.data.type_id} />
           </Anchor>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Position</Text>
           <Position3DText
             size="xs"

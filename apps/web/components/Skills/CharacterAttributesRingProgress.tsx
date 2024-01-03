@@ -136,7 +136,7 @@ export function CharacterAttributesRingProgress({
                 <AttributesIcon width={42} />
 
                 <Stack gap={0}>
-                  <Group gap="xs" position="apart">
+                  <Group gap="xs" justify="space-between">
                     <Text
                       color="dimmed"
                       size="xs"
@@ -163,7 +163,7 @@ export function CharacterAttributesRingProgress({
         <Popover.Dropdown>
           <Stack>
             {data?.data.last_remap_date && (
-              <Group position="apart" gap="xl">
+              <Group justify="space-between" gap="xl">
                 <Text size="sm" color="dimmed">
                   Last remap
                 </Text>
@@ -176,7 +176,7 @@ export function CharacterAttributesRingProgress({
               </Group>
             )}
             {data?.data.accrued_remap_cooldown_date && (
-              <Group position="apart" gap="xl">
+              <Group justify="space-between" gap="xl">
                 <Text size="sm" color="dimmed">
                   Next remap
                 </Text>
@@ -189,7 +189,7 @@ export function CharacterAttributesRingProgress({
               </Group>
             )}
             {data?.data.bonus_remaps && (
-              <Group position="apart" gap="xl">
+              <Group justify="space-between" gap="xl">
                 <Text size="sm" color="dimmed">
                   Bonus Remaps
                 </Text>
