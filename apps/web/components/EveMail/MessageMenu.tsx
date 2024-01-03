@@ -153,7 +153,7 @@ export function MessageMenu({
           className={`umami--click--mark-as-${
             mail.is_read ? "unread" : "read"
           }-menu-item`}
-          icon={
+          leftSection={
             mail.is_read ? <IconMailOpened size={16} /> : <IconMail size={16} />
           }
           onClick={() => {
@@ -200,7 +200,7 @@ export function MessageMenu({
           Mark as {mail.is_read ? "Unread" : "Read"}
         </Menu.Item>
         <Menu.Item
-          icon={<IconTrash size={16} />}
+          leftSection={<IconTrash size={16} />}
           color="red"
           className="umami--click--delete-message-menu-item"
           onClick={() => {
