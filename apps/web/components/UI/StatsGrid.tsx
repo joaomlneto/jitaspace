@@ -1,10 +1,8 @@
 import React, { memo } from "react";
 import {
-  createStyles,
   Grid,
   Group,
   Paper,
-  rem,
   SimpleGrid,
   Text,
   type SimpleGridProps,
@@ -13,39 +11,8 @@ import { IconArrowDownRight, IconArrowUpRight } from "@tabler/icons-react";
 
 import { type EveIconProps } from "@jitaspace/eve-icons";
 
+import classes from "./StatsGrid.module.css";
 
-
-
-
-const useStyles = createStyles((theme) => ({
-  root: {
-    padding: `calc(${theme.spacing.md})`,
-  },
-
-  value: {
-    fontSize: rem(24),
-    fontWeight: 700,
-    lineHeight: 1,
-  },
-
-  diff: {
-    lineHeight: 1,
-    display: "flex",
-    alignItems: "center",
-  },
-
-  icon: {
-    color:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[3]
-        : theme.colors.gray[4],
-  },
-
-  title: {
-    fontWeight: 700,
-    textTransform: "uppercase",
-  },
-}));
 
 type StatsGridProps = SimpleGridProps & {
   data: {
@@ -58,7 +25,6 @@ type StatsGridProps = SimpleGridProps & {
 };
 
 export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
-  const { classes } = useStyles();
   const stats = data.map((stat) => {
     //const Icon = icons[stat.icon];
     const DiffIcon =
