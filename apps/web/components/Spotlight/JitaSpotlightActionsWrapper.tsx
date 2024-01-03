@@ -1,5 +1,13 @@
 import { memo, useMemo, type PropsWithChildren } from "react";
-import { Group, rem, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import {
+  Group,
+  rem,
+  Text,
+  ThemeIcon,
+  Tooltip,
+  useMantineTheme,
+} from "@mantine/core";
+import { useColorScheme } from "@mantine/hooks";
 
 import { InfoIcon } from "@jitaspace/eve-icons";
 import { useSelectedCharacter } from "@jitaspace/hooks";
@@ -15,7 +23,8 @@ export const JitaSpotlightActionsWrapper = memo(
       () => selectedCharacter?.accessTokenPayload.scp ?? [],
       [selectedCharacter],
     );
-
+    const theme = useMantineTheme();
+    const colorScheme = useColorScheme();
     const canUseEsiSearch = scopes.includes("esi-search.search_structures.v1");
     const canReadStructures = scopes.includes(
       "esi-universe.read_structures.v1",
@@ -29,13 +38,13 @@ export const JitaSpotlightActionsWrapper = memo(
           justify="space-between"
           px={15}
           py="xs"
-          sx={(theme) => ({
+          style={{
             borderTop: `${rem(1)} solid ${
-              theme.colorScheme === "dark"
+              colorScheme === "dark"
                 ? theme.colors.dark[4]
                 : theme.colors.gray[2]
             }`,
-          })}
+          }}
         >
           <Group gap="xs">
             {canUseEsiSearch && (
