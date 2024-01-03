@@ -5,6 +5,10 @@ import { useDisclosure } from "@mantine/hooks";
 
 import { TypeAvatar } from "@jitaspace/ui";
 
+
+
+
+
 type MarketGroupNavLinkProps = {
   marketGroups: Record<
     number,
@@ -72,7 +76,7 @@ export const MarketGroupNavLink = memo(
             <NavLink
               component={Link}
               href={`/market/${type.typeId}`}
-              icon={<TypeAvatar size={24} typeId={type.typeId} />}
+              leftSection={<TypeAvatar size={24} typeId={type.typeId} />}
               label={type.name}
               key={type.typeId}
             />
