@@ -102,7 +102,7 @@ export function AppScopeSetCheckboxCard({
         m={0}
         style={{ backgroundColor: "transparent" }}
         label={
-          <Stack spacing={4}>
+          <Stack gap={4}>
             {allAppScopes.map((scope) => (
               <Code key={scope}>{scope}</Code>
             ))}
@@ -124,7 +124,7 @@ export function AppScopeSetCheckboxCard({
         )}
       </div>
 
-      <Group spacing={0} wrap="nowrap">
+      <Group gap={0} wrap="nowrap">
         <Checkbox
           checked={optionalScopeChecked}
           tabIndex={-1}

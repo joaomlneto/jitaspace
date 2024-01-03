@@ -21,10 +21,10 @@ export type EveEntitySelectItemProps = SelectItemProps & {
 export const EveEntitySelectItem = forwardRef<
   HTMLDivElement,
   EveEntitySelectItemProps
->(({ value, category, ...others }, ref) => {
+>(({value, category, ...others}, ref) => {
   return (
     <Group wrap="nowrap" position="apart" ref={ref} {...others}>
-      <Group wrap="nowrap" spacing="xs">
+      <Group wrap="nowrap" gap="xs">
         {value ? (
           <EveEntityAvatar
             entityId={value}
@@ -33,17 +33,17 @@ export const EveEntitySelectItem = forwardRef<
             //variation="icon"
           />
         ) : (
-          <Avatar size={16} mr={10} />
+          <Avatar size={16} mr={10}/>
         )}
         {value ? (
           <EveEntityName
             entityId={value}
             category={category}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
+            sx={{lineHeight: 1, fontSize: rem(12)}}
             lineClamp={1}
           />
         ) : (
-          <Text sx={{ lineHeight: 1, fontSize: rem(12) }}>Unknown</Text>
+          <Text sx={{lineHeight: 1, fontSize: rem(12)}}>Unknown</Text>
         )}
       </Group>
       <Badge size="xs" variant="subtle">

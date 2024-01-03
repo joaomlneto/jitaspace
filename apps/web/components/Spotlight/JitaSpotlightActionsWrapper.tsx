@@ -25,7 +25,7 @@ export const JitaSpotlightActionsWrapper = memo(
       <div>
         {children}
         <Group
-          spacing="xs"
+          gap="xs"
           position="apart"
           px={15}
           py="xs"
@@ -37,7 +37,7 @@ export const JitaSpotlightActionsWrapper = memo(
             }`,
           })}
         >
-          <Group spacing="xs">
+          <Group gap="xs">
             {canUseEsiSearch && (
               <Text size="xs" color="dimmed">
                 ESI Search enabled.

@@ -124,7 +124,7 @@ export const ContactsDataTable = memo(
           header: "Labels",
           accessorKey: "label_ids",
           Cell: ({ cell }) => (
-            <Group spacing="xs">
+            <Group gap="xs">
               {cell.getValue<number[]>()?.map((labelId) => (
                 <Badge size="sm" key={labelId}>
                   {labelName[labelId] ?? JSON.stringify(cell.getValue())}

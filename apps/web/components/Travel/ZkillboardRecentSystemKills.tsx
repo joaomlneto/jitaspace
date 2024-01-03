@@ -87,7 +87,7 @@ export const ZkillboardRecentSystemKills = memo(
 
     return (
       <>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           {lastChecked && (
             <Text size="xs" color="dimmed">
               Last checked <TimeAgoText span date={lastChecked} addSuffix />.
@@ -95,7 +95,7 @@ export const ZkillboardRecentSystemKills = memo(
             </Text>
           )}
           {locations.map((location) => (
-            <Group spacing="xs">
+            <Group gap="xs">
               {(locationKills[location] ?? []).length}{" "}
               <EveEntityName entityId={location} />
             </Group>

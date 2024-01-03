@@ -39,6 +39,7 @@ import UserButton from "../UserButton";
 import { MobileHeaderDrawer } from "./MobileHeaderDrawer";
 import { useStyles } from "./styles";
 
+
 export function HeaderWithMegaMenus() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
@@ -103,7 +104,7 @@ export function HeaderWithMegaMenus() {
               >
                 <Center inline>
                   <Box component="span">
-                    <Group spacing="xs">
+                    <Group gap="xs">
                       <PeopleAndPlacesIcon width={32} />
                     </Group>
                   </Box>

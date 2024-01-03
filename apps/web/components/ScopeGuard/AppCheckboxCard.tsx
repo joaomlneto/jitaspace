@@ -119,7 +119,7 @@ export function AppCheckboxCard({
   const { classes, cx } = useStyles({ checked, indeterminate });
 
   return (
-    <Stack spacing="xs" className={cx(classes.button, className)}>
+    <Stack gap="xs" className={cx(classes.button, className)}>
       <UnstyledButton
         className={cx(classes.wrapper, className)}
         onClick={() => {
@@ -143,7 +143,7 @@ export function AppCheckboxCard({
           </Text>
         </div>
 
-        <Group spacing="xs" wrap="nowrap">
+        <Group gap="xs" wrap="nowrap">
           {!showScopeDetails && (
             <Tooltip
               color="dark"
@@ -151,7 +151,7 @@ export function AppCheckboxCard({
               m={0}
               style={{ backgroundColor: "transparent" }}
               label={
-                <Stack spacing={4}>
+                <Stack gap={4}>
                   {allAppScopes.map((scope) => (
                     <Code key={scope}>{scope}</Code>
                   ))}

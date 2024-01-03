@@ -55,7 +55,7 @@ export const RouteTable = memo(({ route }: RouteTableProps) => {
             Solar System
           </th>
           <th colSpan={2}>
-            <Group spacing="xs">
+            <Group gap="xs">
               <Text>Kill Statistics </Text>
               <Tooltip
                 color="dark"

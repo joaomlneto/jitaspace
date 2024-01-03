@@ -41,7 +41,7 @@ export function MobileCalendarEventList({
           <tr key={event.event_id}>
             <td>
               <Stack>
-                <Group position="apart" spacing="xs">
+                <Group position="apart" gap="xs">
                   <Group>
                     <Tooltip
                       label={
@@ -96,7 +96,7 @@ export function MobileCalendarEventList({
                     />
                   </Group>
                 </Group>
-                <Group wrap="nowrap" spacing="xs">
+                <Group wrap="nowrap" gap="xs">
                   {event.importance === 1 && <WarningIcon width={20} />}
                   <Anchor
                     lineClamp={1}

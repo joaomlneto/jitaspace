@@ -98,7 +98,7 @@ export function RequestPermissionsBanner({
         Alternatively, click the customize button to control which scopes are
         requested.
       </Text>
-      <Group spacing="md" position="center">
+      <Group gap="md" position="center">
         <LoginWithEveOnlineButton
           size="small"
           onClick={() => {

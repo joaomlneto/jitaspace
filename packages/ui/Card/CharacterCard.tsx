@@ -6,6 +6,7 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { CharacterAvatar } from "../Avatar";
 import { CharacterName } from "../Text";
 
+
 interface CharacterCardProps {
   characterId: string | number;
 }
@@ -42,7 +43,7 @@ export const CharacterCard = memo(({ characterId }: CharacterCardProps) => {
         target="_blank"
         size="sm"
       >
-        <Group spacing="xs">
+        <Group gap="xs">
           <IconExternalLink size={14} />
           <Anchor>Open in EVE Who</Anchor>
         </Group>

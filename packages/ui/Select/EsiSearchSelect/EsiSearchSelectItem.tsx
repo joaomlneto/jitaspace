@@ -21,23 +21,23 @@ export type EsiSearchSelectItemProps = SelectItemProps & {
 export const EsiSearchSelectItem = forwardRef<
   HTMLDivElement,
   EsiSearchSelectItemProps
->(({ value, category, ...others }, ref) => {
+>(({value, category, ...others}, ref) => {
   return (
     <Group wrap="nowrap" position="apart" ref={ref} {...others}>
-      <Group wrap="nowrap" spacing="xs">
+      <Group wrap="nowrap" gap="xs">
         {value ? (
-          <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
+          <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl"/>
         ) : (
-          <Avatar size={16} mr={10} radius="xl" />
+          <Avatar size={16} mr={10} radius="xl"/>
         )}
         {value ? (
           <EveEntityName
             entityId={value}
             category={category}
-            sx={{ lineHeight: 1, fontSize: rem(12) }}
+            sx={{lineHeight: 1, fontSize: rem(12)}}
           />
         ) : (
-          <Text sx={{ lineHeight: 1, fontSize: rem(12) }}>Unknown</Text>
+          <Text sx={{lineHeight: 1, fontSize: rem(12)}}>Unknown</Text>
         )}
       </Group>
       <Badge size="xs" variant="subtle">

@@ -72,7 +72,7 @@ export const ContactsTable = ({
                   </Group>
                 </td>
                 <td>
-                  <Group spacing="xs">
+                  <Group gap="xs">
                     {contact.label_ids?.map((labelId) => (
                       <Badge size="sm" key={labelId}>
                         {
