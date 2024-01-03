@@ -14,7 +14,6 @@ import {
 
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const router = useRouter();
   const planetId = parseInt(router.query.planetId as string);
@@ -23,7 +22,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <TypeAvatar typeId={planet?.data.type_id} size="xl" radius={256} />
           <Title order={3}>
             <Text>{planet?.data.name}</Text>
@@ -31,7 +30,7 @@ export default function Page() {
         </Group>
         <Group position="apart">
           <Text>Solar System</Text>
-          <Group spacing="xs">
+          <Group gap="xs">
             <SolarSystemSecurityStatusBadge
               solarSystemId={planet?.data.system_id}
               size="sm"

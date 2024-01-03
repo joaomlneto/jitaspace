@@ -61,8 +61,8 @@ export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
       stat.diff == undefined
         ? null
         : stat.diff > 0
-        ? IconArrowUpRight
-        : IconArrowDownRight;
+          ? IconArrowUpRight
+          : IconArrowDownRight;
 
     return (
       <Paper withBorder p="md" radius="md" key={stat.title}>
@@ -79,7 +79,7 @@ export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
           )}
         </Grid>
 
-        <Group align="flex-end" spacing="xs" mt={25}>
+        <Group align="flex-end" gap="xs" mt={25}>
           <Text className={classes.value}>{stat.value}</Text>
           <Text
             color={stat.diff && stat.diff > 0 ? "teal" : "red"}

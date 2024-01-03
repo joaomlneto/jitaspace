@@ -13,7 +13,6 @@ import {
 } from "~/components/Skills";
 import { MainLayout } from "~/layouts";
 
-
 const SKILLS_CATEGORY_ID = 16;
 
 type PageProps = {
@@ -76,7 +75,7 @@ export default function Page({ groups }: PageProps) {
   const character = useSelectedCharacter();
   return (
     <Container size="xl">
-      <Stack spacing="xl">
+      <Stack gap="xl">
         <Group>
           <SkillsIcon width={48} />
           <Title>Skills</Title>

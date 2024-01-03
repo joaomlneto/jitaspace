@@ -13,7 +13,6 @@ import {
 
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const router = useRouter();
   const raceId = parseInt(router.query.raceId as string);
@@ -22,7 +21,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <RaceAvatar raceId={raceId} size="xl" radius={256} />
           <Title order={3}>
             <RaceName span raceId={raceId} />

@@ -262,9 +262,9 @@ export const LoyaltyPointsTable = memo(
           enableColumnFilter: false,
           enableSorting: false,
           Cell: ({ row, cell }) => (
-            <Stack spacing="xs">
+            <Stack gap="xs">
               {row.original.requiredItems.map(({ quantity, typeId }) => (
-                <Group key={typeId} wrap="nowrap" spacing="xs">
+                <Group key={typeId} wrap="nowrap" gap="xs">
                   <TypeAvatar typeId={typeId} size="sm" />
                   {quantity !== 1 && <Text size="sm">{quantity}</Text>}
                   <TypeAnchor typeId={typeId} target="_blank">
@@ -283,7 +283,7 @@ export const LoyaltyPointsTable = memo(
           enableColumnFilter: false,
           enableSorting: false,
           Cell: ({ row, cell }) => (
-            <Stack spacing="xs">
+            <Stack gap="xs">
               {row.original.requiredItems.map(
                 ({ quantity, typeId, marketStats }) => (
                   <Group key={typeId} wrap="nowrap" position="apart">
@@ -305,7 +305,7 @@ export const LoyaltyPointsTable = memo(
           enableColumnFilter: false,
           enableSorting: false,
           Cell: ({ row, cell }) => (
-            <Stack spacing="xs">
+            <Stack gap="xs">
               {row.original.requiredItems.map(
                 ({ quantity, typeId, marketStats }) => (
                   <Group key={typeId} wrap="nowrap" position="apart">
@@ -329,7 +329,7 @@ export const LoyaltyPointsTable = memo(
           enableColumnFilter: false,
           enableSorting: false,
           Cell: ({ row, cell }) => (
-            <Stack spacing="xs">
+            <Stack gap="xs">
               {row.original.requiredItems.map(
                 ({ quantity, typeId, marketStats }) => (
                   <Group key={typeId} wrap="nowrap" position="apart">
@@ -351,7 +351,7 @@ export const LoyaltyPointsTable = memo(
           enableColumnFilter: false,
           enableSorting: false,
           Cell: ({ row, cell }) => (
-            <Stack spacing="xs">
+            <Stack gap="xs">
               {row.original.requiredItems.map(
                 ({ quantity, typeId, marketStats }) => (
                   <Group key={typeId} wrap="nowrap" position="apart">

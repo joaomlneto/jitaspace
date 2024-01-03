@@ -8,7 +8,6 @@ import { FactionAvatar, FactionName } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const router = useRouter();
   const factionId = router.query.factionId as string;
@@ -16,7 +15,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <FactionAvatar factionId={factionId} size="xl" radius={256} />
           <Title order={3}>
             <FactionName span factionId={factionId} />
@@ -28,7 +27,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 zKillboard
               </Group>

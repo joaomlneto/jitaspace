@@ -47,7 +47,7 @@ export default function Page() {
           <Group>
             <Link href={`https://zkillboard.com/war/${warId}`} target="_blank">
               <Button size="xs">
-                <Group spacing="xs">
+                <Group gap="xs">
                   <IconExternalLink size={14} />
                   zKillboard
                 </Group>
@@ -58,7 +58,7 @@ export default function Page() {
               target="_blank"
             >
               <Button size="xs">
-                <Group spacing="xs">
+                <Group gap="xs">
                   <IconExternalLink size={14} />
                   DOTLAN EveMaps
                 </Group>
@@ -67,7 +67,7 @@ export default function Page() {
           </Group>
         </Group>
         <Group position="apart">
-          <Group spacing="xl" wrap="nowrap">
+          <Group gap="xl" wrap="nowrap">
             <WarAggressorAvatar warId={warId} size="xl" />
             <div>
               <Group wrap="nowrap">
@@ -98,7 +98,7 @@ export default function Page() {
               />
             )}
           </Group>
-          <Group spacing="xl" wrap="nowrap">
+          <Group gap="xl" wrap="nowrap">
             <WarDefenderAvatar warId={warId} size="xl" />
             <div>
               <Group wrap="nowrap">

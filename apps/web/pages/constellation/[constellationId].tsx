@@ -21,7 +21,6 @@ import {
 
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const router = useRouter();
   const constellationId = parseInt(router.query.constellationId as string);
@@ -30,7 +29,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <Title order={3}>
             <ConstellationName span constellationId={constellationId} />
           </Title>
@@ -52,7 +51,7 @@ export default function Page() {
         <List>
           {constellation?.data.systems.map((systemId) => (
             <List.Item key={systemId}>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <SolarSystemSecurityStatusBadge
                   solarSystemId={systemId}
                   size="sm"

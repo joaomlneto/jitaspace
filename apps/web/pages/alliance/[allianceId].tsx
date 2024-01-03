@@ -44,7 +44,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <AllianceAvatar allianceId={allianceId} size="xl" radius={256} />
           <Title order={3}>
             <AllianceName span allianceId={allianceId} />
@@ -63,7 +63,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 DOTLAN EveMaps
               </Group>
@@ -74,7 +74,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 EveWho
               </Group>
@@ -85,14 +85,14 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 zKillboard
               </Group>
             </Button>
           </Link>
         </Group>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           <Group position="apart">
             <Text>Creator</Text>
             <Group wrap="nowrap">
@@ -183,7 +183,7 @@ export default function Page() {
               <Anchor component={Link} href={`/corporation/${corporationId}`}>
                 <CorporationName span corporationId={corporationId} />
               </Anchor>
-              <Group spacing="xs">
+              <Group gap="xs">
                 {alliance?.data.creator_corporation_id === corporationId && (
                   <Badge size="xs">Creator</Badge>
                 )}
