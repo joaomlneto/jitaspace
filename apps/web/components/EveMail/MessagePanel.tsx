@@ -97,9 +97,7 @@ export function MessagePanel({
                     <MailingListName
                       characterId={characterId}
                       mailingListId={recipient.recipient_id}
-                    >
-                      Mailing List
-                    </MailingListName>
+                    />
                   ) : (
                     <EveEntityAnchor
                       entityId={recipient.recipient_id}
