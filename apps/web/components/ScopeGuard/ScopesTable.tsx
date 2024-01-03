@@ -1,20 +1,10 @@
 import { useMemo } from "react";
-import { Badge, createStyles, Table } from "@mantine/core";
+import { Badge, Table } from "@mantine/core";
 
 import { getScopeDescription, type ESIScope } from "@jitaspace/esi-metadata";
 
+import classes from "./ScopesTable.module.css";
 
-
-
-
-const useStyles = createStyles((theme) => ({
-  scopesTable: {
-    maxWidth: 800,
-    margin: "auto",
-    marginTop: theme.spacing.xl,
-    marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
-  },
-}));
 
 export type ScopesTableProps = {
   scopes: ESIScope[];
@@ -22,8 +12,6 @@ export type ScopesTableProps = {
 };
 
 export function ScopesTable({ scopes, showRawScopeNames }: ScopesTableProps) {
-  const { classes } = useStyles();
-
   const scopeData: {
     id: ESIScope;
     category: string;
