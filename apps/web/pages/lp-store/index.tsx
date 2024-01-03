@@ -18,6 +18,7 @@ import { CorporationAvatar } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   corporations: { corporationId: number; name: string }[];
 };
@@ -74,23 +75,7 @@ export default function Page({ corporations }: PageProps) {
             show all offers
           </Anchor>
         </Title>
-        <SimpleGrid
-          cols={4}
-          breakpoints={[
-            {
-              maxWidth: "lg",
-              cols: 3,
-            },
-            {
-              maxWidth: "md",
-              cols: 2,
-            },
-            {
-              maxWidth: "xs",
-              cols: 1,
-            },
-          ]}
-        >
+        <SimpleGrid cols={{ base: 1, xs: 2, md: 3, lg: 4 }}>
           {sortedCorporations.map((corporation) => (
             <Anchor
               component={Link}

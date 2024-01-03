@@ -283,7 +283,7 @@ export default function Page({ ships }: PageProps) {
           </TypeAnchor>{" "}
           into a ship fitting.
         </Text>
-        <SimpleGrid cols={2} breakpoints={[{ maxWidth: "xs", cols: 1 }]}>
+        <SimpleGrid cols={{ base: 1, xs: 2 }}>
           <Stack>
             <FocusTrap active={true}>
               <EveEntitySelect
@@ -308,13 +308,7 @@ export default function Page({ ships }: PageProps) {
             />
             {scans.length > 0 && (
               <>
-                <SimpleGrid
-                  cols={2}
-                  breakpoints={[
-                    { maxWidth: "lg", cols: 2 },
-                    { maxWidth: "xs", cols: 1 },
-                  ]}
-                >
+                <SimpleGrid cols={{ base: 1, xs: 2 }}>
                   {scans.map((scan, index) => (
                     <HoverCard
                       key={`scan-${index}`}

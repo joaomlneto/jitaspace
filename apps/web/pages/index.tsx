@@ -211,15 +211,7 @@ export default function Page() {
         </Group>
       </Stack>
       <Title order={3}>Capsuleer Tools</Title>
-      <SimpleGrid
-        cols={3}
-        spacing="xl"
-        my="xl"
-        breakpoints={[
-          { maxWidth: "sm", cols: 2 },
-          { maxWidth: "xs", cols: 1 },
-        ]}
-      >
+      <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2, sm: 3 }}>
         {Object.values(characterApps).map((feature) => (
           <UnstyledButton
             component={feature.url ? Link : Link}
@@ -249,15 +241,7 @@ export default function Page() {
         ))}
       </SimpleGrid>
       <Title order={3}>Universe</Title>
-      <SimpleGrid
-        cols={3}
-        spacing="xl"
-        my="xl"
-        breakpoints={[
-          { maxWidth: "sm", cols: 2 },
-          { maxWidth: "xs", cols: 1 },
-        ]}
-      >
+      <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2, sm: 3 }}>
         {Object.values(universeApps).map((feature) => (
           <UnstyledButton
             component={feature.url ? Link : Link}
@@ -287,15 +271,7 @@ export default function Page() {
         ))}
       </SimpleGrid>
       <Title order={3}>Development Tools</Title>
-      <SimpleGrid
-        cols={2}
-        spacing="xl"
-        my="xl"
-        breakpoints={[
-          { maxWidth: "sm", cols: 2 },
-          { maxWidth: "xs", cols: 1 },
-        ]}
-      >
+      <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2, sm: 3 }}>
         {devApps.map((feature) => (
           <UnstyledButton
             component={feature.url ? Link : Link}

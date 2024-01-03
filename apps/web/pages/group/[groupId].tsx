@@ -17,6 +17,7 @@ import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   name?: string;
   types: { typeId: number; name: string }[];
@@ -113,11 +114,7 @@ export default function Page({ name, types }: PageProps) {
           </Group>
           <GroupBreadcrumbs groupId={Number(groupId)} />
           <Title order={3}>Types</Title>
-          <SimpleGrid
-            cols={2}
-            spacing="xs"
-            breakpoints={[{ maxWidth: "md", cols: 1 }]}
-          >
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xs">
             {sortedTypes.map((type) => (
               <Group wrap="nowrap" key={type.typeId}>
                 <TypeAvatar typeId={type.typeId} size="sm" />

@@ -106,14 +106,7 @@ export function CharacterAttributesRingProgress({
       new Date().getTime();
 
   return (
-    <SimpleGrid
-      cols={6}
-      breakpoints={[
-        { maxWidth: "lg", cols: 3 },
-        { maxWidth: "sm", cols: 2 },
-        { maxWidth: 500, cols: 1 },
-      ]}
-    >
+    <SimpleGrid cols={{ base: 1, 500: 2, sm: 3, lg: 6 }}>
       {stats}
       <Popover>
         <Popover.Target>

@@ -184,12 +184,8 @@ export default function Page() {
           <>
             <Title order={4}>Industry Cost Indices</Title>
             <StatsGrid
-              cols={3}
+              cols={{ base: 1, xs: 2, sm: 3 }}
               spacing="xs"
-              breakpoints={[
-                { maxWidth: "sm", cols: 2 },
-                { maxWidth: "xs", cols: 1 },
-              ]}
               data={(
                 solarSystemCostIndicesData[systemId]?.cost_indices ?? []
               ).map((index) => ({

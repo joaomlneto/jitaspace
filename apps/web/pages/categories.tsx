@@ -55,14 +55,7 @@ export default function Page({ categories }: PageProps) {
           <ItemsIcon width={48} />
           <Title>Categories</Title>
         </Group>
-        <SimpleGrid
-          cols={3}
-          spacing="xs"
-          breakpoints={[
-            { maxWidth: "sm", cols: 2 },
-            { maxWidth: "xs", cols: 1 },
-          ]}
-        >
+        <SimpleGrid cols={{ base: 1, xs: 2, sm: 3 }} spacing="xs">
           {categories.map((category) => (
             <Group key={category.categoryId}>
               <CategoryAnchor categoryId={category.categoryId}>

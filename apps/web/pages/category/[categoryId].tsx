@@ -18,6 +18,7 @@ import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   name?: string;
   groups: { groupId: number; name: string }[];
@@ -127,14 +128,7 @@ export default function Page({ name, groups }: PageProps) {
           <CategoryBreadcrumbs categoryId={Number(categoryId)} />
           <Stack gap="xs">
             <Title order={3}>Groups</Title>
-            <SimpleGrid
-              cols={3}
-              spacing="xs"
-              breakpoints={[
-                { maxWidth: "md", cols: 2 },
-                { maxWidth: "xs", cols: 1 },
-              ]}
-            >
+            <SimpleGrid spacing="xs" cols={{ base: 1, xs: 2, md: 3 }}>
               {sortedGroups.map((group) => (
                 <Group key={group.groupId}>
                   <GroupAnchor groupId={group.groupId} key={group.groupId}>
