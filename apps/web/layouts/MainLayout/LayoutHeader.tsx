@@ -3,14 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
+  AppShell,
   Box,
   Burger,
   Container,
-  createStyles,
   Divider,
   Drawer,
   Group,
-  Header,
   Kbd,
   Loader,
   rem,
@@ -128,16 +127,16 @@ export function LayoutHeader() {
 
   return (
     <Box>
-      <Header
-        height={rem(60)}
+      <AppShell.Header
+        h={rem(60)}
         px="md"
-        sx={{
+        style={{
           transform: `translate3d(0, ${pinned ? 0 : rem(-110)}, 0)`,
           transition: "transform 400ms ease",
         }}
       >
         <Container size="xl" h={60} p={0}>
-          <Group justify="space-between" sx={{ height: "100%" }}>
+          <Group justify="space-between" style={{ height: "100%" }}>
             <Link href="/" className={classes.logo}>
               <Group p="xs">
                 <Image src="/logo.png" alt="Jita logo" width={30} height={30} />
@@ -146,7 +145,7 @@ export function LayoutHeader() {
             </Link>
 
             <Group
-              sx={{ height: "100%" }}
+              style={{ height: "100%" }}
               gap={0}
               className={classes.hiddenMobile}
             >
@@ -220,7 +219,7 @@ export function LayoutHeader() {
             />
           </Group>
         </Container>
-      </Header>
+      </AppShell.Header>
 
       <Drawer
         opened={drawerOpened}
