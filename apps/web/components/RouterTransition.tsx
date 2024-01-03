@@ -6,6 +6,10 @@ import {
   startNavigationProgress,
 } from "@mantine/nprogress";
 
+
+
+
+
 function RouterTransition() {
   const router = useRouter();
 
@@ -25,7 +29,7 @@ function RouterTransition() {
     };
   }, [router, router.asPath]);
 
-  return <NavigationProgress progressLabel="Loading Page" autoReset={true} />;
+  return <NavigationProgress />;
 }
 
 export default RouterTransition;
