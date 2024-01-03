@@ -1,47 +1,15 @@
 import React from "react";
-import {
-  Center,
-  createStyles,
-  Group,
-  rem,
-  Text,
-  UnstyledButton,
-} from "@mantine/core";
-import { type SpotlightActionProps } from "@mantine/spotlight";
+import { Center, Group, Text, UnstyledButton } from "@mantine/core";
+import { SpotlightActionProps, SpotlightProps } from "@mantine/spotlight";
 
 import { EsiSearchCategory } from "@jitaspace/hooks";
 import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
 
+import classes from "./JitaSpotlight.module.css";
 
 
-
-
-const useStyles = createStyles((theme) => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  action: {
-    position: "relative",
-    display: "block",
-    width: "100%",
-    padding: `${rem(10)} ${rem(12)}`,
-    borderRadius: theme.radius.sm,
-    ...theme.fn.hover({
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[4]
-          : theme.colors.gray[1],
-    }),
-
-    "&[data-hovered]": {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[4]
-          : theme.colors.gray[1],
-    },
-  },
-}));
-
-type JitaSpotlightActionProps = Omit<SpotlightActionProps, "action"> & {
-  action: SpotlightActionProps["action"] & {
+type JitaSpotlightActionProps = Omit<SpotlightProps, "actions"> & {
+  action: SpotlightActionProps & {
     type: "app" | "eve-entity";
     category?: EsiSearchCategory;
     entityId: number;
@@ -56,12 +24,6 @@ export const JitaSpotlightAction = ({
   onTrigger,
   ...others
 }: JitaSpotlightActionProps) => {
-  const { classes } = useStyles(undefined, {
-    styles,
-    classNames,
-    name: "Spotlight",
-  });
-
   // is this an EVE entity?
   if (action.type === "eve-entity")
     return (
@@ -69,7 +31,7 @@ export const JitaSpotlightAction = ({
         className={classes.action}
         data-hovered={hovered || undefined}
         tabIndex={-1}
-        onMouseDown={(event) => event.preventDefault()}
+        //onMouseDown={(event) => event.preventDefault()}
         onClick={onTrigger}
         {...others}
       >

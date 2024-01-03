@@ -1,0 +1,22 @@
+.action {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 10rem 12rem;
+    border-radius: var(--mantine-radius-sm);
+    /* TODO: add hover
+
+    ...theme.fn.hover({
+      backgroundColor:
+        theme.colorScheme === "dark"
+          ? theme.colors.dark[4]
+          : theme.colors.gray[1],
+
+    "&[data-hovered]": {
+      backgroundColor:
+        theme.colorScheme === "dark"
+          ? theme.colors.dark[4]
+          : theme.colors.gray[1],
+    },
+        */
+}
