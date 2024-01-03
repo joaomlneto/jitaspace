@@ -5,6 +5,25 @@
     transition: background-color 150ms ease, border-color 150ms ease;
     border-radius: var(--mantine-radius-sm);
     padding: var(--mantine-spacing-sm);
+
+    /*
+      FIXME: add the following
+      border: `${rem(1)} solid ${
+        checked || indeterminate
+          ? theme.fn.variant({ variant: "outline", color: theme.primaryColor })
+              .border
+          : theme.colorScheme === "dark"
+            ? theme.colors.dark[8]
+            : theme.colors.gray[3]
+      }`,
+      backgroundColor:
+        checked || indeterminate
+          ? theme.fn.variant({ variant: "light", color: theme.primaryColor })
+              .background
+          : theme.colorScheme === "dark"
+            ? theme.colors.dark[8]
+            : theme.white,
+     */
 }
 
 .button {
