@@ -9,6 +9,8 @@ import {
   Stack,
   Text,
   UnstyledButton,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import { format } from "date-fns";
 
@@ -57,6 +59,8 @@ export function CharacterAttributesRingProgress({
   characterId,
 }: CharacterAttributesRingProgressProps) {
   const { data, error, isLoading } = useCharacterAttributes(characterId);
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
 
   if (isLoading) return "LOADING";
   if (error) return "ERROR";
@@ -115,15 +119,15 @@ export function CharacterAttributesRingProgress({
               withBorder
               radius="md"
               p="xs"
-              sx={(theme) => ({
+              style={{
                 backgroundColor:
-                  theme.colors.dark[theme.colorScheme === "dark" ? 9 : 6],
+                  theme.colors.dark[colorScheme === "dark" ? 9 : 6],
                 color: "#fff",
                 "&:hover": {
                   backgroundColor:
-                    theme.colors.dark[theme.colorScheme === "dark" ? 6 : 9],
+                    theme.colors.dark[colorScheme === "dark" ? 6 : 9],
                 },
-              })}
+              }}
             >
               <Group>
                 <AttributesIcon width={42} />
