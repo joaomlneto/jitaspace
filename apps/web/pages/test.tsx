@@ -32,7 +32,7 @@ export default function Page() {
       )}
       {characters.map((char) => (
         <Container key={char.characterId}>
-          <Group position="apart">
+          <Group justify="space-between">
             <Group>
               <CharacterAvatar characterId={char.characterId} />
               <Text>{char.accessTokenPayload.name}</Text>

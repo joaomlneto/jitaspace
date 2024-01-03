@@ -147,7 +147,7 @@ export default function Page() {
       )}
       <Stack my="md" gap="xs">
         {Object.values(characters).map((character) => (
-          <Group position="apart" key={character.characterId}>
+          <Group justify="space-between" key={character.characterId}>
             <Group wrap="nowrap" gap="xs">
               <CharacterAvatar characterId={character.characterId} size="sm" />
               <CharacterAnchor characterId={character.characterId}>

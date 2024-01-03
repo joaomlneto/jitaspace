@@ -46,7 +46,7 @@ export function MessagePanel({
   return (
     <Stack>
       {!hideSender && (
-        <Group position="apart">
+        <Group justify="space-between">
           <Group wrap="nowrap" gap="xs">
             From:
             <EveMailSenderAvatar
@@ -119,7 +119,7 @@ export function MessagePanel({
         </Group>
       )}
       {!hideLabels && (
-        <Group position="apart">
+        <Group justify="space-between">
           {mail?.data.labels?.length === 0 && (
             <Text size="md" color="dimmed">
               No labels assigned

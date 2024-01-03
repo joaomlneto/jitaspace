@@ -89,14 +89,14 @@ export default function Page() {
             {event?.data.title}
           </Title>
           <MailMessageViewer content={event?.data.text ?? ""} />
-          <Group position="apart" mt="xl">
+          <Group justify="space-between" mt="xl">
             <Text>When</Text>
             <FormattedDateText
               date={event?.data.date ? new Date(event?.data.date) : undefined}
               format="yyyy-MM-dd HH:mm"
             />
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Duration</Text>
             {character && (
               <CalendarEventHumanDurationText
@@ -105,7 +105,7 @@ export default function Page() {
               />
             )}
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Owner</Text>
             <Group wrap="nowrap">
               {character && (
@@ -118,7 +118,7 @@ export default function Page() {
               <EveEntityNameAnchor entityId={event?.data.owner_id} />
             </Group>
           </Group>
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Response</Text>
             {character && (
               <CalendarEventResponseBadge
@@ -132,7 +132,7 @@ export default function Page() {
           </Title>
           <Stack>
             {sortedAttendees.map((attendee) => (
-              <Group key={attendee.character_id} position="apart">
+              <Group key={attendee.character_id} justify="space-between">
                 <Group key={attendee.event_response} wrap="nowrap">
                   <CharacterAvatar
                     characterId={attendee.character_id}

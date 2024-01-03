@@ -35,6 +35,7 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   typeId: number;
   ogImageUrl?: string;
@@ -199,7 +200,7 @@ export default function Page({
           )}
           {marketPrices[typeId] && (
             <>
-              <Group position="apart">
+              <Group justify="space-between">
                 <Text>Average Price</Text>
                 <Text>
                   {marketPrices[typeId]?.average_price?.toLocaleString(
@@ -209,7 +210,7 @@ export default function Page({
                   ISK
                 </Text>
               </Group>
-              <Group position="apart">
+              <Group justify="space-between">
                 <Text>Adjusted Price</Text>
                 <Text>
                   {marketPrices[typeId]?.adjusted_price?.toLocaleString(
@@ -228,13 +229,13 @@ export default function Page({
                     </Anchor>
                     )
                   </Title>
-                  <Group position="apart">
+                  <Group justify="space-between">
                     <Text>Jita Buy</Text>
                     <Text>
                       <ISKAmount amount={marketStats.buy.percentile} />
                     </Text>
                   </Group>
-                  <Group position="apart">
+                  <Group justify="space-between">
                     <Text>Jita Split</Text>
                     <Text>
                       <ISKAmount
@@ -246,7 +247,7 @@ export default function Page({
                       />
                     </Text>
                   </Group>
-                  <Group position="apart">
+                  <Group justify="space-between">
                     <Text>Jita Sell</Text>
                     <Text>
                       <ISKAmount amount={marketStats.sell.percentile} />

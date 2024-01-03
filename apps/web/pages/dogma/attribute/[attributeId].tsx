@@ -154,52 +154,52 @@ export default function Page({
             }
           />
         )}
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Attribute ID</Text>
           <Text>{attributeId}</Text>
         </Group>
         {attribute?.data.name && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Name</Text>
             <Text>{attribute.data.name}</Text>
           </Group>
         )}
         {attribute?.data.display_name && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Display Name</Text>
             <Text>{attribute.data.display_name}</Text>
           </Group>
         )}
         {attribute?.data.default_value !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Default Value</Text>
             <Text>{attribute.data.default_value}</Text>
           </Group>
         )}
         {attribute?.data.high_is_good !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>High is Good?</Text>
             <Text>{attribute.data.high_is_good ? "Yes" : "No"}</Text>
           </Group>
         )}
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Published</Text>
           <Text>{published ? "Yes" : "No"}</Text>
         </Group>
         {attribute?.data.stackable !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Stackable</Text>
             <Text>{attribute.data.stackable ? "Yes" : "No"}</Text>
           </Group>
         )}
         {attribute?.data.unit_id !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Unit ID</Text>
             <Text>{attribute.data.unit_id}</Text>
           </Group>
         )}
         {attribute?.data.icon_id !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Icon ID</Text>
             <Text>{attribute.data.icon_id}</Text>
           </Group>

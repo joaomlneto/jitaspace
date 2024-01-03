@@ -41,7 +41,7 @@ export function MobileCalendarEventList({
           <tr key={event.event_id}>
             <td>
               <Stack>
-                <Group position="apart" gap="xs">
+                <Group justify="space-between" gap="xs">
                   <Group>
                     <Tooltip
                       label={

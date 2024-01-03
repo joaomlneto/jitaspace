@@ -61,21 +61,21 @@ export function CalendarEventDetailsPanel({
 
   return (
     <Stack>
-      <Group position="apart" mt="xl">
+      <Group justify="space-between" mt="xl">
         <Text>When</Text>
         <FormattedDateText
           date={event?.data.date ? new Date(event?.data.date) : undefined}
           format="yyyy-MM-dd HH:mm"
         />
       </Group>
-      <Group position="apart">
+      <Group justify="space-between">
         <Text>Duration</Text>
         <CalendarEventHumanDurationText
           characterId={characterId}
           eventId={eventId}
         />
       </Group>
-      <Group position="apart">
+      <Group justify="space-between">
         <Text>Owner</Text>
         <Group wrap="nowrap">
           <CalendarEventOwnerAvatar
@@ -86,7 +86,7 @@ export function CalendarEventDetailsPanel({
           <EveEntityNameAnchor entityId={event?.data.owner_id} />
         </Group>
       </Group>
-      <Group position="apart">
+      <Group justify="space-between">
         <Text>Your Response</Text>
         {canRespondToEvents ? (
           <CalendarEventAttendanceSelect
@@ -110,7 +110,7 @@ export function CalendarEventDetailsPanel({
       </Title>
       <Stack>
         {sortedAttendees.map((attendee) => (
-          <Group key={attendee.character_id} position="apart">
+          <Group key={attendee.character_id} justify="space-between">
             <Group key={attendee.event_response} wrap="nowrap">
               <CharacterAvatar characterId={attendee.character_id} size="sm" />
               <CharacterAnchor characterId={attendee.character_id}>

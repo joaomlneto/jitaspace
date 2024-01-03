@@ -21,6 +21,7 @@ import {
 
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const router = useRouter();
   const constellationId = parseInt(router.query.constellationId as string);
@@ -35,7 +36,7 @@ export default function Page() {
           </Title>
         </Group>
         {constellation?.data.region_id && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Region</Text>
             <Group>
               <Anchor

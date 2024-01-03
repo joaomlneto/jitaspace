@@ -61,7 +61,7 @@ export default function Page() {
             </Button>
           </Link>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Solar System</Text>
           <Group gap="xs">
             <SolarSystemSecurityStatusBadge
@@ -76,19 +76,19 @@ export default function Page() {
             </Anchor>
           </Group>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Station Type</Text>
           <Anchor component={Link} href={`/type/${station?.data.type_id}`}>
             <TypeName span typeId={station?.data.type_id} />
           </Anchor>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Race</Text>
           <Anchor component={Link} href={`/race/${station?.data.race_id}`}>
             <RaceName span raceId={station?.data.race_id} />
           </Anchor>
         </Group>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Owner</Text>
           <EveEntityAnchor entityId={station?.data.owner}>
             <EveEntityName entityId={station?.data.owner} />

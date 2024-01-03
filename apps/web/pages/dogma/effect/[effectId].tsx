@@ -198,30 +198,30 @@ export default function Page({
             description ?? "<i>No description provided</i>",
           )}
         />
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Effect ID</Text>
           <Text>{effectId}</Text>
         </Group>
         {effect?.data.effect_category !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Effect Category ID</Text>
             <Text>{effect.data.effect_category}</Text>
           </Group>
         )}
         {effect?.data.name && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Name</Text>
             <Text>{effect.data.name}</Text>
           </Group>
         )}
         {effect?.data.display_name && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Display Name</Text>
             <Text>{effect.data.display_name}</Text>
           </Group>
         )}
         {effect?.data.discharge_attribute_id && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Discharge Attribute</Text>
             <DogmaAttributeAnchor
               attributeId={effect.data.discharge_attribute_id}
@@ -234,7 +234,7 @@ export default function Page({
           </Group>
         )}
         {effect?.data.duration_attribute_id && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Duration Attribute</Text>
             <DogmaAttributeAnchor
               attributeId={effect.data.duration_attribute_id}
@@ -247,7 +247,7 @@ export default function Page({
           </Group>
         )}
         {effect?.data.falloff_attribute_id && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Falloff Attribute</Text>
             <DogmaAttributeAnchor
               attributeId={effect.data.falloff_attribute_id}
@@ -260,7 +260,7 @@ export default function Page({
           </Group>
         )}
         {effect?.data.range_attribute_id && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Range Attribute</Text>
             <DogmaAttributeAnchor
               attributeId={effect.data.range_attribute_id}
@@ -273,7 +273,7 @@ export default function Page({
           </Group>
         )}
         {effect?.data.tracking_speed_attribute_id && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Tracking Speed Attribute</Text>
             <DogmaAttributeAnchor
               attributeId={effect.data.tracking_speed_attribute_id}
@@ -285,60 +285,60 @@ export default function Page({
             </DogmaAttributeAnchor>
           </Group>
         )}
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Published</Text>
           <Text>{published ? "Yes" : "No"}</Text>
         </Group>
         {effect?.data.disallow_auto_repeat !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Disallow Auto Repeat</Text>
             <Text>{effect.data.disallow_auto_repeat ? "Yes" : "No"}</Text>
           </Group>
         )}
         {effect?.data.electronic_chance !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Electronic Chance</Text>
             <Text>{effect.data.electronic_chance ? "Yes" : "No"}</Text>
           </Group>
         )}
         {effect?.data.is_assistance !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Is Assistance</Text>
             <Text>{effect.data.is_assistance ? "Yes" : "No"}</Text>
           </Group>
         )}
         {effect?.data.is_offensive !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Is Offensive</Text>
             <Text>{effect.data.is_offensive ? "Yes" : "No"}</Text>
           </Group>
         )}
         {effect?.data.is_warp_safe !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Is Warp Safe</Text>
             <Text>{effect.data.is_warp_safe ? "Yes" : "No"}</Text>
           </Group>
         )}
         {effect?.data.range_chance !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Range Chance</Text>
             <Text>{effect.data.range_chance ? "Yes" : "No"}</Text>
           </Group>
         )}
         {effect?.data.icon_id !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Icon ID</Text>
             <Text>{effect.data.icon_id}</Text>
           </Group>
         )}
         {effect?.data.pre_expression !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Pre Expression</Text>
             <Text>{effect.data.pre_expression}</Text>
           </Group>
         )}
         {effect?.data.post_expression !== undefined && (
-          <Group position="apart">
+          <Group justify="space-between">
             <Text>Post Expression</Text>
             <Text>{effect.data.post_expression}</Text>
           </Group>
@@ -350,13 +350,13 @@ export default function Page({
               <tr key={modifier.modifierIndex}>
                 <td>
                   {modifier.groupId && (
-                    <Group position="apart">
+                    <Group justify="space-between">
                       <Text>Effect Group ID</Text>
                       <Text>{modifier.groupId}</Text>
                     </Group>
                   )}
                   {modifier.modifyingAttributeId && (
-                    <Group position="apart">
+                    <Group justify="space-between">
                       <Text>Modifying Attribute</Text>
                       <DogmaAttributeAnchor
                         attributeId={modifier.modifyingAttributeId}
@@ -369,7 +369,7 @@ export default function Page({
                     </Group>
                   )}
                   {modifier.modifiedAttributeId && (
-                    <Group position="apart">
+                    <Group justify="space-between">
                       <Text>Modified Attribute</Text>
                       <DogmaAttributeAnchor
                         attributeId={modifier.modifiedAttributeId}
@@ -382,7 +382,7 @@ export default function Page({
                     </Group>
                   )}
                   {modifier.targetEffectId && (
-                    <Group position="apart">
+                    <Group justify="space-between">
                       <Text>Target Effect</Text>
                       <DogmaEffectAnchor
                         effectId={modifier.targetEffectId}
@@ -393,22 +393,22 @@ export default function Page({
                     </Group>
                   )}
                   {modifier.skillTypeId && (
-                    <Group position="apart">
+                    <Group justify="space-between">
                       <Text>Skill</Text>
                       <TypeAnchor typeId={modifier.skillTypeId} target="_blank">
                         <TypeName typeId={modifier.skillTypeId} />
                       </TypeAnchor>
                     </Group>
                   )}
-                  <Group position="apart">
+                  <Group justify="space-between">
                     <Text>Domain</Text>
                     <Text>{modifier.domain}</Text>
                   </Group>
-                  <Group position="apart">
+                  <Group justify="space-between">
                     <Text>Function</Text>
                     <Text>{modifier.func}</Text>
                   </Group>
-                  <Group position="apart">
+                  <Group justify="space-between">
                     <Text>Operator</Text>
                     <Text>{modifier.operator}</Text>
                   </Group>

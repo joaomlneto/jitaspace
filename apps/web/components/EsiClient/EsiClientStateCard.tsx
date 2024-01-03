@@ -49,7 +49,7 @@ export function EsiClientStateCard() {
           )}
         </CopyButton>
       </Group>
-      <Group position="apart">
+      <Group justify="space-between">
         <Text>Authenticated</Text>
 
         <Tooltip
@@ -64,7 +64,7 @@ export function EsiClientStateCard() {
         </Tooltip>
       </Group>
 
-      <Group position="apart">
+      <Group justify="space-between">
         <Text>Token expires</Text>
         <Group>
           <Tooltip

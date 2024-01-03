@@ -286,7 +286,7 @@ export const LoyaltyPointsTable = memo(
             <Stack gap="xs">
               {row.original.requiredItems.map(
                 ({ quantity, typeId, marketStats }) => (
-                  <Group key={typeId} wrap="nowrap" position="apart">
+                  <Group key={typeId} wrap="nowrap" justify="space-between">
                     <TypeAvatar typeId={typeId} size="sm" />
                     {marketStats && (
                       <ISKAmount amount={marketStats.buy.percentile} />
@@ -308,7 +308,7 @@ export const LoyaltyPointsTable = memo(
             <Stack gap="xs">
               {row.original.requiredItems.map(
                 ({ quantity, typeId, marketStats }) => (
-                  <Group key={typeId} wrap="nowrap" position="apart">
+                  <Group key={typeId} wrap="nowrap" justify="space-between">
                     <TypeAvatar typeId={typeId} size="sm" />
                     {marketStats && (
                       <ISKAmount
@@ -332,7 +332,7 @@ export const LoyaltyPointsTable = memo(
             <Stack gap="xs">
               {row.original.requiredItems.map(
                 ({ quantity, typeId, marketStats }) => (
-                  <Group key={typeId} wrap="nowrap" position="apart">
+                  <Group key={typeId} wrap="nowrap" justify="space-between">
                     <TypeAvatar typeId={typeId} size="sm" />
                     {marketStats && (
                       <ISKAmount amount={marketStats.sell.percentile} />
@@ -354,7 +354,7 @@ export const LoyaltyPointsTable = memo(
             <Stack gap="xs">
               {row.original.requiredItems.map(
                 ({ quantity, typeId, marketStats }) => (
-                  <Group key={typeId} wrap="nowrap" position="apart">
+                  <Group key={typeId} wrap="nowrap" justify="space-between">
                     <TypeAvatar typeId={typeId} size="sm" />
                     {marketStats && (
                       <ISKAmount

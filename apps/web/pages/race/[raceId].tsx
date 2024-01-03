@@ -13,6 +13,7 @@ import {
 
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const router = useRouter();
   const raceId = parseInt(router.query.raceId as string);
@@ -28,7 +29,7 @@ export default function Page() {
           </Title>
         </Group>
         <Text>{race?.description}</Text>
-        <Group position="apart">
+        <Group justify="space-between">
           <Text>Faction</Text>
           <Group>
             <FactionAvatar factionId={race?.alliance_id} radius={16} />
