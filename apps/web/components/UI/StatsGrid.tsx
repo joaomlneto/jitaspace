@@ -13,6 +13,10 @@ import { IconArrowDownRight, IconArrowUpRight } from "@tabler/icons-react";
 
 import { type EveIconProps } from "@jitaspace/eve-icons";
 
+
+
+
+
 const useStyles = createStyles((theme) => ({
   root: {
     padding: `calc(${theme.spacing.md})`,
@@ -102,14 +106,7 @@ export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
   });
   return (
     <div className={classes.root}>
-      <SimpleGrid
-        cols={4}
-        breakpoints={[
-          { maxWidth: "md", cols: 2 },
-          { maxWidth: "xs", cols: 1 },
-        ]}
-        {...otherProps}
-      >
+      <SimpleGrid cols={{ base: 1, xs: 2, md: 4 }} {...otherProps}>
         {stats}
       </SimpleGrid>
     </div>

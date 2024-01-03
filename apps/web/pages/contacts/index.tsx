@@ -76,12 +76,7 @@ export default function Page() {
         <ContactsIcon width={48} />
         <Title order={1}>Contacts</Title>
       </Group>
-      <SimpleGrid
-        cols={3}
-        spacing="xl"
-        my="xl"
-        breakpoints={[{ maxWidth: "md", cols: 1 }]}
-      >
+      <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, md: 3 }}>
         <UnstyledButton component={Link} href="/contacts/character">
           <Card shadow="md" radius="md" className={classes.card} padding="xl">
             <Container m={0} p={0} w={64} h={64}>

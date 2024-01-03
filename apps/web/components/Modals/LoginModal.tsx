@@ -98,12 +98,7 @@ export function LoginModal({
             checked={showAppScopeDetails}
             onChange={() => toggleAppScopeDetails()}
           />
-          <SimpleGrid
-            cols={2}
-            my="xl"
-            spacing={0}
-            breakpoints={[{ maxWidth: "sm", cols: 1 }]}
-          >
+          <SimpleGrid my="xl" spacing={0} cols={{ base: 1, sm: 2 }}>
             {[...Object.values(characterApps)].map((feature) => (
               <AppCheckboxCard
                 app={feature}

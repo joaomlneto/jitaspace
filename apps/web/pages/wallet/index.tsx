@@ -16,6 +16,7 @@ import { WalletIcon } from "@jitaspace/eve-icons";
 
 import { MainLayout } from "~/layouts";
 
+
 const useStyles = createStyles((theme) => ({
   title: {
     fontSize: rem(34),
@@ -74,12 +75,7 @@ export default function Page() {
         <WalletIcon width={48} />
         <Title order={1}>Assets</Title>
       </Group>
-      <SimpleGrid
-        cols={2}
-        spacing="xl"
-        my="xl"
-        breakpoints={[{ maxWidth: "md", cols: 1 }]}
-      >
+      <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, md: 2 }}>
         <UnstyledButton component={Link} href="/wallet/character">
           <Card shadow="md" radius="md" className={classes.card} padding="xl">
             <Container m={0} p={0} w={64} h={64}>
