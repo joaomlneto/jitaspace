@@ -68,7 +68,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
             <CharacterAvatar characterId={characterId} radius="xl" size="sm" />
 
             <div style={{ flex: 1 }}>
-              <Text size="sm" weight={500}>
+              <Text size="sm" fw={500}>
                 {characterName}
               </Text>
             </div>
