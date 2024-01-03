@@ -88,10 +88,10 @@ export function CharacterAttributesRingProgress({
           />
 
           <div>
-            <Text color="dimmed" size="xs" transform="uppercase" weight={700}>
+            <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
               {attribute}
             </Text>
-            <Text weight={700} size="xl">
+            <Text fw={700} size="xl">
               {data?.data[attribute]}
             </Text>
           </div>
@@ -137,17 +137,12 @@ export function CharacterAttributesRingProgress({
 
                 <Stack gap={0}>
                   <Group gap="xs" justify="space-between">
-                    <Text
-                      color="dimmed"
-                      size="xs"
-                      transform="uppercase"
-                      weight={700}
-                    >
+                    <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
                       Remap
                     </Text>
                   </Group>
                   <Group gap="xs">
-                    <Text weight={700} size="xl">
+                    <Text fw={700} size="xl">
                       {remapCooldownElapsed
                         ? "Available"
                         : (data?.data.bonus_remaps ?? 0) > 0

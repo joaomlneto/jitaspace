@@ -34,7 +34,7 @@ export const AllianceCard = memo(({ allianceId }: AllianceCardProps) => {
         allianceId={allianceId}
         ta="center"
         fz="lg"
-        weight={500}
+        fw={500}
         mt="md"
       />
       <Anchor

@@ -11,6 +11,7 @@ import {
 import { CharacterAvatar } from "../Avatar";
 import { CharacterName } from "../Text";
 
+
 const useStyles = createStyles((theme) => ({
   user: {
     display: "block",
@@ -46,7 +47,7 @@ export const CharacterButton = memo(
           <CharacterAvatar characterId={characterId} />
 
           <div style={{ flex: 1 }}>
-            <CharacterName characterId={characterId} size="sm" weight={500} />
+            <CharacterName characterId={characterId} size="sm" fw={500} />
 
             <Text color="dimmed" size="xs">
               {description}

@@ -57,11 +57,7 @@ export const CorporationButton = memo(
           />
 
           <div style={{ flex: 1 }}>
-            <CorporationName
-              corporationId={corporationId}
-              size="sm"
-              weight={500}
-            />
+            <CorporationName corporationId={corporationId} size="sm" fw={500} />
 
             <Text color="dimmed" size="xs">
               {description}

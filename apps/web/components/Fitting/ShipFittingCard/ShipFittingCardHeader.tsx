@@ -31,7 +31,7 @@ export const ShipFittingCardHeader = memo(
         <Group wrap="nowrap">
           <TypeAvatar typeId={shipTypeId} size="md" variation="icon" />
           <div>
-            <Text weight={500} lineClamp={1}>
+            <Text fw={500} lineClamp={1}>
               {shipName}
             </Text>
             <TypeAnchor typeId={shipTypeId} target="_blank">
