@@ -15,6 +15,10 @@ import useSwr from "swr";
 
 import { TimeAgoText } from "@jitaspace/ui";
 
+
+
+
+
 const useStyles = createStyles((theme) => ({
   root: {
     paddingTop: rem(80),
@@ -114,7 +118,7 @@ export default function Page() {
         }}
       >
         <Stack align="center" p="xl" gap="xl" style={{}}>
-          <Title align="center">
+          <Title ta="center">
             {isLoading && "Checking..."}
             {!isLoading && sdeUpdated && "Yes!"}
             {!isLoading && !sdeUpdated && "Not yet!"}
@@ -129,14 +133,14 @@ export default function Page() {
             </Button>
           )}
           {lastModifiedDate && (
-            <Text align="center" size="lg">
+            <Text ta="center" size="lg">
               SDE last updated on
               <br />
               <b>{format(lastModifiedDate, "yyyy-MM-dd")}</b>
             </Text>
           )}
           {lastCheckedOn && (
-            <Text align="center" size="sm">
+            <Text ta="center" size="sm">
               Last checked
               <br />
               <TimeAgoText span date={lastCheckedOn} /> ago

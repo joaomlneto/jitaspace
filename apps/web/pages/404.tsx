@@ -12,6 +12,7 @@ import {
 
 import { MainLayout } from "~/layouts";
 
+
 const useStyles = createStyles((theme) => ({
   root: {
     paddingTop: rem(80),
@@ -63,7 +64,7 @@ export default function Page() {
       <Text
         color="dimmed"
         size="lg"
-        align="center"
+        ta="center"
         className={classes.description}
       >
         Unfortunately, this is only a 404 page. You may have mistyped the

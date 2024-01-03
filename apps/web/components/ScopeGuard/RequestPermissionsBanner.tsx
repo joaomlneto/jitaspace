@@ -88,7 +88,7 @@ export function RequestPermissionsBanner({
       <Text
         color="dimmed"
         size="md"
-        align="center"
+        ta="center"
         className={classes.description}
       >
         We must request additional scopes to continue.
@@ -129,7 +129,7 @@ export function RequestPermissionsBanner({
           Customize
         </Button>
       </Group>
-      <Title order={4} align="center" mt="xl">
+      <Title order={4} ta="center" mt="xl">
         Missing Scopes
       </Title>
       <ScopesTable scopes={missingScopes} />

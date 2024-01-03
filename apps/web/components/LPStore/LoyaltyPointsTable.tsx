@@ -134,7 +134,6 @@ export const LoyaltyPointsTable = memo(
                 }))}
                 searchable
                 clearable
-                hoverOnSearchChange
                 onChange={column.setFilterValue}
               />
             );
@@ -199,7 +198,6 @@ export const LoyaltyPointsTable = memo(
                 }))}
                 searchable
                 clearable
-                hoverOnSearchChange
                 onChange={column.setFilterValue}
                 limit={500}
               />
@@ -231,7 +229,7 @@ export const LoyaltyPointsTable = memo(
             label: (value) => value?.toLocaleString?.(),
           },
           Cell: ({ renderedCellValue, row, cell }) => (
-            <Text align="right">{row.original.lpCost.toLocaleString()} LP</Text>
+            <Text ta="right">{row.original.lpCost.toLocaleString()} LP</Text>
           ),
         },
         {
@@ -243,7 +241,7 @@ export const LoyaltyPointsTable = memo(
             label: (value) => <ISKAmount amount={value} />,
           },
           Cell: ({ renderedCellValue, row, cell }) => (
-            <ISKAmount align="right" amount={row.original.iskCost ?? 0} />
+            <ISKAmount ta="right" amount={row.original.iskCost ?? 0} />
           ),
         },
         {
@@ -375,7 +373,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount align="right" amount={amount} />;
+            return <ISKAmount ta="right" amount={amount} />;
           },
         },
         {
@@ -401,7 +399,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount align="right" amount={amount} />;
+            return <ISKAmount ta="right" amount={amount} />;
           },
         },
         {
@@ -420,7 +418,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount align="right" amount={amount} />;
+            return <ISKAmount ta="right" amount={amount} />;
           },
         },
         {
@@ -441,7 +439,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <Text align="right">{amount.toFixed(0)} ISK/LP</Text>;
+            return <Text ta="right">{amount.toFixed(0)} ISK/LP</Text>;
           },
         },
         {
@@ -452,7 +450,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount align="right" amount={amount} />;
+            return <ISKAmount ta="right" amount={amount} />;
           },
         },
         {
@@ -478,7 +476,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount align="right" amount={amount} />;
+            return <ISKAmount ta="right" amount={amount} />;
           },
         },
         {
@@ -497,7 +495,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount align="right" amount={amount} />;
+            return <ISKAmount ta="right" amount={amount} />;
           },
         },
         {
@@ -518,7 +516,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <Text align="right">{amount.toFixed(0)} ISK/LP</Text>;
+            return <Text ta="right">{amount.toFixed(0)} ISK/LP</Text>;
           },
         },
         {
@@ -534,7 +532,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount align="right" amount={amount} />;
+            return <ISKAmount ta="right" amount={amount} />;
           },
         },
         {
@@ -554,7 +552,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount align="right" amount={amount} />;
+            return <ISKAmount ta="right" amount={amount} />;
           },
         },
       ],
