@@ -5,7 +5,6 @@ import {
   Container,
   Group,
   Loader,
-  MediaQuery,
   Stack,
   Text,
   Title,
@@ -66,12 +65,16 @@ export default function Page() {
                   size: "md",
                   children: (
                     <Center>
-                      <MediaQuery smallerThan="md" styles={{ display: "none" }}>
-                        <EventsCalendar events={events} size="xl" />
-                      </MediaQuery>
-                      <MediaQuery largerThan="md" styles={{ display: "none" }}>
-                        <EventsCalendar events={events} size="sm" />
-                      </MediaQuery>
+                      <EventsCalendar
+                        events={events}
+                        size="xl"
+                        hiddenFrom="md"
+                      />
+                      <EventsCalendar
+                        events={events}
+                        size="sm"
+                        visibleFrom="md"
+                      />
                     </Center>
                   ),
                 })
