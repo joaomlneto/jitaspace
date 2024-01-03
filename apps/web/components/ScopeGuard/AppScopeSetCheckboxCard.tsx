@@ -10,6 +10,7 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
+import cx from "clsx";
 
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import { InfoIcon } from "@jitaspace/eve-icons";
