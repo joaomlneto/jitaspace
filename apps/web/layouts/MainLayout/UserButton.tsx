@@ -83,7 +83,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
               .filter((character) => character.characterId !== characterId)
               .map((character) => (
                 <Menu.Item
-                  icon={
+                  leftSection={
                     <CharacterAvatar
                       characterId={character.characterId}
                       size={20}
@@ -97,11 +97,11 @@ export default function UserButton({ ...others }: UserButtonProps) {
             <Menu.Divider />
           </>
         )}
-        <Menu.Item icon={<SettingsIcon width={20} />} disabled>
+        <Menu.Item leftSection={<SettingsIcon width={20} />} disabled>
           Settings
         </Menu.Item>
         <Menu.Item
-          icon={<RecruitmentIcon width={20} />}
+          leftSection={<RecruitmentIcon width={20} />}
           onClick={() => {
             openContextModal({
               modal: "login",
@@ -114,7 +114,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
           Add Character
         </Menu.Item>
         <Menu.Item
-          icon={<TerminateIcon width={20} />}
+          leftSection={<TerminateIcon width={20} />}
           onClick={() => {
             void signOut({ callbackUrl: "/", redirect: true });
           }}
