@@ -21,7 +21,6 @@ import {
 } from "~/components/Fitting";
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const [selectedShipType, setSelectedShipType] = useState<string | null>(null);
   const character = useSelectedCharacter();
@@ -104,7 +103,7 @@ export default function Page() {
             onChange={setSelectedShipType}
           />
         </Group>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           {filteredFittings.map((fit) => (
             <UnstyledButton
               key={fit.fitting_id}

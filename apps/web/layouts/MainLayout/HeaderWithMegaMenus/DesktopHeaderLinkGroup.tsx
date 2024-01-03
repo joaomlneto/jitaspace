@@ -17,7 +17,6 @@ import { EveIconProps } from "@jitaspace/eve-icons";
 import { JitaApp } from "~/config/apps";
 import { useStyles } from "./styles";
 
-
 export type DesktopHeaderLinkGroupProps = {
   title: string;
   Icon: (props: EveIconProps) => React.ReactElement;
@@ -45,7 +44,7 @@ export const DesktopHeaderLinkGroup = memo(
           <UnstyledButton className={classes.link}>
             <Center inline>
               <Box component="span">
-                <Group spacing="xs">
+                <Group gap="xs">
                   <Icon width={32} />
                 </Group>
               </Box>

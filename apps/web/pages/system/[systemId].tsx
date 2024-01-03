@@ -56,7 +56,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <Title order={3}>
             <Group>
               <SolarSystemName span solarSystemId={systemId} />
@@ -77,7 +77,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 DOTLAN EveMaps
               </Group>
@@ -88,7 +88,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 zKillboard
               </Group>
@@ -96,7 +96,7 @@ export default function Page() {
           </Link>
           <Link href={`https://eveeye.com/?s=${systemId}`} target="_blank">
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 Eveeye
               </Group>
@@ -107,7 +107,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 Adam4EVE
               </Group>
@@ -115,9 +115,9 @@ export default function Page() {
           </Link>
         </Group>
         <Title order={4}>Stations</Title>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           {solarSystem?.data.stations?.map((stationId) => (
-            <Group key={stationId} spacing="xs">
+            <Group key={stationId} gap="xs">
               <StationAvatar size="sm" stationId={stationId} />
               <StationAnchor stationId={stationId}>
                 <StationName span stationId={stationId} />
@@ -126,9 +126,9 @@ export default function Page() {
           ))}
         </Stack>
         <Title order={4}>Stargates</Title>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           {solarSystem?.data.stargates?.map((stargateId) => (
-            <Group key={stargateId} spacing="xs">
+            <Group key={stargateId} gap="xs">
               <StargateAvatar size="sm" stargateId={stargateId} />
               <StargateDestinationAnchor stargateId={stargateId}>
                 <StargateName span stargateId={stargateId} />
@@ -137,7 +137,7 @@ export default function Page() {
           ))}
         </Stack>
         <Title order={4}>Celestials</Title>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           {solarSystem?.data.star_id && (
             <Group>
               <StarAvatar starId={solarSystem.data.star_id} size="sm" />
@@ -155,7 +155,7 @@ export default function Page() {
                     <PlanetName span planetId={planet_id} />
                   </Anchor>
                 </Group>
-                <Group spacing="xs">
+                <Group gap="xs">
                   {moons?.map((moonId) => (
                     <Tooltip label={<MoonName moonId={moonId} />} key={moonId}>
                       <div>

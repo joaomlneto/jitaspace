@@ -28,7 +28,6 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
-
 type PageProps = {
   name: string | null;
   description: string | null;
@@ -190,7 +189,7 @@ export default function Page({
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <Title order={3}>{name ?? <i>Unnamed Effect</i>}</Title>
         </Group>
         <MailMessageViewer

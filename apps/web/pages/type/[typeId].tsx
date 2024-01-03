@@ -35,7 +35,6 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
-
 type PageProps = {
   typeId: number;
   ogImageUrl?: string;
@@ -151,7 +150,7 @@ export default function Page({
       />
       <Container size="sm">
         <Stack>
-          <Group spacing="xl">
+          <Group gap="xl">
             <TypeAvatar typeId={typeId} size="lg" />
             <Title order={1}>{typeName}</Title>
             {character && (
@@ -161,7 +160,7 @@ export default function Page({
               />
             )}
           </Group>
-          <Stack spacing={0}>
+          <Stack gap={0}>
             <TypeInventoryBreadcrumbs typeId={typeId} />
             <TypeMarketBreadcrumbs typeId={typeId} />
           </Stack>
@@ -171,7 +170,7 @@ export default function Page({
               target="_blank"
             >
               <Button size="xs">
-                <Group spacing="xs">
+                <Group gap="xs">
                   <IconExternalLink size={14} />
                   Eve Ref
                 </Group>
@@ -182,7 +181,7 @@ export default function Page({
               target="_blank"
             >
               <Button size="xs">
-                <Group spacing="xs">
+                <Group gap="xs">
                   <IconExternalLink size={14} />
                   EVE Tycoon
                 </Group>

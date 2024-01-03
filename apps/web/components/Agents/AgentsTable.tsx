@@ -140,7 +140,7 @@ export const AgentsTable = ({
         header: "Location",
         accessorKey: "stationId",
         Cell: ({ renderedCellValue, row, cell }) => (
-          <Group wrap="nowrap" spacing="xs">
+          <Group wrap="nowrap" gap="xs">
             <StationAvatar stationId={row.original.stationId} size="xs" />
             <StationAnchor target="_blank" stationId={row.original.stationId}>
               <StationName stationId={row.original.stationId} />

@@ -19,13 +19,12 @@ import { CharacterAnchor, CharacterAvatar, CharacterName } from "@jitaspace/ui";
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
 
-
 const MY_CHARACTER_ID = 401563624;
 
 export default function Page() {
   return (
     <Container size="sm">
-      <Stack spacing="xs">
+      <Stack gap="xs">
         <Title>About</Title>
         <Text size="sm">
           This is just a simple website with a few tools for{" "}
@@ -45,7 +44,7 @@ export default function Page() {
             <tr>
               <td>In-game</td>
               <td align="right">
-                <Group position="right" spacing="xs" wrap="nowrap">
+                <Group position="right" gap="xs" wrap="nowrap">
                   <CharacterAvatar characterId={MY_CHARACTER_ID} size="sm" />
                   <CharacterAnchor
                     characterId={MY_CHARACTER_ID}

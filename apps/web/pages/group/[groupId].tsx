@@ -17,7 +17,6 @@ import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
-
 type PageProps = {
   name?: string;
   types: { typeId: number; name: string }[];
@@ -109,7 +108,7 @@ export default function Page({ name, types }: PageProps) {
       />
       <Container size="md">
         <Stack>
-          <Group spacing="xl">
+          <Group gap="xl">
             <Title order={1}>{name}</Title>
           </Group>
           <GroupBreadcrumbs groupId={Number(groupId)} />

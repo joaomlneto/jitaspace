@@ -20,7 +20,6 @@ import { TypeAvatar, TypeName } from "@jitaspace/ui";
 import { MarketGroupNavLink, MarketOrdersDataTable } from "~/components/Market";
 import { MainLayout } from "~/layouts";
 
-
 type PageProps = {
   marketGroups: Record<
     number,
@@ -157,7 +156,7 @@ export default function Page({ marketGroups, rootMarketGroupIds }: PageProps) {
           </Navbar>
         }
       >
-        <Stack spacing="xl">
+        <Stack gap="xl">
           <Group>
             <MarketIcon width={48} />
             <Title order={1}>Market</Title>

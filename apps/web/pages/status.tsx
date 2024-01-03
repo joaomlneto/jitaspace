@@ -24,7 +24,6 @@ import { FormattedDateText } from "@jitaspace/ui";
 import { EsiClientStateCard } from "~/components/EsiClient";
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
     useState<boolean>(false);
@@ -99,7 +98,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           <Title>Status</Title>
           <Title order={3}>Jita Frontend</Title>
           <EsiClientStateCard />
@@ -121,7 +120,7 @@ export default function Page() {
             </Anchor>
           </Group>
         </Stack>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           <Title order={3}>EVE Online</Title>
           <Group position="apart">
             <Text>Players Online</Text>
@@ -159,7 +158,7 @@ export default function Page() {
                 : nonGreenEndpoints.length}
             </Text>
           </Group>
-          <Stack spacing="xs">
+          <Stack gap="xs">
             <Switch
               label="Show all ESI endpoints"
               description="Toggle between showing all ESI endpoints or only those that are degraded"

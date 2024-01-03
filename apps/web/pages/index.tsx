@@ -145,16 +145,16 @@ export default function Page() {
           </Alert>
         </Center>
       )}
-      <Stack my="md" spacing="xs">
+      <Stack my="md" gap="xs">
         {Object.values(characters).map((character) => (
           <Group position="apart" key={character.characterId}>
-            <Group wrap="nowrap" spacing="xs">
+            <Group wrap="nowrap" gap="xs">
               <CharacterAvatar characterId={character.characterId} size="sm" />
               <CharacterAnchor characterId={character.characterId}>
                 <CharacterName characterId={character.characterId} />
               </CharacterAnchor>
             </Group>
-            <Group wrap="nowrap" spacing="xs">
+            <Group wrap="nowrap" gap="xs">
               <ActionIcon
                 radius="xl"
                 variant="subtle"
@@ -194,7 +194,7 @@ export default function Page() {
             </Group>
           </Group>
         ))}
-        <Group wrap="nowrap" spacing="xs">
+        <Group wrap="nowrap" gap="xs">
           <CharacterAvatar characterId={1} size="sm" />
           <Anchor
             onClick={() => {

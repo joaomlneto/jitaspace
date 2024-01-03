@@ -59,7 +59,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <CharacterAvatar characterId={characterId} size="xl" radius={256} />
           <Title order={3}>
             <CharacterName span characterId={characterId} />
@@ -86,7 +86,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 EveWho
               </Group>
@@ -97,7 +97,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 zKillboard
               </Group>
@@ -193,7 +193,7 @@ export default function Page() {
             </Group>
             <Group position="apart">
               <Text>Agent Station</Text>
-              <Group wrap="nowrap" spacing="xs">
+              <Group wrap="nowrap" gap="xs">
                 <StationAvatar stationId={character.locationId} size="xs" />
                 <StationAnchor stationId={character.locationId} target="_blank">
                   <StationName stationId={character.locationId} />
@@ -203,9 +203,9 @@ export default function Page() {
             {character.isResearchAgent && (
               <Group position="apart">
                 <Text>Research Agent Skills</Text>
-                <Stack spacing="xs">
+                <Stack gap="xs">
                   {character.researchSkills?.map((typeId) => (
-                    <Group wrap="nowrap" spacing="xs" key={typeId}>
+                    <Group wrap="nowrap" gap="xs" key={typeId}>
                       <TypeAvatar typeId={typeId} size="xs" />
                       <TypeAnchor typeId={typeId} target="_blank">
                         <TypeName typeId={typeId} />

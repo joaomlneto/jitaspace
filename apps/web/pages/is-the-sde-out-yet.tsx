@@ -15,10 +15,6 @@ import useSwr from "swr";
 
 import { TimeAgoText } from "@jitaspace/ui";
 
-
-
-
-
 const useStyles = createStyles((theme) => ({
   root: {
     paddingTop: rem(80),
@@ -117,7 +113,7 @@ export default function Page() {
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Stack align="center" p="xl" spacing="xl" style={{}}>
+        <Stack align="center" p="xl" gap="xl" style={{}}>
           <Title align="center">
             {isLoading && "Checking..."}
             {!isLoading && sdeUpdated && "Yes!"}

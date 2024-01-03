@@ -16,7 +16,6 @@ import { EveIconProps } from "@jitaspace/eve-icons";
 import { JitaApp } from "~/config/apps";
 import { useStyles } from "./styles";
 
-
 export type MobileHeaderLinkGroupProps = {
   title: string;
   Icon: (props: EveIconProps) => React.ReactElement;
@@ -39,7 +38,7 @@ export const MobileHeaderLinkGroup = memo(
           onClick={toggleMobileCharacterApps}
         >
           <Center inline>
-            <Group spacing="xs">
+            <Group gap="xs">
               <Icon width={32} />
               <Box component="span" mr={5}>
                 {title}

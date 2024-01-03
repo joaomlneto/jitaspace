@@ -19,7 +19,6 @@ import { MailMessageViewer } from "~/components/EveMail";
 import { characterAttributes } from "~/components/Skills";
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const router = useRouter();
   const bloodlineId = parseInt(router.query.bloodlineId as string);
@@ -29,7 +28,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <Title order={3}>
             <BloodlineName bloodlineId={bloodlineId} />
           </Title>

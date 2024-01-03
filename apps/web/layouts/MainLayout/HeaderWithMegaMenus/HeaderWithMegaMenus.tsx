@@ -39,7 +39,6 @@ import UserButton from "../UserButton";
 import { MobileHeaderDrawer } from "./MobileHeaderDrawer";
 import { useStyles } from "./styles";
 
-
 export function HeaderWithMegaMenus() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
@@ -63,7 +62,7 @@ export function HeaderWithMegaMenus() {
         }}
       >
         <Container size="xl" h={60} p={0}>
-          <Group position="apart" h="100%" spacing="xs">
+          <Group position="apart" h="100%" gap="xs">
             <Link href="/" className={classes.link}>
               <Group>
                 <Image src="/logo.png" alt="Jita logo" width={30} height={30} />

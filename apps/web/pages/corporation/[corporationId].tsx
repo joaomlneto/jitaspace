@@ -28,7 +28,6 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const router = useRouter();
   const corporationId = parseInt(router.query.corporationId as string);
@@ -38,7 +37,7 @@ export default function Page() {
   return (
     <Container size="sm">
       <Stack>
-        <Group spacing="xl">
+        <Group gap="xl">
           <CorporationAvatar
             corporationId={corporationId}
             size="xl"
@@ -63,7 +62,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 DOTLAN EveMaps
               </Group>
@@ -74,7 +73,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 EveWho
               </Group>
@@ -85,7 +84,7 @@ export default function Page() {
             target="_blank"
           >
             <Button>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <IconExternalLink size={14} />
                 zKillboard
               </Group>

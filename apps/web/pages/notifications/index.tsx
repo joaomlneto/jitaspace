@@ -25,7 +25,6 @@ import {
 
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
   const character = useSelectedCharacter();
   const { data } = useEsiCharacterNotifications(character?.characterId);
@@ -41,7 +40,7 @@ export default function Page() {
             {data?.data.map((notification) => (
               <tr key={notification.notification_id}>
                 <td>
-                  <Group wrap="nowrap" spacing="xs">
+                  <Group wrap="nowrap" gap="xs">
                     <EveEntityAvatar entityId={notification.sender_id} />
                     <EveEntityName entityId={notification.sender_id} />
                   </Group>

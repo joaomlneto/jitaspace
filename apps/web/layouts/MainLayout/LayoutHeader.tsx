@@ -147,7 +147,7 @@ export function LayoutHeader() {
 
             <Group
               sx={{ height: "100%" }}
-              spacing={0}
+              gap={0}
               className={classes.hiddenMobile}
             >
               {Object.values(characterApps).map((app) => {
