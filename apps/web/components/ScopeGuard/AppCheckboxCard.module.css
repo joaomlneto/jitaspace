@@ -1,0 +1,25 @@
+.wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    transition: background-color 150ms ease, border-color 150ms ease;
+    border-radius: var(--mantine-radius-sm);
+    padding: var(--mantine-spacing-sm);
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    transition: background-color 150ms ease, border-color 150ms ease;
+    border: 1rem solid var(--mantine-colors-dark-8);
+    border-radius: var(--mantine-radius-sm);
+    padding: var(--mantine-spacing-sm);
+    background-color: var(--mantine-colors-dark-8);
+}
+
+.body {
+    flex: 1;
+    margin-left: var(--mantine-spacing-md);
+    margin-right: var(--mantine-spacing-md);
+}
