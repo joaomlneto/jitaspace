@@ -190,7 +190,6 @@ export default function Page({ solarSystems, initialWaypoints }: PageProps) {
                     .join("/")}`,
                 );
               }}
-              hoverOnSearchChange
               key={index}
             />
           ))}

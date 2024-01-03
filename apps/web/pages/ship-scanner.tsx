@@ -297,7 +297,6 @@ export default function Page({ ships }: PageProps) {
                   setShipTypeId(value ? Number(value) : 670);
                 }}
                 value={shipTypeId?.toString()}
-                hoverOnSearchChange
               />
             </FocusTrap>
             <Textarea
