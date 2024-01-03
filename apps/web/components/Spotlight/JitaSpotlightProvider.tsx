@@ -1,29 +1,24 @@
 import { memo, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { useDebouncedValue } from "@mantine/hooks";
-import {
-  SpotlightProvider,
-  type SpotlightAction,
-  type SpotlightProviderProps,
-} from "@mantine/spotlight";
+import { Spotlight, type SpotlightProps } from "@mantine/spotlight";
 
-import { PeopleAndPlacesIcon } from "@jitaspace/eve-icons";
-import { EsiSearchCategory, useEsiSearch } from "@jitaspace/hooks";
+import { useEsiSearch } from "@jitaspace/hooks";
 
-import { JitaSpotlightAction } from "~/components/Spotlight/JitaSpotlightAction";
-import { JitaSpotlightActionsWrapper } from "~/components/Spotlight/JitaSpotlightActionsWrapper";
-import { characterApps } from "~/config/apps";
+
+
 
 
 export const JitaSpotlightProvider = memo(
-  ({ children }: Omit<SpotlightProviderProps, "actions">) => {
+  ({ children }: Omit<SpotlightProps, "actions">) => {
     const router = useRouter();
     const [query, setQuery] = useState<string>("");
     const [debouncedQuery] = useDebouncedValue(query, 1000);
 
     const { data: esiSearchData } = useEsiSearch(debouncedQuery);
 
-    const staticActions: SpotlightAction[] = useMemo(
+    /*
+    const staticActions= useMemo(
       () =>
         Object.values(characterApps).map((app) => ({
           title: app.name,
@@ -39,7 +34,7 @@ export const JitaSpotlightProvider = memo(
       [router],
     );
 
-    const esiActions: SpotlightAction[] = useMemo(
+    const esiActions = useMemo(
       () =>
         Object.entries(esiSearchData?.data ?? []).flatMap(
           ([categoryString, entries]) => {
@@ -91,27 +86,32 @@ export const JitaSpotlightProvider = memo(
       [debouncedQuery, esiSearchData?.data, router],
     );
 
-    const actions: SpotlightAction[] = useMemo(
-      (): SpotlightAction[] => [...staticActions, ...esiActions],
+    const actions: SpotlightActionData[] = useMemo(
+      () => [...staticActions, ...esiActions],
       [esiActions, staticActions],
     );
+     */
+
     return useMemo(
       () => (
-        <SpotlightProvider
+        <Spotlight
           shortcut={["mod + P", "/"]}
-          actions={actions}
+          actions={
+            [
+              /* actions */
+            ]
+          }
           limit={100}
           query={query}
           onQueryChange={setQuery}
-          searchIcon={<PeopleAndPlacesIcon width={32} height={32} />}
-          actionsWrapperComponent={JitaSpotlightActionsWrapper}
-          // @ts-expect-error extra field not compatible with type signature
-          actionComponent={JitaSpotlightAction}
+          //searchIcon={<PeopleAndPlacesIcon width={32} height={32} />}
+          //actionsWrapperComponent={JitaSpotlightActionsWrapper}
+          //actionComponent={JitaSpotlightAction}
         >
           {children}
-        </SpotlightProvider>
+        </Spotlight>
       ),
-      [actions, children, query],
+      [/*actions,*/ children, query],
     );
   },
 );

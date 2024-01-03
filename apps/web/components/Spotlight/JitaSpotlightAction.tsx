@@ -1,11 +1,11 @@
 import React from "react";
-import { Center, Group, Text, UnstyledButton } from "@mantine/core";
+import { UnstyledButton } from "@mantine/core";
 import { SpotlightActionProps, SpotlightProps } from "@mantine/spotlight";
 
 import { EsiSearchCategory } from "@jitaspace/hooks";
-import { EveEntityAvatar, EveEntityName } from "@jitaspace/ui";
 
-import classes from "./JitaSpotlight.module.css";
+
+
 
 
 type JitaSpotlightActionProps = Omit<SpotlightProps, "actions"> & {
@@ -20,10 +20,11 @@ export const JitaSpotlightAction = ({
   action,
   styles,
   classNames,
-  hovered,
-  onTrigger,
+  //hovered,
+  //onTrigger,
   ...others
 }: JitaSpotlightActionProps) => {
+  /*
   // is this an EVE entity?
   if (action.type === "eve-entity")
     return (
@@ -89,5 +90,6 @@ export const JitaSpotlightAction = ({
         </div>
       </Group>
     </UnstyledButton>
-  );
+  );*/
+  return <UnstyledButton />;
 };
