@@ -1,0 +1,31 @@
+.button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    transition: background-color 150ms ease, border-color 150ms ease;
+    border-radius: var(--mantine-radius-sm);
+    padding: var(--mantine-spacing-xs);
+    /*
+    // FIXME: add missing
+    border: `${rem(1)} solid ${
+      checked
+        ? theme.fn.variant({ variant: "outline", color: theme.primaryColor })
+            .border
+        : theme.colorScheme === "dark"
+          ? theme.colors.dark[8]
+          : theme.colors.gray[3]
+    }`,
+
+    backgroundColor: checked
+      ? theme.fn.variant({ variant: "light", color: theme.primaryColor })
+          .background
+      : theme.colorScheme === "dark"
+        ? theme.colors.dark[8]
+        : theme.white,
+     */
+}
+
+.body {
+    flex: 1;
+    marginLeft: var(--mantine-spacing-xs);
+}
