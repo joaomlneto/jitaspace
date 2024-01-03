@@ -152,7 +152,7 @@ export function MessagePanel({
               )}
           </Group>
           {mail?.data && (
-            <Group position="right">
+            <Group justify="flex-end">
               <MessageMenu
                 characterId={characterId}
                 data={data}

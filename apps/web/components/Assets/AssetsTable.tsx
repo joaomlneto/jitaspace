@@ -45,7 +45,7 @@ export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
                     <TypeName typeId={asset.type_id} />
                   </TypeAnchor>
                 </Group>
-                <Group gap="xs" position="right">
+                <Group gap="xs" justify="flex-end">
                   {asset.is_singleton && <Badge size="xs">assembled</Badge>}
                   {asset.is_blueprint_copy && <Badge size="xs">BPC</Badge>}
                 </Group>
