@@ -3,6 +3,10 @@ import { Badge, createStyles, Table } from "@mantine/core";
 
 import { getScopeDescription, type ESIScope } from "@jitaspace/esi-metadata";
 
+
+
+
+
 const useStyles = createStyles((theme) => ({
   scopesTable: {
     maxWidth: 800,
@@ -43,7 +47,7 @@ export function ScopesTable({ scopes, showRawScopeNames }: ScopesTableProps) {
   );
 
   return (
-    <Table fontSize="xs" className={classes.scopesTable} highlightOnHover>
+    <Table fz="xs" className={classes.scopesTable} highlightOnHover>
       <tbody>
         {scopeData.map((scope) => (
           <tr key={scope.id}>
