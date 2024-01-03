@@ -144,7 +144,7 @@ export const DesktopMailboxTable = ({
                 </Group>
               </td>
               <td>
-                <Group position="right">
+                <Group justify="flex-end">
                   <MessageMenu
                     characterId={characterId}
                     data={data}

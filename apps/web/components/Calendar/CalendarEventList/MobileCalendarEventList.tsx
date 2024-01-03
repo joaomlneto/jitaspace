@@ -81,7 +81,7 @@ export function MobileCalendarEventList({
                       </Avatar>
                     </Tooltip>
                   </Group>
-                  <Group position="right">
+                  <Group justify="flex-end">
                     <CalendarEventAttendeesAvatarGroup
                       characterId={characterId}
                       eventId={event.event_id}
