@@ -266,7 +266,7 @@ export function LayoutHeader() {
             color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
 
-          <Group position="center" grow pb="xl">
+          <Group justify="center" grow pb="xl">
             {false && (
               <Group>
                 <Loader size="sm" />
