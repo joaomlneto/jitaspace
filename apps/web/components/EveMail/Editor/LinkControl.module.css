@@ -1,0 +1,28 @@
+.linkEditor {
+    display: flex
+}
+
+.linkEditorInput {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+}
+
+.linkEditorExternalControl {
+    @mixin dark {
+        backgroundColor: alpha(var(--mantine-color-dark-7), 0.5);
+    }
+    @mixin light {
+        backgroundColor: white
+    }
+    height: 24rem;
+    width: 24rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.linkEditorSave {
+    borderTopLeftRadius: 0;
+    borderBottomLeftRadius: 0;
+}

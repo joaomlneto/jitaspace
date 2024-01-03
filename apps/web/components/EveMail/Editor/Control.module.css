@@ -1,0 +1,15 @@
+.control {
+    backgroundColor: var(--mantine-colors-dark-6);
+    min-width: 26rem;
+    height: 26rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1rem solid var(--mantine-colors-dark-4);
+    cursor: default;
+
+    &[data-interactive] {
+        cursor: pointer;
+        background-color: var(--mantine-colors-dark-5);
+    }
+}
