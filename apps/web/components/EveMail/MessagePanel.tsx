@@ -47,7 +47,7 @@ export function MessagePanel({
     <Stack>
       {!hideSender && (
         <Group position="apart">
-          <Group wrap="nowrap" spacing="xs">
+          <Group wrap="nowrap" gap="xs">
             From:
             <EveMailSenderAvatar
               characterId={characterId}
@@ -85,10 +85,10 @@ export function MessagePanel({
               <Text size="sm">{`Show all ${mail?.data.recipients?.length} recipients`}</Text>
             }
           >
-            <Group spacing="md" mb="xs">
+            <Group gap="md" mb="xs">
               <Text>To:</Text>
               {mail?.data.recipients?.map((recipient) => (
-                <Group wrap="nowrap" spacing="xs" key={recipient.recipient_id}>
+                <Group wrap="nowrap" gap="xs" key={recipient.recipient_id}>
                   <EveEntityAvatar
                     entityId={recipient.recipient_id}
                     size="sm"
@@ -136,7 +136,7 @@ export function MessagePanel({
               .map(
                 (item) =>
                   item && (
-                    <Group key={item.label_id} wrap="nowrap" spacing="xs">
+                    <Group key={item.label_id} wrap="nowrap" gap="xs">
                       <MailLabelColorSwatch
                         characterId={characterId}
                         labelId={item.label_id}

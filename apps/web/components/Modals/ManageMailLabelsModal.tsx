@@ -48,7 +48,7 @@ export function ManageMailLabelsModal({
     },
   });
   return (
-    <Stack spacing="xl">
+    <Stack gap="xl">
       {characterId && <LabelManagementTable characterId={characterId} />}
       <form
         onSubmit={form.onSubmit((values) => {

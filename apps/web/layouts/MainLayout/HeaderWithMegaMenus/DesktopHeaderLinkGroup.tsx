@@ -17,6 +17,7 @@ import { EveIconProps } from "@jitaspace/eve-icons";
 import { JitaApp } from "~/config/apps";
 import { useStyles } from "./styles";
 
+
 export type DesktopHeaderLinkGroupProps = {
   title: string;
   Icon: (props: EveIconProps) => React.ReactElement;
@@ -53,7 +54,7 @@ export const DesktopHeaderLinkGroup = memo(
         </HoverCard.Target>
 
         <HoverCard.Dropdown sx={{ overflow: "hidden" }}>
-          <Group spacing="xs">
+          <Group gap="xs">
             <Text fw={500}>{title}</Text>
           </Group>
 

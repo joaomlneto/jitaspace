@@ -19,6 +19,7 @@ import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
+
 type PageProps = {
   name: string | null;
   description: string | null;
@@ -204,7 +205,7 @@ export default function Page({
           </Group>
         )}
         <Title order={4}>Types:</Title>
-        <Stack spacing="xs">
+        <Stack gap="xs">
           {groups.map((group) => (
             <div key={group.groupId}>
               <Title order={6} mb={8}>
@@ -214,7 +215,7 @@ export default function Page({
                 {groupTypes[group.groupId]?.map((type) => (
                   <tr key={type.typeId}>
                     <td>
-                      <Group spacing="xs">
+                      <Group gap="xs">
                         <TypeAvatar size="sm" typeId={type.typeId} />
                         <TypeAnchor typeId={type.typeId} target="_blank">
                           <TypeName typeId={type.typeId} />

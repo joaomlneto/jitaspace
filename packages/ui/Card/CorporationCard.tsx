@@ -5,6 +5,7 @@ import { Anchor, Group, Paper } from "@mantine/core";
 import { CorporationAvatar } from "../Avatar";
 import { CorporationName } from "../Text";
 
+
 interface CorporationCardProps {
   corporationId: string | number;
 }
@@ -42,7 +43,7 @@ export const CorporationCard = memo(
           target="_blank"
           size="sm"
         >
-          <Group spacing="xs">
+          <Group gap="xs">
             <Anchor>Open in EVE Who</Anchor>
           </Group>
         </Anchor>

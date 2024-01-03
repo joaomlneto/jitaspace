@@ -68,7 +68,7 @@ export const SkillQueueTimeline = memo(
                       </UnstyledButton>
                     </Popover.Target>
                     <Popover.Dropdown>
-                      <Stack spacing="xs">
+                      <Stack gap="xs">
                         {entry.start_date && (
                           <Group position="apart">
                             <Text size="sm" color="dimmed">
@@ -133,7 +133,7 @@ export const SkillQueueTimeline = memo(
                           target="_blank"
                           size="sm"
                         >
-                          <Group spacing="xs">
+                          <Group gap="xs">
                             <IconExternalLink size={14} />
                             <Anchor>Open in EVE Ref</Anchor>
                           </Group>

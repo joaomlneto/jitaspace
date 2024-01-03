@@ -82,7 +82,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
           <th>Attribute</th>
           {sortedTypes.map((type) => (
             <th key={type.type_id}>
-              <Group spacing="xs">
+              <Group gap="xs">
                 <TypeAvatar typeId={type.type_id} size="sm" />
                 <TypeAnchor typeId={type.type_id} target="_blank">
                   <TypeName typeId={type.type_id} />

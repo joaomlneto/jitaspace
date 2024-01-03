@@ -6,6 +6,7 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { AllianceAvatar } from "../Avatar";
 import { AllianceName } from "../Text";
 
+
 interface AllianceCardProps {
   allianceId: string | number;
 }
@@ -42,7 +43,7 @@ export const AllianceCard = memo(({ allianceId }: AllianceCardProps) => {
         target="_blank"
         size="sm"
       >
-        <Group spacing="xs">
+        <Group gap="xs">
           <IconExternalLink size={14} />
           <Anchor>Open in EVE Who</Anchor>
         </Group>

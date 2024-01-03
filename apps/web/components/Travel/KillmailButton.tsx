@@ -43,7 +43,7 @@ export const KillmailButton = memo(
         target="_blank"
       >
         <Group>
-          <Group spacing="xs">
+          <Group gap="xs">
             <Tooltip
               color="dark"
               label={
@@ -68,7 +68,7 @@ export const KillmailButton = memo(
                 </Stack>
               }
             >
-              <Group spacing={4}>
+              <Group gap={4}>
                 <CombatLogIcon width={32} />
                 <CharacterAvatar
                   characterId={data?.data.victim.character_id}
@@ -78,7 +78,7 @@ export const KillmailButton = memo(
               </Group>
             </Tooltip>
           </Group>
-          <Group spacing="xs">
+          <Group gap="xs">
             <Tooltip
               color="dark"
               label={
@@ -125,7 +125,7 @@ export const KillmailButton = memo(
                 </Stack>
               }
             >
-              <Group spacing={4}>
+              <Group gap={4}>
                 <MercenaryIcon width={32} />
                 <Avatar.Group spacing="xs">
                   {data?.data.attackers.map((attacker) =>

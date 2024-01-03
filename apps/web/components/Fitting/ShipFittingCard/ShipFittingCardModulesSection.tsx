@@ -10,6 +10,7 @@ import {
 
 import { ShipFittingCardModuleSectionEntry } from "./ShipFittingCardModuleSectionEntry";
 
+
 const useStyles = createStyles((theme) => ({
   label: {
     lineHeight: 1,
@@ -56,7 +57,7 @@ export const ShipFittingCardModulesSection = memo(
 
     return (
       <Card.Section m={0} p="xs" className={classes.section}>
-        <Stack spacing={0}>
+        <Stack gap={0}>
           <Text color="dimmed" className={classes.label} mb={4}>
             {header}
           </Text>
@@ -67,7 +68,7 @@ export const ShipFittingCardModulesSection = memo(
             />
           ))}
           {showEmptySlots && remainingSlots > 0 && (
-            <Group spacing="xs" pl={26}>
+            <Group gap="xs" pl={26}>
               {remainingSlots > 0 && (
                 <Text size="xs" color="dimmed">
                   {remainingSlots} Empty Slots
@@ -76,7 +77,7 @@ export const ShipFittingCardModulesSection = memo(
             </Group>
           )}
           {showExcessModules && remainingSlots < 0 && (
-            <Group spacing="xs" pl={26}>
+            <Group gap="xs" pl={26}>
               <Text size="xs" color="red">
                 Too many modules
               </Text>

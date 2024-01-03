@@ -159,10 +159,10 @@ export function LayoutHeader() {
                     key={app.name}
                     color="dark"
                     label={
-                      <Stack spacing={4} align="center">
+                      <Stack gap={4} align="center">
                         <Text>{app.name}</Text>
                         {app.hotKey && (
-                          <Group spacing="xs">
+                          <Group gap="xs">
                             {app.hotKey.map((key) => (
                               <Text span key={key}>
                                 <Kbd size="xs">{key}</Kbd>

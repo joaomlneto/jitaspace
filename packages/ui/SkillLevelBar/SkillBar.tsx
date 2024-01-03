@@ -1,6 +1,10 @@
 import { memo } from "react";
 import { createStyles, Group, Stack, Text, Tooltip } from "@mantine/core";
 
+
+
+
+
 const useStyles = createStyles((theme) => ({
   trained: {
     backgroundColor: theme.colorScheme === "dark" ? "#CCCCCC" : "#464646",
@@ -60,7 +64,7 @@ export const SkillBar = memo(
     return (
       <Tooltip
         label={
-          <Stack spacing={0}>
+          <Stack gap={0}>
             <Group position="apart">
               <Text size="xs">Level trained:</Text>
               <Text size="xs">{activeLevel}</Text>
@@ -74,9 +78,7 @@ export const SkillBar = memo(
           </Stack>
         }
       >
-        <Group spacing={0}>
-          {[1, 2, 3, 4, 5].map((level) => getIcon(level))}
-        </Group>
+        <Group gap={0}>{[1, 2, 3, 4, 5].map((level) => getIcon(level))}</Group>
       </Tooltip>
     );
   },
