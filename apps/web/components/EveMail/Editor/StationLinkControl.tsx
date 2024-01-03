@@ -1,11 +1,9 @@
 import React, { forwardRef } from "react";
 import {
   Button,
-  createStyles,
   Popover,
-  px,
-  rem,
-  useComponentDefaultProps,
+  useMantineTheme,
+  useProps,
   type PopoverProps,
 } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
@@ -13,58 +11,14 @@ import { useRichTextEditorContext } from "@mantine/tiptap";
 
 import { getUniverseStationsStationId } from "@jitaspace/esi-client";
 import { StationIcon } from "@jitaspace/eve-icons";
-import { EsiSearchSelect } from "@jitaspace/ui";
+import { EsiSearchSelect, StationAvatar } from "@jitaspace/ui";
 
 import {
   ControlBase,
   type RichTextEditorControlBaseProps,
 } from "~/components/EveMail/Editor/ControlBase";
+import classes from "./LinkControl.module.css";
 
-const useStyles = createStyles((theme) => {
-  const colors = theme.fn.variant({ variant: "light" });
-  return {
-    linkEditor: {
-      display: "flex",
-    },
-
-    linkEditorInput: {
-      borderTopRightRadius: 0,
-      borderBottomRightRadius: 0,
-      borderRight: 0,
-    },
-
-    linkEditorExternalControl: {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.fn.rgba(theme.colors.dark[7], 0.5)
-          : theme.white,
-      border: `${rem(1)} solid ${
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[4]
-          : theme.colors.gray[4]
-      }`,
-      height: rem(24),
-      width: rem(24),
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      borderRadius: theme.fn.radius(),
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      "&[data-active]": {
-        backgroundColor: colors.background,
-        borderColor: colors.border,
-        color: colors.color,
-        ...theme.fn.hover({ background: colors.hover }),
-      },
-    },
-
-    linkEditorSave: {
-      borderTopLeftRadius: 0,
-      borderBottomLeftRadius: 0,
-    },
-  };
-});
 
 export interface RichTextEditorLinkControlProps
   extends Partial<RichTextEditorControlBaseProps> {
@@ -75,28 +29,16 @@ export interface RichTextEditorLinkControlProps
 const StationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
   size,
   ...others
-}) => <StationIcon width={px(size)} {...others} />;
+}) => <StationIcon width={Number(size)} {...others} />;
 
 export const StationLinkControl = forwardRef<
   HTMLButtonElement,
   RichTextEditorLinkControlProps
 >((props, ref) => {
-  const { icon, ...others } = useComponentDefaultProps(
-    "RichTextEditorLinkControl",
-    {},
-    props,
-  );
+  const { icon, ...others } = useProps("RichTextEditorLinkControl", {}, props);
 
-  const { editor, classNames, styles, unstyled, variant } =
-    useRichTextEditorContext();
-  const { classes } = useStyles(undefined, {
-    name: "RichTextEditor",
-    classNames,
-    // @ts-expect-error annoying type conversion issue
-    styles,
-    unstyled,
-    variant,
-  });
+  const theme = useMantineTheme();
+  const { editor, unstyled } = useRichTextEditorContext();
 
   const [stationId, setStationId] = useInputState("");
   const [opened, { open, close }] = useDisclosure(false);
@@ -117,9 +59,9 @@ export const StationLinkControl = forwardRef<
     void getUniverseStationsStationId(parseInt(stationId)).then((data) => {
       handleClose();
       stationId === ""
-        ? editor.chain().focus().extendMarkRange("link").unsetLink().run()
+        ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
         : editor
-            .chain()
+            ?.chain()
             .focus()
             .extendMarkRange("link")
             .setLink({
@@ -156,17 +98,15 @@ export const StationLinkControl = forwardRef<
           title="Link Station"
           onClick={handleOpen}
           active={editor?.isActive("link")}
-          unstyled={unstyled}
           {...others}
           ref={ref}
         />
       </Popover.Target>
 
       <Popover.Dropdown
-        sx={(theme) => ({
-          backgroundColor:
-            theme.colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
-        })}
+        style={{
+          backgroundColor: theme.colors.dark[7],
+        }}
       >
         <div className={classes.linkEditor}>
           <EsiSearchSelect
@@ -178,6 +118,7 @@ export const StationLinkControl = forwardRef<
             classNames={{ input: classes.linkEditorInput }}
             onKeyDown={handleInputKeydown}
             unstyled={unstyled}
+            leftSection={<StationAvatar size={24} stationId={stationId} />}
           />
 
           <Button
