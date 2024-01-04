@@ -18,6 +18,8 @@ import {
   Text,
   Title,
   Tooltip,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure, useHeadroom } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
@@ -26,102 +28,16 @@ import { useSelectedCharacter } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import { characterApps } from "~/config/apps";
+import classes from "./LayoutHeader.module.css";
 import UserButton from "./UserButton";
-
-const useStyles = createStyles((theme) => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  logo: {
-    display: "flex",
-    alignItems: "center",
-    height: "100%",
-    paddingLeft: theme.spacing.md,
-    paddingRight: theme.spacing.md,
-    textDecoration: "none",
-    color: theme.colorScheme === "dark" ? theme.white : theme.black,
-    fontWeight: 500,
-    fontSize: theme.fontSizes.sm,
-
-    [theme.fn.smallerThan("sm")]: {
-      height: rem(42),
-      display: "flex",
-      alignItems: "center",
-    },
-
-    ...theme.fn.hover({
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[6]
-          : theme.colors.gray[0],
-    }),
-  },
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  link: {
-    display: "flex",
-    alignItems: "center",
-    height: "100%",
-    paddingLeft: theme.spacing.md,
-    paddingRight: theme.spacing.md,
-    textDecoration: "none",
-    color: theme.colorScheme === "dark" ? theme.white : theme.black,
-    fontWeight: 500,
-    fontSize: theme.fontSizes.sm,
-
-    [theme.fn.smallerThan("sm")]: {
-      height: rem(42),
-      display: "flex",
-      alignItems: "center",
-      width: "100%",
-    },
-
-    ...theme.fn.hover({
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[6]
-          : theme.colors.gray[0],
-    }),
-  },
-
-  dropdownFooter: {
-    backgroundColor:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[7]
-        : theme.colors.gray[0],
-    margin: `calc(${theme.spacing.md} * -1)`,
-    marginTop: theme.spacing.sm,
-    padding: `${theme.spacing.md} calc(${theme.spacing.md} * 2)`,
-    paddingBottom: theme.spacing.xl,
-    borderTop: `${rem(1)} solid ${
-      theme.colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[1]
-    }`,
-  },
-
-  selected: {
-    backgroundColor:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[5]
-        : theme.colors.gray[0],
-  },
-
-  hiddenMobile: {
-    [theme.fn.smallerThan("sm")]: {
-      display: "none",
-    },
-  },
-
-  hiddenDesktop: {
-    [theme.fn.largerThan("sm")]: {
-      display: "none",
-    },
-  },
-}));
 
 export function LayoutHeader() {
   const router = useRouter();
   const pinned = useHeadroom({ fixedAt: 120 });
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
-  const { classes, theme, cx } = useStyles();
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
 
   const character = useSelectedCharacter();
 
@@ -144,11 +60,7 @@ export function LayoutHeader() {
               </Group>
             </Link>
 
-            <Group
-              style={{ height: "100%" }}
-              gap={0}
-              className={classes.hiddenMobile}
-            >
+            <Group style={{ height: "100%" }} gap={0} visibleFrom="sm">
               {Object.values(characterApps).map((app) => {
                 const isActive =
                   app.url !== undefined &&
@@ -177,9 +89,11 @@ export function LayoutHeader() {
                     <Link
                       href={app.url ?? ""}
                       onClick={app.onClick}
-                      className={cx(classes.link, {
-                        [classes.selected]: isActive,
-                      })}
+                      style={
+                        {
+                          //[classes.selected]: isActive, // FIXME Mantine v7 migration
+                        }
+                      }
                     >
                       <app.Icon width={32} height={32} alt="EveMail" />
                     </Link>
@@ -188,7 +102,7 @@ export function LayoutHeader() {
               })}
             </Group>
 
-            <Group className={classes.hiddenMobile}>
+            <Group visibleFrom="sm">
               {false && (
                 <Group>
                   <Loader size="sm" />
@@ -215,7 +129,7 @@ export function LayoutHeader() {
             <Burger
               opened={drawerOpened}
               onClick={toggleDrawer}
-              className={classes.hiddenDesktop}
+              hiddenFrom="sm"
             />
           </Group>
         </Container>
@@ -227,14 +141,14 @@ export function LayoutHeader() {
         size="100%"
         padding="md"
         title="Navigation"
-        className={classes.hiddenDesktop}
+        hiddenFrom="sm"
         zIndex={1000000}
         position="top"
       >
         <ScrollArea h={`calc(100vh - ${rem(70)})`} mx="-md">
           <Divider
             my="sm"
-            color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
+            color={colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
           {Object.values(characterApps).map((app) => {
             const isActive =
@@ -244,9 +158,10 @@ export function LayoutHeader() {
               <Link
                 key={app.name}
                 href={app.url ?? ""}
+                /*
                 className={cx(classes.link, {
                   [classes.selected]: isActive,
-                })}
+                })} // FIXME Mantine v7 migration */
                 onClick={() => {
                   closeDrawer();
                   app.onClick?.();
@@ -262,7 +177,7 @@ export function LayoutHeader() {
 
           <Divider
             my="sm"
-            color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
+            color={colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
 
           <Group justify="center" grow pb="xl">
