@@ -1,6 +1,10 @@
 import { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
-import { format as formatFn } from "date-fns";
+import { FirstWeekContainsDate, format as formatFn, Locale } from "date-fns";
+
+
+
+
 
 type FormattedDateTextProps = Omit<TextProps, "children"> & {
   date?: Date;
@@ -8,7 +12,7 @@ type FormattedDateTextProps = Omit<TextProps, "children"> & {
   options?: {
     locale?: Locale;
     weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
-    firstWeekContainsDate?: number;
+    firstWeekContainsDate?: FirstWeekContainsDate;
     useAdditionalWeekYearTokens?: boolean;
     useAdditionalDayOfYearTokens?: boolean;
   };
