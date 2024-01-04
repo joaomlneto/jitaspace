@@ -74,23 +74,32 @@ export const CalendarEventAttendanceSelect = memo(
         value={value}
         placeholder={"Not responded"}
         clearable={false}
-        onChange={(
-          newValue: PutCharactersCharacterIdCalendarEventIdMutationRequestResponse,
-        ) => {
+        onChange={(newValue: string | null) => {
           if (value === newValue) return;
           if (!canRespondToEvents) return;
           if (newValue === null) return;
+          if (
+            !Object.keys(
+              putCharactersCharacterIdCalendarEventIdMutationRequestResponse,
+            ).includes(newValue)
+          )
+            return;
           openConfirmModal({
             title: "Are you sure?",
             children: `This will mark event ${event?.data.title} as ${newValue}.`,
             labels: { confirm: "Confirm", cancel: "Cancel" },
             onConfirm: () => {
-              setValue(newValue);
+              setValue(
+                newValue as PutCharactersCharacterIdCalendarEventIdMutationRequestResponse,
+              );
               otherProps.onChange?.(newValue);
               void putCharactersCharacterIdCalendarEventId(
                 characterId ?? 0,
                 typeof eventId === "string" ? parseInt(eventId) : eventId ?? 0,
-                { response: newValue },
+                {
+                  response:
+                    newValue as PutCharactersCharacterIdCalendarEventIdMutationRequestResponse,
+                },
                 {},
                 { headers: { ...authHeaders } },
               );

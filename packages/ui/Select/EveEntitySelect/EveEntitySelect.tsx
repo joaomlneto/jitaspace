@@ -3,7 +3,9 @@ import { Select, type SelectProps } from "@mantine/core";
 
 import { useEsiNamesCache } from "@jitaspace/hooks";
 
-import { EveEntitySelectItem } from "./EveEntitySelectItem";
+
+
+
 
 export type EveEntitySelectProps = Omit<SelectProps, "data"> & {
   entityIds: {
@@ -28,7 +30,7 @@ export const EveEntitySelect = memo(
               "",
           }))
           .sort((a, b) => (a.label ?? "").localeCompare(b.label ?? ""))}
-        itemComponent={EveEntitySelectItem}
+        //itemComponent={EveEntitySelectItem}
         {...otherProps}
       />
     );
