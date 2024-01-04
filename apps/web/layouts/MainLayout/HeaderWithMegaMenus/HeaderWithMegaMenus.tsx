@@ -2,12 +2,12 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  AppShell,
   Box,
   Burger,
   Center,
   Container,
   Group,
-  Header,
   Loader,
   rem,
   Text,
@@ -39,7 +39,6 @@ import UserButton from "../UserButton";
 import { MobileHeaderDrawer } from "./MobileHeaderDrawer";
 import { useStyles } from "./styles";
 
-
 export function HeaderWithMegaMenus() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
@@ -54,10 +53,10 @@ export function HeaderWithMegaMenus() {
 
   return (
     <Box pb="xs">
-      <Header
-        height={60}
+      <AppShell.Header
+        //height={60}
         px="md"
-        sx={{
+        style={{
           transform: `translate3d(0, ${pinned ? 0 : rem(-110)}, 0)`,
           transition: "transform 400ms ease",
         }}
@@ -71,8 +70,8 @@ export function HeaderWithMegaMenus() {
             </Link>
 
             <Group
-              sx={{ height: "100%" }}
-              spacing={0}
+              style={{ height: "100%" }}
+              gap={0}
               className={classes.hiddenMobile}
             >
               <DesktopHeaderLinkGroup
@@ -143,7 +142,7 @@ export function HeaderWithMegaMenus() {
             />
           </Group>
         </Container>
-      </Header>
+      </AppShell.Header>
 
       <MobileHeaderDrawer
         opened={drawerOpened}
