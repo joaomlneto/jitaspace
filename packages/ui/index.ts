@@ -10,7 +10,6 @@ export * from "./ColorSwatch";
 export * from "./DateText";
 export * from "./DurationText";
 export * from "./Indicator";
-export * from "./Input";
 export * from "./MultiSelect";
 export * from "./Select";
 export * from "./SkillLevelBar";
