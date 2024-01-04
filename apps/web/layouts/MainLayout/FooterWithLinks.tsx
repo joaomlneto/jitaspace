@@ -4,7 +4,6 @@ import {
   ActionIcon,
   Anchor,
   Container,
-  createStyles,
   Group,
   rem,
   Text,
@@ -13,46 +12,12 @@ import {
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
 import { env } from "~/env.mjs";
+import classes from "./FotterWithLinks.module.css";
+
 
 const FOOTER_BREAKPOINT = "xs";
 const FOOTER_HEIGHT_DESKTOP = rem(51);
 const FOOTER_HEIGHT_MOBILE = rem(86);
-
-const useStyles = createStyles((theme) => ({
-  footer: {
-    height: FOOTER_HEIGHT_MOBILE,
-    position: "absolute",
-    width: "100%",
-    marginTop: theme.spacing.md,
-    borderTop: `${rem(1)} solid ${
-      theme.colorScheme === "dark" ? theme.colors.dark[5] : theme.colors.gray[2]
-    }`,
-    [theme.fn.largerThan(FOOTER_BREAKPOINT)]: {
-      height: FOOTER_HEIGHT_DESKTOP,
-    },
-    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
-      height: FOOTER_HEIGHT_MOBILE,
-    },
-  },
-
-  inner: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingTop: theme.spacing.md,
-    paddingBottom: theme.spacing.md,
-
-    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
-      flexDirection: "column-reverse",
-    },
-  },
-
-  links: {
-    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
-      marginBottom: theme.spacing.md,
-    },
-  },
-}));
 
 const links: { link: LinkProps["href"]; label: string }[] = [
   {
@@ -66,8 +31,6 @@ const links: { link: LinkProps["href"]; label: string }[] = [
 ];
 
 export function FooterWithLinks() {
-  const { classes } = useStyles();
-
   const items = links.map((link) => (
     <Anchor
       key={link.label}
