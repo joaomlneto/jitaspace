@@ -7,6 +7,8 @@ import {
   Group,
   Text,
   UnstyledButton,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown } from "@tabler/icons-react";
@@ -14,7 +16,7 @@ import { IconChevronDown } from "@tabler/icons-react";
 import { EveIconProps } from "@jitaspace/eve-icons";
 
 import { JitaApp } from "~/config/apps";
-import { useStyles } from "./styles";
+import classes from "./HeaderWithMegaMenus.module.css";
 
 export type MobileHeaderLinkGroupProps = {
   title: string;
@@ -25,7 +27,8 @@ export type MobileHeaderLinkGroupProps = {
 
 export const MobileHeaderLinkGroup = memo(
   ({ title, Icon, items, onNavigation }: MobileHeaderLinkGroupProps) => {
-    const { classes, theme, cx } = useStyles();
+    const theme = useMantineTheme();
+    const { colorScheme } = useMantineColorScheme();
     const [
       mobileCharacterAppsOpened,
       { toggle: toggleMobileCharacterApps, close: closeMobileCharacterApps },
@@ -44,7 +47,7 @@ export const MobileHeaderLinkGroup = memo(
                 {title}
               </Box>
             </Group>
-            <IconChevronDown size={16} color={theme.fn.primaryColor()} />
+            <IconChevronDown size={16} color={theme.primaryColor} />
           </Center>
         </UnstyledButton>
         <Collapse in={mobileCharacterAppsOpened} px="xs">
