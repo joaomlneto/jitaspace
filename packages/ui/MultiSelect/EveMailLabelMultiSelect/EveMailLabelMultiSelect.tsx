@@ -1,12 +1,12 @@
-import React, { memo, useMemo } from "react";
+import React, { memo } from "react";
 import { MultiSelect, type MultiSelectProps } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
 import { humanLabelName } from "@jitaspace/utils";
 
-import { EveMailLabelMultiSelectItem } from "./EveMailLabelMultiSelectItem";
-import { EmailLabelMultiSelectValue } from "./EveMailLabelMultiSelectValue";
+
+
 
 
 type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data"> & {
@@ -29,10 +29,7 @@ export const EveMailLabelMultiSelect = memo(
         },
       },
     );
-    const valueComponent = useMemo(
-      () => EmailLabelMultiSelectValue(characterId),
-      [characterId],
-    );
+
     return (
       <MultiSelect
         label="Labels"
@@ -45,8 +42,8 @@ export const EveMailLabelMultiSelect = memo(
             unreadCount: label.unread_count ?? 0,
           })) ?? []
         }
-        itemComponent={EveMailLabelMultiSelectItem}
-        valueComponent={valueComponent}
+        //itemComponent={EveMailLabelMultiSelectItem}
+        //valueComponent={valueComponent}
         //placeholder="Choose labels"
         {...otherProps}
       />
