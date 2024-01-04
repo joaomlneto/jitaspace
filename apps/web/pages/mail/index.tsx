@@ -93,14 +93,22 @@ export default function Page() {
                 <ActionIcon
                   variant="default"
                   size="lg"
-                  onClick={() =>
+                  onClick={() => {
+                    if (!character) {
+                      console.error(
+                        "Cannot open viewMailingListSubscriptions modal, as no character is active",
+                      );
+                      return;
+                    }
                     modals.openContextModal({
                       modal: "viewMailingListSubscriptions",
                       title: "Active Mailing List Subscriptions",
                       size: "md",
-                      innerProps: {},
-                    })
-                  }
+                      innerProps: {
+                        characterId: character?.characterId,
+                      },
+                    });
+                  }}
                 >
                   <GroupListIcon alt="Mailing Lists" width={32} height={32} />
                 </ActionIcon>
