@@ -36,13 +36,12 @@ import {
 } from "~/config/apps";
 import { DesktopHeaderLinkGroup } from "~/layouts/MainLayout/HeaderWithMegaMenus/DesktopHeaderLinkGroup";
 import UserButton from "../UserButton";
+import classes from "./HeaderWithMegaMenus.module.css";
 import { MobileHeaderDrawer } from "./MobileHeaderDrawer";
-import { useStyles } from "./styles";
 
 export function HeaderWithMegaMenus() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
-  const { classes } = useStyles();
   const characterIds = useAuthenticatedCharacterIds();
   const pinned = useHeadroom({
     fixedAt: 120,
@@ -69,11 +68,7 @@ export function HeaderWithMegaMenus() {
               </Group>
             </Link>
 
-            <Group
-              style={{ height: "100%" }}
-              gap={0}
-              className={classes.hiddenMobile}
-            >
+            <Group style={{ height: "100%" }} gap={0} visibleFrom="sm">
               <DesktopHeaderLinkGroup
                 title="Character Tools"
                 Icon={(props) => <CharacterSheetIcon {...props} />}
@@ -111,7 +106,7 @@ export function HeaderWithMegaMenus() {
               </UnstyledButton>
             </Group>
 
-            <Group className={classes.hiddenMobile}>
+            <Group visibleFrom="sm">
               {false && (
                 <Group>
                   <Loader size="sm" />
@@ -138,7 +133,7 @@ export function HeaderWithMegaMenus() {
             <Burger
               opened={drawerOpened}
               onClick={toggleDrawer}
-              className={classes.hiddenDesktop}
+              hiddenFrom="sm"
             />
           </Group>
         </Container>

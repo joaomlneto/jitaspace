@@ -9,14 +9,15 @@ import {
   SimpleGrid,
   Text,
   UnstyledButton,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
 import { EveIconProps } from "@jitaspace/eve-icons";
 
 import { JitaApp } from "~/config/apps";
-import { useStyles } from "./styles";
-
+import classes from "./HeaderWithMegaMenus.module.css";
 
 export type DesktopHeaderLinkGroupProps = {
   title: string;
@@ -26,7 +27,8 @@ export type DesktopHeaderLinkGroupProps = {
 
 export const DesktopHeaderLinkGroup = memo(
   ({ title, Icon, items }: DesktopHeaderLinkGroupProps) => {
-    const { classes, theme, cx } = useStyles();
+    const theme = useMantineTheme();
+    const { colorScheme } = useMantineColorScheme();
     const [
       mobileCharacterAppsOpened,
       { toggle: toggleMobileCharacterApps, close: closeMobileCharacterApps },
@@ -61,7 +63,7 @@ export const DesktopHeaderLinkGroup = memo(
           <Divider
             my="sm"
             mx="-md"
-            color={theme.colorScheme === "dark" ? "dark.5" : "gray.1"}
+            color={colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
 
           <SimpleGrid cols={2} spacing={0}>
