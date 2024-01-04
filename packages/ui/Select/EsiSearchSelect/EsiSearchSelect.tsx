@@ -5,7 +5,8 @@ import { useDebouncedValue } from "@mantine/hooks";
 import { type GetCharactersCharacterIdSearchQueryParamsCategories } from "@jitaspace/esi-client";
 import { useEsiNamesCache, useEsiSearch } from "@jitaspace/hooks";
 
-import { EsiSearchSelectItem } from "./EsiSearchSelectItem";
+
+
 
 
 export type EsiSearchSelectProps = Omit<
@@ -48,28 +49,28 @@ export const EsiSearchSelect = memo(
     const isLoadingData: boolean =
       isLoading || searchValue !== debouncedSearchValue;
 
-    const onChange = (value: string) => {
+    const onChange = (value: string | null) => {
       setValue(value);
       otherProps.onChange?.(value);
     };
 
     return (
       <Select
-        filter={() => true}
+        //filter={() => true}
         data={data}
         value={otherProps.value ?? value}
         onChange={onChange}
         searchable
         searchValue={searchValue}
         onSearchChange={onSearchChange}
-        itemComponent={EsiSearchSelectItem}
+        //itemComponent={EsiSearchSelectItem}
         rightSection={isLoadingData && <Loader size="sm" />}
-        nothingFound={
+        nothingFoundMessage={
           (searchValue ?? "").length < 3
             ? "Type at least 3 characters to search for results"
             : isLoadingData
-            ? "Searching…"
-            : "No results found"
+              ? "Searching…"
+              : "No results found"
         }
         {...otherProps}
       />

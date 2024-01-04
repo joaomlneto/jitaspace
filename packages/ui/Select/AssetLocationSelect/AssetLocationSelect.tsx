@@ -3,7 +3,9 @@ import { Select, type SelectProps } from "@mantine/core";
 
 import { useCharacterAssets, useEsiNamesCache } from "@jitaspace/hooks";
 
-import { AssetLocationSelectItem } from "./AssetLocationSelectItem";
+
+
+
 
 export type AssetLocationSelectItemProps = Omit<SelectProps, "data">;
 
@@ -18,7 +20,7 @@ export const AssetLocationSelect = memo(
     return (
       <>
         <Select
-          itemComponent={AssetLocationSelectItem}
+          //itemComponent={AssetLocationSelectItem}
           data={(Object.values(locations) ?? [])
             .filter((location) => location.location_type !== "item")
             .map((location) => ({
@@ -28,7 +30,7 @@ export const AssetLocationSelect = memo(
               })`,
             }))}
           value={otherProps.value ?? value}
-          onChange={(value: string) => {
+          onChange={(value: string | null) => {
             otherProps.onChange?.(value);
             onChange(value);
           }}
