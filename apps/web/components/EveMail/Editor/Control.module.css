@@ -8,8 +8,10 @@
     border: 1rem solid var(--mantine-colors-dark-4);
     cursor: default;
 
+    /*
+    FIXME: Mantine v7 migration
     &[data-interactive] {
         cursor: pointer;
         background-color: var(--mantine-colors-dark-5);
-    }
+    }*/
 }

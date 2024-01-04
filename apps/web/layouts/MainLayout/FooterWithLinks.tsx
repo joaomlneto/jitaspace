@@ -12,7 +12,7 @@ import {
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
 import { env } from "~/env.mjs";
-import classes from "./FotterWithLinks.module.css";
+import classes from "./FooterWithLinks.module.css";
 
 
 const FOOTER_BREAKPOINT = "xs";
