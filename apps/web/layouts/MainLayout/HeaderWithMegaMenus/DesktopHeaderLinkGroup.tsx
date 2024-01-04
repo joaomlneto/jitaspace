@@ -53,7 +53,7 @@ export const DesktopHeaderLinkGroup = memo(
           </UnstyledButton>
         </HoverCard.Target>
 
-        <HoverCard.Dropdown sx={{ overflow: "hidden" }}>
+        <HoverCard.Dropdown style={{ overflow: "hidden" }}>
           <Group gap="xs">
             <Text fw={500}>{title}</Text>
           </Group>

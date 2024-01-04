@@ -7,6 +7,10 @@ import {
 } from "@mantine/core";
 import { useUncontrolled } from "@mantine/hooks";
 
+
+
+
+
 const useStyles = createStyles((theme) => ({
   button: {
     display: "flex",
@@ -74,7 +78,7 @@ export function CheckboxCard({
       />
 
       <div>
-        <Text fw={500} mb={7} sx={{ lineHeight: 1 }}>
+        <Text fw={500} mb={7} style={{ lineHeight: 1 }}>
           {title}
         </Text>
         <Text fz="sm" c="dimmed">

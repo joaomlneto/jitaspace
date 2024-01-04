@@ -21,23 +21,23 @@ export type EsiSearchMultiSelectItemProps = SelectItemProps & {
 export const EsiSearchMultiSelectItem = forwardRef<
   HTMLDivElement,
   EsiSearchMultiSelectItemProps
->(({value, category, ...others}, ref) => {
+>(({ value, category, ...others }, ref) => {
   return (
     <Group wrap="nowrap" justify="space-between" ref={ref} {...others}>
       <Group wrap="nowrap" gap="xs">
         {value ? (
-          <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl"/>
+          <EveEntityAvatar entityId={value} size={16} mr={10} radius="xl" />
         ) : (
-          <Avatar size={16} mr={10} radius="xl"/>
+          <Avatar size={16} mr={10} radius="xl" />
         )}
         {value ? (
           <EveEntityName
             entityId={value}
             category={category}
-            sx={{lineHeight: 1, fontSize: rem(12)}}
+            style={{ lineHeight: 1, fontSize: rem(12) }}
           />
         ) : (
-          <Text sx={{lineHeight: 1, fontSize: rem(12)}}>Unknown</Text>
+          <Text style={{ lineHeight: 1, fontSize: rem(12) }}>Unknown</Text>
         )}
       </Group>
       <Badge size="xs" variant="subtle">
@@ -47,11 +47,3 @@ export const EsiSearchMultiSelectItem = forwardRef<
   );
 });
 EsiSearchMultiSelectItem.displayName = "EsiSearchMultiselectItem";
-
-/*
-              <EveEntityName
-                entityId={value}
-                category={category}
-                sx={{ lineHeight: 1, fontSize: rem(12) }}
-              />
-*/
