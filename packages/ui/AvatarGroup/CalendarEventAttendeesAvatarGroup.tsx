@@ -1,10 +1,10 @@
 import React, { memo } from "react";
 import {
   Avatar,
+  AvatarGroupProps,
   Skeleton,
   Tooltip,
   type AvatarProps,
-  type MantineNumberSize,
 } from "@mantine/core";
 
 import { useGetCharactersCharacterIdCalendarEventIdAttendees } from "@jitaspace/esi-client";
@@ -18,7 +18,7 @@ type CalendarEventAttendeesAvatarGroupProps = AvatarProps & {
   characterId: number;
   eventId?: number;
   limit?: number;
-  spacing?: MantineNumberSize;
+  spacing?: AvatarGroupProps["spacing"];
 };
 export const CalendarEventAttendeesAvatarGroup = memo(
   ({
