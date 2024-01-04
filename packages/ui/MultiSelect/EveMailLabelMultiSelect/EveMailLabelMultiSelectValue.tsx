@@ -3,12 +3,13 @@ import {
   Box,
   CloseButton,
   rem,
+  useMantineColorScheme,
+  useMantineTheme,
   type MultiSelectValueProps,
 } from "@mantine/core";
 
 import { MailLabelColorSwatch } from "../../ColorSwatch";
 import { LabelName } from "../../Text";
-
 
 export const EmailLabelMultiSelectValue = (characterId: number) =>
   memo(
@@ -19,19 +20,19 @@ export const EmailLabelMultiSelectValue = (characterId: number) =>
     }: Omit<MultiSelectValueProps, "value"> & {
       value: string | number;
     }) => {
+      const theme = useMantineTheme();
+      const { colorScheme } = useMantineColorScheme();
       return (
         <div {...others}>
           <Box
-            sx={(theme) => ({
+            style={(theme) => ({
               display: "flex",
               cursor: "default",
               alignItems: "center",
               backgroundColor:
-                theme.colorScheme === "dark"
-                  ? theme.colors.dark[7]
-                  : theme.white,
+                colorScheme === "dark" ? theme.colors.dark[7] : theme.white,
               border: `${rem(1)} solid ${
-                theme.colorScheme === "dark"
+                colorScheme === "dark"
                   ? theme.colors.dark[7]
                   : theme.colors.gray[4]
               }`,
@@ -47,7 +48,7 @@ export const EmailLabelMultiSelectValue = (characterId: number) =>
             />
             <LabelName
               characterId={characterId}
-              sx={{ lineHeight: 1, fontSize: rem(12) }}
+              style={{ lineHeight: 1, fontSize: rem(12) }}
               labelId={value}
             />
 

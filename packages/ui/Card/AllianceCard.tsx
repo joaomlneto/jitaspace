@@ -1,6 +1,12 @@
 import React, { memo } from "react";
 import Link from "next/link";
-import { Anchor, Group, Paper } from "@mantine/core";
+import {
+  Anchor,
+  Group,
+  Paper,
+  useMantineColorScheme,
+  useMantineTheme,
+} from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
 import { AllianceAvatar } from "../Avatar";
@@ -12,15 +18,17 @@ interface AllianceCardProps {
 }
 
 export const AllianceCard = memo(({ allianceId }: AllianceCardProps) => {
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
   return (
     <Paper
       radius="md"
       withBorder
       p="lg"
-      sx={(theme) => ({
+      style={{
         backgroundColor:
-          theme.colorScheme === "dark" ? theme.colors.dark[8] : theme.white,
-      })}
+          colorScheme === "dark" ? theme.colors.dark[8] : theme.white,
+      }}
     >
       <Group>
         <AllianceAvatar

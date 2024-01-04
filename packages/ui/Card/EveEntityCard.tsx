@@ -1,5 +1,11 @@
 import React, { memo } from "react";
-import { Group, Paper, Text } from "@mantine/core";
+import {
+  Group,
+  Paper,
+  Text,
+  useMantineColorScheme,
+  useMantineTheme,
+} from "@mantine/core";
 
 import { useEsiName } from "@jitaspace/hooks";
 
@@ -15,6 +21,8 @@ interface EveEntityCardProps {
 
 export const EveEntityCard = memo(({ entityId }: EveEntityCardProps) => {
   const { name, category } = useEsiName(entityId);
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
 
   if (category === "alliance") return <AllianceCard allianceId={entityId} />;
   if (category === "character") return <CharacterCard characterId={entityId} />;
@@ -26,10 +34,10 @@ export const EveEntityCard = memo(({ entityId }: EveEntityCardProps) => {
       radius="md"
       withBorder
       p="lg"
-      sx={(theme) => ({
+      style={{
         backgroundColor:
-          theme.colorScheme === "dark" ? theme.colors.dark[8] : theme.white,
-      })}
+          colorScheme === "dark" ? theme.colors.dark[8] : theme.white,
+      }}
     >
       <Group>
         <EveEntityAvatar entityId={entityId} size="xl" radius={120} mx="auto" />
