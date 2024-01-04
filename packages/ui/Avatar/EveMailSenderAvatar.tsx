@@ -13,7 +13,7 @@ import { sizes } from "./Avatar.styles";
 import { EveEntityAvatar } from "./index";
 
 
-export type EveMailSenderAvatarProps = Omit<AvatarProps, "src"> & {
+export type EveMailSenderAvatarProps = Omit<AvatarProps, "src" | "style"> & {
   characterId: number;
   messageId?: number;
 };
