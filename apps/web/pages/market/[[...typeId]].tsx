@@ -6,7 +6,6 @@ import {
   Container,
   Group,
   Loader,
-  Navbar,
   Stack,
   Text,
   Title,
@@ -17,8 +16,9 @@ import { MarketIcon } from "@jitaspace/eve-icons";
 import { useTypeMarketOrders } from "@jitaspace/hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
-import { MarketGroupNavLink, MarketOrdersDataTable } from "~/components/Market";
+import { MarketOrdersDataTable } from "~/components/Market";
 import { MainLayout } from "~/layouts";
+
 
 type PageProps = {
   marketGroups: Record<
@@ -143,6 +143,7 @@ export default function Page({ marketGroups, rootMarketGroupIds }: PageProps) {
     <Container size="xl">
       <AppShell
         padding="md"
+        /* // FIXME Mantine v7 migration
         fixed={false}
         navbar={
           <Navbar width={{ base: 300 }} height={500} p="xs">
@@ -154,7 +155,7 @@ export default function Page({ marketGroups, rootMarketGroupIds }: PageProps) {
               />
             ))}
           </Navbar>
-        }
+        }*/
       >
         <Stack gap="xl">
           <Group>
