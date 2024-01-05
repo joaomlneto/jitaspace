@@ -11,6 +11,9 @@ import { useEsiSearch } from "@jitaspace/hooks";
 
 export const JitaSpotlightProvider = memo(
   ({ children }: Omit<SpotlightProps, "actions">) => {
+    // FIXME Mantine v7 migration
+    return children;
+
     const router = useRouter();
     const [query, setQuery] = useState<string>("");
     const [debouncedQuery] = useDebouncedValue(query, 1000);
