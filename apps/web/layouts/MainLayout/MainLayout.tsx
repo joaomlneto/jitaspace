@@ -2,6 +2,7 @@ import React, { type PropsWithChildren } from "react";
 import { AppShell, type AppShellProps } from "@mantine/core";
 
 import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
+import { HeaderWithMegaMenus } from "~/layouts/MainLayout/HeaderWithMegaMenus";
 
 
 export function MainLayout({
@@ -25,6 +26,9 @@ export function MainLayout({
       }}
       {...otherProps}
     >
+      <AppShell.Header>
+        <HeaderWithMegaMenus />
+      </AppShell.Header>
       {children}
       <FooterWithLinks />
     </AppShell>
