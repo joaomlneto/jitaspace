@@ -44,7 +44,7 @@ export function LayoutHeader() {
   return (
     <Box>
       <AppShell.Header
-        h={rem(60)}
+        h={60}
         px="md"
         style={{
           transform: `translate3d(0, ${pinned ? 0 : rem(-110)}, 0)`,
