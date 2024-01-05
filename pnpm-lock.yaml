@@ -1113,6 +1113,15 @@ importers:
       eslint:
         specifier: ^8.56.0
         version: 8.56.0
+      postcss:
+        specifier: ^8.4.33
+        version: 8.4.33
+      postcss-preset-mantine:
+        specifier: ^1.12.3
+        version: 1.12.3(postcss@8.4.33)
+      postcss-simple-vars:
+        specifier: ^7.0.1
+        version: 7.0.1(postcss@8.4.33)
       prettier:
         specifier: ^3.1.1
         version: 3.1.1
