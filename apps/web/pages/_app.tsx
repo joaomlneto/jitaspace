@@ -1,3 +1,8 @@
+
+
+
+import "@mantine/core/styles.css";
+
 import React, {
   useEffect,
   type PropsWithChildren,
