@@ -1,17 +1,5 @@
 .footer {
-    position: absolute;
-    width: 100%;
-    margin-top: var(--mantine-spacing-md);
-    border-top: 1rem solid var(--mantine-colors-dark-5);
-    /*
-    FIXME
-    [theme.fn.largerThan(FOOTER_BREAKPOINT)]: {
-      height: FOOTER_HEIGHT_DESKTOP,
-    },
-    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
-      height: FOOTER_HEIGHT_MOBILE,
-    },
-     */
+    border-top: rem(1px) solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
 }
 
 .inner {
@@ -21,20 +9,13 @@
     padding-top: var(--mantine-spacing-md);
     padding-bottom: var(--mantine-spacing-md);
 
-    /*
-    FIXME
-    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
-      flexDirection: "column-reverse",
-    },
-     */
+    @media (max-width: $mantine-breakpoint-xs) {
+        flex-direction: column;
+    }
 }
 
 .links {
-    /*
-    FIXME
-    [theme.fn.smallerThan(FOOTER_BREAKPOINT)]: {
-      marginBottom: theme.spacing.md,
-    },
-
-     */
+    @media (max-width: $mantine-breakpoint-xs) {
+        margin-top: var(--mantine-spacing-md);
+    }
 }
