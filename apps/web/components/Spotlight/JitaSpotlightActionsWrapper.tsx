@@ -48,7 +48,7 @@ export const JitaSpotlightActionsWrapper = memo(
         >
           <Group gap="xs">
             {canUseEsiSearch && (
-              <Text size="xs" color="dimmed">
+              <Text size="xs" c="dimmed">
                 ESI Search enabled.
               </Text>
             )}

@@ -33,7 +33,7 @@ export const ShipFittingCardModulesSection = memo(
     return (
       <Card.Section m={0} p="xs" className={classes.modulesSection}>
         <Stack gap={0}>
-          <Text color="dimmed" className={classes.modulesLabel} mb={4}>
+          <Text c="dimmed" className={classes.modulesLabel} mb={4}>
             {header}
           </Text>
           {items.map((module) => (
@@ -45,7 +45,7 @@ export const ShipFittingCardModulesSection = memo(
           {showEmptySlots && remainingSlots > 0 && (
             <Group gap="xs" pl={26}>
               {remainingSlots > 0 && (
-                <Text size="xs" color="dimmed">
+                <Text size="xs" c="dimmed">
                   {remainingSlots} Empty Slots
                 </Text>
               )}

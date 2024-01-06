@@ -57,7 +57,7 @@ export const JitaSpotlightAction = ({
             <EveEntityName entityId={action.entityId} />
 
             {action.description && (
-              <Text color="dimmed" size="xs">
+              <Text c="dimmed" size="xs">
                 {action.description}
               </Text>
             )}
@@ -83,7 +83,7 @@ export const JitaSpotlightAction = ({
           <Text>{action.title}</Text>
 
           {action.description && (
-            <Text color="dimmed" size="xs">
+            <Text c="dimmed" size="xs">
               {action.description}
             </Text>
           )}

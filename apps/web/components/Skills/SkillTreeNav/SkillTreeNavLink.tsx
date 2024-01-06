@@ -145,7 +145,7 @@ export const SkillTreeNavLink = memo(
                   </TypeAnchor>
                 </Group>
                 <Group>
-                  <Text size="xs" color="dimmed">
+                  <Text size="xs" c="dimmed">
                     {(
                       characterSkill?.skillpoints_in_skill ?? 0
                     ).toLocaleString()}{" "}

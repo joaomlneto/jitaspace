@@ -92,7 +92,7 @@ export function CharacterAttributesRingProgress({
           />
 
           <div>
-            <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
+            <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
               {attribute}
             </Text>
             <Text fw={700} size="xl">
@@ -134,7 +134,7 @@ export function CharacterAttributesRingProgress({
 
                 <Stack gap={0}>
                   <Group gap="xs" justify="space-between">
-                    <Text color="dimmed" size="xs" tt="uppercase" fw={700}>
+                    <Text c="dimmed" size="xs" tt="uppercase" fw={700}>
                       Remap
                     </Text>
                   </Group>
@@ -156,7 +156,7 @@ export function CharacterAttributesRingProgress({
           <Stack>
             {data?.data.last_remap_date && (
               <Group justify="space-between" gap="xl">
-                <Text size="sm" color="dimmed">
+                <Text size="sm" c="dimmed">
                   Last remap
                 </Text>
                 <Text size="sm">
@@ -169,7 +169,7 @@ export function CharacterAttributesRingProgress({
             )}
             {data?.data.accrued_remap_cooldown_date && (
               <Group justify="space-between" gap="xl">
-                <Text size="sm" color="dimmed">
+                <Text size="sm" c="dimmed">
                   Next remap
                 </Text>
                 <Text size="sm">
@@ -182,7 +182,7 @@ export function CharacterAttributesRingProgress({
             )}
             {data?.data.bonus_remaps && (
               <Group justify="space-between" gap="xl">
-                <Text size="sm" color="dimmed">
+                <Text size="sm" c="dimmed">
                   Bonus Remaps
                 </Text>
                 <Text size="sm">{data.data.bonus_remaps} </Text>

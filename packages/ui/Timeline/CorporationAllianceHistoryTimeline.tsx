@@ -18,6 +18,7 @@ import {
 import { AllianceAvatar } from "../Avatar";
 import { AllianceName } from "../Text";
 
+
 type CorporationAllianceHistoryTimelineProps = Omit<
   TimelineProps,
   "children"
@@ -83,7 +84,7 @@ export const CorporationAllianceHistoryTimeline = memo(
                     />
                   </Anchor>
                 ) : (
-                  <Text color="dimmed">Corporation Founded</Text>
+                  <Text c="dimmed">Corporation Founded</Text>
                 )}
                 {allianceMembership.is_deleted && <Badge>Closed</Badge>}
               </Group>

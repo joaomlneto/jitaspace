@@ -276,7 +276,7 @@ export default function Page({ ships }: PageProps) {
           <TypeAvatar typeId={443} size={48} />
           <Title>Ship Scanning Helper</Title>
         </Group>
-        <Text color="dimmed">
+        <Text c="dimmed">
           This tool helps you combine the results of multiple results from a{" "}
           <TypeAnchor typeId={443} target="_blank">
             Ship Scanner

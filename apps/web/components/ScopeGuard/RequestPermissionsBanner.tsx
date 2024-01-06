@@ -43,12 +43,7 @@ export function RequestPermissionsBanner({
   return (
     <Container className={classes.root}>
       <Title className={classes.title}>Insufficient Scopes</Title>
-      <Text
-        color="dimmed"
-        size="md"
-        ta="center"
-        className={classes.description}
-      >
+      <Text c="dimmed" size="md" ta="center" className={classes.description}>
         We must request additional scopes to continue.
         <br />
         Click the login button to request them.
@@ -95,7 +90,7 @@ export function RequestPermissionsBanner({
         <>
           <Center>
             <Button
-              color="dimmed"
+              c="dimmed"
               variant="subtle"
               onClick={toggleGrantedScopesTable}
             >

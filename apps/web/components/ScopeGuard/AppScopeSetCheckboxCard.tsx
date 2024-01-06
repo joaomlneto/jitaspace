@@ -87,7 +87,7 @@ export function AppScopeSetCheckboxCard({
           {scopeSet.reason} {badge && <Badge size="xs">{badge}</Badge>}
         </Text>
         {showDescription && (
-          <Text color="dimmed" size="xs" style={{ lineHeight: 1 }}>
+          <Text c="dimmed" size="xs" style={{ lineHeight: 1 }}>
             {scopeSet.description}
           </Text>
         )}

@@ -119,7 +119,7 @@ export function MessagePanel({
       {!hideLabels && (
         <Group justify="space-between">
           {mail?.data.labels?.length === 0 && (
-            <Text size="md" color="dimmed">
+            <Text size="md" c="dimmed">
               No labels assigned
             </Text>
           )}

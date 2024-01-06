@@ -147,14 +147,14 @@ export default function Page() {
             {...filterForm.getInputProps("name")}
           />
         </Group>
-        <Text size="sm" color="dimmed">
+        <Text size="sm" c="dimmed">
           {filtersEnabled
             ? `Showing ${entries.length}/${
                 (Object.keys(assets) ?? []).length
               } assets`
             : `${(Object.keys(assets) ?? []).length} assets`}
         </Text>
-        <Text size="sm" color="dimmed">
+        <Text size="sm" c="dimmed">
           Total value: <ISKAmount span amount={totalPrice} />
         </Text>
         {numUndefinedNames > 0 && (

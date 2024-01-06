@@ -129,7 +129,7 @@ export default function Page() {
         )}
         {!errorMessage && (
           <>
-            <Text size="sm" color="dimmed">
+            <Text size="sm" c="dimmed">
               {filtersEnabled
                 ? `Showing ${entries.length}/${
                     (Object.keys(assets) ?? []).length
@@ -167,7 +167,7 @@ export default function Page() {
                   .map((asset) => (
                     <tr key={asset.item_id}>
                       <td>
-                        <Text size="xs" color="dimmed">
+                        <Text size="xs" c="dimmed">
                           {asset.item_id}
                         </Text>
                       </td>

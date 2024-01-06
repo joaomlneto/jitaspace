@@ -32,7 +32,7 @@ export function FooterWithLinks() {
       component={Link}
       href={link.link}
       size="xs"
-      color="dimmed"
+      c="dimmed"
     >
       {link.label}
     </Anchor>
@@ -41,13 +41,9 @@ export function FooterWithLinks() {
   return (
     <div className={classes.footer}>
       <Container size="xl" className={classes.inner}>
-        <Text color="dimmed" size="xs">
+        <Text c="dimmed" size="xs">
           All EVE-related materials are property of{" "}
-          <Anchor
-            color="dimmed"
-            href="https://www.ccpgames.com"
-            target="_blank"
-          >
+          <Anchor c="dimmed" href="https://www.ccpgames.com" target="_blank">
             CCP Games
           </Anchor>
           .
@@ -60,6 +56,7 @@ export function FooterWithLinks() {
               target="_blank"
               size="sm"
               variant="transparent"
+              c="dimmed"
             >
               <IconBrandDiscordFilled />
             </ActionIcon>
