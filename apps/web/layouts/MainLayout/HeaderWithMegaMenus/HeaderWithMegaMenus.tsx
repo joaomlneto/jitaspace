@@ -2,19 +2,18 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  AppShell,
   Box,
   Burger,
   Center,
   Container,
   Group,
   Loader,
-  rem,
   Text,
   Title,
   UnstyledButton,
+  useMantineTheme,
 } from "@mantine/core";
-import { useDisclosure, useHeadroom } from "@mantine/hooks";
+import { useDisclosure } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
 import { openSpotlight } from "@mantine/spotlight";
 
@@ -39,36 +38,42 @@ import UserButton from "../UserButton";
 import classes from "./HeaderWithMegaMenus.module.css";
 import { MobileHeaderDrawer } from "./MobileHeaderDrawer";
 
-export function HeaderWithMegaMenus() {
+export type HeaderWithMegaMenusProps = {
+  pinned: boolean;
+};
+
+export function HeaderWithMegaMenus({ pinned }: HeaderWithMegaMenusProps) {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
   const characterIds = useAuthenticatedCharacterIds();
-  const pinned = useHeadroom({
+  /*const pinned = useHeadroom({
     fixedAt: 120,
     onRelease: () => {
       closeDrawer();
     },
-  });
+  });*/
+  const theme = useMantineTheme();
 
   return (
-    <Box pb="xs">
-      <AppShell.Header
-        //height={60}
-        px="md"
-        style={{
-          transform: `translate3d(0, ${pinned ? 0 : rem(-110)}, 0)`,
-          transition: "transform 400ms ease",
-        }}
+    <Box h="100%" px="md">
+      <div
+        className={classes.header}
+        style={
+          {
+            //transform: `translate3d(0, ${pinned ? 0 : rem(-60)}, 0)`,
+            //transition: "transform 400ms ease",
+          }
+        }
       >
         <Container size="xl" h={60} p={0}>
           <Group justify="space-between" h="100%" gap="xs">
-            <Link href="/" className={classes.link}>
-              <Group>
+            <Group h="100%">
+              <Link href="/" className={classes.link}>
                 <Image src="/logo.png" alt="Jita logo" width={30} height={30} />
-              </Group>
-            </Link>
+              </Link>
+            </Group>
 
-            <Group style={{ height: "100%" }} gap={0} visibleFrom="sm">
+            <Group h="100%" gap={0} visibleFrom="sm">
               <DesktopHeaderLinkGroup
                 title="Character Tools"
                 Icon={(props) => <CharacterSheetIcon {...props} />}
@@ -137,8 +142,7 @@ export function HeaderWithMegaMenus() {
             />
           </Group>
         </Container>
-      </AppShell.Header>
-
+      </div>
       <MobileHeaderDrawer
         opened={drawerOpened}
         toggle={toggleDrawer}
