@@ -4,11 +4,9 @@ import Link, { type LinkProps } from "next/link";
 import { useRouter } from "next/router";
 import {
   ActionIcon,
-  Alert,
   Anchor,
   Badge,
   Card,
-  Center,
   Container,
   Group,
   rem,
@@ -20,7 +18,6 @@ import {
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";
-import { useLocalStorage } from "@mantine/hooks";
 import { modals, openContextModal } from "@mantine/modals";
 import { IconCircleX } from "@tabler/icons-react";
 
@@ -66,38 +63,8 @@ export default function Page() {
   const { characters, removeCharacter, selectCharacter, selectedCharacter } =
     useAuthStore();
 
-  const [{ closed }, setNewsState] = useLocalStorage({
-    key: "jitaspace-news-added-support-multiple-characters",
-    defaultValue: { closed: false },
-  });
-
   return (
     <Container size="lg">
-      {!closed && (
-        <Center>
-          <Alert
-            title="Added Support for Multiple Characters"
-            withCloseButton
-            onClose={() => {
-              setNewsState({ closed: true });
-            }}
-            color="red"
-            maw={600}
-          >
-            <p>
-              You can now log in with multiple characters at a time and switch
-              between them using the menu in the top-right corner.
-            </p>
-            <p>
-              However, to guarantee it works properly,{" "}
-              <b>
-                <u>please log out of your existing character sessions</u>
-              </b>{" "}
-              and re-add them afterwards!
-            </p>
-          </Alert>
-        </Center>
-      )}
       <Stack my="md" gap="xs">
         {Object.values(characters).map((character) => (
           <Group justify="space-between" key={character.characterId}>
