@@ -56,20 +56,12 @@ export function HeaderWithMegaMenus({ pinned }: HeaderWithMegaMenusProps) {
 
   return (
     <Box h="100%" px="md">
-      <div
-        className={classes.header}
-        style={
-          {
-            //transform: `translate3d(0, ${pinned ? 0 : rem(-60)}, 0)`,
-            //transition: "transform 400ms ease",
-          }
-        }
-      >
+      <div className={classes.header}>
         <Container size="xl" h={60} p={0}>
           <Group justify="space-between" h="100%" gap="xs">
             <Group h="100%">
               <Link href="/" className={classes.link}>
-                <Image src="/logo.png" alt="Jita logo" width={30} height={30} />
+                <Image src="/logo.png" alt="Jita logo" width={32} height={32} />
               </Link>
             </Group>
 
