@@ -11,6 +11,7 @@ import "@mantine/dropzone/styles.css";
 import "@mantine/carousel/styles.css";
 import "@mantine/spotlight/styles.css";
 import "@mantine/nprogress/styles.css";
+import "mantine-react-table/styles.css";
 
 import React, {
   useEffect,
@@ -41,6 +42,7 @@ import { useAuthStore } from "@jitaspace/hooks";
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
+import { themes } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
 
 
@@ -270,7 +272,7 @@ export default function App({
         <SessionProvider session={session}>
           <EsiClientSSOAccessTokenInjector>
             <EveIconsContextProvider /* iconVersion="rhea"*/>
-              <MantineProvider forceColorScheme="dark">
+              <MantineProvider forceColorScheme="dark" theme={themes.gallente}>
                 <Notifications />
                 <RouterTransition />
                 <JitaSpotlightProvider>
