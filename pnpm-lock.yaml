@@ -171,7 +171,7 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       mantine-react-table:
-        specifier: ^2.0.0-alpha.9
+        specifier: 2.0.0-alpha.9
         version: 2.0.0-alpha.9(@mantine/core@7.4.0)(@mantine/dates@7.4.0)(@mantine/hooks@7.4.0)(@tabler/icons-react@2.45.0)(dayjs@1.11.10)(react-dom@18.2.0)(react@18.2.0)
       next:
         specifier: ^14.0.4
@@ -923,7 +923,7 @@ importers:
         specifier: ^7.4.0
         version: 7.4.0(@mantine/core@7.4.0)(@mantine/hooks@7.4.0)(@tabler/icons-react@2.45.0)(@tiptap/extension-link@2.1.13)(react-dom@18.2.0)(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.44.0
+        specifier: ^2.45.0
         version: 2.45.0(react@18.2.0)
       '@tiptap/extension-character-count':
         specifier: ^2.1.13
@@ -1050,7 +1050,7 @@ importers:
         specifier: ^7.4.0
         version: 7.4.0(@mantine/core@7.4.0)(@mantine/hooks@7.4.0)(@tabler/icons-react@2.45.0)(@tiptap/extension-link@2.1.13)(react-dom@18.2.0)(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.44.0
+        specifier: ^2.45.0
         version: 2.45.0(react@18.2.0)
       '@tiptap/extension-color':
         specifier: ^2.1.13
@@ -5935,6 +5935,11 @@ packages:
     engines: {node: '>=6'}
     dev: false
 
+  /clsx@2.1.0:
+    resolution: {integrity: sha512-m3iNNWpd9rl3jvvcBnu70ylMdrXt8Vlq4HYadnU5fwcOtvkSQWPmj7amUcDT2qYI7risszBjI5AUIUox9D16pg==}
+    engines: {node: '>=6'}
+    dev: false
+
   /code-error-fragment@0.0.230:
     resolution: {integrity: sha512-cadkfKp6932H8UkhzE/gcUqhRMNf8jHzkAN7+5Myabswaghu4xABTgPHDCjW+dBAJxj/SpkTYokpzDqY4pCzQw==}
     engines: {node: '>= 4'}
@@ -8826,7 +8831,7 @@ packages:
       '@tanstack/match-sorter-utils': 8.8.4
       '@tanstack/react-table': 8.10.7(react-dom@18.2.0)(react@18.2.0)
       '@tanstack/react-virtual': 3.0.1(react-dom@18.2.0)(react@18.2.0)
-      clsx: 2.0.0
+      clsx: 2.1.0
       dayjs: 1.11.10
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -10449,7 +10454,7 @@ packages:
       react: ^16.0.0 || ^17.0.0 || ^18.0.0
       react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0
     dependencies:
-      clsx: 2.0.0
+      clsx: 2.1.0
       eventemitter3: 4.0.7
       lodash: 4.17.21
       prop-types: 15.8.1
