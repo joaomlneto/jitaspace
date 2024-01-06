@@ -271,8 +271,8 @@ export default function App({
 
         <SessionProvider session={session}>
           <EsiClientSSOAccessTokenInjector>
-            <EveIconsContextProvider /* iconVersion="rhea"*/>
-              <MantineProvider forceColorScheme="dark" theme={themes.gallente}>
+            <EveIconsContextProvider /*iconVersion="rhea"*/>
+              <MantineProvider defaultColorScheme="dark" theme={themes.default}>
                 <Notifications />
                 <RouterTransition />
                 <JitaSpotlightProvider>

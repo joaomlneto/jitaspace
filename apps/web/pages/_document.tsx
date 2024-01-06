@@ -26,7 +26,7 @@ export default class _Document extends Document {
     return (
       <Html lang="en">
         <Head>
-          <ColorSchemeScript />
+          <ColorSchemeScript defaultColorScheme="dark" />
           <link
             rel="apple-touch-icon"
             sizes="152x152"
