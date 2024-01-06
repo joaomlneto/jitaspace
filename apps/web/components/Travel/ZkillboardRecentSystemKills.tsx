@@ -89,7 +89,7 @@ export const ZkillboardRecentSystemKills = memo(
       <>
         <Stack gap="xs">
           {lastChecked && (
-            <Text size="xs" color="dimmed">
+            <Text size="xs" c="dimmed">
               Last checked <TimeAgoText span date={lastChecked} addSuffix />.
               Updates hourly.
             </Text>

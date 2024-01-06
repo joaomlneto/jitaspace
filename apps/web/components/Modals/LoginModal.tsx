@@ -57,7 +57,7 @@ export function LoginModal({
     <Container p={0}>
       {!showAppSelector && (
         <>
-          <Text size="sm" color="dimmed">
+          <Text size="sm" c="dimmed">
             Click to log in with all required scopes to use all of the features
             on the website.
           </Text>
@@ -88,7 +88,7 @@ export function LoginModal({
 
       {showAppSelector && (
         <>
-          <Text size="sm" color="dimmed">
+          <Text size="sm" c="dimmed">
             Select which features you would like to enable and click the login
             button.
           </Text>
@@ -146,7 +146,7 @@ export function LoginModal({
         </>
       )}
       <Collapse in={showScopesTable}>
-        <Text size="sm" color="dimmed">
+        <Text size="sm" c="dimmed">
           List of scopes to be requested:
         </Text>
         <ScopesTable scopes={[...selectedScopes]} showRawScopeNames />

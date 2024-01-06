@@ -21,6 +21,7 @@ import {
 } from "~/components/Fitting";
 import { MainLayout } from "~/layouts";
 
+
 export default function Page() {
   const [selectedShipType, setSelectedShipType] = useState<string | null>(null);
   const character = useSelectedCharacter();
@@ -84,7 +85,7 @@ export default function Page() {
             />
           </UnstyledButton>
         ) : (
-          <Text color="dimmed" size="sm">
+          <Text c="dimmed" size="sm">
             Insufficient permissions to get current fit of character.
           </Text>
         )}

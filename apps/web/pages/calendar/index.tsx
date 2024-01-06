@@ -114,7 +114,7 @@ export default function Page() {
           )}
           {!isLoading && !hasMoreEvents && (
             <Center>
-              <Text color="dimmed">No more events</Text>
+              <Text c="dimmed">No more events</Text>
             </Center>
           )}
         </Container>

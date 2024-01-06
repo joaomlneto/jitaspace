@@ -78,12 +78,12 @@ export default function Page() {
                 </Title>
                 <WarAggressorTickerBadge warId={warId} />
               </Group>
-              <Text color="dimmed">Aggressor</Text>
-              <Text color="dimmed">
+              <Text c="dimmed">Aggressor</Text>
+              <Text c="dimmed">
                 ISK Destroyed:{" "}
                 <ISKAmount span amount={war?.data.aggressor.isk_destroyed} />
               </Text>
-              <Text color="dimmed">
+              <Text c="dimmed">
                 Ships Killed: {war?.data.aggressor.ships_killed}
               </Text>
             </div>
@@ -109,12 +109,12 @@ export default function Page() {
                 </Title>
                 <WarDefenderTickerBadge warId={warId} />
               </Group>
-              <Text color="dimmed">Defender</Text>
-              <Text color="dimmed">
+              <Text c="dimmed">Defender</Text>
+              <Text c="dimmed">
                 ISK Destroyed:{" "}
                 <ISKAmount span amount={war?.data.defender.isk_destroyed} />
               </Text>
-              <Text color="dimmed">
+              <Text c="dimmed">
                 Ships Killed: {war?.data.defender.ships_killed}
               </Text>
             </div>

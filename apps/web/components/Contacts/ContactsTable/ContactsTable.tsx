@@ -89,7 +89,7 @@ export const ContactsTable = ({
                 {!hideBlockedColumn && (
                   <td>
                     {contact.is_blocked === undefined ? (
-                      <Text color="dimmed">
+                      <Text c="dimmed">
                         <i>Unknown</i>
                       </Text>
                     ) : contact.is_blocked ? (

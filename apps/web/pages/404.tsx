@@ -60,7 +60,7 @@ export default function Page() {
         You have found a secret place.
       </Title>
       <Text
-        color="dimmed"
+        c="dimmed"
         size="lg"
         ta="center"
         style={{

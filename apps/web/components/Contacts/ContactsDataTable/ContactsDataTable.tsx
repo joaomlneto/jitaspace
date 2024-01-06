@@ -111,7 +111,7 @@ export const ContactsDataTable = memo(
             const isBlocked = cell.getValue<boolean | undefined>();
             if (isBlocked === undefined) {
               return (
-                <Text color="dimmed" fs="italic">
+                <Text c="dimmed" fs="italic">
                   Unknown
                 </Text>
               );

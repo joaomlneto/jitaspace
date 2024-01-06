@@ -65,7 +65,7 @@ export const MobileHeaderLinkGroup = memo(
                   <Text size="sm" fw={500}>
                     {app.name}
                   </Text>
-                  <Text size="xs" color="dimmed" lineClamp={2}>
+                  <Text size="xs" c="dimmed" lineClamp={2}>
                     {app.description}
                   </Text>
                 </div>

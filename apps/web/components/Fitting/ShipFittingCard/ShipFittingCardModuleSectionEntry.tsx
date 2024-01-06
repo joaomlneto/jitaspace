@@ -19,7 +19,7 @@ export const ShipFittingCardModuleSectionEntry = memo(
       <Group wrap="nowrap" gap="xs" py={0} my={0}>
         <TypeAvatar typeId={typeId} variation="icon" size="xs" />
         {quantity && quantity > 1 && (
-          <Text size="xs" color="dimmed">
+          <Text size="xs" c="dimmed">
             {quantity}
           </Text>
         )}
@@ -29,7 +29,7 @@ export const ShipFittingCardModuleSectionEntry = memo(
         {ammo && (
           <Group wrap="nowrap" gap="xs" py={0} my={0}>
             <TypeAvatar typeId={ammo.typeId} variation="icon" size="xs" />
-            <TypeName typeId={ammo.typeId} size="xs" color="dimmed" />
+            <TypeName typeId={ammo.typeId} size="xs" c="dimmed" />
           </Group>
         )}
       </Group>

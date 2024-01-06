@@ -38,7 +38,7 @@ export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
       <Paper withBorder p="md" radius="md" key={stat.title}>
         <Grid>
           <Grid.Col span="auto">
-            <Text size="xs" color="dimmed" className={classes.title}>
+            <Text size="xs" c="dimmed" className={classes.title}>
               {stat.title}
             </Text>
           </Grid.Col>

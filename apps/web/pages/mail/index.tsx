@@ -184,7 +184,7 @@ export default function Page() {
         )}
         {!isLoading && !hasMoreMessages && (
           <Center>
-            <Text color="dimmed">No more messages</Text>
+            <Text c="dimmed">No more messages</Text>
           </Center>
         )}
       </Stack>

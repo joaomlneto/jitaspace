@@ -85,7 +85,7 @@ export function AppCheckboxCard({
           <Text fw={500} size="sm" style={{ lineHeight: 1 }} mb={5}>
             {app.name}
           </Text>
-          <Text color="dimmed" size="xs" style={{ lineHeight: 1.2 }}>
+          <Text c="dimmed" size="xs" style={{ lineHeight: 1.2 }}>
             {app.description}
           </Text>
         </div>
