@@ -49,17 +49,15 @@ export const EsiSearchSelect = memo(
     const isLoadingData: boolean =
       isLoading || searchValue !== debouncedSearchValue;
 
-    const onChange = (value: string | null) => {
-      setValue(value);
-      otherProps.onChange?.(value);
-    };
-
     return (
       <Select
         //filter={() => true}
         data={data}
         value={otherProps.value ?? value}
-        onChange={onChange}
+        onChange={(value: string | null, option) => {
+          setValue(value);
+          otherProps.onChange?.(value, option);
+        }}
         searchable
         searchValue={searchValue}
         onSearchChange={onSearchChange}
