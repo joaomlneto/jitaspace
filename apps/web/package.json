@@ -42,7 +42,6 @@
     "@mantine/modals": "^7.4.0",
     "@mantine/notifications": "^7.4.0",
     "@mantine/nprogress": "^7.4.0",
-    "@mantine/prism": "^6.0.21",
     "@mantine/spotlight": "^7.4.0",
     "@mantine/tiptap": "^7.4.0",
     "@next/bundle-analyzer": "^14.0.4",
