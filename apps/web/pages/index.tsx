@@ -257,7 +257,7 @@ export default function Page() {
         ))}
       </SimpleGrid>
       <Title order={3}>Development Tools</Title>
-      <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2, sm: 3 }}>
+      <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2 }}>
         {devApps.map((feature) => (
           <UnstyledButton
             component={feature.url ? Link : Link}
