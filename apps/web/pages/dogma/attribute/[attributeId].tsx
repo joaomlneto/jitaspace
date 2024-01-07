@@ -1,23 +1,14 @@
-import React, { useMemo, type ReactElement } from "react";
-import { GetStaticPaths, GetStaticProps } from "next";
-import { useRouter } from "next/router";
-import {
-  Container,
-  Group,
-  Loader,
-  Stack,
-  Table,
-  Text,
-  Title,
-} from "@mantine/core";
+import {prisma} from "@jitaspace/db";
+import {useDogmaAttribute} from "@jitaspace/hooks";
+import {sanitizeFormattedEveString} from "@jitaspace/tiptap-eve";
+import {TypeAnchor, TypeAvatar, TypeName} from "@jitaspace/ui";
+import {Container, Group, Loader, Stack, Table, Text, Title,} from "@mantine/core";
+import {GetStaticPaths, GetStaticProps} from "next";
+import {useRouter} from "next/router";
+import React, {type ReactElement, useMemo} from "react";
 
-import { prisma } from "@jitaspace/db";
-import { useDogmaAttribute } from "@jitaspace/hooks";
-import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
-
-import { MailMessageViewer } from "~/components/EveMail";
-import { MainLayout } from "~/layouts";
+import {MailMessageViewer} from "~/components/EveMail";
+import {MainLayout} from "~/layouts";
 
 
 type PageProps = {
@@ -106,16 +97,16 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 };
 
 export default function Page({
-  name,
-  description,
-  published,
-  types,
-  groups,
-}: PageProps) {
+                               name,
+                               description,
+                               published,
+                               types,
+                               groups,
+                             }: PageProps) {
   const router = useRouter();
   const attributeId = Number(router.query.attributeId as string);
 
-  const { data: attribute } = useDogmaAttribute(attributeId);
+  const {data: attribute} = useDogmaAttribute(attributeId);
 
   const groupTypes = useMemo(() => {
     const map: Record<number, (typeof types)[number][]> = {};
@@ -132,7 +123,7 @@ export default function Page({
     return (
       <Container size="sm">
         <Group>
-          <Loader />
+          <Loader/>
           <Text>Loading attribute information...</Text>
         </Group>
       </Container>
@@ -213,17 +204,17 @@ export default function Page({
               </Title>
               <Table highlightOnHover>
                 {groupTypes[group.groupId]?.map((type) => (
-                  <tr key={type.typeId}>
-                    <td>
+                  <Table.Tr key={type.typeId}>
+                    <Table.Td>
                       <Group gap="xs">
-                        <TypeAvatar size="sm" typeId={type.typeId} />
+                        <TypeAvatar size="sm" typeId={type.typeId}/>
                         <TypeAnchor typeId={type.typeId} target="_blank">
-                          <TypeName typeId={type.typeId} />
+                          <TypeName typeId={type.typeId}/>
                         </TypeAnchor>
                       </Group>
-                    </td>
-                    <td align="right">{type.value}</td>
-                  </tr>
+                    </Table.Td>
+                    <Table.Td align="right">{type.value}</Table.Td>
+                  </Table.Tr>
                 ))}
               </Table>
             </div>

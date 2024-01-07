@@ -1,18 +1,7 @@
-import React, { memo } from "react";
-import { Badge, Group, Table } from "@mantine/core";
-
-import { CharacterAsset } from "@jitaspace/hooks";
-import {
-  EveEntityAnchor,
-  EveEntityName,
-  ISKAmount,
-  TypeAnchor,
-  TypeAvatar,
-  TypeName,
-} from "@jitaspace/ui";
-
-
-
+import {CharacterAsset} from "@jitaspace/hooks";
+import {EveEntityAnchor, EveEntityName, ISKAmount, TypeAnchor, TypeAvatar, TypeName,} from "@jitaspace/ui";
+import {Badge, Group, Table} from "@mantine/core";
+import React, {memo} from "react";
 
 
 type AssetsTableProps = {
@@ -22,27 +11,27 @@ type AssetsTableProps = {
   })[];
 };
 
-export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
+export const AssetsTable = memo(({assets}: AssetsTableProps) => {
   return (
     <Table highlightOnHover>
-      <thead>
-        <tr>
+      <Table.Thead>
+        <Table.Tr>
           <th>Qty</th>
           <th>Type</th>
           <th>Price</th>
           <th>Location</th>
-        </tr>
-      </thead>
-      <tbody>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
         {assets.map((asset) => (
-          <tr key={asset.item_id}>
-            <td align="right">{asset.quantity}</td>
-            <td>
+          <Table.Tr key={asset.item_id}>
+            <Table.Td align="right">{asset.quantity}</Table.Td>
+            <Table.Td>
               <Group gap="xs" justify="space-between">
                 <Group wrap="nowrap" gap="xs">
-                  <TypeAvatar size="xs" typeId={asset.type_id} />
+                  <TypeAvatar size="xs" typeId={asset.type_id}/>
                   <TypeAnchor typeId={asset.type_id}>
-                    <TypeName typeId={asset.type_id} />
+                    <TypeName typeId={asset.type_id}/>
                   </TypeAnchor>
                 </Group>
                 <Group gap="xs" justify="flex-end">
@@ -50,21 +39,21 @@ export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
                   {asset.is_blueprint_copy && <Badge size="xs">BPC</Badge>}
                 </Group>
               </Group>
-            </td>
-            <td>
-              {asset.price && <ISKAmount ta="right" amount={asset.price} />}
-            </td>
+            </Table.Td>
+            <Table.Td>
+              {asset.price && <ISKAmount ta="right" amount={asset.price}/>}
+            </Table.Td>
 
-            <td>
+            <Table.Td>
               <Group gap="xs">
                 <EveEntityAnchor entityId={asset.location_id}>
-                  <EveEntityName entityId={asset.location_id} />
+                  <EveEntityName entityId={asset.location_id}/>
                 </EveEntityAnchor>
               </Group>
-            </td>
-          </tr>
+            </Table.Td>
+          </Table.Tr>
         ))}
-      </tbody>
+      </Table.Tbody>
     </Table>
   );
 });

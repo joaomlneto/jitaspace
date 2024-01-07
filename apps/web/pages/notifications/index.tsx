@@ -1,62 +1,45 @@
-import React, { type ReactElement } from "react";
-import {
-  Container,
-  Group,
-  JsonInput,
-  Stack,
-  Table,
-  Title,
-  Tooltip,
-} from "@mantine/core";
-import { IconMail, IconMailOpened } from "@tabler/icons-react";
-import { NextSeo } from "next-seo";
+import {MemberIcon} from "@jitaspace/eve-icons";
+import {useEsiCharacterNotifications, useSelectedCharacter,} from "@jitaspace/hooks";
+import {EveEntityAvatar, EveEntityName, FormattedDateText, TimeAgoText,} from "@jitaspace/ui";
+import {Container, Group, JsonInput, Stack, Table, Title, Tooltip,} from "@mantine/core";
+import {IconMail, IconMailOpened} from "@tabler/icons-react";
+import {NextSeo} from "next-seo";
+import React, {type ReactElement} from "react";
 
-import { MemberIcon } from "@jitaspace/eve-icons";
-import {
-  useEsiCharacterNotifications,
-  useSelectedCharacter,
-} from "@jitaspace/hooks";
-import {
-  EveEntityAvatar,
-  EveEntityName,
-  FormattedDateText,
-  TimeAgoText,
-} from "@jitaspace/ui";
-
-import { MainLayout } from "~/layouts";
+import {MainLayout} from "~/layouts";
 
 export default function Page() {
   const character = useSelectedCharacter();
-  const { data } = useEsiCharacterNotifications(character?.characterId);
+  const {data} = useEsiCharacterNotifications(character?.characterId);
   return (
     <Container size="xl">
       <Stack>
         <Group>
-          <MemberIcon width={48} />
+          <MemberIcon width={48}/>
           <Title>Notifications</Title>
         </Group>
         <Table highlightOnHover>
-          <tbody>
+          <Table.Tbody>
             {data?.data.map((notification) => (
-              <tr key={notification.notification_id}>
-                <td>
+              <Table.Tr key={notification.notification_id}>
+                <Table.Td>
                   <Group wrap="nowrap" gap="xs">
-                    <EveEntityAvatar entityId={notification.sender_id} />
-                    <EveEntityName entityId={notification.sender_id} />
+                    <EveEntityAvatar entityId={notification.sender_id}/>
+                    <EveEntityName entityId={notification.sender_id}/>
                   </Group>
-                </td>
-                <td>
+                </Table.Td>
+                <Table.Td>
                   {notification.is_read ? (
-                    <IconMailOpened strokeWidth={1} />
+                    <IconMailOpened strokeWidth={1}/>
                   ) : (
-                    <IconMail strokeWidth={1} />
+                    <IconMail strokeWidth={1}/>
                   )}
-                </td>
-                <td>{notification.type}</td>
-                <td>
-                  <JsonInput value={notification.text} cols={80} autosize />
-                </td>
-                <td>
+                </Table.Td>
+                <Table.Td>{notification.type}</Table.Td>
+                <Table.Td>
+                  <JsonInput value={notification.text} cols={80} autosize/>
+                </Table.Td>
+                <Table.Td>
                   <Tooltip
                     color="dark"
                     label={
@@ -72,10 +55,10 @@ export default function Page() {
                       />
                     </div>
                   </Tooltip>
-                </td>
-              </tr>
+                </Table.Td>
+              </Table.Tr>
             ))}
-          </tbody>
+          </Table.Tbody>
         </Table>
       </Stack>
     </Container>
@@ -85,7 +68,7 @@ export default function Page() {
 Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
-      <NextSeo title="Notifications" />
+      <NextSeo title="Notifications"/>
       {page}
     </MainLayout>
   );

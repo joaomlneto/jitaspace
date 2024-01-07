@@ -1,7 +1,6 @@
-import { useMemo } from "react";
-import { Badge, Table } from "@mantine/core";
-
-import { getScopeDescription, type ESIScope } from "@jitaspace/esi-metadata";
+import {type ESIScope, getScopeDescription} from "@jitaspace/esi-metadata";
+import {Badge, Table} from "@mantine/core";
+import {useMemo} from "react";
 
 import classes from "./ScopesTable.module.css";
 
@@ -11,7 +10,7 @@ export type ScopesTableProps = {
   showRawScopeNames?: boolean;
 };
 
-export function ScopesTable({ scopes, showRawScopeNames }: ScopesTableProps) {
+export function ScopesTable({scopes, showRawScopeNames}: ScopesTableProps) {
   const scopeData: {
     id: ESIScope;
     category: string;
@@ -36,36 +35,36 @@ export function ScopesTable({ scopes, showRawScopeNames }: ScopesTableProps) {
 
   return (
     <Table fz="xs" className={classes.scopesTable} highlightOnHover>
-      <tbody>
+      <Table.Tbody>
         {scopeData.map((scope) => (
-          <tr key={scope.id}>
+          <Table.Tr key={scope.id}>
             {!showRawScopeNames && (
               <>
-                <td>
+                <Table.Td>
                   <Badge size="xs" variant="light" color="dark">
                     {scope.category}
                   </Badge>
-                </td>
-                <td>
+                </Table.Td>
+                <Table.Td>
                   <Badge size="xs" variant="light" color="dark">
                     {scope.permission}
                   </Badge>
-                </td>
+                </Table.Td>
               </>
             )}
             {showRawScopeNames && (
               <>
-                <td>
+                <Table.Td>
                   <Badge size="xs" variant="light" color="dark">
                     {scope.id}
                   </Badge>
-                </td>
+                </Table.Td>
               </>
             )}
-            <td align="left">{scope.description}</td>
-          </tr>
+            <Table.Td align="left">{scope.description}</Table.Td>
+          </Table.Tr>
         ))}
-      </tbody>
+      </Table.Tbody>
     </Table>
   );
 }

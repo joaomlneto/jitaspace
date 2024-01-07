@@ -1,18 +1,5 @@
-import React from "react";
-import {
-  Anchor,
-  Avatar,
-  Group,
-  Table,
-  Text,
-  Title,
-  Tooltip,
-  type TableProps,
-} from "@mantine/core";
-import { openContextModal } from "@mantine/modals";
-
-import { WarningIcon } from "@jitaspace/eve-icons";
-import { CalendarEvent } from "@jitaspace/hooks";
+import {WarningIcon} from "@jitaspace/eve-icons";
+import {CalendarEvent} from "@jitaspace/hooks";
 import {
   CalendarEventAttendeesAvatarGroup,
   CalendarEventHumanDurationText,
@@ -22,6 +9,9 @@ import {
   CalendarEventResponseBadge,
   FormattedDateText,
 } from "@jitaspace/ui";
+import {Anchor, Avatar, Group, Table, type TableProps, Text, Title, Tooltip,} from "@mantine/core";
+import {openContextModal} from "@mantine/modals";
+import React from "react";
 
 type EventListProps = TableProps & {
   characterId: number;
@@ -29,16 +19,16 @@ type EventListProps = TableProps & {
 };
 
 export function DesktopCalendarEventList({
-  characterId,
-  events,
-  ...otherProps
-}: EventListProps) {
+                                           characterId,
+                                           events,
+                                           ...otherProps
+                                         }: EventListProps) {
   return (
     <Table {...otherProps}>
-      <tbody>
+      <Table.Tbody>
         {events.map((event) => (
-          <tr key={event.event_id}>
-            <td width={10}>
+          <Table.Tr key={event.event_id}>
+            <Table.Td width={10}>
               <Tooltip
                 label={
                   <CalendarEventHumanDurationText
@@ -54,8 +44,8 @@ export function DesktopCalendarEventList({
                   />
                 </Text>
               </Tooltip>
-            </td>
-            <td>
+            </Table.Td>
+            <Table.Td>
               <Group wrap="nowrap">
                 <Tooltip
                   label={
@@ -79,7 +69,7 @@ export function DesktopCalendarEventList({
                   </Avatar>
                 </Tooltip>
                 <Group wrap="nowrap" gap="xs">
-                  {event.importance === 1 && <WarningIcon width={20} />}
+                  {event.importance === 1 && <WarningIcon width={20}/>}
                   <Anchor
                     lineClamp={1}
                     onClick={() => {
@@ -89,13 +79,13 @@ export function DesktopCalendarEventList({
                           title: (
                             <Title order={4}>
                               {event.importance === 1 && (
-                                <WarningIcon width={32} />
+                                <WarningIcon width={32}/>
                               )}
                               {event.title}
                             </Title>
                           ),
                           size: "lg",
-                          innerProps: { characterId, eventId: event.event_id },
+                          innerProps: {characterId, eventId: event.event_id},
                         });
                       }
                     }}
@@ -104,8 +94,8 @@ export function DesktopCalendarEventList({
                   </Anchor>
                 </Group>
               </Group>
-            </td>
-            <td align="right" width={1}>
+            </Table.Td>
+            <Table.Td align="right" width={1}>
               <Group justify="flex-end">
                 <CalendarEventAttendeesAvatarGroup
                   characterId={characterId}
@@ -115,17 +105,17 @@ export function DesktopCalendarEventList({
                   radius="xl"
                 />
               </Group>
-            </td>
-            <td align="right" width={1}>
+            </Table.Td>
+            <Table.Td align="right" width={1}>
               <CalendarEventResponseBadge
                 characterId={characterId}
                 w={130}
                 eventId={event.event_id}
               />
-            </td>
-          </tr>
+            </Table.Td>
+          </Table.Tr>
         ))}
-      </tbody>
+      </Table.Tbody>
     </Table>
   );
 }

@@ -25,10 +25,10 @@ export const MobileMailboxTable = ({
 
   return (
     <Table highlightOnHover {...otherProps}>
-      <tbody>
+      <Table.Tbody>
         {visibleMessages.map((message) => (
-          <tr key={message.mail_id}>
-            <td>
+          <Table.Tr key={message.mail_id}>
+            <Table.Td>
               <Stack gap="xs">
                 <Group justify="space-between" gap="xs">
                   <Group wrap="nowrap" gap="xs">
@@ -116,10 +116,10 @@ export const MobileMailboxTable = ({
                     ))}
                 </Anchor>
               </Stack>
-            </td>
-          </tr>
+            </Table.Td>
+          </Table.Tr>
         ))}
-      </tbody>
+      </Table.Tbody>
     </Table>
   );
 };

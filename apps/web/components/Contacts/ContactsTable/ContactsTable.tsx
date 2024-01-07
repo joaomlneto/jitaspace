@@ -32,21 +32,21 @@ export const ContactsTable = ({
 }: ContactsTableProps) => {
   return (
     <Table highlightOnHover>
-      <thead>
-        <tr>
+      <Table.Thead>
+        <Table.Tr>
           <th>Name</th>
           <th>Labels</th>
           <th>Standing</th>
           {!hideBlockedColumn && <th>Blocked?</th>}
-        </tr>
-      </thead>
-      <tbody>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
         {contacts
           ?.sort((a, b) => b.standing - a.standing)
           .map((contact) => {
             return (
-              <tr key={contact.contact_id}>
-                <td>
+              <Table.Tr key={contact.contact_id}>
+                <Table.Td>
                   <Group>
                     <StandingIndicator standing={contact.standing}>
                       <EveEntityAvatar
@@ -70,8 +70,8 @@ export const ContactsTable = ({
                       </Badge>
                     )}
                   </Group>
-                </td>
-                <td>
+                </Table.Td>
+                <Table.Td>
                   <Group gap="xs">
                     {contact.label_ids?.map((labelId) => (
                       <Badge size="sm" key={labelId}>
@@ -82,12 +82,12 @@ export const ContactsTable = ({
                       </Badge>
                     ))}
                   </Group>
-                </td>
-                <td>
+                </Table.Td>
+                <Table.Td>
                   <StandingsBadge standing={contact.standing} size="sm" />
-                </td>
+                </Table.Td>
                 {!hideBlockedColumn && (
-                  <td>
+                  <Table.Td>
                     {contact.is_blocked === undefined ? (
                       <Text c="dimmed">
                         <i>Unknown</i>
@@ -97,12 +97,12 @@ export const ContactsTable = ({
                     ) : (
                       "No"
                     )}
-                  </td>
+                  </Table.Td>
                 )}
-              </tr>
+              </Table.Tr>
             );
           })}
-      </tbody>
+      </Table.Tbody>
     </Table>
   );
 };

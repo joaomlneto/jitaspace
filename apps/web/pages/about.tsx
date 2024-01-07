@@ -41,10 +41,10 @@ export default function Page() {
           channels:
         </Text>
         <Table highlightOnHover fz="sm">
-          <tbody>
-            <tr>
-              <td>In-game</td>
-              <td align="right">
+          <Table.Tbody>
+            <Table.Tr>
+              <Table.Td>In-game</Table.Td>
+              <Table.Td align="right">
                 <Group justify="flex-end" gap="xs" wrap="nowrap">
                   <CharacterAvatar characterId={MY_CHARACTER_ID} size="sm" />
                   <CharacterAnchor
@@ -54,11 +54,11 @@ export default function Page() {
                     <CharacterName characterId={MY_CHARACTER_ID} />
                   </CharacterAnchor>
                 </Group>
-              </td>
-            </tr>
-            <tr>
-              <td>Discord</td>
-              <td align="right">
+              </Table.Td>
+            </Table.Tr>
+            <Table.Tr>
+              <Table.Td>Discord</Table.Td>
+              <Table.Td align="right">
                 <ActionIcon
                   component="a"
                   href={env.NEXT_PUBLIC_DISCORD_INVITE_LINK}
@@ -68,17 +68,17 @@ export default function Page() {
                 >
                   <IconBrandDiscordFilled />
                 </ActionIcon>
-              </td>
-            </tr>
-            <tr>
-              <td>Email</td>
-              <td align="right">
+              </Table.Td>
+            </Table.Tr>
+            <Table.Tr>
+              <Table.Td>Email</Table.Td>
+              <Table.Td align="right">
                 <Anchor component={Email} email="joao@jita.space">
                   Click to send email
                 </Anchor>
-              </td>
-            </tr>
-          </tbody>
+              </Table.Td>
+            </Table.Tr>
+          </Table.Tbody>
         </Table>
         <Title order={3}>Privacy Policy</Title>
         <Text size="sm">

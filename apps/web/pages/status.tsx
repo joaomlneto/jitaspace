@@ -1,34 +1,19 @@
-import React, { useMemo, useState, type ReactElement } from "react";
-import {
-  Anchor,
-  Badge,
-  ColorSwatch,
-  Container,
-  Group,
-  Stack,
-  Switch,
-  Table,
-  Text,
-  Title,
-} from "@mantine/core";
-import { NextSeo } from "next-seo";
+import {type GetStatusQueryResponse, useGetStatus as useGetMetaStatus,} from "@jitaspace/esi-meta-client";
+import {useServerStatus} from "@jitaspace/hooks";
+import {FormattedDateText} from "@jitaspace/ui";
+import {Anchor, Badge, ColorSwatch, Container, Group, Stack, Switch, Table, Text, Title,} from "@mantine/core";
+import {NextSeo} from "next-seo";
+import React, {type ReactElement, useMemo, useState} from "react";
 import useSwr from "swr";
 
-import {
-  useGetStatus as useGetMetaStatus,
-  type GetStatusQueryResponse,
-} from "@jitaspace/esi-meta-client";
-import { useServerStatus } from "@jitaspace/hooks";
-import { FormattedDateText } from "@jitaspace/ui";
-
-import { EsiClientStateCard } from "~/components/EsiClient";
-import { MainLayout } from "~/layouts";
+import {EsiClientStateCard} from "~/components/EsiClient";
+import {MainLayout} from "~/layouts";
 
 
 export default function Page() {
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
     useState<boolean>(false);
-  const { data: sdeData, isLoading: sdeIsLoading } = useSwr<{
+  const {data: sdeData, isLoading: sdeIsLoading} = useSwr<{
     lastModified: string;
     date: string;
   }>(
@@ -39,7 +24,7 @@ export default function Page() {
     },
   );
 
-  const { data: vercelStatusData, isLoading: vercelStatusIsLoading } = useSwr<{
+  const {data: vercelStatusData, isLoading: vercelStatusIsLoading} = useSwr<{
     page: {
       id: string;
       name: string;
@@ -59,11 +44,11 @@ export default function Page() {
     },
   );
 
-  const { data: tqStatus } = useServerStatus();
+  const {data: tqStatus} = useServerStatus();
 
-  const { data: esiStatus } = useGetMetaStatus(
+  const {data: esiStatus} = useGetMetaStatus(
     {},
-    { query: { refetchInterval: 30 * 1000 } },
+    {query: {refetchInterval: 30 * 1000}},
   );
 
   const sdeLastModifiedDate: Date | null = useMemo(
@@ -102,7 +87,7 @@ export default function Page() {
         <Stack gap="xs">
           <Title>Status</Title>
           <Title order={3}>Jita Frontend</Title>
-          <EsiClientStateCard />
+          <EsiClientStateCard/>
           <Title order={3}>Jita Backend</Title>
           <Group justify="space-between">
             <Text>Vercel Platform</Text>
@@ -134,7 +119,7 @@ export default function Page() {
             <Text>Start Time</Text>
             <Text>
               {tqStatus && (
-                <FormattedDateText date={new Date(tqStatus?.data.start_time)} />
+                <FormattedDateText date={new Date(tqStatus?.data.start_time)}/>
               )}
             </Text>
           </Group>
@@ -147,7 +132,7 @@ export default function Page() {
             <Text>
               {sdeIsLoading && "Checking..."}
               {!sdeIsLoading && sdeLastModifiedDate && (
-                <FormattedDateText date={sdeLastModifiedDate} />
+                <FormattedDateText date={sdeLastModifiedDate}/>
               )}
             </Text>
           </Group>
@@ -171,18 +156,18 @@ export default function Page() {
               <div key={tag}>
                 <Title order={6}>{tag}</Title>
                 <Table verticalSpacing={4} horizontalSpacing={4} fz="xs">
-                  <tbody>
+                  <Table.Tbody>
                     {esiStatusByTag[tag]?.map((entry) => (
-                      <tr key={`${entry.method} ${entry.route}`}>
-                        <td width={1}>{entry.method.toUpperCase()}</td>
-                        <td>{entry.route}</td>
-                        <td align="right">{entry.endpoint}</td>
-                        <td align="right" width={1}>
-                          <ColorSwatch size={16} color={entry.status} />
-                        </td>
-                      </tr>
+                      <Table.Tr key={`${entry.method} ${entry.route}`}>
+                        <Table.Td width={1}>{entry.method.toUpperCase()}</Table.Td>
+                        <Table.Td>{entry.route}</Table.Td>
+                        <Table.Td align="right">{entry.endpoint}</Table.Td>
+                        <Table.Td align="right" width={1}>
+                          <ColorSwatch size={16} color={entry.status}/>
+                        </Table.Td>
+                      </Table.Tr>
                     ))}
-                  </tbody>
+                  </Table.Tbody>
                 </Table>
               </div>
             ))}
@@ -196,7 +181,7 @@ export default function Page() {
 Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
-      <NextSeo title="Status" />
+      <NextSeo title="Status"/>
       {page}
     </MainLayout>
   );

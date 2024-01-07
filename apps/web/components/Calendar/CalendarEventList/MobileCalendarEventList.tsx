@@ -36,10 +36,10 @@ export function MobileCalendarEventList({
 }: EventListProps) {
   return (
     <Table {...otherProps}>
-      <tbody>
+      <Table.Tbody>
         {events.map((event) => (
-          <tr key={event.event_id}>
-            <td>
+          <Table.Tr key={event.event_id}>
+            <Table.Td>
               <Stack>
                 <Group justify="space-between" gap="xs">
                   <Group>
@@ -122,10 +122,10 @@ export function MobileCalendarEventList({
                   </Anchor>
                 </Group>
               </Stack>
-            </td>
-          </tr>
+            </Table.Td>
+          </Table.Tr>
         ))}
-      </tbody>
+      </Table.Tbody>
     </Table>
   );
 }
