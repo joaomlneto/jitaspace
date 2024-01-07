@@ -78,7 +78,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
   return (
     <>
       <Table highlightOnHover>
-        <thead>
+        <Table.Thead>
           <th>Attribute</th>
           {sortedTypes.map((type) => (
             <th key={type.type_id}>
@@ -90,30 +90,30 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
               </Group>
             </th>
           ))}
-        </thead>
-        <tbody>
+        </Table.Thead>
+        <Table.Tbody>
           {sortedAttributes.map((attribute) => (
-            <tr key={attribute.attribute_id}>
-              <td>
+            <Table.Tr key={attribute.attribute_id}>
+              <Table.Td>
                 <DogmaAttributeAnchor
                   attributeId={attribute.attribute_id}
                   target="_blank"
                 >
                   <DogmaAttributeName attributeId={attribute.attribute_id} />
                 </DogmaAttributeAnchor>
-              </td>
+              </Table.Td>
               {sortedTypes.map((type) => (
-                <td key={type.type_id}>
+                <Table.Td key={type.type_id}>
                   {(type.dogma_attributes ?? [])
                     .find(
                       (entry) => entry.attribute_id === attribute.attribute_id,
                     )
                     ?.value.toLocaleString()}
-                </td>
+                </Table.Td>
               ))}
-            </tr>
+            </Table.Tr>
           ))}
-        </tbody>
+        </Table.Tbody>
       </Table>
       <JsonInput
         label="Types, sorted alphabetically by name"

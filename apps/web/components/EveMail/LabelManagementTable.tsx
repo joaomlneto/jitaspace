@@ -1,14 +1,10 @@
+import {useCharacterMailLabels} from "@jitaspace/hooks";
+import {LabelName, MailLabelColorSwatch} from "@jitaspace/ui";
+import {isSpecialLabelId} from "@jitaspace/utils";
+import {Button, Group, Table, Text} from "@mantine/core";
+import {openConfirmModal} from "@mantine/modals";
+import {showNotification} from "@mantine/notifications";
 import React from "react";
-import { Button, Group, Table, Text } from "@mantine/core";
-import { openConfirmModal } from "@mantine/modals";
-import { showNotification } from "@mantine/notifications";
-
-import { useCharacterMailLabels } from "@jitaspace/hooks";
-import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
-import { isSpecialLabelId } from "@jitaspace/utils";
-
-
-
 
 
 export type LabelManagementTableProps = {
@@ -16,32 +12,32 @@ export type LabelManagementTableProps = {
 };
 
 export function LabelManagementTable({
-  characterId,
-}: LabelManagementTableProps) {
-  const { data: labels, deleteLabel } = useCharacterMailLabels(characterId);
+                                       characterId,
+                                     }: LabelManagementTableProps) {
+  const {data: labels, deleteLabel} = useCharacterMailLabels(characterId);
 
   return (
     <Table verticalSpacing="xs" highlightOnHover>
-      <thead>
-        <tr>
+      <Table.Thead>
+        <Table.Tr>
           <th>Labels</th>
           <th></th>
-        </tr>
-      </thead>
-      <tbody>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
         {labels?.data.labels?.map((label) => (
-          <tr key={label.label_id}>
-            <td>
+          <Table.Tr key={label.label_id}>
+            <Table.Td>
               <Group>
                 <MailLabelColorSwatch
                   characterId={characterId}
                   labelId={label.label_id}
                   size={16}
                 />
-                <LabelName characterId={characterId} labelId={label.label_id} />
+                <LabelName characterId={characterId} labelId={label.label_id}/>
               </Group>
-            </td>
-            <td align="right">
+            </Table.Td>
+            <Table.Td align="right">
               {!isSpecialLabelId(label.label_id) && (
                 <Button
                   size="xs"
@@ -86,10 +82,10 @@ export function LabelManagementTable({
                   Delete
                 </Button>
               )}
-            </td>
-          </tr>
+            </Table.Td>
+          </Table.Tr>
         ))}
-      </tbody>
+      </Table.Tbody>
     </Table>
   );
 }

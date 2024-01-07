@@ -26,21 +26,21 @@ export const DesktopMailboxTable = ({
   const { data: labels } = useCharacterMailLabels(characterId);
   return (
     <Table highlightOnHover {...otherProps}>
-      <thead>
-        <tr>
-          <th>Sender</th>
-          <th>Subject</th>
-          <th>Received</th>
-          <th>Labels</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th>Sender</Table.Th>
+          <Table.Th>Subject</Table.Th>
+          <Table.Th>Received</Table.Th>
+          <Table.Th>Labels</Table.Th>
+          <Table.Th></Table.Th>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
         {data
           .filter((mail) => !mail.isDeleted)
           .map((mail) => (
-            <tr key={mail.mail_id}>
-              <td>
+            <Table.Tr key={mail.mail_id}>
+              <Table.Td>
                 <Popover width={250} withArrow shadow="md">
                   <Popover.Target>
                     <Group wrap="nowrap" key={mail.mail_id}>
@@ -68,8 +68,8 @@ export const DesktopMailboxTable = ({
                     />
                   </Popover.Dropdown>
                 </Popover>
-              </td>
-              <td>
+              </Table.Td>
+              <Table.Td>
                 <Anchor
                   onClick={() => {
                     if (!mail.mail_id) {
@@ -103,8 +103,8 @@ export const DesktopMailboxTable = ({
                       </Anchor>
                     ))}
                 </Anchor>
-              </td>
-              <td>
+              </Table.Td>
+              <Table.Td>
                 {mail.timestamp && (
                   <FormattedDateText
                     size="xs"
@@ -114,8 +114,8 @@ export const DesktopMailboxTable = ({
                     format="yyyy-MM-dd HH:mm"
                   />
                 )}
-              </td>
-              <td>
+              </Table.Td>
+              <Table.Td>
                 <Group gap="xs">
                   {mail.labels
                     ?.map(
@@ -142,8 +142,8 @@ export const DesktopMailboxTable = ({
                         ),
                     )}
                 </Group>
-              </td>
-              <td>
+              </Table.Td>
+              <Table.Td>
                 <Group justify="flex-end">
                   <MessageMenu
                     characterId={characterId}
@@ -152,10 +152,10 @@ export const DesktopMailboxTable = ({
                     mutate={mutate}
                   />
                 </Group>
-              </td>
-            </tr>
+              </Table.Td>
+            </Table.Tr>
           ))}
-      </tbody>
+      </Table.Tbody>
     </Table>
   );
 };
