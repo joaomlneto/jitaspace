@@ -13,9 +13,9 @@
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
-    "@mantine/core": "^7.4.0",
-    "@mantine/hooks": "^7.4.0",
-    "@mantine/tiptap": "^7.4.0",
+    "@mantine/core": "^7.3.2",
+    "@mantine/hooks": "^7.3.2",
+    "@mantine/tiptap": "^7.3.2",
     "@tabler/icons-react": "^2.45.0",
     "@tiptap/extension-character-count": "^2.1.13",
     "@tiptap/extension-color": "^2.1.13",
