@@ -61,7 +61,7 @@
     "humanize-duration": "^3.31.0",
     "jose": "^5.2.0",
     "jwt-decode": "^4.0.0",
-    "mantine-react-table": "2.0.0-alpha.9",
+    "mantine-react-table": "2.0.0-alpha.10",
     "next": "^14.0.4",
     "next-auth": "^4.24.5",
     "next-seo": "^6.4.0",
