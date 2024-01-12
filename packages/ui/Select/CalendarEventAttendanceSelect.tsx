@@ -74,7 +74,7 @@ export const CalendarEventAttendanceSelect = memo(
         value={value}
         placeholder={"Not responded"}
         clearable={false}
-        onChange={(newValue: string | null, option) => {
+        onChange={(newValue: string | null) => {
           if (value === newValue) return;
           if (!canRespondToEvents) return;
           if (newValue === null) return;
@@ -92,7 +92,7 @@ export const CalendarEventAttendanceSelect = memo(
               setValue(
                 newValue as PutCharactersCharacterIdCalendarEventIdMutationRequestResponse,
               );
-              otherProps.onChange?.(newValue, option);
+              otherProps.onChange?.(newValue);
               void putCharactersCharacterIdCalendarEventId(
                 characterId ?? 0,
                 typeof eventId === "string" ? parseInt(eventId) : eventId ?? 0,
