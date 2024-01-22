@@ -81,40 +81,43 @@ importers:
         specifier: '*'
         version: link:../../packages/utils
       '@mantine/carousel':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(embla-carousel-react@8.0.0-rc17)(react-dom@18.2.0)(react@18.2.0)
+      '@mantine/charts':
+        specifier: ^7.3.2
+        version: 7.4.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)(recharts@2.10.4)
       '@mantine/code-highlight':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/core':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(@mantine/hooks@7.3.2)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/dates':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(dayjs@1.11.10)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/dropzone':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/form':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(react@18.2.0)
       '@mantine/hooks':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(react@18.2.0)
       '@mantine/modals':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/notifications':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/nprogress':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/spotlight':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/tiptap':
-        specifier: 7.3.2
+        specifier: ^7.3.2
         version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(@tabler/icons-react@2.45.0)(@tiptap/extension-link@2.1.15)(react-dom@18.2.0)(react@18.2.0)
       '@next/bundle-analyzer':
         specifier: ^14.0.4
@@ -213,7 +216,7 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2(react@18.2.0)
       recharts:
-        specifier: '2'
+        specifier: ^2.10.4
         version: 2.10.4(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)
       sharp:
         specifier: ^0.33.1
@@ -3555,6 +3558,22 @@ packages:
       embla-carousel-react: 8.0.0-rc17(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
+  /@mantine/charts@7.4.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)(recharts@2.10.4):
+    resolution: {integrity: sha512-Rh/GvplJoYEXUtukNsILMjaRoRUpfdIuQW9PV5pf7VFFsYGiLO94ZJUrCoRjrmA97D8uPW5nXDfsR06mmEVMqg==}
+    peerDependencies:
+      '@mantine/core': 7.4.2
+      '@mantine/hooks': 7.4.2
+      react: ^18.2.0
+      react-dom: ^18.2.0
+      recharts: ^2.10.3
+    dependencies:
+      '@mantine/core': 7.3.2(@mantine/hooks@7.3.2)(@types/react@18.2.47)(react-dom@18.2.0)(react@18.2.0)
+      '@mantine/hooks': 7.3.2(react@18.2.0)
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+      recharts: 2.10.4(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)
     dev: false
 
   /@mantine/code-highlight@7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0):
