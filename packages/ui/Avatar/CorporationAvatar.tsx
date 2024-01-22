@@ -3,6 +3,7 @@ import { type AvatarProps } from "@mantine/core";
 
 import { EveImageServerAvatar } from "./EveImageServerAvatar";
 
+
 export type CorporationAvatarProps = Omit<AvatarProps, "src"> & {
   corporationId?: string | number | null;
 };
@@ -12,7 +13,7 @@ export const CorporationAvatar = memo(
     return (
       <EveImageServerAvatar
         category="corporations"
-        id={`${corporationId}`}
+        id={corporationId}
         variation="logo"
         size={otherProps.size}
         {...otherProps}

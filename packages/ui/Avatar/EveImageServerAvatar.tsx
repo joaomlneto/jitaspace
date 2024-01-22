@@ -5,6 +5,7 @@ import { esiImageSizeClamp, getAvatarSize } from "@jitaspace/utils";
 
 import { sizes } from "./Avatar.styles";
 
+
 export type EveImageServerAvatarProps = Omit<AvatarProps, "src"> & {
   category?: "alliances" | "corporations" | "characters" | "types";
   id?: string | number | null;
@@ -33,7 +34,6 @@ export const EveImageServerAvatar = memo(
             : undefined
         }
         size={size}
-        //radius={size}
         alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
         {...avatarProps}
       />
