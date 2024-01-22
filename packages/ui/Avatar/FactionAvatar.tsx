@@ -3,6 +3,7 @@ import { type AvatarProps } from "@mantine/core";
 
 import { EveImageServerAvatar } from "./EveImageServerAvatar";
 
+
 export type FactionAvatarProps = Omit<AvatarProps, "src"> & {
   factionId?: string | number | null;
 };
@@ -12,7 +13,7 @@ export const FactionAvatar = memo(
     return (
       <EveImageServerAvatar
         category="corporations"
-        id={`${factionId}`}
+        id={factionId}
         variation="logo"
         size={otherProps.size}
         {...otherProps}

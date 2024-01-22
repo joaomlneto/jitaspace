@@ -3,6 +3,7 @@ import { type AvatarProps } from "@mantine/core";
 
 import { EveImageServerAvatar } from "./EveImageServerAvatar";
 
+
 export type CharacterAvatarProps = Omit<AvatarProps, "src"> & {
   characterId?: number | string | null;
 };
@@ -12,7 +13,7 @@ export const CharacterAvatar = memo(
     return (
       <EveImageServerAvatar
         category="characters"
-        id={characterId ?? "1"}
+        id={characterId}
         variation="portrait"
         size={otherProps.size}
         {...otherProps}
