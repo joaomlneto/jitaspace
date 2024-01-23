@@ -60,7 +60,7 @@ export default function Page() {
     <Container size="sm">
       <Stack>
         <Group gap="xl">
-          <CharacterAvatar characterId={characterId} size="xl" radius={256} />
+          <CharacterAvatar characterId={characterId} size="lg" />
           <Title order={3}>
             <CharacterName span characterId={characterId} />
           </Title>
