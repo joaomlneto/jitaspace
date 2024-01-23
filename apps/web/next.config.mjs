@@ -25,9 +25,6 @@ const config = {
         "@jitaspace/tiptap-eve",
         "@jitaspace/ui",
         "@jitaspace/utils",
-        // FIXME: This should not be required to be here! Workaround by the package author while in alpha.
-        // It throws a weird error saying it cannot find MantineProvider otherwise...!
-        "mantine-react-table"
     ],
 
     /** We already do linting and typechecking as separate tasks in CI */
