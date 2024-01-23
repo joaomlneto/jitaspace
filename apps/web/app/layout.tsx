@@ -16,21 +16,10 @@ import "mantine-react-table/styles.css";
 import React from "react";
 import Script from "next/script";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
-import { ModalsProvider } from "@mantine/modals";
-import { Notifications } from "@mantine/notifications";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { ReactQueryStreamedHydration } from "@tanstack/react-query-next-experimental";
 import { Analytics } from "@vercel/analytics/react";
-import { SessionProvider } from "next-auth/react";
 
-import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
-import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
-import { contextModals } from "~/components/Modals";
-import RouterTransition from "~/components/RouterTransition";
-import { JitaSpotlightProvider } from "~/components/Spotlight";
-import { themes } from "~/themes";
+
 
 
 export const metadata = {
@@ -43,7 +32,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [queryClient] = React.useState(() => new QueryClient({}));
+  //const [queryClient] = React.useState(() => new QueryClient({}));
 
   return (
     <html lang="en">
@@ -119,13 +108,13 @@ export default function RootLayout({
 
           {children}
 
-          {false && (
+          {/*
             <QueryClientProvider client={queryClient}>
               <ReactQueryDevtools initialIsOpen={false} />
               <ReactQueryStreamedHydration>
                 <SessionProvider>
                   <EsiClientSSOAccessTokenInjector>
-                    <EveIconsContextProvider /*iconVersion="rhea"*/>
+                    <EveIconsContextProvider>
                       <MantineProvider
                         defaultColorScheme="dark"
                         theme={themes.default}
@@ -146,7 +135,7 @@ export default function RootLayout({
                 </SessionProvider>
               </ReactQueryStreamedHydration>
             </QueryClientProvider>
-          )}
+          */}
         </MantineProvider>
       </body>
     </html>
