@@ -1,3 +1,5 @@
+"use client";
+
 import { Avatar, createTheme, mergeThemeOverrides } from "@mantine/core";
 
 import { colors } from "./colors";

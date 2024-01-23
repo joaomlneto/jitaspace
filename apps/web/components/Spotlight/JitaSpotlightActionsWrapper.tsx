@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useMemo, type PropsWithChildren } from "react";
 import {
   Group,
