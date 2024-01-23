@@ -1,10 +1,16 @@
-import {InfoIcon} from "@jitaspace/eve-icons";
-import {useAllSolarSystemKills} from "@jitaspace/hooks";
-import {SolarSystemAnchor, SolarSystemName, SolarSystemSecurityStatusBadge, TimeAgoText,} from "@jitaspace/ui";
-import {Anchor, Group, Table, Text, Tooltip} from "@mantine/core";
-import React, {memo, useMemo} from "react";
+import React, { memo, useMemo } from "react";
+import { Anchor, Group, Table, Text, Tooltip } from "@mantine/core";
 
-import {ZkillboardRecentSystemKills} from "~/components/Travel/ZkillboardRecentSystemKills";
+import { InfoIcon } from "@jitaspace/eve-icons";
+import { useAllSolarSystemKills } from "@jitaspace/hooks";
+import {
+  SolarSystemAnchor,
+  SolarSystemName,
+  SolarSystemSecurityStatusBadge,
+  TimeAgoText,
+} from "@jitaspace/ui";
+
+import { ZkillboardRecentSystemKills } from "~/components/Travel/ZkillboardRecentSystemKills";
 
 
 type RouteTableProps = {
@@ -13,8 +19,8 @@ type RouteTableProps = {
   }[];
 };
 
-export const RouteTable = memo(({route}: RouteTableProps) => {
-  const {data: systemKillsData} = useAllSolarSystemKills();
+export const RouteTable = memo(({ route }: RouteTableProps) => {
+  const { data: systemKillsData } = useAllSolarSystemKills();
 
   const systemKills = useMemo(() => {
     const index: Record<
@@ -42,10 +48,10 @@ export const RouteTable = memo(({route}: RouteTableProps) => {
     <Table highlightOnHover>
       <Table.Thead>
         <Table.Tr>
-          <th rowSpan={2} style={{verticalAlign: "bottom"}}>
+          <th rowSpan={2} style={{ verticalAlign: "bottom" }}>
             Jump
           </th>
-          <th rowSpan={2} style={{verticalAlign: "bottom"}}>
+          <th rowSpan={2} style={{ verticalAlign: "bottom" }}>
             Solar System
           </th>
           <th colSpan={2}>
@@ -57,21 +63,21 @@ export const RouteTable = memo(({route}: RouteTableProps) => {
                   <Text size="xs">
                     Updated{" "}
                     {killStatisticsDate && (
-                      <TimeAgoText span date={killStatisticsDate} addSuffix/>
+                      <TimeAgoText span date={killStatisticsDate} addSuffix />
                     )}
                     . Updates hourly
                   </Text>
                 }
               >
                 <div>
-                  <InfoIcon width={20}/>
+                  <InfoIcon width={20} />
                 </div>
               </Tooltip>
             </Group>
           </th>
-          <th rowSpan={2} style={{verticalAlign: "bottom"}}>
+          <th rowSpan={2} style={{ verticalAlign: "bottom" }}>
             Recent Kills
-            <br/>
+            <br />
             <Text size="xs">
               Powered by{" "}
               <Anchor href="https://zkillboard.com" target="_blank">
@@ -91,9 +97,13 @@ export const RouteTable = memo(({route}: RouteTableProps) => {
             <Table.Td align="right">{index == 0 ? "Start" : index}</Table.Td>
             <Table.Td>
               <Group>
-                <SolarSystemSecurityStatusBadge solarSystemId={node.id}/>
-                <SolarSystemAnchor solarSystemId={node.id} target="_blank">
-                  <SolarSystemName solarSystemId={node.id}/>
+                <SolarSystemSecurityStatusBadge solarSystemId={node.id} />
+                <SolarSystemAnchor
+                  inherit
+                  solarSystemId={node.id}
+                  target="_blank"
+                >
+                  <SolarSystemName inherit solarSystemId={node.id} />
                 </SolarSystemAnchor>
               </Group>
             </Table.Td>
@@ -103,7 +113,7 @@ export const RouteTable = memo(({route}: RouteTableProps) => {
               {/*(systemKills[node.id]?.shipKills ?? 0) +
                 (systemKills[node.id]?.podKills ?? 0) >
                 0 && <ZkillboardRecentSystemKills solarSystemId={node.id} />*/}
-              <ZkillboardRecentSystemKills solarSystemId={node.id}/>
+              <ZkillboardRecentSystemKills solarSystemId={node.id} />
             </Table.Td>
           </Table.Tr>
         ))}

@@ -97,7 +97,7 @@ export const ZkillboardRecentSystemKills = memo(
           {locations.map((location) => (
             <Group gap="xs">
               {(locationKills[location] ?? []).length}{" "}
-              <EveEntityName entityId={location} />
+              <EveEntityName inherit entityId={location} />
             </Group>
           ))}
           <Spoiler
@@ -107,7 +107,7 @@ export const ZkillboardRecentSystemKills = memo(
           >
             {locations.map((location) => (
               <>
-                <EveEntityName entityId={location} />
+                <EveEntityName inherit entityId={location} />
                 {(data?.body ?? [])
                   .filter((kill) => kill.zkb.locationID === location)
                   .map((kill) => (

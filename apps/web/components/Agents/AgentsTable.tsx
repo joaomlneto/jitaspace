@@ -74,10 +74,11 @@ export const AgentsTable = ({
                 size="sm"
               />
               <CharacterAnchor
+                inherit
                 characterId={row.original.characterId}
                 target="_blank"
               >
-                <CharacterName characterId={row.original.characterId} />
+                <CharacterName inherit characterId={row.original.characterId} />
               </CharacterAnchor>
             </Group>
           </Group>
@@ -95,10 +96,14 @@ export const AgentsTable = ({
                 size="sm"
               />
               <CorporationAnchor
+                inherit
                 corporationId={row.original.corporationId}
                 target="_blank"
               >
-                <CorporationName corporationId={row.original.corporationId} />
+                <CorporationName
+                  inherit
+                  corporationId={row.original.corporationId}
+                />
               </CorporationAnchor>
             </Group>
           </Group>
@@ -109,7 +114,7 @@ export const AgentsTable = ({
         header: "Type",
         accessorKey: "agentTypeId",
         Cell: ({ renderedCellValue, row, cell }) => (
-          <Text>{agentTypeNames[row.original.agentTypeId]}</Text>
+          <Text inherit>{agentTypeNames[row.original.agentTypeId]}</Text>
         ),
       },
       {
@@ -117,7 +122,7 @@ export const AgentsTable = ({
         header: "Type",
         accessorKey: "agentDivisionId",
         Cell: ({ renderedCellValue, row, cell }) => (
-          <Text>{divisionNames[row.original.agentDivisionId]}</Text>
+          <Text inherit>{divisionNames[row.original.agentDivisionId]}</Text>
         ),
       },
       {
@@ -126,7 +131,7 @@ export const AgentsTable = ({
         accessorKey: "isLocator",
         size: 1,
         Cell: ({ renderedCellValue, row, cell }) => (
-          <Text>{row.original.isLocator ? "Yes" : "No"}</Text>
+          <Text inherit>{row.original.isLocator ? "Yes" : "No"}</Text>
         ),
       },
       {
@@ -142,8 +147,12 @@ export const AgentsTable = ({
         Cell: ({ renderedCellValue, row, cell }) => (
           <Group wrap="nowrap" gap="xs">
             <StationAvatar stationId={row.original.stationId} size="xs" />
-            <StationAnchor target="_blank" stationId={row.original.stationId}>
-              <StationName stationId={row.original.stationId} />
+            <StationAnchor
+              inherit
+              target="_blank"
+              stationId={row.original.stationId}
+            >
+              <StationName inherit stationId={row.original.stationId} />
             </StationAnchor>
           </Group>
         ),
