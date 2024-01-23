@@ -32,7 +32,7 @@ export const ShipFittingCardModulesSection = memo(
 
     return (
       <Card.Section m={0} p="xs" className={classes.modulesSection}>
-        <Stack gap={0}>
+        <Stack gap={2}>
           <Text c="dimmed" className={classes.modulesLabel} mb={4}>
             {header}
           </Text>

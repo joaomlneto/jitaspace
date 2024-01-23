@@ -43,7 +43,9 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         sortingFn: "datetime",
         size: 40,
         enableColumnFilterModes: false, //keep this as only date-range filter with between inclusive filterFn
-        Cell: ({ cell }) => <FormattedDateText date={cell.getValue<Date>()} />, //render Date as a string
+        Cell: ({ cell }) => (
+          <FormattedDateText size="sm" date={cell.getValue<Date>()} />
+        ), //render Date as a string
         Header: ({ column }) => <em>{column.columnDef.header}</em>, //custom header markup
       },
       {
@@ -59,7 +61,9 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         size: 40,
         Cell: ({ renderedCellValue, row, cell }) =>
           row.original.context_id_type ? (
-            <Badge>{row.original.context_id_type?.replaceAll("_", " ")}</Badge>
+            <Badge size="sm" variant="light">
+              {row.original.context_id_type?.replaceAll("_", " ")}
+            </Badge>
           ) : undefined,
       },
       {
@@ -75,6 +79,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
                 size="sm"
               />
               <EveEntityAnchor
+                size="sm"
                 entityId={row.original.first_party_id}
                 target="_blank"
               >
@@ -97,6 +102,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
                 size="sm"
               />
               <EveEntityAnchor
+                size="sm"
                 entityId={row.original.second_party_id}
                 target="_blank"
               >
@@ -120,6 +126,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
             <Group wrap="nowrap">
               <EveEntityAvatar entityId={cell.getValue<number>()} size="sm" />
               <EveEntityAnchor
+                size="sm"
                 entityId={cell.getValue<number>()}
                 target="_blank"
               >
@@ -137,6 +144,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         Cell: ({ renderedCellValue, row, cell }) =>
           row.original.amount !== undefined ? (
             <ISKAmount
+              size="sm"
               amount={Math.abs(row.original.amount)}
               color={row.original.amount >= 0 ? "green" : "red"}
             />

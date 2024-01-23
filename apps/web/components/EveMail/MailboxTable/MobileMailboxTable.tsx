@@ -40,6 +40,7 @@ export const MobileMailboxTable = ({
                     <EveMailSenderAnchor
                       characterId={characterId}
                       messageId={message.mail_id}
+                      size="sm"
                     >
                       <EveMailSenderName
                         characterId={characterId}
@@ -71,6 +72,7 @@ export const MobileMailboxTable = ({
                       )}
                     {message.timestamp && (
                       <FormattedDateText
+                        size="sm"
                         date={
                           message.timestamp
                             ? new Date(message.timestamp)
@@ -83,6 +85,7 @@ export const MobileMailboxTable = ({
                   </Group>
                 </Group>
                 <Anchor
+                  size="sm"
                   onClick={() => {
                     if (!message.mail_id) {
                       showNotification({

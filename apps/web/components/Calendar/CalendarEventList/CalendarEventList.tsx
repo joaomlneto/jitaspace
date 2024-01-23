@@ -17,8 +17,8 @@ type CalendarEventListProps = TableProps & {
 export function CalendarEventList(props: CalendarEventListProps) {
   return (
     <>
-      <DesktopCalendarEventList {...props} />
-      <MobileCalendarEventList {...props} />
+      <DesktopCalendarEventList {...props} visibleFrom="md" />
+      <MobileCalendarEventList {...props} hiddenFrom="md" />
     </>
   );
 }
