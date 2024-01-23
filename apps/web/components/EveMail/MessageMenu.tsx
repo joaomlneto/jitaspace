@@ -63,7 +63,7 @@ export function MessageMenu({
   return (
     <Menu>
       <Menu.Target>
-        <ActionIcon size="sm">
+        <ActionIcon size="sm" variant="subtle">
           <IconMenu2 />
         </ActionIcon>
       </Menu.Target>

@@ -53,11 +53,12 @@ export const DesktopMailboxTable = ({
                         characterId={characterId}
                         messageId={mail.mail_id}
                         fw={mail.is_read ? "normal" : "bold"}
+                        size="sm"
                       >
                         <EveMailSenderName
                           characterId={characterId}
                           messageId={mail.mail_id}
-                        />{" "}
+                        />
                       </EveMailSenderAnchor>
                     </Group>
                   </Popover.Target>
@@ -71,6 +72,7 @@ export const DesktopMailboxTable = ({
               </Table.Td>
               <Table.Td>
                 <Anchor
+                  size="sm"
                   onClick={() => {
                     if (!mail.mail_id) {
                       showNotification({

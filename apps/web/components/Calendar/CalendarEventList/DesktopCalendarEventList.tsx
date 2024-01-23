@@ -1,5 +1,17 @@
-import {WarningIcon} from "@jitaspace/eve-icons";
-import {CalendarEvent} from "@jitaspace/hooks";
+import React from "react";
+import {
+  Anchor,
+  Group,
+  Table,
+  Text,
+  Title,
+  Tooltip,
+  type TableProps,
+} from "@mantine/core";
+import { openContextModal } from "@mantine/modals";
+
+import { WarningIcon } from "@jitaspace/eve-icons";
+import { CalendarEvent } from "@jitaspace/hooks";
 import {
   CalendarEventAttendeesAvatarGroup,
   CalendarEventHumanDurationText,
@@ -9,9 +21,6 @@ import {
   CalendarEventResponseBadge,
   FormattedDateText,
 } from "@jitaspace/ui";
-import {Anchor, Avatar, Group, Table, type TableProps, Text, Title, Tooltip,} from "@mantine/core";
-import {openContextModal} from "@mantine/modals";
-import React from "react";
 
 type EventListProps = TableProps & {
   characterId: number;
@@ -19,10 +28,10 @@ type EventListProps = TableProps & {
 };
 
 export function DesktopCalendarEventList({
-                                           characterId,
-                                           events,
-                                           ...otherProps
-                                         }: EventListProps) {
+  characterId,
+  events,
+  ...otherProps
+}: EventListProps) {
   return (
     <Table {...otherProps}>
       <Table.Tbody>
@@ -39,6 +48,7 @@ export function DesktopCalendarEventList({
               >
                 <Text>
                   <FormattedDateText
+                    size="sm"
                     date={new Date(event.event_date ?? 0)}
                     format="HH:mm"
                   />
@@ -55,7 +65,7 @@ export function DesktopCalendarEventList({
                     />
                   }
                 >
-                  <Avatar size="sm">
+                  <div>
                     <CalendarEventOwnerAnchor
                       characterId={characterId}
                       eventId={event.event_id}
@@ -66,11 +76,12 @@ export function DesktopCalendarEventList({
                         size="sm"
                       />
                     </CalendarEventOwnerAnchor>
-                  </Avatar>
+                  </div>
                 </Tooltip>
                 <Group wrap="nowrap" gap="xs">
-                  {event.importance === 1 && <WarningIcon width={20}/>}
+                  {event.importance === 1 && <WarningIcon width={20} />}
                   <Anchor
+                    size="sm"
                     lineClamp={1}
                     onClick={() => {
                       if (event.event_id) {
@@ -79,13 +90,13 @@ export function DesktopCalendarEventList({
                           title: (
                             <Title order={4}>
                               {event.importance === 1 && (
-                                <WarningIcon width={32}/>
+                                <WarningIcon width={32} />
                               )}
                               {event.title}
                             </Title>
                           ),
                           size: "lg",
-                          innerProps: {characterId, eventId: event.event_id},
+                          innerProps: { characterId, eventId: event.event_id },
                         });
                       }
                     }}
@@ -108,6 +119,8 @@ export function DesktopCalendarEventList({
             </Table.Td>
             <Table.Td align="right" width={1}>
               <CalendarEventResponseBadge
+                size="sm"
+                variant="subtle"
                 characterId={characterId}
                 w={130}
                 eventId={event.event_id}

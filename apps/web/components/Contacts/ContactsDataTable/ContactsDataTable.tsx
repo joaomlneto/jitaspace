@@ -80,6 +80,7 @@ export const ContactsDataTable = memo(
                 />
               </StandingIndicator>
               <EveEntityAnchor
+                size="sm"
                 entityId={row.original.contact_id}
                 category={row.original.contact_type}
               >
@@ -109,9 +110,9 @@ export const ContactsDataTable = memo(
           accessorKey: "is_blocked",
           Cell: ({ cell }) => {
             const isBlocked = cell.getValue<boolean | undefined>();
-            if (isBlocked === undefined) {
+            if (isBlocked !== undefined) {
               return (
-                <Text c="dimmed" fs="italic">
+                <Text size="sm" c="dimmed" fs="italic">
                   Unknown
                 </Text>
               );

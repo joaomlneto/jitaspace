@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Anchor,
-  Avatar,
   Group,
   Stack,
   Table,
@@ -67,7 +66,7 @@ export function MobileCalendarEventList({
                         />
                       }
                     >
-                      <Avatar size="sm">
+                      <div>
                         <CalendarEventOwnerAnchor
                           characterId={characterId}
                           eventId={event.event_id}
@@ -78,7 +77,7 @@ export function MobileCalendarEventList({
                             size="sm"
                           />
                         </CalendarEventOwnerAnchor>
-                      </Avatar>
+                      </div>
                     </Tooltip>
                   </Group>
                   <Group justify="flex-end">
@@ -99,6 +98,7 @@ export function MobileCalendarEventList({
                 <Group wrap="nowrap" gap="xs">
                   {event.importance === 1 && <WarningIcon width={20} />}
                   <Anchor
+                    size="sm"
                     lineClamp={1}
                     onClick={() => {
                       if (event.event_id) {
