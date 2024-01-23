@@ -17,11 +17,11 @@ export function MainLayout({
       header={{
         height: 60,
         collapsed: !pinned,
-        offset: false,
+        offset: true,
       }}
       footer={{
         height: { base: 80, xs: 60 },
-        offset: false,
+        offset: true,
         collapsed: matches && !pinned,
       }}
       {...otherProps}
