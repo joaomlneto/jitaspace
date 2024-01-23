@@ -1,5 +1,8 @@
+
+
+
 import "@mantine/core/styles.css";
-import '@mantine/charts/styles.css';
+import "@mantine/charts/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/notifications/styles.css";
 import "@mantine/code-highlight/styles.css";
@@ -10,31 +13,36 @@ import "@mantine/spotlight/styles.css";
 import "@mantine/nprogress/styles.css";
 import "mantine-react-table/styles.css";
 
-import {type ESIScope} from "@jitaspace/esi-metadata";
-import {EveIconsContextProvider} from "@jitaspace/eve-icons";
-import {useAuthStore} from "@jitaspace/hooks";
-import {MantineProvider} from "@mantine/core";
-import {ModalsProvider} from "@mantine/modals";
-import {Notifications, showNotification} from "@mantine/notifications";
-import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
-import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
-import {Analytics} from "@vercel/analytics/react";
-import {type NextPage} from "next";
-import type {Session} from "next-auth";
-import {SessionProvider, useSession} from "next-auth/react";
-import {DefaultSeo} from "next-seo";
-import {type AppProps} from "next/app";
+import React, {
+  useEffect,
+  type PropsWithChildren,
+  type ReactElement,
+  type ReactNode,
+} from "react";
+import { type NextPage } from "next";
+import { type AppProps } from "next/app";
 import Head from "next/head";
 import Script from "next/script";
-
-import React, {type PropsWithChildren, type ReactElement, type ReactNode, useEffect,} from "react";
-import {Workbox} from "workbox-window";
+import { MantineProvider } from "@mantine/core";
+import { ModalsProvider } from "@mantine/modals";
+import { Notifications, showNotification } from "@mantine/notifications";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Analytics } from "@vercel/analytics/react";
+import type { Session } from "next-auth";
+import { SessionProvider, useSession } from "next-auth/react";
+import { DefaultSeo } from "next-seo";
+import { Workbox } from "workbox-window";
 import z from "zod";
 
-import {contextModals} from "~/components/Modals";
-import {ScopeGuard} from "~/components/ScopeGuard";
-import {JitaSpotlightProvider} from "~/components/Spotlight";
-import {themes} from "~/themes";
+import { type ESIScope } from "@jitaspace/esi-metadata";
+import { EveIconsContextProvider } from "@jitaspace/eve-icons";
+import { useAuthStore } from "@jitaspace/hooks";
+
+import { contextModals } from "~/components/Modals";
+import { ScopeGuard } from "~/components/ScopeGuard";
+import { JitaSpotlightProvider } from "~/components/Spotlight";
+import { themes } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
 
 
@@ -52,9 +60,9 @@ type AppPropsWithLayout = AppProps<{
 /**
  * Inject the token obtained from next-auth into our ESI Client
  */
-const EsiClientSSOAccessTokenInjector = ({children}: PropsWithChildren) => {
-  const {data: session, status, update} = useSession();
-  const {addCharacter, characters} = useAuthStore();
+const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
+  const { data: session, status, update } = useSession();
+  const { addCharacter, characters } = useAuthStore();
 
   useEffect(() => {
     useAuthStore.persist.rehydrate();
@@ -63,7 +71,7 @@ const EsiClientSSOAccessTokenInjector = ({children}: PropsWithChildren) => {
   // This useEffect is here to import the current next-auth token (if available)
   useEffect(() => {
     if (session) {
-      console.log({session});
+      console.log({ session });
       addCharacter({
         accessToken: session.accessToken,
         refreshToken: session.encryptedRefreshToken,
@@ -110,7 +118,7 @@ const EsiClientSSOAccessTokenInjector = ({children}: PropsWithChildren) => {
                 accessToken: z.string(),
                 refreshTokenData: z.string(),
               });
-              const {accessToken, refreshTokenData} =
+              const { accessToken, refreshTokenData } =
                 responseSchema.parse(res);
               addCharacter({
                 accessToken,
@@ -130,9 +138,9 @@ const EsiClientSSOAccessTokenInjector = ({children}: PropsWithChildren) => {
 };
 
 export default function App({
-                              Component,
-                              pageProps: {session, ...pageProps},
-                            }: AppPropsWithLayout) {
+  Component,
+  pageProps: { session, ...pageProps },
+}: AppPropsWithLayout) {
   const getLayout = Component.getLayout ?? ((page: ReactNode) => page);
   const requiredScopes = Component.requiredScopes;
 
@@ -188,17 +196,17 @@ export default function App({
         />
 
         {/* Progressive Web App (next-pwa) */}
-        <link rel="manifest" href="/manifest.json"/>
-        <meta name="viewport" content="width=device-width,initial-scale=1"/>
-        <link rel="shortcut icon" href="/favicon.ico"/>
-        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#9bb4d0"/>
-        <meta name="theme-color" content="#9bb4d0"/>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#9bb4d0" />
+        <meta name="theme-color" content="#9bb4d0" />
         <link
           rel="apple-touch-icon"
           sizes="152x152"
           href="/apple-touch-icon.png"
         />
-        <link rel="manifest" href="/manifest.json"/>
+        <link rel="manifest" href="/manifest.json" />
         {/*
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:url" content="https://www.jita.space" />
@@ -252,25 +260,24 @@ export default function App({
         // /analytics is a proxy to the umami server - set in next.config.mjs
         src={"/analytics/script.js"}
         data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-        //data-do-not-track="true"
         data-domains="www.jita.space"
       ></Script>
 
-      <Analytics/>
+      <Analytics />
 
       <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={false}/>
+        <ReactQueryDevtools initialIsOpen={false} />
 
         <SessionProvider session={session}>
           <EsiClientSSOAccessTokenInjector>
             <EveIconsContextProvider /*iconVersion="rhea"*/>
               <MantineProvider defaultColorScheme="dark" theme={themes.default}>
-                <Notifications/>
-                <RouterTransition/>
+                <Notifications />
+                <RouterTransition />
                 <JitaSpotlightProvider>
                   <ModalsProvider
                     modals={contextModals}
-                    modalProps={{centered: true}}
+                    modalProps={{ centered: true }}
                   >
                     {getLayout(
                       <ScopeGuard requiredScopes={requiredScopes}>
