@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { useDebouncedValue } from "@mantine/hooks";

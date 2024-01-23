@@ -1,4 +1,10 @@
+"use client";
+
 import React, { useContext, useMemo, type PropsWithChildren } from "react";
+
+
+
+
 
 export const ICON_VERSIONS = ["castor", "incarna", "rhea"] as const;
 

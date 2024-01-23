@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Button, Grid, Stack, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";

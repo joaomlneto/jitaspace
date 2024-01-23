@@ -13,12 +13,7 @@ import "@mantine/spotlight/styles.css";
 import "@mantine/nprogress/styles.css";
 import "mantine-react-table/styles.css";
 
-import React, {
-  useEffect,
-  type PropsWithChildren,
-  type ReactElement,
-  type ReactNode,
-} from "react";
+import React, { useEffect, type ReactElement, type ReactNode } from "react";
 import { type NextPage } from "next";
 import { type AppProps } from "next/app";
 import Head from "next/head";
@@ -30,15 +25,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
 import type { Session } from "next-auth";
-import { SessionProvider, useSession } from "next-auth/react";
+import { SessionProvider } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 import { Workbox } from "workbox-window";
-import z from "zod";
 
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
-import { useAuthStore } from "@jitaspace/hooks";
 
+import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
@@ -55,86 +49,6 @@ type AppPropsWithLayout = AppProps<{
   session: Session;
 }> & {
   Component: NextPageWithLayout;
-};
-
-/**
- * Inject the token obtained from next-auth into our ESI Client
- */
-const EsiClientSSOAccessTokenInjector = ({ children }: PropsWithChildren) => {
-  const { data: session, status, update } = useSession();
-  const { addCharacter, characters } = useAuthStore();
-
-  useEffect(() => {
-    useAuthStore.persist.rehydrate();
-  }, []);
-
-  // This useEffect is here to import the current next-auth token (if available)
-  useEffect(() => {
-    if (session) {
-      console.log({ session });
-      addCharacter({
-        accessToken: session.accessToken,
-        refreshToken: session.encryptedRefreshToken,
-      });
-    }
-  }, [session?.accessToken, session?.encryptedRefreshToken]);
-
-  // this refreshes tokens that expired or are close to expiring
-  useEffect(() => {
-    if (!characters) return;
-    const timeUntilExpiration = () => {
-      const now = new Date().getTime();
-      return Math.min(
-        ...Object.values(characters).map(
-          (character) =>
-            new Date(character.accessTokenExpirationDate).getTime() - now,
-        ),
-      );
-    };
-    console.log("time until expiration", timeUntilExpiration());
-    const timer = setTimeout(
-      () => {
-        console.log(
-          `updating session: token expires in ${
-            timeUntilExpiration() / 1000
-          } seconds`,
-        );
-        //void update();
-        const now = new Date().getTime();
-        const candidateCharacters = Object.values(characters).filter(
-          (character) =>
-            new Date(character.accessTokenExpirationDate).getTime() - now <
-            30000 + 10000 /* account for some clock drift */,
-        );
-        console.log("tokens to update", candidateCharacters);
-        candidateCharacters.forEach((character) => {
-          fetch("/api/auth2/refresh", {
-            method: "POST",
-            body: character.refreshToken,
-          })
-            .then((res) => res.json())
-            .then((res) => {
-              const responseSchema = z.object({
-                accessToken: z.string(),
-                refreshTokenData: z.string(),
-              });
-              const { accessToken, refreshTokenData } =
-                responseSchema.parse(res);
-              addCharacter({
-                accessToken,
-                refreshToken: refreshTokenData,
-              });
-            });
-        });
-      },
-      Math.max(timeUntilExpiration() - 30000, 1000),
-    );
-    return () => clearTimeout(timer);
-  }, [characters]);
-
-  // TODO: another useEffect for when a token does expire, blocking it from being used to send requests to ESI!!!
-
-  return children;
 };
 
 export default function App({
