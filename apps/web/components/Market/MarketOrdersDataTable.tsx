@@ -9,6 +9,7 @@ import {
 
 import { RegionalMarketOrder } from "@jitaspace/hooks";
 import {
+  EveEntityAnchor,
   EveEntityName,
   SolarSystemSecurityStatusBadge,
   TimeAgoText,
@@ -20,10 +21,11 @@ import {
 
 type MarketOrdersDataTableProps = {
   orders: RegionalMarketOrder[];
+  sortPriceDescending: boolean;
 };
 
 export const MarketOrdersDataTable = memo(
-  ({ orders }: MarketOrdersDataTableProps) => {
+  ({ orders, sortPriceDescending }: MarketOrdersDataTableProps) => {
     const columns = useMemo<MRT_ColumnDef<RegionalMarketOrder>[]>(
       () => [
         {
@@ -69,7 +71,13 @@ export const MarketOrdersDataTable = memo(
               <SolarSystemSecurityStatusBadge
                 solarSystemId={row.original.system_id}
               />
-              <EveEntityName entityId={row.original.location_id} />
+              <EveEntityAnchor
+                inherit
+                entityId={row.original.location_id}
+                target="_blank"
+              >
+                <EveEntityName inherit entityId={row.original.location_id} />
+              </EveEntityAnchor>
             </Group>
           ),
         },
@@ -88,7 +96,11 @@ export const MarketOrdersDataTable = memo(
           header: "Issued",
           accessorKey: "issued",
           Cell: ({ renderedCellValue, row, cell }) => (
-            <TimeAgoText date={new Date(row.original.issued)} addSuffix />
+            <TimeAgoText
+              inherit
+              date={new Date(row.original.issued)}
+              addSuffix
+            />
           ),
         },
         {
@@ -99,7 +111,7 @@ export const MarketOrdersDataTable = memo(
             return addDays(new Date(row.issued), 30);
           },
           Cell: ({ renderedCellValue, row, cell }) => (
-            <TimeAgoText date={cell.getValue<Date>()} addSuffix />
+            <TimeAgoText inherit date={cell.getValue<Date>()} addSuffix />
           ),
         },
         /*
@@ -127,11 +139,12 @@ export const MarketOrdersDataTable = memo(
         density: "xs",
         pagination: {
           pageIndex: 0,
-          pageSize: 25,
+          pageSize: 20,
         },
         columnVisibility: {
           orderId: false,
         },
+        sorting: [{ id: "price", desc: sortPriceDescending }],
       },
     });
 

@@ -1,15 +1,7 @@
 import React, { useMemo, type ReactElement } from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
-import {
-  AppShell,
-  Container,
-  Group,
-  Loader,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Container, Group, Loader, Stack, Text, Title } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
 import { MarketIcon } from "@jitaspace/eve-icons";
@@ -17,7 +9,7 @@ import { useTypeMarketOrders } from "@jitaspace/hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 import { MarketOrdersDataTable } from "~/components/Market";
-import { MainLayout } from "~/layouts";
+import { MarketLayout } from "~/layouts";
 
 
 type PageProps = {
@@ -132,31 +124,18 @@ export default function Page({ marketGroups, rootMarketGroupIds }: PageProps) {
       <Container size="sm">
         <Group>
           <Loader />
-          <Text>Loading market data for</Text>
-          <TypeName span typeId={typeId} />
+          <Text>Loading market data</Text>
         </Group>
       </Container>
     );
   }
 
   return (
-    <Container size="xl">
-      <AppShell
-        padding="md"
-        /* // FIXME Mantine v7 migration
-        fixed={false}
-        navbar={
-          <Navbar width={{ base: 300 }} height={500} p="xs">
-            {rootMarketGroupIds?.map((marketGroupId) => (
-              <MarketGroupNavLink
-                marketGroups={marketGroups}
-                marketGroupId={marketGroupId}
-                key={marketGroupId}
-              />
-            ))}
-          </Navbar>
-        }*/
-      >
+    <MarketLayout
+      marketGroups={marketGroups}
+      rootMarketGroupIds={rootMarketGroupIds}
+    >
+      <Container size="xl">
         <Stack gap="xl">
           <Group>
             <MarketIcon width={48} />
@@ -169,23 +148,30 @@ export default function Page({ marketGroups, rootMarketGroupIds }: PageProps) {
                   <Group>
                     <TypeAvatar typeId={typeId} size="md" />
                     <Title>
-                      <TypeName span typeId={typeId} />
+                      <TypeName inherit span typeId={typeId} />
                     </Title>
                   </Group>
                   <Title order={3}>Sell Orders</Title>
-                  <MarketOrdersDataTable orders={sellOrders} />
+                  <MarketOrdersDataTable
+                    orders={sellOrders}
+                    sortPriceDescending={false}
+                  />
                   <Title order={3}>Buy Orders</Title>
-                  <MarketOrdersDataTable orders={buyOrders} />
+                  <MarketOrdersDataTable
+                    orders={buyOrders}
+                    sortPriceDescending={true}
+                  />
                 </Stack>
               )}
             </Container>
           </Group>
         </Stack>
-      </AppShell>
-    </Container>
+      </Container>
+    </MarketLayout>
   );
 }
 
 Page.getLayout = function getLayout(page: ReactElement) {
-  return <MainLayout>{page}</MainLayout>;
+  // FIXME: Should have MarketLayout wrapping it here!
+  return page;
 };
