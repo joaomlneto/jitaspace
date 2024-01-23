@@ -30,8 +30,8 @@ export const AssetLocationSelect = memo(
               })`,
             }))}
           value={otherProps.value ?? value}
-          onChange={(value: string | null) => {
-            otherProps.onChange?.(value);
+          onChange={(value: string | null, options) => {
+            otherProps.onChange?.(value, options);
             onChange(value);
           }}
           miw={300}

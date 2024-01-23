@@ -54,9 +54,9 @@ export const EsiSearchSelect = memo(
         //filter={() => true}
         data={data}
         value={otherProps.value ?? value}
-        onChange={(value: string | null) => {
+        onChange={(value: string | null, options) => {
           setValue(value);
-          otherProps.onChange?.(value);
+          otherProps.onChange?.(value, options);
         }}
         searchable
         searchValue={searchValue}
