@@ -20,9 +20,9 @@ import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ReactQueryStreamedHydration } from "@tanstack/react-query-next-experimental";
 import { Analytics } from "@vercel/analytics/react";
 import { SessionProvider } from "next-auth/react";
-import { DefaultSeo } from "next-seo";
 
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
@@ -38,13 +38,13 @@ export const metadata = {
   description: "I have followed setup instructions carefully",
 };
 
-const queryClient = new QueryClient();
-
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [queryClient] = React.useState(() => new QueryClient({}));
+
   return (
     <html lang="en">
       <head>
@@ -105,37 +105,6 @@ export default function RootLayout({
       </head>
       <body>
         <MantineProvider>
-          <DefaultSeo
-            defaultTitle="Jita"
-            titleTemplate="%s | Jita"
-            description="EVE Online Tools"
-            openGraph={{
-              title: "Jita",
-              url: "https://www.jita.space",
-              type: "website",
-              images: [
-                {
-                  type: "image/png",
-                  alt: "Jita",
-                  //width: 1200,
-                  //height: 630,
-                  //url: "https://www.jita.space/api/opengraph/image",
-                  //secureUrl: "https://www.jita.space/api/opengraph/image",
-                  width: 176,
-                  height: 168,
-                  url: "https://www.jita.space/logo.png",
-                  secureUrl: "https://www.jita.space/logo.png",
-                },
-              ],
-              siteName: "Jita",
-            }}
-            twitter={{
-              cardType: "summary",
-              site: "https://www.jita.space",
-            }}
-            themeColor="#9bb4d0"
-          />
-
           <Script
             strategy="afterInteractive"
             async
@@ -148,31 +117,36 @@ export default function RootLayout({
 
           <Analytics />
 
-          <QueryClientProvider client={queryClient}>
-            <ReactQueryDevtools initialIsOpen={false} />
+          {children}
 
-            <SessionProvider>
-              <EsiClientSSOAccessTokenInjector>
-                <EveIconsContextProvider /*iconVersion="rhea"*/>
-                  <MantineProvider
-                    defaultColorScheme="dark"
-                    theme={themes.default}
-                  >
-                    <Notifications />
-                    <RouterTransition />
-                    <JitaSpotlightProvider>
-                      <ModalsProvider
-                        modals={contextModals}
-                        modalProps={{ centered: true }}
+          {false && (
+            <QueryClientProvider client={queryClient}>
+              <ReactQueryDevtools initialIsOpen={false} />
+              <ReactQueryStreamedHydration>
+                <SessionProvider>
+                  <EsiClientSSOAccessTokenInjector>
+                    <EveIconsContextProvider /*iconVersion="rhea"*/>
+                      <MantineProvider
+                        defaultColorScheme="dark"
+                        theme={themes.default}
                       >
-                        {children}
-                      </ModalsProvider>
-                    </JitaSpotlightProvider>
-                  </MantineProvider>
-                </EveIconsContextProvider>
-              </EsiClientSSOAccessTokenInjector>
-            </SessionProvider>
-          </QueryClientProvider>
+                        <Notifications />
+                        <RouterTransition />
+                        <JitaSpotlightProvider>
+                          <ModalsProvider
+                            modals={contextModals}
+                            modalProps={{ centered: true }}
+                          >
+                            {children}
+                          </ModalsProvider>
+                        </JitaSpotlightProvider>
+                      </MantineProvider>
+                    </EveIconsContextProvider>
+                  </EsiClientSSOAccessTokenInjector>
+                </SessionProvider>
+              </ReactQueryStreamedHydration>
+            </QueryClientProvider>
+          )}
         </MantineProvider>
       </body>
     </html>
