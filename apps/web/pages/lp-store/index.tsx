@@ -71,7 +71,7 @@ export default function Page({ corporations }: PageProps) {
         </Group>
         <Title order={3}>
           Select a corporation below or{" "}
-          <Anchor component={Link} href="/lp-store/all">
+          <Anchor inherit component={Link} href="/lp-store/all">
             show all offers
           </Anchor>
         </Title>

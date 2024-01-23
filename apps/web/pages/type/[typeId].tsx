@@ -8,6 +8,7 @@ import {
   Container,
   Group,
   Loader,
+  Spoiler,
   Stack,
   Text,
   Title,
@@ -190,13 +191,19 @@ export default function Page({
             </Link>
           </Group>
           {type?.data.description && (
-            <MailMessageViewer
-              content={
-                type.data.description
-                  ? sanitizeFormattedEveString(type.data.description)
-                  : "No description"
-              }
-            />
+            <Spoiler
+              maxHeight={120}
+              showLabel="Show more"
+              hideLabel="Show less"
+            >
+              <MailMessageViewer
+                content={
+                  type.data.description
+                    ? sanitizeFormattedEveString(type.data.description)
+                    : "No description"
+                }
+              />
+            </Spoiler>
           )}
           {marketPrices[typeId] && (
             <>

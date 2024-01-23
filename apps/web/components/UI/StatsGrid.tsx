@@ -50,7 +50,9 @@ export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
         </Grid>
 
         <Group align="flex-end" gap="xs" mt={25}>
-          <Text className={classes.value}>{stat.value}</Text>
+          <Text inherit className={classes.value}>
+            {stat.value}
+          </Text>
           <Text
             color={stat.diff && stat.diff > 0 ? "teal" : "red"}
             fz="sm"
@@ -63,7 +65,7 @@ export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
         </Group>
 
         {stat.description && (
-          <Text fz="xs" c="dimmed" mt={7}>
+          <Text inherit fz="xs" c="dimmed" mt={7}>
             {stat.description}
           </Text>
         )}

@@ -229,7 +229,9 @@ export const LoyaltyPointsTable = memo(
             label: (value) => value?.toLocaleString?.(),
           },
           Cell: ({ renderedCellValue, row, cell }) => (
-            <Text ta="right">{row.original.lpCost.toLocaleString()} LP</Text>
+            <Text inherit ta="right">
+              {row.original.lpCost.toLocaleString()} LP
+            </Text>
           ),
         },
         {
@@ -241,7 +243,7 @@ export const LoyaltyPointsTable = memo(
             label: (value) => <ISKAmount amount={value} />,
           },
           Cell: ({ renderedCellValue, row, cell }) => (
-            <ISKAmount ta="right" amount={row.original.iskCost ?? 0} />
+            <ISKAmount inherit ta="right" amount={row.original.iskCost ?? 0} />
           ),
         },
         {
@@ -287,7 +289,7 @@ export const LoyaltyPointsTable = memo(
                   <Group key={typeId} wrap="nowrap" justify="space-between">
                     <TypeAvatar typeId={typeId} size="sm" />
                     {marketStats && (
-                      <ISKAmount amount={marketStats.buy.percentile} />
+                      <ISKAmount inherit amount={marketStats.buy.percentile} />
                     )}
                   </Group>
                 ),
@@ -310,6 +312,7 @@ export const LoyaltyPointsTable = memo(
                     <TypeAvatar typeId={typeId} size="sm" />
                     {marketStats && (
                       <ISKAmount
+                        inherit
                         amount={marketStats.buy.percentile * quantity}
                       />
                     )}
@@ -333,7 +336,7 @@ export const LoyaltyPointsTable = memo(
                   <Group key={typeId} wrap="nowrap" justify="space-between">
                     <TypeAvatar typeId={typeId} size="sm" />
                     {marketStats && (
-                      <ISKAmount amount={marketStats.sell.percentile} />
+                      <ISKAmount inherit amount={marketStats.sell.percentile} />
                     )}
                   </Group>
                 ),
@@ -356,6 +359,7 @@ export const LoyaltyPointsTable = memo(
                     <TypeAvatar typeId={typeId} size="sm" />
                     {marketStats && (
                       <ISKAmount
+                        inherit
                         amount={marketStats.sell.percentile * quantity}
                       />
                     )}
@@ -373,7 +377,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount ta="right" amount={amount} />;
+            return <ISKAmount inherit ta="right" amount={amount} />;
           },
         },
         {
@@ -399,7 +403,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount ta="right" amount={amount} />;
+            return <ISKAmount inherit ta="right" amount={amount} />;
           },
         },
         {
@@ -418,7 +422,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount ta="right" amount={amount} />;
+            return <ISKAmount inherit ta="right" amount={amount} />;
           },
         },
         {
@@ -439,7 +443,11 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <Text ta="right">{amount.toFixed(0)} ISK/LP</Text>;
+            return (
+              <Text inherit ta="right">
+                {amount.toFixed(0)} ISK/LP
+              </Text>
+            );
           },
         },
         {
@@ -450,7 +458,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount ta="right" amount={amount} />;
+            return <ISKAmount inherit ta="right" amount={amount} />;
           },
         },
         {
@@ -476,7 +484,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount ta="right" amount={amount} />;
+            return <ISKAmount inherit ta="right" amount={amount} />;
           },
         },
         {
@@ -495,7 +503,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount ta="right" amount={amount} />;
+            return <ISKAmount inherit ta="right" amount={amount} />;
           },
         },
         {
@@ -516,7 +524,11 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <Text ta="right">{amount.toFixed(0)} ISK/LP</Text>;
+            return (
+              <Text inherit ta="right">
+                {amount.toFixed(0)} ISK/LP
+              </Text>
+            );
           },
         },
         {
@@ -532,7 +544,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount ta="right" amount={amount} />;
+            return <ISKAmount inherit ta="right" amount={amount} />;
           },
         },
         {
@@ -552,7 +564,7 @@ export const LoyaltyPointsTable = memo(
           Cell: ({ row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
-            return <ISKAmount ta="right" amount={amount} />;
+            return <ISKAmount inherit ta="right" amount={amount} />;
           },
         },
       ],
