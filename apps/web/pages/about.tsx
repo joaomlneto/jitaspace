@@ -196,6 +196,11 @@ export default function Page() {
             </Anchor>
           </List.Item>
           <List.Item>
+            <Anchor href="https://www.mantine-react-table.com" target="_blank">
+              Mantine React Table
+            </Anchor>
+          </List.Item>
+          <List.Item>
             <Anchor href="https://ducanh-next-pwa.vercel.app/" target="_blank">
               next-pwa
             </Anchor>
