@@ -23,17 +23,17 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@prisma/client": "^5.7.1"
+    "@prisma/client": "^5.8.1"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
-    "@types/node": "^18.19.4",
+    "@types/node": "^18.19.8",
     "concurrently": "^8.2.2",
     "eslint": "^8.56.0",
-    "prettier": "^3.1.1",
-    "prisma": "^5.7.1",
+    "prettier": "^3.2.4",
+    "prisma": "^5.8.1",
     "typescript": "^5.3.3"
   }
 }

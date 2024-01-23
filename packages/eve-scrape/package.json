@@ -17,19 +17,19 @@
     "@jitaspace/db": "*",
     "@jitaspace/esi-client": "*",
     "@jitaspace/sde-client": "*",
-    "axios": "^1.6.3",
+    "axios": "^1.6.5",
     "decimal.js": "^10.4.3",
-    "inngest": "^3.7.4",
+    "inngest": "^3.11.0",
     "p-limit": "^4.0.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
-    "@types/node": "^18.19.4",
+    "@types/node": "^18.19.8",
     "eslint": "^8.56.0",
-    "inngest-cli": "^0.23.1",
-    "prettier": "^3.1.1",
+    "inngest-cli": "^0.24.3",
+    "prettier": "^3.2.4",
     "typescript": "^5.3.3"
   }
 }
