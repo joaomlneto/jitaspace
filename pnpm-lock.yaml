@@ -400,29 +400,29 @@ importers:
   packages/esi-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^2.1.5
-        version: 2.1.6(typescript@5.3.3)
+        specifier: ^2.5.1
+        version: 2.5.1(typescript@5.3.3)
       '@kubb/core':
-        specifier: ^2.1.5
-        version: 2.1.6
+        specifier: ^2.5.1
+        version: 2.5.1
       '@kubb/swagger':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-client':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
       '@kubb/swagger-tanstack-query':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
       '@kubb/swagger-ts':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-zod':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-zodios':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@tanstack/react-query':
         specifier: ^5.17.19
         version: 5.17.19(react@18.2.0)
@@ -467,29 +467,29 @@ importers:
   packages/esi-meta-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^2.1.5
-        version: 2.1.6(typescript@5.3.3)
+        specifier: ^2.5.1
+        version: 2.5.1(typescript@5.3.3)
       '@kubb/core':
-        specifier: ^2.1.5
-        version: 2.1.6
+        specifier: ^2.5.1
+        version: 2.5.1
       '@kubb/swagger':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-client':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
       '@kubb/swagger-tanstack-query':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
       '@kubb/swagger-ts':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-zod':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-zodios':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@tanstack/react-query':
         specifier: ^5.17.19
         version: 5.17.19(react@18.2.0)
@@ -649,29 +649,29 @@ importers:
   packages/evetycoon-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^2.1.5
-        version: 2.1.6(typescript@5.3.3)
+        specifier: ^2.5.1
+        version: 2.5.1(typescript@5.3.3)
       '@kubb/core':
-        specifier: ^2.1.5
-        version: 2.1.6
+        specifier: ^2.5.1
+        version: 2.5.1
       '@kubb/swagger':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-client':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
       '@kubb/swagger-tanstack-query':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
       '@kubb/swagger-ts':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-zod':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-zodios':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@tanstack/react-query':
         specifier: ^5.17.19
         version: 5.17.19(react@18.2.0)
@@ -716,29 +716,29 @@ importers:
   packages/fuzzworks-market-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^2.1.5
-        version: 2.1.6(typescript@5.3.3)
+        specifier: ^2.5.1
+        version: 2.5.1(typescript@5.3.3)
       '@kubb/core':
-        specifier: ^2.1.5
-        version: 2.1.6
+        specifier: ^2.5.1
+        version: 2.5.1
       '@kubb/swagger':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-client':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
       '@kubb/swagger-tanstack-query':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
       '@kubb/swagger-ts':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-zod':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-zodios':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@tanstack/react-query':
         specifier: ^5.17.19
         version: 5.17.19(react@18.2.0)
@@ -847,29 +847,29 @@ importers:
   packages/sde-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^2.1.5
-        version: 2.1.6(typescript@5.3.3)
+        specifier: ^2.5.1
+        version: 2.5.1(typescript@5.3.3)
       '@kubb/core':
-        specifier: ^2.1.5
-        version: 2.1.6
+        specifier: ^2.5.1
+        version: 2.5.1
       '@kubb/swagger':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-client':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
       '@kubb/swagger-tanstack-query':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
       '@kubb/swagger-ts':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-zod':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@kubb/swagger-zodios':
-        specifier: ^2.1.5
-        version: 2.1.6(@kubb/react@2.1.6)
+        specifier: ^2.5.1
+        version: 2.5.1(@kubb/react@2.5.1)
       '@tanstack/react-query':
         specifier: ^5.17.19
         version: 5.17.19(react@18.2.0)
@@ -3402,12 +3402,12 @@ packages:
     resolution: {integrity: sha512-4JQNk+3mVzK3xh2rqd6RB4J46qUR19azEHBneZyTZM+c456qOrbbM/5xcR8huNCCcbVt7+UmizG6GuUvPvKUYg==}
     dev: false
 
-  /@kubb/cli@2.1.6(typescript@5.3.3):
-    resolution: {integrity: sha512-kZBAIl38ZgzzazLHeW7A3EH2485pV0a7AHUrarZ3ZwOgzPZeOfh2ml+OCYmhLFXMppbm+AU4hROsyLy5PKqeVQ==}
+  /@kubb/cli@2.5.1(typescript@5.3.3):
+    resolution: {integrity: sha512-D5mVBIjqSZhUZ7cHxd0gKmOOKxIBBtOrnio9oMua/xLvE6h4VZilEX7sF6h6wPTzFZUaachsvQAaosWyqdHYoA==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     hasBin: true
     dependencies:
-      '@kubb/core': 2.1.6
+      '@kubb/core': 2.5.1
       bundle-require: 4.0.2(esbuild@0.19.11)
       cac: 6.7.14
       chokidar: 3.5.3
@@ -3422,13 +3422,13 @@ packages:
       - typescript
     dev: false
 
-  /@kubb/core@2.1.6:
-    resolution: {integrity: sha512-NXef1G12f4Dc9Ig1sSNEa0xC4axmdjVTefPJRZkJ66BD/NkYqnvhs6Q3C5QGnnkt++EPmRmS9z5fu9zW/FqmqA==}
+  /@kubb/core@2.5.1:
+    resolution: {integrity: sha512-XME9n4Ne6rLCB1cGf7OaL+amvLFs9wvQHusp8+W0+8FrgNRpnFn54MYZA0fV24LLYiY7dCm8GNJnlCEI0Wr4Og==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
-      '@kubb/parser': 2.1.6
-      '@kubb/types': 2.1.6
-      change-case: 5.4.0
+      '@kubb/parser': 2.5.1
+      '@kubb/types': 2.5.1
+      change-case: 5.4.2
       directory-tree: 3.5.1
       find-up: 7.0.0
       fs-extra: 11.2.0
@@ -3439,69 +3439,70 @@ packages:
       semver: 7.5.4
     dev: false
 
-  /@kubb/parser@2.1.6:
-    resolution: {integrity: sha512-l7ITTxD0k7iOvBbO50i+q2q1jkittgMOYOSkhD/mztC8/cj+krA/P3a5sMwIjlEvoo2s9uyayp4Mpr1kimwGlg==}
+  /@kubb/parser@2.5.1:
+    resolution: {integrity: sha512-nD94DTa03SIIugjmE3EbUTcRUN8dwexEf3TeyTpdFb4OQOje4o2B/bdxbg5k2oRXxgB/Hv3sKAn6ZIWbYFOfDA==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
       typescript: 5.3.3
     dev: false
 
-  /@kubb/react@2.1.6:
-    resolution: {integrity: sha512-d6x8IJ+I5e7U17YfU3IeRzzMyYaa/6NekLj+W6r7j0Xzh7xX5ui2HUlYvrq0qrRtdimOzBBZoaHUJKLMNUSFPw==}
+  /@kubb/react@2.5.1:
+    resolution: {integrity: sha512-cOLMi8PzgaCZn9tQI0mvGM/HEkF9wfElqon3cSOB7VR/m/hZe4T1yUaO5jV7/3b9s8qwy2Gm8wJFk5VFV3Drlg==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
-      '@kubb/core': 2.1.6
-      '@kubb/parser': 2.1.6
+      '@kubb/core': 2.5.1
+      '@kubb/parser': 2.5.1
     dev: false
 
-  /@kubb/swagger-client@2.1.6(@kubb/react@2.1.6)(axios@1.6.5):
-    resolution: {integrity: sha512-d6ueycEngFW3MVi6+PvaOHpNTJDJS07RBFNVgsXboN8/FqlBBhBRayTCHUvHZUyDYV12dcr3tjzSxg6Dpzx9tA==}
+  /@kubb/swagger-client@2.5.1(@kubb/react@2.5.1)(axios@1.6.5):
+    resolution: {integrity: sha512-W9n/uNG5daGPDtFRGZ0HtSzbOrPDnhjD2DryXkJfMMYMZCM/VlLq6+cxVt7sab2MKYvhK0dF2tXrIARofy4lEQ==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.1.6
+      '@kubb/react': 2.5.1
       axios: ^1.6.2
     peerDependenciesMeta:
       axios:
         optional: true
     dependencies:
-      '@kubb/core': 2.1.6
-      '@kubb/parser': 2.1.6
-      '@kubb/react': 2.1.6
-      '@kubb/swagger': 2.1.6(@kubb/react@2.1.6)
-      '@kubb/swagger-ts': 2.1.6(@kubb/react@2.1.6)
+      '@kubb/core': 2.5.1
+      '@kubb/parser': 2.5.1
+      '@kubb/react': 2.5.1
+      '@kubb/swagger': 2.5.1(@kubb/react@2.5.1)
+      '@kubb/swagger-ts': 2.5.1(@kubb/react@2.5.1)
       axios: 1.6.5
     transitivePeerDependencies:
       - encoding
     dev: false
 
-  /@kubb/swagger-tanstack-query@2.1.6(@kubb/react@2.1.6)(axios@1.6.5):
-    resolution: {integrity: sha512-VCiX/ofsHOeGN+NKwqW6PXQMZhOrEp1l1X4foOeVeFOx7UbkH7aHltVrkLmzA4poFKttH0F6UsRm/k1fbV8yig==}
+  /@kubb/swagger-tanstack-query@2.5.1(@kubb/react@2.5.1)(axios@1.6.5):
+    resolution: {integrity: sha512-k4QZYmnFtjCi/vHBJva24LEcERQv8gF/d61AP064u/IuP9FjLvNslqdxXl5LCKPdkuiYBffq3w1ug5NFTWhzbQ==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.1.6
+      '@kubb/react': 2.5.1
     dependencies:
-      '@kubb/core': 2.1.6
-      '@kubb/parser': 2.1.6
-      '@kubb/react': 2.1.6
-      '@kubb/swagger': 2.1.6(@kubb/react@2.1.6)
-      '@kubb/swagger-client': 2.1.6(@kubb/react@2.1.6)(axios@1.6.5)
-      '@kubb/swagger-ts': 2.1.6(@kubb/react@2.1.6)
+      '@kubb/core': 2.5.1
+      '@kubb/parser': 2.5.1
+      '@kubb/react': 2.5.1
+      '@kubb/swagger': 2.5.1(@kubb/react@2.5.1)
+      '@kubb/swagger-client': 2.5.1(@kubb/react@2.5.1)(axios@1.6.5)
+      '@kubb/swagger-ts': 2.5.1(@kubb/react@2.5.1)
+      '@kubb/swagger-zod': 2.5.1(@kubb/react@2.5.1)
     transitivePeerDependencies:
       - axios
       - encoding
     dev: false
 
-  /@kubb/swagger-ts@2.1.6(@kubb/react@2.1.6):
-    resolution: {integrity: sha512-7hxR9jilNUcLMcZBloZ+GwcyFcUBDrnjZl5/5adFafNiBpfYOdrUlePe919bAb12W4VJM5VEQAkpe9ac7cfXmQ==}
+  /@kubb/swagger-ts@2.5.1(@kubb/react@2.5.1):
+    resolution: {integrity: sha512-IUc6eIOS88yrmTxYm5VSpSqCSvwjGgUodcvb+zgtyHP2NPeRFcygRzocfD67wPOtsR+twTnVrDCNdf/ZdXd4eQ==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.1.6
+      '@kubb/react': 2.5.1
     dependencies:
-      '@kubb/core': 2.1.6
-      '@kubb/parser': 2.1.6
-      '@kubb/react': 2.1.6
-      '@kubb/swagger': 2.1.6(@kubb/react@2.1.6)
-      '@kubb/types': 2.1.6
+      '@kubb/core': 2.5.1
+      '@kubb/parser': 2.5.1
+      '@kubb/react': 2.5.1
+      '@kubb/swagger': 2.5.1(@kubb/react@2.5.1)
+      '@kubb/types': 2.5.1
       hotscript: 1.0.13
       json-schema-to-ts: 3.0.0
       ts-toolbelt: 9.6.0
@@ -3509,44 +3510,45 @@ packages:
       - encoding
     dev: false
 
-  /@kubb/swagger-zod@2.1.6(@kubb/react@2.1.6):
-    resolution: {integrity: sha512-U4UPsrRBno2F1EGc6b3VeN2PdWGhlqWRKGvvB1pMM1/qcCMZihU+JyeCVDGOkO77OxKriCVkdrImQtVuBzxKxA==}
+  /@kubb/swagger-zod@2.5.1(@kubb/react@2.5.1):
+    resolution: {integrity: sha512-d/IW6CLXdjyMhzf+ny5AGRNvB11j1rNLUFhDMHz/B2+W/Zqv+n99PhMx3IIYMlQ4fStKffdSK6a2snprcz53hg==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.1.6
+      '@kubb/react': 2.5.1
     dependencies:
-      '@kubb/core': 2.1.6
-      '@kubb/parser': 2.1.6
-      '@kubb/react': 2.1.6
-      '@kubb/swagger': 2.1.6(@kubb/react@2.1.6)
+      '@kubb/core': 2.5.1
+      '@kubb/parser': 2.5.1
+      '@kubb/react': 2.5.1
+      '@kubb/swagger': 2.5.1(@kubb/react@2.5.1)
+      '@kubb/swagger-ts': 2.5.1(@kubb/react@2.5.1)
     transitivePeerDependencies:
       - encoding
     dev: false
 
-  /@kubb/swagger-zodios@2.1.6(@kubb/react@2.1.6):
-    resolution: {integrity: sha512-byvjBWC6oZEufXJR0K/3ipmJavfKEQCWgxCypg7TDDMDhiNNQFxpddo4ro9ENMBkkwKuM/Kh7OtVDy/JSqzG2w==}
+  /@kubb/swagger-zodios@2.5.1(@kubb/react@2.5.1):
+    resolution: {integrity: sha512-+33KdNX3vZF2HSprq6AF4Ea+clWH6GP9pTzGU/42kLOpuzp9hv1Ve1ybc9sRWATi58KCJsrBviZ0JaaUgf6A6A==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.1.6
+      '@kubb/react': 2.5.1
     dependencies:
-      '@kubb/core': 2.1.6
-      '@kubb/parser': 2.1.6
-      '@kubb/react': 2.1.6
-      '@kubb/swagger': 2.1.6(@kubb/react@2.1.6)
-      '@kubb/swagger-zod': 2.1.6(@kubb/react@2.1.6)
+      '@kubb/core': 2.5.1
+      '@kubb/parser': 2.5.1
+      '@kubb/react': 2.5.1
+      '@kubb/swagger': 2.5.1(@kubb/react@2.5.1)
+      '@kubb/swagger-zod': 2.5.1(@kubb/react@2.5.1)
     transitivePeerDependencies:
       - encoding
     dev: false
 
-  /@kubb/swagger@2.1.6(@kubb/react@2.1.6):
-    resolution: {integrity: sha512-LFPQnd2EerrJRczRmhxdtWUGGNNe3PxS6xiyT1jYWxs+9mlOp7CBXiUlM+InSAj+Q48GuwpXYrE2wL783Xaq0A==}
+  /@kubb/swagger@2.5.1(@kubb/react@2.5.1):
+    resolution: {integrity: sha512-HxjAH9ntvtxBKlB2eZG7lgUvcR7JZ/S+1PlGp96xPb6UNSGW5GicG3h1FJ8MLJXyl1W5d0+2JcRvsm3UYKE/1g==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.1.6
+      '@kubb/react': 2.5.1
     dependencies:
       '@apidevtools/swagger-parser': 10.1.0(openapi-types@12.1.3)
-      '@kubb/core': 2.1.6
-      '@kubb/react': 2.1.6
+      '@kubb/core': 2.5.1
+      '@kubb/react': 2.5.1
       js-yaml: 4.1.0
       oas: 24.1.0
       oas-normalize: 11.0.1
@@ -3556,8 +3558,8 @@ packages:
       - encoding
     dev: false
 
-  /@kubb/types@2.1.6:
-    resolution: {integrity: sha512-k3MNvIiYBlja5Hbknm/tfdK7m9EgQIPYy8Ar8pWeR59cFgfZ4xkkozwZ4vl6ILhuO49YI9wU79PakKyccRGeZQ==}
+  /@kubb/types@2.5.1:
+    resolution: {integrity: sha512-MrjJ9i4eVNrDUXs+hGXC/L7SThTwGahs5/oIJfiPMcOyMHcrM6aeRicvdCqbxecGRn4TRBfsfvCKV3PlDqnilw==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dev: false
 
@@ -5875,8 +5877,8 @@ packages:
       upper-case-first: 1.1.2
     dev: false
 
-  /change-case@5.4.0:
-    resolution: {integrity: sha512-11YRFf0f4pI+ROHUfq64WivyrcNSrZjdDt2qgVxvAObtj/Pwnu5uAKObHRbN9uAhaDFkvkqcKVEl8Dxnmx+N7w==}
+  /change-case@5.4.2:
+    resolution: {integrity: sha512-WB3UiTDpT+vrTilAWaJS4gaIH/jc1He4H9f6erQvraUYas90uWT0JOYFkG1imdNv710XJ6gJvqynrgOHc4ihDA==}
     dev: false
 
   /chardet@0.7.0:
