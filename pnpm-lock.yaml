@@ -400,29 +400,29 @@ importers:
   packages/esi-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^2.5.1
-        version: 2.5.1(typescript@5.3.3)
+        specifier: ^2.5.3
+        version: 2.5.3(typescript@5.3.3)
       '@kubb/core':
-        specifier: ^2.5.1
-        version: 2.5.1
+        specifier: ^2.5.3
+        version: 2.5.3
       '@kubb/swagger':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-client':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
       '@kubb/swagger-tanstack-query':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
       '@kubb/swagger-ts':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-zod':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-zodios':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@tanstack/react-query':
         specifier: ^5.18.1
         version: 5.18.1(react@18.2.0)
@@ -467,29 +467,29 @@ importers:
   packages/esi-meta-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^2.5.1
-        version: 2.5.1(typescript@5.3.3)
+        specifier: ^2.5.3
+        version: 2.5.3(typescript@5.3.3)
       '@kubb/core':
-        specifier: ^2.5.1
-        version: 2.5.1
+        specifier: ^2.5.3
+        version: 2.5.3
       '@kubb/swagger':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-client':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
       '@kubb/swagger-tanstack-query':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
       '@kubb/swagger-ts':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-zod':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-zodios':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@tanstack/react-query':
         specifier: ^5.18.1
         version: 5.18.1(react@18.2.0)
@@ -649,29 +649,29 @@ importers:
   packages/evetycoon-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^2.5.1
-        version: 2.5.1(typescript@5.3.3)
+        specifier: ^2.5.3
+        version: 2.5.3(typescript@5.3.3)
       '@kubb/core':
-        specifier: ^2.5.1
-        version: 2.5.1
+        specifier: ^2.5.3
+        version: 2.5.3
       '@kubb/swagger':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-client':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
       '@kubb/swagger-tanstack-query':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
       '@kubb/swagger-ts':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-zod':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-zodios':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@tanstack/react-query':
         specifier: ^5.18.1
         version: 5.18.1(react@18.2.0)
@@ -716,29 +716,29 @@ importers:
   packages/fuzzworks-market-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^2.5.1
-        version: 2.5.1(typescript@5.3.3)
+        specifier: ^2.5.3
+        version: 2.5.3(typescript@5.3.3)
       '@kubb/core':
-        specifier: ^2.5.1
-        version: 2.5.1
+        specifier: ^2.5.3
+        version: 2.5.3
       '@kubb/swagger':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-client':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
       '@kubb/swagger-tanstack-query':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
       '@kubb/swagger-ts':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-zod':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-zodios':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@tanstack/react-query':
         specifier: ^5.18.1
         version: 5.18.1(react@18.2.0)
@@ -847,29 +847,29 @@ importers:
   packages/sde-client:
     dependencies:
       '@kubb/cli':
-        specifier: ^2.5.1
-        version: 2.5.1(typescript@5.3.3)
+        specifier: ^2.5.3
+        version: 2.5.3(typescript@5.3.3)
       '@kubb/core':
-        specifier: ^2.5.1
-        version: 2.5.1
+        specifier: ^2.5.3
+        version: 2.5.3
       '@kubb/swagger':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-client':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
       '@kubb/swagger-tanstack-query':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
       '@kubb/swagger-ts':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-zod':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@kubb/swagger-zodios':
-        specifier: ^2.5.1
-        version: 2.5.1(@kubb/react@2.5.1)
+        specifier: ^2.5.3
+        version: 2.5.3(@kubb/react@2.5.3)
       '@tanstack/react-query':
         specifier: ^5.18.1
         version: 5.18.1(react@18.2.0)
@@ -2790,8 +2790,8 @@ packages:
     resolution: {integrity: sha512-EsBwpc7hBUJWAsNPBmJy4hxWx12v6bshQsldrVmjxJoc3isbxhOrF2IcCpaXxfvq03NwkI7sbsOLXbYuqF/8Ww==}
     dev: false
 
-  /@esbuild/aix-ppc64@0.19.11:
-    resolution: {integrity: sha512-FnzU0LyE3ySQk7UntJO4+qIiQgI7KoODnZg5xzXIrFJlKd2P2gwHsHY4927xj9y5PJmJSzULiUCWmv7iWnNa7g==}
+  /@esbuild/aix-ppc64@0.19.12:
+    resolution: {integrity: sha512-bmoCYyWdEL3wDQIVbcyzRyeKLgk2WtWLTWz1ZIAZF/EGbNOwSA6ew3PftJ1PqMiOOGu0OyFMzG53L0zqIpPeNA==}
     engines: {node: '>=12'}
     cpu: [ppc64]
     os: [aix]
@@ -2799,8 +2799,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/android-arm64@0.19.11:
-    resolution: {integrity: sha512-aiu7K/5JnLj//KOnOfEZ0D90obUkRzDMyqd/wNAUQ34m4YUPVhRZpnqKV9uqDGxT7cToSDnIHsGooyIczu9T+Q==}
+  /@esbuild/android-arm64@0.19.12:
+    resolution: {integrity: sha512-P0UVNGIienjZv3f5zq0DP3Nt2IE/3plFzuaS96vihvD0Hd6H/q4WXUGpCxD/E8YrSXfNyRPbpTq+T8ZQioSuPA==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [android]
@@ -2808,8 +2808,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/android-arm@0.19.11:
-    resolution: {integrity: sha512-5OVapq0ClabvKvQ58Bws8+wkLCV+Rxg7tUVbo9xu034Nm536QTII4YzhaFriQ7rMrorfnFKUsArD2lqKbFY4vw==}
+  /@esbuild/android-arm@0.19.12:
+    resolution: {integrity: sha512-qg/Lj1mu3CdQlDEEiWrlC4eaPZ1KztwGJ9B6J+/6G+/4ewxJg7gqj8eVYWvao1bXrqGiW2rsBZFSX3q2lcW05w==}
     engines: {node: '>=12'}
     cpu: [arm]
     os: [android]
@@ -2817,8 +2817,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/android-x64@0.19.11:
-    resolution: {integrity: sha512-eccxjlfGw43WYoY9QgB82SgGgDbibcqyDTlk3l3C0jOVHKxrjdc9CTwDUQd0vkvYg5um0OH+GpxYvp39r+IPOg==}
+  /@esbuild/android-x64@0.19.12:
+    resolution: {integrity: sha512-3k7ZoUW6Q6YqhdhIaq/WZ7HwBpnFBlW905Fa4s4qWJyiNOgT1dOqDiVAQFwBH7gBRZr17gLrlFCRzF6jFh7Kew==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [android]
@@ -2826,8 +2826,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/darwin-arm64@0.19.11:
-    resolution: {integrity: sha512-ETp87DRWuSt9KdDVkqSoKoLFHYTrkyz2+65fj9nfXsaV3bMhTCjtQfw3y+um88vGRKRiF7erPrh/ZuIdLUIVxQ==}
+  /@esbuild/darwin-arm64@0.19.12:
+    resolution: {integrity: sha512-B6IeSgZgtEzGC42jsI+YYu9Z3HKRxp8ZT3cqhvliEHovq8HSX2YX8lNocDn79gCKJXOSaEot9MVYky7AKjCs8g==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [darwin]
@@ -2835,8 +2835,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/darwin-x64@0.19.11:
-    resolution: {integrity: sha512-fkFUiS6IUK9WYUO/+22omwetaSNl5/A8giXvQlcinLIjVkxwTLSktbF5f/kJMftM2MJp9+fXqZ5ezS7+SALp4g==}
+  /@esbuild/darwin-x64@0.19.12:
+    resolution: {integrity: sha512-hKoVkKzFiToTgn+41qGhsUJXFlIjxI/jSYeZf3ugemDYZldIXIxhvwN6erJGlX4t5h417iFuheZ7l+YVn05N3A==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [darwin]
@@ -2844,8 +2844,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/freebsd-arm64@0.19.11:
-    resolution: {integrity: sha512-lhoSp5K6bxKRNdXUtHoNc5HhbXVCS8V0iZmDvyWvYq9S5WSfTIHU2UGjcGt7UeS6iEYp9eeymIl5mJBn0yiuxA==}
+  /@esbuild/freebsd-arm64@0.19.12:
+    resolution: {integrity: sha512-4aRvFIXmwAcDBw9AueDQ2YnGmz5L6obe5kmPT8Vd+/+x/JMVKCgdcRwH6APrbpNXsPz+K653Qg8HB/oXvXVukA==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [freebsd]
@@ -2853,8 +2853,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/freebsd-x64@0.19.11:
-    resolution: {integrity: sha512-JkUqn44AffGXitVI6/AbQdoYAq0TEullFdqcMY/PCUZ36xJ9ZJRtQabzMA+Vi7r78+25ZIBosLTOKnUXBSi1Kw==}
+  /@esbuild/freebsd-x64@0.19.12:
+    resolution: {integrity: sha512-EYoXZ4d8xtBoVN7CEwWY2IN4ho76xjYXqSXMNccFSx2lgqOG/1TBPW0yPx1bJZk94qu3tX0fycJeeQsKovA8gg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [freebsd]
@@ -2862,8 +2862,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/linux-arm64@0.19.11:
-    resolution: {integrity: sha512-LneLg3ypEeveBSMuoa0kwMpCGmpu8XQUh+mL8XXwoYZ6Be2qBnVtcDI5azSvh7vioMDhoJFZzp9GWp9IWpYoUg==}
+  /@esbuild/linux-arm64@0.19.12:
+    resolution: {integrity: sha512-EoTjyYyLuVPfdPLsGVVVC8a0p1BFFvtpQDB/YLEhaXyf/5bczaGeN15QkR+O4S5LeJ92Tqotve7i1jn35qwvdA==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [linux]
@@ -2871,8 +2871,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/linux-arm@0.19.11:
-    resolution: {integrity: sha512-3CRkr9+vCV2XJbjwgzjPtO8T0SZUmRZla+UL1jw+XqHZPkPgZiyWvbDvl9rqAN8Zl7qJF0O/9ycMtjU67HN9/Q==}
+  /@esbuild/linux-arm@0.19.12:
+    resolution: {integrity: sha512-J5jPms//KhSNv+LO1S1TX1UWp1ucM6N6XuL6ITdKWElCu8wXP72l9MM0zDTzzeikVyqFE6U8YAV9/tFyj0ti+w==}
     engines: {node: '>=12'}
     cpu: [arm]
     os: [linux]
@@ -2880,8 +2880,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/linux-ia32@0.19.11:
-    resolution: {integrity: sha512-caHy++CsD8Bgq2V5CodbJjFPEiDPq8JJmBdeyZ8GWVQMjRD0sU548nNdwPNvKjVpamYYVL40AORekgfIubwHoA==}
+  /@esbuild/linux-ia32@0.19.12:
+    resolution: {integrity: sha512-Thsa42rrP1+UIGaWz47uydHSBOgTUnwBwNq59khgIwktK6x60Hivfbux9iNR0eHCHzOLjLMLfUMLCypBkZXMHA==}
     engines: {node: '>=12'}
     cpu: [ia32]
     os: [linux]
@@ -2889,8 +2889,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/linux-loong64@0.19.11:
-    resolution: {integrity: sha512-ppZSSLVpPrwHccvC6nQVZaSHlFsvCQyjnvirnVjbKSHuE5N24Yl8F3UwYUUR1UEPaFObGD2tSvVKbvR+uT1Nrg==}
+  /@esbuild/linux-loong64@0.19.12:
+    resolution: {integrity: sha512-LiXdXA0s3IqRRjm6rV6XaWATScKAXjI4R4LoDlvO7+yQqFdlr1Bax62sRwkVvRIrwXxvtYEHHI4dm50jAXkuAA==}
     engines: {node: '>=12'}
     cpu: [loong64]
     os: [linux]
@@ -2898,8 +2898,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/linux-mips64el@0.19.11:
-    resolution: {integrity: sha512-B5x9j0OgjG+v1dF2DkH34lr+7Gmv0kzX6/V0afF41FkPMMqaQ77pH7CrhWeR22aEeHKaeZVtZ6yFwlxOKPVFyg==}
+  /@esbuild/linux-mips64el@0.19.12:
+    resolution: {integrity: sha512-fEnAuj5VGTanfJ07ff0gOA6IPsvrVHLVb6Lyd1g2/ed67oU1eFzL0r9WL7ZzscD+/N6i3dWumGE1Un4f7Amf+w==}
     engines: {node: '>=12'}
     cpu: [mips64el]
     os: [linux]
@@ -2907,8 +2907,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/linux-ppc64@0.19.11:
-    resolution: {integrity: sha512-MHrZYLeCG8vXblMetWyttkdVRjQlQUb/oMgBNurVEnhj4YWOr4G5lmBfZjHYQHHN0g6yDmCAQRR8MUHldvvRDA==}
+  /@esbuild/linux-ppc64@0.19.12:
+    resolution: {integrity: sha512-nYJA2/QPimDQOh1rKWedNOe3Gfc8PabU7HT3iXWtNUbRzXS9+vgB0Fjaqr//XNbd82mCxHzik2qotuI89cfixg==}
     engines: {node: '>=12'}
     cpu: [ppc64]
     os: [linux]
@@ -2916,8 +2916,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/linux-riscv64@0.19.11:
-    resolution: {integrity: sha512-f3DY++t94uVg141dozDu4CCUkYW+09rWtaWfnb3bqe4w5NqmZd6nPVBm+qbz7WaHZCoqXqHz5p6CM6qv3qnSSQ==}
+  /@esbuild/linux-riscv64@0.19.12:
+    resolution: {integrity: sha512-2MueBrlPQCw5dVJJpQdUYgeqIzDQgw3QtiAHUC4RBz9FXPrskyyU3VI1hw7C0BSKB9OduwSJ79FTCqtGMWqJHg==}
     engines: {node: '>=12'}
     cpu: [riscv64]
     os: [linux]
@@ -2925,8 +2925,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/linux-s390x@0.19.11:
-    resolution: {integrity: sha512-A5xdUoyWJHMMlcSMcPGVLzYzpcY8QP1RtYzX5/bS4dvjBGVxdhuiYyFwp7z74ocV7WDc0n1harxmpq2ePOjI0Q==}
+  /@esbuild/linux-s390x@0.19.12:
+    resolution: {integrity: sha512-+Pil1Nv3Umes4m3AZKqA2anfhJiVmNCYkPchwFJNEJN5QxmTs1uzyy4TvmDrCRNT2ApwSari7ZIgrPeUx4UZDg==}
     engines: {node: '>=12'}
     cpu: [s390x]
     os: [linux]
@@ -2934,8 +2934,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/linux-x64@0.19.11:
-    resolution: {integrity: sha512-grbyMlVCvJSfxFQUndw5mCtWs5LO1gUlwP4CDi4iJBbVpZcqLVT29FxgGuBJGSzyOxotFG4LoO5X+M1350zmPA==}
+  /@esbuild/linux-x64@0.19.12:
+    resolution: {integrity: sha512-B71g1QpxfwBvNrfyJdVDexenDIt1CiDN1TIXLbhOw0KhJzE78KIFGX6OJ9MrtC0oOqMWf+0xop4qEU8JrJTwCg==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [linux]
@@ -2943,8 +2943,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/netbsd-x64@0.19.11:
-    resolution: {integrity: sha512-13jvrQZJc3P230OhU8xgwUnDeuC/9egsjTkXN49b3GcS5BKvJqZn86aGM8W9pd14Kd+u7HuFBMVtrNGhh6fHEQ==}
+  /@esbuild/netbsd-x64@0.19.12:
+    resolution: {integrity: sha512-3ltjQ7n1owJgFbuC61Oj++XhtzmymoCihNFgT84UAmJnxJfm4sYCiSLTXZtE00VWYpPMYc+ZQmB6xbSdVh0JWA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [netbsd]
@@ -2952,8 +2952,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/openbsd-x64@0.19.11:
-    resolution: {integrity: sha512-ysyOGZuTp6SNKPE11INDUeFVVQFrhcNDVUgSQVDzqsqX38DjhPEPATpid04LCoUr2WXhQTEZ8ct/EgJCUDpyNw==}
+  /@esbuild/openbsd-x64@0.19.12:
+    resolution: {integrity: sha512-RbrfTB9SWsr0kWmb9srfF+L933uMDdu9BIzdA7os2t0TXhCRjrQyCeOt6wVxr79CKD4c+p+YhCj31HBkYcXebw==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [openbsd]
@@ -2961,8 +2961,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/sunos-x64@0.19.11:
-    resolution: {integrity: sha512-Hf+Sad9nVwvtxy4DXCZQqLpgmRTQqyFyhT3bZ4F2XlJCjxGmRFF0Shwn9rzhOYRB61w9VMXUkxlBy56dk9JJiQ==}
+  /@esbuild/sunos-x64@0.19.12:
+    resolution: {integrity: sha512-HKjJwRrW8uWtCQnQOz9qcU3mUZhTUQvi56Q8DPTLLB+DawoiQdjsYq+j+D3s9I8VFtDr+F9CjgXKKC4ss89IeA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [sunos]
@@ -2970,8 +2970,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/win32-arm64@0.19.11:
-    resolution: {integrity: sha512-0P58Sbi0LctOMOQbpEOvOL44Ne0sqbS0XWHMvvrg6NE5jQ1xguCSSw9jQeUk2lfrXYsKDdOe6K+oZiwKPilYPQ==}
+  /@esbuild/win32-arm64@0.19.12:
+    resolution: {integrity: sha512-URgtR1dJnmGvX864pn1B2YUYNzjmXkuJOIqG2HdU62MVS4EHpU2946OZoTMnRUHklGtJdJZ33QfzdjGACXhn1A==}
     engines: {node: '>=12'}
     cpu: [arm64]
     os: [win32]
@@ -2979,8 +2979,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/win32-ia32@0.19.11:
-    resolution: {integrity: sha512-6YOrWS+sDJDmshdBIQU+Uoyh7pQKrdykdefC1avn76ss5c+RN6gut3LZA4E2cH5xUEp5/cA0+YxRaVtRAb0xBg==}
+  /@esbuild/win32-ia32@0.19.12:
+    resolution: {integrity: sha512-+ZOE6pUkMOJfmxmBZElNOx72NKpIa/HFOMGzu8fqzQJ5kgf6aTGrcJaFsNiVMH4JKpMipyK+7k0n2UXN7a8YKQ==}
     engines: {node: '>=12'}
     cpu: [ia32]
     os: [win32]
@@ -2988,8 +2988,8 @@ packages:
     dev: false
     optional: true
 
-  /@esbuild/win32-x64@0.19.11:
-    resolution: {integrity: sha512-vfkhltrjCAb603XaFhqhAF4LGDi2M4OrCRrFusyQ+iTLQ/o60QQXxc9cZC/FFpihBI9N1Grn6SMKVJ4KP7Fuiw==}
+  /@esbuild/win32-x64@0.19.12:
+    resolution: {integrity: sha512-T1QyPSDCyMXaO3pzBkF96E8xMkiRYbUEZADd29SyPGabqxMViNoii+NcK7eWJAEoU6RZyEm5lVSIjTmcdoB9HA==}
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
@@ -3402,17 +3402,17 @@ packages:
     resolution: {integrity: sha512-4JQNk+3mVzK3xh2rqd6RB4J46qUR19azEHBneZyTZM+c456qOrbbM/5xcR8huNCCcbVt7+UmizG6GuUvPvKUYg==}
     dev: false
 
-  /@kubb/cli@2.5.1(typescript@5.3.3):
-    resolution: {integrity: sha512-D5mVBIjqSZhUZ7cHxd0gKmOOKxIBBtOrnio9oMua/xLvE6h4VZilEX7sF6h6wPTzFZUaachsvQAaosWyqdHYoA==}
+  /@kubb/cli@2.5.3(typescript@5.3.3):
+    resolution: {integrity: sha512-0mekE/5jO4GXa6xAo4um98P152MPOkc7IKMIhhxrpelgq6dYyLGWGzXFVNslJyg2RX3UNIZqctHWnYm7fdWxFw==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     hasBin: true
     dependencies:
-      '@kubb/core': 2.5.1
-      bundle-require: 4.0.2(esbuild@0.19.11)
+      '@kubb/core': 2.5.3
+      bundle-require: 4.0.2(esbuild@0.19.12)
       cac: 6.7.14
       chokidar: 3.5.3
       cosmiconfig: 9.0.0(typescript@5.3.3)
-      esbuild: 0.19.11
+      esbuild: 0.19.12
       execa: 8.0.1
       ora: 8.0.1
       pretty-error: 4.0.0
@@ -3422,12 +3422,12 @@ packages:
       - typescript
     dev: false
 
-  /@kubb/core@2.5.1:
-    resolution: {integrity: sha512-XME9n4Ne6rLCB1cGf7OaL+amvLFs9wvQHusp8+W0+8FrgNRpnFn54MYZA0fV24LLYiY7dCm8GNJnlCEI0Wr4Og==}
+  /@kubb/core@2.5.3:
+    resolution: {integrity: sha512-0vQWVFwtTudu+WYJ4Mn+jYNxEifG1nKotxv5rmPC2D5spUHp+z9Jga9bvms7Kq7KcoLYe0EqRhqeEb2eKBkVwA==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
-      '@kubb/parser': 2.5.1
-      '@kubb/types': 2.5.1
+      '@kubb/parser': 2.5.3
+      '@kubb/types': 2.5.3
       change-case: 5.4.2
       directory-tree: 3.5.1
       find-up: 7.0.0
@@ -3439,70 +3439,70 @@ packages:
       semver: 7.5.4
     dev: false
 
-  /@kubb/parser@2.5.1:
-    resolution: {integrity: sha512-nD94DTa03SIIugjmE3EbUTcRUN8dwexEf3TeyTpdFb4OQOje4o2B/bdxbg5k2oRXxgB/Hv3sKAn6ZIWbYFOfDA==}
+  /@kubb/parser@2.5.3:
+    resolution: {integrity: sha512-nkA/xwqE8Qokh2b5D7iEq10DGcFOWK3p+soUUfL85sv1FL3SbEsuOSbkZz+KeTUf1Zu3KNAehhNdl9R2FZlnrA==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
       typescript: 5.3.3
     dev: false
 
-  /@kubb/react@2.5.1:
-    resolution: {integrity: sha512-cOLMi8PzgaCZn9tQI0mvGM/HEkF9wfElqon3cSOB7VR/m/hZe4T1yUaO5jV7/3b9s8qwy2Gm8wJFk5VFV3Drlg==}
+  /@kubb/react@2.5.3:
+    resolution: {integrity: sha512-RgXnMWVIzgCSVV67Gte4P6v7IoL1a6PU8EK4v2NjRzI4dYQevqp1lIIG+w/rgCTF0CkKKCuvKFnl47Rz7VnUaw==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dependencies:
-      '@kubb/core': 2.5.1
-      '@kubb/parser': 2.5.1
+      '@kubb/core': 2.5.3
+      '@kubb/parser': 2.5.3
     dev: false
 
-  /@kubb/swagger-client@2.5.1(@kubb/react@2.5.1)(axios@1.6.7):
-    resolution: {integrity: sha512-W9n/uNG5daGPDtFRGZ0HtSzbOrPDnhjD2DryXkJfMMYMZCM/VlLq6+cxVt7sab2MKYvhK0dF2tXrIARofy4lEQ==}
+  /@kubb/swagger-client@2.5.3(@kubb/react@2.5.3)(axios@1.6.7):
+    resolution: {integrity: sha512-0P50DDwlcijbIlLk844f62fxvXZwgIRfW9lM5OmacvMzzhtJ4dQ9AY0pmPpmwGX+sdFXNQbrtomaarqSt93h+A==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.5.1
+      '@kubb/react': 2.5.3
       axios: ^1.6.2
     peerDependenciesMeta:
       axios:
         optional: true
     dependencies:
-      '@kubb/core': 2.5.1
-      '@kubb/parser': 2.5.1
-      '@kubb/react': 2.5.1
-      '@kubb/swagger': 2.5.1(@kubb/react@2.5.1)
-      '@kubb/swagger-ts': 2.5.1(@kubb/react@2.5.1)
+      '@kubb/core': 2.5.3
+      '@kubb/parser': 2.5.3
+      '@kubb/react': 2.5.3
+      '@kubb/swagger': 2.5.3(@kubb/react@2.5.3)
+      '@kubb/swagger-ts': 2.5.3(@kubb/react@2.5.3)
       axios: 1.6.7
     transitivePeerDependencies:
       - encoding
     dev: false
 
-  /@kubb/swagger-tanstack-query@2.5.1(@kubb/react@2.5.1)(axios@1.6.7):
-    resolution: {integrity: sha512-k4QZYmnFtjCi/vHBJva24LEcERQv8gF/d61AP064u/IuP9FjLvNslqdxXl5LCKPdkuiYBffq3w1ug5NFTWhzbQ==}
+  /@kubb/swagger-tanstack-query@2.5.3(@kubb/react@2.5.3)(axios@1.6.7):
+    resolution: {integrity: sha512-NcKpMKWec4ChbB085FXSEb/snYwV0gS00797/Ecc3RhCUjMCdESjgLzhYizgy+mKpsqRT0AHnyOfJWh4xvAb5A==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.5.1
+      '@kubb/react': 2.5.3
     dependencies:
-      '@kubb/core': 2.5.1
-      '@kubb/parser': 2.5.1
-      '@kubb/react': 2.5.1
-      '@kubb/swagger': 2.5.1(@kubb/react@2.5.1)
-      '@kubb/swagger-client': 2.5.1(@kubb/react@2.5.1)(axios@1.6.7)
-      '@kubb/swagger-ts': 2.5.1(@kubb/react@2.5.1)
-      '@kubb/swagger-zod': 2.5.1(@kubb/react@2.5.1)
+      '@kubb/core': 2.5.3
+      '@kubb/parser': 2.5.3
+      '@kubb/react': 2.5.3
+      '@kubb/swagger': 2.5.3(@kubb/react@2.5.3)
+      '@kubb/swagger-client': 2.5.3(@kubb/react@2.5.3)(axios@1.6.7)
+      '@kubb/swagger-ts': 2.5.3(@kubb/react@2.5.3)
+      '@kubb/swagger-zod': 2.5.3(@kubb/react@2.5.3)
     transitivePeerDependencies:
       - axios
       - encoding
     dev: false
 
-  /@kubb/swagger-ts@2.5.1(@kubb/react@2.5.1):
-    resolution: {integrity: sha512-IUc6eIOS88yrmTxYm5VSpSqCSvwjGgUodcvb+zgtyHP2NPeRFcygRzocfD67wPOtsR+twTnVrDCNdf/ZdXd4eQ==}
+  /@kubb/swagger-ts@2.5.3(@kubb/react@2.5.3):
+    resolution: {integrity: sha512-Ug02/zf2GWJY80XTfY1U0uUpYk51HTdVIt4FUARZQhWvC7atzMPPTKnhZFq8UNJXjnJV1KNHxlCZoi2Bwr34IA==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.5.1
+      '@kubb/react': 2.5.3
     dependencies:
-      '@kubb/core': 2.5.1
-      '@kubb/parser': 2.5.1
-      '@kubb/react': 2.5.1
-      '@kubb/swagger': 2.5.1(@kubb/react@2.5.1)
-      '@kubb/types': 2.5.1
+      '@kubb/core': 2.5.3
+      '@kubb/parser': 2.5.3
+      '@kubb/react': 2.5.3
+      '@kubb/swagger': 2.5.3(@kubb/react@2.5.3)
+      '@kubb/types': 2.5.3
       hotscript: 1.0.13
       json-schema-to-ts: 3.0.0
       ts-toolbelt: 9.6.0
@@ -3510,45 +3510,45 @@ packages:
       - encoding
     dev: false
 
-  /@kubb/swagger-zod@2.5.1(@kubb/react@2.5.1):
-    resolution: {integrity: sha512-d/IW6CLXdjyMhzf+ny5AGRNvB11j1rNLUFhDMHz/B2+W/Zqv+n99PhMx3IIYMlQ4fStKffdSK6a2snprcz53hg==}
+  /@kubb/swagger-zod@2.5.3(@kubb/react@2.5.3):
+    resolution: {integrity: sha512-Up+SLYw/YWsG2k9ENgWLyIncgghtHWVvoL9b09eTHiAmcINdj+J8cZi96Bw8aJLc6tl2QVRIhkhzs3yIoUHXzg==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.5.1
+      '@kubb/react': 2.5.3
     dependencies:
-      '@kubb/core': 2.5.1
-      '@kubb/parser': 2.5.1
-      '@kubb/react': 2.5.1
-      '@kubb/swagger': 2.5.1(@kubb/react@2.5.1)
-      '@kubb/swagger-ts': 2.5.1(@kubb/react@2.5.1)
+      '@kubb/core': 2.5.3
+      '@kubb/parser': 2.5.3
+      '@kubb/react': 2.5.3
+      '@kubb/swagger': 2.5.3(@kubb/react@2.5.3)
+      '@kubb/swagger-ts': 2.5.3(@kubb/react@2.5.3)
     transitivePeerDependencies:
       - encoding
     dev: false
 
-  /@kubb/swagger-zodios@2.5.1(@kubb/react@2.5.1):
-    resolution: {integrity: sha512-+33KdNX3vZF2HSprq6AF4Ea+clWH6GP9pTzGU/42kLOpuzp9hv1Ve1ybc9sRWATi58KCJsrBviZ0JaaUgf6A6A==}
+  /@kubb/swagger-zodios@2.5.3(@kubb/react@2.5.3):
+    resolution: {integrity: sha512-y1uVssvnOG+mr8gTbr2u0AY4Jv2n1koGxetvWfqJbpVQuxAZLy/nY1acNOl2NjhHr1+g+ApLS9T6p94URjghOQ==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.5.1
+      '@kubb/react': 2.5.3
     dependencies:
-      '@kubb/core': 2.5.1
-      '@kubb/parser': 2.5.1
-      '@kubb/react': 2.5.1
-      '@kubb/swagger': 2.5.1(@kubb/react@2.5.1)
-      '@kubb/swagger-zod': 2.5.1(@kubb/react@2.5.1)
+      '@kubb/core': 2.5.3
+      '@kubb/parser': 2.5.3
+      '@kubb/react': 2.5.3
+      '@kubb/swagger': 2.5.3(@kubb/react@2.5.3)
+      '@kubb/swagger-zod': 2.5.3(@kubb/react@2.5.3)
     transitivePeerDependencies:
       - encoding
     dev: false
 
-  /@kubb/swagger@2.5.1(@kubb/react@2.5.1):
-    resolution: {integrity: sha512-HxjAH9ntvtxBKlB2eZG7lgUvcR7JZ/S+1PlGp96xPb6UNSGW5GicG3h1FJ8MLJXyl1W5d0+2JcRvsm3UYKE/1g==}
+  /@kubb/swagger@2.5.3(@kubb/react@2.5.3):
+    resolution: {integrity: sha512-+gjSqj+MF+qzUjYOm6gZL9H/UQ05NkjSVkW27QoBPoztH+CiwCCGfvNvmlEMmPsq01l7uXVAeY04SjiL33iYlQ==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     peerDependencies:
-      '@kubb/react': 2.5.1
+      '@kubb/react': 2.5.3
     dependencies:
       '@apidevtools/swagger-parser': 10.1.0(openapi-types@12.1.3)
-      '@kubb/core': 2.5.1
-      '@kubb/react': 2.5.1
+      '@kubb/core': 2.5.3
+      '@kubb/react': 2.5.3
       js-yaml: 4.1.0
       oas: 24.1.0
       oas-normalize: 11.0.1
@@ -3558,8 +3558,8 @@ packages:
       - encoding
     dev: false
 
-  /@kubb/types@2.5.1:
-    resolution: {integrity: sha512-MrjJ9i4eVNrDUXs+hGXC/L7SThTwGahs5/oIJfiPMcOyMHcrM6aeRicvdCqbxecGRn4TRBfsfvCKV3PlDqnilw==}
+  /@kubb/types@2.5.3:
+    resolution: {integrity: sha512-VGPVZTXVCxUJzs8cZOZPJ8aJ+kQrOn7VXo6s9EoEQfTboOv/uwHjs1hojWkiDbxflE/HYde5CuZUG7J8o4IahQ==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
     dev: false
 
@@ -5722,13 +5722,13 @@ packages:
       semver: 7.5.4
     dev: false
 
-  /bundle-require@4.0.2(esbuild@0.19.11):
+  /bundle-require@4.0.2(esbuild@0.19.12):
     resolution: {integrity: sha512-jwzPOChofl67PSTW2SGubV9HBQAhhR2i6nskiOThauo9dzwDUgOWQScFVaJkjEfYX+UXiD+LEx8EblQMc2wIag==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     peerDependencies:
       esbuild: '>=0.17'
     dependencies:
-      esbuild: 0.19.11
+      esbuild: 0.19.12
       load-tsconfig: 0.2.5
     dev: false
 
@@ -6939,35 +6939,35 @@ packages:
       es6-symbol: 3.1.3
     dev: false
 
-  /esbuild@0.19.11:
-    resolution: {integrity: sha512-HJ96Hev2hX/6i5cDVwcqiJBBtuo9+FeIJOtZ9W1kA5M6AMJRHUZlpYZ1/SbEwtO0ioNAW8rUooVpC/WehY2SfA==}
+  /esbuild@0.19.12:
+    resolution: {integrity: sha512-aARqgq8roFBj054KvQr5f1sFu0D65G+miZRCuJyJ0G13Zwx7vRar5Zhn2tkQNzIXcBrNVsv/8stehpj+GAjgbg==}
     engines: {node: '>=12'}
     hasBin: true
     requiresBuild: true
     optionalDependencies:
-      '@esbuild/aix-ppc64': 0.19.11
-      '@esbuild/android-arm': 0.19.11
-      '@esbuild/android-arm64': 0.19.11
-      '@esbuild/android-x64': 0.19.11
-      '@esbuild/darwin-arm64': 0.19.11
-      '@esbuild/darwin-x64': 0.19.11
-      '@esbuild/freebsd-arm64': 0.19.11
-      '@esbuild/freebsd-x64': 0.19.11
-      '@esbuild/linux-arm': 0.19.11
-      '@esbuild/linux-arm64': 0.19.11
-      '@esbuild/linux-ia32': 0.19.11
-      '@esbuild/linux-loong64': 0.19.11
-      '@esbuild/linux-mips64el': 0.19.11
-      '@esbuild/linux-ppc64': 0.19.11
-      '@esbuild/linux-riscv64': 0.19.11
-      '@esbuild/linux-s390x': 0.19.11
-      '@esbuild/linux-x64': 0.19.11
-      '@esbuild/netbsd-x64': 0.19.11
-      '@esbuild/openbsd-x64': 0.19.11
-      '@esbuild/sunos-x64': 0.19.11
-      '@esbuild/win32-arm64': 0.19.11
-      '@esbuild/win32-ia32': 0.19.11
-      '@esbuild/win32-x64': 0.19.11
+      '@esbuild/aix-ppc64': 0.19.12
+      '@esbuild/android-arm': 0.19.12
+      '@esbuild/android-arm64': 0.19.12
+      '@esbuild/android-x64': 0.19.12
+      '@esbuild/darwin-arm64': 0.19.12
+      '@esbuild/darwin-x64': 0.19.12
+      '@esbuild/freebsd-arm64': 0.19.12
+      '@esbuild/freebsd-x64': 0.19.12
+      '@esbuild/linux-arm': 0.19.12
+      '@esbuild/linux-arm64': 0.19.12
+      '@esbuild/linux-ia32': 0.19.12
+      '@esbuild/linux-loong64': 0.19.12
+      '@esbuild/linux-mips64el': 0.19.12
+      '@esbuild/linux-ppc64': 0.19.12
+      '@esbuild/linux-riscv64': 0.19.12
+      '@esbuild/linux-s390x': 0.19.12
+      '@esbuild/linux-x64': 0.19.12
+      '@esbuild/netbsd-x64': 0.19.12
+      '@esbuild/openbsd-x64': 0.19.12
+      '@esbuild/sunos-x64': 0.19.12
+      '@esbuild/win32-arm64': 0.19.12
+      '@esbuild/win32-ia32': 0.19.12
+      '@esbuild/win32-x64': 0.19.12
     dev: false
 
   /escalade@3.1.1:
