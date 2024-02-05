@@ -18,7 +18,7 @@
     "@jitaspace/tsconfig": "*",
     "@jitaspace/utils": "*",
     "@types/node": "^18.19.14",
-    "@types/react": "^18.2.53",
+    "@types/react": "^18.2.54",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
     "react": "18.2.0",

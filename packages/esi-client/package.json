@@ -35,7 +35,7 @@
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
     "@types/node": "^18.19.14",
-    "@types/react": "^18.2.53",
+    "@types/react": "^18.2.54",
     "eslint": "^8.56.0",
     "prettier": "^3.2.5",
     "typescript": "^5.3.3"
