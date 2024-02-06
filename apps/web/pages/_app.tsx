@@ -169,6 +169,7 @@ export default function App({
         themeColor="#9bb4d0"
       />
 
+      {/* Analytics: Umami, Vercel, Google */}
       <Script
         strategy="afterInteractive"
         async
@@ -178,9 +179,10 @@ export default function App({
         data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
         data-domains="www.jita.space"
       ></Script>
-
       <Analytics />
-      <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
+      {env.NEXT_PUBLIC_GOOGLE_TAG_ID && (
+        <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
+      )}
 
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} />
