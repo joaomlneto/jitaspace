@@ -1,8 +1,5 @@
 {
   "openapi": "3.1.0",
-  "x-stoplight": {
-    "id": "ghpchccg2fvj6"
-  },
   "info": {
     "title": "Fuzzworks Market API",
     "version": "1.0",
