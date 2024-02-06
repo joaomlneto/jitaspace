@@ -16,8 +16,6 @@
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.5",
-    "@emotion/react": "^11.11.3",
-    "@emotion/server": "^11.11.0",
     "@hapi/iron": "^7.0.1",
     "@jitaspace/auth": "*",
     "@jitaspace/db": "*",
