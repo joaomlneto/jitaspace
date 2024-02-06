@@ -21,6 +21,7 @@ import Script from "next/script";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications, showNotification } from "@mantine/notifications";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
@@ -36,6 +37,7 @@ import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccess
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
+import { env } from "~/env.mjs";
 import { themes } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
 
@@ -173,11 +175,12 @@ export default function App({
         defer
         // /analytics is a proxy to the umami server - set in next.config.mjs
         src={"/analytics/script.js"}
-        data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+        data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
         data-domains="www.jita.space"
       ></Script>
 
       <Analytics />
+      <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
 
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} />
