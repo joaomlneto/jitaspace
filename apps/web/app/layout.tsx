@@ -18,8 +18,7 @@ import Script from "next/script";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { Analytics } from "@vercel/analytics/react";
 
-
-
+import { env } from "~/env.mjs";
 
 
 export const metadata = {
@@ -100,7 +99,7 @@ export default function RootLayout({
             defer
             // /analytics is a proxy to the umami server - set in next.config.mjs
             src={"/analytics/script.js"}
-            data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+            data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
             data-domains="www.jita.space"
           ></Script>
 
