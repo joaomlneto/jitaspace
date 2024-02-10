@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from "react";
-import { AppShell, AppShellProps, rem } from "@mantine/core";
+import { AppShell, AppShellProps, rem, ScrollArea } from "@mantine/core";
 import { useHeadroom, useMediaQuery } from "@mantine/hooks";
 
 import { MarketGroupNavLink } from "~/components/Market";
@@ -46,7 +46,7 @@ export const MarketLayout = ({
         <HeaderWithMegaMenus pinned={pinned} />
       </AppShell.Header>
       <AppShell.Navbar>
-        <AppShell.Section grow>
+        <AppShell.Section grow component={ScrollArea}>
           {rootMarketGroupIds?.map((marketGroupId) => (
             <MarketGroupNavLink
               marketGroups={marketGroups}
