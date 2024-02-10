@@ -35,6 +35,10 @@ export const MarketLayout = ({
         collapsed: !pinned,
         offset: true,
       }}
+      navbar={{
+        width: 350,
+        breakpoint: "sm",
+      }}
       footer={{
         height: { base: 80, xs: 60 },
         offset: true,
