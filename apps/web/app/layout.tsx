@@ -16,13 +16,22 @@ import "mantine-react-table/styles.css";
 import React from "react";
 import Script from "next/script";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
+import { ModalsProvider } from "@mantine/modals";
+import { Notifications } from "@mantine/notifications";
 import { Analytics } from "@vercel/analytics/react";
 
+import { EveIconsContextProvider } from "@jitaspace/eve-icons";
+
+import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
+import { contextModals } from "~/components/Modals";
+import { JitaSpotlightProvider } from "~/components/Spotlight";
 import { env } from "~/env.mjs";
+import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
+import { MySessionProvider } from "~/lib/MySessionProvider";
 
 
 export const metadata = {
-  title: "My Mantine app",
+  title: "Jita",
   description: "I have followed setup instructions carefully",
 };
 
@@ -31,8 +40,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  //const [queryClient] = React.useState(() => new QueryClient({}));
-
   return (
     <html lang="en">
       <head>
@@ -92,7 +99,7 @@ export default function RootLayout({
         */}
       </head>
       <body>
-        <MantineProvider>
+        <MantineProvider defaultColorScheme="dark" /*theme={themes.default}*/>
           <Script
             strategy="afterInteractive"
             async
@@ -105,36 +112,27 @@ export default function RootLayout({
 
           <Analytics />
 
-          {children}
-
-          {/*
-            <QueryClientProvider client={queryClient}>
-              <ReactQueryDevtools initialIsOpen={false} />
-              <ReactQueryStreamedHydration>
-                <SessionProvider>
-                  <EsiClientSSOAccessTokenInjector>
-                    <EveIconsContextProvider>
-                      <MantineProvider
-                        defaultColorScheme="dark"
-                        theme={themes.default}
+          <MyQueryClientProvider>
+            <MySessionProvider>
+              <EsiClientSSOAccessTokenInjector>
+                <EveIconsContextProvider>
+                  <>
+                    <Notifications />
+                    {/* FIXME https://nextjs.org/docs/messages/next-router-not-mounted */}
+                    {/* <RouterTransition /> */}
+                    <JitaSpotlightProvider>
+                      <ModalsProvider
+                        modals={contextModals}
+                        modalProps={{ centered: true }}
                       >
-                        <Notifications />
-                        <RouterTransition />
-                        <JitaSpotlightProvider>
-                          <ModalsProvider
-                            modals={contextModals}
-                            modalProps={{ centered: true }}
-                          >
-                            {children}
-                          </ModalsProvider>
-                        </JitaSpotlightProvider>
-                      </MantineProvider>
-                    </EveIconsContextProvider>
-                  </EsiClientSSOAccessTokenInjector>
-                </SessionProvider>
-              </ReactQueryStreamedHydration>
-            </QueryClientProvider>
-          */}
+                        {children}
+                      </ModalsProvider>
+                    </JitaSpotlightProvider>
+                  </>
+                </EveIconsContextProvider>
+              </EsiClientSSOAccessTokenInjector>
+            </MySessionProvider>
+          </MyQueryClientProvider>
         </MantineProvider>
       </body>
     </html>
