@@ -1,3 +1,5 @@
+"use client";
+
 import { CharacterSsoSession, useAuthStore } from "./useAuthStore";
 
 export const useSelectedCharacter = (): CharacterSsoSession | null => {

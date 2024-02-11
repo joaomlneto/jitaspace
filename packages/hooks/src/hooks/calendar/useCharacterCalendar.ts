@@ -1,3 +1,5 @@
+"use client";
+
 import { useGetCharactersCharacterIdCalendarInfinite } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";

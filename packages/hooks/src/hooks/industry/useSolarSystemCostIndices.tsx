@@ -1,8 +1,10 @@
+"use client";
+
 import { useMemo } from "react";
 
 import {
-  getIndustrySystemsQueryResponseCostIndicesActivity,
   GetIndustrySystemsQueryResponseCostIndicesActivity,
+  getIndustrySystemsQueryResponseCostIndicesActivity,
   useGetIndustrySystems,
   type GetIndustrySystemsQueryResponse,
 } from "@jitaspace/esi-client";

@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 
 import { GetCharactersCharacterIdFittingsQueryResponseItemsFlag } from "@jitaspace/esi-client";

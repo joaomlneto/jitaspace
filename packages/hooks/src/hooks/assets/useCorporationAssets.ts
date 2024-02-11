@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
 

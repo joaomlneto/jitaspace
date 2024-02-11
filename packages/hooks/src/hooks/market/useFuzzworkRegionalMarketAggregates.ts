@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 
 import { useGetAggregates } from "@jitaspace/fuzzworks-market-client";

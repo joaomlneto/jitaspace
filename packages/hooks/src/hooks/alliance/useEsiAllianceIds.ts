@@ -1,3 +1,5 @@
+"use client";
+
 import { useGetAlliances } from "@jitaspace/esi-client";
 
 

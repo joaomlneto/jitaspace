@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo } from "react";
 
 import { GetCharactersCharacterIdQueryResponseGender } from "@jitaspace/esi-client";
@@ -190,6 +192,7 @@ export const useCharacter = (
             birthday: characterBirthdayDate,
             bloodlineId: esiCharacter.data.data.bloodline_id,
             corporationId: esiCharacter.data.data.corporation_id,
+            allianceId: esiCharacter.data.data.alliance_id,
             gender: esiCharacter.data.data.gender,
             name: esiCharacter.data.data.name,
             raceId: esiCharacter.data.data.race_id,

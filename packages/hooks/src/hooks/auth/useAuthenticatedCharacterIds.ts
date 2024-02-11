@@ -1,3 +1,5 @@
+"use client";
+
 import { useAuthStore } from "./useAuthStore";
 
 export const useAuthenticatedCharacterIds = () => {

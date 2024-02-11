@@ -1,3 +1,5 @@
+"use client";
+
 import {
   GetUniverseTypesTypeIdQueryResponse,
   useGetUniverseTypesTypeId,

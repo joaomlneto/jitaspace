@@ -1,3 +1,5 @@
+"use client";
+
 import {
   GetUniverseStarsStarIdQueryResponse,
   useGetUniverseStarsStarId,

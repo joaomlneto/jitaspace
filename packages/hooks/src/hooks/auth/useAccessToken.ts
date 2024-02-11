@@ -1,3 +1,5 @@
+"use client";
+
 import { GetCharactersCharacterIdRolesQueryResponseRoles } from "@jitaspace/esi-client";
 import { ESIScope } from "@jitaspace/esi-metadata";
 
@@ -28,9 +30,8 @@ export const useAccessToken = (options: {
     Object.values(state.characters).filter(
       (character) =>
         (characterId == undefined || character.characterId == characterId) &&
-        (scopes ?? []).every(
-          (requiredScope) =>
-            character.accessTokenPayload?.scp?.includes(requiredScope),
+        (scopes ?? []).every((requiredScope) =>
+          character.accessTokenPayload?.scp?.includes(requiredScope),
         ),
     ),
   );

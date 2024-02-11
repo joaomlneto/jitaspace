@@ -1,3 +1,5 @@
+"use client";
+
 import { useGetCharactersCharacterIdAttributes } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";

@@ -1,3 +1,5 @@
+"use client";
+
 import { useEsiUniverseIdsFromNames } from "./useEsiUniverseIdsFromNames";
 
 export const useEsiTypeIdsFromNames = (names: string[]) => {

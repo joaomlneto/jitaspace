@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
 

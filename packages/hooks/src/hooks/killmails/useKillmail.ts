@@ -1,3 +1,5 @@
+"use client";
+
 import { useGetKillmailsKillmailIdKillmailHash } from "@jitaspace/esi-client";
 
 

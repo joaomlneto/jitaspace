@@ -1,3 +1,5 @@
+"use client";
+
 import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
 
 import {

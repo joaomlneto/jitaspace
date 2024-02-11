@@ -1,3 +1,5 @@
+"use client";
+
 import {
   createContext,
   memo,
@@ -7,6 +9,10 @@ import {
   type PropsWithChildren,
 } from "react";
 import axios from "axios";
+
+
+
+
 
 type EsiClientStatistics = {
   esiErrorsRemaining?: number;

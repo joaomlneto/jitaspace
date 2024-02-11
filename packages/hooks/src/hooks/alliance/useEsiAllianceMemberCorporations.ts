@@ -1,3 +1,5 @@
+"use client";
+
 import { useGetAlliancesAllianceIdCorporations } from "@jitaspace/esi-client";
 
 

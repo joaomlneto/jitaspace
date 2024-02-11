@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { createCache, useCache, type CacheState } from "@react-hook/cache";
 
