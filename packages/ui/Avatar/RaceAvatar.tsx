@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useMemo } from "react";
 import { type AvatarProps } from "@mantine/core";
 

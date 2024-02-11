@@ -1,9 +1,12 @@
+"use client";
+
 import React, { memo } from "react";
 import { Text, type TextProps } from "@mantine/core";
 
 import { useCharacterAssets } from "@jitaspace/hooks";
 
 import { EveEntityName } from "./EveEntityName";
+
 
 export type AssetLocationNameProps = TextProps & {
   locationId?: string | number;

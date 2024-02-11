@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 

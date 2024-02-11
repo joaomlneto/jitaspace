@@ -1,8 +1,11 @@
+"use client";
+
 import { memo } from "react";
 import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
+
 
 export type SolarSystemAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &

@@ -1,5 +1,11 @@
+"use client";
+
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
+
+
+
+
 
 export type Position3DTextProps = TextProps & {
   position?: number[];

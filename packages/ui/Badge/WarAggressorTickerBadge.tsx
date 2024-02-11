@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
 
@@ -5,6 +7,7 @@ import { useGetWarsWarId } from "@jitaspace/esi-client";
 
 import { AllianceTickerBadge } from "./AllianceTickerBadge";
 import { CorporationTickerBadge } from "./CorporationTickerBadge";
+
 
 type WarAggressorTickerBadgeProps = Omit<BadgeProps, "children"> & {
   warId?: number;

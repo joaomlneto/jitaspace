@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import Link from "next/link";
 import {
@@ -11,6 +13,7 @@ import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 
 import { CategoryAnchor, GroupAnchor } from "../Anchor";
 import { CategoryName, GroupName } from "../Text";
+
 
 export type GroupBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   groupId?: number;

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
@@ -6,6 +8,7 @@ import { type ResolvableEntityCategory } from "@jitaspace/hooks";
 
 import { EveEntityName } from "../Text";
 import { EveEntityAnchor } from "./EveEntityAnchor";
+
 
 export type EveEntityNameAnchorProps = Omit<
   AnchorProps,

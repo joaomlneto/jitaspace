@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import {
   Group,
@@ -25,7 +27,8 @@ export const EveEntityCard = memo(({ entityId }: EveEntityCardProps) => {
   const { colorScheme } = useMantineColorScheme();
 
   if (category === "alliance") return <AllianceCard allianceId={entityId} />;
-  if (category === "character") return <CharacterCard characterId={entityId} />;
+  if (category === "character")
+    return <CharacterCard characterId={Number(entityId)} />;
   if (category === "corporation")
     return <CorporationCard corporationId={entityId} />;
 

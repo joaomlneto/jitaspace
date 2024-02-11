@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import { MultiSelect, type MultiSelectProps } from "@mantine/core";
 

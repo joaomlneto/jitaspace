@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useEffect, useState } from "react";
 import { Loader, Select, type SelectProps } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";

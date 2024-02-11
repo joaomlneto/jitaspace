@@ -1,3 +1,5 @@
+"use client";
+
 import { memo } from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";

@@ -1,3 +1,5 @@
+"use client";
+
 import { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 import useSWRImmutable from "swr/immutable";
@@ -5,6 +7,7 @@ import useSWRImmutable from "swr/immutable";
 import { UnknownIcon } from "@jitaspace/eve-icons";
 
 import { EveImageServerAvatar } from "./EveImageServerAvatar";
+
 
 export type TypeAvatarProps = Omit<AvatarProps, "src"> & {
   typeId?: string | number;

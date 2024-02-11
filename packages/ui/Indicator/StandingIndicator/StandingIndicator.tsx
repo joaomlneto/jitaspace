@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import Image from "next/image";
 import { Indicator, type IndicatorProps } from "@mantine/core";
@@ -8,6 +10,7 @@ import ColorTagNeutral from "./ColorTagNeutral.gif";
 import ColorTagPlusDarkBlue from "./ColorTagPlusDarkBlue.gif";
 import ColorTagPlusLightBlue from "./ColorTagPlusLightBlue.gif";
 
+
 export type StandingIndicatorProps = IndicatorProps & {
   standing?: number;
 };
@@ -17,14 +20,14 @@ export const StandingIndicator = memo(
       standing === undefined
         ? undefined
         : standing > 5
-        ? ColorTagPlusDarkBlue
-        : standing > 0
-        ? ColorTagPlusLightBlue
-        : standing == 0
-        ? ColorTagNeutral
-        : standing >= -5
-        ? ColorTagMinusOrange
-        : ColorTagMinusRed;
+          ? ColorTagPlusDarkBlue
+          : standing > 0
+            ? ColorTagPlusLightBlue
+            : standing == 0
+              ? ColorTagNeutral
+              : standing >= -5
+                ? ColorTagMinusOrange
+                : ColorTagMinusRed;
 
     return (
       <Indicator

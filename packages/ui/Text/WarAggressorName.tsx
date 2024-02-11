@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import { type TextProps } from "@mantine/core";
 
@@ -6,6 +8,7 @@ import { useGetWarsWarId } from "@jitaspace/esi-client";
 import { AllianceName } from "./AllianceName";
 import { CorporationName } from "./CorporationName";
 import { EveEntityName } from "./EveEntityName";
+
 
 export type WarAggressorNameProps = TextProps & {
   warId?: number;

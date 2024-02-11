@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import Link from "next/link";
 import {
@@ -9,6 +11,7 @@ import {
 
 import { CategoryAnchor } from "../Anchor";
 import { CategoryName } from "../Text";
+
 
 export type CategoryBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   categoryId?: number;

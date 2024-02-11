@@ -1,3 +1,5 @@
+"use client";
+
 import { memo } from "react";
 import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
@@ -5,6 +7,7 @@ import { type AnchorProps } from "@mantine/core";
 import { useGetUniverseStargatesStargateId } from "@jitaspace/esi-client";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
+
 
 export type StargateDestinationNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &

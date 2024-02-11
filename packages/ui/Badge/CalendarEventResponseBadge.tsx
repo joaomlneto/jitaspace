@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
 

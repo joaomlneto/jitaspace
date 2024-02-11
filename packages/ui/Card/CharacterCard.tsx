@@ -1,62 +1,57 @@
-import React, { memo } from "react";
-import Link from "next/link";
-import {
-  Anchor,
-  Group,
-  Paper,
-  useMantineColorScheme,
-  useMantineTheme,
-} from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
+"use client";
 
-import { CharacterAvatar } from "../Avatar";
-import { CharacterName } from "../Text";
+import React, { memo } from "react";
+import { Group, Stack, useMantineTheme } from "@mantine/core";
+
+import { useCharacter } from "@jitaspace/hooks";
+
+import { AllianceAnchor, CharacterAnchor, CorporationAnchor } from "../Anchor";
+import { AllianceAvatar, CharacterAvatar, CorporationAvatar } from "../Avatar";
+import { AllianceName, CharacterName, CorporationName } from "../Text";
 
 
 interface CharacterCardProps {
-  characterId: string | number;
+  characterId: number;
 }
 
 export const CharacterCard = memo(({ characterId }: CharacterCardProps) => {
   const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
+  const { data } = useCharacter(characterId);
   return (
-    <Paper
-      radius="md"
-      withBorder
-      p="lg"
-      style={{
-        backgroundColor:
-          colorScheme === "dark" ? theme.colors.dark[8] : theme.white,
-      }}
-    >
+    <Stack gap="xs">
       <Group>
-        <CharacterAvatar
-          characterId={characterId}
-          size="xl"
-          radius={120}
-          mx="auto"
-        />
+        <Stack>
+          <CharacterAvatar characterId={characterId} size="lg" />
+        </Stack>
+        <Stack gap="xs">
+          <CharacterAnchor characterId={characterId}>
+            <CharacterName size="md" characterId={characterId} fw={700} />
+          </CharacterAnchor>
+          {data !== undefined && (
+            <Group gap="xs">
+              <CorporationAvatar
+                size="xs"
+                corporationId={data?.corporationId}
+              />
+              <CorporationAnchor corporationId={data.corporationId}>
+                <CorporationName
+                  size="xs"
+                  corporationId={data?.corporationId}
+                />
+              </CorporationAnchor>
+            </Group>
+          )}
+          {data?.allianceId && (
+            <Group gap="xs">
+              <AllianceAvatar size="xs" allianceId={data.allianceId} />
+              <AllianceAnchor allianceId={data.allianceId}>
+                <AllianceName size="xs" allianceId={data.allianceId} />
+              </AllianceAnchor>
+            </Group>
+          )}
+        </Stack>
       </Group>
-      <CharacterName
-        characterId={characterId}
-        ta="center"
-        fz="lg"
-        fw={500}
-        mt="md"
-      />
-      <Anchor
-        component={Link}
-        href={`https://evewho.com/character/${characterId}`}
-        target="_blank"
-        size="sm"
-      >
-        <Group gap="xs">
-          <IconExternalLink size={14} />
-          <Anchor>Open in EVE Who</Anchor>
-        </Group>
-      </Anchor>
-    </Paper>
+    </Stack>
   );
 });
 CharacterCard.displayName = "CharacterCard";

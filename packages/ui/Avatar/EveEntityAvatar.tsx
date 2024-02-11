@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
 
@@ -14,6 +16,7 @@ import { SolarSystemAvatar } from "./SolarSystemAvatar";
 import { StationAvatar } from "./StationAvatar";
 import { StructureAvatar } from "./StructureAvatar";
 import { TypeAvatar } from "./TypeAvatar";
+
 
 export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
   entityId?: string | number;

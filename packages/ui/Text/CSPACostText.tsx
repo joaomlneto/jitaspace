@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useEffect, useState } from "react";
 import { Text, type TextProps } from "@mantine/core";
 

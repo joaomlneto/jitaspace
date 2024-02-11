@@ -1,9 +1,12 @@
+"use client";
+
 import React, { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
 import { useGetUniverseStargatesStargateId } from "@jitaspace/esi-client";
 
 import { TypeAvatar } from "./TypeAvatar";
+
 
 export type StargateAvatarProps = Omit<AvatarProps, "src"> & {
   stargateId?: string | number | null;

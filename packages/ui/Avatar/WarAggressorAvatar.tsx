@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
@@ -6,6 +8,7 @@ import { useGetWarsWarId } from "@jitaspace/esi-client";
 import { AllianceAvatar } from "./AllianceAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
 import { EveEntityAvatar } from "./EveEntityAvatar";
+
 
 export type WarAggressorAvatarProps = Omit<AvatarProps, "src"> & {
   warId?: number;

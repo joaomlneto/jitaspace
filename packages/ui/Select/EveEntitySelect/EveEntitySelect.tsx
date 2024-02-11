@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import { Select, type SelectProps } from "@mantine/core";
 

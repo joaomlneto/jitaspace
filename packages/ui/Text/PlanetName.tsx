@@ -1,7 +1,13 @@
+"use client";
+
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
 import { useGetUniversePlanetsPlanetId } from "@jitaspace/esi-client";
+
+
+
+
 
 export type PlanetNameProps = TextProps & {
   planetId?: number;

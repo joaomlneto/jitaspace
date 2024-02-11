@@ -1,9 +1,12 @@
+"use client";
+
 import React, { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
 import { useGetUniverseStationsStationId } from "@jitaspace/esi-client";
 
 import { TypeAvatar } from "./TypeAvatar";
+
 
 export type StationAvatarProps = Omit<AvatarProps, "src"> & {
   stationId?: string | number | null;

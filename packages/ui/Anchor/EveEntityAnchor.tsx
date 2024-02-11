@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useMemo } from "react";
 import Link, { type LinkProps } from "next/link";
 import { Anchor, Skeleton, type AnchorProps } from "@mantine/core";

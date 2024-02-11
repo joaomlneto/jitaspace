@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import Link from "next/link";
 import {
@@ -14,6 +16,7 @@ import {
 
 import { CategoryAnchor, GroupAnchor, TypeAnchor } from "../Anchor";
 import { CategoryName, GroupName, TypeName } from "../Text";
+
 
 export type TypeInventoryBreadcrumbsProps = Omit<
   BreadcrumbsProps,

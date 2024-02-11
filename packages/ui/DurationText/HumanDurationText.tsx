@@ -1,6 +1,12 @@
+"use client";
+
 import { memo, useMemo } from "react";
 import { Text, type TextProps } from "@mantine/core";
 import humanizeDuration from "humanize-duration";
+
+
+
+
 
 export type HumanDurationTextProps = TextProps & {
   duration: number;

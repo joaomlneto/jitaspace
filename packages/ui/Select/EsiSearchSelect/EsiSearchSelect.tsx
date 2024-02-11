@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo } from "react";
 import { Loader, Select, type SelectProps } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
