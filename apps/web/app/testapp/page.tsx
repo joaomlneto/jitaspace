@@ -1,4 +1,6 @@
-import { ServerLoyaltyPointsTable } from "~/components/LPStore";
+import React from "react";
+
+import { LPTable } from "./LPTable";
 
 export const metadata = {
   title: "Testing Page",
@@ -9,9 +11,7 @@ export default function HomePage() {
   return (
     <>
       <p>This is the app directory! Woohoo!</p>
-      {true && (
-        <ServerLoyaltyPointsTable corporations={[]} types={[]} offers={[]} />
-      )}
+      <LPTable />
     </>
   );
 }

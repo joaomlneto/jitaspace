@@ -23,13 +23,9 @@ import { IconCircleX } from "@tabler/icons-react";
 
 import { EveMailIcon } from "@jitaspace/eve-icons";
 import { useAuthStore } from "@jitaspace/hooks";
-import {
-  CharacterAnchor,
-  CharacterAvatar,
-  CharacterName,
-  TotalUnreadMailsIndicator,
-} from "@jitaspace/ui";
+import { CharacterAvatar, TotalUnreadMailsIndicator } from "@jitaspace/ui";
 
+import { CharacterButton } from "~/components/Button";
 import { characterApps, universeApps } from "~/config/apps";
 import { MainLayout } from "~/layouts";
 
@@ -65,71 +61,72 @@ export default function Page() {
 
   return (
     <Container size="lg">
-      <Stack my="md" gap="xs">
-        {Object.values(characters).map((character) => (
-          <Group justify="space-between" key={character.characterId}>
-            <Group wrap="nowrap" gap="xs">
-              <CharacterAvatar characterId={character.characterId} size="sm" />
-              <CharacterAnchor characterId={character.characterId}>
-                <CharacterName characterId={character.characterId} />
-              </CharacterAnchor>
-            </Group>
-            <Group wrap="nowrap" gap="xs">
-              <ActionIcon
-                radius="xl"
-                variant="subtle"
-                onClick={() => {
-                  selectCharacter(character.characterId);
-                  router.push("/mail");
-                }}
-              >
-                <TotalUnreadMailsIndicator
+      <Container size="xs">
+        <Stack my="md" gap="xs">
+          {Object.values(characters).map((character) => (
+            <Group justify="space-between" key={character.characterId}>
+              <Group>
+                <CharacterButton
                   characterId={character.characterId}
-                  offset={8}
+                  showOnlineIndicator
+                />
+              </Group>
+              <Group wrap="nowrap" gap="xs">
+                <ActionIcon
+                  variant="transparent"
+                  onClick={() => {
+                    selectCharacter(character.characterId);
+                    router.push("/mail");
+                  }}
                 >
-                  <EveMailIcon width={32} />
-                </TotalUnreadMailsIndicator>
-              </ActionIcon>
-              <ActionIcon
-                radius="xl"
-                variant="subtle"
-                onClick={() =>
-                  modals.openConfirmModal({
-                    title: `Log out ${character.accessTokenPayload.name}?`,
-                    children: (
-                      <Text size="sm">
-                        Are you sure you want to log out from character{" "}
-                        {character.accessTokenPayload.name}?
-                      </Text>
-                    ),
-                    labels: { confirm: "Confirm", cancel: "Cancel" },
-                    onConfirm: () => {
-                      removeCharacter(character.characterId);
-                    },
-                  })
-                }
-              >
-                <IconCircleX />
-              </ActionIcon>
+                  <TotalUnreadMailsIndicator
+                    characterId={character.characterId}
+                    offset={8}
+                  >
+                    <EveMailIcon width={32} />
+                  </TotalUnreadMailsIndicator>
+                </ActionIcon>
+                <ActionIcon
+                  radius="xl"
+                  variant="subtle"
+                  onClick={() =>
+                    modals.openConfirmModal({
+                      title: `Log out ${character.accessTokenPayload.name}?`,
+                      children: (
+                        <Text size="sm">
+                          Are you sure you want to log out from character{" "}
+                          {character.accessTokenPayload.name}?
+                        </Text>
+                      ),
+                      labels: { confirm: "Confirm", cancel: "Cancel" },
+                      onConfirm: () => {
+                        removeCharacter(character.characterId);
+                      },
+                    })
+                  }
+                >
+                  <IconCircleX />
+                </ActionIcon>
+              </Group>
             </Group>
+          ))}
+          <Group wrap="nowrap" gap="xs">
+            <CharacterAvatar characterId={1} size="sm" />
+            <Anchor
+              onClick={() => {
+                openContextModal({
+                  modal: "login",
+                  title: "Login",
+                  size: "xl",
+                  innerProps: {},
+                });
+              }}
+            >
+              Add character
+            </Anchor>
           </Group>
-        ))}
-        <Group wrap="nowrap" gap="xs">
-          <CharacterAvatar characterId={1} size="sm" />
-          <Anchor
-            onClick={() => {
-              openContextModal({
-                modal: "login",
-                title: "Login",
-                size: "xl",
-                innerProps: {},
-              });
-            }}
-          >
-            Add character
-          </Anchor>
-        </Group>
-      </Stack>
+        </Stack>
+      </Container>
       <Title order={3}>Capsuleer Tools</Title>
       <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2, sm: 3 }}>
         {Object.values(characterApps).map((feature) => (

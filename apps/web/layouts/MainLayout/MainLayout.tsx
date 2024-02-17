@@ -1,3 +1,5 @@
+"use client";
+
 import React, { type PropsWithChildren } from "react";
 import { AppShell, rem, type AppShellProps } from "@mantine/core";
 import { useHeadroom, useMediaQuery } from "@mantine/hooks";

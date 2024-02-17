@@ -1,3 +1,5 @@
+"use client";
+
 import React, { memo, useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import {

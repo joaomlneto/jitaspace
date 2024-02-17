@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -27,6 +29,7 @@ import {
 import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
+import { ServerStatusIndicator } from "~/components/ServerStatus/ServerStatusIndicator";
 import {
   allianceApps,
   characterApps,
@@ -63,6 +66,8 @@ export function HeaderWithMegaMenus({ pinned }: HeaderWithMegaMenusProps) {
               <Link href="/" className={classes.link}>
                 <Image src="/logo.png" alt="Jita logo" width={32} height={32} />
               </Link>
+
+              <ServerStatusIndicator />
             </Group>
 
             <Group h="100%" gap={0} visibleFrom="sm">

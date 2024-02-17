@@ -24,6 +24,7 @@ import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
+import { RouterTransitionAppDir } from "~/components/RouterTransitionAppDir";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
 import { env } from "~/env.mjs";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
@@ -118,8 +119,7 @@ export default function RootLayout({
                 <EveIconsContextProvider>
                   <>
                     <Notifications />
-                    {/* FIXME https://nextjs.org/docs/messages/next-router-not-mounted */}
-                    {/* <RouterTransition /> */}
+                    <RouterTransitionAppDir />
                     <JitaSpotlightProvider>
                       <ModalsProvider
                         modals={contextModals}

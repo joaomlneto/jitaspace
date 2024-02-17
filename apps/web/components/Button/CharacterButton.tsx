@@ -1,8 +1,12 @@
-import { memo } from "react";
-import { Group, Text, UnstyledButton } from "@mantine/core";
+import React, { memo } from "react";
+import { Group, Popover, Text, UnstyledButton } from "@mantine/core";
 
 import { useEsiCharacter } from "@jitaspace/hooks";
-import { CharacterAvatar, CharacterOnlineIndicator } from "@jitaspace/ui";
+import {
+  CharacterAvatar,
+  CharacterCard,
+  CharacterOnlineIndicator,
+} from "@jitaspace/ui";
 import { ConditionalWrapper } from "@jitaspace/utils";
 
 import classes from "./Button.module.css";
@@ -11,10 +15,15 @@ import classes from "./Button.module.css";
 export type CharacterButtonProps = {
   characterId?: number;
   showOnlineIndicator?: boolean;
+  withHoverCard?: boolean;
 };
 
 export const CharacterButton = memo(
-  ({ characterId, showOnlineIndicator = false }: CharacterButtonProps) => {
+  ({
+    characterId,
+    showOnlineIndicator = false,
+    withHoverCard = true,
+  }: CharacterButtonProps) => {
     const { data } = useEsiCharacter(
       characterId ?? 0,
       {},
@@ -22,23 +31,30 @@ export const CharacterButton = memo(
       { query: { enabled: characterId !== undefined } },
     );
     return (
-      <UnstyledButton className={classes.user}>
-        <Group wrap="nowrap" gap="sm">
-          <ConditionalWrapper
-            condition={showOnlineIndicator && characterId !== undefined}
-            wrapper={(children) => (
-              <CharacterOnlineIndicator characterId={characterId!}>
-                {children}
-              </CharacterOnlineIndicator>
-            )}
-          >
-            <CharacterAvatar characterId={characterId} size={30} />
-          </ConditionalWrapper>
-          <Text fz="sm" fw={500} inherit={true}>
-            {data?.data.name}
-          </Text>
-        </Group>
-      </UnstyledButton>
+      <Popover>
+        <Popover.Target>
+          <UnstyledButton className={classes.user}>
+            <Group wrap="nowrap" gap="sm">
+              <ConditionalWrapper
+                condition={showOnlineIndicator && characterId !== undefined}
+                wrapper={(children) => (
+                  <CharacterOnlineIndicator characterId={characterId!}>
+                    {children}
+                  </CharacterOnlineIndicator>
+                )}
+              >
+                <CharacterAvatar characterId={characterId} size={30} />
+              </ConditionalWrapper>
+              <Text fz="sm" fw={500} inherit={true}>
+                {data?.data.name}
+              </Text>
+            </Group>
+          </UnstyledButton>
+        </Popover.Target>
+        <Popover.Dropdown>
+          {characterId && <CharacterCard characterId={characterId} />}
+        </Popover.Dropdown>
+      </Popover>
     );
   },
 );
