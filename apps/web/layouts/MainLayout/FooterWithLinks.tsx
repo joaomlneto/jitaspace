@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
+import { PartnerBadge } from "~/components/Badge";
 import { env } from "~/env.mjs";
 import classes from "./FooterWithLinks.module.css";
 
@@ -50,6 +51,11 @@ export function FooterWithLinks() {
           </Anchor>
           .
         </Text>
+        {true && (
+          <a href="https://www.eveonline.com/partners" target="_blank">
+            <PartnerBadge height={24} />
+          </a>
+        )}
         <Group className={classes.links}>
           <Tooltip label="Join our Discord!" color="dark">
             <ActionIcon

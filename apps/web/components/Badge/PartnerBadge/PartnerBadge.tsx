@@ -1,0 +1,16 @@
+import React from "react";
+import Image, { ImageProps } from "next/image";
+
+import PartnerBadgeImage from "./partner-badge-2-trimmed.png";
+
+export type PartnerBadgeProps = Omit<ImageProps, "src" | "alt">;
+
+export const PartnerBadge = ({ alt, ...otherProps }: PartnerBadgeProps) => {
+  return (
+    <Image
+      src={PartnerBadgeImage}
+      alt={alt ?? "EVE Online Partner"}
+      {...otherProps}
+    />
+  );
+};
