@@ -51,11 +51,9 @@ export function FooterWithLinks() {
           </Anchor>
           .
         </Text>
-        {true && (
-          <a href="https://www.eveonline.com/partners" target="_blank">
-            <PartnerBadge height={24} />
-          </a>
-        )}
+        <a href="https://www.eveonline.com/partners" target="_blank">
+          <PartnerBadge height={24} />
+        </a>
         <Group className={classes.links}>
           <Tooltip label="Join our Discord!" color="dark">
             <ActionIcon
