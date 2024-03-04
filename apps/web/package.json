@@ -89,7 +89,7 @@
     "@swc-jotai/react-refresh": "^0.1.0",
     "@types/humanize-duration": "^3.27.4",
     "@types/node": "^18.19.21",
-    "@types/react": "^18.2.61",
+    "@types/react": "^18.2.62",
     "@types/react-dom": "^18.2.19",
     "@types/react-html-parser": "^2.0.6",
     "dotenv-cli": "^7.3.0",
