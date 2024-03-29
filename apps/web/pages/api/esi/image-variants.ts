@@ -28,7 +28,7 @@ export default async function NextApiRouteHandler(
    *            LET HIM KNOW IF THERE ARE BREAKING CHANGES!!! *
    ************************************************************/
   return res
-    .setHeader("Cache-Control", "public, max-age=86400")
+    .setHeader("Cache-Control", "public, max-age=86400, immutable")
     .setHeader("Access-Control-Allow-Origin", "*")
     .setHeader(
       "Access-Control-Allow-Methods",
