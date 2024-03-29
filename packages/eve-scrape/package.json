@@ -19,16 +19,16 @@
     "@jitaspace/sde-client": "*",
     "axios": "^1.6.7",
     "decimal.js": "^10.4.3",
-    "inngest": "^3.13.0",
+    "inngest": "^3.15.4",
     "p-limit": "^4.0.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
-    "@types/node": "^18.19.14",
-    "eslint": "^8.56.0",
-    "inngest-cli": "^0.25.2",
+    "@types/node": "^18.19.21",
+    "eslint": "^8.57.0",
+    "inngest-cli": "^0.26.2",
     "prettier": "^3.2.5",
     "typescript": "^5.3.3"
   }
