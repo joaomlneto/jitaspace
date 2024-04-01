@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "@jitaspace/esi-metadata": "*",
-    "next": "^14.1.2",
-    "next-auth": "^4.24.6",
+    "next": "^14.1.4",
+    "next-auth": "^4.24.7",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
@@ -23,6 +23,6 @@
     "@jitaspace/tsconfig": "*",
     "eslint": "^8.57.0",
     "prettier": "^3.2.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.3"
   }
 }

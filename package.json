@@ -2,9 +2,9 @@
   "name": "jitaspace",
   "private": true,
   "engines": {
-    "node": ">=18.19.1"
+    "node": ">=18.20.0"
   },
-  "packageManager": "pnpm@8.15.4",
+  "packageManager": "pnpm@8.15.5",
   "scripts": {
     "analyze": "turbo analyze",
     "build": "turbo build",
@@ -25,11 +25,11 @@
   "dependencies": {
     "@changesets/cli": "^2.27.1",
     "@jitaspace/prettier-config": "*",
-    "@manypkg/cli": "^0.21.2",
-    "@turbo/gen": "^1.12.4",
+    "@manypkg/cli": "^0.21.3",
+    "@turbo/gen": "^1.13.0",
     "prettier": "^3.2.5",
-    "turbo": "^1.12.4",
-    "typescript": "^5.3.3"
+    "turbo": "^1.13.0",
+    "typescript": "^5.4.3"
   },
   "prettier": "@jitaspace/prettier-config"
 }
