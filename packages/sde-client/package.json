@@ -23,9 +23,9 @@
     "@kubb/swagger-ts": "^2.7.1",
     "@kubb/swagger-zod": "^2.7.1",
     "@kubb/swagger-zodios": "^2.7.1",
-    "@tanstack/react-query": "^5.24.8",
+    "@tanstack/react-query": "^5.28.9",
     "@zodios/core": "^10.9.6",
-    "axios": "^1.6.7",
+    "axios": "^1.6.8",
     "react": "18.2.0",
     "zod": "^3.22.4"
   },
@@ -33,10 +33,10 @@
     "@jitaspace/eslint-config": "*",
     "@jitaspace/prettier-config": "*",
     "@jitaspace/tsconfig": "*",
-    "@types/node": "^18.19.21",
+    "@types/node": "^18.19.28",
     "@types/react": "^18.2.73",
     "eslint": "^8.57.0",
     "prettier": "^3.2.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.3"
   }
 }
