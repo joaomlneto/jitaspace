@@ -19,7 +19,7 @@ importers:
         version: 0.21.3
       '@turbo/gen':
         specifier: ^1.13.1
-        version: 1.13.1(@types/node@18.19.28)(typescript@5.4.3)
+        version: 1.13.1(@types/node@20.12.7)(typescript@5.4.3)
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
@@ -247,8 +247,8 @@ importers:
         specifier: ^3.27.4
         version: 3.27.4
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -376,8 +376,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       concurrently:
         specifier: ^8.2.2
         version: 8.2.2
@@ -446,8 +446,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -513,8 +513,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -540,8 +540,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -573,8 +573,8 @@ importers:
         specifier: '*'
         version: link:../utils
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -628,8 +628,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
@@ -695,8 +695,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -762,8 +762,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -820,8 +820,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -893,8 +893,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -972,8 +972,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -1090,8 +1090,8 @@ importers:
         specifier: ^3.27.4
         version: 3.27.4
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -1132,8 +1132,8 @@ importers:
         specifier: '*'
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^18.19.28
-        version: 18.19.28
+        specifier: ^20.12.7
+        version: 20.12.7
       '@types/react':
         specifier: ^18.2.73
         version: 18.2.73
@@ -4682,7 +4682,7 @@ packages:
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
     dev: false
 
-  /@turbo/gen@1.13.1(@types/node@18.19.28)(typescript@5.4.3):
+  /@turbo/gen@1.13.1(@types/node@20.12.7)(typescript@5.4.3):
     resolution: {integrity: sha512-oNhq6JdCKMw7Sl3dpJCNWfEzuZkdPUYx04EkyMtxYmmZ173DtqJe8FCYezDgTnDzRxTZ4KllmAMjrde4woGVxA==}
     hasBin: true
     dependencies:
@@ -4694,7 +4694,7 @@ packages:
       minimatch: 9.0.3
       node-plop: 0.26.3
       proxy-agent: 6.3.1
-      ts-node: 10.9.2(@types/node@18.19.28)(typescript@5.4.3)
+      ts-node: 10.9.2(@types/node@20.12.7)(typescript@5.4.3)
       update-check: 1.5.4
       validate-npm-package-name: 5.0.0
     transitivePeerDependencies:
@@ -4807,7 +4807,7 @@ packages:
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 18.19.28
+      '@types/node': 20.12.7
     dev: false
 
   /@types/htmlparser2@3.10.7:
@@ -4815,7 +4815,7 @@ packages:
     dependencies:
       '@types/domhandler': 2.4.5
       '@types/domutils': 1.7.8
-      '@types/node': 18.19.28
+      '@types/node': 20.12.7
       domhandler: 2.4.2
     dev: true
 
@@ -4858,8 +4858,8 @@ packages:
     resolution: {integrity: sha512-J8xLz7q2OFulZ2cyGTLE1TbbZcjpno7FaN6zdJNrgAdrJ+DZzh/uFR6YrTb4C+nXakvud8Q4+rbhoIWlYQbUFQ==}
     dev: false
 
-  /@types/node@18.19.28:
-    resolution: {integrity: sha512-J5cOGD9n4x3YGgVuaND6khm5x07MMdAKkRyXnjVR6KFhLMNh2yONGiP7Z+4+tBOt5mK+GvDTiacTOVGGpqiecw==}
+  /@types/node@20.12.7:
+    resolution: {integrity: sha512-wq0cICSkRLVaf3UGLMGItu/PtdY7oaXaI/RVU+xliKVOtRna3PRY57ZDfztpDL0n11vfymMUnXv8QwYCO7L1wg==}
     dependencies:
       undici-types: 5.26.5
 
@@ -4900,7 +4900,7 @@ packages:
   /@types/resolve@1.17.1:
     resolution: {integrity: sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw==}
     dependencies:
-      '@types/node': 18.19.28
+      '@types/node': 20.12.7
     dev: false
 
   /@types/semver@6.2.7:
@@ -4918,7 +4918,7 @@ packages:
   /@types/through@0.0.33:
     resolution: {integrity: sha512-HsJ+z3QuETzP3cswwtzt2vEIiHBk/dCcHGhbmG5X3ecnwFD/lPrMpliGXxSCg03L9AhrdwA4Oz/qfspkDW+xGQ==}
     dependencies:
-      '@types/node': 18.19.28
+      '@types/node': 20.12.7
     dev: false
 
   /@types/tinycolor2@1.4.6:
@@ -8683,7 +8683,7 @@ packages:
     resolution: {integrity: sha512-KWYVV1c4i+jbMpaBC+U++4Va0cp8OisU185o73T1vo99hqi7w8tSJfUXYswwqqrjzwxa6KpRK54WhPvwf5w6PQ==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.19.28
+      '@types/node': 20.12.7
       merge-stream: 2.0.0
       supports-color: 7.2.0
     dev: false
@@ -8692,7 +8692,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 18.19.28
+      '@types/node': 20.12.7
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: false
@@ -11835,7 +11835,7 @@ packages:
       typescript: 5.4.3
     dev: false
 
-  /ts-node@10.9.2(@types/node@18.19.28)(typescript@5.4.3):
+  /ts-node@10.9.2(@types/node@20.12.7)(typescript@5.4.3):
     resolution: {integrity: sha512-f0FFpIdcHgn8zcPSbf1dRevwt047YMnaiJM3u2w2RewrB+fob/zePZcrOyQoLMMO7aBIddLcQIEK5dYjkLnGrQ==}
     hasBin: true
     peerDependencies:
@@ -11854,7 +11854,7 @@ packages:
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 18.19.28
+      '@types/node': 20.12.7
       acorn: 8.11.3
       acorn-walk: 8.3.1
       arg: 4.1.3
