@@ -28,7 +28,7 @@
     "@mantine/nprogress": "7.7.1",
     "@mantine/spotlight": "7.7.1",
     "@mantine/tiptap": "7.7.1",
-    "@tabler/icons-react": "^2.47.0",
+    "@tabler/icons-react": "^3.2.0",
     "@tiptap/extension-color": "^2.2.4",
     "@tiptap/extension-link": "^2.2.4",
     "@tiptap/extension-text-style": "^2.2.4",

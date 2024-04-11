@@ -123,8 +123,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.47.0
-        version: 2.47.0(react@18.2.0)
+        specifier: ^3.2.0
+        version: 3.2.0(react@18.2.0)
       '@tanstack/react-query':
         specifier: ^5.28.9
         version: 5.28.9(react@18.2.0)
@@ -172,7 +172,7 @@ importers:
         version: 4.0.0
       mantine-react-table:
         specifier: 2.0.0-beta.1
-        version: 2.0.0-beta.1(@mantine/core@7.7.1)(@mantine/dates@7.7.1)(@mantine/hooks@7.7.1)(@tabler/icons-react@2.47.0)(clsx@2.1.0)(dayjs@1.11.10)(react-dom@18.2.0)(react@18.2.0)
+        version: 2.0.0-beta.1(@mantine/core@7.7.1)(@mantine/dates@7.7.1)(@mantine/hooks@7.7.1)(@tabler/icons-react@3.2.0)(clsx@2.1.0)(dayjs@1.11.10)(react-dom@18.2.0)(react@18.2.0)
       next:
         specifier: ^14.1.4
         version: 14.1.4(@babel/core@7.23.7)(react-dom@18.2.0)(react@18.2.0)
@@ -920,8 +920,8 @@ importers:
         specifier: 7.7.1
         version: 7.7.1(@mantine/core@7.7.1)(@mantine/hooks@7.7.1)(@tiptap/extension-link@2.2.4)(@tiptap/react@2.2.4)(react-dom@18.2.0)(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.47.0
-        version: 2.47.0(react@18.2.0)
+        specifier: ^3.2.0
+        version: 3.2.0(react@18.2.0)
       '@tiptap/extension-character-count':
         specifier: ^2.2.4
         version: 2.2.4(@tiptap/core@2.2.4)(@tiptap/pm@2.2.4)
@@ -1041,8 +1041,8 @@ importers:
         specifier: 7.7.1
         version: 7.7.1(@mantine/core@7.7.1)(@mantine/hooks@7.7.1)(@tiptap/extension-link@2.2.4)(@tiptap/react@2.2.4)(react-dom@18.2.0)(react@18.2.0)
       '@tabler/icons-react':
-        specifier: ^2.47.0
-        version: 2.47.0(react@18.2.0)
+        specifier: ^3.2.0
+        version: 3.2.0(react@18.2.0)
       '@tiptap/extension-color':
         specifier: ^2.2.4
         version: 2.2.4(@tiptap/core@2.2.4)(@tiptap/extension-text-style@2.2.4)
@@ -4261,18 +4261,17 @@ packages:
       defer-to-connect: 2.0.1
     dev: false
 
-  /@tabler/icons-react@2.47.0(react@18.2.0):
-    resolution: {integrity: sha512-iqly2FvCF/qUbgmvS8E40rVeYY7laltc5GUjRxQj59DuX0x/6CpKHTXt86YlI2whg4czvd/c8Ce8YR08uEku0g==}
+  /@tabler/icons-react@3.2.0(react@18.2.0):
+    resolution: {integrity: sha512-b1mZT1XpZrzvbM+eFe1YbYbxkzgJ18tM4knZKqXh0gnHDZ6XVLIH3TzJZ3HZ7PTkUqZLZ7XcGae3qQVGburlBw==}
     peerDependencies:
-      react: ^16.5.1 || ^17.0.0 || ^18.0.0
+      react: '>= 16'
     dependencies:
-      '@tabler/icons': 2.47.0
-      prop-types: 15.8.1
+      '@tabler/icons': 3.2.0
       react: 18.2.0
     dev: false
 
-  /@tabler/icons@2.47.0:
-    resolution: {integrity: sha512-4w5evLh+7FUUiA1GucvGj2ReX2TvOjEr4ejXdwL/bsjoSkof6r1gQmzqI+VHrE2CpJpB3al7bCTulOkFa/RcyA==}
+  /@tabler/icons@3.2.0:
+    resolution: {integrity: sha512-h8GQ2rtxgiSjltrVz4vcopAxTPSpUSUi5nBfJ09H3Bk4fJk6wZ/dVUjzhv/BHfDwGTkAxZBiYe/Q/T95cPeg5Q==}
     dev: false
 
   /@tanstack/eslint-plugin-query@5.28.6(eslint@8.57.0)(typescript@5.4.3):
@@ -9074,7 +9073,7 @@ packages:
     resolution: {integrity: sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==}
     dev: false
 
-  /mantine-react-table@2.0.0-beta.1(@mantine/core@7.7.1)(@mantine/dates@7.7.1)(@mantine/hooks@7.7.1)(@tabler/icons-react@2.47.0)(clsx@2.1.0)(dayjs@1.11.10)(react-dom@18.2.0)(react@18.2.0):
+  /mantine-react-table@2.0.0-beta.1(@mantine/core@7.7.1)(@mantine/dates@7.7.1)(@mantine/hooks@7.7.1)(@tabler/icons-react@3.2.0)(clsx@2.1.0)(dayjs@1.11.10)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-TptKzSL/x8rMReMOaRP1lItIngK5UaD7+uy01V2jz+Y+PtodqTSDfyjUD9ON4iWUEiSMFNxaPAXa2MbMJXPW0Q==}
     engines: {node: '>=16'}
     peerDependencies:
@@ -9090,7 +9089,7 @@ packages:
       '@mantine/core': 7.7.1(@mantine/hooks@7.7.1)(@types/react@18.2.73)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/dates': 7.7.1(@mantine/core@7.7.1)(@mantine/hooks@7.7.1)(dayjs@1.11.10)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/hooks': 7.7.1(react@18.2.0)
-      '@tabler/icons-react': 2.47.0(react@18.2.0)
+      '@tabler/icons-react': 3.2.0(react@18.2.0)
       '@tanstack/match-sorter-utils': 8.11.8
       '@tanstack/react-table': 8.15.0(react-dom@18.2.0)(react@18.2.0)
       '@tanstack/react-virtual': 3.2.0(react-dom@18.2.0)(react@18.2.0)
