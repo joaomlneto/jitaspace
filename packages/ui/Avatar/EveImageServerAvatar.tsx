@@ -28,6 +28,21 @@ export const EveImageServerAvatar = memo(
     });
     const imageSize = esiImageSizeClamp(avatarSize);
 
+    if (
+      category &&
+      !id &&
+      ["alliances", "corporations", "characters"].includes(category)
+    ) {
+      return (
+        <Avatar
+          src={`https://images.evetech.net/${category}/1/${category == "characters" ? "portrait" : "logo"}?size=${imageSize}`}
+          size={size}
+          alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
+          {...avatarProps}
+        />
+      );
+    }
+
     return (
       <Avatar
         src={
