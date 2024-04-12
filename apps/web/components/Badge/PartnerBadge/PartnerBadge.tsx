@@ -3,7 +3,8 @@ import Image, { ImageProps } from "next/image";
 
 import PartnerBadgeImage from "./partner-badge-2-trimmed.png";
 
-export type PartnerBadgeProps = Omit<ImageProps, "src" | "alt">;
+export type PartnerBadgeProps = Omit<ImageProps, "src" | "alt"> &
+  Partial<Pick<ImageProps, "alt">>;
 
 export const PartnerBadge = ({ alt, ...otherProps }: PartnerBadgeProps) => {
   return (
