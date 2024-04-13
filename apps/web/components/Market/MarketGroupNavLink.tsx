@@ -3,7 +3,7 @@ import Link from "next/link";
 import { NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
-import { TypeAvatar } from "@jitaspace/ui";
+import { MarketGroupAvatar, TypeAvatar } from "@jitaspace/ui";
 
 
 
@@ -61,6 +61,9 @@ export const MarketGroupNavLink = memo(
         childrenOffset={28}
         opened={opened}
         onChange={() => toggle()}
+        leftSection={
+          <MarketGroupAvatar size={24} marketGroupId={marketGroupId} />
+        }
       >
         {opened &&
           sortedChildrenMarketGroups.map((childMarketGroup) => (
@@ -76,7 +79,9 @@ export const MarketGroupNavLink = memo(
             <NavLink
               component={Link}
               href={`/market/${type.typeId}`}
-              leftSection={<TypeAvatar size={24} typeId={type.typeId} />}
+              leftSection={
+                <TypeAvatar size={24} typeId={type.typeId} variation="icon" />
+              }
               label={type.name}
               key={type.typeId}
             />
