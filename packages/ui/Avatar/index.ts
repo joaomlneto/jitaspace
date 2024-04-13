@@ -4,6 +4,7 @@ export * from "./CharacterAvatar";
 export * from "./CorporationAvatar";
 export * from "./EveEntityAvatar";
 export * from "./EveIconAvatar";
+export * from "./EveIconAvatarPlaceholder";
 export * from "./EveImageServerAvatar";
 export * from "./EveMailSenderAvatar";
 export * from "./FactionAvatar";
