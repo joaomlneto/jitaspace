@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Group, Text, UnstyledButton } from "@mantine/core";
 
 import { useSolarSystem } from "@jitaspace/hooks";
-import { SolarSystemAvatar } from "@jitaspace/ui";
+import { SolarSystemStarAvatar } from "@jitaspace/ui";
 
 import classes from "./Button.module.css";
 
@@ -22,7 +22,7 @@ export const SolarSystemButton = memo(
     return (
       <UnstyledButton className={classes.user}>
         <Group wrap="nowrap" gap="sm">
-          <SolarSystemAvatar solarSystemId={solarSystemId} size={30} />
+          <SolarSystemStarAvatar solarSystemId={solarSystemId} size={30} />
           <Text fz="sm" fw={500}>
             {data?.data.name}
           </Text>
