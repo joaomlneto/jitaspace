@@ -1,5 +1,5 @@
-import { memo } from "react";
-import { type CardProps } from "@mantine/core";
+import React, { memo } from "react";
+import { Text, type CardProps } from "@mantine/core";
 
 import { useCharacterCurrentFit } from "@jitaspace/hooks";
 
@@ -10,11 +10,28 @@ type EsiCurrentShipFittingCardProps = Omit<CardProps, "children"> & {
   characterId: number;
   hideHeader?: boolean;
   hideModules?: boolean;
+  fallback?: React.ReactNode;
+  hideFallback?: boolean;
 };
 
 export const EsiCurrentShipFittingCard = memo(
-  ({ characterId, ...otherProps }: EsiCurrentShipFittingCardProps) => {
-    const fit = useCharacterCurrentFit(characterId);
+  ({
+    characterId,
+    fallback,
+    hideFallback = false,
+    ...otherProps
+  }: EsiCurrentShipFittingCardProps) => {
+    const { hasToken, ...fit } = useCharacterCurrentFit(characterId);
+
+    if (!hasToken) {
+      return hideFallback
+        ? null
+        : fallback ?? (
+            <Text size="xs" c="dimmed">
+              Active Ship Fitting not available
+            </Text>
+          );
+    }
 
     return (
       <ShipFittingCard
