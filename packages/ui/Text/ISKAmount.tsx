@@ -10,13 +10,19 @@ import { Skeleton, Text, Tooltip, type TextProps } from "@mantine/core";
 export type ISKAmountProps = TextProps & {
   amount?: number;
   digits?: number;
-  space?: boolean;
+  showFullAmount?: boolean;
 };
 
 export const ISKAmount = memo(
-  ({ amount, digits = 1, ...otherProps }: ISKAmountProps) => {
+  ({
+    amount,
+    digits = 1,
+    showFullAmount = false,
+    ...otherProps
+  }: ISKAmountProps) => {
     const formattedAmount = useMemo(() => {
       if (amount === undefined) return null;
+      if (showFullAmount) return amount.toLocaleString();
       const lookup = [
         { value: 1e12, symbol: "T" },
         { value: 1e9, symbol: "B" },
