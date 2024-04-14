@@ -4,6 +4,7 @@ import React from "react";
 import {
   Burger,
   Card,
+  CardProps,
   Group,
   Skeleton,
   Text,
@@ -39,12 +40,13 @@ import { EsiCurrentShipFittingCard } from "~/components/Fitting";
 import { CharacterMenu } from "~/components/Menu";
 import classes from "./AuthenticatedCharacterCard.module.css";
 
-export type AuthenticatedCharacterCardProps = {
+export type AuthenticatedCharacterCardProps = CardProps & {
   characterId: number;
 };
 
 export const AuthenticatedCharacterCard = ({
   characterId,
+  ...otherProps
 }: AuthenticatedCharacterCardProps) => {
   const character = useAuthenticatedCharacter(characterId);
   const { data: balance, isAllowed: isAllowedToReadWalletBalance } =
@@ -58,7 +60,7 @@ export const AuthenticatedCharacterCard = ({
   }
 
   return (
-    <Card withBorder radius="md" className={classes.card}>
+    <Card withBorder radius="md" className={classes.card} {...otherProps}>
       <Card.Section className={classes.imageSection}>
         <Group wrap="nowrap" justify="space-between" align="start">
           <Group wrap="nowrap" align="start">

@@ -7,7 +7,6 @@ import {
   Badge,
   Card,
   Container,
-  Grid,
   Group,
   rem,
   SimpleGrid,
@@ -57,17 +56,15 @@ export default function Page() {
     useAuthStore();
 
   return (
-    <Container size="lg">
-      <Grid>
+    <Container size="xl">
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
         {Object.values(characters).map((character) => (
-          <Grid.Col span={4}>
-            <AuthenticatedCharacterCard
-              characterId={character.characterId}
-              key={character.characterId}
-            />
-          </Grid.Col>
+          <AuthenticatedCharacterCard
+            characterId={character.characterId}
+            key={character.characterId}
+          />
         ))}
-      </Grid>
+      </SimpleGrid>
       <Group wrap="nowrap" gap="xs" mt="md" mb="xl">
         <CharacterAvatar characterId={1} size="sm" />
         <Anchor
