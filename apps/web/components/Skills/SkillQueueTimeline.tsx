@@ -16,19 +16,11 @@ import humanizeDuration from "humanize-duration";
 
 import { useCharacterSkillQueue } from "@jitaspace/hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
+import { skillLevelRomanNumeral } from "@jitaspace/utils";
 
 
 
 
-
-const skillLevelRomanNumeral = (n: number): string =>
-  ({
-    1: "I",
-    2: "II",
-    3: "III",
-    4: "IV",
-    5: "V",
-  })[n] ?? "[Invalid Level]";
 
 export type SkillQueueTimelineProps = {
   characterId: number;
