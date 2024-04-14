@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo } from "react";
-import { Indicator, Tooltip, type IndicatorProps } from "@mantine/core";
+import { Indicator, type IndicatorProps } from "@mantine/core";
 
 import { useCharacterOnlineStatus } from "@jitaspace/hooks";
 
@@ -20,13 +20,11 @@ export const CharacterOnlineIndicator = memo(
     console.log({ characterId, online: data?.data.online });
 
     return (
-      <Tooltip label={`Character ${data?.data.online ? "online" : "offline"}`}>
-        <Indicator
-          disabled={!isSuccess}
-          color={data?.data.online ? "green" : "red"}
-          {...otherProps}
-        />
-      </Tooltip>
+      <Indicator
+        disabled={!isSuccess}
+        color={data?.data.online ? "green" : "red"}
+        {...otherProps}
+      />
     );
   },
 );
