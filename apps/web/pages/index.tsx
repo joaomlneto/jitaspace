@@ -3,29 +3,26 @@ import Image, { type ImageProps } from "next/image";
 import Link, { type LinkProps } from "next/link";
 import { useRouter } from "next/router";
 import {
-  ActionIcon,
   Anchor,
   Badge,
   Card,
   Container,
+  Grid,
   Group,
   rem,
   SimpleGrid,
-  Stack,
   Text,
   Title,
   UnstyledButton,
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";
-import { modals, openContextModal } from "@mantine/modals";
-import { IconCircleX } from "@tabler/icons-react";
+import { openContextModal } from "@mantine/modals";
 
-import { EveMailIcon } from "@jitaspace/eve-icons";
 import { useAuthStore } from "@jitaspace/hooks";
-import { CharacterAvatar, TotalUnreadMailsIndicator } from "@jitaspace/ui";
+import { CharacterAvatar } from "@jitaspace/ui";
 
-import { CharacterButton } from "~/components/Button";
+import { AuthenticatedCharacterCard } from "~/components/Card";
 import { characterApps, universeApps } from "~/config/apps";
 import { MainLayout } from "~/layouts";
 
@@ -61,72 +58,31 @@ export default function Page() {
 
   return (
     <Container size="lg">
-      <Container size="xs">
-        <Stack my="md" gap="xs">
-          {Object.values(characters).map((character) => (
-            <Group justify="space-between" key={character.characterId}>
-              <Group>
-                <CharacterButton
-                  characterId={character.characterId}
-                  showOnlineIndicator
-                />
-              </Group>
-              <Group wrap="nowrap" gap="xs">
-                <ActionIcon
-                  variant="transparent"
-                  onClick={() => {
-                    selectCharacter(character.characterId);
-                    router.push("/mail");
-                  }}
-                >
-                  <TotalUnreadMailsIndicator
-                    characterId={character.characterId}
-                    offset={8}
-                  >
-                    <EveMailIcon width={32} />
-                  </TotalUnreadMailsIndicator>
-                </ActionIcon>
-                <ActionIcon
-                  radius="xl"
-                  variant="subtle"
-                  onClick={() =>
-                    modals.openConfirmModal({
-                      title: `Log out ${character.accessTokenPayload.name}?`,
-                      children: (
-                        <Text size="sm">
-                          Are you sure you want to log out from character{" "}
-                          {character.accessTokenPayload.name}?
-                        </Text>
-                      ),
-                      labels: { confirm: "Confirm", cancel: "Cancel" },
-                      onConfirm: () => {
-                        removeCharacter(character.characterId);
-                      },
-                    })
-                  }
-                >
-                  <IconCircleX />
-                </ActionIcon>
-              </Group>
-            </Group>
-          ))}
-          <Group wrap="nowrap" gap="xs">
-            <CharacterAvatar characterId={1} size="sm" />
-            <Anchor
-              onClick={() => {
-                openContextModal({
-                  modal: "login",
-                  title: "Login",
-                  size: "xl",
-                  innerProps: {},
-                });
-              }}
-            >
-              Add character
-            </Anchor>
-          </Group>
-        </Stack>
-      </Container>
+      <Grid>
+        {Object.values(characters).map((character) => (
+          <Grid.Col span={4}>
+            <AuthenticatedCharacterCard
+              characterId={character.characterId}
+              key={character.characterId}
+            />
+          </Grid.Col>
+        ))}
+      </Grid>
+      <Group wrap="nowrap" gap="xs" mt="md" mb="xl">
+        <CharacterAvatar characterId={1} size="sm" />
+        <Anchor
+          onClick={() => {
+            openContextModal({
+              modal: "login",
+              title: "Login",
+              size: "xl",
+              innerProps: {},
+            });
+          }}
+        >
+          Add character
+        </Anchor>
+      </Group>
       <Title order={3}>Capsuleer Tools</Title>
       <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2, sm: 3 }}>
         {Object.values(characterApps).map((feature) => (
