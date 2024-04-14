@@ -12,7 +12,7 @@ import { sizes } from "./Avatar.styles";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
 import { FactionAvatar } from "./FactionAvatar";
-import { SolarSystemAvatar } from "./SolarSystemAvatar";
+import { SolarSystemStarAvatar } from "./SolarSystemStarAvatar";
 import { StationAvatar } from "./StationAvatar";
 import { StructureAvatar } from "./StructureAvatar";
 import { TypeAvatar } from "./TypeAvatar";
@@ -76,7 +76,7 @@ export const EveEntityAvatar = memo(
     }
 
     if (category === "solar_system") {
-      return <SolarSystemAvatar solarSystemId={entityId} {...otherProps} />;
+      return <SolarSystemStarAvatar solarSystemId={entityId} {...otherProps} />;
     }
 
     if (category === "station") {

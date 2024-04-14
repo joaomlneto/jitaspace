@@ -12,7 +12,7 @@ export type SolarSystemAvatarProps = Omit<AvatarProps, "src"> & {
   solarSystemId?: string | number | null;
 };
 
-export const SolarSystemAvatar = memo(
+export const SolarSystemStarAvatar = memo(
   ({ solarSystemId, ...otherProps }: SolarSystemAvatarProps) => {
     const { data } = useGetUniverseSystemsSystemId(
       typeof solarSystemId === "string"
@@ -36,4 +36,4 @@ export const SolarSystemAvatar = memo(
     );
   },
 );
-SolarSystemAvatar.displayName = "SolarSystemAvatar";
+SolarSystemStarAvatar.displayName = "SolarSystemAvatar";
