@@ -101,6 +101,7 @@ export const useCharacterAssets = (characterId?: number) => {
   }, [data]);
 
   return {
+    hasToken: accessToken !== null,
     assets,
     locations,
     error,

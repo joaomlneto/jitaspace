@@ -12,8 +12,9 @@ export type FittingItemFlag =
   GetCharactersCharacterIdFittingsQueryResponseItemsFlag;
 
 export const useCharacterCurrentFit = (characterId: number) => {
-  const { data: ship } = useCharacterCurrentShip(characterId);
-  const { assets } = useCharacterAssets(characterId);
+  const { data: ship, hasToken: hasShipToken } =
+    useCharacterCurrentShip(characterId);
+  const { assets, hasToken: hasAssetsToken } = useCharacterAssets(characterId);
 
   const modules = useMemo(() => {
     if (!ship) return null;
@@ -23,6 +24,7 @@ export const useCharacterCurrentFit = (characterId: number) => {
   }, [ship, assets]);
 
   return {
+    hasToken: hasShipToken && hasAssetsToken,
     name: ship?.data.ship_name,
     shipTypeId: ship?.data.ship_type_id,
     items: modules?.map((module) => ({

@@ -10,14 +10,17 @@ export const useCharacterCurrentShip = (characterId: number) => {
     characterId,
     scopes: ["esi-location.read_ship_type.v1"],
   });
-  return useGetCharactersCharacterIdShip(
-    characterId ?? 0,
-    {},
-    { ...authHeaders },
-    {
-      query: {
-        enabled: accessToken !== null,
+  return {
+    hasToken: accessToken !== null,
+    ...useGetCharactersCharacterIdShip(
+      characterId ?? 0,
+      {},
+      { ...authHeaders },
+      {
+        query: {
+          enabled: accessToken !== null,
+        },
       },
-    },
-  );
+    ),
+  };
 };

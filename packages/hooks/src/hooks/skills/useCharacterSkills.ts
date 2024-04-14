@@ -17,14 +17,17 @@ export const useCharacterSkills = (characterId: number) => {
     scopes: ["esi-skills.read_skills.v1"],
   });
 
-  return useGetCharactersCharacterIdSkills(
-    characterId ?? 1,
-    {},
-    { ...authHeaders },
-    {
-      query: {
-        enabled: !!characterId && accessToken !== null,
+  return {
+    hasToken: !!accessToken,
+    ...useGetCharactersCharacterIdSkills(
+      characterId ?? 1,
+      {},
+      { ...authHeaders },
+      {
+        query: {
+          enabled: !!characterId && accessToken !== null,
+        },
       },
-    },
-  );
+    ),
+  };
 };
