@@ -25,7 +25,6 @@ import { useServerStatus } from "@jitaspace/hooks";
 import { useGetVersion } from "@jitaspace/sde-client";
 import { FormattedDateText } from "@jitaspace/ui";
 
-import { EsiClientStateCard } from "~/components/EsiClient";
 import { MainLayout } from "~/layouts";
 
 
@@ -123,8 +122,7 @@ export default function Page() {
       <Stack>
         <Stack gap="xs">
           <Title>Status</Title>
-          <Title order={3}>Jita.Space</Title>
-          <EsiClientStateCard />
+          <Title order={3}>JitaSpace</Title>
           <Group justify="space-between">
             <Text>Vercel Platform</Text>
             <Group>
@@ -164,7 +162,7 @@ export default function Page() {
           </Group>
         </Stack>
         <Stack gap="xs">
-          <Title order={3}>EVE Online</Title>
+          <Title order={3}>EVE Online - Tranquility</Title>
           <Group justify="space-between">
             <Text>Players Online</Text>
             <Group>

@@ -17,6 +17,7 @@ import {
   TimeAgoText,
 } from "@jitaspace/ui";
 
+import { AuthenticatedCharacterTokenDetailsPanel } from "~/components/Auth";
 import { ScopesTable } from "../ScopeGuard";
 
 
@@ -103,6 +104,9 @@ export function EsiClientStateCard() {
           </Spoiler>
         </>
       )}
+      <AuthenticatedCharacterTokenDetailsPanel
+        characterId={character.characterId}
+      />
     </>
   ));
 }

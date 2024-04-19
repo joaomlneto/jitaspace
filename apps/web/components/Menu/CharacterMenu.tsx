@@ -1,6 +1,6 @@
 import React from "react";
 import { Menu, MenuProps, Text } from "@mantine/core";
-import { modals } from "@mantine/modals";
+import { modals, openContextModal } from "@mantine/modals";
 import { IconLockSearch } from "@tabler/icons-react";
 
 import { TerminateIcon } from "@jitaspace/eve-icons";
@@ -56,11 +56,23 @@ export const CharacterMenu = ({
           <>
             <Menu.Divider />
             <Menu.Label>Authentication</Menu.Label>
-            {false && (
-              <Menu.Item leftSection={<IconLockSearch size={20} />}>
-                Inspect Access Token
-              </Menu.Item>
-            )}
+
+            <Menu.Item
+              leftSection={<IconLockSearch size={20} />}
+              onClick={() => {
+                openContextModal({
+                  modal: "ssoToken",
+                  title: <Text fw={700}>{character?.name}</Text>,
+                  size: "xl",
+                  innerProps: {
+                    characterId,
+                  },
+                });
+              }}
+            >
+              Inspect Access Token
+            </Menu.Item>
+
             <Menu.Item
               onClick={() =>
                 modals.openConfirmModal({
