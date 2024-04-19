@@ -1,19 +1,37 @@
-import {type GetStatusQueryResponse, useGetStatus as useGetMetaStatus,} from "@jitaspace/esi-meta-client";
-import {useServerStatus} from "@jitaspace/hooks";
-import {FormattedDateText} from "@jitaspace/ui";
-import {Anchor, Badge, ColorSwatch, Container, Group, Stack, Switch, Table, Text, Title,} from "@mantine/core";
-import {NextSeo} from "next-seo";
-import React, {type ReactElement, useMemo, useState} from "react";
+import React, { useMemo, useState, type ReactElement } from "react";
+import {
+  Anchor,
+  Badge,
+  ColorSwatch,
+  Container,
+  Group,
+  Stack,
+  Switch,
+  Table,
+  Text,
+  Title,
+  Tooltip,
+} from "@mantine/core";
+import { IconCircleCheck, IconCircleX } from "@tabler/icons-react";
+import { NextSeo } from "next-seo";
 import useSwr from "swr";
 
-import {EsiClientStateCard} from "~/components/EsiClient";
-import {MainLayout} from "~/layouts";
+import {
+  useGetStatus as useGetMetaStatus,
+  type GetStatusQueryResponse,
+} from "@jitaspace/esi-meta-client";
+import { useServerStatus } from "@jitaspace/hooks";
+import { useGetVersion } from "@jitaspace/sde-client";
+import { FormattedDateText } from "@jitaspace/ui";
+
+import { EsiClientStateCard } from "~/components/EsiClient";
+import { MainLayout } from "~/layouts";
 
 
 export default function Page() {
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
     useState<boolean>(false);
-  const {data: sdeData, isLoading: sdeIsLoading} = useSwr<{
+  const { data: sdeData, isLoading: sdeIsLoading } = useSwr<{
     lastModified: string;
     date: string;
   }>(
@@ -23,8 +41,9 @@ export default function Page() {
       refreshInterval: 60 * 1000,
     },
   );
+  const { data: sdeVersionData } = useGetVersion();
 
-  const {data: vercelStatusData, isLoading: vercelStatusIsLoading} = useSwr<{
+  const { data: vercelStatusData, isLoading: vercelStatusIsLoading } = useSwr<{
     page: {
       id: string;
       name: string;
@@ -44,16 +63,24 @@ export default function Page() {
     },
   );
 
-  const {data: tqStatus} = useServerStatus();
+  const { data: tqStatus } = useServerStatus();
 
-  const {data: esiStatus} = useGetMetaStatus(
+  const { data: esiStatus } = useGetMetaStatus(
     {},
-    {query: {refetchInterval: 30 * 1000}},
+    { query: { refetchInterval: 30 * 1000 } },
   );
 
   const sdeLastModifiedDate: Date | null = useMemo(
     () => (sdeData?.lastModified ? new Date(sdeData.lastModified) : null),
     [sdeData?.lastModified],
+  );
+
+  const sdeApiLastUpdatedDate: Date | null = useMemo(
+    () =>
+      sdeVersionData?.data.generationDate
+        ? new Date(sdeVersionData.data.generationDate)
+        : null,
+    [sdeData?.date],
   );
 
   const nonGreenEndpoints = useMemo(
@@ -87,23 +114,38 @@ export default function Page() {
         <Stack gap="xs">
           <Title>Status</Title>
           <Title order={3}>Jita Frontend</Title>
-          <EsiClientStateCard/>
+          <EsiClientStateCard />
           <Title order={3}>Jita Backend</Title>
           <Group justify="space-between">
             <Text>Vercel Platform</Text>
             <Group>
-              <Anchor href="https://www.vercel-status.com">
+              <Anchor href="https://www.vercel-status.com" target="_blank">
                 {vercelStatusIsLoading && "Checking..."}
                 {vercelStatusData?.status.description}
               </Anchor>
             </Group>
           </Group>
           <Group justify="space-between">
-            <Text>SDE API Last Updated On</Text>
-            {/* FIXME: shouldnt be hardcoded! :) */}
-            <Anchor href="https://sde.jita.space">
-              <Text>2023-06-20 09:50:05</Text>
-            </Anchor>
+            <Text>SDE API Updated On</Text>
+            <Group gap="xs">
+              <Anchor href="https://sde.jita.space">
+                {!sdeApiLastUpdatedDate && "Checking..."}
+                {sdeApiLastUpdatedDate && (
+                  <FormattedDateText date={sdeApiLastUpdatedDate} />
+                )}
+              </Anchor>
+              {sdeApiLastUpdatedDate &&
+              sdeLastModifiedDate &&
+              sdeApiLastUpdatedDate >= sdeLastModifiedDate ? (
+                <Tooltip label="JitaSpace SDE API is up to date!">
+                  <IconCircleCheck color="green" size={16} />
+                </Tooltip>
+              ) : (
+                <Tooltip label="JitaSpace SDE API is outdated!">
+                  <IconCircleX color="red" size={16} />
+                </Tooltip>
+              )}
+            </Group>
           </Group>
         </Stack>
         <Stack gap="xs">
@@ -119,7 +161,7 @@ export default function Page() {
             <Text>Start Time</Text>
             <Text>
               {tqStatus && (
-                <FormattedDateText date={new Date(tqStatus?.data.start_time)}/>
+                <FormattedDateText date={new Date(tqStatus?.data.start_time)} />
               )}
             </Text>
           </Group>
@@ -132,7 +174,7 @@ export default function Page() {
             <Text>
               {sdeIsLoading && "Checking..."}
               {!sdeIsLoading && sdeLastModifiedDate && (
-                <FormattedDateText date={sdeLastModifiedDate}/>
+                <FormattedDateText date={sdeLastModifiedDate} />
               )}
             </Text>
           </Group>
@@ -159,11 +201,13 @@ export default function Page() {
                   <Table.Tbody>
                     {esiStatusByTag[tag]?.map((entry) => (
                       <Table.Tr key={`${entry.method} ${entry.route}`}>
-                        <Table.Td width={1}>{entry.method.toUpperCase()}</Table.Td>
+                        <Table.Td width={1}>
+                          {entry.method.toUpperCase()}
+                        </Table.Td>
                         <Table.Td>{entry.route}</Table.Td>
                         <Table.Td align="right">{entry.endpoint}</Table.Td>
                         <Table.Td align="right" width={1}>
-                          <ColorSwatch size={16} color={entry.status}/>
+                          <ColorSwatch size={16} color={entry.status} />
                         </Table.Td>
                       </Table.Tr>
                     ))}
@@ -181,7 +225,7 @@ export default function Page() {
 Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
-      <NextSeo title="Status"/>
+      <NextSeo title="Status" />
       {page}
     </MainLayout>
   );
