@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Button, CopyButton, Group, Text, Title, Tooltip } from "@mantine/core";
+import {
+  Button,
+  CopyButton,
+  Group,
+  Stack,
+  Text,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 
 import { useAuthenticatedCharacter } from "@jitaspace/hooks";
 import {
@@ -35,7 +43,7 @@ export const AuthenticatedCharacterTokenDetailsPanel = ({
   }
 
   return (
-    <>
+    <Stack>
       <Group>
         <CharacterAvatar characterId={characterId} size="md" />
         <CharacterName characterId={characterId} />
@@ -60,7 +68,7 @@ export const AuthenticatedCharacterTokenDetailsPanel = ({
 
       {expirationDate && (
         <Group justify="space-between">
-          <Text>Token expires</Text>
+          <Text>Token expiration</Text>
           <Group>
             <Tooltip
               color="dark"
@@ -70,7 +78,7 @@ export const AuthenticatedCharacterTokenDetailsPanel = ({
                 </Text>
               }
             >
-              <TimeAgoText date={expirationDate} />
+              <TimeAgoText date={expirationDate} addSuffix />
             </Tooltip>
           </Group>
         </Group>
@@ -80,6 +88,6 @@ export const AuthenticatedCharacterTokenDetailsPanel = ({
         <Title order={4}>Access Token Scopes</Title>
         <ScopesTable scopes={character.accessTokenPayload.scp} />
       </Group>
-    </>
+    </Stack>
   );
 };
