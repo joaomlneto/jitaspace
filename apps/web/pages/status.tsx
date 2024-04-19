@@ -1,4 +1,5 @@
 import React, { useMemo, useState, type ReactElement } from "react";
+import getConfig from "next/config";
 import {
   Anchor,
   Badge,
@@ -29,6 +30,7 @@ import { MainLayout } from "~/layouts";
 
 
 export default function Page() {
+  const { publicRuntimeConfig } = getConfig();
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
     useState<boolean>(false);
   const { data: sdeData, isLoading: sdeIsLoading } = useSwr<{
@@ -68,6 +70,14 @@ export default function Page() {
   const { data: esiStatus } = useGetMetaStatus(
     {},
     { query: { refetchInterval: 30 * 1000 } },
+  );
+
+  const webLastUpdatedDate: Date | null = useMemo(
+    () =>
+      publicRuntimeConfig?.modifiedDate
+        ? new Date(publicRuntimeConfig.modifiedDate)
+        : null,
+    [publicRuntimeConfig?.modifiedDate],
   );
 
   const sdeLastModifiedDate: Date | null = useMemo(
@@ -113,9 +123,8 @@ export default function Page() {
       <Stack>
         <Stack gap="xs">
           <Title>Status</Title>
-          <Title order={3}>Jita Frontend</Title>
+          <Title order={3}>Jita.Space</Title>
           <EsiClientStateCard />
-          <Title order={3}>Jita Backend</Title>
           <Group justify="space-between">
             <Text>Vercel Platform</Text>
             <Group>
@@ -124,6 +133,12 @@ export default function Page() {
                 {vercelStatusData?.status.description}
               </Anchor>
             </Group>
+          </Group>
+          <Group justify="space-between">
+            <Text>Website Updated On</Text>
+            {webLastUpdatedDate && (
+              <FormattedDateText date={webLastUpdatedDate} />
+            )}
           </Group>
           <Group justify="space-between">
             <Text>SDE API Updated On</Text>

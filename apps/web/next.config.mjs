@@ -62,6 +62,10 @@ const config = {
             },
         ];
     },
+
+    publicRuntimeConfig: {
+        modifiedDate: new Date().toISOString(),
+    },
 };
 
 const withPWA = withPWAInit({
