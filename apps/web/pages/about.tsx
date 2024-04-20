@@ -48,6 +48,7 @@ export default function Page() {
                 <Group justify="flex-end" gap="xs" wrap="nowrap">
                   <CharacterAvatar characterId={MY_CHARACTER_ID} size="sm" />
                   <CharacterAnchor
+                    size="sm"
                     characterId={MY_CHARACTER_ID}
                     target="_blank"
                   >
@@ -73,7 +74,7 @@ export default function Page() {
             <Table.Tr>
               <Table.Td>Email</Table.Td>
               <Table.Td align="right">
-                <Anchor component={Email} email="joao@jita.space">
+                <Anchor size="sm" component={Email} email="joao@jita.space">
                   Click to send email
                 </Anchor>
               </Table.Td>
@@ -91,7 +92,7 @@ export default function Page() {
           <List.Item>
             We collect the usual information (IP, browser, URL, location, date)
             for statistical purposes. Information is processed and stored by{" "}
-            <Anchor href="https://www.umami.is/" target="_blank">
+            <Anchor inherit href="https://www.umami.is/" target="_blank">
               Umami Cloud
             </Anchor>
             , a privacy-focused web analytics service. The information collected
@@ -106,7 +107,7 @@ export default function Page() {
             Your EVE user information (EVE SSO access tokens, character data) is
             not stored and is used exclusively for interactions with the EVE
             Online Login and API services, both managed by{" "}
-            <Anchor href="https://www.ccpgames.com/" target="_blank">
+            <Anchor inherit href="https://www.ccpgames.com/" target="_blank">
               CCP Games
             </Anchor>
             .
@@ -131,29 +132,29 @@ export default function Page() {
         </Text>
         <List size="sm">
           <List.Item>
-            <CharacterAnchor characterId={90506825} target="_blank">
+            <CharacterAnchor inherit characterId={90506825} target="_blank">
               Inomares
             </CharacterAnchor>{" "}
             for{" "}
-            <Anchor href="https://www.hoboleaks.space" target="_blank">
+            <Anchor inherit href="https://www.hoboleaks.space" target="_blank">
               Hoboleaks
             </Anchor>{" "}
             and his diligence in helping fellow third party developers.
           </List.Item>
           <List.Item>
             Kenn from{" "}
-            <Anchor href="https://everef.net" target="_blank">
+            <Anchor inherit href="https://everef.net" target="_blank">
               Eve Ref
             </Anchor>
             , for putting up with my questions, for sharing his code, and for
             all the invaluable tips.
           </List.Item>
           <List.Item>
-            <CharacterAnchor characterId={2113325640} target="_blank">
+            <CharacterAnchor inherit characterId={2113325640} target="_blank">
               Nyx Viliana
             </CharacterAnchor>{" "}
             and the{" "}
-            <Anchor href="https://42outunis.com" target="_blank">
+            <Anchor inherit href="https://42outunis.com" target="_blank">
               The Outuni Project
             </Anchor>{" "}
             incursions community, for some cool ideas and all the ISK.
@@ -176,57 +177,69 @@ export default function Page() {
         </Text>
         <List size="sm">
           <List.Item>
-            <Anchor href="https://axios-http.com/" target="_blank">
+            <Anchor inherit href="https://axios-http.com/" target="_blank">
               axios
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor href="https://date-fns.org/" target="_blank">
+            <Anchor inherit href="https://date-fns.org/" target="_blank">
               date-fns
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor href="https://github.com/panva/jose" target="_blank">
+            <Anchor
+              inherit
+              href="https://github.com/panva/jose"
+              target="_blank"
+            >
               jose
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor href="https://mantine.dev" target="_blank">
+            <Anchor inherit href="https://mantine.dev" target="_blank">
               Mantine
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor href="https://www.mantine-react-table.com" target="_blank">
+            <Anchor
+              inherit
+              href="https://www.mantine-react-table.com"
+              target="_blank"
+            >
               Mantine React Table
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor href="https://ducanh-next-pwa.vercel.app/" target="_blank">
+            <Anchor
+              inherit
+              href="https://ducanh-next-pwa.vercel.app/"
+              target="_blank"
+            >
               next-pwa
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor href="https://react.dev/" target="_blank">
+            <Anchor inherit href="https://react.dev/" target="_blank">
               React
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor href="https://swr.vercel.app/" target="_blank">
+            <Anchor inherit href="https://swr.vercel.app/" target="_blank">
               SWR
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor href="https://tabler-icons.io/" target="_blank">
+            <Anchor inherit href="https://tabler-icons.io/" target="_blank">
               Tabler Icons
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor href="https://tanstack.com/" target="_blank">
+            <Anchor inherit href="https://tanstack.com/" target="_blank">
               TanStack
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor href="https://tiptap.dev/" target="_blank">
+            <Anchor inherit href="https://tiptap.dev/" target="_blank">
               Tiptap
             </Anchor>
           </List.Item>

@@ -18,7 +18,7 @@ import {
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
-import { useAuthStore } from "@jitaspace/hooks";
+import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 import { AuthenticatedCharacterCard } from "~/components/Card";
@@ -52,16 +52,15 @@ export default function Page() {
   const router = useRouter();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
-  const { characters, removeCharacter, selectCharacter, selectedCharacter } =
-    useAuthStore();
+  const authenticatedCharacterIds = useAuthenticatedCharacterIds();
 
   return (
     <Container size="xl">
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-        {Object.values(characters).map((character) => (
+        {authenticatedCharacterIds.map((characterId) => (
           <AuthenticatedCharacterCard
-            characterId={character.characterId}
-            key={character.characterId}
+            characterId={characterId}
+            key={characterId}
           />
         ))}
       </SimpleGrid>
