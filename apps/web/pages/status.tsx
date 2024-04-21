@@ -89,7 +89,7 @@ export default function Page() {
       sdeVersionData?.data.generationDate
         ? new Date(sdeVersionData.data.generationDate)
         : null,
-    [sdeData?.date],
+    [sdeVersionData?.data.generationDate],
   );
 
   const nonGreenEndpoints = useMemo(
@@ -148,16 +148,16 @@ export default function Page() {
                 )}
               </Anchor>
               {sdeApiLastUpdatedDate &&
-              sdeLastModifiedDate &&
-              sdeApiLastUpdatedDate >= sdeLastModifiedDate ? (
-                <Tooltip label="JitaSpace SDE API is up to date!">
-                  <IconCircleCheck color="green" size={16} />
-                </Tooltip>
-              ) : (
-                <Tooltip label="JitaSpace SDE API is outdated!">
-                  <IconCircleX color="red" size={16} />
-                </Tooltip>
-              )}
+                sdeLastModifiedDate &&
+                (sdeApiLastUpdatedDate >= sdeLastModifiedDate ? (
+                  <Tooltip label="JitaSpace SDE API is up to date!">
+                    <IconCircleCheck color="green" size={16} />
+                  </Tooltip>
+                ) : (
+                  <Tooltip label="JitaSpace SDE API is outdated!">
+                    <IconCircleX color="red" size={16} />
+                  </Tooltip>
+                ))}
             </Group>
           </Group>
         </Stack>
