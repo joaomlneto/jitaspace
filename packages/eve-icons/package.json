@@ -19,7 +19,7 @@
     "@jitaspace/utils": "*",
     "@types/node": "^20.12.7",
     "@types/react": "^18.2.73",
-    "eslint": "^8.57.0",
+    "eslint": "^9.2.0",
     "prettier": "^3.2.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
