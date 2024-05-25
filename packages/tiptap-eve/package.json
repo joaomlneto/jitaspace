@@ -31,13 +31,13 @@
     "react-dom": "18.2.0"
   },
   "devDependencies": {
-    "@jitaspace/eslint-config": "*",
-    "@jitaspace/prettier-config": "*",
-    "@jitaspace/tsconfig": "*",
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
     "@types/node": "^20.12.7",
     "@types/react": "^18.2.73",
     "@types/react-dom": "^18.2.23",
-    "eslint": "^8.57.0",
+    "eslint": "^9.2.0",
     "prettier": "^3.2.5",
     "typescript": "^5.4.3"
   }

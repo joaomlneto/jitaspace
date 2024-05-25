@@ -4,7 +4,7 @@
   "engines": {
     "node": ">=20.12.2"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@9.1.1",
   "scripts": {
     "analyze": "turbo analyze",
     "build": "turbo build",
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@changesets/cli": "^2.27.1",
-    "@jitaspace/prettier-config": "*",
+    "@jitaspace/prettier-config": "workspace:*",
     "@manypkg/cli": "^0.21.3",
     "@turbo/gen": "^1.13.1",
     "prettier": "^3.2.5",
@@ -33,3 +33,4 @@
   },
   "prettier": "@jitaspace/prettier-config"
 }
+

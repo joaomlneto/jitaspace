@@ -14,20 +14,20 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@jitaspace/db": "*",
-    "@jitaspace/esi-client": "*",
-    "@jitaspace/sde-client": "*",
+    "@jitaspace/db": "workspace:*",
+    "@jitaspace/esi-client": "workspace:*",
+    "@jitaspace/sde-client": "workspace:*",
     "axios": "^1.6.8",
     "decimal.js": "^10.4.3",
     "inngest": "^3.16.1",
     "p-limit": "^4.0.0"
   },
   "devDependencies": {
-    "@jitaspace/eslint-config": "*",
-    "@jitaspace/prettier-config": "*",
-    "@jitaspace/tsconfig": "*",
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
     "@types/node": "^20.12.7",
-    "eslint": "^8.57.0",
+    "eslint": "^9.2.0",
     "inngest-cli": "^0.26.5",
     "prettier": "^3.2.5",
     "typescript": "^5.4.3"

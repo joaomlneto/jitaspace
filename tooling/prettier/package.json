@@ -1,7 +1,11 @@
 {
   "name": "@jitaspace/prettier-config",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.mjs"
+  },
   "main": "index.mjs",
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
@@ -13,7 +17,7 @@
     "prettier": "^3.2.5"
   },
   "devDependencies": {
-    "@jitaspace/tsconfig": "^0.1.0",
+    "@jitaspace/tsconfig": "workspace:*",
     "typescript": "^5.4.3"
   },
   "prettier": "@jitaspace/prettier-config"

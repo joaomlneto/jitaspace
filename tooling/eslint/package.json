@@ -2,6 +2,7 @@
   "name": "@jitaspace/eslint-config",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "license": "MIT",
   "files": [
     "./base.js",
@@ -17,20 +18,17 @@
   "dependencies": {
     "@next/eslint-plugin-next": "^14.1.4",
     "@tanstack/eslint-plugin-query": "^5.28.6",
-    "@types/eslint": "^8.56.7",
-    "@typescript-eslint/eslint-plugin": "^7.5.0",
-    "@typescript-eslint/parser": "^7.5.0",
-    "eslint-config-prettier": "^9.1.0",
     "eslint-config-turbo": "^1.13.1",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.34.1",
-    "eslint-plugin-react-hooks": "^4.6.0"
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "typescript-eslint": "^7.8.0"
   },
   "devDependencies": {
-    "@jitaspace/prettier-config": "^0.1.0",
-    "@jitaspace/tsconfig": "^0.1.0",
-    "eslint": "^8.57.0",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "eslint": "^9.2.0",
     "typescript": "^5.4.3"
   },
   "eslintConfig": {
