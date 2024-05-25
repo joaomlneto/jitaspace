@@ -2,7 +2,6 @@
 /// <reference types="./types.d.ts" />
 
 import eslint from "@eslint/js";
-import tanstackQueryPlugin from "@tanstack/eslint-plugin-query";
 import importPlugin from "eslint-plugin-import";
 import tseslint from "typescript-eslint";
 
@@ -52,7 +51,7 @@ export default tseslint.config(
       ...tseslint.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
       ...tseslint.configs.stylisticTypeChecked,
-      tanstackQueryPlugin.configs.recommended,
+      "plugin:@tanstack/eslint-plugin-query/recommended",
     ],
     rules: {
       "@typescript-eslint/no-unused-vars": [

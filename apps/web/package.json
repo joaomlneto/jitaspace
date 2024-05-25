@@ -2,13 +2,14 @@
   "name": "@jitaspace/web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "analyze": "ANALYZE=true pnpm build",
     "build": "pnpm with-env next build",
     "clean": "git clean -xdf .next .turbo node_modules",
     "dev": "pnpm with-env next dev",
-    "lint": "dotenv -v SKIP_ENV_VALIDATION=1 next lint",
-    "lint:fix": "pnpm lint --fix",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint",
     "postbuild": "next-sitemap",
     "start": "pnpm with-env next start",
     "type-check": "tsc --noEmit",
@@ -94,10 +95,12 @@
     "@types/react-html-parser": "^2.0.6",
     "dotenv-cli": "^7.4.1",
     "eslint": "^9.2.0",
+    "jiti": "^1.21.0",
     "postcss": "^8.4.38",
     "postcss-preset-mantine": "^1.13.0",
     "postcss-simple-vars": "^7.0.1",
     "prettier": "^3.2.5",
     "typescript": "^5.4.3"
-  }
+  },
+  "prettier": "@jitaspace/prettier-config"
 }

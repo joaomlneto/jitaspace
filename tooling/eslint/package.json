@@ -3,39 +3,32 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "license": "MIT",
-  "files": [
-    "./base.js",
-    "./nextjs.js",
-    "./react.js"
-  ],
+  "exports": {
+    "./base": "./base.js",
+    "./nextjs": "./nextjs.js",
+    "./react": "./react.js"
+  },
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
-    "lint": "eslint .",
-    "format": "prettier --check \"**/*.{mjs,ts,md,json}\"",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@next/eslint-plugin-next": "^14.1.4",
-    "@tanstack/eslint-plugin-query": "^5.28.6",
-    "eslint-config-turbo": "^1.13.1",
+    "@next/eslint-plugin-next": "^14.2.3",
+    "@tanstack/eslint-plugin-query": "^5.35.6",
+    "eslint-config-turbo": "^1.13.3",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsx-a11y": "^6.8.0",
     "eslint-plugin-react": "^7.34.1",
-    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-hooks": "beta",
     "typescript-eslint": "^7.8.0"
   },
   "devDependencies": {
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
     "eslint": "^9.2.0",
+    "prettier": "^3.2.5",
     "typescript": "^5.4.3"
-  },
-  "eslintConfig": {
-    "root": true,
-    "extends": [
-      "./base.js"
-    ]
   },
   "prettier": "@jitaspace/prettier-config"
 }

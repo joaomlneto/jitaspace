@@ -2,6 +2,7 @@
   "name": "@jitaspace/ui",
   "description": "UI components for JitaSpace",
   "version": "0.1.0",
+  "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
   "license": "MIT",
@@ -55,5 +56,6 @@
     "postcss-simple-vars": "^7.0.1",
     "prettier": "^3.2.5",
     "typescript": "^5.4.3"
-  }
+  },
+  "prettier": "@jitaspace/prettier-config"
 }

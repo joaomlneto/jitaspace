@@ -2,6 +2,7 @@
   "name": "@jitaspace/tiptap-eve",
   "description": "TipTap editor for EVE Online",
   "version": "0.1.0",
+  "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
   "license": "MIT",
@@ -40,5 +41,6 @@
     "eslint": "^9.2.0",
     "prettier": "^3.2.5",
     "typescript": "^5.4.3"
-  }
+  },
+  "prettier": "@jitaspace/prettier-config"
 }

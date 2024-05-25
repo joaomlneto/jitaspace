@@ -2,6 +2,7 @@
   "name": "@jitaspace/db",
   "description": "JitaSpace Database",
   "version": "0.1.0",
+  "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
   "license": "MIT",
@@ -35,5 +36,6 @@
     "prettier": "^3.2.5",
     "prisma": "^5.11.0",
     "typescript": "^5.4.3"
-  }
+  },
+  "prettier": "@jitaspace/prettier-config"
 }
