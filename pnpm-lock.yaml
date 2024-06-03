@@ -19,10 +19,10 @@ importers:
         version: 0.21.4
       '@turbo/gen':
         specifier: ^1.13.3
-        version: 1.13.3(@types/node@20.12.13)(typescript@5.4.5)
+        version: 1.13.3(@types/node@20.14.0)(typescript@5.4.5)
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       turbo:
         specifier: ^1.13.3
         version: 1.13.3
@@ -75,44 +75,44 @@ importers:
         specifier: workspace:*
         version: link:../../packages/utils
       '@mantine/carousel':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(embla-carousel-react@8.1.3(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(embla-carousel-react@8.1.3(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/charts':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(recharts@2.12.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(recharts@2.12.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       '@mantine/code-highlight':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/core':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/dates':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/dropzone':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/form':
-        specifier: ^7.10.0
-        version: 7.10.0(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(react@18.3.1)
       '@mantine/hooks':
-        specifier: ^7.10.0
-        version: 7.10.0(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(react@18.3.1)
       '@mantine/modals':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/notifications':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/nprogress':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/spotlight':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/tiptap':
-        specifier: ^7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(@tiptap/extension-link@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0))(@tiptap/react@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(@tiptap/extension-link@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0))(@tiptap/react@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@next/bundle-analyzer':
         specifier: ^14.2.3
         version: 14.2.3
@@ -171,8 +171,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       mantine-react-table:
-        specifier: 2.0.0-beta.3
-        version: 2.0.0-beta.3(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/dates@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(@tabler/icons-react@3.5.0(react@18.3.1))(clsx@2.1.1)(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 2.0.0-beta.4
+        version: 2.0.0-beta.4(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/dates@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(@tabler/icons-react@3.5.0(react@18.3.1))(clsx@2.1.1)(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next:
         specifier: ^14.2.3
         version: 14.2.3(@babel/core@7.24.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -247,8 +247,8 @@ importers:
         specifier: ^3.27.4
         version: 3.27.4
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
@@ -262,8 +262,8 @@ importers:
         specifier: ^7.4.2
         version: 7.4.2
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       jiti:
         specifier: ^1.21.0
         version: 1.21.0
@@ -277,8 +277,8 @@ importers:
         specifier: ^7.0.1
         version: 7.0.1(postcss@8.4.38)
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -317,11 +317,11 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -354,11 +354,11 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -379,17 +379,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       concurrently:
         specifier: ^8.2.2
         version: 8.2.2
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       prisma:
         specifier: ^5.14.0
         version: 5.14.0
@@ -449,17 +449,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -516,17 +516,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -543,17 +543,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -576,17 +576,17 @@ importers:
         specifier: workspace:*
         version: link:../utils
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -616,7 +616,7 @@ importers:
         version: 10.4.3
       inngest:
         specifier: ^3.19.8
-        version: 3.19.8(@sveltejs/kit@1.30.4(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0)))(@vercel/node@2.15.10)(aws-lambda@1.0.7)(express@4.19.2)(fastify@4.27.0)(h3@1.10.0)(hono@4.4.0)(koa@2.15.3)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.4.5)
+        version: 3.19.8(@sveltejs/kit@1.30.4(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0)))(@vercel/node@2.15.10)(aws-lambda@1.0.7)(express@4.19.2)(fastify@4.27.0)(h3@1.10.0)(hono@4.4.0)(koa@2.15.3)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.4.5)
       p-limit:
         specifier: ^4.0.0
         version: 4.0.0
@@ -631,17 +631,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       inngest-cli:
         specifier: ^0.29.0
         version: 0.29.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -698,17 +698,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -765,17 +765,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -823,17 +823,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -896,17 +896,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -914,14 +914,14 @@ importers:
   packages/tiptap-eve:
     dependencies:
       '@mantine/core':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/hooks':
-        specifier: 7.10.0
-        version: 7.10.0(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(react@18.3.1)
       '@mantine/tiptap':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(@tiptap/extension-link@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0))(@tiptap/react@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(@tiptap/extension-link@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0))(@tiptap/react@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tabler/icons-react':
         specifier: ^3.5.0
         version: 3.5.0(react@18.3.1)
@@ -975,8 +975,8 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
@@ -984,11 +984,11 @@ importers:
         specifier: ^18.3.0
         version: 18.3.0
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -1011,38 +1011,38 @@ importers:
         specifier: workspace:*
         version: link:../utils
       '@mantine/carousel':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(embla-carousel-react@8.1.3(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(embla-carousel-react@8.1.3(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/core':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/dates':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/dropzone':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/form':
-        specifier: 7.10.0
-        version: 7.10.0(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(react@18.3.1)
       '@mantine/hooks':
-        specifier: 7.10.0
-        version: 7.10.0(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(react@18.3.1)
       '@mantine/modals':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/notifications':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/nprogress':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/spotlight':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@mantine/tiptap':
-        specifier: 7.10.0
-        version: 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(@tiptap/extension-link@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0))(@tiptap/react@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 7.10.1
+        version: 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(@tiptap/extension-link@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0))(@tiptap/react@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tabler/icons-react':
         specifier: ^3.5.0
         version: 3.5.0(react@18.3.1)
@@ -1093,8 +1093,8 @@ importers:
         specifier: ^3.27.4
         version: 3.27.4
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
@@ -1102,8 +1102,8 @@ importers:
         specifier: ^18.3.0
         version: 18.3.0
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       postcss:
         specifier: ^8.4.38
         version: 8.4.38
@@ -1114,8 +1114,8 @@ importers:
         specifier: ^7.0.1
         version: 7.0.1(postcss@8.4.38)
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -1135,17 +1135,17 @@ importers:
         specifier: workspace:*
         version: link:../../tooling/tsconfig
       '@types/node':
-        specifier: ^20.12.13
-        version: 20.12.13
+        specifier: ^20.14.0
+        version: 20.14.0
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -1157,25 +1157,25 @@ importers:
         version: 14.2.3
       '@tanstack/eslint-plugin-query':
         specifier: ^5.35.6
-        version: 5.35.6(eslint@9.3.0)(typescript@5.4.5)
+        version: 5.35.6(eslint@9.4.0)(typescript@5.4.5)
       eslint-config-turbo:
         specifier: ^1.13.3
-        version: 1.13.3(eslint@9.3.0)
+        version: 1.13.3(eslint@9.4.0)
       eslint-plugin-import:
         specifier: ^2.29.1
-        version: 2.29.1(@typescript-eslint/parser@7.11.0(eslint@9.3.0)(typescript@5.4.5))(eslint@9.3.0)
+        version: 2.29.1(@typescript-eslint/parser@7.11.0(eslint@9.4.0)(typescript@5.4.5))(eslint@9.4.0)
       eslint-plugin-jsx-a11y:
         specifier: ^6.8.0
-        version: 6.8.0(eslint@9.3.0)
+        version: 6.8.0(eslint@9.4.0)
       eslint-plugin-react:
         specifier: ^7.34.2
-        version: 7.34.2(eslint@9.3.0)
+        version: 7.34.2(eslint@9.4.0)
       eslint-plugin-react-hooks:
         specifier: beta
-        version: 5.1.0-beta-26f2496093-20240514(eslint@9.3.0)
+        version: 5.1.0-beta-26f2496093-20240514(eslint@9.4.0)
       typescript-eslint:
         specifier: ^7.11.0
-        version: 7.11.0(eslint@9.3.0)(typescript@5.4.5)
+        version: 7.11.0(eslint@9.4.0)(typescript@5.4.5)
     devDependencies:
       '@jitaspace/prettier-config':
         specifier: workspace:*
@@ -1184,11 +1184,11 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       eslint:
-        specifier: ^9.3.0
-        version: 9.3.0
+        specifier: ^9.4.0
+        version: 9.4.0
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
@@ -1197,10 +1197,10 @@ importers:
     dependencies:
       '@ianvs/prettier-plugin-sort-imports':
         specifier: ^4.2.1
-        version: 4.2.1(prettier@3.2.5)
+        version: 4.2.1(prettier@3.3.0)
       prettier:
-        specifier: ^3.2.5
-        version: 3.2.5
+        specifier: ^3.3.0
+        version: 3.3.0
     devDependencies:
       '@jitaspace/tsconfig':
         specifier: workspace:*
@@ -2290,12 +2290,20 @@ packages:
     resolution: {integrity: sha512-Cu96Sd2By9mCNTx2iyKOmq10v22jUVQv0lQnlGNy16oE9589yE+QADPbrMGCkA51cKZSg3Pu/aTJVTGfL/qjUA==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
 
+  '@eslint/config-array@0.15.1':
+    resolution: {integrity: sha512-K4gzNq+yymn/EVsXYmf+SBcBro8MTf+aXJZUphM96CdzUEr+ClGDvAbpmaEK+cGVigVXIgs9gNmvHAlrzzY5JQ==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
   '@eslint/eslintrc@3.1.0':
     resolution: {integrity: sha512-4Bfj15dVJdoy3RfZmmo86RK1Fwzn6SstsvK9JS+BaVKqC6QQQQyXekNaC+g+LKNgkQ+2VhGAzm6hO40AhMR3zQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@eslint/js@9.3.0':
-    resolution: {integrity: sha512-niBqk8iwv96+yuTwjM6bWg8ovzAPF9qkICsGtcoa5/dmqcEMfdwNAX7+/OHcJHc7wj7XqPxH98oAHytFYlw6Sw==}
+  '@eslint/js@9.4.0':
+    resolution: {integrity: sha512-fdI7VJjP3Rvc70lC4xkFXHB0fiPeojiL1PxVG6t1ZvXQrarj893PweuBTujxDUFk0Fxj4R7PIIAZ/aiiyZPZcg==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@eslint/object-schema@2.1.3':
+    resolution: {integrity: sha512-HAbhAYKfsAC2EkTqve00ibWIZlaU74Z1EHwAjYr4PXF0YU2VEA1zSIKSSpKszRLRWwHzzRZXvK632u+uXzvsvw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@exodus/schemasafe@1.3.0':
@@ -2357,10 +2365,6 @@ packages:
   '@hapi/iron@7.0.1':
     resolution: {integrity: sha512-tEZnrOujKpS6jLKliyWBl3A9PaE+ppuL/+gkbyPPDb/l2KSKQyH4lhMkVb+sBhwN+qaxxlig01JRqB8dk/mPxQ==}
 
-  '@humanwhocodes/config-array@0.13.0':
-    resolution: {integrity: sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw==}
-    engines: {node: '>=10.10.0'}
-
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
     engines: {node: '>=12.22'}
@@ -2368,9 +2372,6 @@ packages:
   '@humanwhocodes/momoa@2.0.4':
     resolution: {integrity: sha512-RE815I4arJFtt+FVeU1Tgp9/Xvecacji8w/V6XtXsWWH/wz/eNkNbhb+ny/+PlVZjV0rxQpRSQKNKE3lcktHEA==}
     engines: {node: '>=10.10.0'}
-
-  '@humanwhocodes/object-schema@2.0.3':
-    resolution: {integrity: sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==}
 
   '@humanwhocodes/retry@0.3.0':
     resolution: {integrity: sha512-d2CGZR2o7fS6sWB7DG/3a95bGKQyHMACZ5aW8qGkkqQpUoZV6C0X7Pc7l4ZNMZkfNBf4VWNe9E1jRsf0G146Ew==}
@@ -2602,108 +2603,108 @@ packages:
     resolution: {integrity: sha512-SEmIgXUYivd3w9z57lq1rRKczI4U8QQwxmTsMxOxw50fWmJ1AXAutbk8ufEHjB+VEBBFk5taZmcyiD7oHNOCmg==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
 
-  '@mantine/carousel@7.10.0':
-    resolution: {integrity: sha512-+fP/hyHpXoK5nHR5mgEjPhPqjiurwMDP+aLseaE/mvmoBZEFF3vOPAqYOekNDrdyaqvtHkM82T9mnR4M3BAK0w==}
+  '@mantine/carousel@7.10.1':
+    resolution: {integrity: sha512-dUDc8d4V/goCP9GvlV66K11pVGa3y2Jq391/lrIJBOG3fcIpBFrzdMAjCVxDLCOemOubXQkW4fP0TBXq8cBhlQ==}
     peerDependencies:
-      '@mantine/core': 7.10.0
-      '@mantine/hooks': 7.10.0
+      '@mantine/core': 7.10.1
+      '@mantine/hooks': 7.10.1
       embla-carousel-react: '>=7.0.0'
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  '@mantine/charts@7.10.0':
-    resolution: {integrity: sha512-WgSIVWTtKQ3LL5oWY+UevjuMRjMf1VtsxVTUSgz4qi3JHPIBjlcybcsZ1rIjP9jfDbaYNAlsTtgnRvEjPyr3Zw==}
+  '@mantine/charts@7.10.1':
+    resolution: {integrity: sha512-fMy2EmgegdHVkrtnRO8ync8kqOJoXqixxc1JDmhn9tks4lSvKAKB9ui8OyaTUOWzls/Cs0VfyW51sB/HKe5faw==}
     peerDependencies:
-      '@mantine/core': 7.10.0
-      '@mantine/hooks': 7.10.0
+      '@mantine/core': 7.10.1
+      '@mantine/hooks': 7.10.1
       react: ^18.2.0
       react-dom: ^18.2.0
       recharts: ^2.10.3
 
-  '@mantine/code-highlight@7.10.0':
-    resolution: {integrity: sha512-7dep/kbqdDihCz3RYM5/q28I8M6aLgcZl0iQQN04zP12ZDgqWJ5NiyiNUodZCF4H34X/7XtQdz+cxVesJffXqw==}
+  '@mantine/code-highlight@7.10.1':
+    resolution: {integrity: sha512-ZeqBnd/i6CNF8avmjgYNqo9hKFnrzYoKV13OrKAHNRZk7vdbBGoSeVYF1vq+ChDBOZQfLOW+2naTi3VdzwLOhg==}
     peerDependencies:
-      '@mantine/core': 7.10.0
-      '@mantine/hooks': 7.10.0
+      '@mantine/core': 7.10.1
+      '@mantine/hooks': 7.10.1
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  '@mantine/core@7.10.0':
-    resolution: {integrity: sha512-hNqhdn/+4x8+FDWzR5fu1eMgnG1Mw4fZHw4WjIYjKrSv0NeKHY263RiesZz8RwcUQ8r7LlD95/2tUOMnKVTV5Q==}
+  '@mantine/core@7.10.1':
+    resolution: {integrity: sha512-l9ypojKN3PjwO1CSLIsqxi7mA25+7w+xc71Q+JuCCREI0tuGwkZsKbIOpuTATIJOjPh8ycLiW7QxX1LYsRTq6w==}
     peerDependencies:
-      '@mantine/hooks': 7.10.0
+      '@mantine/hooks': 7.10.1
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  '@mantine/dates@7.10.0':
-    resolution: {integrity: sha512-LBBh1U/RzxFQKGA6sSYxbCwYEMoM5lNIhwofY6g8zOTAZuRQqo5FIWItmB9I9ltT+M2o75SADeP6ZBLi4ec8ZA==}
+  '@mantine/dates@7.10.1':
+    resolution: {integrity: sha512-XkzYaHgzJPrquG78/exJd0dLeghJvRgypfSRwFH7IcR34Eo2MD3nsuorZp09i9sYnROcXqIFhZWgwk5cqg/8nw==}
     peerDependencies:
-      '@mantine/core': 7.10.0
-      '@mantine/hooks': 7.10.0
+      '@mantine/core': 7.10.1
+      '@mantine/hooks': 7.10.1
       dayjs: '>=1.0.0'
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  '@mantine/dropzone@7.10.0':
-    resolution: {integrity: sha512-LFJjYvz0pSfKCSiVGLgAS94AazF2npK/ZYrr+Ax9/tdd1HgbxSd3B8SaPdGm1wOwZbpp8w0auyl3fZfqnDBG8w==}
+  '@mantine/dropzone@7.10.1':
+    resolution: {integrity: sha512-WzOLwMf8RJtakivPzSYBy3ZLuCtsZEbkJpAXNmM5PdsA8s9MKmY3jYA1MuZis1/NStAGm1d4twofH1KjGCMphg==}
     peerDependencies:
-      '@mantine/core': 7.10.0
-      '@mantine/hooks': 7.10.0
+      '@mantine/core': 7.10.1
+      '@mantine/hooks': 7.10.1
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  '@mantine/form@7.10.0':
-    resolution: {integrity: sha512-ChAtqdQCAZrnH6iiCivumyMuMsev+tFWIgsCCgAmbP2sOyMtjbNtypKrcwBwI/PzAH9N4jSJlsmJsnRdXNeEkQ==}
+  '@mantine/form@7.10.1':
+    resolution: {integrity: sha512-mZwzg4GEWKEDKEIZu9FmSpGFzYYhFD2YArVOXUM0MMciUqX7yxSCon1PaPJxrV8ldc6FE+JLVI2+G2KVxJ3ZXA==}
     peerDependencies:
       react: ^18.2.0
 
-  '@mantine/hooks@7.10.0':
-    resolution: {integrity: sha512-fnalwYS2WQEFS4wmhmAetDZ/VdJPLNeUXPX9t+S21o3p/dRTX1xhU2mS7yWaQUKM0hPD1TcujqXGlP2M2g/A9A==}
+  '@mantine/hooks@7.10.1':
+    resolution: {integrity: sha512-0EH9WBWUdtQLGU3Ak+csQ77EtUxI6pPNfwZdRJQWcaA3f8SFOLo9h9CGxiikFExerhvuCeUlaTf3s+TB9Op/rw==}
     peerDependencies:
       react: ^18.2.0
 
-  '@mantine/modals@7.10.0':
-    resolution: {integrity: sha512-UVtmRpTBWDqcJjdv97IUYLduYcZBrqteyDwnspHT453iFZlvCglHUXYR+LvN5ExE+kxUe2IUXL/pEaIRTjwtKQ==}
+  '@mantine/modals@7.10.1':
+    resolution: {integrity: sha512-2riQSNpVV7f0baizlqcggz9hx9/+y6SQTnW3zEkl/RIkuyK9dpeMFUG6M+M8ntwP79b7x9n7Em9PMWxRbgi28A==}
     peerDependencies:
-      '@mantine/core': 7.10.0
-      '@mantine/hooks': 7.10.0
-      react: ^18.2.0
-      react-dom: ^18.2.0
-
-  '@mantine/notifications@7.10.0':
-    resolution: {integrity: sha512-3a0mmM9Kr3nPP+8VHsIuly507nda6ciu2aB/xSxb7gFIKHw3GqSu77pxXa+5l4Y6AQKKvP9360K4KjH6+rOBWw==}
-    peerDependencies:
-      '@mantine/core': 7.10.0
-      '@mantine/hooks': 7.10.0
+      '@mantine/core': 7.10.1
+      '@mantine/hooks': 7.10.1
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  '@mantine/nprogress@7.10.0':
-    resolution: {integrity: sha512-74idt4iMyVVJHU2NA0xDOdeWtx9eSLYr7KOtG8qpBdIY7wPaxML0syBikgNrthOYggJSsp0IZ03VtXsZSADRzw==}
+  '@mantine/notifications@7.10.1':
+    resolution: {integrity: sha512-cx3JR3BJzEzH6t2EF1ysrWVY/rdJk0WbSBQo/qFamJd2sbU+8XAHriI8Cx6hNo7uRGCwd8VGAj7Cf3aWK2VC5A==}
     peerDependencies:
-      '@mantine/core': 7.10.0
-      '@mantine/hooks': 7.10.0
+      '@mantine/core': 7.10.1
+      '@mantine/hooks': 7.10.1
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  '@mantine/spotlight@7.10.0':
-    resolution: {integrity: sha512-gkoBdd+GbAZ3heKxBm3MRdVwEYEgAxc3F5va3i/4X+AbyJ9ZeutCcyA2SL6++ZDNrb3bmWJG4zfLwdKI799dXg==}
+  '@mantine/nprogress@7.10.1':
+    resolution: {integrity: sha512-irzVf35N8YQJEM5TwlzF0lZeguHeMejN005IMFg2UvlMw8ba+WiXGlK4vELhCq0+37yDqRsxl8NKf6crQiNVRQ==}
     peerDependencies:
-      '@mantine/core': 7.10.0
-      '@mantine/hooks': 7.10.0
+      '@mantine/core': 7.10.1
+      '@mantine/hooks': 7.10.1
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  '@mantine/store@7.10.0':
-    resolution: {integrity: sha512-B6AyUX0cA97/hI9v0att7eJJnQTcUG7zBlTdWhOsptBV5UoDNrzdv3DDWIFxrA8h+nhNKGBh6Dif5HWh1+QLeA==}
+  '@mantine/spotlight@7.10.1':
+    resolution: {integrity: sha512-0G9HLaSbgJvSZRFIsEPyLUPM9heLBsYsKNYAeh6gTE6Q0/rdc5WrXxPUyOzdUaZVu4JVPvdzx/Ov5fa+kGgU4g==}
+    peerDependencies:
+      '@mantine/core': 7.10.1
+      '@mantine/hooks': 7.10.1
+      react: ^18.2.0
+      react-dom: ^18.2.0
+
+  '@mantine/store@7.10.1':
+    resolution: {integrity: sha512-KrGBsSoMsfrYeLxPwf5rFv0s2Nl/4wf+AaF/U1SpQrMgPI8vYokPXx52Wp3jCmlo12NCZnCIG+/6YHAdTWH1qQ==}
     peerDependencies:
       react: ^18.2.0
 
-  '@mantine/tiptap@7.10.0':
-    resolution: {integrity: sha512-C8wURpoh1dduWPgGgyknVc+E9/gDZVOMIyPxZXNx/r74/OoaE8tu8tgF/T21t8DtCQ4jter0PEGZFDB9hIXuag==}
+  '@mantine/tiptap@7.10.1':
+    resolution: {integrity: sha512-ZlPFCjwHzbyIOtAwXfvg0pqlI+SYhP5TlGpDCkkej5IFk9gzxVWK6TEhAfx2Tu4QtbT/YR3PkS1kF0PBohowEw==}
     peerDependencies:
-      '@mantine/core': 7.10.0
-      '@mantine/hooks': 7.10.0
+      '@mantine/core': 7.10.1
+      '@mantine/hooks': 7.10.1
       '@tiptap/extension-link': '>=2.1.12'
       '@tiptap/react': '>=2.1.12'
       react: ^18.2.0
@@ -3048,8 +3049,8 @@ packages:
     peerDependencies:
       react: ^18.0.0
 
-  '@tanstack/react-table@8.16.0':
-    resolution: {integrity: sha512-rKRjnt8ostqN2fercRVOIH/dq7MAmOENCMvVlKx6P9Iokhh6woBGnIZEkqsY/vEJf1jN3TqLOb34xQGLVRuhAg==}
+  '@tanstack/react-table@8.17.3':
+    resolution: {integrity: sha512-5gwg5SvPD3lNAXPuJJz1fOCEZYk9/GeBFH3w/hCgnfyszOIzwkwgp5I7Q4MJtn0WECp84b5STQUDdmvGi8m3nA==}
     engines: {node: '>=12'}
     peerDependencies:
       react: '>=16.8'
@@ -3061,8 +3062,8 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
 
-  '@tanstack/table-core@8.16.0':
-    resolution: {integrity: sha512-dCG8vQGk4js5v88/k83tTedWOwjGnIyONrKpHpfmSJB8jwFHl8GSu1sBBxbtACVAPtAQgwNxl0rw1d3RqRM1Tg==}
+  '@tanstack/table-core@8.17.3':
+    resolution: {integrity: sha512-mPBodDGVL+fl6d90wUREepHa/7lhsghg2A3vFpakEhrhtbIlgNAZiMr7ccTgak5qbHqF14Fwy+W1yFWQt+WmYQ==}
     engines: {node: '>=12'}
 
   '@tanstack/virtual-core@3.5.0':
@@ -3338,8 +3339,8 @@ packages:
   '@types/node@14.18.33':
     resolution: {integrity: sha512-qelS/Ra6sacc4loe/3MSjXNL1dNQ/GjxNHVzuChwMfmk7HuycRLVQN2qNY3XahK+fZc5E2szqQSKUyAF0E+2bg==}
 
-  '@types/node@20.12.13':
-    resolution: {integrity: sha512-gBGeanV41c1L171rR7wjbMiEpEI/l5XFQdLLfhr/REwpgDy/4U8y89+i8kRiLzDyZdOkXh+cRaTetUnCYutoXA==}
+  '@types/node@20.14.0':
+    resolution: {integrity: sha512-5cHBxFGJx6L4s56Bubp4fglrEpmyJypsqI6RgzMfBHWUJQGWAAi8cWcgetEbZXHYXo9C2Fa4EEds/uSyS4cxmA==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -4902,8 +4903,8 @@ packages:
     resolution: {integrity: sha512-OtIRv/2GyiF6o/d8K7MYKKbXrOUBIK6SfkIRM4Z0dY3w+LiQ0vy3F57m0Z71bjbyeiWFiHJ8brqnmE6H6/jEuw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  eslint@9.3.0:
-    resolution: {integrity: sha512-5Iv4CsZW030lpUqHBapdPo3MJetAPtejVW8B84GIcIIv8+ohFaddXsrn1Gn8uD9ijDb+kcYKFUVmC8qG8B2ORQ==}
+  eslint@9.4.0:
+    resolution: {integrity: sha512-sjc7Y8cUD1IlwYcTS9qPSvGjAC8Ne9LctpxKKu3x/1IC9bnOg98Zy6GxEJUfr1NojMgVPlyANXYns8oE2c1TAA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     hasBin: true
 
@@ -5040,9 +5041,6 @@ packages:
 
   fastify@4.27.0:
     resolution: {integrity: sha512-ci9IXzbigB8dyi0mSy3faa3Bsj0xWAPb9JeT4KRzubdSb6pNhcADRUaXCBml6V1Ss/a05kbtQls5LBmhHydoTA==}
-
-  fastq@1.16.0:
-    resolution: {integrity: sha512-ifCoaXsDrsdkWTtiNJX5uzHDsrck5TzfKKDcuFFTIrrc/BS076qgEIfoIy1VeZqViznfKiysPYTh/QeHtnIsYA==}
 
   fastq@1.17.1:
     resolution: {integrity: sha512-sRVD3lWVIXWg6By68ZN7vho9a1pQcN/WBFaAAsDDFzlJjvoGx0P8z7V1t72grFJfJhu3YPZBuu25f7Kaw2jN1w==}
@@ -6057,8 +6055,8 @@ packages:
   make-error@1.3.6:
     resolution: {integrity: sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==}
 
-  mantine-react-table@2.0.0-beta.3:
-    resolution: {integrity: sha512-mA4KYss+E2hPIT8oU4j7uYhLGCNM6SPd0yzbrYRbtPujRxpe7fl0sCxv+1ovyZstu24Aaqvb8HwXGe23Te5RLQ==}
+  mantine-react-table@2.0.0-beta.4:
+    resolution: {integrity: sha512-uMsSKWCC7TAbdApnYu4FhDr5bLU1l5YdmEtvyI+RkEGG7tKBbelOb9rlLnVpL55G8C6kH70l3Fw3lChcWDZSQw==}
     engines: {node: '>=16'}
     peerDependencies:
       '@mantine/core': ^7.9
@@ -6787,8 +6785,8 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  prettier@3.2.5:
-    resolution: {integrity: sha512-3/GWa9aOC0YeD7LUfvOG2NiDyhOWRvt1k+rcKhOuYnMY24iiCphgneUfJDyFXd6rZCAnuLBv6UeAULtrhT/F4A==}
+  prettier@3.3.0:
+    resolution: {integrity: sha512-J9odKxERhCQ10OC2yb93583f6UnYutOeiV5i0zEDS7UGTdUt0u+y8erxl3lBKvwo/JHyyoEdXjwp4dke9oyZ/g==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -9705,12 +9703,20 @@ snapshots:
   '@esbuild/win32-x64@0.20.2':
     optional: true
 
-  '@eslint-community/eslint-utils@4.4.0(eslint@9.3.0)':
+  '@eslint-community/eslint-utils@4.4.0(eslint@9.4.0)':
     dependencies:
-      eslint: 9.3.0
+      eslint: 9.4.0
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/regexpp@4.10.0': {}
+
+  '@eslint/config-array@0.15.1':
+    dependencies:
+      '@eslint/object-schema': 2.1.3
+      debug: 4.3.4
+      minimatch: 3.1.2
+    transitivePeerDependencies:
+      - supports-color
 
   '@eslint/eslintrc@3.1.0':
     dependencies:
@@ -9726,7 +9732,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@eslint/js@9.3.0': {}
+  '@eslint/js@9.4.0': {}
+
+  '@eslint/object-schema@2.1.3': {}
 
   '@exodus/schemasafe@1.3.0': {}
 
@@ -9797,30 +9805,20 @@ snapshots:
       '@hapi/cryptiles': 6.0.1
       '@hapi/hoek': 11.0.4
 
-  '@humanwhocodes/config-array@0.13.0':
-    dependencies:
-      '@humanwhocodes/object-schema': 2.0.3
-      debug: 4.3.4
-      minimatch: 3.1.2
-    transitivePeerDependencies:
-      - supports-color
-
   '@humanwhocodes/module-importer@1.0.1': {}
 
   '@humanwhocodes/momoa@2.0.4': {}
 
-  '@humanwhocodes/object-schema@2.0.3': {}
-
   '@humanwhocodes/retry@0.3.0': {}
 
-  '@ianvs/prettier-plugin-sort-imports@4.2.1(prettier@3.2.5)':
+  '@ianvs/prettier-plugin-sort-imports@4.2.1(prettier@3.3.0)':
     dependencies:
       '@babel/core': 7.24.3
       '@babel/generator': 7.23.6
       '@babel/parser': 7.24.1
       '@babel/traverse': 7.24.1
       '@babel/types': 7.24.0
-      prettier: 3.2.5
+      prettier: 3.3.0
       semver: 7.6.0
     transitivePeerDependencies:
       - supports-color
@@ -10066,35 +10064,35 @@ snapshots:
 
   '@kubb/types@2.12.3': {}
 
-  '@mantine/carousel@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(embla-carousel-react@8.1.3(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@mantine/carousel@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(embla-carousel-react@8.1.3(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
       embla-carousel-react: 8.1.3(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@mantine/charts@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(recharts@2.12.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1))':
+  '@mantine/charts@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(recharts@2.12.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1))':
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       recharts: 2.12.7(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
-  '@mantine/code-highlight@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@mantine/code-highlight@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
       clsx: 2.1.1
       highlight.js: 11.9.0
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@floating-ui/react': 0.26.9(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
       clsx: 2.1.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -10105,73 +10103,73 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  '@mantine/dates@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@mantine/dates@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
       clsx: 2.1.1
       dayjs: 1.11.11
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@mantine/dropzone@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@mantine/dropzone@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-dropzone-esm: 15.0.1(react@18.3.1)
 
-  '@mantine/form@7.10.0(react@18.3.1)':
+  '@mantine/form@7.10.1(react@18.3.1)':
     dependencies:
       fast-deep-equal: 3.1.3
       klona: 2.0.6
       react: 18.3.1
 
-  '@mantine/hooks@7.10.0(react@18.3.1)':
+  '@mantine/hooks@7.10.1(react@18.3.1)':
     dependencies:
       react: 18.3.1
 
-  '@mantine/modals@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@mantine/modals@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@mantine/notifications@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@mantine/notifications@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
-      '@mantine/store': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
+      '@mantine/store': 7.10.1(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-transition-group: 4.4.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
-  '@mantine/nprogress@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@mantine/nprogress@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
-      '@mantine/store': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
+      '@mantine/store': 7.10.1(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@mantine/spotlight@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@mantine/spotlight@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
-      '@mantine/store': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
+      '@mantine/store': 7.10.1(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@mantine/store@7.10.0(react@18.3.1)':
+  '@mantine/store@7.10.1(react@18.3.1)':
     dependencies:
       react: 18.3.1
 
-  '@mantine/tiptap@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(@tiptap/extension-link@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0))(@tiptap/react@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@mantine/tiptap@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(@tiptap/extension-link@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0))(@tiptap/react@2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
       '@tiptap/extension-link': 2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)
       '@tiptap/react': 2.4.0(@tiptap/core@2.4.0(@tiptap/pm@2.4.0))(@tiptap/pm@2.4.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
@@ -10285,7 +10283,7 @@ snapshots:
   '@nodelib/fs.walk@1.2.8':
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
-      fastq: 1.16.0
+      fastq: 1.17.1
 
   '@panva/hkdf@1.1.1': {}
 
@@ -10468,9 +10466,9 @@ snapshots:
       magic-string: 0.25.9
       string.prototype.matchall: 4.0.10
 
-  '@sveltejs/kit@1.30.4(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0))':
+  '@sveltejs/kit@1.30.4(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 2.5.3(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0))
+      '@sveltejs/vite-plugin-svelte': 2.5.3(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0))
       '@types/cookie': 0.5.4
       cookie: 0.5.0
       devalue: 4.3.3
@@ -10484,30 +10482,30 @@ snapshots:
       svelte: 4.2.17
       tiny-glob: 0.2.9
       undici: 5.28.4
-      vite: 4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0)
+      vite: 4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte-inspector@1.0.4(@sveltejs/vite-plugin-svelte@2.5.3(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0)))(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0))':
+  '@sveltejs/vite-plugin-svelte-inspector@1.0.4(@sveltejs/vite-plugin-svelte@2.5.3(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0)))(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte': 2.5.3(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0))
+      '@sveltejs/vite-plugin-svelte': 2.5.3(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0))
       debug: 4.3.4
       svelte: 4.2.17
-      vite: 4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0)
+      vite: 4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0)
     transitivePeerDependencies:
       - supports-color
 
-  '@sveltejs/vite-plugin-svelte@2.5.3(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0))':
+  '@sveltejs/vite-plugin-svelte@2.5.3(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0))':
     dependencies:
-      '@sveltejs/vite-plugin-svelte-inspector': 1.0.4(@sveltejs/vite-plugin-svelte@2.5.3(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0)))(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0))
+      '@sveltejs/vite-plugin-svelte-inspector': 1.0.4(@sveltejs/vite-plugin-svelte@2.5.3(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0)))(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0))
       debug: 4.3.4
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.10
       svelte: 4.2.17
       svelte-hmr: 0.15.3(svelte@4.2.17)
-      vite: 4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0)
-      vitefu: 0.2.5(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0))
+      vite: 4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0)
+      vitefu: 0.2.5(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0))
     transitivePeerDependencies:
       - supports-color
 
@@ -10531,10 +10529,10 @@ snapshots:
 
   '@tabler/icons@3.5.0': {}
 
-  '@tanstack/eslint-plugin-query@5.35.6(eslint@9.3.0)(typescript@5.4.5)':
+  '@tanstack/eslint-plugin-query@5.35.6(eslint@9.4.0)(typescript@5.4.5)':
     dependencies:
-      '@typescript-eslint/utils': 6.21.0(eslint@9.3.0)(typescript@5.4.5)
-      eslint: 9.3.0
+      '@typescript-eslint/utils': 6.21.0(eslint@9.4.0)(typescript@5.4.5)
+      eslint: 9.4.0
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -10564,9 +10562,9 @@ snapshots:
       '@tanstack/query-core': 5.40.0
       react: 18.3.1
 
-  '@tanstack/react-table@8.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@tanstack/react-table@8.17.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
-      '@tanstack/table-core': 8.16.0
+      '@tanstack/table-core': 8.17.3
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
@@ -10576,7 +10574,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  '@tanstack/table-core@8.16.0': {}
+  '@tanstack/table-core@8.17.3': {}
 
   '@tanstack/virtual-core@3.5.0': {}
 
@@ -10768,7 +10766,7 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@turbo/gen@1.13.3(@types/node@20.12.13)(typescript@5.4.5)':
+  '@turbo/gen@1.13.3(@types/node@20.14.0)(typescript@5.4.5)':
     dependencies:
       '@turbo/workspaces': 1.13.3
       chalk: 2.4.2
@@ -10778,7 +10776,7 @@ snapshots:
       minimatch: 9.0.4
       node-plop: 0.26.3
       proxy-agent: 6.3.1
-      ts-node: 10.9.2(@types/node@20.12.13)(typescript@5.4.5)
+      ts-node: 10.9.2(@types/node@20.14.0)(typescript@5.4.5)
       update-check: 1.5.4
       validate-npm-package-name: 5.0.0
     transitivePeerDependencies:
@@ -10856,13 +10854,13 @@ snapshots:
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 20.12.13
+      '@types/node': 20.14.0
 
   '@types/htmlparser2@3.10.7':
     dependencies:
       '@types/domhandler': 2.4.5
       '@types/domutils': 1.7.8
-      '@types/node': 20.12.13
+      '@types/node': 20.14.0
       domhandler: 2.4.2
 
   '@types/http-cache-semantics@4.0.4': {}
@@ -10886,14 +10884,14 @@ snapshots:
 
   '@types/node-fetch@2.6.3':
     dependencies:
-      '@types/node': 20.12.13
+      '@types/node': 20.14.0
       form-data: 3.0.1
 
   '@types/node@12.20.55': {}
 
   '@types/node@14.18.33': {}
 
-  '@types/node@20.12.13':
+  '@types/node@20.14.0':
     dependencies:
       undici-types: 5.26.5
 
@@ -10929,21 +10927,21 @@ snapshots:
 
   '@types/through@0.0.33':
     dependencies:
-      '@types/node': 20.12.13
+      '@types/node': 20.14.0
 
   '@types/tinycolor2@1.4.6': {}
 
   '@types/trusted-types@2.0.7': {}
 
-  '@typescript-eslint/eslint-plugin@7.11.0(@typescript-eslint/parser@7.11.0(eslint@9.3.0)(typescript@5.4.5))(eslint@9.3.0)(typescript@5.4.5)':
+  '@typescript-eslint/eslint-plugin@7.11.0(@typescript-eslint/parser@7.11.0(eslint@9.4.0)(typescript@5.4.5))(eslint@9.4.0)(typescript@5.4.5)':
     dependencies:
       '@eslint-community/regexpp': 4.10.0
-      '@typescript-eslint/parser': 7.11.0(eslint@9.3.0)(typescript@5.4.5)
+      '@typescript-eslint/parser': 7.11.0(eslint@9.4.0)(typescript@5.4.5)
       '@typescript-eslint/scope-manager': 7.11.0
-      '@typescript-eslint/type-utils': 7.11.0(eslint@9.3.0)(typescript@5.4.5)
-      '@typescript-eslint/utils': 7.11.0(eslint@9.3.0)(typescript@5.4.5)
+      '@typescript-eslint/type-utils': 7.11.0(eslint@9.4.0)(typescript@5.4.5)
+      '@typescript-eslint/utils': 7.11.0(eslint@9.4.0)(typescript@5.4.5)
       '@typescript-eslint/visitor-keys': 7.11.0
-      eslint: 9.3.0
+      eslint: 9.4.0
       graphemer: 1.4.0
       ignore: 5.3.1
       natural-compare: 1.4.0
@@ -10953,14 +10951,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/parser@7.11.0(eslint@9.3.0)(typescript@5.4.5)':
+  '@typescript-eslint/parser@7.11.0(eslint@9.4.0)(typescript@5.4.5)':
     dependencies:
       '@typescript-eslint/scope-manager': 7.11.0
       '@typescript-eslint/types': 7.11.0
       '@typescript-eslint/typescript-estree': 7.11.0(typescript@5.4.5)
       '@typescript-eslint/visitor-keys': 7.11.0
       debug: 4.3.4
-      eslint: 9.3.0
+      eslint: 9.4.0
     optionalDependencies:
       typescript: 5.4.5
     transitivePeerDependencies:
@@ -10976,12 +10974,12 @@ snapshots:
       '@typescript-eslint/types': 7.11.0
       '@typescript-eslint/visitor-keys': 7.11.0
 
-  '@typescript-eslint/type-utils@7.11.0(eslint@9.3.0)(typescript@5.4.5)':
+  '@typescript-eslint/type-utils@7.11.0(eslint@9.4.0)(typescript@5.4.5)':
     dependencies:
       '@typescript-eslint/typescript-estree': 7.11.0(typescript@5.4.5)
-      '@typescript-eslint/utils': 7.11.0(eslint@9.3.0)(typescript@5.4.5)
+      '@typescript-eslint/utils': 7.11.0(eslint@9.4.0)(typescript@5.4.5)
       debug: 4.3.4
-      eslint: 9.3.0
+      eslint: 9.4.0
       ts-api-utils: 1.3.0(typescript@5.4.5)
     optionalDependencies:
       typescript: 5.4.5
@@ -11022,27 +11020,27 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@6.21.0(eslint@9.3.0)(typescript@5.4.5)':
+  '@typescript-eslint/utils@6.21.0(eslint@9.4.0)(typescript@5.4.5)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@9.3.0)
+      '@eslint-community/eslint-utils': 4.4.0(eslint@9.4.0)
       '@types/json-schema': 7.0.15
       '@types/semver': 7.5.6
       '@typescript-eslint/scope-manager': 6.21.0
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/typescript-estree': 6.21.0(typescript@5.4.5)
-      eslint: 9.3.0
+      eslint: 9.4.0
       semver: 7.6.0
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  '@typescript-eslint/utils@7.11.0(eslint@9.3.0)(typescript@5.4.5)':
+  '@typescript-eslint/utils@7.11.0(eslint@9.4.0)(typescript@5.4.5)':
     dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@9.3.0)
+      '@eslint-community/eslint-utils': 4.4.0(eslint@9.4.0)
       '@typescript-eslint/scope-manager': 7.11.0
       '@typescript-eslint/types': 7.11.0
       '@typescript-eslint/typescript-estree': 7.11.0(typescript@5.4.5)
-      eslint: 9.3.0
+      eslint: 9.4.0
     transitivePeerDependencies:
       - supports-color
       - typescript
@@ -12669,10 +12667,10 @@ snapshots:
     optionalDependencies:
       source-map: 0.6.1
 
-  eslint-config-turbo@1.13.3(eslint@9.3.0):
+  eslint-config-turbo@1.13.3(eslint@9.4.0):
     dependencies:
-      eslint: 9.3.0
-      eslint-plugin-turbo: 1.13.3(eslint@9.3.0)
+      eslint: 9.4.0
+      eslint-plugin-turbo: 1.13.3(eslint@9.4.0)
 
   eslint-import-resolver-node@0.3.9:
     dependencies:
@@ -12682,17 +12680,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-module-utils@2.8.0(@typescript-eslint/parser@7.11.0(eslint@9.3.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint@9.3.0):
+  eslint-module-utils@2.8.0(@typescript-eslint/parser@7.11.0(eslint@9.4.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint@9.4.0):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
-      '@typescript-eslint/parser': 7.11.0(eslint@9.3.0)(typescript@5.4.5)
-      eslint: 9.3.0
+      '@typescript-eslint/parser': 7.11.0(eslint@9.4.0)(typescript@5.4.5)
+      eslint: 9.4.0
       eslint-import-resolver-node: 0.3.9
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@9.3.0)(typescript@5.4.5))(eslint@9.3.0):
+  eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.11.0(eslint@9.4.0)(typescript@5.4.5))(eslint@9.4.0):
     dependencies:
       array-includes: 3.1.7
       array.prototype.findlastindex: 1.2.3
@@ -12700,9 +12698,9 @@ snapshots:
       array.prototype.flatmap: 1.3.2
       debug: 3.2.7
       doctrine: 2.1.0
-      eslint: 9.3.0
+      eslint: 9.4.0
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.8.0(@typescript-eslint/parser@7.11.0(eslint@9.3.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint@9.3.0)
+      eslint-module-utils: 2.8.0(@typescript-eslint/parser@7.11.0(eslint@9.4.0)(typescript@5.4.5))(eslint-import-resolver-node@0.3.9)(eslint@9.4.0)
       hasown: 2.0.0
       is-core-module: 2.13.1
       is-glob: 4.0.3
@@ -12713,13 +12711,13 @@ snapshots:
       semver: 6.3.1
       tsconfig-paths: 3.15.0
     optionalDependencies:
-      '@typescript-eslint/parser': 7.11.0(eslint@9.3.0)(typescript@5.4.5)
+      '@typescript-eslint/parser': 7.11.0(eslint@9.4.0)(typescript@5.4.5)
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
       - supports-color
 
-  eslint-plugin-jsx-a11y@6.8.0(eslint@9.3.0):
+  eslint-plugin-jsx-a11y@6.8.0(eslint@9.4.0):
     dependencies:
       '@babel/runtime': 7.23.8
       aria-query: 5.3.0
@@ -12731,7 +12729,7 @@ snapshots:
       damerau-levenshtein: 1.0.8
       emoji-regex: 9.2.2
       es-iterator-helpers: 1.0.15
-      eslint: 9.3.0
+      eslint: 9.4.0
       hasown: 2.0.0
       jsx-ast-utils: 3.3.5
       language-tags: 1.0.9
@@ -12739,11 +12737,11 @@ snapshots:
       object.entries: 1.1.7
       object.fromentries: 2.0.7
 
-  eslint-plugin-react-hooks@5.1.0-beta-26f2496093-20240514(eslint@9.3.0):
+  eslint-plugin-react-hooks@5.1.0-beta-26f2496093-20240514(eslint@9.4.0):
     dependencies:
-      eslint: 9.3.0
+      eslint: 9.4.0
 
-  eslint-plugin-react@7.34.2(eslint@9.3.0):
+  eslint-plugin-react@7.34.2(eslint@9.4.0):
     dependencies:
       array-includes: 3.1.8
       array.prototype.findlast: 1.2.5
@@ -12752,7 +12750,7 @@ snapshots:
       array.prototype.tosorted: 1.1.3
       doctrine: 2.1.0
       es-iterator-helpers: 1.0.19
-      eslint: 9.3.0
+      eslint: 9.4.0
       estraverse: 5.3.0
       jsx-ast-utils: 3.3.5
       minimatch: 3.1.2
@@ -12765,10 +12763,10 @@ snapshots:
       semver: 6.3.1
       string.prototype.matchall: 4.0.11
 
-  eslint-plugin-turbo@1.13.3(eslint@9.3.0):
+  eslint-plugin-turbo@1.13.3(eslint@9.4.0):
     dependencies:
       dotenv: 16.0.3
-      eslint: 9.3.0
+      eslint: 9.4.0
 
   eslint-scope@5.1.1:
     dependencies:
@@ -12784,13 +12782,13 @@ snapshots:
 
   eslint-visitor-keys@4.0.0: {}
 
-  eslint@9.3.0:
+  eslint@9.4.0:
     dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@9.3.0)
+      '@eslint-community/eslint-utils': 4.4.0(eslint@9.4.0)
       '@eslint-community/regexpp': 4.10.0
+      '@eslint/config-array': 0.15.1
       '@eslint/eslintrc': 3.1.0
-      '@eslint/js': 9.3.0
-      '@humanwhocodes/config-array': 0.13.0
+      '@eslint/js': 9.4.0
       '@humanwhocodes/module-importer': 1.0.1
       '@humanwhocodes/retry': 0.3.0
       '@nodelib/fs.walk': 1.2.8
@@ -13004,10 +13002,6 @@ snapshots:
       secure-json-parse: 2.7.0
       semver: 7.6.0
       toad-cache: 3.7.0
-
-  fastq@1.16.0:
-    dependencies:
-      reusify: 1.0.4
 
   fastq@1.17.1:
     dependencies:
@@ -13496,9 +13490,9 @@ snapshots:
       - encoding
       - supports-color
 
-  inngest@3.19.8(@sveltejs/kit@1.30.4(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0)))(@vercel/node@2.15.10)(aws-lambda@1.0.7)(express@4.19.2)(fastify@4.27.0)(h3@1.10.0)(hono@4.4.0)(koa@2.15.3)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.4.5):
+  inngest@3.19.8(@sveltejs/kit@1.30.4(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0)))(@vercel/node@2.15.10)(aws-lambda@1.0.7)(express@4.19.2)(fastify@4.27.0)(h3@1.10.0)(hono@4.4.0)(koa@2.15.3)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(typescript@5.4.5):
     dependencies:
-      '@sveltejs/kit': 1.30.4(svelte@4.2.17)(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0))
+      '@sveltejs/kit': 1.30.4(svelte@4.2.17)(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0))
       '@types/debug': 4.1.12
       '@vercel/node': 2.15.10
       aws-lambda: 1.0.7
@@ -13799,7 +13793,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 20.12.13
+      '@types/node': 20.14.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -14081,14 +14075,14 @@ snapshots:
 
   make-error@1.3.6: {}
 
-  mantine-react-table@2.0.0-beta.3(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/dates@7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(@tabler/icons-react@3.5.0(react@18.3.1))(clsx@2.1.1)(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  mantine-react-table@2.0.0-beta.4(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/dates@7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(@tabler/icons-react@3.5.0(react@18.3.1))(clsx@2.1.1)(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@mantine/core': 7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/dates': 7.10.0(@mantine/core@7.10.0(@mantine/hooks@7.10.0(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.0(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mantine/hooks': 7.10.0(react@18.3.1)
+      '@mantine/core': 7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/dates': 7.10.1(@mantine/core@7.10.1(@mantine/hooks@7.10.1(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mantine/hooks@7.10.1(react@18.3.1))(dayjs@1.11.11)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mantine/hooks': 7.10.1(react@18.3.1)
       '@tabler/icons-react': 3.5.0(react@18.3.1)
       '@tanstack/match-sorter-utils': 8.15.1
-      '@tanstack/react-table': 8.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@tanstack/react-table': 8.17.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@tanstack/react-virtual': 3.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       clsx: 2.1.1
       dayjs: 1.11.11
@@ -14841,7 +14835,7 @@ snapshots:
 
   prettier@2.8.8: {}
 
-  prettier@3.2.5: {}
+  prettier@3.3.0: {}
 
   pretty-bytes@5.6.0: {}
 
@@ -15005,7 +14999,7 @@ snapshots:
 
   qs@6.11.0:
     dependencies:
-      side-channel: 1.0.4
+      side-channel: 1.0.6
 
   querystring@0.2.0: {}
 
@@ -16039,14 +16033,14 @@ snapshots:
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
 
-  ts-node@10.9.2(@types/node@20.12.13)(typescript@5.4.5):
+  ts-node@10.9.2(@types/node@20.14.0)(typescript@5.4.5):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.9
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.12.13
+      '@types/node': 20.14.0
       acorn: 8.11.3
       acorn-walk: 8.3.1
       arg: 4.1.3
@@ -16206,12 +16200,12 @@ snapshots:
       is-typed-array: 1.1.13
       possible-typed-array-names: 1.0.0
 
-  typescript-eslint@7.11.0(eslint@9.3.0)(typescript@5.4.5):
+  typescript-eslint@7.11.0(eslint@9.4.0)(typescript@5.4.5):
     dependencies:
-      '@typescript-eslint/eslint-plugin': 7.11.0(@typescript-eslint/parser@7.11.0(eslint@9.3.0)(typescript@5.4.5))(eslint@9.3.0)(typescript@5.4.5)
-      '@typescript-eslint/parser': 7.11.0(eslint@9.3.0)(typescript@5.4.5)
-      '@typescript-eslint/utils': 7.11.0(eslint@9.3.0)(typescript@5.4.5)
-      eslint: 9.3.0
+      '@typescript-eslint/eslint-plugin': 7.11.0(@typescript-eslint/parser@7.11.0(eslint@9.4.0)(typescript@5.4.5))(eslint@9.4.0)(typescript@5.4.5)
+      '@typescript-eslint/parser': 7.11.0(eslint@9.4.0)(typescript@5.4.5)
+      '@typescript-eslint/utils': 7.11.0(eslint@9.4.0)(typescript@5.4.5)
+      eslint: 9.4.0
     optionalDependencies:
       typescript: 5.4.5
     transitivePeerDependencies:
@@ -16357,7 +16351,7 @@ snapshots:
       is-arguments: 1.1.1
       is-generator-function: 1.0.10
       is-typed-array: 1.1.13
-      which-typed-array: 1.1.14
+      which-typed-array: 1.1.15
 
   utila@0.4.0: {}
 
@@ -16416,20 +16410,20 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
-  vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0):
+  vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0):
     dependencies:
       esbuild: 0.18.20
       postcss: 8.4.38
       rollup: 3.29.4
     optionalDependencies:
-      '@types/node': 20.12.13
+      '@types/node': 20.14.0
       fsevents: 2.3.3
       sugarss: 4.0.1(postcss@8.4.38)
       terser: 5.26.0
 
-  vitefu@0.2.5(vite@4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0)):
+  vitefu@0.2.5(vite@4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0)):
     optionalDependencies:
-      vite: 4.5.3(@types/node@20.12.13)(sugarss@4.0.1)(terser@5.26.0)
+      vite: 4.5.3(@types/node@20.14.0)(sugarss@4.0.1)(terser@5.26.0)
 
   w3c-keyname@2.2.8: {}
 

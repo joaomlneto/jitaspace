@@ -19,10 +19,10 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^20.12.13",
+    "@types/node": "^20.14.0",
     "@types/react": "^18.3.3",
-    "eslint": "^9.3.0",
-    "prettier": "^3.2.5",
+    "eslint": "^9.4.0",
+    "prettier": "^3.3.0",
     "typescript": "^5.4.5"
   },
   "prettier": "@jitaspace/prettier-config"
