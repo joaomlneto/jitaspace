@@ -13,9 +13,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@mantine/core": "7.10.0",
-    "@mantine/hooks": "7.10.0",
-    "@mantine/tiptap": "7.10.0",
+    "@mantine/core": "7.10.1",
+    "@mantine/hooks": "7.10.1",
+    "@mantine/tiptap": "7.10.1",
     "@tabler/icons-react": "^3.5.0",
     "@tiptap/extension-character-count": "^2.4.0",
     "@tiptap/extension-color": "^2.4.0",
@@ -35,11 +35,11 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^20.12.13",
+    "@types/node": "^20.14.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "eslint": "^9.3.0",
-    "prettier": "^3.2.5",
+    "eslint": "^9.4.0",
+    "prettier": "^3.3.0",
     "typescript": "^5.4.5"
   },
   "prettier": "@jitaspace/prettier-config"
