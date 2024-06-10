@@ -1,4 +1,5 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React from "react";
 import { GetStaticProps } from "next";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
@@ -9,7 +10,6 @@ import { removeUndefinedFields } from "@jitaspace/utils";
 
 import { AgentsTable } from "~/components/Agents";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   agents: {
@@ -89,7 +89,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 30, // 30 seconds on error
+      revalidate: 3600, // at most once per hour
     };
   }
 };

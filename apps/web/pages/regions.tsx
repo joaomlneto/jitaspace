@@ -1,4 +1,5 @@
-import React, { useMemo, type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React, { useMemo } from "react";
 import { GetStaticProps } from "next";
 import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
@@ -8,7 +9,6 @@ import { MapIcon } from "@jitaspace/eve-icons";
 import { RegionAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   regions: { regionId: number; name: string }[];
@@ -35,7 +35,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 30, // 30 seconds on error
+      revalidate: 3600, // at most once per hour
     };
   }
 };

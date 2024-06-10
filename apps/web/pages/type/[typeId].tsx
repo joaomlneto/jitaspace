@@ -1,4 +1,5 @@
-import React, { useState, type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React, { useState } from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -35,7 +36,6 @@ import {
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   typeId: number;
@@ -92,7 +92,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 3600, // every hour
+      revalidate: 3600, // at most once per hour
     };
   }
 };

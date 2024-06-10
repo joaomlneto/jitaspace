@@ -1,4 +1,5 @@
-import React, { useMemo, useState, type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React, { useMemo, useState } from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import {
@@ -24,7 +25,6 @@ import { toArrayIfNot } from "@jitaspace/utils";
 
 import { RouteTable } from "~/components/Travel";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   initialWaypoints: string[];
@@ -99,7 +99,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 30, // 30 seconds on error
+      revalidate: 3600, // at most once per hour
     };
   }
 };

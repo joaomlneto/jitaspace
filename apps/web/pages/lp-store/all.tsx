@@ -1,4 +1,5 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React from "react";
 import { GetStaticProps } from "next";
 import Link from "next/link";
 import {
@@ -16,7 +17,6 @@ import { LPStoreIcon } from "@jitaspace/eve-icons";
 
 import { LoyaltyPointsTable } from "~/components/LPStore";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   corporations: { corporationId: number; name: string }[];
@@ -131,7 +131,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 30, // 30 seconds on error
+      revalidate: 3600, // at most once per hour
     };
   }
 };

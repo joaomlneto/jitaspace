@@ -1,11 +1,9 @@
-import React, { useMemo, type ReactElement } from "react";
+import type { MRT_ColumnDef } from "mantine-react-table";
+import type { ReactElement } from "react";
+import React, { useMemo } from "react";
 import { GetStaticProps } from "next";
 import { Container, Group, Stack, Title } from "@mantine/core";
-import {
-  MantineReactTable,
-  useMantineReactTable,
-  type MRT_ColumnDef,
-} from "mantine-react-table";
+import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 import { NextSeo } from "next-seo";
 
 import { prisma } from "@jitaspace/db";
@@ -13,7 +11,6 @@ import { AttributesIcon } from "@jitaspace/eve-icons";
 import { DogmaAttributeAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   attributes: Record<
@@ -74,7 +71,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 30, // 30 seconds on error
+      revalidate: 3600, // every hour
     };
   }
 };

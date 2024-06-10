@@ -1,6 +1,21 @@
-import {prisma} from "@jitaspace/db";
-import {useDogmaEffect} from "@jitaspace/hooks";
-import {sanitizeFormattedEveString} from "@jitaspace/tiptap-eve";
+import type { ReactElement } from "react";
+import React, { useMemo } from "react";
+import { GetStaticPaths, GetStaticProps } from "next";
+import { useRouter } from "next/router";
+import {
+  Badge,
+  Container,
+  Group,
+  Loader,
+  Stack,
+  Table,
+  Text,
+  Title,
+} from "@mantine/core";
+
+import { prisma } from "@jitaspace/db";
+import { useDogmaEffect } from "@jitaspace/hooks";
+import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   DogmaAttributeAnchor,
   DogmaAttributeName,
@@ -10,14 +25,9 @@ import {
   TypeAvatar,
   TypeName,
 } from "@jitaspace/ui";
-import {Badge, Container, Group, Loader, Stack, Table, Text, Title,} from "@mantine/core";
-import {GetStaticPaths, GetStaticProps} from "next";
-import {useRouter} from "next/router";
-import React, {type ReactElement, useMemo} from "react";
 
-import {MailMessageViewer} from "~/components/EveMail";
-import {MainLayout} from "~/layouts";
-
+import { MailMessageViewer } from "~/components/EveMail";
+import { MainLayout } from "~/layouts";
 
 type PageProps = {
   name: string | null;
@@ -132,23 +142,23 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 900, // every 15 minutes
+      revalidate: 3600, // every hour
     };
   }
 };
 
 export default function Page({
-                               name,
-                               description,
-                               published,
-                               modifiers,
-                               types,
-                               groups,
-                             }: PageProps) {
+  name,
+  description,
+  published,
+  modifiers,
+  types,
+  groups,
+}: PageProps) {
   const router = useRouter();
   const effectId = Number(router.query.effectId as string);
 
-  const {data: effect} = useDogmaEffect(effectId);
+  const { data: effect } = useDogmaEffect(effectId);
 
   const sortedGroups = useMemo(
     () => (groups ?? []).sort((a, b) => a.name.localeCompare(b.name)),
@@ -170,7 +180,7 @@ export default function Page({
     return (
       <Container size="sm">
         <Group>
-          <Loader/>
+          <Loader />
           <Text>Loading effect information...</Text>
         </Group>
       </Container>
@@ -378,7 +388,7 @@ export default function Page({
                         effectId={modifier.targetEffectId}
                         target="_blank"
                       >
-                        <DogmaEffectName effectId={modifier.targetEffectId}/>
+                        <DogmaEffectName effectId={modifier.targetEffectId} />
                       </DogmaEffectAnchor>
                     </Group>
                   )}
@@ -386,7 +396,7 @@ export default function Page({
                     <Group justify="space-between">
                       <Text>Skill</Text>
                       <TypeAnchor typeId={modifier.skillTypeId} target="_blank">
-                        <TypeName typeId={modifier.skillTypeId}/>
+                        <TypeName typeId={modifier.skillTypeId} />
                       </TypeAnchor>
                     </Group>
                   )}
@@ -419,9 +429,9 @@ export default function Page({
                   <Table.Tr key={type.typeId}>
                     <Table.Td>
                       <Group gap="xs">
-                        <TypeAvatar size="sm" typeId={type.typeId}/>
+                        <TypeAvatar size="sm" typeId={type.typeId} />
                         <TypeAnchor typeId={type.typeId} target="_blank">
-                          <TypeName typeId={type.typeId}/>
+                          <TypeName typeId={type.typeId} />
                         </TypeAnchor>
                       </Group>
                     </Table.Td>

@@ -1,4 +1,5 @@
-import React, { useMemo, type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React, { useMemo } from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import { Container, Group, Loader, Stack, Text, Title } from "@mantine/core";
@@ -10,7 +11,6 @@ import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 import { MarketOrdersDataTable } from "~/components/Market";
 import { MarketLayout } from "~/layouts";
-
 
 type PageProps = {
   marketGroups: Record<
@@ -91,7 +91,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 30, // 30 seconds on error
+      revalidate: 3600, // 30 seconds on error
     };
   }
 };

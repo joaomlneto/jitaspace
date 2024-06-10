@@ -1,4 +1,5 @@
-import React, { useMemo, type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React, { useMemo } from "react";
 import { GetStaticProps } from "next";
 import { Accordion, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
@@ -14,7 +15,6 @@ import { OpportunityGroup, OpportunityTask } from "@jitaspace/hooks";
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   opportunities: Record<
@@ -71,7 +71,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 30, // 30 seconds on error
+      revalidate: 3600, // 30 seconds on error
     };
   }
 };

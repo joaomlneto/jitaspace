@@ -1,4 +1,5 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -21,7 +22,6 @@ import { CorporationAvatar } from "@jitaspace/ui";
 import { LoyaltyPointsTable } from "~/components/LPStore";
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   corporation: { corporationId: number; name: string };
@@ -183,7 +183,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 3600, // 1 hour on error
+      revalidate: 3600, // every hour
     };
   }
 };

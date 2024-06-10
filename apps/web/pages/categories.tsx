@@ -1,4 +1,5 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React from "react";
 import { GetStaticProps } from "next";
 import {
   Container,
@@ -15,7 +16,6 @@ import { ItemsIcon } from "@jitaspace/eve-icons";
 import { CategoryAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   categories: { categoryId: number; name: string }[];
@@ -37,7 +37,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       props: {
         categories,
       },
-      revalidate: 24 * 3600,
+      revalidate: 24 * 3600, // every 24 hours
     };
   } catch (e) {
     return {

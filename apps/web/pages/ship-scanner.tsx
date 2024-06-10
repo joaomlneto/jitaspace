@@ -78,12 +78,12 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       props: {
         ships: shipTypes.map((type) => ({ id: type.typeId, name: type.name })),
       },
-      revalidate: 24 * 3600,
+      revalidate: 24 * 3600, // every 24 hours
     };
   } catch (e) {
     return {
       notFound: true,
-      revalidate: 3600, // every hour
+      revalidate: 3600, // at most once per hour
     };
   }
 };
