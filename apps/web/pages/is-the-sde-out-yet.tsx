@@ -14,13 +14,9 @@ import useSwr from "swr";
 
 import { TimeAgoText } from "@jitaspace/ui";
 
-
-
-
-
 export default function Page() {
-  const currentImgSrc = "/wallpapers/viridian.jpg";
-  const nextImgSrc = "/wallpapers/havoc.jpg";
+  const currentImgSrc = "/wallpapers/havoc.jpg";
+  const nextImgSrc = "/wallpapers/equinox.jpg";
 
   const { data, isLoading } = useSwr<{
     lastModified: string;
