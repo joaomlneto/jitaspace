@@ -95,13 +95,16 @@ export const MainSpotlight = () => {
           }));
         },
       ),
-    [router, esiSearchData],
+    [router, names, esiSearchData?.data],
   );
 
   const actions = useMemo(
     () => [...esiSearchResultActions, ...appActions],
     [appActions, esiSearchResultActions],
   );
+
+  console.log("actions to render:", actions.length);
+  console.log({ actions });
 
   return (
     <Spotlight
