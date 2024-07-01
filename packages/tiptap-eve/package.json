@@ -27,7 +27,7 @@
     "@tiptap/react": "^2.4.0",
     "@tiptap/starter-kit": "^2.4.0",
     "date-fns": "^3.6.0",
-    "embla-carousel-react": "8.1.5",
+    "embla-carousel-react": "8.1.6",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
