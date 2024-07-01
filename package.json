@@ -23,7 +23,7 @@
     "test": ""
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.6",
+    "@changesets/cli": "^2.27.7",
     "@jitaspace/prettier-config": "workspace:*",
     "@manypkg/cli": "^0.21.4",
     "@turbo/gen": "^1.13.4",
