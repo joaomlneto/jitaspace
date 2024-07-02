@@ -12,10 +12,10 @@ export type CharacterPageLinkProps = Omit<LinkProps, "href"> & {
 export const CharacterPageLink = ({
   characterId,
   ...otherProps
-}: CharacterLinkProps) => {
+}: CharacterPageLinkProps) => {
   return (
     <Link
-      href={characterId ? `/character/${characterId}` : undefined}
+      href={characterId ? `/character/${characterId}` : "#"}
       {...otherProps}
     />
   );

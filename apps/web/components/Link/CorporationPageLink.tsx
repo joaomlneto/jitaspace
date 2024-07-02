@@ -15,7 +15,7 @@ export const CorporationPageLink = ({
 }: CorporationPageLinkProps) => {
   return (
     <Link
-      href={corporationId ? `/corporation/${corporationId}` : undefined}
+      href={corporationId ? `/corporation/${corporationId}` : "#"}
       {...otherProps}
     />
   );
