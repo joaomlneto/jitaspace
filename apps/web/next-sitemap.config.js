@@ -15,8 +15,8 @@ module.exports = {
     const firstPage = await fetch(
       `https://esi.evetech.net/latest/universe/types/`,
     );
-    /** @type number[] */
-    const numPages = firstPage.headers.get("x-pages");
+    /** @type number */
+    const numPages = Number(firstPage.headers.get("x-pages"));
     let typeIds = await firstPage.json();
     for (let page = 2; page <= numPages; page++) {
       // FIXME: GET PATH FROM SPEC
@@ -25,7 +25,11 @@ module.exports = {
       ).then((res) => res.json());
       typeIds = [...typeIds, ...pageTypeIds];
     }
-    paths.push(...typeIds.map((typeId) => ({ loc: `/type/${typeId}` })));
+    paths.push(
+      ...typeIds.map((/** @type number */ typeId) => ({
+        loc: `/type/${typeId}`,
+      })),
+    );
 
     return paths;
   },
