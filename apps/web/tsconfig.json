@@ -1,6 +1,12 @@
 {
   "extends": "@jitaspace/tsconfig/base.json",
   "compilerOptions": {
+    "lib": [
+      "es2022",
+      "dom",
+      "dom.iterable"
+    ],
+    "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
       "~/*": [
@@ -13,14 +19,11 @@
       }
     ],
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+    "module": "esnext",
     "strictNullChecks": true
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.cjs",
-    "**/*.mjs",
+    ".",
     ".next/types/**/*.ts"
   ],
   "exclude": [
