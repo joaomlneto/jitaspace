@@ -1,17 +1,13 @@
+import type { EVEOnlineProfile } from "next-auth/providers/eveonline";
 import {
   type DefaultSession,
   type NextAuthOptions,
   type Session,
 } from "next-auth";
 import { type JWT } from "next-auth/jwt";
-import EVEOnlineProvider, {
-  type EVEOnlineProfile,
-} from "next-auth/providers/eveonline";
+import EVEOnlineProvider from "next-auth/providers/eveonline";
 
-import {
-  getEveSsoAccessTokenPayload,
-  refreshEveSsoToken,
-} from "@jitaspace/auth-utils";
+import { getEveSsoAccessTokenPayload } from "@jitaspace/auth-utils";
 
 import { env } from "../env.mjs";
 import { sealDataWithAuthSecret } from "../utils";
@@ -62,7 +58,7 @@ declare module "next-auth" {
  * adapters, providers, callbacks, etc.
  * @see https://next-auth.js.org/configuration/options
  **/
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
     EVEOnlineProvider({
@@ -123,6 +119,7 @@ export const authOptions: NextAuthOptions = {
 
       // access token has expired, try to refresh it
       throw new Error("next-auth refresh code is to be removed!");
+      /*
       try {
         const refreshedTokens = await refreshEveSsoToken({
           eveClientId: env.EVE_CLIENT_ID,
@@ -147,6 +144,7 @@ export const authOptions: NextAuthOptions = {
           error: "RefreshAccessTokenError",
         };
       }
+       */
     },
   },
-};
+} satisfies NextAuthOptions;
