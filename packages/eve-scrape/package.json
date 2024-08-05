@@ -18,20 +18,20 @@
     "@jitaspace/db": "workspace:*",
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/sde-client": "workspace:*",
-    "axios": "^1.7.2",
+    "axios": "^1.7.3",
     "decimal.js": "^10.4.3",
-    "inngest": "^3.19.18",
+    "inngest": "^3.22.1",
     "p-limit": "^4.0.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^20.14.9",
-    "eslint": "^9.6.0",
-    "inngest-cli": "^0.29.1",
-    "prettier": "^3.3.2",
-    "typescript": "^5.5.3"
+    "@types/node": "^20.14.14",
+    "eslint": "^9.8.0",
+    "inngest-cli": "^0.29.3",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
   },
   "prettier": "@jitaspace/prettier-config"
 }
