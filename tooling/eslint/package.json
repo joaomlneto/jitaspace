@@ -14,8 +14,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@next/eslint-plugin-next": "^14.2.5",
-    "@tanstack/eslint-plugin-query": "^5.51.15",
+    "@next/eslint-plugin-next": "^14.2.6",
+    "@tanstack/eslint-plugin-query": "^5.52.0",
     "eslint-config-turbo": "^1.13.4",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-jsx-a11y": "^6.9.0",
@@ -26,7 +26,7 @@
   "devDependencies": {
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "eslint": "^9.8.0",
+    "eslint": "^9.9.1",
     "prettier": "^3.3.3",
     "typescript": "^5.5.4"
   },
