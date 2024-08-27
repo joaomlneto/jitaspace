@@ -26,7 +26,7 @@
     "@changesets/cli": "^2.27.7",
     "@jitaspace/prettier-config": "workspace:*",
     "@manypkg/cli": "^0.21.4",
-    "@turbo/gen": "^1.13.4",
+    "@turbo/gen": "^2.1.0",
     "prettier": "^3.3.3",
     "turbo": "^1.13.4",
     "typescript": "^5.5.4"
