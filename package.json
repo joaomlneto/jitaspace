@@ -2,9 +2,9 @@
   "name": "jitaspace",
   "private": true,
   "engines": {
-    "node": ">=20.16.0"
+    "node": ">=20.17.0"
   },
-  "packageManager": "pnpm@9.6.0",
+  "packageManager": "pnpm@9.9.0",
   "scripts": {
     "analyze": "turbo analyze",
     "build": "turbo build",
