@@ -3,8 +3,8 @@
   "globalDependencies": [
     "**/.env"
   ],
+  "ui": "tui",
   "globalEnv": [
-    "CI",
     "DATABASE_URL",
     "EVE_CLIENT_ID",
     "EVE_CLIENT_SECRET",
@@ -15,11 +15,16 @@
     "NEXT_PUBLIC_DISCORD_INVITE_LINK",
     "NEXT_PUBLIC_GOOGLE_TAG_ID",
     "NEXT_PUBLIC_UMAMI_WEBSITE_ID",
-    "NODE_ENV",
     "SKIP_BUILD_STATIC_GENERATION",
-    "SKIP_ENV_VALIDATION",
+    "SKIP_ENV_VALIDATION"
+  ],
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "CI",
     "VERCEL",
-    "VERCEL_URL"
+    "VERCEL",
+    "VERCEL_URL",
+    "npm_lifecycle_event"
   ],
   "tasks": {
     "topo": {
