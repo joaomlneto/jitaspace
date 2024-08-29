@@ -3,7 +3,25 @@
   "globalDependencies": [
     "**/.env"
   ],
-  "pipeline": {
+  "globalEnv": [
+    "CI",
+    "DATABASE_URL",
+    "EVE_CLIENT_ID",
+    "EVE_CLIENT_SECRET",
+    "EXPO_ROUTER_APP_ROOT",
+    "INNGEST_SIGNING_KEY",
+    "NEXTAUTH_SECRET",
+    "NEXTAUTH_URL",
+    "NEXT_PUBLIC_DISCORD_INVITE_LINK",
+    "NEXT_PUBLIC_GOOGLE_TAG_ID",
+    "NEXT_PUBLIC_UMAMI_WEBSITE_ID",
+    "NODE_ENV",
+    "SKIP_BUILD_STATIC_GENERATION",
+    "SKIP_ENV_VALIDATION",
+    "VERCEL",
+    "VERCEL_URL"
+  ],
+  "tasks": {
     "topo": {
       "dependsOn": [
         "^topo"
@@ -49,7 +67,7 @@
       "outputs": [
         "node_modules/.cache/.prettiercache"
       ],
-      "outputMode": "new-only"
+      "outputLogs": "new-only"
     },
     "lint": {
       "dependsOn": [
@@ -86,17 +104,5 @@
         "node_modules/.cache/tsbuildinfo.json"
       ]
     }
-  },
-  "globalEnv": [
-    "CI",
-    "DATABASE_URL",
-    "EXPO_ROUTER_APP_ROOT",
-    "NEXTAUTH_SECRET",
-    "NEXTAUTH_URL",
-    "NEXT_PUBLIC_UMAMI_WEBSITE_ID",
-    "NODE_ENV",
-    "SKIP_ENV_VALIDATION",
-    "VERCEL",
-    "VERCEL_URL"
-  ]
+  }
 }
