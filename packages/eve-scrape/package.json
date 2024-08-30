@@ -21,7 +21,7 @@
     "axios": "^1.7.5",
     "decimal.js": "^10.4.3",
     "inngest": "^3.22.5",
-    "p-limit": "^4.0.0"
+    "p-limit": "^6.1.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
