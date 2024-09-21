@@ -21,7 +21,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.0",
     "eslint-plugin-react": "^7.36.1",
     "eslint-plugin-react-hooks": "beta",
-    "typescript-eslint": "^7.18.0"
+    "typescript-eslint": "^8.6.0"
   },
   "devDependencies": {
     "@jitaspace/prettier-config": "workspace:*",
