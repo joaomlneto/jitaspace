@@ -4,7 +4,7 @@
   "engines": {
     "node": ">=20.17.0"
   },
-  "packageManager": "pnpm@9.9.0",
+  "packageManager": "pnpm@9.11.0",
   "scripts": {
     "analyze": "turbo analyze",
     "build": "turbo build",
@@ -23,13 +23,13 @@
     "test": ""
   },
   "dependencies": {
-    "@changesets/cli": "^2.27.7",
+    "@changesets/cli": "^2.27.8",
     "@jitaspace/prettier-config": "workspace:*",
     "@manypkg/cli": "^0.21.4",
-    "@turbo/gen": "^2.1.0",
+    "@turbo/gen": "^2.1.2",
     "prettier": "^3.3.3",
-    "turbo": "^2.1.0",
-    "typescript": "^5.5.4"
+    "turbo": "^2.1.2",
+    "typescript": "^5.6.2"
   },
   "prettier": "@jitaspace/prettier-config"
 }
