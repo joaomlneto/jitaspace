@@ -153,8 +153,8 @@ importers:
         specifier: ^1.7.7
         version: 1.7.7
       date-fns:
-        specifier: ^3.6.0
-        version: 3.6.0
+        specifier: ^4.1.0
+        version: 4.1.0
       dayjs:
         specifier: ^1.11.13
         version: 1.11.13
@@ -953,8 +953,8 @@ importers:
         specifier: ^2.7.2
         version: 2.7.2
       date-fns:
-        specifier: ^3.6.0
-        version: 3.6.0
+        specifier: ^4.1.0
+        version: 4.1.0
       embla-carousel-react:
         specifier: 8.3.0
         version: 8.3.0(react@18.3.1)
@@ -1068,8 +1068,8 @@ importers:
         specifier: ^2.7.2
         version: 2.7.2
       date-fns:
-        specifier: ^3.6.0
-        version: 3.6.0
+        specifier: ^4.1.0
+        version: 4.1.0
       embla-carousel-react:
         specifier: 8.3.0
         version: 8.3.0(react@18.3.1)
@@ -4156,8 +4156,8 @@ packages:
     resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
     engines: {node: '>=0.11'}
 
-  date-fns@3.6.0:
-    resolution: {integrity: sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==}
+  date-fns@4.1.0:
+    resolution: {integrity: sha512-Ukq0owbQXxa/U3EGtsdVBkR1w7KOQ5gIBqdH2hkvknzZPYvBxb/aa6E8L7tmjFtkwZBu3UXBbjIgPo/Ez4xaNg==}
 
   dayjs@1.11.13:
     resolution: {integrity: sha512-oaMBel6gjolK862uaPQOVTA7q3TZhuSvuMQAAglQDOWYO9A91IrAOUJEyKVlqJlHE0vq5p5UXxzdPfMH/x6xNg==}
@@ -11342,7 +11342,7 @@ snapshots:
   css-tree@2.3.1:
     dependencies:
       mdn-data: 2.0.30
-      source-map-js: 1.2.0
+      source-map-js: 1.2.1
     optional: true
 
   css-what@6.1.0: {}
@@ -11420,7 +11420,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.23.8
 
-  date-fns@3.6.0: {}
+  date-fns@4.1.0: {}
 
   dayjs@1.11.13: {}
 
