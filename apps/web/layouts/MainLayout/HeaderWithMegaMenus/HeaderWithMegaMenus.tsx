@@ -62,7 +62,7 @@ export function HeaderWithMegaMenus({ pinned }: HeaderWithMegaMenusProps) {
       <div className={classes.header}>
         <Container size="xl" h={60} p={0}>
           <Group justify="space-between" h="100%" gap="xs">
-            <Group h="100%">
+            <Group h="100%" wrap="nowrap">
               <Link href="/" className={classes.link}>
                 <Image src="/logo.png" alt="Jita logo" width={32} height={32} />
               </Link>

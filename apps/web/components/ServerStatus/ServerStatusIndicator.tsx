@@ -3,17 +3,13 @@ import { ColorSwatch, Group, Loader, Text } from "@mantine/core";
 
 import { useServerStatus } from "@jitaspace/hooks";
 
-
-
-
-
 export const ServerStatusIndicator = memo(() => {
   const { data, isError, isLoading, isSuccess } = useServerStatus();
 
   const isVip = !!data?.data.vip;
 
   return (
-    <Group gap={4}>
+    <Group gap={4} wrap="nowrap">
       {isLoading && <Loader size={12} />}
       {!isLoading && (
         <ColorSwatch
