@@ -60,7 +60,7 @@ export default function Page() {
 
   return (
     <Container size="xl">
-      <Container size="xs">
+      <Container size="xs" mb="md">
         <ArielCsmCard />
       </Container>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
