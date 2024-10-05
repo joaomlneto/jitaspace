@@ -1,6 +1,9 @@
-import React, { type ReactElement } from "react";
-import Image, { type ImageProps } from "next/image";
-import Link, { type LinkProps } from "next/link";
+import type { ImageProps } from "next/image";
+import type { LinkProps } from "next/link";
+import type { ReactElement } from "react";
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import {
   Anchor,
@@ -21,6 +24,7 @@ import { openContextModal } from "@mantine/modals";
 import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 
+import { ArielCsmCard } from "~/components/ArielCsmCard/ArielCsmCard";
 import { AuthenticatedCharacterCard } from "~/components/Card";
 import { characterApps, universeApps } from "~/config/apps";
 import { MainLayout } from "~/layouts";
@@ -56,6 +60,9 @@ export default function Page() {
 
   return (
     <Container size="xl">
+      <Container size="xs">
+        <ArielCsmCard />
+      </Container>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
         {authenticatedCharacterIds.map((characterId) => (
           <AuthenticatedCharacterCard
