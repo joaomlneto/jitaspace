@@ -1,6 +1,3 @@
-
-
-
 import "@mantine/core/styles.css";
 import "@mantine/charts/styles.css";
 import "@mantine/dates/styles.css";
@@ -13,7 +10,9 @@ import "@mantine/spotlight/styles.css";
 import "@mantine/nprogress/styles.css";
 import "mantine-react-table/styles.css";
 
-import React, { useEffect, type ReactElement, type ReactNode } from "react";
+import type { Session } from "next-auth";
+import type { ReactElement, ReactNode } from "react";
+import React, { useEffect } from "react";
 import { type NextPage } from "next";
 import { type AppProps } from "next/app";
 import Head from "next/head";
@@ -25,7 +24,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
-import type { Session } from "next-auth";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SessionProvider } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 import { Workbox } from "workbox-window";
@@ -40,7 +39,6 @@ import { JitaSpotlightProvider, MainSpotlight } from "~/components/Spotlight";
 import { env } from "~/env.mjs";
 import { themes } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
-
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -184,9 +182,9 @@ export default function App({
         <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
       )}
 
+      <SpeedInsights />
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} />
-
         <SessionProvider session={session}>
           <EsiClientSSOAccessTokenInjector>
             <EveIconsContextProvider /*iconVersion="rhea"*/>

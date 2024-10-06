@@ -149,6 +149,9 @@ importers:
       '@vercel/og':
         specifier: ^0.6.3
         version: 0.6.3
+      '@vercel/speed-insights':
+        specifier: ^1.0.12
+        version: 1.0.12(@sveltejs/kit@1.30.4(svelte@4.2.19)(vite@4.5.3(@types/node@20.16.5)(sugarss@4.0.1(postcss@8.4.47))(terser@5.26.0)))(next@14.2.13(@babel/core@7.24.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(svelte@4.2.19)
       axios:
         specifier: ^1.7.7
         version: 1.7.7
@@ -3351,6 +3354,29 @@ packages:
   '@vercel/og@0.6.3':
     resolution: {integrity: sha512-aoCrC9FqkeA+WEEb9CwSmjD0rGlFeNqbUsI41JPmKWR9Hx6FFn86tvH96O5HZMF6VAXTGHxa3nPH3BokROpdgA==}
     engines: {node: '>=16'}
+
+  '@vercel/speed-insights@1.0.12':
+    resolution: {integrity: sha512-ZGQ+a7bcfWJD2VYEp2R1LHvRAMyyaFBYytZXsfnbOMkeOvzGNVxUL7aVUvisIrTZjXTSsxG45DKX7yiw6nq2Jw==}
+    peerDependencies:
+      '@sveltejs/kit': ^1 || ^2
+      next: '>= 13'
+      react: ^18 || ^19
+      svelte: ^4
+      vue: ^3
+      vue-router: ^4
+    peerDependenciesMeta:
+      '@sveltejs/kit':
+        optional: true
+      next:
+        optional: true
+      react:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+      vue-router:
+        optional: true
 
   '@vercel/static-config@2.0.17':
     resolution: {integrity: sha512-2f50OTVrN07x7pH+XNW0e7cj7T+Ufg+19+a2N3/XZBjQmV+FaMlmSLiaQ4tBxp2H8lWWHzENua7ZSSQPtRZ3/A==}
@@ -10456,6 +10482,13 @@ snapshots:
       '@resvg/resvg-wasm': 2.4.0
       satori: 0.10.9
       yoga-wasm-web: 0.3.3
+
+  '@vercel/speed-insights@1.0.12(@sveltejs/kit@1.30.4(svelte@4.2.19)(vite@4.5.3(@types/node@20.16.5)(sugarss@4.0.1(postcss@8.4.47))(terser@5.26.0)))(next@14.2.13(@babel/core@7.24.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(svelte@4.2.19)':
+    optionalDependencies:
+      '@sveltejs/kit': 1.30.4(svelte@4.2.19)(vite@4.5.3(@types/node@20.16.5)(sugarss@4.0.1(postcss@8.4.47))(terser@5.26.0))
+      next: 14.2.13(@babel/core@7.24.6)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
+      svelte: 4.2.19
 
   '@vercel/static-config@2.0.17':
     dependencies:
