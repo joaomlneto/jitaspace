@@ -48,7 +48,7 @@
     "@jitaspace/tsconfig": "workspace:*",
     "@types/humanize-duration": "^3.27.4",
     "@types/node": "^20.16.5",
-    "@types/react": "^18.3.8",
+    "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "eslint": "^9.11.0",
     "postcss": "^8.4.47",
