@@ -1,33 +1,36 @@
 import React, { PropsWithChildren } from "react";
-import { AppShell, AppShellProps, rem, ScrollArea } from "@mantine/core";
+import {
+  AppShell,
+  AppShellProps,
+  Loader,
+  rem,
+  ScrollArea,
+} from "@mantine/core";
 import { useHeadroom, useMediaQuery } from "@mantine/hooks";
+import { useQuery } from "@tanstack/react-query";
 
 import { MarketGroupNavLink } from "~/components/Market";
 import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
 import { HeaderWithMegaMenus } from "~/layouts/MainLayout/HeaderWithMegaMenus";
+import { MarketGroupsApiResponseBody } from "~/pages/api/market-groups";
 
-
-export type MarketLayoutProps = PropsWithChildren<AppShellProps> & {
-  marketGroups: Record<
-    number,
-    {
-      name: string;
-      parentMarketGroupId: number | null;
-      childrenMarketGroupIds: number[];
-      types: { typeId: number; name: string }[];
-    }
-  >;
-  rootMarketGroupIds: number[];
-};
+export type MarketLayoutProps = PropsWithChildren<AppShellProps>;
 
 export const MarketLayout = ({
-  marketGroups,
-  rootMarketGroupIds,
   children,
   ...otherProps
 }: MarketLayoutProps) => {
   const matches = useMediaQuery("(max-width: 48em)");
   const pinned = useHeadroom({ fixedAt: 120 });
+
+  const marketGroupsRes = useQuery({
+    queryKey: ["https://www.jita.space/api/market-groups"],
+    queryFn: () =>
+      fetch("/api/market-groups").then(
+        (res) => res.json() as Promise<MarketGroupsApiResponseBody>,
+      ),
+  });
+
   return (
     <AppShell
       header={{
@@ -51,13 +54,15 @@ export const MarketLayout = ({
       </AppShell.Header>
       <AppShell.Navbar>
         <AppShell.Section grow component={ScrollArea}>
-          {rootMarketGroupIds?.map((marketGroupId) => (
-            <MarketGroupNavLink
-              marketGroups={marketGroups}
-              marketGroupId={marketGroupId}
-              key={marketGroupId}
-            />
-          ))}
+          {!marketGroupsRes.data?.marketGroups && <Loader />}
+          {marketGroupsRes.data?.marketGroups &&
+            marketGroupsRes.data?.rootMarketGroupIds?.map((marketGroupId) => (
+              <MarketGroupNavLink
+                marketGroups={marketGroupsRes.data?.marketGroups}
+                marketGroupId={marketGroupId}
+                key={marketGroupId}
+              />
+            ))}
         </AppShell.Section>
       </AppShell.Navbar>
       <AppShell.Footer>
