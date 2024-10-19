@@ -29,13 +29,13 @@ export const ArielCsmCard = () => {
                 Ariel Rin for CSM19
               </Text>
               <Anchor
-                href="https://forums.eveonline.com/t/ariel-rin-for-csm19/462992"
+                href="https://community.eveonline.com/community/csm/vote"
                 target="_blank"
                 size="sm"
               >
                 <Group gap={6}>
                   <IconExternalLink size={14} />
-                  CSM19 Forum Thread
+                  Cast your CSM votes here
                 </Group>
               </Anchor>
             </Stack>
@@ -123,10 +123,22 @@ export const ArielCsmCard = () => {
               can vote for CSM from October 17th until October 24th.
             </Text>
             <Anchor
+              href="https://forums.eveonline.com/t/ariel-rin-for-csm19/462992"
+              target="_blank"
+            >
+              <Group gap={6}>
+                <IconExternalLink size={14} />
+                Ariel Rin CSM19 Campaign Forum Thread
+              </Group>
+            </Anchor>
+            <Anchor
               href="https://www.eveonline.com/news/view/csm-19-shaping-the-future-of-new-eden"
               target="_blank"
             >
-              Official CSM19 Announcement Page
+              <Group gap={6}>
+                <IconExternalLink size={14} />
+                Official CSM19 Announcement Page
+              </Group>
             </Anchor>
           </Stack>
         </Accordion.Panel>
