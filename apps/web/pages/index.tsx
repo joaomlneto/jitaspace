@@ -24,7 +24,6 @@ import { openContextModal } from "@mantine/modals";
 import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 
-import { ArielCsmCard } from "~/components/ArielCsmCard/ArielCsmCard";
 import { AuthenticatedCharacterCard } from "~/components/Card";
 import { characterApps, universeApps } from "~/config/apps";
 import { MainLayout } from "~/layouts";
@@ -60,9 +59,6 @@ export default function Page() {
 
   return (
     <Container size="xl">
-      <Container size="xs" mb="md">
-        <ArielCsmCard />
-      </Container>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
         {authenticatedCharacterIds.map((characterId) => (
           <AuthenticatedCharacterCard
