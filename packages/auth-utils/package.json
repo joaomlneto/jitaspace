@@ -15,8 +15,8 @@
     "@jitaspace/esi-metadata": "workspace:*",
     "next": "^14.2.18",
     "next-auth": "^4.24.10",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
