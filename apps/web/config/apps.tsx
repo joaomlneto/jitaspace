@@ -1,7 +1,3 @@
-import React from "react";
-import Image from "next/image";
-import { type LinkProps } from "next/link";
-
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import {
   AgentFinderIcon,
@@ -12,17 +8,19 @@ import {
   CharacterSheetIcon,
   ContactsIcon,
   CorporationIcon,
+  type EveIconProps,
   EveMailIcon,
   FittingIcon,
   ItemsIcon,
   LPStoreIcon,
   MapIcon,
   MarketIcon,
-  OpportunitiesTreeIcon,
   SkillsIcon,
   WalletIcon,
-  type EveIconProps,
 } from "@jitaspace/eve-icons";
+import Image from "next/image";
+import { type LinkProps } from "next/link";
+import React from "react";
 
 export type AppScopeSet = {
   reason: string;
@@ -358,13 +356,6 @@ export const universeApps: Record<string, JitaApp> = {
     Icon: (props) => <MapIcon {...props} />,
     scopes: {},
     tags: ["beta"],
-  },
-  opportunities: {
-    name: "Opportunities",
-    description: "View EVE Online's Opportunities Tree.",
-    url: "/opportunities",
-    Icon: (props) => <OpportunitiesTreeIcon {...props} />,
-    scopes: {},
   },
   market: {
     name: "Market",

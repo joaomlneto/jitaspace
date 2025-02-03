@@ -23,7 +23,5 @@ export * from "./useEsiClientStatistics";
 export * from "./useEsiName";
 export * from "./useEsiSearch";
 export * from "./useMarketPrices";
-export * from "./useOpportunityGroup";
-export * from "./useOpportunityTask";
 export * from "./useServerStatus";
 export * from "./useTypeMarketOrders";

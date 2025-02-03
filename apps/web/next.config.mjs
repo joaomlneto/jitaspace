@@ -9,71 +9,60 @@ import bundleAnalyzer from "@next/bundle-analyzer";
 
 /** @type {import("next").NextConfig} */
 const config = {
-    reactStrictMode: true,
+  reactStrictMode: true,
 
-    /** Enables hot reloading for local packages without a build step */
-    transpilePackages: [
-        "@jitaspace/auth",
-        "@jitaspace/db",
-        "@jitaspace/esi-metadata",
-        "@jitaspace/esi-client",
-        "@jitaspace/esi-meta-client",
-        "@jitaspace/eve-icons",
-        "@jitaspace/eve-scrape",
-        "@jitaspace/hooks",
-        "@jitaspace/sde-client",
-        "@jitaspace/tiptap-eve",
-        "@jitaspace/ui",
-        "@jitaspace/utils",
+  /** Enables hot reloading for local packages without a build step */
+  transpilePackages: [
+    "@jitaspace/auth",
+    "@jitaspace/db",
+    "@jitaspace/esi-metadata",
+    "@jitaspace/esi-client",
+    "@jitaspace/esi-meta-client",
+    "@jitaspace/eve-icons",
+    "@jitaspace/eve-scrape",
+    "@jitaspace/hooks",
+    "@jitaspace/sde-client",
+    "@jitaspace/tiptap-eve",
+    "@jitaspace/ui",
+    "@jitaspace/utils",
+  ],
+
+  /** We already do linting and typechecking as separate tasks in CI */
+  eslint: { ignoreDuringBuilds: !!process.env.CI },
+  typescript: { ignoreBuildErrors: !!process.env.CI },
+
+  /** Allow images from CCP CDN */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "web.ccpgamescdn.com",
+      },
+      {
+        protocol: "https",
+        hostname: "images.evetech.net",
+      },
     ],
+  },
 
-    /** We already do linting and typechecking as separate tasks in CI */
-    eslint: {ignoreDuringBuilds: !!process.env.CI},
-    typescript: {ignoreBuildErrors: !!process.env.CI},
-
-    /** Allow images from CCP CDN */
-    images: {
-        remotePatterns: [
-            {
-                protocol: "https",
-                hostname: "web.ccpgamescdn.com",
-            },
-            {
-                protocol: "https",
-                hostname: "images.evetech.net",
-            },
-        ],
+  rewrites: async () => [
+    {
+      source: "/analytics/:match*",
+      destination: "https://analytics.umami.is/:match*", // Proxy to Umami
     },
+  ],
 
-    rewrites: async () => [
-        {
-            source: "/analytics/:match*",
-            destination: "https://analytics.umami.is/:match*", // Proxy to Umami
-        },
-    ],
-
-    async redirects() {
-        return [
-            {
-                source: "/bookmarks",
-                //destination: 'https://github.com/esi/esi-issues/issues/1340',
-                destination: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-                permanent: false,
-            },
-        ];
-    },
-
-    publicRuntimeConfig: {
-        modifiedDate: new Date().toISOString(),
-    },
+  publicRuntimeConfig: {
+    modifiedDate: new Date().toISOString(),
+  },
 };
 
 const withPWA = withPWAInit({
-    dest: "public",
+  dest: "public",
 });
 
 const withBundleAnalyzer = bundleAnalyzer({
-    enabled: process.env.ANALYZE === "true",
+  enabled: process.env.ANALYZE === "true",
 });
 
 export default withBundleAnalyzer(withPWA(config));
