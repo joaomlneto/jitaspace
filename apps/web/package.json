@@ -90,7 +90,7 @@
     "@jitaspace/tsconfig": "workspace:*",
     "@swc-jotai/react-refresh": "^0.3.0",
     "@types/humanize-duration": "^3.27.4",
-    "@types/node": "^20.17.9",
+    "@types/node": "^22.13.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/react-html-parser": "^2.0.6",
