@@ -10,7 +10,8 @@ import "@mantine/spotlight/styles.css";
 import "@mantine/nprogress/styles.css";
 import "mantine-react-table/styles.css";
 
-import React from "react";
+import React, { ReactNode } from "react";
+import { Viewport } from "next";
 import Script from "next/script";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
@@ -27,18 +28,55 @@ import { env } from "~/env.mjs";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
 import { MySessionProvider } from "~/lib/MySessionProvider";
 
+const APP_NAME = "JitaSpace";
+const APP_DEFAULT_TITLE = "JitaSpace";
+const APP_TITLE_TEMPLATE = "%s | " + APP_NAME;
+const APP_DESCRIPTION = "EVE Online tools";
+
 export const metadata = {
-  title: "Jita",
-  description: "I have followed setup instructions carefully",
+  applicationName: APP_NAME,
+  title: {
+    default: APP_DEFAULT_TITLE,
+    template: APP_TITLE_TEMPLATE,
+  },
+  description: APP_DESCRIPTION,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: APP_DEFAULT_TITLE,
+    // startUpImage: [],
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    siteName: APP_NAME,
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary",
+    title: {
+      default: APP_DEFAULT_TITLE,
+      template: APP_TITLE_TEMPLATE,
+    },
+    description: APP_DESCRIPTION,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#9bb4d0",
 };
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+}: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" dir="ltr">
       <head>
         <ColorSchemeScript defaultColorScheme="dark" />
         <meta
