@@ -1,4 +1,3 @@
-import withPWAInit from "@ducanh2912/next-pwa";
 import bundleAnalyzer from "@next/bundle-analyzer";
 
 /**
@@ -57,12 +56,8 @@ const config = {
   },
 };
 
-const withPWA = withPWAInit({
-  dest: "public",
-});
-
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
-export default withBundleAnalyzer(withPWA(config));
+export default withBundleAnalyzer(config);
