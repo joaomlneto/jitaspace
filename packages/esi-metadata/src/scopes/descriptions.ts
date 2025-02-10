@@ -10,10 +10,10 @@ export const scopeDescriptions: {
     "Allows reading a list of assets that the character owns",
   "esi-assets.read_corporation_assets.v1":
     "Allows reading of a character's corporation's assets, if the character has roles to do so.",
-  "esi-bookmarks.read_character_bookmarks.v1":
-    "Allows reading of a character's bookmarks and bookmark folders",
-  "esi-bookmarks.read_corporation_bookmarks.v1":
-    "Allows reading of a corporations's bookmarks and bookmark folders",
+  //"esi-bookmarks.read_character_bookmarks.v1":
+  //  "Allows reading of a character's bookmarks and bookmark folders",
+  //"esi-bookmarks.read_corporation_bookmarks.v1":
+  //  "Allows reading of a corporations's bookmarks and bookmark folders",
   "esi-calendar.read_calendar_events.v1":
     "Allows reading a character's calendar, including corporation events",
   "esi-calendar.respond_calendar_events.v1":

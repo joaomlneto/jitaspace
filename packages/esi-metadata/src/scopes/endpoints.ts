@@ -47,12 +47,6 @@ export const endpointScopes: {
   "/characters/{character_id}/blueprints/": {
     get: ["esi-characters.read_blueprints.v1"],
   },
-  "/characters/{character_id}/bookmarks/": {
-    get: ["esi-bookmarks.read_character_bookmarks.v1"],
-  },
-  "/characters/{character_id}/bookmarks/folders/": {
-    get: ["esi-bookmarks.read_character_bookmarks.v1"],
-  },
   "/characters/{character_id}/calendar/": {
     get: ["esi-calendar.read_calendar_events.v1"],
   },
@@ -217,12 +211,6 @@ export const endpointScopes: {
   },
   "/corporations/{corporation_id}/blueprints/": {
     get: ["esi-corporations.read_blueprints.v1"],
-  },
-  "/corporations/{corporation_id}/bookmarks/": {
-    get: ["esi-bookmarks.read_corporation_bookmarks.v1"],
-  },
-  "/corporations/{corporation_id}/bookmarks/folders/": {
-    get: ["esi-bookmarks.read_corporation_bookmarks.v1"],
   },
   "/corporations/{corporation_id}/contacts/": {
     get: ["esi-corporations.read_contacts.v1"],
