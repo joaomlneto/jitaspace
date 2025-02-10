@@ -1,19 +1,17 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { useRouter } from "next/router";
-import { useDebouncedValue } from "@mantine/hooks";
-import { Spotlight, SpotlightActionData } from "@mantine/spotlight";
-
 import {
   EsiSearchCategory,
   useEsiNamesCache,
   useEsiSearch,
 } from "@jitaspace/hooks";
 import { EveEntityAvatar } from "@jitaspace/ui";
+import { useDebouncedValue } from "@mantine/hooks";
+import { Spotlight, SpotlightActionData } from "@mantine/spotlight";
+import { useRouter } from "next/router";
+import React, { useMemo, useState } from "react";
 
 import { characterApps } from "~/config/apps";
-
 
 export const MainSpotlight = () => {
   const router = useRouter();
@@ -27,7 +25,7 @@ export const MainSpotlight = () => {
   const appActions: SpotlightActionData[] = useMemo(
     () =>
       Object.values(characterApps)
-        .toSorted((a, b) => a.name.localeCompare(b.name))
+        .sort((a, b) => a.name.localeCompare(b.name))
         .map((app) => ({
           id: `app/${app.name}`,
           label: app.name,
