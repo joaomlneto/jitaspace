@@ -227,9 +227,6 @@ importers:
       swr:
         specifier: ^2.2.5
         version: 2.2.5(react@18.3.1)
-      workbox-window:
-        specifier: ^7.3.0
-        version: 7.3.0
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -7137,12 +7134,6 @@ packages:
     resolution: {integrity: sha512-kKlNACbvHrkpIw6oPeYDSmdCTu2hdMHoyXLTcUKala++lx5Y+wjJ/e474Jqv5abnVmwxw08DiTuHmw69lJGksA==}
     engines: {node: '>=8.0.0'}
 
-  workbox-core@7.3.0:
-    resolution: {integrity: sha512-Z+mYrErfh4t3zi7NVTvOuACB0A/jA3bgxUN3PwtAVHvfEsZxV9Iju580VEETug3zYJRc0Dmii/aixI/Uxj8fmw==}
-
-  workbox-window@7.3.0:
-    resolution: {integrity: sha512-qW8PDy16OV1UBaUNGlTVcepzrlzyzNW/ZJvFQQs2j2TzGsg6IKjcpZC1RSquqQnTOafl5pCj5bGfAHlCjOOjdA==}
-
   wrap-ansi@6.2.0:
     resolution: {integrity: sha512-r6lPcBGxZXlIcymEu7InxDMhdW0KDxpLgoFLcguasxCaJ/SOIZwINatK9KY/tf+ZrlywOKU0UDj3ATXUBfxJXA==}
     engines: {node: '>=8'}
@@ -13908,13 +13899,6 @@ snapshots:
     dependencies:
       reduce-flatten: 2.0.0
       typical: 5.2.0
-
-  workbox-core@7.3.0: {}
-
-  workbox-window@7.3.0:
-    dependencies:
-      '@types/trusted-types': 2.0.7
-      workbox-core: 7.3.0
 
   wrap-ansi@6.2.0:
     dependencies:
