@@ -1,3 +1,4 @@
+import { NextConfig } from "next";
 import bundleAnalyzer from "@next/bundle-analyzer";
 import withSerwistInit from "@serwist/next";
 
@@ -5,10 +6,9 @@ import withSerwistInit from "@serwist/next";
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
  * This is especially useful for Docker builds and Linting.
  */
-!process.env.SKIP_ENV_VALIDATION && (await import("./env.mjs"));
+!process.env.SKIP_ENV_VALIDATION && import("./env.mjs");
 
-/** @type {import("next").NextConfig} */
-const config = {
+const config: NextConfig = {
   reactStrictMode: true,
 
   /** Enables hot reloading for local packages without a build step */
