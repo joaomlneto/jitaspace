@@ -143,7 +143,7 @@ export default function Page({ effects }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement) {
+Page.getLayout = function getLayout(page: ReactElement<any>) {
   return (
     <MainLayout>
       <NextSeo title="Dogma Effects" />

@@ -130,6 +130,6 @@ export default function Page({ name, types }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement) {
+Page.getLayout = function getLayout(page: ReactElement<any>) {
   return <MainLayout>{page}</MainLayout>;
 };

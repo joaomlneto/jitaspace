@@ -31,7 +31,7 @@ import { MainLayout } from "~/layouts";
 const devApps: {
   name: string;
   description: string;
-  icon: (props: Partial<Omit<ImageProps, "src">>) => React.ReactElement;
+  icon: (props: Partial<Omit<ImageProps, "src">>) => React.ReactElement<any>;
   url: LinkProps["href"];
   onClick?: () => void;
   tags?: string[];
@@ -269,6 +269,6 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement) {
+Page.getLayout = function getLayout(page: ReactElement<any>) {
   return <MainLayout>{page}</MainLayout>;
 };

@@ -33,7 +33,7 @@ export type JitaApp = {
   description: string;
   url?: LinkProps["href"];
   onClick?: () => void;
-  Icon: (props: EveIconProps) => React.ReactElement;
+  Icon: (props: EveIconProps) => React.ReactElement<any>;
   tags?: string[];
   hotKey?: string[];
   scopes: {
@@ -449,7 +449,7 @@ export const jitaApps: Record<
   {
     apps: Record<string, JitaApp>;
     name: string;
-    Icon: (props: EveIconProps) => React.ReactElement;
+    Icon: (props: EveIconProps) => React.ReactElement<any>;
   }
 > = {
   character: {

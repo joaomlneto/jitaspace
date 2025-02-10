@@ -8,8 +8,8 @@ import { RequestPermissionsBanner } from "./RequestPermissionsBanner";
 
 export type ScopeGuardProps = {
   requiredScopes?: ESIScope[];
-  loadingScopesComponent?: ReactElement;
-  insufficientScopesComponent?: ReactElement;
+  loadingScopesComponent?: ReactElement<any>;
+  insufficientScopesComponent?: ReactElement<any>;
 };
 
 export function ScopeGuard({

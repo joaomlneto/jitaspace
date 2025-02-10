@@ -147,7 +147,7 @@ export default function Page({ attributes }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement) {
+Page.getLayout = function getLayout(page: ReactElement<any>) {
   return (
     <MainLayout>
       <NextSeo title="Dogma Attributes" />

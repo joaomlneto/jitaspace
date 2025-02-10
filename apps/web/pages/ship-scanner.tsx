@@ -428,7 +428,7 @@ export default function Page({ ships }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement) {
+Page.getLayout = function getLayout(page: ReactElement<any>) {
   return (
     <MainLayout>
       <NextSeo title="Ship Scanner" />

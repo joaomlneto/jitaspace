@@ -23,7 +23,7 @@ import classes from "./HeaderWithMegaMenus.module.css";
 
 export type DesktopHeaderLinkGroupProps = {
   title: string;
-  Icon: (props: EveIconProps) => React.ReactElement;
+  Icon: (props: EveIconProps) => React.ReactElement<any>;
   items: Record<string, JitaApp>;
 };
 
