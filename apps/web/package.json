@@ -81,7 +81,6 @@
     "sharp": "^0.33.5",
     "superjson": "2.2.1",
     "swr": "^2.2.5",
-    "workbox-window": "^7.3.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

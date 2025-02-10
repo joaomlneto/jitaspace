@@ -12,14 +12,14 @@ import "mantine-react-table/styles.css";
 
 import type { Session } from "next-auth";
 import type { ReactElement, ReactNode } from "react";
-import React, { useEffect } from "react";
+import React from "react";
 import { type NextPage } from "next";
 import { type AppProps } from "next/app";
 import Head from "next/head";
 import Script from "next/script";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
-import { Notifications, showNotification } from "@mantine/notifications";
+import { Notifications } from "@mantine/notifications";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -27,7 +27,6 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SessionProvider } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
-import { Workbox } from "workbox-window";
 
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
@@ -59,47 +58,6 @@ export default function App({
   const requiredScopes = Component.requiredScopes;
 
   const [queryClient, setQueryClient] = React.useState(() => new QueryClient());
-
-  // This hook only run once in browser after the component is rendered for the first time.
-  // It has same effect as the old componentDidMount lifecycle callback.
-  useEffect(() => {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      //const wb = window.workbox;
-      const wb = new Workbox("/sw.js");
-
-      wb.addEventListener("waiting", () => {
-        showNotification({
-          title: "Update Available",
-          message:
-            "A newer version of Jita is available. Simply reload to update.",
-        });
-        /*
-        // `event.wasWaitingBeforeRegister` will be false if this is the first time the updated service worker is waiting.
-        // When `event.wasWaitingBeforeRegister` is true, a previously updated service worker is still waiting.
-        // You may want to customize the UI prompt accordingly.
-        // https://developer.chrome.com/docs/workbox/handling-service-worker-updates/#the-code-to-put-in-your-page
-        if (
-          confirm(
-            "A newer version of this web app is available, reload to update?",
-          )
-        ) {
-          wb.addEventListener("controlling", () => {
-            window.location.reload();
-          });
-
-          // Send a message to the waiting service worker, instructing it to activate.
-          wb.messageSkipWaiting();
-        } else {
-          console.log(
-            "User rejected to update SW, keeping the old version. New version will be automatically loaded when the app is opened next time.",
-          );
-        }*/
-      });
-
-      // never forget to call register as automatic registration is turned off in next.config.js
-      void wb.register();
-    }
-  }, []);
 
   return (
     <>
