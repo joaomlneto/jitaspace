@@ -2,7 +2,7 @@
   "name": "jitaspace",
   "private": true,
   "engines": {
-    "node": ">=20.18.1"
+    "node": ">=22.13.1"
   },
   "packageManager": "pnpm@9.14.4",
   "scripts": {
