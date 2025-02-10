@@ -40,7 +40,7 @@ import { themes } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
 
 type NextPageWithLayout = NextPage & {
-  getLayout?: (page: ReactElement) => ReactNode;
+  getLayout?: (page: ReactElement<any>) => ReactNode;
   requiredScopes?: ESIScope[];
 };
 
@@ -135,12 +135,12 @@ export default function App({
         data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
         data-domains="www.jita.space"
       ></Script>
-      <Analytics />
       {env.NEXT_PUBLIC_GOOGLE_TAG_ID && (
         <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
       )}
-
+      <Analytics />
       <SpeedInsights />
+
       <QueryClientProvider client={queryClient}>
         <ReactQueryDevtools initialIsOpen={false} />
         <SessionProvider session={session}>
