@@ -1,4 +1,5 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React from "react";
 import {
   ActionIcon,
   Anchor,
@@ -18,7 +19,6 @@ import { CharacterAnchor, CharacterAvatar, CharacterName } from "@jitaspace/ui";
 
 import { env } from "~/env.mjs";
 import { MainLayout } from "~/layouts";
-
 
 const MY_CHARACTER_ID = 401563624;
 
@@ -212,10 +212,10 @@ export default function Page() {
           <List.Item>
             <Anchor
               inherit
-              href="https://ducanh-next-pwa.vercel.app/"
+              href="https://github.com/serwist/serwist"
               target="_blank"
             >
-              next-pwa
+              serwist
             </Anchor>
           </List.Item>
           <List.Item>
