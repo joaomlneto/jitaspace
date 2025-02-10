@@ -69,7 +69,7 @@ export default function Page({ categories }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement) {
+Page.getLayout = function getLayout(page: ReactElement<any>) {
   return (
     <MainLayout>
       <NextSeo title="Categories" />

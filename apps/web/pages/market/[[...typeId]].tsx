@@ -104,7 +104,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement) {
+Page.getLayout = function getLayout(page: ReactElement<any>) {
   // FIXME: Should have MarketLayout wrapping it here!
   return page;
 };

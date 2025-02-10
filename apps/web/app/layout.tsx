@@ -16,7 +16,9 @@ import Script from "next/script";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
@@ -95,8 +97,11 @@ export default function RootLayout({
             data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
             data-domains="www.jita.space"
           ></Script>
-
+          {env.NEXT_PUBLIC_GOOGLE_TAG_ID && (
+            <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
+          )}
           <Analytics />
+          <SpeedInsights />
 
           <MyQueryClientProvider>
             <MySessionProvider>

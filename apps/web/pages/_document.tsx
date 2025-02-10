@@ -22,7 +22,7 @@ export default class _Document extends Document {
     };
   }
 
-  render(): React.ReactElement {
+  render(): React.ReactElement<any> {
     return (
       <Html lang="en">
         <Head>

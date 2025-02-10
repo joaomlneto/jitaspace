@@ -22,7 +22,7 @@ import classes from "./HeaderWithMegaMenus.module.css";
 
 export type MobileHeaderLinkGroupProps = {
   title: string;
-  Icon: (props: EveIconProps) => React.ReactElement;
+  Icon: (props: EveIconProps) => React.ReactElement<any>;
   onNavigation?: Function;
   items: Record<string, JitaApp>;
 };

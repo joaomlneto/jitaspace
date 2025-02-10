@@ -269,7 +269,7 @@ export default function Page({ solarSystems, initialWaypoints }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement) {
+Page.getLayout = function getLayout(page: ReactElement<any>) {
   return (
     <MainLayout>
       <NextSeo title="Travel Planner" />

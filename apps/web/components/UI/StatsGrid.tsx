@@ -17,7 +17,7 @@ import classes from "./StatsGrid.module.css";
 type StatsGridProps = SimpleGridProps & {
   data: {
     title: string;
-    icon?: (props: EveIconProps) => React.ReactElement;
+    icon?: (props: EveIconProps) => React.ReactElement<any>;
     value: string;
     diff?: number;
     description?: string;
