@@ -93,7 +93,7 @@
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@types/react-html-parser": "^2.0.6",
-    "dotenv-cli": "^7.4.4",
+    "dotenv-cli": "^8.0.0",
     "eslint": "^9.16.0",
     "jiti": "^1.21.6",
     "postcss": "^8.4.49",
