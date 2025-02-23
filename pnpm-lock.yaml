@@ -168,8 +168,8 @@ importers:
         specifier: ^3.32.1
         version: 3.32.1
       jose:
-        specifier: ^5.9.6
-        version: 5.9.6
+        specifier: ^6.0.5
+        version: 6.0.5
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
@@ -2327,6 +2327,7 @@ packages:
 
   '@readme/json-schema-ref-parser@1.2.0':
     resolution: {integrity: sha512-Bt3QVovFSua4QmHa65EHUmh2xS0XJ3rgTEUPH998f4OW4VVJke3BuS16f+kM0ZLOGdvIrzrPRqwihuv5BAjtrA==}
+    deprecated: This package is no longer maintained. Please use `@apidevtools/json-schema-ref-parser` instead.
 
   '@readme/openapi-parser@2.5.0':
     resolution: {integrity: sha512-IbymbOqRuUzoIgxfAAR7XJt2FWl6n2yqN09fF5adacGm7W03siA3bj1Emql0X9D2T+RpBYz3x9zDsMhuoMP62A==}
@@ -4969,8 +4970,8 @@ packages:
   jose@4.15.5:
     resolution: {integrity: sha512-jc7BFxgKPKi94uOvEmzlSWFFe2+vASyXaKUpdQKatWAESU2MWjDfFf0fdfc83CDKcA5QecabZeNLyfhe3yKNkg==}
 
-  jose@5.9.6:
-    resolution: {integrity: sha512-AMlnetc9+CV9asI19zHmrgS/WYsWUwCn2R7RzlbJWD7F9eWYUTGyBmU9o6PxngtLGOiDGPRu+Uc4fhKzbpteZQ==}
+  jose@6.0.5:
+    resolution: {integrity: sha512-lrJIqdYSqsTbKR3ux1nt4DWsesOY7mt8fGqf+SFQ968aV1LfzwBe1Qauduz2vRjxi/0sH82t3/vfZOnr6iNd3Q==}
 
   js-runtime@0.0.7:
     resolution: {integrity: sha512-Icd/s1tYLRu/zrtBPFGA+WRQw6zeDhN2OtWjJzPRFjeVqrZDvIht/XF0H3x64TLhHG8TNMoxm45/xXUSYQu0+g==}
@@ -11555,7 +11556,7 @@ snapshots:
 
   jose@4.15.5: {}
 
-  jose@5.9.6: {}
+  jose@6.0.5: {}
 
   js-runtime@0.0.7: {}
 
