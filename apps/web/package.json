@@ -90,8 +90,8 @@
     "@swc-jotai/react-refresh": "^0.3.0",
     "@types/humanize-duration": "^3.27.4",
     "@types/node": "^22.13.1",
-    "@types/react": "^19.0.8",
-    "@types/react-dom": "^19.0.3",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
     "@types/react-html-parser": "^2.0.6",
     "dotenv-cli": "^8.0.0",
     "eslint": "^9.16.0",
@@ -106,8 +106,8 @@
   "prettier": "@jitaspace/prettier-config",
   "pnpm": {
     "overrides": {
-      "@types/react": "^19.0.8",
-      "@types/react-dom": "^19.0.3"
+      "@types/react": "^19.0.10",
+      "@types/react-dom": "^19.0.4"
     }
   }
 }
