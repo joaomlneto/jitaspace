@@ -18,7 +18,7 @@
     "@jitaspace/db": "workspace:*",
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/sde-client": "workspace:*",
-    "axios": "^1.8.1",
+    "axios": "^1.8.2",
     "decimal.js": "^10.5.0",
     "inngest": "^3.31.13",
     "p-limit": "^6.2.0"
