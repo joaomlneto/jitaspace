@@ -78,7 +78,7 @@
     "react-html-parser": "^2.0.2",
     "react-obfuscate-email": "^1.1.5",
     "recharts": "^2.15.2",
-    "sharp": "^0.34.0",
+    "sharp": "^0.34.1",
     "superjson": "2.2.2",
     "swr": "^2.3.3",
     "zod": "^3.24.2"
