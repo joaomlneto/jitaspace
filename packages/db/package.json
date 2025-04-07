@@ -30,12 +30,12 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^22.13.9",
+    "@types/node": "^22.14.0",
     "concurrently": "^8.2.2",
-    "eslint": "^9.21.0",
+    "eslint": "^9.24.0",
     "prettier": "^3.5.3",
     "prisma": "^5.22.0",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "prettier": "@jitaspace/prettier-config"
 }
