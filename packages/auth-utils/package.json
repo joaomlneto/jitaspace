@@ -15,16 +15,16 @@
     "@jitaspace/esi-metadata": "workspace:*",
     "next": "^15.2.1",
     "next-auth": "^4.24.11",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "eslint": "^9.21.0",
+    "eslint": "^9.24.0",
     "prettier": "^3.5.3",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "prettier": "@jitaspace/prettier-config"
 }
