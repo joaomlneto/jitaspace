@@ -126,14 +126,14 @@ importers:
         specifier: ^3.31.0
         version: 3.31.0(react@19.1.0)
       '@tanstack/react-query':
-        specifier: ^5.71.10
-        version: 5.71.10(react@19.1.0)
+        specifier: ^5.72.0
+        version: 5.72.0(react@19.1.0)
       '@tanstack/react-query-devtools':
-        specifier: ^5.71.10
-        version: 5.71.10(@tanstack/react-query@5.71.10(react@19.1.0))(react@19.1.0)
+        specifier: ^5.72.0
+        version: 5.72.0(@tanstack/react-query@5.72.0(react@19.1.0))(react@19.1.0)
       '@tanstack/react-query-next-experimental':
-        specifier: ^5.71.10
-        version: 5.71.10(@tanstack/react-query@5.71.10(react@19.1.0))(next@15.2.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
+        specifier: ^5.72.0
+        version: 5.72.0(@tanstack/react-query@5.72.0(react@19.1.0))(next@15.2.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       '@tiptap/extension-link':
         specifier: ^2.11.7
         version: 2.11.7(@tiptap/core@2.11.7(@tiptap/pm@2.11.7))(@tiptap/pm@2.11.7)
@@ -427,8 +427,8 @@ importers:
         specifier: ^2.12.3
         version: 2.12.3(@kubb/react@2.12.3)
       '@tanstack/react-query':
-        specifier: ^5.71.10
-        version: 5.71.10(react@19.1.0)
+        specifier: ^5.72.0
+        version: 5.72.0(react@19.1.0)
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.8.4)(zod@3.24.2)
@@ -494,8 +494,8 @@ importers:
         specifier: ^2.12.3
         version: 2.12.3(@kubb/react@2.12.3)
       '@tanstack/react-query':
-        specifier: ^5.71.10
-        version: 5.71.10(react@19.1.0)
+        specifier: ^5.72.0
+        version: 5.72.0(react@19.1.0)
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.8.4)(zod@3.24.2)
@@ -676,8 +676,8 @@ importers:
         specifier: ^2.12.3
         version: 2.12.3(@kubb/react@2.12.3)
       '@tanstack/react-query':
-        specifier: ^5.71.10
-        version: 5.71.10(react@19.1.0)
+        specifier: ^5.72.0
+        version: 5.72.0(react@19.1.0)
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.8.4)(zod@3.24.2)
@@ -743,8 +743,8 @@ importers:
         specifier: ^2.12.3
         version: 2.12.3(@kubb/react@2.12.3)
       '@tanstack/react-query':
-        specifier: ^5.71.10
-        version: 5.71.10(react@19.1.0)
+        specifier: ^5.72.0
+        version: 5.72.0(react@19.1.0)
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.8.4)(zod@3.24.2)
@@ -807,8 +807,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(react@19.1.0)
       '@tanstack/react-query':
-        specifier: ^5.71.10
-        version: 5.71.10(react@19.1.0)
+        specifier: ^5.72.0
+        version: 5.72.0(react@19.1.0)
       axios:
         specifier: ^1.8.4
         version: 1.8.4
@@ -874,8 +874,8 @@ importers:
         specifier: ^2.12.3
         version: 2.12.3(@kubb/react@2.12.3)
       '@tanstack/react-query':
-        specifier: ^5.71.10
-        version: 5.71.10(react@19.1.0)
+        specifier: ^5.72.0
+        version: 5.72.0(react@19.1.0)
       '@zodios/core':
         specifier: ^10.9.6
         version: 10.9.6(axios@1.8.4)(zod@3.24.2)
@@ -1159,8 +1159,8 @@ importers:
         specifier: ^15.2.4
         version: 15.2.4
       '@tanstack/eslint-plugin-query':
-        specifier: ^5.71.5
-        version: 5.71.5(eslint@9.24.0(jiti@1.21.7))(typescript@5.8.3)
+        specifier: ^5.72.0
+        version: 5.72.0(eslint@9.24.0(jiti@1.21.7))(typescript@5.8.3)
       eslint-config-turbo:
         specifier: ^2.5.0
         version: 2.5.0(eslint@9.24.0(jiti@1.21.7))(turbo@2.5.0)
@@ -2543,8 +2543,8 @@ packages:
   '@tabler/icons@3.31.0':
     resolution: {integrity: sha512-dblAdeKY3+GA1U+Q9eziZ0ooVlZMHsE8dqP0RkwvRtEsAULoKOYaCUOcJ4oW1DjWegdxk++UAt2SlQVnmeHv+g==}
 
-  '@tanstack/eslint-plugin-query@5.71.5':
-    resolution: {integrity: sha512-6EDWMUQc35HEYtZrX4yRP7vBXjUhNLwO0JwLzkV14lNpTlpnPbNUltvgh+cUJBh3awpOuUNNuxTL96BG3azLmw==}
+  '@tanstack/eslint-plugin-query@5.72.0':
+    resolution: {integrity: sha512-UmxwJlzN3/KLa+c48irBRjczCCfro9peZGDRBPUZUQvrs7MBR+SZ2xVzdPemwws+v/GC69FIpZGiXdtnc6PzyA==}
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
 
@@ -2552,27 +2552,27 @@ packages:
     resolution: {integrity: sha512-Wo1iKt2b9OT7d+YGhvEPD3DXvPv2etTusIMhMUoG7fbhmxcXCtIjJDEygy91Y2JFlwGyjqiBPRozme7UD8hoqg==}
     engines: {node: '>=12'}
 
-  '@tanstack/query-core@5.71.10':
-    resolution: {integrity: sha512-/fKEY8fO1nbszfrBatzmhJa1nEwIKn0c6Tv2A1ocSA5OiD2GukOIV8nnBbvJRgZb/VIoBy9/N4PVbABI8YQLow==}
+  '@tanstack/query-core@5.72.0':
+    resolution: {integrity: sha512-aa3p6Mou++JLLxxxVX9AB9uGeRIGc0JWkw96GASXuMG8K3D+JpYbSFcqXbkGFJ1eX2jKHPurmCBoO43RjjXJCA==}
 
-  '@tanstack/query-devtools@5.71.5':
-    resolution: {integrity: sha512-Fq1JeAp+I52Md/KnyeFxzG7G0RpdHgeOfDNhSPkZQs/JqqXuAfpUf+wFHDz+vP0GZbSnla2JmcLSQebOkIb1yA==}
+  '@tanstack/query-devtools@5.72.0':
+    resolution: {integrity: sha512-/SJr77+epgxmwMB5Wjlg1TiN6bJObAJKi/mIHWQcon0VJxH3NNOtGCpQRbWih8xOq9oQ5kuIYLftYfD0j2ujew==}
 
-  '@tanstack/react-query-devtools@5.71.10':
-    resolution: {integrity: sha512-n0xsIzwNvkIoZCmfHww28jFmnVTVzOt5dHj/py3LNFMJHGnJq9o9ttQESzVt2Hr7as00Aqf8ElVwH6na1o6dnw==}
+  '@tanstack/react-query-devtools@5.72.0':
+    resolution: {integrity: sha512-xhZbLnZLZvHw+c+R6jWWrr14IO9jjrDKkpIJVD/Tk3KOzQK+Olk0UiWbrZTuHKvDqFMICNBp94SbRyuR0H2kUQ==}
     peerDependencies:
-      '@tanstack/react-query': ^5.71.10
+      '@tanstack/react-query': ^5.72.0
       react: ^18 || ^19
 
-  '@tanstack/react-query-next-experimental@5.71.10':
-    resolution: {integrity: sha512-9SD/PvQQngfSY/KNeKCb94tVbYoFIHTofoIxnnfMe1yK0IZrlpweDj5Gc3MafZOEPDM4BAA4/qrkyPnKgCkoeA==}
+  '@tanstack/react-query-next-experimental@5.72.0':
+    resolution: {integrity: sha512-rwtjE2LtLfX2nYDRYwRnNLC2iLd3TXp3kpNvJbKJjXYaGmNaJ5weBn8u15rYtIfzmkQVgSazeM4LGGTcH+BwSQ==}
     peerDependencies:
-      '@tanstack/react-query': ^5.71.10
+      '@tanstack/react-query': ^5.72.0
       next: ^13 || ^14 || ^15
       react: ^18 || ^19
 
-  '@tanstack/react-query@5.71.10':
-    resolution: {integrity: sha512-mQYM/ObpL8YMDz8vCoUuHkbe8Yu7NnVRH8aBaBa/3zlufjp1f1VuWjeO3TcumNHfuVMDwEAGinsgwrB7OKADiQ==}
+  '@tanstack/react-query@5.72.0':
+    resolution: {integrity: sha512-4Dejq/IiXrPlr/0xxj4H2GbC6KckwfTCoHWbd02+UoIV0laC9yke0d0KegmFdXJA712I6UCuy8WpPM76uuPJ+w==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -2901,10 +2901,6 @@ packages:
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <5.9.0'
 
-  '@typescript-eslint/scope-manager@8.26.0':
-    resolution: {integrity: sha512-E0ntLvsfPqnPwng8b8y4OGuzh/iIOm2z8U3S9zic2TeMLW61u5IH2Q1wu0oSTkfrSzwbDJIB/Lm8O3//8BWMPA==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
   '@typescript-eslint/scope-manager@8.29.0':
     resolution: {integrity: sha512-aO1PVsq7Gm+tcghabUpzEnVSFMCU4/nYIgC2GOatJcllvWfnhrgW0ZEbnTxm36QsikmCN1K/6ZgM7fok2I7xNw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -2916,31 +2912,14 @@ packages:
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <5.9.0'
 
-  '@typescript-eslint/types@8.26.0':
-    resolution: {integrity: sha512-89B1eP3tnpr9A8L6PZlSjBvnJhWXtYfZhECqlBl1D9Lme9mHO6iWlsprBtVenQvY1HMhax1mWOjhtL3fh/u+pA==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
   '@typescript-eslint/types@8.29.0':
     resolution: {integrity: sha512-wcJL/+cOXV+RE3gjCyl/V2G877+2faqvlgtso/ZRbTCnZazh0gXhe+7gbAnfubzN2bNsBtZjDvlh7ero8uIbzg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-eslint/typescript-estree@8.26.0':
-    resolution: {integrity: sha512-tiJ1Hvy/V/oMVRTbEOIeemA2XoylimlDQ03CgPPNaHYZbpsc78Hmngnt+WXZfJX1pjQ711V7g0H7cSJThGYfPQ==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      typescript: '>=4.8.4 <5.9.0'
 
   '@typescript-eslint/typescript-estree@8.29.0':
     resolution: {integrity: sha512-yOfen3jE9ISZR/hHpU/bmNvTtBW1NjRbkSFdZOksL1N+ybPEE7UVGMwqvS6CP022Rp00Sb0tdiIkhSCe6NI8ow==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
-      typescript: '>=4.8.4 <5.9.0'
-
-  '@typescript-eslint/utils@8.26.0':
-    resolution: {integrity: sha512-2L2tU3FVwhvU14LndnQCA2frYC8JnPDVKyQtWFPf8IYFMt/ykEN1bPolNhNbCVgOmdzTlWdusCTKA/9nKrf8Ig==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <5.9.0'
 
   '@typescript-eslint/utils@8.29.0':
@@ -2949,10 +2928,6 @@ packages:
     peerDependencies:
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <5.9.0'
-
-  '@typescript-eslint/visitor-keys@8.26.0':
-    resolution: {integrity: sha512-2z8JQJWAzPdDd51dRQ/oqIJxe99/hoLIqmf8RMCAJQtYDc535W/Jt2+RTP4bP0aKeBG1F65yjIZuczOXCmbWwg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@typescript-eslint/visitor-keys@8.29.0':
     resolution: {integrity: sha512-Sne/pVz8ryR03NFK21VpN88dZ2FdQXOlq3VIklbrTYEt8yXtRFr9tvUhqvCeKjqYk5FSim37sHbooT6vzBTZcg==}
@@ -8866,9 +8841,9 @@ snapshots:
 
   '@tabler/icons@3.31.0': {}
 
-  '@tanstack/eslint-plugin-query@5.71.5(eslint@9.24.0(jiti@1.21.7))(typescript@5.8.3)':
+  '@tanstack/eslint-plugin-query@5.72.0(eslint@9.24.0(jiti@1.21.7))(typescript@5.8.3)':
     dependencies:
-      '@typescript-eslint/utils': 8.26.0(eslint@9.24.0(jiti@1.21.7))(typescript@5.8.3)
+      '@typescript-eslint/utils': 8.29.0(eslint@9.24.0(jiti@1.21.7))(typescript@5.8.3)
       eslint: 9.24.0(jiti@1.21.7)
     transitivePeerDependencies:
       - supports-color
@@ -8878,25 +8853,25 @@ snapshots:
     dependencies:
       remove-accents: 0.5.0
 
-  '@tanstack/query-core@5.71.10': {}
+  '@tanstack/query-core@5.72.0': {}
 
-  '@tanstack/query-devtools@5.71.5': {}
+  '@tanstack/query-devtools@5.72.0': {}
 
-  '@tanstack/react-query-devtools@5.71.10(@tanstack/react-query@5.71.10(react@19.1.0))(react@19.1.0)':
+  '@tanstack/react-query-devtools@5.72.0(@tanstack/react-query@5.72.0(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@tanstack/query-devtools': 5.71.5
-      '@tanstack/react-query': 5.71.10(react@19.1.0)
+      '@tanstack/query-devtools': 5.72.0
+      '@tanstack/react-query': 5.72.0(react@19.1.0)
       react: 19.1.0
 
-  '@tanstack/react-query-next-experimental@5.71.10(@tanstack/react-query@5.71.10(react@19.1.0))(next@15.2.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)':
+  '@tanstack/react-query-next-experimental@5.72.0(@tanstack/react-query@5.72.0(react@19.1.0))(next@15.2.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)':
     dependencies:
-      '@tanstack/react-query': 5.71.10(react@19.1.0)
+      '@tanstack/react-query': 5.72.0(react@19.1.0)
       next: 15.2.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react: 19.1.0
 
-  '@tanstack/react-query@5.71.10(react@19.1.0)':
+  '@tanstack/react-query@5.72.0(react@19.1.0)':
     dependencies:
-      '@tanstack/query-core': 5.71.10
+      '@tanstack/query-core': 5.72.0
       react: 19.1.0
 
   '@tanstack/react-table@8.20.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
@@ -9283,11 +9258,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/scope-manager@8.26.0':
-    dependencies:
-      '@typescript-eslint/types': 8.26.0
-      '@typescript-eslint/visitor-keys': 8.26.0
-
   '@typescript-eslint/scope-manager@8.29.0':
     dependencies:
       '@typescript-eslint/types': 8.29.0
@@ -9304,23 +9274,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/types@8.26.0': {}
-
   '@typescript-eslint/types@8.29.0': {}
-
-  '@typescript-eslint/typescript-estree@8.26.0(typescript@5.8.3)':
-    dependencies:
-      '@typescript-eslint/types': 8.26.0
-      '@typescript-eslint/visitor-keys': 8.26.0
-      debug: 4.4.0
-      fast-glob: 3.3.3
-      is-glob: 4.0.3
-      minimatch: 9.0.4
-      semver: 7.7.1
-      ts-api-utils: 2.0.1(typescript@5.8.3)
-      typescript: 5.8.3
-    transitivePeerDependencies:
-      - supports-color
 
   '@typescript-eslint/typescript-estree@8.29.0(typescript@5.8.3)':
     dependencies:
@@ -9336,17 +9290,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@typescript-eslint/utils@8.26.0(eslint@9.24.0(jiti@1.21.7))(typescript@5.8.3)':
-    dependencies:
-      '@eslint-community/eslint-utils': 4.4.0(eslint@9.24.0(jiti@1.21.7))
-      '@typescript-eslint/scope-manager': 8.26.0
-      '@typescript-eslint/types': 8.26.0
-      '@typescript-eslint/typescript-estree': 8.26.0(typescript@5.8.3)
-      eslint: 9.24.0(jiti@1.21.7)
-      typescript: 5.8.3
-    transitivePeerDependencies:
-      - supports-color
-
   '@typescript-eslint/utils@8.29.0(eslint@9.24.0(jiti@1.21.7))(typescript@5.8.3)':
     dependencies:
       '@eslint-community/eslint-utils': 4.4.0(eslint@9.24.0(jiti@1.21.7))
@@ -9357,11 +9300,6 @@ snapshots:
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
-
-  '@typescript-eslint/visitor-keys@8.26.0':
-    dependencies:
-      '@typescript-eslint/types': 8.26.0
-      eslint-visitor-keys: 4.2.0
 
   '@typescript-eslint/visitor-keys@8.29.0':
     dependencies:

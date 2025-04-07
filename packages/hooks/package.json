@@ -21,7 +21,7 @@
     "@jitaspace/fuzzworks-market-client": "workspace:*",
     "@jitaspace/sde-client": "workspace:*",
     "@react-hook/cache": "^1.1.1",
-    "@tanstack/react-query": "^5.71.10",
+    "@tanstack/react-query": "^5.72.0",
     "axios": "^1.8.4",
     "zustand": "^4.5.6"
   },
