@@ -19,7 +19,7 @@
     "@jitaspace/tsconfig": "workspace:*",
     "@jitaspace/utils": "workspace:*",
     "@types/node": "^22.15.12",
-    "@types/react": "^19.1.2",
+    "@types/react": "^19.1.6",
     "eslint": "^9.26.0",
     "prettier": "^3.5.3",
     "react": "^19.1.0",
