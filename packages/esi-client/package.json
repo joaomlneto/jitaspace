@@ -24,19 +24,19 @@
     "@kubb/swagger-ts": "^2.12.3",
     "@kubb/swagger-zod": "^2.12.3",
     "@kubb/swagger-zodios": "^2.12.3",
-    "@tanstack/react-query": "^5.75.4",
+    "@tanstack/react-query": "^5.79.2",
     "@zodios/core": "^10.9.6",
     "axios": "^1.9.0",
     "react": "^19.1.0",
-    "zod": "^3.24.4"
+    "zod": "^3.25.49"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^22.15.12",
+    "@types/node": "^22.15.29",
     "@types/react": "^19.1.6",
-    "eslint": "^9.26.0",
+    "eslint": "^9.28.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },

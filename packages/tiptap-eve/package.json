@@ -13,10 +13,10 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@mantine/core": "7.17.7",
-    "@mantine/hooks": "7.17.7",
-    "@mantine/tiptap": "7.17.7",
-    "@tabler/icons-react": "^3.31.0",
+    "@mantine/core": "7.17.8",
+    "@mantine/hooks": "7.17.8",
+    "@mantine/tiptap": "7.17.8",
+    "@tabler/icons-react": "^3.34.0",
     "@tiptap/extension-character-count": "^2.12.0",
     "@tiptap/extension-color": "^2.12.0",
     "@tiptap/extension-hard-break": "^2.12.0",
@@ -35,10 +35,10 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^22.15.12",
+    "@types/node": "^22.15.29",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
-    "eslint": "^9.26.0",
+    "eslint": "^9.28.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },
