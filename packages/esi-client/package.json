@@ -11,7 +11,7 @@
     "download-schema": "curl -L https://esi.evetech.net/latest/swagger.json | jq 'del(.paths.\"/route/{origin}/{destination}/\")' > swagger.json",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
-    "kubb:generate": "kubb",
+    "kubb:generate": "npm run download-schema && kubb",
     "postinstall": "kubb",
     "type-check": "tsc --noEmit"
   },
