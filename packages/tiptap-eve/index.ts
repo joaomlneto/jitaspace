@@ -1,3 +1,5 @@
+"use client";
+
 import { DependencyList } from "react";
 import HardBreak from "@tiptap/extension-hard-break";
 import TextStyle from "@tiptap/extension-text-style";

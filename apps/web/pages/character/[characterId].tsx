@@ -1,4 +1,5 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
@@ -153,9 +154,7 @@ export default function Page() {
         {character?.birthday && (
           <Group justify="space-between">
             <Text>Birthday</Text>
-            <Text>
-              <FormattedDateText date={character.birthday} />
-            </Text>
+            <FormattedDateText date={character.birthday} />
           </Group>
         )}
         <Group justify="space-between">

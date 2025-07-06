@@ -21,7 +21,6 @@ import {
 
 import { ScopesTable } from "~/components/ScopeGuard";
 
-
 export type AuthenticatedCharacterTokenDetailsPanelProps = {
   characterId: number;
 };
@@ -72,11 +71,7 @@ export const AuthenticatedCharacterTokenDetailsPanel = ({
           <Group>
             <Tooltip
               color="dark"
-              label={
-                <Text size="sm">
-                  <FormattedDateText date={expirationDate} />
-                </Text>
-              }
+              label={<FormattedDateText size="sm" date={expirationDate} />}
             >
               <TimeAgoText date={expirationDate} addSuffix />
             </Tooltip>

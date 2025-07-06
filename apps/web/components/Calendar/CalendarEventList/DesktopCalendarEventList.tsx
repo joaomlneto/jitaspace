@@ -1,13 +1,6 @@
+import type { TableProps } from "@mantine/core";
 import React from "react";
-import {
-  Anchor,
-  Group,
-  Table,
-  Text,
-  Title,
-  Tooltip,
-  type TableProps,
-} from "@mantine/core";
+import { Anchor, Group, Table, Title, Tooltip } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
 import { WarningIcon } from "@jitaspace/eve-icons";
@@ -46,13 +39,11 @@ export function DesktopCalendarEventList({
                   />
                 }
               >
-                <Text>
-                  <FormattedDateText
-                    size="sm"
-                    date={new Date(event.event_date ?? 0)}
-                    format="HH:mm"
-                  />
-                </Text>
+                <FormattedDateText
+                  size="sm"
+                  date={new Date(event.event_date ?? 0)}
+                  format="HH:mm"
+                />
               </Tooltip>
             </Table.Td>
             <Table.Td>

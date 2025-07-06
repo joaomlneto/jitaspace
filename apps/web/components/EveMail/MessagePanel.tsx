@@ -66,13 +66,11 @@ export function MessagePanel({
             </EveMailSenderAnchor>
           </Group>
           {mail?.data.timestamp && (
-            <Text>
-              <FormattedDateText
-                span
-                date={new Date(mail?.data.timestamp)}
-                format="yyyy-MM-dd HH:mm"
-              />
-            </Text>
+            <FormattedDateText
+              span
+              date={new Date(mail?.data.timestamp)}
+              format="yyyy-MM-dd HH:mm"
+            />
           )}
         </Group>
       )}
@@ -125,11 +123,10 @@ export function MessagePanel({
           )}
           <Group align="start">
             {mail?.data.labels
-              ?.map(
-                (labelIndex) =>
-                  labels?.data.labels?.find(
-                    (label) => label.label_id === labelIndex,
-                  ),
+              ?.map((labelIndex) =>
+                labels?.data.labels?.find(
+                  (label) => label.label_id === labelIndex,
+                ),
               )
               .map(
                 (item) =>

@@ -1,4 +1,5 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
@@ -134,33 +135,25 @@ export default function Page() {
         {war && (
           <Group align="center" justify="space-between">
             <Text>Declared on</Text>
-            <Text>
-              <FormattedDateText date={new Date(war.data.declared)} />
-            </Text>
+            <FormattedDateText date={new Date(war.data.declared)} />
           </Group>
         )}
         {war?.data.started && (
           <Group align="center" justify="space-between">
             <Text>Started on</Text>
-            <Text>
-              <FormattedDateText date={new Date(war.data.started)} />
-            </Text>
+            <FormattedDateText date={new Date(war.data.started)} />
           </Group>
         )}
         {war?.data.retracted && (
           <Group align="center" justify="space-between">
             <Text>Retracted on</Text>
-            <Text>
-              <FormattedDateText date={new Date(war.data.retracted)} />
-            </Text>
+            <FormattedDateText date={new Date(war.data.retracted)} />
           </Group>
         )}
         {war?.data.finished && (
           <Group align="center" justify="space-between">
             <Text>Finished on</Text>
-            <Text>
-              <FormattedDateText date={new Date(war.data.finished)} />
-            </Text>
+            <FormattedDateText date={new Date(war.data.finished)} />
           </Group>
         )}
         {war && (

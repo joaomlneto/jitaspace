@@ -1,4 +1,7 @@
-import React, { type ReactElement } from "react";
+"use client";
+
+import type { ReactElement } from "react";
+import React from "react";
 import {
   Button,
   Center,
@@ -23,7 +26,6 @@ import {
 import { CalendarEventList } from "~/components/Calendar/CalendarEventList/CalendarEventList";
 import EventsCalendar from "~/components/Calendar/EventsCalendar";
 import { MainLayout } from "~/layouts";
-
 
 export default function Page() {
   const character = useSelectedCharacter();
