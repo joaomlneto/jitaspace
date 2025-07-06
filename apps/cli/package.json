@@ -1,0 +1,50 @@
+{
+  "name": "@jitaspace/cli",
+  "version": "1.1.1",
+  "description": "JitaSpace CLI utilities",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "repository": "https://github.com/joaomlneto/jitaspace.git",
+  "author": "João Neto <joao@jita.space>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --noEmit && esbuild index.ts --bundle --platform=node --format=cjs --outfile=./dist/index.cjs",
+    "generate": "mkdir -p out && ts-node index.ts generate",
+    "prepublish": "tsc",
+    "validate": "ts-node index.ts validate"
+  },
+  "devDependencies": {
+    "@asteasolutions/zod-to-openapi": "^4.7.0",
+    "@commander-js/extra-typings": "^10.0.3",
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jsonhero/schema-infer": "^0.1.5",
+    "@openapi-contrib/json-schema-to-openapi-schema": "^2.2.5",
+    "@types/async": "^3.2.20",
+    "@types/cli-progress": "^3.11.0",
+    "@types/figlet": "^1.5.6",
+    "@types/js-yaml": "^4.0.5",
+    "@types/node": "^18.16.4",
+    "ansi-colors": "^4.1.3",
+    "async": "^3.2.4",
+    "change-case": "^4.1.2",
+    "checksum": "^1.0.0",
+    "cli-progress": "^3.12.0",
+    "commander": "^10.0.1",
+    "esbuild": "^0.17.18",
+    "eslint": "^9.28.0",
+    "figlet": "^1.6.0",
+    "inquirer": "^9.2.2",
+    "js-yaml": "^4.1.0",
+    "js2schema": "^1.0.8",
+    "node-html-parser": "^6.1.5",
+    "node-stream-zip": "^1.15.0",
+    "openapi-types": "^12.1.3",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.5.0",
+    "typescript": "^5.8.3",
+    "yaml": "^2.1.3",
+    "zod": "^3.21.4"
+  }
+}

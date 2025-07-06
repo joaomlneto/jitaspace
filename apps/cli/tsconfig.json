@@ -1,0 +1,32 @@
+{
+  "exclude": ["node_modules", "dist"],
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["esnext"],
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "noUncheckedIndexedAccess": true,
+    "outDir": "./dist",
+  },
+  "ts-node": {
+    "esm": true,
+    "files": true,
+    "transpileOnly": true,
+    "compilerOptions": {
+      "esModuleInterop": true
+    },
+    "experimentalSpecifierResolution": "node"
+  }
+}
