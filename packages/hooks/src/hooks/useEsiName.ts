@@ -1,8 +1,10 @@
 "use client";
 
+import type { CacheState } from "@react-hook/cache";
 import { useEffect, useMemo, useState } from "react";
-import { createCache, useCache, type CacheState } from "@react-hook/cache";
+import { createCache, useCache } from "@react-hook/cache";
 
+import type { GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
 import {
   getAlliancesAllianceId,
   getCharactersCharacterId,
@@ -16,7 +18,6 @@ import {
   getUniverseSystemsSystemId,
   getUniverseTypesTypeId,
   postUniverseNames,
-  type GetCharactersCharacterIdSearchQueryParamsCategories,
 } from "@jitaspace/esi-client";
 import {
   allianceIdRanges,
@@ -29,11 +30,13 @@ import {
 
 type EsiNameCacheValue = {
   name: string;
-  category: GetCharactersCharacterIdSearchQueryParamsCategories | "stargate";
+  category:
+    | GetCharactersCharacterIdSearchQueryParamsCategoriesEnum
+    | "stargate";
 };
 
 export type ResolvableEntityCategory =
-  | GetCharactersCharacterIdSearchQueryParamsCategories
+  | GetCharactersCharacterIdSearchQueryParamsCategoriesEnum
   | "stargate";
 
 const inferCategoryFromId = (
@@ -64,12 +67,12 @@ const resolveNameOfUnknownCategory = async (
   id: number | string,
 ): Promise<{
   name?: string;
-  category: GetCharactersCharacterIdSearchQueryParamsCategories;
+  category: GetCharactersCharacterIdSearchQueryParamsCategoriesEnum;
 }> =>
   postUniverseNames([Number(id)], {}, {}).then((data) => ({
     name: data.data[0]?.name,
     category: data.data[0]
-      ?.category as GetCharactersCharacterIdSearchQueryParamsCategories,
+      ?.category as GetCharactersCharacterIdSearchQueryParamsCategoriesEnum,
   }));
 
 const resolveNameOfKnownCategory = async (

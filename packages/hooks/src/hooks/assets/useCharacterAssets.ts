@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
 
 import {
   getCharactersCharacterIdAssets,
@@ -28,11 +27,12 @@ export const useCharacterAssets = (characterId?: number) => {
       {
         query: {
           enabled: characterId !== undefined && accessToken !== null,
-          queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
+          initialPageParam: 1,
+          queryFn: ({ pageParam }) =>
             getCharactersCharacterIdAssets(
               characterId ?? 0,
               {
-                page: pageParam,
+                page: pageParam as number,
               },
               {},
               { headers: { ...authHeaders } },

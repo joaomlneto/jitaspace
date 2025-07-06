@@ -2,14 +2,12 @@
 
 import { useMemo } from "react";
 
-import { GetCharactersCharacterIdFittingsQueryResponseItemsFlag } from "@jitaspace/esi-client";
+import { ItemsFlagEnum } from "@jitaspace/esi-client";
 
 import { useCharacterAssets } from "../assets";
 import { useCharacterCurrentShip } from "../location";
 
-
-export type FittingItemFlag =
-  GetCharactersCharacterIdFittingsQueryResponseItemsFlag;
+export type FittingItemFlag = ItemsFlagEnum;
 
 export const useCharacterCurrentFit = (characterId: number) => {
   const { data: ship, hasToken: hasShipToken } =

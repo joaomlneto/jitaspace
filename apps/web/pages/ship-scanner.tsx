@@ -22,7 +22,7 @@ import { IconX } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
 
 import { prisma } from "@jitaspace/db";
-import { getCharactersCharacterIdFittingsQueryResponseItemsFlag } from "@jitaspace/esi-client";
+import { itemsFlagEnum } from "@jitaspace/esi-client";
 import {
   FittingItemFlag,
   useEsiTypeIdsFromNames,
@@ -184,7 +184,7 @@ function convertScan(scan: ScanResult) {
   }[] = [];
   scan.highSlots.forEach((item, index) => {
     const flag = `HiSlot${index}`;
-    if (flag in getCharactersCharacterIdFittingsQueryResponseItemsFlag)
+    if (flag in itemsFlagEnum)
       items.push({
         name: item.name,
         quantity: item.quantity,
@@ -194,7 +194,7 @@ function convertScan(scan: ScanResult) {
   });
   scan.midSlots.forEach((item, index) => {
     const flag = `MedSlot${index}`;
-    if (flag in getCharactersCharacterIdFittingsQueryResponseItemsFlag)
+    if (flag in itemsFlagEnum)
       items.push({
         name: item.name,
         quantity: item.quantity,
@@ -204,7 +204,7 @@ function convertScan(scan: ScanResult) {
   });
   scan.lowSlots.forEach((item, index) => {
     const flag = `LoSlot${index}`;
-    if (flag in getCharactersCharacterIdFittingsQueryResponseItemsFlag)
+    if (flag in itemsFlagEnum)
       items.push({
         name: item.name,
         quantity: item.quantity,
@@ -214,7 +214,7 @@ function convertScan(scan: ScanResult) {
   });
   scan.rigSlots.forEach((item, index) => {
     const flag = `RigSlot${index}`;
-    if (flag in getCharactersCharacterIdFittingsQueryResponseItemsFlag)
+    if (flag in itemsFlagEnum)
       items.push({
         name: item.name,
         quantity: item.quantity,
@@ -224,7 +224,7 @@ function convertScan(scan: ScanResult) {
   });
   scan.charges.forEach((item, index) => {
     const flag = `RigSlot${index}`;
-    if (flag in getCharactersCharacterIdFittingsQueryResponseItemsFlag)
+    if (flag in itemsFlagEnum)
       items.push({
         name: item.name,
         quantity: item.quantity,

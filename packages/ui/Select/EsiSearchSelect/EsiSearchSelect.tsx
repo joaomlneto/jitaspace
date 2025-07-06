@@ -1,21 +1,18 @@
 "use client";
 
+import type { SelectProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Loader, Select, type SelectProps } from "@mantine/core";
+import { Loader, Select } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
-import { type GetCharactersCharacterIdSearchQueryParamsCategories } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
 import { useEsiNamesCache, useEsiSearch } from "@jitaspace/hooks";
-
-
-
-
 
 export type EsiSearchSelectProps = Omit<
   SelectProps,
   "data" | "searchable" | "searchValue" | "onSearchChange"
 > & {
-  categories: GetCharactersCharacterIdSearchQueryParamsCategories[];
+  categories: GetCharactersCharacterIdSearchQueryParamsCategoriesEnum[];
   debounceTime?: number;
 };
 

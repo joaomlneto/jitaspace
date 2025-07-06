@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
 
 import {
   getCharactersCharacterIdMail,
@@ -35,11 +34,12 @@ export function useCharacterMails(characterId?: number, labels: number[] = []) {
         query: {
           enabled: characterId !== undefined && accessToken !== null,
           queryKey,
-          queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
+          initialPageParam: undefined,
+          queryFn: ({ pageParam }) =>
             getCharactersCharacterIdMail(
               characterId ?? 0,
               {
-                last_mail_id: pageParam,
+                last_mail_id: pageParam as number | undefined,
                 // @ts-expect-error generated code parses this wrong as url param
                 labels: labels !== undefined ? labels.join(",") : undefined,
               },

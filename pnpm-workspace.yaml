@@ -1,5 +1,18 @@
-# https://github.com/vercel/turbo/issues/3340#issuecomment-1398011525
 packages:
   - apps/*
   - packages/*
   - tooling/*
+
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@sveltejs/kit'
+  - '@vercel/speed-insights'
+  - aws-sdk
+  - core-js-pure
+  - es5-ext
+  - esbuild
+  - inngest-cli
+  - prisma
+  - protobufjs
+  - sharp

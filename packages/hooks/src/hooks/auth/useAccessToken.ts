@@ -1,10 +1,9 @@
 "use client";
 
-import { GetCharactersCharacterIdRolesQueryResponseRoles } from "@jitaspace/esi-client";
+import { GetCharactersCharacterIdRoles200RolesEnum } from "@jitaspace/esi-client";
 import { ESIScope } from "@jitaspace/esi-metadata";
 
 import { CharacterSsoSession, useAuthStore } from "./useAuthStore";
-
 
 const TOKEN_UNAVAILABLE = {
   character: null,
@@ -17,7 +16,7 @@ export const useAccessToken = (options: {
   corporationId?: number;
   allianceId?: number;
   scopes?: ESIScope[];
-  roles?: GetCharactersCharacterIdRolesQueryResponseRoles[];
+  roles?: GetCharactersCharacterIdRoles200RolesEnum[];
 }): {
   character: CharacterSsoSession | null;
   accessToken: string | null;

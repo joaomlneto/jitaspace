@@ -1,13 +1,20 @@
+import { DependencyList } from "react";
 import HardBreak from "@tiptap/extension-hard-break";
 import TextStyle from "@tiptap/extension-text-style";
 import { Underline } from "@tiptap/extension-underline";
-import { useEditor } from "@tiptap/react";
+import { EditorOptions, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 
 import { EveFontColor, EveLink } from "./Extensions";
 
-export const useEveEditor: typeof useEditor = (options, ...others) =>
-  useEditor(
+export const useEveEditor = (
+  options: Partial<EditorOptions> & {
+    immediatelyRender?: boolean;
+    shouldRerenderOnTransaction?: boolean;
+  },
+  deps?: DependencyList | undefined,
+) => {
+  return useEditor(
     {
       extensions: [
         StarterKit.configure({}),
@@ -25,7 +32,8 @@ export const useEveEditor: typeof useEditor = (options, ...others) =>
       ],
       ...options,
     },
-    ...others,
+    deps,
   );
+};
 
 export * from "./utils";

@@ -36,13 +36,19 @@ export function CalendarEventDetailsPanel({
   );
   const { data: attendees } = useCalendarEventAttendees(characterId, eventId);
 
-  const eventResponseColor: {
-    [key in CalendarEventAttendeeResponse]: string;
-  } = {
-    accepted: "green",
-    tentative: "yellow",
-    not_responded: "gray",
-    declined: "red",
+  const eventResponseColor = (key: CalendarEventAttendeeResponse) => {
+    switch (key) {
+      case "accepted":
+        return "green";
+      case "tentative":
+        return "yellow";
+      case "not_responded":
+        return "gray";
+      case "declined":
+        return "red";
+      default:
+        return "gray"; // Fallback for any unexpected values
+    }
   };
 
   const sortedAttendees = [...(attendees?.data ?? [])].sort(
@@ -53,8 +59,8 @@ export function CalendarEventDetailsPanel({
       if (!b.event_response) {
         return -1;
       }
-      return eventResponseColor[a.event_response].localeCompare(
-        eventResponseColor[b.event_response],
+      return eventResponseColor(a.event_response).localeCompare(
+        eventResponseColor(b.event_response),
       );
     },
   );
@@ -119,9 +125,9 @@ export function CalendarEventDetailsPanel({
             </Group>
             <Badge
               variant="light"
-              color={
-                eventResponseColor[attendee.event_response ?? "not_responded"]
-              }
+              color={eventResponseColor(
+                attendee.event_response ?? "not_responded",
+              )}
             >
               {attendee.event_response}
             </Badge>

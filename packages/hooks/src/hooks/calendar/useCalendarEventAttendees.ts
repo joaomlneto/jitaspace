@@ -1,8 +1,8 @@
 "use client";
 
 import {
+  GetCharactersCharacterIdCalendarEventIdAttendees200EventResponseEnum,
   GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse,
-  GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
   useGetCharactersCharacterIdCalendarEventIdAttendees,
 } from "@jitaspace/esi-client";
 
@@ -12,7 +12,7 @@ export type CalendarEventAttendee =
   GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number];
 
 export type CalendarEventAttendeeResponse =
-  GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse;
+  GetCharactersCharacterIdCalendarEventIdAttendees200EventResponseEnum;
 
 export const useCalendarEventAttendees = (
   characterId?: number,

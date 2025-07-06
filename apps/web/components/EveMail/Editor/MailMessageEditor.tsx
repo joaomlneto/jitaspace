@@ -1,6 +1,7 @@
+import type { RichTextEditorProps } from "@mantine/tiptap";
 import React from "react";
 import { Stack, Text } from "@mantine/core";
-import { RichTextEditor, type RichTextEditorProps } from "@mantine/tiptap";
+import { RichTextEditor } from "@mantine/tiptap";
 
 import { useEveEditor } from "@jitaspace/tiptap-eve";
 
@@ -28,6 +29,10 @@ export function MailMessageEditor({
       onContentUpdate(editor.getHTML().substring(3, content.length - 4));
     },
   });
+
+  if (!editor) {
+    return <Text>Loading editor...</Text>;
+  }
 
   return (
     <Stack>

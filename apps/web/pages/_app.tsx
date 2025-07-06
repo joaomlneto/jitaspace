@@ -34,7 +34,7 @@ import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
-import { JitaSpotlightProvider, MainSpotlight } from "~/components/Spotlight";
+import { JitaSpotlightProvider } from "~/components/Spotlight";
 import { env } from "~/env.mjs";
 import { themes } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
@@ -149,7 +149,7 @@ export default function App({
               <MantineProvider defaultColorScheme="dark" theme={themes.default}>
                 <Notifications />
                 <RouterTransition />
-                <MainSpotlight />
+                {/*<MainSpotlight />*/}
                 <JitaSpotlightProvider>
                   <ModalsProvider
                     modals={contextModals}

@@ -1,20 +1,17 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
-import { Loader, Select, type SelectProps } from "@mantine/core";
+import type { SelectProps } from "@mantine/core";
+import React, { memo, useEffect, useState } from "react";
+import { Loader, Select } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
 import {
   putCharactersCharacterIdCalendarEventId,
-  putCharactersCharacterIdCalendarEventIdMutationRequestResponse,
-  PutCharactersCharacterIdCalendarEventIdMutationRequestResponse,
+  putCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
+  PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
   useGetCharactersCharacterIdCalendarEventId,
 } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
-
-
-
-
 
 export type CalendarEventAttendanceSelect = Omit<SelectProps, "data"> & {
   characterId: number;
@@ -23,8 +20,8 @@ export type CalendarEventAttendanceSelect = Omit<SelectProps, "data"> & {
 export const CalendarEventAttendanceSelect = memo(
   ({ characterId, eventId, ...otherProps }: CalendarEventAttendanceSelect) => {
     const [value, setValue] =
-      useState<PutCharactersCharacterIdCalendarEventIdMutationRequestResponse | null>(
-        (otherProps.value as PutCharactersCharacterIdCalendarEventIdMutationRequestResponse) ??
+      useState<PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum | null>(
+        (otherProps.value as PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum) ??
           null,
       );
 
@@ -36,7 +33,7 @@ export const CalendarEventAttendanceSelect = memo(
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
-        typeof eventId === "string" ? parseInt(eventId) : eventId ?? 0,
+        typeof eventId === "string" ? parseInt(eventId) : (eventId ?? 0),
         {},
         { ...authHeaders },
         {
@@ -55,13 +52,13 @@ export const CalendarEventAttendanceSelect = memo(
       if (value === null && event?.data.response) {
         setValue(
           event.data
-            .response as PutCharactersCharacterIdCalendarEventIdMutationRequestResponse,
+            .response as PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
         );
       }
     }, [event, value]);
 
     const values = Object.values(
-      putCharactersCharacterIdCalendarEventIdMutationRequestResponse,
+      putCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
     ).map((value) => ({
       value,
       label:
@@ -82,7 +79,7 @@ export const CalendarEventAttendanceSelect = memo(
           if (newValue === null) return;
           if (
             !Object.keys(
-              putCharactersCharacterIdCalendarEventIdMutationRequestResponse,
+              putCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
             ).includes(newValue)
           )
             return;
@@ -92,15 +89,17 @@ export const CalendarEventAttendanceSelect = memo(
             labels: { confirm: "Confirm", cancel: "Cancel" },
             onConfirm: () => {
               setValue(
-                newValue as PutCharactersCharacterIdCalendarEventIdMutationRequestResponse,
+                newValue as PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
               );
               otherProps.onChange?.(newValue, options);
               void putCharactersCharacterIdCalendarEventId(
                 characterId ?? 0,
-                typeof eventId === "string" ? parseInt(eventId) : eventId ?? 0,
+                typeof eventId === "string"
+                  ? parseInt(eventId)
+                  : (eventId ?? 0),
                 {
                   response:
-                    newValue as PutCharactersCharacterIdCalendarEventIdMutationRequestResponse,
+                    newValue as PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
                 },
                 {},
                 { headers: { ...authHeaders } },

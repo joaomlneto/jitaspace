@@ -1,17 +1,13 @@
 import { defineConfig } from "@kubb/core";
-import createSwagger from "@kubb/swagger";
-import createSwaggerClient from "@kubb/swagger-client";
-import createSwaggerTanstackQuery from "@kubb/swagger-tanstack-query";
-import createSwaggerTS from "@kubb/swagger-ts";
-import createSwaggerZod from "@kubb/swagger-zod";
-import createSwaggerZodios from "@kubb/swagger-zodios";
-
-
-
-
+import { pluginClient } from "@kubb/plugin-client";
+import { pluginOas } from "@kubb/plugin-oas";
+import { pluginReactQuery } from "@kubb/plugin-react-query";
+import { pluginTs } from "@kubb/plugin-ts";
+import { pluginZod } from "@kubb/plugin-zod";
 
 export default defineConfig(async () => {
   return {
+    name: "esi-meta-client",
     root: ".",
     input: {
       path: "https://esi.evetech.net/swagger.json",
@@ -20,40 +16,39 @@ export default defineConfig(async () => {
       path: "./src/generated",
     },
     plugins: [
-      createSwagger({}),
-      createSwaggerClient({
-        client: {
-          importPath: "../../client",
-        },
+      pluginOas({ validate: true }),
+      pluginClient({
+        //importPath: "../../client",
+        baseURL: "https://esi.evetech.net",
         dataReturnType: "full",
         exclude: [
           { type: "tag", pattern: "Swagger" },
           { type: "tag", pattern: "WebUI" },
         ],
       }),
-      createSwaggerTS({
+      pluginTs({
         exclude: [
           { type: "tag", pattern: "Swagger" },
           { type: "tag", pattern: "WebUI" },
         ],
       }),
-      createSwaggerTanstackQuery({
+      pluginReactQuery({
         client: {
-          importPath: "../../client",
+          //importPath: "../../client",
+          baseURL: "https://esi.evetech.net",
+          dataReturnType: "full",
         },
-        dataReturnType: "full",
         exclude: [
           { type: "tag", pattern: "Swagger" },
           { type: "tag", pattern: "WebUI" },
         ],
       }),
-      createSwaggerZod({
+      pluginZod({
         exclude: [
           { type: "tag", pattern: "Swagger" },
           { type: "tag", pattern: "WebUI" },
         ],
       }),
-      createSwaggerZodios({}),
     ],
   };
 });

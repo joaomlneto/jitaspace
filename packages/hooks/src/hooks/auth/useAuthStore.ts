@@ -9,13 +9,9 @@ import {
   getEveSsoAccessTokenPayload,
 } from "@jitaspace/auth-utils";
 import {
-  GetCharactersCharacterIdRolesQueryResponseRoles,
+  GetCharactersCharacterIdRoles200RolesEnum,
   postCharactersAffiliation,
 } from "@jitaspace/esi-client";
-
-
-
-
 
 export type CharacterSsoSession = {
   accessToken: string;
@@ -25,7 +21,7 @@ export type CharacterSsoSession = {
   characterId: number;
   corporationId: number;
   allianceId?: number;
-  corporationRoles: GetCharactersCharacterIdRolesQueryResponseRoles[];
+  corporationRoles: GetCharactersCharacterIdRoles200RolesEnum[];
   corporationRolesExpireOn?: number;
 };
 

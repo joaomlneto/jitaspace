@@ -2,11 +2,11 @@
 
 import { useMemo } from "react";
 
+import type { GetIndustrySystemsQueryResponse } from "@jitaspace/esi-client";
 import {
-  GetIndustrySystemsQueryResponseCostIndicesActivity,
-  getIndustrySystemsQueryResponseCostIndicesActivity,
+  CostIndicesActivityEnum,
+  costIndicesActivityEnum,
   useGetIndustrySystems,
-  type GetIndustrySystemsQueryResponse,
 } from "@jitaspace/esi-client";
 
 export function useSolarSystemCostIndices() {
@@ -22,9 +22,7 @@ export function useSolarSystemCostIndices() {
     }, [arrayData?.data]);
 
   const ranges = useMemo(() => {
-    const result = Object.values(
-      getIndustrySystemsQueryResponseCostIndicesActivity,
-    ).reduce(
+    const result = Object.values(costIndicesActivityEnum).reduce(
       (acc, activity) => {
         acc[activity] = {
           min: undefined,
@@ -32,10 +30,7 @@ export function useSolarSystemCostIndices() {
         };
         return acc;
       },
-      {} as Record<
-        GetIndustrySystemsQueryResponseCostIndicesActivity,
-        { min?: number; max?: number }
-      >,
+      {} as Record<CostIndicesActivityEnum, { min?: number; max?: number }>,
     );
 
     Object.values(data).forEach((item) => {

@@ -1,17 +1,13 @@
 import { defineConfig } from "@kubb/core";
-import createSwagger from "@kubb/swagger";
-import createSwaggerClient from "@kubb/swagger-client";
-import createSwaggerTanstackQuery from "@kubb/swagger-tanstack-query";
-import createSwaggerTS from "@kubb/swagger-ts";
-import createSwaggerZod from "@kubb/swagger-zod";
-import createSwaggerZodios from "@kubb/swagger-zodios";
+import { pluginClient } from "@kubb/plugin-client";
+import { pluginOas } from "@kubb/plugin-oas";
+import { pluginReactQuery } from "@kubb/plugin-react-query";
+import { pluginTs } from "@kubb/plugin-ts";
+import { pluginZod } from "@kubb/plugin-zod";
 
-
-
-
-
-export default defineConfig(async () => {
+export default defineConfig(({ config, watch, logLevel }) => {
   return {
+    name: "esi-client",
     root: ".",
     input: {
       // Cannot use the spec directly, as the parser cannot parse the routes endpoint.
@@ -23,20 +19,19 @@ export default defineConfig(async () => {
       path: "./src/generated",
     },
     plugins: [
-      createSwagger({ validate: true }),
-      createSwaggerClient({
-        client: {
-          importPath: "../../client",
-        },
+      pluginOas({ validate: true }),
+      pluginClient({
+        //importPath: "../../client",
+        baseURL: "https://esi.evetech.net/latest",
         dataReturnType: "full",
       }),
-      createSwaggerTS({}),
-      createSwaggerTanstackQuery({
-        framework: "react",
+      pluginTs({}),
+      pluginReactQuery({
         client: {
-          importPath: "../../client",
+          //importPath: "../../client",
+          baseURL: "https://esi.evetech.net/latest",
+          dataReturnType: "full",
         },
-        dataReturnType: "full",
         override: [
           {
             type: "path",
@@ -112,8 +107,7 @@ export default defineConfig(async () => {
           },
         ],
       }),
-      createSwaggerZod({}),
-      createSwaggerZodios({}),
+      pluginZod({}),
     ],
   };
 });

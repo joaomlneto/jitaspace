@@ -1,20 +1,17 @@
 "use client";
 
-import { memo, useState } from "react";
-import { ActionIcon, ColorInput, type ColorInputProps } from "@mantine/core";
+import type { ColorInputProps } from "@mantine/core";
+import React, { memo, useState } from "react";
+import { ActionIcon, ColorInput } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 
-import { postCharactersCharacterIdMailLabelsMutationRequestColor } from "@jitaspace/esi-client";
+import { postCharactersCharacterIdMailLabelsMutationRequestColorEnum } from "@jitaspace/esi-client";
 import { getRandomArrayEntry } from "@jitaspace/utils";
-
-
-
-
 
 export const MailLabelColorSelect = memo(
   ({ ...otherProps }: ColorInputProps) => {
     const colors = Object.keys(
-      postCharactersCharacterIdMailLabelsMutationRequestColor,
+      postCharactersCharacterIdMailLabelsMutationRequestColorEnum,
     );
     const getRandomColor = () => getRandomArrayEntry(colors);
     const [value, onChange] = useState(otherProps.value ?? getRandomColor());
@@ -25,7 +22,7 @@ export const MailLabelColorSelect = memo(
         withPicker={false}
         swatchesPerRow={6}
         swatches={Object.keys(
-          postCharactersCharacterIdMailLabelsMutationRequestColor,
+          postCharactersCharacterIdMailLabelsMutationRequestColorEnum,
         )}
         rightSection={
           <ActionIcon

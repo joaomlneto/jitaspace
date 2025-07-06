@@ -1,7 +1,5 @@
 "use client";
 
-import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
-
 import {
   getCorporationsCorporationIdContacts,
   GetCorporationsCorporationIdContactsLabelsQueryResponse,
@@ -44,11 +42,12 @@ export function useCorporationContacts(corporationId: number) {
       {
         query: {
           enabled: !!corporationId && accessToken !== null,
-          queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
+          initialPageParam: 1,
+          queryFn: ({ pageParam }) =>
             getCorporationsCorporationIdContacts(
               corporationId ?? 0,
               {
-                page: pageParam,
+                page: pageParam as number,
               },
               {},
               { headers: { ...authHeaders } },

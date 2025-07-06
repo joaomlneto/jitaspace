@@ -1,17 +1,12 @@
 "use client";
 
+import type { BadgeProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
+import { Badge, Skeleton } from "@mantine/core";
 
-import {
-  useGetCharactersCharacterIdCalendarEventId,
-  type GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse,
-} from "@jitaspace/esi-client";
+import type { GetCharactersCharacterIdCalendarEventIdAttendees200EventResponseEnum } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
-
-
-
-
 
 export type CalendarEventResponseBadgeProps = BadgeProps & {
   characterId: number;
@@ -19,7 +14,7 @@ export type CalendarEventResponseBadgeProps = BadgeProps & {
 };
 
 const eventResponseColor: {
-  [key in GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse]: string;
+  [key in GetCharactersCharacterIdCalendarEventIdAttendees200EventResponseEnum]: string;
 } = {
   accepted: "green",
   tentative: "yellow",
@@ -52,7 +47,7 @@ export const CalendarEventResponseBadge = memo(
       );
 
     const response = event?.data.response as
-      | GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponseEventResponse
+      | GetCharactersCharacterIdCalendarEventIdAttendees200EventResponseEnum
       | undefined;
 
     if (!response || isLoading) {

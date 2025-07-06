@@ -56,3 +56,16 @@ declare module "@next/eslint-plugin-next" {
   };
   export const rules: Record<string, Rule.RuleModule>;
 }
+
+declare module "eslint-plugin-import" {
+  import type { Linter } from "eslint";
+
+  const importPlugin: {
+    flatConfigs: {
+      recommended: Linter.Config;
+      typescript: Linter.Config;
+    };
+  };
+
+  export default importPlugin;
+}

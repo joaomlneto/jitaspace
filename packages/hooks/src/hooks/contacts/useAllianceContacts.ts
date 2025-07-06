@@ -1,7 +1,5 @@
 "use client";
 
-import { QueryFunctionContext, QueryKey } from "@tanstack/react-query";
-
 import {
   getAlliancesAllianceIdContacts,
   GetAlliancesAllianceIdContactsLabelsQueryResponse,
@@ -44,11 +42,12 @@ export function useAllianceContacts(allianceId: number) {
       {
         query: {
           enabled: accessToken !== null && allianceId !== undefined,
-          queryFn: ({ pageParam }: QueryFunctionContext<QueryKey, any>) =>
+          initialPageParam: 1,
+          queryFn: ({ pageParam }) =>
             getAlliancesAllianceIdContacts(
               allianceId ?? 0,
               {
-                page: pageParam,
+                page: pageParam as number,
               },
               {},
               { headers: { ...authHeaders } },

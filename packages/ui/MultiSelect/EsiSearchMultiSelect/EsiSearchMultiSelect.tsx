@@ -1,21 +1,18 @@
 "use client";
 
+import type { MultiSelectProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Loader, MultiSelect, type MultiSelectProps } from "@mantine/core";
+import { Loader, MultiSelect } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
-import { type GetCharactersCharacterIdSearchQueryParamsCategories } from "@jitaspace/esi-client";
+import { type GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
 import { useEsiSearch } from "@jitaspace/hooks";
-
-
-
-
 
 export type EsiSearchMultiSelectProps = Omit<
   MultiSelectProps,
   "data" | "searchable" | "searchValue" | "onSearchChange"
 > & {
-  categories: GetCharactersCharacterIdSearchQueryParamsCategories[];
+  categories: GetCharactersCharacterIdSearchQueryParamsCategoriesEnum[];
   debounceTime?: number;
 };
 
