@@ -17,6 +17,7 @@ import { type MailboxTableProps } from "~/components/EveMail";
 export const MobileMailboxTable = ({
   characterId,
   data,
+  mutate,
   ...otherProps
 }: MailboxTableProps) => {
   const { data: labels } = useCharacterMailLabels(characterId);
@@ -51,11 +52,10 @@ export const MobileMailboxTable = ({
                   </Group>
                   <Group gap="xs" justify="space-between">
                     {message.labels
-                      ?.map(
-                        (labelIndex) =>
-                          labels?.data.labels?.find(
-                            (label) => label.label_id === labelIndex,
-                          ),
+                      ?.map((labelIndex) =>
+                        labels?.data.labels?.find(
+                          (label) => label.label_id === labelIndex,
+                        ),
                       )
                       .map(
                         (item) =>

@@ -12,7 +12,7 @@
           ? theme.colors.dark[4]
           : theme.colors.gray[1],
 
-    "&[data-hovered]": {
+    "&[data-hovered]": { // this needs rewriting: https://mantine.dev/guides/7x-to-8x/#menu-data-hovered-attribute
       backgroundColor:
         theme.colorScheme === "dark"
           ? theme.colors.dark[4]

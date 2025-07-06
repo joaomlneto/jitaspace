@@ -4,10 +4,6 @@ import { SpotlightActionProps, SpotlightProps } from "@mantine/spotlight";
 
 import { EsiSearchCategory } from "@jitaspace/hooks";
 
-
-
-
-
 type JitaSpotlightActionProps = Omit<SpotlightProps, "actions"> & {
   action: SpotlightActionProps & {
     type: "app" | "eve-entity";
@@ -30,7 +26,7 @@ export const JitaSpotlightAction = ({
     return (
       <UnstyledButton
         className={classes.action}
-        data-hovered={hovered || undefined}
+        data-hovered={hovered || undefined} // this needs rewriting: https://mantine.dev/guides/7x-to-8x/#menu-data-hovered-attribute
         tabIndex={-1}
         //onMouseDown={(event) => event.preventDefault()}
         onClick={onTrigger}
@@ -70,7 +66,7 @@ export const JitaSpotlightAction = ({
   return (
     <UnstyledButton
       className={classes.action}
-      data-hovered={hovered || undefined}
+      data-hovered={hovered || undefined} // this needs rewriting: https://mantine.dev/guides/7x-to-8x/#menu-data-hovered-attribute
       tabIndex={-1}
       onMouseDown={(event) => event.preventDefault()}
       onClick={onTrigger}

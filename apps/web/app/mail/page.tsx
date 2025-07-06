@@ -1,5 +1,8 @@
-import React, { useEffect, type ReactElement } from "react";
-import { useRouter } from "next/router";
+"use client";
+
+import type { ReactElement } from "react";
+import React from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ActionIcon,
   Alert,
@@ -32,16 +35,12 @@ import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
-  const labels = router.query.labels;
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const labels = toArrayIfNot(searchParams?.get("labels") ?? []);
   const character = useSelectedCharacter();
 
   const [selectedLabels, setSelectedLabels] = React.useState<string[]>([]);
-
-  useEffect(() => {
-    if (router.isReady) {
-      setSelectedLabels(toArrayIfNot(labels ?? []) ?? []);
-    }
-  }, [router.isReady, labels]);
 
   const {
     messages,
@@ -146,18 +145,10 @@ export default function Page() {
                 value={selectedLabels}
                 onChange={(value: string[]) => {
                   setSelectedLabels(value);
-                  void router.push(
-                    {
-                      pathname: router.pathname,
-                      query: {
-                        labels: value,
-                      },
-                    },
-                    undefined,
-                    {
-                      shallow: true,
-                    },
-                  );
+                  const params = new URLSearchParams({
+                    labels: value.join(","),
+                  });
+                  void router.push(`${pathname}?${params.toString()}`);
                 }}
                 defaultValue={selectedLabels}
               />
