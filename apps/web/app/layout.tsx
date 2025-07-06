@@ -77,10 +77,11 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
+  const defaultColorScheme = "dark";
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en" dir="ltr" data-mantine-color-scheme={defaultColorScheme}>
       <head>
-        <ColorSchemeScript defaultColorScheme="dark" />
+        <ColorSchemeScript defaultColorScheme={defaultColorScheme} />
         <meta
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
