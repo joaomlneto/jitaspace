@@ -1,15 +1,16 @@
 "use client";
 
+import React, { useMemo, useState } from "react";
+import { useRouter } from "next/router";
+import { useDebouncedValue } from "@mantine/hooks";
+import { Spotlight, SpotlightActionData } from "@mantine/spotlight";
+
 import {
   EsiSearchCategory,
   useEsiNamesCache,
   useEsiSearch,
 } from "@jitaspace/hooks";
 import { EveEntityAvatar } from "@jitaspace/ui";
-import { useDebouncedValue } from "@mantine/hooks";
-import { Spotlight, SpotlightActionData } from "@mantine/spotlight";
-import { useRouter } from "next/router";
-import React, { useMemo, useState } from "react";
 
 import { characterApps } from "~/config/apps";
 
@@ -100,9 +101,6 @@ export const MainSpotlight = () => {
     () => [...esiSearchResultActions, ...appActions],
     [appActions, esiSearchResultActions],
   );
-
-  console.log("actions to render:", actions.length);
-  console.log({ actions });
 
   return (
     <Spotlight

@@ -6,7 +6,6 @@ import { getAllIconIds, getIconById } from "@jitaspace/sde-client";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeIconsEventPayload = {
   data: {
     batchSize?: number;
@@ -28,8 +27,6 @@ export const scrapeSdeIcons = client.createFunction(
     // Get all Icon IDs in SDE
     const iconIds = await getAllIconIds().then((res) => res.data);
     iconIds.sort((a, b) => a - b);
-
-    console.log({ iconIds });
 
     const limit = pLimit(20);
 

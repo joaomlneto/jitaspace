@@ -25,6 +25,7 @@ import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 import { AuthenticatedCharacterCard } from "~/components/Card";
+import { DevelopmentModeAlert } from "~/components/debug";
 import { characterApps, universeApps } from "~/config/apps";
 import { MainLayout } from "~/layouts";
 
@@ -59,6 +60,7 @@ export default function Page() {
 
   return (
     <Container size="xl">
+      {process.env.NODE_ENV == "development" && <DevelopmentModeAlert />}
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
         {authenticatedCharacterIds.map((characterId) => (
           <AuthenticatedCharacterCard

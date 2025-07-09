@@ -12,9 +12,13 @@ import {
 import { env } from "../env.mjs"; // TODO: Support optionally requesting a subset of existing scopes
 import { sealDataWithAuthSecret, unsealDataWithAuthSecret } from "../utils";
 
+// How much time (in ms) before token expires we're willing to refresh it
+// This is to prevent refreshing tokens that are too new
+const REFRESH_TOKEN_BEFORE_EXP_TIME = 60 * 1000; // 1 minute
 
-// How much time before token expires we're willing to refresh it
-const REFRESH_TOKEN_BEFORE_EXP_TIME = 60000;
+// How much time (in ms) an access token is considered "too old" to be refreshed
+// This is to prevent issues with tokens that were created a long time ago
+const ACCESS_TOKEN_TOO_OLD_TIME = 30 * 24 * 3600 * 1000; // 30 days
 
 // TODO: Support optionally requesting a subset of existing scopes
 // See https://docs.esi.evetech.net/docs/sso/refreshing_access_tokens.html
@@ -30,12 +34,9 @@ export const refreshTokenApiRouteHandler = async (
   >,
 ) => {
   const body = req.body;
-  console.log("\n\n\n\n\n\n\n\n\n\n REQUEST!!!", { body });
 
   // Confirm body is an (encrypted) string
   z.string().parse(body);
-
-  console.log("RAW BODY HAS RIGHT FORMAT!!");
 
   // Attempt to unseal its contents
   const decodedBody = await unsealDataWithAuthSecret(body);
@@ -51,15 +52,22 @@ export const refreshTokenApiRouteHandler = async (
 
   // TODO: VALIDATE TOKEN!!!
 
-  // Check if access token is expired or is about to
+  // Check if the access token is expired or is about to
   if (Date.now() < accessTokenExpiration - REFRESH_TOKEN_BEFORE_EXP_TIME) {
     return res
       .status(HttpStatusCode.TooEarly)
       .json({ error: "Token is not expired nor is about to expire." });
   }
 
+  // Check if access token is too old to be refreshed
+  if (Date.now() > accessTokenExpiration + ACCESS_TOKEN_TOO_OLD_TIME) {
+    return res
+      .status(HttpStatusCode.Gone)
+      .json({ error: "Access token is too old. Must reauthenticate." });
+  }
+
   // Attempt to refresh token
-  const { access_token, refresh_token, expires_in } = await refreshEveSsoToken({
+  const { access_token, refresh_token } = await refreshEveSsoToken({
     eveClientId: env.EVE_CLIENT_ID,
     eveClientSecret: env.EVE_CLIENT_SECRET,
     refreshToken,

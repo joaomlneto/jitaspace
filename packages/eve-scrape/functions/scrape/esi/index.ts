@@ -20,3 +20,4 @@ export * from "./scrapeEsiSolarSystems";
 export * from "./scrapeEsiStargates";
 export * from "./scrapeEsiStations";
 export * from "./scrapeEsiTypes";
+export * from "./scrapeEsiWars";

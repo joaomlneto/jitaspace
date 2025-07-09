@@ -4,15 +4,17 @@ export const REFRESH_TOKEN_ENDPOINT =
 // TODO: Add option to specify subset of existing scopes
 // See https://docs.esi.evetech.net/docs/sso/refreshing_access_tokens.html
 
+type SsoRefreshTokenSuccessResult = {
+  access_token: string;
+  expires_in: number;
+  refresh_token: string;
+};
+
 export const refreshEveSsoToken = async (params: {
   eveClientId: string;
   eveClientSecret: string;
   refreshToken: string;
-}): Promise<{
-  access_token: string;
-  expires_in: number;
-  refresh_token: string;
-}> => {
+}): Promise<SsoRefreshTokenSuccessResult> => {
   const { eveClientId, eveClientSecret, refreshToken } = params;
 
   // Base64 encode the client ID and secret
@@ -24,7 +26,7 @@ export const refreshEveSsoToken = async (params: {
     method: "POST",
     body: new URLSearchParams({
       grant_type: "refresh_token",
-      refresh_token: refreshToken as string,
+      refresh_token: refreshToken,
     }),
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
@@ -39,7 +41,8 @@ export const refreshEveSsoToken = async (params: {
     throw new Error("error refreshing access token");
   }
 
-  const refreshResult = await refreshedTokensResponse.json();
+  const refreshResult =
+    (await refreshedTokensResponse.json()) as SsoRefreshTokenSuccessResult;
   console.log({ refreshResult });
 
   return refreshResult;

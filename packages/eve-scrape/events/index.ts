@@ -35,6 +35,7 @@ import {
   ScrapeStationServicesEventPayload,
   ScrapeStationsEventPayload,
   ScrapeTypesEventPayload,
+  ScrapeWarsEventPayload,
 } from "../functions";
 
 export type Events = {
@@ -84,6 +85,8 @@ export type Events = {
   "scrape/esi/stations.finished": {};
   "scrape/esi/types": ScrapeTypesEventPayload;
   "scrape/esi/types.finished": {};
+  "scrape/esi/wars": ScrapeWarsEventPayload;
+  "scrape/esi/wars.finished": {};
   "scrape/hoboleaks/agent-types": ScrapeAgentTypesEventPayload;
   "scrape/hoboleaks/agent-types.finished": {};
   "scrape/hoboleaks/dogma-effect-categories": ScrapeDogmaEffectCategoriesEventPayload;
