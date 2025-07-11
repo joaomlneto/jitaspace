@@ -22,14 +22,14 @@ export default defineConfig(({ config, watch, logLevel }) => {
       pluginOas({ validate: true }),
       pluginClient({
         //importPath: "../../client",
-        baseURL: "https://esi.evetech.net/latest",
+        baseURL: "https://esi.evetech.net",
         dataReturnType: "full",
       }),
       pluginTs({}),
       pluginReactQuery({
         client: {
           //importPath: "../../client",
-          baseURL: "https://esi.evetech.net/latest",
+          baseURL: "https://esi.evetech.net",
           dataReturnType: "full",
         },
         override: [

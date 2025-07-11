@@ -1,14 +1,10 @@
+import {prisma} from "@jitaspace/db";
+import {getUniverseGraphics, getUniverseGraphicsGraphicId,} from "@jitaspace/esi-client";
 import axios from "axios";
 import pLimit from "p-limit";
 
-import { prisma } from "@jitaspace/db";
-import {
-  getUniverseGraphics,
-  getUniverseGraphicsGraphicId,
-} from "@jitaspace/esi-client";
-
-import { client } from "../../../client";
-import { excludeObjectKeys, updateTable } from "../../../utils";
+import {client} from "../../../client";
+import {excludeObjectKeys, updateTable} from "../../../utils";
 
 
 export type ScrapeGraphicsEventPayload = {
@@ -27,7 +23,7 @@ export const scrapeEsiGraphics = client.createFunction(
   async ({ step }) => {
     const stepStartTime = performance.now();
     // FIXME: THIS SHOULD NOT BE NECESSARY
-    axios.defaults.baseURL = "https://esi.evetech.net/latest";
+    axios.defaults.baseURL = "https://esi.evetech.net";
 
     // Get all Graphic IDs in ESI
     const graphicIds = await getUniverseGraphics().then((res) => res.data);
