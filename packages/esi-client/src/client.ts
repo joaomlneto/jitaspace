@@ -71,7 +71,8 @@ export const client = async <TData, TError = unknown, TVariables = unknown>(
       ...config,
       headers: {
         "X-Compatibility-Date": buildDate,
-        "X-User-Agent": "jitaspace-esi-client/1.0.0",
+        "X-User-Agent":
+          "jitaspace-esi-client/1.0.0 (joao@jita.space) (eve:Joao Neto)",
         ...globalConfig.headers,
         ...config.headers,
       },
