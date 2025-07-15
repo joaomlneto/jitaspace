@@ -5,7 +5,6 @@
       "es2022",
       "dom",
       "dom.iterable",
-      "webworker" // serwist
     ],
     "jsx": "preserve",
     "baseUrl": ".",
@@ -18,9 +17,6 @@
       {
         "name": "next"
       }
-    ],
-    "types": [
-      "@serwist/next/typings"
     ],
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
     "module": "esnext",

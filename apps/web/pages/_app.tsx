@@ -78,20 +78,6 @@ export default function App({
           sizes="152x152"
           href="/apple-touch-icon.png"
         />
-        <link rel="manifest" href="/manifest.json" />
-        {/*
-        <meta name="twitter:card" content="summary" />
-        <meta name="twitter:url" content="https://www.jita.space" />
-        <meta name="twitter:title" content="Jita" />
-        <meta name="twitter:description" content="EVE Online Tools" />
-        <meta name="twitter:image" content="/logo.png" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content="Jita" />
-        <meta property="og:description" content="EVE Online Tools" />
-        <meta property="og:site_name" content="Jita" />
-        <meta property="og:url" content="https://www.jita.space" />
-        <meta property="og:image" content="/api/opengraph/image" />
-        */}
       </Head>
 
       <DefaultSeo

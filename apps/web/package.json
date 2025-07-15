@@ -45,7 +45,6 @@
     "@next/bundle-analyzer": "15.3.3",
     "@next/third-parties": "15.3.3",
     "@react-hook/cache": "^1.1.1",
-    "@serwist/next": "^9.0.14",
     "@tabler/icons-react": "^3.34.0",
     "@tanstack/react-query": "^5.81.5",
     "@tanstack/react-query-devtools": "^5.79.2",
@@ -100,7 +99,6 @@
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
     "prettier": "^3.5.3",
-    "serwist": "^9.0.14",
     "typescript": "^5.8.3"
   },
   "prettier": "@jitaspace/prettier-config"

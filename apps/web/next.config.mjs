@@ -1,5 +1,4 @@
 import bundleAnalyzer from "@next/bundle-analyzer";
-import withSerwistInit from "@serwist/next";
 
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
@@ -55,16 +54,12 @@ const config = {
   publicRuntimeConfig: {
     modifiedDate: new Date().toISOString(),
   },
+
+  turbopack: {},
 };
 
 const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
 });
 
-const withSerwist = withSerwistInit({
-  // Note: If you use Pages Router, use something else that works, such as "service-worker/index.ts".
-  swSrc: "app/sw.ts",
-  swDest: "public/sw.js",
-});
-
-export default withBundleAnalyzer(withSerwist(config));
+export default withBundleAnalyzer(config);

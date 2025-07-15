@@ -232,7 +232,6 @@ model DogmaEffect {
   isAssistance             Boolean?
   isOffensive              Boolean?
   isWarpSafe               Boolean?
-  // TODO MODIFIERS
   name                     String?
   postExpression           Int?
   preExpression            Int?
@@ -323,11 +322,14 @@ model Alliance {
 
   memberCorporations Corporation[] @relation("CorporationAlliance")
 
+  warsAggressor War[]             @relation("WarAggressorAlliance")
+  warsDefender  War[]             @relation("WarDefenderAlliance")
+  warsAllies    AllianceWarAlly[] @relation("AllianceWarAllies")
+
   @@index([creatorCorporationId])
   @@index([factionId])
 }
 
-// TODO
 model Faction {
   factionId            Int           @id
   name                 String
@@ -360,14 +362,18 @@ model Corporation {
   corporationId       Int                 @id
   alliance            Alliance?           @relation("CorporationAlliance", fields: [allianceId], references: [allianceId], onUpdate: NoAction, onDelete: NoAction)
   allianceId          Int?
+  // This cannot be null, but is a workaround for inserting mutually referencing entries
   ceo                 Character?          @relation("corporationCeo", fields: [ceoId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
   ceoId               Int?
+  // This cannot be null, but is a workaround for inserting mutually referencing entries
   creator             Character?          @relation("corporationCreator", fields: [creatorId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
   creatorId           Int?
   dateFounded         DateTime?
   description         String?
+  // This cannot be null, but is a workaround for inserting mutually referencing entries
   faction             Faction?            @relation("CorporationFaction", fields: [factionId], references: [factionId])
   factionId           Int?
+  // This cannot be null, but is a workaround for inserting mutually referencing entries
   homeStation         Station?            @relation("CorporationHomeStation", fields: [homeStationId], references: [stationId], onDelete: NoAction, onUpdate: NoAction)
   homeStationId       Int?
   memberCount         Int
@@ -387,6 +393,10 @@ model Corporation {
   MilitiaFaction      Faction[]           @relation("FactionMilitiaCorporation")
   Character           Character[]         @relation("CharacterCorporation")
   LoyaltyStoreOffer   LoyaltyStoreOffer[] @relation("CorporationLoyaltyStoreOffers")
+
+  warsAggressor War[]                @relation("WarAggressorCorporation")
+  warsDefender  War[]                @relation("WarDefenderCorporation")
+  warsAllies    CorporationWarAlly[] @relation("CorporationWarAllies")
 
   @@index([creatorId])
   @@index([factionId])
@@ -651,6 +661,9 @@ model Killmail {
   metadataLoaded Boolean  @default(false)
   updatedAt      DateTime @updatedAt()
   isDeleted      Boolean  @default(false)
+
+  warId Int?
+  war   War? @relation("WarKillmails", fields: [warId], references: [warId])
 }
 
 model AgentType {
@@ -717,4 +730,52 @@ model ResearchAgentSkills {
   isDeleted   Boolean       @default(false)
 
   @@id([characterId, typeId])
+}
+
+model War {
+  warId                  Int                  @id
+  aggressorAllianceId    Int?
+  aggressorCorporationId Int?
+  aggressorAlliance      Alliance?            @relation("WarAggressorAlliance", fields: [aggressorAllianceId], references: [allianceId])
+  aggressorCorporation   Corporation?         @relation("WarAggressorCorporation", fields: [aggressorCorporationId], references: [corporationId])
+  aggressorIskDestroyed  Float
+  aggressorShipsKilled   Int
+  allianceAllies         AllianceWarAlly[]    @relation("WarAllianceAllies")
+  corporationAllies      CorporationWarAlly[] @relation("WarCorporationAllies")
+  declaredDate           DateTime
+  defenderAllianceId     Int?
+  defenderCorporationId  Int?
+  defenderAlliance       Alliance?            @relation("WarDefenderAlliance", fields: [defenderAllianceId], references: [allianceId])
+  defenderCorporation    Corporation?         @relation("WarDefenderCorporation", fields: [defenderCorporationId], references: [corporationId])
+  defenderIskDestroyed   Float
+  defenderShipsKilled    Int
+  startedDate            DateTime?
+  finishedDate           DateTime?
+  isMutual               Boolean
+  isOpenForAllies        Boolean
+  retractedDate          DateTime?
+  isDeleted              Boolean              @default(false)
+  updatedAt              DateTime             @updatedAt()
+  killmails              Killmail[]           @relation("WarKillmails")
+
+  @@index([aggressorAllianceId])
+  @@index([aggressorCorporationId])
+}
+
+model AllianceWarAlly {
+  warId      Int
+  allianceId Int
+  war        War      @relation("WarAllianceAllies", fields: [warId], references: [warId])
+  alliance   Alliance @relation("AllianceWarAllies", fields: [allianceId], references: [allianceId])
+
+  @@id([warId, allianceId])
+}
+
+model CorporationWarAlly {
+  warId         Int
+  corporationId Int
+  war           War         @relation("WarCorporationAllies", fields: [warId], references: [warId])
+  corporation   Corporation @relation("CorporationWarAllies", fields: [corporationId], references: [corporationId])
+
+  @@id([warId, corporationId])
 }

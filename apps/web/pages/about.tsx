@@ -210,15 +210,6 @@ export default function Page() {
             </Anchor>
           </List.Item>
           <List.Item>
-            <Anchor
-              inherit
-              href="https://github.com/serwist/serwist"
-              target="_blank"
-            >
-              serwist
-            </Anchor>
-          </List.Item>
-          <List.Item>
             <Anchor inherit href="https://react.dev/" target="_blank">
               React
             </Anchor>
