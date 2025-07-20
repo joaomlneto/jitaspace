@@ -312,7 +312,7 @@ model Alliance {
   creatorCorporationId  Int
   dateFounded           DateTime
   executorCorporation   Corporation? @relation("AllianceExecutor", fields: [executorCorporationId], references: [corporationId])
-  executorCorporationId Int?         @unique
+  executorCorporationId Int?
   faction               Faction?     @relation(fields: [factionId], references: [factionId])
   factionId             Int?
   name                  String
@@ -385,7 +385,7 @@ model Corporation {
   warEligible         Boolean?
   updatedAt           DateTime            @updatedAt()
   isDeleted           Boolean             @default(false)
-  executorAlliance    Alliance?           @relation("AllianceExecutor")
+  executorAlliance    Alliance[]          @relation("AllianceExecutor")
   createdAlliances    Alliance[]          @relation("AllianceCreator")
   ownedStations       Station[]           @relation("StationOwner")
   bloodlines          Bloodline[]         @relation("BloodlineCorporation")
