@@ -5,9 +5,9 @@ import { prisma } from "@jitaspace/db";
 import { getUniverseStationsStationId } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeStationsEventPayload = {
   data: {
@@ -59,6 +59,10 @@ export const scrapeEsiStations = client.createFunction(
           console.log(`starting batch ${i + 1}`);
           const stepStartTime = performance.now();
           const thisBatchStationIds = batches[i]!;
+
+          await createCorpAndItsRefRecords({
+            missingStationIds: new Set(thisBatchStationIds),
+          });
 
           const stationIdsInDatabase = await prisma.station
             .findMany({

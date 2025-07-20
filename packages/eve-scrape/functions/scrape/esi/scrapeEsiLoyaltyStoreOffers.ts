@@ -7,8 +7,8 @@ import {
 } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeLoyaltyStoreOffersEventPayload = {
   data: {
@@ -37,6 +37,10 @@ export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
     // Split IDs in batches
     corporationIds.sort((a, b) => a - b);
     const stepStartTime = performance.now();
+
+    await createCorpAndItsRefRecords({
+      missingCorporationIds: new Set(corporationIds),
+    });
 
     const thisBatchLoyaltyStoreOffers = (
       await Promise.all(

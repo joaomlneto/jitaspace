@@ -6,7 +6,6 @@ import { getUniverseAncestries } from "@jitaspace/esi-client";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeAncestriesEventPayload = {
   data: {};
 };

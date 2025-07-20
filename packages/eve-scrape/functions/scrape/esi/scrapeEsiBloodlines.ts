@@ -4,8 +4,8 @@ import { prisma } from "@jitaspace/db";
 import { getUniverseBloodlines } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeBloodlinesEventPayload = {
   data: {};
@@ -28,6 +28,10 @@ export const scrapeEsiBloodlines = client.createFunction(
     // Get all Bloodlines in ESI
     const bloodlines = await getUniverseBloodlines().then((res) => res.data);
     const bloodlineIds = bloodlines.map((bloodline) => bloodline.bloodline_id);
+
+    await createCorpAndItsRefRecords({
+      missingBloodlineIds: new Set(bloodlineIds),
+    });
 
     const bloodlineChanges = await updateTable({
       fetchLocalEntries: async () =>

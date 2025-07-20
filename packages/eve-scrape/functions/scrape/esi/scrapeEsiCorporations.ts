@@ -8,9 +8,9 @@ import {
 } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeCorporationsEventPayload = {
   data: {
@@ -78,6 +78,11 @@ export const scrapeEsiCorporations = client.createFunction(
               corporation.creator_id,
             ])
             .filter((characterId) => characterId !== 1);
+
+          await createCorpAndItsRefRecords({
+            missingCharacterIds: new Set(characterIds.filter((id) => id > 1)),
+            missingCorporationIds: new Set(thisBatchIds.filter((id) => id > 1)),
+          });
 
           const characters = await Promise.all(
             characterIds.map((characterId) =>
@@ -182,9 +187,9 @@ export const scrapeEsiCorporations = client.createFunction(
               thisBatchCorporations.map((corporation) => ({
                 corporationId: corporation.corporationId,
                 allianceId: corporation.alliance_id ?? null,
-                ceoId: corporation.ceo_id,
+                ceoId: corporation.ceo_id > 1 ? corporation.ceo_id : null,
                 creatorId:
-                  corporation.creator_id !== 1 ? corporation.creator_id : null,
+                  corporation.creator_id > 1 ? corporation.creator_id : null,
                 dateFounded: corporation.date_founded
                   ? new Date(corporation.date_founded)
                   : null,

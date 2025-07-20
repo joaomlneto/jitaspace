@@ -4,8 +4,8 @@ import { prisma } from "@jitaspace/db";
 import { getUniverseRaces } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeRacesEventPayload = {
   data: {};
@@ -28,6 +28,10 @@ export const scrapeEsiRaces = client.createFunction(
     // Get all Races in ESI
     const races = await getUniverseRaces().then((res) => res.data);
     const raceIds = races.map((race) => race.race_id);
+
+    await createCorpAndItsRefRecords({
+      missingRaceIds: new Set(raceIds),
+    });
 
     const raceChanges = await updateTable({
       fetchLocalEntries: async () =>

@@ -4,17 +4,24 @@ import { prisma } from "@jitaspace/db";
 import { getWars, getWarsWarId } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export type ScrapeWarsEventPayload = {
   data: {
     batchSize?: number;
+    /**
+     * Whether to fetch all pages of wars. If set to true, it will fetch all
+     * wars in one go, which is ideal for bootstrapping a new database.
+     * For regular updates, it is recommended to set this to false (default).
+     */
+    fetchAllPages?: boolean;
+    maxWarId?: number;
   };
 };
 
 type StatsKey = "wars";
-0;
 
 export const scrapeEsiWars = client.createFunction(
   {
@@ -23,20 +30,22 @@ export const scrapeEsiWars = client.createFunction(
     concurrency: {
       limit: 1,
     },
-    retries: 0,
+    retries: 3,
     description: "Fetches wars from ESI",
   },
   { event: "scrape/esi/wars" },
   async ({ step, event, logger }) => {
-    const batchSize = event.data.batchSize ?? 10;
+    const batchSize = event.data.batchSize ?? 100;
+    const fetchAllPages = event.data.fetchAllPages ?? false;
+    const maxWarId = event.data.maxWarId;
 
     // Get all War IDs in ESI
     const batches = await step.run("Fetch War IDs", async () => {
-      const firstPage = await getWars();
-      let warIds = firstPage.data;
-      warIds = warIds.slice(0, 10); // FIXME: Limit to first 10 while testing!!
-      warIds.sort((a, b) => a - b);
+      const warIds = await getWars({ max_war_id: maxWarId }).then(
+        (res) => res.data,
+      );
 
+      warIds.sort((a, b) => a - b);
       const numBatches = Math.ceil(warIds.length / batchSize);
       const batchTypeIds = (batchIndex: number) =>
         warIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
@@ -100,6 +109,29 @@ export const scrapeEsiWars = client.createFunction(
 
           const remoteEntries = await fetchRemoteEntries();
 
+          await createCorpAndItsRefRecords({
+            missingAllianceIds: new Set(
+              remoteEntries
+                .map((war) => [
+                  war.aggressorAllianceId,
+                  war.defenderAllianceId,
+                  ...war.allianceAllies.map((ally) => ally.allianceId),
+                ])
+                .flat()
+                .filter((id) => id != null),
+            ),
+            missingCorporationIds: new Set(
+              remoteEntries
+                .map((war) => [
+                  war.aggressorCorporationId,
+                  war.defenderCorporationId,
+                  ...war.corporationAllies.map((ally) => ally.corporationId),
+                ])
+                .flat()
+                .filter((id) => id != null),
+            ),
+          });
+
           console.log({ remoteEntries });
           logger.info({ remoteEntries });
 
@@ -139,25 +171,23 @@ export const scrapeEsiWars = client.createFunction(
                         aggressorAllianceId: war.aggressor.alliance_id ?? null,
                         aggressorCorporationId:
                           war.aggressor.corporation_id ?? null,
-                        aggressorIskDestroyed: BigInt(
-                          war.aggressor.isk_destroyed,
-                        ),
+                        aggressorIskDestroyed: war.aggressor.isk_destroyed,
                         aggressorShipsKilled:
                           war.aggressor.ships_killed ?? null,
                         defenderAllianceId: war.defender.alliance_id ?? null,
                         defenderCorporationId:
                           war.defender.corporation_id ?? null,
-                        defenderIskDestroyed: BigInt(
-                          war.defender.isk_destroyed,
-                        ),
+                        defenderIskDestroyed: war.defender.isk_destroyed,
                         defenderShipsKilled: war.defender.ships_killed ?? null,
-                        /* allianceAllies: [] /*
+                        // TODO: add allies
+                        /*
+                        allianceAllies:
                           war.allies
                             ?.filter((ally) => ally.alliance_id)
                             .map((ally) => ({
                               allianceId: ally.alliance_id,
-                            })) ?? [],* /,
-                        corporationAllies: [] /*
+                            })) ?? [],
+                        corporationAllies:
                           war.allies
                             ?.filter((ally) => ally.corporation_id)
                             .map((ally) => ({
@@ -239,8 +269,20 @@ export const scrapeEsiWars = client.createFunction(
       totals.elapsed += stepResult.elapsed;
     });
 
+    // Check if we need to recurse to fetch all pages
+    if (fetchAllPages) {
+      const nextMaxWarId = Math.min(...batches.flat());
+      await step.sendEvent(`Scrape Wars < ${nextMaxWarId}`, {
+        name: "scrape/esi/wars",
+        data: {
+          maxWarId: nextMaxWarId,
+          fetchAllPages: true, // Continue fetching all pages
+        },
+      });
+    }
+
     await step.sendEvent("Function Finished", {
-      name: "scrape/esi/types.finished",
+      name: "scrape/esi/wars.finished",
       data: {},
     });
 

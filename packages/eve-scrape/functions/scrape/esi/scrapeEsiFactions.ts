@@ -4,8 +4,8 @@ import { prisma } from "@jitaspace/db";
 import { getUniverseFactions } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeFactionsEventPayload = {
   data: {};
@@ -28,6 +28,10 @@ export const scrapeEsiFactions = client.createFunction(
     // Get all Factions in ESI
     const factions = await getUniverseFactions().then((res) => res.data);
     const factionIds = factions.map((faction) => faction.faction_id);
+
+    await createCorpAndItsRefRecords({
+      missingFactionIds: new Set(factionIds),
+    });
 
     const factionChanges = await updateTable({
       fetchLocalEntries: async () =>

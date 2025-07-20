@@ -11,8 +11,8 @@ import {
 
 import { client } from "../../../client";
 import { mergeEsiEntriesIntoCharactersTable } from "../../../helpers";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeAgentsEventPayload = {
   data: {
@@ -36,6 +36,10 @@ export const scrapeSdeAgents = client.createFunction(
     // Get all Agent IDs in SDE
     const agentCharacterIds = await getAllAgentIds().then((res) => res.data);
     agentCharacterIds.sort((a, b) => a - b);
+
+    await createCorpAndItsRefRecords({
+      missingCharacterIds: new Set(agentCharacterIds),
+    });
 
     const characters = await Promise.all(
       agentCharacterIds.map((characterId) =>

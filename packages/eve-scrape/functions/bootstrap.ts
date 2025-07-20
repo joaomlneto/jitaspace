@@ -11,6 +11,7 @@ export const bootstrapDatabase = client.createFunction(
     concurrency: {
       limit: 1,
     },
+    retries: 0,
   },
   { event: "bootstrap-database" },
   async ({ step, event, logger }) => {
@@ -171,6 +172,7 @@ export const bootstrapDatabase = client.createFunction(
       name: "scrape/esi/factions",
       data: {},
     });
+
     await step.waitForEvent("Wait for Factions", {
       event: "scrape/esi/factions.finished",
       timeout: "1h",
@@ -183,13 +185,6 @@ export const bootstrapDatabase = client.createFunction(
     await step.waitForEvent("Wait for Races from SDE", {
       event: "scrape/sde/races.finished",
       timeout: "1h",
-    });
-
-    await step.sendEvent("Scrape Doomheim Station", {
-      name: "scrape/esi/stations",
-      data: {
-        stationIds: [60000001],
-      },
     });
 
     await step.sendEvent("Scrape Races from ESI", {
@@ -208,6 +203,59 @@ export const bootstrapDatabase = client.createFunction(
     await step.waitForEvent("Wait for Bloodlines", {
       event: "scrape/esi/bloodlines.finished",
       timeout: "1h",
+    });
+
+    await step.sendEvent("Scrape Ancestries", {
+      name: "scrape/esi/ancestries",
+      data: {},
+    });
+    await step.waitForEvent("Wait Ancestries", {
+      event: "scrape/esi/ancestries.finished",
+      timeout: "1h",
+    });
+
+    await step.sendEvent("Scrape NPC Corporations", {
+      name: "scrape/esi/npc-corporations",
+      data: {},
+    });
+    await step.waitForEvent("Wait NPC Corporations", {
+      event: "scrape/esi/npc-corporations.finished",
+      timeout: "1h",
+    });
+
+    await step.sendEvent("Scrape Agents", {
+      name: "scrape/sde/agents",
+      data: {},
+    });
+    await step.waitForEvent("Wait Agents", {
+      event: "scrape/sde/agents.finished",
+      timeout: "1h",
+    });
+
+    await step.sendEvent("Scrape Research Agents", {
+      name: "scrape/sde/research-agents",
+      data: {},
+    });
+    await step.waitForEvent("Wait Research Agents", {
+      event: "scrape/sde/research-agents.finished",
+      timeout: "1h",
+    });
+
+    await step.sendEvent("Scrape LP Store Offers", {
+      name: "scrape/esi/loyalty-store-offers",
+      data: {},
+    });
+    await step.waitForEvent("Wait for LP Store Offers", {
+      event: "scrape/esi/loyalty-store-offers.finished",
+      timeout: "1h",
+    });
+
+    // And a few fire-and-forget events to kick off other scrapes
+    await step.sendEvent("Scrape All Wars", {
+      name: "scrape/esi/wars",
+      data: {
+        fetchAllPages: true,
+      },
     });
   },
 );

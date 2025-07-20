@@ -8,8 +8,8 @@ import {
 } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeNpcCorporationsEventPayload = {
   data: {};
@@ -84,6 +84,18 @@ export const scrapeEsiNpcCorporations = client.createFunction(
         ticker: corporation.ticker,
       })),
       skipDuplicates: true,
+    });
+
+    await createCorpAndItsRefRecords({
+      missingCharacterIds: new Set(characterIds.filter((id) => id > 1)),
+      missingCorporationIds: new Set(corporationIds.filter((id) => id > 1)),
+      missingStationIds: new Set(
+        npcCorporations
+          .map((corporation) => corporation.home_station_id)
+          .filter((stationId) => stationId != undefined)
+          .filter((stationId) => stationId > 1)
+          .map((id) => id),
+      ),
     });
 
     /**
@@ -175,7 +187,10 @@ export const scrapeEsiNpcCorporations = client.createFunction(
             : null,
           description: corporation.description ?? null,
           factionId: corporation.faction_id ?? null,
-          homeStationId: corporation.home_station_id ?? null,
+          homeStationId:
+            (corporation?.home_station_id ?? 0) > 1
+              ? corporation.home_station_id
+              : null,
           memberCount: corporation.member_count,
           name: corporation.name,
           shares: corporation.shares ? BigInt(corporation.shares) : null,
