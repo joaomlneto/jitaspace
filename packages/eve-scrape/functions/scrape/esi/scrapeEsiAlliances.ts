@@ -1,12 +1,13 @@
 import pLimit from "p-limit";
 
-import { prisma } from "@jitaspace/db";
-import { getAlliances, getAlliancesAllianceId } from "@jitaspace/esi-client";
+import {
+  getAlliances,
+  getAlliancesAllianceIdCorporations,
+} from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { BatchStepResult, CrudStatistics } from "../../../types";
-import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeAlliancesEventPayload = {
   data: {
@@ -26,8 +27,8 @@ export const scrapeEsiAlliances = client.createFunction(
     retries: 5,
   },
   { event: "scrape/esi/alliances" },
-  async ({ step, event }) => {
-    const batchSize = event.data.batchSize ?? 1000;
+  async ({ step, event, logger }) => {
+    const batchSize = event.data.batchSize ?? 10;
 
     // Get all Alliance IDs in ESI
     const batches = await step.run("Fetch Alliance IDs", async () => {
@@ -40,12 +41,9 @@ export const scrapeEsiAlliances = client.createFunction(
       return [...Array(numBatches).keys()].map((batchId) => batchIds(batchId));
     });
 
-    type StepResult = BatchStepResult<StatsKey> & {
-      corporationIds: number[];
-      characterIds: number[];
-    };
+    type StepResult = BatchStepResult<StatsKey>;
     let results: StepResult[] = [];
-    const limit = pLimit(20);
+    const limit = pLimit(1);
 
     for (let i = 0; i < batches.length; i++) {
       const result = await step.run(
@@ -53,6 +51,30 @@ export const scrapeEsiAlliances = client.createFunction(
         async (): Promise<StepResult> => {
           const stepStartTime = performance.now();
           const thisBatchIds = batches[i]!;
+
+          const esiAllianceMemberCorporations = (
+            await Promise.all(
+              thisBatchIds.map((allianceId) =>
+                limit(async () =>
+                  getAlliancesAllianceIdCorporations(allianceId).then(
+                    (res) => res.data,
+                  ),
+                ),
+              ),
+            )
+          ).flat();
+
+          logger.info({
+            allianceIds: thisBatchIds,
+            corporationIds: esiAllianceMemberCorporations,
+          });
+
+          await createCorpAndItsRefRecords({
+            missingAllianceIds: new Set(thisBatchIds),
+            missingCorporationIds: new Set(esiAllianceMemberCorporations),
+          });
+
+          /*
 
           const esiAlliances = await Promise.all(
             thisBatchIds.map((allianceId) =>
@@ -136,39 +158,23 @@ export const scrapeEsiAlliances = client.createFunction(
                 ),
               ),
             idAccessor: (e) => e.allianceId,
-          });
+          });*/
 
           return {
             stats: {
-              alliances: allianceChanges,
+              alliances: {
+                created: 0,
+                deleted: 0,
+                modified: 0,
+                equal: 0,
+              },
             },
-            characterIds,
-            corporationIds,
             elapsed: performance.now() - stepStartTime,
           };
         },
       );
       results.push(result);
     }
-
-    // scrape linked corporations
-    await step.sendEvent("fetch-alliance-corporations", {
-      name: "scrape/esi/corporations",
-      data: {
-        corporationIds: [
-          ...new Set(results.flatMap((result) => result.corporationIds)),
-        ],
-      },
-    });
-
-    // TODO: scrape linked characters
-    /*
-        await step.sendEvent({
-          name: "scrape/esi/corporations",
-          data: {
-            corporationIds: results.flatMap((result) => result.corporationIds),
-          },
-        });*/
 
     await step.sendEvent("Function Finished", {
       name: "scrape/esi/alliances.finished",
