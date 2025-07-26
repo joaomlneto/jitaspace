@@ -16,7 +16,6 @@ export const scrapeZkillboardRecentKills = client.createFunction(
   async ({}) => {
     const stepStartTime = performance.now();
 
-    // Get all Dogma Effect Categories in Hoboleaks
     const kill: {
       package: null | {
         killID: number;

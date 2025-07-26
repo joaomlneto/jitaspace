@@ -523,8 +523,6 @@ export const createCorpAndItsRefRecords = async ({
     });
   }
 
-  console.log("prisma didnt fail?!");
-
   return { status: currentStatus(), msgs };
 };
 
@@ -600,7 +598,7 @@ const fetchCharactersFromEsi = (
               description: null,
               factionId: null,
               gender: CharacterGender.male,
-              name: "Deleted Character",
+              name: "",
               raceId: 1,
               securityStatus: null,
               title: null,
@@ -655,7 +653,7 @@ const fetchCorporationsFromEsi = (
               factionId: null,
               homeStationId: null,
               memberCount: -1,
-              name: "Unknown Corporation",
+              name: "",
               shares: null,
               taxRate: 0,
               ticker: "",
@@ -718,7 +716,23 @@ const fetchStationsFromEsi = (stationIds: number[]) =>
             reprocessingEfficiency: station.reprocessing_efficiency,
             reprocessingStationsTake: station.reprocessing_stations_take,
             isDeleted: false,
-          })),
+          }))
+          .catch((err) => {
+            console.log("error fetching station with ID " + stationId, err);
+            return {
+              stationId,
+              name: "",
+              solarSystemId: null,
+              typeId: 54, // just a placeholder should be a valid type ID...
+              maxDockableShipVolume: -1,
+              officeRentalCost: -1,
+              ownerId: null,
+              raceId: null,
+              reprocessingEfficiency: -1,
+              reprocessingStationsTake: -1,
+              isDeleted: true,
+            };
+          }),
       ),
     ),
   );

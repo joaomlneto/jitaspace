@@ -1,5 +1,8 @@
 import { bootstrapDatabase } from "./bootstrap";
 import {
+  backfillEveRefKillmails,
+  backfillEveRefWars,
+  processRedisWars,
   scrapeEsiAlliances,
   scrapeEsiAncestries,
   scrapeEsiBloodlines,
@@ -39,7 +42,10 @@ import {
 import { testPing } from "./test";
 
 export const functions = [
+  backfillEveRefKillmails,
+  backfillEveRefWars,
   bootstrapDatabase,
+  processRedisWars,
   scrapeEsiAlliances,
   scrapeEsiAncestries,
   scrapeEsiBloodlines,

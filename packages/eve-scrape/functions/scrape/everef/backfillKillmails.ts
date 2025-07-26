@@ -1,143 +1,129 @@
 import pLimit from "p-limit";
 
-import { prisma } from "@jitaspace/db";
-import { getWars, getWarsWarId } from "@jitaspace/esi-client";
+import { GetKillmailsKillmailIdKillmailHash200 } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
-import { BatchStepResult, CrudStatistics } from "../../../types";
-import { excludeObjectKeys, updateTable } from "../../../utils";
+import { BatchStepResult } from "../../../types";
+import { downloadTarBz2FileAndParseJson } from "../../../utils/downloadFile.ts";
 
-export type ScrapeWarsEventPayload = {
+export type BackfillEveRefKillmailsEventPayload = {
   data: {
+    url: string;
     batchSize?: number;
-    /**
-     * Whether to fetch all pages of wars. If set to true, it will fetch all
-     * wars in one go, which is ideal for bootstrapping a new database.
-     * For regular updates, it is recommended to set this to false (default).
-     */
-    fetchAllPages?: boolean;
-    maxWarId?: number;
+    skipBatches?: number;
   };
 };
 
-type StatsKey = "wars";
+export type EveRefKillmailSchema = GetKillmailsKillmailIdKillmailHash200 & {
+  http_last_modified: string;
+};
 
-export const scrapeEsiWars = client.createFunction(
+type StatsKey = "killmails";
+
+export const backfillEveRefKillmails = client.createFunction(
   {
-    id: "scrape-esi-wars",
-    name: "Scrape Wars",
+    id: "backfill-everef-killmails",
+    name: "Backfill Killmails from EVE Ref",
     concurrency: {
-      limit: 1,
+      limit: 2,
     },
-    retries: 3,
-    description: "Fetches wars from ESI",
+    retries: 5,
   },
-  { event: "scrape/esi/wars" },
-  async ({ step, event, logger }) => {
-    const batchSize = event.data.batchSize ?? 100;
-    const fetchAllPages = event.data.fetchAllPages ?? false;
-    const maxWarId = event.data.maxWarId;
+  { event: "backfill/everef/killmails" },
+  async ({ event, step, logger }) => {
+    const batchSize = event.data.batchSize ?? 50;
+    const startBatch = event.data.skipBatches ?? 0;
+    const url = event.data.url;
 
-    // Get all War IDs in ESI
-    const batches = await step.run("Fetch War IDs", async () => {
-      const warIds = await getWars({ max_war_id: maxWarId }).then(
-        (res) => res.data,
-      );
+    if (!url) {
+      throw new Error("No URL provided.");
+    }
 
-      warIds.sort((a, b) => a - b);
-      const numBatches = Math.ceil(warIds.length / batchSize);
-      const batchTypeIds = (batchIndex: number) =>
-        warIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      return [...Array(numBatches).keys()].map((batchId) =>
-        batchTypeIds(batchId),
+    const stepStartTime = performance.now();
+    const limit = pLimit(1);
+
+    // Retrieve and extract killmail archive file from EVE Ref
+    const batches: {
+      name: string;
+      content: EveRefKillmailSchema[];
+    }[][] = await step.run("Download and extract packages", async () => {
+      const files = (await downloadTarBz2FileAndParseJson(url)) as {
+        name: string;
+        content: EveRefKillmailSchema[];
+      }[];
+
+      // Ensure no more than 1000 batches are created
+      const boundedBatchSize = Math.max(batchSize, 1 + files.length / 1000);
+
+      const numBatches = Math.ceil(files.length / boundedBatchSize);
+      const batches = [...Array(numBatches).keys()].map((batchId) =>
+        files.slice(batchId * batchSize, (batchId + 1) * batchSize),
       );
+      return batches;
     });
 
     let results: BatchStepResult<StatsKey>[] = [];
-    const limit = pLimit(1);
 
-    // update types in batches
-    for (let i = 0; i < batches.length; i++) {
+    for (let i = startBatch; i < batches.length; i++) {
       const result = await step.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
           const stepStartTime = performance.now();
-          const thisBatchWarIds = batches[i]!;
 
-          const fetchRemoteEntries = async () =>
-            Promise.all(
-              thisBatchWarIds.map((warId) =>
-                limit(async () =>
-                  getWarsWarId(warId)
-                    .then((res) => res.data)
-                    .then((war) => ({
-                      warId: warId,
-                      declaredDate: war.declared,
-                      finishedDate: war.finished ?? null,
-                      retracted: war.retracted ?? null,
-                      startedDate: war.started,
-                      isMutual: war.mutual,
-                      isOpenForAllies: war.open_for_allies,
-                      aggressorAllianceId: war.aggressor.alliance_id ?? null,
-                      aggressorCorporationId:
-                        war.aggressor.corporation_id ?? null,
-                      aggressorIskDestroyed:
-                        war.aggressor.isk_destroyed ?? null,
-                      aggressorShipsKilled: war.aggressor.ships_killed ?? null,
-                      defenderAllianceId: war.defender.alliance_id ?? null,
-                      defenderCorporationId:
-                        war.defender.corporation_id ?? null,
-                      defenderIskDestroyed: war.defender.isk_destroyed ?? null,
-                      defenderShipsKilled: war.defender.ships_killed ?? null,
-                      allianceAllies:
-                        war.allies
-                          ?.filter((ally) => ally.alliance_id)
-                          .map((ally) => ({
-                            allianceId: ally.alliance_id,
-                          })) ?? [],
-                      corporationAllies:
-                        war.allies
-                          ?.filter((ally) => ally.corporation_id)
-                          .map((ally) => ({
-                            corporationId: ally.corporation_id,
-                          })) ?? [],
-                    })),
-                ),
-              ),
-            );
+          const remoteEntries: EveRefKillmailSchema[] = batches[i]!.map(
+            (file: { content: EveRefKillmailSchema[] }) => file.content,
+          ).flat();
 
-          const remoteEntries = await fetchRemoteEntries();
+          const thisBatchKillmailIds = remoteEntries.map(
+            (killmail) => killmail.killmail_id,
+          );
 
           await createCorpAndItsRefRecords({
             missingAllianceIds: new Set(
               remoteEntries
-                .map((war) => [
-                  war.aggressorAllianceId,
-                  war.defenderAllianceId,
-                  ...war.allianceAllies.map((ally) => ally.allianceId),
+                .map((killmail) => [
+                  ...killmail.attackers.map((a) => a.alliance_id),
+                  killmail.victim.alliance_id,
+                ])
+                .flat()
+                .filter((id) => id != null),
+            ),
+            missingCharacterIds: new Set(
+              remoteEntries
+                .map((killmail) => [
+                  ...killmail.attackers.map((a) => a.character_id),
+                  killmail.victim.character_id,
                 ])
                 .flat()
                 .filter((id) => id != null),
             ),
             missingCorporationIds: new Set(
               remoteEntries
-                .map((war) => [
-                  war.aggressorCorporationId,
-                  war.defenderCorporationId,
-                  ...war.corporationAllies.map((ally) => ally.corporationId),
+                .map((killmail) => [
+                  ...killmail.attackers.map((a) => a.corporation_id),
+                  killmail.victim.alliance_id,
+                ])
+                .flat()
+                .filter((id) => id != null),
+            ),
+            missingFactionIds: new Set(
+              remoteEntries
+                .map((killmail) => [
+                  ...killmail.attackers.map((a) => a.faction_id),
+                  killmail.victim.faction_id,
                 ])
                 .flat()
                 .filter((id) => id != null),
             ),
           });
 
-          console.log({ remoteEntries });
-          logger.info({ remoteEntries });
+          // TODO: Fetch wars before inserting killmails
 
-          const warChanges = await updateTable({
+          /*
+          const killmailChanges = await updateTable({
             fetchLocalEntries: async () =>
-              prisma.war
+              prisma.killmail
                 .findMany({
                   select: {
                     warId: true,
@@ -214,7 +200,7 @@ export const scrapeEsiWars = client.createFunction(
                             .map((allyCorporationId) => ({
                               warId,
                               corporationId: allyCorporationId,
-                            })) ?? [],*/
+                            })) ?? [],* /
                         isDeleted: false,
                       })),
                   ),
@@ -249,11 +235,11 @@ export const scrapeEsiWars = client.createFunction(
                 ),
               ),
             idAccessor: (e) => e.warId,
-          });
+          });*/
 
           return {
             stats: {
-              wars: {
+              killmails: {
                 created: 0,
                 deleted: 0,
                 modified: 0,
@@ -267,47 +253,9 @@ export const scrapeEsiWars = client.createFunction(
       results.push(result);
     }
 
-    const totals: BatchStepResult<StatsKey> = {
-      stats: {
-        wars: {
-          created: 0,
-          deleted: 0,
-          modified: 0,
-          equal: 0,
-        },
-      },
-      elapsed: 0,
+    return {
+      stats: {},
+      elapsed: performance.now() - stepStartTime,
     };
-    results.forEach((stepResult) => {
-      Object.entries(stepResult.stats).forEach(([category, value]) => {
-        Object.keys(value).forEach(
-          (op) =>
-            (totals.stats[category as StatsKey][op as keyof CrudStatistics] +=
-              stepResult.stats[category as StatsKey][
-                op as keyof CrudStatistics
-              ]),
-        );
-      });
-      totals.elapsed += stepResult.elapsed;
-    });
-
-    // Check if we need to recurse to fetch all pages
-    if (fetchAllPages) {
-      const nextMaxWarId = Math.min(...batches.flat());
-      await step.sendEvent(`Scrape Wars < ${nextMaxWarId}`, {
-        name: "scrape/esi/wars",
-        data: {
-          maxWarId: nextMaxWarId,
-          fetchAllPages: true, // Continue fetching all pages
-        },
-      });
-    }
-
-    await step.sendEvent("Function Finished", {
-      name: "scrape/esi/wars.finished",
-      data: {},
-    });
-
-    return totals;
   },
 );

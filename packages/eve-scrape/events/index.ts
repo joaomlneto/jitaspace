@@ -1,6 +1,9 @@
 import {
+  BackfillEveRefKillmailsEventPayload,
+  BackfillEveRefWarsEventPayload,
   BootstrapDatabaseEventPayload,
   PingEventPayload,
+  ProcessRedisWarsQueueEventPayload,
   ScrapeAgentsEventPayload,
   ScrapeAgentTypesEventPayload,
   ScrapeAlliancesEventPayload,
@@ -39,8 +42,14 @@ import {
 } from "../functions";
 
 export type Events = {
+  "backfill/everef/killmails": BackfillEveRefKillmailsEventPayload;
+  "backfill/everef/killmails.finished": {};
+  "backfill/everef/wars": BackfillEveRefWarsEventPayload;
+  "backfill/everef/wars.finished": {};
   "bootstrap-database": BootstrapDatabaseEventPayload;
   ping: PingEventPayload;
+  "process/redis/wars": ProcessRedisWarsQueueEventPayload;
+  "process/redis/wars.finished": {};
   "scrape/esi/alliances": ScrapeAlliancesEventPayload;
   "scrape/esi/alliances.finished": {};
   "scrape/esi/ancestries": ScrapeAncestriesEventPayload;
