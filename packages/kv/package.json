@@ -1,0 +1,33 @@
+{
+  "name": "@jitaspace/kv",
+  "description": "JitaSpace Key-Value Store",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --jsx react-jsx --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@jitaspace/esi-client": "workspace:*",
+    "bull": "^4.16.5",
+    "redis": "^5.6.1"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "@types/bull": "^4.10.4",
+    "@types/node": "^22.15.29",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.28.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "prettier": "@jitaspace/prettier-config"
+}
