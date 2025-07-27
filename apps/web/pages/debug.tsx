@@ -19,6 +19,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async () => {
         NODE_ENV: process.env.NODE_ENV,
         NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
         DATABASE_URL: process.env.DATABASE_URL,
+        REDIS_URL: process.env.REDIS_URL,
         EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
         EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
         INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,

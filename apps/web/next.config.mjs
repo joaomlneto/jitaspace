@@ -20,6 +20,7 @@ const config = {
     "@jitaspace/eve-icons",
     "@jitaspace/eve-scrape",
     "@jitaspace/hooks",
+    "@jitaspace/kv",
     "@jitaspace/sde-client",
     "@jitaspace/tiptap-eve",
     "@jitaspace/ui",

@@ -13,6 +13,7 @@ const server = z.object({
       : z.string().min(1).optional(),
 
   DATABASE_URL: z.string().url(),
+  REDIS_URL: z.string(),
 
   EVE_CLIENT_ID: z.string(),
   EVE_CLIENT_SECRET: z.string(),
@@ -56,6 +57,7 @@ const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   DATABASE_URL: process.env.DATABASE_URL,
+  REDIS_URL: process.env.REDIS_URL,
   EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
   EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
   INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
