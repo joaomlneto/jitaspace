@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@kubb/react",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+  }
+}

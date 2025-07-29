@@ -1,0 +1,42 @@
+{
+  "name": "@jitaspace/evekill-client",
+  "description": "EVE Kill Client",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules src/generated",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
+    "kubb:generate": "npm run download-schema && kubb generate",
+    "postinstall": "kubb generate",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.81.5",
+    "axios": "^1.9.0",
+    "react": "^19.1.0",
+    "zod": "^3.25.56"
+  },
+  "devDependencies": {
+    "@kubb/cli": "^3.10.13",
+    "@kubb/core": "^3.10.13",
+    "@kubb/plugin-oas": "^3.10.13",
+    "@kubb/plugin-client": "^3.10.13",
+    "@kubb/plugin-react-query": "^3.10.13",
+    "@kubb/plugin-ts": "^3.10.13",
+    "@kubb/plugin-zod": "^3.10.13",
+    "@kubb/react": "^3.10.13",
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "@types/node": "^22.15.29",
+    "@types/react": "^19.1.6",
+    "eslint": "^9.28.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "prettier": "@jitaspace/prettier-config"
+}
