@@ -152,6 +152,9 @@ importers:
       '@jitaspace/hooks':
         specifier: workspace:*
         version: link:../../packages/hooks
+      '@jitaspace/kv':
+        specifier: workspace:*
+        version: link:../../packages/kv
       '@jitaspace/sde-client':
         specifier: workspace:*
         version: link:../../packages/sde-client
