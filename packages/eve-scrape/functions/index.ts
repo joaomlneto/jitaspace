@@ -1,7 +1,13 @@
 import { bootstrapDatabase } from "./bootstrap";
 import {
+  backfillEveKillAllianceIds,
+  backfillEveKillCharacterIds,
+  backfillEveKillCorporationIds,
   backfillEveRefKillmails,
   backfillEveRefWars,
+  processRedisAllianceIds,
+  processRedisCharacterIds,
+  processRedisCorporationIds,
   processRedisWars,
   scrapeEsiAlliances,
   scrapeEsiAncestries,
@@ -42,9 +48,15 @@ import {
 import { testPing } from "./test";
 
 export const functions = [
+  backfillEveKillAllianceIds,
+  backfillEveKillCharacterIds,
+  backfillEveKillCorporationIds,
   backfillEveRefKillmails,
   backfillEveRefWars,
   bootstrapDatabase,
+  processRedisAllianceIds,
+  processRedisCharacterIds,
+  processRedisCorporationIds,
   processRedisWars,
   scrapeEsiAlliances,
   scrapeEsiAncestries,

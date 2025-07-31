@@ -17,6 +17,7 @@
   "dependencies": {
     "@jitaspace/db": "workspace:*",
     "@jitaspace/esi-client": "workspace:*",
+    "@jitaspace/evekill-client": "workspace:*",
     "@jitaspace/kv": "workspace:*",
     "@jitaspace/sde-client": "workspace:*",
     "axios": "^1.9.0",

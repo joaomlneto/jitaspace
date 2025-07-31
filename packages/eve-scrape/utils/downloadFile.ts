@@ -59,17 +59,12 @@ export const downloadTarBz2FileAndParseJson = async (url: string) => {
     });
 
     extract.on("finish", () => {
-      console.log(
-        "Extracted files:",
-        files.map((f) => f.name),
-      );
+      console.log(`Extracted ${files.length} files:`);
       resolve();
     });
   });
 
-  // print the contents of the first file
-  console.log("First file content:", files[0]?.name, files[0]?.content);
-
+  //console.log("First file content:", files[0]?.name, files[0]?.content);
   console.log(`Finished processing wars package for ${url}`);
 
   return files;

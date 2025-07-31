@@ -1,8 +1,14 @@
 import {
+  BackfillEveKillAllianceIdsEventPayload,
+  BackfillEveKillCharactersEventPayload,
+  BackfillEveKillCorporationIdsEventPayload,
   BackfillEveRefKillmailsEventPayload,
   BackfillEveRefWarsEventPayload,
   BootstrapDatabaseEventPayload,
   PingEventPayload,
+  ProcessRedisAllianceIdsQueueEventPayload,
+  ProcessRedisCharacterIdsQueueEventPayload,
+  ProcessRedisCorporationIdsQueueEventPayload,
   ProcessRedisWarsQueueEventPayload,
   ScrapeAgentsEventPayload,
   ScrapeAgentTypesEventPayload,
@@ -42,12 +48,26 @@ import {
 } from "../functions";
 
 export type Events = {
+  "backfill/evekill/alliance-ids": BackfillEveKillAllianceIdsEventPayload;
+  "backfill/evekill/alliance-ids.finished": {};
+  "backfill/evekill/character-ids": BackfillEveKillCharactersEventPayload;
+  "backfill/evekill/character-ids.finished": {};
+  "backfill/evekill/characters": BackfillEveKillCharactersEventPayload;
+  "backfill/evekill/characters.finished": {};
+  "backfill/evekill/corporation-ids": BackfillEveKillCorporationIdsEventPayload;
+  "backfill/evekill/corporation-ids.finished": {};
   "backfill/everef/killmails": BackfillEveRefKillmailsEventPayload;
   "backfill/everef/killmails.finished": {};
   "backfill/everef/wars": BackfillEveRefWarsEventPayload;
   "backfill/everef/wars.finished": {};
   "bootstrap-database": BootstrapDatabaseEventPayload;
   ping: PingEventPayload;
+  "process/redis/alliance-ids": ProcessRedisAllianceIdsQueueEventPayload;
+  "process/redis/alliance-ids.finished": {};
+  "process/redis/character-ids": ProcessRedisCharacterIdsQueueEventPayload;
+  "process/redis/character-ids.finished": {};
+  "process/redis/corporation-ids": ProcessRedisCorporationIdsQueueEventPayload;
+  "process/redis/corporation-ids.finished": {};
   "process/redis/wars": ProcessRedisWarsQueueEventPayload;
   "process/redis/wars.finished": {};
   "scrape/esi/alliances": ScrapeAlliancesEventPayload;

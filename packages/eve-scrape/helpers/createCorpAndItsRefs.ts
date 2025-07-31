@@ -31,7 +31,7 @@ import {
   getUniverseStationsStationId,
 } from "@jitaspace/esi-client";
 
-const limit = pLimit(1);
+const limit = pLimit(3);
 
 export const createCorpAndItsRefRecords = async ({
   alliances = [],

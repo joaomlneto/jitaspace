@@ -36,7 +36,7 @@ export const backfillEveRefWars = client.createFunction(
   },
   { event: "backfill/everef/wars" },
   async ({ event, step, logger }) => {
-    const batchSize = event.data.batchSize ?? 50;
+    const batchSize = event.data.batchSize ?? 100;
     const startBatch = event.data.skipBatches ?? 0;
     const url = event.data.url;
 
@@ -44,40 +44,41 @@ export const backfillEveRefWars = client.createFunction(
       throw new Error("No URL provided.");
     }
 
-    const stepStartTime = performance.now();
     const limit = pLimit(1);
 
     // Retrieve and extract war archive files from EVE Ref
-    const batches = await step.run(
-      "Download and extract packages",
-      async () => {
-        const files = (await downloadTarBz2FileAndParseJson(url)) as {
-          name: string;
-          content: EveRefWarSchema;
-        }[];
 
-        const numBatches = Math.ceil(files.length / batchSize);
-        const batches = [...Array(numBatches).keys()].map((batchId) =>
-          files.slice(batchId * batchSize, (batchId + 1) * batchSize),
-        );
+    const files = (
+      (await downloadTarBz2FileAndParseJson(url)) as {
+        name: string;
+        content: EveRefWarSchema;
+      }[]
+    ).filter((file) => !file.name.includes("killmails"));
 
-        for (const batch of batches) {
-          await kv.queues.war.add(
-            batch.map((file) => ({
-              ...file.content,
-              id: file.content.war_id,
-            })),
-            {
-              removeOnComplete: true,
-              removeOnFail: false,
-            },
-          );
-        }
-      },
+    console.log("Got files!");
+
+    const numBatches = Math.ceil(files.length / batchSize);
+    const batches = [...Array(numBatches).keys()].map((batchId) =>
+      files.slice(batchId * batchSize, (batchId + 1) * batchSize),
     );
+
+    for (const batch of batches) {
+      await kv.queues.war.add(
+        batch.map((file) => ({
+          ...file.content,
+          id: file.content.war_id,
+        })),
+        {
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+    }
+
+    console.log("done");
 
     let results: BatchStepResult<StatsKey>[] = [];
 
-    return results;
+    return files.slice(0, 100).map((file) => file.name);
   },
 );

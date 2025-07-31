@@ -4,7 +4,7 @@
 import pLimit from "p-limit";
 
 import { prisma, War } from "@jitaspace/db";
-import { getWarsWarId, GetWarsWarId200 } from "@jitaspace/esi-client";
+import { getWarsWarId } from "@jitaspace/esi-client";
 import { kv } from "@jitaspace/kv";
 
 import { client } from "../../../client";
@@ -17,11 +17,6 @@ export type ProcessRedisWarsQueueEventPayload = {
   };
 };
 
-type StatsKey = "wars";
-export type EveRefWarSchema = Omit<GetWarsWarId200, "id"> & {
-  war_id: number; // war_id
-  http_last_modified: string;
-};
 export const processRedisWars = client.createFunction(
   {
     id: "process-redis-wars",
