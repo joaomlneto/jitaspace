@@ -25,6 +25,7 @@
     "@jitaspace/eve-icons": "workspace:*",
     "@jitaspace/eve-scrape": "workspace:*",
     "@jitaspace/hooks": "workspace:*",
+    "@jitaspace/kv": "workspace:*",
     "@jitaspace/sde-client": "workspace:*",
     "@jitaspace/tiptap-eve": "workspace:*",
     "@jitaspace/ui": "workspace:*",
