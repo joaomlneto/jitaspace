@@ -11,6 +11,7 @@ export * from "./FactionAvatar";
 export * from "./MarketGroupAvatar";
 export * from "./PlanetAvatar";
 export * from "./RaceAvatar";
+export * from "./SolarSystemSovereigntyAvatar";
 export * from "./SolarSystemStarAvatar";
 export * from "./StarAvatar";
 export * from "./StargateAvatar";

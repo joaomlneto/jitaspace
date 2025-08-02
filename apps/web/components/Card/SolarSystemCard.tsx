@@ -1,16 +1,16 @@
+import type { CardProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Card, Group, type CardProps } from "@mantine/core";
+import { Card, Group } from "@mantine/core";
 
 import { useSolarSystem } from "@jitaspace/hooks";
 import {
   SolarSystemBreadcrumbs,
   SolarSystemName,
   SolarSystemSecurityStatusBadge,
+  SolarSystemSovereigntyAvatar,
 } from "@jitaspace/ui";
-import { SolarSystemSovereigntyAvatar } from "@jitaspace/ui/Avatar/SolarSystemSovereigntyAvatar";
 
 import classes from "./SolarSystemCard.module.css";
-
 
 export type SolarSystemCardProps = Omit<CardProps, "children"> & {
   solarSystemId: number;
