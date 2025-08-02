@@ -6,7 +6,11 @@ import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
 import { WarReportIcon } from "@jitaspace/eve-icons";
-import { useSelectedCharacter, useWar } from "@jitaspace/hooks";
+import {
+  useSelectedCharacter,
+  useWar,
+  useWarKillmails,
+} from "@jitaspace/hooks";
 import {
   AllianceAnchor,
   AllianceAvatar,
@@ -29,6 +33,7 @@ import {
   WarDefenderTickerBadge,
 } from "@jitaspace/ui";
 
+import { KillmailCard } from "~/components/Killmails";
 import { MainLayout } from "~/layouts";
 
 export default function Page() {
@@ -36,6 +41,7 @@ export default function Page() {
   const warId = parseInt(router.query.warId as string);
   const character = useSelectedCharacter();
   const { data: war } = useWar(warId);
+  const { data: killmails } = useWarKillmails(warId);
 
   return (
     <Container size="lg">
@@ -80,10 +86,8 @@ export default function Page() {
                 <WarAggressorTickerBadge warId={warId} />
               </Group>
               <Text c="dimmed">Aggressor</Text>
-              <Text c="dimmed">
-                ISK Destroyed:{" "}
-                <ISKAmount span amount={war?.data.aggressor.isk_destroyed} />
-              </Text>
+              <Text c="dimmed">ISK Destroyed: </Text>
+              <ISKAmount span amount={war?.data.aggressor.isk_destroyed} />
               <Text c="dimmed">
                 Ships Killed: {war?.data.aggressor.ships_killed}
               </Text>
@@ -111,10 +115,8 @@ export default function Page() {
                 <WarDefenderTickerBadge warId={warId} />
               </Group>
               <Text c="dimmed">Defender</Text>
-              <Text c="dimmed">
-                ISK Destroyed:{" "}
-                <ISKAmount span amount={war?.data.defender.isk_destroyed} />
-              </Text>
+              <Text c="dimmed">ISK Destroyed: </Text>
+              <ISKAmount span amount={war?.data.defender.isk_destroyed} />
               <Text c="dimmed">
                 Ships Killed: {war?.data.defender.ships_killed}
               </Text>
@@ -194,6 +196,16 @@ export default function Page() {
                 </>
               )}
             </Group>
+          ))}
+        </Stack>
+        <Title order={4}>Killmails ({(killmails?.data ?? []).length})</Title>
+        <Stack>
+          {(killmails?.data ?? []).map((killmail) => (
+            <KillmailCard
+              key={killmail.killmail_id}
+              killmailId={killmail.killmail_id}
+              killmailHash={killmail.killmail_hash}
+            />
           ))}
         </Stack>
       </Stack>
