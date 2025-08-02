@@ -4,5 +4,6 @@
     "jsxImportSource": "@kubb/react",
     "resolveJsonModule": true,
     "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
   }
 }

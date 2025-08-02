@@ -28,7 +28,7 @@ export default defineConfig(({ config, watch, logLevel }) => {
       pluginTs({}),
       pluginReactQuery({
         client: {
-          importPath: "../../clientx",
+          importPath: "../../client",
           baseURL: "https://esi.evetech.net",
           dataReturnType: "full",
         },
