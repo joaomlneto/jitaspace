@@ -22,7 +22,7 @@ import { MainLayout } from "~/layouts";
 type PageProps = {
   database: {
     name: string;
-    count: number;
+    count: any;
   }[];
   queues: Record<string, string | number>[];
   vars: Record<string, any>;
@@ -61,10 +61,10 @@ export const getStaticProps: GetStaticProps<PageProps> = async () => {
   dbModels.sort();
 
   const dbStats = await Promise.all(
-    dbModels.map(async (name: keyof prisma) => ({
+    dbModels.map(async (name) => ({
       name,
       // @ts-expect-error i don't know how to type this
-      count: await prisma[name as Models].count(),
+      count: await prisma[name as keyof typeof prisma].count(),
     })),
   );
 
