@@ -17,7 +17,20 @@ export type ScrapeWarsEventPayload = {
      * For regular updates, it is recommended to set this to false (default).
      */
     fetchAllPages?: boolean;
+    /**
+     * Maximum war ID to fetch. If not provided, it will fetch all wars.
+     */
     maxWarId?: number;
+    /**
+     * Whether to skip updating existing wars in the database.
+     */
+    skipExisting?: boolean;
+    /**
+     * Whether to skip wars that are already finished.
+     * True by default. Wars that are finished are read-only and
+     * should not be updated.
+     */
+    skipFinished?: boolean;
   };
 };
 
@@ -38,6 +51,8 @@ export const scrapeEsiWars = client.createFunction(
     const batchSize = event.data.batchSize ?? 100;
     const fetchAllPages = event.data.fetchAllPages ?? false;
     const maxWarId = event.data.maxWarId;
+    const skipExisting = event.data.skipExisting ?? false;
+    const skipFinished = event.data.skipFinished ?? true;
 
     // Get all War IDs in ESI
     const batches = await step.run("Fetch War IDs", async () => {
@@ -45,10 +60,34 @@ export const scrapeEsiWars = client.createFunction(
         (res) => res.data,
       );
 
-      warIds.sort((a, b) => a - b);
-      const numBatches = Math.ceil(warIds.length / batchSize);
+      // find which ones are already in the database and are finished
+      const existingWars = skipExisting
+        ? await prisma.war.findMany({
+            select: { warId: true, finishedDate: true },
+            where: {
+              warId: {
+                in: warIds,
+              },
+            },
+          })
+        : [];
+
+      const remainingWarIds = warIds.filter(
+        (warId) =>
+          !existingWars.some((war) => war.warId === warId) &&
+          (!skipFinished ||
+            !existingWars.some(
+              (war) => war.warId === warId && war.finishedDate !== null,
+            )),
+      );
+
+      remainingWarIds.sort((a, b) => a - b);
+      const numBatches = Math.ceil(remainingWarIds.length / batchSize);
       const batchTypeIds = (batchIndex: number) =>
-        warIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
+        remainingWarIds.slice(
+          batchIndex * batchSize,
+          (batchIndex + 1) * batchSize,
+        );
       return [...Array(numBatches).keys()].map((batchId) =>
         batchTypeIds(batchId),
       );

@@ -45,6 +45,7 @@ import {
   ScrapeStationsEventPayload,
   ScrapeTypesEventPayload,
   ScrapeWarsEventPayload,
+  UpdateActiveWarsEventPayload,
 } from "../functions";
 
 export type Events = {
@@ -139,4 +140,5 @@ export type Events = {
   "scrape/sde/station-services": ScrapeStationServicesEventPayload;
   "scrape/sde/station-services.finished": {};
   "scrape/zkillboard/recent-kills": ScrapeRecentKillsEventPayload;
+  "update/esi/update-wars": UpdateActiveWarsEventPayload;
 };

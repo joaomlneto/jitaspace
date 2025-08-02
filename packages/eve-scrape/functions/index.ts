@@ -44,6 +44,7 @@ import {
   scrapeSdeResearchAgents,
   scrapeSdeStationServices,
   scrapeZkillboardRecentKills,
+  updateWars,
 } from "./scrape";
 import { testPing } from "./test";
 
@@ -94,6 +95,7 @@ export const functions = [
   scrapeSdeStationServices,
   scrapeZkillboardRecentKills,
   testPing,
+  updateWars,
 ];
 
 export * from "./scrape";

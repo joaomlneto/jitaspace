@@ -21,3 +21,4 @@ export * from "./scrapeEsiStargates";
 export * from "./scrapeEsiStations";
 export * from "./scrapeEsiTypes";
 export * from "./scrapeEsiWars";
+export * from "./updateWars.ts";
