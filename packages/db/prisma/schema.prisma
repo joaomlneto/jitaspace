@@ -13,32 +13,66 @@ enum CharacterGender {
 }
 
 model Character {
-  characterId         Int             @id
-  birthday            DateTime
-  bloodline           Bloodline       @relation("CharacterBloodline", fields: [bloodlineId], references: [bloodlineId])
-  bloodlineId         Int
-  corporation         Corporation     @relation("CharacterCorporation", fields: [corporationId], references: [corporationId])
-  corporationId       Int
-  description         String?
-  faction             Faction?        @relation("CharacterFaction", fields: [factionId], references: [factionId])
-  factionId           Int?
-  gender              CharacterGender
-  name                String
-  race                Race            @relation("CharacterRace", fields: [raceId], references: [raceId])
-  raceId              Int
-  securityStatus      Float?
-  title               String?
-  CorporationCeo      Corporation[]   @relation("corporationCeo")
-  createdCorporations Corporation[]   @relation("corporationCreator")
-  updatedAt           DateTime        @updatedAt()
-  isDeleted           Boolean         @default(false)
-  Agent               Agent?          @relation("AgentCharacter")
-  researchAgents      ResearchAgent[] @relation("ResearchAgentCharacter")
+  characterId           Int                              @id
+  birthday              DateTime
+  bloodline             Bloodline                        @relation("CharacterBloodline", fields: [bloodlineId], references: [bloodlineId])
+  bloodlineId           Int
+  corporation           Corporation                      @relation("CharacterCorporation", fields: [corporationId], references: [corporationId])
+  corporationId         Int
+  description           String?
+  faction               Faction?                         @relation("CharacterFaction", fields: [factionId], references: [factionId])
+  factionId             Int?
+  gender                CharacterGender
+  name                  String
+  race                  Race                             @relation("CharacterRace", fields: [raceId], references: [raceId])
+  raceId                Int
+  securityStatus        Float?
+  title                 String?
+  CorporationCeo        Corporation[]                    @relation("corporationCeo")
+  createdCorporations   Corporation[]                    @relation("corporationCreator")
+  updatedAt             DateTime                         @updatedAt()
+  isDeleted             Boolean                          @default(false)
+  Agent                 Agent?                           @relation("AgentCharacter")
+  researchAgents        ResearchAgent[]                  @relation("ResearchAgentCharacter")
+  corporationMembership CharacterCorporationMembership[] @relation("CharacterCorporationMembershipEntry")
+  Contract              Contract[]                       @relation("CharacterContractIssuer")
 
   @@index([bloodlineId])
   @@index([corporationId])
   @@index([factionId])
   @@index([raceId])
+}
+
+/**
+ * A record of a character's membership in a corporation at a specific point in time.
+ */
+model CharacterCorporationMembership {
+  /**
+   * An ESI-provided incrementing ID that can be used to canonically establish order of records in cases where dates
+   * may be ambiguous
+   */
+  recordId      Int         @id
+  /**
+   * The character that this record belongs to.
+   */
+  character     Character   @relation("CharacterCorporationMembershipEntry", fields: [characterId], references: [characterId])
+  characterId   Int
+  /**
+   * The corporation that this record belongs to.
+   */
+  corporation   Corporation @relation("CorporationCharacterMembershipEntry", fields: [corporationId], references: [corporationId])
+  corporationId Int
+  /**
+   * The datetime when the character joined the corporation.
+   */
+  startDate     DateTime
+  /**
+   * When this record was last updated.
+   */
+  updatedAt     DateTime    @updatedAt()
+
+  @@index([characterId])
+  @@index([corporationId])
 }
 
 model MarketGroup {
@@ -394,9 +428,11 @@ model Corporation {
   Character           Character[]         @relation("CharacterCorporation")
   LoyaltyStoreOffer   LoyaltyStoreOffer[] @relation("CorporationLoyaltyStoreOffers")
 
-  warsAggressor War[]                @relation("WarAggressorCorporation")
-  warsDefender  War[]                @relation("WarDefenderCorporation")
-  warsAllies    CorporationWarAlly[] @relation("CorporationWarAllies")
+  warsAggressor       War[]                            @relation("WarAggressorCorporation")
+  warsDefender        War[]                            @relation("WarDefenderCorporation")
+  warsAllies          CorporationWarAlly[]             @relation("CorporationWarAllies")
+  characterMembership CharacterCorporationMembership[] @relation("CorporationCharacterMembershipEntry")
+  Contract            Contract[]                       @relation("CorporationContractIssuer")
 
   @@index([creatorId])
   @@index([factionId])
@@ -427,6 +463,9 @@ model Station {
   stationServices          StationService[]
   corporationHomeStations  Corporation[]    @relation("CorporationHomeStation")
   Agent                    Agent[]          @relation("AgentStation")
+
+  CourierContractStartLocation CourierContract[] @relation("CourierContractStartLocation")
+  CourierContractEndLocation   CourierContract[] @relation("CourierContractEndLocation")
 
   @@index([solarSystemId])
   @@index([typeId])
@@ -499,6 +538,7 @@ model SolarSystem {
   solarSystemFactions Faction[]      @relation("FactionSolarSystem")
   Planet              Planet[]       @relation("PlanetSolarSystem")
   AgentInSpace        AgentInSpace[] @relation("AgentInSpaceSolarSystem")
+  Killmail            Killmail[]     @relation("KillmailSolarSystem")
 
   @@index([constellationId])
 }
@@ -557,12 +597,13 @@ model Planet {
 
 // TODO: Add missing "position" field
 model Moon {
-  moonId    Int      @id
+  moonId    Int        @id
   name      String
-  planet    Planet   @relation("PlanetMoons", fields: [planetId], references: [planetId])
+  planet    Planet     @relation("PlanetMoons", fields: [planetId], references: [planetId])
   planetId  Int
-  updatedAt DateTime @updatedAt()
-  isDeleted Boolean  @default(false)
+  updatedAt DateTime   @updatedAt()
+  isDeleted Boolean    @default(false)
+  Killmail  Killmail[] @relation("KillmailMoon")
 
   @@index([planetId])
 }
@@ -654,16 +695,62 @@ model LoyaltyStoreOfferRequiredItem {
   @@index([typeId])
 }
 
-// TODO add fields: war_id
 model Killmail {
-  killmailId     Int      @id
-  hash           String
+  killmailId    Int         @id
+  hash          String
+  killmailTime  DateTime
+  solarSystemId Int
+  solarSystem   SolarSystem @relation("KillmailSolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  moonId        Int?
+  moon          Moon?       @relation("KillmailMoon", fields: [moonId], references: [moonId])
+
+  /**
+   * Whether the metadata for this killmail has been fetched,
+   * or if it is still pending.
+   */
   metadataLoaded Boolean  @default(false)
   updatedAt      DateTime @updatedAt()
   isDeleted      Boolean  @default(false)
 
   warId Int?
   war   War? @relation("WarKillmails", fields: [warId], references: [warId])
+
+  @@index([solarSystemId])
+  @@index([moonId])
+  @@index([warId])
+}
+
+model KillmailVictim {
+  killmailId          Int
+  characterId         Int?
+  corporationId       Int?
+  allianceId          Int?
+  factionId           Int?
+  shipTypeId          Int
+  damageTaken         Int
+  positionX           Float?
+  positionY           Float?
+  positionZ           Float?
+  updatedAt           DateTime              @updatedAt()
+  isDeleted           Boolean               @default(false)
+  KillmailVictimItems KillmailVictimItems[]
+
+  @@id([killmailId])
+}
+
+model KillmailVictimItems {
+  killmailId        Int
+  killmailVictim    KillmailVictim @relation(fields: [killmailId], references: [killmailId])
+  flag              Int
+  typeId            Int
+  // TODO: add children
+  quantityDestroyed Int
+  quantityDropped   Int
+  isSingleton       Boolean
+  updatedAt         DateTime       @updatedAt()
+  isDeleted         Boolean        @default(false)
+
+  @@id([killmailId, flag, typeId])
 }
 
 model AgentType {
@@ -760,6 +847,9 @@ model War {
 
   @@index([aggressorAllianceId])
   @@index([aggressorCorporationId])
+  @@index([defenderAllianceId])
+  @@index([defenderCorporationId])
+  @@index([finishedDate])
 }
 
 model AllianceWarAlly {
@@ -778,4 +868,69 @@ model CorporationWarAlly {
   corporation   Corporation @relation("CorporationWarAllies", fields: [corporationId], references: [corporationId])
 
   @@id([warId, corporationId])
+}
+
+model Contract {
+  /**
+   * Unique identifier for the contract
+   */
+  contractId          Int          @id
+  /**
+   * Expiration date of the contract
+   */
+  dateExpired         DateTime
+  /**
+   * Сreation date of the contract
+   */
+  dateIssued          DateTime
+  /**
+   * Number of days to perform the contract
+   */
+  daysToComplete      Int?
+  /**
+   * true if the contract was issued on behalf of the issuer's corporation
+   */
+  forCorporation      Boolean
+  issuerCorporationId Int?
+  issuerCorporation   Corporation? @relation("CorporationContractIssuer", fields: [issuerCorporationId], references: [corporationId])
+  issuerId            Int
+  issuer              Character    @relation("CharacterContractIssuer", fields: [issuerId], references: [characterId])
+  title               String
+  type                ContractType
+  volume              Float?
+}
+
+enum ContractType {
+  Unknown
+  ItemExchange
+  Auction
+  Courier
+  Loan
+}
+
+model AuctionContract {
+  contractId Int    @id
+  /**
+   * Buyout price
+   */
+  buyout     BigInt
+  price      BigInt
+}
+
+model CourierContract {
+  contractId      Int     @id
+  /**
+   * The collateral for the courier contract
+   */
+  collateral      BigInt
+  startLocationId Int
+  startLocation   Station @relation("CourierContractStartLocation", fields: [startLocationId], references: [stationId])
+  endLocation     Station @relation("CourierContractEndLocation", fields: [endLocationId], references: [stationId])
+  endLocationId   Int
+  reward          BigInt
+}
+
+model ItemExchangeContract {
+  contractId Int    @id
+  price      BigInt
 }
