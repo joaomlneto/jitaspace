@@ -2,17 +2,18 @@ import { CurrentShipFittingModal } from "~/components/Modals/CurrentShipFittingM
 import { SsoTokenModal } from "~/components/Modals/SsoTokenModal";
 import { ComposeMailModal } from "./ComposeMailModal";
 import { FittingModal } from "./FittingModal";
+import { KillmailFittingModal } from "./KillmailFittingModal";
 import { LoginModal } from "./LoginModal";
 import { ManageMailLabelsModal } from "./ManageMailLabelsModal";
 import { ViewCalendarEventModal } from "./ViewCalendarEventModal";
 import { ViewMailingListSubscriptionsModal } from "./ViewMailingListSubscriptionsModal";
 import { ViewMailMessageModal } from "./ViewMailMessageModal";
 
-
 const contextModals = {
   composeMail: ComposeMailModal,
   currentShipFitting: CurrentShipFittingModal,
   fitting: FittingModal,
+  killmailFitting: KillmailFittingModal,
   login: LoginModal,
   manageMailLabels: ManageMailLabelsModal,
   ssoToken: SsoTokenModal,
