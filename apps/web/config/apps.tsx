@@ -1,3 +1,8 @@
+import React from "react";
+import Image from "next/image";
+import { type LinkProps } from "next/link";
+
+import type { EveIconProps } from "@jitaspace/eve-icons";
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import {
   AgentFinderIcon,
@@ -8,7 +13,6 @@ import {
   CharacterSheetIcon,
   ContactsIcon,
   CorporationIcon,
-  type EveIconProps,
   EveMailIcon,
   FittingIcon,
   ItemsIcon,
@@ -17,10 +21,8 @@ import {
   MarketIcon,
   SkillsIcon,
   WalletIcon,
+  WarsIcon,
 } from "@jitaspace/eve-icons";
-import Image from "next/image";
-import { type LinkProps } from "next/link";
-import React from "react";
 
 export type AppScopeSet = {
   reason: string;
@@ -326,6 +328,14 @@ export const universeApps: Record<string, JitaApp> = {
     hotKey: ["⌘", "P"],
     scopes: {},
   },
+  wars: {
+    name: "Active Wars",
+    description: "View all active wars.",
+    url: "/active-wars",
+    Icon: (props) => <WarsIcon {...props} />,
+    scopes: {},
+    tags: [],
+  },
   map: {
     name: "Map",
     description: "Browse the regions, constellations and solar systems.",
@@ -435,12 +445,44 @@ export const extraJitaFeatures: AppScopeSet[] = [
     scopes: ["esi-location.read_ship_type.v1"],
   },
   {
+    reason: "Read character current location",
+    scopes: ["esi-location.read_location.v1"],
+  },
+  {
     reason: "Read wallet balance",
     scopes: ["esi-wallet.read_character_wallet.v1"],
   },
   {
-    reason: "Read character current location",
-    scopes: ["esi-location.read_location.v1"],
+    reason: "Read agent research information",
+    scopes: ["esi-characters.read_agents_research.v1"],
+  },
+  {
+    reason: "Read character blueprints",
+    scopes: ["esi-characters.read_blueprints.v1"],
+  },
+  {
+    reason: "Read character jump fatigue",
+    scopes: ["esi-characters.read_fatigue.v1"],
+  },
+  {
+    reason: "Read character medals",
+    scopes: ["esi-characters.read_medals.v1"],
+  },
+  {
+    reason: "Read character titles",
+    scopes: ["esi-characters.read_titles.v1"],
+  },
+  {
+    reason: "Read character notifications",
+    scopes: ["esi-characters.read_notifications.v1"],
+  },
+  {
+    reason: "Read character corporation roles",
+    scopes: ["esi-characters.read_corporation_roles.v1"],
+  },
+  {
+    reason: "Read character standings",
+    scopes: ["esi-characters.read_standings.v1"],
   },
 ];
 
