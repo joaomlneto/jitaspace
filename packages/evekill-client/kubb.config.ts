@@ -1,7 +1,6 @@
 import { defineConfig } from "@kubb/core";
 import { pluginClient } from "@kubb/plugin-client";
 import { pluginOas } from "@kubb/plugin-oas";
-import { pluginReactQuery } from "@kubb/plugin-react-query";
 import { pluginTs } from "@kubb/plugin-ts";
 import { pluginZod } from "@kubb/plugin-zod";
 
@@ -18,16 +17,18 @@ export default defineConfig(({ config, watch, logLevel }) => {
     plugins: [
       pluginOas({ validate: true }),
       pluginClient({
+        baseURL: "https://eve-kill.com",
         //importPath: "../../client",
         dataReturnType: "full",
       }),
       pluginTs({}),
-      pluginReactQuery({
+      /*pluginReactQuery({
         client: {
+          baseURL: "https://eve-kill.com",
           //importPath: "../../client",
           dataReturnType: "full",
         },
-      }),
+      }),*/
       pluginZod({}),
     ],
   };

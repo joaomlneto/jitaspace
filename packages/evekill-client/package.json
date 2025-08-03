@@ -10,7 +10,7 @@
     "clean": "rm -rf .turbo node_modules src/generated",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
-    "kubb:generate": "npm run download-schema && kubb generate",
+    "kubb:generate": "kubb generate",
     "postinstall": "kubb generate",
     "type-check": "tsc --noEmit"
   },
