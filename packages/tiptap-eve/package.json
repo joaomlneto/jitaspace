@@ -13,9 +13,9 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@mantine/core": "7.17.8",
-    "@mantine/hooks": "7.17.8",
-    "@mantine/tiptap": "7.17.8",
+    "@mantine/core": "8.2.7",
+    "@mantine/hooks": "8.2.7",
+    "@mantine/tiptap": "8.2.7",
     "@tabler/icons-react": "^3.34.0",
     "@tiptap/extension-character-count": "^2.12.0",
     "@tiptap/extension-color": "^2.12.0",
