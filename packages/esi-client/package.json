@@ -12,7 +12,7 @@
     "get-esi-date": "node ./src/buildscript.js > build_date.json",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
-    "kubb:generate": "npm run download-schema && npm run get-esi-date && kubb generate",
+    "kubb:generate": "npm run get-esi-date && kubb generate",
     "postinstall": "kubb generate",
     "type-check": "tsc --noEmit"
   },
