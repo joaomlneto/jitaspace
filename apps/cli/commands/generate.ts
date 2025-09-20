@@ -3,14 +3,12 @@ import * as path from "node:path";
 import { createCommand } from "@commander-js/extra-typings";
 
 import { collections } from "../config/collections.js";
-import { TITLE_WIDTH, getWorkingDirectory } from "../lib/cli.js";
+import { getWorkingDirectory, TITLE_WIDTH } from "../lib/cli.js";
 import { globalProgress } from "../lib/progress.js";
+import { loadFile } from "../sources/sde.ts";
 import { generateCollectionFiles } from "../utils/collections.js";
 import { mkdir } from "../utils/fs";
-import {
-  ensureSdePresentAndExtracted,
-  latestSdeLastModified,
-} from "../utils/sde.js";
+import { ensureSdePresentAndExtracted } from "../utils/sde.js";
 
 export const SDE_PATH = "sde";
 
@@ -65,18 +63,19 @@ export default createCommand("generate")
       globalProgress.update();
     }
 
-    const sdeLastModified = await latestSdeLastModified();
-
     // add metadata paths
-    const METADATA_VERSION_PATH = "/meta";
+    const sdeRoot = path.resolve(getWorkingDirectory(), SDE_PATH);
+    const sdeMetadataFile = loadFile("_sde.yaml", sdeRoot);
     const metaPath = path.join(getWorkingDirectory(), "latest", "meta");
     mkdir(metaPath);
     const metaVersionPath = path.join(metaPath, "version.json");
     fs.writeFileSync(
       metaVersionPath,
       JSON.stringify({
-        sourceSdePublishDate: sdeLastModified.toISOString(),
+        buildNumber: sdeMetadataFile.sde.buildNumber,
         generationDate: new Date().toISOString(),
+        releaseDate: sdeMetadataFile.sde.releaseDate,
+        schemaChangeLog: sdeMetadataFile.sde.schemaChangeLog,
       }),
     );
     schema.tags.push({ name: "Meta" });
@@ -94,16 +93,27 @@ export default createCommand("generate")
                 schema: {
                   type: "object",
                   properties: {
-                    sourceSdePublishDate: {
+                    buildNumber: {
+                      type: "number",
+                      format: "number",
+                      description:
+                        "The build number at the time the SDE was published",
+                    },
+                    releaseDate: {
                       type: "string",
                       format: "date-time",
-                      description: "The date when the source SDE was published",
+                      description:
+                        "The release date of the SDE (Unix timestamp) by CCP",
+                    },
+                    schemaChangeLog: {
+                      type: "string",
+                      description: "The schema change log notes",
                     },
                     generationDate: {
                       type: "string",
                       format: "date-time",
                       description:
-                        "The date when the contents of the API were updated",
+                        "The date when the SDE was processed and this file was generated",
                     },
                   },
                 },

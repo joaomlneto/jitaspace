@@ -19,6 +19,8 @@
     "@asteasolutions/zod-to-openapi": "^4.7.0",
     "@commander-js/extra-typings": "^10.0.3",
     "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
     "@jsonhero/schema-infer": "^0.1.5",
     "@openapi-contrib/json-schema-to-openapi-schema": "^2.2.5",
     "@types/async": "^3.2.20",

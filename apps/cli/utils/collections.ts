@@ -9,7 +9,6 @@ import { collections } from "../config/collections.js";
 import { getWorkingDirectory, TITLE_WIDTH } from "../lib/cli.js";
 import { globalProgress } from "../lib/progress.js";
 import { getHoboleaksFile } from "../sources/hoboleaks.js";
-import { getUniverseSourceData } from "../sources/sde_universe.js";
 import { loadFile } from "../sources/sde.js";
 import { mkdir } from "./fs.js";
 
@@ -44,8 +43,6 @@ export async function generateCollectionFiles(
     switch (collection.datasource.type) {
       case "sde":
         return loadFile(collection.datasource.name, sdeRoot);
-      case "sde-universe":
-        return await getUniverseSourceData(collection.datasource.name);
       case "hoboleaks":
         return await getHoboleaksFile(collection.datasource.filename);
       default:

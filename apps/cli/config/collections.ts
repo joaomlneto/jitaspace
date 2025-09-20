@@ -5,28 +5,15 @@
  * - GET /collection/{id} — returns a single item from the collection
  * Pagination is not supported, as the collections are expected to be small and static.
  */
-import path from "node:path";
 import { OpenAPIV3 } from "openapi-types";
 
-import { SDE_PATH } from "../commands/generate";
-import { getWorkingDirectory } from "../lib/cli";
-import {
-  SdeSourceFile,
-  fixObjectIndices,
-  loadFile,
-  sdeInputFiles,
-} from "../sources/sde.js";
-import { SdeUniverseSource } from "../sources/sde_universe.js";
+import { fixObjectIndices, sdeInputFiles } from "../sources/sde.js";
 
 export type SdeCollection = {
   datasource: (
     | {
         type: "sde";
         name: keyof typeof sdeInputFiles;
-      }
-    | {
-        type: "sde-universe";
-        name: SdeUniverseSource;
       }
     | {
         type: "hoboleaks";
@@ -49,76 +36,22 @@ export type SdeCollection = {
 };
 
 export const collections: Record<string, SdeCollection> = {
+  /* temporarily (hopefully) removed by accident…
   "/inventory/flags": {
     datasource: {
       type: "sde",
-      name: "bsd/invFlags.yaml",
+      name: "invFlags.yaml",
     },
     idAttribute: "flagID",
     model: {
       name: "InventoryCategory",
     },
     tags: ["Inventory"],
-  },
-  "/inventory/items": {
-    datasource: {
-      type: "sde",
-      name: "bsd/invItems.yaml",
-    },
-    idAttribute: "itemID",
-    model: {
-      name: "InventoryItem",
-    },
-    tags: ["Inventory"],
-  },
-  "/inventory/names": {
-    datasource: {
-      type: "sde",
-      name: "bsd/invNames.yaml",
-    },
-    idAttribute: "itemID",
-    model: {
-      name: "InventoryName",
-    },
-    tags: ["Inventory"],
-  },
-  "/inventory/positions": {
-    datasource: {
-      type: "sde",
-      name: "bsd/invPositions.yaml",
-    },
-    idAttribute: "itemID",
-    model: {
-      name: "InventoryPosition",
-    },
-    tags: ["Inventory"],
-  },
-  "/inventory/uniqueNames": {
-    datasource: {
-      type: "sde",
-      name: "bsd/invUniqueNames.yaml",
-    },
-    idAttribute: "itemID",
-    model: {
-      name: "InventoryUniqueName",
-    },
-    tags: ["Inventory"],
-  },
-  "/universe/stations": {
-    datasource: {
-      type: "sde",
-      name: "bsd/staStations.yaml",
-    },
-    idAttribute: "stationID",
-    model: {
-      name: "Station",
-    },
-    tags: ["Universe"],
-  },
+  },*/
   "/characters/agents": {
     datasource: {
       type: "sde",
-      name: "fsd/agents.yaml",
+      name: "agents.yaml",
     },
     idAttribute: "characterID",
     model: {
@@ -126,10 +59,21 @@ export const collections: Record<string, SdeCollection> = {
     },
     tags: ["Character"],
   },
+  "/universe/stations": {
+    datasource: {
+      type: "sde",
+      name: "npcStations.yaml",
+    },
+    idAttribute: "stationID",
+    model: {
+      name: "Station",
+    },
+    tags: ["Universe"],
+  },
   "/characters/agentsInSpace": {
     datasource: {
       type: "sde",
-      name: "fsd/agentsInSpace.yaml",
+      name: "agentsInSpace.yaml",
     },
     idAttribute: "characterID",
     model: {
@@ -140,7 +84,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/ancestries": {
     datasource: {
       type: "sde",
-      name: "fsd/ancestries.yaml",
+      name: "ancestries.yaml",
     },
     idAttribute: "ancestryID",
     model: {
@@ -151,7 +95,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/bloodlines": {
     datasource: {
       type: "sde",
-      name: "fsd/bloodlines.yaml",
+      name: "bloodlines.yaml",
     },
     idAttribute: "bloodlineID",
     model: {
@@ -162,7 +106,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/blueprints": {
     datasource: {
       type: "sde",
-      name: "fsd/blueprints.yaml",
+      name: "blueprints.yaml",
     },
     idAttribute: "blueprintTypeID",
     model: {
@@ -173,7 +117,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/categories": {
     datasource: {
       type: "sde",
-      name: "fsd/categories.yaml",
+      name: "categories.yaml",
     },
     idAttribute: "categoryID",
     model: {
@@ -184,7 +128,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/certificates": {
     datasource: {
       type: "sde",
-      name: "fsd/certificates.yaml",
+      name: "certificates.yaml",
     },
     idAttribute: "certificateID",
     model: {
@@ -221,7 +165,7 @@ export const collections: Record<string, SdeCollection> = {
   "/characters/attributes": {
     datasource: {
       type: "sde",
-      name: "fsd/characterAttributes.yaml",
+      name: "characterAttributes.yaml",
     },
     idAttribute: "attributeID",
     model: {
@@ -232,7 +176,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/contrabandTypes": {
     datasource: {
       type: "sde",
-      name: "fsd/contrabandTypes.yaml",
+      name: "contrabandTypes.yaml",
     },
     idAttribute: "typeID",
     model: {
@@ -266,7 +210,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/controlTowerResources": {
     datasource: {
       type: "sde",
-      name: "fsd/controlTowerResources.yaml",
+      name: "controlTowerResources.yaml",
     },
     idAttribute: "typeID",
     model: {
@@ -277,7 +221,7 @@ export const collections: Record<string, SdeCollection> = {
   "/corporations/activities": {
     datasource: {
       type: "sde",
-      name: "fsd/corporationActivities.yaml",
+      name: "corporationActivities.yaml",
     },
     idAttribute: "corporationActivityID",
     model: {
@@ -288,7 +232,7 @@ export const collections: Record<string, SdeCollection> = {
   "/dogma/attributeCategories": {
     datasource: {
       type: "sde",
-      name: "fsd/dogmaAttributeCategories.yaml",
+      name: "dogmaAttributeCategories.yaml",
     },
     idAttribute: "attributeCategoryID",
     model: {
@@ -299,7 +243,7 @@ export const collections: Record<string, SdeCollection> = {
   "/dogma/attributes": {
     datasource: {
       type: "sde",
-      name: "fsd/dogmaAttributes.yaml",
+      name: "dogmaAttributes.yaml",
     },
     idAttribute: "attributeID",
     model: {
@@ -310,7 +254,7 @@ export const collections: Record<string, SdeCollection> = {
   "/dogma/effects": {
     datasource: {
       type: "sde",
-      name: "fsd/dogmaEffects.yaml",
+      name: "dogmaEffects.yaml",
     },
     idAttribute: "effectID",
     model: {
@@ -321,7 +265,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/factions": {
     datasource: {
       type: "sde",
-      name: "fsd/factions.yaml",
+      name: "factions.yaml",
     },
     idAttribute: "factionID",
     model: {
@@ -332,7 +276,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/graphics": {
     datasource: {
       type: "sde",
-      name: "fsd/graphicIDs.yaml",
+      name: "graphics.yaml",
     },
     idAttribute: "graphicID",
     model: {
@@ -343,7 +287,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/groups": {
     datasource: {
       type: "sde",
-      name: "fsd/groups.yaml",
+      name: "groups.yaml",
     },
     idAttribute: "groupID",
     model: {
@@ -354,7 +298,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/icons": {
     datasource: {
       type: "sde",
-      name: "fsd/iconIDs.yaml",
+      name: "icons.yaml",
     },
     idAttribute: "iconID",
     model: {
@@ -365,7 +309,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/landmarks": {
     datasource: {
       type: "sde",
-      name: "universe/landmarks/landmarks.yaml",
+      name: "landmarks.yaml",
     },
     idAttribute: "landmarkID",
     model: {
@@ -376,7 +320,7 @@ export const collections: Record<string, SdeCollection> = {
   "/markets/groups": {
     datasource: {
       type: "sde",
-      name: "fsd/marketGroups.yaml",
+      name: "marketGroups.yaml",
     },
     idAttribute: "marketGroupID",
     model: {
@@ -387,7 +331,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/metaGroups": {
     datasource: {
       type: "sde",
-      name: "fsd/metaGroups.yaml",
+      name: "metaGroups.yaml",
     },
     idAttribute: "metaGroupID",
     model: {
@@ -398,7 +342,7 @@ export const collections: Record<string, SdeCollection> = {
   "/corporations/npcCorporationDivisions": {
     datasource: {
       type: "sde",
-      name: "fsd/npcCorporationDivisions.yaml",
+      name: "npcCorporationDivisions.yaml",
     },
     idAttribute: "npcCorporationDivisionID",
     model: {
@@ -409,7 +353,7 @@ export const collections: Record<string, SdeCollection> = {
   "/corporations/npcCorporations": {
     datasource: {
       type: "sde",
-      name: "fsd/npcCorporations.yaml",
+      name: "npcCorporations.yaml",
     },
     idAttribute: "corporationID",
     model: {
@@ -458,7 +402,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/planetSchematics": {
     datasource: {
       type: "sde",
-      name: "fsd/planetSchematics.yaml",
+      name: "planetSchematics.yaml",
     },
     idAttribute: "planetSchematicID",
     model: {
@@ -472,6 +416,9 @@ export const collections: Record<string, SdeCollection> = {
               isInput: {
                 type: "boolean",
               },
+              quantity: {
+                type: "number",
+              },
             },
           },
         };
@@ -483,7 +430,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/races": {
     datasource: {
       type: "sde",
-      name: "fsd/races.yaml",
+      name: "races.yaml",
     },
     idAttribute: "raceID",
     model: {
@@ -503,7 +450,7 @@ export const collections: Record<string, SdeCollection> = {
   "/characters/researchAgents": {
     datasource: {
       type: "sde",
-      name: "fsd/researchAgents.yaml",
+      name: "researchAgents.yaml",
     },
     idAttribute: "characterID",
     model: {
@@ -514,7 +461,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/skinLicenses": {
     datasource: {
       type: "sde",
-      name: "fsd/skinLicenses.yaml",
+      name: "skinLicenses.yaml",
     },
     idAttribute: "licenseTypeID",
     model: {
@@ -525,7 +472,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/skinMaterials": {
     datasource: {
       type: "sde",
-      name: "fsd/skinMaterials.yaml",
+      name: "skinMaterials.yaml",
     },
     idAttribute: "skinMaterialID",
     model: {
@@ -536,7 +483,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/stationOperations": {
     datasource: {
       type: "sde",
-      name: "fsd/stationOperations.yaml",
+      name: "stationOperations.yaml",
     },
     idAttribute: "stationOperationID",
     model: {
@@ -547,7 +494,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/stationServices": {
     datasource: {
       type: "sde",
-      name: "fsd/stationServices.yaml",
+      name: "stationServices.yaml",
     },
     idAttribute: "stationServiceID",
     model: {
@@ -555,21 +502,10 @@ export const collections: Record<string, SdeCollection> = {
     },
     tags: ["Universe"],
   },
-  "/universe/tournamentRuleSets": {
-    datasource: {
-      type: "sde",
-      name: "fsd/tournamentRuleSets.yaml",
-    },
-    idAttribute: "ruleSetID",
-    model: {
-      name: "TournamentRuleSet",
-    },
-    tags: ["Tournament"],
-  },
   "/universe/translationLanguages": {
     datasource: {
       type: "sde",
-      name: "fsd/translationLanguages.yaml",
+      name: "translationLanguages.yaml",
     },
     idAttribute: "translationLanguageID",
     model: {
@@ -580,7 +516,7 @@ export const collections: Record<string, SdeCollection> = {
   "/dogma/types": {
     datasource: {
       type: "sde",
-      name: "fsd/typeDogma.yaml",
+      name: "typeDogma.yaml",
     },
     idAttribute: "typeID",
     model: {
@@ -591,58 +527,29 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/types": {
     datasource: {
       type: "sde",
-      name: "fsd/types.yaml",
+      name: "types.yaml",
     },
     idAttribute: "typeID",
     model: {
       name: "Type",
-      patchSchema: (schema) => {
-        // @ts-expect-error
-        schema.items.properties.traits.properties.types = {
-          additionalProperties: {
-            type: "object",
-            properties: {
-              bonus: {
-                type: "number",
-              },
-              bonusText: {
-                type: "object",
-                properties: {
-                  de: {
-                    type: "string",
-                  },
-                  en: {
-                    type: "string",
-                  },
-                  es: {
-                    type: "string",
-                  },
-                  fr: {
-                    type: "string",
-                  },
-                  ja: {
-                    type: "string",
-                  },
-                  ru: {
-                    type: "string",
-                  },
-                },
-              },
-              importance: {
-                type: "integer",
-              },
-            },
-          },
-        };
-        return schema;
-      },
+    },
+    tags: ["Universe"],
+  },
+  "/universe/typeBonus": {
+    datasource: {
+      type: "sde",
+      name: "typeBonus.yaml",
+    },
+    idAttribute: "typeID",
+    model: {
+      name: "TypeBonus",
     },
     tags: ["Universe"],
   },
   "/universe/typeMaterials": {
     datasource: {
       type: "sde",
-      name: "fsd/typeMaterials.yaml",
+      name: "typeMaterials.yaml",
     },
     idAttribute: "typeID",
     model: {
@@ -653,7 +560,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/planetResources": {
     datasource: {
       type: "sde",
-      name: "fsd/planetResources.yaml",
+      name: "planetResources.yaml",
     },
     idAttribute: "planetID",
     model: {
@@ -664,7 +571,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/sovereigntyUpgrades": {
     datasource: {
       type: "sde",
-      name: "fsd/sovereigntyUpgrades.yaml",
+      name: "sovereigntyUpgrades.yaml",
     },
     idAttribute: "typeID",
     model: {
@@ -674,8 +581,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/universe/asteroidBelts": {
     datasource: {
-      type: "sde-universe",
-      name: "asteroidBelts",
+      type: "sde",
+      name: "mapAsteroidBelts.yaml",
     },
     idAttribute: "asteroidBeltID",
     model: {
@@ -685,8 +592,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/universe/constellations": {
     datasource: {
-      type: "sde-universe",
-      name: "constellations",
+      type: "sde",
+      name: "mapConstellations.yaml",
     },
     idAttribute: "constellationID",
     model: {
@@ -696,115 +603,30 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/universe/moons": {
     datasource: {
-      type: "sde-universe",
-      name: "moons",
+      type: "sde",
+      name: "mapMoons.yaml",
     },
     idAttribute: "moonID",
     model: {
       name: "Moon",
-      patchSchema: (schema) => {
-        // @ts-expect-error
-        schema.items.properties.npcStations = {
-          additionalProperties: {
-            type: "object",
-            properties: {
-              graphicID: {
-                type: "integer",
-              },
-              isConquerable: {
-                type: "boolean",
-              },
-              operationID: {
-                type: "integer",
-              },
-              ownerID: {
-                type: "integer",
-              },
-              position: {
-                type: "array",
-                items: {
-                  type: "number",
-                },
-              },
-              reprocessingEfficiency: {
-                type: "number",
-              },
-              reprocessingHangarFlag: {
-                type: "number",
-              },
-              reprocessingStationsTake: {
-                type: "number",
-              },
-              typeID: {
-                type: "integer",
-              },
-              useOperationName: {
-                type: "boolean",
-              },
-            },
-          },
-        };
-        return schema;
-      },
     },
     tags: ["Universe"],
   },
   "/universe/planets": {
     datasource: {
-      type: "sde-universe",
-      name: "planets",
+      type: "sde",
+      name: "mapPlanets.yaml",
     },
     idAttribute: "planetID",
     model: {
       name: "Planet",
-      patchSchema: (schema) => {
-        // @ts-expect-error
-        schema.items.properties.npcStations = {
-          additionalProperties: {
-            type: "object",
-            properties: {
-              graphicID: {
-                type: "integer",
-              },
-              isConquerable: {
-                type: "boolean",
-              },
-              operationID: {
-                type: "integer",
-              },
-              ownerID: {
-                type: "integer",
-              },
-              position: {
-                type: "array",
-                items: {
-                  type: "number",
-                },
-              },
-              reprocessingEfficiency: {
-                type: "number",
-              },
-              reprocessingHangarFlag: {
-                type: "number",
-              },
-              reprocessingStationsTake: {
-                type: "number",
-              },
-              typeID: {
-                type: "integer",
-              },
-            },
-          },
-        };
-        return schema;
-      },
     },
     tags: ["Universe"],
   },
   "/universe/regions": {
     datasource: {
-      type: "sde-universe",
-      name: "regions",
+      type: "sde",
+      name: "mapRegions.yaml",
     },
     idAttribute: "regionID",
     model: {
@@ -814,8 +636,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/universe/solarSystems": {
     datasource: {
-      type: "sde-universe",
-      name: "solarSystems",
+      type: "sde",
+      name: "mapSolarSystems.yaml",
     },
     idAttribute: "solarSystemID",
     model: {
@@ -825,8 +647,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/universe/stargates": {
     datasource: {
-      type: "sde-universe",
-      name: "stargates",
+      type: "sde",
+      name: "mapStargates.yaml",
     },
     idAttribute: "stargateID",
     model: {
@@ -836,8 +658,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/universe/stars": {
     datasource: {
-      type: "sde-universe",
-      name: "stars",
+      type: "sde",
+      name: "mapStars.yaml",
     },
     idAttribute: "starID",
     model: {
@@ -847,8 +669,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/characters/agentTypes": {
     datasource: {
-      type: "hoboleaks",
-      filename: "agenttypes.json",
+      type: "sde",
+      name: "agentTypes.yaml",
     },
     idAttribute: "agentTypeID",
     model: {
@@ -858,8 +680,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/dogma/units": {
     datasource: {
-      type: "hoboleaks",
-      filename: "dogmaunits.json",
+      type: "sde",
+      name: "dogmaUnits.yaml",
     },
     idAttribute: "unitID",
     model: {
@@ -891,8 +713,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/dogma/dynamicAttributes": {
     datasource: {
-      type: "hoboleaks",
-      filename: "dynamicitemattributes.json",
+      type: "sde",
+      name: "dynamicItemAttributes.yaml",
     },
     idAttribute: "attributeID",
     model: {
@@ -920,14 +742,26 @@ export const collections: Record<string, SdeCollection> = {
     },
     tags: ["Dogma"],
   },
+  "/dogma/dbuff-collections.yaml": {
+    datasource: {
+      type: "sde",
+      name: "dbuffCollections.yaml",
+    },
+    idAttribute: "dbuffCollectionID",
+    model: {
+      name: "DbuffCollection",
+    },
+    tags: ["Dogma"],
+  },
   "/dogma/dbuffs": {
+    // XXX: this is the same as dbuff-collections, perhaps?
     datasource: {
       type: "hoboleaks",
       filename: "dbuffs.json",
     },
     idAttribute: "dbuffID",
     model: {
-      name: "DBuff",
+      name: "Dbuff",
     },
     tags: ["Dogma"],
   },
@@ -959,6 +793,17 @@ export const collections: Record<string, SdeCollection> = {
     idAttribute: "expertSystemID",
     model: {
       name: "ExpertSystem",
+    },
+    tags: ["Universe"],
+  },
+  "/universe/masteries": {
+    datasource: {
+      type: "sde",
+      name: "masteries.yaml",
+    },
+    idAttribute: "typeID",
+    model: {
+      name: "TypeMastery",
     },
     tags: ["Universe"],
   },
@@ -998,8 +843,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/universe/skins": {
     datasource: {
-      type: "hoboleaks",
-      filename: "skins.json",
+      type: "sde",
+      name: "skins.yaml",
     },
     idAttribute: "skinID",
     model: {
@@ -1099,7 +944,7 @@ export const collections: Record<string, SdeCollection> = {
   "/universe/typeVariations": {
     datasource: {
       type: "sde",
-      name: "fsd/types.yaml",
+      name: "types.yaml",
       transformations: [
         (data, { idAttributeName }) => {
           // compute variations for each type

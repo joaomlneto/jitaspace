@@ -1,7 +1,7 @@
 {
+  "extends": "@jitaspace/tsconfig/base.json",
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
-    "target": "ES2023",
     "lib": ["esnext"],
     "allowJs": true,
     "checkJs": true,
