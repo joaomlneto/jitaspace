@@ -65,7 +65,7 @@
     "jwt-decode": "^4.0.0",
     "mantine-react-table": "2.0.0-beta.9",
     "next": "15.3.3",
-    "next-auth": "^4.24.11",
+    "next-auth": "^4.24.12",
     "next-seo": "^6.8.0",
     "next-sitemap": "^4.2.3",
     "nextjs-cors": "^2.2.0",
