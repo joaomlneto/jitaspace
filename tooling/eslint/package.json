@@ -14,19 +14,21 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@eslint/compat": "^1.2.9",
-    "@next/eslint-plugin-next": "^15.3.3",
+    "@eslint/compat": "^1.4.0",
+    "@eslint/js": "^9.39.2",
+    "@next/eslint-plugin-next": "^15.5.9",
     "@tanstack/eslint-plugin-query": "^5.78.0",
-    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^6.0.0-rc.1",
-    "eslint-config-turbo": "^2.5.4",
-    "typescript-eslint": "^8.33.1"
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-config-turbo": "^2.5.8",
+    "typescript-eslint": "^8.46.2"
   },
   "devDependencies": {
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
+    "@types/node": "^24.10.4",
     "eslint": "^9.28.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"

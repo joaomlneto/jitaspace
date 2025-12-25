@@ -15,5 +15,5 @@ export const reactConfig = defineConfig(
       },
     },
   },
-  reactHooks.configs["recommended-latest"]!,
+  reactHooks.configs.flat["recommended-latest"]!,
 );
