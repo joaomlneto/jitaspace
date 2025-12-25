@@ -10,6 +10,7 @@
     "build": "turbo build",
     "clean": "git clean -xdf node_modules",
     "clean:workspaces": "turbo clean",
+    "cypress:open": "(cd apps/web && NODE_ENV=test pnpm with-env cypress open)",
     "db:generate": "turbo db:generate",
     "db:push": "turbo db:push db:generate",
     "dev": "turbo dev --parallel",
