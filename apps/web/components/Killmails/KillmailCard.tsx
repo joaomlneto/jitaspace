@@ -35,7 +35,7 @@ export const KillmailCard = memo(
   ({ killmailId, killmailHash }: KillmailCardProps) => {
     const { data } = useKillmail(killmailHash, killmailId);
 
-    if (!data ?? !data.data) {
+    if (!data?.data) {
       return <Loader />;
     }
 
