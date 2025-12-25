@@ -93,6 +93,7 @@
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
     "@types/react-html-parser": "^2.0.7",
+    "cypress": "^15.8.1",
     "dotenv-cli": "^8.0.0",
     "eslint": "^9.28.0",
     "jiti": "^1.21.7",
