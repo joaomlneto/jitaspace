@@ -1,8 +1,6 @@
 {
   "$schema": "https://turborepo.org/schema.json",
-  "globalDependencies": [
-    "**/.env"
-  ],
+  "globalDependencies": ["**/.env"],
   "ui": "tui",
   "globalEnv": [
     "DATABASE_URL",
@@ -23,32 +21,23 @@
     "NODE_ENV",
     "CI",
     "VERCEL",
-    "VERCEL",
     "VERCEL_URL",
     "npm_lifecycle_event"
   ],
   "tasks": {
     "topo": {
-      "dependsOn": [
-        "^topo"
-      ]
+      "dependsOn": ["^topo"]
     },
     "db:generate": {
-      "inputs": [
-        "prisma/schema.prisma"
-      ],
+      "inputs": ["prisma/schema.prisma"],
       "cache": false
     },
     "db:generate:watch": {
-      "inputs": [
-        "prisma/schema.prisma"
-      ],
+      "inputs": ["prisma/schema.prisma"],
       "cache": false
     },
     "db:push": {
-      "inputs": [
-        "prisma/schema.prisma"
-      ],
+      "inputs": ["prisma/schema.prisma"],
       "cache": false
     },
     "dev": {
@@ -56,11 +45,8 @@
       "cache": false
     },
     "build": {
-      "dependsOn": [
-        "^build",
-        "^db:generate",
-        "kubb:generate"
-      ],
+      "dependsOn": ["^build", "^db:generate", "kubb:generate"],
+      "inputs": ["src/**", "package.json", "tsconfig.json"],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
@@ -70,18 +56,19 @@
       ]
     },
     "format": {
-      "outputs": [
-        "node_modules/.cache/.prettiercache"
-      ],
+      "outputs": ["node_modules/.cache/.prettiercache"],
       "outputLogs": "new-only"
     },
     "lint": {
-      "dependsOn": [
-        "^topo"
+      "dependsOn": ["^topo"],
+      "inputs": [
+        "src/**",
+        "package.json",
+        "tsconfig.json",
+        ".eslintrc*",
+        "eslint.config.*"
       ],
-      "outputs": [
-        "node_modules/.cache/.eslintcache"
-      ]
+      "outputs": ["node_modules/.cache/.eslintcache"]
     },
     "lint:fix": {},
     "analyze": {},
@@ -92,23 +79,15 @@
       "cache": false
     },
     "kubb:generate": {
-      "dependsOn": [
-        "^build",
-        "^db:generate"
-      ],
-      "outputs": [
-        "generated/**",
-        "generated/**"
-      ]
+      "dependsOn": ["^build", "^db:generate"],
+      "inputs": ["kubb.config.ts", "swagger.json"],
+      "outputs": ["src/generated/**"]
     },
     "test": {},
     "type-check": {
-      "dependsOn": [
-        "^topo"
-      ],
-      "outputs": [
-        "node_modules/.cache/tsbuildinfo.json"
-      ]
+      "dependsOn": ["^topo"],
+      "inputs": ["src/**", "package.json", "tsconfig.json"],
+      "outputs": ["node_modules/.cache/tsbuildinfo.json"]
     }
   }
 }
