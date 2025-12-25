@@ -6,7 +6,7 @@ import type {
 } from "axios";
 import axios from "axios";
 
-import { buildDate } from "./build-data.json";
+import buildData from "./build-data.json";
 
 declare const AXIOS_BASE: string;
 declare const AXIOS_HEADERS: string;
@@ -70,7 +70,7 @@ export const client = async <TData, TError = unknown, TVariables = unknown>(
       ...globalConfig,
       ...config,
       headers: {
-        "X-Compatibility-Date": buildDate,
+        "X-Compatibility-Date": buildData.buildDate,
         "X-User-Agent":
           "jitaspace-esi-client/1.0.0 (joao@jita.space) (eve:Joao Neto)",
         ...globalConfig.headers,
