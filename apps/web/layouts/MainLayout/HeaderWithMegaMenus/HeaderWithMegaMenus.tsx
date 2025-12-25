@@ -73,22 +73,22 @@ export function HeaderWithMegaMenus({ pinned }: HeaderWithMegaMenusProps) {
             <Group h="100%" gap={0} visibleFrom="sm">
               <DesktopHeaderLinkGroup
                 title="Character Tools"
-                Icon={(props) => <CharacterSheetIcon {...props} />}
+                Icon={CharacterSheetIcon}
                 items={characterApps}
               />
               <DesktopHeaderLinkGroup
                 title="Corporation Tools"
-                Icon={(props) => <CorporationIcon {...props} />}
+                Icon={CorporationIcon}
                 items={corporationApps}
               />
               <DesktopHeaderLinkGroup
                 title="Alliance Tools"
-                Icon={(props) => <AlliancesIcon {...props} />}
+                Icon={AlliancesIcon}
                 items={allianceApps}
               />
               <DesktopHeaderLinkGroup
                 title="Universe Explorer"
-                Icon={(props) => <MapIcon {...props} />}
+                Icon={MapIcon}
                 items={universeApps}
               />
 
