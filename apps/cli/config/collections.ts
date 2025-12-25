@@ -48,14 +48,14 @@ export const collections: Record<string, SdeCollection> = {
     },
     tags: ["Inventory"],
   },*/
-  "/characters/agents": {
+  "/characters/npc-characters": {
     datasource: {
       type: "sde",
-      name: "agents.yaml",
+      name: "npcCharacters.yaml",
     },
     idAttribute: "characterID",
     model: {
-      name: "Agent",
+      name: "NPCCharacter",
     },
     tags: ["Character"],
   },
@@ -446,17 +446,6 @@ export const collections: Record<string, SdeCollection> = {
       },
     },
     tags: ["Universe"],
-  },
-  "/characters/researchAgents": {
-    datasource: {
-      type: "sde",
-      name: "researchAgents.yaml",
-    },
-    idAttribute: "characterID",
-    model: {
-      name: "ResearchAgent",
-    },
-    tags: ["Character"],
   },
   "/universe/skinLicenses": {
     datasource: {

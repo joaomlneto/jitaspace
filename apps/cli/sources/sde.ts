@@ -33,7 +33,7 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
     idAttributeType: "number",
     transformations: [fromArrayOfObjectsToMap],
   },
-  "agents.yaml": {
+  "npcCharacters.yaml": {
     idAttributeName: "characterID",
     idAttributeType: "number",
     transformations: [addIdToItem],
@@ -225,11 +225,6 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   },
   "races.yaml": {
     idAttributeName: "raceID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "researchAgents.yaml": {
-    idAttributeName: "characterID",
     idAttributeType: "number",
     transformations: [addIdToItem],
   },

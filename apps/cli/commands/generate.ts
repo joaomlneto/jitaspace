@@ -68,7 +68,7 @@ export default createCommand("generate")
     const sdeMetadataFile = loadFile("_sde.yaml", sdeRoot);
     const metaPath = path.join(getWorkingDirectory(), "latest", "meta");
     mkdir(metaPath);
-    const metaVersionPath = path.join(metaPath, "version.json");
+    const metaVersionPath = path.join(metaPath, "version");
     fs.writeFileSync(
       metaVersionPath,
       JSON.stringify({
@@ -147,7 +147,7 @@ export default createCommand("generate")
 
     // write the schema file
     await fs.promises.writeFile(
-      path.join(getWorkingDirectory(), "latest", `swagger.json`),
+      path.join(getWorkingDirectory(), "latest", `swagger.json.json`),
       JSON.stringify(schema, null, 2),
     );
 
