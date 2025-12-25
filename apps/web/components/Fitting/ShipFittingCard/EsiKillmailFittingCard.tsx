@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import { type CardProps } from "@mantine/core";
 
+import { ItemsFlagEnum } from "@jitaspace/esi-client";
 import { useKillmail } from "@jitaspace/hooks";
 
 import { ShipFittingCard } from "./ShipFittingCard";
@@ -18,7 +19,7 @@ type EsiKillmailFittingCardProps = Omit<CardProps, "children"> & {
  * Table to convert flag numbers to names
  * TODO: Move to the data package
  */
-const killmailFlagToEnum: Record<number, string> = {
+const killmailFlagToEnum: Record<number, ItemsFlagEnum> = {
   5: "Cargo",
   11: "LoSlot0",
   12: "LoSlot1",
@@ -75,7 +76,7 @@ export const EsiKillmailFittingCard = memo(
 
     return (
       <ShipFittingCard
-        name={name?.name ?? "Killmail Fitting"}
+        name={`Killmail ${data?.data.killmail_id}`}
         description="Killmail Fitting"
         shipTypeId={data?.data.victim.ship_type_id}
         items={(data?.data.victim.items ?? []).map((item) => ({
