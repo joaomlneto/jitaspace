@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
       - name: Cypress run
         # Uses the official Cypress GitHub action https://github.com/cypress-io/github-action
