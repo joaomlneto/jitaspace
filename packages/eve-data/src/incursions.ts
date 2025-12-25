@@ -1,4 +1,4 @@
-const incursion_constellations: Record<
+export const incursion_constellations: Record<
   string,
   {
     Staging: string;
@@ -3750,7 +3750,7 @@ const incursion_constellations: Record<
   },
 };
 
-const incursion_payouts_isk = {
+export const incursion_payouts_isk = {
   Scout: {
     H: {
       5: 3500,
@@ -3801,7 +3801,7 @@ const incursion_payouts_isk = {
   },
 };
 
-const incursion_payouts_lp = {
+export const incursion_payouts_lp = {
   Scout: {
     H: {
       5: 400,
