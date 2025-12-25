@@ -32,7 +32,7 @@
     "@jitaspace/tsconfig": "workspace:*",
     "@types/node": "^22.15.29",
     "concurrently": "^9.2.0",
-    "eslint": "^9.28.0",
+    "eslint": "^9.39.2",
     "prettier": "^3.5.3",
     "prisma": "^6.12.0",
     "typescript": "^5.8.3"

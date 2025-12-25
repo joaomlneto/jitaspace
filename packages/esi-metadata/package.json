@@ -13,15 +13,14 @@
     "type-check": "tsc --jsx react-jsx --noEmit",
     "prepublish": "pnpm build"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
     "@types/node": "^22.15.29",
     "@types/react": "^19.1.6",
-    "eslint": "^9.28.0",
+    "eslint": "^9.39.2",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },

@@ -35,7 +35,7 @@
     "@types/node": "^22.15.29",
     "@types/tar-stream": "^3.1.4",
     "@types/unbzip2-stream": "^1.4.3",
-    "eslint": "^9.28.0",
+    "eslint": "^9.39.2",
     "inngest-cli": "^1.6.3",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
