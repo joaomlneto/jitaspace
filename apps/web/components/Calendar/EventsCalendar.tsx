@@ -1,12 +1,9 @@
+import type { CalendarProps } from "@mantine/dates";
 import React from "react";
 import { Indicator } from "@mantine/core";
-import { Calendar, type CalendarProps } from "@mantine/dates";
+import { Calendar } from "@mantine/dates";
 
 import { CalendarEvent } from "@jitaspace/hooks";
-
-
-
-
 
 type CharacterMonthCalendarProps = CalendarProps & {
   events: CalendarEvent[];
@@ -35,12 +32,14 @@ export default function EventsCalendar({
 
   return (
     <Calendar
-      excludeDate={(date: Date) => {
+      excludeDate={(dateString: string) => {
+        const date = new Date(dateString);
         // return false if date is before today
         const startOfToday = new Date().setHours(0, 0, 0, 0);
         return date.getTime() < startOfToday;
       }}
-      renderDay={(date: Date) => {
+      renderDay={(dateString: string) => {
+        const date = new Date(dateString);
         const day = date.getDate();
         const dayEvents = eventsPerDate[date.getTime()] ?? [];
         return (
