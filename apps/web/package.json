@@ -61,6 +61,7 @@
     "dayjs": "^1.11.13",
     "embla-carousel-react": "8.6.0",
     "humanize-duration": "^3.32.2",
+    "jiti": "^2.6.1",
     "jose": "^6.0.11",
     "jwt-decode": "^4.0.0",
     "mantine-react-table": "2.0.0-beta.9",

@@ -1,7 +1,8 @@
 "use client";
 
+import type { LinkProps } from "next/link";
 import React from "react";
-import Link, { type LinkProps } from "next/link";
+import Link from "next/link";
 import {
   ActionIcon,
   Anchor,
@@ -13,9 +14,8 @@ import {
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
 
 import { PartnerBadge } from "~/components/Badge";
-import { env } from "~/env.mjs";
+import { env } from "~/env";
 import classes from "./FooterWithLinks.module.css";
-
 
 const links: { link: LinkProps["href"]; label: string }[] = [
   {

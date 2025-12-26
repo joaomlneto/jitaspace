@@ -1,5 +1,5 @@
-import React, { useMemo, useState, type ReactElement } from "react";
-import getConfig from "next/config";
+import type { ReactElement } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Anchor,
   Badge,
@@ -17,19 +17,15 @@ import { IconCircleCheck, IconCircleX } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
 import useSwr from "swr";
 
-import {
-  useGetStatus as useGetMetaStatus,
-  type GetStatusQueryResponse,
-} from "@jitaspace/esi-meta-client";
+import type { GetStatusQueryResponse } from "@jitaspace/esi-meta-client";
+import { useGetStatus as useGetMetaStatus } from "@jitaspace/esi-meta-client";
 import { useServerStatus } from "@jitaspace/hooks";
 import { useGetVersion } from "@jitaspace/sde-client";
 import { FormattedDateText } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
-
 export default function Page() {
-  const { publicRuntimeConfig } = getConfig();
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
     useState<boolean>(false);
   const { data: sdeData, isLoading: sdeIsLoading } = useSwr<{
@@ -73,10 +69,10 @@ export default function Page() {
 
   const webLastUpdatedDate: Date | null = useMemo(
     () =>
-      publicRuntimeConfig?.modifiedDate
-        ? new Date(publicRuntimeConfig.modifiedDate)
+      process.env.NEXT_PUBLIC_MODIFIED_DATE
+        ? new Date(process.env.NEXT_PUBLIC_MODIFIED_DATE)
         : null,
-    [publicRuntimeConfig?.modifiedDate],
+    [],
   );
 
   const sdeLastModifiedDate: Date | null = useMemo(

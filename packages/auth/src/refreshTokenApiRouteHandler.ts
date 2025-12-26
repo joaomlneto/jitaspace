@@ -9,7 +9,7 @@ import {
 } from "@jitaspace/auth-utils";
 
 // How much time before token expires we're willing to refresh it
-import { env } from "../env.mjs"; // TODO: Support optionally requesting a subset of existing scopes
+import { env } from "../env"; // TODO: Support optionally requesting a subset of existing scopes
 import { sealDataWithAuthSecret, unsealDataWithAuthSecret } from "../utils";
 
 // How much time (in ms) before token expires we're willing to refresh it

@@ -35,7 +35,7 @@ import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccess
 import { contextModals } from "~/components/Modals";
 import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
-import { env } from "~/env.mjs";
+import { env } from "~/env";
 import { themes } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
 

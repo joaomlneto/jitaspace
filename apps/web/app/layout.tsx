@@ -26,7 +26,7 @@ import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccess
 import { contextModals } from "~/components/Modals";
 import { RouterTransitionAppDir } from "~/components/RouterTransitionAppDir";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
-import { env } from "~/env.mjs";
+import { env } from "~/env";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
 import { MySessionProvider } from "~/lib/MySessionProvider";
 

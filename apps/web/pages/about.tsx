@@ -17,7 +17,7 @@ import { Email } from "react-obfuscate-email";
 
 import { CharacterAnchor, CharacterAvatar, CharacterName } from "@jitaspace/ui";
 
-import { env } from "~/env.mjs";
+import { env } from "~/env";
 import { MainLayout } from "~/layouts";
 
 const MY_CHARACTER_ID = 401563624;

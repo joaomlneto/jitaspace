@@ -1,7 +1,6 @@
 import { NonRetriableError } from "inngest";
 
-import { env } from "../env.mjs";
-
+import { env } from "../env";
 
 export const compareSets = <T extends object>({
   recordsBefore,

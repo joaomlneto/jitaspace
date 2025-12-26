@@ -1,10 +1,12 @@
 import bundleAnalyzer from "@next/bundle-analyzer";
+import { createJiti } from "jiti";
 
+const jiti = createJiti(import.meta.url);
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
  * This is especially useful for Docker builds and Linting.
  */
-!process.env.SKIP_ENV_VALIDATION && (await import("./env.mjs"));
+!process.env.SKIP_ENV_VALIDATION && (await jiti.import("./env"));
 
 /** @type {import("next").NextConfig} */
 const config = {
@@ -27,8 +29,7 @@ const config = {
     "@jitaspace/utils",
   ],
 
-  /** We already do linting and typechecking as separate tasks in CI */
-  eslint: { ignoreDuringBuilds: !!process.env.CI },
+  /** We already do typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: !!process.env.CI },
 
   /** Allow images from CCP CDN */
@@ -52,11 +53,9 @@ const config = {
     },
   ],
 
-  publicRuntimeConfig: {
-    modifiedDate: new Date().toISOString(),
+  env: {
+    NEXT_PUBLIC_MODIFIED_DATE: new Date().toISOString(),
   },
-
-  turbopack: {},
 };
 
 const withBundleAnalyzer = bundleAnalyzer({

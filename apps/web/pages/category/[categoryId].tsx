@@ -1,4 +1,5 @@
-import React, { useMemo, type ReactElement } from "react";
+import type { ReactElement } from "react";
+import React, { useMemo } from "react";
 import { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import {
@@ -15,9 +16,8 @@ import { NextSeo } from "next-seo";
 import { prisma } from "@jitaspace/db";
 import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
-import { env } from "~/env.mjs";
+import { env } from "~/env";
 import { MainLayout } from "~/layouts";
-
 
 type PageProps = {
   name?: string;

@@ -20,7 +20,7 @@ import { LPStoreIcon } from "@jitaspace/eve-icons";
 import { CorporationAvatar } from "@jitaspace/ui";
 
 import { LoyaltyPointsTable } from "~/components/LPStore";
-import { env } from "~/env.mjs";
+import { env } from "~/env";
 import { MainLayout } from "~/layouts";
 
 type PageProps = {
