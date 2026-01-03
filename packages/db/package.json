@@ -11,7 +11,7 @@
     "db:studio": "prisma studio --browser none",
     "db:generate": "pnpm with-env prisma generate",
     "db:generate:watch": "pnpm with-env prisma generate --watch",
-    "db:push": "pnpm with-env prisma db push --skip-generate",
+    "db:push": "pnpm with-env prisma db push",
     "db:migrate:deploy": "pnpm with-env prisma migrate deploy",
     "db:migrate:dev": "pnpm with-env prisma migrate dev",
     "db:migrate:reset": "pnpm with-env prisma migrate reset",
