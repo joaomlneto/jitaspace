@@ -6,10 +6,6 @@ import z from "zod";
 
 import { useAuthStore } from "@jitaspace/hooks";
 
-
-
-
-
 export const EsiClientSSOAccessTokenInjector = ({
   children,
 }: PropsWithChildren) => {

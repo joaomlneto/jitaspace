@@ -50,8 +50,6 @@ const client = z.object({
 /**
  * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
  * middlewares) or client-side, so we need to destruct manually.
- *
- * @type {Record<keyof z.infer<typeof server> | keyof z.infer<typeof client>, string | undefined>}
  */
 const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
@@ -73,16 +71,12 @@ const processEnv = {
 
 const merged = server.merge(client);
 
-/** @typedef {z.input<typeof merged>} MergedInput */
-/** @typedef {z.infer<typeof merged>} MergedOutput */
-/** @typedef {z.SafeParseReturnType<MergedInput, MergedOutput>} MergedSafeParseReturn */
-
-let env = /** @type {MergedOutput} */ process.env;
+let env = process.env as unknown as z.infer<typeof merged>;
 
 if (!!process.env.SKIP_ENV_VALIDATION === false) {
   const isServer = typeof window === "undefined";
 
-  const parsed = /** @type {MergedSafeParseReturn} */ isServer
+  const parsed = isServer
     ? merged.safeParse(processEnv) // on server we can validate all env vars
     : client.safeParse(processEnv); // on the client we can only validate the ones that are exposed
 
@@ -94,7 +88,7 @@ if (!!process.env.SKIP_ENV_VALIDATION === false) {
     throw new Error("Invalid environment variables");
   }
 
-  const env = new Proxy(parsed.data, {
+  env = new Proxy(parsed.data, {
     get(target, prop) {
       if (typeof prop !== "string") return undefined;
       // Throw a descriptive error if a server-side env var is accessed on the client
@@ -111,7 +105,7 @@ if (!!process.env.SKIP_ENV_VALIDATION === false) {
         );
       return target[prop as keyof typeof target];
     },
-  });
+  }) as unknown as z.infer<typeof merged>;
 }
 
 export { env };

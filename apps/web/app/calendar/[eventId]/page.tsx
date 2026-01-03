@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactElement } from "react";
 import React from "react";
 import {
   Badge,
@@ -11,7 +10,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { NextSeo } from "next-seo";
 
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import {
@@ -33,14 +31,14 @@ import {
 } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
-import { MainLayout } from "~/layouts";
 
-export default async function Page({
+export default function Page({
   params,
 }: {
-  params: Promise<{ eventId: number }>;
+  params: Promise<{ eventId: string }>;
 }) {
-  const { eventId } = await params;
+  const { eventId: eventIdStr } = React.use(params);
+  const eventId = parseInt(eventIdStr);
   //const eventId = parseInt(toArrayIfNot(router.query.eventId)[0] ?? "");
   const character = useSelectedCharacter();
   const { data: event, isLoading: eventLoading } = useCalendarEvent(
@@ -77,11 +75,6 @@ export default async function Page({
 
   return (
     <>
-      <NextSeo
-        title={
-          event?.data ? `${event?.data.title} | Calendar` : "Calendar event"
-        }
-      />
       <Container>
         <Stack>
           <Group>
@@ -166,12 +159,3 @@ export default async function Page({
     </>
   );
 }
-
-Page.getLayout = function getLayout(page: ReactElement<any>) {
-  return <MainLayout>{page}</MainLayout>;
-};
-
-Page.requiredScopes = [
-  "esi-calendar.read_calendar_events.v1",
-  "esi-calendar.respond_calendar_events.v1",
-];

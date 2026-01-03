@@ -1,3 +1,6 @@
+"use client";
+
+import type { AxiosError } from "axios";
 import React from "react";
 import {
   Alert,
@@ -12,14 +15,13 @@ import {
 import { useForm } from "@mantine/form";
 import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
-import { HttpStatusCode, type AxiosError } from "axios";
+import { HttpStatusCode } from "axios";
 
 import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
 import { useAccessToken, useSelectedCharacter } from "@jitaspace/hooks";
 import { EmailRecipientSearchMultiSelect } from "@jitaspace/ui";
 
 import { MailMessageEditor } from "~/components/EveMail/Editor/MailMessageEditor";
-
 
 export type EveMailComposeFormProps = {
   onSend?: () => void;

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useMemo } from "react";
 import {
   Button,
@@ -18,7 +20,6 @@ import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import classes from "./RequestPermissionsBanner.module.css";
 import { ScopesTable } from "./ScopesTable";
-
 
 export type RequestPermissionsBannerProps = {
   requiredScopes: ESIScope[];

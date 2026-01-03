@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactElement } from "react";
 import React from "react";
 import {
   Button,
@@ -14,7 +13,6 @@ import {
 } from "@mantine/core";
 import { openModal } from "@mantine/modals";
 import { format } from "date-fns";
-import { NextSeo } from "next-seo";
 
 import { CalendarIcon } from "@jitaspace/eve-icons";
 import {
@@ -25,7 +23,6 @@ import {
 
 import { CalendarEventList } from "~/components/Calendar/CalendarEventList/CalendarEventList";
 import EventsCalendar from "~/components/Calendar/EventsCalendar";
-import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const character = useSelectedCharacter();
@@ -50,7 +47,6 @@ export default function Page() {
 
   return (
     <>
-      <NextSeo title="Calendar" />
       <Container>
         <Stack gap="xl">
           <Group justify="space-between">
@@ -124,12 +120,3 @@ export default function Page() {
     </>
   );
 }
-
-Page.getLayout = function getLayout(page: ReactElement<any>) {
-  return <MainLayout>{page}</MainLayout>;
-};
-
-Page.requiredScopes = [
-  "esi-calendar.read_calendar_events.v1",
-  "esi-calendar.respond_calendar_events.v1",
-];

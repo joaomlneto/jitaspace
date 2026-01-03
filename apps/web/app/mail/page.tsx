@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactElement } from "react";
 import React from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -18,7 +17,6 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { NextSeo } from "next-seo";
 
 import {
   EvemailComposeIcon,
@@ -31,7 +29,6 @@ import { EveMailLabelMultiSelect } from "@jitaspace/ui";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxTable } from "~/components/EveMail";
-import { MainLayout } from "~/layouts";
 
 export default function Page() {
   const router = useRouter();
@@ -182,20 +179,3 @@ export default function Page() {
     </Container>
   );
 }
-
-Page.getLayout = function getLayout(page: ReactElement<any>) {
-  return (
-    <MainLayout>
-      <NextSeo title="EveMail" />
-      {page}
-    </MainLayout>
-  );
-};
-
-Page.requiredScopes = [
-  "esi-mail.organize_mail.v1",
-  "esi-mail.read_mail.v1",
-  "esi-mail.send_mail.v1",
-  "esi-search.search_structures.v1",
-  "esi-characters.read_contacts.v1",
-];

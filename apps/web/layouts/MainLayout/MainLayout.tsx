@@ -1,12 +1,13 @@
 "use client";
 
-import React, { type PropsWithChildren } from "react";
-import { AppShell, rem, type AppShellProps } from "@mantine/core";
+import type { AppShellProps } from "@mantine/core";
+import type { PropsWithChildren } from "react";
+import React from "react";
+import { AppShell, rem } from "@mantine/core";
 import { useHeadroom, useMediaQuery } from "@mantine/hooks";
 
 import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
 import { HeaderWithMegaMenus } from "~/layouts/MainLayout/HeaderWithMegaMenus";
-
 
 export function MainLayout({
   children,

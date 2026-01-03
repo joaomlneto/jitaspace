@@ -1,10 +1,12 @@
-import { useMemo, type PropsWithChildren, type ReactElement } from "react";
+"use client";
+
+import type { PropsWithChildren, ReactElement } from "react";
+import { useMemo } from "react";
 
 import { type ESIScope } from "@jitaspace/esi-metadata";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 
 import { RequestPermissionsBanner } from "./RequestPermissionsBanner";
-
 
 export type ScopeGuardProps = {
   requiredScopes?: ESIScope[];
