@@ -19,7 +19,7 @@
     "dev": "pnpm with-env concurrently -c \"auto\" --names \"Studio,Watch\" \"pnpm:db:studio\" \"pnpm:db:generate:watch\"",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
-    "postinstall": "prisma generate",
+    "postinstall": "pnpm db:generate",
     "type-check": "tsc --jsx react-jsx --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
