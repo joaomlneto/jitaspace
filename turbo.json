@@ -41,6 +41,7 @@
       "cache": false
     },
     "dev": {
+      "dependsOn": ["^db:generate", "kubb:generate"],
       "persistent": true,
       "cache": false
     },
@@ -84,6 +85,10 @@
       "outputs": ["src/generated/**"]
     },
     "test": {},
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
     "type-check": {
       "dependsOn": ["^topo"],
       "inputs": ["src/**", "package.json", "tsconfig.json"],

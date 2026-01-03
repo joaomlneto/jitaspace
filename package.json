@@ -23,7 +23,8 @@
     "type-check": "turbo type-check",
     "publish-packages": "turbo run build lint test && changeset version && changeset publish",
     "preinstall": "npx only-allow pnpm",
-    "test": ""
+    "test": "turbo test",
+    "test:watch": "turbo test:watch"
   },
   "dependencies": {
     "@changesets/cli": "^2.29.4",
@@ -34,5 +35,11 @@
     "turbo": "^2.5.4",
     "typescript": "^5.8.3"
   },
-  "prettier": "@jitaspace/prettier-config"
+  "prettier": "@jitaspace/prettier-config",
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.7",
+      "@types/react-dom": "19.2.3"
+    }
+  }
 }
