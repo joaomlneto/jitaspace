@@ -48,6 +48,7 @@
     "@next/bundle-analyzer": "16.1.1",
     "@next/third-parties": "16.1.1",
     "@react-hook/cache": "^1.1.1",
+    "@sentry/nextjs": "^10.32.1",
     "@tabler/icons-react": "^3.34.0",
     "@tanstack/react-query": "^5.81.5",
     "@tanstack/react-query-devtools": "^5.79.2",
