@@ -1,10 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "generated"
 }
 
 datasource db {
   provider = "cockroachdb"
-  url      = env("DATABASE_URL")
 }
 
 enum CharacterGender {
