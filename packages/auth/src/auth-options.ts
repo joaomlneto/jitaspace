@@ -58,11 +58,11 @@ declare module "next-auth" {
  * @see https://next-auth.js.org/configuration/options
  **/
 export const authOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: env.NEXTAUTH_SECRET,
   providers: [
     EVEOnlineProvider({
-      clientId: env.EVE_CLIENT_ID,
-      clientSecret: env.EVE_CLIENT_SECRET,
+      clientId: env.EVE_CLIENT_ID!,
+      clientSecret: env.EVE_CLIENT_SECRET!,
       authorization: {
         url: "https://login.eveonline.com/v2/oauth/authorize",
         params: {

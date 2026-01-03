@@ -1,6 +1,7 @@
 {
   "extends": "@jitaspace/tsconfig/base.json",
   "compilerOptions": {
+    "lib": ["es2022", "dom", "dom.iterable"],
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
   "include": [

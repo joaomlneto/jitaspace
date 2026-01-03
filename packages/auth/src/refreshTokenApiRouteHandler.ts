@@ -41,14 +41,9 @@ export const refreshTokenApiRouteHandler = async (
   // Attempt to unseal its contents
   const decodedBody = await unsealDataWithAuthSecret(body);
 
-  console.log({ decodedBody });
-
   // Deserialize unsealed contents back into JSON
   const unsealedBody = tokenRefreshDataSchema.parse(decodedBody);
-  console.log({ unsealedBody });
   const { accessTokenExpiration, refreshToken } = unsealedBody;
-
-  console.log({ accessTokenExpiration, refreshToken });
 
   // TODO: VALIDATE TOKEN!!!
 
@@ -64,6 +59,13 @@ export const refreshTokenApiRouteHandler = async (
     return res
       .status(HttpStatusCode.Gone)
       .json({ error: "Access token is too old. Must reauthenticate." });
+  }
+
+  // check if null
+  if (env.EVE_CLIENT_ID === undefined || env.EVE_CLIENT_SECRET === undefined) {
+    return res
+      .status(HttpStatusCode.InternalServerError)
+      .json({ error: "EVE_CLIENT_ID or EVE_CLIENT_SECRET is undefined" });
   }
 
   // Attempt to refresh token
