@@ -7,10 +7,6 @@ import {
   PostUniverseIdsMutationResponse,
 } from "@jitaspace/esi-client";
 
-
-
-
-
 export const useEsiUniverseIdsFromNames = (names: string[]) => {
   const sortedNames = useMemo(() => names.sort(), [names]);
 
@@ -19,15 +15,11 @@ export const useEsiUniverseIdsFromNames = (names: string[]) => {
     [sortedNames],
   );
 
-  console.log({ sortedNames });
-
   const [result, setResult] = useState<{
     loading: boolean;
     error?: string;
     data?: PostUniverseIdsMutationResponse;
   }>({ loading: true });
-
-  console.log({ result });
 
   useEffect(() => {
     const fetchIds = async () => {

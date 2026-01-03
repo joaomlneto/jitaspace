@@ -29,6 +29,13 @@ type PageProps = {
 };
 
 export const getStaticProps: GetStaticProps<PageProps> = async () => {
+  // skip in production
+  if (process.env.NODE_ENV === "production") {
+    return {
+      notFound: true,
+    };
+  }
+
   const queues = Object.values(kv.queues);
 
   const queuesStatus = await Promise.all(
@@ -88,7 +95,6 @@ export const getStaticProps: GetStaticProps<PageProps> = async () => {
           process.env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
       },
     },
-    notFound: process.env.NODE_ENV === "production",
   };
 };
 
