@@ -7,13 +7,13 @@
   "types": "./src/index.ts",
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf .turbo node_modules src/generated",
+    "clean": "rm -rf .turbo node_modules src/generated src/build-data.json",
     "download-schema": "curl -L https://esi.evetech.net/latest/swagger.json | jq 'del(.paths.\"/route/{origin}/{destination}/\")' > swagger.json",
-    "get-esi-date": "node ./src/buildscript.js > build_date.json",
+    "get-esi-date": "node ./src/buildscript.js",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
-    "kubb:generate": "npm run get-esi-date && kubb generate",
-    "postinstall": "kubb generate",
+    "kubb:generate": "pnpm get-esi-date && kubb generate",
+    "postinstall": "pnpm kubb:generate",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

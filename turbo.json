@@ -89,7 +89,7 @@
     "kubb:generate": {
       "dependsOn": ["^build", "^db:generate"],
       "inputs": ["kubb.config.ts", "swagger.json"],
-      "outputs": ["src/generated/**"]
+      "outputs": ["src/generated/**", "src/build-data.json"]
     },
     "test": {},
     "test:watch": {
