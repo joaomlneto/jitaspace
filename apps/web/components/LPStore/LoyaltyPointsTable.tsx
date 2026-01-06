@@ -1,17 +1,13 @@
 "use client";
 
 import React, { memo, useMemo } from "react";
-import { Group, Stack, Text, Tooltip } from "@mantine/core";
-import {
   MantineReactTable,
   useMantineReactTable,
   type MRT_ColumnDef,
 } from "mantine-react-table";
 
 import {
-  FuzzworkTypeMarketAggregate,
-  useFuzzworkRegionalMarketAggregates,
-} from "@jitaspace/hooks";
+import { FuzzworkTypeMarketAggregate, useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import {
   CorporationAnchor,
   CorporationAvatar,
@@ -20,8 +16,12 @@ import {
   ISKAmount,
   TypeAnchor,
   TypeAvatar,
-  TypeName,
+  TypeName
 } from "@jitaspace/ui";
+import { Group, Stack, Text, Tooltip } from "@mantine/core";
+import type { MRT_ColumnDef } from "mantine-react-table";
+import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
+import React, { memo, useMemo } from "react";
 
 type LoyaltyPointsTableProps = {
   corporations: {
@@ -67,7 +67,7 @@ export const LoyaltyPointsTable = memo(
       const map: Record<number, string> = {};
       types.forEach((type) => (map[type.typeId] = type.name));
       return map;
-    }, types);
+    }, [types]);
 
     const corporationNames = useMemo(() => {
       const map: Record<number, string> = {};
@@ -75,7 +75,7 @@ export const LoyaltyPointsTable = memo(
         (corporation) => (map[corporation.corporationId] = corporation.name),
       );
       return map;
-    }, corporations);
+    }, [corporations]);
 
     const augmentedOffers = useMemo(
       () =>
