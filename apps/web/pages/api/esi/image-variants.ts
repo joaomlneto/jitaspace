@@ -21,7 +21,18 @@ export default async function NextApiRouteHandler(
 
   const response = (await fetch(
     `https://images.evetech.net/${query.data.category}/${query.data.id}`,
-  ).then((res) => res.json())) as string[];
+  )
+    .then((res) => res.json())
+    .catch((err) => console.error(err))) as string[];
+
+  if (!response) {
+    return res
+      .setHeader("Cache-Control", "public, max-age=86400, immutable")
+      .status(HttpStatusCode.NotFound)
+      .json({
+        error: "Image not found",
+      });
+  }
 
   /***********************************************************
    * ATTENTION: THIS API IS BEING USED BY CPPC T'AMBER!!!     *
