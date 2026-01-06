@@ -72,7 +72,8 @@ export const EsiClientSSOAccessTokenInjector = ({
                 accessToken,
                 refreshToken: refreshTokenData,
               });
-            });
+            })
+            .catch((err) => console.error(err));
         });
       },
       Math.max(timeUntilExpiration() - 30000, 1000),

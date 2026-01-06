@@ -48,14 +48,17 @@ export const refreshTokenApiRouteHandler = async (
   // TODO: VALIDATE TOKEN!!!
 
   // Check if the access token is expired or is about to
-  if (Date.now() < accessTokenExpiration - REFRESH_TOKEN_BEFORE_EXP_TIME) {
+  if (
+    Date.now() <
+    accessTokenExpiration * 1000 - REFRESH_TOKEN_BEFORE_EXP_TIME
+  ) {
     return res
       .status(HttpStatusCode.TooEarly)
       .json({ error: "Token is not expired nor is about to expire." });
   }
 
   // Check if access token is too old to be refreshed
-  if (Date.now() > accessTokenExpiration + ACCESS_TOKEN_TOO_OLD_TIME) {
+  if (Date.now() > accessTokenExpiration * 1000 + ACCESS_TOKEN_TOO_OLD_TIME) {
     return res
       .status(HttpStatusCode.Gone)
       .json({ error: "Access token is too old. Must reauthenticate." });
