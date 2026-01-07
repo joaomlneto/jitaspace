@@ -1,13 +1,14 @@
 "use client";
 
+import type { MRT_ColumnDef } from "mantine-react-table";
 import React, { memo, useMemo } from "react";
-  MantineReactTable,
-  useMantineReactTable,
-  type MRT_ColumnDef,
-} from "mantine-react-table";
+import { Group, Stack, Text, Tooltip } from "@mantine/core";
+import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import {
-import { FuzzworkTypeMarketAggregate, useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
+  FuzzworkTypeMarketAggregate,
+  useFuzzworkRegionalMarketAggregates,
+} from "@jitaspace/hooks";
 import {
   CorporationAnchor,
   CorporationAvatar,
@@ -16,12 +17,8 @@ import {
   ISKAmount,
   TypeAnchor,
   TypeAvatar,
-  TypeName
+  TypeName,
 } from "@jitaspace/ui";
-import { Group, Stack, Text, Tooltip } from "@mantine/core";
-import type { MRT_ColumnDef } from "mantine-react-table";
-import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
-import React, { memo, useMemo } from "react";
 
 type LoyaltyPointsTableProps = {
   corporations: {
