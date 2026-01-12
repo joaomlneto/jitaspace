@@ -39,7 +39,10 @@ export const refreshTokenApiRouteHandler = async (
   z.string().parse(body);
 
   // Attempt to unseal its contents
-  const decodedBody = await unsealDataWithAuthSecret(body);
+  const decodedBody = await unsealDataWithAuthSecret({
+    data: body,
+    secret: env.NEXTAUTH_SECRET,
+  });
 
   // Deserialize unsealed contents back into JSON
   const unsealedBody = tokenRefreshDataSchema.parse(decodedBody);
@@ -87,8 +90,11 @@ export const refreshTokenApiRouteHandler = async (
       .json({ error: "Unable to decode payload of refreshed token." });
 
   const sealedRefreshData = await sealDataWithAuthSecret({
-    accessTokenExpiration: payload.exp,
-    refreshToken: refresh_token,
+    data: {
+      accessTokenExpiration: payload.exp,
+      refreshToken: refresh_token,
+    },
+    secret: env.NEXTAUTH_SECRET,
   });
 
   return res.json({

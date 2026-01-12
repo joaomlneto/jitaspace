@@ -43,7 +43,7 @@ export const refreshEveSsoToken = async (params: {
 
   const refreshResult =
     (await refreshedTokensResponse.json()) as SsoRefreshTokenSuccessResult;
-  console.log({ refreshResult });
+  //console.log({ refreshResult });
 
   return refreshResult;
 };

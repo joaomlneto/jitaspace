@@ -23,8 +23,11 @@ const encryptRefreshToken = async (
   if (!payload) throw new Error("Error getting access token payload");
   if (!refreshToken) throw new Error("No refresh token provided!");
   return await sealDataWithAuthSecret({
-    accessTokenExpiration: payload.exp,
-    refreshToken,
+    data: {
+      accessTokenExpiration: payload.exp,
+      refreshToken,
+    },
+    secret: env.NEXTAUTH_SECRET,
   });
 };
 
