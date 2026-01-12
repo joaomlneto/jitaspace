@@ -14,8 +14,9 @@
     ],
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
     "module": "esnext",
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "types": ["jest", "@testing-library/jest-dom", "node"]
   },
   "include": [".", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "cypress", "**/*.cy.tsx", "**/*.cy.ts"]
 }
