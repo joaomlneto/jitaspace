@@ -1,6 +1,6 @@
+import { createCommand } from "@commander-js/extra-typings";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { createCommand } from "@commander-js/extra-typings";
 
 import { collections } from "../config/collections.js";
 import { getWorkingDirectory, TITLE_WIDTH } from "../lib/cli.js";
@@ -68,7 +68,7 @@ export default createCommand("generate")
     const sdeMetadataFile = loadFile("_sde.yaml", sdeRoot);
     const metaPath = path.join(getWorkingDirectory(), "latest", "meta");
     mkdir(metaPath);
-    const metaVersionPath = path.join(metaPath, "version");
+    const metaVersionPath = path.join(metaPath, "version.json");
     fs.writeFileSync(
       metaVersionPath,
       JSON.stringify({
