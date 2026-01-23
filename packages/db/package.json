@@ -17,7 +17,7 @@
     "db:migrate:reset": "pnpm with-env prisma migrate reset",
     "db:migrate:reset-sql": "pnpm with-env npx prisma migrate diff --from-schema-datasource=prisma/schema.prisma --to-empty --script",
     "dev": "pnpm with-env concurrently -c \"auto\" --names \"Studio,Watch\" \"pnpm:db:studio\" \"pnpm:db:generate:watch\"",
-    "lint": "eslint .",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "postinstall": "pnpm db:generate",
     "type-check": "tsc --jsx react-jsx --noEmit",

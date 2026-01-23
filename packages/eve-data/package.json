@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "clean": "rm -rf .turbo node_modules dist",
-    "lint": "eslint .",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --jsx react-jsx --noEmit",
     "prepublish": "pnpm build"

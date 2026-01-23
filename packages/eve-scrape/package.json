@@ -9,7 +9,7 @@
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
     "dev": "pnpm with-env inngest-cli dev",
-    "lint": "eslint .",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --jsx react-jsx --noEmit",
     "with-env": "dotenv -e ../../.env --"
