@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./base": "./base.js",
-    "./nextjs": "./nextjs.js",
-    "./react": "./react.js"
+    "./base": "./base.ts",
+    "./nextjs": "./nextjs.ts",
+    "./react": "./react.ts"
   },
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
