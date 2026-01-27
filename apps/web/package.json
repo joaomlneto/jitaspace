@@ -35,6 +35,7 @@
     "@jitaspace/tiptap-eve": "workspace:*",
     "@jitaspace/ui": "workspace:*",
     "@jitaspace/utils": "workspace:*",
+    "@jitaspace/workflow": "workspace:*",
     "@mantine/carousel": "^8.1.2",
     "@mantine/charts": "^8.1.2",
     "@mantine/code-highlight": "^8.1.2",

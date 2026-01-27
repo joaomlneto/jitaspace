@@ -10,6 +10,9 @@
     "plugins": [
       {
         "name": "next"
+      },
+      {
+        "name": "workflow"
       }
     ],
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
