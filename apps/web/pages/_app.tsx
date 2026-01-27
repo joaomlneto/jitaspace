@@ -63,9 +63,7 @@ export default function App({
   const [queryClient, setQueryClient] = React.useState(() => new QueryClient());
 
   return (
-    <ConsentManagerProvider options={CONSENT_OPTIONS}>
-      <PrivacyBanner />
-      <ConsentManagerDialog />
+    <>
       <Head>
         <meta
           name="viewport"
@@ -158,6 +156,6 @@ export default function App({
           </EsiClientSSOAccessTokenInjector>
         </SessionProvider>
       </QueryClientProvider>
-    </ConsentManagerProvider>
+    </>
   );
 }

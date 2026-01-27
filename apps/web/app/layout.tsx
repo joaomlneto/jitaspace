@@ -80,7 +80,7 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   const defaultColorScheme = "dark";
   return (
-    <ConsentManager>
+    <>
       <html lang="en" dir="ltr" data-mantine-color-scheme={defaultColorScheme}>
         <head>
           <ColorSchemeScript defaultColorScheme={defaultColorScheme} />
@@ -129,6 +129,6 @@ export default function RootLayout({
           </MantineProvider>
         </body>
       </html>
-    </ConsentManager>
+    </>
   );
 }
