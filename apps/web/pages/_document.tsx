@@ -1,16 +1,7 @@
-import React from "react";
-import Document, {
-  Head,
-  Html,
-  Main,
-  NextScript,
-  type DocumentContext,
-} from "next/document";
+import type { DocumentContext } from "next/document";
+import type React from "react";
+import Document, { Head, Html, Main, NextScript } from "next/document";
 import { ColorSchemeScript } from "@mantine/core";
-
-
-
-
 
 export default class _Document extends Document {
   static async getInitialProps(ctx: DocumentContext) {
@@ -22,7 +13,7 @@ export default class _Document extends Document {
     };
   }
 
-  render(): React.ReactElement<any> {
+  render(): React.ReactElement {
     return (
       <Html lang="en">
         <Head>

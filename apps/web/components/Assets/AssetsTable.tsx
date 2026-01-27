@@ -1,15 +1,15 @@
-import {CharacterAsset} from "@jitaspace/hooks";
+import type {CharacterAsset} from "@jitaspace/hooks";
 import {EveEntityAnchor, EveEntityName, ISKAmount, TypeAnchor, TypeAvatar, TypeName,} from "@jitaspace/ui";
 import {Badge, Group, Table} from "@mantine/core";
-import React, {memo} from "react";
+import _React, {memo} from "react";
 
 
-type AssetsTableProps = {
+interface AssetsTableProps {
   assets: (CharacterAsset & {
     name?: string;
     price?: number;
   })[];
-};
+}
 
 export const AssetsTable = memo(({assets}: AssetsTableProps) => {
   return (

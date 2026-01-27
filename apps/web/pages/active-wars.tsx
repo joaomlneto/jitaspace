@@ -1,6 +1,5 @@
+import type { GetStaticProps } from "next";
 import type { ReactElement } from "react";
-import React from "react";
-import { GetStaticProps } from "next";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
@@ -10,7 +9,7 @@ import { WarsIcon } from "@jitaspace/eve-icons";
 import { WarsTable } from "~/components/Wars";
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   wars: {
     warId: number;
     aggressorCorporationId: number | null;
@@ -43,9 +42,9 @@ type PageProps = {
     allianceId: number;
     name: string;
   }[];
-};
+}
 
-export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<PageProps> = async (_context) => {
   try {
     const now = new Date();
     const wars = await prisma.war
@@ -115,7 +114,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 3600, // every hour
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 300, // at most once every 5 minutes
@@ -125,8 +124,8 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
 export default function Page({
   wars,
-  corporations,
-  alliances,
+  corporations: _corporations,
+  alliances: _alliances,
 }: Readonly<PageProps>) {
   return (
     <Container size="xl">
@@ -164,7 +163,7 @@ export default function Page({
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Wars" />

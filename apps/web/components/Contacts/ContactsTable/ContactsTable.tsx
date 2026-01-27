@@ -1,7 +1,6 @@
-import React from "react";
 import { Badge, Group, Table, Text } from "@mantine/core";
 
-import {
+import type {
   AllianceContact,
   AllianceContactLabel,
   CharacterContact,
@@ -17,13 +16,13 @@ import {
   StandingsBadge,
 } from "@jitaspace/ui";
 
-export type ContactsTableProps = {
+export interface ContactsTableProps {
   contacts?: (AllianceContact & CorporationContact & CharacterContact)[];
   labels?: (AllianceContactLabel &
     CorporationContactLabel &
     CharacterContactLabel)[];
   hideBlockedColumn?: boolean;
-};
+}
 
 export const ContactsTable = ({
   contacts,

@@ -7,9 +7,9 @@ import { SolarSystemStarAvatar } from "@jitaspace/ui";
 import classes from "./Button.module.css";
 
 
-export type SolarSystemButtonProps = {
+export interface SolarSystemButtonProps {
   solarSystemId?: number;
-};
+}
 
 export const SolarSystemButton = memo(
   ({ solarSystemId }: SolarSystemButtonProps) => {

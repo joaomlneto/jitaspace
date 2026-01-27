@@ -10,7 +10,8 @@ import {EveEntityAnchor, EveEntityName, TypeAnchor, TypeAvatar, TypeName,} from 
 import {Alert, Badge, Center, Container, Group, Loader, Pagination, Stack, Table, Text, Title,} from "@mantine/core";
 import {useForm} from "@mantine/form";
 import {usePagination} from "@mantine/hooks";
-import React, {type ReactElement, useCallback, useMemo} from "react";
+import _React, { useCallback, useMemo} from "react";
+import type {ReactElement} from "react";
 
 import {MainLayout} from "~/layouts";
 
@@ -80,7 +81,7 @@ export default function Page() {
     ],
   );
 
-  const totalPrice = useMemo(
+  const _totalPrice = useMemo(
     () => entries.reduce((acc, {price}) => (price ? acc + price : acc), 0),
     [entries],
   );
@@ -191,7 +192,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useMemo, type PropsWithChildren } from "react";
+import { memo, useMemo  } from "react";
+import type {PropsWithChildren} from "react";
 import {
   Group,
   rem,

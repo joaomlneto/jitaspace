@@ -1,4 +1,3 @@
-import React from "react";
 import { ActionIcon, Group, Menu, Text } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
@@ -18,11 +17,7 @@ import { useAccessToken, useCharacterMailLabels } from "@jitaspace/hooks";
 import { MailLabelColorSwatch } from "@jitaspace/ui";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
-
-
-
-
-type Message = {
+interface Message {
   //from?: number;
   is_read?: boolean;
   labels?: number[];
@@ -39,14 +34,14 @@ type Message = {
   // This is to try and be more responsive to the user, since the API
   // takes up to 30 seconds to actually show changes.
   isDeleted?: boolean;
-};
+}
 
-export type MessageMenuProps = {
+export interface MessageMenuProps {
   characterId: number;
   mail: Message;
   mutate?: () => void;
   data?: Message[];
-};
+}
 
 export function MessageMenu({
   characterId,

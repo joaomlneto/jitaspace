@@ -3,7 +3,8 @@
 import { memo, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { useDebouncedValue } from "@mantine/hooks";
-import { Spotlight, type SpotlightProps } from "@mantine/spotlight";
+import { Spotlight  } from "@mantine/spotlight";
+import type {SpotlightProps} from "@mantine/spotlight";
 
 import { useEsiSearch } from "@jitaspace/hooks";
 
@@ -16,11 +17,11 @@ export const JitaSpotlightProvider = memo(
     // FIXME Mantine v7 migration
     return children;
 
-    const router = useRouter();
+    const _router = useRouter();
     const [query, setQuery] = useState<string>("");
     const [debouncedQuery] = useDebouncedValue(query, 1000);
 
-    const { data: esiSearchData } = useEsiSearch(debouncedQuery);
+    const { data: _esiSearchData } = useEsiSearch(debouncedQuery);
 
     /*
     const staticActions= useMemo(

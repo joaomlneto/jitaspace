@@ -1,5 +1,7 @@
-import React, { memo } from "react";
-import { Text, type CardProps } from "@mantine/core";
+import type React from "react";
+import { memo } from "react";
+import { Text  } from "@mantine/core";
+import type {CardProps} from "@mantine/core";
 
 import { useCharacterCurrentFit } from "@jitaspace/hooks";
 

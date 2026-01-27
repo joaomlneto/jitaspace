@@ -1,9 +1,7 @@
-import React from "react";
-
 import { useCorporationContacts } from "@jitaspace/hooks";
 
-import { ContactsTable, type ContactsTableProps } from "./ContactsTable";
-
+import type { ContactsTableProps } from "./ContactsTable";
+import { ContactsTable } from "./ContactsTable";
 
 export type CorporationContactsTableProps = Omit<
   ContactsTableProps,

@@ -1,4 +1,4 @@
-import { type NextApiRequest, type NextApiResponse } from "next";
+import type {NextApiRequest, NextApiResponse} from "next";
 
 export default async function NextApiRouteHandler(
   req: NextApiRequest,

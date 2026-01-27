@@ -1,13 +1,9 @@
 "use client";
 
-import React from "react";
-import { type ContextModalProps } from "@mantine/modals";
+import type { ContextModalProps } from "@mantine/modals";
 
-import {
-  ShipFittingCard,
-  type ShipFittingCardProps,
-} from "~/components/Fitting";
-
+import type { ShipFittingCardProps } from "~/components/Fitting";
+import { ShipFittingCard } from "~/components/Fitting";
 
 export function FittingModal({
   innerProps,

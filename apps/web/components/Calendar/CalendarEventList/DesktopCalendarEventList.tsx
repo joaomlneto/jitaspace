@@ -1,10 +1,9 @@
 import type { TableProps } from "@mantine/core";
-import React from "react";
 import { Anchor, Group, Table, Title, Tooltip } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
+import type { CalendarEvent } from "@jitaspace/hooks";
 import { WarningIcon } from "@jitaspace/eve-icons";
-import { CalendarEvent } from "@jitaspace/hooks";
 import {
   CalendarEventAttendeesAvatarGroup,
   CalendarEventHumanDurationText,

@@ -1,4 +1,3 @@
-import React from "react";
 import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
 import { useCharacterMail, useCharacterMailLabels } from "@jitaspace/hooks";
@@ -15,11 +14,11 @@ import {
   MailLabelColorSwatch,
 } from "@jitaspace/ui";
 
-import { MailboxTableProps } from "~/components/EveMail/MailboxTable";
+import type { MailboxTableProps } from "~/components/EveMail/MailboxTable";
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 import { MessageMenu } from "~/components/EveMail/MessageMenu";
 
-export type MessagePanelProps = {
+export interface MessagePanelProps {
   characterId: number;
   data: MailboxTableProps["data"];
   messageId?: number;
@@ -28,7 +27,7 @@ export type MessagePanelProps = {
   hideRecipients?: boolean;
   hideSender?: boolean;
   hideSubject?: boolean;
-};
+}
 
 export function MessagePanel({
   characterId,

@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -38,7 +37,7 @@ export function LayoutHeader() {
   const pinned = useHeadroom({ fixedAt: 120 });
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
-  const theme = useMantineTheme();
+  const _theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
 
   const character = useSelectedCharacter();
@@ -64,7 +63,7 @@ export function LayoutHeader() {
 
             <Group style={{ height: "100%" }} gap={0} visibleFrom="sm">
               {Object.values(characterApps).map((app) => {
-                const isActive =
+                const _isActive =
                   app.url !== undefined &&
                   router.pathname.startsWith(app.url.toString());
                 return (
@@ -153,7 +152,7 @@ export function LayoutHeader() {
             color={colorScheme === "dark" ? "dark.5" : "gray.1"}
           />
           {Object.values(characterApps).map((app) => {
-            const isActive =
+            const _isActive =
               app.url !== undefined &&
               router.pathname.startsWith(app.url.toString());
             return (

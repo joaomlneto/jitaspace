@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
-import React, { useMemo } from "react";
-import { GetStaticPaths, GetStaticProps } from "next";
+import _React, { useMemo } from "react";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import {
   Badge,
@@ -29,7 +29,7 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   name: string | null;
   description: string | null;
   published: boolean | null;
@@ -52,7 +52,7 @@ type PageProps = {
     isDeleted: boolean;
   }[];
   groups: { groupId: number; name: string }[];
-};
+}
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // Do not pre-render any static pages - faster builds, but slower initial page load
@@ -139,7 +139,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // every hour
@@ -449,6 +449,6 @@ export default function Page({
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };

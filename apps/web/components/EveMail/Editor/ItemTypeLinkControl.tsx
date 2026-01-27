@@ -1,11 +1,13 @@
-import React, { forwardRef } from "react";
+import type React from "react";
+import { forwardRef } from "react";
 import {
   Button,
   Popover,
   useMantineTheme,
-  useProps,
-  type PopoverProps,
+  useProps
+  
 } from "@mantine/core";
+import type {PopoverProps} from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
@@ -13,9 +15,10 @@ import { ItemsIcon } from "@jitaspace/eve-icons";
 import { EsiSearchSelect, TypeAvatar } from "@jitaspace/ui";
 
 import {
-  ControlBase,
-  type RichTextEditorControlBaseProps,
+  ControlBase
+  
 } from "~/components/EveMail/Editor/ControlBase";
+import type {RichTextEditorControlBaseProps} from "~/components/EveMail/Editor/ControlBase";
 import classes from "./LinkControl.module.css";
 
 

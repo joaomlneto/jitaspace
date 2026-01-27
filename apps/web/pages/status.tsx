@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import React, { useMemo, useState } from "react";
+import _React, { useMemo, useState } from "react";
 import {
   Anchor,
   Badge,
@@ -231,7 +231,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Status" />

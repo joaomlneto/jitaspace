@@ -1,10 +1,10 @@
-import React, { memo } from "react";
+import _React, { memo } from "react";
 import { Box, Container } from "@mantine/core";
 
 import { SkillTreeNavLink } from "./SkillTreeNavLink";
 
 
-type SkillTreeNavProps = {
+interface SkillTreeNavProps {
   characterId: number;
   groups: {
     groupId: number;
@@ -22,7 +22,7 @@ type SkillTreeNavProps = {
     }[];
   }[];
   showUnpublished?: boolean;
-};
+}
 
 export const SkillTreeNav = memo(
   ({ characterId, groups, showUnpublished = false }: SkillTreeNavProps) => {

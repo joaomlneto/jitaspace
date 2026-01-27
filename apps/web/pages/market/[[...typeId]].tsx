@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
-import React, { useMemo } from "react";
-import { GetStaticPaths, GetStaticProps } from "next";
+import _React, { useMemo } from "react";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import { Container, Group, Loader, Stack, Text, Title } from "@mantine/core";
 
@@ -18,13 +18,13 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
-export const getStaticProps: GetStaticProps<{}> = async (context) => {
+export const getStaticProps: GetStaticProps<{}> = async (_context) => {
   try {
     return {
       props: {},
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // 30 seconds on error
@@ -104,7 +104,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   // FIXME: Should have MarketLayout wrapping it here!
   return page;
 };

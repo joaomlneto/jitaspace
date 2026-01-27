@@ -1,9 +1,10 @@
 import { forwardRef } from "react";
 import { UnstyledButton, useProps } from "@mantine/core";
 import {
-  useRichTextEditorContext,
-  type RichTextEditorControlProps,
+  useRichTextEditorContext
+  
 } from "@mantine/tiptap";
+import type {RichTextEditorControlProps} from "@mantine/tiptap";
 import cx from "clsx";
 
 import classes from "./Control.module.css";
@@ -22,9 +23,9 @@ export const Control = forwardRef<
     active,
     children,
     interactive,
-    classNames,
-    styles,
-    vars,
+    classNames: _classNames,
+    styles: _styles,
+    vars: _vars,
     ...others
   } = useProps("RichTextEditorControl", defaultProps, props);
   const { unstyled } = useRichTextEditorContext();

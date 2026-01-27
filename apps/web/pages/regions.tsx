@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import React, { useMemo } from "react";
-import { GetStaticProps } from "next";
+import type { GetStaticProps } from "next";
 import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
@@ -10,11 +10,11 @@ import { RegionAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   regions: { regionId: number; name: string }[];
-};
+}
 
-export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<PageProps> = async (_context) => {
   try {
     const regions = await prisma.region.findMany({
       select: {
@@ -32,7 +32,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // at most once per hour
@@ -101,7 +101,7 @@ export default function Page({ regions }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Regions" />

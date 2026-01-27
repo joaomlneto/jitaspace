@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
-import React, { useMemo } from "react";
-import { GetStaticProps } from "next";
+import _React, { useMemo } from "react";
+import type { GetStaticProps } from "next";
 import Link from "next/link";
 import {
   Anchor,
@@ -19,11 +19,11 @@ import { CorporationAvatar } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   corporations: { corporationId: number; name: string }[];
-};
+}
 
-export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<PageProps> = async (_context) => {
   try {
     // Get all corporation IDs that have a loyalty store
     const corporationIds = (
@@ -49,7 +49,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // at most once per hour
@@ -97,7 +97,7 @@ export default function Page({ corporations }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="LP Store" />

@@ -1,5 +1,4 @@
 import type { ReactElement } from "react";
-import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
@@ -264,6 +263,6 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };

@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import _React, { memo } from "react";
 import Link from "next/link";
 import {
   ActionIcon,
@@ -28,10 +28,10 @@ import {
   WarDefenderName,
 } from "@jitaspace/ui";
 
-type KillButtonProps = {
+interface KillButtonProps {
   killmailId: number;
   killmailHash: string;
-};
+}
 
 export const KillmailButton = memo(
   ({ killmailId, killmailHash }: KillButtonProps) => {

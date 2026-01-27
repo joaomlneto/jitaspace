@@ -1,7 +1,7 @@
 import type { MRT_ColumnDef } from "mantine-react-table";
 import type { ReactElement } from "react";
-import React, { useMemo } from "react";
-import { GetStaticProps } from "next";
+import _React, { useMemo } from "react";
+import type { GetStaticProps } from "next";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 import { NextSeo } from "next-seo";
@@ -12,7 +12,7 @@ import { DogmaAttributeAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   attributes: Record<
     number,
     {
@@ -22,9 +22,9 @@ type PageProps = {
       numTypeIds: number;
     }
   >;
-};
+}
 
-export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<PageProps> = async (_context) => {
   try {
     const map: Record<
       number,
@@ -68,7 +68,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // every hour
@@ -98,7 +98,7 @@ export default function Page({ attributes }: PageProps) {
         header: "Name",
         accessorKey: "name",
         size: 40,
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <DogmaAttributeAnchor
             attributeId={row.original.attributeId}
             target="_blank"
@@ -147,7 +147,7 @@ export default function Page({ attributes }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Dogma Attributes" />

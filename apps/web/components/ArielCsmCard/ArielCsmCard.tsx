@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Accordion,
   Anchor,
@@ -14,7 +13,7 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { CharacterAvatar } from "@jitaspace/ui";
 
 export const ArielCsmCard = () => {
-  const [visible, setVisible] = useLocalStorage<boolean>({
+  const [_visible, _setVisible] = useLocalStorage<boolean>({
     key: "jitaspace/show-ariel-csm-card",
     defaultValue: true,
   });

@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import _React, { memo, useMemo } from "react";
 import { Group, JsonInput, Table } from "@mantine/core";
 
 import { useDogmaAttributes, useTypes } from "@jitaspace/hooks";
@@ -14,9 +14,9 @@ import {
 
 
 
-export type CompareTableProps = {
+export interface CompareTableProps {
   typeIds: number[];
-};
+}
 
 export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
   const { data: types } = useTypes(typeIds);
@@ -38,7 +38,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
   );
 
   const attributeTypeValues = useMemo(() => {
-    const result: Record<number, { typeId: number; value?: number }> = {};
+    const _result: Record<number, { typeId: number; value?: number }> = {};
     const attributeList = attributeIds.map((attributeId) => ({
       attributeId,
       values: sortedTypes.map((type) => ({

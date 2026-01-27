@@ -1,4 +1,5 @@
-import React, { useMemo, useState, type ReactElement } from "react";
+import _React, { useMemo, useState  } from "react";
+import type {ReactElement} from "react";
 import {
   Container,
   Group,
@@ -10,7 +11,7 @@ import {
 import { openContextModal } from "@mantine/modals";
 import { NextSeo } from "next-seo";
 
-import { ESIScope } from "@jitaspace/esi-metadata";
+import type { ESIScope } from "@jitaspace/esi-metadata";
 import { FittingIcon } from "@jitaspace/eve-icons";
 import { useCharacterFittings, useSelectedCharacter } from "@jitaspace/hooks";
 import { EveEntitySelect } from "@jitaspace/ui";
@@ -147,7 +148,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Fittings" />

@@ -19,14 +19,14 @@ export default defineConfig(async () => {
       pluginOas({ validate: true }),
       pluginClient({
         //importPath: "../../client",
-        baseURL: "https://sde.jita.space/latest",
+        baseURL: "https://sde.jita.space/20250707",
         dataReturnType: "full",
       }),
       pluginTs({}),
       pluginReactQuery({
         client: {
           //importPath: "../../client",
-          baseURL: "https://sde.jita.space/latest",
+          baseURL: "https://sde.jita.space/20250707",
           dataReturnType: "full",
         },
       }),

@@ -3,21 +3,22 @@ import {useDogmaAttribute} from "@jitaspace/hooks";
 import {sanitizeFormattedEveString} from "@jitaspace/tiptap-eve";
 import {TypeAnchor, TypeAvatar, TypeName} from "@jitaspace/ui";
 import {Container, Group, Loader, Stack, Table, Text, Title,} from "@mantine/core";
-import {GetStaticPaths, GetStaticProps} from "next";
+import type {GetStaticPaths, GetStaticProps} from "next";
 import {useRouter} from "next/router";
-import React, {type ReactElement, useMemo} from "react";
+import _React, { useMemo} from "react";
+import type {ReactElement} from "react";
 
 import {MailMessageViewer} from "~/components/EveMail";
 import {MainLayout} from "~/layouts";
 
 
-type PageProps = {
+interface PageProps {
   name: string | null;
   description: string | null;
   published: boolean | null;
   types: { typeId: number; name: string; value: number; groupId: number }[];
   groups: { groupId: number; name: string }[];
-};
+}
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // Do not pre-render any static pages - faster builds, but slower initial page load
@@ -88,7 +89,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // every hour
@@ -225,6 +226,6 @@ export default function Page({
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };

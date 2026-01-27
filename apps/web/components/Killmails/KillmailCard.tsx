@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo } from "react";
+import _React, { memo } from "react";
 import { Group, Loader, Stack, Text, UnstyledButton } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { IconExternalLink } from "@tabler/icons-react";

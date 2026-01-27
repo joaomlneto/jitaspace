@@ -1,11 +1,11 @@
-import React, { memo } from "react";
+import _React, { memo } from "react";
 import { Card, Group, JsonInput, Stack, Text } from "@mantine/core";
 
 import classes from "./ShipFittingCard.module.css";
 import { ShipFittingCardModuleSectionEntry } from "./ShipFittingCardModuleSectionEntry";
 
 
-type ShipFittingCardModulesSectionProps = {
+interface ShipFittingCardModulesSectionProps {
   header: string;
   items: {
     typeId: number;
@@ -15,7 +15,7 @@ type ShipFittingCardModulesSectionProps = {
   numSlots?: number;
   showEmptySlots?: boolean;
   showExcessModules?: boolean;
-};
+}
 
 export const ShipFittingCardModulesSection = memo(
   ({

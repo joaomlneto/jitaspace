@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 import { Card, Group, RingProgress, Text } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
 
@@ -11,18 +11,18 @@ import { skillLevelRomanNumeral } from "@jitaspace/utils";
 import classes from "~/components/Card/SolarSystemCard.module.css";
 
 
-export type CharacterSkillTrainingCardProps = {
+export interface CharacterSkillTrainingCardProps {
   characterId: number;
   fallback?: React.ReactNode;
   hideFallback?: boolean;
-};
+}
 
 export const CharacterSkillTrainingCard = ({
   characterId,
   fallback,
   hideFallback = false,
 }: CharacterSkillTrainingCardProps) => {
-  const { data, isLoading, error } = useCharacterSkillQueue(characterId);
+  const { data, isLoading: _isLoading, error: _error } = useCharacterSkillQueue(characterId);
 
   if (!data) {
     return hideFallback

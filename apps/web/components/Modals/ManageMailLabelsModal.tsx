@@ -1,11 +1,11 @@
 "use client";
 
-import React from "react";
+import type { ContextModalProps } from "@mantine/modals";
+import type { AxiosError } from "axios";
+
 import { Button, Grid, Stack, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { type ContextModalProps } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
-import { type AxiosError } from "axios";
 
 import {
   postCharactersCharacterIdMailLabels,
@@ -25,7 +25,7 @@ export function ManageMailLabelsModal({
 }>) {
   const character = useSelectedCharacter();
   const characterId = character?.characterId;
-  const { accessToken, authHeaders } = useAccessToken({
+  const { accessToken, authHeaders: _authHeaders } = useAccessToken({
     characterId,
     scopes: ["esi-mail.organize_mail.v1"],
   });

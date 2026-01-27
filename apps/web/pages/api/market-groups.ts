@@ -1,8 +1,8 @@
-import { type NextApiRequest, type NextApiResponse } from "next";
+import type {NextApiRequest, NextApiResponse} from "next";
 
 import { prisma } from "@jitaspace/db";
 
-export type MarketGroupsApiResponseBody = {
+export interface MarketGroupsApiResponseBody {
   marketGroups: Record<
     number,
     {
@@ -13,7 +13,7 @@ export type MarketGroupsApiResponseBody = {
     }
   >;
   rootMarketGroupIds: number[];
-};
+}
 
 /**
  * FIXME: This is a temporary route while the Market Groups tree is not made a server-side component.
@@ -75,7 +75,7 @@ export default async function NextApiRouteHandler(
         marketGroups: marketGroupsIndex,
         rootMarketGroupIds,
       });
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // 30 seconds on error

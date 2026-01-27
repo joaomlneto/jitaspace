@@ -1,4 +1,3 @@
-import React from "react";
 import { Anchor, Group, Stack, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
@@ -12,12 +11,12 @@ import {
   MailLabelColorSwatch,
 } from "@jitaspace/ui";
 
-import { type MailboxTableProps } from "~/components/EveMail";
+import type { MailboxTableProps } from "~/components/EveMail";
 
 export const MobileMailboxTable = ({
   characterId,
   data,
-  mutate,
+  mutate: _mutate,
   ...otherProps
 }: MailboxTableProps) => {
   const { data: labels } = useCharacterMailLabels(characterId);

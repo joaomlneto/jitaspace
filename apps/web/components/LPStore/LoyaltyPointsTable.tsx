@@ -1,12 +1,13 @@
 "use client";
 
 import type { MRT_ColumnDef } from "mantine-react-table";
-import React, { memo, useMemo } from "react";
+import _React, { memo, useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
+import type {
+  FuzzworkTypeMarketAggregate} from "@jitaspace/hooks";
 import {
-  FuzzworkTypeMarketAggregate,
   useFuzzworkRegionalMarketAggregates,
 } from "@jitaspace/hooks";
 import {
@@ -20,7 +21,7 @@ import {
   TypeName,
 } from "@jitaspace/ui";
 
-type LoyaltyPointsTableProps = {
+interface LoyaltyPointsTableProps {
   corporations: {
     corporationId: number;
     name: string;
@@ -42,7 +43,7 @@ type LoyaltyPointsTableProps = {
       quantity: number;
     }[];
   }[];
-};
+}
 
 export const LoyaltyPointsTable = memo(
   ({ corporations, types, offers }: LoyaltyPointsTableProps) => {
@@ -123,7 +124,7 @@ export const LoyaltyPointsTable = memo(
             (a.original.corporationName ?? "").localeCompare(
               b.original.corporationName ?? "",
             ),
-          Filter: ({ column, header, table }) => {
+          Filter: ({ column, header: _header, table: _table }) => {
             return (
               <EveEntitySelect
                 miw={200}
@@ -137,7 +138,7 @@ export const LoyaltyPointsTable = memo(
               />
             );
           },
-          Cell: ({ renderedCellValue, row, cell }) => (
+          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
             <Group>
               <Tooltip
                 label={
@@ -187,7 +188,7 @@ export const LoyaltyPointsTable = memo(
             (a.original.typeName ?? "").localeCompare(
               b.original.typeName ?? "",
             ),
-          Filter: ({ column, header, table }) => {
+          Filter: ({ column, header: _header, table: _table }) => {
             return (
               <EveEntitySelect
                 miw={250}
@@ -202,7 +203,7 @@ export const LoyaltyPointsTable = memo(
               />
             );
           },
-          Cell: ({ renderedCellValue, row, cell }) => (
+          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
             <Group wrap="nowrap">
               <TypeAvatar typeId={row.original.typeId} size="sm" />
               {row.original.quantity !== 1 && (
@@ -227,7 +228,7 @@ export const LoyaltyPointsTable = memo(
           mantineFilterRangeSliderProps: {
             label: (value) => value?.toLocaleString?.(),
           },
-          Cell: ({ renderedCellValue, row, cell }) => (
+          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
             <Text inherit ta="right">
               {row.original.lpCost.toLocaleString()} LP
             </Text>
@@ -241,7 +242,7 @@ export const LoyaltyPointsTable = memo(
           mantineFilterRangeSliderProps: {
             label: (value) => <ISKAmount amount={value} />,
           },
-          Cell: ({ renderedCellValue, row, cell }) => (
+          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
             <ISKAmount inherit ta="right" amount={row.original.iskCost ?? 0} />
           ),
         },
@@ -260,7 +261,7 @@ export const LoyaltyPointsTable = memo(
           size: 300,
           enableColumnFilter: false,
           enableSorting: false,
-          Cell: ({ row, cell }) => (
+          Cell: ({ row, cell: _cell }) => (
             <Stack gap="xs">
               {row.original.requiredItems.map(({ quantity, typeId }) => (
                 <Group key={typeId} wrap="nowrap" gap="xs">
@@ -281,10 +282,10 @@ export const LoyaltyPointsTable = memo(
           size: 10,
           enableColumnFilter: false,
           enableSorting: false,
-          Cell: ({ row, cell }) => (
+          Cell: ({ row, cell: _cell }) => (
             <Stack gap="xs">
               {row.original.requiredItems.map(
-                ({ quantity, typeId, marketStats }) => (
+                ({ quantity: _quantity, typeId, marketStats }) => (
                   <Group key={typeId} wrap="nowrap" justify="space-between">
                     <TypeAvatar typeId={typeId} size="sm" />
                     {marketStats && (
@@ -303,7 +304,7 @@ export const LoyaltyPointsTable = memo(
           size: 10,
           enableColumnFilter: false,
           enableSorting: false,
-          Cell: ({ row, cell }) => (
+          Cell: ({ row, cell: _cell }) => (
             <Stack gap="xs">
               {row.original.requiredItems.map(
                 ({ quantity, typeId, marketStats }) => (
@@ -328,10 +329,10 @@ export const LoyaltyPointsTable = memo(
           size: 10,
           enableColumnFilter: false,
           enableSorting: false,
-          Cell: ({ row, cell }) => (
+          Cell: ({ row, cell: _cell }) => (
             <Stack gap="xs">
               {row.original.requiredItems.map(
-                ({ quantity, typeId, marketStats }) => (
+                ({ quantity: _quantity, typeId, marketStats }) => (
                   <Group key={typeId} wrap="nowrap" justify="space-between">
                     <TypeAvatar typeId={typeId} size="sm" />
                     {marketStats && (
@@ -350,7 +351,7 @@ export const LoyaltyPointsTable = memo(
           size: 10,
           enableColumnFilter: false,
           enableSorting: false,
-          Cell: ({ row, cell }) => (
+          Cell: ({ row, cell: _cell }) => (
             <Stack gap="xs">
               {row.original.requiredItems.map(
                 ({ quantity, typeId, marketStats }) => (
@@ -373,7 +374,7 @@ export const LoyaltyPointsTable = memo(
           header: "Jita 5% Sell Price",
           accessorKey: "marketStats.sell.percentile",
           size: 10,
-          Cell: ({ row, cell }) => {
+          Cell: ({ row: _row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
             return <ISKAmount inherit ta="right" amount={amount} />;
@@ -399,7 +400,7 @@ export const LoyaltyPointsTable = memo(
                   (item.quantity ?? 1),
               )
               .reduce((a, b) => a + b, 0),
-          Cell: ({ row, cell }) => {
+          Cell: ({ row: _row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
             return <ISKAmount inherit ta="right" amount={amount} />;
@@ -418,7 +419,7 @@ export const LoyaltyPointsTable = memo(
                   (item.quantity ?? 1),
               )
               .reduce((a, b) => a + b, 0),
-          Cell: ({ row, cell }) => {
+          Cell: ({ row: _row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
             return <ISKAmount inherit ta="right" amount={amount} />;
@@ -439,7 +440,7 @@ export const LoyaltyPointsTable = memo(
                 )
                 .reduce((a, b) => a + b, 0)) /
             row.lpCost,
-          Cell: ({ row, cell }) => {
+          Cell: ({ row: _row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
             return (
@@ -454,7 +455,7 @@ export const LoyaltyPointsTable = memo(
           header: "Jita 5% Buy Price",
           accessorKey: "marketStats.buy.percentile",
           size: 10,
-          Cell: ({ row, cell }) => {
+          Cell: ({ row: _row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
             return <ISKAmount inherit ta="right" amount={amount} />;
@@ -480,7 +481,7 @@ export const LoyaltyPointsTable = memo(
                   (item.quantity ?? 1),
               )
               .reduce((a, b) => a + b, 0),
-          Cell: ({ row, cell }) => {
+          Cell: ({ row: _row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
             return <ISKAmount inherit ta="right" amount={amount} />;
@@ -499,7 +500,7 @@ export const LoyaltyPointsTable = memo(
                   (item.quantity ?? 1),
               )
               .reduce((a, b) => a + b, 0),
-          Cell: ({ row, cell }) => {
+          Cell: ({ row: _row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
             return <ISKAmount inherit ta="right" amount={amount} />;
@@ -520,7 +521,7 @@ export const LoyaltyPointsTable = memo(
                 )
                 .reduce((a, b) => a + b, 0)) /
             row.lpCost,
-          Cell: ({ row, cell }) => {
+          Cell: ({ row: _row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
             return (
@@ -540,7 +541,7 @@ export const LoyaltyPointsTable = memo(
                   row.marketStats.sell.percentile) /
                 2
               : null,
-          Cell: ({ row, cell }) => {
+          Cell: ({ row: _row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
             return <ISKAmount inherit ta="right" amount={amount} />;
@@ -560,7 +561,7 @@ export const LoyaltyPointsTable = memo(
                   (item.quantity ?? 1),
               )
               .reduce((a, b) => a + b, 0),
-          Cell: ({ row, cell }) => {
+          Cell: ({ row: _row, cell }) => {
             const amount = cell.getValue<number | undefined>();
             if (amount === undefined) return null;
             return <ISKAmount inherit ta="right" amount={amount} />;

@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { type ContextModalProps } from "@mantine/modals";
+import type { ContextModalProps } from "@mantine/modals";
 
 import { MailingListsTable } from "~/components/EveMail";
 

@@ -1,14 +1,15 @@
-import {type ESIScope, getScopeDescription} from "@jitaspace/esi-metadata";
+import { getScopeDescription} from "@jitaspace/esi-metadata";
+import type {ESIScope} from "@jitaspace/esi-metadata";
 import {Badge, Table} from "@mantine/core";
 import {useMemo} from "react";
 
 import classes from "./ScopesTable.module.css";
 
 
-export type ScopesTableProps = {
+export interface ScopesTableProps {
   scopes: ESIScope[];
   showRawScopeNames?: boolean;
-};
+}
 
 export function ScopesTable({scopes, showRawScopeNames}: ScopesTableProps) {
   const scopeData: {

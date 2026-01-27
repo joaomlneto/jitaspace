@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -41,11 +40,13 @@ import UserButton from "../UserButton";
 import classes from "./HeaderWithMegaMenus.module.css";
 import { MobileHeaderDrawer } from "./MobileHeaderDrawer";
 
-export type HeaderWithMegaMenusProps = {
+export interface HeaderWithMegaMenusProps {
   pinned: boolean;
-};
+}
 
-export function HeaderWithMegaMenus({ pinned }: HeaderWithMegaMenusProps) {
+export function HeaderWithMegaMenus({
+  pinned: _pinned,
+}: HeaderWithMegaMenusProps) {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
   const characterIds = useAuthenticatedCharacterIds();
@@ -55,7 +56,7 @@ export function HeaderWithMegaMenus({ pinned }: HeaderWithMegaMenusProps) {
       closeDrawer();
     },
   });*/
-  const theme = useMantineTheme();
+  const _theme = useMantineTheme();
 
   return (
     <Box h="100%" px="md">

@@ -1,5 +1,6 @@
-import React, { useMemo, type ReactElement } from "react";
-import { GetStaticPaths, GetStaticProps } from "next";
+import _React, { useMemo  } from "react";
+import type {ReactElement} from "react";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import {
   Container,
@@ -18,10 +19,10 @@ import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 import { MainLayout } from "~/layouts";
 
 
-type PageProps = {
+interface PageProps {
   name?: string;
   types: { typeId: number; name: string }[];
-};
+}
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // Do not pre-render any static pages - faster builds, but slower initial page load
@@ -58,7 +59,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     console.log(
       "error generating page for group with id",
       context.params?.groupId,
@@ -130,6 +131,6 @@ export default function Page({ name, types }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };

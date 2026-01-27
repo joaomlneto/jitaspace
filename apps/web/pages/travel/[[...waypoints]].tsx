@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
-import React, { useMemo, useState } from "react";
-import { GetStaticPaths, GetStaticProps } from "next";
+import _React, { useMemo, useState } from "react";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import {
   Container,
@@ -26,13 +26,13 @@ import { toArrayIfNot } from "@jitaspace/utils";
 import { RouteTable } from "~/components/Travel";
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   initialWaypoints: string[];
   solarSystems: Record<
     string,
     { name: string; securityStatus: number; neighbors: number[] }
   >;
-};
+}
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // Do not pre-render any static pages - faster builds, but slower initial page load
@@ -70,7 +70,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
         name: solarSystem.name,
         securityStatus: solarSystem.securityStatus.toNumber(),
         neighbors: solarSystem.stargates.flatMap(
-          (stargate) => stargate.DestinationStargate!.solarSystemId!,
+          (stargate) => stargate.DestinationStargate!.solarSystemId,
         ),
       };
     });
@@ -87,7 +87,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
 
     const initialWaypoints = toArrayIfNot(context.params?.waypoints ?? [])
       .map((waypoint) => parseWaypoint(waypoint.replaceAll("_", " ")))
-      .filter((x) => x !== null) as string[]; // FIXME: should not need typecast
+      .filter((x) => x !== null); // FIXME: should not need typecast
 
     return {
       props: {
@@ -96,7 +96,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // at most once per hour
@@ -142,7 +142,7 @@ export default function Page({ solarSystems, initialWaypoints }: PageProps) {
     if (!graph || waypoints.length < 2) return [];
     console.time("PATH FIND");
     const pathFinder = path.nba(graph, {
-      distance(fromNode, toNode, link) {
+      distance(fromNode, toNode, _link) {
         const destinationSecurityStatus = toNode.data.securityStatus;
         if (destinationSecurityStatus < 0) return 1 + nullSecPenalty;
         if (destinationSecurityStatus < 0.5) return 1 + lowSecPenalty;
@@ -269,7 +269,7 @@ export default function Page({ solarSystems, initialWaypoints }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Travel Planner" />

@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import _React, { useMemo } from "react";
 import { Group, Text } from "@mantine/core";
+import type {
+  MRT_ColumnDef} from "mantine-react-table";
 import {
   MantineReactTable,
-  MRT_ColumnDef,
   useMantineReactTable,
 } from "mantine-react-table";
 
@@ -18,7 +19,7 @@ import {
   StationName,
 } from "@jitaspace/ui";
 
-export type Agent = {
+export interface Agent {
   characterId: number;
   name: string;
   corporationId: number;
@@ -27,13 +28,13 @@ export type Agent = {
   isLocator: boolean;
   level: number;
   stationId: number;
-};
+}
 
-export type ContactsTableProps = {
+export interface ContactsTableProps {
   agents: Agent[];
   agentDivisions: { name: string; npcCorporationDivisionId: number }[];
   agentTypes: { name: string; agentTypeId: number }[];
-};
+}
 
 export const AgentsTable = ({
   agents,
@@ -66,7 +67,7 @@ export const AgentsTable = ({
         id: "name",
         header: "Name",
         accessorKey: "name",
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Group>
             <Group wrap="nowrap">
               <CharacterAvatar
@@ -88,7 +89,7 @@ export const AgentsTable = ({
         id: "corporation",
         header: "Corporation",
         accessorKey: "corporationId",
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Group>
             <Group wrap="nowrap">
               <CorporationAvatar
@@ -113,7 +114,7 @@ export const AgentsTable = ({
         id: "type",
         header: "Type",
         accessorKey: "agentTypeId",
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Text inherit>{agentTypeNames[row.original.agentTypeId]}</Text>
         ),
       },
@@ -121,7 +122,7 @@ export const AgentsTable = ({
         id: "division",
         header: "Type",
         accessorKey: "agentDivisionId",
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Text inherit>{divisionNames[row.original.agentDivisionId]}</Text>
         ),
       },
@@ -130,7 +131,7 @@ export const AgentsTable = ({
         header: "Locator",
         accessorKey: "isLocator",
         size: 1,
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Text inherit>{row.original.isLocator ? "Yes" : "No"}</Text>
         ),
       },
@@ -144,7 +145,7 @@ export const AgentsTable = ({
         id: "location",
         header: "Location",
         accessorKey: "stationId",
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Group wrap="nowrap" gap="xs">
             <StationAvatar stationId={row.original.stationId} size="xs" />
             <StationAnchor

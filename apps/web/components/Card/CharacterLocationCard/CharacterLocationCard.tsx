@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 import { Text } from "@mantine/core";
 
 import { useCharacterLocation } from "@jitaspace/hooks";
@@ -9,11 +9,11 @@ import { SolarSystemCard } from "~/components/Card";
 import { StationCard } from "~/components/Card/StationCard";
 
 
-export type CharacterLocationCardProps = {
+export interface CharacterLocationCardProps {
   characterId: number;
   fallback?: React.ReactNode;
   hideFallback?: boolean;
-};
+}
 
 export const CharacterLocationCard = ({
   characterId,

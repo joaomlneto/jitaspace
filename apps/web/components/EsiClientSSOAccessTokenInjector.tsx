@@ -1,6 +1,7 @@
 "use client";
 
-import { PropsWithChildren, useEffect } from "react";
+import type { PropsWithChildren} from "react";
+import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import z from "zod";
 
@@ -9,7 +10,7 @@ import { useAuthStore } from "@jitaspace/hooks";
 export const EsiClientSSOAccessTokenInjector = ({
   children,
 }: PropsWithChildren) => {
-  const { data: session, status, update } = useSession();
+  const { data: session, status: _status, update: _update } = useSession();
   const { addCharacter, characters } = useAuthStore();
 
   useEffect(() => {

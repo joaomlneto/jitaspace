@@ -1,10 +1,9 @@
 "use client";
 
-import React from "react";
+import type { CardProps } from "@mantine/core";
 import {
   Burger,
   Card,
-  CardProps,
   Group,
   Skeleton,
   Text,

@@ -12,9 +12,10 @@ import {
 } from "@mantine/core";
 
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
-import {
+import type {
   CalendarEventAttendee,
-  CalendarEventAttendeeResponse,
+  CalendarEventAttendeeResponse} from "@jitaspace/hooks";
+import {
   useCalendarEvent,
   useCalendarEventAttendees,
   useSelectedCharacter,
@@ -50,9 +51,7 @@ export default function Page({
 
   const loading = eventLoading || attendeesLoading;
 
-  const eventResponseColor: {
-    [key in CalendarEventAttendeeResponse]: string;
-  } = {
+  const eventResponseColor: Record<CalendarEventAttendeeResponse, string> = {
     accepted: "green",
     tentative: "yellow",
     not_responded: "gray",

@@ -1,7 +1,6 @@
 "use client";
 
 import type { AxiosError } from "axios";
-import React from "react";
 import {
   Alert,
   Anchor,
@@ -23,14 +22,14 @@ import { EmailRecipientSearchMultiSelect } from "@jitaspace/ui";
 
 import { MailMessageEditor } from "~/components/EveMail/Editor/MailMessageEditor";
 
-export type EveMailComposeFormProps = {
+export interface EveMailComposeFormProps {
   onSend?: () => void;
-};
+}
 
 export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
   const selectedCharacter = useSelectedCharacter();
   const characterId = selectedCharacter?.characterId;
-  const { authHeaders, accessToken } = useAccessToken({
+  const { authHeaders: _authHeaders, accessToken } = useAccessToken({
     characterId: characterId,
     scopes: ["esi-mail.send_mail.v1"],
   });

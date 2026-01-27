@@ -1,6 +1,5 @@
+import type { GetStaticPaths, GetStaticProps } from "next";
 import type { ReactElement } from "react";
-import React from "react";
-import { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
@@ -23,7 +22,7 @@ import { LoyaltyPointsTable } from "~/components/LPStore";
 import { env } from "~/env";
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   corporation: { corporationId: number; name: string };
   types: { typeId: number; name: string }[];
   offers: {
@@ -39,7 +38,7 @@ type PageProps = {
       quantity: number;
     }[];
   }[];
-};
+}
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // When this is true (in preview environments) don't prerender any static pages
@@ -180,7 +179,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // every hour
@@ -231,7 +230,7 @@ export default function Page({ corporation, types, offers }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="LP Store" />

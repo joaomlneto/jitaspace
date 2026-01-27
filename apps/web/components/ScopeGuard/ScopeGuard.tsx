@@ -3,20 +3,20 @@
 import type { PropsWithChildren, ReactElement } from "react";
 import { useMemo } from "react";
 
-import { type ESIScope } from "@jitaspace/esi-metadata";
+import type {ESIScope} from "@jitaspace/esi-metadata";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 
 import { RequestPermissionsBanner } from "./RequestPermissionsBanner";
 
-export type ScopeGuardProps = {
+export interface ScopeGuardProps {
   requiredScopes?: ESIScope[];
-  loadingScopesComponent?: ReactElement<any>;
-  insufficientScopesComponent?: ReactElement<any>;
-};
+  loadingScopesComponent?: ReactElement;
+  insufficientScopesComponent?: ReactElement;
+}
 
 export function ScopeGuard({
   requiredScopes = [],
-  loadingScopesComponent,
+  loadingScopesComponent: _loadingScopesComponent,
   insufficientScopesComponent,
   children,
 }: PropsWithChildren<ScopeGuardProps>) {

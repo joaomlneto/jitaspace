@@ -1,7 +1,8 @@
 import { memo, useMemo } from "react";
-import { Card, JsonInput, type CardProps } from "@mantine/core";
+import { Card, JsonInput  } from "@mantine/core";
+import type {CardProps} from "@mantine/core";
 
-import { FittingItemFlag } from "@jitaspace/hooks";
+import type { FittingItemFlag } from "@jitaspace/hooks";
 
 import classes from "./ShipFittingCard.module.css";
 import { ShipFittingCardHeader } from "./ShipFittingCardHeader";

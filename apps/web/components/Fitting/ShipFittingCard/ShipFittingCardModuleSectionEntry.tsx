@@ -7,11 +7,11 @@ import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
 
 
 
-export type ShipFittingCardModuleSectionEntryProps = {
+export interface ShipFittingCardModuleSectionEntryProps {
   typeId: number;
   quantity?: number;
   ammo?: { typeId?: number; quantity: number };
-};
+}
 
 export const ShipFittingCardModuleSectionEntry = memo(
   ({ typeId, quantity, ammo }: ShipFittingCardModuleSectionEntryProps) => {

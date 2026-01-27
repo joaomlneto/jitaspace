@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import _React, { memo } from "react";
 import { Group, Popover, Text, UnstyledButton } from "@mantine/core";
 
 import { useEsiCharacter } from "@jitaspace/hooks";
@@ -12,17 +12,17 @@ import { ConditionalWrapper } from "@jitaspace/utils";
 import classes from "./Button.module.css";
 
 
-export type CharacterButtonProps = {
+export interface CharacterButtonProps {
   characterId?: number;
   showOnlineIndicator?: boolean;
   withHoverCard?: boolean;
-};
+}
 
 export const CharacterButton = memo(
   ({
     characterId,
     showOnlineIndicator = false,
-    withHoverCard = true,
+    withHoverCard: _withHoverCard = true,
   }: CharacterButtonProps) => {
     const { data } = useEsiCharacter(
       characterId ?? 0,

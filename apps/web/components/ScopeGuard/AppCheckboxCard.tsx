@@ -11,10 +11,10 @@ import {
 } from "@mantine/core";
 import cx from "clsx";
 
-import { type ESIScope } from "@jitaspace/esi-metadata";
+import type {ESIScope} from "@jitaspace/esi-metadata";
 import { InfoIcon } from "@jitaspace/eve-icons";
 
-import { type JitaApp } from "~/config/apps";
+import type {JitaApp} from "~/config/apps";
 import classes from "./AppCheckboxCard.module.css";
 import { AppScopeSetCheckboxCard } from "./AppScopeSetCheckboxCard";
 

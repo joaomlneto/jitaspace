@@ -1,6 +1,5 @@
+import type { GetStaticProps } from "next";
 import type { ReactElement } from "react";
-import React from "react";
-import { GetStaticProps } from "next";
 import Link from "next/link";
 import {
   Anchor,
@@ -18,7 +17,7 @@ import { LPStoreIcon } from "@jitaspace/eve-icons";
 import { LoyaltyPointsTable } from "~/components/LPStore";
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   corporations: { corporationId: number; name: string }[];
   types: { typeId: number; name: string }[];
   offers: {
@@ -34,9 +33,9 @@ type PageProps = {
       quantity: number;
     }[];
   }[];
-};
+}
 
-export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<PageProps> = async (_context) => {
   try {
     // Get all corporation IDs that have a loyalty store
     const corporationIds = (
@@ -128,7 +127,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // at most once per hour
@@ -161,7 +160,7 @@ export default function Page({ corporations, types, offers }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="LP Store" />

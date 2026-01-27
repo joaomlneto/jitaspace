@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Button,
   Center,
@@ -14,12 +13,9 @@ import {
 import { openModal } from "@mantine/modals";
 import { format } from "date-fns";
 
+import type { CalendarEvent } from "@jitaspace/hooks";
 import { CalendarIcon } from "@jitaspace/eve-icons";
-import {
-  CalendarEvent,
-  useCharacterCalendar,
-  useSelectedCharacter,
-} from "@jitaspace/hooks";
+import { useCharacterCalendar, useSelectedCharacter } from "@jitaspace/hooks";
 
 import { CalendarEventList } from "~/components/Calendar/CalendarEventList/CalendarEventList";
 import EventsCalendar from "~/components/Calendar/EventsCalendar";
@@ -29,9 +25,7 @@ export default function Page() {
   const { events, isLoading, hasMoreEvents, loadMoreEvents } =
     useCharacterCalendar(character?.characterId);
 
-  const eventsPerDate: {
-    [date: string]: CalendarEvent[];
-  } = {};
+  const eventsPerDate: Record<string, CalendarEvent[]> = {};
   if (events) {
     events.forEach((event) => {
       if (!event.event_date) return;

@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import _React, { memo } from "react";
 import {
   Badge,
   Group,
@@ -16,12 +16,12 @@ import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
 
 
 
-type ShipFittingCardHeaderProps = {
+interface ShipFittingCardHeaderProps {
   fitString?: string;
   shipName?: string;
   shipTypeId?: number;
   tags?: string[];
-};
+}
 
 export const ShipFittingCardHeader = memo(
   ({ fitString, shipTypeId, shipName, tags }: ShipFittingCardHeaderProps) => {

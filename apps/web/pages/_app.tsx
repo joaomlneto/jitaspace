@@ -10,17 +10,19 @@ import "@mantine/spotlight/styles.css";
 import "@mantine/nprogress/styles.css";
 import "mantine-react-table/styles.css";
 
+import type { NextPage } from "next";
 import type { Session } from "next-auth";
+import type { AppProps } from "next/app";
 import type { ReactElement, ReactNode } from "react";
 import React from "react";
-import { type NextPage } from "next";
-import { type AppProps } from "next/app";
 import Head from "next/head";
-import Script from "next/script";
+import {
+  ConsentManagerDialog,
+  ConsentManagerProvider,
+} from "@c15t/nextjs/pages";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
@@ -28,19 +30,20 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { SessionProvider } from "next-auth/react";
 import { DefaultSeo } from "next-seo";
 
-import { type ESIScope } from "@jitaspace/esi-metadata";
+import type { ESIScope } from "@jitaspace/esi-metadata";
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
+import { PrivacyBanner } from "~/components/privacy/PrivacyBanner.tsx";
 import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
-import { env } from "~/env";
+import { CONSENT_OPTIONS } from "~/config/consent.ts";
 import { themes } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
 
 type NextPageWithLayout = NextPage & {
-  getLayout?: (page: ReactElement<any>) => ReactNode;
+  getLayout?: (page: ReactElement) => ReactNode;
   requiredScopes?: ESIScope[];
 };
 
@@ -60,7 +63,9 @@ export default function App({
   const [queryClient, setQueryClient] = React.useState(() => new QueryClient());
 
   return (
-    <>
+    <ConsentManagerProvider options={CONSENT_OPTIONS}>
+      <PrivacyBanner />
+      <ConsentManagerDialog />
       <Head>
         <meta
           name="viewport"
@@ -112,7 +117,7 @@ export default function App({
       />
 
       {/* Analytics: Umami, Vercel, Google */}
-      <Script
+      {/*<Script // managed by ConsentManager
         strategy="afterInteractive"
         async
         defer
@@ -120,10 +125,10 @@ export default function App({
         src={"/analytics/script.js"}
         data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
         data-domains="www.jita.space"
-      ></Script>
-      {env.NEXT_PUBLIC_GOOGLE_TAG_ID && (
+      ></Script>*/}
+      {/*env.NEXT_PUBLIC_GOOGLE_TAG_ID && (  // managed by ConsentManager
         <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
-      )}
+      )*/}
       <Analytics />
       <SpeedInsights />
 
@@ -153,6 +158,6 @@ export default function App({
           </EsiClientSSOAccessTokenInjector>
         </SessionProvider>
       </QueryClientProvider>
-    </>
+    </ConsentManagerProvider>
   );
 }

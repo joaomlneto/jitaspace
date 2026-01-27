@@ -7,6 +7,8 @@ import {
   jest,
 } from "@jest/globals";
 
+import { env } from "~/env.ts";
+
 jest.mock("@jitaspace/db", () => ({
   prisma: {},
 }));
@@ -24,7 +26,7 @@ jest.mock("../layouts", () => ({
 const { getStaticProps } = require("../pages/debug");
 
 describe("Debug Page", () => {
-  const originalEnv = process.env;
+  const originalEnv = env;
 
   beforeEach(() => {
     jest.resetModules();
@@ -45,7 +47,7 @@ describe("Debug Page", () => {
 
   it("returns props when not in production", async () => {
     (process.env as any).NODE_ENV = "development";
-    const result = (await getStaticProps({} as any)) as any;
+    const result = await getStaticProps({} as any);
     expect(result).toHaveProperty("props");
     expect(result.props.vars.NODE_ENV).toBe("development");
   });

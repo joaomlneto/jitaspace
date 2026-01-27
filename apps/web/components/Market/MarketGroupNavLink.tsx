@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import _React, { memo, useMemo } from "react";
 import Link from "next/link";
 import { NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -9,7 +9,7 @@ import { MarketGroupAvatar, TypeAvatar } from "@jitaspace/ui";
 
 
 
-type MarketGroupNavLinkProps = {
+interface MarketGroupNavLinkProps {
   marketGroups: Record<
     number,
     {
@@ -21,10 +21,10 @@ type MarketGroupNavLinkProps = {
   >;
   marketGroupId: number;
   expand?: boolean;
-};
+}
 
 export const MarketGroupNavLink = memo(
-  ({ marketGroups, marketGroupId, expand = true }: MarketGroupNavLinkProps) => {
+  ({ marketGroups, marketGroupId, expand: _expand = true }: MarketGroupNavLinkProps) => {
     const marketGroup = marketGroups[marketGroupId];
     const [opened, { toggle }] = useDisclosure(false);
 

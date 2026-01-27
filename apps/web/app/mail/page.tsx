@@ -34,7 +34,7 @@ export default function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const labels = toArrayIfNot(searchParams?.get("labels") ?? []);
+  const _labels = toArrayIfNot(searchParams?.get("labels") ?? []);
   const character = useSelectedCharacter();
 
   const [selectedLabels, setSelectedLabels] = React.useState<string[]>([]);

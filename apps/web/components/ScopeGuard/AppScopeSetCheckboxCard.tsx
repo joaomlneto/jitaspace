@@ -12,10 +12,10 @@ import {
 } from "@mantine/core";
 import cx from "clsx";
 
-import { type ESIScope } from "@jitaspace/esi-metadata";
+import type {ESIScope} from "@jitaspace/esi-metadata";
 import { InfoIcon } from "@jitaspace/eve-icons";
 
-import { type AppScopeSet } from "~/config/apps";
+import type {AppScopeSet} from "~/config/apps";
 import classes from "./AppScopeSetCheckboxCard.module.css";
 
 
@@ -43,7 +43,7 @@ export function AppScopeSetCheckboxCard({
 }: AppScopeSetCheckboxCardProps) {
   const allAppScopes = scopeSet.scopes;
 
-  const checked = useMemo(
+  const _checked = useMemo(
     () => allAppScopes.every((scope) => selectedScopes.includes(scope)),
     [allAppScopes, selectedScopes],
   );

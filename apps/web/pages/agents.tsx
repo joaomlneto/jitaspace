@@ -1,6 +1,5 @@
+import type { GetStaticProps } from "next";
 import type { ReactElement } from "react";
-import React from "react";
-import { GetStaticProps } from "next";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
@@ -11,7 +10,7 @@ import { removeUndefinedFields } from "@jitaspace/utils";
 import { AgentsTable } from "~/components/Agents";
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   agents: {
     characterId: number;
     name: string;
@@ -24,9 +23,9 @@ type PageProps = {
   }[];
   agentTypes: { name: string; agentTypeId: number }[];
   agentDivisions: { name: string; npcCorporationDivisionId: number }[];
-};
+}
 
-export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<PageProps> = async (_context) => {
   try {
     const agents = await prisma.agent
       .findMany({
@@ -86,7 +85,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // at most once per hour
@@ -116,7 +115,7 @@ export default function Page({
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Agents" />

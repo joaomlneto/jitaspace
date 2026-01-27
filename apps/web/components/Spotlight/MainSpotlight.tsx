@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import _React, { useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { useDebouncedValue } from "@mantine/hooks";
-import { Spotlight, SpotlightActionData } from "@mantine/spotlight";
+import type { SpotlightActionData } from "@mantine/spotlight";
+import { Spotlight } from "@mantine/spotlight";
 
+import type {
+  EsiSearchCategory} from "@jitaspace/hooks";
 import {
-  EsiSearchCategory,
   useEsiNamesCache,
   useEsiSearch,
 } from "@jitaspace/hooks";

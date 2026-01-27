@@ -1,13 +1,14 @@
-import React, { memo, useMemo } from "react";
+import _React, { memo, useMemo } from "react";
 import { Group } from "@mantine/core";
 import { addDays } from "date-fns";
+import type {
+  MRT_ColumnDef} from "mantine-react-table";
 import {
   MantineReactTable,
-  MRT_ColumnDef,
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { RegionalMarketOrder } from "@jitaspace/hooks";
+import type { RegionalMarketOrder } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,
@@ -19,10 +20,10 @@ import {
 
 
 
-type MarketOrdersDataTableProps = {
+interface MarketOrdersDataTableProps {
   orders: RegionalMarketOrder[];
   sortPriceDescending: boolean;
-};
+}
 
 export const MarketOrdersDataTable = memo(
   ({ orders, sortPriceDescending }: MarketOrdersDataTableProps) => {
@@ -45,7 +46,7 @@ export const MarketOrdersDataTable = memo(
           mantineTableBodyCellProps: {
             align: "right",
           },
-          Cell: ({ renderedCellValue, row, cell }) =>
+          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
             row.original.volume_remain.toLocaleString(),
         },
         {
@@ -59,14 +60,14 @@ export const MarketOrdersDataTable = memo(
           mantineTableBodyCellProps: {
             align: "right",
           },
-          Cell: ({ renderedCellValue, row, cell }) =>
+          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
             `${row.original.price.toLocaleString()} ISK`,
         },
         {
           id: "location",
           header: "Location",
           accessorKey: "location_id",
-          Cell: ({ renderedCellValue, row, cell }) => (
+          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
             <Group wrap="nowrap">
               <SolarSystemSecurityStatusBadge
                 solarSystemId={row.original.system_id}
@@ -95,7 +96,7 @@ export const MarketOrdersDataTable = memo(
           id: "issued",
           header: "Issued",
           accessorKey: "issued",
-          Cell: ({ renderedCellValue, row, cell }) => (
+          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
             <TimeAgoText
               inherit
               date={new Date(row.original.issued)}
@@ -110,7 +111,7 @@ export const MarketOrdersDataTable = memo(
             console.log(row);
             return addDays(new Date(row.issued), 30);
           },
-          Cell: ({ renderedCellValue, row, cell }) => (
+          Cell: ({ renderedCellValue: _renderedCellValue, row: _row, cell }) => (
             <TimeAgoText inherit date={cell.getValue<Date>()} addSuffix />
           ),
         },

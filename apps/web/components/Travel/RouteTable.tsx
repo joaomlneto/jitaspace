@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import _React, { memo, useMemo } from "react";
 import { Anchor, Group, Table, Text, Tooltip } from "@mantine/core";
 
 import { InfoIcon } from "@jitaspace/eve-icons";
@@ -13,11 +13,11 @@ import {
 import { ZkillboardRecentSystemKills } from "~/components/Travel/ZkillboardRecentSystemKills";
 
 
-type RouteTableProps = {
+interface RouteTableProps {
   route: {
     id: number | string;
   }[];
-};
+}
 
 export const RouteTable = memo(({ route }: RouteTableProps) => {
   const { data: systemKillsData } = useAllSolarSystemKills();

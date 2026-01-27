@@ -1,9 +1,9 @@
 import React from "react";
 import Image from "next/image";
-import { type LinkProps } from "next/link";
+import type {LinkProps} from "next/link";
 
 import type { EveIconProps } from "@jitaspace/eve-icons";
-import { type ESIScope } from "@jitaspace/esi-metadata";
+import type {ESIScope} from "@jitaspace/esi-metadata";
 import {
   AgentFinderIcon,
   AlliancesIcon,
@@ -24,25 +24,25 @@ import {
   WarsIcon,
 } from "@jitaspace/eve-icons";
 
-export type AppScopeSet = {
+export interface AppScopeSet {
   reason: string;
   description?: string;
   scopes: ESIScope[];
-};
+}
 
-export type JitaApp = {
+export interface JitaApp {
   name: string;
   description: string;
   url?: LinkProps["href"];
   onClick?: () => void;
-  Icon: (props: EveIconProps) => React.ReactElement<any>;
+  Icon: (props: EveIconProps) => React.ReactElement;
   tags?: string[];
   hotKey?: string[];
   scopes: {
     required?: AppScopeSet[];
     optional?: AppScopeSet[];
   };
-};
+}
 
 export const characterApps: Record<string, JitaApp> = {
   mail: {
@@ -491,7 +491,7 @@ export const jitaApps: Record<
   {
     apps: Record<string, JitaApp>;
     name: string;
-    Icon: (props: EveIconProps) => React.ReactElement<any>;
+    Icon: (props: EveIconProps) => React.ReactElement;
   }
 > = {
   character: {

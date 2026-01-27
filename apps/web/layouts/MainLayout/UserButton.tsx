@@ -1,15 +1,17 @@
 "use client";
 
-import React, { useMemo } from "react";
+import type React from "react";
+import { useMemo } from "react";
 import {
   Group,
   Menu,
   Text,
   UnstyledButton,
   useMantineColorScheme,
-  useMantineTheme,
-  type UnstyledButtonProps,
+  useMantineTheme
+  
 } from "@mantine/core";
+import type {UnstyledButtonProps} from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { signOut } from "next-auth/react";
 

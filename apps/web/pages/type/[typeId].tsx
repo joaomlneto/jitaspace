@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
-import React, { useState } from "react";
-import { GetStaticPaths, GetStaticProps } from "next";
+import _React, { useState } from "react";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import {
@@ -37,12 +37,12 @@ import {
 import { MailMessageViewer } from "~/components/EveMail";
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   typeId: number;
   ogImageUrl?: string;
   typeName?: string;
   typeDescription?: string;
-};
+}
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // Do not pre-render any static pages - faster builds, but slower initial page load
@@ -89,7 +89,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // at most once per hour
@@ -107,7 +107,7 @@ export default function Page({
   const character = useSelectedCharacter();
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();
-  const [regionId, setRegionId] = useState(10000002);
+  const [regionId, _setRegionId] = useState(10000002);
   const { data: marketStats } = useFuzzworkTypeMarketStats(typeId, regionId);
 
   if (!typeId || router.isFallback) {
@@ -270,6 +270,6 @@ export default function Page({
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };

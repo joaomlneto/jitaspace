@@ -1,5 +1,6 @@
-import React, { ReactElement, useMemo, useState } from "react";
-import { GetStaticProps } from "next";
+import type { ReactElement} from "react";
+import React, { useMemo, useState } from "react";
+import type { GetStaticProps } from "next";
 import {
   ActionIcon,
   Badge,
@@ -23,8 +24,9 @@ import { NextSeo } from "next-seo";
 
 import { prisma } from "@jitaspace/db";
 import { itemsFlagEnum } from "@jitaspace/esi-client";
+import type {
+  FittingItemFlag} from "@jitaspace/hooks";
 import {
-  FittingItemFlag,
   useEsiTypeIdsFromNames,
   useType,
 } from "@jitaspace/hooks";
@@ -33,16 +35,16 @@ import { EveEntitySelect, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 import { ShipFittingCard } from "~/components/Fitting";
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   ships: {
     id: number;
     name: string;
   }[];
-};
+}
 
 const SHIP_CATEGORY_ID = 6;
 
-export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<PageProps> = async (_context) => {
   try {
     const shipGroups = await prisma.category.findUniqueOrThrow({
       select: {
@@ -80,7 +82,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // at most once per hour
@@ -97,10 +99,10 @@ const SCAN_CATEGORIES = [
   "Charges",
 ];
 
-type ScanModule = {
+interface ScanModule {
   name: string;
   quantity: number;
-};
+}
 
 interface ScanResult {
   highSlots: ScanModule[];
@@ -251,7 +253,7 @@ export default function Page({ ships }: PageProps) {
   );
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
-  const mergedScans = useMemo(() => mergeScans(scans), [scans]);
+  const _mergedScans = useMemo(() => mergeScans(scans), [scans]);
   const scanItems = useMemo(() => mergeAndConvertScans(scans), [scans]);
 
   const xx = useEsiTypeIdsFromNames(scanItems.map((item) => item.name));
@@ -262,7 +264,7 @@ export default function Page({ ships }: PageProps) {
     try {
       const parsedScan = parseScan(pastedText.trim());
       setScans((prev) => [...prev, parsedScan]);
-    } catch (e) {
+    } catch {
       showNotification({
         title: "Invalid Scan",
         message: "The scan you pasted was invalid.",
@@ -428,7 +430,7 @@ export default function Page({ ships }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Ship Scanner" />

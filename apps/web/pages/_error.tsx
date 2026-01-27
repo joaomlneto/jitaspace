@@ -1,4 +1,4 @@
-import { NextPage, NextPageContext } from "next";
+import type { NextPage, NextPageContext } from "next";
 import Error from "next/error";
 import * as Sentry from "@sentry/nextjs";
 

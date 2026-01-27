@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
-import React, { useMemo } from "react";
-import { GetStaticPaths, GetStaticProps } from "next";
+import _React, { useMemo } from "react";
+import type { GetStaticPaths, GetStaticProps } from "next";
 import { useRouter } from "next/router";
 import {
   Container,
@@ -19,10 +19,10 @@ import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 import { env } from "~/env";
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   name?: string;
   groups: { groupId: number; name: string }[];
-};
+}
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // When this is true (in preview environments) don't prerender any static pages
@@ -75,7 +75,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // every hour
@@ -144,6 +144,6 @@ export default function Page({ name, groups }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };

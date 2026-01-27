@@ -1,12 +1,13 @@
-import React, { memo, useMemo } from "react";
+import _React, { memo, useMemo } from "react";
 import { Badge, Group } from "@mantine/core";
+import type {
+  MRT_ColumnDef} from "mantine-react-table";
 import {
   MantineReactTable,
-  MRT_ColumnDef,
   useMantineReactTable,
 } from "mantine-react-table";
 
-import { CharacterWalletJournalEntry } from "@jitaspace/hooks";
+import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityAvatar,
@@ -19,9 +20,9 @@ import {
 
 
 
-type WalletTableProps = {
+interface WalletTableProps {
   entries: CharacterWalletJournalEntry[];
-};
+}
 
 export const WalletTable = memo(({ entries }: WalletTableProps) => {
   const columns = useMemo<MRT_ColumnDef<CharacterWalletJournalEntry>[]>(
@@ -59,7 +60,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         header: "Context Type",
         accessorKey: "context_id_type",
         size: 40,
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.context_id_type ? (
             <Badge size="sm" variant="light">
               {row.original.context_id_type?.replaceAll("_", " ")}
@@ -71,7 +72,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         header: "First Party",
         accessorKey: "first_party_id",
         size: 40,
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Group>
             <Group wrap="nowrap">
               <EveEntityAvatar
@@ -94,7 +95,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         header: "Second Party",
         accessorKey: "second_party_id",
         size: 40,
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Group>
             <Group wrap="nowrap">
               <EveEntityAvatar
@@ -141,7 +142,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         header: "Amount",
         accessorKey: "amount",
         size: 40,
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.amount !== undefined ? (
             <ISKAmount
               size="sm"
@@ -155,7 +156,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         header: "Balance",
         accessorKey: "balance",
         size: 40,
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           `${row.original.balance?.toLocaleString()} ISK`,
       },
       {
@@ -181,7 +182,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         header: "Tax Receiver",
         accessorKey: "tax_receiver_id",
         size: 40,
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.tax_receiver_id ? (
             <Group>
               <Group wrap="nowrap">

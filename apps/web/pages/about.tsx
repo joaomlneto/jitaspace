@@ -1,5 +1,4 @@
 import type { ReactElement } from "react";
-import React from "react";
 import {
   ActionIcon,
   Anchor,
@@ -267,7 +266,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="About" />

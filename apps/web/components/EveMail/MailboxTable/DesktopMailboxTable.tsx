@@ -1,4 +1,3 @@
-import React from "react";
 import { Anchor, Group, Popover, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
@@ -14,7 +13,7 @@ import {
   MailLabelColorSwatch,
 } from "@jitaspace/ui";
 
-import { type MailboxTableProps } from "~/components/EveMail";
+import type { MailboxTableProps } from "~/components/EveMail";
 import { MessageMenu } from "../MessageMenu";
 
 export const DesktopMailboxTable = ({
@@ -120,11 +119,10 @@ export const DesktopMailboxTable = ({
               <Table.Td>
                 <Group gap="xs">
                   {mail.labels
-                    ?.map(
-                      (labelIndex) =>
-                        labels?.data.labels?.find(
-                          (label) => label.label_id === labelIndex,
-                        ),
+                    ?.map((labelIndex) =>
+                      labels?.data.labels?.find(
+                        (label) => label.label_id === labelIndex,
+                      ),
                     )
                     .map(
                       (item) =>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import _React, { useState } from "react";
 import {
   Button,
   Center,
@@ -12,10 +12,10 @@ import {
   Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { type ContextModalProps } from "@mantine/modals";
+import type {ContextModalProps} from "@mantine/modals";
 import { signIn } from "next-auth/react";
 
-import { type ESIScope } from "@jitaspace/esi-metadata";
+import type {ESIScope} from "@jitaspace/esi-metadata";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import {

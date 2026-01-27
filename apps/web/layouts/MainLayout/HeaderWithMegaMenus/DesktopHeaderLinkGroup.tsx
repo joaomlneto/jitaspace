@@ -1,6 +1,7 @@
 "use client";
 
-import React, { memo } from "react";
+import type React from "react";
+import { memo } from "react";
 import Link from "next/link";
 import {
   Box,
@@ -16,24 +17,24 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
-import { EveIconProps } from "@jitaspace/eve-icons";
+import type { EveIconProps } from "@jitaspace/eve-icons";
 
-import { JitaApp } from "~/config/apps";
+import type { JitaApp } from "~/config/apps";
 import classes from "./HeaderWithMegaMenus.module.css";
 
-export type DesktopHeaderLinkGroupProps = {
+export interface DesktopHeaderLinkGroupProps {
   title: string;
   Icon: React.ComponentType<EveIconProps>;
   items: Record<string, JitaApp>;
-};
+}
 
 export const DesktopHeaderLinkGroup = memo(
   ({ title, Icon, items }: DesktopHeaderLinkGroupProps) => {
-    const theme = useMantineTheme();
+    const _theme = useMantineTheme();
     const { colorScheme } = useMantineColorScheme();
     const [
-      mobileCharacterAppsOpened,
-      { toggle: toggleMobileCharacterApps, close: closeMobileCharacterApps },
+      _mobileCharacterAppsOpened,
+      { toggle: _toggleMobileCharacterApps, close: _closeMobileCharacterApps },
     ] = useDisclosure(false);
 
     return (

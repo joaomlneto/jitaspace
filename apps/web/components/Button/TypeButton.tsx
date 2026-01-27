@@ -7,9 +7,9 @@ import { TypeAvatar } from "@jitaspace/ui";
 import classes from "./Button.module.css";
 
 
-export type TypeButtonProps = {
+export interface TypeButtonProps {
   typeId?: number;
-};
+}
 
 export const TypeButton = memo(({ typeId }: TypeButtonProps) => {
   const { data } = useType(

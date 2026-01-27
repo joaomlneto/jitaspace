@@ -1,6 +1,5 @@
+import type { GetStaticProps } from "next";
 import type { ReactElement } from "react";
-import React from "react";
-import { GetStaticProps } from "next";
 import {
   Container,
   Group,
@@ -17,11 +16,11 @@ import { CategoryAnchor } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
 
-type PageProps = {
+interface PageProps {
   categories: { categoryId: number; name: string }[];
-};
+}
 
-export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<PageProps> = async (_context) => {
   try {
     const categories = await prisma.category.findMany({
       select: {
@@ -39,7 +38,7 @@ export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
       },
       revalidate: 24 * 3600, // every 24 hours
     };
-  } catch (e) {
+  } catch {
     return {
       notFound: true,
       revalidate: 3600, // every hour
@@ -69,7 +68,7 @@ export default function Page({ categories }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Categories" />

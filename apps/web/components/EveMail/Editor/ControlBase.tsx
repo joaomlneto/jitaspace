@@ -1,5 +1,6 @@
-import React, { forwardRef } from "react";
-import { type RichTextEditorControlProps } from "@mantine/tiptap";
+import type React from "react";
+import { forwardRef } from "react";
+import type {RichTextEditorControlProps} from "@mantine/tiptap";
 
 import { Control } from "./Control";
 

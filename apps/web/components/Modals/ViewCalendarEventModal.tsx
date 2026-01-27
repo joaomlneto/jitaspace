@@ -1,10 +1,8 @@
 "use client";
 
-import React from "react";
-import { type ContextModalProps } from "@mantine/modals";
+import type { ContextModalProps } from "@mantine/modals";
 
 import { CalendarEventDetailsPanel } from "~/components/Calendar";
-
 
 export function ViewCalendarEventModal({
   innerProps,

@@ -1,12 +1,10 @@
-import React from "react";
 import { Badge, Group, Stack, Text, Title } from "@mantine/core";
 
-import {
+import type {
   CalendarEventAttendee,
   CalendarEventAttendeeResponse,
-  useCalendarEvent,
-  useCalendarEventAttendees,
 } from "@jitaspace/hooks";
+import { useCalendarEvent, useCalendarEventAttendees } from "@jitaspace/hooks";
 import {
   CalendarEventAttendanceSelect,
   CalendarEventHumanDurationText,
@@ -21,10 +19,10 @@ import {
 
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 
-export type CalendarEventPanelProps = {
+export interface CalendarEventPanelProps {
   characterId: number;
   eventId: number;
-};
+}
 
 export function CalendarEventDetailsPanel({
   characterId,

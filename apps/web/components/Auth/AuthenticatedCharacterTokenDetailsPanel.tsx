@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import _React, { useMemo } from "react";
 import {
   Button,
   CopyButton,
@@ -21,9 +21,9 @@ import {
 
 import { ScopesTable } from "~/components/ScopeGuard";
 
-export type AuthenticatedCharacterTokenDetailsPanelProps = {
+export interface AuthenticatedCharacterTokenDetailsPanelProps {
   characterId: number;
-};
+}
 
 export const AuthenticatedCharacterTokenDetailsPanel = ({
   characterId,

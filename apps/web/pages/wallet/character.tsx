@@ -1,4 +1,4 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
@@ -10,7 +10,6 @@ import {
 
 import { WalletTable } from "~/components/Wallet";
 import { MainLayout } from "~/layouts";
-
 
 export default function Page() {
   const character = useSelectedCharacter();
@@ -29,7 +28,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Character Wallet" />

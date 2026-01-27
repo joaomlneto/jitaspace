@@ -1,7 +1,7 @@
 import type { ImageProps } from "next/image";
 import type { LinkProps } from "next/link";
+import type React from "react";
 import type { ReactElement } from "react";
-import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -32,7 +32,7 @@ import { MainLayout } from "~/layouts";
 const devApps: {
   name: string;
   description: string;
-  icon: (props: Partial<Omit<ImageProps, "src">>) => React.ReactElement<any>;
+  icon: (props: Partial<Omit<ImageProps, "src">>) => React.ReactElement;
   url: LinkProps["href"];
   onClick?: () => void;
   tags?: string[];
@@ -53,7 +53,7 @@ const devApps: {
 ];
 
 export default function Page() {
-  const router = useRouter();
+  const _router = useRouter();
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const authenticatedCharacterIds = useAuthenticatedCharacterIds();
@@ -271,6 +271,6 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };

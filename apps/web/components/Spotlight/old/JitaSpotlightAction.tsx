@@ -1,8 +1,7 @@
-import React from "react";
+import type { SpotlightActionProps, SpotlightProps } from "@mantine/spotlight";
 import { UnstyledButton } from "@mantine/core";
-import { SpotlightActionProps, SpotlightProps } from "@mantine/spotlight";
 
-import { EsiSearchCategory } from "@jitaspace/hooks";
+import type { EsiSearchCategory } from "@jitaspace/hooks";
 
 type JitaSpotlightActionProps = Omit<SpotlightProps, "actions"> & {
   action: SpotlightActionProps & {
@@ -13,12 +12,12 @@ type JitaSpotlightActionProps = Omit<SpotlightProps, "actions"> & {
 };
 
 export const JitaSpotlightAction = ({
-  action,
-  styles,
-  classNames,
+  action: _action,
+  styles: _styles,
+  classNames: _classNames,
   //hovered,
   //onTrigger,
-  ...others
+  ..._others
 }: JitaSpotlightActionProps) => {
   /*
   // is this an EVE entity?

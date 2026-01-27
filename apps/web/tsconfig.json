@@ -18,5 +18,11 @@
     "types": ["jest", "@testing-library/jest-dom", "node"]
   },
   "include": [".", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "cypress", "**/*.cy.tsx", "**/*.cy.ts"]
+  "exclude": [
+    "node_modules",
+    "cypress",
+    "coverage",
+    "**/*.cy.tsx",
+    "**/*.cy.ts"
+  ]
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo } from "react";
+import _React, { memo } from "react";
 import {
   Divider,
   Drawer,
@@ -26,15 +26,15 @@ import { characterApps, corporationApps, universeApps } from "~/config/apps";
 import { MobileHeaderLinkGroup } from "~/layouts/MainLayout/HeaderWithMegaMenus/MobileHeaderLinkGroup";
 import UserButton from "~/layouts/MainLayout/UserButton";
 
-export type MobileHeaderDrawerProps = {
+export interface MobileHeaderDrawerProps {
   opened: boolean;
   toggle: Function;
   close: Function;
-};
+}
 
 export const MobileHeaderDrawer = memo(
   ({ opened, toggle, close }: MobileHeaderDrawerProps) => {
-    const theme = useMantineTheme();
+    const _theme = useMantineTheme();
     const { colorScheme } = useMantineColorScheme();
     const characterIds = useAuthenticatedCharacterIds();
     return (

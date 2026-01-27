@@ -1,4 +1,4 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
@@ -70,7 +70,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };
 

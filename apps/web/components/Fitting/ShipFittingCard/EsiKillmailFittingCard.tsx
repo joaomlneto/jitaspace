@@ -1,7 +1,8 @@
-import React, { memo } from "react";
-import { type CardProps } from "@mantine/core";
+import type React from "react";
+import { memo } from "react";
+import type {CardProps} from "@mantine/core";
 
-import { ItemsFlagEnum } from "@jitaspace/esi-client";
+import type { ItemsFlagEnum } from "@jitaspace/esi-client";
 import { useKillmail } from "@jitaspace/hooks";
 
 import { ShipFittingCard } from "./ShipFittingCard";
@@ -68,8 +69,8 @@ export const EsiKillmailFittingCard = memo(
   ({
     killmailId,
     killmailHash,
-    fallback,
-    hideFallback = false,
+    fallback: _fallback,
+    hideFallback: _hideFallback = false,
     ...otherProps
   }: EsiKillmailFittingCardProps) => {
     const { data } = useKillmail(killmailHash, killmailId);

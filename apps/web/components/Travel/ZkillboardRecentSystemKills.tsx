@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from "react";
+import _React, { memo, useMemo } from "react";
 import { Group, Loader, Spoiler, Stack, Text } from "@mantine/core";
 import { subHours } from "date-fns";
 import useSWR from "swr";
@@ -8,12 +8,12 @@ import { EveEntityName, TimeAgoText } from "@jitaspace/ui";
 import { KillmailButton } from "./KillmailButton";
 
 
-type ZkillboardRecentSystemKillsProps = {
+interface ZkillboardRecentSystemKillsProps {
   solarSystemId: number | string;
   pastSeconds?: number;
-};
+}
 
-type ZkillboardKill = {
+interface ZkillboardKill {
   killmail_id: number;
   zkb: {
     locationID: number;
@@ -27,11 +27,11 @@ type ZkillboardKill = {
     solo: boolean;
     awox: boolean;
   };
-};
+}
 
 export const ZkillboardRecentSystemKills = memo(
   ({ solarSystemId, pastSeconds = 3600 }: ZkillboardRecentSystemKillsProps) => {
-    const { data, error, isLoading, isValidating } = useSWR<{
+    const { data, error: _error, isLoading, isValidating } = useSWR<{
       body: ZkillboardKill[] | undefined;
       headers: Headers;
     }>(

@@ -4,7 +4,7 @@ import { ColorSwatch, Group, Loader, Text } from "@mantine/core";
 import { useServerStatus } from "@jitaspace/hooks";
 
 export const ServerStatusIndicator = memo(() => {
-  const { data, isError, isLoading, isSuccess } = useServerStatus();
+  const { data, isError: _isError, isLoading, isSuccess } = useServerStatus();
 
   const isVip = !!data?.data.vip;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import _React, { useMemo } from "react";
 import {
   Button,
   Center,
@@ -14,16 +14,16 @@ import { useDisclosure } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
 import { signIn } from "next-auth/react";
 
-import { type ESIScope } from "@jitaspace/esi-metadata";
+import type {ESIScope} from "@jitaspace/esi-metadata";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import classes from "./RequestPermissionsBanner.module.css";
 import { ScopesTable } from "./ScopesTable";
 
-export type RequestPermissionsBannerProps = {
+export interface RequestPermissionsBannerProps {
   requiredScopes: ESIScope[];
-};
+}
 
 export function RequestPermissionsBanner({
   requiredScopes,

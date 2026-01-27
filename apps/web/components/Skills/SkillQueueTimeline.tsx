@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import _React, { memo } from "react";
 import Link from "next/link";
 import {
   Anchor,
@@ -22,9 +22,9 @@ import { skillLevelRomanNumeral } from "@jitaspace/utils";
 
 
 
-export type SkillQueueTimelineProps = {
+export interface SkillQueueTimelineProps {
   characterId: number;
-};
+}
 
 export const SkillQueueTimeline = memo(
   ({ characterId }: SkillQueueTimelineProps) => {

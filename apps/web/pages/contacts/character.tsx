@@ -1,4 +1,4 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
@@ -7,7 +7,6 @@ import { useSelectedCharacter } from "@jitaspace/hooks";
 
 import { CharacterContactsDataTable } from "~/components/Contacts";
 import { MainLayout } from "~/layouts";
-
 
 export default function Page() {
   const character = useSelectedCharacter();
@@ -33,7 +32,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Contacts" />

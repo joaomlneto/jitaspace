@@ -1,9 +1,7 @@
-import React from "react";
-import { type TableProps } from "@mantine/core";
+import type { TableProps } from "@mantine/core";
 
 import { DesktopMailboxTable } from "./DesktopMailboxTable";
 import { MobileMailboxTable } from "./MobileMailboxTable";
-
 
 export type MailboxTableProps = TableProps & {
   characterId: number;

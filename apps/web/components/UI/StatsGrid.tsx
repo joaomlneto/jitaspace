@@ -1,15 +1,17 @@
-import React, { memo } from "react";
+import type React from "react";
+import { memo } from "react";
 import {
   Grid,
   Group,
   Paper,
   SimpleGrid,
-  Text,
-  type SimpleGridProps,
+  Text
+  
 } from "@mantine/core";
+import type {SimpleGridProps} from "@mantine/core";
 import { IconArrowDownRight, IconArrowUpRight } from "@tabler/icons-react";
 
-import { type EveIconProps } from "@jitaspace/eve-icons";
+import type {EveIconProps} from "@jitaspace/eve-icons";
 
 import classes from "./StatsGrid.module.css";
 
@@ -17,7 +19,7 @@ import classes from "./StatsGrid.module.css";
 type StatsGridProps = SimpleGridProps & {
   data: {
     title: string;
-    icon?: (props: EveIconProps) => React.ReactElement<any>;
+    icon?: (props: EveIconProps) => React.ReactElement;
     value: string;
     diff?: number;
     description?: string;

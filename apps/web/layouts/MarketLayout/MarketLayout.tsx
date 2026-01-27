@@ -1,18 +1,13 @@
-import React, { PropsWithChildren } from "react";
-import {
-  AppShell,
-  AppShellProps,
-  Loader,
-  rem,
-  ScrollArea,
-} from "@mantine/core";
+import type { AppShellProps } from "@mantine/core";
+import type { PropsWithChildren } from "react";
+import { AppShell, Loader, rem, ScrollArea } from "@mantine/core";
 import { useHeadroom, useMediaQuery } from "@mantine/hooks";
 import { useQuery } from "@tanstack/react-query";
 
+import type { MarketGroupsApiResponseBody } from "~/pages/api/market-groups";
 import { MarketGroupNavLink } from "~/components/Market";
 import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
 import { HeaderWithMegaMenus } from "~/layouts/MainLayout/HeaderWithMegaMenus";
-import { MarketGroupsApiResponseBody } from "~/pages/api/market-groups";
 
 export type MarketLayoutProps = PropsWithChildren<AppShellProps>;
 

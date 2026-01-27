@@ -1,8 +1,9 @@
-import React, { useMemo } from "react";
+import _React, { useMemo } from "react";
 import { Group } from "@mantine/core";
+import type {
+  MRT_ColumnDef} from "mantine-react-table";
 import {
   MantineReactTable,
-  MRT_ColumnDef,
   useMantineReactTable,
 } from "mantine-react-table";
 
@@ -18,7 +19,7 @@ import {
   WarAnchor,
 } from "@jitaspace/ui";
 
-export type War = {
+export interface War {
   warId: number;
   aggressorCorporationId?: number;
   aggressorAllianceId?: number;
@@ -37,11 +38,11 @@ export type War = {
   isOpenForAllies: boolean;
   retractedDate?: Date;
   updatedAt: Date;
-};
+}
 
-export type WarsTableProps = {
+export interface WarsTableProps {
   wars: War[];
-};
+}
 
 export const WarsTable = ({ wars }: WarsTableProps) => {
   const columns = useMemo<MRT_ColumnDef<War>[]>(
@@ -50,7 +51,7 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         id: "id",
         header: "War ID",
         accessorKey: "warId",
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <WarAnchor inherit warId={row.original.warId} target="_blank">
             {row.original.warId}
           </WarAnchor>
@@ -60,7 +61,7 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         id: "aggressor",
         header: "Aggressor",
         //accessorKey: "aggressorCorporationId",
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Group>
             {row.original.aggressorCorporationId && (
               <Group wrap="nowrap">
@@ -112,7 +113,7 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         mantineTableBodyCellProps: {
           align: "right",
         },
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           `${row.original.aggressorIskDestroyed.toLocaleString()} ISK`,
       },
       {
@@ -124,7 +125,7 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         id: "defender",
         header: "Defender",
         //accessorKey: "aggressorCorporationId",
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Group>
             {row.original.defenderCorporationId && (
               <Group wrap="nowrap">
@@ -176,7 +177,7 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         mantineTableBodyCellProps: {
           align: "right",
         },
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           `${row.original.defenderIskDestroyed.toLocaleString()} ISK`,
       },
       {
@@ -188,14 +189,14 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         id: "isOpenForAllies",
         header: "Open for Allies",
         accessorKey: "isOpenForAllies",
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.isOpenForAllies ? "Yes" : "No",
       },
       {
         id: "allies",
         header: "Allies",
         size: 40,
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Group>
             {row.original.allianceAllies.map((allyAllianceId) => (
               <AllianceAnchor
@@ -225,14 +226,14 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         id: "isMutual",
         header: "Mutual",
         accessorKey: "isMutual",
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.isMutual ? "Yes" : "No",
       },
       {
         id: "declaredDate",
         header: "Declared On",
         accessorKey: "declaredDate",
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <FormattedDateText
             inherit
             date={new Date(row.original.declaredDate)}
@@ -243,7 +244,7 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         id: "startedDate",
         header: "Started On",
         accessorKey: "startedDate",
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.startedDate && (
             <FormattedDateText
               inherit
@@ -255,7 +256,7 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         id: "retractedDate",
         header: "Retracted On",
         accessorKey: "retractedDate",
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.retractedDate && (
             <FormattedDateText
               inherit
@@ -267,7 +268,7 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         id: "finishedDate",
         header: "Finished On",
         accessorKey: "finishedDate",
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.finishedDate && (
             <>
               <FormattedDateText
@@ -281,7 +282,7 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         id: "updatedAt",
         header: "Last Updated",
         accessorKey: "updatedAt",
-        Cell: ({ renderedCellValue, row, cell }) =>
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.updatedAt && (
             <TimeAgoText
               inherit

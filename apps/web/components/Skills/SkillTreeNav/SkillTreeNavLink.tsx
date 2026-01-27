@@ -1,14 +1,16 @@
-import React, { memo, useMemo } from "react";
+import _React, { memo, useMemo } from "react";
+import type {
+  NavLinkProps} from "@mantine/core";
 import {
   Group,
   Loader,
   NavLink,
-  NavLinkProps,
   Stack,
   Text,
 } from "@mantine/core";
 
-import { CharacterSkill, useCharacterSkills } from "@jitaspace/hooks";
+import type { CharacterSkill} from "@jitaspace/hooks";
+import { useCharacterSkills } from "@jitaspace/hooks";
 import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
 
 
@@ -49,7 +51,7 @@ export const SkillTreeNavLink = memo(
     const {
       data: skills,
       isLoading: skillsLoading,
-      error: skillsError,
+      error: _skillsError,
     } = useCharacterSkills(characterId);
 
     const sortedTypes = useMemo(

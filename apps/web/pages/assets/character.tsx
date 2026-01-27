@@ -1,9 +1,10 @@
-import React, {
+import _React, {
   useCallback,
   useEffect,
-  useMemo,
-  type ReactElement,
+  useMemo
+  
 } from "react";
+import type {ReactElement} from "react";
 import {
   Center,
   Container,
@@ -186,7 +187,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };
 

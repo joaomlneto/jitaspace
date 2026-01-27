@@ -1,4 +1,5 @@
-import React, { useState, type ReactElement } from "react";
+import _React, { useState  } from "react";
+import type {ReactElement} from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { NextSeo } from "next-seo";
 
@@ -30,7 +31,7 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return (
     <MainLayout>
       <NextSeo title="Agents" />

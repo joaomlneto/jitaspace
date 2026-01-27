@@ -1,5 +1,3 @@
-import React from "react";
-
 export const metadata = {
   title: "Testing Page",
   description: "This is the testing page!",

@@ -1,5 +1,5 @@
 import type { CardProps } from "@mantine/core";
-import React, { memo } from "react";
+import _React, { memo } from "react";
 import { Card, Group } from "@mantine/core";
 
 import { useSolarSystem } from "@jitaspace/hooks";
@@ -18,7 +18,7 @@ export type SolarSystemCardProps = Omit<CardProps, "children"> & {
 
 export const SolarSystemCard = memo(
   ({ solarSystemId, ...otherProps }: SolarSystemCardProps) => {
-    const { data } = useSolarSystem(solarSystemId);
+    const { data: _data } = useSolarSystem(solarSystemId);
 
     return (
       <Card withBorder p={0} m={0} className={classes.card} {...otherProps}>

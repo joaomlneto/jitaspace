@@ -1,14 +1,16 @@
-import React, { memo, useCallback, useEffect, useMemo } from "react";
+import _React, { memo, useCallback, useEffect, useMemo } from "react";
 import { Group, Text } from "@mantine/core";
 import { useForceUpdate, useTimeout } from "@mantine/hooks";
+import type {
+  MRT_ColumnDef} from "mantine-react-table";
 import {
   MantineReactTable,
-  MRT_ColumnDef,
   useMantineReactTable,
 } from "mantine-react-table";
 
+import type {
+  CharacterAsset} from "@jitaspace/hooks";
 import {
-  CharacterAsset,
   useEsiNamePrefetch,
   useEsiNamesCache,
   useMarketPrices,
@@ -19,9 +21,9 @@ import { ISKAmount, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 
 
-type AssetsDataTableProps = {
+interface AssetsDataTableProps {
   entries: CharacterAsset[];
-};
+}
 
 export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {
   const forceUpdate = useForceUpdate();
@@ -97,7 +99,7 @@ export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {
         },
         size: 300,
         enableColumnFilter: false,
-        Cell: ({ renderedCellValue, row, cell }) => (
+        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
           <Group wrap="nowrap">
             <TypeAvatar typeId={row.original.type_id} size="sm" />
             <TypeAnchor
@@ -119,7 +121,7 @@ export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {
           const adjustedPrice = marketPrices[row.type_id]?.adjusted_price;
           return adjustedPrice ? adjustedPrice * row.quantity : undefined;
         },
-        Cell: ({ renderedCellValue, row, cell }) => {
+        Cell: ({ renderedCellValue: _renderedCellValue, row: _row, cell }) => {
           const value = cell.getValue<number>();
           return value !== undefined ? <ISKAmount amount={value} /> : undefined;
         },

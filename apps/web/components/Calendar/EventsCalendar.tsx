@@ -1,9 +1,8 @@
 import type { CalendarProps } from "@mantine/dates";
-import React from "react";
 import { Indicator } from "@mantine/core";
 import { Calendar } from "@mantine/dates";
 
-import { CalendarEvent } from "@jitaspace/hooks";
+import type { CalendarEvent } from "@jitaspace/hooks";
 
 type CharacterMonthCalendarProps = CalendarProps & {
   events: CalendarEvent[];
@@ -13,9 +12,7 @@ export default function EventsCalendar({
   events,
   ...otherProps
 }: CharacterMonthCalendarProps) {
-  const eventsPerDate: {
-    [date: string]: CalendarEvent[];
-  } = {};
+  const eventsPerDate: Record<string, CalendarEvent[]> = {};
 
   if (events) {
     events.forEach((event) => {

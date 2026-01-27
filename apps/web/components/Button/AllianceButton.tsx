@@ -7,9 +7,9 @@ import { AllianceAvatar } from "@jitaspace/ui";
 import classes from "./Button.module.css";
 
 
-export type AllianceButtonProps = {
+export interface AllianceButtonProps {
   allianceId?: number;
-};
+}
 
 export const AllianceButton = memo(({ allianceId }: AllianceButtonProps) => {
   const { data } = useEsiAllianceInformation(

@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { type CardProps } from "@mantine/core";
+import type {CardProps} from "@mantine/core";
 
 import { useCharacterFitting } from "@jitaspace/hooks";
 

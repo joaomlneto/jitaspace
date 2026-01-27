@@ -1,5 +1,5 @@
-import React from "react";
-import { Menu, MenuProps, Text } from "@mantine/core";
+import type { MenuProps } from "@mantine/core";
+import { Menu, Text } from "@mantine/core";
 import { modals, openContextModal } from "@mantine/modals";
 import { IconLockSearch } from "@tabler/icons-react";
 
@@ -12,7 +12,6 @@ import {
 import { CharacterAvatar } from "@jitaspace/ui";
 
 import { ZkillboardIcon } from "~/components/Icon";
-
 
 export type CharacterMenuProps = MenuProps & {
   characterId: number;

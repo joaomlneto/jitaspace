@@ -1,5 +1,4 @@
-import React from "react";
-import { type RichTextEditorProps } from "@mantine/tiptap";
+import type { RichTextEditorProps } from "@mantine/tiptap";
 
 import { useEveEditor } from "@jitaspace/tiptap-eve";
 

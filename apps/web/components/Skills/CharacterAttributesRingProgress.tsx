@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import {
   Center,
   Group,
@@ -20,9 +20,10 @@ import {
   IntelligenceAttributeSmallIcon,
   MemoryAttributeSmallIcon,
   PerceptionAttributeSmallIcon,
-  WillpowerAttributeSmallIcon,
-  type EveIconProps,
+  WillpowerAttributeSmallIcon
+  
 } from "@jitaspace/eve-icons";
+import type {EveIconProps} from "@jitaspace/eve-icons";
 import { useCharacterAttributes } from "@jitaspace/hooks/src/hooks/skills";
 
 export const characterAttributes = [
@@ -51,9 +52,9 @@ const icons: Record<CharacterAttribute, React.FC<EveIconProps>> = {
   willpower: WillpowerAttributeSmallIcon,
 };
 
-type CharacterAttributesRingProgressProps = {
+interface CharacterAttributesRingProgressProps {
   characterId: number;
-};
+}
 
 export function CharacterAttributesRingProgress({
   characterId,

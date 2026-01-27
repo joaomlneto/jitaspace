@@ -7,9 +7,9 @@ import { FactionAvatar } from "@jitaspace/ui";
 import classes from "./Button.module.css";
 
 
-export type FactionButtonProps = {
+export interface FactionButtonProps {
   factionId?: number;
-};
+}
 
 export const FactionButton = memo(({ factionId }: FactionButtonProps) => {
   const { data } = useGetFactionById(factionId ?? 0, {

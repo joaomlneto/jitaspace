@@ -1,12 +1,13 @@
-import React, { memo, useMemo } from "react";
+import _React, { memo, useMemo } from "react";
 import { Badge, Group, Text } from "@mantine/core";
+import type {
+  MRT_ColumnDef} from "mantine-react-table";
 import {
   MantineReactTable,
-  MRT_ColumnDef,
   useMantineReactTable,
 } from "mantine-react-table";
 
-import {
+import type {
   AllianceContact,
   CharacterContact,
   CorporationContact,
@@ -24,12 +25,12 @@ import {
 
 
 type Contact = AllianceContact & CorporationContact & CharacterContact;
-export type ContactsDataTableProps = {
+export interface ContactsDataTableProps {
   contacts?: Contact[];
   labels?: { label_id: number; label_name: string }[];
   hideBlockedColumn?: boolean;
   hideWatchedColumn?: boolean;
-};
+}
 
 const capitalizeFirstLetter = (s: string) =>
   s.charAt(0).toUpperCase() + s.slice(1);

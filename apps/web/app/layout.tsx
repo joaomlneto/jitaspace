@@ -10,8 +10,8 @@ import "@mantine/spotlight/styles.css";
 import "@mantine/nprogress/styles.css";
 import "mantine-react-table/styles.css";
 
-import React, { ReactNode } from "react";
-import { Viewport } from "next";
+import type { Viewport } from "next";
+import type { ReactNode } from "react";
 import Script from "next/script";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
@@ -22,6 +22,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
+import ConsentManager from "~/app/consent-manager.tsx";
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
 import { RouterTransitionAppDir } from "~/components/RouterTransitionAppDir";
@@ -79,53 +80,55 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   const defaultColorScheme = "dark";
   return (
-    <html lang="en" dir="ltr" data-mantine-color-scheme={defaultColorScheme}>
-      <head>
-        <ColorSchemeScript defaultColorScheme={defaultColorScheme} />
-        <meta
-          name="viewport"
-          content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
-        />
-      </head>
-      <body>
-        <MantineProvider defaultColorScheme="dark" /*theme={themes.default}*/>
-          <Script
-            strategy="afterInteractive"
-            async
-            defer
-            // /analytics is a proxy to the umami server - set in next.config.mjs
-            src={"/analytics/script.js"}
-            data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-            data-domains="www.jita.space"
-          ></Script>
-          {env.NEXT_PUBLIC_GOOGLE_TAG_ID && (
-            <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
-          )}
-          <Analytics />
-          <SpeedInsights />
+    <ConsentManager>
+      <html lang="en" dir="ltr" data-mantine-color-scheme={defaultColorScheme}>
+        <head>
+          <ColorSchemeScript defaultColorScheme={defaultColorScheme} />
+          <meta
+            name="viewport"
+            content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
+          />
+        </head>
+        <body>
+          <MantineProvider defaultColorScheme="dark" /*theme={themes.default}*/>
+            <Script
+              strategy="afterInteractive"
+              async
+              defer
+              // /analytics is a proxy to the umami server - set in next.config.mjs
+              src={"/analytics/script.js"}
+              data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+              data-domains="www.jita.space"
+            ></Script>
+            {env.NEXT_PUBLIC_GOOGLE_TAG_ID && (
+              <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
+            )}
+            <Analytics />
+            <SpeedInsights />
 
-          <MyQueryClientProvider>
-            <MySessionProvider>
-              <EsiClientSSOAccessTokenInjector>
-                <EveIconsContextProvider>
-                  <>
-                    <Notifications />
-                    <RouterTransitionAppDir />
-                    <JitaSpotlightProvider>
-                      <ModalsProvider
-                        modals={contextModals}
-                        modalProps={{ centered: true }}
-                      >
-                        {children}
-                      </ModalsProvider>
-                    </JitaSpotlightProvider>
-                  </>
-                </EveIconsContextProvider>
-              </EsiClientSSOAccessTokenInjector>
-            </MySessionProvider>
-          </MyQueryClientProvider>
-        </MantineProvider>
-      </body>
-    </html>
+            <MyQueryClientProvider>
+              <MySessionProvider>
+                <EsiClientSSOAccessTokenInjector>
+                  <EveIconsContextProvider>
+                    <>
+                      <Notifications />
+                      <RouterTransitionAppDir />
+                      <JitaSpotlightProvider>
+                        <ModalsProvider
+                          modals={contextModals}
+                          modalProps={{ centered: true }}
+                        >
+                          {children}
+                        </ModalsProvider>
+                      </JitaSpotlightProvider>
+                    </>
+                  </EveIconsContextProvider>
+                </EsiClientSSOAccessTokenInjector>
+              </MySessionProvider>
+            </MyQueryClientProvider>
+          </MantineProvider>
+        </body>
+      </html>
+    </ConsentManager>
   );
 }

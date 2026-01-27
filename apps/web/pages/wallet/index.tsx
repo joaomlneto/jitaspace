@@ -1,4 +1,4 @@
-import React, { type ReactElement } from "react";
+import type { ReactElement } from "react";
 import Link from "next/link";
 import {
   Card,
@@ -129,6 +129,6 @@ export default function Page() {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };

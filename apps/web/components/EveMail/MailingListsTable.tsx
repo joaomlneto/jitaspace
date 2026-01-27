@@ -1,16 +1,11 @@
-import React from "react";
 import { Alert, Container, Group, Stack, Text } from "@mantine/core";
 
 import { GroupListIcon } from "@jitaspace/eve-icons";
 import { useCharacterMailingLists } from "@jitaspace/hooks";
 
-
-
-
-
-export type MailingListsTableProps = {
+export interface MailingListsTableProps {
   characterId: number;
-};
+}
 
 export function MailingListsTable({ characterId }: MailingListsTableProps) {
   const { data, error } = useCharacterMailingLists(characterId);

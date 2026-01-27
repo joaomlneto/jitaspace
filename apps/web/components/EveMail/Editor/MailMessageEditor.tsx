@@ -1,5 +1,4 @@
 import type { RichTextEditorProps } from "@mantine/tiptap";
-import React from "react";
 import { Stack, Text } from "@mantine/core";
 import { RichTextEditor } from "@mantine/tiptap";
 

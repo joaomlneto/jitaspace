@@ -1,12 +1,10 @@
 "use client";
 
-import React from "react";
-import { type ContextModalProps } from "@mantine/modals";
+import type { ContextModalProps } from "@mantine/modals";
 
 import { useCharacterCurrentFit } from "@jitaspace/hooks";
 
 import { ShipFittingCard } from "~/components/Fitting";
-
 
 export function CurrentShipFittingModal({
   innerProps,

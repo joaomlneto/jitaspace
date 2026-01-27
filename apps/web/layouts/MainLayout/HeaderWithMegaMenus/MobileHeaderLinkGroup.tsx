@@ -1,6 +1,7 @@
 "use client";
 
-import React, { memo } from "react";
+import type React from "react";
+import { memo } from "react";
 import Link from "next/link";
 import {
   Box,
@@ -15,25 +16,25 @@ import {
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown } from "@tabler/icons-react";
 
-import { EveIconProps } from "@jitaspace/eve-icons";
+import type { EveIconProps } from "@jitaspace/eve-icons";
 
-import { JitaApp } from "~/config/apps";
+import type { JitaApp } from "~/config/apps";
 import classes from "./HeaderWithMegaMenus.module.css";
 
-export type MobileHeaderLinkGroupProps = {
+export interface MobileHeaderLinkGroupProps {
   title: string;
-  Icon: (props: EveIconProps) => React.ReactElement<any>;
+  Icon: (props: EveIconProps) => React.ReactElement;
   onNavigation?: Function;
   items: Record<string, JitaApp>;
-};
+}
 
 export const MobileHeaderLinkGroup = memo(
   ({ title, Icon, items, onNavigation }: MobileHeaderLinkGroupProps) => {
     const theme = useMantineTheme();
-    const { colorScheme } = useMantineColorScheme();
+    const { colorScheme: _colorScheme } = useMantineColorScheme();
     const [
       mobileCharacterAppsOpened,
-      { toggle: toggleMobileCharacterApps, close: closeMobileCharacterApps },
+      { toggle: toggleMobileCharacterApps, close: _closeMobileCharacterApps },
     ] = useDisclosure(false);
 
     return (

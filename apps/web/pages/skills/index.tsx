@@ -1,5 +1,5 @@
-import React, { type ReactElement } from "react";
-import { GetStaticProps } from "next";
+import type { GetStaticProps } from "next";
+import type { ReactElement } from "react";
 import { Container, Grid, Group, Stack, Title } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
@@ -15,7 +15,7 @@ import { MainLayout } from "~/layouts";
 
 const SKILLS_CATEGORY_ID = 16;
 
-type PageProps = {
+interface PageProps {
   groups: {
     groupId: number;
     name: string;
@@ -33,9 +33,9 @@ type PageProps = {
       }[];
     }[];
   }[];
-};
+}
 
-export const getStaticProps: GetStaticProps<PageProps> = async (context) => {
+export const getStaticProps: GetStaticProps<PageProps> = async (_context) => {
   const groups = await prisma.group.findMany({
     select: {
       groupId: true,
@@ -105,7 +105,7 @@ export default function Page({ groups }: PageProps) {
   );
 }
 
-Page.getLayout = function getLayout(page: ReactElement<any>) {
+Page.getLayout = function getLayout(page: ReactElement) {
   return <MainLayout>{page}</MainLayout>;
 };
 

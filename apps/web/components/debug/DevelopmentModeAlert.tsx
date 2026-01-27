@@ -1,12 +1,11 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import { Alert, Anchor, Button, Group } from "@mantine/core";
 
-export type DevelopmentModeAlertProps = {};
+export interface DevelopmentModeAlertProps {}
 
-export const DevelopmentModeAlert = (props: DevelopmentModeAlertProps) => {
+export const DevelopmentModeAlert = (_props: DevelopmentModeAlertProps) => {
   return (
     <Alert variant="transparent" color="red" title="Development Mode">
       <Group gap="md">
