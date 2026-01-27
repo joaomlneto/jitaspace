@@ -1,3 +1,6 @@
+
+
+
 import "@mantine/core/styles.css";
 import "@mantine/charts/styles.css";
 import "@mantine/dates/styles.css";
@@ -16,13 +19,11 @@ import type { AppProps } from "next/app";
 import type { ReactElement, ReactNode } from "react";
 import React from "react";
 import Head from "next/head";
-import {
-  ConsentManagerDialog,
-  ConsentManagerProvider,
-} from "@c15t/nextjs/pages";
+import Script from "next/script";
 import { MantineProvider } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Analytics } from "@vercel/analytics/react";
@@ -35,12 +36,12 @@ import { EveIconsContextProvider } from "@jitaspace/eve-icons";
 
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
-import { PrivacyBanner } from "~/components/privacy/PrivacyBanner.tsx";
 import { ScopeGuard } from "~/components/ScopeGuard";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
-import { CONSENT_OPTIONS } from "~/config/consent.ts";
+import { env } from "~/env";
 import { themes } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
+
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -115,7 +116,7 @@ export default function App({
       />
 
       {/* Analytics: Umami, Vercel, Google */}
-      {/*<Script // managed by ConsentManager
+      <Script // TODO: managed by ConsentManager
         strategy="afterInteractive"
         async
         defer
@@ -123,10 +124,10 @@ export default function App({
         src={"/analytics/script.js"}
         data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
         data-domains="www.jita.space"
-      ></Script>*/}
-      {/*env.NEXT_PUBLIC_GOOGLE_TAG_ID && (  // managed by ConsentManager
+      ></Script>
+      {env.NEXT_PUBLIC_GOOGLE_TAG_ID && ( // TODO: managed by ConsentManager
         <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
-      )*/}
+      )}
       <Analytics />
       <SpeedInsights />
 
