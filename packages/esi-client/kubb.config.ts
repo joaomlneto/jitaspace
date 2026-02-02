@@ -5,15 +5,14 @@ import { pluginReactQuery } from "@kubb/plugin-react-query";
 import { pluginTs } from "@kubb/plugin-ts";
 import { pluginZod } from "@kubb/plugin-zod";
 
+const COMPATIBILITY_DATE = "2025-12-16";
+
 export default defineConfig(({ config, watch, logLevel }) => {
   return {
     name: "esi-client",
     root: ".",
     input: {
-      // Cannot use the spec directly, as the parser cannot parse the routes endpoint.
-      // We remove it using jq (see package.json scripts) before feeding it into kubb.
-      //path: "https://esi.evetech.net/latest/swagger.json",
-      path: "./swagger.json",
+      path: `https://esi.evetech.net/meta/openapi.json?compatibility_date=${COMPATIBILITY_DATE}`,
     },
     output: {
       path: "./src/generated",

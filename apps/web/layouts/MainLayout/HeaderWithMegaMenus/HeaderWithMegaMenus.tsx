@@ -28,6 +28,7 @@ import {
 import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
+import { EsiStatusIndicator } from "~/components/EsiStatus/EsiStatusIndicator";
 import { ServerStatusIndicator } from "~/components/ServerStatus/ServerStatusIndicator";
 import {
   allianceApps,
@@ -69,6 +70,7 @@ export function HeaderWithMegaMenus({
               </Link>
 
               <ServerStatusIndicator />
+              <EsiStatusIndicator />
             </Group>
 
             <Group h="100%" gap={0} visibleFrom="sm">
