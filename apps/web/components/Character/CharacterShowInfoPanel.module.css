@@ -1,0 +1,84 @@
+.root {
+  background: light-dark(var(--mantine-color-white), var(--mantine-color-dark-7));
+}
+
+.header {
+  padding: var(--mantine-spacing-md);
+  border-bottom: rem(1px) solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  background: linear-gradient(
+    135deg,
+    light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6)),
+    transparent
+  );
+}
+
+.headerGroup {
+  width: 100%;
+}
+
+.avatarFrame {
+  padding: rem(4px);
+  background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  border-radius: var(--mantine-radius-sm);
+  border: rem(1px) solid
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.headerBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-family: Greycliff CF, var(--mantine-font-family);
+}
+
+.securityPositive {
+  color: var(--mantine-color-teal-6);
+}
+
+.securityNegative {
+  color: var(--mantine-color-red-6);
+}
+
+.tabs {
+  padding: var(--mantine-spacing-md);
+}
+
+.tabList {
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.sectionTitle {
+  margin-bottom: var(--mantine-spacing-xs);
+  text-transform: uppercase;
+  letter-spacing: rem(0.4px);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+}
+
+.infoRow {
+  display: grid;
+  grid-template-columns: minmax(rem(110px), rem(160px)) 1fr;
+  gap: var(--mantine-spacing-sm);
+  align-items: start;
+}
+
+.infoLabel {
+  text-transform: uppercase;
+  letter-spacing: rem(0.4px);
+}
+
+.infoValue {
+  min-width: 0;
+}
+
+.description {
+  padding: var(--mantine-spacing-sm);
+  border-radius: var(--mantine-radius-sm);
+  border: rem(1px) dashed
+    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+  background: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+}

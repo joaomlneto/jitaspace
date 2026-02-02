@@ -35,6 +35,22 @@ export const CharacterMenu = ({
         {false && <Menu.Divider />}
         <Menu.Label>View Character in…</Menu.Label>
         {false && <Menu.Item>EVE Online</Menu.Item>}
+
+        <Menu.Item
+          onClick={() =>
+            modals.openContextModal({
+              modal: "characterShowInfo",
+              innerProps: {
+                characterId,
+              },
+              size: "lg",
+            })
+          }
+          color="red"
+          leftSection={<TerminateIcon width={20} />}
+        >
+          Show Info
+        </Menu.Item>
         <Menu.Item
           component="a"
           href={`https://evewho.com/character/${characterId}`}
