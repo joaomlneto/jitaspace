@@ -37,8 +37,8 @@ importers:
   apps/cli:
     devDependencies:
       '@asteasolutions/zod-to-openapi':
-        specifier: ^4.7.0
-        version: 4.8.0(zod@3.25.49)
+        specifier: ^8.4.0
+        version: 8.4.0(zod@3.25.49)
       '@commander-js/extra-typings':
         specifier: ^10.0.3
         version: 10.0.3(commander@10.0.1)
@@ -1525,15 +1525,15 @@ packages:
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
 
-  '@asteasolutions/zod-to-openapi@4.8.0':
-    resolution: {integrity: sha512-FQlBeHIhSoEhjddAWD1v2zbeBESfTdaAVQuUr0RY9t0rN8ogoEaGirv2Ne8kQQTAVGydJzUMAOIlPULEOQDoeA==}
-    peerDependencies:
-      zod: ^3.20.2
-
   '@asteasolutions/zod-to-openapi@7.3.3':
     resolution: {integrity: sha512-ioiw+R+gBGAUwmDp+/gJA16tedBivzDaji5wOvWej0ZYDE0CXTSSfJfXbrBIuWKh6JQhuXgNDniJdeDueKUZTA==}
     peerDependencies:
       zod: ^3.20.2
+
+  '@asteasolutions/zod-to-openapi@8.4.0':
+    resolution: {integrity: sha512-Ckp971tmTw4pnv+o7iK85ldBHBKk6gxMaoNyLn3c2Th/fKoTG8G3jdYuOanpdGqwlDB0z01FOjry2d32lfTqrA==}
+    peerDependencies:
+      zod: ^4.0.0
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -12044,15 +12044,15 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@asteasolutions/zod-to-openapi@4.8.0(zod@3.25.49)':
-    dependencies:
-      openapi3-ts: 4.4.0
-      zod: 3.25.49
-
   '@asteasolutions/zod-to-openapi@7.3.3(zod@3.25.56)':
     dependencies:
       openapi3-ts: 4.4.0
       zod: 3.25.56
+
+  '@asteasolutions/zod-to-openapi@8.4.0(zod@3.25.49)':
+    dependencies:
+      openapi3-ts: 4.4.0
+      zod: 3.25.49
 
   '@babel/code-frame@7.27.1':
     dependencies:
