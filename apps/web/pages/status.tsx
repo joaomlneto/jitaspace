@@ -3,6 +3,7 @@ import _React, { useMemo, useState } from "react";
 import {
   Anchor,
   Badge,
+  Button,
   ColorSwatch,
   Container,
   Group,
@@ -13,6 +14,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
+import { openModal } from "@mantine/modals";
 import { IconCircleCheck, IconCircleX } from "@tabler/icons-react";
 import { NextSeo } from "next-seo";
 import useSwr from "swr";
@@ -24,6 +26,7 @@ import { useGetVersion } from "@jitaspace/sde-client";
 import { FormattedDateText } from "@jitaspace/ui";
 
 import { MainLayout } from "~/layouts";
+import RateLimitDashboard from "~/components/RateLimits/RateLimitDashboard";
 
 export default function Page() {
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
@@ -117,7 +120,22 @@ export default function Page() {
     <Container size="sm">
       <Stack>
         <Stack gap="xs">
-          <Title>Status</Title>
+          <Group justify="space-between" align="center">
+            <Title>Status</Title>
+            <Button
+              size="xs"
+              variant="light"
+              onClick={() =>
+                openModal({
+                  title: null,
+                  size: "90%",
+                  children: <RateLimitDashboard />,
+                })
+              }
+            >
+              Rate limits
+            </Button>
+          </Group>
           <Title order={3}>JitaSpace</Title>
           <Group justify="space-between">
             <Text>Vercel Platform</Text>
