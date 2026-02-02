@@ -1,6 +1,3 @@
-
-
-
 import "@mantine/core/styles.css";
 import "@mantine/charts/styles.css";
 import "@mantine/dates/styles.css";
@@ -41,7 +38,6 @@ import { JitaSpotlightProvider } from "~/components/Spotlight";
 import { env } from "~/env";
 import { themes } from "~/themes";
 import RouterTransition from "../components/RouterTransition";
-
 
 type NextPageWithLayout = NextPage & {
   getLayout?: (page: ReactElement) => ReactNode;
