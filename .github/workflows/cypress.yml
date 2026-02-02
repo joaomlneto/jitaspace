@@ -16,7 +16,7 @@ jobs:
         containers: [1, 2] # Uses 2 parallel instances
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - uses: pnpm/action-setup@v2
         with:
           version: 8
