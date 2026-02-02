@@ -36,7 +36,7 @@
     "commander": "^10.0.1",
     "figlet": "^1.6.0",
     "inquirer": "^9.2.2",
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "js2schema": "^1.0.8",
     "node-html-parser": "^6.1.5",
     "node-stream-zip": "^1.15.0",
