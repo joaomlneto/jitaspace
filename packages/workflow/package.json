@@ -1,0 +1,43 @@
+{
+  "name": "@jitaspace/workflow",
+  "description": "Durable functions for JitaSpace",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "dev": "pnpm with-env workflow dev",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --jsx react-jsx --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@jitaspace/db": "workspace:*",
+    "@jitaspace/esi-client": "workspace:*",
+    "@jitaspace/evekill-client": "workspace:*",
+    "@jitaspace/kv": "workspace:*",
+    "@jitaspace/sde-client": "workspace:*",
+    "axios": "^1.9.0",
+    "decimal.js": "^10.5.0",
+    "p-limit": "^6.2.0",
+    "tar-stream": "^3.1.7",
+    "untar-to-memory": "^2.0.0",
+    "unbzip2-stream": "^1.4.3",
+    "workflow": "^4.0.1-beta.50"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "@types/node": "^22.15.29",
+    "@types/tar-stream": "^3.1.4",
+    "@types/unbzip2-stream": "^1.4.3",
+    "eslint": "^9.39.2",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "prettier": "@jitaspace/prettier-config"
+}
