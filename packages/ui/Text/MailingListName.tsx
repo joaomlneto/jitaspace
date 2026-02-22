@@ -33,13 +33,26 @@ export const MailingListName = memo(
       },
     );
 
-    return (
-      <Skeleton visible={isLoading}>
+    if (isLoading) {
+      const placeholder = "Unknown Mailing List";
+      const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
+      return (
         <Text {...otherProps}>
-          {data?.data.find((list) => list.mailing_list_id === mailingListId)
-            ?.name ?? "Unknown Mailing List"}
+          <Skeleton
+            component="span"
+            style={{ display: "inline-block" }}
+            height="1em"
+            width={`${skeletonWidth}ch`}
+          />
         </Text>
-      </Skeleton>
+      );
+    }
+
+    return (
+      <Text {...otherProps}>
+        {data?.data.find((list) => list.mailing_list_id === mailingListId)
+          ?.name ?? "Unknown Mailing List"}
+      </Text>
     );
   },
 );

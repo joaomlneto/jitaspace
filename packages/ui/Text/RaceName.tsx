@@ -18,12 +18,20 @@ export const RaceName = memo(({ raceId, ...otherProps }: RaceNameProps) => {
 
   const race = data?.data.find((r) => r.race_id == raceId);
 
-  if (!race || isLoading)
+  if (!race || isLoading) {
+    const placeholder = "Unknown race";
+    const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
     return (
-      <Skeleton>
-        <Text {...otherProps}>Unknown race</Text>
-      </Skeleton>
+      <Text {...otherProps}>
+        <Skeleton
+          component="span"
+          style={{ display: "inline-block" }}
+          height="1em"
+          width={`${skeletonWidth}ch`}
+        />
+      </Text>
     );
+  }
   return <Text {...otherProps}>{race.name}</Text>;
 });
 RaceName.displayName = "RaceName";

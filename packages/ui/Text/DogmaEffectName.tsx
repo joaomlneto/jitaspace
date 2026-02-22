@@ -21,12 +21,20 @@ export const DogmaEffectName = memo(
       {},
       { query: { enabled: !!effectId } },
     );
-    if (isLoading)
+    if (isLoading) {
+      const placeholder = "Unknown effect";
+      const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
-        <Skeleton>
-          <Text {...otherProps}>Unknown effect</Text>
-        </Skeleton>
+        <Text {...otherProps}>
+          <Skeleton
+            component="span"
+            style={{ display: "inline-block" }}
+            height="1em"
+            width={`${skeletonWidth}ch`}
+          />
+        </Text>
       );
+    }
 
     const name =
       data?.data.display_name && data?.data.display_name.length > 0

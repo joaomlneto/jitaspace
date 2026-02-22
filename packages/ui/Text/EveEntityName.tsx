@@ -19,10 +19,17 @@ export const EveEntityName = memo(
     const { name, loading } = useEsiName(entityId ?? undefined, category);
 
     if (!entityId || loading) {
+      const placeholder = name ?? "Unknown";
+      const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
-        <Skeleton>
-          <Text {...otherProps}>{name ?? "Unknown"}</Text>
-        </Skeleton>
+        <Text {...otherProps}>
+          <Skeleton
+            component="span"
+            style={{ display: "inline-block" }}
+            height="1em"
+            width={`${skeletonWidth}ch`}
+          />
+        </Text>
       );
     }
 

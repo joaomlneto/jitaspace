@@ -19,12 +19,20 @@ export const BloodlineName = memo(
 
     const bloodline = data?.data.find((r) => r.bloodline_id == bloodlineId);
 
-    if (!bloodline || isLoading)
+    if (!bloodline || isLoading) {
+      const placeholder = "Unknown bloodline";
+      const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
-        <Skeleton>
-          <Text {...otherProps}>Unknown bloodline</Text>
-        </Skeleton>
+        <Text {...otherProps}>
+          <Skeleton
+            component="span"
+            style={{ display: "inline-block" }}
+            height="1em"
+            width={`${skeletonWidth}ch`}
+          />
+        </Text>
       );
+    }
     return <Text {...otherProps}>{bloodline.name}</Text>;
   },
 );

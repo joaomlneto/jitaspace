@@ -21,12 +21,20 @@ export const DogmaAttributeName = memo(
       {},
       { query: { enabled: !!attributeId } },
     );
-    if (isLoading)
+    if (isLoading) {
+      const placeholder = "Unknown attribute";
+      const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
-        <Skeleton>
-          <Text {...otherProps}>Unknown attribute</Text>
-        </Skeleton>
+        <Text {...otherProps}>
+          <Skeleton
+            component="span"
+            style={{ display: "inline-block" }}
+            height="1em"
+            width={`${skeletonWidth}ch`}
+          />
+        </Text>
       );
+    }
     return (
       <Text {...otherProps}>
         {data?.data.display_name ||

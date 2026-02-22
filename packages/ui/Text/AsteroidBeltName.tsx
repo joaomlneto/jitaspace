@@ -23,12 +23,20 @@ export const AsteroidBeltName = memo(
       {},
       { query: { enabled: !!asteroidBeltId } },
     );
-    if (isLoading)
+    if (isLoading) {
+      const placeholder = "Unknown asteroid belt";
+      const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
-        <Skeleton>
-          <Text {...otherProps}>Unknown asteroid belt</Text>
-        </Skeleton>
+        <Text {...otherProps}>
+          <Skeleton
+            component="span"
+            style={{ display: "inline-block" }}
+            height="1em"
+            width={`${skeletonWidth}ch`}
+          />
+        </Text>
       );
+    }
     return <Text {...otherProps}>{data?.data.name}</Text>;
   },
 );

@@ -48,11 +48,21 @@ export const EveMailSenderName = memo(
       );
 
     if (!mail?.data.from || mailingListsLoading) {
-      return (
-        <Skeleton visible={isLoading}>
-          <Text {...otherProps}>Unknown</Text>
-        </Skeleton>
-      );
+      if (isLoading) {
+        const placeholder = "Unknown";
+        const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
+        return (
+          <Text {...otherProps}>
+            <Skeleton
+              component="span"
+              style={{ display: "inline-block" }}
+              height="1em"
+              width={`${skeletonWidth}ch`}
+            />
+          </Text>
+        );
+      }
+      return <Text {...otherProps}>Unknown</Text>;
     }
 
     const mailingListMatch = mailingLists?.data.find(
