@@ -1,10 +1,11 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
+import React, { memo } from "react";
+import { Skeleton, Text } from "@mantine/core";
+
 import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
-import { Skeleton, Text, type TextProps } from "@mantine/core";
-import React, { memo } from "react";
-
 
 export type CalendarEventOwnerNameProps = TextProps & {
   characterId: number;
