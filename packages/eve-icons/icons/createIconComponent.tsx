@@ -1,7 +1,7 @@
 import { memo } from "react";
 import Image, { type ImageProps, type StaticImageData } from "next/image";
 
-import { useEveIconsConfig, type IconVersion } from "../context";
+import { DEFAULT_ICON_VERSION, type IconVersion } from "../context";
 
 export type EveIconProps = Omit<Partial<ImageProps>, "src"> & {
   variant?: IconVersion;
@@ -17,10 +17,9 @@ export const createEveIconComponent = ({
   };
 }) => {
   const Component = memo(({ alt, variant, ...props }: EveIconProps) => {
-    const { iconVersion } = useEveIconsConfig();
     return (
       <Image
-        src={variants[variant ?? iconVersion]}
+        src={variants[variant ?? DEFAULT_ICON_VERSION]}
         alt={alt ?? name}
         {...props}
       />
