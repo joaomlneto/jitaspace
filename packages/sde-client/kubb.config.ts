@@ -10,7 +10,7 @@ export default defineConfig(async () => {
     name: "sde-client",
     root: ".",
     input: {
-      path: "http://sde.jita.space/20250707/swagger.json",
+      path: "http://sde.jita.space/20260219/swagger.json",
     },
     output: {
       path: "./src/generated",
@@ -19,14 +19,14 @@ export default defineConfig(async () => {
       pluginOas({ validate: true }),
       pluginClient({
         //importPath: "../../client",
-        baseURL: "https://sde.jita.space/20250707",
+        baseURL: "https://sde.jita.space/20260219",
         dataReturnType: "full",
       }),
       pluginTs({}),
       pluginReactQuery({
         client: {
           //importPath: "../../client",
-          baseURL: "https://sde.jita.space/20250707",
+          baseURL: "https://sde.jita.space/20260219",
           dataReturnType: "full",
         },
       }),
