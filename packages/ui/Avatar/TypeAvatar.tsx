@@ -8,7 +8,6 @@ import { UnknownIcon } from "@jitaspace/eve-icons";
 
 import { EveImageServerAvatar } from "./EveImageServerAvatar";
 
-
 export type TypeAvatarProps = Omit<AvatarProps, "src"> & {
   typeId?: string | number;
   variation?: string;
@@ -16,10 +15,9 @@ export type TypeAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const TypeAvatar = memo(
   ({ typeId, variation, ...otherProps }: TypeAvatarProps) => {
-    // FIXME: THIS MESSES UP SEPARATION OF CONCERNS! ARGH CCP WHY U NO CORS
     const { data } = useSWRImmutable<string[]>(
       typeId && !variation
-        ? `/api/esi/image-variants?category=types&id=${typeId}`
+        ? `https://images.evetech.net/types/${typeId}`
         : null,
       (input: RequestInfo | URL, init?: RequestInit | undefined) =>
         fetch(input, init).then((res) => res.json()),
