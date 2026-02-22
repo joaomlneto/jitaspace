@@ -92,7 +92,6 @@ export const authOptions = {
     }) {
       session.user.id = Number(token.sub!);
       session.accessToken = token.accessToken!;
-      console.log({ token });
       // @ts-expect-error token does not have this property and im not sure where to add it
       session.encryptedRefreshToken = token.encryptedRefreshToken;
       return session;
