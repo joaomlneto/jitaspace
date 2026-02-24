@@ -1,7 +1,7 @@
 "use client";
 
 import _React, { useMemo, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { useDebouncedValue } from "@mantine/hooks";
 import type { SpotlightActionData } from "@mantine/spotlight";
 import { Spotlight } from "@mantine/spotlight";

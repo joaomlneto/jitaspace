@@ -19,11 +19,13 @@ jest.mock("@jitaspace/kv", () => ({
   },
 }));
 
-jest.mock("../layouts", () => ({
-  MainLayout: ({ children }: any) => children,
+jest.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NOT_FOUND");
+  },
 }));
 
-const { getStaticProps } = require("../pages/debug");
+const DebugPage = require("../app/debug/page").default;
 
 describe("Debug Page", () => {
   const originalEnv = env;
@@ -37,18 +39,14 @@ describe("Debug Page", () => {
     process.env = originalEnv;
   });
 
-  it("returns notFound: true when in production", async () => {
+  it("throws notFound when in production", async () => {
     (process.env as any).NODE_ENV = "production";
-    const result = await getStaticProps({} as any);
-    expect(result).toEqual({
-      notFound: true,
-    });
+    await expect(DebugPage()).rejects.toThrow("NOT_FOUND");
   });
 
-  it("returns props when not in production", async () => {
+  it("returns a page when not in production", async () => {
     (process.env as any).NODE_ENV = "development";
-    const result = await getStaticProps({} as any);
-    expect(result).toHaveProperty("props");
-    expect(result.props.vars.NODE_ENV).toBe("development");
+    const result = await DebugPage();
+    expect(result).toBeTruthy();
   });
 });

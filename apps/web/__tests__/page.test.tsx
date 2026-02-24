@@ -36,11 +36,11 @@ describe("Next.js smoke tests", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders a pages router page", () => {
-    const PagesRouterPage = require("../pages/404").default;
+  it("renders a not-found app router page", () => {
+    const NotFoundPage = require("../app/not-found").default;
     render(
       <MantineProvider>
-        <PagesRouterPage />
+        <NotFoundPage />
       </MantineProvider>,
     );
     expect(screen.getByText("404")).toBeInTheDocument();

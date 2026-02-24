@@ -1,37 +1,19 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/router";
-import {
-  completeNavigationProgress,
-  NavigationProgress,
-  startNavigationProgress,
-} from "@mantine/nprogress";
+import { usePathname, useRouter } from "next/navigation";
+import { NavigationProgress, nprogress } from "@mantine/nprogress";
 
-
-
-
-
-function RouterTransition() {
+export const RouterTransition = () => {
+  const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const handleStart = (url: string) =>
-      url !== router.asPath && startNavigationProgress();
-    const handleComplete = () => completeNavigationProgress();
-
-    router.events.on("routeChangeStart", handleStart);
-    router.events.on("routeChangeComplete", handleComplete);
-    router.events.on("routeChangeError", handleComplete);
-
+    nprogress.complete();
     return () => {
-      router.events.off("routeChangeStart", handleStart);
-      router.events.off("routeChangeComplete", handleComplete);
-      router.events.off("routeChangeError", handleComplete);
+      nprogress.start();
     };
-  }, [router, router.asPath]);
+  }, [pathname]);
 
-  return <NavigationProgress />;
-}
-
-export default RouterTransition;
+  return <NavigationProgress size={5} />;
+};

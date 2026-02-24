@@ -1,7 +1,6 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
-import { useRouter } from "next/router";
 import { useDebouncedValue } from "@mantine/hooks";
 import { Spotlight  } from "@mantine/spotlight";
 import type {SpotlightProps} from "@mantine/spotlight";
@@ -17,7 +16,6 @@ export const JitaSpotlightProvider = memo(
     // FIXME Mantine v7 migration
     return children;
 
-    const _router = useRouter();
     const [query, setQuery] = useState<string>("");
     const [debouncedQuery] = useDebouncedValue(query, 1000);
 

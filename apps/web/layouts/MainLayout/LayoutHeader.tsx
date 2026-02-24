@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 import {
   AppShell,
   Box,
@@ -33,7 +33,7 @@ import classes from "./LayoutHeader.module.css";
 import UserButton from "./UserButton";
 
 export function LayoutHeader() {
-  const router = useRouter();
+  const pathname = usePathname();
   const pinned = useHeadroom({ fixedAt: 120 });
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
@@ -65,7 +65,7 @@ export function LayoutHeader() {
               {Object.values(characterApps).map((app) => {
                 const _isActive =
                   app.url !== undefined &&
-                  router.pathname.startsWith(app.url.toString());
+                  (pathname?.startsWith(app.url) ?? false);
                 return (
                   <Tooltip
                     key={app.name}
@@ -154,7 +154,7 @@ export function LayoutHeader() {
           {Object.values(characterApps).map((app) => {
             const _isActive =
               app.url !== undefined &&
-              router.pathname.startsWith(app.url.toString());
+              (pathname?.startsWith(app.url) ?? false);
             return (
               <Link
                 key={app.name}

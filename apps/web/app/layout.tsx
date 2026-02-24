@@ -13,23 +13,22 @@ import "mantine-react-table/styles.css";
 import type { Viewport } from "next";
 import type { ReactNode } from "react";
 import Script from "next/script";
-import { ColorSchemeScript, MantineProvider } from "@mantine/core";
+import { ColorSchemeScript } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-import { EveIconsContextProvider } from "@jitaspace/eve-icons";
-
-import ConsentManager from "~/app/consent-manager.tsx";
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
-import { RouterTransitionAppDir } from "~/components/RouterTransitionAppDir";
+import { RouterTransition } from "~/components/RouterTransition.tsx";
 import { JitaSpotlightProvider } from "~/components/Spotlight";
 import { env } from "~/env";
+import { MainLayout } from "~/layouts";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
 import { MySessionProvider } from "~/lib/MySessionProvider";
+import { AppMantineProvider } from "./mantine-provider";
 
 const APP_NAME = "JitaSpace";
 const APP_DEFAULT_TITLE = "JitaSpace";
@@ -90,7 +89,7 @@ export default function RootLayout({
           />
         </head>
         <body>
-          <MantineProvider defaultColorScheme="dark" /*theme={themes.default}*/>
+          <AppMantineProvider>
             <Script
               strategy="afterInteractive"
               async
@@ -109,24 +108,22 @@ export default function RootLayout({
             <MyQueryClientProvider>
               <MySessionProvider>
                 <EsiClientSSOAccessTokenInjector>
-                  <EveIconsContextProvider>
-                    <>
-                      <Notifications />
-                      <RouterTransitionAppDir />
-                      <JitaSpotlightProvider>
-                        <ModalsProvider
-                          modals={contextModals}
-                          modalProps={{ centered: true }}
-                        >
-                          {children}
-                        </ModalsProvider>
-                      </JitaSpotlightProvider>
-                    </>
-                  </EveIconsContextProvider>
+                  <>
+                    <Notifications />
+                    <RouterTransition />
+                    <JitaSpotlightProvider>
+                      <ModalsProvider
+                        modals={contextModals}
+                        modalProps={{ centered: true }}
+                      >
+                        <MainLayout>{children}</MainLayout>
+                      </ModalsProvider>
+                    </JitaSpotlightProvider>
+                  </>
                 </EsiClientSSOAccessTokenInjector>
               </MySessionProvider>
             </MyQueryClientProvider>
-          </MantineProvider>
+          </AppMantineProvider>
         </body>
       </html>
     </>
