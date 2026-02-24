@@ -16,7 +16,7 @@
     "validate": "ts-node index.ts validate"
   },
   "devDependencies": {
-    "@asteasolutions/zod-to-openapi": "^4.7.0",
+    "@asteasolutions/zod-to-openapi": "^8.4.1",
     "@commander-js/extra-typings": "^10.0.3",
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
