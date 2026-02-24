@@ -1,13 +1,11 @@
 import React from "react";
 import Image from "next/image";
-import type {LinkProps} from "next/link";
 
+import type { ESIScope } from "@jitaspace/esi-metadata";
 import type { EveIconProps } from "@jitaspace/eve-icons";
-import type {ESIScope} from "@jitaspace/esi-metadata";
 import {
   AgentFinderIcon,
   AlliancesIcon,
-  AssetsIcon,
   AttributesIcon,
   CalendarIcon,
   CharacterSheetIcon,
@@ -33,7 +31,7 @@ export interface AppScopeSet {
 export interface JitaApp {
   name: string;
   description: string;
-  url?: LinkProps["href"];
+  url?: string;
   onClick?: () => void;
   Icon: (props: EveIconProps) => React.ReactElement;
   tags?: string[];
@@ -169,6 +167,7 @@ export const characterApps: Record<string, JitaApp> = {
       ],
     },
   },
+  /*
   assets: {
     name: "Assets",
     description: "View and manage your character's assets.",
@@ -190,7 +189,7 @@ export const characterApps: Record<string, JitaApp> = {
         },
       ],
     },
-  },
+  },*/
   wallet: {
     name: "Wallet",
     description: "View your character's and your corporation's wallet.",
@@ -258,6 +257,7 @@ export const corporationApps: Record<string, JitaApp> = {
       ],
     },
   },
+  /*
   assets: {
     name: "Assets",
     description: "View and manage your corporation's assets.",
@@ -279,7 +279,7 @@ export const corporationApps: Record<string, JitaApp> = {
         },
       ],
     },
-  },
+  },*/
   wallet: {
     name: "Wallet",
     description: "View your corporation's wallet balance and transactions.",
