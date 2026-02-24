@@ -9,7 +9,8 @@ export default defineConfig(({ config, watch, logLevel }) => {
     name: "esi-client",
     root: ".",
     input: {
-      path: "https://eve-kill.com/_openapi.json",
+      //path: "https://eve-kill.com/_openapi.json",
+      path: "./swagger.json",
     },
     output: {
       path: "./src/generated",
