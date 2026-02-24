@@ -30,6 +30,9 @@ const config = {
     "@jitaspace/utils",
   ],
 
+  /** Avoid bundling server-only worker dependencies */
+  serverExternalPackages: ["bull"],
+
   /** We already do typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: !!process.env.CI },
 
