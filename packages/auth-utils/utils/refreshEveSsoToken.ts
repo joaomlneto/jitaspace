@@ -36,7 +36,16 @@ export const refreshEveSsoToken = async (params: {
   });
 
   if (!refreshedTokensResponse.ok) {
-    console.log({ params });
+    console.log({
+      message: "Error refreshing EVE SSO token",
+      status: refreshedTokensResponse.status,
+      statusText: refreshedTokensResponse.statusText,
+      params: {
+        eveClientId,
+        eveClientSecret: "[REDACTED]",
+        refreshToken: "[REDACTED]",
+      },
+    });
     console.log(refreshedTokensResponse.body);
     throw new Error("error refreshing access token");
   }
