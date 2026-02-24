@@ -1,3 +1,5 @@
+"use client";
+
 import _React, { useMemo } from "react";
 import { Group, Text } from "@mantine/core";
 import type {
