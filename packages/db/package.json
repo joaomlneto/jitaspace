@@ -33,7 +33,7 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^22.15.29",
+    "@types/node": "^24.10.13",
     "@types/pg": "^8.16.0",
     "concurrently": "^9.2.0",
     "eslint": "^9.39.2",
