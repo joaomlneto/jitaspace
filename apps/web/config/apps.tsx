@@ -484,6 +484,10 @@ export const extraJitaFeatures: AppScopeSet[] = [
     reason: "Read character standings",
     scopes: ["esi-characters.read_standings.v1"],
   },
+  {
+    reason: "View your character assets (and active ship fitting)",
+    scopes: ["esi-assets.read_assets.v1"],
+  },
 ];
 
 export const jitaApps: Record<
