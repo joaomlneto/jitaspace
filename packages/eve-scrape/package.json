@@ -32,7 +32,7 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^22.15.29",
+    "@types/node": "^24.10.13",
     "@types/tar-stream": "^3.1.4",
     "@types/unbzip2-stream": "^1.4.3",
     "eslint": "^9.39.2",
