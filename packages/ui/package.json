@@ -47,7 +47,7 @@
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
     "@types/humanize-duration": "^3.27.4",
-    "@types/node": "^22.15.29",
+    "@types/node": "^24.10.13",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
     "eslint": "^9.39.2",
