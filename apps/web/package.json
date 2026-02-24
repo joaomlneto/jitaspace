@@ -62,6 +62,7 @@
     "@vercel/og": "^0.6.8",
     "@vercel/speed-insights": "^1.2.0",
     "axios": "^1.9.0",
+    "botid": "^1.5.10",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "embla-carousel-react": "8.6.0",
