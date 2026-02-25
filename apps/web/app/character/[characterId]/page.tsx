@@ -1,19 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import {
-  Anchor,
-  Badge,
-  Button,
-  Container,
-  Group,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
-
 import { useCharacter, useSelectedCharacter } from "@jitaspace/hooks";
 import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
@@ -35,10 +21,15 @@ import {
   StationName,
   TypeAnchor,
   TypeAvatar,
-  TypeName,
+  TypeName
 } from "@jitaspace/ui";
+import { Anchor, Badge, Button, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { IconExternalLink } from "@tabler/icons-react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 
 import { MailMessageViewer } from "~/components/EveMail";
+
 export default function Page() {
   const params = useParams();
   const rawCharacterId = params?.characterId;
@@ -177,7 +168,7 @@ export default function Page() {
           <>
             <Group justify="space-between">
               <Text>Agent Division</Text>
-              <Text>{agentDivision?.data.nameID.en}</Text>
+              <Text>{agentDivision?.data.name.en}</Text>
             </Group>
             <Group justify="space-between">
               <Text>Agent Type</Text>

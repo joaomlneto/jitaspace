@@ -245,27 +245,16 @@ export default function Page() {
           <Position3DText
             size="xs"
             position={
-              sdeSolarSystem?.data.center as
-                | [number, number, number]
-                | undefined
-            }
-          />
-        </Group>
-        <Group justify="space-between">
-          <Text>Min Coordinates</Text>
-          <Position3DText
-            size="xs"
-            position={
-              sdeSolarSystem?.data.min as [number, number, number] | undefined
-            }
-          />
-        </Group>
-        <Group justify="space-between">
-          <Text>Max Coordinates</Text>
-          <Position3DText
-            size="xs"
-            position={
-              sdeSolarSystem?.data.max as [number, number, number] | undefined
+              sdeSolarSystem?.data.position &&
+              sdeSolarSystem.data.position.x !== undefined &&
+              sdeSolarSystem.data.position.y !== undefined &&
+              sdeSolarSystem.data.position.z !== undefined
+                ? [
+                    sdeSolarSystem.data.position.x,
+                    sdeSolarSystem.data.position.y,
+                    sdeSolarSystem.data.position.z,
+                  ]
+                : undefined
             }
           />
         </Group>

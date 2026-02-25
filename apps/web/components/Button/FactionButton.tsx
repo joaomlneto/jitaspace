@@ -20,7 +20,7 @@ export const FactionButton = memo(({ factionId }: FactionButtonProps) => {
       <Group wrap="nowrap" gap="sm">
         <FactionAvatar factionId={factionId} size={30} />
         <Text fz="sm" fw={500}>
-          {data?.data.nameID.en}
+          {data?.data.name.en}
         </Text>
       </Group>
     </UnstyledButton>
