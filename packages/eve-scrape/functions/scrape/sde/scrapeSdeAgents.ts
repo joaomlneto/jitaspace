@@ -11,6 +11,7 @@ import {
 
 import { client } from "../../../client";
 import { mergeEsiEntriesIntoCharactersTable } from "../../../helpers";
+import { isResearchAgent } from "../../../helpers/agents.ts";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
@@ -125,9 +126,7 @@ export const scrapeSdeAgents = client.createFunction(
       idAccessor: (e) => e.characterId,
     });
 
-    const researchAgentCharacters = npcCharacters.filter(
-      (npcCharacter) => npcCharacter.skills.length > 0,
-    );
+    const researchAgentCharacters = npcCharacters.filter(isResearchAgent);
     const researchAgentCharacterIds = researchAgentCharacters.map(
       (npcCharacter) => npcCharacter.characterID,
     );
