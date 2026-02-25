@@ -3,6 +3,7 @@ export * from "./fitting";
 export * from "./math";
 export * from "./objects";
 export * from "./react";
+export * from "./sde";
 export * from "./skills";
 export * from "./types";
 export * from "./ui";
