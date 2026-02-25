@@ -60,10 +60,12 @@ export const scrapeSdeNpcCorporationDivisions = client.createFunction(
                 .then((corporationDivision) => ({
                   npcCorporationDivisionId:
                     corporationDivision.npcCorporationDivisionID,
-                  name: corporationDivision.nameID.en!,
+                  name:
+                    corporationDivision.name.en ??
+                    corporationDivision.displayName,
                   internalName: corporationDivision.internalName,
                   leaderTypeName:
-                    corporationDivision.leaderTypeNameID.en ?? null,
+                    corporationDivision.leaderTypeName.en ?? null,
                   isDeleted: false,
                 })),
             ),

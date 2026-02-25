@@ -232,15 +232,6 @@ export const bootstrapDatabase = client.createFunction(
       timeout: "1h",
     });
 
-    await step.sendEvent("Scrape Research Agents", {
-      name: "scrape/sde/research-agents",
-      data: {},
-    });
-    await step.waitForEvent("Wait Research Agents", {
-      event: "scrape/sde/research-agents.finished",
-      timeout: "1h",
-    });
-
     await step.sendEvent("Scrape LP Store Offers", {
       name: "scrape/esi/loyalty-store-offers",
       data: {},

@@ -35,13 +35,16 @@ export const scrapeSdeDogmaEffectModifiers = client.createFunction(
 
     const dogmaEffects = await Promise.all(
       dogmaEffectIds.map((effectId) =>
-        limit(async () => getDogmaEffectById(effectId).then((res) => res.data)),
+        limit(async () => ({
+          effectId,
+          effect: await getDogmaEffectById(effectId).then((res) => res.data),
+        })),
       ),
     );
 
-    const dogmaEffectModifiers = dogmaEffects.flatMap((effect) =>
+    const dogmaEffectModifiers = dogmaEffects.flatMap(({ effectId, effect }) =>
       (effect.modifierInfo ?? []).map((modifier, index) => ({
-        effectId: effect.effectID,
+        effectId,
         modifierIndex: index,
         domain: modifier.domain ?? null,
         targetEffectId: modifier.effectID ?? null,

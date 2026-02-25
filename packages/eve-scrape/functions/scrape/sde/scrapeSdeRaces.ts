@@ -6,7 +6,6 @@ import { getAllRaceIds, getRaceById } from "@jitaspace/sde-client";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeSdeRacesEventPayload = {
   data: {
     batchSize?: number;
@@ -56,8 +55,8 @@ export const scrapeSdeRaces = client.createFunction(
                 .then((res) => res.data)
                 .then((race) => ({
                   raceId: race.raceID,
-                  name: race.nameID?.en!,
-                  description: race.descriptionID?.en ?? null,
+                  name: race.name.en!,
+                  description: race.description.en ?? null,
                   isDeleted: false,
                 })),
             ),

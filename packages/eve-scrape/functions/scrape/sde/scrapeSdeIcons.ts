@@ -51,7 +51,6 @@ export const scrapeSdeIcons = client.createFunction(
                 .then((res) => res.data)
                 .then((icon) => ({
                   iconId: icon.iconID,
-                  description: icon.description ?? null,
                   iconFile: icon.iconFile,
                   isDeleted: false,
                 })),

@@ -37,7 +37,6 @@ import {
   ScrapeRacesEventPayload,
   ScrapeRecentKillsEventPayload,
   ScrapeRegionEventPayload,
-  ScrapeResearchAgentsEventPayload,
   ScrapeSdeRacesEventPayload,
   ScrapeSolarSystemsEventPayload,
   ScrapeStargatesEventPayload,
@@ -135,8 +134,6 @@ export type Events = {
   "scrape/sde/npc-corporation-divisions.finished": {};
   "scrape/sde/races": ScrapeSdeRacesEventPayload;
   "scrape/sde/races.finished": {};
-  "scrape/sde/research-agents": ScrapeResearchAgentsEventPayload;
-  "scrape/sde/research-agents.finished": {};
   "scrape/sde/station-services": ScrapeStationServicesEventPayload;
   "scrape/sde/station-services.finished": {};
   "scrape/zkillboard/recent-kills": ScrapeRecentKillsEventPayload;

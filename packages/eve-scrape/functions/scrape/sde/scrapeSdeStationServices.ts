@@ -59,8 +59,8 @@ export const scrapeSdeStationServices = client.createFunction(
                 .then((res) => res.data)
                 .then((stationService) => ({
                   stationServiceId: stationService.stationServiceID,
-                  name: stationService.serviceNameID.en ?? null,
-                  description: stationService.descriptionID?.en ?? null,
+                  name: stationService.serviceName.en ?? null,
+                  description: stationService.description?.en ?? null,
                   isDeleted: false,
                 })),
             ),

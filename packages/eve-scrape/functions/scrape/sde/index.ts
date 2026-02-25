@@ -4,5 +4,4 @@ export * from "./scrapeSdeDogmaEffectModifiers";
 export * from "./scrapeSdeIcons";
 export * from "./scrapeSdeNpcCorporationDivisions";
 export * from "./scrapeSdeRaces";
-export * from "./scrapeSdeResearchAgents";
 export * from "./scrapeSdeStationServices";
