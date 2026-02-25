@@ -130,7 +130,7 @@ export default function Page() {
           <Group justify="space-between">
             <Text>Website Updated On</Text>
             {webLastUpdatedDate && (
-              <FormattedDateText date={webLastUpdatedDate} />
+              <FormattedDateText date={webLastUpdatedDate} span />
             )}
           </Group>
           <Group justify="space-between">
@@ -167,11 +167,9 @@ export default function Page() {
           </Group>
           <Group justify="space-between">
             <Text>Start Time</Text>
-            <Text>
-              {tqStatus && (
-                <FormattedDateText date={new Date(tqStatus?.data.start_time)} />
-              )}
-            </Text>
+            {tqStatus && (
+              <FormattedDateText date={new Date(tqStatus?.data.start_time)} />
+            )}
           </Group>
           <Group justify="space-between">
             <Text>Server Version</Text>
@@ -179,12 +177,10 @@ export default function Page() {
           </Group>
           <Group justify="space-between">
             <Text>SDE Last Updated On</Text>
-            <Text>
-              {sdeIsLoading && "Checking..."}
-              {!sdeIsLoading && sdeLastModifiedDate && (
-                <FormattedDateText date={sdeLastModifiedDate} />
-              )}
-            </Text>
+            {sdeIsLoading && "Checking..."}
+            {!sdeIsLoading && sdeLastModifiedDate && (
+              <FormattedDateText date={sdeLastModifiedDate} />
+            )}
           </Group>
           <Group justify="space-between">
             <Text>Degraded ESI Endpoints</Text>
