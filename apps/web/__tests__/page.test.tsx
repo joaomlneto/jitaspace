@@ -29,7 +29,7 @@ describe("Next.js smoke tests", () => {
   });
 
   it("renders an app router page", () => {
-    const AppRouterPage = require("../app/testapp/page").default;
+    const AppRouterPage = require("../__testfixtures__/testapp/page").default;
     render(<AppRouterPage />);
     expect(
       screen.getByText("This is the app directory! Woohoo!"),
