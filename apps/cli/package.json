@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@asteasolutions/zod-to-openapi": "^4.7.0",
-    "@commander-js/extra-typings": "^10.0.3",
+    "@commander-js/extra-typings": "^14.0.0",
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
