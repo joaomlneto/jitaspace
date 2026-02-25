@@ -6,10 +6,8 @@ import { GetCharactersCharacterId200GenderEnum } from "@jitaspace/esi-client";
 import { isIdInRanges, npcCharacterIdRanges } from "@jitaspace/esi-metadata";
 import {
   useGetAgentInSpaceById,
-  useGetAllAgentIds,
   useGetAllAgentInSpaceIds,
-  useGetAllResearchAgentIds,
-  useGetResearchAgentById,
+  useGetAllNpcCharacterIds,
 } from "@jitaspace/sde-client";
 
 import { useEsiCharacter } from "./useEsiCharacter";
@@ -69,7 +67,7 @@ export const useCharacter = (
 } => {
   const esiCharacter = useEsiCharacter(characterId);
 
-  const agentIds = useGetAllAgentIds();
+  const agentIds = useGetAllNpcCharacterIds();
 
   const isAgent = useMemo(
     () => agentIds.data?.data.includes(characterId) ?? false,
@@ -100,18 +98,7 @@ export const useCharacter = (
     query: { enabled: isAgentInSpace },
   });
 
-  const researchAgentIds = useGetAllResearchAgentIds({
-    query: { enabled: isAgent },
-  });
-
-  const isResearchAgent = useMemo(
-    () => researchAgentIds.data?.data.includes(characterId) ?? false,
-    [researchAgentIds.data?.data, characterId],
-  );
-
-  const researchAgent = useGetResearchAgentById(characterId, {
-    query: { enabled: isResearchAgent },
-  });
+  const isResearchAgent = agent.data?.data.agent.agentTypeID == 4;
 
   const characterBirthdayDate = useMemo(
     () =>
@@ -125,16 +112,14 @@ export const useCharacter = (
     | (ResearchAgent & { isResearchAgent: true })
     | { isResearchAgent: false } = useMemo(
     () =>
-      isResearchAgent && researchAgent.data?.data
+      isResearchAgent && agent.data?.data
         ? {
             isResearchAgent: true,
-            researchSkills: researchAgent.data.data.skills.map(
-              (skill) => skill.typeID,
-            ),
+            researchSkills: agent.data.data.skills.map((skill) => skill.typeID),
           }
         : { isResearchAgent: false },
 
-    [isResearchAgent, researchAgent.data?.data],
+    [isResearchAgent, agent.data?.data],
   );
 
   const agentInSpaceData:
@@ -163,14 +148,14 @@ export const useCharacter = (
         ? {
             type: "agent",
             isNpc,
-            agentTypeId: agent.data.data.agentTypeID,
-            agentDivisionId: agent.data.data.divisionID,
+            agentTypeId: agent.data.data.agent.agentTypeID!,
+            agentDivisionId: agent.data.data.agent.divisionID!,
             birthday: characterBirthdayDate,
             bloodlineId: esiCharacter.data.data.bloodline_id,
             corporationId: agent.data.data.corporationID,
             gender: esiCharacter.data.data.gender,
-            isLocator: agent.data.data.isLocator,
-            level: agent.data.data.level,
+            isLocator: agent.data.data.agent.isLocator ?? false,
+            level: agent.data.data.agent.level!,
             locationId: agent.data.data.locationID,
             name: esiCharacter.data.data.name,
             raceId: esiCharacter.data.data.race_id,
@@ -178,7 +163,14 @@ export const useCharacter = (
             ...agentInSpaceData,
           }
         : null,
-    [agent.data?.data, researchAgentData, agentInSpaceData, isNpc],
+    [
+      agent.data?.data,
+      researchAgentData,
+      agentInSpaceData,
+      isNpc,
+      esiCharacter.data,
+      characterBirthdayDate,
+    ],
   );
 
   const mergedPlayerData:
@@ -203,30 +195,21 @@ export const useCharacter = (
 
   const error =
     esiCharacter.error ??
-    agentIds.error ??
     agent.error ??
     agentInSpaceIds.error ??
-    agentInSpace.error ??
-    researchAgentIds.error ??
-    researchAgent.error;
+    agentInSpace.error;
 
   const isError =
     esiCharacter.isError ||
-    agentIds.isError ||
     agent.isError ||
     agentInSpaceIds.isError ||
-    agentInSpace.isError ||
-    researchAgentIds.isError ||
-    researchAgent.isError;
+    agentInSpace.isError;
 
   const isLoading =
     esiCharacter.isLoading ||
-    agentIds.isLoading ||
     (isAgent && agent.isLoading) ||
     (isAgent && agentInSpaceIds.isLoading) ||
     (isAgentInSpace && agentInSpace.isLoading) ||
-    (isAgent && researchAgentIds.isLoading) ||
-    (isResearchAgent && researchAgent.isLoading) ||
     (!isError && !mergedAgentData && !mergedPlayerData);
 
   const data: Character | undefined = useMemo(
