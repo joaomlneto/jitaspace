@@ -34,7 +34,7 @@ export function useCharacterMails(characterId?: number, labels: number[] = []) {
         query: {
           enabled: characterId !== undefined && accessToken !== null,
           queryKey,
-          initialPageParam: undefined,
+          initialPageParam: undefined as number | undefined,
           queryFn: ({ pageParam }) =>
             getCharactersCharacterIdMail(
               characterId ?? 0,
