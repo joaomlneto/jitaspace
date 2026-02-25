@@ -41,7 +41,7 @@ importers:
         version: 4.8.0(zod@3.25.49)
       '@commander-js/extra-typings':
         specifier: ^10.0.3
-        version: 10.0.3(commander@10.0.1)
+        version: 10.0.3(commander@14.0.3)
       '@jitaspace/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint
@@ -88,8 +88,8 @@ importers:
         specifier: ^3.12.0
         version: 3.12.0
       commander:
-        specifier: ^10.0.1
-        version: 10.0.1
+        specifier: ^14.0.3
+        version: 14.0.3
       figlet:
         specifier: ^1.6.0
         version: 1.8.1
@@ -6341,8 +6341,8 @@ packages:
     resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==}
     engines: {node: '>=14'}
 
-  commander@14.0.2:
-    resolution: {integrity: sha512-TywoWNNRbhoD0BXs1P3ZEScW8W5iKrnbithIl0YH+uCmBd0QpPOA8yc82DS3BIE5Ma6FnBVUsJ7wVUDz4dvOWQ==}
+  commander@14.0.3:
+    resolution: {integrity: sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw==}
     engines: {node: '>=20'}
 
   commander@2.20.3:
@@ -12710,9 +12710,9 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@commander-js/extra-typings@10.0.3(commander@10.0.1)':
+  '@commander-js/extra-typings@10.0.3(commander@14.0.3)':
     dependencies:
-      commander: 10.0.1
+      commander: 14.0.3
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -18057,7 +18057,7 @@ snapshots:
 
   commander@10.0.1: {}
 
-  commander@14.0.2: {}
+  commander@14.0.3: {}
 
   commander@2.20.3: {}
 
@@ -19730,7 +19730,7 @@ snapshots:
     dependencies:
       '@clack/prompts': 0.11.0
       '@paralleldrive/cuid2': 2.3.1
-      commander: 14.0.2
+      commander: 14.0.3
       kysely: 0.28.10
       kysely-typeorm: 0.3.0(kysely@0.28.10)(typeorm@0.3.28(ioredis@5.6.1)(mysql2@3.15.3)(pg@8.16.3)(redis@5.6.1)(ts-node@10.9.2(@swc/core@1.13.2)(@types/node@24.10.13)(typescript@5.8.3)))
       semver: 7.7.4
