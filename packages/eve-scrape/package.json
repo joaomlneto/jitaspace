@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
-    "dev": "pnpm with-env inngest-cli dev",
+    "dev": "pnpm with-env pnpm dlx inngest-cli@latest dev",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "type-check": "tsc --jsx react-jsx --noEmit",
@@ -22,7 +22,7 @@
     "@jitaspace/sde-client": "workspace:*",
     "axios": "^1.9.0",
     "decimal.js": "^10.5.0",
-    "inngest": "^3.38.0",
+    "inngest": "^3.52.4",
     "p-limit": "^6.2.0",
     "tar-stream": "^3.1.7",
     "untar-to-memory": "^2.0.0",
@@ -36,7 +36,6 @@
     "@types/tar-stream": "^3.1.4",
     "@types/unbzip2-stream": "^1.4.3",
     "eslint": "^9.39.2",
-    "inngest-cli": "^1.6.3",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },

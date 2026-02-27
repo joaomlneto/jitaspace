@@ -6,6 +6,10 @@ import { z } from "zod";
  */
 const server = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
+  INNGEST_EVENT_KEY:
+    process.env.NODE_ENV === "production"
+      ? z.string().min(1)
+      : z.string().min(1).optional(),
   INNGEST_SIGNING_KEY:
     process.env.NODE_ENV === "production"
       ? z.string().min(1)
@@ -24,6 +28,7 @@ const client = z.object({});
  */
 const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
+  INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
   INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
 };
 

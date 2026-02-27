@@ -7,10 +7,7 @@ import { z } from "zod";
 const server = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
 
-  NEXTAUTH_SECRET:
-    process.env.NODE_ENV === "production"
-      ? z.string().min(1)
-      : z.string().min(1).optional(),
+  NEXTAUTH_SECRET: z.string().min(1),
 
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string(),
@@ -18,14 +15,8 @@ const server = z.object({
   EVE_CLIENT_ID: z.string(),
   EVE_CLIENT_SECRET: z.string(),
 
-  INNGEST_SIGNING_KEY:
-    process.env.NODE_ENV === "production"
-      ? z.string().min(1)
-      : z.string().min(1).optional(),
-  CRON_SECRET:
-    process.env.NODE_ENV === "production"
-      ? z.string().min(16)
-      : z.string().optional(),
+  INNGEST_SIGNING_KEY: z.string().min(1),
+  CRON_SECRET: z.string().min(16),
 
   SKIP_BUILD_STATIC_GENERATION: z.string(),
 });
