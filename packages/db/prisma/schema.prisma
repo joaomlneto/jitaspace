@@ -96,6 +96,8 @@ model Category {
   published  Boolean
   updatedAt  DateTime @updatedAt()
   isDeleted  Boolean  @default(false)
+
+  @@index([name])
 }
 
 model Group {
@@ -439,6 +441,7 @@ model Corporation {
   @@index([homeStationId])
   @@index([allianceId])
   @@index([ceoId])
+  @@index([name])
 }
 
 model Station {
@@ -506,6 +509,8 @@ model Region {
   updatedAt      DateTime        @updatedAt()
   isDeleted      Boolean         @default(false)
   constellations Constellation[]
+
+  @@index([name])
 }
 
 // TODO: Add missing "position" field
@@ -693,6 +698,7 @@ model LoyaltyStoreOfferRequiredItem {
   @@id([offerId, corporationId, typeId])
   @@index([offerId, corporationId])
   @@index([typeId])
+  @@index([corporationId])
 }
 
 model Killmail {
