@@ -148,28 +148,7 @@ export const scrapeEsiWars = client.createFunction(
 
           const remoteEntries = await fetchRemoteEntries();
 
-          await createCorpAndItsRefRecords({
-            missingAllianceIds: new Set(
-              remoteEntries
-                .map((war) => [
-                  war.aggressorAllianceId,
-                  war.defenderAllianceId,
-                  ...war.allianceAllies.map((ally) => ally.allianceId),
-                ])
-                .flat()
-                .filter((id) => id != null),
-            ),
-            missingCorporationIds: new Set(
-              remoteEntries
-                .map((war) => [
-                  war.aggressorCorporationId,
-                  war.defenderCorporationId,
-                  ...war.corporationAllies.map((ally) => ally.corporationId),
-                ])
-                .flat()
-                .filter((id) => id != null),
-            ),
-          });
+          await createCorpAndItsRefRecords({ wars: remoteEntries });
 
           console.log({ remoteEntries });
           logger.info({ remoteEntries });

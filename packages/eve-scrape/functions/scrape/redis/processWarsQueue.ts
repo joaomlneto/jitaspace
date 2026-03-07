@@ -79,28 +79,7 @@ export const processRedisWars = client.createFunction(
         };
       });
 
-      await createCorpAndItsRefRecords({
-        missingAllianceIds: new Set(
-          remoteEntries
-            .map((war) => [
-              war.aggressor?.alliance_id ?? null,
-              war.defender?.alliance_id ?? null,
-              ...(war.allies ?? [])?.map((ally) => ally.alliance_id),
-            ])
-            .flat()
-            .filter((id) => id != null),
-        ),
-        missingCorporationIds: new Set(
-          remoteEntries
-            .map((war) => [
-              war.aggressor?.corporation_id,
-              war.defender?.corporation_id,
-              ...(war.allies ?? [])?.map((ally) => ally.corporation_id),
-            ])
-            .flat()
-            .filter((id) => id != null),
-        ),
-      });
+      await createCorpAndItsRefRecords({ wars: remoteEntries });
 
       const warChanges = await updateTable({
         fetchLocalEntries: async () =>

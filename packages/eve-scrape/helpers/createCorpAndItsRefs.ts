@@ -7,6 +7,7 @@
  * - Factions (has an associated corporation_id, militia_corporation_id)
  * - Races (has a Faction (though it's named 'alliance_id'))
  * - Stations (owner must be a valid corporation)
+ * - Wars (aggressor/defender/ally references to alliances/corporations)
  */
 import pLimit from "p-limit";
 
@@ -20,6 +21,7 @@ import {
   prisma,
   Race,
   Station,
+  War,
 } from "@jitaspace/db";
 import {
   getAlliancesAllianceId,
@@ -29,9 +31,10 @@ import {
   getUniverseFactions,
   getUniverseRaces,
   getUniverseStationsStationId,
+  getWarsWarId,
 } from "@jitaspace/esi-client";
 
-const limit = pLimit(3);
+const limit = pLimit(1);
 
 export const createCorpAndItsRefRecords = async ({
   alliances = [],
@@ -41,6 +44,7 @@ export const createCorpAndItsRefRecords = async ({
   factions = [],
   races = [],
   stations = [],
+  wars = [],
   missingAllianceIds = new Set<number>(),
   missingBloodlineIds = new Set<number>(),
   missingCharacterIds = new Set<number>(),
@@ -48,21 +52,24 @@ export const createCorpAndItsRefRecords = async ({
   missingFactionIds = new Set<number>(),
   missingRaceIds = new Set<number>(),
   missingStationIds = new Set<number>(),
+  missingWarIds = new Set<number>(),
 }: {
-  alliances?: Omit<Alliance, "updatedAt">[];
+  alliances?: Omit<Alliance, "updatedAt" | "createdAt">[];
   missingAllianceIds?: Set<number>;
-  bloodlines?: Omit<Bloodline, "updatedAt">[];
+  bloodlines?: Omit<Bloodline, "updatedAt" | "createdAt">[];
   missingBloodlineIds?: Set<number>;
-  characters?: Omit<Character, "updatedAt">[];
+  characters?: Omit<Character, "updatedAt" | "createdAt">[];
   missingCharacterIds?: Set<number>;
-  corporations?: Omit<Corporation, "updatedAt">[];
+  corporations?: Omit<Corporation, "updatedAt" | "createdAt">[];
   missingCorporationIds?: Set<number>;
-  factions?: Omit<Faction, "updatedAt">[];
+  factions?: Omit<Faction, "updatedAt" | "createdAt">[];
   missingFactionIds?: Set<number>;
-  races?: Omit<Race, "updatedAt">[];
+  races?: Omit<Race, "updatedAt" | "createdAt">[];
   missingRaceIds?: Set<number>;
-  stations?: Omit<Station, "updatedAt">[];
+  stations?: Omit<Station, "updatedAt" | "createdAt">[];
   missingStationIds?: Set<number>;
+  wars?: Omit<War, "updatedAt" | "createdAt">[];
+  missingWarIds?: Set<number>;
 }) => {
   /**
    * Set of IDs already present in the database, or already fetched
@@ -86,6 +93,7 @@ export const createCorpAndItsRefRecords = async ({
   const existingStationIds = new Set<number>(
     stations.map((station) => station.stationId),
   );
+  const existingWarIds = new Set<number>(wars.map((war) => war.warId));
 
   const msgs: string[] = [];
 
@@ -97,6 +105,12 @@ export const createCorpAndItsRefRecords = async ({
       [
         ...missingAllianceIds,
         ...corporations.map((corporation) => corporation.allianceId),
+        ...wars.flatMap((war) => [
+          war.aggressorAllianceId,
+          war.defenderAllianceId,
+          ...(war.allianceAllies?.map((ally) => ally.allianceId) ?? []),
+          ...(war.allies?.map((ally) => ally.allianceId) ?? []),
+        ]),
       ]
         .filter((id) => id != null)
         .filter((id) => id != 1),
@@ -153,6 +167,12 @@ export const createCorpAndItsRefRecords = async ({
           ])
           .flat(),
         ...stations.map((station) => station.ownerId),
+        ...wars.flatMap((war) => [
+          war.aggressorCorporationId,
+          war.defenderCorporationId,
+          ...(war.corporationAllies?.map((ally) => ally.corporationId) ?? []),
+          ...(war.allies?.map((ally) => ally.corporationId) ?? []),
+        ]),
       ]
         .filter((id) => id != null)
         .filter((id) => id != 1),
@@ -204,6 +224,15 @@ export const createCorpAndItsRefRecords = async ({
 
   const getMissingStationIds = () =>
     getRequiredStationIds().filter((id) => !existingStationIds.has(id));
+
+  const getRequiredWarIds = () => [
+    ...new Set(
+      [...missingWarIds].filter((id) => id != null).filter((id) => id != 1),
+    ),
+  ];
+
+  const getMissingWarIds = () =>
+    getRequiredWarIds().filter((id) => !existingWarIds.has(id));
 
   const filterMissingAllianceIdsInDB = async () => {
     await prisma.alliance
@@ -336,8 +365,24 @@ export const createCorpAndItsRefRecords = async ({
       );
   };
 
+  const filterMissingWarIdsInDB = async () => {
+    await prisma.war
+      .findMany({
+        select: {
+          warId: true,
+        },
+        where: {
+          warId: {
+            in: getMissingWarIds(),
+          },
+        },
+      })
+      .then((wars) => wars.forEach((war) => existingWarIds.add(war.warId)));
+  };
+
   // check if some of the IDs marked as "missing" are already present in the database
   const filterMissingIdsInDatabase = async () => {
+    console.log({ wars });
     await filterMissingAllianceIdsInDB();
     await filterMissingBloodlineIdsInDB();
     await filterMissingCharacterIdsInDB();
@@ -345,6 +390,7 @@ export const createCorpAndItsRefRecords = async ({
     await filterMissingFactionIdsInDB();
     await filterMissingRaceIdsInDB();
     await filterMissingStationIdsInDB();
+    await filterMissingWarIdsInDB();
   };
 
   const fetchMissing = async () => {
@@ -384,6 +430,11 @@ export const createCorpAndItsRefRecords = async ({
       existingStationIds.add(station.stationId),
     );
 
+    // Update wars
+    const fetchedWars = await fetchWarsFromEsi(missingIds.warIds);
+    wars.push(...fetchedWars);
+    fetchedWars.forEach((war) => existingWarIds.add(war.warId));
+
     // Update bloodlines
     if (missingIds.bloodlineIds.length > 0) {
       const fetchedBloodlines = await fetchBloodlinesFromEsi();
@@ -419,6 +470,7 @@ export const createCorpAndItsRefRecords = async ({
       factionIds: [...existingFactionIds],
       raceIds: [...existingRaceIds],
       stationIds: [...existingStationIds],
+      warIds: [...existingWarIds],
     },
     required: {
       allianceIds: getRequiredAllianceIds(),
@@ -428,6 +480,7 @@ export const createCorpAndItsRefRecords = async ({
       factionIds: getRequiredFactionIds(),
       raceIds: getRequiredRaceIds(),
       stationIds: getRequiredStationIds(),
+      warIds: getRequiredWarIds(),
     },
     missing: {
       allianceIds: getMissingAllianceIds(),
@@ -437,6 +490,7 @@ export const createCorpAndItsRefRecords = async ({
       factionIds: getMissingFactionIds(),
       raceIds: getMissingRaceIds(),
       stationIds: getMissingStationIds(),
+      warIds: getMissingWarIds(),
     },
   });
 
@@ -497,6 +551,72 @@ export const createCorpAndItsRefRecords = async ({
   await prisma.character.createMany({ data: characters });
   console.log({ stations });
   await prisma.station.createMany({ data: stations });
+  if (wars.length > 0) {
+    console.log({ wars });
+    const warIds = [
+      ...new Set(
+        wars
+          .map((war) => war.warId)
+          .filter((warId): warId is number => typeof warId === "number"),
+      ),
+    ];
+    const existingDbWarIds = new Set<number>(
+      await prisma.war
+        .findMany({
+          select: { warId: true },
+          where: {
+            warId: {
+              in: warIds,
+            },
+          },
+        })
+        .then((entries) => entries.map((entry) => entry.warId)),
+    );
+
+    for (const war of wars) {
+      if (war.warId == null || existingDbWarIds.has(war.warId)) continue;
+
+      const { allianceAllies, corporationAllies, ...warData } = war as Omit<
+        War,
+        "updatedAt" | "createdAt"
+      > & {
+        allianceAllies?: Array<{
+          allianceId?: number | null;
+          isDeleted?: boolean;
+        }>;
+        corporationAllies?: Array<{
+          corporationId?: number | null;
+          isDeleted?: boolean;
+        }>;
+      };
+
+      const allianceAlliesData = (allianceAllies ?? [])
+        .map((ally) => ({
+          allianceId: ally.allianceId ?? null,
+          isDeleted: ally.isDeleted ?? false,
+        }))
+        .filter((ally) => ally.allianceId != null);
+
+      const corporationAlliesData = (corporationAllies ?? [])
+        .map((ally) => ({
+          corporationId: ally.corporationId ?? null,
+          isDeleted: ally.isDeleted ?? false,
+        }))
+        .filter((ally) => ally.corporationId != null);
+
+      await prisma.war.create({
+        data: {
+          ...warData,
+          ...(allianceAlliesData.length > 0
+            ? { allianceAllies: { create: allianceAlliesData } }
+            : {}),
+          ...(corporationAlliesData.length > 0
+            ? { corporationAllies: { create: corporationAlliesData } }
+            : {}),
+        },
+      });
+    }
+  }
 
   console.log("adding missing corp data!!");
   console.log({ corporations });
@@ -568,7 +688,7 @@ const fetchBloodlinesFromEsi = () =>
 
 const fetchCharactersFromEsi = (
   characterIds: number[],
-): Promise<Omit<Character, "updatedAt">[]> =>
+): Promise<Omit<Character, "updatedAt" | "createdAt">[]> =>
   Promise.all(
     characterIds.map((characterId) =>
       limit(async () =>
@@ -733,6 +853,52 @@ const fetchStationsFromEsi = (stationIds: number[]) =>
               isDeleted: true,
             };
           }),
+      ),
+    ),
+  );
+
+const fetchWarsFromEsi = (warIds: number[]) =>
+  Promise.all(
+    warIds.map((warId) =>
+      limit(async () =>
+        getWarsWarId(warId)
+          .then((res) => res.data)
+          .then((war) => ({
+            warId: warId,
+            declaredDate: new Date(war.declared),
+            finishedDate: war.finished ? new Date(war.finished) : null,
+            retractedDate: war.retracted ? new Date(war.retracted) : null,
+            startedDate: war.started ? new Date(war.started) : null,
+            isMutual: war.mutual,
+            isOpenForAllies: war.open_for_allies,
+            aggressorAllianceId: war.aggressor.alliance_id ?? null,
+            aggressorCorporationId: war.aggressor.corporation_id ?? null,
+            aggressorIskDestroyed: war.aggressor.isk_destroyed,
+            aggressorShipsKilled: war.aggressor.ships_killed ?? null,
+            defenderAllianceId: war.defender.alliance_id ?? null,
+            defenderCorporationId: war.defender.corporation_id ?? null,
+            defenderIskDestroyed: war.defender.isk_destroyed,
+            defenderShipsKilled: war.defender.ships_killed ?? null,
+            allianceAllies:
+              war.allies
+                ?.filter((ally) => ally.alliance_id)
+                .map((ally) => ally.alliance_id!)
+                .map((allyAllianceId) => ({
+                  warId,
+                  allianceId: allyAllianceId,
+                  isDeleted: false,
+                })) ?? [],
+            corporationAllies:
+              war.allies
+                ?.filter((ally) => ally.corporation_id)
+                .map((ally) => ally.corporation_id!)
+                .map((allyCorporationId) => ({
+                  warId,
+                  corporationId: allyCorporationId,
+                  isDeleted: false,
+                })) ?? [],
+            isDeleted: false,
+          })),
       ),
     ),
   );
