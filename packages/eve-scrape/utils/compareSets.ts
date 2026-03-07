@@ -40,10 +40,16 @@ export const compareSets = <T extends object>({
   if (env.NODE_ENV === "development") {
     const objKeysBefore = [
       ...new Set(recordsBefore.flatMap((record) => Object.keys(record))),
-    ];
+    ].filter(
+      (key) =>
+        key !== "updatedAt" && key !== "createdAt" && key !== "isDeleted",
+    );
     const objKeysAfter = [
       ...new Set(recordsAfter.flatMap((record) => Object.keys(record))),
-    ];
+    ].filter(
+      (key) =>
+        key !== "updatedAt" && key !== "createdAt" && key !== "isDeleted",
+    );
     objKeysBefore.sort((a, b) => a.localeCompare(b));
     objKeysAfter.sort((a, b) => a.localeCompare(b));
     if (!objKeysBefore.every((_, i) => objKeysBefore[i] == objKeysAfter[i])) {
