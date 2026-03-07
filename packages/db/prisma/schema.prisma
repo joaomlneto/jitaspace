@@ -30,12 +30,18 @@ model Character {
   title                 String?
   CorporationCeo        Corporation[]                    @relation("corporationCeo")
   createdCorporations   Corporation[]                    @relation("corporationCreator")
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt             DateTime                         @default(now())
   updatedAt             DateTime                         @updatedAt()
   isDeleted             Boolean                          @default(false)
   Agent                 Agent?                           @relation("AgentCharacter")
   researchAgents        ResearchAgent[]                  @relation("ResearchAgentCharacter")
   corporationMembership CharacterCorporationMembership[] @relation("CharacterCorporationMembershipEntry")
   Contract              Contract[]                       @relation("CharacterContractIssuer")
+  killmailVictims       KillmailVictim[]                 @relation("KillmailVictimCharacter")
+  killmailAttackers     KillmailAttacker[]               @relation("KillmailAttackerCharacter")
 
   @@index([bloodlineId])
   @@index([corporationId])
@@ -67,6 +73,10 @@ model CharacterCorporationMembership {
    */
   startDate     DateTime
   /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt     DateTime    @default(now())
+  /**
    * When this record was last updated.
    */
   updatedAt     DateTime    @updatedAt()
@@ -83,6 +93,10 @@ model MarketGroup {
   parentMarketGroupId Int?
   parent              MarketGroup?  @relation("marketGroupParent", fields: [parentMarketGroupId], references: [marketGroupId], onDelete: Restrict, onUpdate: Restrict)
   children            MarketGroup[] @relation("marketGroupParent")
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt()
   isDeleted           Boolean       @default(false)
 
@@ -94,6 +108,10 @@ model Category {
   groups     Group[]
   name       String
   published  Boolean
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt()
   isDeleted  Boolean  @default(false)
 
@@ -107,6 +125,10 @@ model Group {
   name                String
   published           Boolean
   types               Type[]
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt()
   isDeleted           Boolean               @default(false)
   DogmaEffectModifier DogmaEffectModifier[] @relation("DogmaEffectModifierGroup")
@@ -149,6 +171,10 @@ model Type {
   loyaltyStoreOffers              LoyaltyStoreOffer[]
   // List of LP store offers that require this item
   loyaltyStoreOffersRequiredItems LoyaltyStoreOfferRequiredItem[] @relation("LoyaltyStoreOfferRequiredItem")
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt                       DateTime                        @default(now())
   // When was this record last updated
   updatedAt                       DateTime                        @updatedAt()
   // Was this item deleted
@@ -156,6 +182,10 @@ model Type {
   Stargate                        Stargate[]                      @relation("StargateType")
   AgentInSpace                    AgentInSpace[]                  @relation("AgentInSpaceType")
   ResearchAgentSkills             ResearchAgentSkills[]           @relation("ResearchAgentSkillType")
+  killmailAttackerShips           KillmailAttacker[]              @relation("KillmailAttackerShipType")
+  killmailVictims                 KillmailVictim[]                @relation("KillmailVictimShipType")
+  killmailAttackerWeapons         KillmailAttacker[]              @relation("KillmailAttackerWeaponType")
+  killmailVictimItems             KillmailVictimItems[]           @relation("KillmailVictimItemType")
 
   @@index([marketGroupId])
   @@index([graphicId])
@@ -169,6 +199,10 @@ model TypeAttribute {
   typeId      Int
   attributeId Int
   value       Float
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt()
   isDeleted   Boolean        @default(false)
 
@@ -183,6 +217,10 @@ model TypeEffect {
   effect    DogmaEffect @relation(fields: [effectId], references: [effectId])
   effectId  Int
   isDefault Boolean
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt()
   isDeleted Boolean     @default(false)
 
@@ -201,6 +239,10 @@ model Graphic {
   sofHullName    String?
   sofRaceName    String?
   types          Type[]
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt()
   isDeleted      Boolean  @default(false)
 }
@@ -218,6 +260,10 @@ model DogmaAttribute {
   unitId                 Int?
   Icon                   Icon?                 @relation(fields: [iconId], references: [iconId])
   DogmaUnit              DogmaUnit?            @relation(fields: [unitId], references: [unitId])
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt              DateTime              @default(now())
   updatedAt              DateTime              @updatedAt()
   isDeleted              Boolean               @default(false)
   TypeAttributes         TypeAttribute[]
@@ -237,6 +283,10 @@ model DogmaAttributeCategory {
   attributeCategoryId Int      @id
   name                String
   description         String?
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt()
   isDeleted           Boolean  @default(false)
 }
@@ -244,6 +294,10 @@ model DogmaAttributeCategory {
 model DogmaEffectCategory {
   effectCategoryId Int           @id
   name             String
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt()
   isDeleted        Boolean       @default(false)
   effects          DogmaEffect[]
@@ -279,6 +333,10 @@ model DogmaEffect {
   trackingSpeedAttributeId Int?
 
   types                Type[]
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt()
   isDeleted            Boolean               @default(false)
   DogmaEffectModifiers DogmaEffectModifier[] @relation("DogmaEffectModifiers")
@@ -310,6 +368,10 @@ model DogmaEffectModifier {
   group                Group?          @relation("DogmaEffectModifierGroup", fields: [groupId], references: [groupId])
   groupId              Int?
   skillTypeId          Int?
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt()
   isDeleted            Boolean         @default(false)
 
@@ -326,6 +388,10 @@ model DogmaUnit {
   displayName String?
   description String?
   attributes  DogmaAttribute[]
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt()
   isDeleted   Boolean          @default(false)
 }
@@ -334,6 +400,10 @@ model Icon {
   iconId      Int              @id
   description String?
   iconFile    String
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt()
   isDeleted   Boolean          @default(false)
   attributes  DogmaAttribute[]
@@ -353,41 +423,53 @@ model Alliance {
   factionId             Int?
   name                  String
   ticker                String
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt()
   isDeleted             Boolean      @default(false)
 
   memberCorporations Corporation[] @relation("CorporationAlliance")
 
-  warsAggressor War[]             @relation("WarAggressorAlliance")
-  warsDefender  War[]             @relation("WarDefenderAlliance")
-  warsAllies    AllianceWarAlly[] @relation("AllianceWarAllies")
+  warsAggressor     War[]              @relation("WarAggressorAlliance")
+  warsDefender      War[]              @relation("WarDefenderAlliance")
+  warsAllies        AllianceWarAlly[]  @relation("AllianceWarAllies")
+  killmailVictims   KillmailVictim[]   @relation("KillmailVictimAlliance")
+  killmailAttackers KillmailAttacker[] @relation("KillmailAttackerAlliance")
 
   @@index([creatorCorporationId])
   @@index([factionId])
 }
 
 model Faction {
-  factionId            Int           @id
+  factionId            Int                @id
   name                 String
   description          String
   isUnique             Boolean
-  militiaCorporation   Corporation?  @relation("FactionMilitiaCorporation", fields: [militiaCorporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
+  militiaCorporation   Corporation?       @relation("FactionMilitiaCorporation", fields: [militiaCorporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
   militiaCorporationId Int?
   alliances            Alliance[]
-  corporations         Corporation[] @relation("CorporationFaction")
-  factionCorporation   Corporation?  @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
+  corporations         Corporation[]      @relation("CorporationFaction")
+  factionCorporation   Corporation?       @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
   corporationId        Int?
   sizeFactor           Float
-  solarSystem          SolarSystem?  @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  solarSystem          SolarSystem?       @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId        Int?
   // do we need to store this?
   stationCount         Int
   // do we need to store this?
   stationSystemCount   Int
-  updatedAt            DateTime      @updatedAt()
-  isDeleted            Boolean       @default(false)
-  Character            Character[]   @relation("CharacterFaction")
-  races                Race[]        @relation("RaceFaction")
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt()
+  isDeleted            Boolean            @default(false)
+  Character            Character[]        @relation("CharacterFaction")
+  races                Race[]             @relation("RaceFaction")
+  killmailVictims      KillmailVictim[]   @relation("KillmailVictimFaction")
+  killmailAttackers    KillmailAttacker[] @relation("KillmailAttackerFaction")
 
   @@index([corporationId])
   @@index([militiaCorporationId])
@@ -419,6 +501,10 @@ model Corporation {
   ticker              String
   url                 String?
   warEligible         Boolean?
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt()
   isDeleted           Boolean             @default(false)
   executorAlliance    Alliance[]          @relation("AllianceExecutor")
@@ -435,6 +521,8 @@ model Corporation {
   warsAllies          CorporationWarAlly[]             @relation("CorporationWarAllies")
   characterMembership CharacterCorporationMembership[] @relation("CorporationCharacterMembershipEntry")
   Contract            Contract[]                       @relation("CorporationContractIssuer")
+  killmailVictims     KillmailVictim[]                 @relation("KillmailVictimCorporation")
+  killmailAttackers   KillmailAttacker[]               @relation("KillmailAttackerCorporation")
 
   @@index([creatorId])
   @@index([factionId])
@@ -461,6 +549,10 @@ model Station {
   raceId                   Int?
   reprocessingEfficiency   Float
   reprocessingStationsTake Float
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt                DateTime         @default(now())
   updatedAt                DateTime         @updatedAt()
   isDeleted                Boolean          @default(false)
   stationServices          StationService[]
@@ -480,6 +572,10 @@ model StationService {
   stationServiceId Int       @id
   name             String?
   description      String?
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt()
   isDeleted        Boolean   @default(false)
   stations         Station[]
@@ -491,6 +587,10 @@ model Race {
   description String?
   faction     Faction?    @relation("RaceFaction", fields: [factionId], references: [factionId])
   factionId   Int?
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt()
   isDeleted   Boolean     @default(false)
   stations    Station[]   @relation("RaceStations")
@@ -506,6 +606,10 @@ model Region {
   regionId       Int             @id
   name           String
   description    String?
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt()
   isDeleted      Boolean         @default(false)
   constellations Constellation[]
@@ -520,6 +624,10 @@ model Constellation {
   regionId        Int
   region          Region?       @relation(fields: [regionId], references: [regionId])
   solarSystems    SolarSystem[]
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt()
   isDeleted       Boolean       @default(false)
 
@@ -538,6 +646,10 @@ model SolarSystem {
   star                Star?          @relation("SolarSystemStar")
   starId              Int?
   stargates           Stargate[]     @relation("SolarSystemStargate")
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt()
   isDeleted           Boolean        @default(false)
   solarSystemFactions Faction[]      @relation("FactionSolarSystem")
@@ -560,6 +672,10 @@ model Star {
   temperature   BigInt
   type          Type        @relation("StarType", fields: [typeId], references: [typeId])
   typeId        Int
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt()
   isDeleted     Boolean     @default(false)
 
@@ -574,6 +690,10 @@ model Stargate {
   solarSystemId         Int
   DestinationStargate   Stargate?   @relation("StargateDestination", fields: [destinationStargateId], references: [stargateId], onDelete: NoAction, onUpdate: NoAction)
   destinationStargateId Int?        @unique
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt()
   isDeleted             Boolean     @default(false)
   IncomingStargate      Stargate?   @relation("StargateDestination")
@@ -591,6 +711,10 @@ model Planet {
   solarSystemId Int
   type          Type           @relation("PlanetType", fields: [typeId], references: [typeId])
   typeId        Int
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt()
   isDeleted     Boolean        @default(false)
   moons         Moon[]         @relation("PlanetMoons")
@@ -606,6 +730,10 @@ model Moon {
   name      String
   planet    Planet     @relation("PlanetMoons", fields: [planetId], references: [planetId])
   planetId  Int
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt()
   isDeleted Boolean    @default(false)
   Killmail  Killmail[] @relation("KillmailMoon")
@@ -619,6 +747,10 @@ model AsteroidBelt {
   name           String
   planet         Planet   @relation("PlanetAsteroidBelts", fields: [planetId], references: [planetId])
   planetId       Int
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt()
   isDeleted      Boolean  @default(false)
 
@@ -634,6 +766,10 @@ model Ancestry {
   iconId           Int?
   bloodline        Bloodline @relation("AncestryBloodline", fields: [bloodlineId], references: [bloodlineId])
   bloodlineId      Int
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt()
   isDeleted        Boolean   @default(false)
 
@@ -658,6 +794,10 @@ model Bloodline {
   willpower     Int
   Character     Character[] @relation("CharacterBloodline")
   ancestries    Ancestry[]  @relation("AncestryBloodline")
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt()
   isDeleted     Boolean     @default(false)
 
@@ -677,6 +817,10 @@ model LoyaltyStoreOffer {
   iskCost       BigInt
   lpCost        BigInt
   requiredItems LoyaltyStoreOfferRequiredItem[] @relation("LoyaltyStoreOfferRequiredItems")
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt     DateTime                        @default(now())
   updatedAt     DateTime                        @updatedAt()
   isDeleted     Boolean                         @default(false)
 
@@ -692,6 +836,10 @@ model LoyaltyStoreOfferRequiredItem {
   corporationId Int
   typeId        Int
   quantity      Int
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt()
   isDeleted     Boolean           @default(false)
 
@@ -702,32 +850,90 @@ model LoyaltyStoreOfferRequiredItem {
 }
 
 model Killmail {
-  killmailId    Int         @id
+  /**
+   * The unique ID of the killmail, which is also the killmail's kill ID.
+   */
+  killmailId    BigInt      @id
+  /**
+   * The hash of the killmail data
+   */
   hash          String
+  /**
+   * Time at the which the victim was killed and the killmail was generated.
+   */
   killmailTime  DateTime
   solarSystemId Int
   solarSystem   SolarSystem @relation("KillmailSolarSystem", fields: [solarSystemId], references: [solarSystemId])
-  moonId        Int?
-  moon          Moon?       @relation("KillmailMoon", fields: [moonId], references: [moonId])
+
+  /**
+   * The ID of the moon where the kill took place, if applicable.
+   */
+  moonId Int?
+  /**
+   * The moon where the kill took place, if applicable.
+   */
+  moon   Moon? @relation("KillmailMoon", fields: [moonId], references: [moonId])
 
   /**
    * Whether the metadata for this killmail has been fetched,
    * or if it is still pending.
    */
   metadataLoaded Boolean  @default(false)
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt()
   isDeleted      Boolean  @default(false)
 
   warId Int?
   war   War? @relation("WarKillmails", fields: [warId], references: [warId])
 
+  victim    KillmailVictim?    @relation("KillmailVictim")
+  attackers KillmailAttacker[] @relation("KillmailAttackers")
+
   @@index([solarSystemId])
   @@index([moonId])
   @@index([warId])
 }
 
+model KillmailAttacker {
+  killmailId     BigInt
+  attackerIndex  Int
+  characterId    Int?
+  corporationId  Int?
+  allianceId     Int?
+  factionId      Int?
+  shipTypeId     Int?
+  weaponTypeId   Int?
+  damageDone     Int
+  finalBlow      Boolean
+  securityStatus Float
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt()
+  isDeleted      Boolean  @default(false)
+
+  killmail    Killmail     @relation("KillmailAttackers", fields: [killmailId], references: [killmailId])
+  shipType    Type?        @relation("KillmailAttackerShipType", fields: [shipTypeId], references: [typeId])
+  weaponType  Type?        @relation("KillmailAttackerWeaponType", fields: [weaponTypeId], references: [typeId])
+  alliance    Alliance?    @relation("KillmailAttackerAlliance", fields: [allianceId], references: [allianceId])
+  corporation Corporation? @relation("KillmailAttackerCorporation", fields: [corporationId], references: [corporationId])
+  character   Character?   @relation("KillmailAttackerCharacter", fields: [characterId], references: [characterId])
+  faction     Faction?     @relation("KillmailAttackerFaction", fields: [factionId], references: [factionId])
+
+  @@id([killmailId, attackerIndex])
+  @@index([killmailId])
+  @@index([characterId])
+  @@index([corporationId])
+  @@index([allianceId])
+  @@index([factionId])
+}
+
 model KillmailVictim {
-  killmailId          Int
+  killmailId          BigInt                @id
   characterId         Int?
   corporationId       Int?
   allianceId          Int?
@@ -737,31 +943,83 @@ model KillmailVictim {
   positionX           Float?
   positionY           Float?
   positionZ           Float?
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt()
   isDeleted           Boolean               @default(false)
-  KillmailVictimItems KillmailVictimItems[]
+  killmail            Killmail              @relation("KillmailVictim", fields: [killmailId], references: [killmailId])
+  KillmailVictimItems KillmailVictimItems[] @relation("KillmailVictimItems")
+  shipType            Type                  @relation("KillmailVictimShipType", fields: [shipTypeId], references: [typeId])
+  alliance            Alliance?             @relation("KillmailVictimAlliance", fields: [allianceId], references: [allianceId])
+  corporation         Corporation?          @relation("KillmailVictimCorporation", fields: [corporationId], references: [corporationId])
+  character           Character?            @relation("KillmailVictimCharacter", fields: [characterId], references: [characterId])
+  faction             Faction?              @relation("KillmailVictimFaction", fields: [factionId], references: [factionId])
 
-  @@id([killmailId])
+  @@index([characterId])
+  @@index([corporationId])
+  @@index([allianceId])
 }
 
 model KillmailVictimItems {
-  killmailId        Int
-  killmailVictim    KillmailVictim @relation(fields: [killmailId], references: [killmailId])
+  /**
+   * The killmail ID of the killmail this item was involved in.
+   */
+  killmailId        BigInt
+  /**
+   * The index of this item in the list of items involved in the killmail.
+   */
+  itemIndex         Int
+  /**
+   * The parent/container item index of this item, or null if this item is not contained within another item.
+   */
+  parentItemIndex   Int?
+  /**
+   * Flag for the location of the item
+   */
   flag              Int
+  /**
+   * The type ID of the item.
+   */
   typeId            Int
-  // TODO: add children
-  quantityDestroyed Int
-  quantityDropped   Int
-  isSingleton       Boolean
-  updatedAt         DateTime       @updatedAt()
-  isDeleted         Boolean        @default(false)
+  /**
+   * How many of the item were destroyed, if any
+   */
+  quantityDestroyed Int?
+  /**
+   * How many of the item were dropped, if any
+   */
+  quantityDropped   Int?
+  /**
+   * The unique ID of the item, if it was a singleton.
+   */
+  singleton         BigInt
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt()
+  isDeleted         Boolean  @default(false)
 
-  @@id([killmailId, flag, typeId])
+  killmailVictim KillmailVictim        @relation("KillmailVictimItems", fields: [killmailId], references: [killmailId])
+  parentItem     KillmailVictimItems?  @relation("KillmailVictimItemParent", fields: [killmailId, parentItemIndex], references: [killmailId, itemIndex])
+  childItems     KillmailVictimItems[] @relation("KillmailVictimItemParent")
+  type           Type                  @relation("KillmailVictimItemType", fields: [typeId], references: [typeId])
+
+  @@id([killmailId, itemIndex])
+  @@index([typeId])
+  @@index([killmailId])
+  @@index([killmailId, parentItemIndex])
 }
 
 model AgentType {
   agentTypeId Int      @id
   name        String
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt()
   isDeleted   Boolean  @default(false)
   Agents      Agent[]  @relation("AgentType")
@@ -772,6 +1030,10 @@ model NpcCorporationDivision {
   name                     String
   internalName             String
   leaderTypeName           String?
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt()
   isDeleted                Boolean  @default(false)
   Agent                    Agent[]  @relation("AgentDivision")
@@ -789,6 +1051,10 @@ model Agent {
   station         Station                @relation("AgentStation", fields: [stationId], references: [stationId])
   stationId       Int
   agentsInSpace   AgentInSpace[]         @relation("AgentInSpace")
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt()
   isDeleted       Boolean                @default(false)
 }
@@ -802,6 +1068,10 @@ model AgentInSpace {
   spawnPointId  Int
   type          Type        @relation("AgentInSpaceType", fields: [typeId], references: [typeId])
   typeId        Int
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt()
   isDeleted     Boolean     @default(false)
 }
@@ -810,6 +1080,10 @@ model ResearchAgent {
   agent       Character             @relation("ResearchAgentCharacter", fields: [characterId], references: [characterId])
   characterId Int                   @id
   skills      ResearchAgentSkills[] @relation("ResearchAgentSkills")
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt()
   isDeleted   Boolean               @default(false)
 }
@@ -819,6 +1093,10 @@ model ResearchAgentSkills {
   characterId Int
   skill       Type          @relation("ResearchAgentSkillType", fields: [typeId], references: [typeId])
   typeId      Int
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt()
   isDeleted   Boolean       @default(false)
 
@@ -847,8 +1125,12 @@ model War {
   isMutual               Boolean
   isOpenForAllies        Boolean
   retractedDate          DateTime?
-  isDeleted              Boolean              @default(false)
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt              DateTime             @default(now())
   updatedAt              DateTime             @updatedAt()
+  isDeleted              Boolean              @default(false)
   killmails              Killmail[]           @relation("WarKillmails")
 
   @@index([aggressorAllianceId])
@@ -863,6 +1145,12 @@ model AllianceWarAlly {
   allianceId Int
   war        War      @relation("WarAllianceAllies", fields: [warId], references: [warId])
   alliance   Alliance @relation("AllianceWarAllies", fields: [allianceId], references: [allianceId])
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt()
+  isDeleted  Boolean  @default(false)
 
   @@id([warId, allianceId])
 }
@@ -872,6 +1160,12 @@ model CorporationWarAlly {
   corporationId Int
   war           War         @relation("WarCorporationAllies", fields: [warId], references: [warId])
   corporation   Corporation @relation("CorporationWarAllies", fields: [corporationId], references: [corporationId])
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
 
   @@id([warId, corporationId])
 }
@@ -904,6 +1198,12 @@ model Contract {
   title               String
   type                ContractType
   volume              Float?
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt()
+  isDeleted           Boolean      @default(false)
 }
 
 enum ContractType {
@@ -915,28 +1215,46 @@ enum ContractType {
 }
 
 model AuctionContract {
-  contractId Int    @id
+  contractId Int      @id
   /**
    * Buyout price
    */
   buyout     BigInt
   price      BigInt
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt()
+  isDeleted  Boolean  @default(false)
 }
 
 model CourierContract {
-  contractId      Int     @id
+  contractId      Int      @id
   /**
    * The collateral for the courier contract
    */
   collateral      BigInt
   startLocationId Int
-  startLocation   Station @relation("CourierContractStartLocation", fields: [startLocationId], references: [stationId])
-  endLocation     Station @relation("CourierContractEndLocation", fields: [endLocationId], references: [stationId])
+  startLocation   Station  @relation("CourierContractStartLocation", fields: [startLocationId], references: [stationId])
+  endLocation     Station  @relation("CourierContractEndLocation", fields: [endLocationId], references: [stationId])
   endLocationId   Int
   reward          BigInt
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt()
+  isDeleted       Boolean  @default(false)
 }
 
 model ItemExchangeContract {
-  contractId Int    @id
+  contractId Int      @id
   price      BigInt
+  /**
+   * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
+   */
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt()
+  isDeleted  Boolean  @default(false)
 }
