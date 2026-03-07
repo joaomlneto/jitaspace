@@ -1,11 +1,14 @@
-import pLimit from "p-limit";
-
 import { prisma } from "@jitaspace/db";
 import { getWars, getWarsWarId } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
+const delay = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 export type UpdateActiveWarsEventPayload = {
   data: {};
@@ -64,70 +67,51 @@ export const updateWars = client.createFunction(
 
     const warIds = [...new Set([...missingWarIds, ...activeWars])];
 
-    const limit = pLimit(1);
-
-    const fetchRemoteEntries = async () =>
-      Promise.all(
-        warIds.map((warId) =>
-          limit(async () =>
-            getWarsWarId(warId)
-              .then((res) => res.data)
-              .then((war) => ({
-                warId: warId,
-                declaredDate: war.declared,
-                finishedDate: war.finished ?? null,
-                retracted: war.retracted ?? null,
-                startedDate: war.started,
-                isMutual: war.mutual,
-                isOpenForAllies: war.open_for_allies,
-                aggressorAllianceId: war.aggressor.alliance_id ?? null,
-                aggressorCorporationId: war.aggressor.corporation_id ?? null,
-                aggressorIskDestroyed: war.aggressor.isk_destroyed ?? null,
-                aggressorShipsKilled: war.aggressor.ships_killed ?? null,
-                defenderAllianceId: war.defender.alliance_id ?? null,
-                defenderCorporationId: war.defender.corporation_id ?? null,
-                defenderIskDestroyed: war.defender.isk_destroyed ?? null,
-                defenderShipsKilled: war.defender.ships_killed ?? null,
-                allianceAllies:
-                  war.allies
-                    ?.filter((ally) => ally.alliance_id)
-                    .map((ally) => ({
-                      allianceId: ally.alliance_id!,
-                    })) ?? [],
-                corporationAllies:
-                  war.allies
-                    ?.filter((ally) => ally.corporation_id)
-                    .map((ally) => ({
-                      corporationId: ally.corporation_id!,
-                    })) ?? [],
-              })),
-          ),
-        ),
-      );
+    const fetchRemoteEntries = async () => {
+      const entries = [];
+      for (let index = 0; index < warIds.length; index += 1) {
+        const warId = warIds[index]!;
+        const war = await getWarsWarId(warId).then((res) => res.data);
+        entries.push({
+          warId: warId,
+          declaredDate: war.declared,
+          finishedDate: war.finished ?? null,
+          retracted: war.retracted ?? null,
+          startedDate: war.started,
+          isMutual: war.mutual,
+          isOpenForAllies: war.open_for_allies,
+          aggressorAllianceId: war.aggressor.alliance_id ?? null,
+          aggressorCorporationId: war.aggressor.corporation_id ?? null,
+          aggressorIskDestroyed: war.aggressor.isk_destroyed ?? null,
+          aggressorShipsKilled: war.aggressor.ships_killed ?? null,
+          defenderAllianceId: war.defender.alliance_id ?? null,
+          defenderCorporationId: war.defender.corporation_id ?? null,
+          defenderIskDestroyed: war.defender.isk_destroyed ?? null,
+          defenderShipsKilled: war.defender.ships_killed ?? null,
+          allianceAllies:
+            war.allies
+              ?.filter((ally) => ally.alliance_id)
+              .map((ally) => ({
+                allianceId: ally.alliance_id!,
+              })) ?? [],
+          corporationAllies:
+            war.allies
+              ?.filter((ally) => ally.corporation_id)
+              .map((ally) => ({
+                corporationId: ally.corporation_id!,
+              })) ?? [],
+        });
+        if (index < warIds.length - 1) {
+          await delay(500);
+        }
+      }
+      return entries;
+    };
 
     const remoteEntries = await fetchRemoteEntries();
 
     await createCorpAndItsRefRecords({
-      missingAllianceIds: new Set(
-        remoteEntries
-          .map((war) => [
-            war.aggressorAllianceId,
-            war.defenderAllianceId,
-            ...war.allianceAllies.map((ally) => ally.allianceId),
-          ])
-          .flat()
-          .filter((id) => id != null),
-      ),
-      missingCorporationIds: new Set(
-        remoteEntries
-          .map((war) => [
-            war.aggressorCorporationId,
-            war.defenderCorporationId,
-            ...war.corporationAllies.map((ally) => ally.corporationId),
-          ])
-          .flat()
-          .filter((id) => id != null),
-      ),
+      missingWarIds: new Set(remoteEntries.map((war) => war.warId)),
     });
 
     console.log({ remoteEntries });
@@ -191,56 +175,56 @@ export const updateWars = client.createFunction(
           .then((entries) =>
             entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
           ),
-      fetchRemoteEntries: async () =>
-        Promise.all(
-          warIds.map((warId) =>
-            limit(async () =>
-              getWarsWarId(warId)
-                .then((res) => res.data)
-                .then((war) => ({
-                  warId: warId,
-                  declaredDate: new Date(war.declared),
-                  finishedDate: war.finished ? new Date(war.finished) : null,
-                  retractedDate: war.retracted ? new Date(war.retracted) : null,
-                  startedDate: war.started ? new Date(war.started) : null,
-                  isMutual: war.mutual,
-                  isOpenForAllies: war.open_for_allies,
-                  aggressorAllianceId: war.aggressor.alliance_id ?? null,
-                  aggressorCorporationId: war.aggressor.corporation_id ?? null,
-                  aggressorIskDestroyed: war.aggressor.isk_destroyed,
-                  aggressorShipsKilled: war.aggressor.ships_killed ?? null,
-                  defenderAllianceId: war.defender.alliance_id ?? null,
-                  defenderCorporationId: war.defender.corporation_id ?? null,
-                  defenderIskDestroyed: war.defender.isk_destroyed,
-                  defenderShipsKilled: war.defender.ships_killed ?? null,
-                  /*
-                  allianceAllies:
-                    war.allies
-                      ?.filter((ally) => ally.alliance_id)
-                      .map((ally) => ally.alliance_id!)
-                      .map((allyAllianceId) => ({
-                        warId,
-                        allianceId: allyAllianceId,
-                      })) ?? [],
-                  corporationAllies:
-                    war.allies
-                      ?.filter((ally) => ally.corporation_id)
-                      .map((ally) => ally.corporation_id!)
-                      .map((allyCorporationId) => ({
-                        warId,
-                        corporationId: allyCorporationId,
-                      })) ?? [],*/
-                  isDeleted: false,
-                })),
-            ),
-          ),
-        ),
+      fetchRemoteEntries: async () => {
+        const entries = [];
+        for (let index = 0; index < warIds.length; index += 1) {
+          const warId = warIds[index]!;
+          const war = await getWarsWarId(warId).then((res) => res.data);
+          entries.push({
+            warId: warId,
+            declaredDate: new Date(war.declared),
+            finishedDate: war.finished ? new Date(war.finished) : null,
+            retractedDate: war.retracted ? new Date(war.retracted) : null,
+            startedDate: war.started ? new Date(war.started) : null,
+            isMutual: war.mutual,
+            isOpenForAllies: war.open_for_allies,
+            aggressorAllianceId: war.aggressor.alliance_id ?? null,
+            aggressorCorporationId: war.aggressor.corporation_id ?? null,
+            aggressorIskDestroyed: war.aggressor.isk_destroyed,
+            aggressorShipsKilled: war.aggressor.ships_killed ?? null,
+            defenderAllianceId: war.defender.alliance_id ?? null,
+            defenderCorporationId: war.defender.corporation_id ?? null,
+            defenderIskDestroyed: war.defender.isk_destroyed,
+            defenderShipsKilled: war.defender.ships_killed ?? null,
+            /*
+            allianceAllies:
+              war.allies
+                ?.filter((ally) => ally.alliance_id)
+                .map((ally) => ally.alliance_id!)
+                .map((allyAllianceId) => ({
+                  warId,
+                  allianceId: allyAllianceId,
+                })) ?? [],
+            corporationAllies:
+              war.allies
+                ?.filter((ally) => ally.corporation_id)
+                .map((ally) => ally.corporation_id!)
+                .map((allyCorporationId) => ({
+                  warId,
+                  corporationId: allyCorporationId,
+                })) ?? [],*/
+            isDeleted: false,
+          });
+          if (index < warIds.length - 1) {
+            await delay(500);
+          }
+        }
+        return entries;
+      },
       batchCreate: (entries) =>
-        limit(() =>
-          prisma.war.createMany({
-            data: entries,
-          }),
-        ),
+        prisma.war.createMany({
+          data: entries,
+        }),
       batchDelete: (entries) =>
         prisma.war.updateMany({
           data: {
@@ -252,17 +236,14 @@ export const updateWars = client.createFunction(
             },
           },
         }),
-      batchUpdate: (entries) =>
-        Promise.all(
-          entries.map((entry) =>
-            limit(async () =>
-              prisma.war.update({
-                data: entry,
-                where: { warId: entry.warId },
-              }),
-            ),
-          ),
-        ),
+      batchUpdate: async (entries) => {
+        for (const entry of entries) {
+          await prisma.war.update({
+            data: entry,
+            where: { warId: entry.warId },
+          });
+        }
+      },
       idAccessor: (e) => e.warId,
     });
 
