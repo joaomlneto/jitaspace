@@ -1,5 +1,9 @@
 # Jita Space
 
+[![](https://dcbadge.limes.pink/api/server/https://discord.gg/fvcFu7j4dx)](https://discord.gg/https://discord.gg/fvcFu7j4dx)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=joaomlneto_jitaspace&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=joaomlneto_jitaspace)
+
+
 This repository uses [Turborepo](https://turborepo.org/) and contains:
 
 ```
