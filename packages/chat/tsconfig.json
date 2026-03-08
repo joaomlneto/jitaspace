@@ -1,0 +1,10 @@
+{
+  "extends": "@jitaspace/tsconfig/base.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+    "jsx": "react-jsx",
+    "jsxImportSource": "chat"
+  },
+  "include": ["."],
+  "exclude": ["node_modules"]
+}
