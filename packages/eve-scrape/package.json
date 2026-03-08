@@ -15,6 +15,7 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@jitaspace/chat": "workspace:*",
     "@jitaspace/db": "workspace:*",
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/evekill-client": "workspace:*",

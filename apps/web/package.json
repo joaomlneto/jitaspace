@@ -22,6 +22,7 @@
     "@c15t/scripts": "^1.0.1",
     "@hapi/iron": "^7.0.1",
     "@jitaspace/auth": "workspace:*",
+    "@jitaspace/chat": "workspace:*",
     "@jitaspace/db": "workspace:*",
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/esi-meta-client": "workspace:*",
