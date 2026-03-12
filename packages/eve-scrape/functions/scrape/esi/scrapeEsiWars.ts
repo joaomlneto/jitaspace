@@ -40,10 +40,11 @@ export const scrapeEsiWars = client.createFunction(
   {
     id: "scrape-esi-wars",
     name: "Scrape Wars",
-    concurrency: {
-      limit: 1,
+    singleton: {
+      key: "scrape-esi-wars",
+      mode: "skip",
     },
-    retries: 3,
+    retries: 0,
     description: "Fetches wars from ESI",
   },
   { event: "scrape/esi/wars" },
@@ -104,169 +105,8 @@ export const scrapeEsiWars = client.createFunction(
           const stepStartTime = performance.now();
           const thisBatchWarIds = batches[i]!;
 
-          const fetchRemoteEntries = async () =>
-            Promise.all(
-              thisBatchWarIds.map((warId) =>
-                limit(async () =>
-                  getWarsWarId(warId)
-                    .then((res) => res.data)
-                    .then((war) => ({
-                      warId: warId,
-                      declaredDate: war.declared,
-                      finishedDate: war.finished ?? null,
-                      retracted: war.retracted ?? null,
-                      startedDate: war.started,
-                      isMutual: war.mutual,
-                      isOpenForAllies: war.open_for_allies,
-                      aggressorAllianceId: war.aggressor.alliance_id ?? null,
-                      aggressorCorporationId:
-                        war.aggressor.corporation_id ?? null,
-                      aggressorIskDestroyed:
-                        war.aggressor.isk_destroyed ?? null,
-                      aggressorShipsKilled: war.aggressor.ships_killed ?? null,
-                      defenderAllianceId: war.defender.alliance_id ?? null,
-                      defenderCorporationId:
-                        war.defender.corporation_id ?? null,
-                      defenderIskDestroyed: war.defender.isk_destroyed ?? null,
-                      defenderShipsKilled: war.defender.ships_killed ?? null,
-                      allianceAllies:
-                        war.allies
-                          ?.filter((ally) => ally.alliance_id)
-                          .map((ally) => ({
-                            allianceId: ally.alliance_id,
-                          })) ?? [],
-                      corporationAllies:
-                        war.allies
-                          ?.filter((ally) => ally.corporation_id)
-                          .map((ally) => ({
-                            corporationId: ally.corporation_id,
-                          })) ?? [],
-                    })),
-                ),
-              ),
-            );
-
-          const remoteEntries = await fetchRemoteEntries();
-
-          await createCorpAndItsRefRecords({ wars: remoteEntries });
-
-          console.log({ remoteEntries });
-          logger.info({ remoteEntries });
-
-          const warChanges = await updateTable({
-            fetchLocalEntries: async () =>
-              prisma.war
-                .findMany({
-                  select: {
-                    warId: true,
-                    declaredDate: true,
-                    finishedDate: true,
-                    retractedDate: true,
-                    startedDate: true,
-                    isMutual: true,
-                    isOpenForAllies: true,
-                    aggressorAllianceId: true,
-                    aggressorCorporationId: true,
-                    aggressorIskDestroyed: true,
-                    aggressorShipsKilled: true,
-                    defenderAllianceId: true,
-                    defenderCorporationId: true,
-                    defenderIskDestroyed: true,
-                    defenderShipsKilled: true,
-                    updatedAt: true,
-                    isDeleted: true,
-                  },
-                  where: {
-                    warId: {
-                      in: thisBatchWarIds,
-                    },
-                  },
-                })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt"]),
-                  ),
-                ),
-            fetchRemoteEntries: async () =>
-              Promise.all(
-                thisBatchWarIds.map((warId) =>
-                  limit(async () =>
-                    getWarsWarId(warId)
-                      .then((res) => res.data)
-                      .then((war) => ({
-                        warId: warId,
-                        declaredDate: new Date(war.declared),
-                        finishedDate: war.finished
-                          ? new Date(war.finished)
-                          : null,
-                        retractedDate: war.retracted
-                          ? new Date(war.retracted)
-                          : null,
-                        startedDate: war.started ? new Date(war.started) : null,
-                        isMutual: war.mutual,
-                        isOpenForAllies: war.open_for_allies,
-                        aggressorAllianceId: war.aggressor.alliance_id ?? null,
-                        aggressorCorporationId:
-                          war.aggressor.corporation_id ?? null,
-                        aggressorIskDestroyed: war.aggressor.isk_destroyed,
-                        aggressorShipsKilled:
-                          war.aggressor.ships_killed ?? null,
-                        defenderAllianceId: war.defender.alliance_id ?? null,
-                        defenderCorporationId:
-                          war.defender.corporation_id ?? null,
-                        defenderIskDestroyed: war.defender.isk_destroyed,
-                        defenderShipsKilled: war.defender.ships_killed ?? null,
-                        /*
-                        allianceAllies:
-                          war.allies
-                            ?.filter((ally) => ally.alliance_id)
-                            .map((ally) => ally.alliance_id!)
-                            .map((allyAllianceId) => ({
-                              warId,
-                              allianceId: allyAllianceId,
-                            })) ?? [],
-                        corporationAllies:
-                          war.allies
-                            ?.filter((ally) => ally.corporation_id)
-                            .map((ally) => ally.corporation_id!)
-                            .map((allyCorporationId) => ({
-                              warId,
-                              corporationId: allyCorporationId,
-                            })) ?? [],*/
-                        isDeleted: false,
-                      })),
-                  ),
-                ),
-              ),
-            batchCreate: (entries) =>
-              limit(() =>
-                prisma.war.createMany({
-                  data: entries,
-                }),
-              ),
-            batchDelete: (entries) =>
-              prisma.war.updateMany({
-                data: {
-                  isDeleted: true,
-                },
-                where: {
-                  warId: {
-                    in: entries.map((war) => war.warId),
-                  },
-                },
-              }),
-            batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.war.update({
-                      data: entry,
-                      where: { warId: entry.warId },
-                    }),
-                  ),
-                ),
-              ),
-            idAccessor: (e) => e.warId,
+          await createCorpAndItsRefRecords({
+            missingWarIds: new Set(thisBatchWarIds),
           });
 
           return {

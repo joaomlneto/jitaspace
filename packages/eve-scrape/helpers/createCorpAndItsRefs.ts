@@ -382,7 +382,6 @@ export const createCorpAndItsRefRecords = async ({
 
   // check if some of the IDs marked as "missing" are already present in the database
   const filterMissingIdsInDatabase = async () => {
-    console.log({ wars });
     await filterMissingAllianceIdsInDB();
     await filterMissingBloodlineIdsInDB();
     await filterMissingCharacterIdsInDB();
@@ -523,7 +522,7 @@ export const createCorpAndItsRefRecords = async ({
 
   // a bit of cheating… let's create corporation placeholders first...
   // Corporations must go first, with properties removed
-  console.log({ corporations });
+  //console.log({ corporations });
   await prisma.corporation.createMany({
     data: corporations.map((corporation) => ({
       ...corporation,
@@ -537,22 +536,20 @@ export const createCorpAndItsRefRecords = async ({
   });
 
   // Factions must be before Race
-  console.log({ factions });
+  //console.log({ factions });
   await prisma.faction.createMany({ data: factions });
   // Race must be before Bloodline and Character
-  console.log({ races });
+  //console.log({ races });
   await prisma.race.createMany({ data: races });
-  console.log({ bloodlines });
+  //console.log({ bloodlines });
   await prisma.bloodline.createMany({ data: bloodlines });
-  console.log({ alliances });
-  console.log({ previouslyAddedCorps: corporations });
+  //console.log({ alliances });
   await prisma.alliance.createMany({ data: alliances });
-  console.log({ characters });
+  //console.log({ characters });
   await prisma.character.createMany({ data: characters });
-  console.log({ stations });
+  //console.log({ stations });
   await prisma.station.createMany({ data: stations });
   if (wars.length > 0) {
-    console.log({ wars });
     const warIds = [
       ...new Set(
         wars
@@ -618,6 +615,7 @@ export const createCorpAndItsRefRecords = async ({
     }
   }
 
+  /*
   console.log("adding missing corp data!!");
   console.log({ corporations });
   console.log(
@@ -630,11 +628,11 @@ export const createCorpAndItsRefRecords = async ({
         homeStationId,
       }),
     ),
-  );
+  );*/
 
   // we can now populate the missing corporation data
   for (const corporation of corporations) {
-    console.log("updating corporation: " + corporation);
+    //console.log("updating corporation: " + corporation);
     await prisma.corporation.update({
       where: {
         corporationId: corporation.corporationId,
@@ -731,7 +729,7 @@ const fetchCharactersFromEsi = (
 
 const fetchCorporationsFromEsi = (
   corporationIds: number[],
-): Promise<Omit<Corporation, "updatedAt">[]> =>
+): Promise<Omit<Corporation, "updatedAt" | "createdAt">[]> =>
   Promise.all(
     corporationIds.map((corporationId) =>
       limit(async () =>
