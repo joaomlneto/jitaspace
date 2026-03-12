@@ -108,8 +108,8 @@ export const createCorpAndItsRefRecords = async ({
         ...wars.flatMap((war) => [
           war.aggressorAllianceId,
           war.defenderAllianceId,
-          ...(war.allianceAllies?.map((ally) => ally.allianceId) ?? []),
-          ...(war.allies?.map((ally) => ally.allianceId) ?? []),
+          //...(war.allianceAllies?.map((ally) => ally.allianceId) ?? []),
+          //...(war.allies?.map((ally) => ally.allianceId) ?? []),
         ]),
       ]
         .filter((id) => id != null)
@@ -170,8 +170,8 @@ export const createCorpAndItsRefRecords = async ({
         ...wars.flatMap((war) => [
           war.aggressorCorporationId,
           war.defenderCorporationId,
-          ...(war.corporationAllies?.map((ally) => ally.corporationId) ?? []),
-          ...(war.allies?.map((ally) => ally.corporationId) ?? []),
+          //...(war.corporationAllies?.map((ally) => ally.corporationId) ?? []),
+          //...(war.allies?.map((ally) => ally.corporationId) ?? []),
         ]),
       ]
         .filter((id) => id != null)
@@ -604,12 +604,13 @@ export const createCorpAndItsRefRecords = async ({
       await prisma.war.create({
         data: {
           ...warData,
+          /*
           ...(allianceAlliesData.length > 0
             ? { allianceAllies: { create: allianceAlliesData } }
             : {}),
           ...(corporationAlliesData.length > 0
             ? { corporationAllies: { create: corporationAlliesData } }
-            : {}),
+            : {}),*/
         },
       });
     }
@@ -877,6 +878,7 @@ const fetchWarsFromEsi = (warIds: number[]) =>
             defenderCorporationId: war.defender.corporation_id ?? null,
             defenderIskDestroyed: war.defender.isk_destroyed,
             defenderShipsKilled: war.defender.ships_killed ?? null,
+            /*
             allianceAllies:
               war.allies
                 ?.filter((ally) => ally.alliance_id)
@@ -894,7 +896,7 @@ const fetchWarsFromEsi = (warIds: number[]) =>
                   warId,
                   corporationId: allyCorporationId,
                   isDeleted: false,
-                })) ?? [],
+                })) ?? [],*/
             isDeleted: false,
           })),
       ),
