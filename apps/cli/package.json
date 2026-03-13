@@ -22,7 +22,7 @@
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
     "@jsonhero/schema-infer": "^0.1.5",
-    "@openapi-contrib/json-schema-to-openapi-schema": "^2.2.5",
+    "@openapi-contrib/json-schema-to-openapi-schema": "^4.3.1",
     "@types/async": "^3.2.20",
     "@types/cli-progress": "^3.11.0",
     "@types/figlet": "^1.5.6",
