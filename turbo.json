@@ -54,7 +54,7 @@
     },
     "build": {
       "dependsOn": ["^build", "^db:generate", "kubb:generate"],
-      "inputs": ["src/**", "package.json", "tsconfig.json"],
+      "inputs": ["**/*.ts", "**/*.tsx", "package.json", "tsconfig.json"],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
@@ -70,7 +70,8 @@
     "lint": {
       "dependsOn": ["^topo"],
       "inputs": [
-        "src/**",
+        "**/*.ts",
+        "**/*.tsx",
         "package.json",
         "tsconfig.json",
         ".eslintrc*",
@@ -91,14 +92,18 @@
       "inputs": ["kubb.config.ts", "swagger.json"],
       "outputs": ["src/generated/**", "src/build-data.json"]
     },
+    "db:studio": {
+      "cache": false,
+      "persistent": true
+    },
     "test": {},
     "test:watch": {
       "cache": false,
       "persistent": true
     },
     "type-check": {
-      "dependsOn": ["^topo"],
-      "inputs": ["src/**", "package.json", "tsconfig.json"],
+      "dependsOn": ["^topo", "kubb:generate"],
+      "inputs": ["**/*.ts", "**/*.tsx", "package.json", "tsconfig.json"],
       "outputs": ["node_modules/.cache/tsbuildinfo.json"]
     }
   }
