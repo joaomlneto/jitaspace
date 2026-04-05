@@ -5,13 +5,24 @@
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "publishConfig": {
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf .turbo node_modules",
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "clean": "rm -rf .turbo node_modules dist",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
-    "type-check": "tsc --jsx react-jsx --noEmit",
-    "prepublish": "pnpm build"
+    "prepublishOnly": "pnpm build",
+    "type-check": "tsc --jsx react-jsx --noEmit"
   },
   "dependencies": {
     "@jitaspace/auth-utils": "workspace:*",
@@ -25,6 +36,10 @@
     "axios": "^1.9.0",
     "zustand": "^4.5.7"
   },
+  "peerDependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.1.0"
+  },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
@@ -35,6 +50,7 @@
     "prettier": "^3.5.3",
     "react": "^19.2.3",
     "react-dom": "^19.1.0",
+    "tsup": "^8.4.0",
     "typescript": "^5.8.3"
   },
   "prettier": "@jitaspace/prettier-config"
