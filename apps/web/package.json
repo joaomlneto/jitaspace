@@ -82,7 +82,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-html-parser": "^2.0.2",
-    "react-obfuscate-email": "^1.1.5",
+    "react-obfuscate-email": "^2.0.5",
     "recharts": "^3.8.0",
     "sharp": "^0.34.2",
     "superjson": "2.2.2",
