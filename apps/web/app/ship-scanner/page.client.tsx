@@ -21,13 +21,9 @@ import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 import { IconX } from "@tabler/icons-react";
 
+import type { FittingItemFlag } from "@jitaspace/hooks";
 import { itemsFlagEnum } from "@jitaspace/esi-client";
-import type {
-  FittingItemFlag} from "@jitaspace/hooks";
-import {
-  useEsiTypeIdsFromNames,
-  useType,
-} from "@jitaspace/hooks";
+import { useEsiTypeIdsFromNames, useType } from "@jitaspace/hooks";
 import { EveEntitySelect, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { ShipFittingCard } from "~/components/Fitting";
@@ -38,7 +34,6 @@ export interface PageProps {
     name: string;
   }[];
 }
-
 
 const SCAN_CATEGORIES = [
   "High Power Slots",
@@ -197,7 +192,6 @@ export default function Page({ ships }: PageProps) {
   const [scans, setScans] = useState<ScanResult[]>([]);
   const { data: shipData } = useType(
     shipTypeId ?? 0,
-    {},
     {},
     { query: { enabled: shipTypeId !== undefined } },
   );
