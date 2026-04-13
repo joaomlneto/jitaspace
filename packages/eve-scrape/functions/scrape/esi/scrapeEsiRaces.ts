@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 
-import { Prisma, prisma } from "@jitaspace/db";
+import { prisma } from "@jitaspace/db";
 import { getUniverseRaces } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";

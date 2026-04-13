@@ -1,8 +1,8 @@
 "use client";
 
-import type { BreadcrumbsProps } from "@mantine/core";
+import type { BreadcrumbsProps, TextProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Breadcrumbs, TextProps } from "@mantine/core";
+import { Breadcrumbs } from "@mantine/core";
 
 import {
   useGetUniverseConstellationsConstellationId,
