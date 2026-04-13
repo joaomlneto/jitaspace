@@ -1,13 +1,9 @@
 "use client";
 
+import type { BreadcrumbsProps } from "@mantine/core";
 import React, { memo } from "react";
 import Link from "next/link";
-import {
-  Anchor,
-  Breadcrumbs,
-  Text,
-  type BreadcrumbsProps,
-} from "@mantine/core";
+import { Anchor, Breadcrumbs, Text } from "@mantine/core";
 
 import {
   useGetUniverseGroupsGroupId,
@@ -16,7 +12,6 @@ import {
 
 import { CategoryAnchor, GroupAnchor, TypeAnchor } from "../Anchor";
 import { CategoryName, GroupName, TypeName } from "../Text";
-
 
 export type TypeInventoryBreadcrumbsProps = Omit<
   BreadcrumbsProps,
@@ -33,8 +28,7 @@ export const TypeInventoryBreadcrumbs = memo(
     ...otherProps
   }: TypeInventoryBreadcrumbsProps) => {
     const { data: type } = useGetUniverseTypesTypeId(
-      typeof typeId === "string" ? parseInt(typeId) : typeId ?? 0,
-      {},
+      typeof typeId === "string" ? parseInt(typeId) : (typeId ?? 0),
       {},
       {
         query: { enabled: typeId !== undefined },
@@ -42,7 +36,6 @@ export const TypeInventoryBreadcrumbs = memo(
     );
     const { data: group } = useGetUniverseGroupsGroupId(
       type?.data.group_id ?? 0,
-      {},
       {},
       {
         query: { enabled: type?.data.group_id !== undefined },

@@ -1,14 +1,11 @@
 "use client";
 
+import type { ColorSwatchProps } from "@mantine/core";
 import { memo } from "react";
-import { ColorSwatch, type ColorSwatchProps } from "@mantine/core";
+import { ColorSwatch } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
-
-
-
-
 
 export type MailLabelColorSwatchProps = Omit<ColorSwatchProps, "color"> & {
   characterId: number;
@@ -24,7 +21,6 @@ export const MailLabelColorSwatch = memo(
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 1,
-      {},
       { ...authHeaders },
       {
         query: {

@@ -1,13 +1,10 @@
 "use client";
 
+import type { BadgeProps } from "@mantine/core";
 import { memo } from "react";
-import { Badge, Skeleton, type BadgeProps } from "@mantine/core";
+import { Badge, Skeleton } from "@mantine/core";
 
 import { useGetAlliancesAllianceId } from "@jitaspace/esi-client";
-
-
-
-
 
 type AllianceTickerBadgeProps = Omit<BadgeProps, "children"> & {
   allianceId?: number | string;
@@ -16,8 +13,7 @@ type AllianceTickerBadgeProps = Omit<BadgeProps, "children"> & {
 export const AllianceTickerBadge = memo(
   ({ allianceId, ...otherProps }: AllianceTickerBadgeProps) => {
     const { data } = useGetAlliancesAllianceId(
-      typeof allianceId === "number" ? allianceId : Number(allianceId) ?? 0,
-      {},
+      typeof allianceId === "number" ? allianceId : (Number(allianceId) ?? 0),
       {},
       { query: { enabled: allianceId !== undefined } },
     );

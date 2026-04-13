@@ -1,14 +1,11 @@
 "use client";
 
+import type { IndicatorProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Indicator, type IndicatorProps } from "@mantine/core";
+import { Indicator } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
-
-
-
-
 
 type TotalUnreadMailsIndicatorProps = IndicatorProps & {
   characterId: number;
@@ -23,7 +20,6 @@ export const TotalUnreadMailsIndicator = memo(
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 1,
-      {},
       { ...authHeaders },
       {
         query: {

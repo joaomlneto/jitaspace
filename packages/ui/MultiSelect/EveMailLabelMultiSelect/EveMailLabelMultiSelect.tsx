@@ -1,15 +1,12 @@
 "use client";
 
+import type { MultiSelectProps } from "@mantine/core";
 import React, { memo } from "react";
-import { MultiSelect, type MultiSelectProps } from "@mantine/core";
+import { MultiSelect } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
 import { humanLabelName } from "@jitaspace/utils";
-
-
-
-
 
 type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data"> & {
   characterId: number;
@@ -23,7 +20,6 @@ export const EveMailLabelMultiSelect = memo(
     });
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 0,
-      {},
       { ...authHeaders },
       {
         query: {

@@ -9,7 +9,6 @@ import { AllianceName } from "./AllianceName";
 import { CorporationName } from "./CorporationName";
 import { EveEntityName } from "./EveEntityName";
 
-
 export type WarAggressorNameProps = TextProps & {
   warId?: number;
 };
@@ -18,7 +17,6 @@ export const WarAggressorName = memo(
   ({ warId, ...otherProps }: WarAggressorNameProps) => {
     const { data } = useGetWarsWarId(
       warId ?? 0,
-      {},
       {},
       { query: { enabled: warId !== undefined } },
     );

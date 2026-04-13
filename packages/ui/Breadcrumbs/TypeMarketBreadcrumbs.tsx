@@ -1,13 +1,9 @@
 "use client";
 
+import type { BreadcrumbsProps } from "@mantine/core";
 import React, { memo, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  Anchor,
-  Breadcrumbs,
-  Text,
-  type BreadcrumbsProps,
-} from "@mantine/core";
+import { Anchor, Breadcrumbs, Text } from "@mantine/core";
 
 import {
   getMarketsGroupsMarketGroupId,
@@ -17,7 +13,6 @@ import {
 import { MarketGroupAnchor, TypeAnchor } from "../Anchor";
 import { MarketGroupName, TypeName } from "../Text";
 
-
 export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   typeId?: string | number;
   showType?: boolean;
@@ -26,8 +21,7 @@ export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
 export const TypeMarketBreadcrumbs = memo(
   ({ typeId, showType = false, ...otherProps }: TypeMarketBreadcrumbsProps) => {
     const { data: type } = useGetUniverseTypesTypeId(
-      typeof typeId === "string" ? parseInt(typeId) : typeId ?? 0,
-      {},
+      typeof typeId === "string" ? parseInt(typeId) : (typeId ?? 0),
       {},
       {
         query: { enabled: typeId !== undefined },

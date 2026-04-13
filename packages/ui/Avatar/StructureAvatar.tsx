@@ -8,7 +8,6 @@ import { useAccessToken } from "@jitaspace/hooks";
 
 import { TypeAvatar } from "./TypeAvatar";
 
-
 export type StructureAvatarProps = Omit<AvatarProps, "src"> & {
   characterId?: number;
   structureId?: string | number | null;
@@ -23,8 +22,7 @@ export const StructureAvatar = memo(
     const { data } = useGetUniverseStructuresStructureId(
       typeof structureId === "string"
         ? parseInt(structureId)
-        : structureId ?? 1,
-      {},
+        : (structureId ?? 1),
       { ...authHeaders },
       {
         query: {

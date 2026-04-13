@@ -1,13 +1,10 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Skeleton, Text, type TextProps } from "@mantine/core";
+import { Skeleton, Text } from "@mantine/core";
 
 import { useGetUniverseAsteroidBeltsAsteroidBeltId } from "@jitaspace/esi-client";
-
-
-
-
 
 export type AsteroidBeltNameProps = TextProps & {
   asteroidBeltId?: number;
@@ -19,7 +16,6 @@ export const AsteroidBeltName = memo(
   ({ asteroidBeltId, ...otherProps }: AsteroidBeltNameProps) => {
     const { data, isLoading } = useGetUniverseAsteroidBeltsAsteroidBeltId(
       asteroidBeltId ?? 1,
-      {},
       {},
       { query: { enabled: !!asteroidBeltId } },
     );

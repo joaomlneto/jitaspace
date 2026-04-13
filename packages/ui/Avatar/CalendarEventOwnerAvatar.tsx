@@ -1,7 +1,8 @@
 "use client";
 
+import type { AvatarProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
+import { Avatar, Skeleton } from "@mantine/core";
 
 import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
@@ -12,7 +13,6 @@ import {
   CorporationAvatar,
   FactionAvatar,
 } from "./index";
-
 
 export type CalendarEventOwnerAvatarProps = Omit<AvatarProps, "src"> & {
   characterId: number;
@@ -30,7 +30,6 @@ export const CalendarEventOwnerAvatar = memo(
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        {},
         { ...authHeaders },
         {
           query: {

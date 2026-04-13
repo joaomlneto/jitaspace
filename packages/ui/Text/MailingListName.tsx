@@ -1,14 +1,11 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import { memo } from "react";
-import { Skeleton, Text, type TextProps } from "@mantine/core";
+import { Skeleton, Text } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
-
-
-
-
 
 export type MailingListNameProps = TextProps & {
   characterId: number;
@@ -24,7 +21,6 @@ export const MailingListName = memo(
 
     const { data, isLoading } = useGetCharactersCharacterIdMailLists(
       characterId ?? 1,
-      {},
       { ...authHeaders },
       {
         query: {

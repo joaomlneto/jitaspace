@@ -1,18 +1,10 @@
 "use client";
 
+import type { BadgeProps } from "@mantine/core";
 import { memo } from "react";
-import {
-  Badge,
-  Skeleton,
-  useMantineTheme,
-  type BadgeProps,
-} from "@mantine/core";
+import { Badge, Skeleton, useMantineTheme } from "@mantine/core";
 
 import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
-
-
-
-
 
 export type SolarSystemSecurityStatusBadgeProps = BadgeProps & {
   solarSystemId?: string | number;
@@ -67,8 +59,7 @@ export const SolarSystemSecurityStatusBadge = memo(
     const { data: solarSystemData } = useGetUniverseSystemsSystemId(
       typeof solarSystemId === "string"
         ? parseInt(solarSystemId)
-        : solarSystemId ?? 0,
-      {},
+        : (solarSystemId ?? 0),
       {},
       { query: { enabled: !!solarSystemId } },
     );

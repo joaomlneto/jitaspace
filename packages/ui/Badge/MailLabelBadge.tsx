@@ -1,14 +1,11 @@
 "use client";
 
+import type { BadgeProps } from "@mantine/core";
 import { memo } from "react";
-import { Badge, type BadgeProps } from "@mantine/core";
+import { Badge } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
-
-
-
-
 
 export type MailLabelBadgeProps = BadgeProps & {
   characterId: number;
@@ -23,7 +20,6 @@ export const MailLabelBadge = memo(
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 1,
-      {},
       { ...authHeaders },
       {
         query: {

@@ -22,7 +22,6 @@ export const CalendarEventOwnerName = memo(
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         eventId ?? 0,
-        {},
         { ...authHeaders },
         {
           query: {

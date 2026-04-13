@@ -8,10 +8,6 @@ import { IconAppWindowFilled } from "@tabler/icons-react";
 import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
 
-
-
-
-
 type OpenInformationWindowActionIconProps = {
   characterId: number;
   entityId?: string | number;
@@ -42,7 +38,7 @@ export const OpenInformationWindowActionIcon = memo(
                       ? parseInt(entityId)
                       : entityId,
                 },
-                { headers: { ...authHeaders } },
+                authHeaders,
               ).then(() => {
                 showNotification({
                   message: "Information window opened in EVE client.",

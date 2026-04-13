@@ -8,10 +8,6 @@ import { IconRocket } from "@tabler/icons-react";
 import { postUiAutopilotWaypoint } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
 
-
-
-
-
 type SetAutopilotDestinationActionIconProps = {
   characterId: number;
   destinationId?: string | number;
@@ -44,11 +40,7 @@ export const SetAutopilotDestinationActionIcon = memo(
                       ? parseInt(destinationId)
                       : destinationId,
                 },
-                {
-                  headers: {
-                    ...authHeaders,
-                  },
-                },
+                authHeaders,
               ).then(() => {
                 showNotification({
                   message: "Autopilot destination set.",

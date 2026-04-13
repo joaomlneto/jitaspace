@@ -1,16 +1,13 @@
 "use client";
 
+import type { AnchorProps } from "@mantine/core";
 import { memo } from "react";
 import { type LinkProps } from "next/link";
-import { Anchor, type AnchorProps } from "@mantine/core";
+import { Anchor } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 
 import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
-
-
-
-
 
 export type OpenInformationWindowAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
@@ -46,7 +43,7 @@ export const OpenInformationWindowAnchor = memo(
                 target_id:
                   typeof entityId === "string" ? parseInt(entityId) : entityId,
               },
-              { headers: { ...authHeaders } },
+              authHeaders,
             ).then(() => {
               showNotification({
                 message: "Information window opened in EVE client.",

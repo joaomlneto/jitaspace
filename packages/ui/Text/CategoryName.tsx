@@ -1,13 +1,10 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Skeleton, Text, type TextProps } from "@mantine/core";
+import { Skeleton, Text } from "@mantine/core";
 
 import { useGetUniverseCategoriesCategoryId } from "@jitaspace/esi-client";
-
-
-
-
 
 export type CategoryNameProps = TextProps & {
   categoryId?: number;
@@ -17,7 +14,6 @@ export const CategoryName = memo(
   ({ categoryId, ...otherProps }: CategoryNameProps) => {
     const { data, isLoading } = useGetUniverseCategoriesCategoryId(
       categoryId ?? 1,
-      {},
       {},
       { query: { enabled: !!categoryId } },
     );

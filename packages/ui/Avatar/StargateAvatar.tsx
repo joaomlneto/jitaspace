@@ -7,7 +7,6 @@ import { useGetUniverseStargatesStargateId } from "@jitaspace/esi-client";
 
 import { TypeAvatar } from "./TypeAvatar";
 
-
 export type StargateAvatarProps = Omit<AvatarProps, "src"> & {
   stargateId?: string | number | null;
 };
@@ -15,8 +14,7 @@ export type StargateAvatarProps = Omit<AvatarProps, "src"> & {
 export const StargateAvatar = memo(
   ({ stargateId, ...otherProps }: StargateAvatarProps) => {
     const { data } = useGetUniverseStargatesStargateId(
-      typeof stargateId === "string" ? parseInt(stargateId) : stargateId ?? 1,
-      {},
+      typeof stargateId === "string" ? parseInt(stargateId) : (stargateId ?? 1),
       {},
       {
         query: {

@@ -7,7 +7,6 @@ import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
 
 import { StarAvatar } from "./StarAvatar";
 
-
 export type SolarSystemAvatarProps = Omit<AvatarProps, "src"> & {
   solarSystemId?: string | number | null;
 };
@@ -17,8 +16,7 @@ export const SolarSystemStarAvatar = memo(
     const { data } = useGetUniverseSystemsSystemId(
       typeof solarSystemId === "string"
         ? parseInt(solarSystemId)
-        : solarSystemId ?? 1,
-      {},
+        : (solarSystemId ?? 1),
       {},
       {
         query: {

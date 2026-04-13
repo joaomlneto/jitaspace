@@ -1,7 +1,8 @@
 "use client";
 
+import type { AvatarProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
+import { Avatar, Skeleton } from "@mantine/core";
 
 import {
   useGetCharactersCharacterIdMailLists,
@@ -13,7 +14,6 @@ import { getAvatarSize } from "@jitaspace/utils";
 
 import { sizes } from "./Avatar.styles";
 import { EveEntityAvatar } from "./index";
-
 
 export type EveMailSenderAvatarProps = Omit<AvatarProps, "src" | "style"> & {
   characterId: number;
@@ -30,7 +30,6 @@ export const EveMailSenderAvatar = memo(
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      {},
       { ...authHeaders },
       {
         query: {
@@ -42,7 +41,6 @@ export const EveMailSenderAvatar = memo(
     const { data: mailingLists, isLoading: mailingListsLoading } =
       useGetCharactersCharacterIdMailLists(
         characterId ?? 1,
-        {},
         { ...authHeaders },
         {
           query: {
