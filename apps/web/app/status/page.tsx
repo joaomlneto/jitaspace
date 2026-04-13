@@ -29,6 +29,8 @@ import { useServerStatus } from "@jitaspace/hooks";
 import { useGetVersion } from "@jitaspace/sde-client";
 import { FormattedDateText } from "@jitaspace/ui";
 
+import { env } from "~/env";
+
 import { EsiStatusDashboard } from "../../components/Status/EsiStatusDashboard";
 
 export default function StatusPage() {
@@ -66,7 +68,7 @@ export default function StatusPage() {
     },
   );
 
-  const { data: tqStatus } = useServerStatus() as any;
+  const { data: tqStatus } = useServerStatus();
 
   const [opened, { open, close }] = useDisclosure(false);
 
@@ -77,8 +79,8 @@ export default function StatusPage() {
 
   const webLastUpdatedDate: Date | null = useMemo(
     () =>
-      process.env.NEXT_PUBLIC_MODIFIED_DATE
-        ? new Date(process.env.NEXT_PUBLIC_MODIFIED_DATE)
+      env.NEXT_PUBLIC_MODIFIED_DATE
+        ? new Date(env.NEXT_PUBLIC_MODIFIED_DATE)
         : null,
     [],
   );

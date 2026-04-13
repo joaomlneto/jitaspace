@@ -49,7 +49,7 @@ export function useEsiSearch(
       search: query,
       strict,
     },
-    { "Accept-Language": language, ...authHeaders },
+    { ...(language !== undefined && { "Accept-Language": language }), ...authHeaders },
     {
       query: {
         enabled: accessToken !== null && query.length >= 3,
