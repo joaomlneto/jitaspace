@@ -29,7 +29,7 @@ export interface EveMailComposeFormProps {
 export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
   const selectedCharacter = useSelectedCharacter();
   const characterId = selectedCharacter?.characterId;
-  const { authHeaders: _authHeaders, accessToken } = useAccessToken({
+  const { authHeaders, accessToken } = useAccessToken({
     characterId: characterId,
     scopes: ["esi-mail.send_mail.v1"],
   });
@@ -76,7 +76,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
           })),
           subject: values.subject,
         },
-        { token: accessToken },
+        authHeaders,
       );
       if (result.status === HttpStatusCode.Created) {
         showNotification({
@@ -144,7 +144,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
                   })),
                   subject: values.subject,
                 },
-                { token: accessToken },
+                authHeaders,
               );
               if (result.status === HttpStatusCode.Created) {
                 showNotification({

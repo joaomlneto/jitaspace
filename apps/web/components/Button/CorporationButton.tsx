@@ -6,7 +6,6 @@ import { CorporationAvatar } from "@jitaspace/ui";
 
 import classes from "./Button.module.css";
 
-
 export interface CorporationButtonProps {
   corporationId?: number;
 }
@@ -15,7 +14,6 @@ export const CorporationButton = memo(
   ({ corporationId }: CorporationButtonProps) => {
     const { data } = useCorporation(
       corporationId ?? 0,
-      {},
       {},
       { query: { enabled: corporationId !== undefined } },
     );

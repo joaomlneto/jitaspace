@@ -6,7 +6,6 @@ import { TypeAvatar } from "@jitaspace/ui";
 
 import classes from "./Button.module.css";
 
-
 export interface TypeButtonProps {
   typeId?: number;
 }
@@ -14,7 +13,6 @@ export interface TypeButtonProps {
 export const TypeButton = memo(({ typeId }: TypeButtonProps) => {
   const { data } = useType(
     typeId ?? 0,
-    {},
     {},
     { query: { enabled: typeId !== undefined } },
   );

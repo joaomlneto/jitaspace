@@ -11,7 +11,6 @@ import { ConditionalWrapper } from "@jitaspace/utils";
 
 import classes from "./Button.module.css";
 
-
 export interface CharacterButtonProps {
   characterId?: number;
   showOnlineIndicator?: boolean;
@@ -26,7 +25,6 @@ export const CharacterButton = memo(
   }: CharacterButtonProps) => {
     const { data } = useEsiCharacter(
       characterId ?? 0,
-      {},
       {},
       { query: { enabled: characterId !== undefined } },
     );
