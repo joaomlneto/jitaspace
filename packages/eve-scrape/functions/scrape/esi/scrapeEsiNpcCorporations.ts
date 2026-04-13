@@ -112,7 +112,7 @@ export const scrapeEsiNpcCorporations = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
           ),
       fetchRemoteEntries: async () =>
         characters.map((character) => ({
@@ -174,7 +174,7 @@ export const scrapeEsiNpcCorporations = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
           ),
       fetchRemoteEntries: async () =>
         npcCorporations.map((corporation) => ({

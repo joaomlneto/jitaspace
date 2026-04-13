@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 
-import { prisma } from "@jitaspace/db";
+import { Prisma, prisma } from "@jitaspace/db";
 import { getUniverseBloodlines } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";
@@ -44,7 +44,9 @@ export const scrapeEsiBloodlines = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: async () =>
         bloodlines.map((bloodline) => ({

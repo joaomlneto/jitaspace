@@ -44,7 +44,7 @@ export const scrapeEsiMarketGroups = client.createFunction(
         },
       })
       .then((entries) =>
-        entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+        entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
       );
 
     const marketGroupIdsInDatabase = localEntries.map(
