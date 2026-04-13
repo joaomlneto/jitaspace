@@ -2,7 +2,6 @@
 
 import type { ContextModalProps } from "@mantine/modals";
 import type { AxiosError } from "axios";
-
 import { Button, Grid, Stack, TextInput, Title } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { showNotification } from "@mantine/notifications";
@@ -25,7 +24,7 @@ export function ManageMailLabelsModal({
 }>) {
   const character = useSelectedCharacter();
   const characterId = character?.characterId;
-  const { accessToken, authHeaders: _authHeaders } = useAccessToken({
+  const { accessToken, authHeaders } = useAccessToken({
     characterId,
     scopes: ["esi-mail.organize_mail.v1"],
   });
@@ -68,9 +67,7 @@ export function ManageMailLabelsModal({
                   name: values.name,
                   color: values.color,
                 },
-                {
-                  token: accessToken,
-                },
+                authHeaders,
               );
 
               if (result.status >= 200 && result.status < 300) {

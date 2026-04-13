@@ -6,7 +6,6 @@ import { SolarSystemStarAvatar } from "@jitaspace/ui";
 
 import classes from "./Button.module.css";
 
-
 export interface SolarSystemButtonProps {
   solarSystemId?: number;
 }
@@ -15,7 +14,6 @@ export const SolarSystemButton = memo(
   ({ solarSystemId }: SolarSystemButtonProps) => {
     const { data } = useSolarSystem(
       solarSystemId ?? 0,
-      {},
       {},
       { query: { enabled: solarSystemId !== undefined } },
     );

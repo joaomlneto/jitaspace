@@ -97,12 +97,7 @@ export function MessageMenu({
                           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                             [...(mail.labels ?? []), label.label_id!],
                     },
-                    {},
-                    {
-                      headers: {
-                        ...authHeaders,
-                      },
-                    },
+                    authHeaders,
                   );
 
                   // optimistic update
@@ -173,10 +168,7 @@ export function MessageMenu({
                 {
                   read: !mail.is_read,
                 },
-                {},
-                {
-                  headers: { ...authHeaders },
-                },
+                authHeaders,
               );
               if (data) {
                 data.find((item) => item.mail_id === mail.mail_id)!.is_read =
@@ -230,12 +222,7 @@ export function MessageMenu({
                   await deleteCharactersCharacterIdMailMailId(
                     characterId,
                     mail.mail_id,
-                    {},
-                    {
-                      headers: {
-                        ...authHeaders,
-                      },
-                    },
+                    authHeaders,
                   );
                   if (data) {
                     data.find(
