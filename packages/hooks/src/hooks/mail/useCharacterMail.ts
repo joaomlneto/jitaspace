@@ -4,7 +4,6 @@ import { useGetCharactersCharacterIdMailMailId } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 
-
 export function useCharacterMail(characterId: number, messageId?: number) {
   const { accessToken, authHeaders } = useAccessToken({
     characterId,
@@ -14,7 +13,6 @@ export function useCharacterMail(characterId: number, messageId?: number) {
   return useGetCharactersCharacterIdMailMailId(
     characterId ?? 0,
     messageId ?? 0,
-    {},
     { ...authHeaders },
     {
       query: {

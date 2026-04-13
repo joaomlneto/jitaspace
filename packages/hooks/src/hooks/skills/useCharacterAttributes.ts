@@ -4,7 +4,6 @@ import { useGetCharactersCharacterIdAttributes } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 
-
 export const useCharacterAttributes = (characterId: number) => {
   const { accessToken, authHeaders } = useAccessToken({
     characterId,
@@ -13,7 +12,6 @@ export const useCharacterAttributes = (characterId: number) => {
 
   return useGetCharactersCharacterIdAttributes(
     characterId ?? 0,
-    {},
     { ...authHeaders },
     {
       query: {

@@ -17,7 +17,6 @@ export function useCharacterMailLabels(characterId: number) {
 
   const labels = useGetCharactersCharacterIdMailLabels(
     characterId ?? 0,
-    {},
     { ...authHeaders },
     {
       query: {
@@ -54,12 +53,7 @@ export function useCharacterMailLabels(characterId: number) {
     await deleteCharactersCharacterIdMailLabelsLabelId(
       characterId!,
       labelId,
-      {},
-      {
-        headers: {
-          ...authHeaders,
-        },
-      },
+      authHeaders,
     );
 
     // TODO mutate the labels state in React Query

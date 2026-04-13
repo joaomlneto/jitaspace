@@ -19,7 +19,6 @@ export const useCalendarEvent = (characterId?: number, eventId?: number) => {
   const eventData = useGetCharactersCharacterIdCalendarEventId(
     characterId ?? 0,
     eventId ?? 0,
-    {},
     { ...authHeaders },
     {
       query: {

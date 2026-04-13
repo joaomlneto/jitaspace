@@ -1,6 +1,6 @@
 "use client";
 
-import { GetCharactersCharacterIdRoles200RolesEnum } from "@jitaspace/esi-client";
+import { CharactersCharacterIdRolesGetRolesEnum } from "@jitaspace/esi-client";
 import { ESIScope } from "@jitaspace/esi-metadata";
 
 import { CharacterSsoSession, useAuthStore } from "./useAuthStore";
@@ -16,7 +16,7 @@ export const useAccessToken = (options: {
   corporationId?: number;
   allianceId?: number;
   scopes?: ESIScope[];
-  roles?: GetCharactersCharacterIdRoles200RolesEnum[];
+  roles?: CharactersCharacterIdRolesGetRolesEnum[];
 }): {
   character: CharacterSsoSession | null;
   accessToken: string | null;

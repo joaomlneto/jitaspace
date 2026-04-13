@@ -7,7 +7,6 @@ import {
 
 import { useAccessToken } from "../auth";
 
-
 export type CharacterSkill =
   GetCharactersCharacterIdSkillsQueryResponse["skills"][number];
 
@@ -21,7 +20,6 @@ export const useCharacterSkills = (characterId: number) => {
     hasToken: !!accessToken,
     ...useGetCharactersCharacterIdSkills(
       characterId ?? 1,
-      {},
       { ...authHeaders },
       {
         query: {

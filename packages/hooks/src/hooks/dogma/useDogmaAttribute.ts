@@ -11,7 +11,6 @@ export const useDogmaAttribute = (attributeId: number) => {
   return useGetDogmaAttributesAttributeId(
     attributeId,
     {},
-    {},
     {
       query: {
         enabled: attributeIds?.data.includes(attributeId),

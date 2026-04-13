@@ -33,8 +33,7 @@ export const useCorporationAssets = (corporationId?: number) => {
               {
                 page: pageParam as number,
               },
-              {},
-              { headers: { ...authHeaders } },
+              { ...authHeaders },
             ),
           getNextPageParam: (lastPage, pages) => {
             const numPages: number | undefined = lastPage.headers?.["x-pages"];

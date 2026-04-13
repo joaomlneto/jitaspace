@@ -4,7 +4,6 @@ import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 
-
 export const useCharacterSkillQueue = (characterId: number) => {
   const { accessToken, authHeaders } = useAccessToken({
     characterId,
@@ -12,7 +11,6 @@ export const useCharacterSkillQueue = (characterId: number) => {
   });
   return useGetCharactersCharacterIdSkillqueue(
     characterId ?? 1,
-    {},
     { ...authHeaders },
     {
       query: {
