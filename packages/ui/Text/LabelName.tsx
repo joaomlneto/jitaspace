@@ -1,15 +1,12 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import { memo } from "react";
-import { Text, type TextProps } from "@mantine/core";
+import { Text } from "@mantine/core";
 
 import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
 import { humanLabelName } from "@jitaspace/utils";
-
-
-
-
 
 export type LabelNameProps = TextProps & {
   characterId: number;
@@ -25,7 +22,6 @@ export const LabelName = memo(
 
     const { data: labels } = useGetCharactersCharacterIdMailLabels(
       characterId ?? 1,
-      {},
       { ...authHeaders },
       {
         query: {

@@ -1,13 +1,10 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Text, type TextProps } from "@mantine/core";
+import { Text } from "@mantine/core";
 
 import { useGetUniverseStargatesStargateId } from "@jitaspace/esi-client";
-
-
-
-
 
 export type StargateNameProps = TextProps & {
   stargateId?: number;
@@ -16,7 +13,6 @@ export const StargateName = memo(
   ({ stargateId, ...otherProps }: StargateNameProps) => {
     const { data } = useGetUniverseStargatesStargateId(
       stargateId ?? 0,
-      {},
       {},
       { query: { enabled: !!stargateId } },
     );

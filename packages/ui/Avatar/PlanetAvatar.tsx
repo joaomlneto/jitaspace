@@ -7,7 +7,6 @@ import { useGetUniversePlanetsPlanetId } from "@jitaspace/esi-client";
 
 import { TypeAvatar } from "./TypeAvatar";
 
-
 export type PlanetAvatarProps = Omit<AvatarProps, "src"> & {
   planetId?: string | number | null;
 };
@@ -15,8 +14,7 @@ export type PlanetAvatarProps = Omit<AvatarProps, "src"> & {
 export const PlanetAvatar = memo(
   ({ planetId, ...otherProps }: PlanetAvatarProps) => {
     const { data } = useGetUniversePlanetsPlanetId(
-      typeof planetId === "string" ? parseInt(planetId) : planetId ?? 1,
-      {},
+      typeof planetId === "string" ? parseInt(planetId) : (planetId ?? 1),
       {},
       { query: { enabled: !!planetId } },
     );

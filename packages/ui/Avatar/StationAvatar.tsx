@@ -7,7 +7,6 @@ import { useGetUniverseStationsStationId } from "@jitaspace/esi-client";
 
 import { TypeAvatar } from "./TypeAvatar";
 
-
 export type StationAvatarProps = Omit<AvatarProps, "src"> & {
   stationId?: string | number | null;
 };
@@ -15,8 +14,7 @@ export type StationAvatarProps = Omit<AvatarProps, "src"> & {
 export const StationAvatar = memo(
   ({ stationId, ...otherProps }: StationAvatarProps) => {
     const { data } = useGetUniverseStationsStationId(
-      typeof stationId === "string" ? parseInt(stationId) : stationId ?? 1,
-      {},
+      typeof stationId === "string" ? parseInt(stationId) : (stationId ?? 1),
       {},
       {
         query: {

@@ -8,10 +8,6 @@ import { postUiOpenwindowMarketdetails } from "@jitaspace/esi-client";
 import { MarketIcon } from "@jitaspace/eve-icons";
 import { useAccessToken } from "@jitaspace/hooks";
 
-
-
-
-
 type OpenMarketWindowActionIconProps = {
   characterId: number;
   typeId?: string | number;
@@ -40,11 +36,7 @@ export const OpenMarketWindowActionIcon = memo(
                   type_id:
                     typeof typeId === "string" ? parseInt(typeId) : typeId,
                 },
-                {
-                  headers: {
-                    ...authHeaders,
-                  },
-                },
+                authHeaders,
               ).then(() => {
                 showNotification({
                   message: "Market window opened in EVE client.",

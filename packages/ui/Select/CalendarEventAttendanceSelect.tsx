@@ -34,7 +34,6 @@ export const CalendarEventAttendanceSelect = memo(
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
         typeof eventId === "string" ? parseInt(eventId) : (eventId ?? 0),
-        {},
         { ...authHeaders },
         {
           query: {
@@ -101,8 +100,7 @@ export const CalendarEventAttendanceSelect = memo(
                   response:
                     newValue as PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
                 },
-                {},
-                { headers: { ...authHeaders } },
+                authHeaders,
               );
             },
           });

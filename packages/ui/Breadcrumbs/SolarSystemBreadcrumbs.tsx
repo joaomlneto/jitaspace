@@ -1,7 +1,8 @@
 "use client";
 
+import type { BreadcrumbsProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Breadcrumbs, TextProps, type BreadcrumbsProps } from "@mantine/core";
+import { Breadcrumbs, TextProps } from "@mantine/core";
 
 import {
   useGetUniverseConstellationsConstellationId,
@@ -14,7 +15,6 @@ import {
   SolarSystemAnchor,
 } from "../Anchor";
 import { ConstellationName, RegionName, SolarSystemName } from "../Text";
-
 
 export type SolarSystemBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   solarSystemId?: string | number;
@@ -32,8 +32,7 @@ export const SolarSystemBreadcrumbs = memo(
     const { data: solarSystem } = useGetUniverseSystemsSystemId(
       typeof solarSystemId === "string"
         ? parseInt(solarSystemId)
-        : solarSystemId ?? 0,
-      {},
+        : (solarSystemId ?? 0),
       {},
       {
         query: { enabled: solarSystemId !== undefined },
@@ -41,7 +40,6 @@ export const SolarSystemBreadcrumbs = memo(
     );
     const { data: constellation } = useGetUniverseConstellationsConstellationId(
       solarSystem?.data.constellation_id ?? 0,
-      {},
       {},
       {
         query: {

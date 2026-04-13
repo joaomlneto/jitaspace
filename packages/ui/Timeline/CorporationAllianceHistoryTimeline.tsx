@@ -1,25 +1,16 @@
 "use client";
 
+import type { TimelineProps } from "@mantine/core";
 import React, { memo, useMemo } from "react";
 import Link from "next/link";
-import {
-  Anchor,
-  Badge,
-  Group,
-  Text,
-  Timeline,
-  type TimelineProps,
-} from "@mantine/core";
+import { Anchor, Badge, Group, Text, Timeline } from "@mantine/core";
 import { format } from "date-fns";
 
-import {
-  useGetCorporationsCorporationIdAlliancehistory,
-  type GetCorporationsCorporationIdAlliancehistoryQueryResponse,
-} from "@jitaspace/esi-client";
+import type { GetCorporationsCorporationIdAlliancehistoryQueryResponse } from "@jitaspace/esi-client";
+import { useGetCorporationsCorporationIdAlliancehistory } from "@jitaspace/esi-client";
 
 import { AllianceAvatar } from "../Avatar";
 import { AllianceName } from "../Text";
-
 
 type CorporationAllianceHistoryTimelineProps = Omit<
   TimelineProps,
@@ -32,8 +23,7 @@ export const CorporationAllianceHistoryTimeline = memo(
     const { data } = useGetCorporationsCorporationIdAlliancehistory(
       typeof corporationId === "string"
         ? parseInt(corporationId)
-        : corporationId ?? 0,
-      {},
+        : (corporationId ?? 0),
       {},
       { query: { enabled: !!corporationId } },
     );

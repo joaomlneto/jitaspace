@@ -8,7 +8,6 @@ import { useAccessToken } from "@jitaspace/hooks";
 
 import { EveEntityCard } from "./EveEntityCard";
 
-
 export type EveMailSenderCardProps = {
   characterId: number;
   messageId?: number;
@@ -24,7 +23,6 @@ export const EveMailSenderCard = memo(
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      {},
       { ...authHeaders },
       {
         query: {

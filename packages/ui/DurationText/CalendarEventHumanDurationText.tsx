@@ -1,14 +1,14 @@
 "use client";
 
-import { memo } from "react";
-import { Skeleton, Text, type TextProps } from "@mantine/core";
+import type { TextProps } from "@mantine/core";
 import type humanizeDuration from "humanize-duration";
+import { memo } from "react";
+import { Skeleton, Text } from "@mantine/core";
 
 import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
 
 import { HumanDurationText } from "./HumanDurationText";
-
 
 export type CalendarEventHumanDurationTextProps = TextProps & {
   characterId: number;
@@ -33,7 +33,6 @@ export const CalendarEventHumanDurationText = memo(
     } = useGetCharactersCharacterIdCalendarEventId(
       characterId ?? 1,
       eventId ?? 1,
-      {},
       { ...authHeaders },
       {
         query: {

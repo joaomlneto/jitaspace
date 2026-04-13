@@ -9,7 +9,6 @@ import { AllianceAvatar } from "./AllianceAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
 import { EveEntityAvatar } from "./EveEntityAvatar";
 
-
 export type WarDefenderAvatarProps = Omit<AvatarProps, "src"> & {
   warId?: number;
 };
@@ -17,8 +16,7 @@ export type WarDefenderAvatarProps = Omit<AvatarProps, "src"> & {
 export const WarDefenderAvatar = memo(
   ({ warId, ...otherProps }: WarDefenderAvatarProps) => {
     const { data } = useGetWarsWarId(
-      typeof warId === "string" ? parseInt(warId) : warId ?? 0,
-      {},
+      typeof warId === "string" ? parseInt(warId) : (warId ?? 0),
       {},
       {
         query: {

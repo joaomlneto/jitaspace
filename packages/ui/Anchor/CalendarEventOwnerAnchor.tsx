@@ -9,7 +9,6 @@ import { useAccessToken } from "@jitaspace/hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
 
-
 export type CalendarEventOwnerAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
@@ -31,7 +30,6 @@ export const CalendarEventOwnerAnchor = memo(
     const { data: event } = useGetCharactersCharacterIdCalendarEventId(
       characterId ?? 0,
       eventId ?? 0,
-      {},
       { ...authHeaders },
       {
         query: {

@@ -1,8 +1,9 @@
 "use client";
 
+import type { AnchorProps } from "@mantine/core";
 import { memo } from "react";
 import { type LinkProps } from "next/link";
-import { Anchor, type AnchorProps } from "@mantine/core";
+import { Anchor } from "@mantine/core";
 
 import {
   useGetCharactersCharacterIdMailLists,
@@ -11,7 +12,6 @@ import {
 import { useAccessToken } from "@jitaspace/hooks";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
-
 
 export type EveMailSenderNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
@@ -33,7 +33,6 @@ export const EveMailSenderAnchor = memo(
     const { data: mail } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      {},
       { ...authHeaders },
       {
         query: {
@@ -44,7 +43,6 @@ export const EveMailSenderAnchor = memo(
 
     const { data: mailingLists } = useGetCharactersCharacterIdMailLists(
       characterId ?? 1,
-      {},
       { ...authHeaders },
       {
         query: {

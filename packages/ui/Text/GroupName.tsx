@@ -1,13 +1,10 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Skeleton, Text, type TextProps } from "@mantine/core";
+import { Skeleton, Text } from "@mantine/core";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
-
-
-
-
 
 export type GroupNameProps = TextProps & {
   groupId?: number;
@@ -16,7 +13,6 @@ export type GroupNameProps = TextProps & {
 export const GroupName = memo(({ groupId, ...otherProps }: GroupNameProps) => {
   const { data, isLoading } = useGetUniverseGroupsGroupId(
     groupId ?? 1,
-    {},
     {},
     { query: { enabled: !!groupId } },
   );

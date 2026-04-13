@@ -1,7 +1,8 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Skeleton, Text, type TextProps } from "@mantine/core";
+import { Skeleton, Text } from "@mantine/core";
 
 import {
   useGetCharactersCharacterIdMailLists,
@@ -10,7 +11,6 @@ import {
 import { useAccessToken } from "@jitaspace/hooks";
 
 import { EveEntityName } from "./index";
-
 
 export type EveMailSenderNameProps = TextProps & {
   characterId: number;
@@ -26,7 +26,6 @@ export const EveMailSenderName = memo(
     const { data: mail, isLoading } = useGetCharactersCharacterIdMailMailId(
       characterId ?? 0,
       messageId ?? 0,
-      {},
       { ...authHeaders },
       {
         query: {
@@ -38,7 +37,6 @@ export const EveMailSenderName = memo(
     const { data: mailingLists, isLoading: mailingListsLoading } =
       useGetCharactersCharacterIdMailLists(
         characterId ?? 1,
-        {},
         { ...authHeaders },
         {
           query: {
