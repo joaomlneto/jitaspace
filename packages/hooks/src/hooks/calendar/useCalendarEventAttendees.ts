@@ -1,18 +1,18 @@
 "use client";
 
 import {
-  GetCharactersCharacterIdCalendarEventIdAttendees200EventResponseEnum,
-  GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse,
+  CharactersCharacterIdCalendarEventIdAttendeesGet,
+  CharactersCharacterIdCalendarEventIdAttendeesGetEventResponseEnum,
   useGetCharactersCharacterIdCalendarEventIdAttendees,
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 
 export type CalendarEventAttendee =
-  GetCharactersCharacterIdCalendarEventIdAttendeesQueryResponse[number];
+  CharactersCharacterIdCalendarEventIdAttendeesGet[number];
 
 export type CalendarEventAttendeeResponse =
-  GetCharactersCharacterIdCalendarEventIdAttendees200EventResponseEnum;
+  CharactersCharacterIdCalendarEventIdAttendeesGetEventResponseEnum;
 
 export const useCalendarEventAttendees = (
   characterId?: number,
@@ -26,7 +26,6 @@ export const useCalendarEventAttendees = (
   return useGetCharactersCharacterIdCalendarEventIdAttendees(
     characterId ?? 0,
     eventId ?? 0,
-    {},
     { ...authHeaders },
     {
       query: {

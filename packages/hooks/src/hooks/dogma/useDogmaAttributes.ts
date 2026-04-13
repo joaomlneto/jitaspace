@@ -5,13 +5,11 @@ import { useEffect, useState } from "react";
 import {
   getDogmaAttributesAttributeId,
   GetDogmaAttributesAttributeIdHeaderParams,
-  GetDogmaAttributesAttributeIdQueryParams,
   GetDogmaAttributesAttributeIdQueryResponse,
 } from "@jitaspace/esi-client";
 
 export const useDogmaAttributes = (
   attributeIds: number[],
-  params?: GetDogmaAttributesAttributeIdQueryParams,
   headers?: GetDogmaAttributesAttributeIdHeaderParams,
 ) => {
   const [results, setResults] = useState<
@@ -22,7 +20,7 @@ export const useDogmaAttributes = (
     const fetchResults = async () => {
       const responses = await Promise.all(
         attributeIds.map((typeId) =>
-          getDogmaAttributesAttributeId(typeId, params, headers),
+          getDogmaAttributesAttributeId(typeId, headers),
         ),
       );
       const results: Record<
@@ -33,7 +31,7 @@ export const useDogmaAttributes = (
       setResults(results);
     };
     void fetchResults();
-  }, [attributeIds, params, headers]);
+  }, [attributeIds, headers]);
 
   return { data: results };
 };

@@ -10,7 +10,6 @@ export const useDogmaEffect = (effectId: number) => {
   return useGetDogmaEffectsEffectId(
     effectId,
     {},
-    {},
     {
       query: {
         enabled: effectIds?.data.includes(effectId),

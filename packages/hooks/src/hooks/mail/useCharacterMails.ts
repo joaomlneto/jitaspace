@@ -43,8 +43,7 @@ export function useCharacterMails(characterId?: number, labels: number[] = []) {
                 // @ts-expect-error generated code parses this wrong as url param
                 labels: labels !== undefined ? labels.join(",") : undefined,
               },
-              {},
-              { headers: { ...authHeaders } },
+              { ...authHeaders },
             ),
           getNextPageParam: (lastPage) => {
             if (lastPage.data.length != 50) return undefined;

@@ -26,7 +26,6 @@ export function useCharacterContacts(characterId: number) {
 
   const { data: labels } = useGetCharactersCharacterIdContactsLabels(
     characterId ?? 0,
-    {},
     { ...authHeaders },
     {
       query: {
@@ -51,8 +50,7 @@ export function useCharacterContacts(characterId: number) {
               {
                 page: pageParam as number,
               },
-              {},
-              { headers: { ...authHeaders } },
+              { ...authHeaders },
             ),
           getNextPageParam: (lastPage, pages) => {
             const numPages: number | undefined = lastPage.headers?.["x-pages"];

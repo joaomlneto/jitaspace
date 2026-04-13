@@ -5,13 +5,11 @@ import { useEffect, useState } from "react";
 import {
   getUniverseTypesTypeId,
   GetUniverseTypesTypeIdHeaderParams,
-  GetUniverseTypesTypeIdQueryParams,
   GetUniverseTypesTypeIdQueryResponse,
 } from "@jitaspace/esi-client";
 
 export const useTypes = (
   typeIds: number[],
-  params?: GetUniverseTypesTypeIdQueryParams,
   headers?: GetUniverseTypesTypeIdHeaderParams,
 ) => {
   const [results, setResults] = useState<
@@ -21,16 +19,14 @@ export const useTypes = (
   useEffect(() => {
     const fetchResults = async () => {
       const responses = await Promise.all(
-        typeIds.map((typeId) =>
-          getUniverseTypesTypeId(typeId, params, headers),
-        ),
+        typeIds.map((typeId) => getUniverseTypesTypeId(typeId, headers)),
       );
       const results: Record<number, GetUniverseTypesTypeIdQueryResponse> = {};
       responses.forEach((res) => (results[res.data.type_id] = res.data));
       setResults(results);
     };
     void fetchResults();
-  }, [typeIds, params, headers]);
+  }, [typeIds, headers]);
 
   return { data: results };
 };

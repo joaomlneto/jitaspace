@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { GetCharactersCharacterId200GenderEnum } from "@jitaspace/esi-client";
+import { CharactersDetailGenderEnum } from "@jitaspace/esi-client";
 import { isIdInRanges, npcCharacterIdRanges } from "@jitaspace/esi-metadata";
 import {
   useGetAgentInSpaceById,
@@ -20,7 +20,7 @@ export type PlayerCharacter = {
   corporationId: number;
   description?: string;
   factionId?: number;
-  gender: GetCharactersCharacterId200GenderEnum;
+  gender: CharactersDetailGenderEnum;
   name: string;
   raceId: number;
   securityStatus?: number;

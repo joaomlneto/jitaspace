@@ -4,7 +4,6 @@ import { useGetCharactersCharacterIdWallet } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 
-
 export const useCharacterWalletBalance = (characterId?: number) => {
   const { accessToken, authHeaders } = useAccessToken({
     characterId,
@@ -15,7 +14,6 @@ export const useCharacterWalletBalance = (characterId?: number) => {
     isAllowed: !!accessToken,
     ...useGetCharactersCharacterIdWallet(
       characterId ?? 0,
-      {},
       { ...authHeaders },
       {
         query: {

@@ -1,12 +1,9 @@
 {
   "extends": "@jitaspace/tsconfig/internal-package.json",
-  "include": [
-    "."
-  ],
-  "exclude": [
-    "node_modules"
-  ],
+  "include": ["."],
+  "exclude": ["node_modules", "dist"],
   "compilerOptions": {
+    "jsx": "react-jsx",
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   }
 }

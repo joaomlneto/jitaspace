@@ -4,7 +4,6 @@ import { useGetCharactersCharacterIdNotifications } from "@jitaspace/esi-client"
 
 import { useAccessToken } from "../auth";
 
-
 export const useEsiCharacterNotifications = (characterId?: number) => {
   const { accessToken, authHeaders } = useAccessToken({
     characterId,
@@ -12,7 +11,6 @@ export const useEsiCharacterNotifications = (characterId?: number) => {
   });
   return useGetCharactersCharacterIdNotifications(
     characterId ?? 0,
-    {},
     { ...authHeaders },
     {
       query: {

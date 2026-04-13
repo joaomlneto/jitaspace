@@ -16,7 +16,6 @@ export const useStructure = (structureId: number, characterId?: number) => {
   });
   return useGetUniverseStructuresStructureId(
     structureId,
-    {},
     { ...authHeaders },
     {
       query: {

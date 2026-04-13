@@ -14,7 +14,6 @@ export function useTypeMarketOrders(typeId?: number) {
   >([]);
   const { data: regions } = useGetUniverseRegions(
     {},
-    {},
     { query: { enabled: typeId !== undefined } },
   );
 
