@@ -25,18 +25,22 @@ export const chat = new Chat({
 chat.onNewMention(async (thread) => {
   await thread.subscribe();
   await thread.post(
-    <Card title="Support">
-      <Text>
-        Hey! I'm here to help. Ask your question in this thread and I'll do my
-        best to answer it.
-      </Text>
-      <Divider />
-      <Actions>
-        <Button id="escalate" style="danger">
-          Do not click this test button
-        </Button>
-      </Actions>
-    </Card>,
+    Card({
+      title: "Support",
+      children: [
+        Text(
+          "Hey! I'm here to help. Ask your question in this thread and I'll do my best to answer it.",
+        ),
+        Divider(),
+        Actions([
+          Button({
+            id: "escalate",
+            style: "danger",
+            label: "Do not click this test button",
+          }),
+        ]),
+      ],
+    }),
   );
 });
 
