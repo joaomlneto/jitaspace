@@ -26,8 +26,6 @@ packages
   |   └─ database client and utilities, based on Prisma
   ├─ esi-client
   |   └─ Generated Typescript/React client for ESI API
-  ├─ esi-meta-client
-  |   └─ Generated Typescript/React client for ESI Meta API
   ├─ esi-metadata
   |   └─ A bunch of ESI metadata, such as scopes, ID ranges, mapping of endpoints to scopes, …
   ├─ eve-icons

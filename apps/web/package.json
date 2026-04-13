@@ -25,7 +25,6 @@
     "@jitaspace/chat": "workspace:*",
     "@jitaspace/db": "workspace:*",
     "@jitaspace/esi-client": "workspace:*",
-    "@jitaspace/esi-meta-client": "workspace:*",
     "@jitaspace/esi-metadata": "workspace:*",
     "@jitaspace/eve-icons": "workspace:*",
     "@jitaspace/eve-scrape": "workspace:*",
