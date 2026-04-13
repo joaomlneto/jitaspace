@@ -35,7 +35,7 @@ export default defineConfig(({ config, watch, logLevel }) => {
         override: [
           {
             type: "path",
-            pattern: "^/characters/{character_id}/calendar/$",
+            pattern: "^/characters/{character_id}/calendar/?$",
             options: {
               infinite: {
                 queryParam: "from_event",
@@ -46,7 +46,7 @@ export default defineConfig(({ config, watch, logLevel }) => {
           },
           {
             type: "path",
-            pattern: "^/characters/{character_id}/assets/$",
+            pattern: "^/characters/{character_id}/assets/?$",
             options: {
               infinite: {
                 queryParam: "page",
@@ -56,7 +56,7 @@ export default defineConfig(({ config, watch, logLevel }) => {
           },
           {
             type: "path",
-            pattern: "^/corporations/{corporation_id}/assets/$",
+            pattern: "^/corporations/{corporation_id}/assets/?$",
             options: {
               infinite: {
                 queryParam: "page",
@@ -66,7 +66,7 @@ export default defineConfig(({ config, watch, logLevel }) => {
           },
           {
             type: "path",
-            pattern: "^/alliances/{alliance_id}/contacts/$",
+            pattern: "^/alliances/{alliance_id}/contacts/?$",
             options: {
               infinite: {
                 queryParam: "page",
@@ -76,7 +76,7 @@ export default defineConfig(({ config, watch, logLevel }) => {
           },
           {
             type: "path",
-            pattern: "^/characters/{character_id}/contacts/$",
+            pattern: "^/characters/{character_id}/contacts/?$",
             options: {
               infinite: {
                 queryParam: "page",
@@ -86,7 +86,7 @@ export default defineConfig(({ config, watch, logLevel }) => {
           },
           {
             type: "path",
-            pattern: "^/corporations/{corporation_id}/contacts/$",
+            pattern: "^/corporations/{corporation_id}/contacts/?$",
             options: {
               infinite: {
                 queryParam: "page",
@@ -96,7 +96,7 @@ export default defineConfig(({ config, watch, logLevel }) => {
           },
           {
             type: "path",
-            pattern: "^/characters/{character_id}/mail/$",
+            pattern: "^/characters/{character_id}/mail/?$",
             options: {
               infinite: {
                 queryParam: "last_mail_id",

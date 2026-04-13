@@ -8,7 +8,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf .turbo node_modules src/generated src/build-data.json",
-    "download-schema": "curl -L https://esi.evetech.net/latest/swagger.json | jq 'del(.paths.\"/route/{origin}/{destination}/\")' > swagger.json",
+    "download-schema": "curl -L \"https://esi.evetech.net/meta/openapi.json?compatibility_date=2025-12-16\" | jq 'del(.paths.\"/route/{origin}/{destination}/\") | (.. | objects | select(.name == \"X-Compatibility-Date\")) .required = false' > swagger.json",
     "get-esi-date": "node ./src/buildscript.js",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",

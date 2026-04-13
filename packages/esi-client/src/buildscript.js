@@ -7,9 +7,7 @@ const __filename = fileURLToPath(import.meta.url); // get the resolved path to t
 const __dirname = path.dirname(__filename); // get the name of the directory
 
 // get the current date in YYYY-MM-DD format
-const esiCurrentDateString = new Date(new Date().getTime() - 11 * 3600 * 1000)
-  .toISOString()
-  .split("T")[0];
+const esiCurrentDateString = "2025-12-16";
 
 // write build data to build-data.json
 writeFileSync(
