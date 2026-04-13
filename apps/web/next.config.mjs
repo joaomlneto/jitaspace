@@ -19,7 +19,6 @@ const config = {
     "@jitaspace/db",
     "@jitaspace/esi-metadata",
     "@jitaspace/esi-client",
-    "@jitaspace/esi-meta-client",
     "@jitaspace/eve-icons",
     "@jitaspace/eve-scrape",
     "@jitaspace/hooks",
