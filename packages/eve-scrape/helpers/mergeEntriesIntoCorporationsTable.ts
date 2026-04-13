@@ -11,7 +11,7 @@ export const convertEsiCorporationToDomain = (
   corporation: GetCorporationsCorporationIdQueryResponse & {
     corporationId: number;
   },
-): Omit<Corporation, "updatedAt"> => ({
+): Omit<Corporation, "updatedAt" | "createdAt"> => ({
   corporationId: corporation.corporationId,
   allianceId: corporation.alliance_id ?? null,
   ceoId: corporation.ceo_id,
@@ -43,7 +43,7 @@ export const mergeEsiEntriesIntoCorporationsTable = (
   );
 
 export const mergeEntriesIntoCorporationsTable = (
-  corporations: Omit<Corporation, "updatedAt">[],
+  corporations: Omit<Corporation, "updatedAt" | "createdAt">[],
   limit = pLimit(MAX_DB_PARALLELISM),
 ) =>
   updateTable({

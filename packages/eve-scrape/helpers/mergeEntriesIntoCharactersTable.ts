@@ -9,7 +9,7 @@ import { excludeObjectKeys, updateTable } from "../utils";
 
 export const convertEsiCharacterToDomain = (
   character: GetCharactersCharacterIdQueryResponse & { characterId: number },
-): Omit<Character, "updatedAt"> => ({
+): Omit<Character, "updatedAt" | "createdAt"> => ({
   characterId: character.characterId,
   birthday: new Date(character.birthday),
   bloodlineId: character.bloodline_id,
@@ -32,7 +32,7 @@ export const mergeEsiEntriesIntoCharactersTable = (
   mergeEntriesIntoCharactersTable(characters.map(convertEsiCharacterToDomain));
 
 export const mergeEntriesIntoCharactersTable = (
-  characters: Omit<Character, "updatedAt">[],
+  characters: Omit<Character, "updatedAt" | "createdAt">[],
   limit = pLimit(MAX_DB_PARALLELISM),
 ) =>
   updateTable({

@@ -192,6 +192,8 @@ const formatLag = (latest: bigint | null, cursor: bigint | null) => {
   return (latest > cursor ? latest - cursor : 0n).toString();
 };
 
+export type ScrapeRecentKillsEventPayload = {};
+
 export const scrapeZkillboardRecentKills = client.createFunction(
   {
     id: "scrape-zkillboard-recent-kills",

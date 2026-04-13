@@ -78,7 +78,7 @@ export const scrapeEsiPlanets = client.createFunction(
                 })
                 .then((entries) =>
                   entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt"]),
+                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
                   ),
                 ),
             fetchRemoteEntries: async () =>

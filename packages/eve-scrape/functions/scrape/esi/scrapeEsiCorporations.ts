@@ -119,7 +119,7 @@ export const scrapeEsiCorporations = client.createFunction(
                 })
                 .then((entries) =>
                   entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt"]),
+                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
                   ),
                 ),
             fetchRemoteEntries: async () =>
@@ -180,7 +180,7 @@ export const scrapeEsiCorporations = client.createFunction(
                 })
                 .then((entries) =>
                   entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt"]),
+                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
                   ),
                 ),
             fetchRemoteEntries: async () =>

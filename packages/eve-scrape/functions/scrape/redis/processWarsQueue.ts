@@ -40,7 +40,7 @@ export const processRedisWars = client.createFunction(
 
       const thisBatchWarIds = remoteEntries.map((war) => war.id);
 
-      const wars: Record<number, Omit<War, "updatedAt">> = {};
+      const wars: Record<number, Omit<War, "updatedAt" | "createdAt">> = {};
       remoteEntries.forEach((war) => {
         wars[war.id] = {
           warId: war.id,
@@ -79,7 +79,7 @@ export const processRedisWars = client.createFunction(
         };
       });
 
-      await createCorpAndItsRefRecords({ wars: remoteEntries });
+      await createCorpAndItsRefRecords({ wars: Object.values(wars) });
 
       const warChanges = await updateTable({
         fetchLocalEntries: async () =>
@@ -111,7 +111,9 @@ export const processRedisWars = client.createFunction(
               },
             })
             .then((entries) =>
-              entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+              entries.map((entry) =>
+                excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              ),
             ),
         fetchRemoteEntries: async () =>
           Promise.all(
