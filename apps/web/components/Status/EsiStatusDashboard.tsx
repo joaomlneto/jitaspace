@@ -24,10 +24,6 @@ const statusToColor: Record<string, string> = {
   Down: "red",
   Recovering: "orange",
   Unknown: "gray",
-  // Old client used these
-  green: "green",
-  yellow: "yellow",
-  red: "red",
 };
 
 export interface EsiStatusDashboardProps {
@@ -45,7 +41,7 @@ export function EsiStatusDashboard({
     { query: { refetchInterval: 30 * 1000 } },
   );
 
-  // Group esiStatus object by their tags (or first path segment if no tags)
+  // Group routes by first path segment
   const esiStatusByGroup = useMemo(() => {
     const result: Record<string, MetaStatusRoutestatus[]> = {};
     const routes = esiStatus?.data.routes ?? [];
@@ -53,15 +49,8 @@ export function EsiStatusDashboard({
     routes
       .filter((entry) => showAllEsiEndpoints || entry.status !== "OK")
       .forEach((entry) => {
-        // The new ESI spec might not have 'tags' in the same way,
-        // let's use the first path segment as a group if tags are missing.
-        const tags = (entry as any).tags ?? [];
-        const groups =
-          tags.length > 0 ? tags : [entry.path.split("/")[1] || "Other"];
-
-        groups.forEach((group: string) => {
-          result[group] = [...(result[group] ?? []), entry];
-        });
+        const group = entry.path.split("/")[1] || "Other";
+        result[group] = [...(result[group] ?? []), entry];
       });
     return result;
   }, [esiStatus, showAllEsiEndpoints]);

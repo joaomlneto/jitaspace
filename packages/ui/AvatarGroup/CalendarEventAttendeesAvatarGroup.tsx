@@ -1,8 +1,8 @@
 "use client";
 
-import type { AvatarProps } from "@mantine/core";
+import type { AvatarGroupProps, AvatarProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Avatar, AvatarGroupProps, Skeleton, Tooltip } from "@mantine/core";
+import { Avatar, Skeleton, Tooltip } from "@mantine/core";
 
 import { useGetCharactersCharacterIdCalendarEventIdAttendees } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
