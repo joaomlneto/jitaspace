@@ -1,4 +1,5 @@
 export * from "./AllianceName";
+export * from "./AncestryName";
 export * from "./AssetLocationName";
 export * from "./AsteroidBeltName";
 export * from "./BloodlineName";
