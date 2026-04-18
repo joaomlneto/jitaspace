@@ -32,6 +32,9 @@
     "@jitaspace/fuzzworks-market-client": "workspace:*",
     "@jitaspace/sde-client": "workspace:*",
     "@react-hook/cache": "^1.1.1",
+    "@tanstack/db": "^0.6.4",
+    "@tanstack/query-db-collection": "^1.0.36",
+    "@tanstack/react-db": "^0.1.82",
     "@tanstack/react-query": "^5.81.5",
     "axios": "^1.9.0",
     "zustand": "^4.5.7"
