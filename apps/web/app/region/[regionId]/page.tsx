@@ -17,6 +17,7 @@ import { useRegion } from "@jitaspace/hooks";
 import { ConstellationName, RegionName } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
+
 export default function Page() {
   const params = useParams();
   const rawRegionId = params?.regionId;
@@ -85,7 +86,7 @@ export default function Page() {
         )}
         <Title order={4}>Constellations:</Title>
         <List>
-          {region?.data.constellations.map((constellationId) => (
+          {region?.data.constellations.map((constellationId: number) => (
             <List.Item key={constellationId}>
               <Anchor
                 component={Link}
