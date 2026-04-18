@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import { useGetMetaStatus } from "@jitaspace/esi-client";
+import { useServerStatus } from "@jitaspace/hooks";
+import { useGetVersion } from "@jitaspace/sde-client";
+import { FormattedDateText } from "@jitaspace/ui";
 import {
   ActionIcon,
   Anchor,
@@ -14,24 +17,25 @@ import {
   Stack,
   Text,
   Title,
-  Tooltip,
+  Tooltip
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconActivity,
-  IconCircleCheck,
-  IconCircleX,
-} from "@tabler/icons-react";
+import { IconActivity, IconCircleCheck, IconCircleX } from "@tabler/icons-react";
+import dynamic from "next/dynamic";
+import { useMemo } from "react";
 import useSwr from "swr";
 
-import { useGetMetaStatus } from "@jitaspace/esi-client";
-import { useServerStatus } from "@jitaspace/hooks";
-import { useGetVersion } from "@jitaspace/sde-client";
-import { FormattedDateText } from "@jitaspace/ui";
-
 import { env } from "~/env";
-
+import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
 import { EsiStatusDashboard } from "../../components/Status/EsiStatusDashboard";
+
+const DbCollectionsDashboard = dynamic(
+  () =>
+    import("../../components/Status/DbCollectionsDashboard").then(
+      (m) => m.DbCollectionsDashboard,
+    ),
+  { ssr: false },
+);
 
 export default function StatusPage() {
   const { data: sdeData, isLoading: sdeIsLoading } = useSwr<{
@@ -278,6 +282,9 @@ export default function StatusPage() {
             </Stack>
           </Card>
         </SimpleGrid>
+
+        <EsiRateLimitDashboard />
+        <DbCollectionsDashboard />
       </Stack>
 
       <Modal

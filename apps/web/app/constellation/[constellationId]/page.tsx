@@ -57,7 +57,7 @@ export default function Page() {
         )}
         Solar Systems:
         <List>
-          {constellation?.data.systems.map((systemId) => (
+          {constellation?.data.systems.map((systemId: number) => (
             <List.Item key={systemId}>
               <Group gap="xs">
                 <SolarSystemSecurityStatusBadge
