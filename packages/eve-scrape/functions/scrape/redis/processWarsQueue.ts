@@ -111,9 +111,7 @@ export const processRedisWars = client.createFunction(
               },
             })
             .then((entries) =>
-              entries.map((entry) =>
-                excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-              ),
+              entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
             ),
         fetchRemoteEntries: async () =>
           Promise.all(
