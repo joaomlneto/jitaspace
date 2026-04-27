@@ -44,6 +44,7 @@ import {
 } from "@jitaspace/ui";
 
 import { StatsGrid } from "~/components/UI";
+
 export default function Page() {
   const params = useParams();
   const rawSystemId = params?.systemId;
@@ -122,7 +123,7 @@ export default function Page() {
         </Group>
         <Title order={4}>Stations</Title>
         <Stack gap="xs">
-          {solarSystem?.data.stations?.map((stationId) => (
+          {solarSystem?.data.stations?.map((stationId: number) => (
             <Group key={stationId} gap="xs">
               <StationAvatar size="sm" stationId={stationId} />
               <StationAnchor stationId={stationId}>
@@ -133,7 +134,7 @@ export default function Page() {
         </Stack>
         <Title order={4}>Stargates</Title>
         <Stack gap="xs">
-          {solarSystem?.data.stargates?.map((stargateId) => (
+          {solarSystem?.data.stargates?.map((stargateId: number) => (
             <Group key={stargateId} gap="xs">
               <StargateAvatar size="sm" stargateId={stargateId} />
               <StargateDestinationAnchor stargateId={stargateId}>
@@ -153,7 +154,15 @@ export default function Page() {
             </Group>
           )}
           {solarSystem?.data.planets?.map(
-            ({ planet_id, moons, asteroid_belts }) => (
+            ({
+              planet_id,
+              moons,
+              asteroid_belts,
+            }: {
+              planet_id: number;
+              moons?: number[];
+              asteroid_belts?: number[];
+            }) => (
               <Group key={planet_id}>
                 <Group wrap="nowrap">
                   <PlanetAvatar planetId={planet_id} size="sm" />
@@ -162,14 +171,14 @@ export default function Page() {
                   </Anchor>
                 </Group>
                 <Group gap="xs">
-                  {moons?.map((moonId) => (
+                  {moons?.map((moonId: number) => (
                     <Tooltip label={<MoonName moonId={moonId} />} key={moonId}>
                       <div>
                         <TypeAvatar typeId={14} size="xs" />
                       </div>
                     </Tooltip>
                   ))}
-                  {asteroid_belts?.map((asteroidBeltId) => (
+                  {asteroid_belts?.map((asteroidBeltId: number) => (
                     <Tooltip
                       label={
                         <AsteroidBeltName asteroidBeltId={asteroidBeltId} />

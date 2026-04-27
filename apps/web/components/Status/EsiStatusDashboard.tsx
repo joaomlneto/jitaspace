@@ -83,7 +83,7 @@ export function EsiStatusDashboard({
           All ESI endpoints are currently operational.
         </Alert>
       ) : (
-        <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
+        <SimpleGrid cols={1} spacing="md">
           {sortedGroups.map((group) => (
             <Paper key={group} withBorder p="md" shadow="xs">
               <Stack gap="xs">
