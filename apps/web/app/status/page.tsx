@@ -1,9 +1,7 @@
 "use client";
 
-import { useGetMetaStatus } from "@jitaspace/esi-client";
-import { useServerStatus } from "@jitaspace/hooks";
-import { useGetVersion } from "@jitaspace/sde-client";
-import { FormattedDateText } from "@jitaspace/ui";
+import { useMemo } from "react";
+import dynamic from "next/dynamic";
 import {
   ActionIcon,
   Anchor,
@@ -17,13 +15,20 @@ import {
   Stack,
   Text,
   Title,
-  Tooltip
+  Tooltip,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconActivity, IconCircleCheck, IconCircleX } from "@tabler/icons-react";
-import dynamic from "next/dynamic";
-import { useMemo } from "react";
+import {
+  IconActivity,
+  IconCircleCheck,
+  IconCircleX,
+} from "@tabler/icons-react";
 import useSwr from "swr";
+
+import { useGetMetaStatus } from "@jitaspace/esi-client";
+import { useServerStatus } from "@jitaspace/hooks";
+import { useGetVersion } from "@jitaspace/sde-client";
+import { FormattedDateText } from "@jitaspace/ui";
 
 import { env } from "~/env";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
@@ -284,7 +289,6 @@ export default function StatusPage() {
         </SimpleGrid>
 
         <EsiRateLimitDashboard />
-        <DbCollectionsDashboard />
       </Stack>
 
       <Modal
