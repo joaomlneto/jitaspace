@@ -1,6 +1,6 @@
+import type { CardProps } from "@mantine/core";
 import type React from "react";
 import { memo } from "react";
-import type {CardProps} from "@mantine/core";
 
 import type { ItemsFlagEnum } from "@jitaspace/esi-client";
 import { useKillmail } from "@jitaspace/hooks";
@@ -80,7 +80,7 @@ export const EsiKillmailFittingCard = memo(
         name={`Killmail ${data?.data.killmail_id}`}
         description="Killmail Fitting"
         shipTypeId={data?.data.victim.ship_type_id}
-        items={(data?.data.victim.items ?? []).map((item) => ({
+        items={(data?.data.victim.items ?? []).map((item: any) => ({
           typeId: item.item_type_id,
           flag: killmailFlagToEnum[item.flag] ?? "Invalid",
           quantity: item.quantity_destroyed ?? 0 + (item.quantity_dropped ?? 0),
