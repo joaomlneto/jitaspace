@@ -34,6 +34,41 @@ export default function Page() {
           learn and play with ESI and web technologies.
         </Text>
         <Text size="sm">
+          I care a lot about privacy: all the data is fetched from the EVE
+          Online API, and is not stored on my servers.
+        </Text>
+        <Text size="sm">
+          I do track some usage statistics, but I do not collect any personally
+          identifiable information. The information collected is anonymized -
+          users cannot be identified and are never tracked across websites.
+          Information is processed and stored by: <br />
+          <Anchor
+            href="https://www.umami.is/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Umami Cloud
+          </Anchor>
+          ;
+          <br />
+          <Anchor
+            href="https://www.vercel.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Vercel Analytics
+          </Anchor>
+          ;
+          <br />
+          <Anchor
+            href="https://www.cloudflare.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Cloudflare
+          </Anchor>
+        </Text>
+        <Text size="sm">
           If you have any feedback, questions, bug reports, feature requests or
           other suggestions, feel free to contact me through the following
           channels:
@@ -151,11 +186,8 @@ export default function Page() {
             <CharacterAnchor inherit characterId={2113325640} target="_blank">
               Nyx Viliana
             </CharacterAnchor>{" "}
-            and the{" "}
-            <Anchor inherit href="https://42outunis.com" target="_blank">
-              The Outuni Project
-            </Anchor>{" "}
-            incursions community, for some cool ideas and all the ISK.
+            and the The Outuni Project incursions community, for some cool ideas
+            and all the ISK.
           </List.Item>
         </List>
         <Text size="sm">
@@ -210,11 +242,6 @@ export default function Page() {
           <List.Item>
             <Anchor inherit href="https://react.dev/" target="_blank">
               React
-            </Anchor>
-          </List.Item>
-          <List.Item>
-            <Anchor inherit href="https://swr.vercel.app/" target="_blank">
-              SWR
             </Anchor>
           </List.Item>
           <List.Item>
