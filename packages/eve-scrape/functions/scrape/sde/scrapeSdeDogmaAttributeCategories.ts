@@ -9,7 +9,6 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeDogmaAttributeCategoriesEventPayload = {
   data: {
     batchSize?: number;
@@ -46,7 +45,9 @@ export const scrapeSdeDogmaAttributeCategories = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: async () =>
         Promise.all(
