@@ -21,6 +21,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }} # Turborepo caching
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Turborepo caching
     steps:
       - uses: actions/checkout@v6
         with:
