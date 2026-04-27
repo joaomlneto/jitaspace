@@ -1,4 +1,4 @@
-import _React, { memo } from "react";
+import { memo } from "react";
 import Link from "next/link";
 import {
   ActionIcon,
@@ -84,7 +84,7 @@ export const KillmailButton = memo(
               label={
                 <Stack>
                   <Title order={5}>Attackers</Title>
-                  {data?.data.attackers.map((attacker) => (
+                  {data?.data.attackers.map((attacker: any) => (
                     <Group key={attacker.character_id}>
                       <Group>
                         {attacker.character_id ? (
@@ -128,7 +128,7 @@ export const KillmailButton = memo(
               <Group gap={4}>
                 <MercenaryIcon width={32} />
                 <Avatar.Group spacing="xs">
-                  {data?.data.attackers.map((attacker) =>
+                  {data?.data.attackers.map((attacker: any) =>
                     attacker.character_id ? (
                       <CharacterAvatar
                         characterId={attacker.character_id}
