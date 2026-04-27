@@ -35,35 +35,7 @@ interface CollectionStatsProps {
 }
 
 const collections: CollectionDefinition[] = [
-  { name: "Characters", collection: db.charactersCollection },
-  { name: "Market Groups", collection: db.marketGroupsCollection },
-  { name: "Categories", collection: db.categoriesCollection },
-  { name: "Groups", collection: db.groupsCollection },
-  { name: "Types", collection: db.typesCollection },
-  { name: "Dogma Attributes", collection: db.dogmaAttributesCollection },
-  { name: "Dogma Effects", collection: db.dogmaEffectsCollection },
-  { name: "Dogma Units", collection: db.dogmaUnitsCollection },
-  { name: "Alliances", collection: db.alliancesCollection },
-  { name: "Corporations", collection: db.corporationsCollection },
-  { name: "Factions", collection: db.factionsCollection },
-  { name: "Stations", collection: db.stationsCollection },
-  { name: "Races", collection: db.racesCollection },
-  { name: "Regions", collection: db.regionsCollection },
-  { name: "Constellations", collection: db.constellationsCollection },
-  { name: "Solar Systems", collection: db.solarSystemsCollection },
-  { name: "Stars", collection: db.starsCollection },
-  { name: "Stargates", collection: db.stargatesCollection },
-  { name: "Planets", collection: db.planetsCollection },
-  { name: "Moons", collection: db.moonsCollection },
-  { name: "Asteroid Belts", collection: db.asteroidBeltsCollection },
-  { name: "Ancestries", collection: db.ancestriesCollection },
-  { name: "Bloodlines", collection: db.bloodlinesCollection },
-  {
-    name: "Loyalty Store Offers",
-    collection: db.loyaltyStoreOffersCollection,
-  },
-  { name: "Killmails", collection: db.killmailsCollection },
-  { name: "Agents", collection: db.agentsCollection },
+  { name: "ESI Names", collection: db.esiNamesCollection },
 ];
 
 interface CollectionBrowserModalProps {
