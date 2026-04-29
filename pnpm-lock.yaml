@@ -103,8 +103,8 @@ importers:
         specifier: ^1.0.8
         version: 1.0.8
       node-html-parser:
-        specifier: ^6.1.5
-        version: 6.1.13
+        specifier: ^7.1.0
+        version: 7.1.0
       node-stream-zip:
         specifier: ^1.15.0
         version: 1.15.0
@@ -6042,7 +6042,7 @@ packages:
   basic-ftp@5.0.4:
     resolution: {integrity: sha512-8PzkB0arJFV4jJWSGOYR+OEic6aeKMu/osRhBULN6RY0ykby6LKhbmuQ5ublvaas5BOwboah5D87nrHyuh8PPA==}
     engines: {node: '>=10.0.0'}
-    deprecated: Security vulnerability fixed in 5.2.0, please upgrade
+    deprecated: Security vulnerability fixed in 5.2.1, please upgrade
 
   bcrypt-pbkdf@1.0.2:
     resolution: {integrity: sha512-qeFIXtP4MSoi6NLqO12WfqARWWuCKi2Rn/9hJLEmtB5yTNr9DqFWkJRCf2qShWzPeAMRnOgCrq0sg/KLv5ES9w==}
@@ -8275,6 +8275,7 @@ packages:
   inngest@3.52.6:
     resolution: {integrity: sha512-wDxA1I5CIL7anqyX3Vr0T/5kOHkWN8W5oeqbHhFKFbsFrM+M/J3OEFiRRgcdiGyhNHxPvWaRdQb4N2mfgwc7PQ==}
     engines: {node: '>=20'}
+    deprecated: 'CRITICAL SECURITY: upgrade to >=3.54.0'
     peerDependencies:
       '@sveltejs/kit': '>=1.27.3'
       '@vercel/node': '>=2.15.9'
@@ -9653,8 +9654,8 @@ packages:
     resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
     hasBin: true
 
-  node-html-parser@6.1.13:
-    resolution: {integrity: sha512-qIsTMOY4C/dAa5Q5vsobRpOOvPfC4pB61UVW2uSwZNUp0QU/jCekTal1vMmbO0DgdHeLUJpv/ARmDqErVxA3Sg==}
+  node-html-parser@7.1.0:
+    resolution: {integrity: sha512-iJo8b2uYGT40Y8BTyy5ufL6IVbN8rbm/1QK2xffXU/1a/v3AAa0d1YAoqBNYqaS4R/HajkWIpIfdE6KcyFh1AQ==}
 
   node-int64@0.4.0:
     resolution: {integrity: sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==}
@@ -22494,7 +22495,7 @@ snapshots:
   node-gyp-build@4.8.4:
     optional: true
 
-  node-html-parser@6.1.13:
+  node-html-parser@7.1.0:
     dependencies:
       css-select: 5.1.0
       he: 1.2.0
