@@ -36,7 +36,6 @@ const client = z.object({
       : z.string().min(1).optional(),
 
   NEXT_PUBLIC_DISCORD_INVITE_LINK: z.string().url(),
-  NEXT_PUBLIC_MODIFIED_DATE: z.string().optional(),
 });
 
 /**
@@ -56,7 +55,6 @@ const processEnv = {
   NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
   NEXT_PUBLIC_GOOGLE_TAG_ID: process.env.NEXT_PUBLIC_GOOGLE_TAG_ID,
   NEXT_PUBLIC_DISCORD_INVITE_LINK: process.env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
-  NEXT_PUBLIC_MODIFIED_DATE: process.env.NEXT_PUBLIC_MODIFIED_DATE,
 };
 
 // Don't touch the part below

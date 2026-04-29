@@ -6,7 +6,7 @@ import { AppShell, rem } from "@mantine/core";
 import { useHeadroom, useMediaQuery } from "@mantine/hooks";
 
 import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
-import { HeaderWithMegaMenus } from "~/layouts/MainLayout/HeaderWithMegaMenus";
+import { HeaderWithMenus } from "~/layouts/MainLayout/HeaderWithMenus";
 
 export function MainLayout({
   children,
@@ -29,7 +29,7 @@ export function MainLayout({
       {...otherProps}
     >
       <AppShell.Header>
-        <HeaderWithMegaMenus pinned={pinned} />
+        <HeaderWithMenus pinned={pinned} />
       </AppShell.Header>
       <AppShell.Main py={`calc(${rem(60)} + var(--mantine-spacing-xs))`}>
         {children}
