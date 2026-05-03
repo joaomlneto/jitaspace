@@ -13,11 +13,17 @@ import {
   CardText as Text,
 } from "chat";
 
+const discordAdapter = process.env.DISCORD_BOT_TOKEN
+  ? createDiscordAdapter()
+  : undefined;
+
 export const chat = new Chat({
   userName: "JitaSpace",
-  adapters: {
-    discord: createDiscordAdapter(),
-  },
+  adapters: discordAdapter
+    ? {
+        discord: discordAdapter,
+      }
+    : {},
   state: createRedisState(),
 });
 
@@ -44,9 +50,12 @@ chat.onNewMention(async (thread) => {
   );
 });
 
-export const updatesChannel = chat.channel(
-  `discord:1127970667522949201:${process.env.DISCORD_UPDATES_CHANNEL_ID}`,
-);
+const updatesChannelId = process.env.DISCORD_UPDATES_CHANNEL_ID;
+
+export const updatesChannel =
+  discordAdapter && updatesChannelId
+    ? chat.channel(`discord:1127970667522949201:${updatesChannelId}`)
+    : null;
 
 // Respond when someone clicks escalate button
 chat.onAction("escalate", async (event) => {
@@ -84,6 +93,10 @@ const STATUS_LABELS: Record<UpdateStatus, string> = {
 };
 
 export const postUpdateCard = async (options: UpdateCardOptions) => {
+  if (!updatesChannel) {
+    return;
+  }
+
   const fields: ReturnType<typeof Field>[] = [];
   const addField = (
     label: string,
