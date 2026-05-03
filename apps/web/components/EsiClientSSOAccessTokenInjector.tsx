@@ -1,11 +1,12 @@
 "use client";
 
-import type { PropsWithChildren} from "react";
+import type { PropsWithChildren } from "react";
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import z from "zod";
 
 import { useAuthStore } from "@jitaspace/hooks";
+
+import { refreshCharacterToken } from "./EsiClientSSOAccessTokenInjector.actions";
 
 export const EsiClientSSOAccessTokenInjector = ({
   children,
@@ -14,7 +15,7 @@ export const EsiClientSSOAccessTokenInjector = ({
   const { addCharacter, characters } = useAuthStore();
 
   useEffect(() => {
-    useAuthStore.persist.rehydrate();
+    void useAuthStore.persist.rehydrate();
   }, []);
 
   // This useEffect is here to import the current next-auth token (if available)
@@ -26,11 +27,10 @@ export const EsiClientSSOAccessTokenInjector = ({
         refreshToken: session.encryptedRefreshToken,
       });
     }
-  }, [session?.accessToken, session?.encryptedRefreshToken]);
+  }, [addCharacter, session]);
 
   // this refreshes tokens that expired or are close to expiring
   useEffect(() => {
-    if (!characters) return;
     const timeUntilExpiration = () => {
       const now = new Date().getTime();
       return Math.min(
@@ -57,18 +57,8 @@ export const EsiClientSSOAccessTokenInjector = ({
         );
         console.log("tokens to update", candidateCharacters);
         candidateCharacters.forEach((character) => {
-          fetch("/api/auth2/refresh", {
-            method: "POST",
-            body: character.refreshToken,
-          })
-            .then((res) => res.json())
-            .then((res) => {
-              const responseSchema = z.object({
-                accessToken: z.string(),
-                refreshTokenData: z.string(),
-              });
-              const { accessToken, refreshTokenData } =
-                responseSchema.parse(res);
+          void refreshCharacterToken(character.refreshToken)
+            .then(({ accessToken, refreshTokenData }) => {
               addCharacter({
                 accessToken,
                 refreshToken: refreshTokenData,
@@ -80,7 +70,7 @@ export const EsiClientSSOAccessTokenInjector = ({
       Math.max(timeUntilExpiration() - 30000, 1000),
     );
     return () => clearTimeout(timer);
-  }, [characters]);
+  }, [addCharacter, characters]);
 
   // TODO: another useEffect for when a token does expire, blocking it from being used to send requests to ESI!!!
 
