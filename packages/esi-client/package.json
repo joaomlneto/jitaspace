@@ -14,9 +14,12 @@
     "lint:fix": "pnpm lint --fix",
     "kubb:generate": "pnpm get-esi-date && kubb generate",
     "postinstall": "pnpm kubb:generate",
+    "test": "jest --config ./jest.config.ts --runInBand",
+    "test:watch": "jest --config ./jest.config.ts --watch",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/pacer-lite": "^0.2.1",
     "@tanstack/react-query": "^5.81.5",
     "axios": "^1.9.0",
     "react": "^19.2.3",
@@ -34,9 +37,13 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
+    "@swc/core": "^1.13.20",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.10.13",
     "@types/react": "^19.1.6",
     "eslint": "^9.39.2",
+    "jest": "^30.2.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },
