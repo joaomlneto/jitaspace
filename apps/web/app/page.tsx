@@ -8,6 +8,7 @@ import Link from "next/link";
 import {
   Anchor,
   Badge,
+  Burger,
   Card,
   Container,
   Group,
@@ -21,11 +22,12 @@ import {
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
-import { useAuthenticatedCharacterIds } from "@jitaspace/hooks";
-import { CharacterAvatar } from "@jitaspace/ui";
+import { useAuthenticatedCharacterIds, useAuthStore } from "@jitaspace/hooks";
+import { AllianceCard, CharacterAvatar, CorporationCard } from "@jitaspace/ui";
 
 import { AuthenticatedCharacterCard } from "~/components/Card";
 import { DevelopmentModeAlert } from "~/components/debug";
+import { AllianceMenu, CorporationMenu } from "~/components/Menu";
 import { characterApps, universeApps } from "~/config/apps";
 
 const devApps: {
@@ -55,6 +57,26 @@ export default function Page() {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const authenticatedCharacterIds = useAuthenticatedCharacterIds();
+  const authenticatedCorporationIds = useAuthStore((state) => {
+    return Array.from(
+      new Set(
+        authenticatedCharacterIds
+          .map((characterId) => state.characters[characterId]?.corporationId)
+          .filter(
+            (corporationId): corporationId is number => corporationId != null,
+          ),
+      ),
+    );
+  });
+  const authenticatedAllianceIds = useAuthStore((state) => {
+    return Array.from(
+      new Set(
+        authenticatedCharacterIds
+          .map((characterId) => state.characters[characterId]?.allianceId)
+          .filter((allianceId): allianceId is number => allianceId != null),
+      ),
+    );
+  });
 
   return (
     <Container size="xl">
@@ -82,11 +104,39 @@ export default function Page() {
           Add character
         </Anchor>
       </Group>
+      <Text c="dimmed">Corporations:</Text>
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+        {authenticatedCorporationIds.map((corporationId) => (
+          <CorporationCard
+            corporationId={corporationId}
+            key={corporationId}
+            headerRightSection={
+              <CorporationMenu corporationId={corporationId}>
+                <Burger size="sm" />
+              </CorporationMenu>
+            }
+          />
+        ))}
+      </SimpleGrid>
+      <Text c="dimmed">Alliances:</Text>
+      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
+        {authenticatedAllianceIds.map((allianceId) => (
+          <AllianceCard
+            allianceId={allianceId}
+            key={allianceId}
+            headerRightSection={
+              <AllianceMenu allianceId={allianceId}>
+                <Burger size="sm" />
+              </AllianceMenu>
+            }
+          />
+        ))}
+      </SimpleGrid>
       <Title order={3}>Capsuleer Tools</Title>
       <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2, sm: 3 }}>
         {Object.values(characterApps).map((feature) => (
           <UnstyledButton
-            component={feature.url ? Link : Link}
+            component={Link}
             href={feature.url ?? ""}
             onClick={feature.onClick}
             key={feature.name}

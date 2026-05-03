@@ -34,6 +34,7 @@ const APP_NAME = "JitaSpace";
 const APP_DEFAULT_TITLE = "JitaSpace";
 const APP_TITLE_TEMPLATE = "%s | " + APP_NAME;
 const APP_DESCRIPTION = "EVE Online tools";
+const ESI_USER_AGENT = "jitaspace-web/0.1.0 (https://jita.space)";
 
 export const metadata = {
   applicationName: APP_NAME,
@@ -105,7 +106,7 @@ export default function RootLayout({
             <Analytics />
             <SpeedInsights />
 
-            <MyQueryClientProvider>
+            <MyQueryClientProvider esiUserAgent={ESI_USER_AGENT}>
               <MySessionProvider>
                 <EsiClientSSOAccessTokenInjector>
                   <>
