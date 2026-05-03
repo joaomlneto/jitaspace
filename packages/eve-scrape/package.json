@@ -23,7 +23,7 @@
     "@jitaspace/sde-client": "workspace:*",
     "axios": "^1.9.0",
     "decimal.js": "^10.5.0",
-    "inngest": "^3.52.6",
+    "inngest": "^3.54.2",
     "p-limit": "^6.2.0",
     "tar-stream": "^3.1.7",
     "untar-to-memory": "^2.0.0",
@@ -37,6 +37,7 @@
     "@types/tar-stream": "^3.1.4",
     "@types/unbzip2-stream": "^1.4.3",
     "eslint": "^9.39.2",
+    "inngest-cli": "^1.19.1",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },
