@@ -1,12 +1,11 @@
-import type {NextRequest} from "next/server";
+import type { NextRequest } from "next/server";
 import { ImageResponse } from "@vercel/og";
 
 /* eslint-disable @next/next/no-img-element */
 
-export const config = {
-  runtime: "edge",
-};
-export default function handler(request: NextRequest) {
+export const runtime = "edge";
+
+export function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const hasTitle = searchParams.has("title");
@@ -78,9 +77,9 @@ export default function handler(request: NextRequest) {
         height: 630,
       },
     );
-  } catch (e) {
-    console.log(`${(e as Error).message}`);
-    return new Response(`Failed to generate the image`, {
+  } catch (error) {
+    console.log(`${(error as Error).message}`);
+    return new Response("Failed to generate the image", {
       status: 500,
     });
   }
