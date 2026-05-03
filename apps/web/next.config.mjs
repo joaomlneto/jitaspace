@@ -30,7 +30,12 @@ const config = {
   ],
 
   /** Avoid bundling server-only worker dependencies */
-  serverExternalPackages: ["bull"],
+  serverExternalPackages: [
+    "bull",
+    "@chat-adapter/discord",
+    "discord.js",
+    "@discordjs/ws",
+  ],
 
   /** We already do typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: !!process.env.CI },
