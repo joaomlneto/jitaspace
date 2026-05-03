@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "analyze": "ANALYZE=true pnpm build",
+    "analyze": "pnpm with-env next experimental-analyze",
     "build": "pnpm with-env next build",
     "clean": "git clean -xdf .next .turbo node_modules",
     "dev": "pnpm with-env next dev",
@@ -47,7 +47,6 @@
     "@mantine/nprogress": "^8.1.2",
     "@mantine/spotlight": "^8.1.2",
     "@mantine/tiptap": "^8.1.2",
-    "@next/bundle-analyzer": "16.1.1",
     "@next/third-parties": "16.1.1",
     "@react-hook/cache": "^1.1.1",
     "@sentry/nextjs": "^10.32.1",

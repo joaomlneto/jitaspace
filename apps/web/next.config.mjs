@@ -1,4 +1,3 @@
-import bundleAnalyzer from "@next/bundle-analyzer";
 import { withSentryConfig } from "@sentry/nextjs";
 import { createJiti } from "jiti";
 
@@ -66,11 +65,7 @@ const config = {
   },
 };
 
-const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === "true",
-});
-
-export default withSentryConfig(withBundleAnalyzer(config), {
+export default withSentryConfig(config, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
