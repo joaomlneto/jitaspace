@@ -1,9 +1,5 @@
 import type { MantineColorsTuple } from "@mantine/core";
 
-
-
-
-
 export const colors: Record<string, MantineColorsTuple> = {
   amarr: [
     "#faf5ec",
@@ -88,6 +84,66 @@ export const colors: Record<string, MantineColorsTuple> = {
     "#717171",
     "#656565",
     "#5c5557",
+  ],
+  eve: [
+    "#dae4eb",
+    "#b8c7d3",
+    "#95a9bb",
+    "#748ca3",
+    "#5d7a92",
+    "#4f6f89",
+    "#43647f",
+    "#365469",
+    "#2a4555",
+    "#1c313d",
+  ],
+  eve_accent: [
+    "#f7f2df",
+    "#ecdfb8",
+    "#dec58c",
+    "#d0ac61",
+    "#c5983d",
+    "#be8e28",
+    "#b9891c",
+    "#a4780d",
+    "#906806",
+    "#7b5700",
+  ],
+  eve_background: [
+    "#c4ccd3",
+    "#9ca7b0",
+    "#778490",
+    "#526272",
+    "#36485a",
+    "#26394b",
+    "#1f3245",
+    "#152738",
+    "#0b1c2b",
+    "#010f1d",
+  ],
+  eve_primary: [
+    "#d9ecef",
+    "#c5dde2",
+    "#a8c6ce",
+    "#8caeba",
+    "#7398a7",
+    "#618999",
+    "#547d8e",
+    "#446a79",
+    "#375968",
+    "#264956",
+  ],
+  eve_secondary: [
+    "#d9ebf9",
+    "#c3d9e8",
+    "#a2bfd1",
+    "#81a6bc",
+    "#698ea9",
+    "#597f9d",
+    "#4f7696",
+    "#406684",
+    "#345a75",
+    "#294c64",
   ],
   gallente: [
     "#f2f8f8",
