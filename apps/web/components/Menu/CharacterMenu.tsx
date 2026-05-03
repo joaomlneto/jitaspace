@@ -1,8 +1,10 @@
 import type { MenuProps } from "@mantine/core";
+import Link from "next/link";
 import { Menu, Text } from "@mantine/core";
 import { modals, openContextModal } from "@mantine/modals";
 import { IconLockSearch } from "@tabler/icons-react";
 
+import type { ESIScope } from "@jitaspace/esi-metadata";
 import { TerminateIcon } from "@jitaspace/eve-icons";
 import {
   useAuthenticatedCharacter,
@@ -11,7 +13,14 @@ import {
 } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
 
-import { ZkillboardIcon } from "~/components/Icon";
+import { JitaSpaceIcon, ZkillboardIcon } from "~/components/Icon";
+import { CharacterPageLink } from "~/components/Link";
+import { characterApps } from "~/config/apps.tsx";
+import { getEnabledApps } from "./appAccess";
+
+export const getEnabledCharacterApps = (grantedScopes: ESIScope[]) => {
+  return getEnabledApps(characterApps, grantedScopes);
+};
 
 export type CharacterMenuProps = MenuProps & {
   characterId: number;
@@ -26,6 +35,10 @@ export const CharacterMenu = ({
   const authenticatedCharacter = useAuthenticatedCharacter(characterId);
   const { data: character } = useCharacter(characterId);
   const isAuthenticated = authenticatedCharacter !== null;
+  const enabledCharacterApps =
+    authenticatedCharacter == null
+      ? []
+      : getEnabledCharacterApps(authenticatedCharacter.accessTokenPayload.scp);
 
   return (
     <Menu {...otherProps}>
@@ -35,6 +48,13 @@ export const CharacterMenu = ({
         {false && <Menu.Divider />}
         <Menu.Label>View Character in…</Menu.Label>
         {false && <Menu.Item>EVE Online</Menu.Item>}
+        <Menu.Item
+          component={CharacterPageLink}
+          characterId={characterId}
+          leftSection={<JitaSpaceIcon width={20} />}
+        >
+          Character Page
+        </Menu.Item>
         <Menu.Item
           component="a"
           href={`https://evewho.com/character/${characterId}`}
@@ -51,6 +71,23 @@ export const CharacterMenu = ({
         >
           zKillboard
         </Menu.Item>
+        {isAuthenticated && enabledCharacterApps.length > 0 && (
+          <>
+            <Menu.Divider />
+            <Menu.Label>Character Apps</Menu.Label>
+            {enabledCharacterApps.map((app) => (
+              <Menu.Item
+                key={app.name}
+                component={Link}
+                href={app.url ?? ""}
+                onClick={app.onClick}
+                leftSection={<app.Icon width={20} />}
+              >
+                {app.name}
+              </Menu.Item>
+            ))}
+          </>
+        )}
         {authenticatedCharacter && isAuthenticated && (
           <>
             <Menu.Divider />
