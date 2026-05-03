@@ -1,9 +1,14 @@
 {
   "compilerOptions": {
+    "target": "ES2023",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "skipLibCheck": true,
+    "types": ["node", "jest"],
     "jsx": "react-jsx",
     "jsxImportSource": "@kubb/react",
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "allowImportingTsExtensions": true,
+    "allowImportingTsExtensions": true
   }
 }
