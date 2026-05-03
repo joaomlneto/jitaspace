@@ -13,6 +13,8 @@ jobs:
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }} # Turborepo caching
       TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Turborepo caching
+      # Skip runtime env validation in Next.js during CI runs where secrets are not available
+      SKIP_ENV_VALIDATION: "1"
     strategy:
       fail-fast: false # https://github.com/cypress-io/github-action/issues/48
       matrix:
@@ -36,18 +38,19 @@ jobs:
         # Uses the official Cypress GitHub action https://github.com/cypress-io/github-action
         uses: cypress-io/github-action@v6
         with:
-          # Starts web server for E2E tests - replace with your own server invocation
-          # https://docs.cypress.io/guides/continuous-integration/introduction#Boot-your-server
+          # Dependencies are already installed at monorepo root; skip action-level install
+          # to avoid lockfile lookup in apps/web (pnpm lockfile is at repository root).
+          install: false
+          # Run commands from the web app workspace so `pnpm start` resolves to `apps/web`
+          working-directory: apps/web
+          # Starts web server for E2E tests - the web package exposes `start` which runs Next.js
           start: pnpm start
-          wait-on: 'http://localhost:3000' # Waits for above
+          wait-on: "http://localhost:3000" # Waits for above
           # Records to Cypress Cloud
           # https://docs.cypress.io/guides/cloud/projects#Set-up-a-project-to-record
           record: true
           parallel: true # Runs test in parallel using settings above
-          #working-directory: apps/web
         env:
-          # For recording and parallelization to work you must set your CYPRESS_RECORD_KEY
-          # in GitHub repo → Settings → Secrets → Actions
+          # If you enable recording/parallelization set CYPRESS_RECORD_KEY in repo secrets
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          # Creating a token https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
