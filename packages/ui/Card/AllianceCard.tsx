@@ -2,18 +2,7 @@
 
 import type { ReactNode } from "react";
 import React, { memo } from "react";
-import Link from "next/link";
-import {
-  Anchor,
-  Badge,
-  Card,
-  Flex,
-  Group,
-  Skeleton,
-  Stack,
-  Text,
-} from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
+import { Badge, Card, Flex, Group, Skeleton, Stack, Text } from "@mantine/core";
 
 import {
   useEsiAllianceInformation,
@@ -200,18 +189,6 @@ export const AllianceCard = memo(
                 </Flex>
               </Stack>
             )}
-
-            <Anchor
-              component={Link}
-              href={`https://evewho.com/alliance/${allianceId}`}
-              target="_blank"
-              size="xs"
-            >
-              <Group gap={4} wrap="nowrap">
-                <IconExternalLink size={14} />
-                <Text size="xs">Open in EVE Who</Text>
-              </Group>
-            </Anchor>
           </Stack>
         </Card.Section>
       </Card>
