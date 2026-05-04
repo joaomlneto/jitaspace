@@ -1,9 +1,8 @@
-import _React, { memo } from "react";
+import { memo } from "react";
 import { Card, Group, JsonInput, Stack, Text } from "@mantine/core";
 
 import classes from "./ShipFittingCard.module.css";
 import { ShipFittingCardModuleSectionEntry } from "./ShipFittingCardModuleSectionEntry";
-
 
 interface ShipFittingCardModulesSectionProps {
   header: string;
@@ -36,9 +35,9 @@ export const ShipFittingCardModulesSection = memo(
           <Text c="dimmed" className={classes.modulesLabel} mb={4}>
             {header}
           </Text>
-          {items.map((module) => (
+          {items.map((module, index) => (
             <ShipFittingCardModuleSectionEntry
-              key={module.typeId}
+              key={`${index}/${module.typeId}`}
               {...module}
             />
           ))}
