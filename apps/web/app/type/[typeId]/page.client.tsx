@@ -19,6 +19,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
+import { useQueries } from "@tanstack/react-query";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import {
@@ -27,6 +28,10 @@ import {
   useSelectedCharacter,
   useType,
 } from "@jitaspace/hooks";
+import {
+  getDogmaAttributeByIdQueryOptions,
+  getDogmaAttributeCategoryByIdQueryOptions,
+} from "@jitaspace/sde-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   CategoryAnchor,
@@ -132,6 +137,110 @@ export default function TypePage({
       ),
     [typeData?.dogma_attributes],
   );
+
+  const dogmaAttributeQueries = useQueries({
+    queries: sortedDogmaAttributes.map((attribute) =>
+      getDogmaAttributeByIdQueryOptions(attribute.attribute_id),
+    ),
+  });
+
+  const dogmaAttributeCategoryIds = useMemo(() => {
+    const categoryIds = new Set<number>();
+
+    for (const query of dogmaAttributeQueries) {
+      const categoryId = query.data?.data.attributeCategoryID;
+      if (categoryId !== undefined) {
+        categoryIds.add(categoryId);
+      }
+    }
+
+    return Array.from(categoryIds).sort((a, b) => a - b);
+  }, [dogmaAttributeQueries]);
+
+  const dogmaAttributeCategoryQueries = useQueries({
+    queries: dogmaAttributeCategoryIds.map((categoryId) =>
+      getDogmaAttributeCategoryByIdQueryOptions(categoryId),
+    ),
+  });
+
+  const dogmaAttributeCategoryByAttributeId = useMemo(() => {
+    const categoryByAttributeId = new Map<number, number>();
+
+    sortedDogmaAttributes.forEach((attribute, index) => {
+      const categoryId =
+        dogmaAttributeQueries[index]?.data?.data.attributeCategoryID;
+      if (categoryId !== undefined) {
+        categoryByAttributeId.set(attribute.attribute_id, categoryId);
+      }
+    });
+
+    return categoryByAttributeId;
+  }, [dogmaAttributeQueries, sortedDogmaAttributes]);
+
+  const dogmaAttributeCategoryNamesById = useMemo(() => {
+    const categoryNamesById = new Map<number, string>();
+
+    dogmaAttributeCategoryIds.forEach((categoryId, index) => {
+      const categoryName =
+        dogmaAttributeCategoryQueries[index]?.data?.data.name;
+      if (categoryName) {
+        categoryNamesById.set(categoryId, categoryName);
+      }
+    });
+
+    return categoryNamesById;
+  }, [dogmaAttributeCategoryIds, dogmaAttributeCategoryQueries]);
+
+  const categorizedDogmaAttributes = useMemo(() => {
+    const grouped = new Map<
+      string,
+      {
+        categoryId?: number;
+        categoryLabel: string;
+        attributes: typeof sortedDogmaAttributes;
+      }
+    >();
+
+    for (const attribute of sortedDogmaAttributes) {
+      const categoryId = dogmaAttributeCategoryByAttributeId.get(
+        attribute.attribute_id,
+      );
+      const key = categoryId === undefined ? "uncategorized" : `${categoryId}`;
+      const categoryLabel =
+        categoryId === undefined
+          ? "Uncategorized"
+          : (dogmaAttributeCategoryNamesById.get(categoryId) ??
+            `Category ${categoryId}`);
+
+      const existingGroup = grouped.get(key);
+      if (existingGroup) {
+        existingGroup.attributes.push(attribute);
+      } else {
+        grouped.set(key, {
+          categoryId,
+          categoryLabel,
+          attributes: [attribute],
+        });
+      }
+    }
+
+    return Array.from(grouped.values()).sort((a, b) => {
+      if (a.categoryId === undefined && b.categoryId === undefined) {
+        return 0;
+      }
+      if (a.categoryId === undefined) {
+        return 1;
+      }
+      if (b.categoryId === undefined) {
+        return -1;
+      }
+      return a.categoryId - b.categoryId;
+    });
+  }, [
+    dogmaAttributeCategoryByAttributeId,
+    dogmaAttributeCategoryNamesById,
+    sortedDogmaAttributes,
+  ]);
 
   const sortedDogmaEffects = useMemo(
     () =>
@@ -283,78 +392,6 @@ export default function TypePage({
           </Spoiler>
         )}
 
-        <Title order={4}>Dogma Attributes</Title>
-        <Paper withBorder radius="md" p="sm">
-          {sortedDogmaAttributes.length > 0 ? (
-            <Table highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Attribute</Table.Th>
-                  <Table.Th>ID</Table.Th>
-                  <Table.Th ta="right">Value</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {sortedDogmaAttributes.map((attribute) => (
-                  <Table.Tr key={attribute.attribute_id}>
-                    <Table.Td>
-                      <DogmaAttributeAnchor
-                        attributeId={attribute.attribute_id}
-                      >
-                        <DogmaAttributeName
-                          attributeId={attribute.attribute_id}
-                        />
-                      </DogmaAttributeAnchor>
-                    </Table.Td>
-                    <Table.Td>{attribute.attribute_id}</Table.Td>
-                    <Table.Td ta="right">
-                      {formatDogmaValue(attribute.value)}
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          ) : (
-            <Text size="sm" c="dimmed">
-              {notAvailableText}
-            </Text>
-          )}
-        </Paper>
-
-        <Title order={4}>Dogma Effects</Title>
-        <Paper withBorder radius="md" p="sm">
-          {sortedDogmaEffects.length > 0 ? (
-            <Table highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Effect</Table.Th>
-                  <Table.Th>ID</Table.Th>
-                  <Table.Th ta="right">Default</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {sortedDogmaEffects.map((effect) => (
-                  <Table.Tr key={effect.effect_id}>
-                    <Table.Td>
-                      <DogmaEffectAnchor effectId={effect.effect_id}>
-                        <DogmaEffectName effectId={effect.effect_id} />
-                      </DogmaEffectAnchor>
-                    </Table.Td>
-                    <Table.Td>{effect.effect_id}</Table.Td>
-                    <Table.Td ta="right">
-                      {booleanBadge(effect.is_default)}
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          ) : (
-            <Text size="sm" c="dimmed">
-              {notAvailableText}
-            </Text>
-          )}
-        </Paper>
-
         <Title order={4}>Market Information</Title>
         <Paper withBorder radius="md" p="sm">
           <Stack gap="xs">
@@ -426,6 +463,86 @@ export default function TypePage({
               </>
             )}
           </Stack>
+        </Paper>
+
+        <Title order={4}>Dogma Attributes</Title>
+        <Paper withBorder radius="md" p="sm">
+          {sortedDogmaAttributes.length > 0 ? (
+            <Stack gap="lg">
+              {categorizedDogmaAttributes.map((category) => (
+                <Stack key={category.categoryId ?? "uncategorized"} gap="xs">
+                  <Text fw={700} size="sm">
+                    {category.categoryLabel}
+                    {category.categoryId === undefined
+                      ? ""
+                      : ` (${category.categoryId})`}
+                  </Text>
+                  <Table highlightOnHover>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>Attribute</Table.Th>
+                        <Table.Th ta="right">Value</Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {category.attributes.map((attribute) => (
+                        <Table.Tr key={attribute.attribute_id}>
+                          <Table.Td>
+                            <DogmaAttributeAnchor
+                              attributeId={attribute.attribute_id}
+                            >
+                              <DogmaAttributeName
+                                attributeId={attribute.attribute_id}
+                              />
+                            </DogmaAttributeAnchor>
+                          </Table.Td>
+                          <Table.Td ta="right">
+                            {formatDogmaValue(attribute.value)}
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </Stack>
+              ))}
+            </Stack>
+          ) : (
+            <Text size="sm" c="dimmed">
+              {notAvailableText}
+            </Text>
+          )}
+        </Paper>
+
+        <Title order={4}>Dogma Effects</Title>
+        <Paper withBorder radius="md" p="sm">
+          {sortedDogmaEffects.length > 0 ? (
+            <Table highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Effect</Table.Th>
+                  <Table.Th ta="right">Default</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {sortedDogmaEffects.map((effect) => (
+                  <Table.Tr key={effect.effect_id}>
+                    <Table.Td>
+                      <DogmaEffectAnchor effectId={effect.effect_id}>
+                        <DogmaEffectName effectId={effect.effect_id} />
+                      </DogmaEffectAnchor>
+                    </Table.Td>
+                    <Table.Td ta="right">
+                      {booleanBadge(effect.is_default)}
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          ) : (
+            <Text size="sm" c="dimmed">
+              {notAvailableText}
+            </Text>
+          )}
         </Paper>
       </Stack>
     </Container>
