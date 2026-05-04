@@ -1,27 +1,15 @@
 "use client";
 
-import type React from "react";
-import { useMemo } from "react";
-import {
-  Group,
-  Menu,
-  Text,
-  UnstyledButton,
-  useMantineColorScheme,
-  useMantineTheme
-  
-} from "@mantine/core";
-import type {UnstyledButtonProps} from "@mantine/core";
-import { openContextModal } from "@mantine/modals";
-import { signOut } from "next-auth/react";
-
-import {
-  RecruitmentIcon,
-  SettingsIcon,
-  TerminateIcon,
-} from "@jitaspace/eve-icons";
+import { RecruitmentIcon, SettingsIcon, TerminateIcon } from "@jitaspace/eve-icons";
 import { useAuthStore, useSelectedCharacter } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
+import type { UnstyledButtonProps } from "@mantine/core";
+import { Group, Menu, Text, UnstyledButton, useMantineColorScheme, useMantineTheme } from "@mantine/core";
+import { openContextModal } from "@mantine/modals";
+import { signOut } from "next-auth/react";
+import Link from "next/link";
+import type React from "react";
+import { useMemo } from "react";
 
 interface UserButtonProps extends UnstyledButtonProps {
   icon?: React.ReactNode;
@@ -84,6 +72,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
               .filter((character) => character.characterId !== characterId)
               .map((character) => (
                 <Menu.Item
+                  key={character.characterId}
                   leftSection={
                     <CharacterAvatar
                       characterId={character.characterId}
@@ -98,7 +87,11 @@ export default function UserButton({ ...others }: UserButtonProps) {
             <Menu.Divider />
           </>
         )}
-        <Menu.Item leftSection={<SettingsIcon width={20} />} disabled>
+        <Menu.Item
+          leftSection={<SettingsIcon width={20} />}
+          component={Link}
+          href="/settings"
+        >
           Settings
         </Menu.Item>
         <Menu.Item
