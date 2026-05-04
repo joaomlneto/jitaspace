@@ -1,17 +1,20 @@
-import { getScopeDescription} from "@jitaspace/esi-metadata";
-import type {ESIScope} from "@jitaspace/esi-metadata";
-import {Badge, Table} from "@mantine/core";
-import {useMemo} from "react";
+import { useMemo } from "react";
+import { Badge, Table } from "@mantine/core";
+
+import type { ESIScope } from "@jitaspace/esi-metadata";
+import { getScopeDescription } from "@jitaspace/esi-metadata";
 
 import classes from "./ScopesTable.module.css";
 
-
 export interface ScopesTableProps {
-  scopes: ESIScope[];
+  scopes?: ESIScope[];
   showRawScopeNames?: boolean;
 }
 
-export function ScopesTable({scopes, showRawScopeNames}: ScopesTableProps) {
+export function ScopesTable({
+  scopes,
+  showRawScopeNames,
+}: Readonly<ScopesTableProps>) {
   const scopeData: {
     id: ESIScope;
     category: string;
@@ -19,7 +22,7 @@ export function ScopesTable({scopes, showRawScopeNames}: ScopesTableProps) {
     description: string;
   }[] = useMemo(
     () =>
-      scopes.sort().map((scope: ESIScope) => {
+      (scopes ?? []).sort().map((scope: ESIScope) => {
         const category = (scope.split(".")[0] ?? "").slice(4);
         const permission = (scope.split(".")[1] ?? "")
           .replaceAll("_", " ")
