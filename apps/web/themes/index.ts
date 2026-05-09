@@ -206,7 +206,7 @@ export const themes = {
   default: baseTheme,
   eve: eveTheme,
   amarr: mergeThemeOverrides(
-    baseTheme,
+    eveTheme,
     createTheme({
       primaryColor: "amarr_primary",
       primaryShade: 6,
@@ -214,21 +214,21 @@ export const themes = {
     }),
   ),
   caldari: mergeThemeOverrides(
-    baseTheme,
+    eveTheme,
     createTheme({
       primaryColor: "caldari_primary",
       colors,
     }),
   ),
   gallente: mergeThemeOverrides(
-    baseTheme,
+    eveTheme,
     createTheme({
       primaryColor: "gallente_primary",
       colors,
     }),
   ),
   minmatar: mergeThemeOverrides(
-    baseTheme,
+    eveTheme,
     createTheme({
       primaryColor: "minmatar_primary",
       colors,
