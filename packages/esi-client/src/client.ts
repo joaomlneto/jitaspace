@@ -1,9 +1,4 @@
-import type {
-  AxiosError,
-  AxiosHeaders,
-  AxiosRequestConfig,
-  AxiosResponse,
-} from "axios";
+import type { AxiosError, AxiosHeaders, AxiosRequestConfig, AxiosResponse } from "axios";
 import axios from "axios";
 
 import buildData from "./build-data.json";
@@ -12,7 +7,7 @@ import {
   getWaitTime,
   recordRateLimitRequest,
   updateRateLimitState,
-  updateRetryAfter,
+  updateRetryAfter
 } from "./rate-limit";
 
 declare const AXIOS_BASE: string;
@@ -59,7 +54,7 @@ let _config: Partial<RequestConfig> = {
   headers:
     typeof AXIOS_HEADERS !== "undefined"
       ? (JSON.parse(AXIOS_HEADERS) as AxiosHeaders)
-      : undefinedx,
+      : undefined,
 };
 
 export const getConfig = () => _config;
