@@ -336,6 +336,9 @@ importers:
       zod:
         specifier: ^3.25.49
         version: 3.25.49
+      zustand:
+        specifier: ^4.5.7
+        version: 4.5.7(@types/react@19.2.7)(immer@11.1.4)(react@19.2.3)
     devDependencies:
       '@jitaspace/eslint-config':
         specifier: workspace:*
@@ -25760,7 +25763,7 @@ snapshots:
 
   zustand@4.5.7(@types/react@19.2.7)(immer@11.1.4)(react@19.2.3):
     dependencies:
-      use-sync-external-store: 1.4.0(react@19.2.3)
+      use-sync-external-store: 1.6.0(react@19.2.3)
     optionalDependencies:
       '@types/react': 19.2.7
       immer: 11.1.4
