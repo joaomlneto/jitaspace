@@ -1,15 +1,27 @@
 "use client";
 
-import { RecruitmentIcon, SettingsIcon, TerminateIcon } from "@jitaspace/eve-icons";
-import { useAuthStore, useSelectedCharacter } from "@jitaspace/hooks";
-import { CharacterAvatar } from "@jitaspace/ui";
 import type { UnstyledButtonProps } from "@mantine/core";
-import { Group, Menu, Text, UnstyledButton, useMantineColorScheme, useMantineTheme } from "@mantine/core";
-import { openContextModal } from "@mantine/modals";
-import { signOut } from "next-auth/react";
-import Link from "next/link";
 import type React from "react";
 import { useMemo } from "react";
+import Link from "next/link";
+import {
+  Group,
+  Menu,
+  Text,
+  UnstyledButton,
+  useMantineColorScheme,
+  useMantineTheme,
+} from "@mantine/core";
+import { openContextModal } from "@mantine/modals";
+import { signOut } from "next-auth/react";
+
+import {
+  RecruitmentIcon,
+  SettingsIcon,
+  TerminateIcon,
+} from "@jitaspace/eve-icons";
+import { useAuthStore, useSelectedCharacter } from "@jitaspace/hooks";
+import { CharacterAvatar } from "@jitaspace/ui";
 
 interface UserButtonProps extends UnstyledButtonProps {
   icon?: React.ReactNode;

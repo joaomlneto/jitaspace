@@ -40,16 +40,16 @@ export function SettingsCard() {
   const selectedLanguage = useMemo(
     () =>
       ESI_ACCEPT_LANGUAGE_OPTIONS.find(
-        (item) => item.value === acceptLanguage,
+        (item) => item.languageCode === acceptLanguage,
       ) ?? ESI_ACCEPT_LANGUAGE_OPTIONS[0],
     [acceptLanguage],
   );
 
   const languageItems = ESI_ACCEPT_LANGUAGE_OPTIONS.map((item) => (
     <Menu.Item
-      key={item.value}
+      key={item.languageCode}
       onClick={() => {
-        setSelectedAcceptLanguage(item.value);
+        setSelectedAcceptLanguage(item.languageCode);
       }}
       leftSection={
         <ReactCountryFlag

@@ -15,6 +15,11 @@ export function ScopesTable({
   scopes,
   showRawScopeNames,
 }: Readonly<ScopesTableProps>) {
+  const normalizedScopes = useMemo(
+    () => (Array.isArray(scopes) ? [...scopes].sort() : []),
+    [scopes],
+  );
+
   const scopeData: {
     id: ESIScope;
     category: string;
@@ -22,7 +27,7 @@ export function ScopesTable({
     description: string;
   }[] = useMemo(
     () =>
-      (scopes ?? []).sort().map((scope: ESIScope) => {
+      normalizedScopes.map((scope: ESIScope) => {
         const category = (scope.split(".")[0] ?? "").slice(4);
         const permission = (scope.split(".")[1] ?? "")
           .replaceAll("_", " ")
@@ -34,7 +39,7 @@ export function ScopesTable({
           description: getScopeDescription(scope),
         };
       }),
-    [scopes],
+    [normalizedScopes],
   );
 
   return (
