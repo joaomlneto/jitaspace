@@ -1,7 +1,13 @@
 import type { AxiosError } from "axios";
 
 import buildData from "./build-data.json";
-import { axiosInstance, client, setConfig, setUserAgent } from "./client";
+import {
+  axiosInstance,
+  client,
+  setAcceptLanguage,
+  setConfig,
+  setUserAgent,
+} from "./client";
 import {
   getRateLimitBucketKey,
   getRateLimitState,
@@ -413,9 +419,9 @@ describe("client rate-limit integration", () => {
     expect(requestHeaders["X-Compatibility-Date"]).toBe(buildData.buildDate);
   });
 
-  it("allows users to configure user-agent globally and per request", async () => {
+  it("allows users to configure request headers globally and per request", async () => {
     const requestSpy = jest.spyOn(axiosInstance, "request");
-    setConfig({ userAgent: "global-agent/2.0" });
+    setConfig({ userAgent: "global-agent/2.0", acceptLanguage: "en-US" });
 
     requestSpy.mockResolvedValueOnce({
       data: { ok: true },
@@ -431,6 +437,7 @@ describe("client rate-limit integration", () => {
       unknown
     >;
     expect(requestHeaders["X-User-Agent"]).toBe("global-agent/2.0");
+    expect(requestHeaders["Accept-Language"]).toBe("en-US");
 
     requestSpy.mockResolvedValueOnce({
       data: { ok: true },
@@ -443,6 +450,7 @@ describe("client rate-limit integration", () => {
       method: "GET",
       url: "/status",
       userAgent: "request-agent/3.0",
+      acceptLanguage: "pt-PT",
     });
 
     requestHeaders = requestSpy.mock.calls[1]?.[0]?.headers as Record<
@@ -450,9 +458,10 @@ describe("client rate-limit integration", () => {
       unknown
     >;
     expect(requestHeaders["X-User-Agent"]).toBe("request-agent/3.0");
+    expect(requestHeaders["Accept-Language"]).toBe("pt-PT");
   });
 
-  it("allows updating user-agent without dropping existing global headers", async () => {
+  it("allows updating request headers without dropping existing global headers", async () => {
     const requestSpy = jest.spyOn(axiosInstance, "request");
     setConfig({
       headers: {
@@ -460,6 +469,7 @@ describe("client rate-limit integration", () => {
       },
     });
     setUserAgent("global-agent/4.0");
+    setAcceptLanguage("fr-FR");
 
     requestSpy.mockResolvedValueOnce({
       data: { ok: true },
@@ -477,6 +487,7 @@ describe("client rate-limit integration", () => {
 
     expect(requestHeaders["Authorization"]).toBe("Bearer test-token");
     expect(requestHeaders["X-User-Agent"]).toBe("global-agent/4.0");
+    expect(requestHeaders["Accept-Language"]).toBe("fr-FR");
   });
 
   it("keeps using route-derived group when x-ratelimit-group header differs", async () => {

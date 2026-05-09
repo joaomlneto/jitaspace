@@ -39,6 +39,7 @@ export type RequestConfig<TData = unknown> = {
   headers?: AxiosRequestConfig["headers"];
   rateLimitUserId?: string;
   userAgent?: string;
+  acceptLanguage?: string;
 };
 
 /**
@@ -58,7 +59,7 @@ let _config: Partial<RequestConfig> = {
   headers:
     typeof AXIOS_HEADERS !== "undefined"
       ? (JSON.parse(AXIOS_HEADERS) as AxiosHeaders)
-      : undefined,
+      : undefinedx,
 };
 
 export const getConfig = () => _config;
@@ -97,6 +98,9 @@ export const updateConfig = (config: Partial<RequestConfig>) => {
 };
 
 export const setUserAgent = (userAgent?: string) => updateConfig({ userAgent });
+
+export const setAcceptLanguage = (acceptLanguage?: string) =>
+  updateConfig({ acceptLanguage });
 
 export const axiosInstance = axios.create(getConfig());
 
@@ -145,7 +149,7 @@ const getPathSegments = (path: string): string[] =>
     .split("/")
     .filter((segment) => segment.length > 0);
 
-const isPathParameterSegment = (segment: string) => /^\{[^}]+\}$/.test(segment);
+const isPathParameterSegment = (segment: string) => /^\{[^}]+}$/.test(segment);
 
 const routeOperationMappings: RouteOperationMapping[] = Object.entries(
   buildDataTyped.routeOperationIds ?? {},
@@ -339,7 +343,9 @@ const decodeJwtPayload = (token: string): Record<string, unknown> | null => {
     return null;
   }
 
-  const normalizedPayload = tokenPayload.replace(/-/g, "+").replace(/_/g, "/");
+  const normalizedPayload = tokenPayload
+    .replaceAll("-", "+")
+    .replaceAll("_", "/");
   const paddedPayload = normalizedPayload.padEnd(
     Math.ceil(normalizedPayload.length / 4) * 4,
     "=",
@@ -362,7 +368,7 @@ const extractCharacterIdFromSubject = (subject: unknown): string | null => {
   }
 
   const subjectSegments = subject.split(":");
-  const possibleCharacterId = subjectSegments[subjectSegments.length - 1];
+  const possibleCharacterId = subjectSegments.at(-1);
   if (!possibleCharacterId || !/^\d+$/.test(possibleCharacterId)) {
     return null;
   }
@@ -537,6 +543,43 @@ const resolveUserAgent = (
   return DEFAULT_USER_AGENT;
 };
 
+const resolveAcceptLanguage = (
+  requestConfig: RequestConfig,
+  globalConfig: Partial<RequestConfig>,
+) => {
+  if (
+    typeof requestConfig.acceptLanguage === "string" &&
+    requestConfig.acceptLanguage.trim() !== ""
+  ) {
+    return requestConfig.acceptLanguage;
+  }
+
+  if (
+    typeof globalConfig.acceptLanguage === "string" &&
+    globalConfig.acceptLanguage.trim() !== ""
+  ) {
+    return globalConfig.acceptLanguage;
+  }
+
+  const requestAcceptLanguage = getHeaderValue(
+    requestConfig.headers,
+    "accept-language",
+  );
+  if (requestAcceptLanguage && requestAcceptLanguage.trim() !== "") {
+    return requestAcceptLanguage;
+  }
+
+  const globalAcceptLanguage = getHeaderValue(
+    globalConfig.headers,
+    "accept-language",
+  );
+  if (globalAcceptLanguage && globalAcceptLanguage.trim() !== "") {
+    return globalAcceptLanguage;
+  }
+
+  return undefined;
+};
+
 export const client = async <TData, TError = unknown, TVariables = unknown>(
   config: RequestConfig<TVariables>,
 ): Promise<ResponseConfig<TData>> => {
@@ -560,6 +603,7 @@ export const client = async <TData, TError = unknown, TVariables = unknown>(
   try {
     const compatibilityDate = resolveCompatibilityDate(config, globalConfig);
     const userAgent = resolveUserAgent(config, globalConfig);
+    const acceptLanguage = resolveAcceptLanguage(config, globalConfig);
 
     const response = await axiosInstance.request<TData, ResponseConfig<TData>>({
       ...globalConfig,
@@ -569,13 +613,13 @@ export const client = async <TData, TError = unknown, TVariables = unknown>(
         ...config.headers,
         "X-Compatibility-Date": compatibilityDate,
         "X-User-Agent": userAgent,
+        ...(acceptLanguage ? { "Accept-Language": acceptLanguage } : {}),
       },
     });
 
     if (group) {
       const ratelimitUsed = getRatelimitUsedFromHeaders(response.headers);
-      const consumedTokens =
-        ratelimitUsed === null ? getTokenCost(response.status) : ratelimitUsed;
+      const consumedTokens = ratelimitUsed ?? getTokenCost(response.status);
       const didSyncFromHeaders = updateRateLimitState(
         group,
         response.headers as Record<string, string>,
@@ -606,9 +650,7 @@ export const client = async <TData, TError = unknown, TVariables = unknown>(
         axiosError.response.headers,
       );
       const consumedTokens =
-        ratelimitUsed === null
-          ? getTokenCost(axiosError.response.status)
-          : ratelimitUsed;
+        ratelimitUsed ?? getTokenCost(axiosError.response.status);
       const retryAfterSeconds = getRetryAfterSecondsFromHeaders(
         axiosError.response.headers,
       );
