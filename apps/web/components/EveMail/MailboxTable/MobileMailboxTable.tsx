@@ -2,7 +2,10 @@ import { Anchor, Group, Stack, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
-import { useCharacterMailLabels } from "@jitaspace/hooks";
+import {
+  useCharacterMailingLists,
+  useCharacterMailLabels,
+} from "@jitaspace/hooks";
 import {
   EveMailSenderAnchor,
   EveMailSenderAvatar,
@@ -20,6 +23,7 @@ export const MobileMailboxTable = ({
   ...otherProps
 }: MailboxTableProps) => {
   const { data: labels } = useCharacterMailLabels(characterId);
+  const { data: mailingLists } = useCharacterMailingLists(characterId);
 
   const visibleMessages = data.filter((mail) => !mail.isDeleted);
 
@@ -33,18 +37,18 @@ export const MobileMailboxTable = ({
                 <Group justify="space-between" gap="xs">
                   <Group wrap="nowrap" gap="xs">
                     <EveMailSenderAvatar
-                      characterId={characterId}
-                      messageId={message.mail_id}
-                      size="xs"
+                      from={message.from}
+                      mailingLists={mailingLists?.data}
+                      size="sm"
                     />
                     <EveMailSenderAnchor
-                      characterId={characterId}
-                      messageId={message.mail_id}
+                      from={message.from}
+                      mailingLists={mailingLists?.data}
                       size="sm"
                     >
                       <EveMailSenderName
-                        characterId={characterId}
-                        messageId={message.mail_id}
+                        from={message.from}
+                        mailingLists={mailingLists?.data}
                         fw={message.is_read ? "normal" : "bold"}
                       />
                     </EveMailSenderAnchor>

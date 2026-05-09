@@ -1,6 +1,10 @@
 import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
-import { useCharacterMail, useCharacterMailLabels } from "@jitaspace/hooks";
+import {
+  useCharacterMail,
+  useCharacterMailingLists,
+  useCharacterMailLabels,
+} from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityAvatar,
@@ -41,6 +45,7 @@ export function MessagePanel({
 }: MessagePanelProps) {
   const { data: labels } = useCharacterMailLabels(characterId);
   const { data: mail } = useCharacterMail(characterId, messageId);
+  const { data: mailingLists } = useCharacterMailingLists(characterId);
 
   return (
     <Stack>
@@ -49,18 +54,18 @@ export function MessagePanel({
           <Group wrap="nowrap" gap="xs">
             From:
             <EveMailSenderAvatar
-              characterId={characterId}
-              messageId={messageId}
+              from={mail?.data.from}
+              mailingLists={mailingLists?.data}
               size="sm"
             />
             <EveMailSenderAnchor
-              characterId={characterId}
-              messageId={messageId}
+              from={mail?.data.from}
+              mailingLists={mailingLists?.data}
               target="_blank"
             >
               <EveMailSenderName
-                characterId={characterId}
-                messageId={messageId}
+                from={mail?.data.from}
+                mailingLists={mailingLists?.data}
               />
             </EveMailSenderAnchor>
           </Group>

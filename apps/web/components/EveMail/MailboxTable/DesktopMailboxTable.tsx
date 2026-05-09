@@ -2,7 +2,10 @@ import { Anchor, Group, Popover, Table, Text } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
-import { useCharacterMailLabels } from "@jitaspace/hooks";
+import {
+  useCharacterMailingLists,
+  useCharacterMailLabels,
+} from "@jitaspace/hooks";
 import {
   EveMailSenderAnchor,
   EveMailSenderAvatar,
@@ -23,6 +26,8 @@ export const DesktopMailboxTable = ({
   ...otherProps
 }: MailboxTableProps) => {
   const { data: labels } = useCharacterMailLabels(characterId);
+  const { data: mailingLists } = useCharacterMailingLists(characterId);
+
   return (
     <Table highlightOnHover {...otherProps}>
       <Table.Thead>
@@ -43,22 +48,26 @@ export const DesktopMailboxTable = ({
                 <Popover width={250} withArrow shadow="md">
                   <Popover.Target>
                     <Group wrap="nowrap" key={mail.mail_id}>
-                      <EveMailSenderAvatar
-                        characterId={characterId}
-                        messageId={mail.mail_id}
-                        size="sm"
-                      />
-                      <EveMailSenderAnchor
-                        characterId={characterId}
-                        messageId={mail.mail_id}
-                        fw={mail.is_read ? "normal" : "bold"}
-                        size="sm"
-                      >
-                        <EveMailSenderName
-                          characterId={characterId}
-                          messageId={mail.mail_id}
-                        />
-                      </EveMailSenderAnchor>
+                      {mail?.from && (
+                        <>
+                          <EveMailSenderAvatar
+                            from={mail.from}
+                            mailingLists={mailingLists?.data}
+                            size="sm"
+                          />
+                          <EveMailSenderAnchor
+                            from={mail.from}
+                            mailingLists={mailingLists?.data}
+                            fw={mail.is_read ? "normal" : "bold"}
+                            size="sm"
+                          >
+                            <EveMailSenderName
+                              from={mail.from}
+                              mailingLists={mailingLists?.data}
+                            />
+                          </EveMailSenderAnchor>
+                        </>
+                      )}
                     </Group>
                   </Popover.Target>
                   <Popover.Dropdown>
