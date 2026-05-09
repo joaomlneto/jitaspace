@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Container, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { cacheLife } from "next/cache";
+import { Container, Group, Loader, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
 import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
@@ -9,37 +11,47 @@ interface PageProps {
   types: { typeId: number; name: string }[];
 }
 
-export const revalidate = 86400;
+async function getGroupData(groupId: number): Promise<PageProps> {
+  "use cache";
+  cacheLife("days");
 
-export default async function Page({
+  const group = await prisma.group.findUniqueOrThrow({
+    select: {
+      groupId: true,
+      name: true,
+      types: {
+        select: {
+          typeId: true,
+          name: true,
+        },
+      },
+    },
+    where: {
+      groupId,
+    },
+  });
+
+  return {
+    name: group.name,
+    types: group.types ?? [],
+  };
+}
+
+async function PageContent({
   params,
 }: {
   params: Promise<{ groupId: string }>;
 }) {
   const { groupId: groupIdParam } = await params;
+  const groupId = Number(groupIdParam);
+
   let name: PageProps["name"] = undefined;
   let types: PageProps["types"] = [];
 
   try {
-    const groupId = Number(groupIdParam);
-    const group = await prisma.group.findUniqueOrThrow({
-      select: {
-        groupId: true,
-        name: true,
-        types: {
-          select: {
-            typeId: true,
-            name: true,
-          },
-        },
-      },
-      where: {
-        groupId,
-      },
-    });
-
-    name = group.name;
-    types = group.types ?? [];
+    const data = await getGroupData(groupId);
+    name = data.name;
+    types = data.types;
   } catch {
     notFound();
   }
@@ -47,7 +59,6 @@ export default async function Page({
   const sortedTypes = [...types].sort((a, b) =>
     a.name.localeCompare(b.name),
   );
-  const groupId = Number(groupIdParam);
 
   return (
     <Container size="md">
@@ -69,5 +80,17 @@ export default async function Page({
         </SimpleGrid>
       </Stack>
     </Container>
+  );
+}
+
+export default function Page({
+  params,
+}: {
+  params: Promise<{ groupId: string }>;
+}) {
+  return (
+    <Suspense fallback={<Loader />}>
+      <PageContent params={params} />
+    </Suspense>
   );
 }

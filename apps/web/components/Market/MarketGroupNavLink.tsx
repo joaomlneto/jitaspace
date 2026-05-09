@@ -1,3 +1,5 @@
+"use client";
+
 import _React, { memo, useMemo } from "react";
 import Link from "next/link";
 import { NavLink } from "@mantine/core";

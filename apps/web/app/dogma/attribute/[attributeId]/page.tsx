@@ -1,22 +1,16 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
+import { Loader } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
 
 import type { PageProps } from "./page.client";
 import DogmaAttributePage from "./page.client";
 
-export const revalidate = 86400;
-
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ attributeId: string }>;
-}) {
-  const { attributeId: attributeIdParam } = await params;
-  const attributeId = Number(attributeIdParam);
-  if (!Number.isFinite(attributeId)) {
-    notFound();
-  }
+async function getAttributeData(attributeId: number): Promise<PageProps> {
+  "use cache";
+  cacheLife("days");
 
   const attribute = await prisma.dogmaAttribute.findUnique({
     select: {
@@ -77,7 +71,7 @@ export default async function Page({
     },
   });
 
-  const props: PageProps = {
+  return {
     attributeId,
     title: attribute.displayName ?? attribute.name ?? null,
     name: attribute.name,
@@ -95,6 +89,32 @@ export default async function Page({
     })),
     groups,
   };
+}
+
+async function PageContent({
+  params,
+}: {
+  params: Promise<{ attributeId: string }>;
+}) {
+  const { attributeId: attributeIdParam } = await params;
+  const attributeId = Number(attributeIdParam);
+  if (!Number.isFinite(attributeId)) {
+    notFound();
+  }
+
+  const props = await getAttributeData(attributeId);
 
   return <DogmaAttributePage {...props} />;
+}
+
+export default function Page({
+  params,
+}: {
+  params: Promise<{ attributeId: string }>;
+}) {
+  return (
+    <Suspense fallback={<Loader />}>
+      <PageContent params={params} />
+    </Suspense>
+  );
 }

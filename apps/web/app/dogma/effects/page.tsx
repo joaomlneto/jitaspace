@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 
 import { prisma } from "@jitaspace/db";
 
 import DogmaEffectsPage from "./page.client";
 import type { PageProps } from "./page.client";
 
-export const revalidate = 86400;
-
 export default async function Page() {
+  "use cache";
+  cacheLife("days");
   let effects: PageProps["effects"] = {};
   try {
     const map: PageProps["effects"] = {};

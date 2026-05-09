@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
 import { prisma } from "@jitaspace/db";
 import { kv } from "@jitaspace/kv";
@@ -6,9 +8,8 @@ import { kv } from "@jitaspace/kv";
 import DebugPage from "./page.client";
 import type { PageProps } from "./page.client";
 
-export const dynamic = "force-dynamic";
-
-export default async function Page() {
+async function DebugPageContent() {
+  await connection();
   if (process.env.NODE_ENV === "production") {
     notFound();
   }
@@ -73,4 +74,12 @@ export default async function Page() {
   };
 
   return <DebugPage {...props} />;
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <DebugPageContent />
+    </Suspense>
+  );
 }

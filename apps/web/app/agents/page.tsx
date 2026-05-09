@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 import { Container, Group, Stack, Title } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
@@ -22,9 +23,9 @@ interface PageProps {
   agentDivisions: { name: string; npcCorporationDivisionId: number }[];
 }
 
-export const revalidate = 86400;
-
 export default async function Page() {
+  "use cache";
+  cacheLife("days");
   let agents: PageProps["agents"] = [];
   let agentTypes: PageProps["agentTypes"] = [];
   let agentDivisions: PageProps["agentDivisions"] = [];

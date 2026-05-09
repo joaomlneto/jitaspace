@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 
 import { prisma } from "@jitaspace/db";
 
@@ -7,9 +8,9 @@ import type { PageProps } from "./page.client";
 
 const SHIP_CATEGORY_ID = 6;
 
-export const revalidate = 86400;
-
 export default async function Page() {
+  "use cache";
+  cacheLife("days");
   let ships: PageProps["ships"] = [];
   try {
     const shipGroups = await prisma.category.findUniqueOrThrow({

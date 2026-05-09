@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { Container, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { cacheLife } from "next/cache";
+import { Container, Group, Loader, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
 import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
@@ -9,9 +11,33 @@ interface PageProps {
   groups: { groupId: number; name: string }[];
 }
 
-export const revalidate = 86400;
+async function getCategoryData(categoryId: number): Promise<PageProps> {
+  "use cache";
+  cacheLife("days");
 
-export default async function Page({
+  const category = await prisma.category.findUniqueOrThrow({
+    select: {
+      categoryId: true,
+      name: true,
+      groups: {
+        select: {
+          groupId: true,
+          name: true,
+        },
+      },
+    },
+    where: {
+      categoryId,
+    },
+  });
+
+  return {
+    name: category.name,
+    groups: category.groups,
+  };
+}
+
+async function PageContent({
   params,
 }: {
   params: Promise<{ categoryId: string }>;
@@ -25,24 +51,9 @@ export default async function Page({
   let name: PageProps["name"] = undefined;
   let groups: PageProps["groups"] = [];
   try {
-    const category = await prisma.category.findUniqueOrThrow({
-      select: {
-        categoryId: true,
-        name: true,
-        groups: {
-          select: {
-            groupId: true,
-            name: true,
-          },
-        },
-      },
-      where: {
-        categoryId,
-      },
-    });
-
-    name = category.name;
-    groups = category.groups;
+    const data = await getCategoryData(categoryId);
+    name = data.name;
+    groups = data.groups;
   } catch {
     notFound();
   }
@@ -72,5 +83,17 @@ export default async function Page({
         </Stack>
       </Stack>
     </Container>
+  );
+}
+
+export default function Page({
+  params,
+}: {
+  params: Promise<{ categoryId: string }>;
+}) {
+  return (
+    <Suspense fallback={<Loader />}>
+      <PageContent params={params} />
+    </Suspense>
   );
 }

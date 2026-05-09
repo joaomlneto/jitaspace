@@ -1,53 +1,41 @@
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
-import { Container, Group, Stack, Title } from "@mantine/core";
+import { Container, Group, Loader, Stack, Title } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
 import { WarsIcon } from "@jitaspace/eve-icons";
 
 import { WarsTable } from "~/components/Wars";
 
-interface PageProps {
-  wars: {
-    warId: number;
-    aggressorCorporationId: number | null;
-    aggressorAllianceId: number | null;
-    aggressorIskDestroyed: number;
-    aggressorShipsKilled: number;
-    allianceAllies: {
-      allianceId: number;
-    }[];
-    corporationAllies: {
-      corporationId: number;
-    }[];
-    declaredDate: string; // ISO string
-    defenderCorporationId: number | null;
-    defenderAllianceId: number | null;
-    defenderIskDestroyed: number;
-    defenderShipsKilled: number;
-    startedDate: string | null; // ISO string
-    finishedDate: string | null; // ISO string
-    isMutual: boolean;
-    isOpenForAllies: boolean;
-    retractedDate: string | null; // ISO string
-    updatedAt: string; // ISO string
-  }[];
-  corporations: {
-    corporationId: number;
-    name: string;
-  }[];
-  alliances: {
-    allianceId: number;
-    name: string;
-  }[];
-}
+type War = {
+  warId: number;
+  aggressorCorporationId: number | null;
+  aggressorAllianceId: number | null;
+  aggressorIskDestroyed: number;
+  aggressorShipsKilled: number;
+  allianceAllies: { allianceId: number }[];
+  corporationAllies: { corporationId: number }[];
+  declaredDate: string;
+  defenderCorporationId: number | null;
+  defenderAllianceId: number | null;
+  defenderIskDestroyed: number;
+  defenderShipsKilled: number;
+  startedDate: string | null;
+  finishedDate: string | null;
+  isMutual: boolean;
+  isOpenForAllies: boolean;
+  retractedDate: string | null;
+  updatedAt: string;
+};
 
-export const revalidate = 3600;
+async function getCachedWarsData(): Promise<War[]> {
+  "use cache";
+  cacheLife("hours");
 
-export default async function Page() {
-  let wars: PageProps["wars"] = [];
   try {
     const now = new Date();
-    wars = await prisma.war
+    return await prisma.war
       .findMany({
         select: {
           warId: true,
@@ -55,16 +43,8 @@ export default async function Page() {
           aggressorAllianceId: true,
           aggressorIskDestroyed: true,
           aggressorShipsKilled: true,
-          allianceAllies: {
-            select: {
-              allianceId: true,
-            },
-          },
-          corporationAllies: {
-            select: {
-              corporationId: true,
-            },
-          },
+          allianceAllies: { select: { allianceId: true } },
+          corporationAllies: { select: { corporationId: true } },
           declaredDate: true,
           defenderCorporationId: true,
           defenderAllianceId: true,
@@ -80,15 +60,10 @@ export default async function Page() {
         where: {
           isDeleted: false,
           OR: [
-            {
-              finishedDate: { gte: now },
-            },
-            {
-              finishedDate: { equals: null },
-            },
+            { finishedDate: { gte: now } },
+            { finishedDate: { equals: null } },
           ],
         },
-        take: 1000,
       })
       .then((wars) =>
         wars.map((war) => ({
@@ -107,6 +82,11 @@ export default async function Page() {
   } catch {
     notFound();
   }
+}
+
+async function ActiveWarsContent() {
+  const wars = await getCachedWarsData();
+
   return (
     <Container size="xl">
       <Stack>
@@ -140,5 +120,13 @@ export default async function Page() {
         />
       </Stack>
     </Container>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <ActiveWarsContent />
+    </Suspense>
   );
 }

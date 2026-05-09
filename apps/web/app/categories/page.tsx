@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 import {
   Container,
   Group,
@@ -17,9 +18,9 @@ interface PageProps {
   categories: { categoryId: number; name: string }[];
 }
 
-export const revalidate = 86400;
-
 export default async function Page() {
+  "use cache";
+  cacheLife("days");
   let categories: PageProps["categories"] = [];
   try {
     categories = await prisma.category.findMany({

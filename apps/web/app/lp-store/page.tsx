@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 import LPStorePage from "./page.client";
 import type { LPStorePageProps } from "./page.client";
 
 import { prisma } from "@jitaspace/db";
 
-export const revalidate = 86400;
-
 export default async function Page() {
+  "use cache";
+  cacheLife("days");
   let corporations: LPStorePageProps["corporations"] = [];
   try {
     const corporationIds = (

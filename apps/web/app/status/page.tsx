@@ -1,3 +1,6 @@
+import { Suspense } from "react";
+import { Loader } from "@mantine/core";
+
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
 import StatusPageClient from "./page.client";
 
@@ -20,7 +23,7 @@ async function getSdeLastModified() {
   ).then((res) => res.json() as Promise<SdeLastModifiedResponse>);
 }
 
-export default async function StatusPage() {
+async function StatusPageContent() {
   const vercelStatusData = await getVercelStatus().catch(() => null);
   const sdeLastModifiedData = await getSdeLastModified().catch(() => null);
 
@@ -29,5 +32,13 @@ export default async function StatusPage() {
       vercelStatusData={vercelStatusData}
       sdeLastModifiedData={sdeLastModifiedData}
     />
+  );
+}
+
+export default function StatusPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <StatusPageContent />
+    </Suspense>
   );
 }

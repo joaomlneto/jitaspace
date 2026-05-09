@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cacheLife } from "next/cache";
 
 import { prisma } from "@jitaspace/db";
 
@@ -7,9 +8,9 @@ import type { SkillsPageProps } from "./page.client";
 
 const SKILLS_CATEGORY_ID = 16;
 
-export const revalidate = 86400;
-
 export default async function Page() {
+  "use cache";
+  cacheLife("days");
   let groups: SkillsPageProps["groups"] = [];
   try {
     groups = await prisma.group.findMany({

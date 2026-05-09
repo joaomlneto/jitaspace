@@ -3,8 +3,6 @@ import { ImageResponse } from "@vercel/og";
 
 /* eslint-disable @next/next/no-img-element */
 
-export const runtime = "edge";
-
 export function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
