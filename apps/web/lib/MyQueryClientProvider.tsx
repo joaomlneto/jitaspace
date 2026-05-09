@@ -8,44 +8,26 @@ import { ReactQueryStreamedHydration } from "@tanstack/react-query-next-experime
 
 import { setAcceptLanguage, setUserAgent } from "@jitaspace/esi-client";
 
-import {
-  DEFAULT_ESI_ACCEPT_LANGUAGE,
-  EsiAcceptLanguage,
-  getStoredEsiAcceptLanguage,
-  usePreferencesStore,
-} from "~/lib/preferences";
+import { usePreferencesStore } from "~/lib/preferences";
 
 type MyQueryClientProviderProps = PropsWithChildren<{
   esiUserAgent?: string;
-  esiAcceptLanguage?: EsiAcceptLanguage;
+  esiAcceptLanguage?: string;
 }>;
 
 export const MyQueryClientProvider = ({
   children,
   esiUserAgent,
-  esiAcceptLanguage,
 }: MyQueryClientProviderProps) => {
   const [client] = useState(new QueryClient());
 
   useEffect(() => {
-    const fallbackAcceptLanguage =
-      esiAcceptLanguage ?? DEFAULT_ESI_ACCEPT_LANGUAGE;
-
-    const storedAcceptLanguage = getStoredEsiAcceptLanguage();
-    const initialAcceptLanguage =
-      storedAcceptLanguage ?? fallbackAcceptLanguage;
-    const currentAcceptLanguage =
-      usePreferencesStore.getState().esiAcceptLanguage;
-
-    if (currentAcceptLanguage !== initialAcceptLanguage) {
-      usePreferencesStore.setState({
-        esiAcceptLanguage: initialAcceptLanguage,
-      });
-    }
-
-    setUserAgent(esiUserAgent);
-    setAcceptLanguage(initialAcceptLanguage);
-  }, [esiAcceptLanguage, esiUserAgent]);
+    void (async () => {
+      await usePreferencesStore.persist.rehydrate();
+      setUserAgent(esiUserAgent);
+      setAcceptLanguage(usePreferencesStore.getState().esiAcceptLanguage);
+    })();
+  }, [esiUserAgent]);
 
   useEffect(() => {
     const unsubscribe = usePreferencesStore.subscribe(

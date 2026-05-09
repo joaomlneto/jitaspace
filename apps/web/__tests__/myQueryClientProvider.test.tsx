@@ -6,7 +6,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { act, render, waitFor } from "@testing-library/react";
 
 import {
-  ESI_ACCEPT_LANGUAGE_STORAGE_KEY,
+  PREFERENCES_STORAGE_KEY,
   setStoredEsiAcceptLanguage,
   usePreferencesStore,
 } from "~/lib/preferences";
@@ -76,8 +76,11 @@ describe("MyQueryClientProvider", () => {
       .mockResolvedValue(undefined);
 
     window.localStorage.setItem(
-      ESI_ACCEPT_LANGUAGE_STORAGE_KEY,
-      "not-a-language",
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        state: { esiAcceptLanguage: "not-a-language", appTheme: "default" },
+        version: 0,
+      }),
     );
 
     const { MyQueryClientProvider } = require("~/lib/MyQueryClientProvider");

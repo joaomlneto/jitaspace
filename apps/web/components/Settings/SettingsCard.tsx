@@ -21,17 +21,10 @@ export function SettingsCard() {
     (state) => state.esiAcceptLanguage,
   );
   const selectedTheme = usePreferencesStore((state) => state.appTheme);
-  const hydrateFromStorage = usePreferencesStore(
-    (state) => state.hydrateFromStorage,
-  );
   const setSelectedAcceptLanguage = usePreferencesStore(
     (state) => state.setEsiAcceptLanguage,
   );
   const setSelectedTheme = usePreferencesStore((state) => state.setAppTheme);
-
-  useEffect(() => {
-    hydrateFromStorage();
-  }, [hydrateFromStorage]);
 
   useEffect(() => {
     setAcceptLanguage(acceptLanguage);

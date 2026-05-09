@@ -1,10 +1,13 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import * as MantineCore from "@mantine/core";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-import { usePreferencesStore } from "~/lib/preferences";
+import { AppMantineProvider } from "~/app/mantine-provider";
+import {
+  PREFERENCES_STORAGE_KEY,
+  usePreferencesStore,
+} from "~/lib/preferences";
 
 const mockSetAcceptLanguage = jest.fn<(value?: string) => void>();
 
@@ -24,14 +27,20 @@ describe("SettingsCard", () => {
   });
 
   it("uses stored language on mount and updates selection", async () => {
-    window.localStorage.setItem("jitaspace.esi-accept-language", "de");
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        state: { esiAcceptLanguage: "de", appTheme: "default" },
+        version: 0,
+      }),
+    );
 
     const { SettingsCard } = require("~/components/Settings/SettingsCard");
 
     render(
-      <MantineCore.MantineProvider>
+      <AppMantineProvider>
         <SettingsCard />
-      </MantineCore.MantineProvider>,
+      </AppMantineProvider>,
     );
 
     await waitFor(() => {
@@ -48,21 +57,28 @@ describe("SettingsCard", () => {
     fireEvent.click(languageControl as HTMLButtonElement);
     fireEvent.click(await screen.findByText("French"));
 
-    expect(window.localStorage.getItem("jitaspace.esi-accept-language")).toBe(
-      "fr",
+    const stored = JSON.parse(
+      window.localStorage.getItem(PREFERENCES_STORAGE_KEY) ?? "{}",
     );
+    expect(stored.state?.esiAcceptLanguage).toBe("fr");
     expect(mockSetAcceptLanguage).toHaveBeenLastCalledWith("fr");
   });
 
   it("falls back to english when stored language is invalid", async () => {
-    window.localStorage.setItem("jitaspace.esi-accept-language", "invalid");
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        state: { esiAcceptLanguage: "invalid", appTheme: "default" },
+        version: 0,
+      }),
+    );
 
     const { SettingsCard } = require("~/components/Settings/SettingsCard");
 
     render(
-      <MantineCore.MantineProvider>
+      <AppMantineProvider>
         <SettingsCard />
-      </MantineCore.MantineProvider>,
+      </AppMantineProvider>,
     );
 
     await waitFor(() => {
@@ -74,9 +90,9 @@ describe("SettingsCard", () => {
     const { SettingsCard } = require("~/components/Settings/SettingsCard");
 
     render(
-      <MantineCore.MantineProvider>
+      <AppMantineProvider>
         <SettingsCard />
-      </MantineCore.MantineProvider>,
+      </AppMantineProvider>,
     );
 
     const selectedLanguageText = await screen.findByText("English");
@@ -93,14 +109,20 @@ describe("SettingsCard", () => {
   });
 
   it("uses stored theme on mount and updates selection", async () => {
-    window.localStorage.setItem("jitaspace.app-theme", "eve");
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        state: { esiAcceptLanguage: "en", appTheme: "eve" },
+        version: 0,
+      }),
+    );
 
     const { SettingsCard } = require("~/components/Settings/SettingsCard");
 
     render(
-      <MantineCore.MantineProvider>
+      <AppMantineProvider>
         <SettingsCard />
-      </MantineCore.MantineProvider>,
+      </AppMantineProvider>,
     );
 
     await screen.findByText("EVE");
@@ -110,19 +132,28 @@ describe("SettingsCard", () => {
     fireEvent.click(themeControl);
     fireEvent.click(await screen.findByText("Gallente"));
 
-    expect(window.localStorage.getItem("jitaspace.app-theme")).toBe("gallente");
+    const stored = JSON.parse(
+      window.localStorage.getItem(PREFERENCES_STORAGE_KEY) ?? "{}",
+    );
+    expect(stored.state?.appTheme).toBe("gallente");
     await screen.findByText("Gallente");
   });
 
   it("falls back to default when stored theme is invalid", async () => {
-    window.localStorage.setItem("jitaspace.app-theme", "invalid");
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({
+        state: { esiAcceptLanguage: "en", appTheme: "invalid" },
+        version: 0,
+      }),
+    );
 
     const { SettingsCard } = require("~/components/Settings/SettingsCard");
 
     render(
-      <MantineCore.MantineProvider>
+      <AppMantineProvider>
         <SettingsCard />
-      </MantineCore.MantineProvider>,
+      </AppMantineProvider>,
     );
 
     await screen.findByText("Default");

@@ -6,7 +6,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 
 import { AppMantineProvider } from "~/app/mantine-provider";
 import {
-  APP_THEME_STORAGE_KEY,
+  PREFERENCES_STORAGE_KEY,
   setStoredAppTheme,
   usePreferencesStore,
 } from "~/lib/preferences";
@@ -27,7 +27,10 @@ describe("AppMantineProvider", () => {
   });
 
   it("applies stored theme from localStorage", async () => {
-    window.localStorage.setItem(APP_THEME_STORAGE_KEY, "eve");
+    window.localStorage.setItem(
+      PREFERENCES_STORAGE_KEY,
+      JSON.stringify({ state: { appTheme: "eve", esiAcceptLanguage: "en" }, version: 0 }),
+    );
 
     render(
       <AppMantineProvider>
