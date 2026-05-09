@@ -162,7 +162,7 @@ export function MessagePanel({
         </Group>
       )}
       {!hideSubject && <Text>Subject: {mail?.data.subject}</Text>}
-      {!hideMessage && <MailMessageViewer content={mail?.data.body ?? ""} />}
+      {!hideMessage && mail?.data.body && <MailMessageViewer content={mail?.data.body ?? ""} />}
     </Stack>
   );
 }
