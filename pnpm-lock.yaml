@@ -37,8 +37,8 @@ importers:
   apps/cli:
     devDependencies:
       '@asteasolutions/zod-to-openapi':
-        specifier: ^4.7.0
-        version: 4.8.0(zod@3.25.49)
+        specifier: ^8.5.0
+        version: 8.5.0(zod@3.25.49)
       '@commander-js/extra-typings':
         specifier: ^14.0.0
         version: 14.0.0(commander@14.0.3)
@@ -1539,15 +1539,15 @@ packages:
   '@asamuzakjp/css-color@3.2.0':
     resolution: {integrity: sha512-K1A6z8tS3XsmCMM86xoWdn7Fkdn9m6RSVtocUrJYIwZnFVkng/PvkEoWtOWmP+Scc6saYWHWZYbndEEXxl24jw==}
 
-  '@asteasolutions/zod-to-openapi@4.8.0':
-    resolution: {integrity: sha512-FQlBeHIhSoEhjddAWD1v2zbeBESfTdaAVQuUr0RY9t0rN8ogoEaGirv2Ne8kQQTAVGydJzUMAOIlPULEOQDoeA==}
-    peerDependencies:
-      zod: ^3.20.2
-
   '@asteasolutions/zod-to-openapi@7.3.3':
     resolution: {integrity: sha512-ioiw+R+gBGAUwmDp+/gJA16tedBivzDaji5wOvWej0ZYDE0CXTSSfJfXbrBIuWKh6JQhuXgNDniJdeDueKUZTA==}
     peerDependencies:
       zod: ^3.20.2
+
+  '@asteasolutions/zod-to-openapi@8.5.0':
+    resolution: {integrity: sha512-SABbKiObg5dLRiTFnqiW1WWwGcg1BJfmHtT2asIBnBHg6Smy/Ms2KHc650+JI4Hw7lSkdiNebEGXpwoxfben8Q==}
+    peerDependencies:
+      zod: ^4.0.0
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -2924,6 +2924,7 @@ packages:
   '@kubb/oas@3.18.3':
     resolution: {integrity: sha512-QbjQaPPYi+sGOjRRJW4D3ArzUi3HFT4M8gmr9x5k7uESc06LlyoHa4SN4P36ARzZ3g7PThQDH/KM6UYuuo1yjQ==}
     engines: {node: '>=20'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@kubb/parser-ts@3.18.3':
     resolution: {integrity: sha512-+UBoAg4Dvoa9KLi13LpkE8jpC4wykwO5Z47tGF9YlTTCFaKiGeAcJW3RE9awFM8U5UrGNeCrPP1/GMljINaV6Q==}
@@ -2942,6 +2943,7 @@ packages:
   '@kubb/plugin-oas@3.18.3':
     resolution: {integrity: sha512-DwBBV+bxxuprXajyZZnoLDzZG0SQk1W1pVf0Lwgji98Ipx5Rk9bxmm/Ha+EQZnbaqzgBVOdh+oPApil6wtwxBA==}
     engines: {node: '>=20'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
     peerDependencies:
       '@kubb/react': ^3.0.0
 
@@ -2966,10 +2968,12 @@ packages:
   '@kubb/react@3.18.3':
     resolution: {integrity: sha512-c8bBJAby4eRK194dbMMEAR9X+y03pLOc7uF7Kht39B7/m7k3bNvdXY60HeEMWy/JpjlWutjo5b93YnuPE1dkwQ==}
     engines: {node: '>=20'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@kubb/ui@3.18.3':
     resolution: {integrity: sha512-EVqOGbORyjCqUzZSoT+j57sTPunl0dcCmroL5S070j5xXwnlh4Mmsc+ePCfrC+CShTP+dklb1PJAsEHYBTi+cg==}
     engines: {node: '>=20'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@mantine/carousel@8.1.2':
     resolution: {integrity: sha512-HAA/WkBpCBfAP7K97bCpdNCDXbs9dKN59gkF2dLDScO+mN4R8KCGHA0eHAdFxw/1r3tQ5hb1N02ACjZ690+fHg==}
@@ -5553,6 +5557,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@unrs/resolver-binding-android-arm-eabi@1.11.1':
     resolution: {integrity: sha512-ppLRUgHVaGRWUx0R0Ut06Mjo9gBaBkg3v/8AxusGLhsIotbBLuRk51rAzqLC8gq6NyyAojEXglNjzf6R948DNw==}
@@ -6129,7 +6134,7 @@ packages:
   basic-ftp@5.0.4:
     resolution: {integrity: sha512-8PzkB0arJFV4jJWSGOYR+OEic6aeKMu/osRhBULN6RY0ykby6LKhbmuQ5ublvaas5BOwboah5D87nrHyuh8PPA==}
     engines: {node: '>=10.0.0'}
-    deprecated: Security vulnerability fixed in 5.2.0, please upgrade
+    deprecated: Security vulnerability fixed in 5.2.1, please upgrade
 
   bcrypt-pbkdf@1.0.2:
     resolution: {integrity: sha512-qeFIXtP4MSoi6NLqO12WfqARWWuCKi2Rn/9hJLEmtB5yTNr9DqFWkJRCf2qShWzPeAMRnOgCrq0sg/KLv5ES9w==}
@@ -8906,6 +8911,7 @@ packages:
   js-runtime@0.0.8:
     resolution: {integrity: sha512-/nxfuHRkzajgNgGP/7j2A9y8k54XtTWizq+vEGrWh3eBWlSqFhwgToXHAGZeHX3wRMTC3VFBw1iVeemlX4qxZw==}
     engines: {node: '>=18', pnpm: '>=8.3.0'}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -12466,15 +12472,15 @@ snapshots:
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 10.4.3
 
-  '@asteasolutions/zod-to-openapi@4.8.0(zod@3.25.49)':
-    dependencies:
-      openapi3-ts: 4.4.0
-      zod: 3.25.49
-
   '@asteasolutions/zod-to-openapi@7.3.3(zod@3.25.76)':
     dependencies:
       openapi3-ts: 4.4.0
       zod: 3.25.76
+
+  '@asteasolutions/zod-to-openapi@8.5.0(zod@3.25.49)':
+    dependencies:
+      openapi3-ts: 4.4.0
+      zod: 3.25.49
 
   '@babel/code-frame@7.27.1':
     dependencies:
