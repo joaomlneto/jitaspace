@@ -205,6 +205,22 @@ const eveTheme = mergeThemeOverrides(
 export const themes = {
   default: baseTheme,
   eve: eveTheme,
+  carbon: mergeThemeOverrides(
+    eveTheme,
+    createTheme({
+      primaryColor: "carbon",
+      primaryShade: 6,
+      colors,
+    }),
+  ),
+  photon: mergeThemeOverrides(
+    eveTheme,
+    createTheme({
+      primaryColor: "photon",
+      primaryShade: 6,
+      colors,
+    }),
+  ),
   amarr: mergeThemeOverrides(
     eveTheme,
     createTheme({
@@ -231,6 +247,20 @@ export const themes = {
     eveTheme,
     createTheme({
       primaryColor: "minmatar_primary",
+      colors,
+    }),
+  ),
+  ore: mergeThemeOverrides(
+    eveTheme,
+    createTheme({
+      primaryColor: "ore_primary",
+      colors,
+    }),
+  ),
+  sisters_of_eve: mergeThemeOverrides(
+    eveTheme,
+    createTheme({
+      primaryColor: "sisters_of_eve_primary",
       colors,
     }),
   ),
