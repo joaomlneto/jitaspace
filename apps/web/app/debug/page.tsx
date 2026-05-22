@@ -8,7 +8,7 @@ import { kv } from "@jitaspace/kv";
 import DebugPage from "./page.client";
 import type { PageProps } from "./page.client";
 
-async function DebugPageContent() {
+export async function DebugPageContent() {
   await connection();
   if (process.env.NODE_ENV === "production") {
     notFound();

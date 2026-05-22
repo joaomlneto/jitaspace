@@ -25,7 +25,11 @@ jest.mock("next/navigation", () => ({
   },
 }));
 
-const DebugPage = require("../app/debug/page").default;
+jest.mock("next/server", () => ({
+  connection: jest.fn().mockResolvedValue(undefined),
+}));
+
+const { DebugPageContent } = require("../app/debug/page");
 
 describe("Debug Page", () => {
   const originalEnv = env;
@@ -41,12 +45,12 @@ describe("Debug Page", () => {
 
   it("throws notFound when in production", async () => {
     (process.env as any).NODE_ENV = "production";
-    await expect(DebugPage()).rejects.toThrow("NOT_FOUND");
+    await expect(DebugPageContent()).rejects.toThrow("NOT_FOUND");
   });
 
   it("returns a page when not in production", async () => {
     (process.env as any).NODE_ENV = "development";
-    const result = await DebugPage();
+    const result = await DebugPageContent();
     expect(result).toBeTruthy();
   });
 });
