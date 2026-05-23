@@ -1,5 +1,7 @@
 import type { RichTextEditorProps } from "@mantine/tiptap";
 
+import styles from "./MailMessageViewer.module.css";
+
 import {
   convertEveColorTags,
   convertEveMailLineBreaks,
@@ -17,12 +19,15 @@ type MailMessageViewerProps = Omit<
   internalLinkColor?: string;
   /** Color for external links (http/https URLs). */
   externalLinkColor?: string;
+  /** Color for chat channel links (/channel/...). */
+  channelLinkColor?: string;
 };
 
 export function MailMessageViewer({
   content,
   internalLinkColor = "#d98d00",
   externalLinkColor = "#ffd700",
+  channelLinkColor = "#6270dc",
 }: MailMessageViewerProps) {
   const editor = useEveEditor({
     content: convertEveUrlTags(
@@ -34,12 +39,14 @@ export function MailMessageViewer({
     /<a\b([^>]*)\bhref="([^"]*)"([^>]*)>/g,
     (_, before: string, href: string, after: string) => {
       const translatedHref = renderEveHref(href);
-      const color = translatedHref.startsWith("/")
-        ? internalLinkColor
-        : externalLinkColor;
-      return `<a${before}href="${translatedHref}"${after} style="color:${color};font-weight:600;text-decoration:none;">`;
+      const color = translatedHref.startsWith("/channel/")
+        ? channelLinkColor
+        : translatedHref.startsWith("/")
+          ? internalLinkColor
+          : externalLinkColor;
+      return `<a${before}href="${translatedHref}"${after} style="color:${color};font-weight:600;">`;
     },
   );
 
-  return <div dangerouslySetInnerHTML={{ __html: html }} />;
+  return <div className={styles.content} dangerouslySetInnerHTML={{ __html: html }} />;
 }

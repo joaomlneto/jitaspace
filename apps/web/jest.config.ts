@@ -102,6 +102,8 @@ const config: Config = {
   // single module
   moduleNameMapper: {
     "^~/(.*)$": "<rootDir>/$1",
+    "^@jitaspace/tiptap-eve$":
+      "<rootDir>/../../packages/tiptap-eve/index.ts",
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module

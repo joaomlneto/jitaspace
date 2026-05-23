@@ -175,6 +175,30 @@ describe("renderEveHref", () => {
     });
   });
 
+  describe("contract links", () => {
+    it("converts contract:0//contractId to /contract/:contractId", () => {
+      expect(renderEveHref("contract:0//196428637")).toBe(
+        "/contract/196428637",
+      );
+    });
+
+    it("ignores the first segment — only the contract ID matters", () => {
+      expect(renderEveHref("contract:98000001//987654321")).toBe(
+        "/contract/987654321",
+      );
+    });
+  });
+
+  describe("joinChannel links", () => {
+    it("converts joinChannel:id to /channel/:id", () => {
+      expect(renderEveHref("joinChannel:-26572540")).toBe("/channel/-26572540");
+    });
+
+    it("handles positive channel IDs", () => {
+      expect(renderEveHref("joinChannel:12345678")).toBe("/channel/12345678");
+    });
+  });
+
   describe("showinfo links — edge cases", () => {
     it("returns /type/ for showinfo: with no type ID", () => {
       // "showinfo:" → slice → "" → split("//") → [""] → length 1 → /type/
@@ -215,7 +239,7 @@ describe("EveLink protocol configuration", () => {
   // TipTap's setLink command calls isAllowedUri before applying the mark —
   // if it returns false the command silently no-ops. These tests verify that
   // our protocol list unlocks all EVE-specific schemes.
-  const eveProtocols = ["showinfo", "warReport", "killReport", "recruitmentAd"];
+  const eveProtocols = ["showinfo", "warReport", "killReport", "recruitmentAd", "contract", "joinChannel"];
 
   it("allows showinfo: URLs when the protocol is listed", () => {
     expect(isAllowedUri("showinfo:1373//93345033", eveProtocols)).toBeTruthy();
@@ -246,6 +270,24 @@ describe("EveLink protocol configuration", () => {
     expect(
       isAllowedUri("recruitmentAd:98645206//155600", eveProtocols),
     ).toBeTruthy();
+  });
+
+  it("allows contract: URLs when the protocol is listed", () => {
+    expect(
+      isAllowedUri("contract:0//196428637", eveProtocols),
+    ).toBeTruthy();
+  });
+
+  it("rejects contract: URLs when no EVE protocols are configured", () => {
+    expect(isAllowedUri("contract:0//196428637", [])).toBeFalsy();
+  });
+
+  it("allows joinChannel: URLs when the protocol is listed", () => {
+    expect(isAllowedUri("joinChannel:-26572540", eveProtocols)).toBeTruthy();
+  });
+
+  it("rejects joinChannel: URLs when no EVE protocols are configured", () => {
+    expect(isAllowedUri("joinChannel:-26572540", [])).toBeFalsy();
   });
 
   it("rejects killReport: URLs when no EVE protocols are configured", () => {
