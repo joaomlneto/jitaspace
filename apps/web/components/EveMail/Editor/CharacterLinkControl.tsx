@@ -28,10 +28,11 @@ export interface RichTextEditorLinkControlProps
   popoverProps?: Partial<PopoverProps>;
 }
 
-const CharacterLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
-  size,
-  ...others
-}) => <ChannelOperatorIcon width={Number(size)} {...others} />;
+const CharacterLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
+  <div style={{ position: "relative", width: size, height: size }}>
+    <ChannelOperatorIcon fill alt="" />
+  </div>
+);
 
 export const CharacterLinkControl = forwardRef<
   HTMLButtonElement,
@@ -118,6 +119,7 @@ export const CharacterLinkControl = forwardRef<
             classNames={{ input: classes.linkEditorInput }}
             onKeyDown={handleInputKeydown}
             unstyled={unstyled}
+            comboboxProps={{ withinPortal: false }}
             leftSection={
               <CharacterAvatar size={24} characterId={characterId} />
             }

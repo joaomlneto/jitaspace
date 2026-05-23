@@ -28,10 +28,11 @@ export interface RichTextEditorLinkControlProps
   popoverProps?: Partial<PopoverProps>;
 }
 
-const SolarSystemLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
-  size,
-  ...others
-}) => <SystemsIcon width={Number(size)} {...others} />;
+const SolarSystemLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
+  <div style={{ position: "relative", width: size, height: size }}>
+    <SystemsIcon fill alt="" />
+  </div>
+);
 
 export const SolarSystemLinkControl = forwardRef<
   HTMLButtonElement,
@@ -118,6 +119,7 @@ export const SolarSystemLinkControl = forwardRef<
             classNames={{ input: classes.linkEditorInput }}
             onKeyDown={handleInputKeydown}
             unstyled={unstyled}
+            comboboxProps={{ withinPortal: false }}
           />
 
           <Button

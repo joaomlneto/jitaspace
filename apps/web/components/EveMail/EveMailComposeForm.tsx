@@ -7,6 +7,7 @@ import {
   Button,
   Grid,
   Group,
+  JsonInput,
   Stack,
   Text,
   TextInput,
@@ -195,6 +196,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
           content={form.values.body}
           onContentUpdate={(content) => form.setFieldValue("body", content)}
         />
+        <JsonInput value={form.values.body} autosize />
       </Stack>
     </form>
   );

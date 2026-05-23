@@ -5,18 +5,18 @@ import {
   Popover,
   useMantineTheme,
   useProps
-  
+
 } from "@mantine/core";
 import type {PopoverProps} from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
-import { CorporationIcon } from "@jitaspace/eve-icons";
-import { CorporationAvatar, EsiSearchSelect } from "@jitaspace/ui";
+import { Systems2Icon } from "@jitaspace/eve-icons";
+import { EsiSearchSelect } from "@jitaspace/ui";
 
 import {
   ControlBase
-  
+
 } from "~/components/EveMail/Editor/ControlBase";
 import type {RichTextEditorControlBaseProps} from "~/components/EveMail/Editor/ControlBase";
 import classes from "./LinkControl.module.css";
@@ -28,13 +28,13 @@ export interface RichTextEditorLinkControlProps
   popoverProps?: Partial<PopoverProps>;
 }
 
-const CorporationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
+const ConstellationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
   <div style={{ position: "relative", width: size, height: size }}>
-    <CorporationIcon fill alt="" />
+    <Systems2Icon fill alt="" />
   </div>
 );
 
-export const CorporationLinkControl = forwardRef<
+export const ConstellationLinkControl = forwardRef<
   HTMLButtonElement,
   RichTextEditorLinkControlProps
 >((props, ref) => {
@@ -43,31 +43,31 @@ export const CorporationLinkControl = forwardRef<
   const theme = useMantineTheme();
   const { editor, unstyled } = useRichTextEditorContext();
 
-  const [corporationId, setCorporationId] = useInputState("");
+  const [constellationId, setConstellationId] = useInputState("");
   const [opened, { open, close }] = useDisclosure(false);
 
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setCorporationId(linkData?.href || "");
+    setConstellationId(linkData?.href || "");
   };
 
   const handleClose = () => {
     close();
-    setCorporationId("");
+    setConstellationId("");
   };
 
   const setLink = () => {
     handleClose();
-    corporationId === ""
+    constellationId === ""
       ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
       : editor
           ?.chain()
           .focus()
           .extendMarkRange("link")
           .setLink({
-            href: `showinfo:2//${corporationId}`,
+            href: `showinfo:4//${constellationId}`,
           })
           .run();
   };
@@ -94,9 +94,9 @@ export const CorporationLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || CorporationLinkIcon}
-          aria-label="Link Corporation"
-          title="Link Corporation"
+          icon={icon || ConstellationLinkIcon}
+          aria-label="Link Constellation"
+          title="Link Constellation"
           onClick={handleOpen}
           active={editor?.isActive("link")}
           {...others}
@@ -111,18 +111,15 @@ export const CorporationLinkControl = forwardRef<
       >
         <div className={classes.linkEditor}>
           <EsiSearchSelect
-            categories={["corporation"]}
-            placeholder="Search Corporation"
+            categories={["constellation"]}
+            placeholder="Search Constellation"
             type="url"
-            value={corporationId}
-            onChange={setCorporationId}
+            value={constellationId}
+            onChange={setConstellationId}
             classNames={{ input: classes.linkEditorInput }}
             onKeyDown={handleInputKeydown}
             unstyled={unstyled}
             comboboxProps={{ withinPortal: false }}
-            leftSection={
-              <CorporationAvatar size={24} corporationId={corporationId} />
-            }
           />
 
           <Button
@@ -138,4 +135,4 @@ export const CorporationLinkControl = forwardRef<
     </Popover>
   );
 });
-CorporationLinkControl.displayName = "CorporationLinkControl";
+ConstellationLinkControl.displayName = "ConstellationLinkControl";

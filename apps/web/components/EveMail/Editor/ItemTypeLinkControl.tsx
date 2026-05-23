@@ -28,10 +28,11 @@ export interface RichTextEditorLinkControlProps
   popoverProps?: Partial<PopoverProps>;
 }
 
-const ItemTypeLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
-  size,
-  ...others
-}) => <ItemsIcon width={Number(size)} {...others} />;
+const ItemTypeLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
+  <div style={{ position: "relative", width: size, height: size }}>
+    <ItemsIcon fill alt="" />
+  </div>
+);
 
 export const ItemTypeLinkControl = forwardRef<
   HTMLButtonElement,
@@ -118,6 +119,7 @@ export const ItemTypeLinkControl = forwardRef<
             classNames={{ input: classes.linkEditorInput }}
             onKeyDown={handleInputKeydown}
             unstyled={unstyled}
+            comboboxProps={{ withinPortal: false }}
             leftSection={
               <TypeAvatar size={24} typeId={itemTypeId} variant="render" />
             }

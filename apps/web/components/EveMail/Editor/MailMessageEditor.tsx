@@ -6,8 +6,10 @@ import { useEveEditor } from "@jitaspace/tiptap-eve";
 
 import { AllianceLinkControl } from "~/components/EveMail/Editor/AllianceLinkControl";
 import { CharacterLinkControl } from "~/components/EveMail/Editor/CharacterLinkControl";
+import { ConstellationLinkControl } from "~/components/EveMail/Editor/ConstellationLinkControl";
 import { CorporationLinkControl } from "~/components/EveMail/Editor/CorporationLinkControl";
 import { ItemTypeLinkControl } from "~/components/EveMail/Editor/ItemTypeLinkControl";
+import { RegionLinkControl } from "~/components/EveMail/Editor/RegionLinkControl";
 import { SolarSystemLinkControl } from "~/components/EveMail/Editor/SolarSystemLinkControl";
 import { StationLinkControl } from "~/components/EveMail/Editor/StationLinkControl";
 
@@ -25,7 +27,8 @@ export function MailMessageEditor({
     content,
     onUpdate: ({ editor }) => {
       // we remove the outermost <p></p> tag
-      onContentUpdate(editor.getHTML().substring(3, content.length - 4));
+      const html = editor.getHTML();
+      onContentUpdate(html.substring(3, html.length - 4));
     },
   });
 
@@ -49,27 +52,22 @@ export function MailMessageEditor({
             <CharacterLinkControl />
             <CorporationLinkControl />
             <AllianceLinkControl />
+            <RegionLinkControl />
+            <ConstellationLinkControl />
             <SolarSystemLinkControl />
             <StationLinkControl />
             <ItemTypeLinkControl />
             <RichTextEditor.Unlink />
           </RichTextEditor.ControlsGroup>
 
-          <RichTextEditor.ControlsGroup>
+          <RichTextEditor.ControlsGroup ml="auto">
             <Text
-              ml="xl"
               size="sm"
               color={
                 (editor?.getHTML().length ?? 0) - 7 >= 8000 ? "red" : "dimmed"
               }
             >
               {(editor?.getHTML().length ?? 0) - 7}/8000
-            </Text>
-          </RichTextEditor.ControlsGroup>
-
-          <RichTextEditor.ControlsGroup>
-            <Text ml="xl" size="md">
-              Text formatting not fully supported
             </Text>
           </RichTextEditor.ControlsGroup>
         </RichTextEditor.Toolbar>

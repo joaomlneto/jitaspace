@@ -1,4 +1,4 @@
-import { Group, Spoiler, Stack, Text } from "@mantine/core";
+import { Group, JsonInput, Spoiler, Stack, Text } from "@mantine/core";
 
 import {
   useCharacterMail,
@@ -162,7 +162,12 @@ export function MessagePanel({
         </Group>
       )}
       {!hideSubject && <Text>Subject: {mail?.data.subject}</Text>}
-      {!hideMessage && mail?.data.body && <MailMessageViewer content={mail?.data.body ?? ""} />}
+      {!hideMessage && mail?.data.body && (
+        <MailMessageViewer content={mail?.data.body ?? ""} />
+      )}
+      {!hideMessage && mail?.data.body && (
+        <JsonInput value={mail?.data.body} autosize />
+      )}
     </Stack>
   );
 }

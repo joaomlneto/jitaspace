@@ -28,10 +28,11 @@ export interface RichTextEditorLinkControlProps
   popoverProps?: Partial<PopoverProps>;
 }
 
-const AllianceLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
-  size,
-  ...others
-}) => <AlliancesIcon width={Number(size)} {...others} />;
+const AllianceLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
+  <div style={{ position: "relative", width: size, height: size }}>
+    <AlliancesIcon fill alt="" />
+  </div>
+);
 
 export const AllianceLinkControl = forwardRef<
   HTMLButtonElement,
@@ -118,6 +119,7 @@ export const AllianceLinkControl = forwardRef<
             classNames={{ input: classes.linkEditorInput }}
             onKeyDown={handleInputKeydown}
             unstyled={unstyled}
+            comboboxProps={{ withinPortal: false }}
             leftSection={<AllianceAvatar size={24} allianceId={allianceId} />}
           />
 

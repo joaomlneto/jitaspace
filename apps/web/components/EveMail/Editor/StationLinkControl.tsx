@@ -29,10 +29,11 @@ export interface RichTextEditorLinkControlProps
   popoverProps?: Partial<PopoverProps>;
 }
 
-const StationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
-  size,
-  ...others
-}) => <StationIcon width={Number(size)} {...others} />;
+const StationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
+  <div style={{ position: "relative", width: size, height: size }}>
+    <StationIcon fill alt="" />
+  </div>
+);
 
 export const StationLinkControl = forwardRef<
   HTMLButtonElement,
@@ -121,6 +122,7 @@ export const StationLinkControl = forwardRef<
             classNames={{ input: classes.linkEditorInput }}
             onKeyDown={handleInputKeydown}
             unstyled={unstyled}
+            comboboxProps={{ withinPortal: false }}
             leftSection={<StationAvatar size={24} stationId={stationId} />}
           />
 
