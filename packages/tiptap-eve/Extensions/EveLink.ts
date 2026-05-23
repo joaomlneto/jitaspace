@@ -17,9 +17,11 @@ const CHARACTER_TYPE_IDS = [
 ];
 
 // FIXME: These should be configurable
-const renderEveHref = (href: string) => {
+export const renderEveHref = (href: string) => {
   const INVENTORY_INFO_PREFIX = "showinfo:";
   const WAR_REPORT_PREFIX = "warReport:";
+  const KILL_REPORT_PREFIX = "killReport:";
+  const RECRUITMENT_AD_PREFIX = "recruitmentAd:";
 
   if (href.startsWith(INVENTORY_INFO_PREFIX)) {
     const targetType = href.slice(INVENTORY_INFO_PREFIX.length).split("//");
@@ -48,19 +50,19 @@ const renderEveHref = (href: string) => {
     return `/war/${warId}`;
   }
 
+  if (href.startsWith(KILL_REPORT_PREFIX)) {
+    const [killId, hash] = href.slice(KILL_REPORT_PREFIX.length).split(":");
+    return hash ? `/kill/${killId}?hash=${hash}` : `/kill/${killId}`;
+  }
+
+  if (href.startsWith(RECRUITMENT_AD_PREFIX)) {
+    const corporationId = href.slice(RECRUITMENT_AD_PREFIX.length).split("//")[0];
+    return `/corporation/${corporationId}`;
+  }
+
   return href;
 };
 
-export const EveLink = Link.extend({
-  renderHTML({ HTMLAttributes }) {
-    //console.log("EveLink HTMLAttributes:", HTMLAttributes);
-    return [
-      "a",
-      mergeAttributes(this.options.HTMLAttributes, {
-        ...HTMLAttributes,
-        href: renderEveHref(String(HTMLAttributes?.href ?? "")),
-      }),
-      0,
-    ];
-  },
+export const EveLink = Link.configure({
+  protocols: ["showinfo", "warReport", "killReport", "recruitmentAd"],
 });

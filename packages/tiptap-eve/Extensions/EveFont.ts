@@ -1,8 +1,13 @@
 import { getMarkAttributes, Mark, mergeAttributes } from "@tiptap/core";
 
-const fromEveColor = (eveColor: string): string => {
+export const fromEveColor = (eveColor: string): string => {
   if (eveColor && eveColor.length === 9) {
+    // 0x0RRGGBB — single-digit alpha prefix, strip "0x0"
     return `#${eveColor.slice(3)}`;
+  }
+  if (eveColor && eveColor.length === 10 && eveColor.startsWith("0x")) {
+    // 0xAARRGGBB — two-digit alpha, strip "0xAA"
+    return `#${eveColor.slice(4)}`;
   }
   return eveColor;
 };
@@ -13,6 +18,9 @@ export interface FontColorMarkOptions {
 
 export const EveFontColor = Mark.create<FontColorMarkOptions>({
   name: "EVEFontMark",
+  // Render outside Link (priority 1000) so that CSS anchor-color rules can
+  // override inherited color on the <a> element directly.
+  priority: 1001,
   addOptions() {
     return {
       HTMLAttributes: {},
@@ -36,17 +44,20 @@ export const EveFontColor = Mark.create<FontColorMarkOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
+    const styles: string[] = [];
+    if (HTMLAttributes.size) {
+      styles.push(`font-size:${HTMLAttributes.size}pt`);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+    const cssColor = fromEveColor(HTMLAttributes.color);
+    if (cssColor) {
+      styles.push(`color:${cssColor}`);
+    }
     return [
       "span",
       mergeAttributes(
         { ...this.options.HTMLAttributes },
-        {
-          ...HTMLAttributes,
-          style: `font-size:${HTMLAttributes.size}pt;color:${fromEveColor(
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-            HTMLAttributes.color,
-          )}`,
-        },
+        { ...HTMLAttributes, style: styles.join(";") },
       ),
       0,
     ];

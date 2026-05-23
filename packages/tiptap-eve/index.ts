@@ -38,4 +38,5 @@ export const useEveEditor = (
   );
 };
 
+export * from "./Extensions";
 export * from "./utils";

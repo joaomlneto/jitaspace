@@ -10,6 +10,8 @@
     "clean": "rm -rf .turbo node_modules",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
+    "test": "jest --config ./jest.config.ts --runInBand",
+    "test:watch": "jest --config ./jest.config.ts --watch",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -35,10 +37,15 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
+    "@swc/core": "^1.13.20",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.10.13",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
     "eslint": "^9.39.2",
+    "jest": "^30.2.0",
+    "jest-environment-jsdom": "^30.2.0",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },
