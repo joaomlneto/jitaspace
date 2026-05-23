@@ -1,0 +1,37 @@
+import type { Config } from "jest";
+
+const config: Config = {
+  testEnvironment: "jsdom",
+  testMatch: ["<rootDir>/tests/**/*.test.tsx", "<rootDir>/tests/**/*.test.ts"],
+  transform: {
+    "^.+\\.tsx?$": [
+      "@swc/jest",
+      {
+        jsc: {
+          target: "es2022",
+          parser: {
+            syntax: "typescript",
+            tsx: true,
+          },
+          transform: {
+            react: {
+              runtime: "automatic",
+            },
+          },
+        },
+        module: {
+          type: "commonjs",
+        },
+      },
+    ],
+  },
+  // Transform ESM packages that need to be compiled
+  transformIgnorePatterns: [
+    "/node_modules/(?!(@mantine|@tabler|@jitaspace|@tiptap))",
+  ],
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  clearMocks: true,
+  restoreMocks: true,
+};
+
+export default config;

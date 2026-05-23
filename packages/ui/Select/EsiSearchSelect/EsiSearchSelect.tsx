@@ -50,7 +50,7 @@ export const EsiSearchSelect = memo(
 
     return (
       <Select
-        //filter={() => true}
+        filter={({ options }) => options}
         data={data}
         value={otherProps.value ?? value}
         onChange={(value: string | null, options) => {
