@@ -3,6 +3,6 @@
   <component name="SonarLintProjectSettings">
     <option name="bindingEnabled" value="true" />
     <option name="projectKey" value="joaomlneto_jitaspace" />
-    <option name="serverId" value="sonarqube cloud" />
+    <option name="serverId" value="SonarQube Cloud" />
   </component>
 </project>
