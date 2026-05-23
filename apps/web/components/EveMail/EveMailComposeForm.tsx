@@ -19,6 +19,7 @@ import { HttpStatusCode } from "axios";
 
 import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
 import { useAccessToken, useSelectedCharacter } from "@jitaspace/hooks";
+import { htmlToEveMail } from "@jitaspace/tiptap-eve";
 import { EmailRecipientSearchMultiSelect } from "@jitaspace/ui";
 
 import { MailMessageEditor } from "~/components/EveMail/Editor/MailMessageEditor";
@@ -70,7 +71,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
         characterId,
         {
           approved_cost: 0,
-          body: values.body,
+          body: htmlToEveMail(values.body),
           recipients: values.recipients.map((r) => ({
             recipient_id: Number(r),
             recipient_type: "character",
@@ -138,7 +139,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
                 characterId,
                 {
                   approved_cost: details.totalCost,
-                  body: values.body,
+                  body: htmlToEveMail(values.body),
                   recipients: values.recipients.map((r) => ({
                     recipient_id: Number(r),
                     recipient_type: "character",
