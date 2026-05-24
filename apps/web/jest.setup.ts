@@ -23,9 +23,9 @@ Object.defineProperty(window, "matchMedia", {
   }),
 });
 
-// Drain floating-ui positioning callbacks synchronously
+// Defer rAF callbacks like a real browser — calling synchronously causes
+// flushSync-inside-render errors when Mantine's Transition component fires.
 global.requestAnimationFrame = (cb) => {
-  cb(performance.now());
-  return 0;
+  return setTimeout(() => cb(performance.now()), 0) as unknown as number;
 };
-global.cancelAnimationFrame = () => {};
+global.cancelAnimationFrame = (id) => clearTimeout(id);
