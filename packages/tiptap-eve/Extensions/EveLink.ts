@@ -23,7 +23,6 @@ export const renderEveHref = (href: string) => {
   const KILL_REPORT_PREFIX = "killReport:";
   const RECRUITMENT_AD_PREFIX = "recruitmentAd:";
   const CONTRACT_PREFIX = "contract:";
-  const JOIN_CHANNEL_PREFIX = "joinChannel:";
 
   if (href.startsWith(INVENTORY_INFO_PREFIX)) {
     const targetType = href.slice(INVENTORY_INFO_PREFIX.length).split("//");
@@ -67,14 +66,9 @@ export const renderEveHref = (href: string) => {
     return `/contract/${contractId}`;
   }
 
-  if (href.startsWith(JOIN_CHANNEL_PREFIX)) {
-    const channelId = href.slice(JOIN_CHANNEL_PREFIX.length);
-    return `/channel/${channelId}`;
-  }
-
   return href;
 };
 
 export const EveLink = Link.configure({
-  protocols: ["showinfo", "warReport", "killReport", "recruitmentAd", "contract", "joinChannel"],
+  protocols: ["showinfo", "warReport", "killReport", "recruitmentAd", "contract", "joinChannel", "helpPointer", "shipSkinListing", "fitting", "localsvc", "opportunity", "careerProgramNode", "fleet"],
 });

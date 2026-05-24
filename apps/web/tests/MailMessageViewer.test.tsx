@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import { describe, expect, it, jest } from "@jest/globals";
 
@@ -6,19 +7,32 @@ import { describe, expect, it, jest } from "@jest/globals";
 // We control getHTML() so we can test the link post-processing logic directly.
 // Use require() below (not a static import) so the mock is guaranteed to be
 // in place before the module that consumes it is loaded.
+jest.mock("@mantine/modals", () => ({
+  openModal: jest.fn(),
+}));
+
+jest.mock("~/components/Fitting", () => ({
+  DnaShipFittingCard: () => null,
+}));
+
+const mockGetHTML = jest.fn(() =>
+  '<p><a href="showinfo:1377//93345033" target="_blank" rel="noopener noreferrer nofollow">Joao Neto</a>' +
+  ' and <a href="https://example.com" target="_blank" rel="noopener noreferrer nofollow">External</a>' +
+  ' and <a href="joinChannel:-26572540" target="_blank" rel="noopener noreferrer nofollow">Channel</a>' +
+  ' and <a href="fleet:1021212278338" target="_blank" rel="noopener noreferrer nofollow">Mining Fleet</a>' +
+  ' and <a href="helpPointer:neocom.airCareerProgram">Help</a>' +
+  ' and <a href="shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951">Skin</a>' +
+  ' and <a href="fitting:33470:31047;1:31011;1::">Stratios Fit</a></p>',
+);
+
 jest.mock("@jitaspace/tiptap-eve", () => ({
-  useEveEditor: () => ({
-    getHTML: () =>
-      '<p><a href="showinfo:1377//93345033" target="_blank" rel="noopener noreferrer nofollow">Joao Neto</a>' +
-      ' and <a href="https://example.com" target="_blank" rel="noopener noreferrer nofollow">External</a>' +
-      ' and <a href="joinChannel:-26572540" target="_blank" rel="noopener noreferrer nofollow">Channel</a></p>',
-  }),
+  useEveEditor: () => ({ getHTML: mockGetHTML }),
   convertEveMailLineBreaks: (s: string) => s,
   convertEveColorTags: (s: string) => s,
   convertEveUrlTags: (s: string) => s,
   renderEveHref: (href: string) => {
     if (href.startsWith("showinfo:1377//")) return `/character/${href.split("//")[1]}`;
-    if (href.startsWith("joinChannel:")) return `/channel/${href.slice("joinChannel:".length)}`;
+    if (href.startsWith("helpPointer:")) return href;
     return href;
   },
 }));
@@ -64,10 +78,10 @@ describe("MailMessageViewer", () => {
       expect(channelLink).toHaveStyle("color: #0000ff");
     });
 
-    it("translates joinChannel hrefs to /channel/ paths", () => {
+    it("preserves joinChannel hrefs unchanged", () => {
       render(<MailMessageViewer content="" />);
       const channelLink = screen.getByRole("link", { name: "Channel" });
-      expect(channelLink).toHaveAttribute("href", "/channel/-26572540");
+      expect(channelLink).toHaveAttribute("href", "joinChannel:-26572540");
     });
 
     it("renders links with bold font weight", () => {
@@ -104,6 +118,116 @@ describe("MailMessageViewer", () => {
       render(<MailMessageViewer content="" />);
       const externalLink = screen.getByRole("link", { name: "External" });
       expect(externalLink).toHaveAttribute("href", "https://example.com");
+    });
+
+    it("renders fleet invite links with the channel link color", () => {
+      render(<MailMessageViewer content="" />);
+      const fleetLink = screen.getByRole("link", { name: "Mining Fleet" });
+      expect(fleetLink).toHaveStyle("color: #6270dc");
+    });
+
+    it("uses the channelLinkColor prop for fleet invite links", () => {
+      render(<MailMessageViewer content="" channelLinkColor="#0000ff" />);
+      const fleetLink = screen.getByRole("link", { name: "Mining Fleet" });
+      expect(fleetLink).toHaveStyle("color: #0000ff");
+    });
+
+    it("renders fleet invite links with channel color even when wrapped in a color tag", () => {
+      mockGetHTML.mockReturnValueOnce(
+        '<p><span style="color:#ff0000"><a href="fleet:1021212278338">Mining Fleet</a></span></p>',
+      );
+      render(<MailMessageViewer content="" />);
+      const fleetLink = screen.getByRole("link", { name: "Mining Fleet" });
+      expect(fleetLink).toHaveStyle("color: #6270dc");
+    });
+
+    it("renders channel links with channel color even when wrapped in a color tag", () => {
+      mockGetHTML.mockReturnValueOnce(
+        '<p><span style="color:#ff0000"><a href="joinChannel:-26572540">Channel</a></span></p>',
+      );
+      render(<MailMessageViewer content="" />);
+      const channelLink = screen.getByRole("link", { name: "Channel" });
+      expect(channelLink).toHaveStyle("color: #6270dc");
+    });
+  });
+
+  describe("channel links (joinChannel:)", () => {
+    it("shows an alert with the channel ID when a channel link is clicked", async () => {
+      const user = userEvent.setup();
+      const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
+      render(<MailMessageViewer content="" />);
+      await user.click(screen.getByRole("link", { name: "Channel" }));
+      expect(alertSpy).toHaveBeenCalledWith(
+        expect.stringContaining("-26572540"),
+      );
+      alertSpy.mockRestore();
+    });
+  });
+
+  describe("shipSkinListing links", () => {
+    it("shows an alert when a ship skin listing link is clicked", async () => {
+      const user = userEvent.setup();
+      const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
+      render(<MailMessageViewer content="" />);
+      await user.click(screen.getByRole("link", { name: "Skin" }));
+      expect(alertSpy).toHaveBeenCalledTimes(1);
+      alertSpy.mockRestore();
+    });
+  });
+
+  describe("fitting links", () => {
+    it("opens a modal when a fitting link is clicked", async () => {
+      const user = userEvent.setup();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { openModal } = require("@mantine/modals") as { openModal: ReturnType<typeof jest.fn> };
+      render(<MailMessageViewer content="" />);
+      await user.click(screen.getByRole("link", { name: "Stratios Fit" }));
+      expect(openModal).toHaveBeenCalledTimes(1);
+    });
+
+    it("passes the DNA string (without 'fitting:' prefix) to the modal", async () => {
+      const user = userEvent.setup();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { openModal } = require("@mantine/modals") as { openModal: ReturnType<typeof jest.fn> };
+      render(<MailMessageViewer content="" />);
+      await user.click(screen.getByRole("link", { name: "Stratios Fit" }));
+      const call = (openModal as ReturnType<typeof jest.fn>).mock.calls[0]?.[0] as { children: React.ReactElement };
+      expect(call.children.props.dna).toBe("33470:31047;1:31011;1::");
+    });
+
+    it("uses the link text as the modal title", async () => {
+      const user = userEvent.setup();
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { openModal } = require("@mantine/modals") as { openModal: ReturnType<typeof jest.fn> };
+      render(<MailMessageViewer content="" />);
+      await user.click(screen.getByRole("link", { name: "Stratios Fit" }));
+      const call = (openModal as ReturnType<typeof jest.fn>).mock.calls[0]?.[0] as { title: string };
+      expect(call.title).toBe("Stratios Fit");
+    });
+
+    it("renders fitting links with the internal link color", () => {
+      render(<MailMessageViewer content="" />);
+      const fittingLink = screen.getByRole("link", { name: "Stratios Fit" });
+      expect(fittingLink).toHaveStyle("color: #d98d00");
+    });
+  });
+
+  describe("helpPointer links", () => {
+    it("shows an alert with the topic name when a helpPointer link is clicked", async () => {
+      const user = userEvent.setup();
+      const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
+      render(<MailMessageViewer content="" />);
+      await user.click(screen.getByRole("link", { name: "Help" }));
+      expect(alertSpy).toHaveBeenCalledWith(
+        expect.stringContaining("neocom.airCareerProgram"),
+      );
+      alertSpy.mockRestore();
+    });
+
+    it("does not navigate when a helpPointer link is clicked", async () => {
+      render(<MailMessageViewer content="" />);
+      const helpLink = screen.getByRole("link", { name: "Help" });
+      expect(helpLink).toHaveAttribute("href", "helpPointer:neocom.airCareerProgram");
     });
   });
 });
