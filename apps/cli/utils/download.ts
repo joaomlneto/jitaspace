@@ -6,7 +6,7 @@ import fetch, { type Response } from "node-fetch";
 import { globalProgress } from "../lib/progress.js";
 
 function showDownloadProgress(response: Response) {
-  const total = parseInt(response.headers.get("content-length") || "0");
+  const total = Number.parseInt(response.headers.get("content-length") || "0", 10);
 
   if (!response.body) {
     throw new Error("Response body is empty");

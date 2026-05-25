@@ -15,7 +15,7 @@ async function getLPStoreCorporationData(
   cacheLife("days");
 
   const numericRequestedCorporation = Number(corporationId);
-  const requestedCorporationId = !isNaN(numericRequestedCorporation)
+  const requestedCorporationId = !Number.isNaN(numericRequestedCorporation)
     ? numericRequestedCorporation
     : undefined;
 

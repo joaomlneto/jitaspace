@@ -38,7 +38,7 @@ export default function Page() {
       data?.data.filter(
         (fit) =>
           selectedShipType === null ||
-          fit.ship_type_id === parseInt(selectedShipType, 10),
+          fit.ship_type_id === Number.parseInt(selectedShipType, 10),
       ) ?? [],
     [data?.data, selectedShipType],
   );

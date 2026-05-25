@@ -30,7 +30,6 @@ import {
 } from "@jitaspace/hooks";
 import { AssetLocationSelect, ISKAmount } from "@jitaspace/ui";
 
-import { AssetsTable } from "~/components/Assets";
 import { AssetsDataTable } from "~/components/Assets/AssetsDataTable";
 import { ScopeGuard } from "~/components/ScopeGuard";
 
@@ -140,7 +139,7 @@ export default function Page() {
             onChange={(value) => {
               filterForm.setFieldValue(
                 "location_id",
-                value ? parseInt(value, 10) : null,
+                value ? Number.parseInt(value, 10) : null,
               );
             }}
           />
@@ -176,11 +175,6 @@ export default function Page() {
             onChange={pagination.setPage}
           />
         </Center>
-        {false && (
-          <AssetsTable
-            assets={entries.slice(offset, offset + ENTRIES_PER_PAGE)}
-          />
-        )}
         <AssetsDataTable
           entries={entries.slice(offset, offset + ENTRIES_PER_PAGE)}
         />

@@ -321,7 +321,7 @@ export function addIdToItem(
   Object.keys(obj).forEach(
     (id) =>
       (obj[id][idAttributeName] =
-        idAttributeType === "number" ? parseInt(id) : id),
+        idAttributeType === "number" ? Number.parseInt(id, 10) : id),
   );
   return obj;
 }

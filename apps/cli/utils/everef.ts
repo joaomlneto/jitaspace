@@ -39,8 +39,9 @@ export async function getEveRefDataDirectoryContents(
   // parse the entries from the <pre> element
   const files = inner.querySelectorAll(".data-file").map((entry) => {
     const name = entry.querySelector(".data-file-url")!.text;
-    const size = parseInt(
+    const size = Number.parseInt(
       entry.querySelector(".data-file-size-bytes")!.text.replaceAll(",", ""),
+      10,
     );
     const lastModified = new Date(
       entry.querySelector(".data-file-last-modified")!.text,

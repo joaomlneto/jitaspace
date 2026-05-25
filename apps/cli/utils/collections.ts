@@ -93,7 +93,7 @@ export async function generateCollectionFiles(
 
   // write index file
   const allIds = Object.keys(data).map((key) =>
-    idAttributeType === "number" ? parseInt(key) : key,
+    idAttributeType === "number" ? Number.parseInt(key, 10) : key,
   );
   fs.writeFileSync(indexPath, JSON.stringify(allIds));
 
