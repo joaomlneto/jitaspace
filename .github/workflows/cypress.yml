@@ -15,14 +15,22 @@ jobs:
       TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Turborepo caching
       # Skip runtime env validation in Next.js during CI runs where secrets are not available
       SKIP_ENV_VALIDATION: "1"
-      # Prisma config resolves DATABASE_URL even during `prisma generate`; provide a dummy value
-      # so postinstall doesn't fail. No actual DB connection is made during generate.
       DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
     strategy:
       fail-fast: false # https://github.com/cypress-io/github-action/issues/48
       matrix:
         containers: [1, 2] # Uses 2 parallel instances
     steps:
+      - name: Start CockroachDB
+        run: |
+          docker run -d \
+            --name cockroachdb \
+            -p 26257:26257 \
+            -p 8080:8080 \
+            cockroachdb/cockroach:latest \
+            start-single-node --insecure --store=type=mem,size=0.5
+          until curl -sf http://localhost:8080/health?ready=1; do sleep 1; done
+          docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS jitaspace;"
       - name: Checkout
         uses: actions/checkout@v6
       - uses: pnpm/action-setup@v2
@@ -35,6 +43,8 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
+      - name: Push database schema
+        run: cd packages/db && pnpm exec prisma db push
       - name: Build
         run: pnpm build
       - name: Cypress run
