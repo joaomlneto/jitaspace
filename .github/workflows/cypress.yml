@@ -56,7 +56,7 @@ jobs:
         run: pnpm install
       - name: Cache Cypress binary
         id: cypress-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/Cypress
           key: cypress-${{ runner.os }}-${{ hashFiles('apps/web/package.json') }}
