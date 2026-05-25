@@ -1,10 +1,10 @@
 "use client";
 
 import type { SelectProps } from "@mantine/core";
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import { Group, Select, Text } from "@mantine/core";
 
-import { useEsiNamesCache } from "@jitaspace/hooks";
+import { useEsiNameLookup } from "@jitaspace/hooks";
 
 import { EveEntityAvatar } from "../../Avatar";
 
@@ -17,8 +17,15 @@ export type EveEntitySelectProps = Omit<SelectProps, "data"> & {
 
 export const EveEntitySelect = memo(
   ({ entityIds, ...otherProps }: EveEntitySelectProps) => {
-    const cache = useEsiNamesCache();
-    const getNameFromCache = (id: number) => cache[id]?.value?.name;
+    const entityEntries = useMemo(
+      () =>
+        entityIds.map(({ id }) => ({
+          id: typeof id === "string" ? Number.parseInt(id, 10) : id,
+        })),
+      [entityIds],
+    );
+    const names = useEsiNameLookup(entityEntries);
+    const getNameFromCache = (id: number) => names[id.toString()]?.value?.name;
 
     return (
       <Select
@@ -44,4 +51,4 @@ export const EveEntitySelect = memo(
     );
   },
 );
-EveEntitySelect.displayName = "EsiSearchSelect";
+EveEntitySelect.displayName = "EveEntitySelect";

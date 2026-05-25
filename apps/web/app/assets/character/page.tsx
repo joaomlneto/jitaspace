@@ -2,9 +2,7 @@
 
 import {
   useCallback,
-  useEffect,
   useMemo
-  
 } from "react";
 import {
   Center,
@@ -18,13 +16,12 @@ import {
   Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { useForceUpdate, usePagination, useTimeout } from "@mantine/hooks";
+import { usePagination } from "@mantine/hooks";
 
 import { AssetsIcon } from "@jitaspace/eve-icons";
 import {
   useCharacterAssets,
-  useEsiNamePrefetch,
-  useEsiNamesCache,
+  useEsiNameLookup,
   useMarketPrices,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
@@ -35,7 +32,6 @@ import { ScopeGuard } from "~/components/ScopeGuard";
 
 
 export default function Page() {
-  const forceUpdate = useForceUpdate();
   const character = useSelectedCharacter();
   const { assets, isLoading } = useCharacterAssets(character?.characterId);
   const filterForm = useForm<{ location_id: number | null; name: string }>({
@@ -44,19 +40,21 @@ export default function Page() {
       name: "",
     },
   });
-  const cache = useEsiNamesCache();
   const { data: marketPrices } = useMarketPrices();
 
-  const getNameFromCache = useCallback(
-    (id: number) => cache[id]?.value?.name,
-    [cache],
+  const assetEntries = useMemo(
+    () =>
+      Object.values(assets ?? {}).map((asset) => ({
+        id: asset.type_id,
+        category: "inventory_type" as const,
+      })),
+    [assets],
   );
+  const names = useEsiNameLookup(assetEntries);
 
-  useEsiNamePrefetch(
-    Object.values(assets ?? {}).map((asset) => ({
-      id: asset.type_id,
-      category: "inventory_type",
-    })),
+  const getNameFromCache = useCallback(
+    (id: number) => names[id.toString()]?.value?.name,
+    [names],
   );
 
   const filtersEnabled =
@@ -114,14 +112,6 @@ export default function Page() {
   const pagination = usePagination({ total: numPages, siblings: 3 });
   const offset = ENTRIES_PER_PAGE * (pagination.active - 1);
 
-  // reload if some asset names are still missing
-  const { start, clear } = useTimeout(() => forceUpdate(), 1000);
-
-  useEffect(() => {
-    if (numUndefinedNames > 0) start();
-    else clear();
-  }, [numUndefinedNames, start]);
-
   return (
     <ScopeGuard requiredScopes={["esi-assets.read_assets.v1"]}>
       <Container size="xl">
@@ -161,11 +151,7 @@ export default function Page() {
         </Text>
         {numUndefinedNames > 0 && (
           <Text color="red" size="sm">
-            Failed to resolve names for {numUndefinedNames} items! This causes
-            the ordering of items to be wrong.
-            <br />
-            Keep changing between pages 1 and 2 and it should resolve itself...
-            This is an annoying bug, sorry about that!
+            Resolving names for {numUndefinedNames} items…
           </Text>
         )}
         <Center>

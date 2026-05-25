@@ -206,6 +206,13 @@ export function useEsiNamesCache() {
   return fetchCache.readAll();
 }
 
+export function useEsiNameLookup(
+  entries: { id: number; category?: ResolvableEntityCategory }[],
+) {
+  useEsiNamePrefetch(entries);
+  return useEsiNames(entries);
+}
+
 export function useEsiNamePrefetch(
   entries: {
     id: number | string;
@@ -220,67 +227,62 @@ export function useEsiNamePrefetch(
   }, [entries]);
 }
 
+function makeCacheUpdater(
+  key: string,
+  value: CacheState<EsiNameCacheValue, Error>,
+) {
+  return (
+    prev: Record<string, CacheState<EsiNameCacheValue, Error> | undefined>,
+  ) => {
+    if (prev[key]?.value === value.value) return prev;
+    return { ...prev, [key]: value };
+  };
+}
+
 export function useEsiNames(
   names: {
     id: number;
     category?: ResolvableEntityCategory;
   }[],
-) {
-  const ids = useMemo(() => names.map((name) => name.id), [names]);
-  const keys = useMemo(() => ids.map((id) => id.toString()), [ids]);
-  const [state, setState] = useState<{
-    keys: string[];
-    cache: typeof fetchCache;
-    current: {
-      [key: string]: CacheState<EsiNameCacheValue, Error> | undefined;
-    };
-    //current: Record<string, CacheState<EsiNameCacheValue, Error> | undefined>;
+): { [key: string]: CacheState<EsiNameCacheValue, Error> | undefined } {
+  const keys = useMemo(() => names.map((name) => name.id.toString()), [names]);
+  const [current, setCurrent] = useState<{
+    [key: string]: CacheState<EsiNameCacheValue, Error> | undefined;
   }>(() => {
-    const current: {
+    const initial: {
       [key: string]: CacheState<EsiNameCacheValue, Error> | undefined;
     } = {};
-    keys.forEach((key) => (current[key] = fetchCache.read(key)));
-    return { keys, cache: fetchCache, current };
+    keys.forEach((key) => (initial[key] = fetchCache.read(key)));
+    return initial;
   });
 
   useEffect(() => {
     let didUnsubscribe = false;
-
-    const checkForUpdates = (
-      value: CacheState<EsiNameCacheValue, Error> | undefined,
-    ) => {
-      if (didUnsubscribe) return;
-      if (value === undefined) return;
-      setState((prev) => {
-        // Bails if our key has changed from under us
-        if (!value?.id || !ids.includes(value.id)) return prev;
-        // Bails if our value hasn't changed
-        if (prev.current[value.id]?.value === value.value) return prev;
-        return {
-          ...prev,
-          current: {
-            ...prev.current,
-            [value.id]: value,
-          },
-        };
-      });
-    };
+    const callbacks = new Map<
+      string,
+      (v: CacheState<EsiNameCacheValue, Error> | undefined) => void
+    >();
 
     keys.forEach((key) => {
-      state.cache.subscribe(key, checkForUpdates);
-    });
-
-    keys.forEach((key) => {
-      checkForUpdates(state.cache.read(key));
+      const callback = (
+        value: CacheState<EsiNameCacheValue, Error> | undefined,
+      ) => {
+        if (didUnsubscribe) return;
+        if (value === undefined) return;
+        setCurrent(makeCacheUpdater(key, value));
+      };
+      callbacks.set(key, callback);
+      fetchCache.subscribe(key, callback);
+      callback(fetchCache.read(key));
     });
 
     return () => {
       didUnsubscribe = true;
-      keys.forEach((key) => {
-        state.cache.unsubscribe(key, checkForUpdates);
+      callbacks.forEach((callback, key) => {
+        fetchCache.unsubscribe(key, callback);
       });
     };
-  }, [ids, keys, state.cache]);
+  }, [keys]);
 
-  return state;
+  return current;
 }

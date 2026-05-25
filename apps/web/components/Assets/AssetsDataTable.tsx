@@ -1,80 +1,38 @@
-import { memo, useCallback, useEffect, useMemo } from "react";
-import { Group, Text } from "@mantine/core";
-import { useForceUpdate, useTimeout } from "@mantine/hooks";
-import type {
-  MRT_ColumnDef} from "mantine-react-table";
-import {
-  MantineReactTable,
-  useMantineReactTable,
-} from "mantine-react-table";
+import type { MRT_ColumnDef } from "mantine-react-table";
+import { memo, useMemo } from "react";
+import { Group } from "@mantine/core";
+import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
-import type {
-  CharacterAsset} from "@jitaspace/hooks";
-import {
-  useEsiNamePrefetch,
-  useEsiNamesCache,
-  useMarketPrices,
-} from "@jitaspace/hooks";
+import type { CharacterAsset } from "@jitaspace/hooks";
+import { useEsiNameLookup, useMarketPrices } from "@jitaspace/hooks";
 import { ISKAmount, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
-
-
-
-
 
 interface AssetsDataTableProps {
   entries: CharacterAsset[];
 }
 
 export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {
-  const forceUpdate = useForceUpdate();
-  const cache = useEsiNamesCache();
   const { data: marketPrices } = useMarketPrices();
 
-  useEsiNamePrefetch(
-    Object.values(entries ?? {}).map((asset) => ({
-      id: asset.type_id,
-      category: "inventory_type",
-    })),
-  );
-
-  const getNameFromCache = useCallback(
-    (id: number) => cache[id]?.value?.name,
-    [cache],
-  );
-
-  const typeIds = useMemo(
-    () => [...new Set(entries.map((entry) => entry.type_id))],
+  const assetEntries = useMemo(
+    () =>
+      entries.map((asset) => ({
+        id: asset.type_id,
+        category: "inventory_type" as const,
+      })),
     [entries],
   );
-
-  const typeNames = useMemo(() => {
-    const names: Record<number, string | undefined> = {};
-    typeIds.forEach((typeId) => (names[typeId] = getNameFromCache(typeId)));
-    return names;
-  }, [getNameFromCache, typeIds]);
+  const names = useEsiNameLookup(assetEntries);
 
   const augmentedEntries = useMemo(
     () =>
       entries.map((entry) => ({
         ...entry,
         unitPrice: marketPrices[entry.type_id]?.adjusted_price,
-        typeName: typeNames[entry.type_id],
+        typeName: names[entry.type_id.toString()]?.value?.name,
       })),
-    [entries, marketPrices, typeNames],
+    [entries, marketPrices, names],
   );
-
-  const numUndefinedNames = useMemo(
-    () =>
-      augmentedEntries.filter((entry) => entry.typeName === undefined).length,
-    [augmentedEntries],
-  );
-
-  // reload if some asset names are still missing
-  const { start } = useTimeout(() => forceUpdate(), 1000);
-
-  useEffect(() => {
-    if (numUndefinedNames > 0) start();
-  }, [numUndefinedNames, start]);
 
   const columns = useMemo<MRT_ColumnDef<(typeof augmentedEntries)[number]>[]>(
     () => [
@@ -144,11 +102,6 @@ export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {
     },
   });
 
-  return (
-    <>
-      <Text>NUM UNDEFINED: {numUndefinedNames}</Text>
-      <MantineReactTable table={table} />
-    </>
-  );
+  return <MantineReactTable table={table} />;
 });
 AssetsDataTable.displayName = "AssetsDataTable";

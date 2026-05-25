@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 import { getRateLimitState, subscribeToRateLimitState } from "../rate-limit";
 
 export const useEsiRateLimit = () => {
-  const [state, setState] = useState(() => getRateLimitState());
+  const [state, setState] = useState<ReturnType<typeof getRateLimitState>>({});
 
   useEffect(() => {
+    setState(getRateLimitState());
     return subscribeToRateLimitState((newState) => {
       setState({ ...newState });
     });

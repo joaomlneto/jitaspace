@@ -24,7 +24,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
 import { RouterTransition } from "~/components/RouterTransition.tsx";
-import { JitaSpotlightProvider } from "~/components/Spotlight";
+import { MainSpotlight } from "~/components/Spotlight";
 import { env } from "~/env";
 import { MainLayout } from "~/layouts";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
@@ -118,14 +118,13 @@ export default function RootLayout({
                   <Suspense fallback={null}>
                     <RouterTransition />
                   </Suspense>
-                  <JitaSpotlightProvider>
-                    <ModalsProvider
-                      modals={contextModals}
-                      modalProps={{ centered: true }}
-                    >
-                      <MainLayout>{children}</MainLayout>
-                    </ModalsProvider>
-                  </JitaSpotlightProvider>
+                  <MainSpotlight />
+                  <ModalsProvider
+                    modals={contextModals}
+                    modalProps={{ centered: true }}
+                  >
+                    <MainLayout>{children}</MainLayout>
+                  </ModalsProvider>
                 </>
               </EsiClientSSOAccessTokenInjector>
             </MySessionProvider>

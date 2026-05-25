@@ -1,9 +1,9 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Select, type SelectProps } from "@mantine/core";
 
-import { useCharacterAssets, useEsiNamesCache } from "@jitaspace/hooks";
+import { useCharacterAssets, useEsiNameLookup } from "@jitaspace/hooks";
 
 
 
@@ -16,8 +16,12 @@ export const AssetLocationSelect = memo(
     const { locations } = useCharacterAssets();
     const [value, onChange] = useState<string | null>();
 
-    const cache = useEsiNamesCache();
-    const getNameFromCache = (id: number) => cache[id]?.value?.name;
+    const locationEntries = useMemo(
+      () => Object.values(locations).map((loc) => ({ id: loc.location_id })),
+      [locations],
+    );
+    const names = useEsiNameLookup(locationEntries);
+    const getNameFromCache = (id: number) => names[id.toString()]?.value?.name;
 
     return (
       <>
