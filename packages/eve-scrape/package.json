@@ -2,6 +2,7 @@
   "name": "@jitaspace/eve-scrape",
   "description": "Scripts to scrape EVE Online information",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
@@ -21,11 +22,11 @@
     "@jitaspace/evekill-client": "workspace:*",
     "@jitaspace/kv": "workspace:*",
     "@jitaspace/sde-client": "workspace:*",
-    "axios": "^1.9.0",
-    "decimal.js": "^10.5.0",
+    "axios": "^1.16.1",
+    "decimal.js": "^10.6.0",
     "inngest": "^3.54.2",
     "p-limit": "^6.2.0",
-    "tar-stream": "^3.1.7",
+    "tar-stream": "^3.2.0",
     "untar-to-memory": "^2.0.0",
     "unbzip2-stream": "^1.4.3"
   },
@@ -33,13 +34,13 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^24.10.13",
+    "@types/node": "^24.12.4",
     "@types/tar-stream": "^3.1.4",
     "@types/unbzip2-stream": "^1.4.3",
-    "eslint": "^9.39.2",
-    "inngest-cli": "^1.19.1",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.3"
+    "eslint": "^9.39.4",
+    "inngest-cli": "^1.22.0",
+    "prettier": "^3.8.3",
+    "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"
 }

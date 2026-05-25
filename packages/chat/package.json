@@ -2,6 +2,7 @@
   "name": "@jitaspace/chat",
   "description": "JitaSpace Chat Client",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "./index.tsx",
   "types": "./index.tsx",
@@ -14,21 +15,21 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@chat-adapter/discord": "^4.16.1",
-    "@chat-adapter/state-redis": "^4.16.1",
-    "chat": "^4.16.1",
-    "dotenv": "^17.2.3",
-    "pg": "^8.16.3"
+    "@chat-adapter/discord": "^4.29.0",
+    "@chat-adapter/state-redis": "^4.29.0",
+    "chat": "^4.29.0",
+    "dotenv": "^17.4.2",
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^24.10.13",
-    "@types/pg": "^8.16.0",
-    "eslint": "^9.39.2",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.3"
+    "@types/node": "^24.12.4",
+    "@types/pg": "^8.20.0",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.3",
+    "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"
 }

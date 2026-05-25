@@ -2,6 +2,7 @@
   "name": "@jitaspace/kv",
   "description": "JitaSpace Key-Value Store",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
@@ -16,18 +17,18 @@
   "dependencies": {
     "@jitaspace/esi-client": "workspace:*",
     "bull": "^4.16.5",
-    "redis": "^5.6.1"
+    "redis": "^5.12.1"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
     "@types/bull": "^4.10.4",
-    "@types/node": "^24.10.13",
-    "concurrently": "^9.2.0",
-    "eslint": "^9.39.2",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.3"
+    "@types/node": "^24.12.4",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.3",
+    "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"
 }

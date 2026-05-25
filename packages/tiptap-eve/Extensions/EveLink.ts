@@ -1,7 +1,8 @@
 "use client";
 
-import { Link } from "@mantine/tiptap";
-import { mergeAttributes } from "@tiptap/core";
+import TipTapLink from "@tiptap/extension-link";
+
+const Link = TipTapLink.configure({ openOnClick: false });
 
 const STATION_TYPE_IDS = [
   54, 56, 57, 58, 59, 1529, 1530, 1531, 1926, 1927, 1928, 1929, 1930, 1931,

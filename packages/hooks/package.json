@@ -2,6 +2,7 @@
   "name": "@jitaspace/hooks",
   "description": "ESI React Hooks",
   "version": "0.1.1",
+  "private": true,
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
@@ -32,29 +33,29 @@
     "@jitaspace/fuzzworks-market-client": "workspace:*",
     "@jitaspace/sde-client": "workspace:*",
     "@react-hook/cache": "^1.1.1",
-    "@tanstack/db": "^0.6.5",
-    "@tanstack/query-db-collection": "^1.0.36",
-    "@tanstack/react-db": "^0.1.82",
-    "@tanstack/react-query": "^5.81.5",
-    "axios": "^1.9.0",
+    "@tanstack/db": "^0.6.7",
+    "@tanstack/query-db-collection": "^1.0.38",
+    "@tanstack/react-db": "^0.1.85",
+    "@tanstack/react-query": "^5.100.14",
+    "axios": "^1.16.1",
     "zustand": "^4.5.7"
   },
   "peerDependencies": {
-    "react": "^19.2.3",
-    "react-dom": "^19.1.0"
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@types/node": "^24.10.13",
-    "@types/react": "^19.2.15",
-    "eslint": "^9.39.2",
-    "prettier": "^3.5.3",
-    "react": "^19.2.3",
-    "react-dom": "^19.1.0",
-    "tsup": "^8.4.0",
-    "typescript": "^5.8.3"
+    "@types/node": "^24.12.4",
+    "@types/react": "^19.1.6",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"
 }

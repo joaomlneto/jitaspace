@@ -1,6 +1,7 @@
 {
   "name": "@jitaspace/auth-utils",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
@@ -13,18 +14,18 @@
   },
   "dependencies": {
     "@jitaspace/esi-metadata": "workspace:*",
-    "next": "^16.1.5",
-    "next-auth": "^4.24.11",
-    "react": "^19.2.3",
-    "react-dom": "^19.1.0"
+    "next": "^16.2.6",
+    "next-auth": "^4.24.14",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "eslint": "^9.39.2",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.3"
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.3",
+    "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"
 }

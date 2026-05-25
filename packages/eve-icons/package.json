@@ -2,6 +2,7 @@
   "name": "@jitaspace/eve-icons",
   "description": "EVE Icons",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
@@ -18,13 +19,13 @@
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
     "@jitaspace/utils": "workspace:*",
-    "@types/node": "^24.10.13",
-    "@types/react": "^19.2.15",
-    "eslint": "^9.39.2",
-    "prettier": "^3.5.3",
-    "react": "^19.2.3",
-    "react-dom": "^19.1.0",
-    "typescript": "^5.8.3"
+    "@types/node": "^24.12.4",
+    "@types/react": "^19.1.6",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"
 }
