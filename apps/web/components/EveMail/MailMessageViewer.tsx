@@ -52,7 +52,9 @@ export function MailMessageViewer({
     },
   );
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleLinkInteraction = (
+    e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>,
+  ) => {
     const anchor = (e.target as HTMLElement).closest("a");
     if (!anchor) return;
     const href = anchor.getAttribute("href");
@@ -109,7 +111,9 @@ export function MailMessageViewer({
     <div
       className={styles.content}
       dangerouslySetInnerHTML={{ __html: html }}
-      onClick={handleClick}
+      onClick={handleLinkInteraction}
+      onKeyDown={(e) => { if (e.key === "Enter") handleLinkInteraction(e); }}
+      role="presentation"
     />
   );
 }
