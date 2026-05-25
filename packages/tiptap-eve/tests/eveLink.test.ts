@@ -37,39 +37,15 @@ describe("renderEveHref", () => {
     });
   });
 
-  describe("showinfo links — corporations (type 2)", () => {
-    it("converts type 2 to /corporation/:id", () => {
-      expect(renderEveHref("showinfo:2//98000001")).toBe(
-        "/corporation/98000001",
-      );
-    });
-  });
-
-  describe("showinfo links — regions (type 3)", () => {
-    it("converts type 3 to /region/:id", () => {
-      expect(renderEveHref("showinfo:3//10000002")).toBe("/region/10000002");
-    });
-  });
-
-  describe("showinfo links — constellations (type 4)", () => {
-    it("converts type 4 to /constellation/:id", () => {
-      expect(renderEveHref("showinfo:4//20000020")).toBe(
-        "/constellation/20000020",
-      );
-    });
-  });
-
-  describe("showinfo links — solar systems (type 5)", () => {
-    it("converts type 5 to /system/:id", () => {
-      expect(renderEveHref("showinfo:5//30000142")).toBe("/system/30000142");
-    });
-  });
-
-  describe("showinfo links — alliances (type 16159)", () => {
-    it("converts type 16159 to /alliance/:id", () => {
-      expect(renderEveHref("showinfo:16159//498125261")).toBe(
-        "/alliance/498125261",
-      );
+  describe("showinfo links — named entity types", () => {
+    it.each([
+      ["corporations (type 2)", "showinfo:2//98000001", "/corporation/98000001"],
+      ["regions (type 3)", "showinfo:3//10000002", "/region/10000002"],
+      ["constellations (type 4)", "showinfo:4//20000020", "/constellation/20000020"],
+      ["solar systems (type 5)", "showinfo:5//30000142", "/system/30000142"],
+      ["alliances (type 16159)", "showinfo:16159//498125261", "/alliance/498125261"],
+    ])("converts %s", (_name, input, expected) => {
+      expect(renderEveHref(input)).toBe(expected);
     });
   });
 
@@ -130,12 +106,11 @@ describe("renderEveHref", () => {
   });
 
   describe("warReport links", () => {
-    it("converts warReport to /war/:id", () => {
-      expect(renderEveHref("warReport:1234567")).toBe("/war/1234567");
-    });
-
-    it("converts warReport with numeric ID", () => {
-      expect(renderEveHref("warReport:42")).toBe("/war/42");
+    it.each([
+      ["numeric ID", "warReport:1234567", "/war/1234567"],
+      ["small numeric ID", "warReport:42", "/war/42"],
+    ])("converts warReport with %s", (_name, input, expected) => {
+      expect(renderEveHref(input)).toBe(expected);
     });
   });
 
@@ -189,71 +164,22 @@ describe("renderEveHref", () => {
     });
   });
 
-  describe("joinChannel links", () => {
-    it("passes joinChannel: hrefs through unchanged (intercepted by click handler)", () => {
-      expect(renderEveHref("joinChannel:-26572540")).toBe(
-        "joinChannel:-26572540",
-      );
-    });
-
-    it("handles positive channel IDs unchanged", () => {
-      expect(renderEveHref("joinChannel:12345678")).toBe("joinChannel:12345678");
-    });
-  });
-
-  describe("helpPointer links", () => {
-    it("passes helpPointer: hrefs through unchanged", () => {
-      expect(renderEveHref("helpPointer:neocom.airCareerProgram")).toBe(
-        "helpPointer:neocom.airCareerProgram",
-      );
-    });
-  });
-
-  describe("fitting links", () => {
-    it("passes fitting: hrefs through unchanged", () => {
-      expect(renderEveHref("fitting:33470:31047;1:31011;1::")).toBe(
-        "fitting:33470:31047;1:31011;1::",
-      );
-    });
-  });
-
-  describe("localsvc links", () => {
-    it("passes localsvc: hrefs through unchanged (intercepted by click handler)", () => {
-      expect(renderEveHref("localsvc:method=OpenFWWindow")).toBe(
-        "localsvc:method=OpenFWWindow",
-      );
-    });
-  });
-
-  describe("opportunity links", () => {
-    it("passes opportunity: hrefs through unchanged (intercepted by click handler)", () => {
-      expect(renderEveHref("opportunity:epic_arcs:40")).toBe(
-        "opportunity:epic_arcs:40",
-      );
-    });
-  });
-
-  describe("careerProgramNode links", () => {
-    it("passes careerProgramNode: hrefs through unchanged (intercepted by click handler)", () => {
-      expect(renderEveHref("careerProgramNode:7:410:None")).toBe(
-        "careerProgramNode:7:410:None",
-      );
-    });
-  });
-
-  describe("fleet links", () => {
-    it("passes fleet: hrefs through unchanged (intercepted by click handler)", () => {
-      expect(renderEveHref("fleet:1021212278338")).toBe("fleet:1021212278338");
-    });
-  });
-
-  describe("shipSkinListing links", () => {
-    it("passes shipSkinListing: hrefs through unchanged", () => {
-      expect(
-        renderEveHref(
-          "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
-        ),
-      ).toBe("shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951");
+  describe("pass-through links (intercepted by click handler or app routing)", () => {
+    it.each([
+      ["joinChannel (negative ID)", "joinChannel:-26572540"],
+      ["joinChannel (positive ID)", "joinChannel:12345678"],
+      ["helpPointer", "helpPointer:neocom.airCareerProgram"],
+      ["fitting", "fitting:33470:31047;1:31011;1::"],
+      ["localsvc", "localsvc:method=OpenFWWindow"],
+      ["opportunity", "opportunity:epic_arcs:40"],
+      ["careerProgramNode", "careerProgramNode:7:410:None"],
+      ["fleet", "fleet:1021212278338"],
+      [
+        "shipSkinListing",
+        "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
+      ],
+    ])("passes %s hrefs through unchanged", (_name, href) => {
+      expect(renderEveHref(href)).toBe(href);
     });
   });
 
@@ -297,136 +223,57 @@ describe("EveLink protocol configuration", () => {
   // TipTap's setLink command calls isAllowedUri before applying the mark —
   // if it returns false the command silently no-ops. These tests verify that
   // our protocol list unlocks all EVE-specific schemes.
-  const eveProtocols = ["showinfo", "warReport", "killReport", "recruitmentAd", "contract", "joinChannel", "helpPointer", "shipSkinListing", "fitting", "localsvc", "opportunity", "careerProgramNode", "fleet"];
+  const eveProtocols = [
+    "showinfo",
+    "warReport",
+    "killReport",
+    "recruitmentAd",
+    "contract",
+    "joinChannel",
+    "helpPointer",
+    "shipSkinListing",
+    "fitting",
+    "localsvc",
+    "opportunity",
+    "careerProgramNode",
+    "fleet",
+  ];
 
-  it("allows showinfo: URLs when the protocol is listed", () => {
-    expect(isAllowedUri("showinfo:1373//93345033", eveProtocols)).toBeTruthy();
-  });
+  const EVE_PROTOCOL_SAMPLES: [string, string][] = [
+    ["showinfo", "showinfo:1373//93345033"],
+    ["warReport", "warReport:42"],
+    [
+      "killReport",
+      "killReport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
+    ],
+    ["recruitmentAd", "recruitmentAd:98645206//155600"],
+    ["contract", "contract:0//196428637"],
+    ["joinChannel", "joinChannel:-26572540"],
+    ["helpPointer", "helpPointer:neocom.airCareerProgram"],
+    [
+      "shipSkinListing",
+      "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
+    ],
+    ["fitting", "fitting:33470:31047;1::"],
+    ["localsvc", "localsvc:method=OpenFWWindow"],
+    ["opportunity", "opportunity:epic_arcs:40"],
+    ["careerProgramNode", "careerProgramNode:7:410:None"],
+    ["fleet", "fleet:1021212278338"],
+  ];
 
-  it("allows warReport: URLs when the protocol is listed", () => {
-    expect(isAllowedUri("warReport:42", eveProtocols)).toBeTruthy();
-  });
+  it.each(EVE_PROTOCOL_SAMPLES)(
+    "allows %s: URLs when the protocol is listed",
+    (_, url) => {
+      expect(isAllowedUri(url, eveProtocols)).toBeTruthy();
+    },
+  );
 
-  it("allows killReport: URLs when the protocol is listed", () => {
-    expect(
-      isAllowedUri(
-        "killReport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
-        eveProtocols,
-      ),
-    ).toBeTruthy();
-  });
-
-  it("rejects showinfo: URLs when no EVE protocols are configured", () => {
-    expect(isAllowedUri("showinfo:1373//93345033", [])).toBeFalsy();
-  });
-
-  it("rejects warReport: URLs when no EVE protocols are configured", () => {
-    expect(isAllowedUri("warReport:42", [])).toBeFalsy();
-  });
-
-  it("allows recruitmentAd: URLs when the protocol is listed", () => {
-    expect(
-      isAllowedUri("recruitmentAd:98645206//155600", eveProtocols),
-    ).toBeTruthy();
-  });
-
-  it("allows contract: URLs when the protocol is listed", () => {
-    expect(
-      isAllowedUri("contract:0//196428637", eveProtocols),
-    ).toBeTruthy();
-  });
-
-  it("rejects contract: URLs when no EVE protocols are configured", () => {
-    expect(isAllowedUri("contract:0//196428637", [])).toBeFalsy();
-  });
-
-  it("allows joinChannel: URLs when the protocol is listed", () => {
-    expect(isAllowedUri("joinChannel:-26572540", eveProtocols)).toBeTruthy();
-  });
-
-  it("rejects joinChannel: URLs when no EVE protocols are configured", () => {
-    expect(isAllowedUri("joinChannel:-26572540", [])).toBeFalsy();
-  });
-
-  it("allows helpPointer: URLs when the protocol is listed", () => {
-    expect(
-      isAllowedUri("helpPointer:neocom.airCareerProgram", eveProtocols),
-    ).toBeTruthy();
-  });
-
-  it("rejects helpPointer: URLs when no EVE protocols are configured", () => {
-    expect(isAllowedUri("helpPointer:neocom.airCareerProgram", [])).toBeFalsy();
-  });
-
-  it("allows shipSkinListing: URLs when the protocol is listed", () => {
-    expect(
-      isAllowedUri(
-        "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
-        eveProtocols,
-      ),
-    ).toBeTruthy();
-  });
-
-  it("allows fitting: URLs when the protocol is listed", () => {
-    expect(
-      isAllowedUri("fitting:33470:31047;1::", eveProtocols),
-    ).toBeTruthy();
-  });
-
-  it("rejects fitting: URLs when no EVE protocols are configured", () => {
-    expect(isAllowedUri("fitting:33470:31047;1::", [])).toBeFalsy();
-  });
-
-  it("allows localsvc: URLs when the protocol is listed", () => {
-    expect(
-      isAllowedUri("localsvc:method=OpenFWWindow", eveProtocols),
-    ).toBeTruthy();
-  });
-
-  it("rejects localsvc: URLs when no EVE protocols are configured", () => {
-    expect(isAllowedUri("localsvc:method=OpenFWWindow", [])).toBeFalsy();
-  });
-
-  it("allows opportunity: URLs when the protocol is listed", () => {
-    expect(isAllowedUri("opportunity:epic_arcs:40", eveProtocols)).toBeTruthy();
-  });
-
-  it("rejects opportunity: URLs when no EVE protocols are configured", () => {
-    expect(isAllowedUri("opportunity:epic_arcs:40", [])).toBeFalsy();
-  });
-
-  it("allows careerProgramNode: URLs when the protocol is listed", () => {
-    expect(
-      isAllowedUri("careerProgramNode:7:410:None", eveProtocols),
-    ).toBeTruthy();
-  });
-
-  it("rejects careerProgramNode: URLs when no EVE protocols are configured", () => {
-    expect(isAllowedUri("careerProgramNode:7:410:None", [])).toBeFalsy();
-  });
-
-  it("allows fleet: URLs when the protocol is listed", () => {
-    expect(isAllowedUri("fleet:1021212278338", eveProtocols)).toBeTruthy();
-  });
-
-  it("rejects fleet: URLs when no EVE protocols are configured", () => {
-    expect(isAllowedUri("fleet:1021212278338", [])).toBeFalsy();
-  });
-
-  it("rejects shipSkinListing: URLs when no EVE protocols are configured", () => {
-    expect(
-      isAllowedUri("shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951", []),
-    ).toBeFalsy();
-  });
-
-  it("rejects killReport: URLs when no EVE protocols are configured", () => {
-    expect(
-      isAllowedUri(
-        "killReport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
-        [],
-      ),
-    ).toBeFalsy();
-  });
+  it.each(EVE_PROTOCOL_SAMPLES)(
+    "rejects %s: URLs when no EVE protocols are configured",
+    (_, url) => {
+      expect(isAllowedUri(url, [])).toBeFalsy();
+    },
+  );
 
   it("still allows standard https: URLs regardless of the protocol list", () => {
     expect(isAllowedUri("https://example.com", eveProtocols)).toBeTruthy();

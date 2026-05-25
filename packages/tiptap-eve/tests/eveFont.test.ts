@@ -5,82 +5,34 @@ describe("fromEveColor", () => {
     // EVE colors are stored as 0x + 1 alpha digit + 6 hex color digits = 9 chars.
     // fromEveColor strips the leading 3 chars (0xA) and prepends '#'.
 
-    it("converts red", () => {
-      expect(fromEveColor("0x0ff0000")).toBe("#ff0000");
-    });
-
-    it("converts green", () => {
-      expect(fromEveColor("0x000ff00")).toBe("#00ff00");
-    });
-
-    it("converts blue", () => {
-      expect(fromEveColor("0x00000ff")).toBe("#0000ff");
-    });
-
-    it("converts white", () => {
-      expect(fromEveColor("0x0ffffff")).toBe("#ffffff");
-    });
-
-    it("converts black", () => {
-      expect(fromEveColor("0x0000000")).toBe("#000000");
-    });
-
-    it("converts yellow", () => {
-      expect(fromEveColor("0x0ffff00")).toBe("#ffff00");
-    });
-
-    it("converts a mixed color", () => {
-      expect(fromEveColor("0x0a1b2c3")).toBe("#a1b2c3");
-    });
-
-    it("preserves lowercase hex digits", () => {
-      expect(fromEveColor("0x0abcdef")).toBe("#abcdef");
-    });
-
-    it("preserves uppercase hex digits", () => {
-      expect(fromEveColor("0x0ABCDEF")).toBe("#ABCDEF");
+    it.each([
+      ["red", "0x0ff0000", "#ff0000"],
+      ["green", "0x000ff00", "#00ff00"],
+      ["blue", "0x00000ff", "#0000ff"],
+      ["white", "0x0ffffff", "#ffffff"],
+      ["black", "0x0000000", "#000000"],
+      ["yellow", "0x0ffff00", "#ffff00"],
+      ["a mixed color", "0x0a1b2c3", "#a1b2c3"],
+      ["lowercase hex digits", "0x0abcdef", "#abcdef"],
+      ["uppercase hex digits", "0x0ABCDEF", "#ABCDEF"],
+    ])("converts %s", (_name, input, expected) => {
+      expect(fromEveColor(input)).toBe(expected);
     });
   });
 
   describe("non-EVE color inputs (pass-through)", () => {
-    it("returns a CSS hex color unchanged (7 chars)", () => {
-      expect(fromEveColor("#ff0000")).toBe("#ff0000");
-    });
-
-    it("converts 10-char 0xAARRGGBB EVE color (alpha=ff, black)", () => {
-      // 0x + ff (alpha) + 000000 (R=G=B=0) → #000000
-      expect(fromEveColor("0xff000000")).toBe("#000000");
-    });
-
-    it("converts 10-char 0xffFF0000 (fully opaque red)", () => {
-      // 0x + ff (alpha) + FF0000 (red) → #FF0000
-      expect(fromEveColor("0xffFF0000")).toBe("#FF0000");
-    });
-
-    it("converts 10-char 0xffFFFFFF (fully opaque white)", () => {
-      // 0x + ff (alpha) + FFFFFF (white) → #FFFFFF
-      expect(fromEveColor("0xffFFFFFF")).toBe("#FFFFFF");
-    });
-
-    it("converts 10-char 0xbfffffff (semi-transparent white)", () => {
-      // 0x + bf (alpha) + ffffff (white) → #ffffff
-      expect(fromEveColor("0xbfffffff")).toBe("#ffffff");
-    });
-
-    it("returns a plain 8-char 0x color unchanged (0xRRGGBB)", () => {
-      expect(fromEveColor("0xff0000")).toBe("0xff0000");
-    });
-
-    it("returns an empty string unchanged", () => {
-      expect(fromEveColor("")).toBe("");
-    });
-
-    it("returns a named color unchanged", () => {
-      expect(fromEveColor("red")).toBe("red");
-    });
-
-    it("returns a short 3-char string unchanged", () => {
-      expect(fromEveColor("abc")).toBe("abc");
+    it.each([
+      ["CSS hex color (7 chars)", "#ff0000", "#ff0000"],
+      ["10-char alpha=ff, black (0xff000000)", "0xff000000", "#000000"],
+      ["10-char fully opaque red (0xffFF0000)", "0xffFF0000", "#FF0000"],
+      ["10-char fully opaque white (0xffFFFFFF)", "0xffFFFFFF", "#FFFFFF"],
+      ["10-char semi-transparent white (0xbfffffff)", "0xbfffffff", "#ffffff"],
+      ["plain 8-char 0xRRGGBB", "0xff0000", "0xff0000"],
+      ["empty string", "", ""],
+      ["named color", "red", "red"],
+      ["short 3-char string", "abc", "abc"],
+    ])("handles %s correctly", (_name, input, expected) => {
+      expect(fromEveColor(input)).toBe(expected);
     });
   });
 
