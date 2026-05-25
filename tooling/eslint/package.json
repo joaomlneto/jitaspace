@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@eslint/compat": "^1.4.1",
+    "@eslint/compat": "^2.1.0",
     "@eslint/js": "^9.39.4",
     "@next/eslint-plugin-next": "^16.2.6",
     "@tanstack/eslint-plugin-query": "^5.100.14",
