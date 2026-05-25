@@ -25,7 +25,7 @@
     "axios": "^1.16.1",
     "decimal.js": "^10.6.0",
     "inngest": "^3.54.2",
-    "p-limit": "^6.2.0",
+    "p-limit": "^7.3.0",
     "tar-stream": "^3.2.0",
     "untar-to-memory": "^2.0.0",
     "unbzip2-stream": "^1.4.3"
