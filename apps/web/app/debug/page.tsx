@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
 import { prisma } from "@jitaspace/db";
-import { kv } from "@jitaspace/kv";
 
 import DebugPage from "./page.client";
 import type { PageProps } from "./page.client";
@@ -14,6 +13,10 @@ export async function DebugPageContent() {
   }
   await connection();
 
+  // Dynamic import: @jitaspace/kv connects to Redis at module load time via
+  // top-level await, so it must not be statically imported at the module level
+  // or Next.js will attempt the connection during build-time config collection.
+  const { kv } = await import("@jitaspace/kv");
   const queues = Object.values(kv.queues);
 
   const queuesStatus = await Promise.all(
