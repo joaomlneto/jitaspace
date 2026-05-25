@@ -30,6 +30,9 @@ const config: Config = {
     "/node_modules/(?!(@mantine|@tabler|@jitaspace|@tiptap))",
   ],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  collectCoverage: true,
+  coverageDirectory: "coverage",
+  coverageReporters: ["lcov", "text"],
   clearMocks: true,
   restoreMocks: true,
 };

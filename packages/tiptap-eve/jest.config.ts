@@ -20,6 +20,9 @@ const config: Config = {
     ],
   },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  collectCoverage: true,
+  coverageDirectory: "coverage",
+  coverageReporters: ["lcov", "text"],
   clearMocks: true,
   restoreMocks: true,
 };

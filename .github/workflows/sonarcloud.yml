@@ -1,0 +1,40 @@
+name: SonarCloud
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      SKIP_ENV_VALIDATION: "1"
+      # Dummy DATABASE_URL so prisma generate (postinstall) succeeds
+      DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # Disable shallow clone so SonarCloud gets full blame/history data
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 10.30.2
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run tests with coverage
+        run: pnpm test
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

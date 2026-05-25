@@ -100,7 +100,9 @@
       "cache": false,
       "persistent": true
     },
-    "test": {},
+    "test": {
+      "outputs": ["coverage/**"]
+    },
     "test:watch": {
       "cache": false,
       "persistent": true
