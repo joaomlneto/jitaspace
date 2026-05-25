@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import {
   ActionIcon,
   Anchor,
@@ -111,13 +112,15 @@ export default function StatusPage({
                   <Text size="sm" fw={500}>
                     Website Updated On
                   </Text>
-                  {webLastUpdatedDate && (
-                    <FormattedDateText
-                      date={webLastUpdatedDate}
-                      size="sm"
-                      span
-                    />
-                  )}
+                  <Anchor component={Link} href="/changelog" size="sm">
+                    {webLastUpdatedDate && (
+                      <FormattedDateText
+                        date={webLastUpdatedDate}
+                        size="sm"
+                        span
+                      />
+                    )}
+                  </Anchor>
                 </Group>
                 <Group justify="space-between">
                   <Text size="sm" fw={500}>
