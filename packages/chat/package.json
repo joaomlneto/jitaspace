@@ -2,6 +2,7 @@
   "name": "@jitaspace/chat",
   "description": "JitaSpace Chat Client",
   "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "./index.tsx",
   "types": "./index.tsx",

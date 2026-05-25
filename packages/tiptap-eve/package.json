@@ -15,23 +15,15 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@mantine/core": "8.3.18",
-    "@mantine/hooks": "8.3.18",
-    "@mantine/tiptap": "8.3.18",
-    "@tabler/icons-react": "^3.44.0",
-    "@tiptap/extension-character-count": "^2.27.2",
-    "@tiptap/extension-color": "^2.27.2",
     "@tiptap/extension-hard-break": "^2.27.2",
     "@tiptap/extension-link": "^2.27.2",
     "@tiptap/extension-text-style": "^2.27.2",
     "@tiptap/extension-underline": "^2.27.2",
-    "@tiptap/pm": "^2.27.2",
     "@tiptap/react": "^2.27.2",
-    "@tiptap/starter-kit": "^2.27.2",
-    "date-fns": "^4.3.0",
-    "embla-carousel-react": "8.6.0",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "@tiptap/starter-kit": "^2.27.2"
+  },
+  "peerDependencies": {
+    "react": "^19.2.6"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
@@ -42,7 +34,6 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
     "@types/react": "^19.1.6",
-    "@types/react-dom": "^19.1.5",
     "eslint": "^9.39.4",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
