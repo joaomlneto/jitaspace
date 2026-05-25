@@ -227,6 +227,18 @@ export function useEsiNamePrefetch(
   }, [entries]);
 }
 
+function makeCacheUpdater(
+  key: string,
+  value: CacheState<EsiNameCacheValue, Error>,
+) {
+  return (
+    prev: Record<string, CacheState<EsiNameCacheValue, Error> | undefined>,
+  ) => {
+    if (prev[key]?.value === value.value) return prev;
+    return { ...prev, [key]: value };
+  };
+}
+
 export function useEsiNames(
   names: {
     id: number;
@@ -257,10 +269,7 @@ export function useEsiNames(
       ) => {
         if (didUnsubscribe) return;
         if (value === undefined) return;
-        setCurrent((prev) => {
-          if (prev[key]?.value === value.value) return prev;
-          return { ...prev, [key]: value };
-        });
+        setCurrent(makeCacheUpdater(key, value));
       };
       callbacks.set(key, callback);
       fetchCache.subscribe(key, callback);

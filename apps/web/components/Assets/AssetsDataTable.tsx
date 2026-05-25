@@ -1,6 +1,6 @@
 import type { MRT_ColumnDef } from "mantine-react-table";
 import { memo, useMemo } from "react";
-import { Group, Text } from "@mantine/core";
+import { Group } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type { CharacterAsset } from "@jitaspace/hooks";

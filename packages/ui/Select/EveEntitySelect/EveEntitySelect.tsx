@@ -20,7 +20,7 @@ export const EveEntitySelect = memo(
     const entityEntries = useMemo(
       () =>
         entityIds.map(({ id }) => ({
-          id: typeof id === "string" ? parseInt(id, 10) : id,
+          id: typeof id === "string" ? Number.parseInt(id, 10) : id,
         })),
       [entityIds],
     );

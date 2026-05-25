@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedValue } from "@mantine/hooks";
 import type { SpotlightActionData } from "@mantine/spotlight";
@@ -32,6 +32,13 @@ export const MainSpotlight = () => {
 
   const names = useEsiNameLookup(entityEntries);
 
+  const makeAppOnClick = useCallback(
+    (url: string | undefined) => () => {
+      if (url !== undefined) void router.push(url);
+    },
+    [router],
+  );
+
   const appActions: SpotlightActionData[] = useMemo(
     () =>
       Object.values(jitaApps).flatMap(({ name: groupName, apps }) =>
@@ -43,14 +50,10 @@ export const MainSpotlight = () => {
             description: app.description,
             group: `${groupName} Apps`,
             leftSection: <app.Icon width={32} height={32} />,
-            onClick: () => {
-              if (app.url !== undefined) {
-                void router.push(app.url);
-              }
-            },
+            onClick: makeAppOnClick(app.url),
           })),
       ),
-    [router],
+    [makeAppOnClick],
   );
 
   const esiSearchResultActions: SpotlightActionData[] = useMemo(
@@ -128,7 +131,8 @@ export const MainSpotlight = () => {
     const _ungrouped: SpotlightActionData[] = [];
     for (const action of filteredActions) {
       if (action.group) {
-        (_groups[action.group] ??= []).push(action);
+        if (!_groups[action.group]) _groups[action.group] = [];
+        _groups[action.group].push(action);
       } else {
         _ungrouped.push(action);
       }
