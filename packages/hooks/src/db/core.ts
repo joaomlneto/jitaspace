@@ -1,6 +1,7 @@
 "use client";
 
 import { createCollection } from "@tanstack/db";
+import type { CollectionConfig, UtilsRecord } from "@tanstack/db";
 import { parseLoadSubsetOptions } from "@tanstack/query-db-collection";
 import { QueryClient } from "@tanstack/react-query";
 
@@ -25,8 +26,9 @@ export const queryClient = new QueryClient({
 export function createQueryCollection<
   T extends object,
   TKey extends string | number,
->(queryOpts: Parameters<typeof createCollection>[0]) {
-  return createCollection<T, TKey>(queryOpts);
+  TUtils extends UtilsRecord = UtilsRecord,
+>(queryOpts: CollectionConfig<T, TKey, never, TUtils> & { utils: TUtils }) {
+  return createCollection(queryOpts);
 }
 
 export function extractIdFromCtx(
