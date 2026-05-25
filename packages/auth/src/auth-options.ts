@@ -55,6 +55,14 @@ declare module "next-auth" {
   // }
 }
 
+declare module "next-auth/jwt" {
+  interface JWT {
+    accessToken?: string;
+    accessTokenExpires?: number;
+    encryptedRefreshToken?: string;
+  }
+}
+
 /**
  * Options for NextAuth.js used to configure
  * adapters, providers, callbacks, etc.
@@ -88,12 +96,11 @@ export const authOptions = {
       token,
     }: {
       session: Session;
-      token: JWT & { accessToken?: string; refreshToken?: string };
+      token: JWT;
     }) {
       session.user.id = Number(token.sub!);
       session.accessToken = token.accessToken!;
-      // @ts-expect-error token does not have this property and im not sure where to add it
-      session.encryptedRefreshToken = token.encryptedRefreshToken;
+      session.encryptedRefreshToken = token.encryptedRefreshToken!;
       return session;
     },
     async jwt({ token, user, account }) {
@@ -113,7 +120,7 @@ export const authOptions = {
       // return previous token if the access token has not expired yet (or is about to expire)
       if (
         Date.now() <
-        <number>token.accessTokenExpires - REFRESH_TOKEN_BEFORE_EXP_TIME
+        (token.accessTokenExpires ?? 0) - REFRESH_TOKEN_BEFORE_EXP_TIME
       ) {
         return token;
       }

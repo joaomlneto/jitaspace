@@ -21,7 +21,6 @@ export const EsiClientSSOAccessTokenInjector = ({
   // This useEffect is here to import the current next-auth token (if available)
   useEffect(() => {
     if (session) {
-      console.log({ session });
       addCharacter({
         accessToken: session.accessToken,
         refreshToken: session.encryptedRefreshToken,
@@ -40,22 +39,14 @@ export const EsiClientSSOAccessTokenInjector = ({
         ),
       );
     };
-    console.log("time until expiration", timeUntilExpiration());
     const timer = setTimeout(
       () => {
-        console.log(
-          `updating session: token expires in ${
-            timeUntilExpiration() / 1000
-          } seconds`,
-        );
-        //void update();
         const now = new Date().getTime();
         const candidateCharacters = Object.values(characters).filter(
           (character) =>
             new Date(character.accessTokenExpirationDate).getTime() - now <
             30000 + 10000 /* account for some clock drift */,
         );
-        console.log("tokens to update", candidateCharacters);
         candidateCharacters.forEach((character) => {
           void refreshCharacterToken(character.refreshToken)
             .then(({ accessToken, refreshTokenData }) => {
