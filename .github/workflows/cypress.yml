@@ -54,6 +54,13 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
+      - name: Cache Cypress binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('**/node_modules/cypress/package.json') }}
+      - name: Install Cypress binary
+        run: pnpm exec cypress install
       - name: Push database schema
         run: cd packages/db && pnpm exec prisma db push
       - name: Build
@@ -62,11 +69,9 @@ jobs:
         # Uses the official Cypress GitHub action https://github.com/cypress-io/github-action
         uses: cypress-io/github-action@v6
         with:
-          # Dependencies are already installed at monorepo root. Use install-command
-          # (rather than install: false) so the action still caches the Cypress binary,
-          # but only downloads it — not a full pnpm install from apps/web which would
-          # fail because the pnpm lockfile lives at the repository root.
-          install-command: pnpm exec cypress install
+          # Dependencies are already installed at monorepo root; skip action-level install
+          # to avoid lockfile lookup in apps/web (pnpm lockfile is at repository root).
+          install: false
           # Run commands from the web app workspace so `pnpm start` resolves to `apps/web`
           working-directory: apps/web
           # Starts web server for E2E tests - the web package exposes `start` which runs Next.js
