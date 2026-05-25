@@ -2,11 +2,14 @@
 
 import type { SelectProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Loader, Select } from "@mantine/core";
+import { Badge, Group, Loader, rem, Select } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
 import { type GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
 import { useEsiNamesCache, useEsiSearch } from "@jitaspace/hooks";
+
+import { EveEntityAvatar } from "../../Avatar";
+import { EveEntityName } from "../../Text";
 
 export type EsiSearchSelectProps = Omit<
   SelectProps,
@@ -60,7 +63,34 @@ export const EsiSearchSelect = memo(
         searchable
         searchValue={searchValue}
         onSearchChange={onSearchChange}
-        //itemComponent={EsiSearchSelectItem}
+        renderOption={({ option }) => {
+          const category = (
+            option as typeof option & {
+              category?: GetCharactersCharacterIdSearchQueryParamsCategoriesEnum;
+            }
+          ).category;
+          return (
+            <Group wrap="nowrap" justify="space-between">
+              <Group wrap="nowrap" gap="xs">
+                <EveEntityAvatar
+                  entityId={option.value}
+                  category={category}
+                  size={24}
+                />
+                <EveEntityName
+                  entityId={option.value}
+                  category={category}
+                  style={{ lineHeight: 1, fontSize: rem(12) }}
+                />
+              </Group>
+              {category && (
+                <Badge size="xs" variant="subtle">
+                  {category}
+                </Badge>
+              )}
+            </Group>
+          );
+        }}
         rightSection={isLoadingData && <Loader size="sm" />}
         nothingFoundMessage={
           (searchValue ?? "").length < 3
