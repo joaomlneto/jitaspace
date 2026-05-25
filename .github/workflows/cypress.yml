@@ -44,7 +44,7 @@ jobs:
           docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS jitaspace;"
       - name: Checkout
         uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v6
         with:
           version: 10.33.4
       - name: Setup Node.js
