@@ -2,8 +2,6 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
-export const dynamic = "force-dynamic";
-
 import { prisma } from "@jitaspace/db";
 import { kv } from "@jitaspace/kv";
 
@@ -11,10 +9,10 @@ import DebugPage from "./page.client";
 import type { PageProps } from "./page.client";
 
 export async function DebugPageContent() {
-  await connection();
   if (process.env.NODE_ENV === "production") {
     notFound();
   }
+  await connection();
 
   const queues = Object.values(kv.queues);
 
