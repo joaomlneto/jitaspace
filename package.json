@@ -21,7 +21,8 @@
     "lint": "turbo lint --continue -- --cache --cache-location 'node_modules/.cache/.eslintcache' && manypkg check",
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location 'node_modules/.cache/.eslintcache' && manypkg fix",
     "type-check": "turbo type-check",
-    "publish-packages": "turbo run build lint test && changeset version && changeset publish",
+    "version-packages": "changeset version && node --import tsx/esm .changeset/stamp-changelog-dates.ts $(find . -name 'CHANGELOG.md' -not -path '*/node_modules/*')",
+    "publish-packages": "turbo run build lint test && pnpm version-packages && changeset publish",
     "preinstall": "npx only-allow pnpm",
     "test": "turbo test",
     "test:watch": "turbo test:watch"
@@ -41,5 +42,8 @@
       "@types/react": "19.2.15",
       "@types/react-dom": "19.2.3"
     }
+  },
+  "devDependencies": {
+    "tsx": "^4.22.3"
   }
 }
