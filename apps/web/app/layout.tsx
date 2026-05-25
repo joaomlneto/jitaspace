@@ -132,6 +132,7 @@ export default function RootLayout({
           </MyQueryClientProvider>
         </AppMantineProvider>
       </body>
+
     </html>
   );
 }
