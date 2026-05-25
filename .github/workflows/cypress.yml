@@ -27,7 +27,7 @@ jobs:
             --name cockroachdb \
             -p 26257:26257 \
             -p 8080:8080 \
-            cockroachdb/cockroach:latest \
+            cockroachdb/cockroach:v24.3.7 \
             start-single-node --insecure --store=type=mem,size=0.5
           until curl -sf http://localhost:8080/health?ready=1; do sleep 1; done
           docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS jitaspace;"
