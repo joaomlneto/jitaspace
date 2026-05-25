@@ -74,6 +74,22 @@ Where to look first (quick file map for agents)
 - Auth: `packages/auth/src/auth-options.ts`, `packages/auth/index.ts`
 - Tooling: `tooling/eslint`, `tooling/prettier`, `tooling/tsconfig`
 
+Changesets — documenting changes
+- Every non-trivial change must be accompanied by a changeset file in `.changeset/`. Create one with a descriptive filename (e.g. `.changeset/my-feature.md`).
+- Format:
+  ```markdown
+  ---
+  "@jitaspace/package-name": patch | minor | major
+  ---
+
+  Description of the change.
+  ```
+- Use **patch** for bug fixes and internal improvements, **minor** for new user-visible features or new exports, **major** for breaking changes.
+- **`@jitaspace/web` changesets must be human-readable** — write them as if describing the change to an end user (e.g. "Added dark mode toggle to settings", "Fixed mail search not returning results"). Do not write technical implementation details.
+- **All other packages** should use a more technical description aimed at developers (e.g. "Add `renderEveHref` export", "Fix `EveLink` protocol list missing `joinChannel`").
+- **If a change in a dependency produces a visible improvement in the web app** (e.g. a bug fix in `tiptap-eve` that changes editor behaviour), also add `"@jitaspace/web": patch` to the same changeset with a human-readable description of what users will notice.
+- Do not create changesets for private packages (`"private": true` in their `package.json`).
+
 Safety and change rules for automated agents
 - Never change generated files directly. Instead edit the source (Prisma schema, OpenAPI swagger, kubb config, or generator config) and run the appropriate `db:generate`/`kubb:generate` task.
 - When adding new dependencies, prefer adding them to the appropriate package's package.json (not root) and use workspace specifiers for internal packages (`workspace:*`).
