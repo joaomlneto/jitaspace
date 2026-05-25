@@ -1,5 +1,9 @@
 # @jitaspace/web
 
+## 0.2.5 — 2026-05-25
+
+- Updated dependencies [b659f2d]
+
 ## 0.2.4 — 2026-05-25
 
 - Upgrade zustand from v4 to v5 and fix infinite re-render loops caused by selectors returning new array/object references.
