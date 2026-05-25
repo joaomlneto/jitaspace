@@ -27,5 +27,5 @@
 
 .body {
     flex: 1;
-    marginLeft: var(--mantine-spacing-xs);
+    margin-left: var(--mantine-spacing-xs);
 }
