@@ -1,6 +1,5 @@
 # Jita Space
 
-[![Build](https://github.com/joaomlneto/jitaspace/actions/workflows/build.yaml/badge.svg)](https://github.com/joaomlneto/jitaspace/actions/workflows/build.yaml)
 [![Cypress Tests](https://github.com/joaomlneto/jitaspace/actions/workflows/cypress.yml/badge.svg)](https://github.com/joaomlneto/jitaspace/actions/workflows/cypress.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=joaomlneto_jitaspace&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=joaomlneto_jitaspace)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=joaomlneto_jitaspace&metric=coverage)](https://sonarcloud.io/summary/new_code?id=joaomlneto_jitaspace)
