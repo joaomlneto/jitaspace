@@ -55,11 +55,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Cache Cypress binary
+        id: cypress-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/Cypress
-          key: cypress-${{ runner.os }}-${{ hashFiles('**/node_modules/cypress/package.json') }}
+          key: cypress-${{ runner.os }}-${{ hashFiles('apps/web/package.json') }}
       - name: Install Cypress binary
+        if: steps.cypress-cache.outputs.cache-hit != 'true'
         run: pnpm exec cypress install
       - name: Push database schema
         run: cd packages/db && pnpm exec prisma db push
