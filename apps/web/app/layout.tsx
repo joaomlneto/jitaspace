@@ -92,22 +92,21 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <Script
+          strategy="afterInteractive"
+          async
+          defer
+          // /analytics is a proxy to the umami server - set in next.config.mjs
+          src={"/analytics/script.js"}
+          data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+          data-domains="www.jita.space"
+        ></Script>
+        {env.NEXT_PUBLIC_GOOGLE_TAG_ID && (
+          <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
+        )}
+        <Analytics />
+        <SpeedInsights />
         <AppMantineProvider>
-          <Script
-            strategy="afterInteractive"
-            async
-            defer
-            // /analytics is a proxy to the umami server - set in next.config.mjs
-            src={"/analytics/script.js"}
-            data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-            data-domains="www.jita.space"
-          ></Script>
-          {env.NEXT_PUBLIC_GOOGLE_TAG_ID && (
-            <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
-          )}
-          <Analytics />
-          <SpeedInsights />
-
           <MyQueryClientProvider
             esiUserAgent={ESI_USER_AGENT}
             esiAcceptLanguage={ESI_ACCEPT_LANGUAGE}
