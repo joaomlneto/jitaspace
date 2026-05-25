@@ -1,11 +1,16 @@
 {
   "name": "@jitaspace/tiptap-eve",
   "description": "TipTap editor for EVE Online",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joaomlneto/jitaspace.git",
+    "directory": "packages/tiptap-eve"
+  },
   "publishConfig": {
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",

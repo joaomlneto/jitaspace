@@ -1,5 +1,13 @@
 # @jitaspace/tiptap-eve
 
+## 0.1.5 — 2026-05-25
+
+- 7859f5d: Fix repository URL in package.json
+
+## 0.1.4 — 2026-05-25
+
+- fb317df: Add repository field to package.json
+
 ## 0.1.3
 
 ### Patch Changes
