@@ -33,7 +33,7 @@ export const CalendarEventAttendanceSelect = memo(
     const { data: event, isLoading } =
       useGetCharactersCharacterIdCalendarEventId(
         characterId ?? 0,
-        typeof eventId === "string" ? parseInt(eventId) : (eventId ?? 0),
+        typeof eventId === "string" ? parseInt(eventId, 10) : (eventId ?? 0),
         { ...authHeaders },
         {
           query: {
@@ -94,7 +94,7 @@ export const CalendarEventAttendanceSelect = memo(
               void putCharactersCharacterIdCalendarEventId(
                 characterId ?? 0,
                 typeof eventId === "string"
-                  ? parseInt(eventId)
+                  ? parseInt(eventId, 10)
                   : (eventId ?? 0),
                 {
                   response:

@@ -14,7 +14,7 @@ export type StargateAvatarProps = Omit<AvatarProps, "src"> & {
 export const StargateAvatar = memo(
   ({ stargateId, ...otherProps }: StargateAvatarProps) => {
     const { data } = useGetUniverseStargatesStargateId(
-      typeof stargateId === "string" ? parseInt(stargateId) : (stargateId ?? 1),
+      typeof stargateId === "string" ? parseInt(stargateId, 10) : (stargateId ?? 1),
       {},
       {
         query: {

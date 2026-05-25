@@ -39,8 +39,8 @@ export default function Page({
   params: Promise<{ eventId: string }>;
 }) {
   const { eventId: eventIdStr } = React.use(params);
-  const eventId = parseInt(eventIdStr);
-  //const eventId = parseInt(toArrayIfNot(router.query.eventId)[0] ?? "");
+  const eventId = parseInt(eventIdStr, 10);
+  //const eventId = parseInt(toArrayIfNot(router.query.eventId, 10)[0] ?? "");
   const character = useSelectedCharacter();
   const { data: event, isLoading: eventLoading } = useCalendarEvent(
     character?.characterId,

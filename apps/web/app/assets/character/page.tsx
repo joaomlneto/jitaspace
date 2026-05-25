@@ -140,7 +140,7 @@ export default function Page() {
             onChange={(value) => {
               filterForm.setFieldValue(
                 "location_id",
-                value ? parseInt(value) : null,
+                value ? parseInt(value, 10) : null,
               );
             }}
           />

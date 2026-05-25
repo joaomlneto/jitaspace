@@ -22,7 +22,7 @@ export const CorporationAllianceHistoryTimeline = memo(
   ({ corporationId }: CorporationAllianceHistoryTimelineProps) => {
     const { data } = useGetCorporationsCorporationIdAlliancehistory(
       typeof corporationId === "string"
-        ? parseInt(corporationId)
+        ? parseInt(corporationId, 10)
         : (corporationId ?? 0),
       {},
       { query: { enabled: !!corporationId } },

@@ -37,7 +37,7 @@ export const SetAutopilotDestinationActionIcon = memo(
                   clear_other_waypoints: true,
                   destination_id:
                     typeof destinationId === "string"
-                      ? parseInt(destinationId)
+                      ? parseInt(destinationId, 10)
                       : destinationId,
                 },
                 authHeaders,

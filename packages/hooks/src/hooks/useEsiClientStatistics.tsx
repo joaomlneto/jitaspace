@@ -21,9 +21,7 @@ type EsiClientStatistics = {
 };
 
 const defaultEsiClientStatistics: EsiClientStatistics = {
-  setEsiErrorInfo: () => {
-    return;
-  },
+  setEsiErrorInfo: () => {},
 };
 
 const EsiClientStatistics = createContext<EsiClientStatistics>(
@@ -43,14 +41,13 @@ export const EsiClientStatisticsProvider = memo(
         const remaining: string | undefined = res.headers.get(
           "x-esi-error-limit-remain",
         );
-        if (remaining) setEsiErrorsRemaining(parseInt(remaining));
+        if (remaining) setEsiErrorsRemaining(parseInt(remaining, 10));
         // @ts-expect-error type of res.headers.get not detected as function?
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const reset: string | undefined = res.headers.get(
           "x-esi-error-limit-reset",
         );
-        if (reset) setEsiErrorsResetOn(new Date(parseInt(reset) * 1000));
-        //console.log({ remaining, reset });
+        if (reset) setEsiErrorsResetOn(new Date(parseInt(reset, 10) * 1000));
         return res;
       });
     }, []);
@@ -60,9 +57,7 @@ export const EsiClientStatisticsProvider = memo(
         value={{
           esiErrorsRemaining,
           esiErrorsResetOn,
-          setEsiErrorInfo: () => {
-            return;
-          },
+          setEsiErrorInfo: () => {},
         }}
       >
         {children}

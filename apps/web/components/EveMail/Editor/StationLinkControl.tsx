@@ -60,7 +60,7 @@ export const StationLinkControl = forwardRef<
   };
 
   const setLink = () => {
-    void getUniverseStationsStationId(parseInt(stationId)).then((data) => {
+    void getUniverseStationsStationId(parseInt(stationId, 10)).then((data) => {
       handleClose();
       stationId === ""
         ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()

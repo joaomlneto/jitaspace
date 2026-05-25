@@ -16,7 +16,7 @@ export type WarAggressorAvatarProps = Omit<AvatarProps, "src"> & {
 export const WarAggressorAvatar = memo(
   ({ warId, ...otherProps }: WarAggressorAvatarProps) => {
     const { data } = useGetWarsWarId(
-      typeof warId === "string" ? parseInt(warId) : (warId ?? 0),
+      typeof warId === "string" ? parseInt(warId, 10) : (warId ?? 0),
       {},
       {
         query: {

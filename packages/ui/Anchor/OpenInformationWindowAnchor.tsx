@@ -40,7 +40,7 @@ export const OpenInformationWindowAnchor = memo(
             void postUiOpenwindowInformation(
               {
                 target_id:
-                  typeof entityId === "string" ? parseInt(entityId) : entityId,
+                  typeof entityId === "string" ? parseInt(entityId, 10) : entityId,
               },
               authHeaders,
             ).then(() => {

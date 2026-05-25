@@ -35,7 +35,7 @@ export const OpenInformationWindowActionIcon = memo(
                 {
                   target_id:
                     typeof entityId === "string"
-                      ? parseInt(entityId)
+                      ? parseInt(entityId, 10)
                       : entityId,
                 },
                 authHeaders,

@@ -58,7 +58,7 @@ export const SolarSystemSecurityStatusBadge = memo(
 
     const { data: solarSystemData } = useGetUniverseSystemsSystemId(
       typeof solarSystemId === "string"
-        ? parseInt(solarSystemId)
+        ? parseInt(solarSystemId, 10)
         : (solarSystemId ?? 0),
       {},
       { query: { enabled: !!solarSystemId } },

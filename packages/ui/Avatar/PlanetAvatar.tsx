@@ -14,7 +14,7 @@ export type PlanetAvatarProps = Omit<AvatarProps, "src"> & {
 export const PlanetAvatar = memo(
   ({ planetId, ...otherProps }: PlanetAvatarProps) => {
     const { data } = useGetUniversePlanetsPlanetId(
-      typeof planetId === "string" ? parseInt(planetId) : (planetId ?? 1),
+      typeof planetId === "string" ? parseInt(planetId, 10) : (planetId ?? 1),
       {},
       { query: { enabled: !!planetId } },
     );

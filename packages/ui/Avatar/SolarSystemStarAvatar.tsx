@@ -15,7 +15,7 @@ export const SolarSystemStarAvatar = memo(
   ({ solarSystemId, ...otherProps }: SolarSystemAvatarProps) => {
     const { data } = useGetUniverseSystemsSystemId(
       typeof solarSystemId === "string"
-        ? parseInt(solarSystemId)
+        ? parseInt(solarSystemId, 10)
         : (solarSystemId ?? 1),
       {},
       {

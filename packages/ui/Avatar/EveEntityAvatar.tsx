@@ -32,10 +32,10 @@ export const EveEntityAvatar = memo(
     ...otherProps
   }: EveEntityAvatarProps) => {
     const { category, loading, error } = useEsiName(entityId, categoryHint);
-    entityId = typeof entityId === "string" ? parseInt(entityId) : entityId;
+    entityId = typeof entityId === "string" ? parseInt(entityId, 10) : entityId;
 
     if (entityId === undefined || loading) {
-      <Skeleton
+      return <Skeleton
         radius={otherProps.radius}
         height={otherProps.size}
         width={otherProps.size}
@@ -48,6 +48,7 @@ export const EveEntityAvatar = memo(
         />
       </Skeleton>;
     }
+
 
     if (!category || error) {
       const size = getAvatarSize({

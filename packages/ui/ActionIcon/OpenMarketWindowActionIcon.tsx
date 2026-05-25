@@ -34,7 +34,7 @@ export const OpenMarketWindowActionIcon = memo(
               void postUiOpenwindowMarketdetails(
                 {
                   type_id:
-                    typeof typeId === "string" ? parseInt(typeId) : typeId,
+                    typeof typeId === "string" ? parseInt(typeId, 10) : typeId,
                 },
                 authHeaders,
               ).then(() => {

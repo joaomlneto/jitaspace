@@ -28,7 +28,7 @@ export const EveEntitySelect = memo(
             value: `${id}`,
             label:
               name ??
-              getNameFromCache(typeof id === "string" ? parseInt(id) : id) ??
+              getNameFromCache(typeof id === "string" ? parseInt(id, 10) : id) ??
               "",
           }))
           .sort((a, b) => (a.label ?? "").localeCompare(b.label ?? ""))}

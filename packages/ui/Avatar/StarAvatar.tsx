@@ -13,7 +13,7 @@ export type StarAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const StarAvatar = memo(({ starId, ...otherProps }: StarAvatarProps) => {
   const { data } = useGetUniverseStarsStarId(
-    typeof starId === "string" ? parseInt(starId) : (starId ?? 1),
+    typeof starId === "string" ? parseInt(starId, 10) : (starId ?? 1),
     {},
     { query: { enabled: !!starId } },
   );

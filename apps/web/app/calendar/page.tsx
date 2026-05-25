@@ -79,7 +79,7 @@ export default function Page() {
             return (
               <Stack key={dateString}>
                 <Title order={5}>
-                  {format(new Date(parseInt(dateString)), "LLLL dd - EEEE")}
+                  {format(new Date(parseInt(dateString, 10)), "LLLL dd - EEEE")}
                 </Title>
                 {character && (
                   <CalendarEventList

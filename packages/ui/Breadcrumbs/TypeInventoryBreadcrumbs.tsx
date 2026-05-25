@@ -28,7 +28,7 @@ export const TypeInventoryBreadcrumbs = memo(
     ...otherProps
   }: TypeInventoryBreadcrumbsProps) => {
     const { data: type } = useGetUniverseTypesTypeId(
-      typeof typeId === "string" ? parseInt(typeId) : (typeId ?? 0),
+      typeof typeId === "string" ? parseInt(typeId, 10) : (typeId ?? 0),
       {},
       {
         query: { enabled: typeId !== undefined },

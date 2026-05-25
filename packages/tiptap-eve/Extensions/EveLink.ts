@@ -39,10 +39,10 @@ export const renderEveHref = (href: string) => {
 
     if (targetType[0] === "16159") return `/alliance/${targetType[1]}`;
 
-    if (CHARACTER_TYPE_IDS.includes(parseInt(targetType[0] ?? "")))
+    if (CHARACTER_TYPE_IDS.includes(parseInt(targetType[0] ?? "", 10)))
       return `/character/${targetType[1]}`;
 
-    if (STATION_TYPE_IDS.includes(parseInt(targetType[0] ?? "")))
+    if (STATION_TYPE_IDS.includes(parseInt(targetType[0] ?? "", 10)))
       return `/station/${targetType[1]}`;
   }
 

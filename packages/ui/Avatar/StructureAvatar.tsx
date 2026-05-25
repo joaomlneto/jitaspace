@@ -21,7 +21,7 @@ export const StructureAvatar = memo(
     });
     const { data } = useGetUniverseStructuresStructureId(
       typeof structureId === "string"
-        ? parseInt(structureId)
+        ? parseInt(structureId, 10)
         : (structureId ?? 1),
       { ...authHeaders },
       {

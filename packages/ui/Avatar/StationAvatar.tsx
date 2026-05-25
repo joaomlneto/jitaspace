@@ -14,7 +14,7 @@ export type StationAvatarProps = Omit<AvatarProps, "src"> & {
 export const StationAvatar = memo(
   ({ stationId, ...otherProps }: StationAvatarProps) => {
     const { data } = useGetUniverseStationsStationId(
-      typeof stationId === "string" ? parseInt(stationId) : (stationId ?? 1),
+      typeof stationId === "string" ? parseInt(stationId, 10) : (stationId ?? 1),
       {},
       {
         query: {

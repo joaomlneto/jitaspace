@@ -20,7 +20,7 @@ export const SolarSystemSovereigntyAvatar = memo(
     const normalizedSolarSystemId = useMemo(
       () =>
         typeof solarSystemId === "string"
-          ? parseInt(solarSystemId)
+          ? parseInt(solarSystemId, 10)
           : solarSystemId ?? 1,
       [solarSystemId],
     );
