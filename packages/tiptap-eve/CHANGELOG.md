@@ -1,5 +1,11 @@
 # @jitaspace/tiptap-eve
 
+## 0.1.3
+
+### Patch Changes
+
+- fdfec1b: Bundle MIT LICENSE file in published package
+
 ## 0.1.2
 
 ### Patch Changes
