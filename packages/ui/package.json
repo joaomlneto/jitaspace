@@ -1,7 +1,7 @@
 {
   "name": "@jitaspace/ui",
   "description": "UI components for JitaSpace",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "main": "./index.ts",

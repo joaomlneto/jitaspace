@@ -1,5 +1,7 @@
 "use client";
 
+import { useShallow } from "zustand/shallow";
+
 import { CharactersCharacterIdRolesGetRolesEnum } from "@jitaspace/esi-client";
 import { ESIScope } from "@jitaspace/esi-metadata";
 
@@ -25,7 +27,7 @@ export const useAccessToken = (options: {
   const { characterId, corporationId, allianceId, scopes, roles } = options;
   // TODO: Filter by corporationId, allianceId, roles
 
-  const characters = useAuthStore((state) =>
+  const characters = useAuthStore(useShallow((state) =>
     Object.values(state.characters).filter(
       (character) =>
         (characterId == undefined || character.characterId == characterId) &&
@@ -33,7 +35,7 @@ export const useAccessToken = (options: {
           character.accessTokenPayload?.scp?.includes(requiredScope),
         ),
     ),
-  );
+  ));
 
   // Check if character is logged in
   if (!characters[0]) return TOKEN_UNAVAILABLE;

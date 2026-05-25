@@ -22,6 +22,8 @@ import {
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
+import { useShallow } from "zustand/shallow";
+
 import { useAuthenticatedCharacterIds, useAuthStore } from "@jitaspace/hooks";
 import { AllianceCard, CharacterAvatar, CorporationCard } from "@jitaspace/ui";
 
@@ -57,7 +59,7 @@ export default function Page() {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const authenticatedCharacterIds = useAuthenticatedCharacterIds();
-  const authenticatedCorporationIds = useAuthStore((state) => {
+  const authenticatedCorporationIds = useAuthStore(useShallow((state) => {
     return Array.from(
       new Set(
         authenticatedCharacterIds
@@ -67,8 +69,8 @@ export default function Page() {
           ),
       ),
     );
-  });
-  const authenticatedAllianceIds = useAuthStore((state) => {
+  }));
+  const authenticatedAllianceIds = useAuthStore(useShallow((state) => {
     return Array.from(
       new Set(
         authenticatedCharacterIds
@@ -76,7 +78,7 @@ export default function Page() {
           .filter((allianceId): allianceId is number => allianceId != null),
       ),
     );
-  });
+  }));
 
   return (
     <Container size="xl">
