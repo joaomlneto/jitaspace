@@ -80,7 +80,7 @@ export const EsiKillmailFittingCard = memo(
         name={`Killmail ${data?.data.killmail_id}`}
         description="Killmail Fitting"
         shipTypeId={data?.data.victim.ship_type_id}
-        items={(data?.data.victim.items ?? []).map((item: any) => ({
+        items={(data?.data.victim.items ?? []).map((item) => ({
           typeId: item.item_type_id,
           flag: killmailFlagToEnum[item.flag] ?? "Invalid",
           quantity: item.quantity_destroyed ?? 0 + (item.quantity_dropped ?? 0),

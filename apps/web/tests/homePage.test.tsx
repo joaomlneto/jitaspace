@@ -4,6 +4,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import type { ImgHTMLAttributes, ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -61,16 +62,14 @@ jest.mock("~/config/apps", () => ({
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ href, children, ...props }: any) => (
-    <a href={typeof href === "string" ? href : ""} {...props}>
-      {children}
-    </a>
+  default: ({ href, children }: { href?: string | object; children?: ReactNode }) => (
+    <a href={typeof href === "string" ? href : ""}>{children}</a>
   ),
 }));
 
 jest.mock("next/image", () => ({
   __esModule: true,
-  default: (props: any) => <img alt={props.alt} {...props} />,
+  default: (props: ImgHTMLAttributes<HTMLImageElement>) => <img alt={props.alt} {...props} />,
 }));
 
 describe("home page corporations", () => {

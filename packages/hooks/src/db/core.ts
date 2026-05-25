@@ -25,14 +25,21 @@ export const queryClient = new QueryClient({
 export function createQueryCollection<
   T extends object,
   TKey extends string | number,
->(queryOpts: any) {
+>(queryOpts: Parameters<typeof createCollection>[0]) {
   return createCollection<T, TKey>(queryOpts);
 }
 
-export function extractIdFromCtx(ctx: any, fieldName: string): any | undefined {
+export function extractIdFromCtx(
+  ctx: { meta?: { loadSubsetOptions?: unknown } },
+  fieldName: string,
+): string | number | undefined {
   if (!ctx.meta?.loadSubsetOptions) return undefined;
-  const params = parseLoadSubsetOptions(ctx.meta?.loadSubsetOptions);
-  return params.filters?.find((f: any) => f.field.includes(fieldName))?.value;
+  const params = parseLoadSubsetOptions(ctx.meta.loadSubsetOptions);
+  return params.filters?.find((f: { field: string | string[] }) =>
+    typeof f.field === "string"
+      ? f.field.includes(fieldName)
+      : f.field.some((part) => part.includes(fieldName)),
+  )?.value as string | number | undefined;
 }
 
 function isNotFoundError(error: unknown): boolean {

@@ -48,8 +48,7 @@ export async function DebugPageContent() {
   const dbStats = await Promise.all(
     dbModels.map(async (name) => ({
       name,
-      // @ts-expect-error i don't know how to type this
-      count: await prisma[name as keyof typeof prisma].count(),
+      count: await (prisma[name as keyof typeof prisma] as { count: () => Promise<number> }).count(),
     })),
   );
 

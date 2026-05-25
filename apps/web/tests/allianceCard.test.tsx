@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import type { ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -15,9 +16,9 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 jest.mock("../../../packages/ui/Anchor", () => ({
-  AllianceAnchor: ({ children }: any) => <a href="#">{children}</a>,
-  CharacterAnchor: ({ children }: any) => <a href="#">{children}</a>,
-  CorporationAnchor: ({ children }: any) => <a href="#">{children}</a>,
+  AllianceAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
+  CorporationAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
 }));
 
 jest.mock("../../../packages/ui/Avatar", () => ({
@@ -46,10 +47,8 @@ jest.mock("../../../packages/ui/DateText", () => ({
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ href, children, ...props }: any) => (
-    <a href={typeof href === "string" ? href : ""} {...props}>
-      {children}
-    </a>
+  default: ({ href, children }: { href?: string | object; children?: ReactNode }) => (
+    <a href={typeof href === "string" ? href : ""}>{children}</a>
   ),
 }));
 

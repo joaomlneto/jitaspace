@@ -60,7 +60,7 @@ export type Character = (
 export const useCharacter = (
   characterId: number,
 ): {
-  error: any;
+  error: unknown;
   isError: boolean;
   isLoading: boolean;
   data?: Character;
