@@ -30,7 +30,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       - name: Run tests with coverage
         run: pnpm test
       - name: SonarCloud Scan
