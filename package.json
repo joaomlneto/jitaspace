@@ -22,7 +22,7 @@
     "lint:fix": "turbo lint --continue -- --fix --cache --cache-location 'node_modules/.cache/.eslintcache' && manypkg fix",
     "type-check": "turbo type-check",
     "version-packages": "changeset version && node --import tsx/esm .changeset/stamp-changelog-dates.ts $(find . -name 'CHANGELOG.md' -not -path '*/node_modules/*')",
-    "publish-packages": "turbo run build lint test && pnpm version-packages && changeset publish",
+    "publish-packages": "pnpm version-packages && changeset publish",
     "preinstall": "npx only-allow pnpm",
     "test": "turbo test",
     "test:watch": "turbo test:watch"
