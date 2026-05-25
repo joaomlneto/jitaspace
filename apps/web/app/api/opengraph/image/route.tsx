@@ -76,7 +76,7 @@ export function GET(request: NextRequest) {
       },
     );
   } catch (error) {
-    console.log(`${(error as Error).message}`);
+    console.error(`${(error as Error).message}`);
     return new Response("Failed to generate the image", {
       status: 500,
     });

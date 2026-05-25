@@ -31,8 +31,6 @@ const EsiClientStatistics = createContext<EsiClientStatistics>(
 );
 export const EsiClientStatisticsProvider = memo(
   ({ children }: PropsWithChildren) => {
-    console.log("rerendering esi client STATISTICS provider");
-
     const [esiErrorsRemaining, setEsiErrorsRemaining] = useState<number>(100);
     const [esiErrorsResetOn, setEsiErrorsResetOn] = useState<Date | undefined>(
       new Date(),

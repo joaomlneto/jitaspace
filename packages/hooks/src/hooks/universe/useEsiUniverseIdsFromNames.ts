@@ -41,7 +41,5 @@ export const useEsiUniverseIdsFromNames = (names: string[]) => {
     void fetchIds();
   }, [sortedNamesAsString]);
 
-  console.log({ result });
-
   return result;
 };

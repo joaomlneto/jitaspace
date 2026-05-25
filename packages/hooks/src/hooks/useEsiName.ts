@@ -240,7 +240,6 @@ export function useEsiNames(
       [key: string]: CacheState<EsiNameCacheValue, Error> | undefined;
     } = {};
     keys.forEach((key) => (current[key] = fetchCache.read(key)));
-    console.log("initial current:", current);
     return { keys, cache: fetchCache, current };
   });
 
@@ -250,11 +249,9 @@ export function useEsiNames(
     const checkForUpdates = (
       value: CacheState<EsiNameCacheValue, Error> | undefined,
     ) => {
-      console.log("got update:", value);
       if (didUnsubscribe) return;
       if (value === undefined) return;
       setState((prev) => {
-        console.log("setting state");
         // Bails if our key has changed from under us
         if (!value?.id || !ids.includes(value.id)) return prev;
         // Bails if our value hasn't changed
@@ -270,12 +267,10 @@ export function useEsiNames(
     };
 
     keys.forEach((key) => {
-      console.log("subscribing to updates for key", key);
       state.cache.subscribe(key, checkForUpdates);
     });
 
     keys.forEach((key) => {
-      console.log("checking for updates to key", key);
       checkForUpdates(state.cache.read(key));
     });
 

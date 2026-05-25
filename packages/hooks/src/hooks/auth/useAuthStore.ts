@@ -50,7 +50,7 @@ export const useAuthStore = create(
       }) => {
         const accessTokenPayload = getEveSsoAccessTokenPayload(accessToken);
         if (accessTokenPayload == null) {
-          console.log("Error getting access token payload");
+          console.error("Error getting access token payload");
           return;
         }
         const characterId = Number(accessTokenPayload.sub.split(":")[2]);
