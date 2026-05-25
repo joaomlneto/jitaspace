@@ -46,7 +46,7 @@ export async function DebugPageContent() {
         "transaction",
       ].includes(key),
   );
-  dbModels.sort();
+  dbModels.sort((a, b) => a.localeCompare(b));
 
   const dbStats = await Promise.all(
     dbModels.map(async (name) => ({

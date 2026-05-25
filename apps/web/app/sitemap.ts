@@ -48,7 +48,7 @@ async function collectStaticRoutes(): Promise<string[]> {
   }
 
   await walk(APP_DIR, []);
-  return [...routes].sort();
+  return [...routes].sort((a, b) => a.localeCompare(b));
 }
 
 async function getStaticRoutes(): Promise<string[]> {

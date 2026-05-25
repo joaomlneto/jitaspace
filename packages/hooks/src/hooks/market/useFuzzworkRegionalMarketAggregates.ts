@@ -27,7 +27,7 @@ export const useFuzzworkRegionalMarketAggregates = (
   typeIds: number[],
   regionId: number,
 ) => {
-  const sortedTypeIds = useMemo(() => typeIds.sort(), [typeIds]);
+  const sortedTypeIds = useMemo(() => typeIds.sort((a, b) => a - b), [typeIds]);
   const query = useGetAggregates(
     {
       // FIXME: Generator wont support specifying array of integers for a query parameter.

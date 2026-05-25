@@ -126,14 +126,14 @@ export default createCommand("generate")
 
     // Sort the paths alphabetically
     const sortedPaths = {};
-    const sortedKeys = Object.keys(schema.paths).sort();
+    const sortedKeys = Object.keys(schema.paths).sort((a, b) => a.localeCompare(b));
     // @ts-expect-error
     sortedKeys.forEach((key) => (sortedPaths[key] = schema.paths[key]));
     schema.paths = sortedPaths;
 
     // Sort the schemas alphabetically
     const sortedSchemas = {};
-    const sortedSchemaKeys = Object.keys(schema.components.schemas).sort();
+    const sortedSchemaKeys = Object.keys(schema.components.schemas).sort((a, b) => a.localeCompare(b));
     sortedSchemaKeys.forEach(
       // @ts-expect-error
       (key) => (sortedSchemas[key] = schema.components.schemas[key]),
@@ -141,7 +141,7 @@ export default createCommand("generate")
     schema.components.schemas = sortedSchemas;
 
     // Sort the tags alphabetically, removing duplicates
-    schema.tags = [...new Set(schema.tags.map((tag) => tag.name).sort())].map(
+    schema.tags = [...new Set(schema.tags.map((tag) => tag.name).sort((a, b) => a.localeCompare(b)))].map(
       (name) => ({ name }),
     );
 

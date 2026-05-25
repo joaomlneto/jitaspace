@@ -64,7 +64,7 @@ export default async function Page() {
         })),
       );
 
-    agents.forEach(removeUndefinedFields);
+    agents.forEach((agent) => removeUndefinedFields(agent));
     agents = agents.sort((a, b) => a.name.localeCompare(b.name));
 
     agentTypes = await prisma.agentType.findMany({
