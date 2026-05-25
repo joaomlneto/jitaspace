@@ -15,6 +15,9 @@ jobs:
       TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Turborepo caching
       # Skip runtime env validation in Next.js during CI runs where secrets are not available
       SKIP_ENV_VALIDATION: "1"
+      # Prisma config resolves DATABASE_URL even during `prisma generate`; provide a dummy value
+      # so postinstall doesn't fail. No actual DB connection is made during generate.
+      DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
     strategy:
       fail-fast: false # https://github.com/cypress-io/github-action/issues/48
       matrix:
