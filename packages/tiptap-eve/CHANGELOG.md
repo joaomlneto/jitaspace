@@ -1,5 +1,11 @@
 # @jitaspace/tiptap-eve
 
+## 0.1.2
+
+### Patch Changes
+
+- 219a51b: Update README with full API docs, correct dependencies, and npm badges
+
 ## 0.1.1
 
 ### Patch Changes

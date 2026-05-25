@@ -1,7 +1,7 @@
 {
   "name": "@jitaspace/tiptap-eve",
   "description": "TipTap editor for EVE Online",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
