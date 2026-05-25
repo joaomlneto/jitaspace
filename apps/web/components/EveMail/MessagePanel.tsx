@@ -165,9 +165,6 @@ export function MessagePanel({
       {!hideMessage && mail?.data.body && (
         <MailMessageViewer content={mail?.data.body ?? ""} />
       )}
-      {!hideMessage && mail?.data.body && (
-        <JsonInput value={mail?.data.body} autosize />
-      )}
     </Stack>
   );
 }
