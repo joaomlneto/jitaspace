@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 import { prisma } from "@jitaspace/db";
 import { kv } from "@jitaspace/kv";
 
