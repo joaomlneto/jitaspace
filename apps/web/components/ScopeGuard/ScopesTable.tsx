@@ -16,7 +16,7 @@ export function ScopesTable({
   showRawScopeNames,
 }: Readonly<ScopesTableProps>) {
   const normalizedScopes = useMemo(
-    () => (Array.isArray(scopes) ? scopes.toSorted((a, b) => a.localeCompare(b)) : []),
+    () => (Array.isArray(scopes) ? [...scopes].sort((a, b) => a.localeCompare(b)) : []),
     [scopes],
   );
 
