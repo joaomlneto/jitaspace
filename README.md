@@ -1,7 +1,12 @@
 # Jita Space
 
-[![](https://dcbadge.limes.pink/api/server/https://discord.gg/fvcFu7j4dx)](https://discord.gg/https://discord.gg/fvcFu7j4dx)
+[![Build](https://github.com/joaomlneto/jitaspace/actions/workflows/build.yaml/badge.svg)](https://github.com/joaomlneto/jitaspace/actions/workflows/build.yaml)
+[![Cypress Tests](https://github.com/joaomlneto/jitaspace/actions/workflows/cypress.yml/badge.svg)](https://github.com/joaomlneto/jitaspace/actions/workflows/cypress.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=joaomlneto_jitaspace&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=joaomlneto_jitaspace)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=joaomlneto_jitaspace&metric=coverage)](https://sonarcloud.io/summary/new_code?id=joaomlneto_jitaspace)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=joaomlneto_jitaspace&metric=bugs)](https://sonarcloud.io/summary/new_code?id=joaomlneto_jitaspace)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Discord](https://img.shields.io/discord/1127970667522949201?logo=discord&label=discord&color=5865F2)](https://discord.gg/fvcFu7j4dx)
 
 
 This repository uses [Turborepo](https://turborepo.org/) and contains:
