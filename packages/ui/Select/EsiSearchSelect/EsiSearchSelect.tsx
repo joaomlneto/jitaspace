@@ -1,12 +1,12 @@
 "use client";
 
 import type { SelectProps } from "@mantine/core";
-import React, { memo } from "react";
+import React, { memo, useMemo } from "react";
 import { Badge, Group, Loader, rem, Select } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
 import { type GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
-import { useEsiNamesCache, useEsiSearch } from "@jitaspace/hooks";
+import { useEsiNameLookup, useEsiSearch } from "@jitaspace/hooks";
 
 import { EveEntityAvatar } from "../../Avatar";
 import { EveEntityName } from "../../Text";
@@ -28,8 +28,6 @@ export const EsiSearchSelect = memo(
       debounceTime ?? 1000,
     );
 
-    const names = useEsiNamesCache();
-
     const { data: searchResult, isLoading } = useEsiSearch(
       debouncedSearchValue,
       {
@@ -37,16 +35,30 @@ export const EsiSearchSelect = memo(
       },
     );
 
-    const data = [
-      ...Object.entries(searchResult?.data ?? []).flatMap(
-        ([categoryName, categoryIds]) =>
-          categoryIds.slice(0, 100).map((id) => ({
-            label: names[id]?.value?.name ?? "Unknown",
-            value: `${id}`,
-            category: categoryName,
-          })),
-      ),
-    ];
+    const slicedEntries = useMemo(
+      () =>
+        Object.entries(searchResult?.data ?? {}).flatMap(
+          ([categoryName, ids]) =>
+            ids.slice(0, 100).map((id) => ({ id, categoryName })),
+        ),
+      [searchResult?.data],
+    );
+
+    const entityEntries = useMemo(
+      () => slicedEntries.map(({ id }) => ({ id })),
+      [slicedEntries],
+    );
+    const names = useEsiNameLookup(entityEntries);
+
+    const data = useMemo(
+      () =>
+        slicedEntries.map(({ id, categoryName }) => ({
+          label: names[id.toString()]?.value?.name ?? "Unknown",
+          value: `${id}`,
+          category: categoryName,
+        })),
+      [slicedEntries, names],
+    );
 
     const isLoadingData: boolean =
       isLoading || searchValue !== debouncedSearchValue;

@@ -6,15 +6,11 @@ import { useDebouncedValue } from "@mantine/hooks";
 import type { SpotlightActionData } from "@mantine/spotlight";
 import { Spotlight } from "@mantine/spotlight";
 
-import type {
-  EsiSearchCategory} from "@jitaspace/hooks";
-import {
-  useEsiNamesCache,
-  useEsiSearch,
-} from "@jitaspace/hooks";
+import type { EsiSearchCategory } from "@jitaspace/hooks";
+import { useEsiNameLookup, useEsiSearch } from "@jitaspace/hooks";
 import { EveEntityAvatar } from "@jitaspace/ui";
 
-import { characterApps } from "~/config/apps";
+import { jitaApps } from "~/config/apps";
 
 export const MainSpotlight = () => {
   const router = useRouter();
@@ -23,25 +19,37 @@ export const MainSpotlight = () => {
 
   const { data: esiSearchData } = useEsiSearch(debouncedQuery);
 
-  const names = useEsiNamesCache();
+  const entityEntries = useMemo(
+    () =>
+      Object.entries(esiSearchData?.data ?? []).flatMap(
+        ([categoryString, entries]) => {
+          const category = categoryString as EsiSearchCategory;
+          return entries.map((entityId) => ({ id: entityId, category }));
+        },
+      ),
+    [esiSearchData?.data],
+  );
+
+  const names = useEsiNameLookup(entityEntries);
 
   const appActions: SpotlightActionData[] = useMemo(
     () =>
-      Object.values(characterApps)
-        .sort((a, b) => a.name.localeCompare(b.name))
-        .map((app) => ({
-          id: `app/${app.name}`,
-          label: app.name,
-          description: app.description,
-          group: "Apps",
-          leftSection: <app.Icon width={32} />,
-          onClick: () => {
-            if (app.url !== undefined) {
-              void router.push(app.url);
-            }
-          },
-          icon: <app.Icon width={38} />,
-        })),
+      Object.values(jitaApps).flatMap(({ name: groupName, apps }) =>
+        Object.values(apps)
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((app) => ({
+            id: `app/${groupName}/${app.name}`,
+            label: app.name,
+            description: app.description,
+            group: `${groupName} Apps`,
+            leftSection: <app.Icon width={32} height={32} />,
+            onClick: () => {
+              if (app.url !== undefined) {
+                void router.push(app.url);
+              }
+            },
+          })),
+      ),
     [router],
   );
 
@@ -52,8 +60,7 @@ export const MainSpotlight = () => {
           const category = categoryString as EsiSearchCategory;
           return entries.map((entityId) => ({
             id: `entity/${entityId}`,
-            label: names[entityId]?.value?.name ?? "",
-            //description: `Search result for ${debouncedQuery}`,
+            label: names[entityId.toString()]?.value?.name ?? "",
             group: category.replace("_", " "),
             leftSection: (
               <EveEntityAvatar
@@ -104,13 +111,60 @@ export const MainSpotlight = () => {
     [appActions, esiSearchResultActions],
   );
 
+  // Filter actions by query locally (mirrors defaultSpotlightFilter behaviour)
+  const filteredActions = useMemo(() => {
+    if (!query.trim()) return actions;
+    const q = query.trim().toLowerCase();
+    return actions.filter(
+      (action) =>
+        action.label?.toLowerCase().includes(q) ||
+        action.description?.toLowerCase().includes(q),
+    );
+  }, [query, actions]);
+
+  // Group filtered actions for rendering with the compound API
+  const { ungrouped, groups } = useMemo(() => {
+    const _groups: Record<string, SpotlightActionData[]> = {};
+    const _ungrouped: SpotlightActionData[] = [];
+    for (const action of filteredActions) {
+      if (action.group) {
+        (_groups[action.group] ??= []).push(action);
+      } else {
+        _ungrouped.push(action);
+      }
+    }
+    return { ungrouped: _ungrouped, groups: _groups };
+  }, [filteredActions]);
+
+  // Use the compound API so SpotlightActionsList is always mounted.
+  // When SpotlightActionsList unmounts it clears listId to ""; pressing Enter
+  // then calls querySelector("# [data-selected]") which is an invalid selector
+  // and throws a SyntaxError. Keeping it always mounted avoids the bug.
   return (
-    <Spotlight
+    <Spotlight.Root
       shortcut={["mod + K", "mod + P", "/"]}
-      limit={100}
       query={query}
       onQueryChange={setQuery}
-      actions={actions}
-    />
+    >
+      <Spotlight.Search />
+      <Spotlight.ActionsList mah="60vh" style={{ overflowY: "auto" }}>
+        {filteredActions.length > 0 ? (
+          <>
+            {ungrouped.map(({ id, group: _g, ...action }) => (
+              <Spotlight.Action key={id} id={id} {...action} />
+            ))}
+            {Object.entries(groups).map(([groupName, groupActions]) => (
+              <Spotlight.ActionsGroup key={groupName} label={groupName}>
+                {groupActions.map(({ id, group: _g, ...action }) => (
+                  <Spotlight.Action key={id} id={id} {...action} />
+                ))}
+              </Spotlight.ActionsGroup>
+            ))}
+          </>
+        ) : (
+          <Spotlight.Empty>No results found</Spotlight.Empty>
+        )}
+      </Spotlight.ActionsList>
+    </Spotlight.Root>
   );
 };

@@ -3,8 +3,7 @@
 import {AssetsIcon, AttentionIcon} from "@jitaspace/eve-icons";
 import {
   useCorporationAssets,
-  useEsiNamePrefetch,
-  useEsiNamesCache,
+  useEsiNameLookup,
   useMarketPrices,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
@@ -12,7 +11,7 @@ import {EveEntityAnchor, EveEntityName, TypeAnchor, TypeAvatar, TypeName,} from 
 import {Alert, Badge, Center, Container, Group, Loader, Pagination, Stack, Table, Text, Title,} from "@mantine/core";
 import {useForm} from "@mantine/form";
 import {usePagination} from "@mantine/hooks";
-import { useCallback, useMemo} from "react";
+import { useCallback, useMemo } from "react";
 import { ScopeGuard } from "~/components/ScopeGuard";
 
 
@@ -28,19 +27,21 @@ export default function Page() {
       name: "",
     },
   });
-  const cache = useEsiNamesCache();
   const {data: marketPrices} = useMarketPrices();
 
-  const getNameFromCache = useCallback(
-    (id: number) => cache[id]?.value?.name,
-    [cache],
+  const assetEntries = useMemo(
+    () =>
+      Object.values(assets ?? {}).map((asset) => ({
+        id: asset.type_id,
+        category: "inventory_type" as const,
+      })),
+    [assets],
   );
+  const names = useEsiNameLookup(assetEntries);
 
-  useEsiNamePrefetch(
-    Object.values(assets ?? {}).map((asset) => ({
-      id: asset.type_id,
-      category: "inventory_type",
-    })),
+  const getNameFromCache = useCallback(
+    (id: number) => names[id.toString()]?.value?.name,
+    [names],
   );
 
   const filtersEnabled =
