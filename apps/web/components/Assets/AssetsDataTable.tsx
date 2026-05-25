@@ -1,4 +1,4 @@
-import _React, { memo, useCallback, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { Group, Text } from "@mantine/core";
 import { useForceUpdate, useTimeout } from "@mantine/hooks";
 import type {
@@ -73,7 +73,6 @@ export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {
   const { start } = useTimeout(() => forceUpdate(), 1000);
 
   useEffect(() => {
-    console.log("still undefined:", numUndefinedNames);
     if (numUndefinedNames > 0) start();
   }, [numUndefinedNames, start]);
 

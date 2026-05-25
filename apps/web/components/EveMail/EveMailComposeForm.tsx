@@ -60,7 +60,6 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
   });
 
   const handleSend = async (values: typeof form.values) => {
-    console.log("values:", values);
     try {
       if (accessToken === null || !characterId) {
         return showNotification({

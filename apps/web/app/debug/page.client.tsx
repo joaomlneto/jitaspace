@@ -18,10 +18,10 @@ import { FolderIcon } from "@jitaspace/eve-icons";
 export interface PageProps {
   database: {
     name: string;
-    count: any;
+    count: number;
   }[];
   queues: Record<string, string | number>[];
-  vars: Record<string, any>;
+  vars: Record<string, string | undefined>;
 }
 
 export default function Page({ database, queues, vars }: Readonly<PageProps>) {

@@ -54,7 +54,6 @@ export function ManageMailLabelsModal({
         onSubmit={form.onSubmit((values) => {
           void (async (values) => {
             try {
-              console.log(values);
               if (accessToken === null || !characterId) {
                 return showNotification({
                   title: "Error creating label",

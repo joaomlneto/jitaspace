@@ -39,8 +39,6 @@ export const CharacterSkillTrainingCard = ({
       skill.finish_date && skill.finish_date > new Date().toISOString(),
   )[0];
 
-  console.log({ characterId, activeSkill });
-
   const skillDuration =
     activeSkill?.start_date && activeSkill?.finish_date
       ? differenceInSeconds(

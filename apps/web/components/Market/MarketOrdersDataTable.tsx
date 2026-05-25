@@ -1,4 +1,4 @@
-import _React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Group } from "@mantine/core";
 import { addDays } from "date-fns";
 import type {
@@ -108,7 +108,6 @@ export const MarketOrdersDataTable = memo(
           id: "expires",
           header: "Expires",
           accessorFn: (row) => {
-            console.log(row);
             return addDays(new Date(row.issued), 30);
           },
           Cell: ({ renderedCellValue: _renderedCellValue, row: _row, cell }) => (

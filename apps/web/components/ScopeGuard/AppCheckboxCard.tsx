@@ -70,7 +70,6 @@ export function AppCheckboxCard({
       <UnstyledButton
         className={cx(classes.wrapper, className)}
         onClick={() => {
-          console.log("changing", app.name, "to", !checked);
           if (checked) {
             onScopeDeselect?.(allAppScopes);
           } else {
