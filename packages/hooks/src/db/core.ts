@@ -37,10 +37,10 @@ export function extractIdFromCtx(
 ): string | number | undefined {
   if (!ctx.meta?.loadSubsetOptions) return undefined;
   const params = parseLoadSubsetOptions(ctx.meta.loadSubsetOptions);
-  return params.filters?.find((f: { field: string | string[] }) =>
+  return params.filters?.find((f: { field: string | (string | number)[] }) =>
     typeof f.field === "string"
       ? f.field.includes(fieldName)
-      : f.field.some((part) => part.includes(fieldName)),
+      : f.field.some((part) => part.toString().includes(fieldName)),
   )?.value as string | number | undefined;
 }
 

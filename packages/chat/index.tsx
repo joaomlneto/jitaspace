@@ -9,6 +9,7 @@ import {
   Chat,
   Divider,
   Field,
+  FieldElement,
   Fields,
   CardText as Text,
 } from "chat";
@@ -97,7 +98,7 @@ export const postUpdateCard = async (options: UpdateCardOptions) => {
     return;
   }
 
-  const fields: ReturnType<typeof Field>[] = [];
+  const fields: FieldElement[] = [];
   const addField = (
     label: string,
     value: string | number | bigint | null | undefined,
