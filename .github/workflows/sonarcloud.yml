@@ -21,7 +21,7 @@ jobs:
         with:
           # Disable shallow clone so SonarCloud gets full blame/history data
           fetch-depth: 0
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@eae0cfeb286e66ffb5155f1a79b90583a127a68b # v2.4.1
         with:
           version: 10.30.2
       - name: Setup Node.js
@@ -34,7 +34,7 @@ jobs:
       - name: Run tests with coverage
         run: pnpm test
       - name: SonarCloud Scan
-        uses: sonarsource/sonarcloud-github-action@master
+        uses: sonarsource/sonarcloud-github-action@ba3875ecf642b2129de2b589510c81a8b53dbf4e # master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
