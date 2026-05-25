@@ -54,6 +54,8 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
+      - name: Install Cypress binary
+        run: pnpm exec cypress install
       - name: Push database schema
         run: cd packages/db && pnpm exec prisma db push
       - name: Build
