@@ -1,5 +1,10 @@
 # @jitaspace/web
 
+## 0.3.0 — 2026-05-25
+
+- d197156: Re-enable and fix the main Spotlight search
+- Updated dependencies [d197156]
+
 ## 0.2.5 — 2026-05-25
 
 - Updated dependencies [b659f2d]
