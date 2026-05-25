@@ -1,12 +1,6 @@
-[production]
 chrome >= 110
 firefox >= 115
 safari >= 16.4
 edge >= 110
 opera >= 96
 not dead
-
-[development]
-last 1 chrome version
-last 1 firefox version
-last 1 safari version
