@@ -4,18 +4,25 @@ import TipTapLink from "@tiptap/extension-link";
 
 const Link = TipTapLink.configure({ openOnClick: false });
 
-const STATION_TYPE_IDS = [
+const STATION_TYPE_IDS = new Set([
   54, 56, 57, 58, 59, 1529, 1530, 1531, 1926, 1927, 1928, 1929, 1930, 1931,
   1932, 2071, 2496, 2497, 2498, 2499, 2500, 2501, 2502, 3864, 3865, 3866, 3867,
   3868, 3869, 3870, 3871, 3872, 4023, 4024, 9856, 9857, 9867, 9868, 9873, 10795,
   12242, 12294, 12295, 19757, 21642, 21644, 21645, 21646, 22296, 22297, 22298,
   29323, 29387, 29388, 29389, 29390, 34325, 34326, 52678, 59956, 71361, 74397,
-];
+]);
 
-const CHARACTER_TYPE_IDS = [
+const CHARACTER_TYPE_IDS = new Set([
   1373, 1374, 1375, 1376, 1377, 1378, 1379, 1380, 1381, 1382, 1383, 1384, 1385,
   1386, 34574,
-];
+]);
+
+const STRUCTURE_TYPE_IDS = new Set([
+  35825, 35826, 35827, 35828, 35829, 35830, 35832, 35833, 35834, 35835, 35836,
+  35837, 35838, 35839, 35840, 35841, 35842, 35843, 35844, 35845, 37533, 37534,
+  37535, 37536, 40340, 45006, 46363, 46364, 47512, 47513, 47514, 47515, 47516,
+  49600, 49601, 71116, 71117, 71118, 71119, 78260, 79172, 81826,
+]);
 
 // FIXME: These should be configurable
 export const renderEveHref = (href: string) => {
@@ -40,11 +47,14 @@ export const renderEveHref = (href: string) => {
 
     if (targetType[0] === "16159") return `/alliance/${targetType[1]}`;
 
-    if (CHARACTER_TYPE_IDS.includes(parseInt(targetType[0] ?? "", 10)))
+    if (CHARACTER_TYPE_IDS.has(parseInt(targetType[0] ?? "", 10)))
       return `/character/${targetType[1]}`;
 
-    if (STATION_TYPE_IDS.includes(parseInt(targetType[0] ?? "", 10)))
+    if (STATION_TYPE_IDS.has(parseInt(targetType[0] ?? "", 10)))
       return `/station/${targetType[1]}`;
+
+    if (STRUCTURE_TYPE_IDS.has(parseInt(targetType[0] ?? "", 10)))
+      return `/structure/${targetType[1]}`;
   }
 
   if (href.startsWith(WAR_REPORT_PREFIX)) {
@@ -58,7 +68,9 @@ export const renderEveHref = (href: string) => {
   }
 
   if (href.startsWith(RECRUITMENT_AD_PREFIX)) {
-    const corporationId = href.slice(RECRUITMENT_AD_PREFIX.length).split("//")[0];
+    const corporationId = href
+      .slice(RECRUITMENT_AD_PREFIX.length)
+      .split("//")[0];
     return `/corporation/${corporationId}`;
   }
 
@@ -71,5 +83,19 @@ export const renderEveHref = (href: string) => {
 };
 
 export const EveLink = Link.configure({
-  protocols: ["showinfo", "warReport", "killReport", "recruitmentAd", "contract", "joinChannel", "helpPointer", "shipSkinListing", "fitting", "localsvc", "opportunity", "careerProgramNode", "fleet"],
+  protocols: [
+    "showinfo",
+    "warReport",
+    "killReport",
+    "recruitmentAd",
+    "contract",
+    "joinChannel",
+    "helpPointer",
+    "shipSkinListing",
+    "fitting",
+    "localsvc",
+    "opportunity",
+    "careerProgramNode",
+    "fleet",
+  ],
 });
