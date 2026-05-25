@@ -77,11 +77,9 @@ function parseScan(scan: string) {
   };
   for (const line of lines) {
     if (SCAN_CATEGORIES.some((category) => line.includes(category))) {
-      console.log("Switch to category:", line, CATEGORY_KEY[line]);
       currentCategory = CATEGORY_KEY[line] ?? null;
     } else {
       if (currentCategory === null) throw new Error("Invalid Scan");
-      console.log("Found item:", line, currentCategory);
       if (result[currentCategory].some((item) => item.name === line)) {
         result[currentCategory].find((item) => item.name === line)!.quantity++;
       } else {
@@ -89,7 +87,6 @@ function parseScan(scan: string) {
       }
     }
   }
-  console.log("result:", result);
   return result;
 }
 
@@ -135,8 +132,7 @@ function convertScan(scan: ScanResult) {
       items.push({
         name: item.name,
         quantity: item.quantity,
-        // @ts-ignore this is guaranteed to exist
-        flag,
+        flag: flag as FittingItemFlag,
       });
   });
   scan.midSlots.forEach((item, index) => {
@@ -145,8 +141,7 @@ function convertScan(scan: ScanResult) {
       items.push({
         name: item.name,
         quantity: item.quantity,
-        // @ts-ignore this is guaranteed to exist
-        flag,
+        flag: flag as FittingItemFlag,
       });
   });
   scan.lowSlots.forEach((item, index) => {
@@ -155,8 +150,7 @@ function convertScan(scan: ScanResult) {
       items.push({
         name: item.name,
         quantity: item.quantity,
-        // @ts-ignore this is guaranteed to exist
-        flag,
+        flag: flag as FittingItemFlag,
       });
   });
   scan.rigSlots.forEach((item, index) => {
@@ -165,8 +159,7 @@ function convertScan(scan: ScanResult) {
       items.push({
         name: item.name,
         quantity: item.quantity,
-        // @ts-ignore this is guaranteed to exist
-        flag,
+        flag: flag as FittingItemFlag,
       });
   });
   scan.charges.forEach((item, index) => {
@@ -175,8 +168,7 @@ function convertScan(scan: ScanResult) {
       items.push({
         name: item.name,
         quantity: item.quantity,
-        // @ts-ignore this is guaranteed to exist
-        flag,
+        flag: flag as FittingItemFlag,
       });
   });
   return items;

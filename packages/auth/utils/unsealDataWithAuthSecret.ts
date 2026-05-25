@@ -6,7 +6,7 @@ export const unsealDataWithAuthSecret = ({
   data,
   secret,
 }: {
-  data: any;
+  data: string;
   secret: string;
 }) => {
   if (!secret) {

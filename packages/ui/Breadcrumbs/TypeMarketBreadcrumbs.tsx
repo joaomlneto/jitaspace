@@ -56,7 +56,6 @@ export const TypeMarketBreadcrumbs = memo(
      * Retrieve necessary market groups
      */
     useEffect(() => {
-      console.log("useEffect", { type, marketGroups });
       // check if we are done!
       if (!missingMarketGroupId) return;
 

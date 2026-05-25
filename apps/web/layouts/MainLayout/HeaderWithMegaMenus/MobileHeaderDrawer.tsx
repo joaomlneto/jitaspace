@@ -1,6 +1,6 @@
 "use client";
 
-import _React, { memo } from "react";
+import { memo } from "react";
 import {
   Divider,
   Drawer,

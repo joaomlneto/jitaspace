@@ -36,7 +36,6 @@ export const OpenInformationWindowAnchor = memo(
         onClick={() => {
           if (!canOpenWindow) {
             showNotification({ message: "Insufficient permissions" });
-            console.log({ canOpenWindow });
           } else {
             void postUiOpenwindowInformation(
               {

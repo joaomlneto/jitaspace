@@ -1,4 +1,4 @@
-import _React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import type {
   NavLinkProps} from "@mantine/core";
 import {

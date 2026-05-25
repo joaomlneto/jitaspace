@@ -1,4 +1,4 @@
-import _React, { memo } from "react";
+import { memo } from "react";
 import {
   Badge,
   Group,

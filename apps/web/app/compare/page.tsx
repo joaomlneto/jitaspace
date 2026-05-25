@@ -1,6 +1,6 @@
 "use client";
 
-import _React, { useState  } from "react";
+import { useState  } from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
 
 import { CompareToolIcon } from "@jitaspace/eve-icons";

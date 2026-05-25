@@ -17,8 +17,6 @@ export const CharacterOnlineIndicator = memo(
   ({ characterId, ...otherProps }: CharacterOnlineIndicatorProps) => {
     const { data, isSuccess } = useCharacterOnlineStatus(characterId);
 
-    console.log({ characterId, online: data?.data.online });
-
     return (
       <Indicator
         disabled={!isSuccess}

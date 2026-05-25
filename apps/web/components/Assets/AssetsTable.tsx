@@ -1,7 +1,7 @@
 import type {CharacterAsset} from "@jitaspace/hooks";
 import {EveEntityAnchor, EveEntityName, ISKAmount, TypeAnchor, TypeAvatar, TypeName,} from "@jitaspace/ui";
 import {Badge, Group, Table} from "@mantine/core";
-import _React, {memo} from "react";
+import {memo} from "react";
 
 
 interface AssetsTableProps {

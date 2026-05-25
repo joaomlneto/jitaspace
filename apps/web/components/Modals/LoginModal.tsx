@@ -1,6 +1,6 @@
 "use client";
 
-import _React, { useState } from "react";
+import { useState } from "react";
 import {
   Button,
   Center,

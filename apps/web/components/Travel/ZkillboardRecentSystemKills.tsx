@@ -1,4 +1,4 @@
-import _React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Group, Loader, Spoiler, Stack, Text } from "@mantine/core";
 import { subHours } from "date-fns";
 import useSWR from "swr";

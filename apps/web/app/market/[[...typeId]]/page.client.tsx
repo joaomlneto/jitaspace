@@ -1,6 +1,6 @@
 "use client";
 
-import _React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Container, Group, Stack, Title } from "@mantine/core";
 

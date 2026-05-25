@@ -12,7 +12,7 @@ import {EveEntityAnchor, EveEntityName, TypeAnchor, TypeAvatar, TypeName,} from 
 import {Alert, Badge, Center, Container, Group, Loader, Pagination, Stack, Table, Text, Title,} from "@mantine/core";
 import {useForm} from "@mantine/form";
 import {usePagination} from "@mantine/hooks";
-import _React, { useCallback, useMemo} from "react";
+import { useCallback, useMemo} from "react";
 import { ScopeGuard } from "~/components/ScopeGuard";
 
 

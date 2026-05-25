@@ -1,6 +1,6 @@
 "use client";
 
-import _React, {
+import {
   useCallback,
   useEffect,
   useMemo

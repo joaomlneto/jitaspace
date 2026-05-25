@@ -1,4 +1,4 @@
-import _React, { memo } from "react";
+import { memo } from "react";
 import { Group, Popover, Text, UnstyledButton } from "@mantine/core";
 
 import { useEsiCharacter } from "@jitaspace/hooks";

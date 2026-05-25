@@ -1,4 +1,4 @@
-import _React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Group, JsonInput, Table } from "@mantine/core";
 
 import { useDogmaAttributes, useTypes } from "@jitaspace/hooks";

@@ -1,4 +1,4 @@
-import _React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Anchor, Group, Table, Text, Tooltip } from "@mantine/core";
 
 import { InfoIcon } from "@jitaspace/eve-icons";

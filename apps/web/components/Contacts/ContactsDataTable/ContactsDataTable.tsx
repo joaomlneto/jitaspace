@@ -1,4 +1,4 @@
-import _React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Badge, Group, Text } from "@mantine/core";
 import type {
   MRT_ColumnDef} from "mantine-react-table";

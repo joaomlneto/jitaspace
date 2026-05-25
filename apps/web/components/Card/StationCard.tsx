@@ -1,4 +1,4 @@
-import _React, { memo } from "react";
+import { memo } from "react";
 import { Card, Group  } from "@mantine/core";
 import type {CardProps} from "@mantine/core";
 

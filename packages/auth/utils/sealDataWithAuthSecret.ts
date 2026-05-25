@@ -4,7 +4,7 @@ export const sealDataWithAuthSecret = async ({
   data,
   secret,
 }: {
-  data: any;
+  data: unknown;
   secret: string;
 }) => {
   if (!secret) {
@@ -12,6 +12,5 @@ export const sealDataWithAuthSecret = async ({
   }
 
   const result = await Iron.seal(data, secret, Iron.defaults);
-  //console.debug("SEALED DATA:", { data, result });
   return result;
 };

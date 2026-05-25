@@ -1,6 +1,6 @@
 "use client";
 
-import _React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Container,
