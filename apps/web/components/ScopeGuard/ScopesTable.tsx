@@ -28,10 +28,12 @@ export function ScopesTable({
   }[] = useMemo(
     () =>
       normalizedScopes.map((scope: ESIScope) => {
-        const category = (scope.split(".")[0] ?? "").slice(4);
-        const permission = (scope.split(".")[1] ?? "")
-          .replaceAll("_", " ")
-          .replaceAll(category, "");
+        const parts = scope.split(".");
+        const category = (parts[0] ?? "").slice(4);
+        const rawPermission = (parts[1] ?? "").replaceAll("_", " ");
+        const permission = category
+          ? rawPermission.replaceAll(category, "")
+          : rawPermission;
         return {
           id: scope,
           category,
