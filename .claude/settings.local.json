@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install:*)",
+      "Bash(pnpm --filter @jitaspace/tiptap-eve test)",
+      "Bash(node -e \"const m = require\\(''''/Users/joaomlneto/git/jitaspace/node_modules/@mantine/core''''\\); console.log\\(Object.keys\\(m\\).filter\\(k => k.includes\\(''''MultiSelect''''\\) || k.includes\\(''''Combobox''''\\)\\)\\)\")",
+      "WebFetch(domain:mantine.dev)",
+      "Bash(xargs cat:*)",
+      "Bash(grep -r Combobox /Users/joaomlneto/git/jitaspace/packages/ui --include=*.tsx --include=*.ts)",
+      "Bash(grep -r Combobox /Users/joaomlneto/git/jitaspace/apps/web --include=*.tsx --include=*.ts)",
+      "Bash(find /Users/joaomlneto/git/jitaspace/tooling -type f -name *.ts -o -name *.js -o -name *.json)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm with-env:*)",
+      "Bash(grep -r \"dogma_effects\\\\|effect_id\\\\|hiPower\\\\|medPower\\\\|loPower\\\\|rigSlot\" /Users/joaomlneto/git/jitaspace/packages/hooks/src --include=*.ts -l)",
+      "Bash(grep -r GetUniverseTypesTypeId /Users/joaomlneto/git/jitaspace/packages/esi-client/src --include=*.ts -l)",
+      "Bash(grep -E \"^\\\\.env$\")",
+      "Bash(git ls-tree:*)",
+      "Bash(find /Users/joaomlneto/git/jitaspace/apps/web/components -name *.actions.ts -o -name *.action.ts)",
+      "Bash(find /Users/joaomlneto/git/jitaspace/apps/web/app -path *api* -name *.ts)",
+      "Bash(find /Users/joaomlneto/git/jitaspace/packages/db -name *.ts)",
+      "Bash(git commit:*)",
+      "Bash(find /Users/joaomlneto/git/jitaspace/apps/web/src -type f -name *debug*)",
+      "Bash(git add:*)",
+      "Bash(grep -r console.log apps/web/components packages/hooks packages/auth packages/ui packages/eve-scrape --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"TODO\\\\|FIXME\" apps/web packages/hooks packages/auth packages/ui packages/eve-scrape --include=*.ts --include=*.tsx)",
+      "Bash(grep -rn !. apps/web packages/hooks packages/auth packages/ui packages/eve-scrape --include=*.ts --include=*.tsx)",
+      "Bash(grep -rn :s*any apps/web packages/hooks packages/auth packages/ui packages/eve-scrape --include=*.ts --include=*.tsx)",
+      "Bash(grep -rn \"import.*unused\\\\|^import.*_\" apps/web packages/hooks packages/auth packages/ui packages/eve-scrape --include=*.ts --include=*.tsx)",
+      "Bash(grep -rn \"const.*=.*0\\\\|const.*=.*1\\\\|const.*=.*.*\\\\|const.*=.*''''.*''''\" apps/web/components packages/hooks packages/auth packages/ui --include=*.ts --include=*.tsx)",
+      "Bash(pnpm --filter @jitaspace/hooks build)",
+      "Bash(ls /Users/joaomlneto/git/jitaspace/*.md)",
+      "Bash(git remote:*)",
+      "Bash(ls /Users/joaomlneto/git/jitaspace/LICENSE*)",
+      "Bash(git fetch:*)",
+      "Bash(git checkout:*)",
+      "Bash(cat packages/*/package.json apps/*/package.json)",
+      "Bash(for f:*)",
+      "Bash(do echo:*)",
+      "Bash(git diff:*)",
+      "Bash(done)"
+    ]
+  }
+}
