@@ -69,7 +69,7 @@ jobs:
         run: pnpm build
       - name: Cypress run
         # Uses the official Cypress GitHub action https://github.com/cypress-io/github-action
-        uses: cypress-io/github-action@v6
+        uses: cypress-io/github-action@v7.3.0
         with:
           # Dependencies are already installed at monorepo root; skip action-level install
           # to avoid lockfile lookup in apps/web (pnpm lockfile is at repository root).
