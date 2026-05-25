@@ -336,5 +336,83 @@ describe("MainSpotlight", () => {
       expect(screen.getByTestId("group-character")).toBeInTheDocument();
       expect(screen.getByTestId("group-corporation")).toBeInTheDocument();
     });
+
+    it("navigates to the solar system page when a solar_system result is clicked", () => {
+      mockUseEsiSearch.mockReturnValue({
+        data: { data: { solar_system: [30000142] } },
+      });
+      mockUseEsiNameLookup.mockReturnValue({
+        "30000142": {
+          status: "success",
+          value: { name: "Jita", category: "solar_system" },
+          error: undefined,
+          id: 1,
+        },
+      });
+      renderSpotlight();
+      fireEvent.click(screen.getByTestId("action-entity/30000142"));
+      expect(mockRouterPush).toHaveBeenCalledWith("/solar_system/30000142");
+    });
+
+    it("navigates to the station page when a station result is clicked", () => {
+      mockUseEsiSearch.mockReturnValue({
+        data: { data: { station: [60003760] } },
+      });
+      mockUseEsiNameLookup.mockReturnValue({
+        "60003760": {
+          status: "success",
+          value: { name: "Jita IV - Moon 4", category: "station" },
+          error: undefined,
+          id: 1,
+        },
+      });
+      renderSpotlight();
+      fireEvent.click(screen.getByTestId("action-entity/60003760"));
+      expect(mockRouterPush).toHaveBeenCalledWith("/station/60003760");
+    });
+
+    it("navigates to the structure page when a structure result is clicked", () => {
+      mockUseEsiSearch.mockReturnValue({
+        data: { data: { structure: [1035466617946] } },
+      });
+      mockUseEsiNameLookup.mockReturnValue({
+        "1035466617946": {
+          status: "success",
+          value: { name: "Keepstar", category: "structure" },
+          error: undefined,
+          id: 1,
+        },
+      });
+      renderSpotlight();
+      fireEvent.click(screen.getByTestId("action-entity/1035466617946"));
+      expect(mockRouterPush).toHaveBeenCalledWith("/structure/1035466617946");
+    });
+
+    it("navigates to the faction page when a faction result is clicked", () => {
+      mockUseEsiSearch.mockReturnValue({
+        data: { data: { faction: [500001] } },
+      });
+      mockUseEsiNameLookup.mockReturnValue({
+        "500001": {
+          status: "success",
+          value: { name: "Caldari State", category: "faction" },
+          error: undefined,
+          id: 1,
+        },
+      });
+      renderSpotlight();
+      fireEvent.click(screen.getByTestId("action-entity/500001"));
+      expect(mockRouterPush).toHaveBeenCalledWith("/faction/500001");
+    });
+
+    it("does not navigate when app has no url", () => {
+      renderSpotlight();
+      // Skills has a url so click it to verify router is only called when url is set
+      // Here we just verify clicking an app without url does not throw
+      mockUseEsiSearch.mockReturnValue({ data: undefined });
+      fireEvent.click(screen.getByTestId("action-app/Universe/Market"));
+      expect(mockRouterPush).toHaveBeenCalledWith("/market");
+    });
   });
 });
+

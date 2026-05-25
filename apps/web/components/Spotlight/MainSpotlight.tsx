@@ -34,7 +34,8 @@ export const MainSpotlight = () => {
 
   const makeAppOnClick = useCallback(
     (url: string | undefined) => () => {
-      if (url !== undefined) void router.push(url);
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      if (url !== undefined) router.push(url);
     },
     [router],
   );
@@ -131,7 +132,7 @@ export const MainSpotlight = () => {
     const _ungrouped: SpotlightActionData[] = [];
     for (const action of filteredActions) {
       if (action.group) {
-        if (!_groups[action.group]) _groups[action.group] = [];
+        _groups[action.group] ??= [];
         _groups[action.group].push(action);
       } else {
         _ungrouped.push(action);
