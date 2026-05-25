@@ -251,8 +251,8 @@ importers:
         specifier: ^2.27.2
         version: 2.27.2
       '@vercel/analytics':
-        specifier: ^1.6.1
-        version: 1.6.1(@sveltejs/kit@1.30.4(svelte@4.2.19)(vite@4.5.3(@types/node@24.12.4)(sugarss@5.0.1(postcss@8.5.15))(terser@5.48.0)))(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(svelte@4.2.19)
+        specifier: ^2.0.1
+        version: 2.0.1(@sveltejs/kit@1.30.4(svelte@4.2.19)(vite@4.5.3(@types/node@24.12.4)(sugarss@5.0.1(postcss@8.5.15))(terser@5.48.0)))(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(svelte@4.2.19)
       '@vercel/og':
         specifier: ^0.11.1
         version: 0.11.1
@@ -291,7 +291,7 @@ importers:
         version: 16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-auth:
         specifier: ^4.24.14
-        version: 4.24.14(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 4.24.14(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-seo:
         specifier: ^6.8.0
         version: 6.8.0(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -436,7 +436,7 @@ importers:
         version: 16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-auth:
         specifier: ^4.24.14
-        version: 4.24.14(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 4.24.14(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: ^19.2.6
         version: 19.2.6
@@ -473,7 +473,7 @@ importers:
         version: 16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-auth:
         specifier: ^4.24.14
-        version: 4.24.14(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 4.24.14(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: ^19.2.6
         version: 19.2.6
@@ -6103,12 +6103,13 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@vercel/analytics@1.6.1':
-    resolution: {integrity: sha512-oH9He/bEM+6oKlv3chWuOOcp8Y6fo6/PSro8hEkgCW3pu9/OiCXiUpRUogDh3Fs3LH2sosDrx8CxeOLBEE+afg==}
+  '@vercel/analytics@2.0.1':
+    resolution: {integrity: sha512-MTQG6V9qQrt1tsDeF+2Uoo5aPjqbVPys1xvnIftXSJYG2SrwXRHnqEvVoYID7BTruDz4lCd2Z7rM1BdkUehk2g==}
     peerDependencies:
       '@remix-run/react': ^2
       '@sveltejs/kit': ^1 || ^2
       next: '>= 13'
+      nuxt: '>= 3'
       react: ^18 || ^19 || ^19.0.0-rc
       svelte: '>= 4'
       vue: ^3
@@ -6119,6 +6120,8 @@ packages:
       '@sveltejs/kit':
         optional: true
       next:
+        optional: true
+      nuxt:
         optional: true
       react:
         optional: true
@@ -16068,15 +16071,6 @@ snapshots:
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@orpc/client@1.13.13(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@orpc/shared': 1.13.13(@opentelemetry/api@1.9.1)
-      '@orpc/standard-server': 1.13.13(@opentelemetry/api@1.9.1)
-      '@orpc/standard-server-fetch': 1.13.13(@opentelemetry/api@1.9.1)
-      '@orpc/standard-server-peer': 1.13.13(@opentelemetry/api@1.9.1)
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-
   '@orpc/contract@1.13.13(@opentelemetry/api@1.9.0)':
     dependencies:
       '@orpc/client': 1.13.13(@opentelemetry/api@1.9.0)
@@ -16160,13 +16154,6 @@ snapshots:
     optionalDependencies:
       '@opentelemetry/api': 1.9.0
 
-  '@orpc/shared@1.13.13(@opentelemetry/api@1.9.1)':
-    dependencies:
-      radash: 12.1.1
-      type-fest: 5.6.0
-    optionalDependencies:
-      '@opentelemetry/api': 1.9.1
-
   '@orpc/shared@1.14.3(@opentelemetry/api@1.9.0)':
     dependencies:
       radash: 12.1.1
@@ -16198,13 +16185,6 @@ snapshots:
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@orpc/standard-server-fetch@1.13.13(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@orpc/shared': 1.13.13(@opentelemetry/api@1.9.1)
-      '@orpc/standard-server': 1.13.13(@opentelemetry/api@1.9.1)
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-
   '@orpc/standard-server-node@1.13.13(@opentelemetry/api@1.9.0)':
     dependencies:
       '@orpc/shared': 1.13.13(@opentelemetry/api@1.9.0)
@@ -16220,22 +16200,9 @@ snapshots:
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
-  '@orpc/standard-server-peer@1.13.13(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@orpc/shared': 1.13.13(@opentelemetry/api@1.9.1)
-      '@orpc/standard-server': 1.13.13(@opentelemetry/api@1.9.1)
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-
   '@orpc/standard-server@1.13.13(@opentelemetry/api@1.9.0)':
     dependencies:
       '@orpc/shared': 1.13.13(@opentelemetry/api@1.9.0)
-    transitivePeerDependencies:
-      - '@opentelemetry/api'
-
-  '@orpc/standard-server@1.13.13(@opentelemetry/api@1.9.1)':
-    dependencies:
-      '@orpc/shared': 1.13.13(@opentelemetry/api@1.9.1)
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
@@ -17941,7 +17908,7 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
-  '@vercel/analytics@1.6.1(@sveltejs/kit@1.30.4(svelte@4.2.19)(vite@4.5.3(@types/node@24.12.4)(sugarss@5.0.1(postcss@8.5.15))(terser@5.48.0)))(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(svelte@4.2.19)':
+  '@vercel/analytics@2.0.1(@sveltejs/kit@1.30.4(svelte@4.2.19)(vite@4.5.3(@types/node@24.12.4)(sugarss@5.0.1(postcss@8.5.15))(terser@5.48.0)))(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(svelte@4.2.19)':
     optionalDependencies:
       '@sveltejs/kit': 1.30.4(svelte@4.2.19)(vite@4.5.3(@types/node@24.12.4)(sugarss@5.0.1(postcss@8.5.15))(terser@5.48.0))
       next: 16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -18653,7 +18620,7 @@ snapshots:
     dependencies:
       '@c15t/backend': 1.8.6(@electric-sql/pglite@0.4.1)(@opentelemetry/instrumentation@0.214.0(@opentelemetry/api@1.9.1))(@prisma/client@7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.20.0)(mysql2@3.15.3)(pg@8.21.0)(postgres@3.4.7)(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typeorm@0.3.28(ioredis@5.6.1)(mysql2@3.15.3)(pg@8.21.0)(redis@5.12.1(@opentelemetry/api@1.9.1))(ts-node@10.9.2(@swc/core@1.15.40)(@types/node@24.12.4)(typescript@5.9.3)))(ws@8.19.0)
       '@c15t/translations': 1.8.5
-      '@orpc/client': 1.13.13(@opentelemetry/api@1.9.1)
+      '@orpc/client': 1.13.13(@opentelemetry/api@1.9.0)
       '@orpc/server': 1.13.13(@opentelemetry/api@1.9.1)(ws@8.19.0)
       zustand: 5.0.13(@types/react@19.2.15)(immer@11.1.4)(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))
     transitivePeerDependencies:
@@ -22799,7 +22766,7 @@ snapshots:
     optionalDependencies:
       '@rollup/rollup-linux-x64-gnu': 4.54.0
 
-  next-auth@4.24.14(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
+  next-auth@4.24.14(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
     dependencies:
       '@babel/runtime': 7.28.6
       '@panva/hkdf': 1.2.1
