@@ -15,13 +15,13 @@ import { useDogmaEffect } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   DogmaAttributeAnchor,
-  DogmaAttributeName,
   DogmaEffectAnchor,
-  DogmaEffectName,
   TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/ui";
+
+import { DogmaAttributeName, DogmaEffectName } from "~/components/Text";
 
 import { MailMessageViewer } from "~/components/EveMail";
 

@@ -17,9 +17,10 @@ import {
   CorporationAvatar,
   CorporationName,
   StationAnchor,
-  StationAvatar,
   StationName,
 } from "@jitaspace/ui";
+
+import { StationAvatar } from "~/components/Avatar";
 
 export interface Agent {
   characterId: number;

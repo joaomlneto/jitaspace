@@ -6,23 +6,23 @@ import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
   AllianceName,
-  BloodlineName,
   CharacterAvatar,
   CharacterName,
   CorporationAvatar,
   CorporationName,
   FormattedDateText,
-  OpenInformationWindowActionIcon,
-  RaceName,
   SolarSystemAnchor,
   SolarSystemName,
   StationAnchor,
-  StationAvatar,
   StationName,
   TypeAnchor,
   TypeAvatar,
   TypeName
 } from "@jitaspace/ui";
+
+import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import { StationAvatar } from "~/components/Avatar";
+import { BloodlineName, RaceName } from "~/components/Text";
 import { Anchor, Badge, Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 import Link from "next/link";

@@ -6,16 +6,17 @@ import type {
 } from "@jitaspace/hooks";
 import { useCalendarEvent, useCalendarEventAttendees } from "@jitaspace/hooks";
 import {
-  CalendarEventAttendanceSelect,
-  CalendarEventHumanDurationText,
-  CalendarEventOwnerAvatar,
-  CalendarEventResponseBadge,
   CharacterAnchor,
   CharacterAvatar,
   CharacterName,
   EveEntityNameAnchor,
   FormattedDateText,
 } from "@jitaspace/ui";
+
+import { CalendarEventOwnerAvatar } from "~/components/Avatar";
+import { CalendarEventResponseBadge } from "~/components/Badge";
+import { CalendarEventHumanDurationText } from "~/components/DurationText";
+import { CalendarEventAttendanceSelect } from "~/components/Select";
 
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 

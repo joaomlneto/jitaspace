@@ -15,23 +15,18 @@ import {
   AllianceAnchor,
   AllianceAvatar,
   AllianceName,
-  AllianceTickerBadge,
   CorporationAnchor,
   CorporationAvatar,
   CorporationName,
-  CorporationTickerBadge,
   FormattedDateText,
   ISKAmount,
-  OpenInformationWindowActionIcon,
-  WarAggressorAnchor,
-  WarAggressorAvatar,
-  WarAggressorName,
-  WarAggressorTickerBadge,
-  WarDefenderAnchor,
-  WarDefenderAvatar,
-  WarDefenderName,
-  WarDefenderTickerBadge,
 } from "@jitaspace/ui";
+
+import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import { WarAggressorAnchor, WarDefenderAnchor } from "~/components/Anchor";
+import { WarAggressorAvatar, WarDefenderAvatar } from "~/components/Avatar";
+import { AllianceTickerBadge, CorporationTickerBadge, WarAggressorTickerBadge, WarDefenderTickerBadge } from "~/components/Badge";
+import { WarAggressorName, WarDefenderName } from "~/components/Text";
 
 import { KillmailCard } from "~/components/Killmails";
 export default function Page() {

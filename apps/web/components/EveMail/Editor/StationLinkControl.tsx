@@ -13,7 +13,9 @@ import { useRichTextEditorContext } from "@mantine/tiptap";
 
 import { getUniverseStationsStationId } from "@jitaspace/esi-client";
 import { StationIcon } from "@jitaspace/eve-icons";
-import { EsiSearchSelect, StationAvatar } from "@jitaspace/ui";
+import { EsiSearchSelect } from "@jitaspace/ui";
+
+import { StationAvatar } from "~/components/Avatar";
 
 import {
   ControlBase

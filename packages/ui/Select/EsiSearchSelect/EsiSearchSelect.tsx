@@ -5,7 +5,7 @@ import React, { memo, useMemo } from "react";
 import { Badge, Group, Loader, rem, Select } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
-import { type GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
+import { type EsiSearchCategory as GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/hooks";
 import { useEsiNameLookup, useEsiSearch } from "@jitaspace/hooks";
 
 import { EveEntityAvatar } from "../../Avatar";

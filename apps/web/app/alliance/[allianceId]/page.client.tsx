@@ -29,8 +29,9 @@ import {
   CorporationName,
   FactionAvatar,
   FactionName,
-  OpenInformationWindowActionIcon,
 } from "@jitaspace/ui";
+
+import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 
 export default function Page() {
   const character = useSelectedCharacter();

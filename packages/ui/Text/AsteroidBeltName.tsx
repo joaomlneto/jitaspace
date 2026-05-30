@@ -4,22 +4,13 @@ import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
-import { useGetUniverseAsteroidBeltsAsteroidBeltId } from "@jitaspace/esi-client";
-
 export type AsteroidBeltNameProps = TextProps & {
-  asteroidBeltId?: number;
-  planetId?: number;
-  //roidBeltId?: number;
+  name?: string;
 };
 
 export const AsteroidBeltName = memo(
-  ({ asteroidBeltId, ...otherProps }: AsteroidBeltNameProps) => {
-    const { data, isLoading } = useGetUniverseAsteroidBeltsAsteroidBeltId(
-      asteroidBeltId ?? 1,
-      {},
-      { query: { enabled: !!asteroidBeltId } },
-    );
-    if (isLoading) {
+  ({ name, ...otherProps }: AsteroidBeltNameProps) => {
+    if (!name) {
       const placeholder = "Unknown asteroid belt";
       const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
@@ -33,7 +24,7 @@ export const AsteroidBeltName = memo(
         </Text>
       );
     }
-    return <Text {...otherProps}>{data?.data.name}</Text>;
+    return <Text {...otherProps}>{name}</Text>;
   },
 );
 AsteroidBeltName.displayName = "AsteroidBeltName";

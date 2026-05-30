@@ -4,8 +4,6 @@ import React, { memo } from "react";
 import { type LinkProps } from "next/link";
 import { type AnchorProps } from "@mantine/core";
 
-import { useGetWarsWarId } from "@jitaspace/esi-client";
-
 import { AllianceAnchor } from "./AllianceAnchor";
 import { CorporationAnchor } from "./CorporationAnchor";
 import { EveEntityAnchor } from "./EveEntityAnchor";
@@ -13,31 +11,28 @@ import { EveEntityAnchor } from "./EveEntityAnchor";
 export type WarAggressorAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
-    warId: number;
+    aggressorAllianceId?: number;
+    aggressorCorporationId?: number;
   };
 
 export const WarAggressorAnchor = memo(
-  ({ warId, children, ...otherProps }: WarAggressorAnchorProps) => {
-    const { data } = useGetWarsWarId(
-      warId ?? 0,
-      {},
-      { query: { enabled: warId !== undefined } },
-    );
-
-    if (data?.data.aggressor.alliance_id)
+  ({
+    aggressorAllianceId,
+    aggressorCorporationId,
+    children,
+    ...otherProps
+  }: WarAggressorAnchorProps) => {
+    if (aggressorAllianceId)
       return (
-        <AllianceAnchor
-          allianceId={data.data.aggressor.alliance_id}
-          {...otherProps}
-        >
+        <AllianceAnchor allianceId={aggressorAllianceId} {...otherProps}>
           {children}
         </AllianceAnchor>
       );
 
-    if (data?.data.aggressor.corporation_id)
+    if (aggressorCorporationId)
       return (
         <CorporationAnchor
-          corporationId={data.data.aggressor.corporation_id}
+          corporationId={aggressorCorporationId}
           {...otherProps}
         >
           {children}

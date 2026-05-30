@@ -14,7 +14,6 @@ import { useEsiName } from "@jitaspace/hooks";
 import { EveEntityAvatar } from "../Avatar";
 import { AllianceCard } from "./AllianceCard";
 import { CharacterCard } from "./CharacterCard";
-import { CorporationCard } from "./CorporationCard";
 
 
 interface EveEntityCardProps {
@@ -29,8 +28,6 @@ export const EveEntityCard = memo(({ entityId }: EveEntityCardProps) => {
   if (category === "alliance") return <AllianceCard allianceId={entityId} />;
   if (category === "character")
     return <CharacterCard characterId={Number(entityId)} />;
-  if (category === "corporation")
-    return <CorporationCard corporationId={entityId} />;
 
   return (
     <Paper

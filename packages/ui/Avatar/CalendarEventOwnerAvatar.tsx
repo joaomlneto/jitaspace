@@ -4,9 +4,6 @@ import type { AvatarProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Avatar, Skeleton } from "@mantine/core";
 
-import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
-import { useAccessToken } from "@jitaspace/hooks";
-
 import {
   AllianceAvatar,
   CharacterAvatar,
@@ -15,33 +12,16 @@ import {
 } from "./index";
 
 export type CalendarEventOwnerAvatarProps = Omit<AvatarProps, "src"> & {
-  characterId: number;
-  eventId?: number;
+  ownerId?: number;
+  ownerType?: string;
 };
 
 export const CalendarEventOwnerAvatar = memo(
-  ({ eventId, characterId, ...otherProps }: CalendarEventOwnerAvatarProps) => {
-    const { accessToken, authHeaders } = useAccessToken({
-      characterId,
-      scopes: ["esi-calendar.read_calendar_events.v1"],
-    });
-
-    const { data: event, isLoading } =
-      useGetCharactersCharacterIdCalendarEventId(
-        characterId ?? 0,
-        eventId ?? 0,
-        { ...authHeaders },
-        {
-          query: {
-            enabled: accessToken !== null && !!eventId,
-          },
-        },
-      );
-
-    if (!event?.data) {
+  ({ ownerId, ownerType, ...otherProps }: CalendarEventOwnerAvatarProps) => {
+    if (!ownerId || !ownerType) {
       return (
         <Skeleton
-          visible={isLoading || !event?.data}
+          visible={true}
           radius={otherProps.radius}
           height={otherProps.size}
           width={otherProps.size}
@@ -52,24 +32,23 @@ export const CalendarEventOwnerAvatar = memo(
       );
     }
 
-    return {
-      alliance: (
-        <AllianceAvatar allianceId={event.data.owner_id} {...otherProps} />
-      ),
-      character: (
-        <CharacterAvatar characterId={event.data.owner_id} {...otherProps} />
-      ),
-      corporation: (
-        <CorporationAvatar
-          corporationId={event.data.owner_id}
-          {...otherProps}
-        />
-      ),
-      faction: (
-        <FactionAvatar factionId={event.data.owner_id} {...otherProps} />
-      ),
-      eve_server: <AllianceAvatar allianceId={434243723} {...otherProps} />,
-    }[event.data.owner_type];
+    return (
+      {
+        alliance: (
+          <AllianceAvatar allianceId={ownerId} {...otherProps} />
+        ),
+        character: (
+          <CharacterAvatar characterId={ownerId} {...otherProps} />
+        ),
+        corporation: (
+          <CorporationAvatar corporationId={ownerId} {...otherProps} />
+        ),
+        faction: (
+          <FactionAvatar factionId={ownerId} {...otherProps} />
+        ),
+        eve_server: <AllianceAvatar allianceId={434243723} {...otherProps} />,
+      }[ownerType] ?? <Avatar {...otherProps} />
+    );
   },
 );
 CalendarEventOwnerAvatar.displayName = "CalendarEventOwnerAvatar";
