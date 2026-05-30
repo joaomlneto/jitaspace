@@ -132,7 +132,8 @@ export const MainSpotlight = () => {
     const _ungrouped: SpotlightActionData[] = [];
     for (const action of filteredActions) {
       if (action.group) {
-        (_groups[action.group] ??= []).push(action);
+        _groups[action.group] ??= [];
+        _groups[action.group].push(action);
       } else {
         _ungrouped.push(action);
       }

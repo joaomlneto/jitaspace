@@ -13,9 +13,10 @@ export type CalendarEventHumanDurationTextProps = TextProps & {
 export const CalendarEventHumanDurationText = memo(
   ({ characterId, eventId, ...otherProps }: CalendarEventHumanDurationTextProps) => {
     const { data: event } = useCalendarEvent(characterId, eventId);
-    const durationMs = event?.data.duration !== undefined
-      ? event.data.duration * 60 * 1000
-      : undefined;
+    const durationMs =
+      event?.data.duration === undefined
+        ? undefined
+        : event.data.duration * 60 * 1000;
     return (
       <UICalendarEventHumanDurationText durationMs={durationMs} {...otherProps} />
     );

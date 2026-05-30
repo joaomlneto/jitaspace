@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  GetUniverseAsteroidBeltsAsteroidBeltIdQueryResponse,
-  useGetUniverseAsteroidBeltsAsteroidBeltId,
-} from "@jitaspace/esi-client";
+export type { GetUniverseAsteroidBeltsAsteroidBeltIdQueryResponse as AsteroidBelt } from "@jitaspace/esi-client";
 
-export type AsteroidBelt = GetUniverseAsteroidBeltsAsteroidBeltIdQueryResponse;
-
-export const useAsteroidBelt = useGetUniverseAsteroidBeltsAsteroidBeltId;
+export { useGetUniverseAsteroidBeltsAsteroidBeltId as useAsteroidBelt } from "@jitaspace/esi-client";

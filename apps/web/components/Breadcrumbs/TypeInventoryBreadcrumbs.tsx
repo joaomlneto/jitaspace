@@ -12,7 +12,8 @@ export type TypeInventoryBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> &
 
 export const TypeInventoryBreadcrumbs = memo(
   ({ typeId, showType, ...otherProps }: TypeInventoryBreadcrumbsProps) => {
-    const typeIdNum = typeof typeId === "string" ? parseInt(typeId) : typeId;
+    const typeIdNum =
+      typeof typeId === "string" ? Number.parseInt(typeId) : typeId;
     const { data: type } = useType(typeIdNum ?? 0);
     const groupId = type?.data.group_id;
     const { data: group } = useGroup(groupId ?? 0);
