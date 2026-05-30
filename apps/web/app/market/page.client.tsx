@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Container, Group, Stack, Title } from "@mantine/core";
 
 import { MarketIcon } from "@jitaspace/eve-icons";
@@ -10,10 +10,22 @@ import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 import { MarketOrdersDataTable } from "~/components/Market";
 export default function Page() {
-  const params = useParams();
-  const rawTypeId = params?.typeId;
-  const typeIdRaw = typeof rawTypeId === "string" ? rawTypeId : rawTypeId?.[0];
-  const typeId = typeIdRaw ? Number(typeIdRaw) : undefined;
+  // Every /market/<typeId> URL is rewritten to this single static /market shell
+  // (see next.config.mjs), so there is no route param to read — we derive the
+  // selected type from the browser path instead. Gating on `mounted` keeps the
+  // first client render identical to the static server shell (typeId undefined),
+  // avoiding a hydration mismatch; the id is applied right after mount and on
+  // subsequent client-side navigation between items.
+  const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const typeId = useMemo(() => {
+    if (!mounted) return undefined;
+    const match = pathname?.match(/^\/market\/(\d+)/);
+    return match ? Number(match[1]) : undefined;
+  }, [mounted, pathname]);
+
   const { data } = useTypeMarketOrders(typeId);
 
   const mergedRegionalOrders = useMemo(() => {
