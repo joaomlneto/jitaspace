@@ -1,88 +1,37 @@
 "use client";
 
 import type { BreadcrumbsProps } from "@mantine/core";
-import React, { memo, useEffect, useMemo, useState } from "react";
+import React, { memo } from "react";
 import Link from "next/link";
 import { Anchor, Breadcrumbs, Text } from "@mantine/core";
-
-import {
-  getMarketsGroupsMarketGroupId,
-  useGetUniverseTypesTypeId,
-} from "@jitaspace/esi-client";
 
 import { MarketGroupAnchor, TypeAnchor } from "../Anchor";
 import { MarketGroupName, TypeName } from "../Text";
 
+export type MarketGroupEntry = {
+  market_group_id: number;
+  name: string;
+};
+
 export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   typeId?: string | number;
+  marketGroups?: MarketGroupEntry[];
   showType?: boolean;
 };
 
 export const TypeMarketBreadcrumbs = memo(
-  ({ typeId, showType = false, ...otherProps }: TypeMarketBreadcrumbsProps) => {
-    const { data: type } = useGetUniverseTypesTypeId(
-      typeof typeId === "string" ? parseInt(typeId, 10) : (typeId ?? 0),
-      {},
-      {
-        query: { enabled: typeId !== undefined },
-      },
-    );
-
-    const [marketGroups, setMarketGroups] = useState<
-      Record<
-        number,
-        {
-          market_group_id: number;
-          name: string;
-          parent_group_id?: number;
-        }
-      >
-    >({});
-
-    const missingMarketGroupId = useMemo(() => {
-      // check if we reached the root
-      let missingMarketGroupId = type?.data.market_group_id;
-      while (
-        missingMarketGroupId !== undefined &&
-        marketGroups[missingMarketGroupId] !== undefined
-      ) {
-        missingMarketGroupId =
-          marketGroups[missingMarketGroupId]!.parent_group_id;
-      }
-      return missingMarketGroupId ?? null;
-    }, [type, marketGroups]);
-
-    /**
-     * Retrieve necessary market groups
-     */
-    useEffect(() => {
-      // check if we are done!
-      if (!missingMarketGroupId) return;
-
-      // retrieve the next market group in the chain
-      const retrieveMarketGroup = async () => {
-        const missingMarketGroup = await getMarketsGroupsMarketGroupId(
-          missingMarketGroupId!,
-        );
-        setMarketGroups((marketGroups) => ({
-          ...marketGroups,
-          [missingMarketGroup.data.market_group_id]: missingMarketGroup.data,
-        }));
-      };
-      void retrieveMarketGroup();
-    }, [type, marketGroups, setMarketGroups]);
-
+  ({ typeId, marketGroups, showType = false, ...otherProps }: TypeMarketBreadcrumbsProps) => {
     return (
       <Breadcrumbs {...otherProps}>
         <Anchor component={Link} href="/market">
           <Text>Market</Text>
         </Anchor>
-        {Object.values(marketGroups).map((marketGroup) => (
+        {(marketGroups ?? []).map((marketGroup) => (
           <MarketGroupAnchor
             key={marketGroup.market_group_id}
             marketGroupId={marketGroup.market_group_id}
           >
-            <MarketGroupName marketGroupId={marketGroup.market_group_id} />
+            <MarketGroupName name={marketGroup.name} />
           </MarketGroupAnchor>
         ))}
         {showType && (

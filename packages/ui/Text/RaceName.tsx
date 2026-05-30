@@ -3,22 +3,12 @@
 import React, { memo } from "react";
 import { Skeleton, Text, type TextProps } from "@mantine/core";
 
-import { useGetUniverseRaces } from "@jitaspace/esi-client";
-
-
-
-
-
 export type RaceNameProps = TextProps & {
-  raceId?: string | number;
+  name?: string;
 };
 
-export const RaceName = memo(({ raceId, ...otherProps }: RaceNameProps) => {
-  const { data, isLoading } = useGetUniverseRaces();
-
-  const race = data?.data.find((r) => r.race_id == raceId);
-
-  if (!race || isLoading) {
+export const RaceName = memo(({ name, ...otherProps }: RaceNameProps) => {
+  if (!name) {
     const placeholder = "Unknown race";
     const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
     return (
@@ -32,6 +22,6 @@ export const RaceName = memo(({ raceId, ...otherProps }: RaceNameProps) => {
       </Text>
     );
   }
-  return <Text {...otherProps}>{race.name}</Text>;
+  return <Text {...otherProps}>{name}</Text>;
 });
 RaceName.displayName = "RaceName";

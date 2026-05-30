@@ -4,20 +4,13 @@ import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
-import { useGetMarketsGroupsMarketGroupId } from "@jitaspace/esi-client";
-
 export type MarketGroupNameProps = TextProps & {
-  marketGroupId?: number;
+  name?: string;
 };
 
 export const MarketGroupName = memo(
-  ({ marketGroupId, ...otherProps }: MarketGroupNameProps) => {
-    const { data, isLoading } = useGetMarketsGroupsMarketGroupId(
-      marketGroupId ?? 1,
-      {},
-      { query: { enabled: !!marketGroupId } },
-    );
-    if (isLoading) {
+  ({ name, ...otherProps }: MarketGroupNameProps) => {
+    if (!name) {
       const placeholder = "Unknown Market Group";
       const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
@@ -31,7 +24,7 @@ export const MarketGroupName = memo(
         </Text>
       );
     }
-    return <Text {...otherProps}>{data?.data.name}</Text>;
+    return <Text {...otherProps}>{name}</Text>;
   },
 );
 MarketGroupName.displayName = "MarketGroupName";

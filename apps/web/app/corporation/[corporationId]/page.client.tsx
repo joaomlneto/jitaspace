@@ -20,11 +20,12 @@ import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
   AllianceName,
-  CorporationAllianceHistoryTimeline,
   CorporationAvatar,
   CorporationName,
-  OpenInformationWindowActionIcon,
 } from "@jitaspace/ui";
+
+import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import { CorporationAllianceHistoryTimeline } from "~/components/Timeline";
 
 import { MailMessageViewer } from "~/components/EveMail";
 export default function Page() {

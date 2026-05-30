@@ -3,29 +3,17 @@
 import React, { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetUniverseStargatesStargateId } from "@jitaspace/esi-client";
-
 import { TypeAvatar } from "./TypeAvatar";
 
 export type StargateAvatarProps = Omit<AvatarProps, "src"> & {
-  stargateId?: string | number | null;
+  typeId?: number;
 };
 
 export const StargateAvatar = memo(
-  ({ stargateId, ...otherProps }: StargateAvatarProps) => {
-    const { data } = useGetUniverseStargatesStargateId(
-      typeof stargateId === "string" ? parseInt(stargateId, 10) : (stargateId ?? 1),
-      {},
-      {
-        query: {
-          enabled: !!stargateId,
-        },
-      },
-    );
-
+  ({ typeId, ...otherProps }: StargateAvatarProps) => {
     return (
       <TypeAvatar
-        typeId={data?.data.type_id}
+        typeId={typeId}
         variation="render"
         size={otherProps.size}
         {...otherProps}

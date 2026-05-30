@@ -4,7 +4,7 @@ import React from "react";
 import { Avatar, Badge, Group, rem, Text } from "@mantine/core";
 import type { ComboboxLikeRenderOptionInput } from "@mantine/core";
 
-import type { GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
+import type { EsiSearchCategory as GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/hooks";
 
 import { EveEntityAvatar } from "../../Avatar";
 import { EveEntityName } from "../../Text";

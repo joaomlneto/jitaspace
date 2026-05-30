@@ -7,13 +7,14 @@ import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { useSelectedCharacter, useStructure } from "@jitaspace/hooks";
 import {
   EveEntityName,
-  SetAutopilotDestinationActionIcon,
   SolarSystemName,
-  SolarSystemSecurityStatusBadge,
-  StructureAvatar,
   StructureName,
   TypeName,
 } from "@jitaspace/ui";
+
+import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
+import { StructureAvatar } from "~/components/Avatar";
+import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
 import { ScopeGuard } from "~/components/ScopeGuard";
 export default function Page() {
