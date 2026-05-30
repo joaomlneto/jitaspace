@@ -53,6 +53,7 @@ export const CalendarEventAttendanceSelect = memo(
 
     return (
       <Select
+        {...otherProps}
         readOnly={!canRespond}
         rightSection={isLoading ? <Loader size="xs" /> : undefined}
         data={values}
@@ -76,7 +77,6 @@ export const CalendarEventAttendanceSelect = memo(
             },
           });
         }}
-        {...otherProps}
       />
     );
   },
