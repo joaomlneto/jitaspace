@@ -298,17 +298,19 @@ describe("EveEntityAvatar", () => {
     );
   });
 
-  // solar_system/station/structure route to avatars that take a `typeId`, but
-  // EveEntityAvatar forwards solarSystemId/stationId/structureId, which those
-  // wrappers ignore. The branch still executes (TypeAvatar renders its
-  // placeholder), so we only assert the component mounts and runs that path.
+  // solar_system/station/structure are type-backed entities: their avatar is
+  // the underlying type's render, which needs resolving id -> type_id (a fetch,
+  // plus auth for structures). This generic dispatcher can't do that, so it
+  // falls through to a bare Avatar (no image). Callers needing those avatars
+  // use the smart apps/web wrappers.
   it.each<[string]>([["solar_system"], ["station"], ["structure"]])(
-    "executes the %s branch and still renders",
+    "falls through to a bare Avatar for type-backed category %s",
     (category) => {
       useEsiName.mockReturnValue({ category, loading: false });
       const { container } = renderWithMantine(
         <EveEntityAvatar entityId={77} />,
       );
+      expect(container.querySelector("img")).not.toBeInTheDocument();
       expect(container).not.toBeEmptyDOMElement();
     },
   );

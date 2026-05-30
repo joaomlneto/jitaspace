@@ -139,6 +139,28 @@ describe("CalendarEventAttendanceSelect", () => {
     );
     expect(container.querySelector(".mantine-Loader-root")).toBeInTheDocument();
   });
+
+  it("does not let a caller-supplied onChange bypass the confirmation flow", async () => {
+    // Regression: otherProps is spread BEFORE the internal onChange, so a
+    // caller's onChange cannot override the confirm-modal logic.
+    const callerOnChange = jest.fn();
+    renderWithMantine(
+      <CalendarEventAttendanceSelect canRespond onChange={callerOnChange} />,
+    );
+    await userEvent.click(screen.getByRole("textbox"));
+    await userEvent.click(
+      screen.getByRole("option", { name: "Accepted", hidden: true }),
+    );
+    // Internal logic still runs (modal opens); caller's onChange is only
+    // invoked once confirmed, not in place of the modal.
+    expect(mockOpenConfirmModal).toHaveBeenCalledTimes(1);
+    expect(callerOnChange).not.toHaveBeenCalled();
+    const config = mockOpenConfirmModal.mock.calls[0]![0] as {
+      onConfirm: () => void;
+    };
+    act(() => config.onConfirm());
+    expect(callerOnChange.mock.calls[0]?.[0]).toBe("accepted");
+  });
 });
 
 // ---------------------------------------------------------------------------

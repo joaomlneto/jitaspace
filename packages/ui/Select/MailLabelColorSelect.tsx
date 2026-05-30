@@ -35,6 +35,7 @@ export const MailLabelColorSelect = memo(
 
     return (
       <ColorInput
+        {...otherProps}
         disallowInput
         withPicker={false}
         swatchesPerRow={6}
@@ -56,7 +57,6 @@ export const MailLabelColorSelect = memo(
           onChange(color);
         }}
         w={140}
-        {...otherProps}
       />
     );
   },
