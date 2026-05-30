@@ -2,7 +2,6 @@
 
 import type { PropsWithChildren } from "react";
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
 
 import { useAuthStore } from "@jitaspace/hooks";
 
@@ -11,22 +10,11 @@ import { refreshCharacterToken } from "./EsiClientSSOAccessTokenInjector.actions
 export const EsiClientSSOAccessTokenInjector = ({
   children,
 }: PropsWithChildren) => {
-  const { data: session, status: _status, update: _update } = useSession();
   const { addCharacter, characters } = useAuthStore();
 
   useEffect(() => {
     void useAuthStore.persist.rehydrate();
   }, []);
-
-  // This useEffect is here to import the current next-auth token (if available)
-  useEffect(() => {
-    if (session) {
-      addCharacter({
-        accessToken: session.accessToken,
-        refreshToken: session.encryptedRefreshToken,
-      });
-    }
-  }, [addCharacter, session]);
 
   // this refreshes tokens that expired or are close to expiring
   useEffect(() => {
@@ -49,12 +37,12 @@ export const EsiClientSSOAccessTokenInjector = ({
         );
         candidateCharacters.forEach((character) => {
           void refreshCharacterToken(character.refreshToken)
-            .then(({ accessToken, refreshTokenData }) => {
+            .then(({ accessToken, refreshTokenData }) =>
               addCharacter({
                 accessToken,
                 refreshToken: refreshTokenData,
-              });
-            })
+              }),
+            )
             .catch((err) => console.error(err));
         });
       },

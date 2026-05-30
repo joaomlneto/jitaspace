@@ -17,7 +17,6 @@
     "@jitaspace/auth-utils": "workspace:*",
     "@jitaspace/esi-metadata": "workspace:*",
     "next": "^16.2.6",
-    "next-auth": "^4.24.14",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },

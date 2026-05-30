@@ -37,7 +37,7 @@ apps/
   cli/      # CLI utilities
   worker/   # Background worker (Vercel-hosted)
 packages/
-  auth/             # NextAuth with EVE Online SSO
+  auth/             # Custom EVE Online SSO OAuth2 flow (PKCE + state), token sealing & refresh
   db/               # Prisma ORM client and schema
   esi-client/       # Generated EVE Online ESI API client
   esi-metadata/     # ESI metadata, scopes, ID ranges
