@@ -14,7 +14,7 @@ export type SolarSystemBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
 export const SolarSystemBreadcrumbs = memo(
   ({ solarSystemId, hideSolarSystem, textProps, ...otherProps }: SolarSystemBreadcrumbsProps) => {
     const solarSystemIdNum = typeof solarSystemId === "string"
-      ? parseInt(solarSystemId)
+      ? Number.parseInt(solarSystemId)
       : solarSystemId;
     const { data: solarSystem } = useSolarSystem(solarSystemIdNum ?? 0);
     const constellationId = solarSystem?.data.constellation_id;

@@ -1,12 +1,5 @@
 "use client";
 
-import {
-  GetCorporationsCorporationIdAlliancehistoryQueryResponse,
-  useGetCorporationsCorporationIdAlliancehistory,
-} from "@jitaspace/esi-client";
+export type { GetCorporationsCorporationIdAlliancehistoryQueryResponse as CorporationAllianceHistory } from "@jitaspace/esi-client";
 
-export type CorporationAllianceHistory =
-  GetCorporationsCorporationIdAlliancehistoryQueryResponse;
-
-export const useCorporationAllianceHistory =
-  useGetCorporationsCorporationIdAlliancehistory;
+export { useGetCorporationsCorporationIdAlliancehistory as useCorporationAllianceHistory } from "@jitaspace/esi-client";

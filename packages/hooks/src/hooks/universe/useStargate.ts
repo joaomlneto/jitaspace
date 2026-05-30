@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  GetUniverseStargatesStargateIdQueryResponse,
-  useGetUniverseStargatesStargateId,
-} from "@jitaspace/esi-client";
+export type { GetUniverseStargatesStargateIdQueryResponse as Stargate } from "@jitaspace/esi-client";
 
-export type Stargate = GetUniverseStargatesStargateIdQueryResponse;
-
-export const useStargate = useGetUniverseStargatesStargateId;
+export { useGetUniverseStargatesStargateId as useStargate } from "@jitaspace/esi-client";

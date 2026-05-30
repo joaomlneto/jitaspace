@@ -12,7 +12,8 @@ export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
 
 export const TypeMarketBreadcrumbs = memo(
   ({ typeId, showType, ...otherProps }: TypeMarketBreadcrumbsProps) => {
-    const typeIdNum = typeof typeId === "string" ? parseInt(typeId) : typeId;
+    const typeIdNum =
+      typeof typeId === "string" ? Number.parseInt(typeId) : typeId;
     const { data: type } = useType(typeIdNum ?? 0);
 
     const level1Id = type?.data.market_group_id ?? 0;

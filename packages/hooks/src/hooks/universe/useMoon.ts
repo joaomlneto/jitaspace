@@ -1,10 +1,5 @@
 "use client";
 
-import {
-  GetUniverseMoonsMoonIdQueryResponse,
-  useGetUniverseMoonsMoonId,
-} from "@jitaspace/esi-client";
+export type { GetUniverseMoonsMoonIdQueryResponse as Moon } from "@jitaspace/esi-client";
 
-export type Moon = GetUniverseMoonsMoonIdQueryResponse;
-
-export const useMoon = useGetUniverseMoonsMoonId;
+export { useGetUniverseMoonsMoonId as useMoon } from "@jitaspace/esi-client";
