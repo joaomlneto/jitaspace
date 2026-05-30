@@ -85,7 +85,7 @@ export default function StatusPage({
   const latestCompatibilityDate = useMemo(() => {
     const dates = compatibilityDatesData?.data.compatibility_dates;
     if (!dates?.length) return null;
-    return [...dates].sort().at(-1) ?? null;
+    return [...dates].sort((a, b) => a.localeCompare(b)).at(-1) ?? null;
   }, [compatibilityDatesData]);
 
   const nonOkEndpointsCount = useMemo(
