@@ -7,14 +7,14 @@ import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { useBloodline } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  BloodlineName,
   CorporationAvatar,
   CorporationName,
-  RaceAvatar,
-  RaceName,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/ui";
+
+import { RaceAvatar } from "~/components/Avatar";
+import { BloodlineName, RaceName } from "~/components/Text";
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { characterAttributes } from "~/components/Skills";

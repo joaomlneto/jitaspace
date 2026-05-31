@@ -35,21 +35,17 @@ import {
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   CategoryAnchor,
-  CategoryName,
   DogmaAttributeAnchor,
-  DogmaAttributeName,
   DogmaEffectAnchor,
-  DogmaEffectName,
   GroupAnchor,
-  GroupName,
   ISKAmount,
   MarketGroupAnchor,
-  MarketGroupName,
-  OpenMarketWindowActionIcon,
   TypeAvatar,
-  TypeInventoryBreadcrumbs,
-  TypeMarketBreadcrumbs,
 } from "@jitaspace/ui";
+
+import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
+import { TypeInventoryBreadcrumbs, TypeMarketBreadcrumbs } from "~/components/Breadcrumbs";
+import { CategoryName, DogmaAttributeName, DogmaEffectName, GroupName, MarketGroupName } from "~/components/Text";
 
 import { MailMessageViewer } from "~/components/EveMail";
 

@@ -6,17 +6,29 @@ packages:
 overrides:
   "@types/react": 19.2.15
   "@types/react-dom": 19.2.3
-
-onlyBuiltDependencies:
-  - '@prisma/client'
-  - '@prisma/engines'
-  - '@sveltejs/kit'
-  - '@vercel/speed-insights'
-  - aws-sdk
-  - core-js-pure
-  - es5-ext
-  - esbuild
-  - inngest-cli
-  - prisma
-  - protobufjs
-  - sharp
+nodeLinker: hoisted
+publicHoistPattern:
+  - '*prisma*'
+strictPeerDependencies: false
+enablePrePostScripts: true
+allowBuilds:
+  '@kubb/cli': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@sentry/cli': true
+  '@sveltejs/kit': true
+  '@swc/core': true
+  '@vercel/speed-insights': true
+  aws-sdk: true
+  core-js-pure: true
+  cypress: true
+  es5-ext: true
+  esbuild: true
+  inngest-cli: true
+  lzma-native: true
+  msgpackr-extract: true
+  prisma: true
+  protobufjs: true
+  sharp: true
+  turbo: true
+  unrs-resolver: true

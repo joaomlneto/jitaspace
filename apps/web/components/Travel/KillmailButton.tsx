@@ -23,10 +23,10 @@ import {
   TimeAgoText,
   TypeAvatar,
   TypeName,
-  WarAggressorName,
   WarAnchor,
-  WarDefenderName,
 } from "@jitaspace/ui";
+
+import { WarAggressorName, WarDefenderName } from "~/components/Text";
 
 interface KillButtonProps {
   killmailId: number;

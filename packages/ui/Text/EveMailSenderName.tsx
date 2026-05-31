@@ -4,17 +4,18 @@ import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Text } from "@mantine/core";
 
-import {
-  CharactersCharacterIdMailListsGet,
-  CharactersCharacterIdMailMailIdGet,
-} from "@jitaspace/esi-client";
-
 import { EveEntityName } from "./index";
 
-export type EveMailSenderNameProps = TextProps & {
-  from?: CharactersCharacterIdMailMailIdGet["from"];
-  mailingLists?: CharactersCharacterIdMailListsGet;
+export type MailingList = {
+  mailing_list_id: number;
+  name: string;
 };
+
+export type EveMailSenderNameProps = TextProps & {
+  from?: number;
+  mailingLists?: MailingList[];
+};
+
 export const EveMailSenderName = memo(
   ({ from, mailingLists, ...otherProps }: EveMailSenderNameProps) => {
     if (!from) {

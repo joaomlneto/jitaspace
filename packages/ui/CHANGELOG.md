@@ -1,5 +1,13 @@
 # @jitaspace/ui
 
+## 1.0.0 — 2026-05-31
+
+- 070b967: Decouple `@jitaspace/ui` from `@jitaspace/esi-client`
+- Updated dependencies [4c46749]
+- Updated dependencies [070b967]
+- Updated dependencies [ecfc186]
+- Updated dependencies [13f2f2a]
+
 ## 0.1.3 — 2026-05-25
 
 - d197156: Re-enable and fix the main Spotlight search

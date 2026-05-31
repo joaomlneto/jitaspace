@@ -4,21 +4,13 @@ import type { BadgeProps } from "@mantine/core";
 import { memo } from "react";
 import { Badge, Skeleton } from "@mantine/core";
 
-import { useGetAlliancesAllianceId } from "@jitaspace/esi-client";
-
-type AllianceTickerBadgeProps = Omit<BadgeProps, "children"> & {
-  allianceId?: number | string;
+export type AllianceTickerBadgeProps = Omit<BadgeProps, "children"> & {
+  ticker?: string;
 };
 
 export const AllianceTickerBadge = memo(
-  ({ allianceId, ...otherProps }: AllianceTickerBadgeProps) => {
-    const { data } = useGetAlliancesAllianceId(
-      typeof allianceId === "number" ? allianceId : (Number(allianceId) ?? 0),
-      {},
-      { query: { enabled: allianceId !== undefined } },
-    );
-
-    if (!data) {
+  ({ ticker, ...otherProps }: AllianceTickerBadgeProps) => {
+    if (!ticker) {
       return (
         <Skeleton>
           <Badge {...otherProps}>XXXXX</Badge>
@@ -26,7 +18,7 @@ export const AllianceTickerBadge = memo(
       );
     }
 
-    return <Badge {...otherProps}>{data.data.ticker}</Badge>;
+    return <Badge {...otherProps}>{ticker}</Badge>;
   },
 );
 AllianceTickerBadge.displayName = "AllianceTickerBadge";

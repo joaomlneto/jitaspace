@@ -21,15 +21,16 @@ import {
   useSelectedCharacter,
 } from "@jitaspace/hooks";
 import {
-  CalendarEventHumanDurationText,
-  CalendarEventOwnerAvatar,
-  CalendarEventResponseBadge,
   CharacterAnchor,
   CharacterAvatar,
   CharacterName,
   EveEntityNameAnchor,
   FormattedDateText,
 } from "@jitaspace/ui";
+
+import { CalendarEventOwnerAvatar } from "~/components/Avatar";
+import { CalendarEventResponseBadge } from "~/components/Badge";
+import { CalendarEventHumanDurationText } from "~/components/DurationText";
 
 import { MailMessageViewer } from "~/components/EveMail";
 

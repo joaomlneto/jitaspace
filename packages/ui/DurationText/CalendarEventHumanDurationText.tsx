@@ -5,43 +5,20 @@ import type humanizeDuration from "humanize-duration";
 import { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
-import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
-import { useAccessToken } from "@jitaspace/hooks";
-
 import { HumanDurationText } from "./HumanDurationText";
 
 export type CalendarEventHumanDurationTextProps = TextProps & {
-  characterId: number;
-  eventId?: number;
+  durationMs?: number;
   options?: humanizeDuration.Options;
 };
+
 export const CalendarEventHumanDurationText = memo(
   ({
-    characterId,
-    eventId,
+    durationMs,
     options,
     ...otherProps
   }: CalendarEventHumanDurationTextProps) => {
-    const { accessToken, authHeaders } = useAccessToken({
-      characterId,
-      scopes: ["esi-calendar.read_calendar_events.v1"],
-    });
-    const {
-      data: event,
-      isLoading,
-      error,
-    } = useGetCharactersCharacterIdCalendarEventId(
-      characterId ?? 1,
-      eventId ?? 1,
-      { ...authHeaders },
-      {
-        query: {
-          enabled: !!eventId && accessToken !== null,
-        },
-      },
-    );
-
-    if (isLoading || error) {
+    if (durationMs === undefined) {
       return (
         <Skeleton>
           <Text>Loading...</Text>
@@ -49,13 +26,13 @@ export const CalendarEventHumanDurationText = memo(
       );
     }
 
-    if (!event?.data.duration) {
-      return <Text>No duration specified</Text>;
+    if (durationMs === 0) {
+      return <Text {...otherProps}>No duration specified</Text>;
     }
 
     return (
       <HumanDurationText
-        duration={event.data.duration * 60000}
+        duration={durationMs}
         options={options}
         {...otherProps}
       />

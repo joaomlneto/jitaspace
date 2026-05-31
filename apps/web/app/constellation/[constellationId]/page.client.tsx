@@ -17,8 +17,9 @@ import {
   ConstellationName,
   RegionName,
   SolarSystemName,
-  SolarSystemSecurityStatusBadge,
 } from "@jitaspace/ui";
+
+import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
 export default function Page() {
   const params = useParams();

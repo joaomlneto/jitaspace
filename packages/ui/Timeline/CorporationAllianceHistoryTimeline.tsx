@@ -6,52 +6,52 @@ import Link from "next/link";
 import { Anchor, Badge, Group, Text, Timeline } from "@mantine/core";
 import { format } from "date-fns";
 
-import type { GetCorporationsCorporationIdAlliancehistoryQueryResponse } from "@jitaspace/esi-client";
-import { useGetCorporationsCorporationIdAlliancehistory } from "@jitaspace/esi-client";
-
 import { AllianceAvatar } from "../Avatar";
 import { AllianceName } from "../Text";
+
+export type AllianceHistoryEntry = {
+  alliance_id?: number;
+  is_deleted?: boolean;
+  record_id: number;
+  start_date: string;
+};
+
+type AllianceHistoryEntryWithEnd = AllianceHistoryEntry & {
+  end_date?: string;
+};
 
 type CorporationAllianceHistoryTimelineProps = Omit<
   TimelineProps,
   "children"
 > & {
-  corporationId?: string | number;
+  history?: AllianceHistoryEntry[];
 };
-export const CorporationAllianceHistoryTimeline = memo(
-  ({ corporationId }: CorporationAllianceHistoryTimelineProps) => {
-    const { data } = useGetCorporationsCorporationIdAlliancehistory(
-      typeof corporationId === "string"
-        ? parseInt(corporationId, 10)
-        : (corporationId ?? 0),
-      {},
-      { query: { enabled: !!corporationId } },
-    );
 
-    const parsedCorporationAllianceHistory: (GetCorporationsCorporationIdAlliancehistoryQueryResponse[number] & {
-      end_date?: string;
-    })[] = useMemo(() => {
-      if (!data?.data) return [];
-      return data.data
-        .map((allianceMembership, index, array) => {
-          const end_date =
-            allianceMembership.alliance_id &&
-            index > 0 &&
-            array[index - 1]?.alliance_id === undefined
-              ? array[index - 1]?.start_date
-              : undefined;
-          return {
-            ...allianceMembership,
-            end_date,
-          };
-        })
-        .filter(
-          (allianceMembership, index, array) =>
-            allianceMembership.alliance_id !== undefined ||
-            index === array.length - 1,
-        )
-        .sort((a, b) => b.record_id - a.record_id);
-    }, [data?.data]);
+export const CorporationAllianceHistoryTimeline = memo(
+  ({ history }: CorporationAllianceHistoryTimelineProps) => {
+    const parsedCorporationAllianceHistory: AllianceHistoryEntryWithEnd[] =
+      useMemo(() => {
+        if (!history) return [];
+        return history
+          .map((allianceMembership, index, array) => {
+            const end_date =
+              allianceMembership.alliance_id &&
+              index > 0 &&
+              array[index - 1]?.alliance_id === undefined
+                ? array[index - 1]?.start_date
+                : undefined;
+            return {
+              ...allianceMembership,
+              end_date,
+            };
+          })
+          .filter(
+            (allianceMembership, index, array) =>
+              allianceMembership.alliance_id !== undefined ||
+              index === array.length - 1,
+          )
+          .sort((a, b) => b.record_id - a.record_id);
+      }, [history]);
 
     return (
       <Timeline active={-1} bulletSize={32} lineWidth={2}>

@@ -4,43 +4,27 @@ import type { AvatarGroupProps, AvatarProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Avatar, Skeleton, Tooltip } from "@mantine/core";
 
-import { useGetCharactersCharacterIdCalendarEventIdAttendees } from "@jitaspace/esi-client";
-import { useAccessToken } from "@jitaspace/hooks";
-
 import { CharacterAvatar } from "../Avatar";
 import { CharacterName } from "../Text";
 
-type CalendarEventAttendeesAvatarGroupProps = AvatarProps & {
-  characterId: number;
-  eventId?: number;
+export type CalendarEventAttendee = {
+  character_id?: number;
+  event_response?: string;
+};
+
+export type CalendarEventAttendeesAvatarGroupProps = AvatarProps & {
+  attendees?: CalendarEventAttendee[];
   limit?: number;
   spacing?: AvatarGroupProps["spacing"];
 };
+
 export const CalendarEventAttendeesAvatarGroup = memo(
   ({
-    characterId,
-    eventId,
+    attendees,
     limit,
     spacing,
     ...otherProps
   }: CalendarEventAttendeesAvatarGroupProps) => {
-    const { accessToken, authHeaders } = useAccessToken({
-      characterId,
-      scopes: ["esi-calendar.read_calendar_events.v1"],
-    });
-
-    const { data: attendees } =
-      useGetCharactersCharacterIdCalendarEventIdAttendees(
-        characterId ?? 0,
-        eventId ?? 0,
-        { ...authHeaders },
-        {
-          query: {
-            enabled: !!eventId && !!characterId && accessToken !== null,
-          },
-        },
-      );
-
     if (!attendees) {
       return (
         <Skeleton>
@@ -51,7 +35,7 @@ export const CalendarEventAttendeesAvatarGroup = memo(
       );
     }
 
-    const filteredAttendees = (attendees?.data ?? []).filter(
+    const filteredAttendees = attendees.filter(
       (attendee) => attendee.event_response === "accepted",
     );
 

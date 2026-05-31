@@ -2,7 +2,8 @@ import { memo } from "react";
 import { Group, Text, UnstyledButton } from "@mantine/core";
 
 import { useSolarSystem } from "@jitaspace/hooks";
-import { SolarSystemStarAvatar } from "@jitaspace/ui";
+
+import { SolarSystemStarAvatar } from "~/components/Avatar";
 
 import classes from "./Button.module.css";
 
