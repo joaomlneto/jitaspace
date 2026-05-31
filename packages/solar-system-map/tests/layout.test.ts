@@ -2,7 +2,7 @@ import type { ScenePlanet } from "../layout";
 import {
   buildSystemLayout,
   FIRST_ORBIT,
-  moonLayout,
+  moonOrbit,
   ORBIT_STEP,
   PLANET_BASE_SIZE,
   PLANET_COLORS,
@@ -64,20 +64,12 @@ describe("buildSystemLayout", () => {
     expect(planet?.color).toBe(planetColor(0));
     expect(planet?.size).toBeCloseTo(PLANET_BASE_SIZE + (42 % 4) * 0.06);
     expect(planet?.phase).toBeCloseTo(((42 % 360) * Math.PI) / 180);
-    // outer planets orbit more slowly than inner ones
-    const many = buildSystemLayout(makePlanets(3)).planets;
-    const innerSpeed = many[0]?.speed ?? 0;
-    const outerSpeed = many[2]?.speed ?? 0;
-    expect(innerSpeed).toBeGreaterThan(outerSpeed);
   });
 });
 
-describe("moonLayout", () => {
-  it("pushes successive moons to wider, faster orbits", () => {
-    const inner = moonLayout(0.5, 0);
-    const outer = moonLayout(0.5, 2);
-    expect(outer.orbit).toBeGreaterThan(inner.orbit);
-    expect(outer.speed).toBeGreaterThan(inner.speed);
+describe("moonOrbit", () => {
+  it("pushes successive moons to wider orbits", () => {
+    expect(moonOrbit(0.5, 2)).toBeGreaterThan(moonOrbit(0.5, 0));
   });
 });
 

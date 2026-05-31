@@ -1,16 +1,16 @@
 "use client";
 
 import type { ThreeEvent } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { OrbitControls, Stars } from "@react-three/drei";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 
 import type { HoverTarget, ScenePlanet } from "./layout";
 import {
   buildSystemLayout,
   MOON_COLOR,
-  moonLayout,
+  moonOrbit,
   ringMarkerPosition,
   STAR_COLOR,
   STAR_RADIUS,
@@ -46,13 +46,9 @@ function OrbitPath({ radius }: Readonly<{ radius: number }>) {
 }
 
 function Star() {
-  const ref = useRef<THREE.Mesh>(null);
-  useFrame((_, delta) => {
-    if (ref.current) ref.current.rotation.y += delta * 0.05;
-  });
   return (
     <group>
-      <mesh ref={ref}>
+      <mesh>
         <sphereGeometry args={[STAR_RADIUS, 48, 48]} />
         <meshBasicMaterial color={STAR_COLOR} />
       </mesh>
@@ -109,15 +105,11 @@ function Moon({
   hover: HoverTarget | null;
   setHover: (hover: HoverTarget | null) => void;
 }>) {
-  const ref = useRef<THREE.Group>(null);
-  const { orbit, speed } = moonLayout(planetSize, index);
+  const orbit = moonOrbit(planetSize, index);
   const phase = ((id % 360) * Math.PI) / 180;
-  useFrame((_, delta) => {
-    if (ref.current) ref.current.rotation.y += delta * speed;
-  });
   const isHovered = hover?.kind === "moon" && hover.id === id;
   return (
-    <group ref={ref} rotation={[0, phase, 0]}>
+    <group rotation={[0, phase, 0]}>
       <mesh
         position={[orbit, 0, 0]}
         scale={isHovered ? 1.6 : 1}
@@ -139,7 +131,6 @@ function Planet({
   orbit,
   size,
   color,
-  speed,
   phase,
   hover,
   setHover,
@@ -148,20 +139,15 @@ function Planet({
   orbit: number;
   size: number;
   color: string;
-  speed: number;
   phase: number;
   hover: HoverTarget | null;
   setHover: (hover: HoverTarget | null) => void;
 }>) {
-  const ref = useRef<THREE.Group>(null);
-  useFrame((_, delta) => {
-    if (ref.current) ref.current.rotation.y += delta * speed;
-  });
   const isHovered = hover?.kind === "planet" && hover.id === planet.planetId;
   return (
     <group>
       <OrbitPath radius={orbit} />
-      <group ref={ref} rotation={[0, phase, 0]}>
+      <group rotation={[0, phase, 0]}>
         <group position={[orbit, 0, 0]}>
           <mesh
             scale={isHovered ? 1.25 : 1}
@@ -305,7 +291,6 @@ export default function SolarSystemScene({
           orbit={p.orbit}
           size={p.size}
           color={p.color}
-          speed={p.speed}
           phase={p.phase}
           hover={hover}
           setHover={setHover}

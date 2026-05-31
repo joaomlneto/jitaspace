@@ -28,7 +28,7 @@ export interface SolarSystemMapProps {
   renderLabel?: (target: { kind: HoverKind; id: number }) => ReactNode;
   /** Show the colour legend overlay. Defaults to true. */
   showLegend?: boolean;
-  /** Slowly auto-rotate the camera (pauses while hovering). Defaults to true. */
+  /** Slowly auto-rotate the camera (pauses while hovering). Defaults to false. */
   autoRotate?: boolean;
   /** Extra styles merged into the container element. */
   style?: CSSProperties;
@@ -78,7 +78,7 @@ export function SolarSystemMap({
   height = 460,
   renderLabel,
   showLegend = true,
-  autoRotate = true,
+  autoRotate = false,
   style,
 }: Readonly<SolarSystemMapProps>) {
   const [hover, setHover] = useState<HoverTarget | null>(null);

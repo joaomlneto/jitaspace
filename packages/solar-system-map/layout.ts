@@ -51,9 +51,7 @@ export interface PlanetLayout {
   /** Sphere radius. */
   size: number;
   color: string;
-  /** Angular velocity (radians/second) of the orbit. */
-  speed: number;
-  /** Initial orbital angle (radians). */
+  /** Fixed angle on the orbit (radians) — bodies do not animate. */
   phase: number;
 }
 
@@ -79,7 +77,6 @@ export function buildSystemLayout(planets: ScenePlanet[]): SystemLayout {
     orbit: FIRST_ORBIT + index * ORBIT_STEP,
     size: PLANET_BASE_SIZE + (planet.planetId % 4) * 0.06,
     color: planetColor(index),
-    speed: 0.13 / (1 + index * 0.22),
     phase: ((planet.planetId % 360) * Math.PI) / 180,
   }));
 
@@ -99,12 +96,9 @@ export function buildSystemLayout(planets: ScenePlanet[]): SystemLayout {
   };
 }
 
-/** Orbital radius and angular velocity for the moon at a given index. */
-export function moonLayout(planetSize: number, index: number) {
-  return {
-    orbit: planetSize + 0.45 + index * 0.32,
-    speed: 0.7 + index * 0.18,
-  };
+/** Fixed orbital radius for the moon at a given index. */
+export function moonOrbit(planetSize: number, index: number): number {
+  return planetSize + 0.45 + index * 0.32;
 }
 
 /** Evenly-spaced angles (radians) for `count` markers around a ring. */
