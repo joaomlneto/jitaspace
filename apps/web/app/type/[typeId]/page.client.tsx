@@ -116,8 +116,8 @@ const prettifyUnitSymbol = (symbol?: string): string | undefined =>
   symbol
     ? symbol
         .replaceAll(/m3/gi, "m³")
-        .replaceAll(/\^3/g, "³")
-        .replaceAll(/\^2/g, "²")
+        .replaceAll("^3", "³")
+        .replaceAll("^2", "²")
     : undefined;
 
 /** Locale-format a number, keeping useful precision for small fractions. */
