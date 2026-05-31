@@ -4,20 +4,13 @@ import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
-import { useGetUniverseCategoriesCategoryId } from "@jitaspace/esi-client";
-
 export type CategoryNameProps = TextProps & {
-  categoryId?: number;
+  name?: string;
 };
 
 export const CategoryName = memo(
-  ({ categoryId, ...otherProps }: CategoryNameProps) => {
-    const { data, isLoading } = useGetUniverseCategoriesCategoryId(
-      categoryId ?? 1,
-      {},
-      { query: { enabled: !!categoryId } },
-    );
-    if (isLoading) {
+  ({ name, ...otherProps }: CategoryNameProps) => {
+    if (!name) {
       const placeholder = "Unknown Category";
       const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
@@ -31,7 +24,7 @@ export const CategoryName = memo(
         </Text>
       );
     }
-    return <Text {...otherProps}>{data?.data.name}</Text>;
+    return <Text {...otherProps}>{name}</Text>;
   },
 );
 CategoryName.displayName = "CategoryName";

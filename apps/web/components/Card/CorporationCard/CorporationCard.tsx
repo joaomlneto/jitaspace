@@ -14,11 +14,18 @@ import {
 import { IconExternalLink } from "@tabler/icons-react";
 
 import { useCorporation } from "@jitaspace/hooks";
-
-import { AllianceAnchor, CharacterAnchor, CorporationAnchor } from "../Anchor";
-import { AllianceAvatar, CharacterAvatar, CorporationAvatar } from "../Avatar";
-import { FormattedDateText } from "../DateText";
-import { AllianceName, CharacterName, CorporationName } from "../Text";
+import {
+  AllianceAnchor,
+  AllianceAvatar,
+  AllianceName,
+  CharacterAnchor,
+  CharacterAvatar,
+  CharacterName,
+  CorporationAnchor,
+  CorporationAvatar,
+  CorporationName,
+  FormattedDateText,
+} from "@jitaspace/ui";
 
 interface CorporationCardProps {
   corporationId: string | number;

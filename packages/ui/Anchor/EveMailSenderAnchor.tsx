@@ -5,19 +5,20 @@ import React, { memo } from "react";
 import { type LinkProps } from "next/link";
 import { Anchor } from "@mantine/core";
 
-import {
-  CharactersCharacterIdMailListsGet,
-  CharactersCharacterIdMailMailIdGet,
-} from "@jitaspace/esi-client";
-
 import { EveEntityAnchor } from "./EveEntityAnchor";
+
+export type MailingList = {
+  mailing_list_id: number;
+  name: string;
+};
 
 export type EveMailSenderNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
-    from?: CharactersCharacterIdMailMailIdGet["from"];
-    mailingLists?: CharactersCharacterIdMailListsGet;
+    from?: number;
+    mailingLists?: MailingList[];
   };
+
 export const EveMailSenderAnchor = memo(
   ({
     from,
@@ -25,7 +26,6 @@ export const EveMailSenderAnchor = memo(
     children,
     ...props
   }: EveMailSenderNameAnchorProps) => {
-    // if it is a mailing list, do not link to anything.
     if (mailingLists?.some((mailList) => mailList.mailing_list_id === from)) {
       return <Anchor {...props}>{children}</Anchor>;
     }

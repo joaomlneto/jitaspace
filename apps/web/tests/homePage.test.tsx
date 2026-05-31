@@ -26,14 +26,14 @@ jest.mock("@jitaspace/ui", () => ({
     <span>{`Alliance ${allianceId}`}</span>
   ),
   CharacterAvatar: () => <div>Character Avatar</div>,
-  CorporationCard: ({ corporationId }: { corporationId: number }) => (
-    <span>{`Corporation ${corporationId}`}</span>
-  ),
 }));
 
 jest.mock("~/components/Card", () => ({
   AuthenticatedCharacterCard: ({ characterId }: { characterId: number }) => (
     <div>{`Character ${characterId}`}</div>
+  ),
+  CorporationCard: ({ corporationId }: { corporationId: number }) => (
+    <span>{`Corporation ${corporationId}`}</span>
   ),
 }));
 

@@ -4,19 +4,12 @@ import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
-import { useGetUniverseMoonsMoonId } from "@jitaspace/esi-client";
-
 export type MoonNameProps = TextProps & {
-  moonId?: number;
+  name?: string;
 };
 
-export const MoonName = memo(({ moonId, ...otherProps }: MoonNameProps) => {
-  const { data, isLoading } = useGetUniverseMoonsMoonId(
-    moonId ?? 1,
-    {},
-    { query: { enabled: !!moonId } },
-  );
-  if (isLoading) {
+export const MoonName = memo(({ name, ...otherProps }: MoonNameProps) => {
+  if (!name) {
     const placeholder = "Unknown moon";
     const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
     return (
@@ -30,6 +23,6 @@ export const MoonName = memo(({ moonId, ...otherProps }: MoonNameProps) => {
       </Text>
     );
   }
-  return <Text {...otherProps}>{data?.data.name}</Text>;
+  return <Text {...otherProps}>{name}</Text>;
 });
 MoonName.displayName = "MoonName";

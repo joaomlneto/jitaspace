@@ -14,7 +14,7 @@ import {
   putCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
 import { useAccessToken, useCharacterMailLabels } from "@jitaspace/hooks";
-import { MailLabelColorSwatch } from "@jitaspace/ui";
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
 interface Message {

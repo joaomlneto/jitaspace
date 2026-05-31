@@ -4,23 +4,13 @@ import type { BadgeProps } from "@mantine/core";
 import { memo } from "react";
 import { Badge, Skeleton } from "@mantine/core";
 
-import { useGetCorporationsCorporationId } from "@jitaspace/esi-client";
-
-type CorporationTickerBadgeProps = Omit<BadgeProps, "children"> & {
-  corporationId?: number | string;
+export type CorporationTickerBadgeProps = Omit<BadgeProps, "children"> & {
+  ticker?: string;
 };
 
 export const CorporationTickerBadge = memo(
-  ({ corporationId, ...otherProps }: CorporationTickerBadgeProps) => {
-    const { data } = useGetCorporationsCorporationId(
-      typeof corporationId === "number"
-        ? corporationId
-        : (Number(corporationId) ?? 0),
-      {},
-      { query: { enabled: corporationId !== undefined } },
-    );
-
-    if (!data) {
+  ({ ticker, ...otherProps }: CorporationTickerBadgeProps) => {
+    if (!ticker) {
       return (
         <Skeleton>
           <Badge {...otherProps}>XXXXX</Badge>
@@ -28,7 +18,7 @@ export const CorporationTickerBadge = memo(
       );
     }
 
-    return <Badge {...otherProps}>{data.data.ticker}</Badge>;
+    return <Badge {...otherProps}>{ticker}</Badge>;
   },
 );
 CorporationTickerBadge.displayName = "CorporationTickerBadge";

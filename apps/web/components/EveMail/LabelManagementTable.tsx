@@ -3,7 +3,8 @@ import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
 import { useCharacterMailLabels } from "@jitaspace/hooks";
-import { LabelName, MailLabelColorSwatch } from "@jitaspace/ui";
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
+import { LabelName } from "~/components/Text";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
 

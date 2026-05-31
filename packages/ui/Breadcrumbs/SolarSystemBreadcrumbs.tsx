@@ -5,11 +5,6 @@ import React, { memo } from "react";
 import { Breadcrumbs } from "@mantine/core";
 
 import {
-  useGetUniverseConstellationsConstellationId,
-  useGetUniverseSystemsSystemId,
-} from "@jitaspace/esi-client";
-
-import {
   ConstellationAnchor,
   RegionAnchor,
   SolarSystemAnchor,
@@ -18,6 +13,8 @@ import { ConstellationName, RegionName, SolarSystemName } from "../Text";
 
 export type SolarSystemBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   solarSystemId?: string | number;
+  constellationId?: number;
+  regionId?: number;
   hideSolarSystem?: boolean;
   textProps?: TextProps;
 };
@@ -25,40 +22,19 @@ export type SolarSystemBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
 export const SolarSystemBreadcrumbs = memo(
   ({
     solarSystemId,
+    constellationId,
+    regionId,
     hideSolarSystem = false,
     textProps = {},
     ...otherProps
   }: SolarSystemBreadcrumbsProps) => {
-    const { data: solarSystem } = useGetUniverseSystemsSystemId(
-      typeof solarSystemId === "string"
-        ? parseInt(solarSystemId, 10)
-        : (solarSystemId ?? 0),
-      {},
-      {
-        query: { enabled: solarSystemId !== undefined },
-      },
-    );
-    const { data: constellation } = useGetUniverseConstellationsConstellationId(
-      solarSystem?.data.constellation_id ?? 0,
-      {},
-      {
-        query: {
-          enabled: solarSystem?.data.constellation_id !== undefined,
-        },
-      },
-    );
     return (
       <Breadcrumbs {...otherProps}>
-        <RegionAnchor regionId={constellation?.data.region_id}>
-          <RegionName regionId={constellation?.data.region_id} {...textProps} />
+        <RegionAnchor regionId={regionId}>
+          <RegionName regionId={regionId} {...textProps} />
         </RegionAnchor>
-        <ConstellationAnchor
-          constellationId={solarSystem?.data.constellation_id}
-        >
-          <ConstellationName
-            constellationId={solarSystem?.data.constellation_id}
-            {...textProps}
-          />
+        <ConstellationAnchor constellationId={constellationId}>
+          <ConstellationName constellationId={constellationId} {...textProps} />
         </ConstellationAnchor>
         {!hideSolarSystem && (
           <SolarSystemAnchor solarSystemId={solarSystemId}>

@@ -8,10 +8,11 @@ import { usePlanet } from "@jitaspace/hooks";
 import {
   Position3DText,
   SolarSystemName,
-  SolarSystemSecurityStatusBadge,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/ui";
+
+import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
 export default function Page() {
   const params = useParams();

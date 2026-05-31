@@ -4,33 +4,13 @@ import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
-import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
-import { useAccessToken } from "@jitaspace/hooks";
-
 export type CalendarEventOwnerNameProps = TextProps & {
-  characterId: number;
-  eventId?: number;
+  ownerName?: string;
 };
+
 export const CalendarEventOwnerName = memo(
-  ({ characterId, eventId, ...otherProps }: CalendarEventOwnerNameProps) => {
-    const { accessToken, authHeaders } = useAccessToken({
-      characterId,
-      scopes: ["esi-calendar.read_calendar_events.v1"],
-    });
-
-    const { data: event, isLoading } =
-      useGetCharactersCharacterIdCalendarEventId(
-        characterId ?? 0,
-        eventId ?? 0,
-        { ...authHeaders },
-        {
-          query: {
-            enabled: accessToken !== null && !!eventId,
-          },
-        },
-      );
-
-    if (isLoading) {
+  ({ ownerName, ...otherProps }: CalendarEventOwnerNameProps) => {
+    if (!ownerName) {
       const placeholder = "Unknown";
       const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
@@ -45,7 +25,7 @@ export const CalendarEventOwnerName = memo(
       );
     }
 
-    return <Text {...otherProps}>{event?.data?.owner_name ?? "Unknown"}</Text>;
+    return <Text {...otherProps}>{ownerName}</Text>;
   },
 );
 CalendarEventOwnerName.displayName = "CalendarEventOwnerName";

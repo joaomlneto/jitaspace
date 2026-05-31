@@ -4,32 +4,13 @@ import type { TextProps } from "@mantine/core";
 import { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
-import { useGetCharactersCharacterIdMailLists } from "@jitaspace/esi-client";
-import { useAccessToken } from "@jitaspace/hooks";
-
 export type MailingListNameProps = TextProps & {
-  characterId: number;
-  mailingListId?: number;
+  name?: string;
 };
 
 export const MailingListName = memo(
-  ({ characterId, mailingListId, ...otherProps }: MailingListNameProps) => {
-    const { accessToken, authHeaders } = useAccessToken({
-      characterId,
-      scopes: ["esi-mail.read_mail.v1"],
-    });
-
-    const { data, isLoading } = useGetCharactersCharacterIdMailLists(
-      characterId ?? 1,
-      { ...authHeaders },
-      {
-        query: {
-          enabled: accessToken !== null,
-        },
-      },
-    );
-
-    if (isLoading) {
+  ({ name, ...otherProps }: MailingListNameProps) => {
+    if (!name) {
       const placeholder = "Unknown Mailing List";
       const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
@@ -43,13 +24,7 @@ export const MailingListName = memo(
         </Text>
       );
     }
-
-    return (
-      <Text {...otherProps}>
-        {data?.data.find((list) => list.mailing_list_id === mailingListId)
-          ?.name ?? "Unknown Mailing List"}
-      </Text>
-    );
+    return <Text {...otherProps}>{name}</Text>;
   },
 );
 MailingListName.displayName = "MailingListName";

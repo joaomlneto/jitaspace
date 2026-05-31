@@ -4,17 +4,11 @@ import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Text } from "@mantine/core";
 
-import { useGetUniverseStarsStarId } from "@jitaspace/esi-client";
-
 export type StarNameProps = TextProps & {
-  starId?: number;
+  name?: string;
 };
-export const StarName = memo(({ starId, ...otherProps }: StarNameProps) => {
-  const { data } = useGetUniverseStarsStarId(
-    starId ?? 0,
-    {},
-    { query: { enabled: !!starId } },
-  );
-  return <Text {...otherProps}>{data?.data.name}</Text>;
+
+export const StarName = memo(({ name, ...otherProps }: StarNameProps) => {
+  return <Text {...otherProps}>{name}</Text>;
 });
 StarName.displayName = "StarName";

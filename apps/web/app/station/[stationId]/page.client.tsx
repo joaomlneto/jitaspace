@@ -17,14 +17,15 @@ import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,
-  RaceName,
-  SetAutopilotDestinationActionIcon,
   SolarSystemName,
-  SolarSystemSecurityStatusBadge,
-  StationAvatar,
   StationName,
   TypeName,
 } from "@jitaspace/ui";
+
+import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
+import { StationAvatar } from "~/components/Avatar";
+import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
+import { RaceName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();

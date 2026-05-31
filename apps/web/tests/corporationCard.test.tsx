@@ -11,13 +11,10 @@ jest.mock("@jitaspace/hooks", () => ({
   useCorporation: (corporationId: number) => mockUseCorporation(corporationId),
 }));
 
-jest.mock("../../../packages/ui/Anchor", () => ({
+jest.mock("@jitaspace/ui", () => ({
   AllianceAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
   CharacterAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
   CorporationAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
-}));
-
-jest.mock("../../../packages/ui/Avatar", () => ({
   AllianceAvatar: ({ allianceId }: { allianceId: number }) => (
     <span>{`Alliance Avatar ${allianceId}`}</span>
   ),
@@ -29,9 +26,6 @@ jest.mock("../../../packages/ui/Avatar", () => ({
   }: {
     corporationId: number | string;
   }) => <span>{`Corporation Avatar ${corporationId}`}</span>,
-}));
-
-jest.mock("../../../packages/ui/Text", () => ({
   AllianceName: ({ allianceId }: { allianceId: number }) => (
     <span>{`Alliance ${allianceId}`}</span>
   ),
@@ -41,9 +35,6 @@ jest.mock("../../../packages/ui/Text", () => ({
   CorporationName: ({ corporationId }: { corporationId: number | string }) => (
     <span>{`Corporation ${corporationId}`}</span>
   ),
-}));
-
-jest.mock("../../../packages/ui/DateText", () => ({
   FormattedDateText: ({ date }: { date: Date }) => (
     <span>{`Date ${date.toISOString()}`}</span>
   ),
@@ -83,7 +74,7 @@ describe("CorporationCard", () => {
 
     const {
       CorporationCard,
-    } = require("../../../packages/ui/Card/CorporationCard");
+    } = require("../components/Card/CorporationCard/CorporationCard");
     render(
       <MantineProvider>
         <CorporationCard corporationId={98553333} />
@@ -131,7 +122,7 @@ describe("CorporationCard", () => {
 
     const {
       CorporationCard,
-    } = require("../../../packages/ui/Card/CorporationCard");
+    } = require("../components/Card/CorporationCard/CorporationCard");
     render(
       <MantineProvider>
         <CorporationCard corporationId={42} />
@@ -160,7 +151,7 @@ describe("CorporationCard", () => {
 
     const {
       CorporationCard,
-    } = require("../../../packages/ui/Card/CorporationCard");
+    } = require("../components/Card/CorporationCard/CorporationCard");
     render(
       <MantineProvider>
         <CorporationCard

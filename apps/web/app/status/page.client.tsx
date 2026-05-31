@@ -24,7 +24,7 @@ import {
   IconCircleX,
 } from "@tabler/icons-react";
 
-import { getRateLimitBuildDate, useGetMetaStatus } from "@jitaspace/esi-client";
+import { getRateLimitBuildDate, useGetMetaCompatibilityDates, useGetMetaStatus } from "@jitaspace/esi-client";
 import { useServerStatus } from "@jitaspace/hooks";
 import { useGetVersion } from "@jitaspace/sde-client";
 import { FormattedDateText } from "@jitaspace/ui";
@@ -80,6 +80,14 @@ export default function StatusPage({
 
   const buildDate = useMemo(() => getRateLimitBuildDate(), []);
 
+  const { data: compatibilityDatesData } = useGetMetaCompatibilityDates();
+
+  const latestCompatibilityDate = useMemo(() => {
+    const dates = compatibilityDatesData?.data.compatibility_dates;
+    if (!dates?.length) return null;
+    return [...dates].sort((a, b) => a.localeCompare(b)).at(-1) ?? null;
+  }, [compatibilityDatesData]);
+
   const nonOkEndpointsCount = useMemo(
     () => esiStatus?.data.routes.filter((e) => e.status !== "OK").length ?? 0,
     [esiStatus],
@@ -128,6 +136,17 @@ export default function StatusPage({
                   </Text>
                   <Group gap="xs">
                     <Text size="sm">{buildDate || "-"}</Text>
+                    {buildDate && latestCompatibilityDate && (
+                      buildDate >= latestCompatibilityDate ? (
+                        <Tooltip label="ESI compatibility date is up to date!">
+                          <IconCircleCheck color="green" size={14} />
+                        </Tooltip>
+                      ) : (
+                        <Tooltip label={`ESI compatibility date is outdated! Latest: ${latestCompatibilityDate}`}>
+                          <IconCircleX color="red" size={14} />
+                        </Tooltip>
+                      )
+                    )}
                   </Group>
                 </Group>
                 <Group justify="space-between">

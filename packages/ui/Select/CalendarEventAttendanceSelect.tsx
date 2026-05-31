@@ -5,68 +5,56 @@ import React, { memo, useEffect, useState } from "react";
 import { Loader, Select } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
-import {
-  putCharactersCharacterIdCalendarEventId,
-  putCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
-  PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
-  useGetCharactersCharacterIdCalendarEventId,
-} from "@jitaspace/esi-client";
-import { useAccessToken } from "@jitaspace/hooks";
+export type CalendarEventAttendanceResponse =
+  | "accepted"
+  | "declined"
+  | "tentative"
+  | "not_responded";
 
-export type CalendarEventAttendanceSelect = Omit<SelectProps, "data"> & {
-  characterId: number;
-  eventId?: string | number;
+const responseOptions: CalendarEventAttendanceResponse[] = [
+  "accepted",
+  "declined",
+  "tentative",
+  "not_responded",
+];
+
+export type CalendarEventAttendanceSelectProps = Omit<SelectProps, "data"> & {
+  eventTitle?: string;
+  initialResponse?: CalendarEventAttendanceResponse | null;
+  canRespond?: boolean;
+  isLoading?: boolean;
+  onRespond?: (response: CalendarEventAttendanceResponse) => void;
 };
+
 export const CalendarEventAttendanceSelect = memo(
-  ({ characterId, eventId, ...otherProps }: CalendarEventAttendanceSelect) => {
+  ({
+    eventTitle,
+    initialResponse,
+    canRespond,
+    isLoading,
+    onRespond,
+    ...otherProps
+  }: CalendarEventAttendanceSelectProps) => {
     const [value, setValue] =
-      useState<PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum | null>(
-        (otherProps.value as PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum) ??
-          null,
+      useState<CalendarEventAttendanceResponse | null>(
+        (otherProps.value as CalendarEventAttendanceResponse) ?? null,
       );
-
-    const { character, accessToken, authHeaders } = useAccessToken({
-      characterId,
-      scopes: ["esi-calendar.read_calendar_events.v1"],
-    });
-
-    const { data: event, isLoading } =
-      useGetCharactersCharacterIdCalendarEventId(
-        characterId ?? 0,
-        typeof eventId === "string" ? parseInt(eventId, 10) : (eventId ?? 0),
-        { ...authHeaders },
-        {
-          query: {
-            enabled: !!eventId && accessToken !== null,
-          },
-        },
-      );
-
-    const canRespondToEvents =
-      character?.accessTokenPayload.scp.includes(
-        "esi-calendar.respond_calendar_events.v1",
-      ) ?? false;
 
     useEffect(() => {
-      if (value === null && event?.data.response) {
-        setValue(
-          event.data
-            .response as PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
-        );
+      if (value === null && initialResponse) {
+        setValue(initialResponse);
       }
-    }, [event, value]);
+    }, [initialResponse, value]);
 
-    const values = Object.values(
-      putCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
-    ).map((value) => ({
-      value,
-      label:
-        value.charAt(0).toUpperCase() + value.slice(1).replaceAll("_", " "),
+    const values = responseOptions.map((r) => ({
+      value: r,
+      label: r.charAt(0).toUpperCase() + r.slice(1).replaceAll("_", " "),
     }));
 
     return (
       <Select
-        readOnly={!canRespondToEvents}
+        {...otherProps}
+        readOnly={!canRespond}
         rightSection={isLoading ? <Loader size="xs" /> : undefined}
         data={values}
         value={value}
@@ -74,38 +62,21 @@ export const CalendarEventAttendanceSelect = memo(
         clearable={false}
         onChange={(newValue: string | null, options) => {
           if (value === newValue) return;
-          if (!canRespondToEvents) return;
+          if (!canRespond) return;
           if (newValue === null) return;
-          if (
-            !Object.keys(
-              putCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
-            ).includes(newValue)
-          )
+          if (!responseOptions.includes(newValue as CalendarEventAttendanceResponse))
             return;
           openConfirmModal({
             title: "Are you sure?",
-            children: `This will mark event ${event?.data.title} as ${newValue}.`,
+            children: `This will mark event ${eventTitle} as ${newValue}.`,
             labels: { confirm: "Confirm", cancel: "Cancel" },
             onConfirm: () => {
-              setValue(
-                newValue as PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
-              );
+              setValue(newValue as CalendarEventAttendanceResponse);
               otherProps.onChange?.(newValue, options);
-              void putCharactersCharacterIdCalendarEventId(
-                characterId ?? 0,
-                typeof eventId === "string"
-                  ? parseInt(eventId, 10)
-                  : (eventId ?? 0),
-                {
-                  response:
-                    newValue as PutCharactersCharacterIdCalendarEventIdMutationRequestResponseEnum,
-                },
-                authHeaders,
-              );
+              onRespond?.(newValue as CalendarEventAttendanceResponse);
             },
           });
         }}
-        {...otherProps}
       />
     );
   },

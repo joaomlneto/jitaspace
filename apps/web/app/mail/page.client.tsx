@@ -25,7 +25,7 @@ import {
   GroupListIcon,
 } from "@jitaspace/eve-icons";
 import { useCharacterMails, useSelectedCharacter } from "@jitaspace/hooks";
-import { EveMailLabelMultiSelect } from "@jitaspace/ui";
+import { EveMailLabelMultiSelect } from "~/components/MultiSelect/EveMailLabelMultiSelect";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxTable } from "~/components/EveMail";

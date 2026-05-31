@@ -11,8 +11,9 @@ import {
   EveMailSenderAvatar,
   EveMailSenderName,
   FormattedDateText,
-  MailLabelColorSwatch,
 } from "@jitaspace/ui";
+
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 
 import type { MailboxTableProps } from "~/components/EveMail";
 
