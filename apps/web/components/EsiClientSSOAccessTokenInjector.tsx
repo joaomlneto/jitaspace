@@ -7,6 +7,26 @@ import { useAuthStore } from "@jitaspace/hooks";
 
 import { refreshCharacterToken } from "./EsiClientSSOAccessTokenInjector.actions";
 
+type AddCharacter = (params: {
+  accessToken: string;
+  refreshToken: string;
+}) => Promise<void>;
+
+// Extracted to module scope so the effect below stays within the
+// max-nesting limit and the refresh/store/error flow reads top-to-bottom.
+async function refreshCharacterAndStore(
+  refreshToken: string,
+  addCharacter: AddCharacter,
+) {
+  try {
+    const { accessToken, refreshTokenData } =
+      await refreshCharacterToken(refreshToken);
+    await addCharacter({ accessToken, refreshToken: refreshTokenData });
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 export const EsiClientSSOAccessTokenInjector = ({
   children,
 }: PropsWithChildren) => {
@@ -30,21 +50,19 @@ export const EsiClientSSOAccessTokenInjector = ({
     const timer = setTimeout(
       () => {
         const now = new Date().getTime();
-        const candidateCharacters = Object.values(characters).filter(
-          (character) =>
-            new Date(character.accessTokenExpirationDate).getTime() - now <
-            30000 + 10000 /* account for some clock drift */,
-        );
-        candidateCharacters.forEach((character) => {
-          void refreshCharacterToken(character.refreshToken)
-            .then(({ accessToken, refreshTokenData }) =>
-              addCharacter({
-                accessToken,
-                refreshToken: refreshTokenData,
-              }),
-            )
-            .catch((err) => console.error(err));
-        });
+        Object.values(characters)
+          .filter(
+            (character) =>
+              new Date(character.accessTokenExpirationDate).getTime() - now <
+              30000 + 10000 /* account for some clock drift */,
+          )
+          .forEach(
+            (character) =>
+              void refreshCharacterAndStore(
+                character.refreshToken,
+                addCharacter,
+              ),
+          );
       },
       Math.max(timeUntilExpiration() - 30000, 1000),
     );

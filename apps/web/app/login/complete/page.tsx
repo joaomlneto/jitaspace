@@ -29,7 +29,7 @@ export default function LoginCompletePage() {
     hasRun.current = true;
 
     const returnTo = safeReturnTo(
-      new URLSearchParams(window.location.search).get("returnTo"),
+      new URLSearchParams(globalThis.location.search).get("returnTo"),
     );
 
     void (async () => {
