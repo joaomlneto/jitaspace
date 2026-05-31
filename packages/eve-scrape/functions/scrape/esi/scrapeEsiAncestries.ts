@@ -44,9 +44,7 @@ export const scrapeEsiAncestries = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
           ),
       fetchRemoteEntries: async () =>
         ancestries.map((ancestry) => ({

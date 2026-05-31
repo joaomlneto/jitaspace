@@ -16,12 +16,9 @@ export type ScrapeNpcCorporationsEventPayload = {
   data: {};
 };
 
-export const scrapeEsiNpcCorporationsEvent = eventType(
-  "scrape/esi/npc-corporations",
-  {
-    schema: staticSchema<ScrapeNpcCorporationsEventPayload["data"]>(),
-  },
-);
+export const scrapeEsiNpcCorporationsEvent = eventType("scrape/esi/npc-corporations", {
+  schema: staticSchema<ScrapeNpcCorporationsEventPayload["data"]>(),
+});
 
 export const scrapeEsiNpcCorporations = client.createFunction(
   {
@@ -119,9 +116,7 @@ export const scrapeEsiNpcCorporations = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
           ),
       fetchRemoteEntries: async () =>
         characters.map((character) => ({
@@ -183,9 +178,7 @@ export const scrapeEsiNpcCorporations = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
           ),
       fetchRemoteEntries: async () =>
         npcCorporations.map((corporation) => ({

@@ -1,4 +1,4 @@
-import { eventType, NonRetriableError, staticSchema } from "inngest";
+import { eventType, staticSchema, NonRetriableError } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -10,18 +10,16 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeMarketGroupsEventPayload = {
   data: {
     batchSize?: number;
   };
 };
 
-export const scrapeEsiMarketGroupsEvent = eventType(
-  "scrape/esi/market-groups",
-  {
-    schema: staticSchema<ScrapeMarketGroupsEventPayload["data"]>(),
-  },
-);
+export const scrapeEsiMarketGroupsEvent = eventType("scrape/esi/market-groups", {
+  schema: staticSchema<ScrapeMarketGroupsEventPayload["data"]>(),
+});
 
 export const scrapeEsiMarketGroups = client.createFunction(
   {
@@ -50,9 +48,7 @@ export const scrapeEsiMarketGroups = client.createFunction(
         },
       })
       .then((entries) =>
-        entries.map((entry) =>
-          excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-        ),
+        entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
       );
 
     const marketGroupIdsInDatabase = localEntries.map(

@@ -18,12 +18,9 @@ export type ScrapeLoyaltyStoreOffersEventPayload = {
   };
 };
 
-export const scrapeEsiLoyaltyStoreOffersEvent = eventType(
-  "scrape/esi/loyalty-store-offers",
-  {
-    schema: staticSchema<ScrapeLoyaltyStoreOffersEventPayload["data"]>(),
-  },
-);
+export const scrapeEsiLoyaltyStoreOffersEvent = eventType("scrape/esi/loyalty-store-offers", {
+  schema: staticSchema<ScrapeLoyaltyStoreOffersEventPayload["data"]>(),
+});
 
 export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
   {
@@ -80,9 +77,7 @@ export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
           ),
       fetchRemoteEntries: async () =>
         thisBatchLoyaltyStoreOffers.map((offer) => ({
@@ -141,9 +136,7 @@ export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
           ),
       fetchRemoteEntries: async () =>
         requiredItems.map((item) => ({

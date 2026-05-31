@@ -10,6 +10,7 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+
 export type ScrapeRegionEventPayload = {
   data: {};
 };
@@ -48,9 +49,7 @@ export const scrapeEsiRegions = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
           ),
       fetchRemoteEntries: async () =>
         Promise.all(
