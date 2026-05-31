@@ -10,7 +10,7 @@ import {
   jest,
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 const SYSTEM_ID = 30000142;
 
@@ -87,6 +87,10 @@ jest.mock("~/components/UI", () => ({
       ))}
     </div>
   ),
+}));
+
+jest.mock("~/components/SolarSystem3D", () => ({
+  SolarSystem3D: () => <div data-testid="solar-system-3d" />,
 }));
 
 jest.mock("next/link", () => ({
@@ -335,5 +339,30 @@ describe("System page", () => {
 
     // The summary stat labels render even before data resolves
     expect(screen.getByText("Planets")).toBeInTheDocument();
+  });
+
+  it("toggles the 3D system map on and off", () => {
+    mockUseSelectedCharacter.mockReturnValue(undefined);
+    mockUseSolarSystem.mockReturnValue({
+      data: { data: { security_status: 0.9 } },
+    });
+    mockUseSolarSystemCostIndices.mockReturnValue({ data: {} });
+    mockUseSolarSystemSovereignty.mockReturnValue(undefined);
+    mockUseGetSolarSystemById.mockReturnValue({ data: { data: {} } });
+    mockUseGetConstellationById.mockReturnValue({ data: undefined });
+
+    renderPage();
+
+    // Collapsed by default: the map is not mounted.
+    expect(screen.getByText("System Map")).toBeInTheDocument();
+    expect(screen.queryByTestId("solar-system-3d")).not.toBeInTheDocument();
+
+    // Show -> the map mounts and a "Hide 3D map" control appears.
+    fireEvent.click(screen.getByRole("button", { name: /Show 3D map/ }));
+    expect(screen.getByTestId("solar-system-3d")).toBeInTheDocument();
+
+    // Hide -> the map unmounts again.
+    fireEvent.click(screen.getByRole("button", { name: /Hide 3D map/ }));
+    expect(screen.queryByTestId("solar-system-3d")).not.toBeInTheDocument();
   });
 });
