@@ -151,11 +151,12 @@ export default function Page() {
     solarSystemCostIndicesData[systemId];
   const costIndices = costIndicesEntry?.cost_indices ?? [];
 
+  const positionData = sde?.position;
   const position =
-    sde?.position.x !== undefined &&
-    sde.position.y !== undefined &&
-    sde.position.z !== undefined
-      ? [sde.position.x, sde.position.y, sde.position.z]
+    positionData?.x !== undefined &&
+    positionData.y !== undefined &&
+    positionData.z !== undefined
+      ? [positionData.x, positionData.y, positionData.z]
       : undefined;
 
   return (
