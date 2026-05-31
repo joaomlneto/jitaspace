@@ -12,12 +12,12 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openContextModal } from "@mantine/modals";
-import { signIn } from "next-auth/react";
 
-import type {ESIScope} from "@jitaspace/esi-metadata";
+import type { ESIScope } from "@jitaspace/esi-metadata";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
+import { loginWithEveOnline } from "~/lib/eveOnlineLogin";
 import classes from "./RequestPermissionsBanner.module.css";
 import { ScopesTable } from "./ScopesTable";
 
@@ -38,7 +38,7 @@ export function RequestPermissionsBanner({
     useDisclosure(false);
 
   const missingScopes = requiredScopes.filter(
-    (scope) => !(grantedScopes ?? []).includes(scope),
+    (scope) => !grantedScopes.includes(scope),
   );
 
   return (
@@ -56,13 +56,7 @@ export function RequestPermissionsBanner({
         <LoginWithEveOnlineButton
           size="small"
           onClick={() => {
-            void signIn(
-              "eveonline",
-              {},
-              {
-                scope: [...(grantedScopes ?? []), ...missingScopes].join(" "),
-              },
-            );
+            loginWithEveOnline([...grantedScopes, ...missingScopes]);
           }}
         />
         <Button
@@ -87,7 +81,7 @@ export function RequestPermissionsBanner({
         Missing Scopes
       </Title>
       <ScopesTable scopes={missingScopes} />
-      {(grantedScopes ?? []).length > 0 && (
+      {grantedScopes.length > 0 && (
         <>
           <Center>
             <Button
@@ -99,7 +93,7 @@ export function RequestPermissionsBanner({
             </Button>
           </Center>
           <Collapse in={openGrantedScopesTable}>
-            <ScopesTable scopes={grantedScopes ?? []} />
+            <ScopesTable scopes={grantedScopes} />
           </Collapse>
         </>
       )}

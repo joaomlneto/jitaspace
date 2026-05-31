@@ -3,20 +3,20 @@
 import type { AvatarProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Avatar, Skeleton } from "@mantine/core";
-
-import {
-  CharactersCharacterIdMailListsGet,
-  CharactersCharacterIdMailMailIdGet,
-} from "@jitaspace/esi-client";
 import { GroupListIcon } from "@jitaspace/eve-icons";
 import { getAvatarSize } from "@jitaspace/utils";
 
 import { sizes } from "./Avatar.styles";
 import { EveEntityAvatar } from "./index";
 
+export type MailingList = {
+  mailing_list_id: number;
+  name: string;
+};
+
 export type EveMailSenderAvatarProps = Omit<AvatarProps, "src" | "style"> & {
-  from?: CharactersCharacterIdMailMailIdGet["from"];
-  mailingLists?: CharactersCharacterIdMailListsGet;
+  from?: number;
+  mailingLists?: MailingList[];
 };
 
 export const EveMailSenderAvatar = memo(

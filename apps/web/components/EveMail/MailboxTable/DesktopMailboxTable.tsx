@@ -9,12 +9,13 @@ import {
 import {
   EveMailSenderAnchor,
   EveMailSenderAvatar,
-  EveMailSenderCard,
   EveMailSenderName,
   FormattedDateText,
-  LabelName,
-  MailLabelColorSwatch,
 } from "@jitaspace/ui";
+
+import { EveMailSenderCard } from "~/components/Card";
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
+import { LabelName } from "~/components/Text";
 
 import type { MailboxTableProps } from "~/components/EveMail";
 import { MessageMenu } from "../MessageMenu";

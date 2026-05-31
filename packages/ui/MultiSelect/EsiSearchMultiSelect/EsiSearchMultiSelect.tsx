@@ -11,14 +11,13 @@ import {
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
-import { type GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
-import { useEsiSearch } from "@jitaspace/hooks";
+import { type EsiSearchCategory, useEsiSearch } from "@jitaspace/hooks";
 
 import { EsiSearchMultiSelectItem } from "./EsiSearchMultiSelectItem";
 import { EsiSearchMultiSelectValue } from "./EsiSearchMultiSelectValue";
 
 export type EsiSearchMultiSelectProps = {
-  categories: GetCharactersCharacterIdSearchQueryParamsCategoriesEnum[];
+  categories: EsiSearchCategory[];
   debounceTime?: number;
   value?: string[];
   defaultValue?: string[];
@@ -76,8 +75,7 @@ export const EsiSearchMultiSelect = memo(
           .map((id) => ({
             label: `${categoryName} ${id}`,
             value: `${id}`,
-            category:
-              categoryName as GetCharactersCharacterIdSearchQueryParamsCategoriesEnum,
+            category: categoryName as EsiSearchCategory,
           })),
     );
 

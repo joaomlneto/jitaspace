@@ -22,26 +22,20 @@ import {
 } from "@jitaspace/hooks";
 import { useGetSolarSystemById } from "@jitaspace/sde-client";
 import {
-  AsteroidBeltName,
-  MoonName,
-  PlanetAvatar,
-  PlanetName,
   Position3DText,
-  SetAutopilotDestinationActionIcon,
-  SolarSystemBreadcrumbs,
   SolarSystemName,
-  SolarSystemSecurityStatusBadge,
   StarAnchor,
-  StarAvatar,
-  StargateAvatar,
-  StargateDestinationAnchor,
-  StargateName,
-  StarName,
   StationAnchor,
-  StationAvatar,
   StationName,
   TypeAvatar,
 } from "@jitaspace/ui";
+
+import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
+import { StargateDestinationAnchor } from "~/components/Anchor";
+import { PlanetAvatar, StarAvatar, StargateAvatar, StationAvatar } from "~/components/Avatar";
+import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
+import { SolarSystemBreadcrumbs } from "~/components/Breadcrumbs";
+import { AsteroidBeltName, MoonName, PlanetName, StargateName, StarName } from "~/components/Text";
 
 import { StatsGrid } from "~/components/UI";
 

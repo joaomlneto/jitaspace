@@ -6,9 +6,10 @@ import { useAllSolarSystemKills } from "@jitaspace/hooks";
 import {
   SolarSystemAnchor,
   SolarSystemName,
-  SolarSystemSecurityStatusBadge,
   TimeAgoText,
 } from "@jitaspace/ui";
+
+import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
 import { ZkillboardRecentSystemKills } from "~/components/Travel/ZkillboardRecentSystemKills";
 

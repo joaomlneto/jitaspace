@@ -5,12 +5,10 @@ import { useParams } from "next/navigation";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import { useRace } from "@jitaspace/hooks";
-import {
-  FactionAvatar,
-  FactionName,
-  RaceAvatar,
-  RaceName,
-} from "@jitaspace/ui";
+import { FactionAvatar, FactionName } from "@jitaspace/ui";
+
+import { RaceAvatar } from "~/components/Avatar";
+import { RaceName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();

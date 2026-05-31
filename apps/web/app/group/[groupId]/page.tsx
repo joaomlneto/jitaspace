@@ -4,7 +4,9 @@ import { cacheLife } from "next/cache";
 import { Container, Group, Loader, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
-import { GroupBreadcrumbs, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
+import { TypeAnchor, TypeAvatar } from "@jitaspace/ui";
+
+import { GroupBreadcrumbs } from "~/components/Breadcrumbs";
 
 interface PageProps {
   name?: string;

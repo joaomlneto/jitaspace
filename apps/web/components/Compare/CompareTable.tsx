@@ -4,11 +4,12 @@ import { Group, JsonInput, Table } from "@mantine/core";
 import { useDogmaAttributes, useTypes } from "@jitaspace/hooks";
 import {
   DogmaAttributeAnchor,
-  DogmaAttributeName,
   TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/ui";
+
+import { DogmaAttributeName } from "~/components/Text";
 
 
 

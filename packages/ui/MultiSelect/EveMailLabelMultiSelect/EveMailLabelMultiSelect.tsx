@@ -3,46 +3,32 @@
 import type { MultiSelectProps } from "@mantine/core";
 import React, { memo } from "react";
 import { MultiSelect } from "@mantine/core";
-
-import { useGetCharactersCharacterIdMailLabels } from "@jitaspace/esi-client";
-import { useAccessToken } from "@jitaspace/hooks";
 import { humanLabelName } from "@jitaspace/utils";
 
+export type MailLabel = {
+  label_id?: number;
+  name?: string;
+  color?: string;
+  unread_count?: number;
+};
+
 type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data"> & {
-  characterId: number;
+  labels?: MailLabel[];
 };
 
 export const EveMailLabelMultiSelect = memo(
-  ({ characterId, ...otherProps }: EmailLabelMultiSelectProps) => {
-    const { accessToken, authHeaders } = useAccessToken({
-      characterId,
-      scopes: ["esi-mail.read_mail.v1"],
-    });
-    const { data: labels } = useGetCharactersCharacterIdMailLabels(
-      characterId ?? 0,
-      { ...authHeaders },
-      {
-        query: {
-          enabled: accessToken !== null,
-        },
-      },
-    );
-
+  ({ labels, ...otherProps }: EmailLabelMultiSelectProps) => {
     return (
       <MultiSelect
         label="Labels"
         clearable
         data={
-          labels?.data.labels?.map((label) => ({
+          labels?.map((label) => ({
             value: `${label.label_id}`,
             label: humanLabelName(label),
-            characterId,
             unreadCount: label.unread_count ?? 0,
           })) ?? []
         }
-        //itemComponent={EveMailLabelMultiSelectItem}
-        //valueComponent={valueComponent}
-        //placeholder="Choose labels"
         {...otherProps}
       />
     );

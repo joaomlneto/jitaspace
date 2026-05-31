@@ -5,11 +5,6 @@ import React, { memo } from "react";
 import Link from "next/link";
 import { Anchor, Breadcrumbs, Text } from "@mantine/core";
 
-import {
-  useGetUniverseGroupsGroupId,
-  useGetUniverseTypesTypeId,
-} from "@jitaspace/esi-client";
-
 import { CategoryAnchor, GroupAnchor, TypeAnchor } from "../Anchor";
 import { CategoryName, GroupName, TypeName } from "../Text";
 
@@ -18,39 +13,33 @@ export type TypeInventoryBreadcrumbsProps = Omit<
   "children"
 > & {
   typeId?: string | number;
+  groupId?: number;
+  groupName?: string;
+  categoryId?: number;
+  categoryName?: string;
   showType?: boolean;
 };
 
 export const TypeInventoryBreadcrumbs = memo(
   ({
     typeId,
+    groupId,
+    groupName,
+    categoryId,
+    categoryName,
     showType = false,
     ...otherProps
   }: TypeInventoryBreadcrumbsProps) => {
-    const { data: type } = useGetUniverseTypesTypeId(
-      typeof typeId === "string" ? parseInt(typeId, 10) : (typeId ?? 0),
-      {},
-      {
-        query: { enabled: typeId !== undefined },
-      },
-    );
-    const { data: group } = useGetUniverseGroupsGroupId(
-      type?.data.group_id ?? 0,
-      {},
-      {
-        query: { enabled: type?.data.group_id !== undefined },
-      },
-    );
     return (
       <Breadcrumbs {...otherProps}>
         <Anchor component={Link} href="/categories">
           <Text>Inventory</Text>
         </Anchor>
-        <CategoryAnchor categoryId={group?.data.category_id}>
-          <CategoryName categoryId={group?.data.category_id} />
+        <CategoryAnchor categoryId={categoryId}>
+          <CategoryName name={categoryName} />
         </CategoryAnchor>
-        <GroupAnchor groupId={type?.data.group_id}>
-          <GroupName groupId={type?.data.group_id} />
+        <GroupAnchor groupId={groupId}>
+          <GroupName name={groupName} />
         </GroupAnchor>
         {showType && (
           <TypeAnchor typeId={typeId}>

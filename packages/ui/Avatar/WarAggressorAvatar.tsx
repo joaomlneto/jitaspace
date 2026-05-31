@@ -1,49 +1,38 @@
 "use client";
 
 import React, { memo } from "react";
-import { type AvatarProps } from "@mantine/core";
-
-import { useGetWarsWarId } from "@jitaspace/esi-client";
+import { Avatar, type AvatarProps } from "@mantine/core";
 
 import { AllianceAvatar } from "./AllianceAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
-import { EveEntityAvatar } from "./EveEntityAvatar";
 
 export type WarAggressorAvatarProps = Omit<AvatarProps, "src"> & {
-  warId?: number;
+  aggressorAllianceId?: number;
+  aggressorCorporationId?: number;
 };
 
 export const WarAggressorAvatar = memo(
-  ({ warId, ...otherProps }: WarAggressorAvatarProps) => {
-    const { data } = useGetWarsWarId(
-      typeof warId === "string" ? parseInt(warId, 10) : (warId ?? 0),
-      {},
-      {
-        query: {
-          enabled: warId !== undefined,
-        },
-      },
-    );
-
-    if (data?.data.aggressor.alliance_id) {
+  ({
+    aggressorAllianceId,
+    aggressorCorporationId,
+    ...otherProps
+  }: WarAggressorAvatarProps) => {
+    if (aggressorAllianceId) {
       return (
-        <AllianceAvatar
-          allianceId={data?.data.aggressor.alliance_id}
-          {...otherProps}
-        />
+        <AllianceAvatar allianceId={aggressorAllianceId} {...otherProps} />
       );
     }
 
-    if (data?.data.aggressor.corporation_id) {
+    if (aggressorCorporationId) {
       return (
         <CorporationAvatar
-          corporationId={data?.data.aggressor.corporation_id}
+          corporationId={aggressorCorporationId}
           {...otherProps}
         />
       );
     }
 
-    return <EveEntityAvatar {...otherProps} />;
+    return <Avatar {...otherProps} />;
   },
 );
 WarAggressorAvatar.displayName = "WarAggressorAvatar";

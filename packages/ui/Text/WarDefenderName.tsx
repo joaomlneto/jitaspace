@@ -3,36 +3,30 @@
 import React, { memo } from "react";
 import { type TextProps } from "@mantine/core";
 
-import { useGetWarsWarId } from "@jitaspace/esi-client";
-
 import { AllianceName } from "./AllianceName";
 import { CorporationName } from "./CorporationName";
 import { EveEntityName } from "./EveEntityName";
 
 export type WarDefenderNameProps = TextProps & {
-  warId?: number;
+  defenderAllianceId?: number;
+  defenderCorporationId?: number;
 };
 
 export const WarDefenderName = memo(
-  ({ warId, ...otherProps }: WarDefenderNameProps) => {
-    const { data } = useGetWarsWarId(
-      warId ?? 0,
-      {},
-      { query: { enabled: warId !== undefined } },
-    );
-
-    if (data?.data.defender.alliance_id)
+  ({
+    defenderAllianceId,
+    defenderCorporationId,
+    ...otherProps
+  }: WarDefenderNameProps) => {
+    if (defenderAllianceId)
       return (
-        <AllianceName
-          allianceId={data.data.defender.alliance_id}
-          {...otherProps}
-        />
+        <AllianceName allianceId={defenderAllianceId} {...otherProps} />
       );
 
-    if (data?.data.defender.corporation_id)
+    if (defenderCorporationId)
       return (
         <CorporationName
-          corporationId={data.data.defender.corporation_id}
+          corporationId={defenderCorporationId}
           {...otherProps}
         />
       );

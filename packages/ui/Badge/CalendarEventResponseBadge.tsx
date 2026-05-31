@@ -4,18 +4,17 @@ import type { BadgeProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Badge, Skeleton } from "@mantine/core";
 
-import type { CharactersCharacterIdCalendarEventIdAttendeesGetEventResponseEnum } from "@jitaspace/esi-client";
-import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
-import { useAccessToken } from "@jitaspace/hooks";
+export type CalendarEventResponse =
+  | "accepted"
+  | "tentative"
+  | "not_responded"
+  | "declined";
 
 export type CalendarEventResponseBadgeProps = BadgeProps & {
-  characterId: number;
-  eventId?: number;
+  response?: CalendarEventResponse;
 };
 
-const eventResponseColor: {
-  [key in CharactersCharacterIdCalendarEventIdAttendeesGetEventResponseEnum]: string;
-} = {
+const eventResponseColor: { [key in CalendarEventResponse]: string } = {
   accepted: "green",
   tentative: "yellow",
   not_responded: "gray",
@@ -23,33 +22,8 @@ const eventResponseColor: {
 };
 
 export const CalendarEventResponseBadge = memo(
-  ({
-    characterId,
-    eventId,
-    ...otherProps
-  }: CalendarEventResponseBadgeProps) => {
-    const { accessToken, authHeaders } = useAccessToken({
-      characterId,
-      scopes: ["esi-calendar.read_calendar_events.v1"],
-    });
-
-    const { data: event, isLoading } =
-      useGetCharactersCharacterIdCalendarEventId(
-        characterId ?? 0,
-        eventId ?? 0,
-        { ...authHeaders },
-        {
-          query: {
-            enabled: accessToken !== null && !!eventId,
-          },
-        },
-      );
-
-    const response = event?.data.response as
-      | CharactersCharacterIdCalendarEventIdAttendeesGetEventResponseEnum
-      | undefined;
-
-    if (!response || isLoading) {
+  ({ response, ...otherProps }: CalendarEventResponseBadgeProps) => {
+    if (!response) {
       return (
         <Skeleton>
           <Badge variant="light" {...otherProps}>

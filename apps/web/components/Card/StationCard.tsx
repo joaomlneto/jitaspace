@@ -3,12 +3,11 @@ import { Card, Group  } from "@mantine/core";
 import type {CardProps} from "@mantine/core";
 
 import { useStation } from "@jitaspace/hooks";
-import {
-  SolarSystemBreadcrumbs,
-  SolarSystemSecurityStatusBadge,
-  StationAvatar,
-  StationName,
-} from "@jitaspace/ui";
+import { StationName } from "@jitaspace/ui";
+
+import { StationAvatar } from "~/components/Avatar";
+import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
+import { SolarSystemBreadcrumbs } from "~/components/Breadcrumbs";
 
 import classes from "./StationCard.module.css";
 

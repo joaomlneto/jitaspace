@@ -3,29 +3,17 @@
 import React, { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetUniverseStationsStationId } from "@jitaspace/esi-client";
-
 import { TypeAvatar } from "./TypeAvatar";
 
 export type StationAvatarProps = Omit<AvatarProps, "src"> & {
-  stationId?: string | number | null;
+  typeId?: number;
 };
 
 export const StationAvatar = memo(
-  ({ stationId, ...otherProps }: StationAvatarProps) => {
-    const { data } = useGetUniverseStationsStationId(
-      typeof stationId === "string" ? parseInt(stationId, 10) : (stationId ?? 1),
-      {},
-      {
-        query: {
-          enabled: !!stationId,
-        },
-      },
-    );
-
+  ({ typeId, ...otherProps }: StationAvatarProps) => {
     return (
       <TypeAvatar
-        typeId={data?.data.type_id}
+        typeId={typeId}
         variation="render"
         size={otherProps.size}
         {...otherProps}

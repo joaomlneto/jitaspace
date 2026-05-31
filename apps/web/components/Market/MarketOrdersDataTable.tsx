@@ -12,9 +12,10 @@ import type { RegionalMarketOrder } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,
-  SolarSystemSecurityStatusBadge,
   TimeAgoText,
 } from "@jitaspace/ui";
+
+import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
 
 

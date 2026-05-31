@@ -4,14 +4,12 @@ import type { BadgeProps } from "@mantine/core";
 import { memo } from "react";
 import { Badge, Skeleton, useMantineTheme } from "@mantine/core";
 
-import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
-
 export type SolarSystemSecurityStatusBadgeProps = BadgeProps & {
-  solarSystemId?: string | number;
+  securityStatus?: number;
 };
 
 export const SolarSystemSecurityStatusBadge = memo(
-  ({ solarSystemId, ...otherProps }: SolarSystemSecurityStatusBadgeProps) => {
+  ({ securityStatus, ...otherProps }: SolarSystemSecurityStatusBadgeProps) => {
     const theme = useMantineTheme();
     const classes = {
       "1.0": {
@@ -56,15 +54,7 @@ export const SolarSystemSecurityStatusBadge = memo(
       },
     };
 
-    const { data: solarSystemData } = useGetUniverseSystemsSystemId(
-      typeof solarSystemId === "string"
-        ? parseInt(solarSystemId, 10)
-        : (solarSystemId ?? 0),
-      {},
-      { query: { enabled: !!solarSystemId } },
-    );
-
-    if (!solarSystemData) {
+    if (securityStatus === undefined) {
       return (
         <Skeleton>
           <Badge variant="filled" {...otherProps}>
@@ -75,7 +65,7 @@ export const SolarSystemSecurityStatusBadge = memo(
     }
 
     const roundedSecStatus = (
-      Math.round(Math.max(solarSystemData.data.security_status, 0) * 10) / 10
+      Math.round(Math.max(securityStatus, 0) * 10) / 10
     ).toFixed(1) as keyof typeof classes;
 
     return (
