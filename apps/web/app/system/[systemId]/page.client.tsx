@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -60,6 +61,7 @@ import {
 } from "~/components/Avatar";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { SolarSystemBreadcrumbs } from "~/components/Breadcrumbs";
+import { SolarSystem3D } from "~/components/SolarSystem3D";
 import { PlanetName, StargateName, StarName } from "~/components/Text";
 import { StatsGrid } from "~/components/UI";
 
@@ -97,6 +99,7 @@ export default function Page() {
     solarSystem?.data.constellation_id ?? 0,
   );
   const { data: solarSystemCostIndicesData } = useSolarSystemCostIndices();
+  const [show3D, setShow3D] = useState(false);
 
   if (!Number.isFinite(systemId)) {
     return null;
@@ -238,6 +241,34 @@ export default function Page() {
             </Button>
           ))}
         </Group>
+
+        {/* 3D system map (loaded on demand — pulls in three.js) */}
+        <SectionCard title="System Map">
+          {show3D ? (
+            <Stack gap="sm">
+              <SolarSystem3D solarSystemId={systemId} />
+              <Group justify="flex-end">
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  onClick={() => setShow3D(false)}
+                >
+                  Hide 3D map
+                </Button>
+              </Group>
+            </Stack>
+          ) : (
+            <Group justify="space-between" wrap="nowrap">
+              <Text size="sm" c="dimmed">
+                Explore the star, planets, moons, stations and stargates in an
+                interactive 3D view.
+              </Text>
+              <Button size="xs" onClick={() => setShow3D(true)}>
+                Show 3D map
+              </Button>
+            </Group>
+          )}
+        </SectionCard>
 
         {/* Stargates */}
         {stargates.length > 0 && (

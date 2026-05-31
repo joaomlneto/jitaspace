@@ -1,0 +1,65 @@
+{
+  "name": "@jitaspace/solar-system-map",
+  "description": "Interactive 3D solar system map for EVE Online, built with React Three Fiber",
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joaomlneto/jitaspace.git",
+    "directory": "packages/solar-system-map"
+  },
+  "publishConfig": {
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup index.ts --format cjs,esm --dts --external react --external react-dom",
+    "dev": "tsup index.ts --format cjs,esm --dts --external react --external react-dom --watch",
+    "clean": "rm -rf .turbo node_modules dist",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
+    "lint:fix": "pnpm lint --fix",
+    "prepublishOnly": "pnpm build",
+    "test": "jest --config ./jest.config.ts",
+    "test:watch": "jest --config ./jest.config.ts --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
+    "three": "^0.184.0"
+  },
+  "peerDependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "@swc/core": "^1.15.40",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.12.4",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.184.1",
+    "eslint": "^9.39.4",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "prettier": "^3.8.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  },
+  "prettier": "@jitaspace/prettier-config"
+}
