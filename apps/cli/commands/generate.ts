@@ -1,6 +1,6 @@
-import { createCommand } from "@commander-js/extra-typings";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { createCommand } from "@commander-js/extra-typings";
 
 import { collections } from "../config/collections.js";
 import { getWorkingDirectory, TITLE_WIDTH } from "../lib/cli.js";
@@ -103,7 +103,7 @@ export default createCommand("generate")
                       type: "string",
                       format: "date-time",
                       description:
-                        "The release date of the SDE (Unix timestamp) by CCP",
+                        "The release date of the SDE (Unix timestamp) by Fenris Creations",
                     },
                     schemaChangeLog: {
                       type: "string",
@@ -126,14 +126,18 @@ export default createCommand("generate")
 
     // Sort the paths alphabetically
     const sortedPaths = {};
-    const sortedKeys = Object.keys(schema.paths).sort((a, b) => a.localeCompare(b));
+    const sortedKeys = Object.keys(schema.paths).sort((a, b) =>
+      a.localeCompare(b),
+    );
     // @ts-expect-error
     sortedKeys.forEach((key) => (sortedPaths[key] = schema.paths[key]));
     schema.paths = sortedPaths;
 
     // Sort the schemas alphabetically
     const sortedSchemas = {};
-    const sortedSchemaKeys = Object.keys(schema.components.schemas).sort((a, b) => a.localeCompare(b));
+    const sortedSchemaKeys = Object.keys(schema.components.schemas).sort(
+      (a, b) => a.localeCompare(b),
+    );
     sortedSchemaKeys.forEach(
       // @ts-expect-error
       (key) => (sortedSchemas[key] = schema.components.schemas[key]),
@@ -141,9 +145,11 @@ export default createCommand("generate")
     schema.components.schemas = sortedSchemas;
 
     // Sort the tags alphabetically, removing duplicates
-    schema.tags = [...new Set(schema.tags.map((tag) => tag.name).sort((a, b) => a.localeCompare(b)))].map(
-      (name) => ({ name }),
-    );
+    schema.tags = [
+      ...new Set(
+        schema.tags.map((tag) => tag.name).sort((a, b) => a.localeCompare(b)),
+      ),
+    ].map((name) => ({ name }));
 
     // write the schema file
     await fs.promises.writeFile(

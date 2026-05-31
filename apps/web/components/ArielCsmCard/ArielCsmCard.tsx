@@ -52,8 +52,8 @@ export const ArielCsmCard = () => {
               social engagement in EVE.
             </Blockquote>
             <Text>
-              The ESI API, provided by CCP, is the source of all the data for
-              the tools we rely on, such as{" "}
+              The ESI API, provided by Fenris Creations, is the source of all
+              the data for the tools we rely on, such as{" "}
               <Anchor href="https://zkillboard.com/" target="_blank">
                 zKillboard
               </Anchor>
