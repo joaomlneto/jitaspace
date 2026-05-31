@@ -32,7 +32,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
   const { colorScheme } = useMantineColorScheme();
   const router = useRouter();
   const character = useSelectedCharacter();
-  const { characters, selectCharacter, logout } = useAuthStore();
+  const { characters, selectCharacter, removeCharacter } = useAuthStore();
 
   const sortedCharacters = useMemo(
     () =>
@@ -123,8 +123,13 @@ export default function UserButton({ ...others }: UserButtonProps) {
         <Menu.Item
           leftSection={<TerminateIcon width={20} />}
           onClick={() => {
-            logout();
-            router.push("/");
+            removeCharacter(characterId);
+            // If that was the last character we're fully logged out, so go
+            // home. Otherwise removeCharacter() selects one of the remaining
+            // characters and we stay on the current page.
+            if (sortedCharacters.length <= 1) {
+              router.push("/");
+            }
           }}
         >
           Logout
