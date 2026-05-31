@@ -28,7 +28,6 @@ import { MainSpotlight } from "~/components/Spotlight";
 import { env } from "~/env";
 import { MainLayout } from "~/layouts";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
-import { MySessionProvider } from "~/lib/MySessionProvider";
 import { DEFAULT_ESI_ACCEPT_LANGUAGE } from "~/lib/preferences";
 import { AppMantineProvider } from "./mantine-provider";
 
@@ -111,27 +110,24 @@ export default function RootLayout({
             esiUserAgent={ESI_USER_AGENT}
             esiAcceptLanguage={ESI_ACCEPT_LANGUAGE}
           >
-            <MySessionProvider>
-              <EsiClientSSOAccessTokenInjector>
-                <>
-                  <Notifications />
-                  <Suspense fallback={null}>
-                    <RouterTransition />
-                  </Suspense>
-                  <MainSpotlight />
-                  <ModalsProvider
-                    modals={contextModals}
-                    modalProps={{ centered: true }}
-                  >
-                    <MainLayout>{children}</MainLayout>
-                  </ModalsProvider>
-                </>
-              </EsiClientSSOAccessTokenInjector>
-            </MySessionProvider>
+            <EsiClientSSOAccessTokenInjector>
+              <>
+                <Notifications />
+                <Suspense fallback={null}>
+                  <RouterTransition />
+                </Suspense>
+                <MainSpotlight />
+                <ModalsProvider
+                  modals={contextModals}
+                  modalProps={{ centered: true }}
+                >
+                  <MainLayout>{children}</MainLayout>
+                </ModalsProvider>
+              </>
+            </EsiClientSSOAccessTokenInjector>
           </MyQueryClientProvider>
         </AppMantineProvider>
       </body>
-
     </html>
   );
 }

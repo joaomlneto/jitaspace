@@ -4,16 +4,18 @@ import { add } from "date-fns";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import type {
+  EveSsoAccessTokenPayload} from "@jitaspace/auth-utils";
 import {
-  EveSsoAccessTokenPayload,
   getEveSsoAccessTokenPayload,
 } from "@jitaspace/auth-utils";
+import type {
+  CharactersCharacterIdRolesGetRolesEnum} from "@jitaspace/esi-client";
 import {
-  CharactersCharacterIdRolesGetRolesEnum,
   postCharactersAffiliation,
 } from "@jitaspace/esi-client";
 
-export type CharacterSsoSession = {
+export interface CharacterSsoSession {
   accessToken: string;
   accessTokenPayload: EveSsoAccessTokenPayload;
   accessTokenExpirationDate: string;
@@ -23,16 +25,20 @@ export type CharacterSsoSession = {
   allianceId?: number;
   corporationRoles: CharactersCharacterIdRolesGetRolesEnum[];
   corporationRolesExpireOn?: number;
-};
+}
 
 // TODO: Update corporation roles hourly
-export type SsoAuthState = {
+export interface SsoAuthState {
   characters: Record<number, CharacterSsoSession>;
   selectedCharacter: number | null;
-  addCharacter: (params: { accessToken: string; refreshToken: string }) => void;
+  addCharacter: (params: {
+    accessToken: string;
+    refreshToken: string;
+  }) => Promise<void>;
   removeCharacter: (characterId: number) => void;
   selectCharacter: (characterId: number) => void;
-};
+  logout: () => void;
+}
 
 // TODO: Sync local storage: https://github.com/pmndrs/zustand/discussions/1614
 
@@ -108,6 +114,12 @@ export const useAuthStore = create(
             selectedCharacter: characterId,
           };
         }),
+      logout: () =>
+        set((state) => ({
+          ...state,
+          characters: {},
+          selectedCharacter: null,
+        })),
     }),
     {
       name: "jitaspace-auth",

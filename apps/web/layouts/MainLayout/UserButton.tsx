@@ -4,6 +4,7 @@ import type { UnstyledButtonProps } from "@mantine/core";
 import type React from "react";
 import { useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Group,
   Menu,
@@ -13,7 +14,6 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
-import { signOut } from "next-auth/react";
 
 import {
   RecruitmentIcon,
@@ -30,8 +30,9 @@ interface UserButtonProps extends UnstyledButtonProps {
 export default function UserButton({ ...others }: UserButtonProps) {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
+  const router = useRouter();
   const character = useSelectedCharacter();
-  const { characters, selectCharacter } = useAuthStore();
+  const { characters, selectCharacter, logout } = useAuthStore();
 
   const sortedCharacters = useMemo(
     () =>
@@ -122,7 +123,8 @@ export default function UserButton({ ...others }: UserButtonProps) {
         <Menu.Item
           leftSection={<TerminateIcon width={20} />}
           onClick={() => {
-            void signOut({ callbackUrl: "/", redirect: true });
+            logout();
+            router.push("/");
           }}
         >
           Logout
