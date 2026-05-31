@@ -396,11 +396,11 @@ function StatCard({
   label,
   value,
   loading,
-}: {
+}: Readonly<{
   label: string;
   value: ReactNode;
   loading?: boolean;
-}) {
+}>) {
   return (
     <Paper p="xs" radius="md" withBorder>
       <Text
@@ -425,11 +425,11 @@ function SectionCard({
   title,
   count,
   children,
-}: {
+}: Readonly<{
   title: string;
   count?: number;
   children: ReactNode;
-}) {
+}>) {
   return (
     <Paper p="md" radius="md" withBorder>
       <Group gap="xs" mb="sm">
@@ -445,7 +445,10 @@ function SectionCard({
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: ReactNode }) {
+function DetailRow({
+  label,
+  value,
+}: Readonly<{ label: string; value: ReactNode }>) {
   return (
     <Group justify="space-between" wrap="nowrap">
       <Text size="sm" c="dimmed">
@@ -459,10 +462,10 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
 function OwnerLine({
   label,
   children,
-}: {
+}: Readonly<{
   label: string;
   children: ReactNode;
-}) {
+}>) {
   return (
     <Group gap={6} wrap="nowrap">
       <Text size="xs" c="dimmed" tt="uppercase">
@@ -473,7 +476,9 @@ function OwnerLine({
   );
 }
 
-function SovereigntyOwner({ solarSystemId }: { solarSystemId: number }) {
+function SovereigntyOwner({
+  solarSystemId,
+}: Readonly<{ solarSystemId: number }>) {
   const sovereignty = useSolarSystemSovereignty(solarSystemId);
 
   if (sovereignty?.alliance_id) {
