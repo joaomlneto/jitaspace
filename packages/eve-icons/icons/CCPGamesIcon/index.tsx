@@ -1,7 +1,7 @@
 import { createEveIconComponent } from "../createIconComponent";
 import RheaImage from "./rhea.png";
 
-export const FenrisCreationsIcon = createEveIconComponent({
+export const CCPGamesIcon = createEveIconComponent({
   name: "Fenris Creations Icon",
   variants: {
     castor: RheaImage,
