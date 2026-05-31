@@ -1,7 +1,7 @@
 {
   "name": "@jitaspace/ui",
   "description": "UI components for JitaSpace",
-  "version": "0.1.3",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "main": "./index.ts",
@@ -15,7 +15,6 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/eve-icons": "workspace:*",
     "@jitaspace/hooks": "workspace:*",
     "@jitaspace/sde-client": "workspace:*",

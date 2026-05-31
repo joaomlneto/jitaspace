@@ -25,9 +25,9 @@ import { openContextModal } from "@mantine/modals";
 import { useShallow } from "zustand/shallow";
 
 import { useAuthenticatedCharacterIds, useAuthStore } from "@jitaspace/hooks";
-import { AllianceCard, CharacterAvatar, CorporationCard } from "@jitaspace/ui";
+import { AllianceCard, CharacterAvatar } from "@jitaspace/ui";
 
-import { AuthenticatedCharacterCard } from "~/components/Card";
+import { AuthenticatedCharacterCard, CorporationCard } from "~/components/Card";
 import { DevelopmentModeAlert } from "~/components/debug";
 import { AllianceMenu, CorporationMenu } from "~/components/Menu";
 import { characterApps, universeApps } from "~/config/apps";

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ContextModalProps } from "@mantine/modals";
 import { useState } from "react";
 import {
   Button,
@@ -12,10 +13,8 @@ import {
   Text,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import type {ContextModalProps} from "@mantine/modals";
-import { signIn } from "next-auth/react";
 
-import type {ESIScope} from "@jitaspace/esi-metadata";
+import type { ESIScope } from "@jitaspace/esi-metadata";
 import { LoginWithEveOnlineButton } from "@jitaspace/ui";
 
 import {
@@ -24,7 +23,7 @@ import {
   ScopesTable,
 } from "~/components/ScopeGuard";
 import { characterApps, extraJitaFeatures } from "~/config/apps";
-
+import { loginWithEveOnline } from "~/lib/eveOnlineLogin";
 
 const allAppScopes = [
   ...Object.values(characterApps).flatMap((app) =>
@@ -67,13 +66,7 @@ export function LoginModal({
             <LoginWithEveOnlineButton
               size="small"
               onClick={() => {
-                void signIn(
-                  "eveonline",
-                  {},
-                  {
-                    scope: [...selectedScopes].join(" "),
-                  },
-                );
+                loginWithEveOnline([...selectedScopes]);
               }}
             />
           </Center>
@@ -129,13 +122,7 @@ export function LoginModal({
             <LoginWithEveOnlineButton
               size="small"
               onClick={() => {
-                void signIn(
-                  "eveonline",
-                  {},
-                  {
-                    scope: [...selectedScopes].join(" "),
-                  },
-                );
+                loginWithEveOnline([...selectedScopes]);
               }}
             />
           </Center>

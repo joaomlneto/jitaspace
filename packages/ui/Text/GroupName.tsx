@@ -4,19 +4,12 @@ import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
-import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
-
 export type GroupNameProps = TextProps & {
-  groupId?: number;
+  name?: string;
 };
 
-export const GroupName = memo(({ groupId, ...otherProps }: GroupNameProps) => {
-  const { data, isLoading } = useGetUniverseGroupsGroupId(
-    groupId ?? 1,
-    {},
-    { query: { enabled: !!groupId } },
-  );
-  if (isLoading) {
+export const GroupName = memo(({ name, ...otherProps }: GroupNameProps) => {
+  if (!name) {
     const placeholder = "Unknown Group";
     const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
     return (
@@ -30,6 +23,6 @@ export const GroupName = memo(({ groupId, ...otherProps }: GroupNameProps) => {
       </Text>
     );
   }
-  return <Text {...otherProps}>{data?.data.name}</Text>;
+  return <Text {...otherProps}>{name}</Text>;
 });
 GroupName.displayName = "GroupName";

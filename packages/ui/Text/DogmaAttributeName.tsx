@@ -4,20 +4,13 @@ import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
-import { useGetDogmaAttributesAttributeId } from "@jitaspace/esi-client";
-
 export type DogmaAttributeNameProps = TextProps & {
-  attributeId?: number;
+  name?: string;
 };
 
 export const DogmaAttributeName = memo(
-  ({ attributeId, ...otherProps }: DogmaAttributeNameProps) => {
-    const { data, isLoading } = useGetDogmaAttributesAttributeId(
-      attributeId ?? 1,
-      {},
-      { query: { enabled: !!attributeId } },
-    );
-    if (isLoading) {
+  ({ name, ...otherProps }: DogmaAttributeNameProps) => {
+    if (!name) {
       const placeholder = "Unknown attribute";
       const skeletonWidth = Math.min(Math.max(placeholder.length, 4), 24);
       return (
@@ -31,13 +24,7 @@ export const DogmaAttributeName = memo(
         </Text>
       );
     }
-    return (
-      <Text {...otherProps}>
-        {data?.data.display_name ||
-          data?.data.name ||
-          `Unnamed Attribute ${attributeId}`}
-      </Text>
-    );
+    return <Text {...otherProps}>{name}</Text>;
   },
 );
 DogmaAttributeName.displayName = "DogmaAttributeName";

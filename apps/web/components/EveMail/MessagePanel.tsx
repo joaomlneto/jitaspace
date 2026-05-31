@@ -13,10 +13,10 @@ import {
   EveMailSenderAvatar,
   EveMailSenderName,
   FormattedDateText,
-  LabelName,
-  MailingListName,
-  MailLabelColorSwatch,
 } from "@jitaspace/ui";
+
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
+import { LabelName, MailingListName } from "~/components/Text";
 
 import type { MailboxTableProps } from "~/components/EveMail/MailboxTable";
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";

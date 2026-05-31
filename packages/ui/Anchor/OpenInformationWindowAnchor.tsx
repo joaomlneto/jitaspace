@@ -4,52 +4,25 @@ import type { AnchorProps } from "@mantine/core";
 import { memo } from "react";
 import { type LinkProps } from "next/link";
 import { Anchor } from "@mantine/core";
-import { showNotification } from "@mantine/notifications";
-
-import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
-import { useAccessToken } from "@jitaspace/hooks";
 
 export type OpenInformationWindowAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
-    characterId: number;
-    entityId?: string | number;
+    onOpen?: () => void;
+    disabled?: boolean;
   };
 
 export const OpenInformationWindowAnchor = memo(
   ({
-    characterId,
-    entityId,
+    onOpen,
+    disabled,
     children,
     ...props
   }: OpenInformationWindowAnchorProps) => {
-    const { accessToken, authHeaders } = useAccessToken({
-      characterId,
-      scopes: ["esi-ui.open_window.v1"],
-    });
-
-    const canOpenWindow = !!entityId && accessToken !== null;
-
     return (
       <Anchor
         {...props}
-        onClick={() => {
-          if (!canOpenWindow) {
-            showNotification({ message: "Insufficient permissions" });
-          } else {
-            void postUiOpenwindowInformation(
-              {
-                target_id:
-                  typeof entityId === "string" ? parseInt(entityId, 10) : entityId,
-              },
-              authHeaders,
-            ).then(() => {
-              showNotification({
-                message: "Information window opened in EVE client.",
-              });
-            });
-          }
-        }}
+        onClick={disabled ? undefined : onOpen}
       >
         {children}
       </Anchor>

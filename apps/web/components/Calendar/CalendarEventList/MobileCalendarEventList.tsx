@@ -4,15 +4,14 @@ import { openContextModal } from "@mantine/modals";
 
 import type { CalendarEvent } from "@jitaspace/hooks";
 import { WarningIcon } from "@jitaspace/eve-icons";
-import {
-  CalendarEventAttendeesAvatarGroup,
-  CalendarEventHumanDurationText,
-  CalendarEventOwnerAnchor,
-  CalendarEventOwnerAvatar,
-  CalendarEventOwnerName,
-  CalendarEventResponseBadge,
-  FormattedDateText,
-} from "@jitaspace/ui";
+import { FormattedDateText } from "@jitaspace/ui";
+
+import { CalendarEventOwnerAnchor } from "~/components/Anchor";
+import { CalendarEventOwnerAvatar } from "~/components/Avatar";
+import { CalendarEventAttendeesAvatarGroup } from "~/components/AvatarGroup";
+import { CalendarEventResponseBadge } from "~/components/Badge";
+import { CalendarEventHumanDurationText } from "~/components/DurationText";
+import { CalendarEventOwnerName } from "~/components/Text";
 
 type EventListProps = TableProps & {
   characterId: number;

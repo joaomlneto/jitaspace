@@ -12,9 +12,6 @@ import { sizes } from "./Avatar.styles";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
 import { FactionAvatar } from "./FactionAvatar";
-import { SolarSystemStarAvatar } from "./SolarSystemStarAvatar";
-import { StationAvatar } from "./StationAvatar";
-import { StructureAvatar } from "./StructureAvatar";
 import { TypeAvatar } from "./TypeAvatar";
 
 
@@ -76,18 +73,12 @@ export const EveEntityAvatar = memo(
       );
     }
 
-    if (category === "solar_system") {
-      return <SolarSystemStarAvatar solarSystemId={entityId} {...otherProps} />;
-    }
-
-    if (category === "station") {
-      return <StationAvatar stationId={entityId} {...otherProps} />;
-    }
-
-    if (category === "structure") {
-      return <StructureAvatar structureId={entityId} {...otherProps} />;
-    }
-
+    // solar_system / station / structure are type-backed entities: their avatar
+    // is the underlying type's render, which requires resolving id -> type_id
+    // (a fetch, plus an authenticated character for private structures). This
+    // generic, fetch-light dispatcher can't do that — callers needing those
+    // avatars use the smart Avatar wrappers in apps/web. Here they fall through
+    // to a bare Avatar below.
     if (category === "faction") {
       return <FactionAvatar factionId={entityId} {...otherProps} />;
     }

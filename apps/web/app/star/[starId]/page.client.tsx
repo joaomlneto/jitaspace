@@ -7,11 +7,12 @@ import { useStar } from "@jitaspace/hooks";
 import {
   SolarSystemAnchor,
   SolarSystemName,
-  SolarSystemSecurityStatusBadge,
-  StarAvatar,
   TypeAnchor,
   TypeName,
 } from "@jitaspace/ui";
+
+import { StarAvatar } from "~/components/Avatar";
+import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
 export default function Page() {
   const params = useParams();

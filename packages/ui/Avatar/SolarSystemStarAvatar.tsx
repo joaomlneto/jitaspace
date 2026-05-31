@@ -3,31 +3,18 @@
 import { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useGetUniverseSystemsSystemId } from "@jitaspace/esi-client";
-
-import { StarAvatar } from "./StarAvatar";
+import { TypeAvatar } from "./TypeAvatar";
 
 export type SolarSystemAvatarProps = Omit<AvatarProps, "src"> & {
-  solarSystemId?: string | number | null;
+  typeId?: number;
 };
 
 export const SolarSystemStarAvatar = memo(
-  ({ solarSystemId, ...otherProps }: SolarSystemAvatarProps) => {
-    const { data } = useGetUniverseSystemsSystemId(
-      typeof solarSystemId === "string"
-        ? parseInt(solarSystemId, 10)
-        : (solarSystemId ?? 1),
-      {},
-      {
-        query: {
-          enabled: !!solarSystemId,
-        },
-      },
-    );
-
+  ({ typeId, ...otherProps }: SolarSystemAvatarProps) => {
     return (
-      <StarAvatar
-        starId={data?.data.star_id}
+      <TypeAvatar
+        typeId={typeId}
+        variation="render"
         size={otherProps.size}
         {...otherProps}
       />
