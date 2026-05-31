@@ -1,19 +1,25 @@
+import { eventType, staticSchema } from "inngest";
+
 import { client } from "../client";
 
 export type BootstrapDatabaseEventPayload = {
   data: {};
 };
 
+export const bootstrapDatabaseEvent = eventType("bootstrap-database", {
+  schema: staticSchema<BootstrapDatabaseEventPayload["data"]>(),
+});
+
 export const bootstrapDatabase = client.createFunction(
   {
     id: "bootstrap-database",
+    triggers: [bootstrapDatabaseEvent],
     name: "Bootstrap Database",
     concurrency: {
       limit: 1,
     },
     retries: 0,
   },
-  { event: "bootstrap-database" },
   async ({ step, event, logger }) => {
     await step.sendEvent("Scrape Agent Types", {
       name: "scrape/hoboleaks/agent-types",

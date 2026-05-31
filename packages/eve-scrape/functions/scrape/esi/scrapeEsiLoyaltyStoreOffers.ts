@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -17,16 +18,23 @@ export type ScrapeLoyaltyStoreOffersEventPayload = {
   };
 };
 
+export const scrapeEsiLoyaltyStoreOffersEvent = eventType(
+  "scrape/esi/loyalty-store-offers",
+  {
+    schema: staticSchema<ScrapeLoyaltyStoreOffersEventPayload["data"]>(),
+  },
+);
+
 export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
   {
     id: "scrape-esi-loyalty-store-offers",
+    triggers: [scrapeEsiLoyaltyStoreOffersEvent],
     name: "Scrape LoyaltyStoreOffers",
     concurrency: {
       limit: 1,
     },
     retries: 5,
   },
-  { event: "scrape/esi/loyalty-store-offers" },
   async ({ event, step }) => {
     let corporationIds: number[] =
       event.data.corporationIds ??
@@ -72,7 +80,9 @@ export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: async () =>
         thisBatchLoyaltyStoreOffers.map((offer) => ({
@@ -131,7 +141,9 @@ export const scrapeEsiLoyaltyStoreOffers = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: async () =>
         requiredItems.map((item) => ({

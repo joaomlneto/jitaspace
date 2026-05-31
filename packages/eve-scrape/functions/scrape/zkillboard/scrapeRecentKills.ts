@@ -1,3 +1,5 @@
+import { eventType, staticSchema } from "inngest";
+
 import type { Prisma } from "@jitaspace/db";
 import { postUpdateCard } from "@jitaspace/chat";
 import { prisma } from "@jitaspace/db";
@@ -194,9 +196,17 @@ const formatLag = (latest: bigint | null, cursor: bigint | null) => {
 
 export type ScrapeRecentKillsEventPayload = {};
 
+export const scrapeZkillboardRecentKillsEvent = eventType(
+  "scrape/zkillboard/recent-kills",
+  {
+    schema: staticSchema<ScrapeRecentKillsEventPayload>(),
+  },
+);
+
 export const scrapeZkillboardRecentKills = client.createFunction(
   {
     id: "scrape-zkillboard-recent-kills",
+    triggers: [scrapeZkillboardRecentKillsEvent],
     name: "Scrape Killmails from R2Z2",
     singleton: {
       key: "scrape-zkillboard-recent-kills",
@@ -204,10 +214,6 @@ export const scrapeZkillboardRecentKills = client.createFunction(
     },
     retries: 0,
     description: "Poll zKillboard's R2Z2 sequence feed and ingest killmails.",
-  },
-  {
-    /*cron: "TZ=UTC * * * * *"*/
-    event: "scrape/zkillboard/recent-kills",
   },
   async ({ step, logger }) => {
     let latestSequence: bigint | null = null;

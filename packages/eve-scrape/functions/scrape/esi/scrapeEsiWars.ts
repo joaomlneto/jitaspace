@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -36,9 +37,14 @@ export type ScrapeWarsEventPayload = {
 
 type StatsKey = "wars";
 
+export const scrapeEsiWarsEvent = eventType("scrape/esi/wars", {
+  schema: staticSchema<ScrapeWarsEventPayload["data"]>(),
+});
+
 export const scrapeEsiWars = client.createFunction(
   {
     id: "scrape-esi-wars",
+    triggers: [scrapeEsiWarsEvent],
     name: "Scrape Wars",
     singleton: {
       key: "scrape-esi-wars",
@@ -47,7 +53,6 @@ export const scrapeEsiWars = client.createFunction(
     retries: 0,
     description: "Fetches wars from ESI",
   },
-  { event: "scrape/esi/wars" },
   async ({ step, event, logger }) => {
     const batchSize = event.data.batchSize ?? 100;
     const fetchAllPages = event.data.fetchAllPages ?? false;

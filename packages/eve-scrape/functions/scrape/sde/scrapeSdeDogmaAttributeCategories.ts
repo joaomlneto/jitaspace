@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -15,15 +16,22 @@ export type ScrapeDogmaAttributeCategoriesEventPayload = {
   };
 };
 
+export const scrapeSdeDogmaAttributeCategoriesEvent = eventType(
+  "scrape/sde/dogma-attribute-categories",
+  {
+    schema: staticSchema<ScrapeDogmaAttributeCategoriesEventPayload["data"]>(),
+  },
+);
+
 export const scrapeSdeDogmaAttributeCategories = client.createFunction(
   {
     id: "scrape-sde-dogma-attribute-categories",
+    triggers: [scrapeSdeDogmaAttributeCategoriesEvent],
     name: "Scrape Dogma Attribute Categories",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/sde/dogma-attribute-categories" },
   async ({ step, event, logger }) => {
     const stepStartTime = performance.now();
 

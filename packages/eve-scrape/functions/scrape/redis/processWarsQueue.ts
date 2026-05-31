@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 /**
  * Thanks to Karbowiak for the original code that this is based on!
  */
@@ -17,16 +18,20 @@ export type ProcessRedisWarsQueueEventPayload = {
   };
 };
 
+export const processRedisWarsEvent = eventType("process/redis/wars", {
+  schema: staticSchema<ProcessRedisWarsQueueEventPayload["data"]>(),
+});
+
 export const processRedisWars = client.createFunction(
   {
     id: "process-redis-wars",
+    triggers: [processRedisWarsEvent],
     name: "Process Wars from Redis Queue",
     concurrency: {
       limit: 5,
     },
     retries: 3,
   },
-  { event: "process/redis/wars" },
   async ({ event, step, logger }) => {
     const recursive = event.data.recursive ?? false;
     const limit = pLimit(1);

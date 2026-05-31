@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -9,20 +10,26 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeConstellationEventPayload = {
   data: {};
 };
 
+export const scrapeEsiConstellationsEvent = eventType(
+  "scrape/esi/constellations",
+  {
+    schema: staticSchema<ScrapeConstellationEventPayload["data"]>(),
+  },
+);
+
 export const scrapeEsiConstellations = client.createFunction(
   {
     id: "scrape-esi-constellations",
+    triggers: [scrapeEsiConstellationsEvent],
     name: "Scrape Constellations",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/esi/constellations" },
   async ({ step }) => {
     const stepStartTime = performance.now();
 
@@ -45,7 +52,9 @@ export const scrapeEsiConstellations = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: async () =>
         Promise.all(

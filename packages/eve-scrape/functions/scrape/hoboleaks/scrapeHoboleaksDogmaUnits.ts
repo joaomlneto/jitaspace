@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -5,20 +6,26 @@ import { prisma } from "@jitaspace/db";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeDogmaUnitsEventPayload = {
   data: {};
 };
 
+export const scrapeHoboleaksDogmaUnitsEvent = eventType(
+  "scrape/hoboleaks/dogma-units",
+  {
+    schema: staticSchema<ScrapeDogmaUnitsEventPayload["data"]>(),
+  },
+);
+
 export const scrapeHoboleaksDogmaUnits = client.createFunction(
   {
     id: "scrape-hoboleaks-dogma-units",
+    triggers: [scrapeHoboleaksDogmaUnitsEvent],
     name: "Scrape Dogma Units",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/hoboleaks/dogma-units" },
   async ({ step }) => {
     const stepStartTime = performance.now();
 

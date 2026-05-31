@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import {
@@ -17,16 +18,20 @@ export type ScrapeAlliancesEventPayload = {
 
 type StatsKey = "alliances";
 
+export const scrapeEsiAlliancesEvent = eventType("scrape/esi/alliances", {
+  schema: staticSchema<ScrapeAlliancesEventPayload["data"]>(),
+});
+
 export const scrapeEsiAlliances = client.createFunction(
   {
     id: "scrape-esi-alliances",
+    triggers: [scrapeEsiAlliancesEvent],
     name: "Scrape Alliances",
     concurrency: {
       limit: 1,
     },
     retries: 5,
   },
-  { event: "scrape/esi/alliances" },
   async ({ step, event, logger }) => {
     const batchSize = event.data.batchSize ?? 10;
 

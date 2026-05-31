@@ -1,4 +1,4 @@
-import { NonRetriableError } from "inngest";
+import { eventType, NonRetriableError, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -7,7 +7,6 @@ import { getUniverseStargatesStargateId } from "@jitaspace/esi-client";
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeStargatesEventPayload = {
   data: {
@@ -18,16 +17,20 @@ export type ScrapeStargatesEventPayload = {
 
 type StatsKey = "stargates";
 
+export const scrapeEsiStargatesEvent = eventType("scrape/esi/stargates", {
+  schema: staticSchema<ScrapeStargatesEventPayload["data"]>(),
+});
+
 export const scrapeEsiStargates = client.createFunction(
   {
     id: "scrape-esi-stargates",
+    triggers: [scrapeEsiStargatesEvent],
     name: "Scrape Stargates",
     concurrency: {
       limit: 1,
     },
     retries: 5,
   },
-  { event: "scrape/esi/stargates" },
   async ({ step, event }) => {
     const batchSize = event.data.batchSize ?? 1000;
     const stargateIds = event.data.stargateIds;

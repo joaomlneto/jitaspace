@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { kv } from "@jitaspace/kv";
@@ -14,16 +15,23 @@ export type BackfillEveKillCharactersEventPayload = {
 
 type StatsKey = "characters";
 
+export const backfillEveKillCharacterIdsEvent = eventType(
+  "backfill/evekill/character-ids",
+  {
+    schema: staticSchema<BackfillEveKillCharactersEventPayload["data"]>(),
+  },
+);
+
 export const backfillEveKillCharacterIds = client.createFunction(
   {
     id: "backfill-evekill-character-ids",
+    triggers: [backfillEveKillCharacterIdsEvent],
     name: "Backfill Character IDs from EVE Kill",
     concurrency: {
       limit: 1,
     },
     retries: 5,
   },
-  { event: "backfill/evekill/character-ids" },
   async ({ event, step, logger }) => {
     const batchSize = event.data.batchSize ?? 100;
     const url = event.data.url;

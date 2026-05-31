@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -12,15 +13,19 @@ export type ScrapeSdeRacesEventPayload = {
   };
 };
 
+export const scrapeSdeRacesEvent = eventType("scrape/sde/races", {
+  schema: staticSchema<ScrapeSdeRacesEventPayload["data"]>(),
+});
+
 export const scrapeSdeRaces = client.createFunction(
   {
     id: "scrape-sde-races",
+    triggers: [scrapeSdeRacesEvent],
     name: "Scrape Races",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/sde/races" },
   async ({ step, event, logger }) => {
     const stepStartTime = performance.now();
 

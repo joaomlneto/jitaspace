@@ -1,25 +1,33 @@
-import {prisma} from "@jitaspace/db";
-import {getUniverseGraphics, getUniverseGraphicsGraphicId,} from "@jitaspace/esi-client";
 import axios from "axios";
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
-import {client} from "../../../client";
-import {excludeObjectKeys, updateTable} from "../../../utils";
+import { prisma } from "@jitaspace/db";
+import {
+  getUniverseGraphics,
+  getUniverseGraphicsGraphicId,
+} from "@jitaspace/esi-client";
 
+import { client } from "../../../client";
+import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export type ScrapeGraphicsEventPayload = {
   data: {};
 };
 
+export const scrapeEsiGraphicsEvent = eventType("scrape/esi/graphics", {
+  schema: staticSchema<ScrapeGraphicsEventPayload["data"]>(),
+});
+
 export const scrapeEsiGraphics = client.createFunction(
   {
     id: "scrape-esi-graphics",
+    triggers: [scrapeEsiGraphicsEvent],
     name: "Scrape Graphics",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/esi/graphics" },
   async ({ step }) => {
     const stepStartTime = performance.now();
     // FIXME: THIS SHOULD NOT BE NECESSARY
@@ -42,7 +50,9 @@ export const scrapeEsiGraphics = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: async () =>
         Promise.all(

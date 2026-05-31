@@ -1,4 +1,4 @@
-import { NonRetriableError } from "inngest";
+import { eventType, NonRetriableError, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -21,16 +21,20 @@ export type ScrapeCorporationsEventPayload = {
 
 type StatsKey = "corporations";
 
+export const scrapeEsiCorporationsEvent = eventType("scrape/esi/corporations", {
+  schema: staticSchema<ScrapeCorporationsEventPayload["data"]>(),
+});
+
 export const scrapeEsiCorporations = client.createFunction(
   {
     id: "scrape-esi-corporations",
+    triggers: [scrapeEsiCorporationsEvent],
     name: "Scrape Corporations",
     concurrency: {
       limit: 1,
     },
     retries: 5,
   },
-  { event: "scrape/esi/corporations" },
   async ({ step, event }) => {
     const batchSize = event.data.batchSize ?? 1000;
     const corporationIds: number[] = event.data.corporationIds;

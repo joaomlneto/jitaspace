@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -9,22 +10,28 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeNpcCorporationDivisionsEventPayload = {
   data: {
     batchSize?: number;
   };
 };
 
+export const scrapeSdeNpcCorporationDivisionsEvent = eventType(
+  "scrape/sde/npc-corporation-divisions",
+  {
+    schema: staticSchema<ScrapeNpcCorporationDivisionsEventPayload["data"]>(),
+  },
+);
+
 export const scrapeSdeNpcCorporationDivisions = client.createFunction(
   {
     id: "scrape-sde-npc-corporation-divisions",
+    triggers: [scrapeSdeNpcCorporationDivisionsEvent],
     name: "Scrape NPC Corporation Divisions",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/sde/npc-corporation-divisions" },
   async ({ step, event, logger }) => {
     const stepStartTime = performance.now();
 
@@ -64,8 +71,7 @@ export const scrapeSdeNpcCorporationDivisions = client.createFunction(
                     corporationDivision.name.en ??
                     corporationDivision.displayName,
                   internalName: corporationDivision.internalName,
-                  leaderTypeName:
-                    corporationDivision.leaderTypeName.en ?? null,
+                  leaderTypeName: corporationDivision.leaderTypeName.en ?? null,
                   isDeleted: false,
                 })),
             ),

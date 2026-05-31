@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -9,21 +10,23 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeRegionEventPayload = {
   data: {};
 };
 
+export const scrapeEsiRegionsEvent = eventType("scrape/esi/regions", {
+  schema: staticSchema<ScrapeRegionEventPayload["data"]>(),
+});
+
 export const scrapeEsiRegions = client.createFunction(
   {
     id: "scrape-esi-regions",
+    triggers: [scrapeEsiRegionsEvent],
     name: "Scrape Regions",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/esi/regions" },
-
   async ({ step }) => {
     // Get all Region IDs in ESI
     const regionIds = await getUniverseRegions().then((res) => res.data);
@@ -45,7 +48,9 @@ export const scrapeEsiRegions = client.createFunction(
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: async () =>
         Promise.all(
