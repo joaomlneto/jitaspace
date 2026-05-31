@@ -103,7 +103,7 @@ export default createCommand("generate")
                       type: "string",
                       format: "date-time",
                       description:
-                        "The release date of the SDE (Unix timestamp) by CCP",
+                        "The release date of the SDE (Unix timestamp) by Fenris Creations",
                     },
                     schemaChangeLog: {
                       type: "string",

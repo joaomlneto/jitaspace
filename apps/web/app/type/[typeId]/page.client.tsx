@@ -902,8 +902,8 @@ export default function TypePage({
                     >
                       fuzzwork.co.uk
                     </Anchor>
-                    . Average and adjusted prices are CCP&apos;s global ESI
-                    estimates.
+                    . Average and adjusted prices are Fenris Creations&apos;
+                    global ESI estimates.
                   </Text>
                 </Stack>
               </Stack>

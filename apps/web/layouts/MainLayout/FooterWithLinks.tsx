@@ -45,8 +45,8 @@ export function FooterWithLinks() {
       <Container size="xl" className={classes.inner}>
         <Text c="dimmed" size="xs">
           All EVE-related materials are property of{" "}
-          <Anchor c="dimmed" href="https://www.ccpgames.com" target="_blank">
-            CCP Games
+          <Anchor c="dimmed" href="https://fenriscreations.com" target="_blank">
+            Fenris Creations
           </Anchor>
           .
         </Text>
