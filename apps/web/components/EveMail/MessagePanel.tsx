@@ -155,7 +155,11 @@ export function MessagePanel({
               <MessageMenu
                 characterId={characterId}
                 data={data}
-                mail={mail.data}
+                mail={{
+                  mail_id: messageId,
+                  is_read: mail.data.read,
+                  labels: mail.data.labels,
+                }}
               />
             </Group>
           )}
