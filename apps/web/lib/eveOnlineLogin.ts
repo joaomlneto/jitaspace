@@ -3,10 +3,17 @@
  * endpoint, which generates `state` + PKCE and redirects to the provider.
  *
  * Replaces next-auth's `signIn("eveonline", ..., { scope })`.
+ *
+ * When `returnTo` is omitted, the user is returned to the page they were on
+ * when login was initiated. The server (`sanitizeReturnTo`) validates this is a
+ * same-site relative path before honouring it.
  */
 export function loginWithEveOnline(scopes: string[], returnTo?: string): void {
   const params = new URLSearchParams();
   params.set("scope", [...new Set(scopes)].join(" "));
-  if (returnTo) params.set("returnTo", returnTo);
+  const target =
+    returnTo ??
+    `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (target) params.set("returnTo", target);
   window.location.assign(`/api/auth/login?${params.toString()}`);
 }
