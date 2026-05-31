@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -10,7 +11,6 @@ import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeGroupsEventPayload = {
   data: {
     batchSize?: number;
@@ -18,15 +18,19 @@ export type ScrapeGroupsEventPayload = {
 };
 type StatsKey = "groups";
 
+export const scrapeEsiGroupsEvent = eventType("scrape/esi/groups", {
+  schema: staticSchema<ScrapeGroupsEventPayload["data"]>(),
+});
+
 export const scrapeEsiGroups = client.createFunction(
   {
     id: "scrape-esi-groups",
+    triggers: [scrapeEsiGroupsEvent],
     name: "Scrape Groups",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/esi/groups" },
   async ({ step, event, logger }) => {
     const batchSize = event.data.batchSize ?? 500;
 

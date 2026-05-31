@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -10,7 +11,6 @@ import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeTypesEventPayload = {
   data: {
     batchSize?: number;
@@ -19,16 +19,20 @@ export type ScrapeTypesEventPayload = {
 
 type StatsKey = "types" | "typeAttributes" | "typeEffects";
 
+export const scrapeEsiTypesEvent = eventType("scrape/esi/types", {
+  schema: staticSchema<ScrapeTypesEventPayload["data"]>(),
+});
+
 export const scrapeEsiTypes = client.createFunction(
   {
     id: "scrape-esi-types",
+    triggers: [scrapeEsiTypesEvent],
     name: "Scrape Types",
     concurrency: {
       limit: 1,
     },
     retries: 5,
   },
-  { event: "scrape/esi/types" },
   async ({ step, event, logger }) => {
     const batchSize = event.data.batchSize ?? 500;
 

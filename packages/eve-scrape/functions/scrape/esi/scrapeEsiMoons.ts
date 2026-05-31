@@ -1,4 +1,4 @@
-import { NonRetriableError } from "inngest";
+import { eventType, NonRetriableError, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -7,7 +7,6 @@ import { getUniverseMoonsMoonId } from "@jitaspace/esi-client";
 import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
 
 export type ScrapeMoonsEventPayload = {
   data: {
@@ -18,16 +17,20 @@ export type ScrapeMoonsEventPayload = {
 
 type StatsKey = "moons";
 
+export const scrapeEsiMoonsEvent = eventType("scrape/esi/moons", {
+  schema: staticSchema<ScrapeMoonsEventPayload["data"]>(),
+});
+
 export const scrapeEsiMoons = client.createFunction(
   {
     id: "scrape-esi-moons",
+    triggers: [scrapeEsiMoonsEvent],
     name: "Scrape Moons",
     concurrency: {
       limit: 1,
     },
     retries: 5,
   },
-  { event: "scrape/esi/moons" },
   async ({ step, event }) => {
     const batchSize = event.data.batchSize ?? 1000;
     const moonIds = event.data.moons;

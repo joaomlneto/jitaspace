@@ -1,3 +1,5 @@
+import { eventType, staticSchema } from "inngest";
+
 import { kv } from "@jitaspace/kv";
 
 import { client } from "../../../client";
@@ -11,16 +13,23 @@ export type BackfillEveKillAllianceIdsEventPayload = {
 
 type StatsKey = "alliances";
 
+export const backfillEveKillAllianceIdsEvent = eventType(
+  "backfill/evekill/alliance-ids",
+  {
+    schema: staticSchema<BackfillEveKillAllianceIdsEventPayload["data"]>(),
+  },
+);
+
 export const backfillEveKillAllianceIds = client.createFunction(
   {
     id: "backfill-evekill-alliance-ids",
+    triggers: [backfillEveKillAllianceIdsEvent],
     name: "Backfill Alliance IDs from EVE Kill",
     concurrency: {
       limit: 1,
     },
     retries: 0,
   },
-  { event: "backfill/evekill/alliance-ids" },
   async ({ event, step, logger }) => {
     const batchSize = event.data.batchSize ?? 100;
     const url = event.data.url;

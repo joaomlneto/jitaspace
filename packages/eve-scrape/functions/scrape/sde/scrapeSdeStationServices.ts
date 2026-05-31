@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -9,22 +10,28 @@ import {
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeStationServicesEventPayload = {
   data: {
     batchSize?: number;
   };
 };
 
+export const scrapeSdeStationServicesEvent = eventType(
+  "scrape/sde/station-services",
+  {
+    schema: staticSchema<ScrapeStationServicesEventPayload["data"]>(),
+  },
+);
+
 export const scrapeSdeStationServices = client.createFunction(
   {
     id: "scrape-sde-station-services",
+    triggers: [scrapeSdeStationServicesEvent],
     name: "Scrape Station Services",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/sde/station-services" },
   async ({ step, event, logger }) => {
     const stepStartTime = performance.now();
 

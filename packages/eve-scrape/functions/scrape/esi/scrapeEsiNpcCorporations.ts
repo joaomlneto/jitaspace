@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -15,17 +16,20 @@ export type ScrapeNpcCorporationsEventPayload = {
   data: {};
 };
 
+export const scrapeEsiNpcCorporationsEvent = eventType("scrape/esi/npc-corporations", {
+  schema: staticSchema<ScrapeNpcCorporationsEventPayload["data"]>(),
+});
+
 export const scrapeEsiNpcCorporations = client.createFunction(
   {
     id: "scrape-esi-npc-corporations",
+    triggers: [scrapeEsiNpcCorporationsEvent],
     name: "Scrape NPC Corporations",
     concurrency: {
       limit: 1,
     },
     retries: 5,
   },
-  { event: "scrape/esi/npc-corporations" },
-
   async ({ step }) => {
     const stepStartTime = performance.now();
 

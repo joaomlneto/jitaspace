@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -12,15 +13,19 @@ export type ScrapeIconsEventPayload = {
   };
 };
 
+export const scrapeSdeIconsEvent = eventType("scrape/sde/icons", {
+  schema: staticSchema<ScrapeIconsEventPayload["data"]>(),
+});
+
 export const scrapeSdeIcons = client.createFunction(
   {
     id: "scrape-sde-icons",
+    triggers: [scrapeSdeIconsEvent],
     name: "Scrape Icons",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/sde/icons" },
   async ({ step, event, logger }) => {
     const stepStartTime = performance.now();
 

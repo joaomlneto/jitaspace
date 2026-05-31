@@ -1,3 +1,5 @@
+import { eventType, staticSchema } from "inngest";
+
 /**
  * Thanks to Karbowiak for the original code that this is based on!
  */
@@ -10,16 +12,23 @@ export type ProcessRedisCharacterIdsQueueEventPayload = {
   data: {};
 };
 
+export const processRedisCharacterIdsEvent = eventType(
+  "process/redis/character-ids",
+  {
+    schema: staticSchema<ProcessRedisCharacterIdsQueueEventPayload["data"]>(),
+  },
+);
+
 export const processRedisCharacterIds = client.createFunction(
   {
     id: "process-redis-character-ids",
+    triggers: [processRedisCharacterIdsEvent],
     name: "Process Character IDs from Redis Queue",
     concurrency: {
       limit: 1,
     },
     retries: 0,
   },
-  { event: "process/redis/character-ids" },
   async ({ event, step, logger }) => {
     console.log("Processing character IDs from Redis queue...");
 

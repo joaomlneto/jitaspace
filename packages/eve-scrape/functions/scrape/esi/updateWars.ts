@@ -16,6 +16,7 @@ export type UpdateActiveWarsEventPayload = {
 export const updateWars = client.createFunction(
   {
     id: "esi-update-wars",
+    triggers: [{ cron: "TZ=UTC 30 * * * *" }],
     name: "Update wars from ESI",
     singleton: {
       key: "esi-update-wars",
@@ -24,7 +25,6 @@ export const updateWars = client.createFunction(
     retries: 0,
     description: "Fetch new wars and update active wars' state from ESI",
   },
-  { cron: "TZ=UTC 30 * * * *" },
   async ({ step, event, logger }) => {
     const now = new Date();
 

@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import {prisma} from "@jitaspace/db";
 import {getUniverseGraphics, getUniverseGraphicsGraphicId,} from "@jitaspace/esi-client";
 import axios from "axios";
@@ -11,15 +12,19 @@ export type ScrapeGraphicsEventPayload = {
   data: {};
 };
 
+export const scrapeEsiGraphicsEvent = eventType("scrape/esi/graphics", {
+  schema: staticSchema<ScrapeGraphicsEventPayload["data"]>(),
+});
+
 export const scrapeEsiGraphics = client.createFunction(
   {
     id: "scrape-esi-graphics",
+    triggers: [scrapeEsiGraphicsEvent],
     name: "Scrape Graphics",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/esi/graphics" },
   async ({ step }) => {
     const stepStartTime = performance.now();
     // FIXME: THIS SHOULD NOT BE NECESSARY

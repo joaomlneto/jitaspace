@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -15,15 +16,22 @@ export type ScrapeDogmaEffectModifiersEventPayload = {
   };
 };
 
+export const scrapeSdeDogmaEffectModifiersEvent = eventType(
+  "scrape/sde/dogma-effect-modifiers",
+  {
+    schema: staticSchema<ScrapeDogmaEffectModifiersEventPayload["data"]>(),
+  },
+);
+
 export const scrapeSdeDogmaEffectModifiers = client.createFunction(
   {
     id: "scrape-sde-dogma-effect-modifiers",
+    triggers: [scrapeSdeDogmaEffectModifiersEvent],
     name: "Scrape Dogma Effect Modifiers",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/sde/dogma-effect-modifiers" },
   async ({ step, event, logger }) => {
     const stepStartTime = performance.now();
     const limit = pLimit(20);

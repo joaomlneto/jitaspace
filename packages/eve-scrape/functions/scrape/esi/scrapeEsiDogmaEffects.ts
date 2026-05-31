@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -10,7 +11,6 @@ import { client } from "../../../client";
 import { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeDogmaEffectsEventPayload = {
   data: {
     batchSize?: number;
@@ -19,15 +19,22 @@ export type ScrapeDogmaEffectsEventPayload = {
 
 type StatsKey = "dogmaEffects";
 
+export const scrapeEsiDogmaEffectsEvent = eventType(
+  "scrape/esi/dogma-effects",
+  {
+    schema: staticSchema<ScrapeDogmaEffectsEventPayload["data"]>(),
+  },
+);
+
 export const scrapeEsiDogmaEffects = client.createFunction(
   {
     id: "scrape-esi-dogma-effects",
+    triggers: [scrapeEsiDogmaEffectsEvent],
     name: "Scrape Dogma Effects",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/esi/dogma-effects" },
   async ({ step, event, logger }) => {
     const batchSize = event.data.batchSize ?? 500;
 

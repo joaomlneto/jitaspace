@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -5,20 +6,26 @@ import { prisma } from "@jitaspace/db";
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
-
 export type ScrapeAgentTypesEventPayload = {
   data: {};
 };
 
+export const scrapeHoboleaksAgentTypesEvent = eventType(
+  "scrape/hoboleaks/agent-types",
+  {
+    schema: staticSchema<ScrapeAgentTypesEventPayload["data"]>(),
+  },
+);
+
 export const scrapeHoboleaksAgentTypes = client.createFunction(
   {
     id: "scrape-hoboleaks-agent-types",
+    triggers: [scrapeHoboleaksAgentTypesEvent],
     name: "Scrape Agent Types",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/hoboleaks/agent-types" },
   async ({ step }) => {
     const stepStartTime = performance.now();
 

@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 /**
  * Thanks to Karbowiak for the original code that this is based on!
  */
@@ -25,16 +26,20 @@ export type EveRefWarSchema = Omit<GetWarsWarId200, "id"> & {
 
 type StatsKey = "wars";
 
+export const backfillEveRefWarsEvent = eventType("backfill/everef/wars", {
+  schema: staticSchema<BackfillEveRefWarsEventPayload["data"]>(),
+});
+
 export const backfillEveRefWars = client.createFunction(
   {
     id: "backfill-everef-wars",
+    triggers: [backfillEveRefWarsEvent],
     name: "Backfill Wars from EVE Ref",
     concurrency: {
       limit: 1,
     },
     retries: 5,
   },
-  { event: "backfill/everef/wars" },
   async ({ event, step, logger }) => {
     const batchSize = event.data.batchSize ?? 100;
     const startBatch = event.data.skipBatches ?? 0;

@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { GetKillmailsKillmailIdKillmailHash200 } from "@jitaspace/esi-client";
@@ -21,16 +22,23 @@ export type EveRefKillmailSchema = GetKillmailsKillmailIdKillmailHash200 & {
 
 type StatsKey = "killmails";
 
+export const backfillEveRefKillmailsEvent = eventType(
+  "backfill/everef/killmails",
+  {
+    schema: staticSchema<BackfillEveRefKillmailsEventPayload["data"]>(),
+  },
+);
+
 export const backfillEveRefKillmails = client.createFunction(
   {
     id: "backfill-everef-killmails",
+    triggers: [backfillEveRefKillmailsEvent],
     name: "Backfill Killmails from EVE Ref",
     concurrency: {
       limit: 2,
     },
     retries: 5,
   },
-  { event: "backfill/everef/killmails" },
   async ({ event, step, logger }) => {
     const batchSize = event.data.batchSize ?? 50;
     const startBatch = event.data.skipBatches ?? 0;

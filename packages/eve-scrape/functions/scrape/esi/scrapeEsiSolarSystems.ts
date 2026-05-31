@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { Prisma, prisma } from "@jitaspace/db";
@@ -28,16 +29,23 @@ type StatsKey =
   | "moons"
   | "asteroidBelts";
 
+export const scrapeEsiSolarSystemsEvent = eventType(
+  "scrape/esi/solar-systems",
+  {
+    schema: staticSchema<ScrapeSolarSystemsEventPayload["data"]>(),
+  },
+);
+
 export const scrapeEsiSolarSystems = client.createFunction(
   {
     id: "scrape-esi-solar-systems",
+    triggers: [scrapeEsiSolarSystemsEvent],
     name: "Scrape Solar Systems",
     concurrency: {
       limit: 1,
     },
     retries: 5,
   },
-  { event: "scrape/esi/solar-systems" },
   async ({ step, event }) => {
     const batchSize = event.data.batchSize ?? 20;
 

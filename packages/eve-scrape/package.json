@@ -12,6 +12,7 @@
     "dev": "pnpm with-env npx --ignore-scripts=false inngest-cli@latest dev",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
+    "test": "jest",
     "type-check": "tsc --jsx react-jsx --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
@@ -24,21 +25,25 @@
     "@jitaspace/sde-client": "workspace:*",
     "axios": "^1.16.1",
     "decimal.js": "^10.6.0",
-    "inngest": "^3.54.2",
+    "inngest": "^4.5.0",
     "p-limit": "^7.3.0",
     "tar-stream": "^3.2.0",
-    "untar-to-memory": "^2.0.0",
-    "unbzip2-stream": "^1.4.3"
+    "unbzip2-stream": "^1.4.3",
+    "untar-to-memory": "^2.0.0"
   },
   "devDependencies": {
+    "@jest/globals": "^30.4.1",
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
     "@types/tar-stream": "^3.1.4",
     "@types/unbzip2-stream": "^1.4.3",
     "eslint": "^9.39.4",
     "inngest-cli": "^1.22.0",
+    "jest": "^30.4.2",
     "prettier": "^3.8.3",
     "typescript": "^5.9.3"
   },

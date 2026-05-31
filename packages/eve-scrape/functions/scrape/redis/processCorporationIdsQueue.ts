@@ -1,3 +1,5 @@
+import { eventType, staticSchema } from "inngest";
+
 import { kv } from "@jitaspace/kv";
 
 import { client } from "../../../client";
@@ -7,16 +9,23 @@ export type ProcessRedisCorporationIdsQueueEventPayload = {
   data: {};
 };
 
+export const processRedisCorporationIdsEvent = eventType(
+  "process/redis/corporation-ids",
+  {
+    schema: staticSchema<ProcessRedisCorporationIdsQueueEventPayload["data"]>(),
+  },
+);
+
 export const processRedisCorporationIds = client.createFunction(
   {
     id: "process-redis-corporation-ids",
+    triggers: [processRedisCorporationIdsEvent],
     name: "Process Corporation IDs from Redis Queue",
     concurrency: {
       limit: 1,
     },
     retries: 0,
   },
-  { event: "process/redis/corporation-ids" },
   async ({ event, step, logger }) => {
     console.log("Processing corporation IDs from Redis queue...");
 

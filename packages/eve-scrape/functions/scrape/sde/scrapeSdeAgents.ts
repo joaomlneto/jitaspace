@@ -1,3 +1,4 @@
+import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { prisma } from "@jitaspace/db";
@@ -21,15 +22,19 @@ export type ScrapeAgentsEventPayload = {
   };
 };
 
+export const scrapeSdeAgentsEvent = eventType("scrape/sde/agents", {
+  schema: staticSchema<ScrapeAgentsEventPayload["data"]>(),
+});
+
 export const scrapeSdeAgents = client.createFunction(
   {
     id: "scrape-sde-agents",
+    triggers: [scrapeSdeAgentsEvent],
     name: "Scrape Agents",
     concurrency: {
       limit: 1,
     },
   },
-  { event: "scrape/sde/agents" },
   async ({ step, event, logger }) => {
     const stepStartTime = performance.now();
     const limit = pLimit(20);
