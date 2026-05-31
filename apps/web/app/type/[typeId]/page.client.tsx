@@ -56,10 +56,18 @@ import {
 } from "@jitaspace/ui";
 
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
-import { TypeInventoryBreadcrumbs, TypeMarketBreadcrumbs } from "~/components/Breadcrumbs";
-import { CategoryName, DogmaAttributeName, DogmaEffectName, GroupName, MarketGroupName } from "~/components/Text";
-
+import {
+  TypeInventoryBreadcrumbs,
+  TypeMarketBreadcrumbs,
+} from "~/components/Breadcrumbs";
 import { MailMessageViewer } from "~/components/EveMail";
+import {
+  CategoryName,
+  DogmaAttributeName,
+  DogmaEffectName,
+  GroupName,
+  MarketGroupName,
+} from "~/components/Text";
 
 export interface PageProps {
   typeId: number;
@@ -106,7 +114,10 @@ const booleanBadge = (value: boolean | null | undefined) => (
 /** Turn ASCII unit shorthand from the SDE into nicer typography (m3 -> m³). */
 const prettifyUnitSymbol = (symbol?: string): string | undefined =>
   symbol
-    ? symbol.replace(/m3/gi, "m³").replace(/\^3/g, "³").replace(/\^2/g, "²")
+    ? symbol
+        .replaceAll(/m3/gi, "m³")
+        .replaceAll(/\^3/g, "³")
+        .replaceAll(/\^2/g, "²")
     : undefined;
 
 /** Locale-format a number, keeping useful precision for small fractions. */
@@ -114,7 +125,9 @@ const formatNumber = (value: number): string => {
   if (value === 0) return "0";
   if (Number.isInteger(value)) return value.toLocaleString();
   const abs = Math.abs(value);
-  const maximumFractionDigits = abs < 0.001 ? 6 : abs < 1 ? 4 : 2;
+  let maximumFractionDigits = 2;
+  if (abs < 1) maximumFractionDigits = 4;
+  if (abs < 0.001) maximumFractionDigits = 6;
   return value.toLocaleString(undefined, { maximumFractionDigits });
 };
 
@@ -152,10 +165,10 @@ const formatAttributeValue = (value: number, unit?: UnitInfo): string => {
 function SectionHeading({
   icon,
   children,
-}: {
+}: Readonly<{
   icon: ReactNode;
   children: ReactNode;
-}) {
+}>) {
   return (
     <Group gap={8} align="center">
       <Box c="eve_accent.4" style={{ display: "flex" }}>
@@ -170,11 +183,11 @@ function StatCard({
   label,
   value,
   sub,
-}: {
+}: Readonly<{
   label: string;
   value: ReactNode;
   sub?: ReactNode;
-}) {
+}>) {
   return (
     <Paper withBorder radius="md" p="sm">
       <Stack gap={2}>
@@ -200,7 +213,10 @@ function StatCard({
   );
 }
 
-function HeroStat({ label, value }: { label: string; value: ReactNode }) {
+function HeroStat({
+  label,
+  value,
+}: Readonly<{ label: string; value: ReactNode }>) {
   return (
     <Stack gap={0}>
       <Text
@@ -222,10 +238,10 @@ function HeroStat({ label, value }: { label: string; value: ReactNode }) {
 function AttributeValue({
   value,
   unit,
-}: {
+}: Readonly<{
   value: number;
   unit?: UnitInfo;
-}) {
+}>) {
   switch (unit?.unitId) {
     // typeID
     case 116:
@@ -567,7 +583,11 @@ export default function TypePage({
                 )}
                 {heroPrice !== undefined && (
                   <HeroStat
-                    label={jitaSellPrice !== undefined ? "Jita Sell" : "Average Price"}
+                    label={
+                      jitaSellPrice === undefined
+                        ? "Average Price"
+                        : "Jita Sell"
+                    }
                     value={<ISKAmount amount={heroPrice} />}
                   />
                 )}
@@ -647,23 +667,25 @@ export default function TypePage({
                       </GroupAnchor>
                     }
                     sub={
-                      typeData?.group_id !== undefined
-                        ? `ID ${typeData.group_id}`
-                        : undefined
+                      typeData?.group_id === undefined
+                        ? undefined
+                        : `ID ${typeData.group_id}`
                     }
                   />
                   <StatCard
                     label="Category"
                     value={
-                      categoryId !== undefined ? (
+                      categoryId === undefined ? (
+                        notAvailableText
+                      ) : (
                         <CategoryAnchor categoryId={categoryId}>
                           <CategoryName categoryId={categoryId} />
                         </CategoryAnchor>
-                      ) : (
-                        notAvailableText
                       )
                     }
-                    sub={categoryId !== undefined ? `ID ${categoryId}` : undefined}
+                    sub={
+                      categoryId === undefined ? undefined : `ID ${categoryId}`
+                    }
                   />
                   {typeData?.market_group_id !== undefined && (
                     <StatCard
@@ -741,8 +763,7 @@ export default function TypePage({
                                 const unit = meta?.unitId
                                   ? unitById.get(meta.unitId)
                                   : undefined;
-                                const label =
-                                  meta?.displayName ?? meta?.name;
+                                const label = meta?.displayName ?? meta?.name;
                                 return (
                                   <Table.Tr key={attribute.attribute_id}>
                                     <Table.Td style={{ width: 36 }}>
@@ -759,10 +780,7 @@ export default function TypePage({
                                         attributeId={attribute.attribute_id}
                                       >
                                         {label ?? (
-                                          <Skeleton
-                                            height="1em"
-                                            width="10ch"
-                                          />
+                                          <Skeleton height="1em" width="10ch" />
                                         )}
                                       </DogmaAttributeAnchor>
                                     </Table.Td>
@@ -833,7 +851,9 @@ export default function TypePage({
                     {marketStats && (
                       <StatCard
                         label="Jita Buy"
-                        value={<ISKAmount amount={marketStats.buy.percentile} />}
+                        value={
+                          <ISKAmount amount={marketStats.buy.percentile} />
+                        }
                       />
                     )}
                     {marketStats && (

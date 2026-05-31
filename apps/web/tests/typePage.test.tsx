@@ -396,8 +396,6 @@ describe("Type page (client)", () => {
         <TypePage typeId={0} />
       </MantineProvider>,
     );
-    expect(
-      screen.getByText("Loading type information..."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Loading type information...")).toBeInTheDocument();
   });
 });
