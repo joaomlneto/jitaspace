@@ -101,6 +101,10 @@ const MIN_GEOMETRY = 1e-4;
 const STATION_ICON = 0.05;
 const STARGATE_ICON = 0.07;
 
+// Camera framing when a body is selected (clicked) to centre on it.
+const FOCUS_SIZE_MULT = 8;
+const MIN_FOCUS_DISTANCE = 0.25;
+
 function length(v: Vec3): number {
   return Math.hypot(v[0], v[1], v[2]);
 }
@@ -164,6 +168,16 @@ export function displayRadius(
     (Math.log(realDistance) - Math.log(minDistance)) /
     (Math.log(maxDistance) - Math.log(minDistance));
   return DISPLAY_INNER + t * (DISPLAY_OUTER - DISPLAY_INNER);
+}
+
+/**
+ * Camera distance that nicely frames a body of the given display `size` when it
+ * is selected: proportional to the body so big bodies are viewed from farther
+ * away, floored so tiny bodies don't pull the camera inside them, and capped at
+ * the scene `extent` so it never zooms out past the whole system.
+ */
+export function focusDistance(size: number, extent: number): number {
+  return Math.min(Math.max(size * FOCUS_SIZE_MULT, MIN_FOCUS_DISTANCE), extent);
 }
 
 export interface PlacedStar {

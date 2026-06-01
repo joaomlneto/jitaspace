@@ -203,7 +203,7 @@ export function SolarSystemMap({
       )}
 
       <div style={{ ...overlayTextStyle, right: 12, top: 8 }}>
-        Drag to rotate · scroll to zoom · hover for names
+        Drag to rotate · scroll to zoom · click to focus · hover for names
       </div>
     </div>
   );

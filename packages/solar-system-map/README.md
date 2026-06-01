@@ -3,7 +3,8 @@
 An interactive 3D map of an EVE Online solar system, built with
 [React Three Fiber](https://docs.pmnd.rs/react-three-fiber). It draws the star,
 its planets (with their moons and stations) and stargates, with orbit controls
-and hover labels.
+and hover labels. Clicking a body smoothly centres the camera on it and frames
+it by size — handy for diving into the otherwise-tiny inner system.
 
 It is **presentational** — you pass in each body's real, system-relative
 position and `radius` (the metres-scale values from the SDE) and, optionally, a

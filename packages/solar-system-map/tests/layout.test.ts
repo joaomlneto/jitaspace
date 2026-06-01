@@ -1,6 +1,7 @@
 import type { PlanetInput, StarInput, Vec3 } from "../layout";
 import {
   displayRadius,
+  focusDistance,
   layoutSystem,
   nearestPlanetId,
   PLANET_COLORS,
@@ -82,6 +83,20 @@ describe("displayRadius (overview modes)", () => {
     expect(degenerate).toBeGreaterThan(0);
     expect(displayRadius(80, 100, 100, "compressed", 0, 1)).toBe(degenerate);
     expect(displayRadius(0, 10, 100, "compressed", 0, 1)).toBe(degenerate);
+  });
+});
+
+describe("focusDistance", () => {
+  it("views bigger bodies from farther away", () => {
+    expect(focusDistance(1, 100)).toBeGreaterThan(focusDistance(0.5, 100));
+  });
+
+  it("never gets closer than the minimum, even for tiny bodies", () => {
+    expect(focusDistance(1e-9, 100)).toBeCloseTo(0.25);
+  });
+
+  it("never zooms out past the scene extent", () => {
+    expect(focusDistance(1000, 20)).toBe(20);
   });
 });
 
