@@ -144,3 +144,28 @@ describe("layoutSystem", () => {
     );
   });
 });
+
+describe("degenerate inputs", () => {
+  it("returns 0 radius for 'scale' when there is no extent", () => {
+    expect(displayRadius(5, 0, 0, "scale", 0, 1)).toBe(0);
+  });
+
+  it("falls back to the inner radius for 'compressed' edge cases", () => {
+    // maxDistance === minDistance, and realDistance <= 0
+    const degenerate = displayRadius(50, 100, 100, "compressed", 0, 1);
+    expect(degenerate).toBeGreaterThan(0);
+    expect(displayRadius(80, 100, 100, "compressed", 0, 1)).toBe(degenerate);
+    expect(displayRadius(0, 10, 100, "compressed", 0, 1)).toBe(degenerate);
+  });
+
+  it("drops stations that have no planet to attach to", () => {
+    const layout = layoutSystem(
+      [],
+      [{ id: 60, position: vec(1e9, 0, 0) }],
+      [],
+      "compressed",
+    );
+    expect(layout.planets).toHaveLength(0);
+    expect(layout.extent).toBeGreaterThan(0);
+  });
+});
