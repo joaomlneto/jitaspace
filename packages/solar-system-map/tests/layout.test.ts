@@ -12,9 +12,20 @@ function vec(x: number, y: number, z: number): Vec3 {
 }
 
 const JITA_PLANETS: PlanetInput[] = [
-  { id: 1, position: vec(40e9, 0, 0), moonIds: [11, 12] }, // +x axis, ~0.3 AU
-  { id: 2, position: vec(0, 0, 60e9), moonIds: [] }, // +z axis
-  { id: 3, position: vec(-900e9, 0, 0), moonIds: [31] }, // -x axis, far
+  {
+    id: 1,
+    position: vec(40e9, 0, 0), // +x axis, ~0.3 AU
+    moons: [
+      { id: 11, position: vec(40e9 + 2e8, 0, 0) }, // +x of the planet, near
+      { id: 12, position: vec(40e9, 0, 4e8) }, // +z of the planet, farther
+    ],
+  },
+  { id: 2, position: vec(0, 0, 60e9), moons: [] }, // +z axis
+  {
+    id: 3,
+    position: vec(-900e9, 0, 0), // -x axis, far
+    moons: [{ id: 31, position: vec(-900e9, 0, 2e8) }],
+  },
 ];
 
 describe("planetColor", () => {
@@ -108,6 +119,24 @@ describe("layoutSystem", () => {
     ).toBe(true);
   });
 
+  it("places moons from their real position relative to the planet", () => {
+    const { planets } = layoutSystem(JITA_PLANETS, [], [], "compressed");
+    const p1 = planets.find((p) => p.id === 1);
+    // moon 11 is offset +x from the planet -> local +x, z ≈ 0
+    const moon11 = p1?.satellites.find((s) => s.id === 11);
+    expect(moon11?.position[0] ?? 0).toBeGreaterThan(0);
+    expect(moon11?.position[2]).toBeCloseTo(0);
+    // moon 12 is offset +z from the planet -> local +z, x ≈ 0
+    const moon12 = p1?.satellites.find((s) => s.id === 12);
+    expect(moon12?.position[2] ?? 0).toBeGreaterThan(0);
+    expect(moon12?.position[0]).toBeCloseTo(0);
+    // moon 12 is farther from the planet in reality (4e8 > 2e8), so its
+    // display radius is larger
+    expect(Math.hypot(...(moon12?.position ?? [0, 0, 0]))).toBeGreaterThan(
+      Math.hypot(...(moon11?.position ?? [0, 0, 0])),
+    );
+  });
+
   it("places stargates at the same angle but a larger radius in 'rings'", () => {
     const stargates = [{ id: 50, position: vec(0, 0, -4000e9) }]; // -z axis
     const { planets, stargates: placed } = layoutSystem(
@@ -156,6 +185,22 @@ describe("degenerate inputs", () => {
     expect(degenerate).toBeGreaterThan(0);
     expect(displayRadius(80, 100, 100, "compressed", 0, 1)).toBe(degenerate);
     expect(displayRadius(0, 10, 100, "compressed", 0, 1)).toBe(degenerate);
+  });
+
+  it("falls back to a fan direction for a satellite on the planet centre", () => {
+    const planets: PlanetInput[] = [
+      {
+        id: 1,
+        position: vec(40e9, 0, 0),
+        moons: [{ id: 11, position: vec(40e9, 0, 0) }], // exactly on the planet
+      },
+    ];
+    const moon = layoutSystem(planets, [], [], "compressed").planets[0]
+      ?.satellites[0];
+    expect(moon?.id).toBe(11);
+    // no NaN, and the moon is still pushed off the planet centre
+    expect(Number.isFinite(moon?.position[0] ?? NaN)).toBe(true);
+    expect(Math.hypot(...(moon?.position ?? [0, 0, 0]))).toBeGreaterThan(0);
   });
 
   it("drops stations that have no planet to attach to", () => {

@@ -6,8 +6,9 @@
  * (metres, with the star at the origin). EVE systems span a huge radial range
  * (inner planet ~0.3 AU, stargates ~38 AU), so the radial distance is remapped
  * per `LayoutMode` while the real angular position (in the orbital x/z plane)
- * is always preserved. Moons and stations are clustered around their parent
- * planet (they sit essentially on it at system scale), so they stay visible.
+ * is always preserved. Moons and stations are placed from their real position
+ * relative to their parent planet (direction preserved, distance amplified into
+ * a small visible band — they sit essentially on it at system scale).
  */
 
 export type Vec3 = [number, number, number];
@@ -28,7 +29,8 @@ export interface PlanetInput {
   id: number;
   /** Real, system-relative position (metres). */
   position: Vec3;
-  moonIds: number[];
+  /** This planet's moons with their real, system-relative positions. */
+  moons: BodyInput[];
 }
 
 export interface BodyInput {
@@ -157,26 +159,69 @@ export interface SystemLayout {
   extent: number;
 }
 
-/** Arrange a planet's moons and stations in small local rings around it. */
+// Display band for a planet's moon/station cluster (map units from the planet).
+const SAT_INNER_GAP = 0.4;
+const SAT_BAND = 1.1;
+
+function subtract(a: Vec3, b: Vec3): Vec3 {
+  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}
+
+/** Even fan direction, used when a satellite sits exactly on the planet. */
+function fanDirection(i: number, count: number): Vec3 {
+  const angle = (i / Math.max(count, 1)) * Math.PI * 2;
+  return [Math.cos(angle), 0, Math.sin(angle)];
+}
+
+/**
+ * Place a planet's moons and stations from their real positions relative to the
+ * planet. The real direction (including inclination) is preserved exactly,
+ * while the real distance is normalised into a small visible band around the
+ * planet (preserving ordering) — at system scale they would otherwise collapse
+ * onto the planet itself.
+ */
 function placeSatellites(
-  moonIds: number[],
-  stationIds: number[],
+  moons: BodyInput[],
+  stations: BodyInput[],
+  planetPosition: Vec3,
   planetSize: number,
 ): PlacedSatellite[] {
-  const items: { id: number; kind: "moon" | "station" }[] = [
-    ...moonIds.map((id) => ({ id, kind: "moon" as const })),
-    ...stationIds.map((id) => ({ id, kind: "station" as const })),
+  const raw: { id: number; kind: "moon" | "station"; offset: Vec3 }[] = [
+    ...moons.map((m) => ({
+      id: m.id,
+      kind: "moon" as const,
+      offset: subtract(m.position, planetPosition),
+    })),
+    ...stations.map((s) => ({
+      id: s.id,
+      kind: "station" as const,
+      offset: subtract(s.position, planetPosition),
+    })),
   ];
+  if (raw.length === 0) return [];
+
+  const items = raw.map((it) => ({ ...it, dist: length(it.offset) }));
+  const dists = items.map((it) => it.dist);
+  const minDist = Math.min(...dists);
+  const maxDist = Math.max(...dists);
+  const inner = planetSize + SAT_INNER_GAP;
+
   return items.map((item, i) => {
-    const angle = (i / Math.max(items.length, 1)) * Math.PI * 2;
-    const radius = planetSize + 0.4 + (i % 3) * 0.22;
+    const t =
+      maxDist > minDist ? (item.dist - minDist) / (maxDist - minDist) : 0;
+    const radius = inner + t * SAT_BAND;
+    const dir: Vec3 =
+      item.dist > 0
+        ? [
+            item.offset[0] / item.dist,
+            item.offset[1] / item.dist,
+            item.offset[2] / item.dist,
+          ]
+        : fanDirection(i, items.length);
     return {
-      ...item,
-      position: [
-        Math.cos(angle) * radius,
-        ((i % 2) - 0.5) * 0.12,
-        Math.sin(angle) * radius,
-      ],
+      id: item.id,
+      kind: item.kind,
+      position: [dir[0] * radius, dir[1] * radius, dir[2] * radius],
     };
   });
 }
@@ -200,12 +245,12 @@ export function layoutSystem(
   const maxDistance = distances.length ? Math.max(...distances) : 1;
 
   // Assign each station to its nearest planet.
-  const stationsByPlanet = new Map<number, number[]>();
+  const stationsByPlanet = new Map<number, BodyInput[]>();
   for (const station of stations) {
     const planetId = nearestPlanetId(station.position, planets);
     if (planetId === undefined) continue;
     const list = stationsByPlanet.get(planetId) ?? [];
-    list.push(station.id);
+    list.push(station);
     stationsByPlanet.set(planetId, list);
   }
 
@@ -235,8 +280,9 @@ export function layoutSystem(
       size,
       color: planetColor(index),
       satellites: placeSatellites(
-        planet.moonIds,
+        planet.moons,
         stationsByPlanet.get(planet.id) ?? [],
+        planet.position,
         size,
       ),
     };

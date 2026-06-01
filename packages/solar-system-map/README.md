@@ -32,8 +32,12 @@ import { SolarSystemMap } from "@jitaspace/solar-system-map";
 
 <SolarSystemMap
   planets={[
-    { id: 40000010, position: [40e9, 0, 20e9], moonIds: [40000011] },
-    { id: 40000020, position: [0, 0, -90e9], moonIds: [] },
+    {
+      id: 40000010,
+      position: [40e9, 0, 20e9],
+      moons: [{ id: 40000011, position: [40e9 + 2e8, 0, 20e9] }],
+    },
+    { id: 40000020, position: [0, 0, -90e9], moons: [] },
   ]}
   stations={[{ id: 60000001, position: [41e9, 1e9, 20e9] }]}
   stargates={[{ id: 50000001, position: [0, 0, -4000e9] }]}
@@ -53,18 +57,19 @@ const SolarSystemMap = dynamic(
 
 ## Props
 
-| Prop          | Type                                 | Default        | Description                                                  |
-| ------------- | ------------------------------------ | -------------- | ------------------------------------------------------------ |
-| `planets`     | `{ id, position, moonIds }[]`        | —              | Planets with real position (metres) and their moon ids.      |
-| `stations`    | `{ id, position }[]`                 | —              | Stations with real position (clustered onto nearest planet). |
-| `stargates`   | `{ id, position }[]`                 | —              | Stargates with real position.                                |
-| `height`      | `number \| string`                   | `460`          | Map height.                                                  |
-| `defaultMode` | `"compressed" \| "scale" \| "rings"` | `"compressed"` | Initial layout mode.                                         |
-| `renderLabel` | `({ kind, id }) => ReactNode`        | —              | Renders the hover label; resolve names here.                 |
-| `showLegend`  | `boolean`                            | `true`         | Show the colour legend.                                      |
-| `autoRotate`  | `boolean`                            | `false`        | Slowly auto-rotate the camera (pauses while hovering).       |
+| Prop          | Type                                 | Default        | Description                                                          |
+| ------------- | ------------------------------------ | -------------- | -------------------------------------------------------------------- |
+| `planets`     | `{ id, position, moons }[]`          | —              | Planets with real position (metres); `moons` are `{ id, position }`. |
+| `stations`    | `{ id, position }[]`                 | —              | Stations with real position (clustered onto nearest planet).         |
+| `stargates`   | `{ id, position }[]`                 | —              | Stargates with real position.                                        |
+| `height`      | `number \| string`                   | `460`          | Map height.                                                          |
+| `defaultMode` | `"compressed" \| "scale" \| "rings"` | `"compressed"` | Initial layout mode.                                                 |
+| `renderLabel` | `({ kind, id }) => ReactNode`        | —              | Renders the hover label; resolve names here.                         |
+| `showLegend`  | `boolean`                            | `true`         | Show the colour legend.                                              |
+| `autoRotate`  | `boolean`                            | `false`        | Slowly auto-rotate the camera (pauses while hovering).               |
 
 Positions are the raw system-relative SDE coordinates (metres, star at the
 origin); the component normalises them for display. Moons and stations sit
-essentially on their planet at system scale, so they are clustered around it for
-visibility.
+essentially on their planet at system scale, so their real position relative to
+the planet is preserved (direction and ordering) but amplified into a small
+visible band around it.

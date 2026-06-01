@@ -12,6 +12,7 @@ import type {
 } from "@jitaspace/solar-system-map";
 import { useSolarSystem } from "@jitaspace/hooks";
 import {
+  getMoonByIdQueryOptions,
   getPlanetByIdQueryOptions,
   getStargateByIdQueryOptions,
   getStationByIdQueryOptions,
@@ -72,10 +73,15 @@ export function SolarSystem3D({
   const stationIds = data?.stations ?? [];
   const stargateIds = data?.stargates ?? [];
 
+  const moonIds = planetEntries.flatMap((planet) => planet.moons ?? []);
+
   const planetQueries = useQueries({
     queries: planetEntries.map((planet) =>
       getPlanetByIdQueryOptions(planet.planet_id),
     ),
+  });
+  const moonQueries = useQueries({
+    queries: moonIds.map((id) => getMoonByIdQueryOptions(id)),
   });
   const stationQueries = useQueries({
     queries: stationIds.map((id) => getStationByIdQueryOptions(id)),
@@ -84,14 +90,26 @@ export function SolarSystem3D({
     queries: stargateIds.map((id) => getStargateByIdQueryOptions(id)),
   });
 
+  const moonPositionById = new Map<number, Vec3>();
+  moonIds.forEach((id, i) => {
+    const position = moonQueries[i]?.data?.data.position;
+    if (position) moonPositionById.set(id, toVec(position));
+  });
+
   const planets: PlanetInput[] = planetEntries
     .map((planet, i) => {
       const position = planetQueries[i]?.data?.data.position;
       if (!position) return undefined;
+      const moons: BodyInput[] = (planet.moons ?? [])
+        .map((id) => {
+          const moonPosition = moonPositionById.get(id);
+          return moonPosition ? { id, position: moonPosition } : undefined;
+        })
+        .filter((m): m is BodyInput => m !== undefined);
       return {
         id: planet.planet_id,
         position: toVec(position),
-        moonIds: planet.moons ?? [],
+        moons,
       };
     })
     .filter((p): p is PlanetInput => p !== undefined);
@@ -113,6 +131,7 @@ export function SolarSystem3D({
   const settled =
     !!data &&
     planetQueries.every((q) => !q.isLoading) &&
+    moonQueries.every((q) => !q.isLoading) &&
     stationQueries.every((q) => !q.isLoading) &&
     stargateQueries.every((q) => !q.isLoading);
 
