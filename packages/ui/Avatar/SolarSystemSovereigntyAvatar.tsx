@@ -3,13 +3,16 @@
 import React, { memo, useMemo } from "react";
 import { type AvatarProps } from "@mantine/core";
 
-import { useSolarSystem, useSolarSystemSovereignty } from "@jitaspace/hooks";
+import {
+  useSolarSystem,
+  useSolarSystemSovereignty,
+  useStar,
+} from "@jitaspace/hooks";
 
 import { AllianceAvatar } from "./AllianceAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
 import { FactionAvatar } from "./FactionAvatar";
 import { StarAvatar } from "./StarAvatar";
-
 
 export type SolarSystemSovereigntyAvatarProps = Omit<AvatarProps, "src"> & {
   solarSystemId?: string | number | null;
@@ -21,11 +24,12 @@ export const SolarSystemSovereigntyAvatar = memo(
       () =>
         typeof solarSystemId === "string"
           ? parseInt(solarSystemId, 10)
-          : solarSystemId ?? 1,
+          : (solarSystemId ?? 1),
       [solarSystemId],
     );
     const { data } = useSolarSystem(normalizedSolarSystemId);
     const sov = useSolarSystemSovereignty(normalizedSolarSystemId);
+    const { data: star } = useStar(data?.data.star_id ?? 0);
 
     // if sov has an alliance, show an alliance avatar
     if (sov?.alliance_id) {
@@ -44,8 +48,8 @@ export const SolarSystemSovereigntyAvatar = memo(
       return <FactionAvatar factionId={sov.faction_id} {...otherProps} />;
     }
 
-    // if not, show a star avatar
-    return <StarAvatar starId={data?.data.star_id} {...otherProps} />;
+    // if not, show a star avatar (resolved from the star's type)
+    return <StarAvatar typeId={star?.data.type_id} {...otherProps} />;
   },
 );
 SolarSystemSovereigntyAvatar.displayName = "SolarSystemSovereigntyAvatar";
