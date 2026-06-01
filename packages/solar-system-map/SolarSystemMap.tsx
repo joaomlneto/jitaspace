@@ -3,8 +3,15 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 
-import type { HoverKind, HoverTarget, ScenePlanet } from "./layout";
+import type {
+  BodyInput,
+  HoverKind,
+  HoverTarget,
+  LayoutMode,
+  PlanetInput,
+} from "./layout";
 import {
+  LAYOUT_MODES,
   MOON_COLOR,
   PLANET_COLORS,
   STAR_COLOR,
@@ -14,16 +21,19 @@ import {
 import SolarSystemScene from "./SolarSystemScene";
 
 export interface SolarSystemMapProps {
-  /** Planets of the system, each with its moon and asteroid-belt ids. */
-  planets: ScenePlanet[];
-  stationIds: number[];
-  stargateIds: number[];
+  /** Planets with their real, system-relative position and moon ids. */
+  planets: PlanetInput[];
+  /** Stations with their real position (assigned to their nearest planet). */
+  stations: BodyInput[];
+  /** Stargates with their real position. */
+  stargates: BodyInput[];
   /** Height of the map. Defaults to 460. */
   height?: number | string;
+  /** Initial layout mode. Defaults to "compressed". */
+  defaultMode?: LayoutMode;
   /**
    * Renders the label shown while hovering a body. Receives the body's kind
-   * and id so the host application can resolve names however it likes. When
-   * omitted, a simple `Kind #id` label is shown.
+   * and id so the host application can resolve names however it likes.
    */
   renderLabel?: (target: { kind: HoverKind; id: number }) => ReactNode;
   /** Show the colour legend overlay. Defaults to true. */
@@ -73,15 +83,17 @@ function capitalize(value: string): string {
 
 export function SolarSystemMap({
   planets,
-  stationIds,
-  stargateIds,
+  stations,
+  stargates,
   height = 460,
+  defaultMode = "compressed",
   renderLabel,
   showLegend = true,
   autoRotate = false,
   style,
 }: Readonly<SolarSystemMapProps>) {
   const [hover, setHover] = useState<HoverTarget | null>(null);
+  const [mode, setMode] = useState<LayoutMode>(defaultMode);
 
   return (
     <div
@@ -97,8 +109,9 @@ export function SolarSystemMap({
     >
       <SolarSystemScene
         planets={planets}
-        stationIds={stationIds}
-        stargateIds={stargateIds}
+        stations={stations}
+        stargates={stargates}
+        mode={mode}
         autoRotate={autoRotate}
         hover={hover}
         setHover={setHover}
@@ -113,6 +126,47 @@ export function SolarSystemMap({
           )}
         </div>
       )}
+
+      {/* Layout-mode selector */}
+      <div
+        style={{
+          position: "absolute",
+          top: 8,
+          left: 10,
+          zIndex: 3,
+          display: "flex",
+          gap: 2,
+          padding: 2,
+          borderRadius: 5,
+          background: "rgba(8, 12, 20, 0.82)",
+          border: "1px solid rgba(108, 132, 151, 0.28)",
+        }}
+      >
+        {LAYOUT_MODES.map((option) => {
+          const active = mode === option.value;
+          return (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setMode(option.value)}
+              style={{
+                cursor: "pointer",
+                padding: "3px 9px",
+                borderRadius: 3,
+                border: "none",
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: "0.02em",
+                color: active ? "#eaf8fc" : "rgba(219, 230, 240, 0.7)",
+                background: active ? "rgba(53, 148, 157, 0.85)" : "transparent",
+              }}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
 
       {showLegend && (
         <div

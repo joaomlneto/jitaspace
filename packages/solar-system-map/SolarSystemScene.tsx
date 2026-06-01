@@ -6,12 +6,18 @@ import { OrbitControls, Stars } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 
-import type { HoverTarget, ScenePlanet } from "./layout";
+import type {
+  BodyInput,
+  HoverTarget,
+  LayoutMode,
+  PlacedPlanet,
+  PlacedSatellite,
+  PlacedStargate,
+  PlanetInput,
+} from "./layout";
 import {
-  buildSystemLayout,
+  layoutSystem,
   MOON_COLOR,
-  moonOrbit,
-  ringMarkerPosition,
   STAR_COLOR,
   STAR_RADIUS,
   STARGATE_COLOR,
@@ -19,9 +25,10 @@ import {
 } from "./layout";
 
 export interface SolarSystemSceneProps {
-  planets: ScenePlanet[];
-  stationIds: number[];
-  stargateIds: number[];
+  planets: PlanetInput[];
+  stations: BodyInput[];
+  stargates: BodyInput[];
+  mode: LayoutMode;
   autoRotate: boolean;
   hover: HoverTarget | null;
   setHover: (hover: HoverTarget | null) => void;
@@ -31,14 +38,14 @@ function pointerXY(e: ThreeEvent<PointerEvent>) {
   return { x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY };
 }
 
-function OrbitPath({ radius }: Readonly<{ radius: number }>) {
+function OrbitRing({ radius }: Readonly<{ radius: number }>) {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]}>
-      <ringGeometry args={[radius - 0.012, radius + 0.012, 128]} />
+      <ringGeometry args={[radius - 0.015, radius + 0.015, 160]} />
       <meshBasicMaterial
         color="#2b3b52"
         transparent
-        opacity={0.55}
+        opacity={0.5}
         side={THREE.DoubleSide}
       />
     </mesh>
@@ -61,168 +68,111 @@ function Star() {
   );
 }
 
-function Belt({ radius, seed }: Readonly<{ radius: number; seed: number }>) {
-  const positions = useMemo(() => {
-    const count = 160;
-    const arr = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2 + (seed % 7);
-      const jitter = Math.abs((Math.sin(i * 12.9898 + seed) * 43758.5453) % 1);
-      const r = radius + jitter * 0.28;
-      arr[i * 3] = Math.cos(angle) * r;
-      arr[i * 3 + 1] = ((Math.sin(i * 78.233 + seed) * 1000) % 1) * 0.08;
-      arr[i * 3 + 2] = Math.sin(angle) * r;
-    }
-    return arr;
-  }, [radius, seed]);
-
-  return (
-    <points>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.05}
-        sizeAttenuation
-        color="#b39b6e"
-        transparent
-        opacity={0.85}
-      />
-    </points>
-  );
-}
-
-function Moon({
-  id,
-  index,
-  planetSize,
+function Satellite({
+  satellite,
   hover,
   setHover,
 }: Readonly<{
-  id: number;
-  index: number;
-  planetSize: number;
+  satellite: PlacedSatellite;
   hover: HoverTarget | null;
   setHover: (hover: HoverTarget | null) => void;
 }>) {
-  const orbit = moonOrbit(planetSize, index);
-  const phase = ((id % 360) * Math.PI) / 180;
-  const isHovered = hover?.kind === "moon" && hover.id === id;
-  return (
-    <group rotation={[0, phase, 0]}>
-      <mesh
-        position={[orbit, 0, 0]}
-        scale={isHovered ? 1.6 : 1}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHover({ kind: "moon", id, ...pointerXY(e) });
-        }}
-        onPointerOut={() => setHover(null)}
-      >
-        <sphereGeometry args={[0.1, 16, 16]} />
-        <meshStandardMaterial color={MOON_COLOR} roughness={0.9} />
-      </mesh>
-    </group>
-  );
-}
-
-function Planet({
-  planet,
-  orbit,
-  size,
-  color,
-  phase,
-  hover,
-  setHover,
-}: Readonly<{
-  planet: ScenePlanet;
-  orbit: number;
-  size: number;
-  color: string;
-  phase: number;
-  hover: HoverTarget | null;
-  setHover: (hover: HoverTarget | null) => void;
-}>) {
-  const isHovered = hover?.kind === "planet" && hover.id === planet.planetId;
-  return (
-    <group>
-      <OrbitPath radius={orbit} />
-      <group rotation={[0, phase, 0]}>
-        <group position={[orbit, 0, 0]}>
-          <mesh
-            scale={isHovered ? 1.25 : 1}
-            onPointerOver={(e) => {
-              e.stopPropagation();
-              setHover({
-                kind: "planet",
-                id: planet.planetId,
-                ...pointerXY(e),
-              });
-            }}
-            onPointerOut={() => setHover(null)}
-          >
-            <sphereGeometry args={[size, 32, 32]} />
-            <meshStandardMaterial
-              color={color}
-              roughness={0.78}
-              metalness={0.05}
-              emissive={color}
-              emissiveIntensity={isHovered ? 0.35 : 0}
-            />
-          </mesh>
-          {planet.moonIds.map((moonId, i) => (
-            <Moon
-              key={moonId}
-              id={moonId}
-              index={i}
-              planetSize={size}
-              hover={hover}
-              setHover={setHover}
-            />
-          ))}
-          {planet.beltIds.length > 0 && (
-            <Belt radius={size * 2.1} seed={planet.planetId} />
-          )}
-        </group>
-      </group>
-    </group>
-  );
-}
-
-function Marker({
-  id,
-  kind,
-  color,
-  position,
-  hover,
-  setHover,
-}: Readonly<{
-  id: number;
-  kind: "station" | "stargate";
-  color: string;
-  position: [number, number, number];
-  hover: HoverTarget | null;
-  setHover: (hover: HoverTarget | null) => void;
-}>) {
+  const { id, kind, position } = satellite;
   const isHovered = hover?.kind === kind && hover.id === id;
+  const color = kind === "moon" ? MOON_COLOR : STATION_COLOR;
   return (
     <mesh
       position={position}
-      scale={isHovered ? 1.5 : 1}
+      scale={isHovered ? 1.7 : 1}
       onPointerOver={(e) => {
         e.stopPropagation();
         setHover({ kind, id, ...pointerXY(e) });
       }}
       onPointerOut={() => setHover(null)}
     >
-      {kind === "stargate" ? (
-        <octahedronGeometry args={[0.34, 0]} />
+      {kind === "moon" ? (
+        <sphereGeometry args={[0.1, 14, 14]} />
       ) : (
-        <boxGeometry args={[0.34, 0.34, 0.34]} />
+        <boxGeometry args={[0.16, 0.16, 0.16]} />
       )}
       <meshStandardMaterial
         color={color}
-        emissive={color}
+        emissive={kind === "station" ? color : "#000000"}
+        emissiveIntensity={kind === "station" ? 0.5 : 0}
+        roughness={0.85}
+      />
+    </mesh>
+  );
+}
+
+function PlanetBody({
+  planet,
+  hover,
+  setHover,
+}: Readonly<{
+  planet: PlacedPlanet;
+  hover: HoverTarget | null;
+  setHover: (hover: HoverTarget | null) => void;
+}>) {
+  const isHovered = hover?.kind === "planet" && hover.id === planet.id;
+  return (
+    <>
+      <OrbitRing radius={planet.orbitRadius} />
+      <group position={planet.position}>
+        <mesh
+          scale={isHovered ? 1.25 : 1}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            setHover({ kind: "planet", id: planet.id, ...pointerXY(e) });
+          }}
+          onPointerOut={() => setHover(null)}
+        >
+          <sphereGeometry args={[planet.size, 32, 32]} />
+          <meshStandardMaterial
+            color={planet.color}
+            roughness={0.78}
+            metalness={0.05}
+            emissive={planet.color}
+            emissiveIntensity={isHovered ? 0.35 : 0}
+          />
+        </mesh>
+        {planet.satellites.map((satellite) => (
+          <Satellite
+            key={`${satellite.kind}-${satellite.id}`}
+            satellite={satellite}
+            hover={hover}
+            setHover={setHover}
+          />
+        ))}
+      </group>
+    </>
+  );
+}
+
+function StargateMarker({
+  gate,
+  hover,
+  setHover,
+}: Readonly<{
+  gate: PlacedStargate;
+  hover: HoverTarget | null;
+  setHover: (hover: HoverTarget | null) => void;
+}>) {
+  const isHovered = hover?.kind === "stargate" && hover.id === gate.id;
+  return (
+    <mesh
+      position={gate.position}
+      scale={isHovered ? 1.5 : 1}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHover({ kind: "stargate", id: gate.id, ...pointerXY(e) });
+      }}
+      onPointerOut={() => setHover(null)}
+    >
+      <octahedronGeometry args={[0.34, 0]} />
+      <meshStandardMaterial
+        color={STARGATE_COLOR}
+        emissive={STARGATE_COLOR}
         emissiveIntensity={isHovered ? 0.9 : 0.45}
         roughness={0.4}
       />
@@ -230,48 +180,20 @@ function Marker({
   );
 }
 
-function RingMarkers({
-  ids,
-  radius,
-  kind,
-  color,
-  hover,
-  setHover,
-}: Readonly<{
-  ids: number[];
-  radius: number;
-  kind: "station" | "stargate";
-  color: string;
-  hover: HoverTarget | null;
-  setHover: (hover: HoverTarget | null) => void;
-}>) {
-  return (
-    <group>
-      {ids.map((id, i) => (
-        <Marker
-          key={id}
-          id={id}
-          kind={kind}
-          color={color}
-          position={ringMarkerPosition(i, ids.length, radius)}
-          hover={hover}
-          setHover={setHover}
-        />
-      ))}
-    </group>
-  );
-}
-
 export default function SolarSystemScene({
   planets,
-  stationIds,
-  stargateIds,
+  stations,
+  stargates,
+  mode,
   autoRotate,
   hover,
   setHover,
 }: Readonly<SolarSystemSceneProps>) {
-  const layout = useMemo(() => buildSystemLayout(planets), [planets]);
-  const { stationRing, stargateRing, camDistance } = layout;
+  const layout = useMemo(
+    () => layoutSystem(planets, stations, stargates, mode),
+    [planets, stations, stargates, mode],
+  );
+  const camDistance = layout.extent * 1.9 + 6;
 
   return (
     <Canvas
@@ -284,34 +206,22 @@ export default function SolarSystemScene({
       <ambientLight intensity={0.4} />
       <Stars radius={140} depth={50} count={2200} factor={4} fade speed={0.4} />
       <Star />
-      {layout.planets.map((p) => (
-        <Planet
-          key={p.planet.planetId}
-          planet={p.planet}
-          orbit={p.orbit}
-          size={p.size}
-          color={p.color}
-          phase={p.phase}
+      {layout.planets.map((planet) => (
+        <PlanetBody
+          key={planet.id}
+          planet={planet}
           hover={hover}
           setHover={setHover}
         />
       ))}
-      <RingMarkers
-        ids={stationIds}
-        radius={stationRing}
-        kind="station"
-        color={STATION_COLOR}
-        hover={hover}
-        setHover={setHover}
-      />
-      <RingMarkers
-        ids={stargateIds}
-        radius={stargateRing}
-        kind="stargate"
-        color={STARGATE_COLOR}
-        hover={hover}
-        setHover={setHover}
-      />
+      {layout.stargates.map((gate) => (
+        <StargateMarker
+          key={gate.id}
+          gate={gate}
+          hover={hover}
+          setHover={setHover}
+        />
+      ))}
       <OrbitControls
         makeDefault
         enableDamping
