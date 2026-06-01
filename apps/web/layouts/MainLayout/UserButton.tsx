@@ -13,7 +13,7 @@ import {
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";
-import { openContextModal } from "@mantine/modals";
+import { modals, openContextModal } from "@mantine/modals";
 
 import {
   RecruitmentIcon,
@@ -122,15 +122,28 @@ export default function UserButton({ ...others }: UserButtonProps) {
         </Menu.Item>
         <Menu.Item
           leftSection={<TerminateIcon width={20} />}
-          onClick={() => {
-            removeCharacter(characterId);
-            // If that was the last character we're fully logged out, so go
-            // home. Otherwise removeCharacter() selects one of the remaining
-            // characters and we stay on the current page.
-            if (sortedCharacters.length <= 1) {
-              router.push("/");
-            }
-          }}
+          onClick={() =>
+            modals.openConfirmModal({
+              title: `Log out ${characterName}?`,
+              children: (
+                <Text size="sm">
+                  Are you sure you want to log out from character{" "}
+                  {characterName}?
+                </Text>
+              ),
+              labels: { confirm: "Confirm", cancel: "Cancel" },
+              confirmProps: { color: "red" },
+              onConfirm: () => {
+                removeCharacter(characterId);
+                // If that was the last character we're fully logged out, so
+                // go home. Otherwise removeCharacter() selects one of the
+                // remaining characters and we stay on the current page.
+                if (sortedCharacters.length <= 1) {
+                  router.push("/");
+                }
+              },
+            })
+          }
         >
           Logout
         </Menu.Item>
