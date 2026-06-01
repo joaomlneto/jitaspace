@@ -5,6 +5,29 @@ import { describe, expect, it } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render } from "@testing-library/react";
 
+import { AllianceAvatar } from "../../Avatar/AllianceAvatar";
+import { CalendarEventOwnerAvatar } from "../../Avatar/CalendarEventOwnerAvatar";
+import { CharacterAvatar } from "../../Avatar/CharacterAvatar";
+import { CorporationAvatar } from "../../Avatar/CorporationAvatar";
+import { EveEntityAvatar } from "../../Avatar/EveEntityAvatar";
+import { EveIconAvatar } from "../../Avatar/EveIconAvatar";
+import { EveIconAvatarPlaceholder } from "../../Avatar/EveIconAvatarPlaceholder";
+import { EveImageServerAvatar } from "../../Avatar/EveImageServerAvatar";
+import { EveMailSenderAvatar } from "../../Avatar/EveMailSenderAvatar";
+import { FactionAvatar } from "../../Avatar/FactionAvatar";
+import { MarketGroupAvatar } from "../../Avatar/MarketGroupAvatar";
+import { PlanetAvatar } from "../../Avatar/PlanetAvatar";
+import { RaceAvatar } from "../../Avatar/RaceAvatar";
+import { SolarSystemSovereigntyAvatar } from "../../Avatar/SolarSystemSovereigntyAvatar";
+import { SolarSystemStarAvatar } from "../../Avatar/SolarSystemStarAvatar";
+import { StarAvatar } from "../../Avatar/StarAvatar";
+import { StargateAvatar } from "../../Avatar/StargateAvatar";
+import { StationAvatar } from "../../Avatar/StationAvatar";
+import { StructureAvatar } from "../../Avatar/StructureAvatar";
+import { TypeAvatar } from "../../Avatar/TypeAvatar";
+import { WarAggressorAvatar } from "../../Avatar/WarAggressorAvatar";
+import { WarDefenderAvatar } from "../../Avatar/WarDefenderAvatar";
+
 // ---------------------------------------------------------------------------
 // Mock every external data source the Avatar components reach for. Each mock is
 // a jest.fn() so individual tests can override the return shape when they need
@@ -15,6 +38,7 @@ const useEsiName = jest.fn();
 const useMarketGroup = jest.fn();
 const useSolarSystem = jest.fn();
 const useSolarSystemSovereignty = jest.fn();
+const useStar = jest.fn();
 
 jest.mock("@jitaspace/hooks", () => ({
   useEsiName: (...args: unknown[]) => useEsiName(...args),
@@ -22,6 +46,7 @@ jest.mock("@jitaspace/hooks", () => ({
   useSolarSystem: (...args: unknown[]) => useSolarSystem(...args),
   useSolarSystemSovereignty: (...args: unknown[]) =>
     useSolarSystemSovereignty(...args),
+  useStar: (...args: unknown[]) => useStar(...args),
 }));
 
 const useGetIconById = jest.fn();
@@ -47,29 +72,6 @@ jest.mock("@jitaspace/eve-icons", () => ({
   GroupListIcon: () => <span data-testid="group-list-icon" />,
 }));
 
-import { AllianceAvatar } from "../../Avatar/AllianceAvatar";
-import { CalendarEventOwnerAvatar } from "../../Avatar/CalendarEventOwnerAvatar";
-import { CharacterAvatar } from "../../Avatar/CharacterAvatar";
-import { CorporationAvatar } from "../../Avatar/CorporationAvatar";
-import { EveEntityAvatar } from "../../Avatar/EveEntityAvatar";
-import { EveIconAvatar } from "../../Avatar/EveIconAvatar";
-import { EveIconAvatarPlaceholder } from "../../Avatar/EveIconAvatarPlaceholder";
-import { EveImageServerAvatar } from "../../Avatar/EveImageServerAvatar";
-import { EveMailSenderAvatar } from "../../Avatar/EveMailSenderAvatar";
-import { FactionAvatar } from "../../Avatar/FactionAvatar";
-import { MarketGroupAvatar } from "../../Avatar/MarketGroupAvatar";
-import { PlanetAvatar } from "../../Avatar/PlanetAvatar";
-import { RaceAvatar } from "../../Avatar/RaceAvatar";
-import { SolarSystemSovereigntyAvatar } from "../../Avatar/SolarSystemSovereigntyAvatar";
-import { SolarSystemStarAvatar } from "../../Avatar/SolarSystemStarAvatar";
-import { StarAvatar } from "../../Avatar/StarAvatar";
-import { StargateAvatar } from "../../Avatar/StargateAvatar";
-import { StationAvatar } from "../../Avatar/StationAvatar";
-import { StructureAvatar } from "../../Avatar/StructureAvatar";
-import { TypeAvatar } from "../../Avatar/TypeAvatar";
-import { WarAggressorAvatar } from "../../Avatar/WarAggressorAvatar";
-import { WarDefenderAvatar } from "../../Avatar/WarDefenderAvatar";
-
 const renderWithMantine = (ui: ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);
 
@@ -89,6 +91,7 @@ beforeEach(() => {
     corporation_id: 98000001,
     faction_id: 500001,
   });
+  useStar.mockReturnValue({ data: { data: { type_id: 3802 } } });
   useGetIconById.mockReturnValue({
     data: { data: { iconFile: "res:/ui/texture/icons/7_64_15.png" } },
     isPending: false,
@@ -113,7 +116,11 @@ describe("Avatar components render", () => {
     ["EveIconAvatarPlaceholder", <EveIconAvatarPlaceholder />],
     [
       "EveImageServerAvatar",
-      <EveImageServerAvatar category="characters" id={1} variation="portrait" />,
+      <EveImageServerAvatar
+        category="characters"
+        id={1}
+        variation="portrait"
+      />,
     ],
     ["EveMailSenderAvatar", <EveMailSenderAvatar from={90000001} />],
     ["FactionAvatar", <FactionAvatar factionId={500001} />],
@@ -130,7 +137,10 @@ describe("Avatar components render", () => {
     ["StationAvatar", <StationAvatar typeId={1531} />],
     ["StructureAvatar", <StructureAvatar typeId={35832} />],
     ["TypeAvatar", <TypeAvatar typeId={587} />],
-    ["WarAggressorAvatar", <WarAggressorAvatar aggressorAllianceId={99000001} />],
+    [
+      "WarAggressorAvatar",
+      <WarAggressorAvatar aggressorAllianceId={99000001} />,
+    ],
     ["WarDefenderAvatar", <WarDefenderAvatar defenderAllianceId={99000002} />],
   ])("%s renders without crashing", (_label, element) => {
     const { container } = renderWithMantine(element);
@@ -250,13 +260,17 @@ describe("EveEntityAvatar", () => {
     const { container } = renderWithMantine(
       <EveEntityAvatar entityId={90000001} />,
     );
-    expect(container.querySelector(".mantine-Skeleton-root")).toBeInTheDocument();
+    expect(
+      container.querySelector(".mantine-Skeleton-root"),
+    ).toBeInTheDocument();
   });
 
   it("shows a skeleton when entityId is undefined", () => {
     useEsiName.mockReturnValue({ category: undefined, loading: false });
     const { container } = renderWithMantine(<EveEntityAvatar />);
-    expect(container.querySelector(".mantine-Skeleton-root")).toBeInTheDocument();
+    expect(
+      container.querySelector(".mantine-Skeleton-root"),
+    ).toBeInTheDocument();
   });
 
   it("renders the UnknownIcon when category resolution fails", () => {
@@ -290,9 +304,7 @@ describe("EveEntityAvatar", () => {
     ["faction", "/corporations/77/logo"],
   ])("routes category %s to the right avatar", (category, expectedFragment) => {
     useEsiName.mockReturnValue({ category, loading: false });
-    const { container } = renderWithMantine(
-      <EveEntityAvatar entityId={77} />,
-    );
+    const { container } = renderWithMantine(<EveEntityAvatar entityId={77} />);
     expect(container.querySelector("img")?.getAttribute("src")).toContain(
       expectedFragment,
     );
@@ -317,9 +329,7 @@ describe("EveEntityAvatar", () => {
 
   it("renders a bare Avatar for an unhandled category", () => {
     useEsiName.mockReturnValue({ category: "region", loading: false });
-    const { container } = renderWithMantine(
-      <EveEntityAvatar entityId={77} />,
-    );
+    const { container } = renderWithMantine(<EveEntityAvatar entityId={77} />);
     // Unhandled categories fall through to a plain Mantine Avatar (no img).
     expect(container.querySelector("img")).not.toBeInTheDocument();
     expect(container).not.toBeEmptyDOMElement();
@@ -342,7 +352,9 @@ describe("EveIconAvatar", () => {
   it("wraps in a visible skeleton while the icon query is pending", () => {
     useGetIconById.mockReturnValue({ data: undefined, isPending: true });
     const { container } = renderWithMantine(<EveIconAvatar iconId={25} />);
-    expect(container.querySelector(".mantine-Skeleton-root")).toBeInTheDocument();
+    expect(
+      container.querySelector(".mantine-Skeleton-root"),
+    ).toBeInTheDocument();
   });
 
   it("defaults a null iconId to 0 when querying the icon", () => {
@@ -442,7 +454,9 @@ describe("TypeAvatar", () => {
 describe("CalendarEventOwnerAvatar", () => {
   it("renders a skeleton when ownerId or ownerType is missing", () => {
     const { container } = renderWithMantine(<CalendarEventOwnerAvatar />);
-    expect(container.querySelector(".mantine-Skeleton-root")).toBeInTheDocument();
+    expect(
+      container.querySelector(".mantine-Skeleton-root"),
+    ).toBeInTheDocument();
   });
 
   it.each<[string, string]>([
@@ -484,7 +498,9 @@ describe("CalendarEventOwnerAvatar", () => {
 describe("EveMailSenderAvatar", () => {
   it("renders a skeleton when no sender is given", () => {
     const { container } = renderWithMantine(<EveMailSenderAvatar />);
-    expect(container.querySelector(".mantine-Skeleton-root")).toBeInTheDocument();
+    expect(
+      container.querySelector(".mantine-Skeleton-root"),
+    ).toBeInTheDocument();
   });
 
   it("renders the mailing-list icon when the sender is a mailing list", () => {
@@ -546,12 +562,14 @@ describe("SolarSystemSovereigntyAvatar", () => {
   it("falls back to the star avatar when there is no sovereignty", () => {
     useSolarSystemSovereignty.mockReturnValue(undefined);
     useSolarSystem.mockReturnValue({ data: { data: { star_id: 40000007 } } });
+    useStar.mockReturnValue({ data: { data: { type_id: 45041 } } });
     const { container } = renderWithMantine(
       <SolarSystemSovereigntyAvatar solarSystemId={30000142} />,
     );
-    // StarAvatar -> TypeAvatar receives star_id via starId, which TypeAvatar
-    // ignores (no typeId), so it renders the fallback placeholder, not an img.
-    expect(container).not.toBeEmptyDOMElement();
+    // the star is resolved to its type and rendered as a type "render" image
+    expect(container.querySelector("img")?.getAttribute("src")).toContain(
+      "/types/45041/render",
+    );
   });
 
   it("accepts a string solarSystemId", () => {
