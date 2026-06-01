@@ -21,6 +21,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
+import { AuthErrorNotifier } from "~/components/AuthErrorNotifier";
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
 import { RouterTransition } from "~/components/RouterTransition.tsx";
@@ -113,6 +114,7 @@ export default function RootLayout({
             <EsiClientSSOAccessTokenInjector>
               <>
                 <Notifications />
+                <AuthErrorNotifier />
                 <Suspense fallback={null}>
                   <RouterTransition />
                 </Suspense>

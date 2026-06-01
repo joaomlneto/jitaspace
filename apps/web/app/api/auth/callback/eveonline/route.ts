@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 
 import {
   completeLoginFlow,
@@ -70,6 +71,11 @@ export async function GET(req: NextRequest) {
     });
     return response;
   } catch (error) {
+    // The flow is aborted here on a genuine failure (state/PKCE mismatch,
+    // expired flow cookie, token-exchange failure, undecodable token). Report
+    // it: this `catch` swallows the error, so Next's `onRequestError` hook
+    // never sees it and it would otherwise only exist in the server logs.
+    Sentry.captureException(error, { tags: { area: "eve-sso-callback" } });
     console.error("EVE SSO callback failed", error);
     const response = NextResponse.redirect(
       `${origin}/?auth_error=login_failed`,
