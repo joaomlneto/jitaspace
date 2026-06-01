@@ -12,19 +12,21 @@ import type {
   LayoutMode,
   PlacedPlanet,
   PlacedSatellite,
+  PlacedStar,
   PlacedStargate,
   PlanetInput,
+  StarInput,
 } from "./layout";
 import {
   layoutSystem,
   MOON_COLOR,
   STAR_COLOR,
-  STAR_RADIUS,
   STARGATE_COLOR,
   STATION_COLOR,
 } from "./layout";
 
 export interface SolarSystemSceneProps {
+  star: StarInput;
   planets: PlanetInput[];
   stations: BodyInput[];
   stargates: BodyInput[];
@@ -52,15 +54,32 @@ function OrbitRing({ radius }: Readonly<{ radius: number }>) {
   );
 }
 
-function Star() {
+function Star({
+  star,
+  hover,
+  setHover,
+}: Readonly<{
+  star: PlacedStar;
+  hover: HoverTarget | null;
+  setHover: (hover: HoverTarget | null) => void;
+}>) {
+  const isHovered = hover?.kind === "star";
+  const size = star.size;
   return (
     <group>
-      <mesh>
-        <sphereGeometry args={[STAR_RADIUS, 48, 48]} />
+      <mesh
+        scale={isHovered ? 1.12 : 1}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHover({ kind: "star", id: star.id, ...pointerXY(e) });
+        }}
+        onPointerOut={() => setHover(null)}
+      >
+        <sphereGeometry args={[size, 48, 48]} />
         <meshBasicMaterial color={STAR_COLOR} />
       </mesh>
       <mesh>
-        <sphereGeometry args={[STAR_RADIUS * 1.55, 32, 32]} />
+        <sphereGeometry args={[size * 1.55, 32, 32]} />
         <meshBasicMaterial color="#ffb648" transparent opacity={0.16} />
       </mesh>
       <pointLight intensity={2.4} decay={0} color="#fff1d4" />
@@ -77,7 +96,7 @@ function Satellite({
   hover: HoverTarget | null;
   setHover: (hover: HoverTarget | null) => void;
 }>) {
-  const { id, kind, position } = satellite;
+  const { id, kind, position, size } = satellite;
   const isHovered = hover?.kind === kind && hover.id === id;
   const color = kind === "moon" ? MOON_COLOR : STATION_COLOR;
   return (
@@ -91,9 +110,9 @@ function Satellite({
       onPointerOut={() => setHover(null)}
     >
       {kind === "moon" ? (
-        <sphereGeometry args={[0.1, 14, 14]} />
+        <sphereGeometry args={[size, 16, 16]} />
       ) : (
-        <boxGeometry args={[0.16, 0.16, 0.16]} />
+        <boxGeometry args={[size, size, size]} />
       )}
       <meshStandardMaterial
         color={color}
@@ -107,17 +126,19 @@ function Satellite({
 
 function PlanetBody({
   planet,
+  flat,
   hover,
   setHover,
 }: Readonly<{
   planet: PlacedPlanet;
+  flat: boolean;
   hover: HoverTarget | null;
   setHover: (hover: HoverTarget | null) => void;
 }>) {
   const isHovered = hover?.kind === "planet" && hover.id === planet.id;
   return (
     <>
-      <OrbitRing radius={planet.orbitRadius} />
+      {flat && <OrbitRing radius={planet.orbitRadius} />}
       <group position={planet.position}>
         <mesh
           scale={isHovered ? 1.25 : 1}
@@ -169,7 +190,7 @@ function StargateMarker({
       }}
       onPointerOut={() => setHover(null)}
     >
-      <octahedronGeometry args={[0.34, 0]} />
+      <octahedronGeometry args={[gate.size, 0]} />
       <meshStandardMaterial
         color={STARGATE_COLOR}
         emissive={STARGATE_COLOR}
@@ -181,6 +202,7 @@ function StargateMarker({
 }
 
 export default function SolarSystemScene({
+  star,
   planets,
   stations,
   stargates,
@@ -190,8 +212,8 @@ export default function SolarSystemScene({
   setHover,
 }: Readonly<SolarSystemSceneProps>) {
   const layout = useMemo(
-    () => layoutSystem(planets, stations, stargates, mode),
-    [planets, stations, stargates, mode],
+    () => layoutSystem(star, planets, stations, stargates, mode),
+    [star, planets, stations, stargates, mode],
   );
   const camDistance = layout.extent * 1.9 + 6;
 
@@ -205,11 +227,12 @@ export default function SolarSystemScene({
       <fog attach="fog" args={["#05070d", camDistance, camDistance * 3]} />
       <ambientLight intensity={0.4} />
       <Stars radius={140} depth={50} count={2200} factor={4} fade speed={0.4} />
-      <Star />
+      <Star star={layout.star} hover={hover} setHover={setHover} />
       {layout.planets.map((planet) => (
         <PlanetBody
           key={planet.id}
           planet={planet}
+          flat={layout.flat}
           hover={hover}
           setHover={setHover}
         />
@@ -226,7 +249,7 @@ export default function SolarSystemScene({
         makeDefault
         enableDamping
         dampingFactor={0.08}
-        minDistance={3}
+        minDistance={0.2}
         maxDistance={camDistance * 2.4}
         autoRotate={autoRotate && !hover}
         autoRotateSpeed={0.25}

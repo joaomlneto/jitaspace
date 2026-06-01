@@ -9,6 +9,7 @@ import type {
   HoverTarget,
   LayoutMode,
   PlanetInput,
+  StarInput,
 } from "./layout";
 import {
   LAYOUT_MODES,
@@ -21,7 +22,9 @@ import {
 import SolarSystemScene from "./SolarSystemScene";
 
 export interface SolarSystemMapProps {
-  /** Planets with their real, system-relative position and moon ids. */
+  /** The system's star, with its real radius. */
+  star: StarInput;
+  /** Planets with their real position, radius and moons. */
   planets: PlanetInput[];
   /** Stations with their real position (assigned to their nearest planet). */
   stations: BodyInput[];
@@ -29,7 +32,7 @@ export interface SolarSystemMapProps {
   stargates: BodyInput[];
   /** Height of the map. Defaults to 460. */
   height?: number | string;
-  /** Initial layout mode. Defaults to "compressed". */
+  /** Initial layout mode. Defaults to "realistic". */
   defaultMode?: LayoutMode;
   /**
    * Renders the label shown while hovering a body. Receives the body's kind
@@ -82,11 +85,12 @@ function capitalize(value: string): string {
 }
 
 export function SolarSystemMap({
+  star,
   planets,
   stations,
   stargates,
   height = 460,
-  defaultMode = "compressed",
+  defaultMode = "realistic",
   renderLabel,
   showLegend = true,
   autoRotate = false,
@@ -108,6 +112,7 @@ export function SolarSystemMap({
       }}
     >
       <SolarSystemScene
+        star={star}
         planets={planets}
         stations={stations}
         stargates={stargates}

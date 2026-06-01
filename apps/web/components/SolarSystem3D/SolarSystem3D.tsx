@@ -2,24 +2,31 @@
 
 import dynamic from "next/dynamic";
 import { Center, Loader } from "@mantine/core";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 
 import type {
   BodyInput,
   HoverKind,
   PlanetInput,
+  StarInput,
   Vec3,
 } from "@jitaspace/solar-system-map";
 import { useSolarSystem } from "@jitaspace/hooks";
 import {
   getMoonByIdQueryOptions,
   getPlanetByIdQueryOptions,
+  getStarByIdQueryOptions,
   getStargateByIdQueryOptions,
   getStationByIdQueryOptions,
 } from "@jitaspace/sde-client";
 import { StationName } from "@jitaspace/ui";
 
-import { MoonName, PlanetName, StargateName } from "~/components/Text";
+import {
+  MoonName,
+  PlanetName,
+  StargateName,
+  StarName,
+} from "~/components/Text";
 
 // The map renders a WebGL canvas and pulls in three.js, so it is loaded lazily
 // on the client only.
@@ -51,6 +58,7 @@ function toVec(position: SdePosition | undefined): Vec3 {
 }
 
 function renderLabel({ kind, id }: { kind: HoverKind; id: number }) {
+  if (kind === "star") return <StarName span starId={id} />;
   if (kind === "planet") return <PlanetName span planetId={id} />;
   if (kind === "moon") return <MoonName span moonId={id} />;
   if (kind === "station") return <StationName span stationId={id} />;
@@ -59,8 +67,8 @@ function renderLabel({ kind, id }: { kind: HoverKind; id: number }) {
 
 /**
  * Solar-system page adapter around `@jitaspace/solar-system-map`: resolves the
- * system's celestials, fetches their real positions from the SDE, and supplies
- * name-resolving hover labels.
+ * system's celestials, fetches their real positions and radii from the SDE, and
+ * supplies name-resolving hover labels.
  */
 export function SolarSystem3D({
   solarSystemId,
@@ -69,12 +77,17 @@ export function SolarSystem3D({
   const { data: solarSystem } = useSolarSystem(solarSystemId);
   const data = solarSystem?.data;
 
+  const starId = data?.star_id;
   const planetEntries = data?.planets ?? [];
   const stationIds = data?.stations ?? [];
   const stargateIds = data?.stargates ?? [];
 
   const moonIds = planetEntries.flatMap((planet) => planet.moons ?? []);
 
+  const starQuery = useQuery({
+    ...getStarByIdQueryOptions(starId ?? 0),
+    enabled: starId !== undefined,
+  });
   const planetQueries = useQueries({
     queries: planetEntries.map((planet) =>
       getPlanetByIdQueryOptions(planet.planet_id),
@@ -90,25 +103,34 @@ export function SolarSystem3D({
     queries: stargateIds.map((id) => getStargateByIdQueryOptions(id)),
   });
 
-  const moonPositionById = new Map<number, Vec3>();
+  const moonById = new Map<number, BodyInput>();
   moonIds.forEach((id, i) => {
-    const position = moonQueries[i]?.data?.data.position;
-    if (position) moonPositionById.set(id, toVec(position));
+    const moon = moonQueries[i]?.data?.data;
+    if (moon?.position) {
+      moonById.set(id, {
+        id,
+        position: toVec(moon.position),
+        radius: moon.radius,
+      });
+    }
   });
+
+  const star: StarInput = {
+    id: starId ?? 0,
+    radius: starQuery.data?.data.radius ?? 0,
+  };
 
   const planets: PlanetInput[] = planetEntries
     .map((planet, i) => {
-      const position = planetQueries[i]?.data?.data.position;
-      if (!position) return undefined;
+      const sde = planetQueries[i]?.data?.data;
+      if (!sde?.position) return undefined;
       const moons: BodyInput[] = (planet.moons ?? [])
-        .map((id) => {
-          const moonPosition = moonPositionById.get(id);
-          return moonPosition ? { id, position: moonPosition } : undefined;
-        })
+        .map((id) => moonById.get(id))
         .filter((m): m is BodyInput => m !== undefined);
       return {
         id: planet.planet_id,
-        position: toVec(position),
+        position: toVec(sde.position),
+        radius: sde.radius,
         moons,
       };
     })
@@ -130,6 +152,8 @@ export function SolarSystem3D({
 
   const settled =
     !!data &&
+    starId !== undefined &&
+    !starQuery.isLoading &&
     planetQueries.every((q) => !q.isLoading) &&
     moonQueries.every((q) => !q.isLoading) &&
     stationQueries.every((q) => !q.isLoading) &&
@@ -145,6 +169,7 @@ export function SolarSystem3D({
 
   return (
     <SolarSystemMap
+      star={star}
       planets={planets}
       stations={stations}
       stargates={stargates}
