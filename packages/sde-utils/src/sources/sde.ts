@@ -10,272 +10,82 @@ export type SdeSourceFile = {
   transformations: ((data: unknown, file: SdeSourceFile) => SdeRecord)[];
 };
 
+// Builder helpers to cut repetition in sdeInputFiles
+const addId = (idAttributeName: string): SdeSourceFile => ({
+  idAttributeName,
+  idAttributeType: "number",
+  transformations: [addIdToItem],
+});
+
+const fromArr = (idAttributeName: string): SdeSourceFile => ({
+  idAttributeName,
+  idAttributeType: "number",
+  transformations: [fromArrayOfObjectsToMap],
+});
+
+const noTransform = (
+  idAttributeName: string,
+  idAttributeType: SdeSourceFile["idAttributeType"] = "number",
+): SdeSourceFile => ({
+  idAttributeName,
+  idAttributeType,
+  transformations: [],
+});
+
 export const sdeInputFiles: Record<string, SdeSourceFile> = {
-  "_sde.yaml": {
-    idAttributeName: "XXXX",
-    idAttributeType: "number",
-    transformations: [],
-  },
-  "invFlags.yaml": {
-    idAttributeName: "flagID",
-    idAttributeType: "number",
-    transformations: [fromArrayOfObjectsToMap],
-  },
-  "npcCharacters.yaml": {
-    idAttributeName: "characterID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "agentsInSpace.yaml": {
-    idAttributeName: "characterID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "agentTypes.yaml": {
-    idAttributeName: "agentTypeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "ancestries.yaml": {
-    idAttributeName: "ancestryID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "bloodlines.yaml": {
-    idAttributeName: "bloodlineID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "blueprints.yaml": {
-    idAttributeName: "blueprintTypeID",
-    idAttributeType: "number",
-    transformations: [],
-  },
-  "categories.yaml": {
-    idAttributeName: "categoryID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "certificates.yaml": {
-    idAttributeName: "certificateID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "characterAttributes.yaml": {
-    idAttributeName: "attributeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "contrabandTypes.yaml": {
-    idAttributeName: "typeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "controlTowerResources.yaml": {
-    idAttributeName: "typeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "corporationActivities.yaml": {
-    idAttributeName: "corporationActivityID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "dbuffCollections.yaml": {
-    idAttributeName: "dbuffCollectionID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "dogmaAttributeCategories.yaml": {
-    idAttributeName: "attributeCategoryID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "dogmaAttributes.yaml": {
-    idAttributeName: "attributeID",
-    idAttributeType: "number",
-    transformations: [],
-  },
-  "dogmaEffects.yaml": {
-    idAttributeName: "effectID",
-    idAttributeType: "number",
-    transformations: [],
-  },
-  "dogmaUnits.yaml": {
-    idAttributeName: "unitID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "dynamicItemAttributes.yaml": {
-    idAttributeName: "dynamicItemAttributeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "factions.yaml": {
-    idAttributeName: "factionID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "graphics.yaml": {
-    idAttributeName: "graphicID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "groups.yaml": {
-    idAttributeName: "groupID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "icons.yaml": {
-    idAttributeName: "iconID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "landmarks.yaml": {
-    idAttributeName: "landmarkID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "mapAsteroidBelts.yaml": {
-    idAttributeName: "asteroidBeltID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "mapConstellations.yaml": {
-    idAttributeName: "constellationID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "mapMoons.yaml": {
-    idAttributeName: "moonID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "mapPlanets.yaml": {
-    idAttributeName: "planetID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "mapRegions.yaml": {
-    idAttributeName: "regionID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "mapSolarSystems.yaml": {
-    idAttributeName: "solarSystemID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "mapStargates.yaml": {
-    idAttributeName: "stargateID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "mapStars.yaml": {
-    idAttributeName: "starID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "marketGroups.yaml": {
-    idAttributeName: "marketGroupID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "masteries.yaml": {
-    idAttributeName: "typeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "metaGroups.yaml": {
-    idAttributeName: "metaGroupID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "npcCorporationDivisions.yaml": {
-    idAttributeName: "npcCorporationDivisionID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "npcCorporations.yaml": {
-    idAttributeName: "corporationID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "npcStations.yaml": {
-    idAttributeName: "stationID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "planetSchematics.yaml": {
-    idAttributeName: "planetSchematicID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "races.yaml": {
-    idAttributeName: "raceID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "skinLicenses.yaml": {
-    idAttributeName: "licenseTypeID",
-    idAttributeType: "number",
-    transformations: [],
-  },
-  "skinMaterials.yaml": {
-    idAttributeName: "skinMaterialID",
-    idAttributeType: "number",
-    transformations: [],
-  },
-  "skins.yaml": {
-    idAttributeName: "skinID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "stationOperations.yaml": {
-    idAttributeName: "stationOperationID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "stationServices.yaml": {
-    idAttributeName: "stationServiceID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "translationLanguages.yaml": {
-    idAttributeName: "translationLanguageID",
-    idAttributeType: "string",
-    transformations: [],
-  },
-  "typeBonus.yaml": {
-    idAttributeName: "typeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "typeDogma.yaml": {
-    idAttributeName: "typeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "types.yaml": {
-    idAttributeName: "typeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "typeMaterials.yaml": {
-    idAttributeName: "typeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "planetResources.yaml": {
-    idAttributeName: "planetID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
-  "sovereigntyUpgrades.yaml": {
-    idAttributeName: "typeID",
-    idAttributeType: "number",
-    transformations: [addIdToItem],
-  },
+  "_sde.yaml": noTransform("XXXX"),
+  "invFlags.yaml": fromArr("flagID"),
+  "npcCharacters.yaml": addId("characterID"),
+  "agentsInSpace.yaml": addId("characterID"),
+  "agentTypes.yaml": addId("agentTypeID"),
+  "ancestries.yaml": addId("ancestryID"),
+  "bloodlines.yaml": addId("bloodlineID"),
+  "blueprints.yaml": noTransform("blueprintTypeID"),
+  "categories.yaml": addId("categoryID"),
+  "certificates.yaml": addId("certificateID"),
+  "characterAttributes.yaml": addId("attributeID"),
+  "contrabandTypes.yaml": addId("typeID"),
+  "controlTowerResources.yaml": addId("typeID"),
+  "corporationActivities.yaml": addId("corporationActivityID"),
+  "dbuffCollections.yaml": addId("dbuffCollectionID"),
+  "dogmaAttributeCategories.yaml": addId("attributeCategoryID"),
+  "dogmaAttributes.yaml": noTransform("attributeID"),
+  "dogmaEffects.yaml": noTransform("effectID"),
+  "dogmaUnits.yaml": addId("unitID"),
+  "dynamicItemAttributes.yaml": addId("dynamicItemAttributeID"),
+  "factions.yaml": addId("factionID"),
+  "graphics.yaml": addId("graphicID"),
+  "groups.yaml": addId("groupID"),
+  "icons.yaml": addId("iconID"),
+  "landmarks.yaml": addId("landmarkID"),
+  "mapAsteroidBelts.yaml": addId("asteroidBeltID"),
+  "mapConstellations.yaml": addId("constellationID"),
+  "mapMoons.yaml": addId("moonID"),
+  "mapPlanets.yaml": addId("planetID"),
+  "mapRegions.yaml": addId("regionID"),
+  "mapSolarSystems.yaml": addId("solarSystemID"),
+  "mapStargates.yaml": addId("stargateID"),
+  "mapStars.yaml": addId("starID"),
+  "marketGroups.yaml": addId("marketGroupID"),
+  "masteries.yaml": addId("typeID"),
+  "metaGroups.yaml": addId("metaGroupID"),
+  "npcCorporationDivisions.yaml": addId("npcCorporationDivisionID"),
+  "npcCorporations.yaml": addId("corporationID"),
+  "npcStations.yaml": addId("stationID"),
+  "planetSchematics.yaml": addId("planetSchematicID"),
+  "races.yaml": addId("raceID"),
+  "skinLicenses.yaml": noTransform("licenseTypeID"),
+  "skinMaterials.yaml": noTransform("skinMaterialID"),
+  "skins.yaml": addId("skinID"),
+  "stationOperations.yaml": addId("stationOperationID"),
+  "stationServices.yaml": addId("stationServiceID"),
+  "translationLanguages.yaml": noTransform("translationLanguageID", "string"),
+  "typeBonus.yaml": addId("typeID"),
+  "typeDogma.yaml": addId("typeID"),
+  "types.yaml": addId("typeID"),
+  "typeMaterials.yaml": addId("typeID"),
+  "planetResources.yaml": addId("planetID"),
+  "sovereigntyUpgrades.yaml": addId("typeID"),
 };
 
 export function fromArrayOfObjectsToMap(

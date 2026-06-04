@@ -20,7 +20,10 @@ export async function sdeZipChecksum(
   const zip = new StreamZip.async({ file: filePath });
   const entries = await zip.entries();
   const total = await zip.entriesCount;
-  const checksum = crypto.createHash("md5");
+  // MD5 is required here: EVE Online's official SDE checksum endpoint publishes
+  // an MD5 digest, so we must use the same algorithm to verify downloads. This
+  // is integrity-checking, not cryptographic security. NOSONAR
+  const checksum = crypto.createHash("md5"); // NOSONAR
 
   let processed = 0;
   for (const entry of Object.values(entries)) {
@@ -48,7 +51,7 @@ export async function sdeFolderChecksum(
   const zip = new StreamZip.async({ file: sdeZipPath });
   const entries = await zip.entries();
   const total = await zip.entriesCount;
-  const checksum = crypto.createHash("md5");
+  const checksum = crypto.createHash("md5"); // NOSONAR — see sdeZipChecksum
 
   let processed = 0;
   for (const entry of Object.values(entries)) {

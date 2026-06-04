@@ -1256,9 +1256,6 @@ importers:
       js-yaml:
         specifier: ^4.1.1
         version: 4.1.1
-      node-stream-zip:
-        specifier: ^1.15.0
-        version: 1.15.0
     devDependencies:
       '@jitaspace/eslint-config':
         specifier: workspace:*
@@ -1532,6 +1529,9 @@ importers:
       node-fetch:
         specifier: ^2.7.0
         version: 2.7.0
+      node-stream-zip:
+        specifier: ^1.15.0
+        version: 1.15.0
       prettier:
         specifier: ^3.8.3
         version: 3.8.3
