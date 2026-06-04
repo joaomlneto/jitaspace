@@ -10,6 +10,17 @@ import { prisma } from "@jitaspace/db";
 import TypePage from "./page.client";
 import type { PageProps } from "./page.client";
 
+function stripHtml(s: string): string {
+  let out = "";
+  let inTag = false;
+  for (const ch of s) {
+    if (ch === "<") inTag = true;
+    else if (ch === ">") inTag = false;
+    else if (!inTag) out += ch;
+  }
+  return out;
+}
+
 async function getTypeData(typeId: number): Promise<PageProps> {
   "use cache";
   cacheLife("days");
@@ -57,7 +68,7 @@ export async function generateMetadata({
     const { typeName, typeDescription, ogImageUrl } =
       await getTypeData(typeId);
     const description = typeDescription
-      ? typeDescription.replace(/<[^>]+>/g, "").slice(0, 200)
+      ? stripHtml(typeDescription).slice(0, 200)
       : undefined;
     return {
       title: typeName ?? undefined,

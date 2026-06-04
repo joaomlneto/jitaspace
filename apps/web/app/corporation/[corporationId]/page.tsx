@@ -6,6 +6,17 @@ import PageClient from "./page.client";
 
 const ESI_BASE = "https://esi.evetech.net/latest";
 
+function stripHtml(s: string): string {
+  let out = "";
+  let inTag = false;
+  for (const ch of s) {
+    if (ch === "<") inTag = true;
+    else if (ch === ">") inTag = false;
+    else if (!inTag) out += ch;
+  }
+  return out;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -27,7 +38,7 @@ export async function generateMetadata({
     };
     const name = data.name;
     const description = data.description
-      ? data.description.replace(/<[^>]+>/g, "").slice(0, 200)
+      ? stripHtml(data.description).slice(0, 200)
       : undefined;
     const logoUrl = `https://images.evetech.net/corporations/${id}/logo`;
     return {
