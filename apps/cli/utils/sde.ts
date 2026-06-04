@@ -3,7 +3,6 @@ import * as path from "node:path";
 import fetch from "node-fetch";
 import {
   latestSdeLastModified,
-  LOCAL_SDE_FILENAME,
   SDE_CHECKSUM_URL,
   SDE_DOWNLOAD_URL,
 } from "@jitaspace/sde-utils";
@@ -14,6 +13,8 @@ import { downloadFile } from "./download.js";
 import { mkdir, sdeZipChecksum, unzipSde } from "./fs.js";
 
 export { latestSdeLastModified };
+
+const LOCAL_SDE_FILENAME = "sde.zip";
 
 export async function ensureSdePresentAndExtracted() {
   const checksumResponse = await fetch(SDE_CHECKSUM_URL);

@@ -5,7 +5,7 @@ import * as path from "node:path";
 import { collections } from "../config/collections.js";
 import { getWorkingDirectory, TITLE_WIDTH } from "../lib/cli.js";
 import { globalProgress } from "../lib/progress.js";
-import { loadFile } from "../sources/sde.ts";
+import { loadFile } from "@jitaspace/sde-utils";
 import { generateCollectionFiles } from "../utils/collections.js";
 import { mkdir } from "../utils/fs";
 import { ensureSdePresentAndExtracted } from "../utils/sde.js";

@@ -2,11 +2,9 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import fetch from "node-fetch";
 
-import {
-  LOCAL_SDE_FILENAME,
-  SDE_CHECKSUM_URL,
-  SDE_DOWNLOAD_URL,
-} from "./constants.js";
+import { SDE_CHECKSUM_URL, SDE_DOWNLOAD_URL } from "./constants.js";
+
+const SDE_ARCHIVE_FILENAME = "sde.zip";
 import { downloadFile } from "./download.js";
 import { mkdir, sdeZipChecksum, unzipSde } from "./fs.js";
 
@@ -43,7 +41,7 @@ export async function ensureSdePresentAndExtracted(
     return;
   }
 
-  const localSdePath = path.resolve(workDir, LOCAL_SDE_FILENAME);
+  const localSdePath = path.resolve(workDir, SDE_ARCHIVE_FILENAME);
   if (fs.existsSync(localSdePath)) {
     log("SDE archive present. Checking checksum...\n");
     const currentChecksum = await sdeZipChecksum(localSdePath);
@@ -52,10 +50,10 @@ export async function ensureSdePresentAndExtracted(
       log("SDE archive is up to date!\n");
     } else {
       log("SDE archive is outdated. Downloading new one...\n");
-      await downloadFile(SDE_DOWNLOAD_URL, workDir, LOCAL_SDE_FILENAME);
+      await downloadFile(SDE_DOWNLOAD_URL, workDir, SDE_ARCHIVE_FILENAME);
     }
   } else {
-    await downloadFile(SDE_DOWNLOAD_URL, workDir, LOCAL_SDE_FILENAME);
+    await downloadFile(SDE_DOWNLOAD_URL, workDir, SDE_ARCHIVE_FILENAME);
   }
 
   mkdir(path.resolve(workDir, "sde"));

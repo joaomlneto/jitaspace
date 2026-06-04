@@ -9,7 +9,7 @@ import { collections } from "../config/collections.js";
 import { getWorkingDirectory, TITLE_WIDTH } from "../lib/cli.js";
 import { globalProgress } from "../lib/progress.js";
 import { getHoboleaksFile } from "../sources/hoboleaks.js";
-import { loadFile } from "../sources/sde.js";
+import { loadFile } from "@jitaspace/sde-utils";
 import { mkdir } from "./fs.js";
 
 export function sdeCamelCase(str: string) {
