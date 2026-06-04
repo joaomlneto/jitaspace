@@ -1,5 +1,5 @@
 import type { SingleBar } from "cli-progress";
-import { downloadFile as coreDownloadFile } from "@jitaspace/sde-utils";
+import { downloadFile as coreDownloadFile } from "@jitaspace/utils";
 
 import { globalProgress } from "../lib/progress.js";
 

@@ -58,6 +58,9 @@ importers:
       '@jitaspace/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
+      '@jitaspace/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
       '@jsonhero/schema-infer':
         specifier: ^0.1.5
         version: 0.1.5
