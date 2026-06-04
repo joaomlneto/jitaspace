@@ -1,9 +1,7 @@
 "use client";
 
-import type { ContextModalProps } from "@mantine/modals";
-
 import { SettingsCard } from "~/components/Settings/SettingsCard";
 
-export function SettingsModal(_props: ContextModalProps) {
+export function SettingsModal() {
   return <SettingsCard />;
 }
