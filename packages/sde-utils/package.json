@@ -15,8 +15,9 @@
     "prepublish": "pnpm build"
   },
   "dependencies": {
-    "@jitaspace/utils": "workspace:*",
-    "js-yaml": "^4.1.1"
+    "js-yaml": "^4.1.1",
+    "node-fetch": "^2.7.0",
+    "node-stream-zip": "^1.15.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
@@ -24,6 +25,7 @@
     "@jitaspace/tsconfig": "workspace:*",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.12.4",
+    "@types/node-fetch": "^2.6.12",
     "eslint": "^9.39.4",
     "prettier": "^3.8.3",
     "typescript": "^5.9.3"

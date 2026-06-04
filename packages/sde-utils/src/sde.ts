@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { downloadFile, mkdir, sdeZipChecksum, unzipSde } from "@jitaspace/utils";
+import { downloadFile } from "./download.js";
+import { mkdir, sdeZipChecksum, unzipSde } from "./zip.js";
 
 import { SDE_CHECKSUM_URL, SDE_DOWNLOAD_URL } from "./constants.js";
 
