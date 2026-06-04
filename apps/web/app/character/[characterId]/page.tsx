@@ -13,7 +13,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { characterId } = await params;
   const id = Number(characterId);
-  if (!id) return {};
+  if (!Number.isSafeInteger(id) || id <= 0) return {};
 
   try {
     const res = await fetch(`${ESI_BASE}/characters/${id}/`, {
