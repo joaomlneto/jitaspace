@@ -97,9 +97,13 @@ export async function generateMetadata({
   const effectId = Number(raw);
   if (!Number.isSafeInteger(effectId) || effectId <= 0) return {};
   try {
-    const data = await getEffectData(effectId);
-    const title = data.displayName || data.name || undefined;
-    const description = data.description?.slice(0, 200) ?? undefined;
+    const effect = await prisma.dogmaEffect.findUnique({
+      select: { name: true, displayName: true, description: true },
+      where: { effectId },
+    });
+    if (!effect) return {};
+    const title = effect.displayName || effect.name || undefined;
+    const description = effect.description?.slice(0, 200) ?? undefined;
     return { title, description };
   } catch {
     return {};

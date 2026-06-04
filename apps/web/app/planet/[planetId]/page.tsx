@@ -15,7 +15,7 @@ export async function generateMetadata({
   const id = Number(planetId);
   if (!Number.isSafeInteger(id) || id <= 0) return {};
   try {
-    const res = await fetch(`${ESI_BASE}/universe/planets/${id}/`, {
+    const res = await fetch(`${ESI_BASE}/universe/planets/${id}/`, { // NOSONAR - domain hardcoded; id is a validated safe positive integer
       next: { revalidate: 86400 },
     });
     if (!res.ok) return {};

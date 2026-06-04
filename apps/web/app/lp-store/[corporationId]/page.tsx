@@ -96,9 +96,14 @@ export async function generateMetadata({
   params: Promise<{ corporationId: string }>;
 }): Promise<Metadata> {
   const { corporationId } = await params;
+  const id = Number(corporationId);
+  if (!Number.isSafeInteger(id) || id <= 0) return {};
   try {
-    const data = await getLPStoreCorporationData(corporationId);
-    const name = data.corporation?.name;
+    const corporation = await prisma.corporation.findUnique({
+      select: { name: true },
+      where: { corporationId: id },
+    });
+    const name = corporation?.name;
     return {
       title: name ? `${name} LP Store` : "LP Store",
       description: name

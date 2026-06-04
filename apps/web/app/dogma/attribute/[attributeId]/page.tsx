@@ -101,9 +101,13 @@ export async function generateMetadata({
   const attributeId = Number(raw);
   if (!Number.isSafeInteger(attributeId) || attributeId <= 0) return {};
   try {
-    const data = await getAttributeData(attributeId);
-    const title = data.displayName || data.name || undefined;
-    const description = data.description?.slice(0, 200) ?? undefined;
+    const attribute = await prisma.dogmaAttribute.findUnique({
+      select: { name: true, displayName: true, description: true },
+      where: { attributeId },
+    });
+    if (!attribute) return {};
+    const title = attribute.displayName || attribute.name || undefined;
+    const description = attribute.description?.slice(0, 200) ?? undefined;
     return { title, description };
   } catch {
     return {};

@@ -16,7 +16,7 @@ export async function generateMetadata({
   if (!Number.isSafeInteger(id) || id <= 0) return {};
 
   try {
-    const res = await fetch(`${ESI_BASE}/alliances/${id}/`, {
+    const res = await fetch(`${ESI_BASE}/alliances/${id}/`, { // NOSONAR - domain hardcoded; id is a validated safe positive integer
       next: { revalidate: 3600 },
     });
     if (!res.ok) return {};
