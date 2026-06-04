@@ -3,7 +3,6 @@
 import type { UnstyledButtonProps } from "@mantine/core";
 import type React from "react";
 import { useMemo } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Group,
@@ -102,8 +101,13 @@ export default function UserButton({ ...others }: UserButtonProps) {
         )}
         <Menu.Item
           leftSection={<SettingsIcon width={20} />}
-          component={Link}
-          href="/settings"
+          onClick={() => {
+            openContextModal({
+              modal: "settings",
+              title: "Settings",
+              innerProps: {},
+            });
+          }}
         >
           Settings
         </Menu.Item>
