@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import type { Metadata } from "next";
 import { Loader } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
@@ -85,6 +86,24 @@ async function getEffectData(effectId: number): Promise<PageProps> {
     })),
     groups,
   };
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ effectId: string }>;
+}): Promise<Metadata> {
+  const { effectId: raw } = await params;
+  const effectId = Number(raw);
+  if (!Number.isSafeInteger(effectId) || effectId <= 0) return {};
+  try {
+    const data = await getEffectData(effectId);
+    const title = data.displayName || data.name || undefined;
+    const description = data.description?.slice(0, 200) ?? undefined;
+    return { title, description };
+  } catch {
+    return {};
+  }
 }
 
 async function PageContent({
