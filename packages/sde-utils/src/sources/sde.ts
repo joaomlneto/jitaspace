@@ -1,11 +1,13 @@
-import fs from "fs";
-import path from "path";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import * as YAML from "js-yaml";
+
+export type SdeRecord = Record<string | number, unknown>;
 
 export type SdeSourceFile = {
   idAttributeName: string;
   idAttributeType: "string" | "number";
-  transformations: ((data: any, file: SdeSourceFile) => any)[];
+  transformations: ((data: unknown, file: SdeSourceFile) => SdeRecord)[];
 };
 
 export const sdeInputFiles: Record<string, SdeSourceFile> = {
@@ -277,64 +279,67 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
 };
 
 export function fromArrayOfObjectsToMap(
-  array: Record<any, any>[],
+  data: unknown,
   { idAttributeName }: SdeSourceFile,
-) {
-  const map: Record<any, any> = {};
+): SdeRecord {
+  const array = data as SdeRecord[];
+  const map: SdeRecord = {};
 
-  array.forEach((item) => {
+  for (const item of array) {
     if (!Object.prototype.hasOwnProperty.call(item, idAttributeName)) {
       throw new Error(`⚠️ Missing ID ${idAttributeName}`);
     }
-    if (Object.prototype.hasOwnProperty.call(map, item[idAttributeName])) {
+    const id = item[idAttributeName] as string | number;
+    if (Object.prototype.hasOwnProperty.call(map, id)) {
       // FIXME: Downgraded to warning due to existence of ID collisions in the SDE
-      console.warn(`⚠️ Duplicate ID ${item[idAttributeName]}`);
+      console.warn(`⚠️ Duplicate ID ${id}`);
     }
-    map[item[idAttributeName]] = item;
-    return map[item[idAttributeName]];
-  });
+    map[id] = item;
+  }
   return map;
 }
 
 export function addIdToItem(
-  obj: Record<any, any>,
+  data: unknown,
   { idAttributeName, idAttributeType }: SdeSourceFile,
-) {
-  Object.keys(obj).forEach(
-    (id) =>
-      (obj[id][idAttributeName] =
-        idAttributeType === "number" ? Number.parseInt(id, 10) : id),
-  );
+): SdeRecord {
+  const obj = data as Record<string, SdeRecord>;
+  for (const id of Object.keys(obj)) {
+    obj[id]![idAttributeName] =
+      idAttributeType === "number" ? Number.parseInt(id, 10) : id;
+  }
   return obj;
 }
 
 export function fixObjectIndices(
-  obj: Record<any, any>,
+  obj: SdeRecord,
   { idAttributeName }: { idAttributeName: string },
-) {
-  const result: typeof obj = {};
-  Object.values(obj).forEach(
-    (entry) => (result[entry[idAttributeName]] = entry),
-  );
+): SdeRecord {
+  const result: SdeRecord = {};
+  for (const entry of Object.values(obj)) {
+    const item = entry as SdeRecord;
+    const id = item[idAttributeName] as string | number;
+    result[id] = item;
+  }
   return result;
 }
 
 export function loadFile(
   filename: keyof typeof sdeInputFiles,
   sdeRoot: string,
-): Record<string, any> {
+): SdeRecord {
   const file = sdeInputFiles[filename];
 
   if (!file) {
     throw new Error(`File ${filename} not found in sdeInputFiles`);
   }
 
-  const filePath = path.join(sdeRoot, filename);
-  let data: any = YAML.load(fs.readFileSync(filePath, "utf8"));
+  const filePath = join(sdeRoot, filename);
+  let data: unknown = YAML.load(readFileSync(filePath, "utf8"));
 
   for (const transformation of file.transformations) {
     data = transformation(data, file);
   }
 
-  return data;
+  return data as SdeRecord;
 }

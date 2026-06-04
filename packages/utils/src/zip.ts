@@ -53,7 +53,9 @@ export async function sdeFolderChecksum(
   let processed = 0;
   for (const entry of Object.values(entries)) {
     if (entry.isDirectory) continue;
-    const content = fs.readFileSync(path.resolve(sdeRootPath, entry.name));
+    const content = await fs.promises.readFile(
+      path.resolve(sdeRootPath, entry.name),
+    );
     checksum.update(content);
     processed++;
     onProgress?.(processed, total);

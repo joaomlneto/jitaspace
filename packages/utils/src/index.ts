@@ -8,3 +8,4 @@ export * from "./sde";
 export * from "./skills";
 export * from "./types";
 export * from "./ui";
+export * from "./zip";

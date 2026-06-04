@@ -66,16 +66,21 @@ export default createCommand("generate")
     // add metadata paths
     const sdeRoot = path.resolve(getWorkingDirectory(), SDE_PATH);
     const sdeMetadataFile = loadFile("_sde.yaml", sdeRoot);
+    const sde = sdeMetadataFile["sde"] as {
+      buildNumber: number;
+      releaseDate: string;
+      schemaChangeLog: string;
+    };
     const metaPath = path.join(getWorkingDirectory(), "latest", "meta");
     mkdir(metaPath);
     const metaVersionPath = path.join(metaPath, "version.json");
     fs.writeFileSync(
       metaVersionPath,
       JSON.stringify({
-        buildNumber: sdeMetadataFile.sde.buildNumber,
+        buildNumber: sde.buildNumber,
         generationDate: new Date().toISOString(),
-        releaseDate: sdeMetadataFile.sde.releaseDate,
-        schemaChangeLog: sdeMetadataFile.sde.schemaChangeLog,
+        releaseDate: sde.releaseDate,
+        schemaChangeLog: sde.schemaChangeLog,
       }),
     );
     schema.tags.push({ name: "Meta" });

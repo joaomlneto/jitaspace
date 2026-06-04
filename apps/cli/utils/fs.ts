@@ -4,7 +4,7 @@ import {
   sdeFolderChecksum as coreSdeFolderChecksum,
   sdeZipChecksum as coreSdeZipChecksum,
   unzipSde as coreUnzipSde,
-} from "@jitaspace/sde-utils";
+} from "@jitaspace/utils";
 
 import { globalProgress } from "../lib/progress.js";
 

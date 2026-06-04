@@ -1,9 +1,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { downloadFile } from "@jitaspace/utils";
+import { downloadFile, mkdir, sdeZipChecksum, unzipSde } from "@jitaspace/utils";
 
 import { SDE_CHECKSUM_URL, SDE_DOWNLOAD_URL } from "./constants.js";
-import { mkdir, sdeZipChecksum, unzipSde } from "./fs.js";
 
 const SDE_ARCHIVE_FILENAME = "sde.zip";
 
