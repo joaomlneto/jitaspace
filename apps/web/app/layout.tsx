@@ -33,12 +33,15 @@ import { AppMantineProvider } from "./mantine-provider";
 
 const APP_NAME = "JitaSpace";
 const APP_DEFAULT_TITLE = "JitaSpace";
-const APP_TITLE_TEMPLATE = "%s | " + APP_NAME;
-const APP_DESCRIPTION = "EVE Online tools";
+const APP_TITLE_TEMPLATE = "%s | JitaSpace";
+const APP_DESCRIPTION =
+  "EVE Online companion app — browse items, characters, corporations, market data, ship fittings, and more.";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.jita.space";
 const ESI_USER_AGENT = "jitaspace-web/0.1.0 (https://jita.space)";
 const ESI_ACCEPT_LANGUAGE = DEFAULT_ESI_ACCEPT_LANGUAGE;
 
 export const metadata = {
+  metadataBase: new URL(SITE_URL),
   applicationName: APP_NAME,
   title: {
     default: APP_DEFAULT_TITLE,
@@ -49,7 +52,6 @@ export const metadata = {
     capable: true,
     statusBarStyle: "default",
     title: APP_DEFAULT_TITLE,
-    // startUpImage: [],
   },
   formatDetection: {
     telephone: false,
@@ -62,14 +64,23 @@ export const metadata = {
       template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
+    images: [
+      {
+        url: "/api/opengraph/image",
+        width: 1200,
+        height: 630,
+        alt: APP_NAME,
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: {
       default: APP_DEFAULT_TITLE,
       template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
+    images: ["/api/opengraph/image"],
   },
 };
 

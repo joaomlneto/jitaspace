@@ -3,6 +3,12 @@ import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 
+export const metadata = {
+  title: "Regions",
+  description:
+    "Browse all regions in the EVE Online universe — New Eden's star clusters, systems, and constellations.",
+};
+
 import { prisma } from "@jitaspace/db";
 import { MapIcon } from "@jitaspace/eve-icons";
 import { RegionAnchor } from "@jitaspace/ui";
