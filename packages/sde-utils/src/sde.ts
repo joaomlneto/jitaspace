@@ -1,12 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import fetch from "node-fetch";
+import { downloadFile } from "@jitaspace/utils";
 
 import { SDE_CHECKSUM_URL, SDE_DOWNLOAD_URL } from "./constants.js";
+import { mkdir, sdeZipChecksum, unzipSde } from "./fs.js";
 
 const SDE_ARCHIVE_FILENAME = "sde.zip";
-import { downloadFile } from "./download.js";
-import { mkdir, sdeZipChecksum, unzipSde } from "./fs.js";
 
 export async function latestSdeLastModified(): Promise<Date> {
   const res = await fetch(SDE_DOWNLOAD_URL, { method: "HEAD" });
