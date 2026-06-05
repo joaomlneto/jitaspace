@@ -34,9 +34,8 @@ export async function ensureSdePresentAndExtracted(
 
   const sdeRootPath = path.resolve(workDir, "sde");
   if (fs.existsSync(sdeRootPath)) {
-    log("SDE folder present. Checking checksum...\n");
-    // FIXME: temporarily skipping folder checksum verification
-    log("SDE folder is up to date! No action needed.\n");
+    // Folder checksum verification is not yet implemented; assume up to date
+    log("SDE folder already present, skipping verification.\n");
     return;
   }
 
