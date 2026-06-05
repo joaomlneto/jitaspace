@@ -97,11 +97,11 @@ export function fromArrayOfObjectsToMap(
   const map: SdeRecord = {};
 
   for (const item of array) {
-    if (!Object.hasOwn(item as object, idAttributeName)) {
+    if (!Object.hasOwn(item, idAttributeName)) {
       throw new Error(`⚠️ Missing ID ${idAttributeName}`);
     }
     const id = item[idAttributeName] as string | number;
-    if (Object.hasOwn(map as object, id)) {
+    if (Object.hasOwn(map, id)) {
       // Duplicate IDs exist in the SDE data itself; warn instead of throwing
       console.warn(`⚠️ Duplicate ID ${id}`);
     }
