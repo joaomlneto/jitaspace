@@ -1,4 +1,5 @@
-import { parseEFTFitString, toEFTFitString, ShipFitting } from "../src/fitting";
+import type { ShipFitting } from "../src/fitting";
+import { parseEFTFitString, toEFTFitString } from "../src/fitting";
 
 // A canonical EFT string representative of a typical EVE fitting.
 // Sections are separated by blank lines:
