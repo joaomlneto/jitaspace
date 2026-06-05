@@ -25,6 +25,26 @@ const baseTheme = createTheme({
   },
 });
 
+const whpdPanelStyles = {
+  position: "relative",
+  overflow: "hidden",
+  backgroundColor: "rgba(0, 1, 8, 0.97)",
+  backgroundImage:
+    "linear-gradient(180deg, rgba(4, 8, 22, 0.97) 0%, rgba(1, 3, 14, 0.99) 58%, rgba(0, 0, 5, 1) 100%)",
+  borderColor: "rgba(43, 92, 255, 0.32)",
+  borderTopColor: "rgba(85, 127, 255, 0.52)",
+  boxShadow:
+    "inset 0 1px 0 rgba(100, 150, 255, 0.14), inset 0 -10px 18px rgba(0, 0, 15, 0.6), 0 0 28px rgba(43, 92, 255, 0.1)",
+  "&::before": {
+    content: '""',
+    position: "absolute",
+    inset: 0,
+    background:
+      "linear-gradient(110deg, rgba(43, 92, 255, 0.11) 0%, rgba(43, 92, 255, 0) 42%, rgba(255, 26, 26, 0.08) 72%, rgba(255, 26, 26, 0) 100%)",
+    pointerEvents: "none",
+  },
+} as const;
+
 const evePanelStyles = {
   position: "relative",
   overflow: "hidden",
@@ -262,6 +282,141 @@ export const themes = {
     createTheme({
       primaryColor: "sisters_of_eve_primary",
       colors,
+    }),
+  ),
+  whpd: mergeThemeOverrides(
+    eveTheme,
+    createTheme({
+      black: "#000002",
+      white: "#eef2ff",
+      primaryColor: "whpd_primary",
+      primaryShade: 6,
+      colors: {
+        ...colors,
+        dark: [
+          "#d0d4e0",
+          "#a8adbf",
+          "#80869a",
+          "#585e74",
+          "#363c52",
+          "#252b3e",
+          "#141828",
+          "#080c18",
+          "#030610",
+          "#010206",
+        ],
+      },
+      defaultGradient: {
+        from: "whpd_primary.6",
+        to: "whpd_siren.7",
+        deg: 130,
+      },
+      shadows: {
+        xs: "0 0 0 1px rgba(43, 92, 255, 0.22)",
+        sm: "0 2px 10px rgba(0, 0, 10, 0.72)",
+        md: "0 8px 24px rgba(0, 0, 10, 0.8)",
+        lg: "0 14px 36px rgba(0, 0, 10, 0.86)",
+        xl: "0 20px 52px rgba(0, 0, 10, 0.92)",
+      },
+      components: {
+        Badge: Badge.extend({
+          defaultProps: {
+            color: "whpd_siren",
+            variant: "outline",
+          },
+        }),
+        Button: Button.extend({
+          defaultProps: {
+            color: "whpd_primary",
+            variant: "outline",
+            radius: "xs",
+            fw: 600,
+            tt: "uppercase",
+          },
+          styles: {
+            root: {
+              letterSpacing: "0.04em",
+              transition:
+                "background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, color 150ms ease, transform 120ms ease",
+              "&:active": {
+                transform: "translateY(1px)",
+              },
+              "&[dataVariant='outline']": {
+                borderColor: "rgba(43, 92, 255, 0.42)",
+                backgroundImage:
+                  "linear-gradient(180deg, rgba(10, 20, 60, 0.28) 0%, rgba(2, 4, 18, 0.68) 100%)",
+                color: "#c8d8ff",
+                "&:hover": {
+                  borderColor: "rgba(85, 127, 255, 0.62)",
+                  backgroundImage:
+                    "linear-gradient(180deg, rgba(15, 28, 75, 0.38) 0%, rgba(4, 8, 28, 0.78) 100%)",
+                  boxShadow: "0 0 14px rgba(43, 92, 255, 0.18) inset",
+                },
+              },
+              "&[dataVariant='filled']": {
+                border: "1px solid rgba(85, 127, 255, 0.38)",
+                backgroundImage:
+                  "linear-gradient(180deg, #3869ff 0%, #1e4de8 100%)",
+                color: "#eef2ff",
+                boxShadow:
+                  "inset 0 1px 0 rgba(200, 216, 255, 0.2), 0 0 18px rgba(43, 92, 255, 0.18)",
+                "&:hover": {
+                  backgroundImage:
+                    "linear-gradient(180deg, #4878ff 0%, #2558f0 100%)",
+                  boxShadow:
+                    "inset 0 1px 0 rgba(210, 225, 255, 0.24), 0 0 26px rgba(43, 92, 255, 0.26)",
+                },
+              },
+            },
+          },
+        }),
+        Card: Card.extend({
+          defaultProps: {
+            bg: "#000104",
+            radius: "xs",
+            shadow: "xs",
+            withBorder: true,
+          },
+          styles: {
+            root: {
+              ...whpdPanelStyles,
+            },
+          },
+        }),
+        Divider: Divider.extend({
+          defaultProps: {
+            color: "rgba(43, 92, 255, 0.26)",
+          },
+        }),
+        Paper: Paper.extend({
+          defaultProps: {
+            bg: "#000104",
+            radius: "xs",
+            shadow: "xs",
+            withBorder: true,
+          },
+          styles: {
+            root: {
+              ...whpdPanelStyles,
+            },
+          },
+        }),
+        Text: Text.extend({
+          defaultProps: {
+            c: "whpd_primary.1",
+          },
+        }),
+        Title: Title.extend({
+          defaultProps: {
+            c: "gray.0",
+            order: 2,
+            tt: "uppercase",
+            style: {
+              letterSpacing: "0.06em",
+            },
+          },
+        }),
+      },
     }),
   ),
 };
