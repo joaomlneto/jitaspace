@@ -6,237 +6,206 @@
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=joaomlneto_jitaspace&metric=bugs)](https://sonarcloud.io/summary/new_code?id=joaomlneto_jitaspace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Discord](https://img.shields.io/discord/1127970667522949201?logo=discord&label=discord&color=5865F2)](https://discord.gg/fvcFu7j4dx)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fjoaomlneto%2Fjitaspace&root-directory=apps%2Fweb&env=NEXTAUTH_SECRET%2CEVE_CLIENT_ID%2CEVE_CLIENT_SECRET%2CDATABASE_URL%2CREDIS_URL%2CINNGEST_SIGNING_KEY%2CINNGEST_EVENT_KEY%2CCRON_SECRET%2CESI_USER_AGENT%2CZKILLBOARD_USER_AGENT%2CNEXT_PUBLIC_DISCORD_INVITE_LINK%2CDISCORD_BOT_TOKEN%2CDISCORD_APPLICATION_ID%2CDISCORD_PUBLIC_KEY%2CDISCORD_UPDATES_CHANNEL_ID%2CNEXT_PUBLIC_UMAMI_WEBSITE_ID%2CNEXT_PUBLIC_GOOGLE_TAG_ID&envDescription=Required%20environment%20variables%20%E2%80%94%20see%20.env.example%20for%20details&envLink=https%3A%2F%2Fgithub.com%2Fjoaomlneto%2Fjitaspace%2Fblob%2Fmain%2F.env.example)
 
+> An EVE Online companion app — mail, assets, market orders, wallet, killmails, and more, all in one place. **[Live at jita.space](https://www.jita.space)**
 
-This repository uses [Turborepo](https://turborepo.org/) and contains:
+---
+
+## Features
+
+- Sign in with your EVE Online account via OAuth2 PKCE
+- Read and send in-game mail
+- Browse assets, wallet, market orders, and contracts
+- Explore killmails via zKillboard integration
+- Rich text rendering of EVE's proprietary HTML format
+- Scheduled background sync of EVE universe data
+- Discord community integration
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js ≥ 24 |
+| Language | TypeScript 5 |
+| Monorepo | Turborepo + pnpm |
+| Frontend | Next.js 16 (App Router) + React 19 |
+| UI | Mantine 8 |
+| Data fetching | TanStack React Query 5 |
+| State | Zustand |
+| Database | PostgreSQL + Prisma 7 |
+| Cache & queues | Redis + Bull |
+| Background jobs | Inngest |
+| Auth | NextAuth — EVE Online SSO |
+| Rich text | Tiptap + EVE HTML extensions |
+| API codegen | Kubb (OpenAPI → TypeScript) |
+| Testing | Jest + Cypress |
+| Monitoring | Sentry + Umami |
+| Deployment | Vercel |
+
+---
+
+## Repository Structure
 
 ```
-.github
-  └─ workflows
-        └─ CI with pnpm cache setup
-.vscode
-  └─ Recommended extensions and settings for VSCode users
-apps
-  ├─ mobile (not yet!)
-  |   ├─ Expo SDK 48
-  |   ├─ React Native using React 18
-  |   ├─ Navigation using Expo Router
-  └─ web
-      └─ Next.js 13 web application, hosted on Vercel
-packages
-  ├─ auth
-  |   └─ next-auth package preconfigured to use EVE SSO
-  ├─ db
-  |   └─ database client and utilities, based on Prisma
-  ├─ esi-client
-  |   └─ Generated Typescript/React client for ESI API
-  ├─ esi-metadata
-  |   └─ A bunch of ESI metadata, such as scopes, ID ranges, mapping of endpoints to scopes, …
-  ├─ eve-icons
-  |   └─ Collection of EVE Icons as react components
-  ├─ eve-scrape
-  |   └─ Background jobs, using Inngest
-  ├─ evetycoon-client
-  |   └─ Generated Typescript/React client for EveTycoon API (DOES NOT WORK DUE TO CORS)
-  ├─ fuzzworks-market-client
-  |   └─ Generated Typescript/React client for Fuzzwork Enterprises Market API
-  ├─ hooks
-  |   └─ React hooks for high-level ESI interactions
-  ├─ sde-client
-  |   └─ Generated Typescript/React client for ESI SDE API at https://sde.jita.space
-  ├─ tiptap-eve
-  |   └─ Custom Tiptap (https://tiptap.dev) editor supporting EVE HTML syntax
-  ├─ ui
-  |   └─ React UI components
-  └─ utils
-      └─ Diverse utilities that don't fit anywhere else
-tooling
-  ├─ eslint
-  |   └─ shared, fine-grained, eslint presets
-  ├─ prettier
-  |   └─ shared prettier configuration
-  └─ typescript
-      └─ shared tsconfig you can extend from
+apps/
+  ├─ web/    Next.js web app — the main product
+  └─ cli/    Developer CLI utilities
+
+packages/
+  ├─ auth/                    ├─ esi-metadata/
+  ├─ auth-utils/              ├─ eve-data/
+  ├─ db/                      ├─ eve-icons/
+  ├─ kv/                      ├─ tiptap-eve/
+  ├─ esi-client/              ├─ ui/
+  ├─ sde-client/              ├─ hooks/
+  ├─ evekill-client/          ├─ chat/
+  ├─ fuzzworks-market-client/ ├─ eve-scrape/
+  └─ evetycoon-client/        └─ utils/
+
+tooling/
+  ├─ eslint/    ├─ prettier/    └─ tsconfig/
 ```
 
-## Quick Start
+---
 
-To get it running, follow the steps below:
+## Packages
 
-### Setup dependencies
+### Core
 
-```diff
-# Install dependencies
-pnpm i
+| Package | Description |
+|---|---|
+| `@jitaspace/auth` | Custom EVE Online SSO OAuth2 flow (PKCE + state), token sealing & refresh |
+| `@jitaspace/auth-utils` | Token helpers and SSO utilities |
+| `@jitaspace/db` | Prisma client and PostgreSQL schema |
+| `@jitaspace/kv` | Redis client and Bull job queues |
 
-# In packages/db/prisma update schema.prisma provider to use sqlite
-# or use your own database provider
-- provider = "postgresql"
-+ provider = "sqlite"
+### EVE API Clients
 
-# Configure environment variables.
-# There is an `.env.example` in the root directory you can use for reference
-cp .env.example .env
+> All generated by [Kubb](https://kubb.dev/) from OpenAPI specs. Run `pnpm kubb:generate` to regenerate — do not edit these files directly.
 
-# Push the Prisma schema to your database
-pnpm db:push
+| Package | API |
+|---|---|
+| `@jitaspace/esi-client` | [ESI](https://esi.evetech.net/) — EVE Online's official REST API |
+| `@jitaspace/sde-client` | Self-hosted SDE API at [sde.jita.space](https://sde.jita.space) |
+| `@jitaspace/evekill-client` | [EVE-KILL](https://eve-kill.com/) killmail data |
+| `@jitaspace/fuzzworks-market-client` | [Fuzzwork](https://market.fuzzwork.co.uk/) market aggregates |
+| `@jitaspace/evetycoon-client` | [EveTycoon](https://evetycoon.com/) market data _(currently blocked by CORS)_ |
+
+### Data & UI
+
+| Package | Description |
+|---|---|
+| `@jitaspace/esi-metadata` | ESI scope definitions, ID ranges, and endpoint→scope mappings |
+| `@jitaspace/eve-data` | Static EVE Online datasets (ships, skills, regions, …) |
+| `@jitaspace/ui` | Shared Mantine component library — forms, tables, modals, charts |
+| `@jitaspace/eve-icons` | EVE Online icons as React components |
+| `@jitaspace/tiptap-eve` | Tiptap extension for parsing and rendering EVE's HTML format |
+
+### Utilities
+
+| Package | Description |
+|---|---|
+| `@jitaspace/hooks` | React Query hooks for high-level ESI and third-party API interactions |
+| `@jitaspace/chat` | Discord-backed in-app chat client |
+| `@jitaspace/eve-scrape` | Inngest jobs for scheduled EVE data scraping and SDE imports |
+| `@jitaspace/utils` | Shared utility functions |
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js ≥ 24
+- pnpm 11 (`npm install -g pnpm`)
+- PostgreSQL database
+- Redis instance
+- EVE Online developer app — [register here](https://developers.eveonline.com/)
+
+### Setup
+
+```bash
+git clone https://github.com/joaomlneto/jitaspace.git
+cd jitaspace
+pnpm install
+cp .env.example .env   # fill in your credentials
+pnpm db:push           # apply schema (also runs db:generate)
+pnpm kubb:generate     # generate API clients from OpenAPI specs
+pnpm dev               # start all dev servers
 ```
 
-### Configure Expo `dev`-script
+Open `http://localhost:3000`.
 
-#### Use iOS Simulator
+---
 
-1. Make sure you have XCode and XCommand Line Tools
-   installed [as shown on expo docs](https://docs.expo.dev/workflow/ios-simulator/).
-   > **NOTE:** If you just installed XCode, or if you have updated it, you need to open the simulator manually once.
-   Run `npx expo start` in the root dir, and then enter `I` to launch Expo Go. After the manual launch, you can
-   run `pnpm dev` in the root directory.
+## Environment Variables
 
-```diff
-+  "dev": "expo start --ios",
+| Variable | Description |
+|---|---|
+| `NEXTAUTH_SECRET` | Secret for signing session cookies (`openssl rand -base64 32`) |
+| `EVE_CLIENT_ID` | EVE Online SSO client ID |
+| `EVE_CLIENT_SECRET` | EVE Online SSO client secret |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `REDIS_URL` | Redis URL (default: `redis://127.0.0.1:6379`) |
+| `INNGEST_SIGNING_KEY` | Inngest webhook signing key |
+| `INNGEST_EVENT_KEY` | Inngest event publishing key |
+| `CRON_SECRET` | Secret for Vercel Cron route protection |
+| `ESI_USER_AGENT` | User-agent for ESI API requests |
+| `ZKILLBOARD_USER_AGENT` | User-agent for zKillboard requests |
+| `NEXT_PUBLIC_DISCORD_INVITE_LINK` | Discord server invite URL |
+| `DISCORD_BOT_TOKEN` | Discord bot token |
+| `NEXT_PUBLIC_UMAMI_WEBSITE_ID` | Umami analytics site ID |
+| `NEXT_PUBLIC_GOOGLE_TAG_ID` | Google Tag Manager ID |
+
+Full reference: [`.env.example`](.env.example)
+
+---
+
+## Commands
+
+```bash
+pnpm dev              # Start all dev servers in parallel
+pnpm build            # Build everything
+pnpm test             # Run all tests (Jest)
+pnpm lint             # ESLint + manypkg checks
+pnpm lint:fix         # Auto-fix linting issues
+pnpm type-check       # TypeScript across all packages
+pnpm format           # Prettier
+
+pnpm db:generate      # Regenerate Prisma client
+pnpm db:push          # Push schema + regenerate client
+pnpm kubb:generate    # Regenerate all API clients
+
+pnpm cypress:run      # Run E2E tests headlessly
+pnpm cypress:open     # Open Cypress runner
+pnpm clean            # Remove root node_modules
+pnpm clean:workspaces # Clean all workspace build output
 ```
 
-3. Run `pnpm dev` at the project root folder.
-
-> **TIP:** It might be easier to run each app in separate terminal windows so you get the logs from each app separately.
-> This is also required if you want your terminals to be interactive, e.g. to access the Expo QR code. You can
-> run `pnpm --filter expo dev` and `pnpm --filter nextjs dev` to run each app in a separate terminal window.
-
-#### For Android
-
-1. Install Android Studio tools [as shown on expo docs](https://docs.expo.dev/workflow/android-studio-emulator/).
-2. Change the `dev` script at `apps/expo/package.json` to open the Android emulator.
-
-```diff
-+  "dev": "expo start --android",
-```
-
-3. Run `pnpm dev` at the project root folder.
+---
 
 ## Deployment
 
-### Next.js
+Click **Deploy with Vercel** at the top of this README — it will fork the repo, prompt for all required environment variables, and deploy. You'll need a PostgreSQL database and Redis instance ready beforehand (e.g. [Neon](https://neon.tech/) + [Upstash](https://upstash.com/), [Railway](https://railway.app/), or self-hosted). After the first deploy, run `pnpm db:push` against your database to apply the schema.
 
-#### Prerequisites
+For manual setup: set `apps/web` as the Vercel root directory. Turborepo remote caching is supported out of the box. Inngest background jobs and cron routes are co-hosted in the same Next.js deployment.
 
-_We do not recommend deploying a SQLite database on serverless environments since the data wouldn't be persisted. I
-provisioned a quick Postgresql database on [Railway](https://railway.app), but you can of course use any other database
-provider. Make sure the prisma schema is updated to use the correct database._
+---
 
-**Please note that the Next.js application with tRPC must be deployed in order for the Expo app to communicate with the
-server in a production environment.**
+## Contributing
 
-#### Deploy to Vercel
+1. Fork and create a branch
+2. Make your changes — internal packages import as `@jitaspace/*` with `workspace:*`
+3. Run `pnpm lint && pnpm type-check && pnpm test`
+4. For package version bumps, run `pnpm changeset`
 
-Let's deploy the Next.js application to [Vercel](https://vercel.com/). If you have ever deployed a Turborepo app there,
-the steps are quite straightforward. You can also read
-the [official Turborepo guide](https://vercel.com/docs/concepts/monorepos/turborepo) on deploying to Vercel.
+Questions or ideas? Join the [Discord](https://discord.gg/fvcFu7j4dx).
 
-1. Create a new project on Vercel, select the `apps/nextjs` folder as the root directory and apply the following build
-   settings:
+---
 
-<img width="927" alt="Vercel deployment settings" src="https://user-images.githubusercontent.com/11340449/201974887-b6403a32-5570-4ce6-b146-c486c0dbd244.png">
+## License
 
-> The install command filters out the expo package and saves a few second (and cache size) of dependency installation.
-> The build command makes us build the application using Turbo.
-
-2. Add your `DATABASE_URL` environment variable.
-
-3. Done! Your app should successfully deploy. Assign your domain and use that instead of `localhost` for the `url` in
-   the Expo app so that your Expo app can communicate with your backend when you are not in development.
-
-### Expo
-
-Deploying your Expo application works slightly differently compared to Next.js on the web. Instead of "deploying" your
-app online, you need to submit production builds of your app to the app stores,
-like [Apple App Store](https://www.apple.com/app-store/) and [Google Play](https://play.google.com/store/apps). You can
-read the full [Distributing your app](https://docs.expo.dev/distribution/introduction/), including best practices, in
-the Expo docs.
-
-1. Make sure to modify the `getBaseUrl` function to point to your backend's production URL:
-
-https://github.com/t3-oss/create-t3-turbo/blob/656965aff7db271e5e080242c4a3ce4dad5d25f8/apps/expo/src/utils/api.tsx#L20-L37
-
-2. Let's start by setting up [EAS Build](https://docs.expo.dev/build/introduction/), which is short for Expo Application
-   Services. The build service helps you create builds of your app, without requiring a full native development setup.
-   The commands below are a summary of [Creating your first build](https://docs.expo.dev/build/setup/).
-
-   ```bash
-   // Install the EAS CLI
-   $ pnpm add -g eas-cli
-
-   // Log in with your Expo account
-   $ eas login
-
-   // Configure your Expo app
-   $ cd apps/expo
-   $ eas build:configure
-   ```
-
-3. After the initial setup, you can create your first build. You can build for Android and iOS platforms and use
-   different [**eas.json** build profiles](https://docs.expo.dev/build-reference/eas-json/) to create production builds
-   or development, or test builds. Let's make a production build for iOS.
-
-   ```
-   $ eas build --platform ios --profile production
-   ```
-
-   > If you don't specify the `--profile` flag, EAS uses the `production` profile by default.
-
-4. Now that you have your first production build, you can submit this to the
-   stores. [EAS Submit](https://docs.expo.dev/submit/introduction/) can help you send the build to the stores.
-
-   ```
-   $ eas submit --platform ios --latest
-   ```
-
-   > You can also combine build and submit in a single command, using `eas build ... --auto-submit`.
-
-5. Before you can get your app in the hands of your users, you'll have to provide additional information to the app
-   stores. This includes screenshots, app information, privacy policies, etc. _While still in
-   preview_, [EAS Metadata](https://docs.expo.dev/eas/metadata/) can help you with most of this information.
-
-6. Once everything is approved, your users can finally enjoy your app. Let's say you spotted a small typo; you'll have
-   to create a new build, submit it to the stores, and wait for approval before you can resolve this issue. In these
-   cases, you can use EAS Update to quickly send a small bugfix to your users without going through this long process.
-   Let's start by setting up EAS Update.
-
-   The steps below summarize
-   the [Getting started with EAS Update](https://docs.expo.dev/eas-update/getting-started/#configure-your-project)
-   guide.
-
-   ```bash
-   // Add the `expo-updates` library to your Expo app
-   $ cd apps/expo
-   $ pnpm expo install expo-updates
-
-   // Configure EAS Update
-   $ eas update:configure
-   ```
-
-7. Before we can send out updates to your app, you have to create a new build and submit it to the app stores. For every
-   change that includes native APIs, you have to rebuild the app and submit the update to the app stores. See steps 2
-   and 3.
-
-8. Now that everything is ready for updates, let's create a new update for `production` builds. With the `--auto` flag,
-   EAS Update uses your current git branch name and commit message for this update.
-   See [How EAS Update works](https://docs.expo.dev/eas-update/how-eas-update-works/#publishing-an-update) for more
-   information.
-
-   ```bash
-   $ cd apps/expo
-   $ eas update --auto
-   ```
-
-   > Your OTA (Over The Air) updates must always follow the app store's rules. You can't change your app's primary
-   functionality without getting app store approval. But this is a fast way to update your app for minor changes and bug
-   fixes.
-
-9. Done! Now that you have created your production build, submitted it to the stores, and installed EAS Update, you are
-   ready for anything!
-
-## References
-
-The stack originates from [create-t3-app](https://github.com/t3-oss/create-t3-app).
-
-A [blog post](https://jumr.dev/blog/t3-turbo) where I wrote how to migrate a T3 app into this.
+MIT — see [LICENSE](LICENSE).
