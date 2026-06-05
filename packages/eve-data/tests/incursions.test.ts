@@ -180,7 +180,7 @@ describe("incursion_constellations", () => {
 
   describe("known constellation regression tests", () => {
     it("Algintal has the expected solar systems", () => {
-      const c = incursion_constellations["Algintal"];
+      const c = incursion_constellations["Algintal"]!;
       expect(c).toBeDefined();
       expect(c.Staging).toBe("Barmalie");
       expect(c.Vanguards).toEqual(
@@ -195,7 +195,7 @@ describe("incursion_constellations", () => {
     });
 
     it("Ihilakken has the expected solar systems", () => {
-      const c = incursion_constellations["Ihilakken"];
+      const c = incursion_constellations["Ihilakken"]!;
       expect(c).toBeDefined();
       expect(c.Staging).toBe("Sakenta");
       expect(c.Vanguards).toEqual(
@@ -210,7 +210,7 @@ describe("incursion_constellations", () => {
     });
 
     it("Sanctum has the expected solar systems", () => {
-      const c = incursion_constellations["Sanctum"];
+      const c = incursion_constellations["Sanctum"]!;
       expect(c).toBeDefined();
       expect(c.Staging).toBe("Yulai");
       expect(c.Vanguards).toEqual(
@@ -225,7 +225,7 @@ describe("incursion_constellations", () => {
     });
 
     it("stub entry Ananah has Staging but empty Headquarters", () => {
-      const c = incursion_constellations["Ananah"];
+      const c = incursion_constellations["Ananah"]!;
       expect(c).toBeDefined();
       expect(c.Staging).toBe("Mifrata");
       expect(c.Headquarters).toBe("");
