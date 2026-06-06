@@ -24,7 +24,7 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "tsup index.ts --format cjs,esm --dts",
+    "build": "prisma generate && tsup index.ts --format cjs,esm --dts",
     "clean": "rm -rf .turbo node_modules dist",
     "db:studio": "prisma studio --browser none",
     "db:generate": "pnpm with-env prisma generate",
@@ -37,7 +37,7 @@
     "dev": "pnpm with-env concurrently -c \"auto\" --names \"Studio,Watch\" \"pnpm:db:studio\" \"pnpm:db:generate:watch\"",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
-    "prepublishOnly": "pnpm db:generate && pnpm build",
+    "prepublishOnly": "pnpm build",
     "type-check": "tsc --jsx react-jsx --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
