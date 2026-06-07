@@ -52,7 +52,9 @@ export function createChat({
   discordBotToken,
   discordUpdatesChannelId,
 }: CreateChatOptions = {}) {
-  const discordAdapter = discordBotToken ? createDiscordAdapter() : undefined;
+  const discordAdapter = discordBotToken
+    ? createDiscordAdapter({ botToken: discordBotToken })
+    : undefined;
 
   const chat = new Chat({
     userName: "JitaSpace",
