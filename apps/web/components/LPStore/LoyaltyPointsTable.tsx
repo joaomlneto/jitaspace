@@ -270,9 +270,9 @@ const COLUMNS: ColumnDef<AugmentedOffer, any>[] = [
     "reqitems5pbuydetailstotal",
     "Required Items Jita 5% Buy Prices for Quantities",
     (item) =>
-      item.marketStats !== undefined
-        ? item.marketStats.buy.percentile * item.quantity
-        : undefined,
+      item.marketStats === undefined
+        ? undefined
+        : item.marketStats.buy.percentile * item.quantity,
   ),
   makeRequiredItemsPriceColumn(
     "reqitems5pselldetails",
@@ -283,9 +283,9 @@ const COLUMNS: ColumnDef<AugmentedOffer, any>[] = [
     "reqitems5pselldetailstotal",
     "Required Items Jita 5% Sell Prices for Quantities",
     (item) =>
-      item.marketStats !== undefined
-        ? item.marketStats.sell.percentile * item.quantity
-        : undefined,
+      item.marketStats === undefined
+        ? undefined
+        : item.marketStats.sell.percentile * item.quantity,
   ),
   {
     id: "jita5psell",
