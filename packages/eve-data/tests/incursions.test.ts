@@ -17,56 +17,42 @@ describe("incursion_constellations", () => {
 
     it("has all 4 required keys on every entry", () => {
       const required = ["Staging", "Vanguards", "Assaults", "Headquarters"] as const;
-      for (const [name, entry] of Object.entries(incursion_constellations)) {
+      for (const [, entry] of Object.entries(incursion_constellations)) {
         for (const key of required) {
-          if (!Object.prototype.hasOwnProperty.call(entry, key)) {
-            throw new Error(`${name}: missing required key "${key}"`);
-          }
+          expect(Object.prototype.hasOwnProperty.call(entry, key)).toBe(true);
         }
       }
     });
 
     it("has no empty constellation names as keys", () => {
       for (const name of Object.keys(incursion_constellations)) {
-        if (name.trim().length === 0) {
-          throw new Error(`found an empty constellation name in keys`);
-        }
+        expect(name.trim().length).toBeGreaterThan(0);
       }
     });
   });
 
   describe("field types (all entries)", () => {
     it("Staging is always a string", () => {
-      for (const [name, entry] of Object.entries(incursion_constellations)) {
-        if (typeof entry.Staging !== "string") {
-          throw new Error(`${name}: Staging should be string, got ${typeof entry.Staging}`);
-        }
+      for (const [, entry] of Object.entries(incursion_constellations)) {
+        expect(typeof entry.Staging).toBe("string");
       }
     });
 
     it("Headquarters is always a string", () => {
-      for (const [name, entry] of Object.entries(incursion_constellations)) {
-        if (typeof entry.Headquarters !== "string") {
-          throw new Error(
-            `${name}: Headquarters should be string, got ${typeof entry.Headquarters}`,
-          );
-        }
+      for (const [, entry] of Object.entries(incursion_constellations)) {
+        expect(typeof entry.Headquarters).toBe("string");
       }
     });
 
     it("Vanguards is always an array", () => {
-      for (const [name, entry] of Object.entries(incursion_constellations)) {
-        if (!Array.isArray(entry.Vanguards)) {
-          throw new Error(`${name}: Vanguards should be array`);
-        }
+      for (const [, entry] of Object.entries(incursion_constellations)) {
+        expect(Array.isArray(entry.Vanguards)).toBe(true);
       }
     });
 
     it("Assaults is always an array", () => {
-      for (const [name, entry] of Object.entries(incursion_constellations)) {
-        if (!Array.isArray(entry.Assaults)) {
-          throw new Error(`${name}: Assaults should be array`);
-        }
+      for (const [, entry] of Object.entries(incursion_constellations)) {
+        expect(Array.isArray(entry.Assaults)).toBe(true);
       }
     });
   });
@@ -77,18 +63,14 @@ describe("incursion_constellations", () => {
     });
 
     it("Staging is a non-empty string", () => {
-      for (const [name, entry] of fullEntries) {
-        if (entry.Staging.trim().length === 0) {
-          throw new Error(`${name}: Staging should be non-empty`);
-        }
+      for (const [, entry] of fullEntries) {
+        expect(entry.Staging.trim().length).toBeGreaterThan(0);
       }
     });
 
     it("Headquarters is a non-empty string", () => {
-      for (const [name, entry] of fullEntries) {
-        if (entry.Headquarters.trim().length === 0) {
-          throw new Error(`${name}: Headquarters should be non-empty`);
-        }
+      for (const [, entry] of fullEntries) {
+        expect(entry.Headquarters.trim().length).toBeGreaterThan(0);
       }
     });
 
@@ -96,37 +78,28 @@ describe("incursion_constellations", () => {
       // Some entries have a non-empty HQ but stub-like empty Vanguard arrays
       // (e.g. "2747-4" has HQ "A-" but Vanguards: [""]).
       // We only enforce non-empty Vanguards where actual system names are present.
-      for (const [name, entry] of fullEntries) {
+      for (const [, entry] of fullEntries) {
         const populatedVanguards = entry.Vanguards.filter((s) => s.trim().length > 0);
         if (entry.Vanguards.length > 0 && populatedVanguards.length === 0) {
           // skip — entry has placeholder empty strings in Vanguards
           continue;
         }
-        if (entry.Vanguards.length === 0) {
-          throw new Error(`${name}: Vanguards should have at least one element`);
-        }
+        expect(entry.Vanguards.length).toBeGreaterThan(0);
       }
     });
 
-    it("every non-empty Vanguard element is a non-empty string", () => {
-      // Filter out known placeholder entries where all Vanguards are empty strings.
-      for (const [name, entry] of fullEntries) {
+    it("every Vanguard element is a string", () => {
+      for (const [, entry] of fullEntries) {
         for (const system of entry.Vanguards) {
-          if (typeof system !== "string") {
-            throw new Error(`${name}: Vanguards element must be a string`);
-          }
-          // Empty strings indicate incomplete data entries — skip them but don't fail.
-          // See entries like "2747-4" which have placeholder values.
+          expect(typeof system).toBe("string");
         }
       }
     });
 
-    it("every non-empty Assault element is a non-empty string", () => {
-      for (const [name, entry] of fullEntries) {
+    it("every Assault element is a string", () => {
+      for (const [, entry] of fullEntries) {
         for (const system of entry.Assaults) {
-          if (typeof system !== "string") {
-            throw new Error(`${name}: Assaults element must be a string`);
-          }
+          expect(typeof system).toBe("string");
         }
       }
     });
@@ -134,46 +107,27 @@ describe("incursion_constellations", () => {
 
   describe("uniqueness constraints (full entries)", () => {
     it("no two full constellations share the same Headquarters", () => {
-      const hqToConstellation = new Map<string, string>();
-      for (const [name, entry] of fullEntries) {
-        const existing = hqToConstellation.get(entry.Headquarters);
-        if (existing !== undefined) {
-          throw new Error(
-            `Headquarters "${entry.Headquarters}" is shared by "${existing}" and "${name}"`,
-          );
-        }
-        hqToConstellation.set(entry.Headquarters, name);
-      }
+      const hqs = fullEntries.map(([, entry]) => entry.Headquarters);
+      expect(new Set(hqs).size).toBe(hqs.length);
     });
 
     it("Staging and Headquarters are different solar systems within each full constellation", () => {
-      for (const [name, entry] of fullEntries) {
-        // Skip entries where Staging is empty (incomplete data)
+      for (const [, entry] of fullEntries) {
         if (entry.Staging.trim().length === 0) continue;
-        if (entry.Staging === entry.Headquarters) {
-          throw new Error(`${name}: Staging and Headquarters must differ ("${entry.Staging}")`);
-        }
+        expect(entry.Staging).not.toBe(entry.Headquarters);
       }
     });
 
     it("Staging does not appear in Assaults within each full constellation", () => {
-      for (const [name, entry] of fullEntries) {
+      for (const [, entry] of fullEntries) {
         if (entry.Staging.trim().length === 0) continue;
-        if (entry.Assaults.includes(entry.Staging)) {
-          throw new Error(
-            `${name}: Staging "${entry.Staging}" must not appear in Assaults`,
-          );
-        }
+        expect(entry.Assaults).not.toContain(entry.Staging);
       }
     });
 
     it("Headquarters does not appear in Assaults within each full constellation", () => {
-      for (const [name, entry] of fullEntries) {
-        if (entry.Assaults.includes(entry.Headquarters)) {
-          throw new Error(
-            `${name}: Headquarters "${entry.Headquarters}" must not appear in Assaults`,
-          );
-        }
+      for (const [, entry] of fullEntries) {
+        expect(entry.Assaults).not.toContain(entry.Headquarters);
       }
     });
   });
