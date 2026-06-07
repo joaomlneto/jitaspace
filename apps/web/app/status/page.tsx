@@ -4,6 +4,11 @@ import { Loader } from "@mantine/core";
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
 import StatusPageClient from "./page.client";
 
+export const metadata = {
+  title: "Server Status",
+  description: "EVE Online Tranquility server status and JitaSpace service health.",
+};
+
 async function getVercelStatus() {
   "use server";
 

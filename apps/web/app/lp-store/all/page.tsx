@@ -3,6 +3,11 @@ import { cacheLife } from "next/cache";
 
 import { prisma } from "@jitaspace/db";
 
+export const metadata = {
+  title: "All LP Store Offers",
+  description: "Browse all Loyalty Point store offers from every NPC corporation in EVE Online.",
+};
+
 import LPStoreAllPage from "./page.client";
 import type { LPStoreAllPageProps } from "./page.client";
 

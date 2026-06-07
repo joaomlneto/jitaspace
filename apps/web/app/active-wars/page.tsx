@@ -3,6 +3,12 @@ import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { Container, Group, Loader, Stack, Title } from "@mantine/core";
 
+export const metadata = {
+  title: "Active Wars",
+  description:
+    "Live list of active wars in EVE Online — track ongoing conflicts between corporations and alliances.",
+};
+
 import { prisma } from "@jitaspace/db";
 import { WarsIcon } from "@jitaspace/eve-icons";
 
