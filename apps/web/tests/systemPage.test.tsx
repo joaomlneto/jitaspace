@@ -13,7 +13,7 @@ const mockUseSolarSystemCostIndices = jest.fn();
 const mockUseGetSolarSystemById = jest.fn();
 
 // system/[systemId]/page.tsx now imports prisma for generateMetadata
-jest.mock("@jitaspace/db", () => ({
+jest.mock("~/lib/db", () => ({
   prisma: {
     solarSystem: { findUnique: jest.fn().mockResolvedValue(null) },
   },

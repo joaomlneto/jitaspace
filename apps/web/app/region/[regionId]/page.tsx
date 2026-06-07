@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Loader } from "@mantine/core";
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 
 import PageClient from "./page.client";
 
