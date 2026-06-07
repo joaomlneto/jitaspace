@@ -27,9 +27,9 @@ const STRUCTURE_TYPE_IDS = new Set([
 // FIXME: These should be configurable
 export const renderEveHref = (href: string) => {
   const INVENTORY_INFO_PREFIX = "showinfo:";
-  const WAR_REPORT_PREFIX = "warReport:";
-  const KILL_REPORT_PREFIX = "killReport:";
-  const RECRUITMENT_AD_PREFIX = "recruitmentAd:";
+  const WAR_REPORT_PREFIX = "warreport:";
+  const KILL_REPORT_PREFIX = "killreport:";
+  const RECRUITMENT_AD_PREFIX = "recruitmentad:";
   const CONTRACT_PREFIX = "contract:";
 
   if (href.startsWith(INVENTORY_INFO_PREFIX)) {
@@ -82,20 +82,23 @@ export const renderEveHref = (href: string) => {
   return href;
 };
 
+// linkifyjs v4 (used by TipTap v3) requires scheme names to be all-lowercase.
+// EVE Online uses camelCase scheme names (warReport:, joinChannel:, …) — those
+// are normalised to lowercase by convertEveUrlTags before TipTap ever sees them.
 export const EveLink = Link.configure({
   protocols: [
     "showinfo",
-    "warReport",
-    "killReport",
-    "recruitmentAd",
+    "warreport",
+    "killreport",
+    "recruitmentad",
     "contract",
-    "joinChannel",
-    "helpPointer",
-    "shipSkinListing",
+    "joinchannel",
+    "helppointer",
+    "shipskinlisting",
     "fitting",
     "localsvc",
     "opportunity",
-    "careerProgramNode",
+    "careerprogramnode",
     "fleet",
   ],
 });

@@ -46,7 +46,8 @@ const {
 const renderWithMantine = (ui: React.ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);
 
-const getSearchInput = () => screen.getByRole("textbox");
+// Mantine v9 renders the MultiSelect search field with role="combobox".
+const getSearchInput = () => screen.getByRole("combobox");
 
 function emptySearchResult() {
   return { data: undefined, isLoading: false } as ReturnType<

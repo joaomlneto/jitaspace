@@ -24,9 +24,19 @@ export const convertEveColorTags = (body: string): string =>
  * EVE mail bodies use <url=HREF>TEXT</url> for hyperlinks instead of standard
  * HTML <a> tags. Convert them to <a href="HREF">TEXT</a> so TipTap's Link
  * extension can parse and render them correctly.
+ *
+ * The scheme part is lowercased because linkifyjs v4 (used by TipTap v3)
+ * requires all-lowercase scheme names. EVE Online uses camelCase schemes
+ * (e.g. "warReport:", "joinChannel:") that must be normalised here before the
+ * content reaches TipTap.
  */
 export const convertEveUrlTags = (body: string): string =>
-  body.replace(/<url=([^>]*)>(.*?)<\/url>/gs, '<a href="$1">$2</a>');
+  body.replace(/<url=([^>]*)>(.*?)<\/url>/gs, (_, href: string, text: string) => {
+    const normalizedHref = href.replace(/^[A-Za-z][A-Za-z0-9]*(?=:)/, (scheme) =>
+      scheme.toLowerCase(),
+    );
+    return `<a href="${normalizedHref}">${text}</a>`;
+  });
 
 export const sanitizeFormattedEveString = (str: string): string => {
   // FIXME: IS THIS CORRECT? THIS WILL CONSIDER THAT THE WHOLE THING IS A "UNICODE BLOCK".

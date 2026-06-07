@@ -228,9 +228,9 @@ describe("convertEveUrlTags", () => {
       ).toBe('<a href="https://example.com">Example</a>');
     });
 
-    it("converts a warReport url tag", () => {
+    it("normalises a camelCase scheme (warReport → warreport)", () => {
       expect(convertEveUrlTags("<url=warReport:1234567>War</url>")).toBe(
-        '<a href="warReport:1234567">War</a>',
+        '<a href="warreport:1234567">War</a>',
       );
     });
 
@@ -288,6 +288,34 @@ describe("convertEveUrlTags", () => {
       expect(
         convertEveUrlTags("<url=showinfo:34>Tri\r\ntanium</url>"),
       ).toBe('<a href="showinfo:34">Tri\r\ntanium</a>');
+    });
+  });
+
+  describe("scheme normalisation (linkifyjs v4 compatibility)", () => {
+    it.each([
+      ["killReport", "<url=killReport:13807613:abc>Kill</url>", '<a href="killreport:13807613:abc">Kill</a>'],
+      ["recruitmentAd", "<url=recruitmentAd:98645206//155600>Ad</url>", '<a href="recruitmentad:98645206//155600">Ad</a>'],
+      ["joinChannel", "<url=joinChannel:-26572540>Channel</url>", '<a href="joinchannel:-26572540">Channel</a>'],
+      ["helpPointer", "<url=helpPointer:neocom.airCareerProgram>Help</url>", '<a href="helppointer:neocom.airCareerProgram">Help</a>'],
+      ["shipSkinListing", "<url=shipSkinListing:fe7ec0c3>Skin</url>", '<a href="shipskinlisting:fe7ec0c3">Skin</a>'],
+      ["careerProgramNode", "<url=careerProgramNode:7:410:None>Career</url>", '<a href="careerprogramnode:7:410:None">Career</a>'],
+    ])("lowercases %s scheme", (_name, input, expected) => {
+      expect(convertEveUrlTags(input)).toBe(expected);
+    });
+
+    it("leaves already-lowercase schemes unchanged (idempotent)", () => {
+      expect(convertEveUrlTags("<url=showinfo:1377//93345033>Name</url>")).toBe(
+        '<a href="showinfo:1377//93345033">Name</a>',
+      );
+      expect(convertEveUrlTags("<url=fitting:33470:31047;1::>Fit</url>")).toBe(
+        '<a href="fitting:33470:31047;1::">Fit</a>',
+      );
+    });
+
+    it("leaves https:// URLs unchanged (uppercase only in scheme portion, which is already lowercase)", () => {
+      expect(convertEveUrlTags("<url=https://example.com>Link</url>")).toBe(
+        '<a href="https://example.com">Link</a>',
+      );
     });
   });
 

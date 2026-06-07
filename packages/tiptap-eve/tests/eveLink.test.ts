@@ -105,46 +105,46 @@ describe("renderEveHref", () => {
     });
   });
 
-  describe("warReport links", () => {
+  describe("warreport links", () => {
     it.each([
-      ["numeric ID", "warReport:1234567", "/war/1234567"],
-      ["small numeric ID", "warReport:42", "/war/42"],
-    ])("converts warReport with %s", (_name, input, expected) => {
+      ["numeric ID", "warreport:1234567", "/war/1234567"],
+      ["small numeric ID", "warreport:42", "/war/42"],
+    ])("converts warreport with %s", (_name, input, expected) => {
       expect(renderEveHref(input)).toBe(expected);
     });
   });
 
-  describe("killReport links", () => {
-    it("converts killReport:id:hash to /kill/:id?hash=:hash", () => {
+  describe("killreport links", () => {
+    it("converts killreport:id:hash to /kill/:id?hash=:hash", () => {
       expect(
         renderEveHref(
-          "killReport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
+          "killreport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
         ),
       ).toBe("/kill/13807613?hash=1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46");
     });
 
-    it("converts killReport with a different ID and hash", () => {
+    it("converts killreport with a different ID and hash", () => {
       expect(
         renderEveHref(
-          "killReport:99999999:abcdef1234567890abcdef1234567890abcdef12",
+          "killreport:99999999:abcdef1234567890abcdef1234567890abcdef12",
         ),
       ).toBe("/kill/99999999?hash=abcdef1234567890abcdef1234567890abcdef12");
     });
 
-    it("converts killReport with only an ID (no hash)", () => {
-      expect(renderEveHref("killReport:13807613")).toBe("/kill/13807613");
+    it("converts killreport with only an ID (no hash)", () => {
+      expect(renderEveHref("killreport:13807613")).toBe("/kill/13807613");
     });
   });
 
-  describe("recruitmentAd links", () => {
-    it("converts recruitmentAd:corpId//adId to /corporation/:corpId", () => {
-      expect(renderEveHref("recruitmentAd:98645206//155600")).toBe(
+  describe("recruitmentad links", () => {
+    it("converts recruitmentad:corpId//adId to /corporation/:corpId", () => {
+      expect(renderEveHref("recruitmentad:98645206//155600")).toBe(
         "/corporation/98645206",
       );
     });
 
     it("ignores the ad ID — only the corporation ID matters", () => {
-      expect(renderEveHref("recruitmentAd:12345678//999")).toBe(
+      expect(renderEveHref("recruitmentad:12345678//999")).toBe(
         "/corporation/12345678",
       );
     });
@@ -165,18 +165,20 @@ describe("renderEveHref", () => {
   });
 
   describe("pass-through links (intercepted by click handler or app routing)", () => {
+    // Schemes are normalised to lowercase by convertEveUrlTags before TipTap
+    // stores them, so renderEveHref only ever receives lowercase schemes here.
     it.each([
-      ["joinChannel (negative ID)", "joinChannel:-26572540"],
-      ["joinChannel (positive ID)", "joinChannel:12345678"],
-      ["helpPointer", "helpPointer:neocom.airCareerProgram"],
+      ["joinchannel (negative ID)", "joinchannel:-26572540"],
+      ["joinchannel (positive ID)", "joinchannel:12345678"],
+      ["helppointer", "helppointer:neocom.airCareerProgram"],
       ["fitting", "fitting:33470:31047;1:31011;1::"],
       ["localsvc", "localsvc:method=OpenFWWindow"],
       ["opportunity", "opportunity:epic_arcs:40"],
-      ["careerProgramNode", "careerProgramNode:7:410:None"],
+      ["careerprogramnode", "careerprogramnode:7:410:None"],
       ["fleet", "fleet:1021212278338"],
       [
-        "shipSkinListing",
-        "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
+        "shipskinlisting",
+        "shipskinlisting:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
       ],
     ])("passes %s hrefs through unchanged", (_name, href) => {
       expect(renderEveHref(href)).toBe(href);
@@ -219,45 +221,46 @@ describe("renderEveHref", () => {
 });
 
 describe("EveLink protocol configuration", () => {
-  // EveLink is configured with protocols: ["showinfo", "warReport", "killReport"].
+  // EveLink registers all EVE-specific schemes as lowercase — linkifyjs v4
+  // (used by TipTap v3) rejects any scheme containing uppercase letters.
   // TipTap's setLink command calls isAllowedUri before applying the mark —
   // if it returns false the command silently no-ops. These tests verify that
   // our protocol list unlocks all EVE-specific schemes.
   const eveProtocols = [
     "showinfo",
-    "warReport",
-    "killReport",
-    "recruitmentAd",
+    "warreport",
+    "killreport",
+    "recruitmentad",
     "contract",
-    "joinChannel",
-    "helpPointer",
-    "shipSkinListing",
+    "joinchannel",
+    "helppointer",
+    "shipskinlisting",
     "fitting",
     "localsvc",
     "opportunity",
-    "careerProgramNode",
+    "careerprogramnode",
     "fleet",
   ];
 
   const EVE_PROTOCOL_SAMPLES: [string, string][] = [
     ["showinfo", "showinfo:1373//93345033"],
-    ["warReport", "warReport:42"],
+    ["warreport", "warreport:42"],
     [
-      "killReport",
-      "killReport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
+      "killreport",
+      "killreport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
     ],
-    ["recruitmentAd", "recruitmentAd:98645206//155600"],
+    ["recruitmentad", "recruitmentad:98645206//155600"],
     ["contract", "contract:0//196428637"],
-    ["joinChannel", "joinChannel:-26572540"],
-    ["helpPointer", "helpPointer:neocom.airCareerProgram"],
+    ["joinchannel", "joinchannel:-26572540"],
+    ["helppointer", "helppointer:neocom.airCareerProgram"],
     [
-      "shipSkinListing",
-      "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
+      "shipskinlisting",
+      "shipskinlisting:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
     ],
     ["fitting", "fitting:33470:31047;1::"],
     ["localsvc", "localsvc:method=OpenFWWindow"],
     ["opportunity", "opportunity:epic_arcs:40"],
-    ["careerProgramNode", "careerProgramNode:7:410:None"],
+    ["careerprogramnode", "careerprogramnode:7:410:None"],
     ["fleet", "fleet:1021212278338"],
   ];
 
