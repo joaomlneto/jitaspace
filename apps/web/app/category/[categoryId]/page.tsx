@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import type { Metadata } from "next";
 import { Container, Group, Loader, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
@@ -35,6 +36,27 @@ async function getCategoryData(categoryId: number): Promise<PageProps> {
     name: category.name,
     groups: category.groups,
   };
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ categoryId: string }>;
+}): Promise<Metadata> {
+  const { categoryId: categoryIdParam } = await params;
+  const categoryId = Number(categoryIdParam);
+  if (!categoryId) return {};
+  try {
+    const { name } = await getCategoryData(categoryId);
+    return {
+      title: name,
+      description: name
+        ? `Browse EVE Online ${name} items by group.`
+        : undefined,
+    };
+  } catch {
+    return {};
+  }
 }
 
 async function PageContent({

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import type { Metadata } from "next";
 import { Loader } from "@mantine/core";
 
 import { prisma } from "@jitaspace/db";
@@ -87,6 +88,31 @@ async function getLPStoreCorporationData(
     offers,
     types,
   };
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ corporationId: string }>;
+}): Promise<Metadata> {
+  const { corporationId } = await params;
+  const id = Number(corporationId);
+  if (!Number.isSafeInteger(id) || id <= 0) return {};
+  try {
+    const corporation = await prisma.corporation.findUnique({
+      select: { name: true },
+      where: { corporationId: id },
+    });
+    const name = corporation?.name;
+    return {
+      title: name ? `${name} LP Store` : "LP Store",
+      description: name
+        ? `Browse Loyalty Point store offers from ${name} in EVE Online.`
+        : undefined,
+    };
+  } catch {
+    return {};
+  }
 }
 
 async function PageContent({

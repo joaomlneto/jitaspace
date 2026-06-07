@@ -52,7 +52,7 @@ export const ShipFittingCardModulesSection = memo(
           )}
           {showExcessModules && remainingSlots < 0 && (
             <Group gap="xs" pl={26}>
-              <Text size="xs" color="red">
+              <Text size="xs" c="red">
                 Too many modules
               </Text>
             </Group>

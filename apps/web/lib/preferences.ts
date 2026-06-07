@@ -26,6 +26,7 @@ export const APP_THEME_OPTIONS = [
   { value: "caldari", label: "Caldari" },
   { value: "gallente", label: "Gallente" },
   { value: "minmatar", label: "Minmatar" },
+  { value: "whpd", label: "WHPD" },
 ] as const;
 
 export type EsiAcceptLanguage =

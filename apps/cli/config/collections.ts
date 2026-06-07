@@ -7,7 +7,7 @@
  */
 import { OpenAPIV3 } from "openapi-types";
 
-import { fixObjectIndices, sdeInputFiles } from "../sources/sde.js";
+import { fixObjectIndices, sdeInputFiles } from "@jitaspace/sde-utils";
 
 export type SdeCollection = {
   datasource: (

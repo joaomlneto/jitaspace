@@ -12,6 +12,13 @@ const mockUseSolarSystem = jest.fn();
 const mockUseSolarSystemCostIndices = jest.fn();
 const mockUseGetSolarSystemById = jest.fn();
 
+// system/[systemId]/page.tsx now imports prisma for generateMetadata
+jest.mock("@jitaspace/db", () => ({
+  prisma: {
+    solarSystem: { findUnique: jest.fn().mockResolvedValue(null) },
+  },
+}));
+
 jest.mock("next/navigation", () => ({
   useParams: () => ({ systemId: String(SYSTEM_ID) }),
   useRouter: () => ({}),

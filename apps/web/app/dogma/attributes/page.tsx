@@ -3,6 +3,11 @@ import { cacheLife } from "next/cache";
 
 import { prisma } from "@jitaspace/db";
 
+export const metadata = {
+  title: "Dogma Attributes",
+  description: "Browse all EVE Online dogma attributes used in ship and module balancing.",
+};
+
 import DogmaAttributesPage from "./page.client";
 import type { PageProps } from "./page.client";
 

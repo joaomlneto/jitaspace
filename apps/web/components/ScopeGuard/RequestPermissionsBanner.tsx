@@ -92,7 +92,7 @@ export function RequestPermissionsBanner({
               Show already granted scopes
             </Button>
           </Center>
-          <Collapse in={openGrantedScopesTable}>
+          <Collapse expanded={openGrantedScopesTable}>
             <ScopesTable scopes={grantedScopes} />
           </Collapse>
         </>

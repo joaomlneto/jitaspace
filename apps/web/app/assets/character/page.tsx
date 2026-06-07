@@ -150,7 +150,7 @@ export default function Page() {
           Total value: <ISKAmount span amount={totalPrice} />
         </Text>
         {numUndefinedNames > 0 && (
-          <Text color="red" size="sm">
+          <Text c="red" size="sm">
             Resolving names for {numUndefinedNames} items…
           </Text>
         )}

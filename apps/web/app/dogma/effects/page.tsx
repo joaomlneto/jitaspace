@@ -3,6 +3,11 @@ import { cacheLife } from "next/cache";
 
 import { prisma } from "@jitaspace/db";
 
+export const metadata = {
+  title: "Dogma Effects",
+  description: "Browse all EVE Online dogma effects applied by ships, modules, and skills.",
+};
+
 import DogmaEffectsPage from "./page.client";
 import type { PageProps } from "./page.client";
 
