@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 
-import { Character, prisma } from "@jitaspace/db";
+import { Character, prisma } from "../db";
 import { GetCharactersCharacterIdQueryResponse } from "@jitaspace/esi-client";
 
 import { MAX_DB_PARALLELISM } from "../config";

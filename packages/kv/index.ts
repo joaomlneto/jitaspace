@@ -1,31 +1,39 @@
 import Queue from "bull";
 import { createClient } from "redis";
 
-import { GetWarsWarId200 } from "@jitaspace/esi-client";
+import type { GetWarsWarId200 } from "@jitaspace/esi-client";
 
-export const redis = await createClient({
-  url: process.env.REDIS_URL,
-}).connect();
+export interface CreateKvOptions {
+  /** Redis connection URL. */
+  redisUrl: string;
+}
 
-const keys = {
-  killmails: "killmails",
-  wars: "wars",
-};
+/**
+ * Create the Redis client and Bull queues.
+ *
+ * This package reads no environment variables: callers (apps) inject the Redis
+ * URL from their own validated env. The Redis client is connected eagerly, so
+ * this is async — callers typically `await` it once and re-export the result.
+ */
+export async function createKv({ redisUrl }: CreateKvOptions) {
+  const redis = await createClient({ url: redisUrl }).connect();
 
-export const kv = {
-  queues: {
-    allianceIds: new Queue<{ allianceIds: number[] }>(
-      "allianceIds",
-      process.env.REDIS_URL as string,
-    ),
-    characterIds: new Queue<{ characterIds: number[] }>(
-      "characterIds",
-      process.env.REDIS_URL as string,
-    ),
-    corporationIds: new Queue<{ corporationIds: number[] }>(
-      "corporationIds",
-      process.env.REDIS_URL as string,
-    ),
-    war: new Queue<GetWarsWarId200[]>("wars", process.env.REDIS_URL as string),
-  },
-};
+  const kv = {
+    queues: {
+      allianceIds: new Queue<{ allianceIds: number[] }>("allianceIds", redisUrl),
+      characterIds: new Queue<{ characterIds: number[] }>(
+        "characterIds",
+        redisUrl,
+      ),
+      corporationIds: new Queue<{ corporationIds: number[] }>(
+        "corporationIds",
+        redisUrl,
+      ),
+      war: new Queue<GetWarsWarId200[]>("wars", redisUrl),
+    },
+  };
+
+  return { redis, kv };
+}
+
+export type Kv = Awaited<ReturnType<typeof createKv>>;

@@ -7,11 +7,11 @@ import type { client as Client, functions as Functions } from "../index";
 // executes the declarative Inngest config (eventType / triggers) we care about
 // here. Mocks are registered before the dynamic import below, so the registry
 // resolves these stubs instead of the real modules.
-jest.mock("@jitaspace/kv", () => ({ redis: {}, kv: { queues: {} } }));
-jest.mock("@jitaspace/db", () => ({ prisma: {}, Prisma: {} }));
+jest.mock("../kv", () => ({ redis: {}, kv: { queues: {} } }));
+jest.mock("../db", () => ({ prisma: {}, Prisma: {} }));
 jest.mock("@jitaspace/esi-client", () => ({}));
 jest.mock("@jitaspace/sde-client", () => ({}));
-jest.mock("@jitaspace/chat", () => ({ postUpdateCard: jest.fn() }));
+jest.mock("../chat", () => ({ postUpdateCard: jest.fn() }));
 // p-limit is ESM-only and only used inside handlers, not in the registry config.
 jest.mock("p-limit", () => ({
   __esModule: true,

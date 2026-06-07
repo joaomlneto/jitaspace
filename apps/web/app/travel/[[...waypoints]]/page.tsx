@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 import { Loader } from "@mantine/core";
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import TravelPage from "./page.client";

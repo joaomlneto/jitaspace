@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 
 export const metadata = {
   title: "Dogma Effects",

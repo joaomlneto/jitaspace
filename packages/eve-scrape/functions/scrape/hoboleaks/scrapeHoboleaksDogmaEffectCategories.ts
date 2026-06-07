@@ -1,7 +1,7 @@
 import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "../../../db";
 
 import { client } from "../../../client";
 import { excludeObjectKeys, updateTable } from "../../../utils";

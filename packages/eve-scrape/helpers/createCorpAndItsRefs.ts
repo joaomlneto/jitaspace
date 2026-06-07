@@ -22,7 +22,7 @@ import {
   Race,
   Station,
   War,
-} from "@jitaspace/db";
+} from "../db";
 import {
   getAlliancesAllianceId,
   getCharactersCharacterId,

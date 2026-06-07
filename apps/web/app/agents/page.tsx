@@ -7,7 +7,7 @@ export const metadata = {
   description: "Browse EVE Online NPC agents and their locations.",
 };
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 import { AgentFinderIcon } from "@jitaspace/eve-icons";
 import { removeUndefinedFields } from "@jitaspace/utils";
 
