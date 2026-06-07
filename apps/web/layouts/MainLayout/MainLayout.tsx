@@ -13,7 +13,7 @@ export function MainLayout({
   ...otherProps
 }: PropsWithChildren<AppShellProps>) {
   const matches = useMediaQuery("(max-width: 48em)");
-  const pinned = useHeadroom({ fixedAt: 120 });
+  const { pinned } = useHeadroom({ fixedAt: 120 });
   return (
     <AppShell
       header={{

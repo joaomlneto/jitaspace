@@ -2,7 +2,7 @@
 
 import type { PropsWithChildren } from "react";
 import { useEffect, useMemo } from "react";
-import { MantineProvider } from "@mantine/core";
+import { MantineProvider, v8CssVariablesResolver } from "@mantine/core";
 
 import { usePreferencesStore } from "~/lib/preferences";
 import { themes } from "~/themes";
@@ -20,7 +20,11 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
   );
 
   return (
-    <MantineProvider defaultColorScheme="dark" theme={theme}>
+    <MantineProvider
+      defaultColorScheme="dark"
+      theme={theme}
+      cssVariablesResolver={v8CssVariablesResolver}
+    >
       {children}
     </MantineProvider>
   );
