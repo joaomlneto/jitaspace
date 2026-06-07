@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Loader } from "@mantine/core";
 
-import PageClient from "./page.client";
+import { getAlliancesAllianceId } from "@jitaspace/esi-client";
 
-const ESI_BASE = "https://esi.evetech.net/latest";
+import PageClient from "./page.client";
 
 export async function generateMetadata({
   params,
@@ -14,14 +14,9 @@ export async function generateMetadata({
   const { allianceId } = await params;
   const id = Number(allianceId);
   if (!Number.isSafeInteger(id) || id <= 0) return {};
-
   try {
-    const res = await fetch(`${ESI_BASE}/alliances/${id}/`, { // NOSONAR - domain hardcoded; id is a validated safe positive integer
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return {};
-    const data = (await res.json()) as { name?: string; ticker?: string };
-    const name = data.name;
+    const res = await getAlliancesAllianceId(id);
+    const name = res.data?.name;
     const logoUrl = `https://images.evetech.net/alliances/${id}/logo`;
     return {
       title: name,

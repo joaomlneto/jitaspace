@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Loader } from "@mantine/core";
 
-import PageClient from "./page.client";
+import { getCorporationsCorporationId } from "@jitaspace/esi-client";
 
-const ESI_BASE = "https://esi.evetech.net/latest";
+import PageClient from "./page.client";
 
 function stripHtml(s: string): string {
   let out = "";
@@ -27,18 +27,10 @@ export async function generateMetadata({
   if (!Number.isSafeInteger(id) || id <= 0) return {};
 
   try {
-    const res = await fetch(`${ESI_BASE}/corporations/${id}/`, { // NOSONAR - domain hardcoded; id is a validated safe positive integer
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return {};
-    const data = (await res.json()) as {
-      name?: string;
-      description?: string;
-      ticker?: string;
-    };
-    const name = data.name;
-    const description = data.description
-      ? stripHtml(data.description).slice(0, 200)
+    const res = await getCorporationsCorporationId(id);
+    const name = res.data?.name;
+    const description = res.data?.description
+      ? stripHtml(res.data.description).slice(0, 200)
       : undefined;
     const logoUrl = `https://images.evetech.net/corporations/${id}/logo`;
     return {

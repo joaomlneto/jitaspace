@@ -2,9 +2,9 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Loader } from "@mantine/core";
 
-import PageClient from "./page.client";
+import { prisma } from "@jitaspace/db";
 
-const ESI_BASE = "https://esi.evetech.net/latest";
+import PageClient from "./page.client";
 
 export async function generateMetadata({
   params,
@@ -15,12 +15,15 @@ export async function generateMetadata({
   const id = Number(planetId);
   if (!Number.isSafeInteger(id) || id <= 0) return {};
   try {
-    const res = await fetch(`${ESI_BASE}/universe/planets/${id}/`, { // NOSONAR - domain hardcoded; id is a validated safe positive integer
-      next: { revalidate: 86400 },
+    const planet = await prisma.planet.findUnique({
+      select: { name: true },
+      where: { planetId: id },
     });
-    if (!res.ok) return {};
-    const { name } = (await res.json()) as { name?: string };
-    return { title: name, description: name ? `${name} planet in EVE Online.` : undefined };
+    if (!planet) return {};
+    return {
+      title: planet.name,
+      description: `${planet.name} planet in EVE Online.`,
+    };
   } catch {
     return {};
   }

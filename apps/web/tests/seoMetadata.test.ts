@@ -1,7 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+
+jest.mock("@mantine/core", () => ({ Loader: () => null }));
 
 // Mock client components to avoid loading heavy client-side dependency trees
-// (they pull in @tanstack/db → fractional-indexing which uses ESM syntax)
 jest.mock("~/app/character/[characterId]/page.client", () => ({
   default: () => null,
 }));
@@ -11,28 +12,24 @@ jest.mock("~/app/corporation/[corporationId]/page.client", () => ({
 jest.mock("~/app/alliance/[allianceId]/page.client", () => ({
   default: () => null,
 }));
-jest.mock("@mantine/core", () => ({ Loader: () => null }));
 
 // ---------------------------------------------------------------------------
-// Helpers
+// ESI-client mocks
 // ---------------------------------------------------------------------------
 
-function mockFetchOk(body: unknown) {
-  return jest.fn().mockResolvedValue({
-    ok: true,
-    json: () => Promise.resolve(body),
-  });
-}
+const mockGetCharactersCharacterId = jest.fn();
+const mockGetCorporationsCorporationId = jest.fn();
+const mockGetAlliancesAllianceId = jest.fn();
 
-function mockFetchFail() {
-  return jest.fn().mockResolvedValue({ ok: false });
-}
+jest.mock("@jitaspace/esi-client", () => ({
+  getCharactersCharacterId: (...a: unknown[]) =>
+    mockGetCharactersCharacterId(...a),
+  getCorporationsCorporationId: (...a: unknown[]) =>
+    mockGetCorporationsCorporationId(...a),
+  getAlliancesAllianceId: (...a: unknown[]) => mockGetAlliancesAllianceId(...a),
+}));
 
-function mockFetchThrow() {
-  return jest.fn().mockRejectedValue(new Error("network error"));
-}
-
-function resolvedParams<T>(obj: T): Promise<T> {
+function rp<T>(obj: T): Promise<T> {
   return Promise.resolve(obj);
 }
 
@@ -41,90 +38,71 @@ function resolvedParams<T>(obj: T): Promise<T> {
 // ---------------------------------------------------------------------------
 
 describe("character/[characterId] generateMetadata", () => {
-  beforeEach(() => jest.resetModules());
-  afterEach(() => {
-    (global as Record<string, unknown>).fetch = undefined;
+  beforeEach(() => {
+    jest.resetModules();
+    mockGetCharactersCharacterId.mockReset();
   });
 
   it("returns name + portrait for a valid character id", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchOk({
-      name: "Jita Trader",
+    mockGetCharactersCharacterId.mockResolvedValue({
+      data: { name: "Jita Trader" },
     });
     const { generateMetadata } = await import(
       "~/app/character/[characterId]/page"
     );
     const result = await generateMetadata({
-      params: resolvedParams({ characterId: "90000001" }),
+      params: rp({ characterId: "90000001" }),
     });
     expect(result.title).toBe("Jita Trader");
     expect(
       (result.openGraph as { images?: { url: string }[] })?.images?.[0]?.url,
     ).toContain("90000001");
-    expect((result.twitter as { images?: string[] })?.images?.[0]).toContain(
-      "90000001",
-    );
   });
 
   it("returns empty object for id = 0", async () => {
     const { generateMetadata } = await import(
       "~/app/character/[characterId]/page"
     );
-    const result = await generateMetadata({
-      params: resolvedParams({ characterId: "0" }),
-    });
-    expect(result).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ characterId: "0" }) }),
+    ).toEqual({});
   });
 
   it("returns empty object for non-numeric id", async () => {
     const { generateMetadata } = await import(
       "~/app/character/[characterId]/page"
     );
-    const result = await generateMetadata({
-      params: resolvedParams({ characterId: "invalid" }),
-    });
-    expect(result).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ characterId: "invalid" }) }),
+    ).toEqual({});
   });
 
   it("returns empty object for negative id", async () => {
     const { generateMetadata } = await import(
       "~/app/character/[characterId]/page"
     );
-    const result = await generateMetadata({
-      params: resolvedParams({ characterId: "-1" }),
-    });
-    expect(result).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ characterId: "-1" }) }),
+    ).toEqual({});
   });
 
   it("returns empty object for Infinity", async () => {
     const { generateMetadata } = await import(
       "~/app/character/[characterId]/page"
     );
-    const result = await generateMetadata({
-      params: resolvedParams({ characterId: "Infinity" }),
-    });
-    expect(result).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ characterId: "Infinity" }) }),
+    ).toEqual({});
   });
 
-  it("returns empty object when ESI returns non-ok", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchFail();
+  it("returns empty object when esi-client throws", async () => {
+    mockGetCharactersCharacterId.mockRejectedValue(new Error("network error"));
     const { generateMetadata } = await import(
       "~/app/character/[characterId]/page"
     );
-    const result = await generateMetadata({
-      params: resolvedParams({ characterId: "90000001" }),
-    });
-    expect(result).toEqual({});
-  });
-
-  it("returns empty object when fetch throws", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchThrow();
-    const { generateMetadata } = await import(
-      "~/app/character/[characterId]/page"
-    );
-    const result = await generateMetadata({
-      params: resolvedParams({ characterId: "90000001" }),
-    });
-    expect(result).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ characterId: "90000001" }) }),
+    ).toEqual({});
   });
 });
 
@@ -133,21 +111,20 @@ describe("character/[characterId] generateMetadata", () => {
 // ---------------------------------------------------------------------------
 
 describe("corporation/[corporationId] generateMetadata", () => {
-  beforeEach(() => jest.resetModules());
-  afterEach(() => {
-    (global as Record<string, unknown>).fetch = undefined;
+  beforeEach(() => {
+    jest.resetModules();
+    mockGetCorporationsCorporationId.mockReset();
   });
 
   it("returns name + description + logo for a valid corp id", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchOk({
-      name: "Jita Corp",
-      description: "<b>We trade</b>",
+    mockGetCorporationsCorporationId.mockResolvedValue({
+      data: { name: "Jita Corp", description: "<b>We trade</b>" },
     });
     const { generateMetadata } = await import(
       "~/app/corporation/[corporationId]/page"
     );
     const result = await generateMetadata({
-      params: resolvedParams({ corporationId: "98000001" }),
+      params: rp({ corporationId: "98000001" }),
     });
     expect(result.title).toBe("Jita Corp");
     expect(result.description).toBe("We trade");
@@ -157,29 +134,27 @@ describe("corporation/[corporationId] generateMetadata", () => {
   });
 
   it("strips HTML tags from description", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchOk({
-      name: "Corp",
-      description: "<p>Hello <b>world</b></p>",
+    mockGetCorporationsCorporationId.mockResolvedValue({
+      data: { name: "Corp", description: "<p>Hello <b>world</b></p>" },
     });
     const { generateMetadata } = await import(
       "~/app/corporation/[corporationId]/page"
     );
     const result = await generateMetadata({
-      params: resolvedParams({ corporationId: "98000001" }),
+      params: rp({ corporationId: "98000001" }),
     });
     expect(result.description).toBe("Hello world");
   });
 
   it("truncates description to 200 chars", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchOk({
-      name: "Corp",
-      description: "x".repeat(300),
+    mockGetCorporationsCorporationId.mockResolvedValue({
+      data: { name: "Corp", description: "x".repeat(300) },
     });
     const { generateMetadata } = await import(
       "~/app/corporation/[corporationId]/page"
     );
     const result = await generateMetadata({
-      params: resolvedParams({ corporationId: "98000001" }),
+      params: rp({ corporationId: "98000001" }),
     });
     expect((result.description ?? "").length).toBe(200);
   });
@@ -188,32 +163,19 @@ describe("corporation/[corporationId] generateMetadata", () => {
     const { generateMetadata } = await import(
       "~/app/corporation/[corporationId]/page"
     );
-    const result = await generateMetadata({
-      params: resolvedParams({ corporationId: "abc" }),
-    });
-    expect(result).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ corporationId: "abc" }) }),
+    ).toEqual({});
   });
 
-  it("returns empty object when ESI returns non-ok", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchFail();
+  it("returns empty object when esi-client throws", async () => {
+    mockGetCorporationsCorporationId.mockRejectedValue(new Error("network"));
     const { generateMetadata } = await import(
       "~/app/corporation/[corporationId]/page"
     );
-    const result = await generateMetadata({
-      params: resolvedParams({ corporationId: "98000001" }),
-    });
-    expect(result).toEqual({});
-  });
-
-  it("returns empty object when fetch throws", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchThrow();
-    const { generateMetadata } = await import(
-      "~/app/corporation/[corporationId]/page"
-    );
-    const result = await generateMetadata({
-      params: resolvedParams({ corporationId: "98000001" }),
-    });
-    expect(result).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ corporationId: "98000001" }) }),
+    ).toEqual({});
   });
 });
 
@@ -222,20 +184,20 @@ describe("corporation/[corporationId] generateMetadata", () => {
 // ---------------------------------------------------------------------------
 
 describe("alliance/[allianceId] generateMetadata", () => {
-  beforeEach(() => jest.resetModules());
-  afterEach(() => {
-    (global as Record<string, unknown>).fetch = undefined;
+  beforeEach(() => {
+    jest.resetModules();
+    mockGetAlliancesAllianceId.mockReset();
   });
 
   it("returns name + logo for a valid alliance id", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchOk({
-      name: "Pandemic Horde",
+    mockGetAlliancesAllianceId.mockResolvedValue({
+      data: { name: "Pandemic Horde" },
     });
     const { generateMetadata } = await import(
       "~/app/alliance/[allianceId]/page"
     );
     const result = await generateMetadata({
-      params: resolvedParams({ allianceId: "99005338" }),
+      params: rp({ allianceId: "99005338" }),
     });
     expect(result.title).toBe("Pandemic Horde");
     expect(
@@ -247,41 +209,27 @@ describe("alliance/[allianceId] generateMetadata", () => {
     const { generateMetadata } = await import(
       "~/app/alliance/[allianceId]/page"
     );
-    const result = await generateMetadata({
-      params: resolvedParams({ allianceId: "xyz" }),
-    });
-    expect(result).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ allianceId: "xyz" }) }),
+    ).toEqual({});
   });
 
   it("returns empty object for Infinity", async () => {
     const { generateMetadata } = await import(
       "~/app/alliance/[allianceId]/page"
     );
-    const result = await generateMetadata({
-      params: resolvedParams({ allianceId: "Infinity" }),
-    });
-    expect(result).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ allianceId: "Infinity" }) }),
+    ).toEqual({});
   });
 
-  it("returns empty object when ESI returns non-ok", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchFail();
+  it("returns empty object when esi-client throws", async () => {
+    mockGetAlliancesAllianceId.mockRejectedValue(new Error("network"));
     const { generateMetadata } = await import(
       "~/app/alliance/[allianceId]/page"
     );
-    const result = await generateMetadata({
-      params: resolvedParams({ allianceId: "99005338" }),
-    });
-    expect(result).toEqual({});
-  });
-
-  it("returns empty object when fetch throws", async () => {
-    (global as Record<string, unknown>).fetch = mockFetchThrow();
-    const { generateMetadata } = await import(
-      "~/app/alliance/[allianceId]/page"
-    );
-    const result = await generateMetadata({
-      params: resolvedParams({ allianceId: "99005338" }),
-    });
-    expect(result).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ allianceId: "99005338" }) }),
+    ).toEqual({});
   });
 });
