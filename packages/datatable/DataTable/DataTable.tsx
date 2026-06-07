@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import {
   type ColumnDef,
   type PaginationState,
@@ -40,6 +40,12 @@ export interface DataTableProps<TData> extends Omit<TableProps, "data"> {
 
 const PAGE_SIZE_OPTIONS = ["10", "25", "50", "100"];
 
+function getSortIcon(sorted: "asc" | "desc" | false): string {
+  if (sorted === "asc") return "↑";
+  if (sorted === "desc") return "↓";
+  return "⇅";
+}
+
 export function DataTable<TData>({
   data,
   columns,
@@ -50,7 +56,7 @@ export function DataTable<TData>({
   defaultPageSize = 10,
   onRowClick,
   ...tableProps
-}: DataTableProps<TData>) {
+}: Readonly<DataTableProps<TData>>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [pagination, setPagination] = useState<PaginationState>({
@@ -76,6 +82,43 @@ export function DataTable<TData>({
   });
 
   const rows = table.getRowModel().rows;
+
+  let tbodyContent: ReactNode;
+  if (isLoading) {
+    tbodyContent = (
+      <Table.Tr>
+        <Table.Td colSpan={columns.length}>
+          <Center py="xl">
+            <Loader />
+          </Center>
+        </Table.Td>
+      </Table.Tr>
+    );
+  } else if (rows.length === 0) {
+    tbodyContent = (
+      <Table.Tr>
+        <Table.Td colSpan={columns.length}>
+          <Center py="xl">
+            <Text c="dimmed">{emptyText}</Text>
+          </Center>
+        </Table.Td>
+      </Table.Tr>
+    );
+  } else {
+    tbodyContent = rows.map((row) => (
+      <Table.Tr
+        key={row.id}
+        onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+        style={onRowClick ? { cursor: "pointer" } : undefined}
+      >
+        {row.getVisibleCells().map((cell) => (
+          <Table.Td key={cell.id}>
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </Table.Td>
+        ))}
+      </Table.Tr>
+    ));
+  }
 
   return (
     <Stack gap="sm">
@@ -117,11 +160,7 @@ export function DataTable<TData>({
                           )}
                           {canSort && (
                             <Text size="xs" c="dimmed" component="span">
-                              {sorted === "asc"
-                                ? "↑"
-                                : sorted === "desc"
-                                  ? "↓"
-                                  : "⇅"}
+                              {getSortIcon(sorted)}
                             </Text>
                           )}
                         </Group>
@@ -132,44 +171,7 @@ export function DataTable<TData>({
               </Table.Tr>
             ))}
           </Table.Thead>
-          <Table.Tbody>
-            {isLoading ? (
-              <Table.Tr>
-                <Table.Td colSpan={columns.length}>
-                  <Center py="xl">
-                    <Loader />
-                  </Center>
-                </Table.Td>
-              </Table.Tr>
-            ) : rows.length === 0 ? (
-              <Table.Tr>
-                <Table.Td colSpan={columns.length}>
-                  <Center py="xl">
-                    <Text c="dimmed">{emptyText}</Text>
-                  </Center>
-                </Table.Td>
-              </Table.Tr>
-            ) : (
-              rows.map((row) => (
-                <Table.Tr
-                  key={row.id}
-                  onClick={
-                    onRowClick ? () => onRowClick(row.original) : undefined
-                  }
-                  style={onRowClick ? { cursor: "pointer" } : undefined}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <Table.Td key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </Table.Td>
-                  ))}
-                </Table.Tr>
-              ))
-            )}
-          </Table.Tbody>
+          <Table.Tbody>{tbodyContent}</Table.Tbody>
         </Table>
       </Table.ScrollContainer>
 
