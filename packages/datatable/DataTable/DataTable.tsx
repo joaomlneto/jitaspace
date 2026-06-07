@@ -5,6 +5,7 @@ import {
   type ColumnDef,
   type PaginationState,
   type SortingState,
+  type VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -25,7 +26,7 @@ import {
   TextInput,
 } from "@mantine/core";
 
-export type { ColumnDef };
+export type { ColumnDef, SortingState, VisibilityState };
 
 export interface DataTableProps<TData> extends Omit<TableProps, "data"> {
   data: TData[];
@@ -36,6 +37,8 @@ export interface DataTableProps<TData> extends Omit<TableProps, "data"> {
   withPagination?: boolean;
   defaultPageSize?: number;
   onRowClick?: (row: TData) => void;
+  initialSorting?: SortingState;
+  initialColumnVisibility?: VisibilityState;
 }
 
 const PAGE_SIZE_OPTIONS = ["10", "25", "50", "100"];
@@ -55,9 +58,14 @@ export function DataTable<TData>({
   withPagination = false,
   defaultPageSize = 10,
   onRowClick,
+  initialSorting,
+  initialColumnVisibility,
   ...tableProps
 }: Readonly<DataTableProps<TData>>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>(initialSorting ?? []);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    initialColumnVisibility ?? {},
+  );
   const [globalFilter, setGlobalFilter] = useState("");
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -70,10 +78,12 @@ export function DataTable<TData>({
     state: {
       sorting,
       globalFilter,
+      columnVisibility,
       ...(withPagination ? { pagination } : {}),
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
+    onColumnVisibilityChange: setColumnVisibility,
     ...(withPagination ? { onPaginationChange: setPagination } : {}),
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
