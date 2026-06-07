@@ -2,13 +2,34 @@
   "name": "@jitaspace/db",
   "description": "JitaSpace Database",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "main": "./index.ts",
   "types": "./index.ts",
+  "files": [
+    "dist",
+    "prisma/schema.prisma"
+  ],
+  "publishConfig": {
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/index.js"
+        },
+        "require": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/index.cjs"
+        }
+      }
+    }
+  },
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf .turbo node_modules",
+    "build": "prisma generate && tsup index.ts --format cjs,esm --dts",
+    "clean": "rm -rf .turbo node_modules dist",
     "db:studio": "prisma studio --browser none",
     "db:generate": "pnpm with-env prisma generate",
     "db:generate:watch": "pnpm with-env prisma generate --watch",
@@ -20,14 +41,13 @@
     "dev": "pnpm with-env concurrently -c \"auto\" --names \"Studio,Watch\" \"pnpm:db:studio\" \"pnpm:db:generate:watch\"",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
-    "postinstall": "pnpm db:generate",
+    "prepublishOnly": "pnpm build",
     "type-check": "tsc --jsx react-jsx --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "dotenv": "^17.4.2",
     "pg": "^8.21.0"
   },
   "devDependencies": {
@@ -37,9 +57,11 @@
     "@types/node": "^24.12.4",
     "@types/pg": "^8.20.0",
     "concurrently": "^9.2.1",
+    "dotenv": "^17.4.2",
     "eslint": "^9.39.4",
     "prettier": "^3.8.3",
     "prisma": "^7.8.0",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"
