@@ -2,7 +2,7 @@
 
 import { DependencyList } from "react";
 import HardBreak from "@tiptap/extension-hard-break";
-import TextStyle from "@tiptap/extension-text-style";
+import { TextStyle } from "@tiptap/extension-text-style";
 import { Underline } from "@tiptap/extension-underline";
 import { EditorOptions, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -19,7 +19,14 @@ export const useEveEditor = (
   return useEditor(
     {
       extensions: [
-        StarterKit.configure({}),
+        // TipTap 3's StarterKit now bundles Link, Underline and HardBreak.
+        // Disable them here so they don't collide with the customized versions
+        // (EveLink, the standalone Underline, and the HardBreak below) we add.
+        StarterKit.configure({
+          link: false,
+          underline: false,
+          hardBreak: false,
+        }),
         HardBreak.extend({
           addKeyboardShortcuts() {
             return {

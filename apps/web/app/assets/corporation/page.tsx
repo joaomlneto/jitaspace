@@ -122,7 +122,7 @@ export default function Page() {
                 : `${(Object.keys(assets) ?? []).length} assets`}
             </Text>
             {numUndefinedNames > 0 && (
-              <Text color="red" size="sm">
+              <Text c="red" size="sm">
                 Failed to resolve names for {numUndefinedNames} items! This
                 causes the ordering of items to be wrong.
                 <br/>

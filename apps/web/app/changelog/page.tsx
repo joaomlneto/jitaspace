@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-import { Container, TypographyStylesProvider } from "@mantine/core";
+import { Container, Typography } from "@mantine/core";
 import Markdown from "react-markdown";
 
 export const metadata = {
@@ -16,9 +16,9 @@ export default function ChangelogPage() {
 
   return (
     <Container size="sm" py="xl">
-      <TypographyStylesProvider>
+      <Typography>
         <Markdown>{content}</Markdown>
-      </TypographyStylesProvider>
+      </Typography>
     </Container>
   );
 }

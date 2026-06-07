@@ -147,7 +147,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
             <ISKAmount
               size="sm"
               amount={Math.abs(row.original.amount)}
-              color={row.original.amount >= 0 ? "green" : "red"}
+              c={row.original.amount >= 0 ? "green" : "red"}
             />
           ) : undefined,
       },

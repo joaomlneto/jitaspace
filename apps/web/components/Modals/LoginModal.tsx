@@ -134,7 +134,7 @@ export function LoginModal({
           </Center>
         </>
       )}
-      <Collapse in={showScopesTable}>
+      <Collapse expanded={showScopesTable}>
         <Text size="sm" c="dimmed">
           List of scopes to be requested:
         </Text>

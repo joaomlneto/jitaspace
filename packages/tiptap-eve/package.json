@@ -33,12 +33,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@tiptap/extension-hard-break": "^2.27.2",
-    "@tiptap/extension-link": "^2.27.2",
-    "@tiptap/extension-text-style": "^2.27.2",
-    "@tiptap/extension-underline": "^2.27.2",
-    "@tiptap/react": "^2.27.2",
-    "@tiptap/starter-kit": "^2.27.2"
+    "@tiptap/extension-hard-break": "^3.26.0",
+    "@tiptap/extension-link": "^3.26.0",
+    "@tiptap/extension-text-style": "^3.26.0",
+    "@tiptap/extension-underline": "^3.26.0",
+    "@tiptap/react": "^3.26.0",
+    "@tiptap/starter-kit": "^3.26.0"
   },
   "peerDependencies": {
     "react": "^19.2.6"

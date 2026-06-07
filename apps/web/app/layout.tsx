@@ -123,7 +123,9 @@ export default function RootLayout({
           >
             <EsiClientSSOAccessTokenInjector>
               <>
-                <Notifications />
+                {/* Mantine 9 changed the default so hovering any notification
+                    pauses all timers; keep the previous per-notification behavior. */}
+                <Notifications pauseResetOnHover="notification" />
                 <Suspense fallback={null}>
                   <RouterTransition />
                 </Suspense>

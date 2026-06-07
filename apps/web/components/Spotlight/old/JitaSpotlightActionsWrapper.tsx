@@ -60,7 +60,7 @@ export const JitaSpotlightActionsWrapper = memo(
                 multiline
                 label="To enable you must be logged in and provide the esi-search.search_structures.v1 scope"
               >
-                <Text size="xs" color="brown">
+                <Text size="xs" c="brown">
                   ESI Search disabled.
                 </Text>
               </Tooltip>
@@ -70,7 +70,7 @@ export const JitaSpotlightActionsWrapper = memo(
                 multiline
                 label="To enable you must be logged in and provide the esi-universe.read_structures.v1 scope"
               >
-                <Text size="xs" color="brown">
+                <Text size="xs" c="brown">
                   Structure search disabled.
                 </Text>
               </Tooltip>

@@ -16,6 +16,9 @@ import {
 import { colors } from "./colors";
 
 const baseTheme = createTheme({
+  // Mantine 9 changed the default radius from `sm` (4px) to `md` (8px).
+  // Keep the previous default so existing components render unchanged.
+  defaultRadius: "sm",
   components: {
     Avatar: Avatar.extend({
       defaultProps: {
