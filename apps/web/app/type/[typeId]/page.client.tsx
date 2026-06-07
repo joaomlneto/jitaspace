@@ -56,10 +56,6 @@ import {
 } from "@jitaspace/ui";
 
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
-import {
-  TypeInventoryBreadcrumbs,
-  TypeMarketBreadcrumbs,
-} from "~/components/Breadcrumbs";
 import { MailMessageViewer } from "~/components/EveMail";
 import {
   CategoryName,
@@ -74,6 +70,8 @@ export interface PageProps {
   ogImageUrl?: string;
   typeName?: string;
   typeDescription?: string;
+  inventoryBreadcrumbs?: ReactNode;
+  marketBreadcrumbs?: ReactNode;
 }
 
 const notAvailableText = "Not available";
@@ -277,6 +275,8 @@ export default function TypePage({
   typeId,
   typeName,
   typeDescription,
+  inventoryBreadcrumbs,
+  marketBreadcrumbs,
 }: PageProps) {
   const character = useSelectedCharacter();
   const { data: type } = useType(typeId);
@@ -544,7 +544,7 @@ export default function TypePage({
             </Box>
 
             <Stack gap="sm" style={{ flex: 1, minWidth: 240 }}>
-              <TypeInventoryBreadcrumbs typeId={typeId} fz="sm" />
+              {inventoryBreadcrumbs}
               <Group gap="sm" align="center">
                 <Title order={2}>{name ?? notAvailableText}</Title>
                 {typeData?.published === false && (
@@ -842,7 +842,7 @@ export default function TypePage({
           {hasMarket && (
             <Tabs.Panel value="market" pt="lg">
               <Stack gap="lg">
-                <TypeMarketBreadcrumbs typeId={typeId} fz="sm" />
+                {marketBreadcrumbs}
                 <Stack gap="sm">
                   <SectionHeading icon={<IconCoin size={18} />}>
                     Jita / The Forge
