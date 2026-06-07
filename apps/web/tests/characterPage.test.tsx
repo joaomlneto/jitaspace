@@ -11,6 +11,13 @@ const mockUseCharacter = jest.fn();
 const mockUseSelectedCharacter = jest.fn();
 const mockUseGetNpcCorporationDivisionById = jest.fn();
 
+// character/[characterId]/page.tsx imports getCharactersCharacterId for generateMetadata
+jest.mock("@jitaspace/esi-client", () => ({
+  getCharactersCharacterId: jest
+    .fn()
+    .mockResolvedValue({ data: { name: "Test" } }),
+}));
+
 jest.mock("next/navigation", () => ({
   useParams: () => ({ characterId: String(CHARACTER_ID) }),
   useRouter: () => ({}),
