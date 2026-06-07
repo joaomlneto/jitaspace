@@ -2,6 +2,7 @@
 
 import { type ReactNode, useState } from "react";
 import {
+  type Column,
   type ColumnDef,
   type PaginationState,
   type SortingState,
@@ -14,10 +15,14 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import {
+  Button,
   Center,
+  Checkbox,
+  Divider,
   Group,
   Loader,
   Pagination,
+  Popover,
   Select,
   Stack,
   Table,
@@ -34,6 +39,7 @@ export interface DataTableProps<TData> extends Omit<TableProps, "data"> {
   isLoading?: boolean;
   emptyText?: string;
   withGlobalFilter?: boolean;
+  withColumnVisibility?: boolean;
   withPagination?: boolean;
   defaultPageSize?: number;
   onRowClick?: (row: TData) => void;
@@ -49,12 +55,19 @@ function getSortIcon(sorted: "asc" | "desc" | false): string {
   return "⇅";
 }
 
+// Prefer a string header for the visibility menu label; fall back to the id.
+function columnLabel<TData>(column: Column<TData>): string {
+  const header = column.columnDef.header;
+  return typeof header === "string" && header.length > 0 ? header : column.id;
+}
+
 export function DataTable<TData>({
   data,
   columns,
   isLoading = false,
   emptyText = "No data",
   withGlobalFilter = false,
+  withColumnVisibility = false,
   withPagination = false,
   defaultPageSize = 10,
   onRowClick,
@@ -67,6 +80,7 @@ export function DataTable<TData>({
     initialColumnVisibility ?? {},
   );
   const [globalFilter, setGlobalFilter] = useState("");
+  const [columnsMenuOpened, setColumnsMenuOpened] = useState(false);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: defaultPageSize,
@@ -130,14 +144,70 @@ export function DataTable<TData>({
     ));
   }
 
+  const hideableColumns = table
+    .getAllLeafColumns()
+    .filter((column) => column.getCanHide());
+
   return (
     <Stack gap="sm">
-      {withGlobalFilter && (
-        <TextInput
-          placeholder="Search..."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.currentTarget.value)}
-        />
+      {(withGlobalFilter || withColumnVisibility) && (
+        <Group justify="space-between" align="flex-start">
+          {withGlobalFilter ? (
+            <TextInput
+              placeholder="Search..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.currentTarget.value)}
+              style={{ flex: 1, maxWidth: 320 }}
+            />
+          ) : (
+            <span />
+          )}
+          {withColumnVisibility && (
+            <Popover
+              opened={columnsMenuOpened}
+              onChange={setColumnsMenuOpened}
+              position="bottom-end"
+              shadow="md"
+              withinPortal
+            >
+              <Popover.Target>
+                <Button
+                  variant="default"
+                  size="xs"
+                  onClick={() => setColumnsMenuOpened((opened) => !opened)}
+                >
+                  Columns
+                </Button>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <div style={{ maxHeight: 360, overflowY: "auto" }}>
+                  <Stack gap="xs">
+                    <Checkbox
+                      size="xs"
+                      label="Toggle all"
+                      checked={table.getIsAllColumnsVisible()}
+                      indeterminate={
+                        table.getIsSomeColumnsVisible() &&
+                        !table.getIsAllColumnsVisible()
+                      }
+                      onChange={table.getToggleAllColumnsVisibilityHandler()}
+                    />
+                    <Divider />
+                    {hideableColumns.map((column) => (
+                      <Checkbox
+                        key={column.id}
+                        size="xs"
+                        label={columnLabel(column)}
+                        checked={column.getIsVisible()}
+                        onChange={column.getToggleVisibilityHandler()}
+                      />
+                    ))}
+                  </Stack>
+                </div>
+              </Popover.Dropdown>
+            </Popover>
+          )}
+        </Group>
       )}
 
       <Table.ScrollContainer minWidth={400}>

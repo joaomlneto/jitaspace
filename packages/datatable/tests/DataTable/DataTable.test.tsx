@@ -270,3 +270,87 @@ describe("DataTable — row click", () => {
     expect(firstDataRow).not.toHaveStyle("cursor: pointer");
   });
 });
+
+describe("DataTable — column visibility", () => {
+  it("does not render the Columns control by default", () => {
+    renderWithMantine(<DataTable columns={columns} data={data} />);
+    expect(
+      screen.queryByRole("button", { name: "Columns" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders a Columns control when withColumnVisibility is true", () => {
+    renderWithMantine(
+      <DataTable columns={columns} data={data} withColumnVisibility />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Columns" }),
+    ).toBeInTheDocument();
+  });
+
+  it("opens a menu with a checkbox per column plus a toggle-all", async () => {
+    renderWithMantine(
+      <DataTable columns={columns} data={data} withColumnVisibility />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Columns" }));
+    expect(screen.getByLabelText("Toggle all")).toBeInTheDocument();
+    expect(screen.getByLabelText("Name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Score")).toBeInTheDocument();
+  });
+
+  it("hides a column's header when its checkbox is unchecked", async () => {
+    renderWithMantine(
+      <DataTable columns={columns} data={data} withColumnVisibility />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Columns" }));
+    await userEvent.click(screen.getByLabelText("Score"));
+    // The "Score" header is gone, but the "Name" header remains.
+    expect(
+      screen.queryByRole("columnheader", { name: /Score/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", { name: /Name/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("restores a hidden column when its checkbox is re-checked", async () => {
+    renderWithMantine(
+      <DataTable columns={columns} data={data} withColumnVisibility />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Columns" }));
+    const scoreCheckbox = screen.getByLabelText("Score");
+    await userEvent.click(scoreCheckbox); // hide
+    await userEvent.click(scoreCheckbox); // show again
+    expect(
+      screen.getByRole("columnheader", { name: /Score/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("honors initialColumnVisibility (column hidden + checkbox unchecked)", async () => {
+    renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={data}
+        withColumnVisibility
+        initialColumnVisibility={{ score: false }}
+      />,
+    );
+    expect(
+      screen.queryByRole("columnheader", { name: /Score/ }),
+    ).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Columns" }));
+    expect(screen.getByLabelText("Score")).not.toBeChecked();
+  });
+
+  it("toggle-all hides every column, then shows them again", async () => {
+    renderWithMantine(
+      <DataTable columns={columns} data={data} withColumnVisibility />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Columns" }));
+    const toggleAll = screen.getByLabelText("Toggle all");
+    await userEvent.click(toggleAll); // hide all
+    expect(screen.queryByRole("columnheader")).not.toBeInTheDocument();
+    await userEvent.click(toggleAll); // show all
+    expect(screen.getAllByRole("columnheader").length).toBe(2);
+  });
+});

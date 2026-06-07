@@ -37,8 +37,24 @@ const types = [
 ];
 
 const MARKET_STATS: FuzzworkTypeMarketAggregate = {
-  buy: { percentile: 1_000_000, volume: 500 },
-  sell: { percentile: 1_200_000, volume: 300 },
+  buy: {
+    percentile: 1_000_000,
+    volume: 500,
+    weightedAverage: 1_000_000,
+    max: 1_100_000,
+    stddev: 0,
+    median: 1_000_000,
+    orderCount: 10,
+  },
+  sell: {
+    percentile: 1_200_000,
+    volume: 300,
+    weightedAverage: 1_200_000,
+    max: 1_300_000,
+    stddev: 0,
+    median: 1_200_000,
+    orderCount: 8,
+  },
 };
 
 const offers = [

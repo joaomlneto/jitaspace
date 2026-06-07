@@ -470,6 +470,7 @@ export const LoyaltyPointsTable = memo(
         withPagination
         defaultPageSize={25}
         withGlobalFilter
+        withColumnVisibility
         initialSorting={INITIAL_SORTING}
         initialColumnVisibility={initialColumnVisibility}
         verticalSpacing="xs"
