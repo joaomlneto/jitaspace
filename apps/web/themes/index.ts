@@ -1,5 +1,13 @@
 "use client";
 
+import type {} from "@mantine/core";
+
+declare module "@mantine/core" {
+  interface MantineThemeOther {
+    wallpaper?: string;
+  }
+}
+
 import {
   Avatar,
   Badge,
@@ -71,6 +79,10 @@ const evePanelStyles = {
 const eveTheme = mergeThemeOverrides(
   baseTheme,
   createTheme({
+    other: {
+      wallpaper:
+        "/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg",
+    },
     black: "#04070c",
     white: "#f2f7fb",
     primaryColor: "eve_primary",
@@ -247,6 +259,7 @@ export const themes = {
   amarr: mergeThemeOverrides(
     eveTheme,
     createTheme({
+      other: { wallpaper: "/wallpapers/2026-cradle-of-war/amarr_wallpaper.jpg" },
       primaryColor: "amarr_primary",
       primaryShade: 6,
       colors,
@@ -255,6 +268,9 @@ export const themes = {
   caldari: mergeThemeOverrides(
     eveTheme,
     createTheme({
+      other: {
+        wallpaper: "/wallpapers/2026-cradle-of-war/caldari_wallpaper.jpg",
+      },
       primaryColor: "caldari_primary",
       colors,
     }),
@@ -262,6 +278,9 @@ export const themes = {
   gallente: mergeThemeOverrides(
     eveTheme,
     createTheme({
+      other: {
+        wallpaper: "/wallpapers/2026-cradle-of-war/gallente_wallpaper.jpg",
+      },
       primaryColor: "gallente_primary",
       colors,
     }),
@@ -269,6 +288,9 @@ export const themes = {
   minmatar: mergeThemeOverrides(
     eveTheme,
     createTheme({
+      other: {
+        wallpaper: "/wallpapers/2026-cradle-of-war/minmatar_wallpaper.jpg",
+      },
       primaryColor: "minmatar_primary",
       colors,
     }),

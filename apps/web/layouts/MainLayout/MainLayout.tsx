@@ -2,7 +2,7 @@
 
 import type { AppShellProps } from "@mantine/core";
 import type { PropsWithChildren } from "react";
-import { AppShell, rem } from "@mantine/core";
+import { AppShell, rem, useMantineTheme } from "@mantine/core";
 import { useHeadroom, useMediaQuery } from "@mantine/hooks";
 
 import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
@@ -14,6 +14,8 @@ export function MainLayout({
 }: PropsWithChildren<AppShellProps>) {
   const matches = useMediaQuery("(max-width: 48em)");
   const { pinned } = useHeadroom({ fixedAt: 120 });
+  const theme = useMantineTheme();
+  const wallpaper = theme.other.wallpaper;
   return (
     <AppShell
       header={{
@@ -26,6 +28,13 @@ export function MainLayout({
         offset: true,
         collapsed: matches && !pinned,
       }}
+      style={
+        wallpaper
+          ? {
+              background: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${wallpaper}) center / cover fixed no-repeat`,
+            }
+          : undefined
+      }
       {...otherProps}
     >
       <AppShell.Header>
