@@ -1,4 +1,40 @@
 /**
+ * EVE Online uses camelCase scheme names (joinChannel:, warReport:, …) in its
+ * rich-text mail format.  When we read incoming mail, convertEveUrlTags
+ * normalises those schemes to lowercase so TipTap/linkifyjs v4 can accept them
+ * (linkifyjs v4 enforces RFC 3986 lowercase-only schemes).  This map restores
+ * the canonical EVE casing on the way back out so that outgoing mail sent via
+ * ESI uses the same scheme names the EVE client generated in the first place.
+ *
+ * Schemes that are already lowercase (showinfo, contract, fitting, …) are not
+ * in this map and pass through unchanged.
+ */
+const EVE_SCHEME_RESTORE: Readonly<Record<string, string>> = {
+  warreport: "warReport",
+  killreport: "killReport",
+  recruitmentad: "recruitmentAd",
+  joinchannel: "joinChannel",
+  helppointer: "helpPointer",
+  shipskinlisting: "shipSkinListing",
+  careerprogramnode: "careerProgramNode",
+};
+
+/**
+ * Restores the canonical EVE camelCase scheme name from a (possibly lowercased)
+ * href stored by TipTap.  Non-EVE schemes (https, http, …) and already-correct
+ * schemes pass through unchanged.
+ */
+function restoreEveScheme(href: string): string {
+  // Only match all-lowercase scheme names (the form stored by TipTap after
+  // normalisation).  If the scheme already has uppercase letters the href came
+  // directly from user input and should be left as-is.
+  return href.replace(/^([a-z][a-z0-9+.-]*):/, (_, scheme: string) => {
+    const canonical = EVE_SCHEME_RESTORE[scheme];
+    return canonical ? canonical + ":" : scheme + ":";
+  });
+}
+
+/**
  * Serializes a DOM node produced by TipTap's getHTML() back to EVE Online's
  * rich-text mail format.
  *
@@ -9,7 +45,7 @@
  *   <em>/<i>           → <i>…</i>
  *   <u>                → <u>…</u>
  *   <s>                → <s>…</s>
- *   <a href="…">       → <url=…>…</url>
+ *   <a href="…">       → <url=…>…</url>  (scheme restored to EVE camelCase)
  *   <span color="0x…"> → <color=0x…>…</color>  (EveFontColor stores the
  *                         original EVE color string in the `color` attribute)
  */
@@ -52,7 +88,7 @@ function nodeToEveMail(node: Node): string {
       return `<s>${inner}</s>`;
 
     case "a": {
-      const href = el.getAttribute("href") ?? "";
+      const href = restoreEveScheme(el.getAttribute("href") ?? "");
       return `<url=${href}>${inner}</url>`;
     }
 
