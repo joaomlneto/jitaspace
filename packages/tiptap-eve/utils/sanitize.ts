@@ -13,10 +13,13 @@ export const convertEveMailLineBreaks = (body: string): string =>
  * EVE mail bodies use <color=0xAARRGGBB>TEXT</color> for coloured text.
  * Convert to <font color="0xAARRGGBB">TEXT</font> so TipTap's EveFontColor
  * extension can parse and apply the colour via fromEveColor.
+ *
+ * The text portion uses (?:[^<]|<(?!\/color>))* instead of .*? to avoid
+ * catastrophic backtracking on malformed or adversarial input (ReDoS).
  */
 export const convertEveColorTags = (body: string): string =>
   body.replace(
-    /<color=(0x[0-9a-fA-F]+)>(.*?)<\/color>/gs,
+    /<color=(0x[0-9a-fA-F]+)>((?:[^<]|<(?!\/color>))*)<\/color>/g,
     (_, color: string, text: string) => `<font color="${color}">${text}</font>`,
   );
 
@@ -29,14 +32,28 @@ export const convertEveColorTags = (body: string): string =>
  * requires all-lowercase scheme names. EVE Online uses camelCase schemes
  * (e.g. "warReport:", "joinChannel:") that must be normalised here before the
  * content reaches TipTap.
+ *
+ * Regex notes (ReDoS safety):
+ *  - [^><]* for the href: excludes both < and > so a missing > cannot cause
+ *    the engine to scan into nested opening tags.
+ *  - (?:[^<]|<(?!\/url>))* for the text: unambiguous alternation —
+ *    [^<] handles every non-< character while <(?!\/url>) handles a bare <
+ *    that does not open the </url> close tag. No catastrophic backtracking.
+ *  - Scheme normalisation uses a capturing group + literal : instead of a
+ *    lookahead, avoiding any lookahead-driven retry loop.
  */
 export const convertEveUrlTags = (body: string): string =>
-  body.replace(/<url=([^>]*)>(.*?)<\/url>/gs, (_, href: string, text: string) => {
-    const normalizedHref = href.replace(/^[A-Za-z][A-Za-z0-9]*(?=:)/, (scheme) =>
-      scheme.toLowerCase(),
-    );
-    return `<a href="${normalizedHref}">${text}</a>`;
-  });
+  body.replace(
+    /<url=([^><]*?)>((?:[^<]|<(?!\/url>))*)<\/url>/g,
+    (_, href: string, text: string) => {
+      // Lowercase only the scheme part (up to and including the first colon).
+      const normalizedHref = href.replace(
+        /^([A-Za-z][A-Za-z0-9+.-]*):/,
+        (_, scheme: string) => scheme.toLowerCase() + ":",
+      );
+      return `<a href="${normalizedHref}">${text}</a>`;
+    },
+  );
 
 export const sanitizeFormattedEveString = (str: string): string => {
   // FIXME: IS THIS CORRECT? THIS WILL CONSIDER THAT THE WHOLE THING IS A "UNICODE BLOCK".
