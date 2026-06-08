@@ -1,5 +1,13 @@
 "use client";
 
+import type {} from "@mantine/core";
+
+declare module "@mantine/core" {
+  interface MantineThemeOther {
+    appBackground?: string;
+  }
+}
+
 import {
   Avatar,
   Badge,
@@ -71,6 +79,10 @@ const evePanelStyles = {
 const eveTheme = mergeThemeOverrides(
   baseTheme,
   createTheme({
+    other: {
+      appBackground:
+        "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg) center/cover fixed no-repeat",
+    },
     black: "#04070c",
     white: "#f2f7fb",
     primaryColor: "eve_primary",
@@ -247,6 +259,10 @@ export const themes = {
   amarr: mergeThemeOverrides(
     eveTheme,
     createTheme({
+      other: {
+        appBackground:
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/amarr_wallpaper.jpg) center/cover fixed no-repeat",
+      },
       primaryColor: "amarr_primary",
       primaryShade: 6,
       colors,
@@ -255,6 +271,10 @@ export const themes = {
   caldari: mergeThemeOverrides(
     eveTheme,
     createTheme({
+      other: {
+        appBackground:
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/caldari_wallpaper.jpg) center/cover fixed no-repeat",
+      },
       primaryColor: "caldari_primary",
       colors,
     }),
@@ -262,6 +282,10 @@ export const themes = {
   gallente: mergeThemeOverrides(
     eveTheme,
     createTheme({
+      other: {
+        appBackground:
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/gallente_wallpaper.jpg) center/cover fixed no-repeat",
+      },
       primaryColor: "gallente_primary",
       colors,
     }),
@@ -269,6 +293,10 @@ export const themes = {
   minmatar: mergeThemeOverrides(
     eveTheme,
     createTheme({
+      other: {
+        appBackground:
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/minmatar_wallpaper.jpg) center/cover fixed no-repeat",
+      },
       primaryColor: "minmatar_primary",
       colors,
     }),
@@ -290,6 +318,7 @@ export const themes = {
   whpd: mergeThemeOverrides(
     eveTheme,
     createTheme({
+      other: { appBackground: "#000" },
       black: "#000002",
       white: "#eef2ff",
       primaryColor: "whpd_primary",
