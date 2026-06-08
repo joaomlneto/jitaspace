@@ -14,12 +14,15 @@ export const convertEveMailLineBreaks = (body: string): string =>
  * Convert to <font color="0xAARRGGBB">TEXT</font> so TipTap's EveFontColor
  * extension can parse and apply the colour via fromEveColor.
  *
- * The text portion uses (?:[^<]|<(?!\/color>))* instead of .*? to avoid
- * catastrophic backtracking on malformed or adversarial input (ReDoS).
+ * ReDoS safety: the text uses (?:[^<]|<(?!\/?color))* rather than .*?. Forbidding
+ * the text from containing `<color`/`</color` is what keeps it linear — with the
+ * /g flag the engine retries at every `<color=` occurrence, and if the text could
+ * swallow other `<color=` tokens those retries would overlap into O(n²) scanning
+ * on adversarial input. Other tags (<b>, <font>, …) are still allowed in the text.
  */
 export const convertEveColorTags = (body: string): string =>
   body.replace(
-    /<color=(0x[0-9a-fA-F]+)>((?:[^<]|<(?!\/color>))*)<\/color>/g,
+    /<color=(0x[0-9a-fA-F]+)>((?:[^<]|<(?!\/?color))*)<\/color>/g,
     (_, color: string, text: string) => `<font color="${color}">${text}</font>`,
   );
 
@@ -28,31 +31,16 @@ export const convertEveColorTags = (body: string): string =>
  * HTML <a> tags. Convert them to <a href="HREF">TEXT</a> so TipTap's Link
  * extension can parse and render them correctly.
  *
- * The scheme part is lowercased because linkifyjs v4 (used by TipTap v3)
- * requires all-lowercase scheme names. EVE Online uses camelCase schemes
- * (e.g. "warReport:", "joinChannel:") that must be normalised here before the
- * content reaches TipTap.
- *
- * Regex notes (ReDoS safety):
- *  - [^><]* for the href: excludes both < and > so a missing > cannot cause
- *    the engine to scan into nested opening tags.
- *  - (?:[^<]|<(?!\/url>))* for the text: unambiguous alternation —
- *    [^<] handles every non-< character while <(?!\/url>) handles a bare <
- *    that does not open the </url> close tag. No catastrophic backtracking.
- *  - Scheme normalisation uses a capturing group + literal : instead of a
- *    lookahead, avoiding any lookahead-driven retry loop.
+ * ReDoS safety: the href uses [^<>]* (cannot consume `<` or `>`) and the text
+ * uses (?:[^<]|<(?!\/?url))*, which forbids the text from swallowing another
+ * `<url`/`</url` token. That non-overlap is what keeps it linear under the /g
+ * flag — see convertEveColorTags. Nested formatting tags in the link label
+ * (<font>, <b>, …) are still permitted.
  */
 export const convertEveUrlTags = (body: string): string =>
   body.replace(
-    /<url=([^><]*?)>((?:[^<]|<(?!\/url>))*)<\/url>/g,
-    (_, href: string, text: string) => {
-      // Lowercase only the scheme part (up to and including the first colon).
-      const normalizedHref = href.replace(
-        /^([A-Za-z][A-Za-z0-9+.-]*):/,
-        (_, scheme: string) => scheme.toLowerCase() + ":",
-      );
-      return `<a href="${normalizedHref}">${text}</a>`;
-    },
+    /<url=([^<>]*)>((?:[^<]|<(?!\/?url))*)<\/url>/g,
+    '<a href="$1">$2</a>',
   );
 
 export const sanitizeFormattedEveString = (str: string): string => {

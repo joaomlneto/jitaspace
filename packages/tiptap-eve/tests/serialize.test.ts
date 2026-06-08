@@ -86,10 +86,24 @@ describe("htmlToEveMail", () => {
       ).toBe("<url=https://example.com>Example</url>");
     });
 
+    it("converts killReport links to <url=...>", () => {
+      expect(
+        htmlToEveMail(
+          '<p><a href="killReport:13807613:abc123">Kill</a></p>',
+        ),
+      ).toBe("<url=killReport:13807613:abc123>Kill</url>");
+    });
+
     it("converts contract links to <url=...>", () => {
       expect(
         htmlToEveMail('<p><a href="contract:0//196428637">My Contract</a></p>'),
       ).toBe("<url=contract:0//196428637>My Contract</url>");
+    });
+
+    it("converts joinChannel links to <url=...>", () => {
+      expect(
+        htmlToEveMail('<p><a href="joinChannel:-26572540">Channel</a></p>'),
+      ).toBe("<url=joinChannel:-26572540>Channel</url>");
     });
 
     it("strips rel and target attributes — EVE mail does not support them", () => {
@@ -98,46 +112,6 @@ describe("htmlToEveMail", () => {
           '<p><a href="showinfo:1377//93345033" target="_blank" rel="noopener noreferrer nofollow">Joao Neto</a></p>',
         ),
       ).toBe("<url=showinfo:1377//93345033>Joao Neto</url>");
-    });
-
-    // TipTap stores hrefs in lowercase (linkifyjs v4 requires RFC 3986 lowercase
-    // schemes).  The serializer must restore the canonical EVE camelCase names so
-    // outgoing mail matches what the EVE client originally produced.
-    describe("camelCase scheme restoration", () => {
-      it.each([
-        ["joinchannel", "joinchannel:-26572540", "joinChannel:-26572540"],
-        ["killreport", "killreport:13807613:abc123", "killReport:13807613:abc123"],
-        ["warreport", "warreport:42", "warReport:42"],
-        ["recruitmentad", "recruitmentad:98645206//155600", "recruitmentAd:98645206//155600"],
-        ["helppointer", "helppointer:neocom.airCareerProgram", "helpPointer:neocom.airCareerProgram"],
-        ["shipskinlisting", "shipskinlisting:fe7ec0c3", "shipSkinListing:fe7ec0c3"],
-        ["careerprogramnode", "careerprogramnode:7:410:None", "careerProgramNode:7:410:None"],
-      ])(
-        "restores %s → original camelCase on serialization",
-        (_scheme, lowercase, camelCase) => {
-          expect(
-            htmlToEveMail(`<p><a href="${lowercase}">Link</a></p>`),
-          ).toBe(`<url=${camelCase}>Link</url>`);
-        },
-      );
-
-      it("leaves already-lowercase EVE schemes unchanged (showinfo, contract, fitting, …)", () => {
-        expect(htmlToEveMail('<p><a href="showinfo:1377//93345033">Name</a></p>')).toBe(
-          "<url=showinfo:1377//93345033>Name</url>",
-        );
-        expect(htmlToEveMail('<p><a href="contract:0//196428637">Contract</a></p>')).toBe(
-          "<url=contract:0//196428637>Contract</url>",
-        );
-        expect(htmlToEveMail('<p><a href="fitting:33470:31047;1::">Fit</a></p>')).toBe(
-          "<url=fitting:33470:31047;1::>Fit</url>",
-        );
-      });
-
-      it("leaves https:// links unchanged", () => {
-        expect(htmlToEveMail('<p><a href="https://example.com">Example</a></p>')).toBe(
-          "<url=https://example.com>Example</url>",
-        );
-      });
     });
   });
 

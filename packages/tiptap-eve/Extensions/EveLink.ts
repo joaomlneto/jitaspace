@@ -27,9 +27,9 @@ const STRUCTURE_TYPE_IDS = new Set([
 // FIXME: These should be configurable
 export const renderEveHref = (href: string) => {
   const INVENTORY_INFO_PREFIX = "showinfo:";
-  const WAR_REPORT_PREFIX = "warreport:";
-  const KILL_REPORT_PREFIX = "killreport:";
-  const RECRUITMENT_AD_PREFIX = "recruitmentad:";
+  const WAR_REPORT_PREFIX = "warReport:";
+  const KILL_REPORT_PREFIX = "killReport:";
+  const RECRUITMENT_AD_PREFIX = "recruitmentAd:";
   const CONTRACT_PREFIX = "contract:";
 
   if (href.startsWith(INVENTORY_INFO_PREFIX)) {
@@ -82,9 +82,17 @@ export const renderEveHref = (href: string) => {
   return href;
 };
 
-// linkifyjs v4 (used by TipTap v3) requires scheme names to be all-lowercase.
-// EVE Online uses camelCase scheme names (warReport:, joinChannel:, …) — those
-// are normalised to lowercase by convertEveUrlTags before TipTap ever sees them.
+// TipTap 3 uses linkifyjs v4, whose registerCustomProtocol() rejects any scheme
+// that is not all-lowercase (RFC 3986). EVE's schemes are camelCase
+// (warReport:, joinChannel:, …), so the names registered here MUST be lowercase
+// or the editor throws at construction.
+//
+// This only affects scheme *registration*. linkifyjs's isAllowedUri() matches
+// schemes case-insensitively, so a camelCase href in mail content
+// (<a href="warReport:42">) is still recognised and preserved verbatim by
+// TipTap. That is why renderEveHref above and the click handlers in
+// MailMessageViewer match the original camelCase scheme names: the hrefs flowing
+// through the editor are never lowercased.
 export const EveLink = Link.configure({
   protocols: [
     "showinfo",

@@ -1,6 +1,7 @@
 import { isAllowedUri } from "@tiptap/extension-link";
+import { registerCustomProtocol } from "linkifyjs";
 
-import { renderEveHref } from "../Extensions/EveLink";
+import { EveLink, renderEveHref } from "../Extensions/EveLink";
 
 describe("renderEveHref", () => {
   describe("regular URLs", () => {
@@ -105,46 +106,46 @@ describe("renderEveHref", () => {
     });
   });
 
-  describe("warreport links", () => {
+  describe("warReport links", () => {
     it.each([
-      ["numeric ID", "warreport:1234567", "/war/1234567"],
-      ["small numeric ID", "warreport:42", "/war/42"],
-    ])("converts warreport with %s", (_name, input, expected) => {
+      ["numeric ID", "warReport:1234567", "/war/1234567"],
+      ["small numeric ID", "warReport:42", "/war/42"],
+    ])("converts warReport with %s", (_name, input, expected) => {
       expect(renderEveHref(input)).toBe(expected);
     });
   });
 
-  describe("killreport links", () => {
-    it("converts killreport:id:hash to /kill/:id?hash=:hash", () => {
+  describe("killReport links", () => {
+    it("converts killReport:id:hash to /kill/:id?hash=:hash", () => {
       expect(
         renderEveHref(
-          "killreport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
+          "killReport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
         ),
       ).toBe("/kill/13807613?hash=1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46");
     });
 
-    it("converts killreport with a different ID and hash", () => {
+    it("converts killReport with a different ID and hash", () => {
       expect(
         renderEveHref(
-          "killreport:99999999:abcdef1234567890abcdef1234567890abcdef12",
+          "killReport:99999999:abcdef1234567890abcdef1234567890abcdef12",
         ),
       ).toBe("/kill/99999999?hash=abcdef1234567890abcdef1234567890abcdef12");
     });
 
-    it("converts killreport with only an ID (no hash)", () => {
-      expect(renderEveHref("killreport:13807613")).toBe("/kill/13807613");
+    it("converts killReport with only an ID (no hash)", () => {
+      expect(renderEveHref("killReport:13807613")).toBe("/kill/13807613");
     });
   });
 
-  describe("recruitmentad links", () => {
-    it("converts recruitmentad:corpId//adId to /corporation/:corpId", () => {
-      expect(renderEveHref("recruitmentad:98645206//155600")).toBe(
+  describe("recruitmentAd links", () => {
+    it("converts recruitmentAd:corpId//adId to /corporation/:corpId", () => {
+      expect(renderEveHref("recruitmentAd:98645206//155600")).toBe(
         "/corporation/98645206",
       );
     });
 
     it("ignores the ad ID — only the corporation ID matters", () => {
-      expect(renderEveHref("recruitmentad:12345678//999")).toBe(
+      expect(renderEveHref("recruitmentAd:12345678//999")).toBe(
         "/corporation/12345678",
       );
     });
@@ -165,20 +166,18 @@ describe("renderEveHref", () => {
   });
 
   describe("pass-through links (intercepted by click handler or app routing)", () => {
-    // Schemes are normalised to lowercase by convertEveUrlTags before TipTap
-    // stores them, so renderEveHref only ever receives lowercase schemes here.
     it.each([
-      ["joinchannel (negative ID)", "joinchannel:-26572540"],
-      ["joinchannel (positive ID)", "joinchannel:12345678"],
-      ["helppointer", "helppointer:neocom.airCareerProgram"],
+      ["joinChannel (negative ID)", "joinChannel:-26572540"],
+      ["joinChannel (positive ID)", "joinChannel:12345678"],
+      ["helpPointer", "helpPointer:neocom.airCareerProgram"],
       ["fitting", "fitting:33470:31047;1:31011;1::"],
       ["localsvc", "localsvc:method=OpenFWWindow"],
       ["opportunity", "opportunity:epic_arcs:40"],
-      ["careerprogramnode", "careerprogramnode:7:410:None"],
+      ["careerProgramNode", "careerProgramNode:7:410:None"],
       ["fleet", "fleet:1021212278338"],
       [
-        "shipskinlisting",
-        "shipskinlisting:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
+        "shipSkinListing",
+        "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
       ],
     ])("passes %s hrefs through unchanged", (_name, href) => {
       expect(renderEveHref(href)).toBe(href);
@@ -221,11 +220,12 @@ describe("renderEveHref", () => {
 });
 
 describe("EveLink protocol configuration", () => {
-  // EveLink registers all EVE-specific schemes as lowercase — linkifyjs v4
-  // (used by TipTap v3) rejects any scheme containing uppercase letters.
-  // TipTap's setLink command calls isAllowedUri before applying the mark —
-  // if it returns false the command silently no-ops. These tests verify that
-  // our protocol list unlocks all EVE-specific schemes.
+  // EveLink registers all EVE schemes in lowercase because linkifyjs v4 (used by
+  // TipTap v3) rejects any non-lowercase custom scheme. The sample URLs below are
+  // camelCase — the form EVE actually puts in mail — to prove that isAllowedUri
+  // matches schemes case-insensitively, so camelCase hrefs in content are still
+  // recognised against the lowercase protocol list (which is why mail content is
+  // never lowercased).
   const eveProtocols = [
     "showinfo",
     "warreport",
@@ -244,23 +244,23 @@ describe("EveLink protocol configuration", () => {
 
   const EVE_PROTOCOL_SAMPLES: [string, string][] = [
     ["showinfo", "showinfo:1373//93345033"],
-    ["warreport", "warreport:42"],
+    ["warReport", "warReport:42"],
     [
-      "killreport",
-      "killreport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
+      "killReport",
+      "killReport:13807613:1d88cad6ae072bbba76dd5708e7bdb4f7e57dd46",
     ],
-    ["recruitmentad", "recruitmentad:98645206//155600"],
+    ["recruitmentAd", "recruitmentAd:98645206//155600"],
     ["contract", "contract:0//196428637"],
-    ["joinchannel", "joinchannel:-26572540"],
-    ["helppointer", "helppointer:neocom.airCareerProgram"],
+    ["joinChannel", "joinChannel:-26572540"],
+    ["helpPointer", "helpPointer:neocom.airCareerProgram"],
     [
-      "shipskinlisting",
-      "shipskinlisting:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
+      "shipSkinListing",
+      "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
     ],
     ["fitting", "fitting:33470:31047;1::"],
     ["localsvc", "localsvc:method=OpenFWWindow"],
     ["opportunity", "opportunity:epic_arcs:40"],
-    ["careerprogramnode", "careerprogramnode:7:410:None"],
+    ["careerProgramNode", "careerProgramNode:7:410:None"],
     ["fleet", "fleet:1021212278338"],
   ];
 
@@ -301,6 +301,36 @@ describe("EveLink protocol configuration", () => {
     ];
     for (const url of urls) {
       expect(isAllowedUri(url, eveProtocols)).toBeTruthy();
+    }
+  });
+});
+
+describe("EveLink registered protocols are linkifyjs-safe (regression)", () => {
+  // The /character/:id page crashed because EveLink registered camelCase scheme
+  // names, which linkifyjs v4's registerCustomProtocol() rejects. These tests
+  // lock in the requirement that every registered scheme is all-lowercase.
+  const registered = EveLink.options.protocols as string[];
+
+  it("registers at least the known EVE schemes", () => {
+    expect(registered).toEqual(expect.arrayContaining(["showinfo", "fleet"]));
+    expect(registered.length).toBeGreaterThanOrEqual(13);
+  });
+
+  it("registers every scheme in all-lowercase form", () => {
+    for (const scheme of registered) {
+      expect(scheme).toBe(scheme.toLowerCase());
+    }
+  });
+
+  it("every registered scheme is accepted by linkifyjs registerCustomProtocol", () => {
+    for (const scheme of registered) {
+      expect(() => registerCustomProtocol(scheme, true)).not.toThrow();
+    }
+  });
+
+  it("linkifyjs rejects the camelCase names EVE uses (why we lowercase)", () => {
+    for (const bad of ["warReport", "joinChannel", "shipSkinListing"]) {
+      expect(() => registerCustomProtocol(bad, true)).toThrow(/linkifyjs/);
     }
   });
 });

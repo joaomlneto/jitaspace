@@ -15,15 +15,13 @@ jest.mock("~/components/Fitting", () => ({
   DnaShipFittingCard: () => null,
 }));
 
-// Schemes are lowercase because convertEveUrlTags normalises them before TipTap
-// stores them (linkifyjs v4 requires all-lowercase scheme names).
 const mockGetHTML = jest.fn(() =>
   '<p><a href="showinfo:1377//93345033" target="_blank" rel="noopener noreferrer nofollow">Joao Neto</a>' +
   ' and <a href="https://example.com" target="_blank" rel="noopener noreferrer nofollow">External</a>' +
-  ' and <a href="joinchannel:-26572540" target="_blank" rel="noopener noreferrer nofollow">Channel</a>' +
+  ' and <a href="joinChannel:-26572540" target="_blank" rel="noopener noreferrer nofollow">Channel</a>' +
   ' and <a href="fleet:1021212278338" target="_blank" rel="noopener noreferrer nofollow">Mining Fleet</a>' +
-  ' and <a href="helppointer:neocom.airCareerProgram">Help</a>' +
-  ' and <a href="shipskinlisting:fe7ec0c3-2d02-4d3b-9cd4-b41221941951">Skin</a>' +
+  ' and <a href="helpPointer:neocom.airCareerProgram">Help</a>' +
+  ' and <a href="shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951">Skin</a>' +
   ' and <a href="fitting:33470:31047;1:31011;1::">Stratios Fit</a></p>',
 );
 
@@ -34,6 +32,7 @@ jest.mock("@jitaspace/tiptap-eve", () => ({
   convertEveUrlTags: (s: string) => s,
   renderEveHref: (href: string) => {
     if (href.startsWith("showinfo:1377//")) return `/character/${href.split("//")[1]}`;
+    if (href.startsWith("helpPointer:")) return href;
     return href;
   },
 }));
@@ -79,10 +78,10 @@ describe("MailMessageViewer", () => {
       expect(channelLink).toHaveStyle("color: #0000ff");
     });
 
-    it("preserves joinchannel hrefs unchanged", () => {
+    it("preserves joinChannel hrefs unchanged", () => {
       render(<MailMessageViewer content="" />);
       const channelLink = screen.getByRole("link", { name: "Channel" });
-      expect(channelLink).toHaveAttribute("href", "joinchannel:-26572540");
+      expect(channelLink).toHaveAttribute("href", "joinChannel:-26572540");
     });
 
     it("renders links with bold font weight", () => {
@@ -144,7 +143,7 @@ describe("MailMessageViewer", () => {
 
     it("renders channel links with channel color even when wrapped in a color tag", () => {
       mockGetHTML.mockReturnValueOnce(
-        '<p><span style="color:#ff0000"><a href="joinchannel:-26572540">Channel</a></span></p>',
+        '<p><span style="color:#ff0000"><a href="joinChannel:-26572540">Channel</a></span></p>',
       );
       render(<MailMessageViewer content="" />);
       const channelLink = screen.getByRole("link", { name: "Channel" });
@@ -213,8 +212,8 @@ describe("MailMessageViewer", () => {
     });
   });
 
-  describe("helppointer links", () => {
-    it("shows an alert with the topic name when a helppointer link is clicked", async () => {
+  describe("helpPointer links", () => {
+    it("shows an alert with the topic name when a helpPointer link is clicked", async () => {
       const user = userEvent.setup();
       const alertSpy = jest.spyOn(window, "alert").mockImplementation(() => {});
       render(<MailMessageViewer content="" />);
@@ -225,10 +224,10 @@ describe("MailMessageViewer", () => {
       alertSpy.mockRestore();
     });
 
-    it("does not navigate when a helppointer link is clicked", async () => {
+    it("does not navigate when a helpPointer link is clicked", async () => {
       render(<MailMessageViewer content="" />);
       const helpLink = screen.getByRole("link", { name: "Help" });
-      expect(helpLink).toHaveAttribute("href", "helppointer:neocom.airCareerProgram");
+      expect(helpLink).toHaveAttribute("href", "helpPointer:neocom.airCareerProgram");
     });
   });
 });

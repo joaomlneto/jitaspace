@@ -44,7 +44,7 @@ export function MailMessageViewer({
     (_, before: string, href: string, after: string) => {
       const translatedHref = renderEveHref(href);
       const color =
-        href.startsWith("joinchannel:") || href.startsWith("fleet:") ? channelLinkColor
+        href.startsWith("joinChannel:") || href.startsWith("fleet:") ? channelLinkColor
         : href.startsWith("fitting:") ? internalLinkColor
         : translatedHref.startsWith("/") ? internalLinkColor
         : externalLinkColor;
@@ -58,15 +58,15 @@ export function MailMessageViewer({
     const anchor = (e.target as HTMLElement).closest("a");
     if (!anchor) return;
     const href = anchor.getAttribute("href");
-    if (href?.startsWith("helppointer:")) {
+    if (href?.startsWith("helpPointer:")) {
       e.preventDefault();
-      const topic = href.slice("helppointer:".length);
+      const topic = href.slice("helpPointer:".length);
       window.alert(
         `This is a help pointer link to "${topic}". Open it in the EVE Online client.`,
       );
-    } else if (href?.startsWith("joinchannel:")) {
+    } else if (href?.startsWith("joinChannel:")) {
       e.preventDefault();
-      const channelId = href.slice("joinchannel:".length);
+      const channelId = href.slice("joinChannel:".length);
       window.alert(
         `This is a chat channel (ID: ${channelId}). Join it from within the EVE Online client.`,
       );
@@ -79,7 +79,7 @@ export function MailMessageViewer({
         size: "lg",
         children: <DnaShipFittingCard dna={dna} name={name} />,
       });
-    } else if (href?.startsWith("shipskinlisting:")) {
+    } else if (href?.startsWith("shipSkinListing:")) {
       e.preventDefault();
       window.alert(
         "This is a ship skin listing. Open it in the EVE Online client to preview or purchase.",
@@ -94,7 +94,7 @@ export function MailMessageViewer({
       window.alert(
         "This is an opportunity link. Open it in the EVE Online client.",
       );
-    } else if (href?.startsWith("careerprogramnode:")) {
+    } else if (href?.startsWith("careerProgramNode:")) {
       e.preventDefault();
       window.alert(
         "This is an AIR Career Program link. Open it in the EVE Online client.",

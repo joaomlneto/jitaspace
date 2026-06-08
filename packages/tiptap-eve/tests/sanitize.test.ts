@@ -228,9 +228,9 @@ describe("convertEveUrlTags", () => {
       ).toBe('<a href="https://example.com">Example</a>');
     });
 
-    it("normalises a camelCase scheme (warReport → warreport)", () => {
+    it("converts a warReport url tag", () => {
       expect(convertEveUrlTags("<url=warReport:1234567>War</url>")).toBe(
-        '<a href="warreport:1234567">War</a>',
+        '<a href="warReport:1234567">War</a>',
       );
     });
 
@@ -288,34 +288,6 @@ describe("convertEveUrlTags", () => {
       expect(
         convertEveUrlTags("<url=showinfo:34>Tri\r\ntanium</url>"),
       ).toBe('<a href="showinfo:34">Tri\r\ntanium</a>');
-    });
-  });
-
-  describe("scheme normalisation (linkifyjs v4 compatibility)", () => {
-    it.each([
-      ["killReport", "<url=killReport:13807613:abc>Kill</url>", '<a href="killreport:13807613:abc">Kill</a>'],
-      ["recruitmentAd", "<url=recruitmentAd:98645206//155600>Ad</url>", '<a href="recruitmentad:98645206//155600">Ad</a>'],
-      ["joinChannel", "<url=joinChannel:-26572540>Channel</url>", '<a href="joinchannel:-26572540">Channel</a>'],
-      ["helpPointer", "<url=helpPointer:neocom.airCareerProgram>Help</url>", '<a href="helppointer:neocom.airCareerProgram">Help</a>'],
-      ["shipSkinListing", "<url=shipSkinListing:fe7ec0c3>Skin</url>", '<a href="shipskinlisting:fe7ec0c3">Skin</a>'],
-      ["careerProgramNode", "<url=careerProgramNode:7:410:None>Career</url>", '<a href="careerprogramnode:7:410:None">Career</a>'],
-    ])("lowercases %s scheme", (_name, input, expected) => {
-      expect(convertEveUrlTags(input)).toBe(expected);
-    });
-
-    it("leaves already-lowercase schemes unchanged (idempotent)", () => {
-      expect(convertEveUrlTags("<url=showinfo:1377//93345033>Name</url>")).toBe(
-        '<a href="showinfo:1377//93345033">Name</a>',
-      );
-      expect(convertEveUrlTags("<url=fitting:33470:31047;1::>Fit</url>")).toBe(
-        '<a href="fitting:33470:31047;1::">Fit</a>',
-      );
-    });
-
-    it("leaves https:// URLs unchanged (uppercase only in scheme portion, which is already lowercase)", () => {
-      expect(convertEveUrlTags("<url=https://example.com>Link</url>")).toBe(
-        '<a href="https://example.com">Link</a>',
-      );
     });
   });
 
@@ -431,5 +403,41 @@ describe("convertEveColorTags", () => {
         '<font color="0xffffffff">Hello,</font><br><font color="0xffFF0000">Important!</font>',
       );
     });
+  });
+});
+
+describe("ReDoS safety (CodeQL: polynomial regex on uncontrolled data)", () => {
+  // The regexes run on EVE-server-controlled mail bodies. CodeQL flagged the
+  // original `([^>]*)>(.*?)` patterns as vulnerable to catastrophic backtracking
+  // on inputs like `<url=` + many `<url==`, or `<url=>` + many `<url=>a`. The
+  // hardened patterns process these in linear time; if they regress these tests
+  // exceed jest's timeout and fail.
+  it("convertEveUrlTags returns quickly on the '<url==' attack string", () => {
+    const evil = "<url=" + "<url==".repeat(50000);
+    const start = Date.now();
+    expect(convertEveUrlTags(evil)).toBe(evil); // no valid </url> ⇒ unchanged
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+
+  it("convertEveUrlTags returns quickly on the '<url=>a' attack string", () => {
+    const evil = "<url=>" + "<url=>a".repeat(50000);
+    const start = Date.now();
+    convertEveUrlTags(evil);
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+
+  it("convertEveColorTags returns quickly on an analogous attack string", () => {
+    // Valid <color=0xAA> openings (so the engine reaches the text scan) repeated
+    // with no closing </color> — the shape that triggers polynomial backtracking.
+    const evil = "<color=0xAA>" + "<color=0xAA>a".repeat(50000);
+    const start = Date.now();
+    convertEveColorTags(evil);
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+
+  it("still converts a normal <url=> tag after hardening (camelCase preserved)", () => {
+    expect(convertEveUrlTags("<url=warReport:42>War</url>")).toBe(
+      '<a href="warReport:42">War</a>',
+    );
   });
 });
