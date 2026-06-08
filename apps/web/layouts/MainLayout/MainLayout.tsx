@@ -15,7 +15,7 @@ export function MainLayout({
   const matches = useMediaQuery("(max-width: 48em)");
   const { pinned } = useHeadroom({ fixedAt: 120 });
   const theme = useMantineTheme();
-  const wallpaper = theme.other.wallpaper;
+  const appBackground = theme.other.appBackground;
   return (
     <AppShell
       header={{
@@ -28,13 +28,7 @@ export function MainLayout({
         offset: true,
         collapsed: matches && !pinned,
       }}
-      style={
-        wallpaper
-          ? {
-              background: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${wallpaper}) center / cover fixed no-repeat`,
-            }
-          : undefined
-      }
+      style={appBackground ? { background: appBackground } : undefined}
       {...otherProps}
     >
       <AppShell.Header>

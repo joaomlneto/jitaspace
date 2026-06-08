@@ -4,7 +4,7 @@ import type {} from "@mantine/core";
 
 declare module "@mantine/core" {
   interface MantineThemeOther {
-    wallpaper?: string;
+    appBackground?: string;
   }
 }
 
@@ -80,8 +80,8 @@ const eveTheme = mergeThemeOverrides(
   baseTheme,
   createTheme({
     other: {
-      wallpaper:
-        "/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg",
+      appBackground:
+        "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg) center/cover fixed no-repeat",
     },
     black: "#04070c",
     white: "#f2f7fb",
@@ -259,7 +259,10 @@ export const themes = {
   amarr: mergeThemeOverrides(
     eveTheme,
     createTheme({
-      other: { wallpaper: "/wallpapers/2026-cradle-of-war/amarr_wallpaper.jpg" },
+      other: {
+        appBackground:
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/amarr_wallpaper.jpg) center/cover fixed no-repeat",
+      },
       primaryColor: "amarr_primary",
       primaryShade: 6,
       colors,
@@ -269,7 +272,8 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        wallpaper: "/wallpapers/2026-cradle-of-war/caldari_wallpaper.jpg",
+        appBackground:
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/caldari_wallpaper.jpg) center/cover fixed no-repeat",
       },
       primaryColor: "caldari_primary",
       colors,
@@ -279,7 +283,8 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        wallpaper: "/wallpapers/2026-cradle-of-war/gallente_wallpaper.jpg",
+        appBackground:
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/gallente_wallpaper.jpg) center/cover fixed no-repeat",
       },
       primaryColor: "gallente_primary",
       colors,
@@ -289,7 +294,8 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        wallpaper: "/wallpapers/2026-cradle-of-war/minmatar_wallpaper.jpg",
+        appBackground:
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/minmatar_wallpaper.jpg) center/cover fixed no-repeat",
       },
       primaryColor: "minmatar_primary",
       colors,
@@ -312,6 +318,7 @@ export const themes = {
   whpd: mergeThemeOverrides(
     eveTheme,
     createTheme({
+      other: { appBackground: "#000" },
       black: "#000002",
       white: "#eef2ff",
       primaryColor: "whpd_primary",
