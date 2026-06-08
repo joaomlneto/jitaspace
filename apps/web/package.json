@@ -18,8 +18,6 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@c15t/nextjs": "^1.8.6",
-    "@c15t/scripts": "^1.0.1",
     "@hapi/iron": "^7.0.1",
     "@jitaspace/auth": "workspace:*",
     "@jitaspace/chat": "workspace:*",
