@@ -30,6 +30,7 @@ import { AllianceCard, CharacterAvatar } from "@jitaspace/ui";
 import { AuthenticatedCharacterCard, CorporationCard } from "~/components/Card";
 import { DevelopmentModeAlert } from "~/components/debug";
 import { AllianceMenu, CorporationMenu } from "~/components/Menu";
+import { NewsCarousel } from "~/components/News";
 import { characterApps, universeApps } from "~/config/apps";
 
 const devApps: {
@@ -82,6 +83,7 @@ export default function Page() {
 
   return (
     <Container size="xl">
+      <NewsCarousel />
       {process.env.NODE_ENV == "development" && <DevelopmentModeAlert />}
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
         {authenticatedCharacterIds.map((characterId) => (
