@@ -54,7 +54,7 @@ export const newsItems: NewsItem[] = [
       "/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg",
     link: {
       label: "Read the expansion notes",
-      href: "https://www.eveonline.com/news/view/cradle-of-war-expansion-notes",
+      href: "https://www.eveonline.com/news/view/the-cradle-of-war-expansion-is-here",
       external: true,
     },
   },
