@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Sparkline } from "@mantine/charts";
+import dynamic from "next/dynamic";
+
+const Sparkline = dynamic(
+  () => import("@mantine/charts").then((m) => m.Sparkline),
+  { ssr: false },
+);
 import {
   Alert,
   Badge,
