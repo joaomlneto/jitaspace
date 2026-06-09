@@ -3,7 +3,7 @@ import { eventType, staticSchema } from "inngest";
 /**
  * Thanks to Karbowiak for the original code that this is based on!
  */
-import { kv } from "@jitaspace/kv";
+import { kv } from "../../../kv";
 
 import { client } from "../../../client";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";

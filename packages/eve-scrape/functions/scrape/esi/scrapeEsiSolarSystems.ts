@@ -1,7 +1,7 @@
 import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
-import { Prisma, prisma } from "@jitaspace/db";
+import { Prisma, prisma } from "../../../db";
 import {
   getUniverseAsteroidBeltsAsteroidBeltId,
   getUniverseMoonsMoonId,

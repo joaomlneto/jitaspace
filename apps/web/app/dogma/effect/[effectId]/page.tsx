@@ -4,7 +4,7 @@ import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
 import { Loader } from "@mantine/core";
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 
 import DogmaEffectPage from "./page.client";
 import type { PageProps } from "./page.client";

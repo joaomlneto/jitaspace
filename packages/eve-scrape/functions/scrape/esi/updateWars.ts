@@ -1,4 +1,4 @@
-import { prisma, War } from "@jitaspace/db";
+import { prisma, War } from "../../../db";
 import { getWars, getWarsWarId } from "@jitaspace/esi-client";
 
 import { client } from "../../../client";

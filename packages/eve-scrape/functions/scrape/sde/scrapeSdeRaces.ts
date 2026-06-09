@@ -1,7 +1,7 @@
 import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "../../../db";
 import { getAllRaceIds, getRaceById } from "@jitaspace/sde-client";
 
 import { client } from "../../../client";

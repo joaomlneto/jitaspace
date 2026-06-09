@@ -4,9 +4,9 @@ import { eventType, staticSchema } from "inngest";
  */
 import pLimit from "p-limit";
 
-import { prisma, War } from "@jitaspace/db";
+import { prisma, War } from "../../../db";
 import { getWarsWarId } from "@jitaspace/esi-client";
-import { kv } from "@jitaspace/kv";
+import { kv } from "../../../kv";
 
 import { client } from "../../../client";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";

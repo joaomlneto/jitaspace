@@ -36,7 +36,7 @@ const mockDogmaAttributeFindUnique = jest.fn();
 const mockDogmaEffectFindUnique = jest.fn();
 const mockCorporationFindUnique = jest.fn();
 
-jest.mock("@jitaspace/db", () => ({
+jest.mock("~/lib/db", () => ({
   prisma: {
     race: { findUnique: (...a: unknown[]) => mockRaceFindUnique(...a) },
     bloodline: { findUnique: (...a: unknown[]) => mockBloodlineFindUnique(...a) },

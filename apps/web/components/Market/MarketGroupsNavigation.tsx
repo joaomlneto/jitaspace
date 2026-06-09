@@ -1,6 +1,6 @@
 import { cacheLife } from "next/cache";
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 
 import { MarketGroupNavLink } from "./MarketGroupNavLink";
 

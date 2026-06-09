@@ -2,7 +2,7 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { MetadataRoute } from "next";
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 
 import { CONFIG } from "~/config/constants.ts";
 

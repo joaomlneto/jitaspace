@@ -5,7 +5,7 @@ import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
 import { GetWarsWarId200 } from "@jitaspace/esi-client";
-import { kv } from "@jitaspace/kv";
+import { kv } from "../../../kv";
 
 import { client } from "../../../client";
 import { BatchStepResult } from "../../../types";

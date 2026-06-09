@@ -9,7 +9,7 @@ export const metadata = {
     "Live list of active wars in EVE Online — track ongoing conflicts between corporations and alliances.",
 };
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 import { WarsIcon } from "@jitaspace/eve-icons";
 
 import { WarsTable } from "~/components/Wars";

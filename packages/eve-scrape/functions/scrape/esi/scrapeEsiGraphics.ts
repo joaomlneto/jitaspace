@@ -1,5 +1,5 @@
 import { eventType, staticSchema } from "inngest";
-import {prisma} from "@jitaspace/db";
+import {prisma} from "../../../db";
 import {getUniverseGraphics, getUniverseGraphicsGraphicId,} from "@jitaspace/esi-client";
 import axios from "axios";
 import pLimit from "p-limit";

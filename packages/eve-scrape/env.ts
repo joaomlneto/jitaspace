@@ -6,6 +6,10 @@ import { z } from "zod";
  */
 const server = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
+  DATABASE_URL: z.string().url(),
+  REDIS_URL: z.string(),
+  DISCORD_BOT_TOKEN: z.string().optional(),
+  DISCORD_UPDATES_CHANNEL_ID: z.string().optional(),
   INNGEST_EVENT_KEY:
     process.env.NODE_ENV === "production"
       ? z.string().min(1)
@@ -28,6 +32,10 @@ const client = z.object({});
  */
 const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
+  DATABASE_URL: process.env.DATABASE_URL,
+  REDIS_URL: process.env.REDIS_URL,
+  DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
+  DISCORD_UPDATES_CHANNEL_ID: process.env.DISCORD_UPDATES_CHANNEL_ID,
   INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
   INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
 };
