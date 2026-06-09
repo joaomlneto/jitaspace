@@ -17,7 +17,10 @@ export interface NewsBannerCardProps {
  * scrim that darkens the top (for the title) and the bottom (for the date /
  * message / CTA). Falls back to a solid accent colour when there is no image.
  */
-export function NewsBannerCard({ item, onDismiss }: NewsBannerCardProps) {
+export function NewsBannerCard({
+  item,
+  onDismiss,
+}: Readonly<NewsBannerCardProps>) {
   const color = item.color ?? "blue";
 
   return (

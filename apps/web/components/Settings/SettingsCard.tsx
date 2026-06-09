@@ -92,6 +92,13 @@ export function SettingsCard() {
     });
   };
 
+  const hiddenNewsNoun = hiddenNewsCount === 1 ? "item" : "items";
+  const hiddenNewsPronoun = hiddenNewsCount === 1 ? "it" : "them";
+  const hiddenNewsDescription =
+    newsMounted && hiddenNewsCount > 0
+      ? `You have dismissed ${hiddenNewsCount} news ${hiddenNewsNoun}. Reset to show ${hiddenNewsPronoun} again at the top of the home page.`
+      : "Dismissed news banners will reappear at the top of the home page.";
+
   return (
     <Card withBorder radius="md" p="xl" className={classes.card}>
       <Text fz="lg" className={classes.title} fw={500}>
@@ -215,13 +222,7 @@ export function SettingsCard() {
             <div>
               <Text>Hidden news</Text>
               <Text size="xs" c="dimmed">
-                {newsMounted && hiddenNewsCount > 0
-                  ? `You have dismissed ${hiddenNewsCount} news ${
-                      hiddenNewsCount === 1 ? "item" : "items"
-                    }. Reset to show ${
-                      hiddenNewsCount === 1 ? "it" : "them"
-                    } again at the top of the home page.`
-                  : "Dismissed news banners will reappear at the top of the home page."}
+                {hiddenNewsDescription}
               </Text>
             </div>
 

@@ -12,7 +12,7 @@ import {
 export type NewsCarouselProps = UseDismissedNewsOptions;
 
 /** Flashy, image-forward banner cards in a horizontally-scrollable carousel. */
-export function NewsCarousel(props: NewsCarouselProps) {
+export function NewsCarousel(props: Readonly<NewsCarouselProps>) {
   const { activeItems, dismiss } = useDismissedNews(props);
 
   if (activeItems.length === 0) return null;
