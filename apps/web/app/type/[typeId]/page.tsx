@@ -7,6 +7,10 @@ import { Loader } from "@mantine/core";
 
 import { prisma } from "~/lib/db";
 
+import {
+  TypeInventoryBreadcrumbs,
+  TypeMarketBreadcrumbs,
+} from "~/components/Breadcrumbs";
 import TypePage from "./page.client";
 import type { PageProps } from "./page.client";
 
@@ -103,7 +107,13 @@ async function PageContent({
 
   try {
     const props = await getTypeData(typeId);
-    return <TypePage {...props} />;
+    return (
+      <TypePage
+        {...props}
+        inventoryBreadcrumbs={<TypeInventoryBreadcrumbs typeId={typeId} fz="sm" />}
+        marketBreadcrumbs={<TypeMarketBreadcrumbs typeId={typeId} fz="sm" />}
+      />
+    );
   } catch {
     notFound();
   }
