@@ -15,17 +15,18 @@ import { CategoryName } from "../Text";
 
 export type CategoryBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   categoryId?: number;
+  categoryName?: string;
 };
 
 export const CategoryBreadcrumbs = memo(
-  ({ categoryId, ...otherProps }: CategoryBreadcrumbsProps) => {
+  ({ categoryId, categoryName, ...otherProps }: CategoryBreadcrumbsProps) => {
     return (
       <Breadcrumbs {...otherProps}>
         <Anchor component={Link} href="/categories">
           <Text>Inventory</Text>
         </Anchor>
         <CategoryAnchor categoryId={categoryId}>
-          <CategoryName categoryId={categoryId} />
+          <CategoryName name={categoryName} />
         </CategoryAnchor>
       </Breadcrumbs>
     );
