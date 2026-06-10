@@ -54,6 +54,7 @@ jest.mock("@jitaspace/utils", () => ({
 
 // Passthrough / simple stubs for UI components
 jest.mock("@jitaspace/ui", () => ({
+  DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
   EveEntityAnchor: ({ children }: { children?: ReactNode }) => (
     <a href="#">{children}</a>
   ),

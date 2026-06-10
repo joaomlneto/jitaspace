@@ -24,6 +24,7 @@ import {
   CorporationAnchor,
   CorporationAvatar,
   CorporationName,
+  DateHoverCard,
   FormattedDateText,
 } from "@jitaspace/ui";
 
@@ -168,10 +169,12 @@ export const CorporationCard = memo(
               </Text>
               <Skeleton visible={!corporationData} width="auto">
                 {corporationData?.date_founded ? (
-                  <FormattedDateText
-                    date={new Date(corporationData.date_founded)}
-                    size="xs"
-                  />
+                  <DateHoverCard date={new Date(corporationData.date_founded)}>
+                    <FormattedDateText
+                      date={new Date(corporationData.date_founded)}
+                      size="xs"
+                    />
+                  </DateHoverCard>
                 ) : (
                   <Text size="xs">N/A</Text>
                 )}

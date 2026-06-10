@@ -8,14 +8,13 @@ import {
   Stack,
   Text,
   Title,
-  Tooltip,
 } from "@mantine/core";
 
 import { useAuthenticatedCharacter } from "@jitaspace/hooks";
 import {
   CharacterAvatar,
   CharacterName,
-  FormattedDateText,
+  DateHoverCard,
   TimeAgoText,
 } from "@jitaspace/ui";
 
@@ -68,14 +67,9 @@ export const AuthenticatedCharacterTokenDetailsPanel = ({
       {expirationDate && (
         <Group justify="space-between">
           <Text>Token expiration</Text>
-          <Group>
-            <Tooltip
-              color="dark"
-              label={<FormattedDateText size="sm" date={expirationDate} />}
-            >
-              <TimeAgoText date={expirationDate} addSuffix />
-            </Tooltip>
-          </Group>
+          <DateHoverCard date={expirationDate}>
+            <TimeAgoText date={expirationDate} addSuffix />
+          </DateHoverCard>
         </Group>
       )}
 

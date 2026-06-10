@@ -9,6 +9,7 @@ import {
 
 import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
 import {
+  DateHoverCard,
   EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
@@ -45,7 +46,9 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         size: 40,
         enableColumnFilterModes: false, //keep this as only date-range filter with between inclusive filterFn
         Cell: ({ cell }) => (
-          <FormattedDateText size="sm" date={cell.getValue<Date>()} />
+          <DateHoverCard date={cell.getValue<Date>()}>
+            <FormattedDateText size="sm" date={cell.getValue<Date>()} />
+          </DateHoverCard>
         ), //render Date as a string
         Header: ({ column }) => <em>{column.columnDef.header}</em>, //custom header markup
       },

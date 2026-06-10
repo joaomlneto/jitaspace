@@ -4,13 +4,12 @@ import { openContextModal } from "@mantine/modals";
 
 import type { CalendarEvent } from "@jitaspace/hooks";
 import { WarningIcon } from "@jitaspace/eve-icons";
-import { FormattedDateText } from "@jitaspace/ui";
+import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import { CalendarEventOwnerAnchor } from "~/components/Anchor";
 import { CalendarEventOwnerAvatar } from "~/components/Avatar";
 import { CalendarEventAttendeesAvatarGroup } from "~/components/AvatarGroup";
 import { CalendarEventResponseBadge } from "~/components/Badge";
-import { CalendarEventHumanDurationText } from "~/components/DurationText";
 import { CalendarEventOwnerName } from "~/components/Text";
 
 type EventListProps = TableProps & {
@@ -29,20 +28,13 @@ export function DesktopCalendarEventList({
         {events.map((event) => (
           <Table.Tr key={event.event_id}>
             <Table.Td width={10}>
-              <Tooltip
-                label={
-                  <CalendarEventHumanDurationText
-                    characterId={characterId}
-                    eventId={event.event_id}
-                  />
-                }
-              >
+              <DateHoverCard date={new Date(event.event_date ?? 0)}>
                 <FormattedDateText
                   size="sm"
                   date={new Date(event.event_date ?? 0)}
                   format="HH:mm"
                 />
-              </Tooltip>
+              </DateHoverCard>
             </Table.Td>
             <Table.Td>
               <Group wrap="nowrap">

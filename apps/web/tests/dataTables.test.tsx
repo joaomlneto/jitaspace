@@ -21,6 +21,7 @@ jest.mock("@jitaspace/hooks", () => ({
 // @jitaspace/ui stubs (used by AgentsTable, MarketOrdersDataTable, CompareTable)
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/ui", () => ({
+  DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
   CharacterAnchor: ({ children }: { children?: ReactNode }) => (
     <span data-testid="char-anchor">{children}</span>
   ),

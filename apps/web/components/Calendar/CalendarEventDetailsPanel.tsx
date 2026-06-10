@@ -9,6 +9,7 @@ import {
   CharacterAnchor,
   CharacterAvatar,
   CharacterName,
+  DateHoverCard,
   EveEntityNameAnchor,
   FormattedDateText,
 } from "@jitaspace/ui";
@@ -68,10 +69,14 @@ export function CalendarEventDetailsPanel({
     <Stack>
       <Group justify="space-between" mt="xl">
         <Text>When</Text>
-        <FormattedDateText
+        <DateHoverCard
           date={event?.data.date ? new Date(event?.data.date) : undefined}
-          format="yyyy-MM-dd HH:mm"
-        />
+        >
+          <FormattedDateText
+            date={event?.data.date ? new Date(event?.data.date) : undefined}
+            format="yyyy-MM-dd HH:mm"
+          />
+        </DateHoverCard>
       </Group>
       <Group justify="space-between">
         <Text>Duration</Text>

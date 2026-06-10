@@ -27,7 +27,7 @@ import {
 import { getRateLimitBuildDate, useGetMetaCompatibilityDates, useGetMetaStatus } from "@jitaspace/esi-client";
 import { useServerStatus } from "@jitaspace/hooks";
 import { useGetVersion } from "@jitaspace/sde-client";
-import { FormattedDateText } from "@jitaspace/ui";
+import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
 import { env } from "~/env";
@@ -157,7 +157,9 @@ export default function StatusPage({
                     <Anchor href="https://sde.jita.space" size="sm">
                       {!sdeApiLastUpdatedDate && <Loader size="xs" />}
                       {sdeApiLastUpdatedDate && (
-                        <FormattedDateText date={sdeApiLastUpdatedDate} />
+                        <DateHoverCard date={sdeApiLastUpdatedDate}>
+                          <FormattedDateText date={sdeApiLastUpdatedDate} />
+                        </DateHoverCard>
                       )}
                     </Anchor>
                     {sdeApiLastUpdatedDate &&
@@ -209,10 +211,12 @@ export default function StatusPage({
                     Start Time
                   </Text>
                   {tqStatus && (
-                    <FormattedDateText
-                      date={new Date(tqStatus.data.start_time)}
-                      size="sm"
-                    />
+                    <DateHoverCard date={new Date(tqStatus.data.start_time)}>
+                      <FormattedDateText
+                        date={new Date(tqStatus.data.start_time)}
+                        size="sm"
+                      />
+                    </DateHoverCard>
                   )}
                 </Group>
                 <Group justify="space-between">
@@ -228,7 +232,9 @@ export default function StatusPage({
                     SDE Last Updated On
                   </Text>
                   {sdeLastModifiedDate && (
-                    <FormattedDateText date={sdeLastModifiedDate} size="sm" />
+                    <DateHoverCard date={sdeLastModifiedDate}>
+                      <FormattedDateText date={sdeLastModifiedDate} size="sm" />
+                    </DateHoverCard>
                   )}
                 </Group>
               </Stack>

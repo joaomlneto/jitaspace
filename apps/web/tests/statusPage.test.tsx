@@ -34,6 +34,7 @@ jest.mock("@jitaspace/sde-client", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
+  DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
   FormattedDateText: ({ date }: { date?: Date }) => (
     <span>{date ? `Date ${date.toISOString()}` : "No date"}</span>
   ),

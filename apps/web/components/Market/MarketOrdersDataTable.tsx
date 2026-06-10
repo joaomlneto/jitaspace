@@ -10,6 +10,7 @@ import {
 
 import type { RegionalMarketOrder } from "@jitaspace/hooks";
 import {
+  DateHoverCard,
   EveEntityAnchor,
   EveEntityName,
   TimeAgoText,
@@ -98,11 +99,13 @@ export const MarketOrdersDataTable = memo(
           header: "Issued",
           accessorKey: "issued",
           Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-            <TimeAgoText
-              inherit
-              date={new Date(row.original.issued)}
-              addSuffix
-            />
+            <DateHoverCard date={new Date(row.original.issued)}>
+              <TimeAgoText
+                inherit
+                date={new Date(row.original.issued)}
+                addSuffix
+              />
+            </DateHoverCard>
           ),
         },
         {
@@ -112,7 +115,9 @@ export const MarketOrdersDataTable = memo(
             return addDays(new Date(row.issued), 30);
           },
           Cell: ({ renderedCellValue: _renderedCellValue, row: _row, cell }) => (
-            <TimeAgoText inherit date={cell.getValue<Date>()} addSuffix />
+            <DateHoverCard date={cell.getValue<Date>()}>
+              <TimeAgoText inherit date={cell.getValue<Date>()} addSuffix />
+            </DateHoverCard>
           ),
         },
         /*

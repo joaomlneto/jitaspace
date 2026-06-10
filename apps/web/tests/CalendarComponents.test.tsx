@@ -32,6 +32,7 @@ jest.mock("@mantine/modals", () => ({
 // ---------------------------------------------------------------------------
 
 jest.mock("@jitaspace/ui", () => ({
+  DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
   CharacterAnchor: ({ children }: { children?: ReactNode }) => (
     <a href="#">{children}</a>
   ),
