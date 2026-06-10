@@ -10,7 +10,6 @@ import { CalendarEventOwnerAnchor } from "~/components/Anchor";
 import { CalendarEventOwnerAvatar } from "~/components/Avatar";
 import { CalendarEventAttendeesAvatarGroup } from "~/components/AvatarGroup";
 import { CalendarEventResponseBadge } from "~/components/Badge";
-import { CalendarEventHumanDurationText } from "~/components/DurationText";
 import { CalendarEventOwnerName } from "~/components/Text";
 
 type EventListProps = TableProps & {
