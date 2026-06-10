@@ -10,6 +10,7 @@ import {
   CharacterName,
   CorporationAvatar,
   CorporationName,
+  DateHoverCard,
   FormattedDateText,
   SolarSystemAnchor,
   SolarSystemName,
@@ -146,7 +147,9 @@ export default function Page() {
         {character?.birthday && (
           <Group justify="space-between">
             <Text>Birthday</Text>
-            <FormattedDateText date={character.birthday} />
+            <DateHoverCard date={character.birthday}>
+              <FormattedDateText date={character.birthday} />
+            </DateHoverCard>
           </Group>
         )}
         <Group justify="space-between">

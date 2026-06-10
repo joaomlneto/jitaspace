@@ -1,10 +1,10 @@
 import type { TableProps } from "@mantine/core";
-import { Anchor, Group, Stack, Table, Title, Tooltip } from "@mantine/core";
+import { Anchor, Group, Stack, Table, Title } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
 import type { CalendarEvent } from "@jitaspace/hooks";
 import { WarningIcon } from "@jitaspace/eve-icons";
-import { FormattedDateText } from "@jitaspace/ui";
+import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import { CalendarEventOwnerAnchor } from "~/components/Anchor";
 import { CalendarEventOwnerAvatar } from "~/components/Avatar";
@@ -32,20 +32,13 @@ export function MobileCalendarEventList({
               <Stack>
                 <Group justify="space-between" gap="xs">
                   <Group>
-                    <Tooltip
-                      label={
-                        <CalendarEventHumanDurationText
-                          characterId={characterId}
-                          eventId={event.event_id}
-                        />
-                      }
-                    >
+                    <DateHoverCard date={new Date(event.event_date ?? 0)}>
                       <FormattedDateText
                         size="sm"
                         date={new Date(event.event_date ?? 0)}
                         format="HH:mm"
                       />
-                    </Tooltip>
+                    </DateHoverCard>
                     <Tooltip
                       label={
                         <CalendarEventOwnerName

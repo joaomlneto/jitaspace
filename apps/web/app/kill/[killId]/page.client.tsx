@@ -30,10 +30,10 @@ import {
   CorporationAnchor,
   CorporationAvatar,
   CorporationName,
+  DateHoverCard,
   FactionAnchor,
   FactionAvatar,
   FactionName,
-  FormattedDateText,
   ISKAmount,
   SolarSystemAnchor,
   SolarSystemName,
@@ -153,15 +153,13 @@ export default function Page() {
               <Text size="sm" c="dimmed">
                 •
               </Text>
-              <FormattedDateText date={new Date(km.killmail_time)} size="sm" />
-              <Text size="sm" c="dimmed">
-                •
-              </Text>
-              <TimeAgoText
-                date={new Date(km.killmail_time)}
-                addSuffix
-                size="sm"
-              />
+              <DateHoverCard date={new Date(km.killmail_time)}>
+                <TimeAgoText
+                  date={new Date(km.killmail_time)}
+                  addSuffix
+                  size="sm"
+                />
+              </DateHoverCard>
             </Group>
           </Stack>
           <Group gap="xs" wrap="nowrap">

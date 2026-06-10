@@ -18,6 +18,7 @@ import {
   CharacterName,
   CorporationAvatar,
   CorporationName,
+  DateHoverCard,
   FactionAvatar,
   FactionName,
   TimeAgoText,
@@ -169,10 +170,12 @@ export const KillmailButton = memo(
             )}
             <Group>
               {data?.data.killmail_time && (
-                <TimeAgoText
-                  date={new Date(data?.data.killmail_time)}
-                  addSuffix
-                />
+                <DateHoverCard date={new Date(data?.data.killmail_time)}>
+                  <TimeAgoText
+                    date={new Date(data?.data.killmail_time)}
+                    addSuffix
+                  />
+                </DateHoverCard>
               )}
             </Group>
           </Group>

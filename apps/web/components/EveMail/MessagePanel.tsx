@@ -6,6 +6,7 @@ import {
   useCharacterMailLabels,
 } from "@jitaspace/hooks";
 import {
+  DateHoverCard,
   EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
@@ -70,11 +71,13 @@ export function MessagePanel({
             </EveMailSenderAnchor>
           </Group>
           {mail?.data.timestamp && (
-            <FormattedDateText
-              span
-              date={new Date(mail?.data.timestamp)}
-              format="yyyy-MM-dd HH:mm"
-            />
+            <DateHoverCard date={new Date(mail?.data.timestamp)}>
+              <FormattedDateText
+                span
+                date={new Date(mail?.data.timestamp)}
+                format="yyyy-MM-dd HH:mm"
+              />
+            </DateHoverCard>
           )}
         </Group>
       )}
