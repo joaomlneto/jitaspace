@@ -1,5 +1,5 @@
 import type { TableProps } from "@mantine/core";
-import { Anchor, Group, Stack, Table, Title } from "@mantine/core";
+import { Anchor, Group, Stack, Table, Title, Tooltip } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
 import type { CalendarEvent } from "@jitaspace/hooks";
