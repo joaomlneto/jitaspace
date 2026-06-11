@@ -52,7 +52,8 @@ const DONATION_CORPORATION_ID = 98832245;
 const MY_CHARACTER_ID = 401563624;
 
 /**
- * External destinations. TODO: enable GitHub Sponsors before relying on that link.
+ * External destinations. Note: GitHub Sponsors must be enabled on the account
+ * before that link resolves.
  */
 const links = {
   // The creator code is entered at the payment step on the EVE Online Store.
@@ -62,7 +63,7 @@ const links = {
   github: "https://github.com/joaomlneto/jitaspace",
   // Pre-filled "new issue" picker (bug / feature templates).
   feedback: "https://github.com/joaomlneto/jitaspace/issues/new/choose",
-  githubSponsors: "https://github.com/sponsors/joaomlneto", // TODO: enable GitHub Sponsors
+  githubSponsors: "https://github.com/sponsors/joaomlneto", // needs GitHub Sponsors enabled on the account
   buyMeACoffee: "https://buymeacoffee.com/joaomlneto",
 };
 
