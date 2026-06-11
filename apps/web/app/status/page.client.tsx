@@ -24,7 +24,11 @@ import {
   IconCircleX,
 } from "@tabler/icons-react";
 
-import { getRateLimitBuildDate, useGetMetaCompatibilityDates, useGetMetaStatus } from "@jitaspace/esi-client";
+import {
+  getRateLimitBuildDate,
+  useGetMetaCompatibilityDates,
+  useGetMetaStatus,
+} from "@jitaspace/esi-client";
 import { useServerStatus } from "@jitaspace/hooks";
 import { useGetVersion } from "@jitaspace/sde-client";
 import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
@@ -33,6 +37,7 @@ import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
 import { env } from "~/env";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
 import { EsiStatusDashboard } from "../../components/Status/EsiStatusDashboard";
+import { InngestJobsDashboard } from "../../components/Status/InngestJobsDashboard";
 
 export interface PageProps {
   vercelStatusData: VercelStatusResponse | null;
@@ -136,17 +141,19 @@ export default function StatusPage({
                   </Text>
                   <Group gap="xs">
                     <Text size="sm">{buildDate || "-"}</Text>
-                    {buildDate && latestCompatibilityDate && (
-                      buildDate >= latestCompatibilityDate ? (
+                    {buildDate &&
+                      latestCompatibilityDate &&
+                      (buildDate >= latestCompatibilityDate ? (
                         <Tooltip label="ESI compatibility date is up to date!">
                           <IconCircleCheck color="green" size={14} />
                         </Tooltip>
                       ) : (
-                        <Tooltip label={`ESI compatibility date is outdated! Latest: ${latestCompatibilityDate}`}>
+                        <Tooltip
+                          label={`ESI compatibility date is outdated! Latest: ${latestCompatibilityDate}`}
+                        >
                           <IconCircleX color="red" size={14} />
                         </Tooltip>
-                      )
-                    )}
+                      ))}
                   </Group>
                 </Group>
                 <Group justify="space-between">
@@ -290,6 +297,8 @@ export default function StatusPage({
             </Stack>
           </Card>
         </SimpleGrid>
+
+        <InngestJobsDashboard />
 
         <EsiRateLimitDashboard />
       </Stack>
