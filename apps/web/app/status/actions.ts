@@ -75,7 +75,7 @@ const fetchEvents = async ({
     const items = body.data ?? [];
     events.push(...items);
 
-    const last = items[items.length - 1];
+    const last = items.at(-1);
     if (items.length < PAGE_SIZE || !last?.internal_id) break;
     cursor = last.internal_id;
   }
