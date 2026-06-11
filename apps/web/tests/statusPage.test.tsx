@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -55,6 +55,10 @@ jest.mock("../components/Status/EsiRateLimitDashboard", () => ({
 
 jest.mock("../components/Status/EsiStatusDashboard", () => ({
   EsiStatusDashboard: () => <div>ESI Status Dashboard</div>,
+}));
+
+jest.mock("../components/Status/InngestJobsDashboard", () => ({
+  InngestJobsDashboard: () => <div>Inngest Jobs Dashboard</div>,
 }));
 
 jest.mock("next/link", () => ({
@@ -157,6 +161,7 @@ describe("Status Page", () => {
 
     // Dashboards render
     expect(screen.getByText("Rate Limit Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Inngest Jobs Dashboard")).toBeInTheDocument();
   });
 
   it("renders outdated branches and partial ESI degradation", () => {

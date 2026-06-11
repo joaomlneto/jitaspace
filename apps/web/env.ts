@@ -16,6 +16,12 @@ const server = z.object({
   EVE_CLIENT_SECRET: z.string(),
 
   INNGEST_SIGNING_KEY: z.string().min(1),
+  /**
+   * Overrides the Inngest REST API base URL used by the status endpoint
+   * (defaults to https://api.inngest.com in production and the local
+   * `inngest dev` server otherwise).
+   */
+  INNGEST_BASE_URL: z.string().url().optional(),
   CRON_SECRET: z.string().min(16),
 
   SKIP_BUILD_STATIC_GENERATION: z.string(),
@@ -51,6 +57,7 @@ const processEnv = {
   EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
   EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
   INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
+  INNGEST_BASE_URL: process.env.INNGEST_BASE_URL,
   CRON_SECRET: process.env.CRON_SECRET,
   SKIP_BUILD_STATIC_GENERATION: process.env.SKIP_BUILD_STATIC_GENERATION,
   NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
