@@ -57,7 +57,7 @@
       "cache": false
     },
     "build": {
-      "dependsOn": ["^build", "^db:generate", "kubb:generate"],
+      "dependsOn": ["^build", "db:generate", "^db:generate", "kubb:generate"],
       "inputs": ["**/*.ts", "**/*.tsx", "package.json", "tsconfig.json"],
       "outputs": [
         ".next/**",
