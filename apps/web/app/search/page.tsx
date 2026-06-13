@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Container,
@@ -26,13 +26,19 @@ function SearchView() {
   const [query, setQuery] = useState<string>(searchParams.get("q") ?? "");
   const { filteredActions, ungrouped, groups } = useSearchActions(query);
 
+  // Focus the search box on mount (this is a dedicated search destination).
+  // Done via ref rather than the autoFocus attribute, which is an a11y smell.
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
   return (
     <Container size="sm">
       <Stack gap="md">
         <Title order={2}>Search</Title>
         <TextInput
-          data-autofocus
-          autoFocus
+          ref={inputRef}
           size="md"
           leftSection={<IconSearch size={18} />}
           placeholder="Search characters, corporations, items, tools…"
@@ -80,11 +86,11 @@ function SearchActionList({
             {leftSection}
             <Stack gap={0}>
               <Text>{label}</Text>
-              {description && (
+              {description ? (
                 <Text size="xs" c="dimmed">
                   {description}
                 </Text>
-              )}
+              ) : null}
             </Stack>
           </Group>
         </UnstyledButton>

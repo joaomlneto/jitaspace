@@ -60,8 +60,7 @@ export function useSearchActions(query: string): SearchActionGroups {
 
   const makeAppOnClick = useCallback(
     (url: string | undefined) => () => {
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      if (url !== undefined) router.push(url);
+      if (url !== undefined) void router.push(url);
     },
     [router],
   );
