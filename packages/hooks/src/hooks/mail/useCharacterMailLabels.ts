@@ -56,7 +56,8 @@ export function useCharacterMailLabels(characterId: number) {
       authHeaders,
     );
 
-    // TODO mutate the labels state in React Query
+    // Refetch the labels so the React Query cache reflects the deletion
+    await labels.refetch();
 
     return { success: true };
   };
