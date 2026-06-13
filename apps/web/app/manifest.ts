@@ -35,9 +35,9 @@ export default function manifest(): MetadataRoute.Manifest {
         type: "image/png",
         purpose: "any",
       },
-      // Maskable variants for Android adaptive icons. NOTE: these files do not
-      // exist yet — generate them (e.g. at https://maskable.app) with adequate
-      // safe-zone padding and drop them in apps/web/public/icons/.
+      // Maskable variants for Android adaptive icons. Generated from the logo
+      // padded into the ~80% safe zone over the dark background; refine at
+      // https://maskable.app if the mask crops anything important.
       {
         src: "/icons/icon-192-maskable.png",
         sizes: "192x192",
@@ -51,8 +51,9 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
-    // Install prompts on desktop/mobile show these. NOTE: placeholder paths —
-    // add real captures at apps/web/public/screenshots/.
+    // Install prompts on desktop/mobile show these. Currently branded
+    // placeholders at the declared dimensions — replace with real screen
+    // captures of the running app at apps/web/public/screenshots/.
     screenshots: [
       {
         src: "/screenshots/desktop-wide.png",
