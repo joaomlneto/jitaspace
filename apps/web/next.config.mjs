@@ -17,6 +17,8 @@ const config = {
   transpilePackages: [
     "@jitaspace/auth",
     "@jitaspace/datatable",
+    "@jitaspace/datatable-mantine",
+    "@jitaspace/datatable-tanstack",
     "@jitaspace/db",
     "@jitaspace/esi-metadata",
     "@jitaspace/esi-client",

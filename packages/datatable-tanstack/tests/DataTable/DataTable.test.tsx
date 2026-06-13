@@ -1,10 +1,11 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import { describe, expect, it, jest } from "@jest/globals";
-import { type ColumnDef } from "@tanstack/react-table";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+
+import type { DataTableColumn } from "@jitaspace/datatable";
 
 import { DataTable } from "../../DataTable/DataTable";
 
@@ -13,14 +14,14 @@ interface Row {
   score: number;
 }
 
-const columns: ColumnDef<Row>[] = [
-  { accessorKey: "name", header: "Name", enableSorting: true },
-  { accessorKey: "score", header: "Score", enableSorting: true },
+const columns: DataTableColumn<Row>[] = [
+  { id: "name", header: "Name", accessor: "name", sortable: true },
+  { id: "score", header: "Score", accessor: "score", sortable: true },
 ];
 
-const unsortableColumns: ColumnDef<Row>[] = [
-  { accessorKey: "name", header: "Name", enableSorting: false },
-  { accessorKey: "score", header: "Score", enableSorting: false },
+const unsortableColumns: DataTableColumn<Row>[] = [
+  { id: "name", header: "Name", accessor: "name" },
+  { id: "score", header: "Score", accessor: "score" },
 ];
 
 const data: Row[] = [
@@ -326,13 +327,22 @@ describe("DataTable — column visibility", () => {
     ).toBeInTheDocument();
   });
 
-  it("honors initialColumnVisibility (column hidden + checkbox unchecked)", async () => {
+  it("honors defaultVisible: false (column hidden + checkbox unchecked)", async () => {
+    const columnsWithHiddenScore: DataTableColumn<Row>[] = [
+      { id: "name", header: "Name", accessor: "name", sortable: true },
+      {
+        id: "score",
+        header: "Score",
+        accessor: "score",
+        sortable: true,
+        defaultVisible: false,
+      },
+    ];
     renderWithMantine(
       <DataTable
-        columns={columns}
+        columns={columnsWithHiddenScore}
         data={data}
         withColumnVisibility
-        initialColumnVisibility={{ score: false }}
       />,
     );
     expect(

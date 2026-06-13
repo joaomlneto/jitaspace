@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import {
   type Column,
   type ColumnDef,
@@ -26,26 +26,11 @@ import {
   Select,
   Stack,
   Table,
-  type TableProps,
   Text,
   TextInput,
 } from "@mantine/core";
 
-export type { ColumnDef, SortingState, VisibilityState };
-
-export interface DataTableProps<TData> extends Omit<TableProps, "data"> {
-  data: TData[];
-  columns: ColumnDef<TData, any>[];
-  isLoading?: boolean;
-  emptyText?: string;
-  withGlobalFilter?: boolean;
-  withColumnVisibility?: boolean;
-  withPagination?: boolean;
-  defaultPageSize?: number;
-  onRowClick?: (row: TData) => void;
-  initialSorting?: SortingState;
-  initialColumnVisibility?: VisibilityState;
-}
+import type { DataTableColumn, DataTableProps } from "@jitaspace/datatable";
 
 const PAGE_SIZE_OPTIONS = ["10", "25", "50", "100"];
 
@@ -53,6 +38,57 @@ function getSortIcon(sorted: "asc" | "desc" | false): string {
   if (sorted === "asc") return "↑";
   if (sorted === "desc") return "↓";
   return "⇅";
+}
+
+function renderValue(value: unknown): ReactNode {
+  return value == null ? "" : String(value);
+}
+
+function compareValues(
+  a: string | number | null | undefined,
+  b: string | number | null | undefined,
+): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return -1;
+  if (b == null) return 1;
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  return String(a).localeCompare(String(b));
+}
+
+/** Translate the engine-agnostic columns into TanStack column defs. */
+function buildColumnDefs<TData>(
+  columns: DataTableColumn<TData>[],
+): ColumnDef<TData>[] {
+  return columns.map((col) => {
+    const accessorPart =
+      typeof col.accessor === "function"
+        ? { accessorFn: col.accessor }
+        : col.accessor != null
+          ? { accessorKey: col.accessor as string }
+          : {};
+
+    return {
+      id: col.id,
+      header: col.header,
+      enableSorting: col.sortable ?? false,
+      enableHiding: col.enableHiding ?? true,
+      ...accessorPart,
+      ...(col.width != null ? { size: col.width } : {}),
+      ...(col.sortAccessor
+        ? {
+            sortingFn: (a, b) =>
+              compareValues(
+                col.sortAccessor!(a.original),
+                col.sortAccessor!(b.original),
+              ),
+          }
+        : {}),
+      cell: (ctx) =>
+        col.cell
+          ? col.cell(ctx.row.original, ctx.getValue())
+          : renderValue(ctx.getValue()),
+    } as ColumnDef<TData>;
+  });
 }
 
 // Prefer a string header for the visibility menu label; fall back to the id.
@@ -70,14 +106,32 @@ export function DataTable<TData>({
   withColumnVisibility = false,
   withPagination = false,
   defaultPageSize = 10,
+  initialSort,
   onRowClick,
-  initialSorting,
-  initialColumnVisibility,
-  ...tableProps
+  rowId,
+  striped,
+  highlightOnHover,
+  withTableBorder,
+  withColumnBorders,
+  verticalSpacing = "sm",
+  fontSize,
 }: Readonly<DataTableProps<TData>>) {
-  const [sorting, setSorting] = useState<SortingState>(initialSorting ?? []);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
-    initialColumnVisibility ?? {},
+  const columnDefs = useMemo(() => buildColumnDefs(columns), [columns]);
+  const columnsById = useMemo(
+    () => new Map(columns.map((col) => [col.id, col])),
+    [columns],
+  );
+
+  const [sorting, setSorting] = useState<SortingState>(
+    initialSort
+      ? [{ id: initialSort.columnId, desc: initialSort.direction === "desc" }]
+      : [],
+  );
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
+    columns.reduce<VisibilityState>((acc, col) => {
+      if (col.defaultVisible === false) acc[col.id] = false;
+      return acc;
+    }, {}),
   );
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnsMenuOpened, setColumnsMenuOpened] = useState(false);
@@ -88,7 +142,8 @@ export function DataTable<TData>({
 
   const table = useReactTable({
     data,
-    columns,
+    columns: columnDefs,
+    ...(rowId ? { getRowId: (row: TData) => String(rowId(row)) } : {}),
     state: {
       sorting,
       globalFilter,
@@ -102,7 +157,9 @@ export function DataTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    ...(withPagination ? { getPaginationRowModel: getPaginationRowModel() } : {}),
+    ...(withPagination
+      ? { getPaginationRowModel: getPaginationRowModel() }
+      : {}),
   });
 
   const rows = table.getRowModel().rows;
@@ -136,7 +193,7 @@ export function DataTable<TData>({
         style={onRowClick ? { cursor: "pointer" } : undefined}
       >
         {row.getVisibleCells().map((cell) => (
-          <Table.Td key={cell.id}>
+          <Table.Td key={cell.id} ta={columnsById.get(cell.column.id)?.align}>
             {flexRender(cell.column.columnDef.cell, cell.getContext())}
           </Table.Td>
         ))}
@@ -211,16 +268,26 @@ export function DataTable<TData>({
       )}
 
       <Table.ScrollContainer minWidth={400}>
-        <Table {...tableProps}>
+        <Table
+          striped={striped}
+          highlightOnHover={highlightOnHover}
+          withTableBorder={withTableBorder}
+          withColumnBorders={withColumnBorders}
+          verticalSpacing={verticalSpacing}
+          fz={fontSize}
+        >
           <Table.Thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.Tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   const canSort = header.column.getCanSort();
                   const sorted = header.column.getIsSorted();
+                  const meta = columnsById.get(header.column.id);
                   return (
                     <Table.Th
                       key={header.id}
+                      ta={meta?.align}
+                      w={meta?.width}
                       onClick={
                         canSort
                           ? header.column.getToggleSortingHandler()
@@ -233,7 +300,17 @@ export function DataTable<TData>({
                       }
                     >
                       {header.isPlaceholder ? null : (
-                        <Group gap={4} wrap="nowrap">
+                        <Group
+                          gap={4}
+                          wrap="nowrap"
+                          justify={
+                            meta?.align === "right"
+                              ? "flex-end"
+                              : meta?.align === "center"
+                                ? "center"
+                                : "flex-start"
+                          }
+                        >
                           {flexRender(
                             header.column.columnDef.header,
                             header.getContext(),

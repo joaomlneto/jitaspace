@@ -14,7 +14,8 @@ import {
   TypeAvatar,
   TypeName,
 } from "@jitaspace/ui";
-import { type ColumnDef, DataTable } from "@jitaspace/datatable";
+import type { DataTableColumn } from "@jitaspace/datatable";
+import { DataTable } from "@jitaspace/datatable-tanstack";
 
 interface LoyaltyPointsTableProps {
   corporations: {
@@ -58,8 +59,10 @@ type AugmentedOffer = {
   marketStats?: FuzzworkTypeMarketAggregate;
 };
 
+type LpColumn = DataTableColumn<AugmentedOffer>;
+
 // ---------------------------------------------------------------------------
-// Derived-value helpers used in multiple accessorFns
+// Derived-value helpers used in multiple accessors
 // ---------------------------------------------------------------------------
 
 function requiredItemsSellCost(row: AugmentedOffer): number {
@@ -79,17 +82,17 @@ function requiredItemsBuyCost(row: AugmentedOffer): number {
 }
 
 // ---------------------------------------------------------------------------
-// Shared cell renderers
+// Shared cell renderers — agnostic signature: (row, value) => ReactNode
 // ---------------------------------------------------------------------------
 
-function iskAmountCell({ getValue }: { getValue: () => unknown }) {
-  const amount = getValue() as number | undefined;
+function iskAmountCell(_row: AugmentedOffer, value: unknown) {
+  const amount = value as number | undefined;
   if (amount === undefined) return null;
   return <ISKAmount inherit ta="right" amount={amount} />;
 }
 
-function iskPerLpCell({ getValue }: { getValue: () => unknown }) {
-  const amount = getValue() as number | undefined;
+function iskPerLpCell(_row: AugmentedOffer, value: unknown) {
+  const amount = value as number | undefined;
   if (amount === undefined) return null;
   return (
     <Text inherit ta="right">
@@ -98,31 +101,34 @@ function iskPerLpCell({ getValue }: { getValue: () => unknown }) {
   );
 }
 
-function volumeCell({ getValue }: { getValue: () => unknown }) {
-  const volume = getValue() as number | undefined;
+function volumeCell(_row: AugmentedOffer, value: unknown) {
+  const volume = value as number | undefined;
   if (volume === undefined) return null;
   return <Text ta="right">{volume.toLocaleString()}</Text>;
 }
 
 // ---------------------------------------------------------------------------
-// Factory: required-items price list columns (4 variants)
+// Factory: required-items price list columns (4 variants, hidden by default)
 // ---------------------------------------------------------------------------
 
-type ItemPricer = (item: AugmentedOffer["requiredItems"][number]) => number | undefined;
+type ItemPricer = (
+  item: AugmentedOffer["requiredItems"][number],
+) => number | undefined;
 
 function makeRequiredItemsPriceColumn(
   id: string,
   header: string,
   getPrice: ItemPricer,
-): ColumnDef<AugmentedOffer, any> {
+): LpColumn {
   return {
     id,
     header,
-    accessorKey: "requiredItems",
-    enableSorting: false,
-    cell: ({ row }: { row: { original: AugmentedOffer } }) => (
+    accessor: "requiredItems",
+    sortable: false,
+    defaultVisible: false,
+    cell: (row) => (
       <Stack gap="xs">
-        {row.original.requiredItems.map((item) => {
+        {row.requiredItems.map((item) => {
           const price = getPrice(item);
           return (
             <Group key={item.typeId} wrap="nowrap" justify="space-between">
@@ -135,268 +141,6 @@ function makeRequiredItemsPriceColumn(
     ),
   };
 }
-
-// ---------------------------------------------------------------------------
-// Column definitions
-// ---------------------------------------------------------------------------
-
-const COLUMNS: ColumnDef<AugmentedOffer, any>[] = [
-  {
-    id: "id",
-    header: "Offer ID",
-    accessorKey: "offerId",
-    enableSorting: true,
-  },
-  {
-    id: "corporationId",
-    header: "Corporation",
-    accessorKey: "corporationId",
-    enableSorting: true,
-    sortingFn: (a, b) =>
-      (a.original.corporationName ?? "").localeCompare(
-        b.original.corporationName ?? "",
-      ),
-    cell: ({ row }) => (
-      <Group>
-        <Tooltip
-          label={
-            <CorporationName
-              corporationId={row.original.corporationId}
-              lineClamp={1}
-            />
-          }
-          color="dark"
-        >
-          <Group wrap="nowrap">
-            <CorporationAvatar
-              corporationId={row.original.corporationId}
-              size="sm"
-            />
-            <CorporationAnchor
-              corporationId={row.original.corporationId}
-              target="_blank"
-            >
-              <CorporationName corporationId={row.original.corporationId} />
-            </CorporationAnchor>
-          </Group>
-        </Tooltip>
-      </Group>
-    ),
-  },
-  {
-    id: "quantity",
-    header: "Quantity",
-    accessorKey: "quantity",
-    enableSorting: true,
-    cell: ({ getValue }) => (
-      <Text ta="right">{(getValue() as number).toLocaleString()}</Text>
-    ),
-  },
-  {
-    id: "typeId",
-    header: "Item",
-    accessorKey: "typeId",
-    enableSorting: true,
-    sortingFn: (a, b) =>
-      (a.original.typeName ?? "").localeCompare(b.original.typeName ?? ""),
-    cell: ({ row }) => (
-      <Group wrap="nowrap">
-        <TypeAvatar typeId={row.original.typeId} size="sm" />
-        {row.original.quantity !== 1 && (
-          <Text size="sm">{row.original.quantity}</Text>
-        )}
-        <TypeAnchor typeId={row.original.typeId} target="_blank">
-          <TypeName span typeId={row.original.typeId} size="sm" />
-        </TypeAnchor>
-      </Group>
-    ),
-  },
-  {
-    id: "lpCost",
-    header: "LP Cost",
-    accessorKey: "lpCost",
-    enableSorting: true,
-    cell: ({ row }) => (
-      <Text inherit ta="right">
-        {row.original.lpCost.toLocaleString()} LP
-      </Text>
-    ),
-  },
-  {
-    id: "iskCost",
-    header: "ISK Cost",
-    accessorKey: "iskCost",
-    enableSorting: true,
-    cell: ({ row }) => (
-      <ISKAmount inherit ta="right" amount={row.original.iskCost ?? 0} />
-    ),
-  },
-  {
-    id: "akCost",
-    header: "AK Cost",
-    accessorKey: "akCost",
-    enableSorting: true,
-    cell: ({ getValue }) => (
-      <Text ta="right">
-        {(getValue() as number | null)?.toLocaleString() ?? ""}
-      </Text>
-    ),
-  },
-  {
-    id: "requiredItems",
-    header: "Required Items",
-    accessorKey: "requiredItems",
-    enableSorting: false,
-    cell: ({ row }) => (
-      <Stack gap="xs">
-        {row.original.requiredItems.map(({ quantity, typeId }) => (
-          <Group key={typeId} wrap="nowrap" gap="xs">
-            <TypeAvatar typeId={typeId} size="sm" />
-            {quantity !== 1 && <Text size="sm">{quantity}</Text>}
-            <TypeAnchor typeId={typeId} target="_blank">
-              <TypeName span typeId={typeId} size="sm" lineClamp={1} />
-            </TypeAnchor>
-          </Group>
-        ))}
-      </Stack>
-    ),
-  },
-  makeRequiredItemsPriceColumn(
-    "reqitems5pbuydetailsunit",
-    "Required Items Jita 5% Buy Unit Prices",
-    (item) => item.marketStats?.buy.percentile,
-  ),
-  makeRequiredItemsPriceColumn(
-    "reqitems5pbuydetailstotal",
-    "Required Items Jita 5% Buy Prices for Quantities",
-    (item) =>
-      item.marketStats === undefined
-        ? undefined
-        : item.marketStats.buy.percentile * item.quantity,
-  ),
-  makeRequiredItemsPriceColumn(
-    "reqitems5pselldetails",
-    "Required Items Jita 5% Sell Unit Prices",
-    (item) => item.marketStats?.sell.percentile,
-  ),
-  makeRequiredItemsPriceColumn(
-    "reqitems5pselldetailstotal",
-    "Required Items Jita 5% Sell Prices for Quantities",
-    (item) =>
-      item.marketStats === undefined
-        ? undefined
-        : item.marketStats.sell.percentile * item.quantity,
-  ),
-  {
-    id: "jita5psell",
-    header: "Jita 5% Sell Price",
-    accessorFn: (row) => row.marketStats?.sell.percentile,
-    enableSorting: true,
-    cell: iskAmountCell,
-  },
-  {
-    id: "jitaSellVolume",
-    header: "Jita Sell Volume",
-    accessorFn: (row) => row.marketStats?.sell.volume,
-    enableSorting: true,
-    cell: volumeCell,
-  },
-  {
-    id: "reqitemsjita5psell",
-    header: "Required Items Jita 5% Sell",
-    accessorFn: requiredItemsSellCost,
-    enableSorting: true,
-    cell: iskAmountCell,
-  },
-  {
-    id: "jita5psellprofit",
-    header: "Jita 5% Sell Profit",
-    accessorFn: (row) =>
-      (row.marketStats?.sell.percentile ?? 0) - requiredItemsSellCost(row),
-    enableSorting: true,
-    cell: iskAmountCell,
-  },
-  {
-    id: "jita5psellisklp",
-    header: "Jita 5% Sell ISK/LP",
-    accessorFn: (row) =>
-      ((row.marketStats?.sell.percentile ?? 0) -
-        (row.iskCost ?? 0) -
-        requiredItemsSellCost(row)) /
-      row.lpCost,
-    enableSorting: true,
-    cell: iskPerLpCell,
-  },
-  {
-    id: "jita5pbuy",
-    header: "Jita 5% Buy Price",
-    accessorFn: (row) => row.marketStats?.buy.percentile,
-    enableSorting: true,
-    cell: iskAmountCell,
-  },
-  {
-    id: "jitaBuyVolume",
-    header: "Jita Buy Volume",
-    accessorFn: (row) => row.marketStats?.buy.volume,
-    enableSorting: true,
-    cell: volumeCell,
-  },
-  {
-    id: "reqitemsjita5pbuy",
-    header: "Required Items Jita 5% Buy",
-    accessorFn: requiredItemsBuyCost,
-    enableSorting: true,
-    cell: iskAmountCell,
-  },
-  {
-    id: "jita5pbuyprofit",
-    header: "Jita 5% Buy Profit",
-    accessorFn: (row) =>
-      (row.marketStats?.buy.percentile ?? 0) - requiredItemsBuyCost(row),
-    enableSorting: true,
-    cell: iskAmountCell,
-  },
-  {
-    id: "jita5pbuyisklp",
-    header: "Jita 5% Buy ISK/LP",
-    accessorFn: (row) =>
-      ((row.marketStats?.buy.percentile ?? 0) -
-        (row.iskCost ?? 0) -
-        requiredItemsBuyCost(row)) /
-      row.lpCost,
-    enableSorting: true,
-    cell: iskPerLpCell,
-  },
-  {
-    id: "jitasplit",
-    header: "Jita Split",
-    accessorFn: (row) =>
-      row.marketStats?.buy && row.marketStats?.sell
-        ? (row.marketStats.buy.percentile + row.marketStats.sell.percentile) /
-          2
-        : undefined,
-    enableSorting: true,
-    cell: iskAmountCell,
-  },
-  {
-    id: "reqitemsjitasplit",
-    header: "Required Items Jita 5% Split",
-    accessorFn: (row) =>
-      row.requiredItems
-        .map(
-          (item) =>
-            (((item.marketStats?.buy.percentile ?? 0) +
-              (item.marketStats?.sell.percentile ?? 0)) /
-              2) *
-            (item.quantity ?? 1),
-        )
-        .reduce((a, b) => a + b, 0),
-    enableSorting: true,
-    cell: iskAmountCell,
-  },
-];
-
-const INITIAL_SORTING = [{ id: "id", desc: true }];
 
 // ---------------------------------------------------------------------------
 // Component
@@ -442,37 +186,301 @@ export const LoyaltyPointsTable = memo(
       [offers, typeNames, corporationNames, marketStats.data],
     );
 
-    const initialColumnVisibility = useMemo(
-      () => ({
-        id: false,
-        quantity: false,
-        corporationId: sortedCorporations.length > 1,
-        akCost: offers.some((offer) => !!offer.akCost),
-        reqitems5pbuydetailsunit: false,
-        reqitems5pbuydetailstotal: false,
-        reqitems5pselldetails: false,
-        reqitems5pselldetailstotal: false,
-        jita5pbuy: false,
-        reqitemsjita5pbuy: false,
-        jita5pbuyprofit: false,
-        jitasplit: false,
-        reqitemsjitasplit: false,
-        jita5psell: false,
-        jita5psellprofit: false,
-      }),
-      [sortedCorporations.length, offers],
+    const showCorporation = sortedCorporations.length > 1;
+    const showAkCost = offers.some((offer) => !!offer.akCost);
+
+    const columns = useMemo<LpColumn[]>(
+      () => [
+        {
+          id: "id",
+          header: "Offer ID",
+          accessor: "offerId",
+          sortable: true,
+          defaultVisible: false,
+        },
+        {
+          id: "corporationId",
+          header: "Corporation",
+          // accessor returns the name so global filter + sort work by name
+          accessor: (row) => row.corporationName ?? "",
+          sortable: true,
+          defaultVisible: showCorporation,
+          cell: (row) => (
+            <Group>
+              <Tooltip
+                label={
+                  <CorporationName
+                    corporationId={row.corporationId}
+                    lineClamp={1}
+                  />
+                }
+                color="dark"
+              >
+                <Group wrap="nowrap">
+                  <CorporationAvatar
+                    corporationId={row.corporationId}
+                    size="sm"
+                  />
+                  <CorporationAnchor
+                    corporationId={row.corporationId}
+                    target="_blank"
+                  >
+                    <CorporationName corporationId={row.corporationId} />
+                  </CorporationAnchor>
+                </Group>
+              </Tooltip>
+            </Group>
+          ),
+        },
+        {
+          id: "quantity",
+          header: "Quantity",
+          accessor: "quantity",
+          sortable: true,
+          defaultVisible: false,
+          align: "right",
+          cell: (row) => (
+            <Text ta="right">{row.quantity.toLocaleString()}</Text>
+          ),
+        },
+        {
+          id: "typeId",
+          header: "Item",
+          // accessor returns the name so global filter + sort work by name
+          accessor: (row) => row.typeName ?? "",
+          sortable: true,
+          cell: (row) => (
+            <Group wrap="nowrap">
+              <TypeAvatar typeId={row.typeId} size="sm" />
+              {row.quantity !== 1 && <Text size="sm">{row.quantity}</Text>}
+              <TypeAnchor typeId={row.typeId} target="_blank">
+                <TypeName span typeId={row.typeId} size="sm" />
+              </TypeAnchor>
+            </Group>
+          ),
+        },
+        {
+          id: "lpCost",
+          header: "LP Cost",
+          accessor: "lpCost",
+          sortable: true,
+          align: "right",
+          cell: (row) => (
+            <Text inherit ta="right">
+              {row.lpCost.toLocaleString()} LP
+            </Text>
+          ),
+        },
+        {
+          id: "iskCost",
+          header: "ISK Cost",
+          accessor: "iskCost",
+          sortable: true,
+          align: "right",
+          cell: (row) => (
+            <ISKAmount inherit ta="right" amount={row.iskCost ?? 0} />
+          ),
+        },
+        {
+          id: "akCost",
+          header: "AK Cost",
+          accessor: "akCost",
+          sortable: true,
+          defaultVisible: showAkCost,
+          align: "right",
+          cell: (_row, value) => (
+            <Text ta="right">
+              {(value as number | null)?.toLocaleString() ?? ""}
+            </Text>
+          ),
+        },
+        {
+          id: "requiredItems",
+          header: "Required Items",
+          accessor: "requiredItems",
+          sortable: false,
+          cell: (row) => (
+            <Stack gap="xs">
+              {row.requiredItems.map(({ quantity, typeId }) => (
+                <Group key={typeId} wrap="nowrap" gap="xs">
+                  <TypeAvatar typeId={typeId} size="sm" />
+                  {quantity !== 1 && <Text size="sm">{quantity}</Text>}
+                  <TypeAnchor typeId={typeId} target="_blank">
+                    <TypeName span typeId={typeId} size="sm" lineClamp={1} />
+                  </TypeAnchor>
+                </Group>
+              ))}
+            </Stack>
+          ),
+        },
+        makeRequiredItemsPriceColumn(
+          "reqitems5pbuydetailsunit",
+          "Required Items Jita 5% Buy Unit Prices",
+          (item) => item.marketStats?.buy.percentile,
+        ),
+        makeRequiredItemsPriceColumn(
+          "reqitems5pbuydetailstotal",
+          "Required Items Jita 5% Buy Prices for Quantities",
+          (item) =>
+            item.marketStats === undefined
+              ? undefined
+              : item.marketStats.buy.percentile * item.quantity,
+        ),
+        makeRequiredItemsPriceColumn(
+          "reqitems5pselldetails",
+          "Required Items Jita 5% Sell Unit Prices",
+          (item) => item.marketStats?.sell.percentile,
+        ),
+        makeRequiredItemsPriceColumn(
+          "reqitems5pselldetailstotal",
+          "Required Items Jita 5% Sell Prices for Quantities",
+          (item) =>
+            item.marketStats === undefined
+              ? undefined
+              : item.marketStats.sell.percentile * item.quantity,
+        ),
+        {
+          id: "jita5psell",
+          header: "Jita 5% Sell Price",
+          accessor: (row) => row.marketStats?.sell.percentile,
+          sortable: true,
+          defaultVisible: false,
+          align: "right",
+          cell: iskAmountCell,
+        },
+        {
+          id: "jitaSellVolume",
+          header: "Jita Sell Volume",
+          accessor: (row) => row.marketStats?.sell.volume,
+          sortable: true,
+          align: "right",
+          cell: volumeCell,
+        },
+        {
+          id: "reqitemsjita5psell",
+          header: "Required Items Jita 5% Sell",
+          accessor: requiredItemsSellCost,
+          sortable: true,
+          align: "right",
+          cell: iskAmountCell,
+        },
+        {
+          id: "jita5psellprofit",
+          header: "Jita 5% Sell Profit",
+          accessor: (row) =>
+            (row.marketStats?.sell.percentile ?? 0) -
+            requiredItemsSellCost(row),
+          sortable: true,
+          defaultVisible: false,
+          align: "right",
+          cell: iskAmountCell,
+        },
+        {
+          id: "jita5psellisklp",
+          header: "Jita 5% Sell ISK/LP",
+          accessor: (row) =>
+            ((row.marketStats?.sell.percentile ?? 0) -
+              (row.iskCost ?? 0) -
+              requiredItemsSellCost(row)) /
+            row.lpCost,
+          sortable: true,
+          align: "right",
+          cell: iskPerLpCell,
+        },
+        {
+          id: "jita5pbuy",
+          header: "Jita 5% Buy Price",
+          accessor: (row) => row.marketStats?.buy.percentile,
+          sortable: true,
+          defaultVisible: false,
+          align: "right",
+          cell: iskAmountCell,
+        },
+        {
+          id: "jitaBuyVolume",
+          header: "Jita Buy Volume",
+          accessor: (row) => row.marketStats?.buy.volume,
+          sortable: true,
+          align: "right",
+          cell: volumeCell,
+        },
+        {
+          id: "reqitemsjita5pbuy",
+          header: "Required Items Jita 5% Buy",
+          accessor: requiredItemsBuyCost,
+          sortable: true,
+          defaultVisible: false,
+          align: "right",
+          cell: iskAmountCell,
+        },
+        {
+          id: "jita5pbuyprofit",
+          header: "Jita 5% Buy Profit",
+          accessor: (row) =>
+            (row.marketStats?.buy.percentile ?? 0) - requiredItemsBuyCost(row),
+          sortable: true,
+          defaultVisible: false,
+          align: "right",
+          cell: iskAmountCell,
+        },
+        {
+          id: "jita5pbuyisklp",
+          header: "Jita 5% Buy ISK/LP",
+          accessor: (row) =>
+            ((row.marketStats?.buy.percentile ?? 0) -
+              (row.iskCost ?? 0) -
+              requiredItemsBuyCost(row)) /
+            row.lpCost,
+          sortable: true,
+          align: "right",
+          cell: iskPerLpCell,
+        },
+        {
+          id: "jitasplit",
+          header: "Jita Split",
+          accessor: (row) =>
+            row.marketStats?.buy && row.marketStats?.sell
+              ? (row.marketStats.buy.percentile +
+                  row.marketStats.sell.percentile) /
+                2
+              : undefined,
+          sortable: true,
+          defaultVisible: false,
+          align: "right",
+          cell: iskAmountCell,
+        },
+        {
+          id: "reqitemsjitasplit",
+          header: "Required Items Jita 5% Split",
+          accessor: (row) =>
+            row.requiredItems
+              .map(
+                (item) =>
+                  (((item.marketStats?.buy.percentile ?? 0) +
+                    (item.marketStats?.sell.percentile ?? 0)) /
+                    2) *
+                  (item.quantity ?? 1),
+              )
+              .reduce((a, b) => a + b, 0),
+          sortable: true,
+          defaultVisible: false,
+          align: "right",
+          cell: iskAmountCell,
+        },
+      ],
+      [showCorporation, showAkCost],
     );
 
     return (
       <DataTable
         data={augmentedOffers}
-        columns={COLUMNS}
+        columns={columns}
         withPagination
         defaultPageSize={25}
         withGlobalFilter
         withColumnVisibility
-        initialSorting={INITIAL_SORTING}
-        initialColumnVisibility={initialColumnVisibility}
+        initialSort={{ columnId: "id", direction: "desc" }}
+        rowId={(row) => row.offerId}
         verticalSpacing="xs"
         withTableBorder
         highlightOnHover
