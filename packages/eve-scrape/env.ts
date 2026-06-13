@@ -1,15 +1,12 @@
 import { z } from "zod";
 
 /**
- * Specify your server-side environment variables schema here. This way you can ensure the app isn't
- * built with invalid env vars.
+ * Inngest-adapter env. The job logic's own env (DATABASE_URL, REDIS_URL,
+ * DISCORD_*) lives in `@jitaspace/background-jobs`; this package only needs the
+ * Inngest keys for the client/serve handler.
  */
 const server = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).optional(),
-  DATABASE_URL: z.string().url(),
-  REDIS_URL: z.string(),
-  DISCORD_BOT_TOKEN: z.string().optional(),
-  DISCORD_UPDATES_CHANNEL_ID: z.string().optional(),
   INNGEST_EVENT_KEY:
     process.env.NODE_ENV === "production"
       ? z.string().min(1)
@@ -20,22 +17,8 @@ const server = z.object({
       : z.string().min(1).optional(),
 });
 
-/**
- * Specify your client-side environment variables schema here. This way you can ensure the app isn't
- * built with invalid env vars. To expose them to the client, prefix them with `NEXT_PUBLIC_`.
- */
-const client = z.object({});
-
-/**
- * You can't destruct `process.env` as a regular object in the Next.js edge runtimes (e.g.
- * middlewares) or client-side, so we need to destruct manually.
- */
 const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
-  DATABASE_URL: process.env.DATABASE_URL,
-  REDIS_URL: process.env.REDIS_URL,
-  DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
-  DISCORD_UPDATES_CHANNEL_ID: process.env.DISCORD_UPDATES_CHANNEL_ID,
   INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
   INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
 };
@@ -43,16 +26,10 @@ const processEnv = {
 // Don't touch the part below
 // --------------------------
 
-const merged = server.merge(client);
-
-let env = process.env as unknown as z.infer<typeof merged>;
+let env = process.env as unknown as z.infer<typeof server>;
 
 if (!!process.env.SKIP_ENV_VALIDATION === false) {
-  const isServer = typeof window === "undefined";
-
-  const parsed = isServer
-    ? merged.safeParse(processEnv) // on server we can validate all env vars
-    : client.safeParse(processEnv); // on the client we can only validate the ones that are exposed
+  const parsed = server.safeParse(processEnv);
 
   if (parsed.success === false) {
     console.error(
@@ -62,24 +39,7 @@ if (!!process.env.SKIP_ENV_VALIDATION === false) {
     throw new Error("Invalid environment variables");
   }
 
-  env = new Proxy(parsed.data, {
-    get(target, prop) {
-      if (typeof prop !== "string") return undefined;
-      // Throw a descriptive error if a server-side env var is accessed on the client
-      // Otherwise it would just be returning `undefined` and be annoying to debug
-      if (
-        !isServer &&
-        !prop.startsWith("NEXT_PUBLIC_") &&
-        !["NODE_ENV"].includes(prop)
-      )
-        throw new Error(
-          process.env.NODE_ENV === "production"
-            ? "❌ Attempted to access a server-side environment variable on the client"
-            : `❌ Attempted to access server-side environment variable '${prop}' on the client`,
-        );
-      return target[prop as keyof typeof target];
-    },
-  }) as unknown as z.infer<typeof merged>;
+  env = parsed.data;
 }
 
 export { env };

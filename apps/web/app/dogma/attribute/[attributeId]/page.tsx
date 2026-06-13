@@ -83,6 +83,7 @@ async function getAttributeData(attributeId: number): Promise<PageProps> {
     published: attribute.published ?? null,
     stackable: attribute.stackable ?? null,
     unit: attribute.DogmaUnit?.displayName ?? attribute.DogmaUnit?.name ?? null,
+    unitId: attribute.unitId ?? null,
     iconId: attribute.iconId ?? null,
     types: attribute.TypeAttributes.map((entry) => ({
       ...entry.type,
