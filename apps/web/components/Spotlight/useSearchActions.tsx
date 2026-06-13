@@ -11,6 +11,20 @@ import { EveEntityAvatar } from "@jitaspace/ui";
 
 import { jitaApps } from "~/config/apps";
 
+// Where each ESI search category resolves to. Kept as a lookup table so the
+// click handler stays a single push instead of a large switch.
+const CATEGORY_ROUTE_PREFIX: Partial<Record<EsiSearchCategory, string>> = {
+  alliance: "/alliance/",
+  agent: "/character/",
+  character: "/character/",
+  corporation: "/corporation/",
+  faction: "/faction/",
+  solar_system: "/solar_system/",
+  station: "/station/",
+  structure: "/structure/",
+  inventory_type: "/type/",
+};
+
 export interface SearchActionGroups {
   /** Every action matching the query, flat. */
   filteredActions: SpotlightActionData[];
@@ -86,35 +100,8 @@ export function useSearchActions(query: string): SearchActionGroups {
               />
             ),
             onClick: () => {
-              switch (category) {
-                case "alliance":
-                  void router.push(`/alliance/${entityId}`);
-                  break;
-                case "agent":
-                case "character":
-                  void router.push(`/character/${entityId}`);
-                  break;
-                case "corporation":
-                  void router.push(`/corporation/${entityId}`);
-                  break;
-                case "faction":
-                  void router.push(`/faction/${entityId}`);
-                  break;
-                case "solar_system":
-                  void router.push(`/solar_system/${entityId}`);
-                  break;
-                case "station":
-                  void router.push(`/station/${entityId}`);
-                  break;
-                case "structure":
-                  void router.push(`/structure/${entityId}`);
-                  break;
-                case "inventory_type":
-                  void router.push(`/type/${entityId}`);
-                  break;
-                default:
-                  console.error(`Unknown category ${category}`);
-              }
+              const prefix = CATEGORY_ROUTE_PREFIX[category];
+              if (prefix) void router.push(`${prefix}${entityId}`);
             },
           }));
         },
