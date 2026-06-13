@@ -12,6 +12,7 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
+  DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
   AllianceAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
   CharacterAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
   CorporationAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,

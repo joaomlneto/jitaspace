@@ -1,20 +1,14 @@
 "use client";
 
-import React, { memo, useState } from "react";
-import {
-  Combobox,
-  Loader,
-  Pill,
-  PillsInput,
-  ScrollArea,
-  useCombobox,
-} from "@mantine/core";
-import { useDebouncedValue } from "@mantine/hooks";
+import React, { memo, useMemo, useState } from "react";
+import { Group, Loader, MultiSelect, Pill, rem } from "@mantine/core";
+import { useDebouncedValue, useUncontrolled } from "@mantine/hooks";
 
 import { type EsiSearchCategory, useEsiSearch } from "@jitaspace/hooks";
 
+import { EveEntityAvatar } from "../../Avatar";
+import { EveEntityName } from "../../Text";
 import { EsiSearchMultiSelectItem } from "./EsiSearchMultiSelectItem";
-import { EsiSearchMultiSelectValue } from "./EsiSearchMultiSelectValue";
 
 export type EsiSearchMultiSelectProps = {
   categories: EsiSearchCategory[];
@@ -30,11 +24,14 @@ export type EsiSearchMultiSelectProps = {
   readOnly?: boolean;
 };
 
+const MIN_SEARCH_LENGTH = 3;
+const MAX_RESULTS_PER_CATEGORY = 100;
+
 export const EsiSearchMultiSelect = memo(
   ({
     categories,
     debounceTime,
-    value: controlledValue,
+    value,
     defaultValue,
     onChange,
     placeholder,
@@ -42,21 +39,18 @@ export const EsiSearchMultiSelect = memo(
     readOnly,
     ...inputProps
   }: EsiSearchMultiSelectProps) => {
-    const [internalValue, setInternalValue] = useState<string[]>(
-      defaultValue ?? [],
-    );
-    const value = controlledValue ?? internalValue;
+    const [selectedValues, setSelectedValues] = useUncontrolled<string[]>({
+      value,
+      defaultValue,
+      finalValue: [],
+      onChange,
+    });
 
     const [searchValue, setSearchValue] = useState("");
     const [debouncedSearchValue] = useDebouncedValue(
       searchValue,
       debounceTime ?? 1000,
     );
-
-    const combobox = useCombobox({
-      onDropdownClose: () => combobox.resetSelectedOption(),
-      onDropdownOpen: () => combobox.updateSelectedOptionIndex("active"),
-    });
 
     const { data: searchResult, isLoading } = useEsiSearch(
       debouncedSearchValue,
@@ -65,101 +59,75 @@ export const EsiSearchMultiSelect = memo(
 
     const isLoadingData = isLoading || searchValue !== debouncedSearchValue;
 
-    const selectedValues = new Set(value);
+    // Flatten the per-category ESI results into Combobox options, keeping a
+    // value -> category lookup so the dropdown can show the entity's category.
+    const { data, categoryByValue } = useMemo(() => {
+      const categoryByValue = new Map<string, EsiSearchCategory>();
+      const data = Object.entries(searchResult?.data ?? {}).flatMap(
+        ([category, ids]) =>
+          ids.slice(0, MAX_RESULTS_PER_CATEGORY).map((id) => {
+            const value = `${id}`;
+            categoryByValue.set(value, category as EsiSearchCategory);
+            return { value, label: `${category} ${id}` };
+          }),
+      );
+      return { data, categoryByValue };
+    }, [searchResult]);
 
-    const options = Object.entries(searchResult?.data ?? []).flatMap(
-      ([categoryName, categoryIds]) =>
-        categoryIds
-          .filter((id) => !selectedValues.has(`${id}`))
-          .slice(0, 100)
-          .map((id) => ({
-            label: `${categoryName} ${id}`,
-            value: `${id}`,
-            category: categoryName as EsiSearchCategory,
-          })),
-    );
-
-    const handleValueSelect = (val: string) => {
-      const next = [...value, val];
-      setInternalValue(next);
-      onChange?.(next);
-      setSearchValue("");
-    };
-
-    const handleValueRemove = (val: string) => {
-      const next = value.filter((v) => v !== val);
-      setInternalValue(next);
-      onChange?.(next);
-    };
-
-    const pills = value.map((id) => (
-      <EsiSearchMultiSelectValue
-        key={id}
-        value={id}
-        onRemove={() => handleValueRemove(id)}
-        disabled={disabled || readOnly}
-      />
-    ));
-
-    const emptyMessage =
-      searchValue.length < 3
-        ? "Type at least 3 characters to search for results"
+    const nothingFoundMessage =
+      searchValue.length < MIN_SEARCH_LENGTH
+        ? `Type at least ${MIN_SEARCH_LENGTH} characters to search for results`
         : isLoadingData
           ? "Searching…"
           : "No results found";
 
     return (
-      <Combobox store={combobox} onOptionSubmit={handleValueSelect}>
-        <Combobox.DropdownTarget>
-          <PillsInput
-            onClick={() => !disabled && !readOnly && combobox.openDropdown()}
-            rightSection={isLoadingData ? <Loader size="sm" /> : undefined}
-            disabled={disabled}
-            {...inputProps}
-          >
-            <Pill.Group>
-              {pills}
-              <Combobox.EventsTarget>
-                <PillsInput.Field
-                  onFocus={() => combobox.openDropdown()}
-                  onBlur={() => combobox.closeDropdown()}
-                  value={searchValue}
-                  placeholder={value.length === 0 ? placeholder : undefined}
-                  disabled={disabled}
-                  readOnly={readOnly}
-                  onChange={(e) => {
-                    setSearchValue(e.currentTarget.value);
-                    combobox.updateSelectedOptionIndex();
-                  }}
-                  onKeyDown={(e) => {
-                    const lastValue = value?.[value.length - 1];
-                    if (lastValue && e.key === "Backspace" && searchValue.length === 0) {
-                      e.preventDefault();
-                      handleValueRemove(lastValue);
-                    }
-                  }}
-                />
-              </Combobox.EventsTarget>
-            </Pill.Group>
-          </PillsInput>
-        </Combobox.DropdownTarget>
-
-        <Combobox.Dropdown>
-          <Combobox.Options>
-            <ScrollArea.Autosize type="scroll" mah={250}>
-              {options.length > 0 ? (
-                options.map((option) => (
-                  <Combobox.Option key={option.value} value={option.value}>
-                    <EsiSearchMultiSelectItem option={option} />
-                  </Combobox.Option>
-                ))
-              ) : (
-                <Combobox.Empty>{emptyMessage}</Combobox.Empty>
-              )}
-            </ScrollArea.Autosize>
-          </Combobox.Options>
-        </Combobox.Dropdown>
-      </Combobox>
+      <MultiSelect
+        value={selectedValues}
+        onChange={setSelectedValues}
+        searchable
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        data={data}
+        // Results are already filtered server-side; keep every option returned
+        // instead of re-filtering the labels (which encode the raw entity id).
+        filter={({ options }) => options}
+        hidePickedOptions
+        maxDropdownHeight={250}
+        nothingFoundMessage={nothingFoundMessage}
+        rightSection={isLoadingData ? <Loader size="sm" /> : undefined}
+        // Match the previous behaviour of hiding the placeholder once a value
+        // is selected (the high-level MultiSelect keeps it by default).
+        placeholder={selectedValues.length > 0 ? undefined : placeholder}
+        disabled={disabled}
+        readOnly={readOnly}
+        renderOption={({ option }) => (
+          <EsiSearchMultiSelectItem
+            option={{
+              value: option.value,
+              label: option.label,
+              category: categoryByValue.get(option.value),
+            }}
+          />
+        )}
+        renderPill={({ value: pillValue, onRemove }) => {
+          const interactive = !disabled && !readOnly;
+          return (
+            <Pill
+              p={0}
+              withRemoveButton={interactive}
+              onRemove={onRemove}
+              disabled={!interactive}
+            >
+              <Group wrap="nowrap" gap={rem(4)} align="center">
+                <EveEntityAvatar entityId={pillValue} size={22} radius="xl" />
+                <EveEntityName entityId={pillValue} size="sm" />
+              </Group>
+            </Pill>
+          );
+        }}
+        {...inputProps}
+      />
     );
   },
 );

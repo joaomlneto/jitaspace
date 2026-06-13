@@ -3,13 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import React from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 // Bypass debounce so search value is always "committed" immediately in tests
@@ -59,9 +53,9 @@ function renderWithMantine(ui: React.ReactElement) {
   return render(<MantineProvider>{ui}</MantineProvider>);
 }
 
-/** Returns the hidden text input inside PillsInput.Field */
+/** Returns the search input. In Mantine v9 the MultiSelect field is a combobox. */
 function getSearchInput() {
-  return screen.getByRole("textbox");
+  return screen.getByRole("combobox");
 }
 
 function defaultSearchResult() {
@@ -253,6 +247,23 @@ describe("EsiSearchMultiSelect", () => {
       await userEvent.type(getSearchInput(), "test");
 
       expect(await screen.findByText("corporation")).toBeInTheDocument();
+    });
+
+    it("keeps server results that do not match the typed text (no client-side filtering)", async () => {
+      // The synthetic option label is `character 123456789`. Searching for
+      // unrelated text must still surface the server-provided result, because
+      // ESI already did the filtering — the component disables client filtering.
+      mockUseEsiSearch.mockReturnValue(searchResultWith([123456789]));
+
+      renderWithMantine(<EsiSearchMultiSelect categories={["character"]} />);
+      const input = getSearchInput();
+      await userEvent.click(input);
+      await userEvent.type(input, "zzz");
+
+      expect(await screen.findByTestId("entity-name")).toHaveAttribute(
+        "data-entity-id",
+        "123456789",
+      );
     });
 
     it("does not include already-selected IDs among the options", async () => {

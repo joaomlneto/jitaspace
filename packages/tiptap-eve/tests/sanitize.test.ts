@@ -405,3 +405,39 @@ describe("convertEveColorTags", () => {
     });
   });
 });
+
+describe("ReDoS safety (CodeQL: polynomial regex on uncontrolled data)", () => {
+  // The regexes run on EVE-server-controlled mail bodies. CodeQL flagged the
+  // original `([^>]*)>(.*?)` patterns as vulnerable to catastrophic backtracking
+  // on inputs like `<url=` + many `<url==`, or `<url=>` + many `<url=>a`. The
+  // hardened patterns process these in linear time; if they regress these tests
+  // exceed jest's timeout and fail.
+  it("convertEveUrlTags returns quickly on the '<url==' attack string", () => {
+    const evil = "<url=" + "<url==".repeat(50000);
+    const start = Date.now();
+    expect(convertEveUrlTags(evil)).toBe(evil); // no valid </url> ⇒ unchanged
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+
+  it("convertEveUrlTags returns quickly on the '<url=>a' attack string", () => {
+    const evil = "<url=>" + "<url=>a".repeat(50000);
+    const start = Date.now();
+    convertEveUrlTags(evil);
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+
+  it("convertEveColorTags returns quickly on an analogous attack string", () => {
+    // Valid <color=0xAA> openings (so the engine reaches the text scan) repeated
+    // with no closing </color> — the shape that triggers polynomial backtracking.
+    const evil = "<color=0xAA>" + "<color=0xAA>a".repeat(50000);
+    const start = Date.now();
+    convertEveColorTags(evil);
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+
+  it("still converts a normal <url=> tag after hardening (camelCase preserved)", () => {
+    expect(convertEveUrlTags("<url=warReport:42>War</url>")).toBe(
+      '<a href="warReport:42">War</a>',
+    );
+  });
+});

@@ -32,6 +32,7 @@ jest.mock("@jitaspace/eve-icons", () => ({
 // @jitaspace/ui -> render identifiable text so we can assert on entity ids
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/ui", () => ({
+  DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
   CharacterAvatar: ({ characterId }: { characterId?: number }) => (
     <span data-testid="char-avatar">{`char-avatar-${characterId ?? "?"}`}</span>
   ),

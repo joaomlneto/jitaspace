@@ -9,11 +9,11 @@ import {
 
 import { env } from "~/env.ts";
 
-jest.mock("@jitaspace/db", () => ({
+jest.mock("~/lib/db", () => ({
   prisma: {},
 }));
 
-jest.mock("@jitaspace/kv", () => ({
+jest.mock("~/lib/kv", () => ({
   kv: {
     queues: {},
   },

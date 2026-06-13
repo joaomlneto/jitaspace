@@ -15,7 +15,7 @@ export const metadata = {
     "Browse all EVE Online item categories — ships, modules, ammunition, structures, and more.",
 };
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 import { ItemsIcon } from "@jitaspace/eve-icons";
 import { CategoryAnchor } from "@jitaspace/ui";
 

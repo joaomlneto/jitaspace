@@ -18,6 +18,7 @@ import {
   CorporationAnchor,
   CorporationAvatar,
   CorporationName,
+  DateHoverCard,
   FormattedDateText,
   ISKAmount,
 } from "@jitaspace/ui";
@@ -137,25 +138,33 @@ export default function Page() {
         {war && (
           <Group align="center" justify="space-between">
             <Text>Declared on</Text>
-            <FormattedDateText date={new Date(war.data.declared)} />
+            <DateHoverCard date={new Date(war.data.declared)}>
+              <FormattedDateText date={new Date(war.data.declared)} />
+            </DateHoverCard>
           </Group>
         )}
         {war?.data.started && (
           <Group align="center" justify="space-between">
             <Text>Started on</Text>
-            <FormattedDateText date={new Date(war.data.started)} />
+            <DateHoverCard date={new Date(war.data.started)}>
+              <FormattedDateText date={new Date(war.data.started)} />
+            </DateHoverCard>
           </Group>
         )}
         {war?.data.retracted && (
           <Group align="center" justify="space-between">
             <Text>Retracted on</Text>
-            <FormattedDateText date={new Date(war.data.retracted)} />
+            <DateHoverCard date={new Date(war.data.retracted)}>
+              <FormattedDateText date={new Date(war.data.retracted)} />
+            </DateHoverCard>
           </Group>
         )}
         {war?.data.finished && (
           <Group align="center" justify="space-between">
             <Text>Finished on</Text>
-            <FormattedDateText date={new Date(war.data.finished)} />
+            <DateHoverCard date={new Date(war.data.finished)}>
+              <FormattedDateText date={new Date(war.data.finished)} />
+            </DateHoverCard>
           </Group>
         )}
         {war && (

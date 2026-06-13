@@ -25,7 +25,7 @@ const mockStarFindUnique = jest.fn();
 const mockPlanetFindUnique = jest.fn();
 const mockStationFindUnique = jest.fn();
 
-jest.mock("@jitaspace/db", () => ({
+jest.mock("~/lib/db", () => ({
   prisma: {
     region: { findUnique: (...a: unknown[]) => mockRegionFindUnique(...a) },
     constellation: { findUnique: (...a: unknown[]) => mockConstellationFindUnique(...a) },

@@ -1,0 +1,11 @@
+/*
+ * Hide the navigation arrows on small screens: there is no room for side
+ * gutters there, so the carousel becomes swipe-only (the indicator dots still
+ * convey position). On larger screens the arrows live in the reserved side
+ * gutters (the `px` padding on the Carousel) and never overlap the cards.
+ */
+@media (max-width: $mantine-breakpoint-sm) {
+  .controls {
+    display: none;
+  }
+}

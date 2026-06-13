@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { HttpStatusCode } from "axios";
 import { Loader } from "@mantine/core";
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 
 import TypePage from "./page.client";
 import type { PageProps } from "./page.client";

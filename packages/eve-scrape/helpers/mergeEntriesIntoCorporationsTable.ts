@@ -1,6 +1,6 @@
 import pLimit, { LimitFunction } from "p-limit";
 
-import { Corporation, prisma } from "@jitaspace/db";
+import { Corporation, prisma } from "../db";
 import { GetCorporationsCorporationIdQueryResponse } from "@jitaspace/esi-client";
 
 import { MAX_DB_PARALLELISM } from "../config";

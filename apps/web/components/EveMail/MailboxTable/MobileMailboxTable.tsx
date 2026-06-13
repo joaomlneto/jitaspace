@@ -7,6 +7,7 @@ import {
   useCharacterMailLabels,
 } from "@jitaspace/hooks";
 import {
+  DateHoverCard,
   EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
@@ -75,16 +76,14 @@ export const MobileMailboxTable = ({
                           ),
                       )}
                     {message.timestamp && (
-                      <FormattedDateText
-                        size="sm"
-                        date={
-                          message.timestamp
-                            ? new Date(message.timestamp)
-                            : undefined
-                        }
-                        format="LLL dd"
-                        fw={message.is_read ? "normal" : "bold"}
-                      />
+                      <DateHoverCard date={new Date(message.timestamp)}>
+                        <FormattedDateText
+                          size="sm"
+                          date={new Date(message.timestamp)}
+                          format="LLL dd"
+                          fw={message.is_read ? "normal" : "bold"}
+                        />
+                      </DateHoverCard>
                     )}
                   </Group>
                 </Group>

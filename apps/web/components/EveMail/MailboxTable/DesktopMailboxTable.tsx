@@ -7,6 +7,7 @@ import {
   useCharacterMailLabels,
 } from "@jitaspace/hooks";
 import {
+  DateHoverCard,
   EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
@@ -117,13 +118,15 @@ export const DesktopMailboxTable = ({
               </Table.Td>
               <Table.Td>
                 {mail.timestamp && (
-                  <FormattedDateText
-                    size="xs"
-                    style={{ whiteSpace: "nowrap" }}
-                    date={new Date(mail.timestamp)}
-                    fw={mail.is_read ? "normal" : "bold"}
-                    format="yyyy-MM-dd HH:mm"
-                  />
+                  <DateHoverCard date={new Date(mail.timestamp)}>
+                    <FormattedDateText
+                      size="xs"
+                      style={{ whiteSpace: "nowrap" }}
+                      date={new Date(mail.timestamp)}
+                      fw={mail.is_read ? "normal" : "bold"}
+                      format="yyyy-MM-dd HH:mm"
+                    />
+                  </DateHoverCard>
                 )}
               </Table.Td>
               <Table.Td>

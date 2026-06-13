@@ -1,7 +1,7 @@
 import { eventType, staticSchema } from "inngest";
 import pLimit from "p-limit";
 
-import { kv } from "@jitaspace/kv";
+import { kv } from "../../../kv";
 
 import { client } from "../../../client";
 

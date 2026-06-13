@@ -16,6 +16,7 @@ import {
   CorporationAnchor,
   CorporationAvatar,
   CorporationName,
+  DateHoverCard,
   FormattedDateText,
   TimeAgoText,
   WarAnchor,
@@ -236,10 +237,12 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         header: "Declared On",
         accessorKey: "declaredDate",
         Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-          <FormattedDateText
-            inherit
-            date={new Date(row.original.declaredDate)}
-          />
+          <DateHoverCard date={new Date(row.original.declaredDate)}>
+            <FormattedDateText
+              inherit
+              date={new Date(row.original.declaredDate)}
+            />
+          </DateHoverCard>
         ),
       },
       {
@@ -248,10 +251,12 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         accessorKey: "startedDate",
         Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.startedDate && (
-            <FormattedDateText
-              inherit
-              date={new Date(row.original.startedDate)}
-            />
+            <DateHoverCard date={new Date(row.original.startedDate)}>
+              <FormattedDateText
+                inherit
+                date={new Date(row.original.startedDate)}
+              />
+            </DateHoverCard>
           ),
       },
       {
@@ -260,10 +265,12 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         accessorKey: "retractedDate",
         Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.retractedDate && (
-            <FormattedDateText
-              inherit
-              date={new Date(row.original.retractedDate)}
-            />
+            <DateHoverCard date={new Date(row.original.retractedDate)}>
+              <FormattedDateText
+                inherit
+                date={new Date(row.original.retractedDate)}
+              />
+            </DateHoverCard>
           ),
       },
       {
@@ -272,12 +279,12 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         accessorKey: "finishedDate",
         Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.finishedDate && (
-            <>
+            <DateHoverCard date={new Date(row.original.finishedDate)}>
               <FormattedDateText
                 inherit
                 date={new Date(row.original.finishedDate)}
               />
-            </>
+            </DateHoverCard>
           ),
       },
       {
@@ -286,11 +293,13 @@ export const WarsTable = ({ wars }: WarsTableProps) => {
         accessorKey: "updatedAt",
         Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
           row.original.updatedAt && (
-            <TimeAgoText
-              inherit
-              date={new Date(row.original.updatedAt)}
-              addSuffix
-            />
+            <DateHoverCard date={new Date(row.original.updatedAt)}>
+              <TimeAgoText
+                inherit
+                date={new Date(row.original.updatedAt)}
+                addSuffix
+              />
+            </DateHoverCard>
           ),
       },
     ],

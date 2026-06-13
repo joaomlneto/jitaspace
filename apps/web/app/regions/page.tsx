@@ -9,7 +9,7 @@ export const metadata = {
     "Browse all regions in the EVE Online universe — New Eden's star clusters, systems, and constellations.",
 };
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 import { MapIcon } from "@jitaspace/eve-icons";
 import { RegionAnchor } from "@jitaspace/ui";
 

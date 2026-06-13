@@ -18,7 +18,7 @@ const mockNotFound = jest.fn(() => {
   throw new Error("NEXT_NOT_FOUND");
 });
 
-jest.mock("@jitaspace/db", () => ({
+jest.mock("~/lib/db", () => ({
   prisma: {
     group: {
       findUniqueOrThrow: (...args: unknown[]) =>

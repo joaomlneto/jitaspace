@@ -9,6 +9,20 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
+// Mantine Carousel (embla-carousel) uses IntersectionObserver, which jsdom
+// does not implement. A no-op stub lets carousel-bearing pages render in tests.
+global.IntersectionObserver = class IntersectionObserver {
+  readonly root = null;
+  readonly rootMargin = "";
+  readonly thresholds: ReadonlyArray<number> = [];
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+} as unknown as typeof IntersectionObserver;
+
 // Guarded so this setup is also safe in `@jest-environment node` test files,
 // which have no `window` (e.g. route-handler / server-action unit tests).
 if (typeof window !== "undefined") {

@@ -82,20 +82,31 @@ export const renderEveHref = (href: string) => {
   return href;
 };
 
+// TipTap 3 uses linkifyjs v4, whose registerCustomProtocol() rejects any scheme
+// that is not all-lowercase (RFC 3986). EVE's schemes are camelCase
+// (warReport:, joinChannel:, …), so the names registered here MUST be lowercase
+// or the editor throws at construction.
+//
+// This only affects scheme *registration*. linkifyjs's isAllowedUri() matches
+// schemes case-insensitively, so a camelCase href in mail content
+// (<a href="warReport:42">) is still recognised and preserved verbatim by
+// TipTap. That is why renderEveHref above and the click handlers in
+// MailMessageViewer match the original camelCase scheme names: the hrefs flowing
+// through the editor are never lowercased.
 export const EveLink = Link.configure({
   protocols: [
     "showinfo",
-    "warReport",
-    "killReport",
-    "recruitmentAd",
+    "warreport",
+    "killreport",
+    "recruitmentad",
     "contract",
-    "joinChannel",
-    "helpPointer",
-    "shipSkinListing",
+    "joinchannel",
+    "helppointer",
+    "shipskinlisting",
     "fitting",
     "localsvc",
     "opportunity",
-    "careerProgramNode",
+    "careerprogramnode",
     "fleet",
   ],
 });

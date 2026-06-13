@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  Button,
   Card,
   Group,
   Menu,
@@ -10,11 +11,19 @@ import {
   Text,
   UnstyledButton,
 } from "@mantine/core";
-import { IconChevronDown } from "@tabler/icons-react";
+import { showNotification } from "@mantine/notifications";
+import {
+  IconChevronDown,
+  IconFlask,
+  IconRefresh,
+  IconRestore,
+  IconSettings,
+} from "@tabler/icons-react";
 import ReactCountryFlag from "react-country-flag";
 
 import { setAcceptLanguage } from "@jitaspace/esi-client";
 
+import { useDismissedNews } from "~/components/News";
 import {
   APP_THEME_OPTIONS,
   ESI_ACCEPT_LANGUAGE_OPTIONS,
@@ -39,6 +48,13 @@ export function SettingsCard() {
   const setExperimentalDataTables = usePreferencesStore(
     (state) => state.setExperimentalDataTables,
   );
+
+  const {
+    dismissedIds,
+    mounted: newsMounted,
+    reset: resetHiddenNews,
+  } = useDismissedNews();
+  const hiddenNewsCount = dismissedIds.length;
 
   useEffect(() => {
     setAcceptLanguage(acceptLanguage);
@@ -89,22 +105,45 @@ export function SettingsCard() {
     </Menu.Item>
   ));
 
+  const handleResetHiddenNews = () => {
+    resetHiddenNews();
+    showNotification({
+      title: "Hidden news reset",
+      message: "Dismissed news banners will appear again on the home page.",
+    });
+  };
+
+  const hiddenNewsNoun = hiddenNewsCount === 1 ? "item" : "items";
+  const hiddenNewsPronoun = hiddenNewsCount === 1 ? "it" : "them";
+  const hiddenNewsDescription =
+    newsMounted && hiddenNewsCount > 0
+      ? `You have dismissed ${hiddenNewsCount} news ${hiddenNewsNoun}. Reset to show ${hiddenNewsPronoun} again at the top of the home page.`
+      : "Dismissed news banners will reappear at the top of the home page.";
+
   return (
     <Card withBorder radius="md" p="xl" className={classes.card}>
       <Text fz="lg" className={classes.title} fw={500}>
         Configure settings
       </Text>
-      <Text fz="xs" c="dimmed" mt={3} mb="md">
-        Manage your JitaSpace preferences.
-      </Text>
 
-      <Tabs defaultValue="general">
+      <Tabs defaultValue="general" mt="md">
         <Tabs.List mb="md">
-          <Tabs.Tab value="general">General</Tabs.Tab>
-          <Tabs.Tab value="experimental">Experimental</Tabs.Tab>
+          <Tabs.Tab value="general" leftSection={<IconSettings size={16} />}>
+            General
+          </Tabs.Tab>
+          <Tabs.Tab value="experimental" leftSection={<IconFlask size={16} />}>
+            Experimental
+          </Tabs.Tab>
+          <Tabs.Tab value="reset" leftSection={<IconRefresh size={16} />}>
+            Reset
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="general">
+          <Text fz="xs" c="dimmed" mt={3} mb="md">
+            Choose the language for ESI requests and the UI theme.
+          </Text>
+
           <Group
             justify="space-between"
             className={classes.item}
@@ -194,6 +233,10 @@ export function SettingsCard() {
         </Tabs.Panel>
 
         <Tabs.Panel value="experimental">
+          <Text fz="xs" c="dimmed" mt={3} mb="md">
+            Try out features that are still in development.
+          </Text>
+
           <Group
             justify="space-between"
             className={classes.item}
@@ -216,6 +259,35 @@ export function SettingsCard() {
               }
               aria-label="Enable experimental data tables"
             />
+          </Group>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="reset">
+          <Text fz="xs" c="dimmed" mt={3} mb="md">
+            Restore things you have dismissed.
+          </Text>
+
+          <Group
+            justify="space-between"
+            className={classes.item}
+            wrap="nowrap"
+            gap="xl"
+          >
+            <div>
+              <Text>Hidden news</Text>
+              <Text size="xs" c="dimmed">
+                {hiddenNewsDescription}
+              </Text>
+            </div>
+
+            <Button
+              variant="default"
+              leftSection={<IconRestore size={16} />}
+              disabled={!newsMounted || hiddenNewsCount === 0}
+              onClick={handleResetHiddenNews}
+            >
+              Reset hidden news
+            </Button>
           </Group>
         </Tabs.Panel>
       </Tabs>

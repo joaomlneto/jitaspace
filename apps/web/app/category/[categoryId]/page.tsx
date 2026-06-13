@@ -4,7 +4,7 @@ import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
 import { Container, Group, Loader, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
-import { prisma } from "@jitaspace/db";
+import { prisma } from "~/lib/db";
 import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 interface PageProps {
@@ -90,7 +90,7 @@ async function PageContent({
         <Group gap="xl">
           <Title order={1}>{name}</Title>
         </Group>
-        <CategoryBreadcrumbs categoryId={categoryId} />
+        <CategoryBreadcrumbs categoryId={categoryId} categoryName={name} />
         <Stack gap="xs">
           <Title order={3}>Groups</Title>
           <SimpleGrid spacing="xs" cols={{ base: 1, xs: 2, md: 3 }}>

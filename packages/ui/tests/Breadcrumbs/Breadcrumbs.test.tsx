@@ -47,14 +47,26 @@ const renderWithMantine = (ui: ReactNode) =>
   render(<MantineProvider>{ui}</MantineProvider>);
 
 describe("CategoryBreadcrumbs", () => {
-  it("renders the Inventory root link and a category anchor for the given id", () => {
-    const { container } = renderWithMantine(<CategoryBreadcrumbs categoryId={6} />);
+  it("renders Inventory root plus the category name from props", () => {
+    const { container } = renderWithMantine(
+      <CategoryBreadcrumbs categoryId={6} categoryName="Ship" />,
+    );
     // Static root link.
     const inventory = screen.getByText("Inventory");
     expect(inventory).toBeInTheDocument();
     expect(inventory.closest("a")).toHaveAttribute("href", "/categories");
-    // CategoryName here only receives `categoryId` (not a `name`), so it shows
-    // a skeleton placeholder wrapped by a CategoryAnchor -> /category/<id>.
+    // The category segment renders its name and links to the detail page.
+    expect(screen.getByText("Ship")).toBeInTheDocument();
+    expect(screen.getByText("Ship").closest("a")).toHaveAttribute(
+      "href",
+      "/category/6",
+    );
+    expect(container.querySelector(".mantine-Skeleton-root")).toBeFalsy();
+  });
+
+  it("renders a skeleton placeholder when the category name is absent", () => {
+    const { container } = renderWithMantine(<CategoryBreadcrumbs categoryId={6} />);
+    expect(screen.getByText("Inventory")).toBeInTheDocument();
     const categoryLink = container.querySelector('a[href="/category/6"]');
     expect(categoryLink).toBeTruthy();
     expect(

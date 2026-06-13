@@ -1,10 +1,10 @@
 import { eventType, staticSchema } from "inngest";
 
-import type { Prisma } from "@jitaspace/db";
-import { postUpdateCard } from "@jitaspace/chat";
-import { prisma } from "@jitaspace/db";
+import type { Prisma } from "../../../db";
+import { postUpdateCard } from "../../../chat";
+import { prisma } from "../../../db";
 import { GetKillmailsKillmailIdKillmailHash200 } from "@jitaspace/esi-client";
-import { redis } from "@jitaspace/kv";
+import { redis } from "../../../kv";
 
 import { client } from "../../../client";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
