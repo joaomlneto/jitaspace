@@ -4,7 +4,7 @@
 
 Turborepo monorepo for an EVE Online companion web application. Two apps (`apps/web`, `apps/cli`) and 20+ shared packages under `packages/`. The main product is `apps/web`, a Next.js 16 app deployed to Vercel. Background jobs run inside `apps/web` via Inngest — there is no `apps/worker`.
 
-**Tech stack:** Node.js >=24.16.0 · TypeScript 5.9 · Next.js 16 · React 19 · Mantine 8 · TanStack Query 5 · Prisma 7 + PostgreSQL · NextAuth 4 · Inngest · Turborepo 2 · pnpm 11.3.0
+**Tech stack:** Node.js >=24.15.0 · TypeScript 5.9 · Next.js 16 · React 19 · Mantine 8 · TanStack Query 5 · Prisma 7 + PostgreSQL · NextAuth 4 · Inngest · Turborepo 2 · pnpm 11.3.0
 
 ---
 

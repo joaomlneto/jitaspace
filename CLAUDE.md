@@ -10,7 +10,7 @@ JitaSpace is a Turborepo + pnpm monorepo for an EVE Online companion web app (ma
 
 ## Package Manager
 
-Use **pnpm exclusively** — the root `preinstall` hook runs `only-allow pnpm`, so `npm install`/`yarn` fail. Pinned to `pnpm@11.3.0`; Node `>=24.16.0` (see `.nvmrc`).
+Use **pnpm exclusively** — the root `preinstall` hook runs `only-allow pnpm`, so `npm install`/`yarn` fail. Pinned to `pnpm@11.3.0`; Node `>=24.15.0` (see `.nvmrc`).
 
 ```bash
 pnpm install                    # install all workspace dependencies
@@ -96,7 +96,7 @@ tooling/
 
 ## Tech Stack
 
-- **Runtime/Lang:** Node.js ≥24.16.0, TypeScript ~5.9
+- **Runtime/Lang:** Node.js ≥24.15.0, TypeScript ~5.9
 - **Monorepo:** Turborepo ~2.9 + pnpm 11
 - **Frontend:** Next.js 16 (App Router), React 19, Mantine 8, Zustand
 - **Data fetching:** TanStack React Query 5
