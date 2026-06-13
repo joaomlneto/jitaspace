@@ -16,6 +16,9 @@ const config = {
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
     "@jitaspace/auth",
+    "@jitaspace/datatable",
+    "@jitaspace/datatable-mantine",
+    "@jitaspace/datatable-tanstack",
     "@jitaspace/db",
     "@jitaspace/esi-metadata",
     "@jitaspace/esi-client",
