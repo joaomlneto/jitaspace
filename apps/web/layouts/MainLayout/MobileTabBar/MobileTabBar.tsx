@@ -1,6 +1,7 @@
 "use client";
 
 import type { TablerIcon } from "@tabler/icons-react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Text } from "@mantine/core";
@@ -35,9 +36,7 @@ function isActive(pathname: string | null, tab: Tab): boolean {
   return (tab.match ?? []).some((prefix) => pathname?.startsWith(prefix));
 }
 
-export function MobileTabBar() {
-  const pathname = usePathname();
-
+function TabBarLinks({ pathname }: Readonly<{ pathname: string | null }>) {
   return (
     <nav className={classes.bar} aria-label="Primary">
       {tabs.map((tab) => {
@@ -58,5 +57,21 @@ export function MobileTabBar() {
         );
       })}
     </nav>
+  );
+}
+
+function ActiveTabBar() {
+  const pathname = usePathname();
+  return <TabBarLinks pathname={pathname} />;
+}
+
+export function MobileTabBar() {
+  // usePathname reads request data; under Next's Cache Components it must sit
+  // inside a Suspense boundary or it blocks prerendering of every page. The
+  // fallback renders the same bar without active state, so there's no shift.
+  return (
+    <Suspense fallback={<TabBarLinks pathname={null} />}>
+      <ActiveTabBar />
+    </Suspense>
   );
 }
