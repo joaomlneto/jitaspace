@@ -87,12 +87,17 @@ const taskOptions = (job: JobDefinition) => ({
 const toTriggerCron = (
   cron: string,
 ): string | { pattern: string; timezone: string } => {
-  const match = /^TZ=(\S+)\s+(.+)$/.exec(cron.trim());
-  if (match) {
-    const [, timezone, pattern] = match;
-    if (timezone && pattern) return { pattern, timezone };
+  const trimmed = cron.trim();
+  // Parse an optional `TZ=Area/City ` prefix without a regex (avoids ReDoS).
+  if (trimmed.startsWith("TZ=")) {
+    const spaceIndex = trimmed.indexOf(" ");
+    if (spaceIndex > 3) {
+      const timezone = trimmed.slice(3, spaceIndex);
+      const pattern = trimmed.slice(spaceIndex + 1).trim();
+      if (timezone && pattern) return { pattern, timezone };
+    }
   }
-  return cron;
+  return trimmed;
 };
 
 const runJob = async (
