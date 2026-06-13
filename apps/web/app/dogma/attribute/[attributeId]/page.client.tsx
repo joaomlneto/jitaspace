@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import { TypeAnchor, TypeAvatar } from "@jitaspace/ui";
+import { DogmaAttributeValue, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
 
@@ -30,6 +30,7 @@ export interface PageProps {
   published: boolean | null;
   stackable: boolean | null;
   unit: string | null;
+  unitId: number | null;
   iconId: number | null;
   types: { typeId: number; name: string; value: number; groupId: number }[];
   groups: { groupId: number; name: string }[];
@@ -46,6 +47,7 @@ export default function DogmaAttributePage({
   published,
   stackable,
   unit,
+  unitId,
   iconId,
   types,
   groups,
@@ -75,7 +77,18 @@ export default function DogmaAttributePage({
     ...(name ? [{ label: "Name", value: name }] : []),
     ...(displayName ? [{ label: "Display Name", value: displayName }] : []),
     ...(defaultValue !== null
-      ? [{ label: "Default Value", value: defaultValue }]
+      ? [
+          {
+            label: "Default Value",
+            value: (
+              <DogmaAttributeValue
+                value={defaultValue}
+                unitId={unitId ?? undefined}
+                unitSymbol={unit ?? undefined}
+              />
+            ),
+          },
+        ]
       : []),
     { label: "High is Good", value: booleanBadge(highIsGood) },
     { label: "Published", value: booleanBadge(published) },
@@ -143,7 +156,13 @@ export default function DogmaAttributePage({
                           </TypeAnchor>
                         </Group>
                       </Table.Td>
-                      <Table.Td align="right">{type.value}</Table.Td>
+                      <Table.Td align="right">
+                        <DogmaAttributeValue
+                          value={type.value}
+                          unitId={unitId ?? undefined}
+                          unitSymbol={unit ?? undefined}
+                        />
+                      </Table.Td>
                     </Table.Tr>
                   ))}
                 </Table.Tbody>

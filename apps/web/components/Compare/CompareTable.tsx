@@ -4,16 +4,13 @@ import { Group, JsonInput, Table } from "@mantine/core";
 import { useDogmaAttributes, useTypes } from "@jitaspace/hooks";
 import {
   DogmaAttributeAnchor,
+  formatDogmaAttributeValue,
   TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/ui";
 
 import { DogmaAttributeName } from "~/components/Text";
-
-
-
-
 
 export interface CompareTableProps {
   typeIds: number[];
@@ -103,15 +100,20 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
                   <DogmaAttributeName attributeId={attribute.attribute_id} />
                 </DogmaAttributeAnchor>
               </Table.Td>
-              {sortedTypes.map((type) => (
-                <Table.Td key={type.type_id}>
-                  {(type.dogma_attributes ?? [])
-                    .find(
-                      (entry) => entry.attribute_id === attribute.attribute_id,
-                    )
-                    ?.value.toLocaleString()}
-                </Table.Td>
-              ))}
+              {sortedTypes.map((type) => {
+                const value = (type.dogma_attributes ?? []).find(
+                  (entry) => entry.attribute_id === attribute.attribute_id,
+                )?.value;
+                return (
+                  <Table.Td key={type.type_id}>
+                    {value === undefined
+                      ? null
+                      : formatDogmaAttributeValue(value, {
+                          unitId: attribute.unit_id,
+                        })}
+                  </Table.Td>
+                );
+              })}
             </Table.Tr>
           ))}
         </Table.Tbody>

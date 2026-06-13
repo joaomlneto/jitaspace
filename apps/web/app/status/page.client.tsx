@@ -38,6 +38,7 @@ import { env } from "~/env";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
 import { EsiStatusDashboard } from "../../components/Status/EsiStatusDashboard";
 import { InngestJobsDashboard } from "../../components/Status/InngestJobsDashboard";
+import { TriggerJobsDashboard } from "../../components/Status/TriggerJobsDashboard";
 
 export interface PageProps {
   vercelStatusData: VercelStatusResponse | null;
@@ -299,6 +300,8 @@ export default function StatusPage({
         </SimpleGrid>
 
         <InngestJobsDashboard />
+
+        <TriggerJobsDashboard />
 
         <EsiRateLimitDashboard />
       </Stack>

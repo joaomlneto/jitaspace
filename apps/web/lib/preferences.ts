@@ -7,6 +7,7 @@ export const PREFERENCES_STORAGE_KEY = "jitaspace.preferences";
 
 export const DEFAULT_ESI_ACCEPT_LANGUAGE = "en";
 export const DEFAULT_APP_THEME = "default";
+export const DEFAULT_EXPERIMENTAL_DATA_TABLES = false;
 
 export const ESI_ACCEPT_LANGUAGE_OPTIONS = [
   { languageCode: "en", label: "English", countryCode: "GB" },
@@ -36,8 +37,10 @@ export type AppTheme = (typeof APP_THEME_OPTIONS)[number]["value"];
 type PreferencesState = {
   esiAcceptLanguage: EsiAcceptLanguage;
   appTheme: AppTheme;
+  experimentalDataTables: boolean;
   setEsiAcceptLanguage: (value: EsiAcceptLanguage) => void;
   setAppTheme: (value: AppTheme) => void;
+  setExperimentalDataTables: (value: boolean) => void;
 };
 
 export const sanitizeAppTheme = (
@@ -75,8 +78,11 @@ export const usePreferencesStore = create<PreferencesState>()(
     (set) => ({
       esiAcceptLanguage: DEFAULT_ESI_ACCEPT_LANGUAGE,
       appTheme: DEFAULT_APP_THEME,
+      experimentalDataTables: DEFAULT_EXPERIMENTAL_DATA_TABLES,
       setEsiAcceptLanguage: (value) => set({ esiAcceptLanguage: value }),
       setAppTheme: (value) => set({ appTheme: value }),
+      setExperimentalDataTables: (value) =>
+        set({ experimentalDataTables: value }),
     }),
     {
       name: PREFERENCES_STORAGE_KEY,
@@ -90,6 +96,10 @@ export const usePreferencesStore = create<PreferencesState>()(
             sanitizeEsiAcceptLanguage(persisted.esiAcceptLanguage) ??
             DEFAULT_ESI_ACCEPT_LANGUAGE,
           appTheme: sanitizeAppTheme(persisted.appTheme) ?? DEFAULT_APP_THEME,
+          experimentalDataTables:
+            typeof persisted.experimentalDataTables === "boolean"
+              ? persisted.experimentalDataTables
+              : DEFAULT_EXPERIMENTAL_DATA_TABLES,
         };
       },
     },
