@@ -4,7 +4,7 @@ Shared authentication utilities and Zod schemas for JitaSpace.
 
 ## Overview
 
-Provides helper functions and validation schemas used across the JitaSpace monorepo for working with EVE Online SSO tokens, NextAuth sessions, and related auth data.
+Provides helper functions and validation schemas used across the JitaSpace monorepo for working with EVE Online SSO tokens and related auth data.
 
 ## Exports
 
@@ -30,6 +30,5 @@ pnpm dev     # Watch mode
 
 ## Dependencies
 
-- `next-auth` — Session and JWT types
 - `next` — Next.js types
 - `@jitaspace/esi-metadata` — ESI scope definitions

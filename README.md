@@ -38,7 +38,7 @@
 | Database | PostgreSQL + Prisma 7 |
 | Cache & queues | Redis + Bull |
 | Background jobs | Inngest |
-| Auth | NextAuth — EVE Online SSO |
+| Auth | Custom EVE Online SSO (OAuth2 + PKCE) |
 | Rich text | Tiptap + EVE HTML extensions |
 | API codegen | Kubb (OpenAPI → TypeScript) |
 | Testing | Jest + Cypress |

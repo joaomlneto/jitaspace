@@ -62,7 +62,7 @@ tooling/
 - **Frontend:** Next.js 16, React 19, Mantine 8
 - **Data Fetching:** TanStack React Query 5
 - **Database:** Prisma 7 + PostgreSQL
-- **Auth:** NextAuth 4 with EVE Online OAuth2
+- **Auth:** Custom EVE Online SSO OAuth2 flow (authorization code + PKCE)
 - **Background Jobs:** Inngest
 - **API Client Generation:** Kubb 3 (generates from OpenAPI specs)
 - **Testing:** Jest 30, Cypress 15

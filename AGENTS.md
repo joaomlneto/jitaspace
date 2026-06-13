@@ -7,7 +7,7 @@ Big picture
 - The web app (`apps/web`) is a Next.js 16 app that imports many local packages via `@jitaspace/*`. Local packages are consumed directly in source (see `apps/web/next.config.mjs` → `transpilePackages`).
 - Data layer: Prisma (packages/db) with a large schema at `packages/db/prisma/schema.prisma`. Database client is generated into the package (run `pnpm db:generate`).
 - API clients: generated with Kubb from OpenAPI specs (see `packages/esi-client/kubb.config.ts` and `packages/*-client/*/swagger.json`). Generated code lives under each client package (e.g. `packages/esi-client/src/generated`). Do NOT edit generated files.
-- Auth: NextAuth-based SSO in `packages/auth` (key file: `packages/auth/src/auth-options.ts`). Refresh token handling uses helper utilities in `packages/auth-utils`.
+- Auth: Custom EVE Online SSO OAuth2 flow (authorization code + PKCE) in `packages/auth` (entry: `packages/auth/index.ts`, flow in `packages/auth/src/oauth/`). Token exchange/refresh helpers live in `packages/auth-utils`.
 
 Essential conventions (project-specific)
 - Package imports use the internal scope `@jitaspace/*` and `workspace:*` version specifiers in package.json. Respect this when adding new packages.
