@@ -7,9 +7,9 @@ import { defineConfig } from "@trigger.dev/sdk";
  * the placeholder) before `trigger.dev dev`/`deploy`.
  *
  * Prisma 7 uses the `prisma-client` generator, so the build uses modern mode.
- * Modern mode does NOT run `prisma generate` — it must run before the build.
- * The deploy installs from the repo root and `@jitaspace/db`'s postinstall
- * runs `prisma generate`, so the install step covers it.
+ * Modern mode does NOT run `prisma generate` — it must run before the build, so
+ * the Trigger.dev project sets a pre-build command `pnpm db:generate` (Console →
+ * build settings; documented in this package's README).
  *
  * runtime "node-22" → Node 22.16.0: the repo pins `pnpm@11.3.0`, which needs
  * Node >=22.13, but Trigger's default build runtime is older. node-22 is the
