@@ -17,6 +17,8 @@ import {
 import type { DataTableColumn } from "@jitaspace/datatable";
 
 import { DataTable } from "~/components/DataTable";
+import { usePreferencesStore } from "~/lib/preferences";
+import { LoyaltyPointsTableClassic } from "./LoyaltyPointsTableClassic";
 
 interface LoyaltyPointsTableProps {
   corporations: {
@@ -214,10 +216,10 @@ function makeRequiredItemsPriceColumn(
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Experimental component (engine-agnostic, with per-table engine selector)
 // ---------------------------------------------------------------------------
 
-export const LoyaltyPointsTable = memo(
+const LoyaltyPointsTableExperimental = memo(
   ({ corporations, types, offers }: LoyaltyPointsTableProps) => {
     const sortedCorporations = useMemo(
       () => [...corporations].sort((a, b) => a.name.localeCompare(b.name)),
@@ -503,4 +505,23 @@ export const LoyaltyPointsTable = memo(
     );
   },
 );
+LoyaltyPointsTableExperimental.displayName = "LoyaltyPointsTableExperimental";
+
+// ---------------------------------------------------------------------------
+// Public component — picks the implementation based on the experimental setting.
+// OFF (default): the original mantine-react-table table (unchanged behaviour).
+// ON: the engine-agnostic table with a per-table engine selector.
+// ---------------------------------------------------------------------------
+
+export const LoyaltyPointsTable = memo((props: LoyaltyPointsTableProps) => {
+  const experimentalEnabled = usePreferencesStore(
+    (state) => state.experimentalDataTables,
+  );
+
+  if (!experimentalEnabled) {
+    return <LoyaltyPointsTableClassic {...props} />;
+  }
+
+  return <LoyaltyPointsTableExperimental {...props} />;
+});
 LoyaltyPointsTable.displayName = "LoyaltyPointsTable";

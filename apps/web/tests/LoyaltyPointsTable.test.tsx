@@ -346,3 +346,27 @@ describe("LoyaltyPointsTable — single corporation", () => {
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 });
+
+describe("LoyaltyPointsTable — classic engine (experimental off)", () => {
+  beforeEach(() => {
+    (useFuzzworkRegionalMarketAggregates as jest.Mock).mockReturnValue({
+      data: {},
+    });
+    // Disable experimental → the chooser renders the classic MRT table.
+    usePreferencesStore.setState({ experimentalDataTables: false });
+  });
+
+  it("renders the classic table (no engine selector)", () => {
+    wrap(
+      React.createElement(LoyaltyPointsTable, {
+        corporations,
+        types,
+        offers,
+      }),
+    );
+    expect(screen.getByRole("table")).toBeInTheDocument();
+    expect(screen.getByText("LP Cost")).toBeInTheDocument();
+    // The per-table engine selector only appears in the experimental version.
+    expect(screen.queryByText("Table engine")).not.toBeInTheDocument();
+  });
+});
