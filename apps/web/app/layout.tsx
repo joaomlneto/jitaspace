@@ -88,7 +88,10 @@ export const metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#9bb4d0",
+  // Matches the manifest theme_color and the dark app header so the installed
+  // PWA title bar (and mobile status bar) blend with the UI. The runtime
+  // theme-color meta tag takes precedence over the manifest, so keep them in sync.
+  themeColor: "#04070c",
 };
 
 export default function RootLayout({
