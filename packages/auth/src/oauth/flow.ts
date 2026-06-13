@@ -5,7 +5,6 @@ import {
   getEveSsoAccessTokenPayload,
 } from "@jitaspace/auth-utils";
 
-import { env } from "../../env";
 import { sealDataWithAuthSecret, unsealDataWithAuthSecret } from "../../utils";
 import {
   EVE_AUTHORIZE_URL,
@@ -44,13 +43,18 @@ export type LoginResult = z.infer<typeof loginResultSchema>;
  * Build the EVE SSO authorization URL and the sealed flow data that must be
  * stored in a short-lived, httpOnly cookie. The returned `sealedFlow` carries
  * the `state` (CSRF binding) and PKCE `code_verifier`.
+ *
+ * Credentials (`eveClientId`, `nextAuthSecret`) are supplied by the caller —
+ * this package reads no environment variables of its own.
  */
 export async function createLoginFlow(params: {
   scopes: string[];
   redirectUri: string;
   returnTo: string;
+  eveClientId: string;
+  nextAuthSecret: string;
 }): Promise<{ authorizationUrl: string; sealedFlow: string }> {
-  const { scopes, redirectUri, returnTo } = params;
+  const { scopes, redirectUri, returnTo, eveClientId, nextAuthSecret } = params;
 
   const state = generateState();
   const codeVerifier = generateCodeVerifier();
@@ -59,7 +63,7 @@ export async function createLoginFlow(params: {
   const authorizationParams = new URLSearchParams({
     response_type: "code",
     redirect_uri: redirectUri,
-    client_id: env.EVE_CLIENT_ID,
+    client_id: eveClientId,
     scope: scopes.join(" "),
     state,
     code_challenge: codeChallenge,
@@ -68,7 +72,7 @@ export async function createLoginFlow(params: {
 
   const sealedFlow = await sealDataWithAuthSecret({
     data: { state, codeVerifier, returnTo } satisfies FlowState,
-    secret: env.NEXTAUTH_SECRET,
+    secret: nextAuthSecret,
     ttlMs: OAUTH_FLOW_MAX_AGE_SECONDS * 1000,
   });
 
@@ -82,13 +86,26 @@ export async function createLoginFlow(params: {
  * Validate the callback against the sealed flow cookie, then exchange the
  * authorization code (+ PKCE verifier) for tokens. Returns the access token and
  * a sealed refresh-token blob in the same shape the rest of the app expects.
+ *
+ * Credentials (`eveClientId`, `eveClientSecret`, `nextAuthSecret`) are supplied
+ * by the caller — this package reads no environment variables of its own.
  */
 export async function completeLoginFlow(params: {
   code: string | null;
   state: string | null;
   sealedFlow: string | undefined;
+  eveClientId: string;
+  eveClientSecret: string;
+  nextAuthSecret: string;
 }): Promise<LoginResult & { returnTo: string }> {
-  const { code, state, sealedFlow } = params;
+  const {
+    code,
+    state,
+    sealedFlow,
+    eveClientId,
+    eveClientSecret,
+    nextAuthSecret,
+  } = params;
 
   if (!sealedFlow) throw new OAuthFlowError("Missing OAuth flow cookie.");
   if (!code) throw new OAuthFlowError("Missing authorization code.");
@@ -98,7 +115,7 @@ export async function completeLoginFlow(params: {
     flow = flowStateSchema.parse(
       await unsealDataWithAuthSecret({
         data: sealedFlow,
-        secret: env.NEXTAUTH_SECRET,
+        secret: nextAuthSecret,
         ttlMs: OAUTH_FLOW_MAX_AGE_SECONDS * 1000,
       }),
     );
@@ -113,8 +130,8 @@ export async function completeLoginFlow(params: {
   }
 
   const tokens = await exchangeEveSsoToken({
-    eveClientId: env.EVE_CLIENT_ID,
-    eveClientSecret: env.EVE_CLIENT_SECRET,
+    eveClientId,
+    eveClientSecret,
     code,
     codeVerifier: flow.codeVerifier,
   });
@@ -129,7 +146,7 @@ export async function completeLoginFlow(params: {
       accessTokenExpiration: payload.exp,
       refreshToken: tokens.refresh_token,
     },
-    secret: env.NEXTAUTH_SECRET,
+    secret: nextAuthSecret,
   });
 
   return {
@@ -140,20 +157,26 @@ export async function completeLoginFlow(params: {
 }
 
 /** Seal the login result for the brief, single-use handoff cookie. */
-export async function sealLoginResult(result: LoginResult): Promise<string> {
+export async function sealLoginResult(
+  result: LoginResult,
+  options: { nextAuthSecret: string },
+): Promise<string> {
   return await sealDataWithAuthSecret({
     data: result satisfies LoginResult,
-    secret: env.NEXTAUTH_SECRET,
+    secret: options.nextAuthSecret,
     ttlMs: OAUTH_RESULT_MAX_AGE_SECONDS * 1000,
   });
 }
 
 /** Unseal + validate the handoff cookie. Throws if tampered or expired. */
-export async function readLoginResult(sealed: string): Promise<LoginResult> {
+export async function readLoginResult(
+  sealed: string,
+  options: { nextAuthSecret: string },
+): Promise<LoginResult> {
   return loginResultSchema.parse(
     await unsealDataWithAuthSecret({
       data: sealed,
-      secret: env.NEXTAUTH_SECRET,
+      secret: options.nextAuthSecret,
       ttlMs: OAUTH_RESULT_MAX_AGE_SECONDS * 1000,
     }),
   );

@@ -8,8 +8,6 @@ import {
   tokenRefreshDataSchema,
 } from "@jitaspace/auth-utils";
 
-// How much time before token expires we're willing to refresh it
-import { env } from "../env"; // TODO: Support optionally requesting a subset of existing scopes
 import { sealDataWithAuthSecret, unsealDataWithAuthSecret } from "../utils";
 
 // How much time (in ms) before token expires we're willing to refresh it
@@ -23,6 +21,10 @@ const ACCESS_TOKEN_TOO_OLD_TIME = 30 * 24 * 3600 * 1000; // 30 days
 // TODO: Support optionally requesting a subset of existing scopes
 // See https://docs.esi.evetech.net/docs/sso/refreshing_access_tokens.html
 
+/**
+ * Credentials (`nextAuthSecret`, `eveClientId`, `eveClientSecret`) are supplied
+ * by the caller — this package reads no environment variables of its own.
+ */
 export const refreshTokenApiRouteHandler = async (
   req: NextApiRequest,
   res: NextApiResponse<
@@ -32,7 +34,13 @@ export const refreshTokenApiRouteHandler = async (
         refreshTokenData: string;
       }
   >,
+  config: {
+    nextAuthSecret: string;
+    eveClientId: string;
+    eveClientSecret: string;
+  },
 ) => {
+  const { nextAuthSecret, eveClientId, eveClientSecret } = config;
   const body = req.body;
 
   // Confirm body is an (encrypted) string
@@ -41,7 +49,7 @@ export const refreshTokenApiRouteHandler = async (
   // Attempt to unseal its contents
   const decodedBody = await unsealDataWithAuthSecret({
     data: body,
-    secret: env.NEXTAUTH_SECRET,
+    secret: nextAuthSecret,
   });
 
   // Deserialize unsealed contents back into JSON
@@ -67,17 +75,10 @@ export const refreshTokenApiRouteHandler = async (
       .json({ error: "Access token is too old. Must reauthenticate." });
   }
 
-  // check if null
-  if (env.EVE_CLIENT_ID === undefined || env.EVE_CLIENT_SECRET === undefined) {
-    return res
-      .status(HttpStatusCode.InternalServerError)
-      .json({ error: "EVE_CLIENT_ID or EVE_CLIENT_SECRET is undefined" });
-  }
-
   // Attempt to refresh token
   const { access_token, refresh_token } = await refreshEveSsoToken({
-    eveClientId: env.EVE_CLIENT_ID,
-    eveClientSecret: env.EVE_CLIENT_SECRET,
+    eveClientId,
+    eveClientSecret,
     refreshToken,
   });
 
@@ -94,7 +95,7 @@ export const refreshTokenApiRouteHandler = async (
       accessTokenExpiration: payload.exp,
       refreshToken: refresh_token,
     },
-    secret: env.NEXTAUTH_SECRET,
+    secret: nextAuthSecret,
   });
 
   return res.json({

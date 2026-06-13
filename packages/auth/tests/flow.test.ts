@@ -1,14 +1,8 @@
-jest.mock("@jitaspace/auth-utils", () => ({
-  exchangeEveSsoToken: jest.fn(),
-  getEveSsoAccessTokenPayload: jest.fn(),
-}));
-
 import {
   exchangeEveSsoToken,
   getEveSsoAccessTokenPayload,
 } from "@jitaspace/auth-utils";
 
-import { unsealDataWithAuthSecret } from "../utils/unsealDataWithAuthSecret";
 import {
   completeLoginFlow,
   createLoginFlow,
@@ -16,8 +10,18 @@ import {
   readLoginResult,
   sealLoginResult,
 } from "../src/oauth";
+import { unsealDataWithAuthSecret } from "../utils/unsealDataWithAuthSecret";
 
-const secret = process.env.NEXTAUTH_SECRET!;
+jest.mock("@jitaspace/auth-utils", () => ({
+  exchangeEveSsoToken: jest.fn(),
+  getEveSsoAccessTokenPayload: jest.fn(),
+}));
+
+// The package reads no env of its own — callers pass these in. @hapi/iron
+// requires a secret of at least 32 characters.
+const nextAuthSecret = "0123456789abcdef0123456789abcdef";
+const eveClientId = "test-client-id";
+const eveClientSecret = "test-client-secret";
 
 const stateFromUrl = (authorizationUrl: string) =>
   new URL(authorizationUrl).searchParams.get("state")!;
@@ -28,6 +32,8 @@ describe("createLoginFlow", () => {
       scopes: ["publicData", "esi-skills.read_skills.v1"],
       redirectUri: "https://jita.space/api/auth/callback/eveonline",
       returnTo: "/skills",
+      eveClientId,
+      nextAuthSecret,
     });
 
     const url = new URL(authorizationUrl);
@@ -38,6 +44,7 @@ describe("createLoginFlow", () => {
     expect(url.searchParams.get("redirect_uri")).toBe(
       "https://jita.space/api/auth/callback/eveonline",
     );
+    expect(url.searchParams.get("client_id")).toBe(eveClientId);
     expect(url.searchParams.get("scope")).toBe(
       "publicData esi-skills.read_skills.v1",
     );
@@ -46,7 +53,7 @@ describe("createLoginFlow", () => {
 
     const sealed = (await unsealDataWithAuthSecret({
       data: sealedFlow,
-      secret,
+      secret: nextAuthSecret,
     })) as { state: string; codeVerifier: string; returnTo: string };
     expect(sealed.state).toBe(url.searchParams.get("state"));
     expect(sealed.returnTo).toBe("/skills");
@@ -72,23 +79,38 @@ describe("completeLoginFlow", () => {
       scopes: [],
       redirectUri: "https://jita.space/cb",
       returnTo: "/home",
+      eveClientId,
+      nextAuthSecret,
     });
 
     const result = await completeLoginFlow({
       code: "the-code",
       state: stateFromUrl(authorizationUrl),
       sealedFlow,
+      eveClientId,
+      eveClientSecret,
+      nextAuthSecret,
     });
 
     expect(result.accessToken).toBe("AT");
     expect(result.returnTo).toBe("/home");
     expect(typeof result.encryptedRefreshToken).toBe("string");
     expect(exchangeEveSsoToken).toHaveBeenCalledTimes(1);
+    expect(exchangeEveSsoToken).toHaveBeenCalledWith(
+      expect.objectContaining({ eveClientId, eveClientSecret }),
+    );
   });
 
   it("throws when the flow cookie is missing", async () => {
     await expect(
-      completeLoginFlow({ code: "c", state: "s", sealedFlow: undefined }),
+      completeLoginFlow({
+        code: "c",
+        state: "s",
+        sealedFlow: undefined,
+        eveClientId,
+        eveClientSecret,
+        nextAuthSecret,
+      }),
     ).rejects.toBeInstanceOf(OAuthFlowError);
   });
 
@@ -97,12 +119,17 @@ describe("completeLoginFlow", () => {
       scopes: [],
       redirectUri: "https://jita.space/cb",
       returnTo: "/",
+      eveClientId,
+      nextAuthSecret,
     });
     await expect(
       completeLoginFlow({
         code: null,
         state: stateFromUrl(authorizationUrl),
         sealedFlow,
+        eveClientId,
+        eveClientSecret,
+        nextAuthSecret,
       }),
     ).rejects.toBeInstanceOf(OAuthFlowError);
   });
@@ -112,9 +139,18 @@ describe("completeLoginFlow", () => {
       scopes: [],
       redirectUri: "https://jita.space/cb",
       returnTo: "/",
+      eveClientId,
+      nextAuthSecret,
     });
     await expect(
-      completeLoginFlow({ code: "c", state: "WRONG", sealedFlow }),
+      completeLoginFlow({
+        code: "c",
+        state: "WRONG",
+        sealedFlow,
+        eveClientId,
+        eveClientSecret,
+        nextAuthSecret,
+      }),
     ).rejects.toThrow(/state mismatch/i);
     expect(exchangeEveSsoToken).not.toHaveBeenCalled();
   });
@@ -122,11 +158,11 @@ describe("completeLoginFlow", () => {
 
 describe("sealLoginResult / readLoginResult", () => {
   it("round-trips the login result", async () => {
-    const sealed = await sealLoginResult({
-      accessToken: "AT",
-      encryptedRefreshToken: "ERT",
-    });
-    expect(await readLoginResult(sealed)).toEqual({
+    const sealed = await sealLoginResult(
+      { accessToken: "AT", encryptedRefreshToken: "ERT" },
+      { nextAuthSecret },
+    );
+    expect(await readLoginResult(sealed, { nextAuthSecret })).toEqual({
       accessToken: "AT",
       encryptedRefreshToken: "ERT",
     });

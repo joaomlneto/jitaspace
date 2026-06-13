@@ -9,6 +9,7 @@ import {
   sealLoginResult,
 } from "@jitaspace/auth";
 
+import { env } from "~/env";
 import { getRequestOrigin } from "~/lib/serverAuth";
 
 /**
@@ -50,12 +51,15 @@ export async function GET(req: NextRequest) {
         code: params.get("code"),
         state: params.get("state"),
         sealedFlow,
+        eveClientId: env.EVE_CLIENT_ID,
+        eveClientSecret: env.EVE_CLIENT_SECRET,
+        nextAuthSecret: env.NEXTAUTH_SECRET,
       });
 
-    const sealedResult = await sealLoginResult({
-      accessToken,
-      encryptedRefreshToken,
-    });
+    const sealedResult = await sealLoginResult(
+      { accessToken, encryptedRefreshToken },
+      { nextAuthSecret: env.NEXTAUTH_SECRET },
+    );
 
     const response = NextResponse.redirect(
       `${origin}/login/complete?returnTo=${encodeURIComponent(returnTo)}`,

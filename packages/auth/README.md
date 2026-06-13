@@ -11,27 +11,31 @@ This package exports a ready-to-use NextAuth `authOptions` object pre-configured
 ## Usage
 
 ```ts
-import { authOptions } from "@jitaspace/auth";
 import NextAuth from "next-auth";
+
+import { authOptions } from "@jitaspace/auth";
 
 export default NextAuth(authOptions);
 ```
 
 ## Exports
 
-| Export | Description |
-|---|---|
-| `authOptions` | NextAuth options object with EVE Online provider |
-| `refreshTokenApiRouteHandler` | API route handler for refreshing EVE SSO tokens |
+| Export                        | Description                                      |
+| ----------------------------- | ------------------------------------------------ |
+| `authOptions`                 | NextAuth options object with EVE Online provider |
+| `refreshTokenApiRouteHandler` | API route handler for refreshing EVE SSO tokens  |
 
-## Environment Variables
+## Configuration
 
-| Variable | Description |
-|---|---|
-| `EVE_CLIENT_ID` | EVE Online OAuth2 client ID |
-| `EVE_CLIENT_SECRET` | EVE Online OAuth2 client secret |
-| `NEXTAUTH_SECRET` | Secret used to sign/encrypt NextAuth JWTs and cookies |
-| `NEXTAUTH_URL` | Canonical URL of your Next.js app |
+This package reads **no** environment variables of its own. The host
+application (e.g. `apps/web`) reads and validates its own environment and passes
+the required credentials into each function as arguments:
+
+| Field             | Description                                                             |
+| ----------------- | ----------------------------------------------------------------------- |
+| `eveClientId`     | EVE Online OAuth2 client ID                                             |
+| `eveClientSecret` | EVE Online OAuth2 client secret                                         |
+| `nextAuthSecret`  | Secret used to seal/unseal the OAuth flow & result cookies (≥ 32 chars) |
 
 ## Dependencies
 

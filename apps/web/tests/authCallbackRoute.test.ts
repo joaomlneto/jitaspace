@@ -1,8 +1,8 @@
 /**
  * @jest-environment node
  */
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 const mockCompleteLoginFlow = jest.fn();
 const mockSealLoginResult = jest.fn();
@@ -17,9 +17,20 @@ jest.mock("@jitaspace/auth", () => ({
   OAUTH_RESULT_MAX_AGE_SECONDS: 60,
 }));
 
+jest.mock("~/env", () => ({
+  env: {
+    EVE_CLIENT_ID: "test-eve-client-id",
+    EVE_CLIENT_SECRET: "test-eve-client-secret",
+    NEXTAUTH_SECRET: "test-nextauth-secret",
+  },
+}));
+
 const loadGET = () =>
-  (require("../app/api/auth/callback/eveonline/route") as { GET: (req: NextRequest) => Promise<Response> })
-    .GET;
+  (
+    require("../app/api/auth/callback/eveonline/route") as {
+      GET: (req: NextRequest) => Promise<Response>;
+    }
+  ).GET;
 
 const headers = {
   "x-forwarded-host": "jita.space",

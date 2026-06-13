@@ -4,6 +4,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 import { refreshTokenApiRouteHandler } from "@jitaspace/auth";
 
+import { env } from "~/env";
+
 type RefreshTokenApiResponseBody =
   | { error: string }
   | {
@@ -50,6 +52,11 @@ const refreshCharacterTokenResult = async (
       body: refreshTokenData,
     } as NextApiRequest,
     response,
+    {
+      nextAuthSecret: env.NEXTAUTH_SECRET,
+      eveClientId: env.EVE_CLIENT_ID,
+      eveClientSecret: env.EVE_CLIENT_SECRET,
+    },
   );
 
   const { statusCode, body } = result();
