@@ -7,7 +7,7 @@ import userEvent from "@testing-library/user-event";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 
-import { DataTable } from "../../DataTable/DataTable";
+import { DataTable } from "../../DataTable/TanstackDataTable";
 
 interface Row {
   name: string;

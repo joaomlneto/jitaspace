@@ -11,7 +11,7 @@
     "clean": "rm -rf .turbo node_modules coverage",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
-    "test": "jest && node ../../scripts/prefix-lcov-paths.mjs packages/datatable-tanstack",
+    "test": "jest",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

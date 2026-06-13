@@ -7,7 +7,7 @@ import userEvent from "@testing-library/user-event";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 
-import { DataTable } from "../../DataTable/DataTable";
+import { DataTable } from "../../DataTable/MantineDataTable";
 
 // mantine-datatable gates every header/row cell behind its `visibleMediaQuery`
 // feature: each cell calls `useMediaQuery(query || "", true)` and renders
