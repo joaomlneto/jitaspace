@@ -46,6 +46,7 @@ import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   CategoryAnchor,
   DogmaAttributeAnchor,
+  DogmaAttributeValue,
   DogmaEffectAnchor,
   EveIconAvatar,
   GroupAnchor,
@@ -111,15 +112,6 @@ const booleanBadge = (value: boolean | null | undefined) => (
   </Badge>
 );
 
-/** Turn ASCII unit shorthand from the SDE into nicer typography (m3 -> m³). */
-const prettifyUnitSymbol = (symbol?: string): string | undefined =>
-  symbol
-    ? symbol
-        .replaceAll(/m3/gi, "m³")
-        .replaceAll("^3", "³")
-        .replaceAll("^2", "²")
-    : undefined;
-
 /** Locale-format a number, keeping useful precision for small fractions. */
 const formatNumber = (value: number): string => {
   if (value === 0) return "0";
@@ -129,37 +121,6 @@ const formatNumber = (value: number): string => {
   if (abs < 1) maximumFractionDigits = 4;
   if (abs < 0.001) maximumFractionDigits = 6;
   return value.toLocaleString(undefined, { maximumFractionDigits });
-};
-
-/**
- * Format a dogma attribute value the way the EVE client does, applying the
- * well-known unit transforms (resistances, percentages, multipliers) and
- * otherwise appending the unit symbol. Transforms are documented in the SDE
- * unit descriptions and verified against in-game values.
- */
-const formatAttributeValue = (value: number, unit?: UnitInfo): string => {
-  switch (unit?.unitId) {
-    // Inverse Absolute Percent — resistances. 0.0 => 100%, 1.0 => 0%.
-    case 108:
-      return `${formatNumber((1 - value) * 100)}%`;
-    // Absolute Percent. 0.0 => 0%, 1.0 => 100%.
-    case 127:
-      return `${formatNumber(value * 100)}%`;
-    // Modifier Percent — multiplier shown as a signed %. 1.1 => +10%, 0.9 => -10%.
-    case 109: {
-      const percent = (value - 1) * 100;
-      return `${percent > 0 ? "+" : ""}${formatNumber(percent)}%`;
-    }
-    // Boolean flag.
-    case 137:
-      return value >= 1 ? "Yes" : "No";
-    default: {
-      const symbol = prettifyUnitSymbol(unit?.symbol);
-      if (!symbol) return formatNumber(value);
-      if (symbol === "%") return `${formatNumber(value)}%`;
-      return `${formatNumber(value)} ${symbol}`;
-    }
-  }
 };
 
 function SectionHeading({
@@ -266,9 +227,14 @@ function AttributeValue({
       );
     default:
       return (
-        <Text ff="monospace" fw={600} c="eve.2">
-          {formatAttributeValue(value, unit)}
-        </Text>
+        <DogmaAttributeValue
+          value={value}
+          unitId={unit?.unitId}
+          unitSymbol={unit?.symbol}
+          ff="monospace"
+          fw={600}
+          c="eve.2"
+        />
       );
   }
 }

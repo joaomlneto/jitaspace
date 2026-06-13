@@ -13,6 +13,7 @@
     "EVE_CLIENT_ID",
     "EVE_CLIENT_SECRET",
     "EXPO_ROUTER_APP_ROOT",
+    "INNGEST_ENABLED",
     "INNGEST_EVENT_KEY",
     "INNGEST_SIGNING_KEY",
     "LOGTAIL_SOURCE_TOKEN",
@@ -26,7 +27,10 @@
     "SENTRY_ORG",
     "SENTRY_PROJECT",
     "SKIP_BUILD_STATIC_GENERATION",
-    "SKIP_ENV_VALIDATION"
+    "SKIP_ENV_VALIDATION",
+    "TRIGGER_API_URL",
+    "TRIGGER_PROJECT_REF",
+    "TRIGGER_SECRET_KEY"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
@@ -111,6 +115,10 @@
       "dependsOn": ["^topo", "kubb:generate"],
       "inputs": ["**/*.ts", "**/*.tsx", "package.json", "tsconfig.json"],
       "outputs": ["node_modules/.cache/tsbuildinfo.json"]
+    },
+    "deploy": {
+      "dependsOn": ["^db:generate", "^build"],
+      "cache": false
     }
   }
 }

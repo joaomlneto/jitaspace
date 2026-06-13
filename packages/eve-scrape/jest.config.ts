@@ -28,7 +28,7 @@ const config: Config = {
   // and skip the HTML report, whose vendored JS would trip the package's
   // checkJs type-check.
   coverageReporters: ["lcovonly", "text"],
-  collectCoverageFrom: ["functions/**/*.ts", "client.ts"],
+  collectCoverageFrom: ["adapter.ts", "client.ts"],
   clearMocks: true,
   restoreMocks: true,
 };
