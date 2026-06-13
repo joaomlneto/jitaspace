@@ -4,12 +4,17 @@ import type {
   InngestApiEvent,
   InngestStatusResponse,
 } from "~/lib/inngestStatus";
+import type { TriggerApiRun, TriggerStatusResponse } from "~/lib/triggerStatus";
 import { env } from "~/env";
 import {
   buildInngestStatusResponse,
   collectTerminalRuns,
   INNGEST_STATUS_WINDOW_HOURS,
 } from "~/lib/inngestStatus";
+import {
+  buildTriggerStatusResponse,
+  TRIGGER_STATUS_WINDOW_HOURS,
+} from "~/lib/triggerStatus";
 
 /**
  * Server function summarizing Inngest background-job runs for the status
@@ -137,4 +142,95 @@ export async function getInngestStatus(): Promise<InngestStatusResponse> {
     };
   }
   return cache.payload;
+}
+
+// ---------------------------------------------------------------------------
+// Trigger.dev background-jobs status
+//
+// Mirrors getInngestStatus but backed by the Trigger.dev Management API
+// (GET /api/v1/runs), which lists runs directly. The secret key authenticates
+// us and must never reach the client; this function only returns aggregated
+// run data. When the key is unset the dashboard shows an "unavailable" state.
+// ---------------------------------------------------------------------------
+
+const TRIGGER_API_BASE_URL = env.TRIGGER_API_URL ?? "https://api.trigger.dev";
+const TRIGGER_PAGE_SIZE = 100;
+const TRIGGER_MAX_PAGES = 10;
+
+let triggerCache: {
+  expiresAt: number;
+  payload: TriggerStatusResponse;
+} | null = null;
+
+const fetchTriggerRuns = async (fromIso: string): Promise<TriggerApiRun[]> => {
+  const runs: TriggerApiRun[] = [];
+  let after: string | undefined;
+
+  for (let page = 0; page < TRIGGER_MAX_PAGES; page++) {
+    const url = new URL("/api/v1/runs", TRIGGER_API_BASE_URL);
+    url.searchParams.set("page[size]", String(TRIGGER_PAGE_SIZE));
+    url.searchParams.set("filter[createdAt][from]", fromIso);
+    if (after) url.searchParams.set("page[after]", after);
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${env.TRIGGER_SECRET_KEY ?? ""}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      throw new Error(`Trigger.dev API responded with ${response.status}`);
+    }
+
+    const body = (await response.json()) as {
+      data?: TriggerApiRun[] | null;
+      pagination?: { next?: string | null } | null;
+    };
+    const items = body.data ?? [];
+    runs.push(...items);
+
+    const next = body.pagination?.next;
+    if (!next || items.length === 0) break;
+    after = next;
+  }
+
+  return runs;
+};
+
+const computeTriggerStatus = async (): Promise<TriggerStatusResponse> => {
+  const fetchedAt = new Date();
+
+  if (!env.TRIGGER_SECRET_KEY) {
+    return buildTriggerStatusResponse({
+      runs: [],
+      fetchedAt,
+      error: "TRIGGER_SECRET_KEY is not configured.",
+    });
+  }
+
+  const fromIso = new Date(
+    fetchedAt.getTime() - TRIGGER_STATUS_WINDOW_HOURS * 60 * 60 * 1000,
+  ).toISOString();
+
+  try {
+    const runs = await fetchTriggerRuns(fromIso);
+    return buildTriggerStatusResponse({ runs, fetchedAt });
+  } catch (error) {
+    return buildTriggerStatusResponse({
+      runs: [],
+      fetchedAt,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export async function getTriggerStatus(): Promise<TriggerStatusResponse> {
+  if (!triggerCache || Date.now() >= triggerCache.expiresAt) {
+    const payload = await computeTriggerStatus();
+    triggerCache = {
+      payload,
+      expiresAt:
+        Date.now() + (payload.error ? ERROR_CACHE_TTL_MS : CACHE_TTL_MS),
+    };
+  }
+  return triggerCache.payload;
 }

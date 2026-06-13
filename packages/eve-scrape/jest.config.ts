@@ -28,15 +28,7 @@ const config: Config = {
   // and skip the HTML report, whose vendored JS would trip the package's
   // checkJs type-check.
   coverageReporters: ["lcovonly", "text"],
-  collectCoverageFrom: [
-    "functions/**/*.ts",
-    "client.ts",
-    // Pure data-sync/diff helpers are unit-tested; surface their coverage too.
-    // downloadFile.ts (network IO) and the barrel are intentionally excluded.
-    "utils/**/*.ts",
-    "!utils/index.ts",
-    "!utils/downloadFile.ts",
-  ],
+  collectCoverageFrom: ["adapter.ts", "client.ts"],
   clearMocks: true,
   restoreMocks: true,
 };

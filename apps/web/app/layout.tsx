@@ -51,7 +51,9 @@ export const metadata = {
   description: APP_DESCRIPTION,
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    // black-translucent lets the web app draw behind the iOS status bar so the
+    // dark header extends edge-to-edge (paired with viewport-fit=cover below).
+    statusBarStyle: "black-translucent",
     title: APP_DEFAULT_TITLE,
   },
   formatDetection: {
@@ -86,7 +88,10 @@ export const metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#9bb4d0",
+  // Matches the manifest theme_color and the dark app header so the installed
+  // PWA title bar (and mobile status bar) blend with the UI. The runtime
+  // theme-color meta tag takes precedence over the manifest, so keep them in sync.
+  themeColor: "#04070c",
 };
 
 export default function RootLayout({

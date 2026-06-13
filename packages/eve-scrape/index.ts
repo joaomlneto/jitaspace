@@ -1,2 +1,2 @@
-export * from "./client";
-export * from "./functions";
+export { client } from "./client";
+export { functions } from "./adapter";

@@ -61,6 +61,10 @@ jest.mock("../components/Status/InngestJobsDashboard", () => ({
   InngestJobsDashboard: () => <div>Inngest Jobs Dashboard</div>,
 }));
 
+jest.mock("../components/Status/TriggerJobsDashboard", () => ({
+  TriggerJobsDashboard: () => <div>Trigger Jobs Dashboard</div>,
+}));
+
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({
