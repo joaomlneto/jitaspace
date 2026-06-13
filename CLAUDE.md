@@ -59,6 +59,7 @@ pnpm kubb:generate   # OpenAPI → TypeScript clients in packages/*-client/src/g
 If you see import errors for `@jitaspace/db` or `@jitaspace/esi-client`, these haven't run yet.
 
 **Never edit generated files directly.** Instead edit the source and regenerate:
+
 - Prisma client → edit `packages/db/prisma/schema.prisma`, then `pnpm db:generate`
 - API clients → edit the package's `swagger.json` / `kubb.config.ts`, then `pnpm kubb:generate`
 
@@ -73,7 +74,8 @@ Copy `.env.example` to `.env` at the repo root. `apps/web/env.ts` validates env 
 ```
 apps/
   web/   # Next.js 16 (App Router) — the main product, deployed to Vercel.
-         # Inngest background jobs and cron routes are co-hosted here.
+         # The Inngest adapter + cron routes are co-hosted here (disabled
+         # fallback; the active jobs run on Trigger.dev).
   cli/   # Developer CLI utilities
 packages/
   auth/ auth-utils/          # NextAuth EVE SSO (OAuth2 PKCE + state), token seal/refresh
@@ -86,13 +88,17 @@ packages/
   ui/ eve-icons/ tiptap-eve/ # Mantine component lib; icons; EVE-HTML Tiptap extension
   datatable/ datatable-mantine/ datatable-tanstack/  # engine-agnostic table contract + adapters
   chat/                      # Discord-backed in-app chat
-  eve-scrape/                # Inngest jobs for scheduled EVE data scraping / SDE imports
+  background-jobs/           # Platform-agnostic EVE-data background job logic (source of truth)
+  background-jobs-triggerdev/ # Trigger.dev adapter (active runner) for background-jobs
+  eve-scrape/                # Inngest adapter (legacy/rollback) for background-jobs
   utils/ sde-utils/          # shared utilities
 tooling/
   eslint/ prettier/ tsconfig/  # shared presets (extend these, don't redefine)
 ```
 
-> Note: there is no `apps/worker` — background jobs run inside `apps/web` via Inngest.
+> Note: there is no `apps/worker` — background jobs run on Trigger.dev (the
+> `@jitaspace/background-jobs-triggerdev` adapter); the Inngest adapter stays
+> co-hosted in `apps/web` as a disabled fallback (`INNGEST_ENABLED`).
 
 ## Tech Stack
 
@@ -102,7 +108,7 @@ tooling/
 - **Data fetching:** TanStack React Query 5
 - **DB / cache:** PostgreSQL + Prisma 7; Redis + Bull
 - **Auth:** NextAuth 4 with EVE Online SSO
-- **Background jobs:** Inngest
+- **Background jobs:** Trigger.dev (active) — platform-agnostic logic in `@jitaspace/background-jobs`, run by the `background-jobs-triggerdev` adapter; Inngest (`eve-scrape`) retained as a disabled fallback (toggle `INNGEST_ENABLED`)
 - **API codegen:** Kubb 3 (OpenAPI → TypeScript)
 - **Rich text:** Tiptap + EVE HTML extensions
 - **Testing:** Jest 30 (unit), Cypress 15 (E2E)
@@ -137,6 +143,7 @@ Description of the change.
 ## CI
 
 Two GitHub Actions run on push/PR (both set `SKIP_ENV_VALIDATION=1`):
+
 - **`cypress.yml`:** spins up CockroachDB + Redis → push DB schema → `pnpm build` → start web → Cypress E2E (parallel).
 - **`sonarcloud.yml`:** `pnpm install --frozen-lockfile` → `pnpm test` (coverage) → SonarQube scan. New code must keep coverage above the quality gate.
 
@@ -144,13 +151,13 @@ Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 p
 
 ## Where to look first
 
-| Area | Path |
-|---|---|
-| Turbo pipeline | `turbo.json` |
-| Web config / env | `apps/web/next.config.mjs`, `apps/web/env.ts` |
-| Web routes | `apps/web/app/` |
-| DB schema | `packages/db/prisma/schema.prisma` |
-| ESI client gen | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json` |
-| Auth | `packages/auth/src/auth-options.ts` |
-| Shared tooling | `tooling/eslint/src/base.ts`, `tooling/prettier/index.mjs`, `tooling/tsconfig/base.json` |
-| Test config (web) | `apps/web/jest.config.ts`, `apps/web/cypress.config.ts` |
+| Area              | Path                                                                                     |
+| ----------------- | ---------------------------------------------------------------------------------------- |
+| Turbo pipeline    | `turbo.json`                                                                             |
+| Web config / env  | `apps/web/next.config.mjs`, `apps/web/env.ts`                                            |
+| Web routes        | `apps/web/app/`                                                                          |
+| DB schema         | `packages/db/prisma/schema.prisma`                                                       |
+| ESI client gen    | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json`                 |
+| Auth              | `packages/auth/src/auth-options.ts`                                                      |
+| Shared tooling    | `tooling/eslint/src/base.ts`, `tooling/prettier/index.mjs`, `tooling/tsconfig/base.json` |
+| Test config (web) | `apps/web/jest.config.ts`, `apps/web/cypress.config.ts`                                  |

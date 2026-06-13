@@ -1,6 +1,6 @@
 {
   "name": "@jitaspace/eve-scrape",
-  "description": "Scripts to scrape EVE Online information",
+  "description": "Inngest adapter that runs @jitaspace/background-jobs on Inngest",
   "version": "0.1.2",
   "private": true,
   "type": "module",
@@ -17,19 +17,8 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@jitaspace/chat": "workspace:*",
-    "@jitaspace/db": "workspace:*",
-    "@jitaspace/esi-client": "workspace:*",
-    "@jitaspace/evekill-client": "workspace:*",
-    "@jitaspace/kv": "workspace:*",
-    "@jitaspace/sde-client": "workspace:*",
-    "axios": "^1.16.1",
-    "decimal.js": "^10.6.0",
-    "inngest": "^4.5.0",
-    "p-limit": "^7.3.0",
-    "tar-stream": "^3.2.0",
-    "unbzip2-stream": "^1.4.3",
-    "untar-to-memory": "^2.0.0"
+    "@jitaspace/background-jobs": "workspace:*",
+    "inngest": "^4.5.0"
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",
@@ -39,8 +28,6 @@
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
-    "@types/tar-stream": "^3.1.4",
-    "@types/unbzip2-stream": "^1.4.3",
     "eslint": "^9.39.4",
     "inngest-cli": "^1.22.0",
     "jest": "^30.4.2",
