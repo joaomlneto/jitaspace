@@ -51,7 +51,7 @@ export function DataTable<TData>(props: Readonly<DataTableProps<TData>>) {
         <SegmentedControl
           size="xs"
           value={engine}
-          onChange={(value) => setEngine(value as DataTableEngine)}
+          onChange={(value) => setEngine(value)}
           data={ENGINE_OPTIONS}
         />
       </Group>

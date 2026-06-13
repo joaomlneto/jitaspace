@@ -89,7 +89,7 @@ export function MantineReactTableImpl<TData>({
         accessorFn: (row) => filterableValue(readValue(col, row)),
         enableSorting: col.sortable ?? false,
         enableHiding: col.enableHiding ?? true,
-        ...(col.width != null ? { size: col.width } : {}),
+        ...(typeof col.width === "number" ? { size: col.width } : {}),
         ...(col.sortAccessor
           ? {
               sortingFn: (a, b) =>

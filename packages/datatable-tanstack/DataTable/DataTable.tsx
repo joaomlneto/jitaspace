@@ -106,7 +106,7 @@ function buildColumnDefs<TData>(
         col.cell
           ? col.cell(ctx.row.original, ctx.getValue())
           : renderValue(ctx.getValue()),
-    } as ColumnDef<TData>;
+    } satisfies ColumnDef<TData>;
   });
 }
 
