@@ -40,6 +40,7 @@ function SearchView() {
         <TextInput
           ref={inputRef}
           size="md"
+          aria-label="Search"
           leftSection={<IconSearch size={18} />}
           placeholder="Search characters, corporations, items, tools…"
           value={query}

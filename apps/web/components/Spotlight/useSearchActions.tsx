@@ -58,11 +58,28 @@ export function useSearchActions(query: string): SearchActionGroups {
 
   const names = useEsiNameLookup(entityEntries);
 
-  const makeAppOnClick = useCallback(
-    (url: string | undefined) => () => {
-      if (url !== undefined) void router.push(url);
+  const navigate = useCallback(
+    (url: string) => {
+      // router.push returns a promise we intentionally don't await.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      router.push(url);
     },
     [router],
+  );
+
+  const makeAppOnClick = useCallback(
+    (url: string | undefined) => () => {
+      if (url !== undefined) navigate(url);
+    },
+    [navigate],
+  );
+
+  const makeEntityOnClick = useCallback(
+    (category: EsiSearchCategory, entityId: number) => () => {
+      const prefix = CATEGORY_ROUTE_PREFIX[category];
+      if (prefix) navigate(`${prefix}${entityId}`);
+    },
+    [navigate],
   );
 
   const appActions: SpotlightActionData[] = useMemo(
@@ -98,14 +115,11 @@ export function useSearchActions(query: string): SearchActionGroups {
                 size={32}
               />
             ),
-            onClick: () => {
-              const prefix = CATEGORY_ROUTE_PREFIX[category];
-              if (prefix) void router.push(`${prefix}${entityId}`);
-            },
+            onClick: makeEntityOnClick(category, entityId),
           }));
         },
       ),
-    [router, names, esiSearchData?.data],
+    [makeEntityOnClick, names, esiSearchData?.data],
   );
 
   const actions = useMemo(
