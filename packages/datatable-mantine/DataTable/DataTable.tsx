@@ -24,8 +24,22 @@ import type {
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
+type SortValue = string | number | null | undefined;
+
+/** Stringify only primitives; anything else becomes "" (avoids "[object Object]"). */
+function primitiveString(value: unknown): string {
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return String(value);
+  }
+  return "";
+}
+
 function renderValue(value: unknown): ReactNode {
-  return value == null ? "" : String(value);
+  return primitiveString(value);
 }
 
 function readValue<TData>(col: DataTableColumn<TData>, row: TData): unknown {
@@ -34,20 +48,14 @@ function readValue<TData>(col: DataTableColumn<TData>, row: TData): unknown {
   return undefined;
 }
 
-function sortKey<TData>(
-  col: DataTableColumn<TData>,
-  row: TData,
-): string | number | null | undefined {
+function sortKey<TData>(col: DataTableColumn<TData>, row: TData): SortValue {
   if (col.sortAccessor) return col.sortAccessor(row);
   const value = readValue(col, row);
   if (typeof value === "number" || typeof value === "string") return value;
-  return value == null ? value : String(value);
+  return value == null ? value : primitiveString(value);
 }
 
-function compareValues(
-  a: string | number | null | undefined,
-  b: string | number | null | undefined,
-): number {
+function compareValues(a: SortValue, b: SortValue): number {
   if (a == null && b == null) return 0;
   if (a == null) return -1;
   if (b == null) return 1;
@@ -89,7 +97,7 @@ export function DataTable<TData>({
     return data.filter((row) =>
       columns.some((col) => {
         const value = readValue(col, row);
-        return value != null && String(value).toLowerCase().includes(query);
+        return primitiveString(value).toLowerCase().includes(query);
       }),
     );
   }, [data, columns, withGlobalFilter, globalFilter]);

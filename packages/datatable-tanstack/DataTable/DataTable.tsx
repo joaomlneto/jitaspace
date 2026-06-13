@@ -41,7 +41,33 @@ function getSortIcon(sorted: "asc" | "desc" | false): string {
 }
 
 function renderValue(value: unknown): ReactNode {
-  return value == null ? "" : String(value);
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return String(value);
+  }
+  return "";
+}
+
+function alignToJustify(
+  align: DataTableColumn<unknown>["align"],
+): "flex-start" | "center" | "flex-end" {
+  if (align === "right") return "flex-end";
+  if (align === "center") return "center";
+  return "flex-start";
+}
+
+/** Resolve the agnostic accessor into TanStack's accessorFn/accessorKey shape. */
+function accessorPartFor<TData>(
+  accessor: DataTableColumn<TData>["accessor"],
+): Record<string, unknown> {
+  if (typeof accessor === "function") return { accessorFn: accessor };
+  if (typeof accessor === "string" || typeof accessor === "number") {
+    return { accessorKey: String(accessor) };
+  }
+  return {};
 }
 
 function compareValues(
@@ -60,20 +86,13 @@ function buildColumnDefs<TData>(
   columns: DataTableColumn<TData>[],
 ): ColumnDef<TData>[] {
   return columns.map((col) => {
-    const accessorPart =
-      typeof col.accessor === "function"
-        ? { accessorFn: col.accessor }
-        : col.accessor != null
-          ? { accessorKey: col.accessor as string }
-          : {};
-
     return {
       id: col.id,
       header: col.header,
       enableSorting: col.sortable ?? false,
       enableHiding: col.enableHiding ?? true,
-      ...accessorPart,
-      ...(col.width != null ? { size: col.width } : {}),
+      ...accessorPartFor(col.accessor),
+      ...(typeof col.width === "number" ? { size: col.width } : {}),
       ...(col.sortAccessor
         ? {
             sortingFn: (a, b) =>
@@ -303,13 +322,7 @@ export function DataTable<TData>({
                         <Group
                           gap={4}
                           wrap="nowrap"
-                          justify={
-                            meta?.align === "right"
-                              ? "flex-end"
-                              : meta?.align === "center"
-                                ? "center"
-                                : "flex-start"
-                          }
+                          justify={alignToJustify(meta?.align)}
                         >
                           {flexRender(
                             header.column.columnDef.header,

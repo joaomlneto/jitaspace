@@ -108,6 +108,76 @@ function volumeCell(_row: AugmentedOffer, value: unknown) {
   return <Text ta="right">{volume.toLocaleString()}</Text>;
 }
 
+function corporationCell(row: AugmentedOffer) {
+  return (
+    <Group>
+      <Tooltip
+        label={
+          <CorporationName corporationId={row.corporationId} lineClamp={1} />
+        }
+        color="dark"
+      >
+        <Group wrap="nowrap">
+          <CorporationAvatar corporationId={row.corporationId} size="sm" />
+          <CorporationAnchor corporationId={row.corporationId} target="_blank">
+            <CorporationName corporationId={row.corporationId} />
+          </CorporationAnchor>
+        </Group>
+      </Tooltip>
+    </Group>
+  );
+}
+
+function quantityCell(row: AugmentedOffer) {
+  return <Text ta="right">{row.quantity.toLocaleString()}</Text>;
+}
+
+function itemCell(row: AugmentedOffer) {
+  return (
+    <Group wrap="nowrap">
+      <TypeAvatar typeId={row.typeId} size="sm" />
+      {row.quantity !== 1 && <Text size="sm">{row.quantity}</Text>}
+      <TypeAnchor typeId={row.typeId} target="_blank">
+        <TypeName span typeId={row.typeId} size="sm" />
+      </TypeAnchor>
+    </Group>
+  );
+}
+
+function lpCostCell(row: AugmentedOffer) {
+  return (
+    <Text inherit ta="right">
+      {row.lpCost.toLocaleString()} LP
+    </Text>
+  );
+}
+
+function iskCostCell(row: AugmentedOffer) {
+  return <ISKAmount inherit ta="right" amount={row.iskCost ?? 0} />;
+}
+
+function akCostCell(_row: AugmentedOffer, value: unknown) {
+  return (
+    <Text ta="right">{(value as number | null)?.toLocaleString() ?? ""}</Text>
+  );
+}
+
+function requiredItemsCell(row: AugmentedOffer) {
+  return (
+    <Stack gap="xs">
+      {row.requiredItems.map(({ quantity, typeId }) => (
+        <Group key={typeId} wrap="nowrap" gap="xs">
+          <TypeAvatar typeId={typeId} size="sm" />
+          {quantity !== 1 && <Text size="sm">{quantity}</Text>}
+          <TypeAnchor typeId={typeId} target="_blank">
+            <TypeName span typeId={typeId} size="sm" lineClamp={1} />
+          </TypeAnchor>
+        </Group>
+      ))}
+    </Stack>
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Factory: required-items price list columns (4 variants, hidden by default)
 // ---------------------------------------------------------------------------
@@ -206,32 +276,7 @@ export const LoyaltyPointsTable = memo(
           accessor: (row) => row.corporationName ?? "",
           sortable: true,
           defaultVisible: showCorporation,
-          cell: (row) => (
-            <Group>
-              <Tooltip
-                label={
-                  <CorporationName
-                    corporationId={row.corporationId}
-                    lineClamp={1}
-                  />
-                }
-                color="dark"
-              >
-                <Group wrap="nowrap">
-                  <CorporationAvatar
-                    corporationId={row.corporationId}
-                    size="sm"
-                  />
-                  <CorporationAnchor
-                    corporationId={row.corporationId}
-                    target="_blank"
-                  >
-                    <CorporationName corporationId={row.corporationId} />
-                  </CorporationAnchor>
-                </Group>
-              </Tooltip>
-            </Group>
-          ),
+          cell: corporationCell,
         },
         {
           id: "quantity",
@@ -240,9 +285,7 @@ export const LoyaltyPointsTable = memo(
           sortable: true,
           defaultVisible: false,
           align: "right",
-          cell: (row) => (
-            <Text ta="right">{row.quantity.toLocaleString()}</Text>
-          ),
+          cell: quantityCell,
         },
         {
           id: "typeId",
@@ -250,15 +293,7 @@ export const LoyaltyPointsTable = memo(
           // accessor returns the name so global filter + sort work by name
           accessor: (row) => row.typeName ?? "",
           sortable: true,
-          cell: (row) => (
-            <Group wrap="nowrap">
-              <TypeAvatar typeId={row.typeId} size="sm" />
-              {row.quantity !== 1 && <Text size="sm">{row.quantity}</Text>}
-              <TypeAnchor typeId={row.typeId} target="_blank">
-                <TypeName span typeId={row.typeId} size="sm" />
-              </TypeAnchor>
-            </Group>
-          ),
+          cell: itemCell,
         },
         {
           id: "lpCost",
@@ -266,11 +301,7 @@ export const LoyaltyPointsTable = memo(
           accessor: "lpCost",
           sortable: true,
           align: "right",
-          cell: (row) => (
-            <Text inherit ta="right">
-              {row.lpCost.toLocaleString()} LP
-            </Text>
-          ),
+          cell: lpCostCell,
         },
         {
           id: "iskCost",
@@ -278,9 +309,7 @@ export const LoyaltyPointsTable = memo(
           accessor: "iskCost",
           sortable: true,
           align: "right",
-          cell: (row) => (
-            <ISKAmount inherit ta="right" amount={row.iskCost ?? 0} />
-          ),
+          cell: iskCostCell,
         },
         {
           id: "akCost",
@@ -289,30 +318,14 @@ export const LoyaltyPointsTable = memo(
           sortable: true,
           defaultVisible: showAkCost,
           align: "right",
-          cell: (_row, value) => (
-            <Text ta="right">
-              {(value as number | null)?.toLocaleString() ?? ""}
-            </Text>
-          ),
+          cell: akCostCell,
         },
         {
           id: "requiredItems",
           header: "Required Items",
           accessor: "requiredItems",
           sortable: false,
-          cell: (row) => (
-            <Stack gap="xs">
-              {row.requiredItems.map(({ quantity, typeId }) => (
-                <Group key={typeId} wrap="nowrap" gap="xs">
-                  <TypeAvatar typeId={typeId} size="sm" />
-                  {quantity !== 1 && <Text size="sm">{quantity}</Text>}
-                  <TypeAnchor typeId={typeId} target="_blank">
-                    <TypeName span typeId={typeId} size="sm" lineClamp={1} />
-                  </TypeAnchor>
-                </Group>
-              ))}
-            </Stack>
-          ),
+          cell: requiredItemsCell,
         },
         makeRequiredItemsPriceColumn(
           "reqitems5pbuydetailsunit",
