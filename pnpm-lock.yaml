@@ -161,6 +161,15 @@ importers:
       '@jitaspace/chat':
         specifier: workspace:*
         version: link:../../packages/chat
+      '@jitaspace/datatable':
+        specifier: workspace:*
+        version: link:../../packages/datatable
+      '@jitaspace/datatable-mantine':
+        specifier: workspace:*
+        version: link:../../packages/datatable-mantine
+      '@jitaspace/datatable-tanstack':
+        specifier: workspace:*
+        version: link:../../packages/datatable-tanstack
       '@jitaspace/db':
         specifier: workspace:*
         version: link:../../packages/db
@@ -296,6 +305,9 @@ importers:
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
+      mantine-datatable:
+        specifier: ^9.2.2
+        version: 9.2.2(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(clsx@2.1.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       mantine-react-table:
         specifier: 2.0.0-beta.9
         version: 2.0.0-beta.9(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/dates@9.3.0(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(dayjs@1.11.20)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(@tabler/icons-react@3.44.0(react@19.2.6))(clsx@2.1.1)(dayjs@1.11.20)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -582,6 +594,188 @@ importers:
       jest:
         specifier: ^30.4.2
         version: 30.4.2(@types/node@24.12.4)(ts-node@10.9.2(@swc/core@1.15.40)(@types/node@24.12.4)(typescript@5.9.3))
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/datatable:
+    devDependencies:
+      '@jitaspace/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@jitaspace/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@jitaspace/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@types/react':
+        specifier: 19.2.15
+        version: 19.2.15
+      eslint:
+        specifier: ^9.39.4
+        version: 9.39.4(jiti@2.7.0)
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      react:
+        specifier: ^19.2.6
+        version: 19.2.6
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/datatable-mantine:
+    dependencies:
+      '@jitaspace/datatable':
+        specifier: workspace:*
+        version: link:../datatable
+      '@mantine/core':
+        specifier: 9.3.0
+        version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@mantine/hooks':
+        specifier: 9.3.0
+        version: 9.3.0(react@19.2.6)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      mantine-datatable:
+        specifier: ^9.2.2
+        version: 9.2.2(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(clsx@2.1.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      react:
+        specifier: ^19.2.6
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.6)
+    devDependencies:
+      '@jest/globals':
+        specifier: ^30.4.1
+        version: 30.4.1
+      '@jitaspace/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@jitaspace/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@jitaspace/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@swc/core':
+        specifier: ^1.15.40
+        version: 1.15.40
+      '@swc/jest':
+        specifier: ^0.2.39
+        version: 0.2.39(@swc/core@1.15.40)
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@testing-library/user-event':
+        specifier: ^14.6.1
+        version: 14.6.1(@testing-library/dom@10.4.1)
+      '@types/jest':
+        specifier: ^30.0.0
+        version: 30.0.0
+      '@types/node':
+        specifier: ^24.12.4
+        version: 24.12.4
+      '@types/react':
+        specifier: 19.2.15
+        version: 19.2.15
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.15)
+      eslint:
+        specifier: ^9.39.4
+        version: 9.39.4(jiti@2.7.0)
+      jest:
+        specifier: ^30.4.2
+        version: 30.4.2(@types/node@24.12.4)(ts-node@10.9.2(@swc/core@1.15.40)(@types/node@24.12.4)(typescript@5.9.3))
+      jest-environment-jsdom:
+        specifier: ^30.4.1
+        version: 30.4.1
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/datatable-tanstack:
+    dependencies:
+      '@jitaspace/datatable':
+        specifier: workspace:*
+        version: link:../datatable
+      '@mantine/core':
+        specifier: 9.3.0
+        version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@mantine/hooks':
+        specifier: 9.3.0
+        version: 9.3.0(react@19.2.6)
+      '@tanstack/react-table':
+        specifier: ^8.21.3
+        version: 8.21.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      react:
+        specifier: ^19.2.6
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.6)
+    devDependencies:
+      '@jest/globals':
+        specifier: ^30.4.1
+        version: 30.4.1
+      '@jitaspace/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@jitaspace/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@jitaspace/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@swc/core':
+        specifier: ^1.15.40
+        version: 1.15.40
+      '@swc/jest':
+        specifier: ^0.2.39
+        version: 0.2.39(@swc/core@1.15.40)
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@testing-library/user-event':
+        specifier: ^14.6.1
+        version: 14.6.1(@testing-library/dom@10.4.1)
+      '@types/jest':
+        specifier: ^30.0.0
+        version: 30.0.0
+      '@types/node':
+        specifier: ^24.12.4
+        version: 24.12.4
+      '@types/react':
+        specifier: 19.2.15
+        version: 19.2.15
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.15)
+      eslint:
+        specifier: ^9.39.4
+        version: 9.39.4(jiti@2.7.0)
+      jest:
+        specifier: ^30.4.2
+        version: 30.4.2(@types/node@24.12.4)(ts-node@10.9.2(@swc/core@1.15.40)(@types/node@24.12.4)(typescript@5.9.3))
+      jest-environment-jsdom:
+        specifier: ^30.4.1
+        version: 30.4.1
       prettier:
         specifier: ^3.8.3
         version: 3.8.3
@@ -5390,6 +5584,13 @@ packages:
       react: '>=16.8'
       react-dom: '>=16.8'
 
+  '@tanstack/react-table@8.21.3':
+    resolution: {integrity: sha512-5nNMTSETP4ykGegmVkhjcS8tTLW6Vl4axfEGQN3v0zdHYbK4UfoqfPChclTrJ4EoK9QynqAu9oUf8VEmrpZ5Ww==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+
   '@tanstack/react-virtual@3.11.2':
     resolution: {integrity: sha512-OuFzMXPF4+xZgx8UzJha0AieuMihhhaWG0tCqpp6tDzlFwOmNBPYMuLOtMJ1Tr4pXLHmgjcWhG6RlknY2oNTdQ==}
     peerDependencies:
@@ -5398,6 +5599,10 @@ packages:
 
   '@tanstack/table-core@8.20.5':
     resolution: {integrity: sha512-P9dF7XbibHph2PFRz8gfBKEXEY/HJPOhym8CHmjF8y3q5mWpKx9xtZapXQUWCgkqvsK0R46Azuz+VaxD4Xl+Tg==}
+    engines: {node: '>=12'}
+
+  '@tanstack/table-core@8.21.3':
+    resolution: {integrity: sha512-ldZXEhOBb8Is7xLs01fR3YEc3DERiz5silj8tnGkFZytt1abEvl/GhUmCE0PMLaMPTa3Jk4HbKmRlHmu+gCftg==}
     engines: {node: '>=12'}
 
   '@tanstack/virtual-core@3.11.2':
@@ -7771,9 +7976,6 @@ packages:
   fast-safe-stringify@2.1.1:
     resolution: {integrity: sha512-W+KJc2dmILlPplD/H4K9l9LcAHAfPtP6BY84uVLXQ6Evcz9Lcg33Y2z1IVblT6xdY54PXYVHEv+0Wpq8Io6zkA==}
 
-  fast-uri@3.1.0:
-    resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
-
   fast-uri@3.1.2:
     resolution: {integrity: sha512-rVjf7ArG3LTk+FS6Yw81V1DLuZl1bRbNrev6Tmd/9RaroeeRRJhAt7jg/6YFxbvAQXUCavSoZhPPj6oOx+5KjQ==}
 
@@ -9126,6 +9328,15 @@ packages:
 
   makeerror@1.0.12:
     resolution: {integrity: sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==}
+
+  mantine-datatable@9.2.2:
+    resolution: {integrity: sha512-pSWIAggUQC1I4lNUzwVoNm85CIkx8jst0syzRo8N9CrTHdc+Z2+8aFLfBniSHbF4nJyLE6nkeAcb8uvFdHbVfw==}
+    peerDependencies:
+      '@mantine/core': '>=9.0'
+      '@mantine/hooks': '>=9.0'
+      clsx: '>=2'
+      react: '>=19'
+      react-dom: '>=19'
 
   mantine-react-table@2.0.0-beta.9:
     resolution: {integrity: sha512-ZdfcwebWaPERoDvAuk43VYcBCzamohARVclnbuepT0PHZ0wRcDPMBR+zgaocL+pFy8EXUGwvWTOKNh25ITpjNQ==}
@@ -15981,6 +16192,12 @@ snapshots:
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
 
+  '@tanstack/react-table@8.21.3(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
+    dependencies:
+      '@tanstack/table-core': 8.21.3
+      react: 19.2.6
+      react-dom: 19.2.6(react@19.2.6)
+
   '@tanstack/react-virtual@3.11.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
     dependencies:
       '@tanstack/virtual-core': 3.11.2
@@ -15988,6 +16205,8 @@ snapshots:
       react-dom: 19.2.6(react@19.2.6)
 
   '@tanstack/table-core@8.20.5': {}
+
+  '@tanstack/table-core@8.21.3': {}
 
   '@tanstack/virtual-core@3.11.2': {}
 
@@ -16816,7 +17035,7 @@ snapshots:
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.0
+      fast-uri: 3.1.2
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -18673,8 +18892,6 @@ snapshots:
 
   fast-safe-stringify@2.1.1: {}
 
-  fast-uri@3.1.0: {}
-
   fast-uri@3.1.2: {}
 
   fastq@1.20.1:
@@ -20244,6 +20461,14 @@ snapshots:
   makeerror@1.0.12:
     dependencies:
       tmpl: 1.0.5
+
+  mantine-datatable@9.2.2(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(clsx@2.1.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
+    dependencies:
+      '@mantine/core': 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@mantine/hooks': 9.3.0(react@19.2.6)
+      clsx: 2.1.1
+      react: 19.2.6
+      react-dom: 19.2.6(react@19.2.6)
 
   mantine-react-table@2.0.0-beta.9(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/dates@9.3.0(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(dayjs@1.11.20)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(@tabler/icons-react@3.44.0(react@19.2.6))(clsx@2.1.1)(dayjs@1.11.20)(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
     dependencies:
