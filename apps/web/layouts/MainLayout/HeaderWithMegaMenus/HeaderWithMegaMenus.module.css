@@ -5,6 +5,29 @@
     border-bottom: rem(1px) solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
 
+/* Window Controls Overlay: when the installed desktop app (Chrome/Edge) uses
+   the native title bar, the OS window controls overlay the top of the viewport.
+   Lay the header out inside the area the OS leaves available (titlebar-area-*)
+   so nothing renders under the window buttons, and turn the bar into a real
+   drag handle while keeping its interactive children clickable. */
+@media (display-mode: window-controls-overlay) {
+    .header {
+        position: relative;
+        top: env(titlebar-area-y, 0);
+        margin-left: env(titlebar-area-x, 0);
+        width: env(titlebar-area-width, 100%);
+        height: env(titlebar-area-height, rem(60px));
+        -webkit-app-region: drag;
+        app-region: drag;
+    }
+
+    /* Interactive elements must opt out of dragging to stay clickable. */
+    .header :is(a, button, input, [role="button"], [tabindex]) {
+        -webkit-app-region: no-drag;
+        app-region: no-drag;
+    }
+}
+
 .link {
     display: flex;
     align-items: center;

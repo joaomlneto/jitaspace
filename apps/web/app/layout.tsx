@@ -51,7 +51,9 @@ export const metadata = {
   description: APP_DESCRIPTION,
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    // black-translucent lets the web app draw behind the iOS status bar so the
+    // dark header extends edge-to-edge (paired with viewport-fit=cover below).
+    statusBarStyle: "black-translucent",
     title: APP_DEFAULT_TITLE,
   },
   formatDetection: {
