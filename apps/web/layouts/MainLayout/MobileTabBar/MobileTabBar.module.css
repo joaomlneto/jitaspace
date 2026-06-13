@@ -1,0 +1,33 @@
+.bar {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    height: 100%;
+    width: 100%;
+    /* Removes the 300ms tap delay / double-tap zoom on the nav. */
+    touch-action: manipulation;
+}
+
+.tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: rem(2px);
+    flex: 1 1 0;
+    text-decoration: none;
+    color: var(--mantine-color-dimmed);
+    transition: color 100ms ease;
+
+    @mixin hover {
+        color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+    }
+}
+
+.tab[data-active] {
+    color: var(--mantine-primary-color-filled);
+}
+
+.label {
+    line-height: 1;
+}

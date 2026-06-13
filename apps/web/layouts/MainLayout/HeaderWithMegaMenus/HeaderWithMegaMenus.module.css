@@ -5,6 +5,18 @@
     border-bottom: rem(1px) solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
 
+/* In the installed app the header background is grown to cover the status-bar /
+   notch (see globals.css). Push the header content below the inset and clear a
+   landscape notch on the sides. */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+    .header {
+        height: calc(rem(60px) + env(safe-area-inset-top));
+        padding-top: env(safe-area-inset-top);
+        padding-left: max(var(--mantine-spacing-md), env(safe-area-inset-left));
+        padding-right: max(var(--mantine-spacing-md), env(safe-area-inset-right));
+    }
+}
+
 /* Window Controls Overlay: when the installed desktop app (Chrome/Edge) uses
    the native title bar, the OS window controls overlay the top of the viewport.
    Lay the header out inside the area the OS leaves available (titlebar-area-*)

@@ -1,0 +1,44 @@
+/* Global tweaks that make the installed PWA feel like a native mobile app.
+   Everything here is either harmless in a normal browser tab or scoped to
+   display-mode: standalone, so desktop/in-browser usage is unaffected. */
+
+/* --- Remove the obvious "web" tells on touch --------------------------- */
+
+html {
+  /* No grey flash when tapping links/buttons. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  /* No rubber-band bounce / pull-to-refresh on the document. */
+  overscroll-behavior-y: none;
+}
+
+/* App chrome shouldn't be selectable or show the iOS long-press callout.
+   Page content stays selectable (important for a data-heavy app). */
+.mantine-AppShell-header,
+.mantine-AppShell-footer {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* --- Safe-area insets (notch / Dynamic Island / home indicator) -------- */
+/* Mantine already adds env(safe-area-inset-bottom) to the footer, so only the
+   header top inset and the horizontal (landscape notch) insets need handling. */
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  /* Grow the header so its dark background covers the status-bar / notch area.
+     Mantine sizes the header from this variable and offsets the main content
+     by the same amount, so content still clears the taller header. 3.75rem =
+     the 60px header height configured in MainLayout. */
+  .mantine-AppShell-root {
+    --app-shell-header-height: calc(3.75rem + env(safe-area-inset-top)) !important;
+  }
+
+  /* Keep page content clear of a landscape notch on either side. */
+  .mantine-AppShell-main {
+    padding-left: max(var(--app-shell-padding, 1rem), env(safe-area-inset-left));
+    padding-right: max(var(--app-shell-padding, 1rem), env(safe-area-inset-right));
+  }
+}
