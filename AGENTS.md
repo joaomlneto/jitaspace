@@ -3,7 +3,7 @@
 This file is a concise, actionable guide for automated coding agents (or humans) to understand the JitaSpace monorepo quickly and make safe, useful changes.
 
 Big picture
-- Monorepo (Turborepo) containing three apps (apps/web, apps/cli, apps/worker) and many internal packages under `packages/` (db, auth, esi-client, esi-metadata, ui, utils, etc.). See `CLAUDE.md` for a short overview.
+- Monorepo (Turborepo) containing two apps (apps/web, apps/cli) and many internal packages under `packages/` (db, auth, esi-client, esi-metadata, ui, utils, etc.). Background jobs run inside `apps/web` via Inngest — there is no `apps/worker`. See `CLAUDE.md` for a short overview.
 - The web app (`apps/web`) is a Next.js 16 app that imports many local packages via `@jitaspace/*`. Local packages are consumed directly in source (see `apps/web/next.config.mjs` → `transpilePackages`).
 - Data layer: Prisma (packages/db) with a large schema at `packages/db/prisma/schema.prisma`. Database client is generated into the package (run `pnpm db:generate`).
 - API clients: generated with Kubb from OpenAPI specs (see `packages/esi-client/kubb.config.ts` and `packages/*-client/*/swagger.json`). Generated code lives under each client package (e.g. `packages/esi-client/src/generated`). Do NOT edit generated files.
@@ -39,7 +39,7 @@ pnpm kubb:generate
 - Run all dev servers (parallel):
 ```zsh
 pnpm dev
-# This runs `turbo dev --parallel` and starts web/cli/worker
+# This runs `turbo dev --parallel` and starts the web and cli dev servers
 ```
 - Build / CI:
 ```zsh
