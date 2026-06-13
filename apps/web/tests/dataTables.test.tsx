@@ -58,6 +58,7 @@ jest.mock("@jitaspace/ui", () => ({
   DogmaAttributeAnchor: ({ children }: { children?: ReactNode }) => (
     <span data-testid="attr-anchor">{children}</span>
   ),
+  formatDogmaAttributeValue: (value: number) => value.toLocaleString(),
   TypeAnchor: ({ children }: { children?: ReactNode }) => (
     <span data-testid="type-anchor">{children}</span>
   ),
