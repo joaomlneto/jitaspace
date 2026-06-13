@@ -1,0 +1,46 @@
+name: Deploy to Trigger.dev (prod)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/background-jobs/**"
+      - "packages/background-jobs-triggerdev/**"
+      - "packages/db/**"
+      - ".github/workflows/triggerdev-deploy.yml"
+
+# Don't let two deploys run at once; let an in-flight one finish.
+concurrency:
+  group: triggerdev-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SKIP_ENV_VALIDATION: "1"
+      # Dummy DATABASE_URL so prisma generate (postinstall + modern-mode
+      # bundling) succeeds without a real database.
+      DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
+      TRIGGER_ACCESS_TOKEN: ${{ secrets.TRIGGER_ACCESS_TOKEN }}
+      TRIGGER_PROJECT_REF: ${{ secrets.TRIGGER_PROJECT_REF }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+        with:
+          version: 11.3.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.16.0
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate Prisma client
+        # Modern-mode prismaExtension does NOT run `prisma generate`; the
+        # generated client must exist on disk before the deploy bundles it.
+        run: pnpm db:generate
+      - name: Deploy to Trigger.dev
+        working-directory: packages/background-jobs-triggerdev
+        run: pnpm exec trigger.dev deploy

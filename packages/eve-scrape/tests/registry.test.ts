@@ -1,40 +1,60 @@
 import { beforeAll, describe, expect, it, jest } from "@jest/globals";
 
-import type { client as Client, functions as Functions } from "../index";
+import type { client as Client } from "../client";
+import type { functions as Functions } from "../adapter";
 
-// Importing the function registry pulls in external IO clients at module load
-// (Prisma, Redis, ESI/SDE API clients, chat). Mock them so the import only
-// executes the declarative Inngest config (eventType / triggers) we care about
-// here. Mocks are registered before the dynamic import below, so the registry
-// resolves these stubs instead of the real modules.
-jest.mock("../kv", () => ({ redis: {}, kv: { queues: {} } }));
-jest.mock("../db", () => ({ prisma: {}, Prisma: {} }));
-jest.mock("@jitaspace/esi-client", () => ({}));
-jest.mock("@jitaspace/sde-client", () => ({}));
-jest.mock("../chat", () => ({ postUpdateCard: jest.fn() }));
-// p-limit is ESM-only and only used inside handlers, not in the registry config.
-jest.mock("p-limit", () => ({
-  __esModule: true,
-  default: () => (fn: () => unknown) => fn(),
-}));
+// Mock the shared core so this adapter test doesn't pull in the 46 real job
+// modules (and their Prisma/Redis/chat/ESI imports). We assert only that the
+// adapter maps JobDefinitions onto the shared Inngest client correctly; the
+// real registry membership is covered by @jitaspace/background-jobs' own tests.
+jest.mock("@jitaspace/background-jobs", () => {
+  const noop = async () => undefined;
+  const jobs = [
+    { id: "alpha-job", name: "Alpha", trigger: { type: "event" }, handler: noop },
+    {
+      id: "beta-cron",
+      name: "Beta",
+      trigger: { type: "cron", cron: "TZ=UTC 0 * * * *" },
+      singleton: true,
+      retries: 0,
+      handler: noop,
+    },
+    {
+      id: "gamma-job",
+      name: "Gamma",
+      trigger: { type: "event" },
+      concurrencyLimit: 5,
+      retries: 3,
+      handler: noop,
+    },
+  ];
+  return {
+    NonRetriableError: class NonRetriableError extends Error {},
+    registry: {
+      jobs,
+      byId: new Map(jobs.map((job) => [job.id, job])),
+      has: (id: string) => jobs.some((job) => job.id === id),
+      get: (id: string) => jobs.find((job) => job.id === id),
+    },
+  };
+});
 
 let client: typeof Client;
 let functions: typeof Functions;
 
 beforeAll(async () => {
-  const mod = await import("../index");
-  client = mod.client;
-  functions = mod.functions;
+  client = (await import("../client")).client;
+  functions = (await import("../adapter")).functions;
 });
 
-describe("eve-scrape Inngest registry", () => {
-  it("creates the shared client", () => {
+describe("eve-scrape Inngest adapter", () => {
+  it("creates the shared client with id 'jitaspace'", () => {
     expect(client.id).toBe("jitaspace");
   });
 
-  it("registers every function with a unique, non-empty id", () => {
+  it("builds one Inngest function per job with unique, non-empty ids", () => {
     expect(Array.isArray(functions)).toBe(true);
-    expect(functions.length).toBeGreaterThan(40);
+    expect(functions.length).toBe(3);
 
     const ids = functions.map((fn) => fn.id());
     expect(ids.every((id) => typeof id === "string" && id.length > 0)).toBe(

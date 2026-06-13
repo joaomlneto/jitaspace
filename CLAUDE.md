@@ -42,7 +42,9 @@ packages/
   esi-client/       # Generated EVE Online ESI API client
   esi-metadata/     # ESI metadata, scopes, ID ranges
   eve-icons/        # EVE Online icons as React components
-  eve-scrape/       # Inngest background jobs for EVE data scraping
+  background-jobs/  # Platform-agnostic EVE-data background job logic (source of truth)
+  background-jobs-triggerdev/  # Trigger.dev adapter (active runner) for background-jobs
+  eve-scrape/       # Inngest adapter (legacy/rollback) for background-jobs
   hooks/            # React hooks for ESI interactions
   ui/               # Mantine-based UI component library
   utils/            # Shared utilities
@@ -63,7 +65,7 @@ tooling/
 - **Data Fetching:** TanStack React Query 5
 - **Database:** Prisma 7 + PostgreSQL
 - **Auth:** NextAuth 4 with EVE Online OAuth2
-- **Background Jobs:** Inngest
+- **Background Jobs:** Trigger.dev (active) — platform-agnostic logic in `@jitaspace/background-jobs`, run by the `background-jobs-triggerdev` adapter; Inngest (`eve-scrape`) retained as a disabled fallback (toggle `INNGEST_ENABLED`)
 - **API Client Generation:** Kubb 3 (generates from OpenAPI specs)
 - **Testing:** Jest 30, Cypress 15
 
