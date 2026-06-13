@@ -9,6 +9,51 @@ const PWA_ENTRY = "/?source=pwa";
 // title bar (window-controls-overlay) and splash screen blend with the UI.
 const DARK_HEADER_BACKGROUND = "#04070c";
 
+// Jump-list entries shown when right-clicking the installed app icon (desktop)
+// or long-pressing it (Android). Tagged so their usage is distinguishable from
+// regular navigation in analytics. Kept to a focused, high-frequency set — the
+// OS only surfaces a handful. Icons are intentionally omitted for now; see
+// scripts/generate-shortcut-icons (text-only renders fine without them).
+const SHORTCUT_SOURCE = "?source=pwa-shortcut";
+const shortcuts: MetadataRoute.Manifest["shortcuts"] = [
+  {
+    name: "Search",
+    short_name: "Search",
+    description: "Search characters, corporations, items and tools",
+    url: `/search${SHORTCUT_SOURCE}`,
+  },
+  {
+    name: "EveMail",
+    description: "Read your in-game mail",
+    url: `/mail${SHORTCUT_SOURCE}`,
+  },
+  {
+    name: "Skills",
+    description: "Check your skill queue",
+    url: `/skills${SHORTCUT_SOURCE}`,
+  },
+  {
+    name: "Wallet",
+    description: "View your wallet balance and transactions",
+    url: `/wallet/character${SHORTCUT_SOURCE}`,
+  },
+  {
+    name: "Assets",
+    description: "Browse your assets",
+    url: `/assets/character${SHORTCUT_SOURCE}`,
+  },
+  {
+    name: "Market",
+    description: "Browse the EVE Online market",
+    url: `/market${SHORTCUT_SOURCE}`,
+  },
+  {
+    name: "Map",
+    description: "Explore the New Eden map",
+    url: `/regions${SHORTCUT_SOURCE}`,
+  },
+];
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: PWA_ENTRY,
@@ -70,5 +115,6 @@ export default function manifest(): MetadataRoute.Manifest {
         label: "Jita on mobile",
       },
     ],
+    shortcuts,
   };
 }
