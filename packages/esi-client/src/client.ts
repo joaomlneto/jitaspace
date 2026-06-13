@@ -49,6 +49,15 @@ export type ResponseConfig<TData = unknown> = {
 
 export type ResponseErrorConfig<TError = unknown> = AxiosError<TError>;
 
+/**
+ * Client function type expected by Kubb-generated code (v4+).
+ * Mirrors the signature of the default `client` export below, which the
+ * generated clients use as the default request implementation.
+ */
+export type Client = <TData = unknown, _TError = unknown, TVariables = unknown>(
+  config: RequestConfig<TVariables>,
+) => Promise<ResponseConfig<TData>>;
+
 let _config: Partial<RequestConfig> = {
   baseURL: typeof AXIOS_BASE !== "undefined" ? AXIOS_BASE : undefined,
   headers:

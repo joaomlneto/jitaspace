@@ -22,7 +22,9 @@ export default defineConfig(async () => {
         baseURL: "https://sde.jita.space/20260527",
         dataReturnType: "full",
       }),
-      pluginTs({}),
+      // enumTypeSuffix: "" preserves v3 enum type names (`...Enum`); kubb v4
+      // defaults this to "Key", which would rename every generated enum type.
+      pluginTs({ enumTypeSuffix: "" }),
       pluginReactQuery({
         client: {
           //importPath: "../../client",
