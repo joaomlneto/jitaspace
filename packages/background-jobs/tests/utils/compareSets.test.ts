@@ -1,6 +1,7 @@
-import { describe, expect, it, jest } from "@jest/globals";
+import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
 
 import { compareSets } from "../../utils/compareSets";
+import { env } from "../../env";
 
 jest.mock("inngest", () => ({
   NonRetriableError: class NonRetriableError extends Error {
@@ -134,5 +135,37 @@ describe("compareSets", () => {
         recordsAreEqual: isEqual,
       }),
     ).toThrow("compareSets: input and output length do not match");
+  });
+});
+
+describe("compareSets dev-mode key validation", () => {
+  const envRef = env as unknown as { NODE_ENV?: string };
+  const original = envRef.NODE_ENV;
+  beforeAll(() => {
+    envRef.NODE_ENV = "development";
+  });
+  afterAll(() => {
+    envRef.NODE_ENV = original;
+  });
+
+  it("passes when the before/after record shapes match", () => {
+    const result = compareSets({
+      recordsBefore: [{ id: 1, name: "alpha" }] as Item[],
+      recordsAfter: [{ id: 1, name: "alpha" }] as Item[],
+      getId,
+      recordsAreEqual: isEqual,
+    });
+    expect(result.equal).toHaveLength(1);
+  });
+
+  it("throws when the before/after key sets differ", () => {
+    expect(() =>
+      compareSets({
+        recordsBefore: [{ id: 1, name: "alpha" }] as Item[],
+        recordsAfter: [{ id: 1, other: "x" } as unknown as Item],
+        getId,
+        recordsAreEqual: isEqual,
+      }),
+    ).toThrow("KEY SETS DO NOT MATCH");
   });
 });
