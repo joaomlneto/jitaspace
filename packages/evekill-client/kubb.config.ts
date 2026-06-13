@@ -22,7 +22,9 @@ export default defineConfig(({ config, watch, logLevel }) => {
         //importPath: "../../client",
         dataReturnType: "full",
       }),
-      pluginTs({}),
+      // enumTypeSuffix: "" preserves v3 enum type names (`...Enum`); kubb v4
+      // defaults this to "Key", which would rename every generated enum type.
+      pluginTs({ enumTypeSuffix: "" }),
       /*pluginReactQuery({
         client: {
           baseURL: "https://eve-kill.com",
