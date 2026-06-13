@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Card, Group, Menu, Text, UnstyledButton } from "@mantine/core";
+import {
+  Card,
+  Group,
+  Menu,
+  Switch,
+  Tabs,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
 import { IconChevronDown } from "@tabler/icons-react";
 import ReactCountryFlag from "react-country-flag";
 
@@ -21,10 +29,16 @@ export function SettingsCard() {
     (state) => state.esiAcceptLanguage,
   );
   const selectedTheme = usePreferencesStore((state) => state.appTheme);
+  const experimentalDataTables = usePreferencesStore(
+    (state) => state.experimentalDataTables,
+  );
   const setSelectedAcceptLanguage = usePreferencesStore(
     (state) => state.setEsiAcceptLanguage,
   );
   const setSelectedTheme = usePreferencesStore((state) => state.setAppTheme);
+  const setExperimentalDataTables = usePreferencesStore(
+    (state) => state.setExperimentalDataTables,
+  );
 
   useEffect(() => {
     setAcceptLanguage(acceptLanguage);
@@ -80,94 +94,131 @@ export function SettingsCard() {
       <Text fz="lg" className={classes.title} fw={500}>
         Configure settings
       </Text>
-      <Text fz="xs" c="dimmed" mt={3} mb="xl">
-        Choose the language for ESI requests and the UI theme.
+      <Text fz="xs" c="dimmed" mt={3} mb="md">
+        Manage your JitaSpace preferences.
       </Text>
 
-      <Group
-        justify="space-between"
-        className={classes.item}
-        wrap="nowrap"
-        gap="xl"
-      >
-        <div>
-          <Text>Language</Text>
-          <Text size="xs" c="dimmed">
-            Used in ESI requests through the `Accept-Language` header
-          </Text>
-        </div>
+      <Tabs defaultValue="general">
+        <Tabs.List mb="md">
+          <Tabs.Tab value="general">General</Tabs.Tab>
+          <Tabs.Tab value="experimental">Experimental</Tabs.Tab>
+        </Tabs.List>
 
-        <Menu
-          onOpen={() => setLanguageMenuOpened(true)}
-          onClose={() => setLanguageMenuOpened(false)}
-          radius="md"
-          width="target"
-        >
-          <Menu.Target>
-            <UnstyledButton
-              className={classes.control}
-              data-expanded={languageMenuOpened || undefined}
+        <Tabs.Panel value="general">
+          <Group
+            justify="space-between"
+            className={classes.item}
+            wrap="nowrap"
+            gap="xl"
+          >
+            <div>
+              <Text>Language</Text>
+              <Text size="xs" c="dimmed">
+                Used in ESI requests through the `Accept-Language` header
+              </Text>
+            </div>
+
+            <Menu
+              onOpen={() => setLanguageMenuOpened(true)}
+              onClose={() => setLanguageMenuOpened(false)}
+              radius="md"
+              width="target"
             >
-              <Group gap="xs">
-                <ReactCountryFlag
-                  countryCode={selectedLanguage.countryCode}
-                  svg
-                  className={classes.flag}
-                  aria-label={`${selectedLanguage.label} flag`}
-                />
-                <span className={classes.label}>{selectedLanguage.label}</span>
-              </Group>
-              <IconChevronDown
-                size={16}
-                className={classes.icon}
-                stroke={1.5}
-              />
-            </UnstyledButton>
-          </Menu.Target>
-          <Menu.Dropdown>{languageItems}</Menu.Dropdown>
-        </Menu>
-      </Group>
+              <Menu.Target>
+                <UnstyledButton
+                  className={classes.control}
+                  data-expanded={languageMenuOpened || undefined}
+                >
+                  <Group gap="xs">
+                    <ReactCountryFlag
+                      countryCode={selectedLanguage.countryCode}
+                      svg
+                      className={classes.flag}
+                      aria-label={`${selectedLanguage.label} flag`}
+                    />
+                    <span className={classes.label}>
+                      {selectedLanguage.label}
+                    </span>
+                  </Group>
+                  <IconChevronDown
+                    size={16}
+                    className={classes.icon}
+                    stroke={1.5}
+                  />
+                </UnstyledButton>
+              </Menu.Target>
+              <Menu.Dropdown>{languageItems}</Menu.Dropdown>
+            </Menu>
+          </Group>
 
-      <Group
-        justify="space-between"
-        className={classes.item}
-        wrap="nowrap"
-        gap="xl"
-      >
-        <div>
-          <Text>Theme</Text>
-          <Text size="xs" c="dimmed">
-            Choose the global UI theme
-          </Text>
-        </div>
+          <Group
+            justify="space-between"
+            className={classes.item}
+            wrap="nowrap"
+            gap="xl"
+          >
+            <div>
+              <Text>Theme</Text>
+              <Text size="xs" c="dimmed">
+                Choose the global UI theme
+              </Text>
+            </div>
 
-        <Menu
-          onOpen={() => setThemeMenuOpened(true)}
-          onClose={() => setThemeMenuOpened(false)}
-          radius="md"
-          width="target"
-        >
-          <Menu.Target>
-            <UnstyledButton
-              className={classes.control}
-              data-expanded={themeMenuOpened || undefined}
-              aria-label="Theme"
+            <Menu
+              onOpen={() => setThemeMenuOpened(true)}
+              onClose={() => setThemeMenuOpened(false)}
+              radius="md"
+              width="target"
             >
-              <Group gap="xs">
-                <span className={classes.label}>
-                  {selectedThemeOption.label}
-                </span>
-              </Group>
-              <IconChevronDown
-                size={16}
-                className={classes.icon}
-                stroke={1.5}
-              />
-            </UnstyledButton>
-          </Menu.Target>
-          <Menu.Dropdown>{themeItems}</Menu.Dropdown>
-        </Menu>
-      </Group>
+              <Menu.Target>
+                <UnstyledButton
+                  className={classes.control}
+                  data-expanded={themeMenuOpened || undefined}
+                  aria-label="Theme"
+                >
+                  <Group gap="xs">
+                    <span className={classes.label}>
+                      {selectedThemeOption.label}
+                    </span>
+                  </Group>
+                  <IconChevronDown
+                    size={16}
+                    className={classes.icon}
+                    stroke={1.5}
+                  />
+                </UnstyledButton>
+              </Menu.Target>
+              <Menu.Dropdown>{themeItems}</Menu.Dropdown>
+            </Menu>
+          </Group>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="experimental">
+          <Group
+            justify="space-between"
+            className={classes.item}
+            wrap="nowrap"
+            gap="xl"
+          >
+            <div>
+              <Text>New data tables</Text>
+              <Text size="xs" c="dimmed">
+                Enable the experimental DataTable components. When on, each table
+                shows an engine selector (TanStack or mantine-datatable). When
+                off, the classic mantine-react-table is used everywhere.
+              </Text>
+            </div>
+            <Switch
+              className={classes.switch}
+              checked={experimentalDataTables}
+              onChange={(event) =>
+                setExperimentalDataTables(event.currentTarget.checked)
+              }
+              aria-label="Enable experimental data tables"
+            />
+          </Group>
+        </Tabs.Panel>
+      </Tabs>
     </Card>
   );
 }

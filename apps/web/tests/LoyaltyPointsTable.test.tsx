@@ -21,6 +21,7 @@ import {
 // @jitaspace/datatable is loaded via moduleNameMapper → real source → SWC
 // ---------------------------------------------------------------------------
 import { LoyaltyPointsTable } from "../components/LPStore/LoyaltyPointsTable";
+import { usePreferencesStore } from "~/lib/preferences";
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -82,6 +83,13 @@ const offers = [
 
 const wrap = (ui: React.ReactElement) =>
   render(React.createElement(MantineProvider, null, ui));
+
+// LoyaltyPointsTable renders via the app DataTable switcher. Enable the
+// experimental setting so it uses the TanStack engine these tests assert
+// against (the classic mantine-react-table engine renders different DOM).
+beforeEach(() => {
+  usePreferencesStore.setState({ experimentalDataTables: true });
+});
 
 // ---------------------------------------------------------------------------
 // Tests

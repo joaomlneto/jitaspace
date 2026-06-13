@@ -15,7 +15,8 @@ import {
   TypeName,
 } from "@jitaspace/ui";
 import type { DataTableColumn } from "@jitaspace/datatable";
-import { DataTable } from "@jitaspace/datatable-tanstack";
+
+import { DataTable } from "~/components/DataTable";
 
 interface LoyaltyPointsTableProps {
   corporations: {
