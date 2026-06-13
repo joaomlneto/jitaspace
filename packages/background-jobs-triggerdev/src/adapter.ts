@@ -24,14 +24,19 @@ const taskById = new Map<string, TriggerableTask>();
 
 // Trigger's `wait.for` takes { seconds | minutes | hours | days }; our
 // JobDuration is a number of seconds or a string like "60s"/"3m"/"1h".
+const DURATION_UNIT_SECONDS: Record<string, number> = {
+  s: 1,
+  m: 60,
+  h: 3600,
+  d: 86400,
+};
+
 const toWaitDuration = (duration: JobDuration): { seconds: number } => {
   if (typeof duration === "number") return { seconds: duration };
-  const match = /^(\d+)\s*(s|m|h|d)?$/.exec(duration.trim());
+  const match = /^(\d+)\s*([smhd])?$/.exec(duration.trim());
   if (!match) return { seconds: 60 };
   const value = Number(match[1]);
-  const unit = match[2];
-  const factor =
-    unit === "d" ? 86400 : unit === "h" ? 3600 : unit === "m" ? 60 : 1;
+  const factor = DURATION_UNIT_SECONDS[match[2] ?? "s"] ?? 1;
   return { seconds: value * factor };
 };
 
@@ -68,19 +73,18 @@ const buildContext = (payload: unknown, attempt: number): JobContext => ({
   },
 });
 
-const taskOptions = (job: JobDefinition) => ({
-  ...(job.singleton
-    ? { queue: { concurrencyLimit: 1 } }
-    : job.concurrencyLimit
-      ? { queue: { concurrencyLimit: job.concurrencyLimit } }
-      : {}),
-  // Inngest `retries: N` = N retries after the first attempt (N+1 total);
-  // Trigger `maxAttempts` is the total, so add one.
-  ...(job.retries !== undefined
-    ? { retry: { maxAttempts: job.retries + 1 } }
-    : {}),
-  ...(job.maxDurationSeconds ? { maxDuration: job.maxDurationSeconds } : {}),
-});
+const taskOptions = (job: JobDefinition) => {
+  const concurrencyLimit = job.singleton ? 1 : job.concurrencyLimit;
+  return {
+    ...(concurrencyLimit ? { queue: { concurrencyLimit } } : {}),
+    // Inngest `retries: N` = N retries after the first attempt (N+1 total);
+    // Trigger `maxAttempts` is the total, so add one.
+    ...(job.retries === undefined
+      ? {}
+      : { retry: { maxAttempts: job.retries + 1 } }),
+    ...(job.maxDurationSeconds ? { maxDuration: job.maxDurationSeconds } : {}),
+  };
+};
 
 // Inngest cron strings may be prefixed `TZ=Area/City`; Trigger wants the
 // pattern plus a separate timezone.

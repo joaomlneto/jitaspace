@@ -1,5 +1,3 @@
-import pLimit from "p-limit";
-
 import { getWars } from "@jitaspace/esi-client";
 
 import { defineJob } from "../../../core";

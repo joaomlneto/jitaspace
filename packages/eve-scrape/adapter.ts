@@ -51,9 +51,9 @@ const toInngestFunction = (job: JobDefinition): InngestFunctionRef =>
       ...(job.concurrencyLimit
         ? { concurrency: { limit: job.concurrencyLimit } }
         : {}),
-      ...(job.retries !== undefined
-        ? { retries: job.retries as InngestRetries }
-        : {}),
+      ...(job.retries === undefined
+        ? {}
+        : { retries: job.retries as InngestRetries }),
     },
     async (inngestCtx) => {
       const { event, step, logger } = inngestCtx;
