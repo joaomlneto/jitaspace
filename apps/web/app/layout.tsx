@@ -10,6 +10,7 @@ import "@mantine/spotlight/styles.css";
 import "@mantine/nprogress/styles.css";
 import "mantine-react-table/styles.css";
 import "mantine-datatable/styles.css";
+import "./globals.css";
 
 import type { Viewport } from "next";
 import type { ReactNode } from "react";
@@ -31,6 +32,7 @@ import { MainLayout } from "~/layouts";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
 import { DEFAULT_ESI_ACCEPT_LANGUAGE } from "~/lib/preferences";
 import { AppMantineProvider } from "./mantine-provider";
+import { splashScreenLink, splashScreens } from "./splashScreens";
 
 const APP_NAME = "JitaSpace";
 const APP_DEFAULT_TITLE = "JitaSpace";
@@ -106,6 +108,17 @@ export default function RootLayout({
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
         />
+        {splashScreens.map((screen) => {
+          const { href, media } = splashScreenLink(screen);
+          return (
+            <link
+              key={screen.name}
+              rel="apple-touch-startup-image"
+              media={media}
+              href={href}
+            />
+          );
+        })}
       </head>
       <body>
         <Script
