@@ -9,6 +9,7 @@ export * from "./ConstellationName";
 export * from "./CorporationName";
 export * from "./CSPACostText";
 export * from "./DogmaAttributeName";
+export * from "./DogmaAttributeValue";
 export * from "./DogmaEffectName";
 export * from "./EveEntityName";
 export * from "./EveMailSenderName";
