@@ -5,23 +5,6 @@ import { pluginReactQuery } from "@kubb/plugin-react-query";
 import { pluginTs } from "@kubb/plugin-ts";
 import { pluginZod } from "@kubb/plugin-zod";
 
-// Endpoints exposing an infinite query: [pathPattern, paginationParam, initialPageParam].
-// FIXME: initialPageParam 0 (from_event / last_mail_id) is not valid and must be
-// overridden when consuming the generated hook.
-const infiniteEndpoints: [
-  pattern: string,
-  queryParam: string,
-  initialPageParam: number,
-][] = [
-  ["^/characters/{character_id}/calendar/?$", "from_event", 0],
-  ["^/characters/{character_id}/assets/?$", "page", 1],
-  ["^/corporations/{corporation_id}/assets/?$", "page", 1],
-  ["^/alliances/{alliance_id}/contacts/?$", "page", 1],
-  ["^/characters/{character_id}/contacts/?$", "page", 1],
-  ["^/corporations/{corporation_id}/contacts/?$", "page", 1],
-  ["^/characters/{character_id}/mail/?$", "last_mail_id", 0],
-];
-
 export default defineConfig(({ config, watch, logLevel }) => {
   return {
     name: "esi-client",
@@ -51,13 +34,80 @@ export default defineConfig(({ config, watch, logLevel }) => {
           baseURL: "https://esi.evetech.net",
           dataReturnType: "full",
         },
-        override: infiniteEndpoints.map(
-          ([pattern, queryParam, initialPageParam]) => ({
-            type: "path" as const,
-            pattern,
-            options: { infinite: { queryParam, initialPageParam } },
-          }),
-        ),
+        override: [
+          {
+            type: "path",
+            pattern: "^/characters/{character_id}/calendar/?$",
+            options: {
+              infinite: {
+                queryParam: "from_event",
+                // FIXME: This is not valid! Needs to be overriden when using the generated code!
+                initialPageParam: 0,
+              },
+            },
+          },
+          {
+            type: "path",
+            pattern: "^/characters/{character_id}/assets/?$",
+            options: {
+              infinite: {
+                queryParam: "page",
+                initialPageParam: 1,
+              },
+            },
+          },
+          {
+            type: "path",
+            pattern: "^/corporations/{corporation_id}/assets/?$",
+            options: {
+              infinite: {
+                queryParam: "page",
+                initialPageParam: 1,
+              },
+            },
+          },
+          {
+            type: "path",
+            pattern: "^/alliances/{alliance_id}/contacts/?$",
+            options: {
+              infinite: {
+                queryParam: "page",
+                initialPageParam: 1,
+              },
+            },
+          },
+          {
+            type: "path",
+            pattern: "^/characters/{character_id}/contacts/?$",
+            options: {
+              infinite: {
+                queryParam: "page",
+                initialPageParam: 1,
+              },
+            },
+          },
+          {
+            type: "path",
+            pattern: "^/corporations/{corporation_id}/contacts/?$",
+            options: {
+              infinite: {
+                queryParam: "page",
+                initialPageParam: 1,
+              },
+            },
+          },
+          {
+            type: "path",
+            pattern: "^/characters/{character_id}/mail/?$",
+            options: {
+              infinite: {
+                queryParam: "last_mail_id",
+                // FIXME: This is not valid! Needs to be overriden when using the generated code!
+                initialPageParam: 0,
+              },
+            },
+          },
+        ],
       }),
       pluginZod({}),
     ],
