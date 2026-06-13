@@ -2,11 +2,6 @@ import type { Config } from "jest";
 
 const config: Config = {
   testEnvironment: "node",
-  // Resolve the CJS build of dual-package deps (e.g. `inngest`, whose exports
-  // map only has `import`/`require`) so @swc/jest can load them as CommonJS.
-  testEnvironmentOptions: {
-    customExportConditions: ["require", "node", "default"],
-  },
   testMatch: ["<rootDir>/tests/**/*.test.ts"],
   setupFiles: ["<rootDir>/jest.setup.ts"],
   transform: {
@@ -24,19 +19,10 @@ const config: Config = {
   transformIgnorePatterns: ["/node_modules/(?!(@jitaspace))"],
   collectCoverage: true,
   coverageDirectory: "coverage",
+  collectCoverageFrom: ["src/**/*.ts", "!src/**/*.d.ts"],
   // `lcovonly` (not `lcov`) so we emit only coverage/lcov.info for SonarCloud
-  // and skip the HTML report, whose vendored JS would trip the package's
-  // checkJs type-check.
+  // and skip the HTML report, whose vendored JS would trip `tsc --noEmit`.
   coverageReporters: ["lcovonly", "text"],
-  collectCoverageFrom: [
-    "functions/**/*.ts",
-    "client.ts",
-    // Pure data-sync/diff helpers are unit-tested; surface their coverage too.
-    // downloadFile.ts (network IO) and the barrel are intentionally excluded.
-    "utils/**/*.ts",
-    "!utils/index.ts",
-    "!utils/downloadFile.ts",
-  ],
   clearMocks: true,
   restoreMocks: true,
 };
