@@ -34,12 +34,14 @@ pnpm type-check
 
 ## Deploying
 
-CI deploys on push to `main` via `.github/workflows/triggerdev-deploy.yml`
-(`pnpm db:generate` then `trigger.dev deploy`). It needs repo secrets
-`TRIGGER_ACCESS_TOKEN` and `TRIGGER_PROJECT_REF`.
+Deployment runs through the official **Trigger.dev GitHub + Vercel integrations**
+(connect the repo/project from the Trigger.dev dashboard) — there is no GitHub
+Action or `TRIGGER_ACCESS_TOKEN` secret in this repo. For a manual/local deploy:
+`pnpm deploy` (runs `trigger.dev deploy`).
 
 **Prisma 7:** modern-mode `prismaExtension` does **not** run `prisma generate`,
-so the generated client must exist before deploy (the CI step handles this).
+so the generated client must exist before deploy. The repo's `pnpm install`
+postinstall generates it, so the integration's install step covers this.
 
 ## Status dashboard
 
