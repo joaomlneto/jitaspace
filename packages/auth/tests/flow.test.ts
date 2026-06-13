@@ -1,6 +1,6 @@
 import {
   exchangeEveSsoToken,
-  getEveSsoAccessTokenPayload,
+  verifyEveSsoAccessToken,
 } from "@jitaspace/auth-utils";
 
 import {
@@ -14,7 +14,7 @@ import { unsealDataWithAuthSecret } from "../utils/unsealDataWithAuthSecret";
 
 jest.mock("@jitaspace/auth-utils", () => ({
   exchangeEveSsoToken: jest.fn(),
-  getEveSsoAccessTokenPayload: jest.fn(),
+  verifyEveSsoAccessToken: jest.fn(),
 }));
 
 // The package reads no env of its own — callers pass these in. @hapi/iron
@@ -63,7 +63,7 @@ describe("createLoginFlow", () => {
 
 describe("completeLoginFlow", () => {
   beforeEach(() => {
-    (getEveSsoAccessTokenPayload as jest.Mock).mockReturnValue({
+    (verifyEveSsoAccessToken as jest.Mock).mockResolvedValue({
       exp: 9_999_999_999,
       sub: "CHARACTER:EVE:123",
     });

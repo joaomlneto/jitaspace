@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import {
   exchangeEveSsoToken,
-  getEveSsoAccessTokenPayload,
+  verifyEveSsoAccessToken,
 } from "@jitaspace/auth-utils";
 
 import { sealDataWithAuthSecret, unsealDataWithAuthSecret } from "../../utils";
@@ -136,8 +136,13 @@ export async function completeLoginFlow(params: {
     codeVerifier: flow.codeVerifier,
   });
 
-  const payload = getEveSsoAccessTokenPayload(tokens.access_token);
-  if (!payload) throw new OAuthFlowError("Unable to decode access token.");
+  // Verify the token's signature against EVE's published JWKS (and the
+  // iss/aud/exp claims) before trusting anything it contains.
+  const payload = await verifyEveSsoAccessToken(tokens.access_token).catch(
+    () => {
+      throw new OAuthFlowError("Access token failed verification.");
+    },
+  );
 
   // Same sealed shape `refreshTokenApiRouteHandler` / `tokenRefreshDataSchema`
   // expect, so the existing refresh path can consume it unchanged.

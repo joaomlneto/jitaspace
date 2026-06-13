@@ -1,6 +1,6 @@
 import {
-  refreshEveSsoToken,
   REFRESH_TOKEN_ENDPOINT,
+  refreshEveSsoToken,
 } from "../utils/refreshEveSsoToken";
 
 const params = {
@@ -54,6 +54,49 @@ describe("refreshEveSsoToken", () => {
     const headers = init.headers as Record<string, string>;
     const expectedAuth = `Basic ${Buffer.from("cid:secret").toString("base64")}`;
     expect(headers.Authorization).toBe(expectedAuth);
+  });
+
+  it("sends a narrowed `scope` param when scopes are provided", async () => {
+    const json = jest.fn().mockResolvedValue({
+      access_token: "AT",
+      refresh_token: "RT",
+      expires_in: 1199,
+    });
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, json });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await refreshEveSsoToken({
+      ...params,
+      scopes: [
+        "esi-skills.read_skills.v1",
+        "esi-wallet.read_character_wallet.v1",
+      ],
+    });
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = init.body as URLSearchParams;
+    expect(body.get("scope")).toBe(
+      "esi-skills.read_skills.v1 esi-wallet.read_character_wallet.v1",
+    );
+  });
+
+  it("omits `scope` when scopes are absent or empty", async () => {
+    const json = jest.fn().mockResolvedValue({
+      access_token: "AT",
+      refresh_token: "RT",
+      expires_in: 1199,
+    });
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, json });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await refreshEveSsoToken(params);
+    await refreshEveSsoToken({ ...params, scopes: [] });
+
+    const bodies = fetchMock.mock.calls.map(
+      ([, init]) => (init as RequestInit).body as URLSearchParams,
+    );
+    expect(bodies[0]?.has("scope")).toBe(false);
+    expect(bodies[1]?.has("scope")).toBe(false);
   });
 
   it("throws 'error refreshing access token' when response is not ok", async () => {

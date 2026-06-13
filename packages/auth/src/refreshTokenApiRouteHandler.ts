@@ -3,9 +3,9 @@ import { HttpStatusCode } from "axios";
 import z from "zod";
 
 import {
-  getEveSsoAccessTokenPayload,
   refreshEveSsoToken,
   tokenRefreshDataSchema,
+  verifyEveSsoAccessToken,
 } from "@jitaspace/auth-utils";
 
 import { sealDataWithAuthSecret, unsealDataWithAuthSecret } from "../utils";
@@ -18,12 +18,12 @@ const REFRESH_TOKEN_BEFORE_EXP_TIME = 60 * 1000; // 1 minute
 // This is to prevent issues with tokens that were created a long time ago
 const ACCESS_TOKEN_TOO_OLD_TIME = 30 * 24 * 3600 * 1000; // 30 days
 
-// TODO: Support optionally requesting a subset of existing scopes
-// See https://docs.esi.evetech.net/docs/sso/refreshing_access_tokens.html
-
 /**
  * Credentials (`nextAuthSecret`, `eveClientId`, `eveClientSecret`) are supplied
  * by the caller — this package reads no environment variables of its own.
+ *
+ * Pass `scopes` to request a subset of the originally-granted scopes on the
+ * refresh (least privilege); omit it to keep the full scope set.
  */
 export const refreshTokenApiRouteHandler = async (
   req: NextApiRequest,
@@ -38,9 +38,10 @@ export const refreshTokenApiRouteHandler = async (
     nextAuthSecret: string;
     eveClientId: string;
     eveClientSecret: string;
+    scopes?: string[];
   },
 ) => {
-  const { nextAuthSecret, eveClientId, eveClientSecret } = config;
+  const { nextAuthSecret, eveClientId, eveClientSecret, scopes } = config;
   const body = req.body;
 
   // Confirm body is an (encrypted) string
@@ -55,8 +56,6 @@ export const refreshTokenApiRouteHandler = async (
   // Deserialize unsealed contents back into JSON
   const unsealedBody = tokenRefreshDataSchema.parse(decodedBody);
   const { accessTokenExpiration, refreshToken } = unsealedBody;
-
-  // TODO: VALIDATE TOKEN!!!
 
   // Check if the access token is expired or is about to
   if (
@@ -80,15 +79,17 @@ export const refreshTokenApiRouteHandler = async (
     eveClientId,
     eveClientSecret,
     refreshToken,
+    scopes,
   });
 
-  // Decode access token payload
-  const payload = getEveSsoAccessTokenPayload(access_token);
+  // Verify the refreshed token's signature against EVE's JWKS (and the
+  // iss/aud/exp claims) before trusting its payload.
+  const payload = await verifyEveSsoAccessToken(access_token).catch(() => null);
 
   if (!payload)
     return res
       .status(HttpStatusCode.InternalServerError)
-      .json({ error: "Unable to decode payload of refreshed token." });
+      .json({ error: "Refreshed access token failed verification." });
 
   const sealedRefreshData = await sealDataWithAuthSecret({
     data: {
