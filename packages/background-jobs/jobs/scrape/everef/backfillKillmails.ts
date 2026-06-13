@@ -1,8 +1,8 @@
 import type { GetKillmailsKillmailIdKillmailHash200 } from "@jitaspace/esi-client";
 
+import type { BatchStepResult } from "../../../types";
 import { defineJob } from "../../../core";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
-import type { BatchStepResult } from "../../../types";
 import { downloadTarBz2FileAndParseJson } from "../../../utils/downloadFile.ts";
 
 export interface BackfillEveRefKillmailsEventPayload {
@@ -59,10 +59,8 @@ export const backfillEveRefKillmails = defineJob<
       return batches;
     });
 
-    const results: BatchStepResult<StatsKey>[] = [];
-
     for (let i = startBatch; i < batches.length; i++) {
-      const result = await ctx.run(
+      await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
           const batchStartTime = performance.now();
@@ -110,9 +108,9 @@ export const backfillEveRefKillmails = defineJob<
             ),
           });
 
-          // TODO: Fetch wars before inserting killmails
-          // TODO: persist killmails (the updateTable WIP was removed during the
-          // background-jobs migration; recover from git history if needed).
+          // Not yet implemented: fetch wars + persist killmails. The
+          // updateTable WIP was removed during the background-jobs migration;
+          // see git history to recover it.
 
           return {
             stats: {
@@ -127,7 +125,6 @@ export const backfillEveRefKillmails = defineJob<
           };
         },
       );
-      results.push(result);
     }
 
     return {

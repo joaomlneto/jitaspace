@@ -4,13 +4,12 @@ import {
   staticSchema,
 } from "inngest";
 
-import {
-  NonRetriableError,
-  registry,
-  type JobContext,
-  type JobDefinition,
-  type JobDuration,
+import type {
+  JobContext,
+  JobDefinition,
+  JobDuration,
 } from "@jitaspace/background-jobs";
+import { NonRetriableError, registry } from "@jitaspace/background-jobs";
 
 import { client } from "./client";
 
@@ -69,8 +68,9 @@ const toInngestFunction = (job: JobDefinition): InngestFunctionRef =>
           error: (message, meta) => logger.error(message, meta),
         },
         run: <T>(name: string, fn: () => Promise<T>): Promise<T> =>
-          step.run(name, fn) as unknown as Promise<T>,
-        sleep: (name, duration) => step.sleep(name, toInngestDuration(duration)),
+          step.run(name, fn),
+        sleep: (name, duration) =>
+          step.sleep(name, toInngestDuration(duration)),
         send: async (jobId, payload) => {
           await step.sendEvent(`send:${jobId}`, {
             name: jobId,
@@ -85,7 +85,7 @@ const toInngestFunction = (job: JobDefinition): InngestFunctionRef =>
           return step.invoke(`invoke:${jobId}`, {
             function: target,
             data: (payload ?? {}) as Record<string, unknown>,
-          }) as unknown as Promise<R>;
+          });
         },
       };
 

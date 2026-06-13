@@ -1,5 +1,6 @@
 import type { GetKillmailsKillmailIdKillmailHash200 } from "@jitaspace/esi-client";
 
+import type { JobContext } from "../../../core";
 import type { Prisma } from "../../../db";
 import { postUpdateCard } from "../../../chat";
 import { defineJob } from "../../../core";
@@ -193,6 +194,179 @@ const formatLag = (latest: bigint | null, cursor: bigint | null) => {
   return (latest > cursor ? latest - cursor : 0n).toString();
 };
 
+interface KillmailRows {
+  killmailRows: Prisma.KillmailCreateManyInput[];
+  victimRows: Prisma.KillmailVictimCreateManyInput[];
+  attackerRows: Prisma.KillmailAttackerCreateManyInput[];
+  itemRows: Prisma.KillmailVictimItemsCreateManyInput[];
+  missingAllianceIds: Set<number>;
+  missingCharacterIds: Set<number>;
+  missingCorporationIds: Set<number>;
+  missingFactionIds: Set<number>;
+  missingWarIds: Set<number>;
+}
+
+/** Build the killmail/victim/attacker/item rows + referenced-id sets from R2Z2 packages. */
+const buildKillmailRows = (packages: R2Z2Package[]): KillmailRows => {
+  const missingAllianceIds = new Set<number>();
+  const missingCharacterIds = new Set<number>();
+  const missingCorporationIds = new Set<number>();
+  const missingFactionIds = new Set<number>();
+  const missingWarIds = new Set<number>();
+
+  const killmailRows: Prisma.KillmailCreateManyInput[] = [];
+  const victimRows: Prisma.KillmailVictimCreateManyInput[] = [];
+  const attackerRows: Prisma.KillmailAttackerCreateManyInput[] = [];
+  const itemRows: Prisma.KillmailVictimItemsCreateManyInput[] = [];
+
+  const add = (set: Set<number>, value?: number) => {
+    if (value != null) set.add(value);
+  };
+
+  for (const entry of packages) {
+    const killmail = entry.esi;
+    const zkb = entry.zkb;
+    const killmailId = toBigInt(killmail.killmail_id);
+    const warId = killmail.war_id ?? zkb.war_id ?? null;
+
+    if (warId !== null) missingWarIds.add(warId);
+
+    killmailRows.push({
+      killmailId,
+      hash: zkb.hash,
+      killmailTime: new Date(killmail.killmail_time),
+      solarSystemId: killmail.solar_system_id,
+      moonId: killmail.moon_id ?? null,
+      warId,
+      metadataLoaded: true,
+    });
+
+    const victim = killmail.victim;
+    victimRows.push({
+      killmailId,
+      characterId: victim.character_id ?? null,
+      corporationId: victim.corporation_id ?? null,
+      allianceId: victim.alliance_id ?? null,
+      factionId: victim.faction_id ?? null,
+      shipTypeId: victim.ship_type_id,
+      damageTaken: victim.damage_taken,
+      positionX: victim.position?.x ?? null,
+      positionY: victim.position?.y ?? null,
+      positionZ: victim.position?.z ?? null,
+    });
+
+    flattenVictimItems(victim.items).forEach(
+      ({ item, parentIndex }, itemIndex) => {
+        itemRows.push({
+          killmailId,
+          itemIndex,
+          parentItemIndex: parentIndex,
+          flag: item.flag,
+          typeId: item.item_type_id,
+          quantityDestroyed: item.quantity_destroyed ?? null,
+          quantityDropped: item.quantity_dropped ?? null,
+          singleton: toBigInt(item.singleton ?? 0),
+        });
+      },
+    );
+
+    killmail.attackers.forEach((attacker, attackerIndex) => {
+      attackerRows.push({
+        killmailId,
+        attackerIndex,
+        characterId: attacker.character_id ?? null,
+        corporationId: attacker.corporation_id ?? null,
+        allianceId: attacker.alliance_id ?? null,
+        factionId: attacker.faction_id ?? null,
+        shipTypeId: attacker.ship_type_id ?? null,
+        weaponTypeId: attacker.weapon_type_id ?? null,
+        damageDone: attacker.damage_done,
+        finalBlow: attacker.final_blow,
+        securityStatus: attacker.security_status ?? 0,
+      });
+      add(missingAllianceIds, attacker.alliance_id);
+      add(missingCharacterIds, attacker.character_id);
+      add(missingCorporationIds, attacker.corporation_id);
+      add(missingFactionIds, attacker.faction_id);
+    });
+
+    add(missingAllianceIds, victim.alliance_id);
+    add(missingCharacterIds, victim.character_id);
+    add(missingCorporationIds, victim.corporation_id);
+    add(missingFactionIds, victim.faction_id);
+  }
+
+  return {
+    killmailRows,
+    victimRows,
+    attackerRows,
+    itemRows,
+    missingAllianceIds,
+    missingCharacterIds,
+    missingCorporationIds,
+    missingFactionIds,
+    missingWarIds,
+  };
+};
+
+/** Poll R2Z2 from `startCursor`, returning the packages and the advanced cursor / throttle time. */
+const collectKillmailPackages = async (
+  ctx: JobContext,
+  redis: Awaited<ReturnType<typeof getRedis>>,
+  startCursor: bigint,
+  latestSequence: bigint,
+): Promise<{
+  packages: R2Z2Package[];
+  cursor: bigint;
+  rateLimitUntilMs: number | null;
+}> => {
+  const packages: R2Z2Package[] = [];
+  let cursor = startCursor;
+  let rateLimitUntilMs: number | null = null;
+
+  for (let i = 0; i < MAX_KILLMAILS_PER_RUN; i++) {
+    const response = await fetchJson(`${R2Z2_BASE_URL}/${cursor}.json`);
+
+    if (response.status === 429) {
+      const retryAfterSeconds = response.retryAfterSeconds;
+      const sleepFor = toSleepDuration(retryAfterSeconds);
+      rateLimitUntilMs =
+        Date.now() +
+        (retryAfterSeconds ?? RATE_LIMIT_FALLBACK_SLEEP_SECONDS) * 1000;
+      await postUpdateCard({
+        status: "rate_limited",
+        summary: "Rate limited while fetching sequence.json.",
+        throttledUntil: new Date(rateLimitUntilMs).toISOString(),
+      });
+      await ctx.sleep("Rate limited fetching killmail", sleepFor);
+      break;
+    }
+
+    if (response.status === 404) {
+      // If we're behind and hit a 404 immediately, re-prime to latest.
+      if (packages.length === 0 && cursor < latestSequence) {
+        cursor = latestSequence;
+        await redis.set(R2Z2_CURSOR_KEY, cursor.toString());
+      }
+      break;
+    }
+
+    const payload = response.data as Partial<R2Z2Package> | null;
+    if (!payload?.esi || !payload.zkb) {
+      ctx.logger.warn("Skipping invalid killmail payload from R2Z2.", {
+        sequence: cursor.toString(),
+      });
+      cursor += 1n;
+      continue;
+    }
+
+    packages.push(payload as R2Z2Package);
+    cursor += 1n;
+  }
+
+  return { packages, cursor, rateLimitUntilMs };
+};
+
 export interface ScrapeRecentKillsEventPayload {}
 
 export const scrapeZkillboardRecentKills =
@@ -280,49 +454,18 @@ export const scrapeZkillboardRecentKills =
           });
         }
 
-        const killmailPackages: R2Z2Package[] = [];
         cursor = BigInt(nextSequenceValue);
         startCursor = cursor;
 
-        for (let i = 0; i < MAX_KILLMAILS_PER_RUN; i++) {
-          const response = await fetchJson(`${R2Z2_BASE_URL}/${cursor}.json`);
-
-          if (response.status === 429) {
-            const retryAfterSeconds = response.retryAfterSeconds;
-            const sleepFor = toSleepDuration(retryAfterSeconds);
-            rateLimitUntilMs =
-              Date.now() +
-              (retryAfterSeconds ?? RATE_LIMIT_FALLBACK_SLEEP_SECONDS) * 1000;
-            await postUpdateCard({
-              status: "rate_limited",
-              summary: "Rate limited while fetching sequence.json.",
-              throttledUntil: new Date(rateLimitUntilMs).toISOString(),
-            });
-            await ctx.sleep("Rate limited fetching killmail", sleepFor);
-            break;
-          }
-
-          if (response.status === 404) {
-            // If we're behind and hit a 404 immediately, re-prime to latest.
-            if (killmailPackages.length === 0 && cursor < latestSequence) {
-              cursor = latestSequence;
-              await redis.set(R2Z2_CURSOR_KEY, cursor.toString());
-            }
-            break;
-          }
-
-          const payload = response.data as Partial<R2Z2Package> | null;
-          if (!payload?.esi || !payload.zkb) {
-            ctx.logger.warn("Skipping invalid killmail payload from R2Z2.", {
-              sequence: cursor.toString(),
-            });
-            cursor += 1n;
-            continue;
-          }
-
-          killmailPackages.push(payload as R2Z2Package);
-          cursor += 1n;
-        }
+        const collected = await collectKillmailPackages(
+          ctx,
+          redis,
+          cursor,
+          latestSequence,
+        );
+        const killmailPackages = collected.packages;
+        cursor = collected.cursor;
+        rateLimitUntilMs = collected.rateLimitUntilMs;
 
         if (killmailPackages.length === 0) {
           await postUpdateCard({
@@ -344,97 +487,17 @@ export const scrapeZkillboardRecentKills =
           };
         }
 
-        const missingAllianceIds = new Set<number>();
-        const missingCharacterIds = new Set<number>();
-        const missingCorporationIds = new Set<number>();
-        const missingFactionIds = new Set<number>();
-        const missingWarIds = new Set<number>();
-
-        const killmailRows: Prisma.KillmailCreateManyInput[] = [];
-        const victimRows: Prisma.KillmailVictimCreateManyInput[] = [];
-        const attackerRows: Prisma.KillmailAttackerCreateManyInput[] = [];
-        const itemRows: Prisma.KillmailVictimItemsCreateManyInput[] = [];
-
-        for (const entry of killmailPackages) {
-          const killmail = entry.esi;
-          const zkb = entry.zkb;
-          const hash = zkb.hash;
-
-          const killmailId = toBigInt(killmail.killmail_id);
-          const warId = killmail.war_id ?? zkb.war_id ?? null;
-
-          if (warId !== null) missingWarIds.add(warId);
-
-          killmailRows.push({
-            killmailId,
-            hash,
-            killmailTime: new Date(killmail.killmail_time),
-            solarSystemId: killmail.solar_system_id,
-            moonId: killmail.moon_id ?? null,
-            warId: killmail.war_id ?? zkb.war_id ?? null,
-            metadataLoaded: true,
-          });
-
-          const victim = killmail.victim;
-          victimRows.push({
-            killmailId,
-            characterId: victim.character_id ?? null,
-            corporationId: victim.corporation_id ?? null,
-            allianceId: victim.alliance_id ?? null,
-            factionId: victim.faction_id ?? null,
-            shipTypeId: victim.ship_type_id,
-            damageTaken: victim.damage_taken,
-            positionX: victim.position?.x ?? null,
-            positionY: victim.position?.y ?? null,
-            positionZ: victim.position?.z ?? null,
-          });
-
-          const flattenedItems = flattenVictimItems(victim.items);
-          flattenedItems.forEach(({ item, parentIndex }, itemIndex) => {
-            itemRows.push({
-              killmailId,
-              itemIndex,
-              parentItemIndex: parentIndex,
-              flag: item.flag,
-              typeId: item.item_type_id,
-              quantityDestroyed: item.quantity_destroyed ?? null,
-              quantityDropped: item.quantity_dropped ?? null,
-              singleton: toBigInt(item.singleton ?? 0),
-            });
-          });
-
-          killmail.attackers.forEach((attacker, attackerIndex) => {
-            attackerRows.push({
-              killmailId,
-              attackerIndex,
-              characterId: attacker.character_id ?? null,
-              corporationId: attacker.corporation_id ?? null,
-              allianceId: attacker.alliance_id ?? null,
-              factionId: attacker.faction_id ?? null,
-              shipTypeId: attacker.ship_type_id ?? null,
-              weaponTypeId: attacker.weapon_type_id ?? null,
-              damageDone: attacker.damage_done,
-              finalBlow: attacker.final_blow,
-              securityStatus: attacker.security_status ?? 0,
-            });
-          });
-
-          const add = (set: Set<number>, value?: number) => {
-            if (value != null) set.add(value);
-          };
-
-          add(missingAllianceIds, victim.alliance_id);
-          add(missingCharacterIds, victim.character_id);
-          add(missingCorporationIds, victim.corporation_id);
-          add(missingFactionIds, victim.faction_id);
-
-          killmail.attackers.forEach((attacker) => {
-            add(missingAllianceIds, attacker.alliance_id);
-            add(missingCharacterIds, attacker.character_id);
-            add(missingCorporationIds, attacker.corporation_id);
-            add(missingFactionIds, attacker.faction_id);
-          });
-        }
+        const {
+          killmailRows,
+          victimRows,
+          attackerRows,
+          itemRows,
+          missingAllianceIds,
+          missingCharacterIds,
+          missingCorporationIds,
+          missingFactionIds,
+          missingWarIds,
+        } = buildKillmailRows(killmailPackages);
 
         await ctx.run("Ensure related entities exist", async () => {
           await createCorpAndItsRefRecords({

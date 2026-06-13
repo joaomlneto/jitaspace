@@ -22,9 +22,7 @@ export const scrapeEsiMarketGroups = defineJob<
   trigger: { type: "event" },
   name: "Scrape Market Groups",
   concurrencyLimit: 1,
-  handler: async (ctx) => {
-    const batchSize = ctx.payload.batchSize ?? 500;
-
+  handler: async () => {
     // Get all Market Group IDs in ESI
     const marketGroupIds = await getMarketsGroups().then((res) => res.data);
     marketGroupIds.sort((a, b) => a - b);
