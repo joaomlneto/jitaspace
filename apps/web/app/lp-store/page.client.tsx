@@ -18,7 +18,9 @@ export interface LPStorePageProps {
   corporations: { corporationId: number; name: string }[];
 }
 
-export default function LPStorePage({ corporations }: LPStorePageProps) {
+export default function LPStorePage({
+  corporations,
+}: Readonly<LPStorePageProps>) {
   return (
     <Container size="xl">
       <Stack>

@@ -30,7 +30,7 @@ export const backfillEveKillAllianceIds = defineJob<
     console.log(allianceIds.length, "Alliance IDs found");
 
     const numBatches = Math.ceil(allianceIds.length / batchSize);
-    const batches = [...Array(numBatches).keys()].map((batchId) =>
+    const batches = [...new Array(numBatches).keys()].map((batchId) =>
       allianceIds.slice(batchId * batchSize, (batchId + 1) * batchSize),
     );
 

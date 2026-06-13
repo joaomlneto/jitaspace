@@ -101,16 +101,26 @@ interface MarketPriceEntry {
   adjusted_price?: number;
 }
 
-const booleanBadge = (value: boolean | null | undefined) => (
-  <Badge
-    color={
-      value === undefined || value === null ? "gray" : value ? "teal" : "red"
-    }
-    variant="light"
-  >
-    {value === undefined || value === null ? "Unknown" : value ? "Yes" : "No"}
-  </Badge>
-);
+const booleanBadge = (value: boolean | null | undefined) => {
+  const isUnknown = value === undefined || value === null;
+  let color: string;
+  if (isUnknown) {
+    color = "gray";
+  } else {
+    color = value ? "teal" : "red";
+  }
+  let label: string;
+  if (isUnknown) {
+    label = "Unknown";
+  } else {
+    label = value ? "Yes" : "No";
+  }
+  return (
+    <Badge color={color} variant="light">
+      {label}
+    </Badge>
+  );
+};
 
 /** Locale-format a number, keeping useful precision for small fractions. */
 const formatNumber = (value: number): string => {
@@ -243,7 +253,7 @@ export default function TypePage({
   typeId,
   typeName,
   typeDescription,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const character = useSelectedCharacter();
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();

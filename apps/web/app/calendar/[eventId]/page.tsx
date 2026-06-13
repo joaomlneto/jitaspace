@@ -5,9 +5,9 @@ import PageClient from "./page.client";
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ eventId: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<Loader />}>
       <PageClient params={params} />

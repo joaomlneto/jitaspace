@@ -17,6 +17,11 @@ export interface ScrapeLoyaltyStoreOffersEventPayload {
   };
 }
 
+async function fetchCorporationLoyaltyStoreOffers(corporationId: number) {
+  const res = await getLoyaltyStoresCorporationIdOffers(corporationId);
+  return res.data.map((offer) => ({ corporationId, ...offer }));
+}
+
 export const scrapeEsiLoyaltyStoreOffers = defineJob<
   ScrapeLoyaltyStoreOffersEventPayload["data"]
 >({
@@ -43,11 +48,7 @@ export const scrapeEsiLoyaltyStoreOffers = defineJob<
     const thisBatchLoyaltyStoreOffers = (
       await Promise.all(
         corporationIds.map((corporationId) =>
-          limit(async () =>
-            getLoyaltyStoresCorporationIdOffers(corporationId).then((res) =>
-              res.data.map((offer) => ({ corporationId, ...offer })),
-            ),
-          ),
+          limit(() => fetchCorporationLoyaltyStoreOffers(corporationId)),
         ),
       )
     ).flat();

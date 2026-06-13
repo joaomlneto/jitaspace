@@ -54,25 +54,27 @@ export const compareSets = <T extends object>({
         objKeysAfter,
         test: new Set(recordsAfter.flatMap((record) => Object.keys(record))),
       });
-      throw Error("KEY SETS DO NOT MATCH");
+      throw new Error("KEY SETS DO NOT MATCH");
     }
   }
 
   // get the records that are common to both sets
-  const commonKeys = keysAfter.filter((key) => keysBefore.includes(key));
+  const commonKeys = new Set(
+    keysAfter.filter((key) => keysBefore.includes(key)),
+  );
   const commonRecords = recordsAfter.filter((record) =>
-    commonKeys.includes(getId(record)),
+    commonKeys.has(getId(record)),
   );
 
   // determine which records did not change
   const equal = commonRecords.filter((record) =>
     recordsAreEqual(indexBefore[getId(record)]!, record),
   );
-  const equalKeys = equal.map((record) => getId(record));
+  const equalKeys = new Set(equal.map((record) => getId(record)));
 
   // determine which records have been modified
   const modified = commonRecords.filter(
-    (record) => !equalKeys.includes(getId(record)),
+    (record) => !equalKeys.has(getId(record)),
   );
 
   /*
@@ -83,12 +85,10 @@ export const compareSets = <T extends object>({
     });*/
 
   // sanity check
-  const numInputs = [
-    ...new Set([
-      ...keysBefore.map((x) => x.toString()),
-      ...keysAfter.map((x) => x.toString()),
-    ]),
-  ].length;
+  const numInputs = new Set([
+    ...keysBefore.map((x) => x.toString()),
+    ...keysAfter.map((x) => x.toString()),
+  ]).size;
   const numOutputs =
     created.length + deleted.length + equal.length + modified.length;
   if (numOutputs !== numInputs) {

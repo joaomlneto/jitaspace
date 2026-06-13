@@ -21,7 +21,6 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
-
 import { useShallow } from "zustand/shallow";
 
 import { useAuthenticatedCharacterIds, useAuthStore } from "@jitaspace/hooks";
@@ -60,26 +59,30 @@ export default function Page() {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
   const authenticatedCharacterIds = useAuthenticatedCharacterIds();
-  const authenticatedCorporationIds = useAuthStore(useShallow((state) => {
-    return Array.from(
-      new Set(
-        authenticatedCharacterIds
-          .map((characterId) => state.characters[characterId]?.corporationId)
-          .filter(
-            (corporationId): corporationId is number => corporationId != null,
-          ),
-      ),
-    );
-  }));
-  const authenticatedAllianceIds = useAuthStore(useShallow((state) => {
-    return Array.from(
-      new Set(
-        authenticatedCharacterIds
-          .map((characterId) => state.characters[characterId]?.allianceId)
-          .filter((allianceId): allianceId is number => allianceId != null),
-      ),
-    );
-  }));
+  const authenticatedCorporationIds = useAuthStore(
+    useShallow((state) => {
+      return Array.from(
+        new Set(
+          authenticatedCharacterIds
+            .map((characterId) => state.characters[characterId]?.corporationId)
+            .filter(
+              (corporationId): corporationId is number => corporationId != null,
+            ),
+        ),
+      );
+    }),
+  );
+  const authenticatedAllianceIds = useAuthStore(
+    useShallow((state) => {
+      return Array.from(
+        new Set(
+          authenticatedCharacterIds
+            .map((characterId) => state.characters[characterId]?.allianceId)
+            .filter((allianceId): allianceId is number => allianceId != null),
+        ),
+      );
+    }),
+  );
 
   return (
     <Container size="xl">
@@ -190,7 +193,9 @@ export default function Page() {
                 >
                   {feature.name}
                 </Text>
-                {feature.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}
+                {feature.tags?.map((tag) => (
+                  <Badge key={tag}>{tag}</Badge>
+                ))}
               </Group>
               <Text fz="sm" c="dimmed" mt="sm">
                 {feature.description}
@@ -203,7 +208,7 @@ export default function Page() {
       <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2, sm: 3 }}>
         {Object.values(universeApps).map((feature) => (
           <UnstyledButton
-            component={feature.url ? Link : Link}
+            component={Link}
             href={feature.url ?? ""}
             onClick={feature.onClick}
             key={feature.name}
@@ -253,7 +258,9 @@ export default function Page() {
                 >
                   {feature.name}
                 </Text>
-                {feature.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}
+                {feature.tags?.map((tag) => (
+                  <Badge key={tag}>{tag}</Badge>
+                ))}
               </Group>
               <Text fz="sm" c="dimmed" mt="sm">
                 {feature.description}
@@ -266,7 +273,7 @@ export default function Page() {
       <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2 }}>
         {devApps.map((feature) => (
           <UnstyledButton
-            component={feature.url ? Link : Link}
+            component={Link}
             href={feature.url ?? ""}
             onClick={feature.onClick}
             key={feature.name}
@@ -310,7 +317,9 @@ export default function Page() {
                 >
                   {feature.name}
                 </Text>
-                {feature.tags?.map((tag) => <Badge key={tag}>{tag}</Badge>)}
+                {feature.tags?.map((tag) => (
+                  <Badge key={tag}>{tag}</Badge>
+                ))}
               </Group>
               <Text fz="sm" c="dimmed" mt="sm">
                 {feature.description}

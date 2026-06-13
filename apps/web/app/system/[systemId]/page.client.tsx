@@ -14,6 +14,7 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import type { EveIconProps } from "@jitaspace/eve-icons";
 import { IndustryIcon } from "@jitaspace/eve-icons";
 import {
   useSelectedCharacter,
@@ -32,12 +33,26 @@ import {
 
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
 import { StargateDestinationAnchor } from "~/components/Anchor";
-import { PlanetAvatar, StarAvatar, StargateAvatar, StationAvatar } from "~/components/Avatar";
+import {
+  PlanetAvatar,
+  StarAvatar,
+  StargateAvatar,
+  StationAvatar,
+} from "~/components/Avatar";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { SolarSystemBreadcrumbs } from "~/components/Breadcrumbs";
-import { AsteroidBeltName, MoonName, PlanetName, StargateName, StarName } from "~/components/Text";
-
+import {
+  AsteroidBeltName,
+  MoonName,
+  PlanetName,
+  StargateName,
+  StarName,
+} from "~/components/Text";
 import { StatsGrid } from "~/components/UI";
+
+function IndustryIconRender(props: EveIconProps) {
+  return <IndustryIcon {...props} />;
+}
 
 export default function Page() {
   const params = useParams();
@@ -198,7 +213,7 @@ export default function Page() {
               data={(
                 solarSystemCostIndicesData[systemId]?.cost_indices ?? []
               ).map((index) => ({
-                icon: (props) => <IndustryIcon {...props} />,
+                icon: IndustryIconRender,
                 title: index.activity.replaceAll("_", " "),
                 value: index.cost_index.toString(),
               }))}
@@ -248,10 +263,9 @@ export default function Page() {
           <Position3DText
             size="xs"
             position={
-              sdeSolarSystem?.data.position &&
-              sdeSolarSystem.data.position.x !== undefined &&
-              sdeSolarSystem.data.position.y !== undefined &&
-              sdeSolarSystem.data.position.z !== undefined
+              sdeSolarSystem?.data.position?.x !== undefined &&
+              sdeSolarSystem.data.position?.y !== undefined &&
+              sdeSolarSystem.data.position?.z !== undefined
                 ? [
                     sdeSolarSystem.data.position.x,
                     sdeSolarSystem.data.position.y,

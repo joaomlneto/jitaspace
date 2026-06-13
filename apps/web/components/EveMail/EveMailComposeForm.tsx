@@ -27,7 +27,15 @@ export interface EveMailComposeFormProps {
   onSend?: () => void;
 }
 
-export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
+const toMailRecipients = (recipients: string[]) =>
+  recipients.map((r) => ({
+    recipient_id: Number(r),
+    recipient_type: "character" as const,
+  }));
+
+export function EveMailComposeForm({
+  onSend,
+}: Readonly<EveMailComposeFormProps>) {
   const selectedCharacter = useSelectedCharacter();
   const characterId = selectedCharacter?.characterId;
   const { authHeaders, accessToken } = useAccessToken({
@@ -70,10 +78,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
         {
           approved_cost: 0,
           body: htmlToEveMail(values.body),
-          recipients: values.recipients.map((r) => ({
-            recipient_id: Number(r),
-            recipient_type: "character",
-          })),
+          recipients: toMailRecipients(values.recipients),
           subject: values.subject,
         },
         authHeaders,
@@ -138,10 +143,7 @@ export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
                 {
                   approved_cost: details.totalCost,
                   body: htmlToEveMail(values.body),
-                  recipients: values.recipients.map((r) => ({
-                    recipient_id: Number(r),
-                    recipient_type: "character",
-                  })),
+                  recipients: toMailRecipients(values.recipients),
                   subject: values.subject,
                 },
                 authHeaders,

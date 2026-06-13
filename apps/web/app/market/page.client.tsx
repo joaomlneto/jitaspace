@@ -9,6 +9,7 @@ import { useTypeMarketOrders } from "@jitaspace/hooks";
 import { TypeAvatar, TypeName } from "@jitaspace/ui";
 
 import { MarketOrdersDataTable } from "~/components/Market";
+
 export default function Page() {
   // Every /market/<typeId> URL is rewritten to this single static /market shell
   // (see next.config.mjs), so there is no route param to read — we derive the
@@ -22,7 +23,7 @@ export default function Page() {
 
   const typeId = useMemo(() => {
     if (!mounted) return undefined;
-    const match = pathname?.match(/^\/market\/(\d+)/);
+    const match = /^\/market\/(\d+)/.exec(pathname ?? "");
     return match ? Number(match[1]) : undefined;
   }, [mounted, pathname]);
 

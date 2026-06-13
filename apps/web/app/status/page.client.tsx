@@ -48,7 +48,7 @@ export interface PageProps {
 export default function StatusPage({
   vercelStatusData,
   sdeLastModifiedData,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const { data: sdeVersionData } = useGetVersion();
 
   const { data: tqStatus } = useServerStatus();
@@ -264,9 +264,7 @@ export default function StatusPage({
                     <IconActivity size={20} />
                   </ActionIcon>
                 </Group>
-                {!esiStatus ? (
-                  <Loader size="sm" />
-                ) : (
+                {esiStatus ? (
                   <Badge
                     color={nonOkEndpointsCount === 0 ? "green" : "yellow"}
                     variant="light"
@@ -275,6 +273,8 @@ export default function StatusPage({
                       ? "All Systems Operational"
                       : "Partial Degradation"}
                   </Badge>
+                ) : (
+                  <Loader size="sm" />
                 )}
               </Group>
               <Stack gap="xs">

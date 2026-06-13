@@ -1,14 +1,13 @@
 "use client";
 
+import type { AnchorProps } from "@mantine/core";
+import type { LinkProps } from "next/link";
 import { memo, useMemo } from "react";
-import Link, { type LinkProps } from "next/link";
-import { Anchor, Skeleton, type AnchorProps } from "@mantine/core";
+import Link from "next/link";
+import { Anchor, Skeleton } from "@mantine/core";
 
-import { useEsiName, type ResolvableEntityCategory } from "@jitaspace/hooks";
-
-
-
-
+import type { ResolvableEntityCategory } from "@jitaspace/hooks";
+import { useEsiName } from "@jitaspace/hooks";
 
 export type EveEntityAnchorProps = Omit<AnchorProps, "component" | "href"> &
   Omit<LinkProps, "href"> &
@@ -47,7 +46,6 @@ export const EveEntityAnchor = memo(
         default:
           return "#";
       }
-      return `/${category}/${entityId}`;
     }, [category, entityId]);
 
     if (!url) {

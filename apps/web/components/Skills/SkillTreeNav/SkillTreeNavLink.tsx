@@ -1,21 +1,10 @@
+import type { NavLinkProps } from "@mantine/core";
 import { memo, useMemo } from "react";
-import type {
-  NavLinkProps} from "@mantine/core";
-import {
-  Group,
-  Loader,
-  NavLink,
-  Stack,
-  Text,
-} from "@mantine/core";
+import { Group, Loader, NavLink, Stack, Text } from "@mantine/core";
 
-import type { CharacterSkill} from "@jitaspace/hooks";
+import type { CharacterSkill } from "@jitaspace/hooks";
 import { useCharacterSkills } from "@jitaspace/hooks";
 import { SkillBar, TypeAnchor, TypeName } from "@jitaspace/ui";
-
-
-
-
 
 const TRAINING_TIME_MULTIPLIER_ATTRIBUTE_ID = 275;
 
@@ -62,13 +51,12 @@ export const SkillTreeNavLink = memo(
       [group],
     );
 
-    const characterSkillsIndex = skills?.data.skills.reduce(
-      (acc, skill) => {
-        acc[skill.skill_id] = skill;
-        return acc;
-      },
-      {} as Record<string, CharacterSkill>,
-    );
+    const characterSkillsIndex = skills?.data.skills.reduce<
+      Record<string, CharacterSkill>
+    >((acc, skill) => {
+      acc[skill.skill_id] = skill;
+      return acc;
+    }, {});
 
     const getSkillTrainingTimeMultiplier = (skill: {
       attributes: {

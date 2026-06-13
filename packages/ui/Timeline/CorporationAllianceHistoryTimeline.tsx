@@ -27,6 +27,13 @@ type CorporationAllianceHistoryTimelineProps = Omit<
   history?: AllianceHistoryEntry[];
 };
 
+const getMembershipDatePreposition = (
+  allianceMembership: AllianceHistoryEntryWithEnd,
+) => {
+  if (!allianceMembership.alliance_id) return "On";
+  return allianceMembership.end_date ? "From" : "Since";
+};
+
 export const CorporationAllianceHistoryTimeline = memo(
   ({ history }: CorporationAllianceHistoryTimelineProps) => {
     const parsedCorporationAllianceHistory: AllianceHistoryEntryWithEnd[] =
@@ -84,11 +91,7 @@ export const CorporationAllianceHistoryTimeline = memo(
             key={allianceMembership.record_id}
           >
             <Text size="xs" mt={4}>
-              {allianceMembership.alliance_id
-                ? allianceMembership.end_date
-                  ? "From"
-                  : "Since"
-                : "On"}{" "}
+              {getMembershipDatePreposition(allianceMembership)}{" "}
               {format(
                 new Date(allianceMembership.start_date),
                 "yyyy-MM-dd HH:mm",

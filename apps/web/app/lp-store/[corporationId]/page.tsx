@@ -1,13 +1,12 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 import { Loader } from "@mantine/core";
 
-import { prisma } from "~/lib/db";
-
-import LPStoreCorporationPage from "./page.client";
 import type { LPStoreCorporationPageProps } from "./page.client";
+import { prisma } from "~/lib/db";
+import LPStoreCorporationPage from "./page.client";
 
 async function getLPStoreCorporationData(
   corporationId: string,
@@ -16,9 +15,9 @@ async function getLPStoreCorporationData(
   cacheLife("days");
 
   const numericRequestedCorporation = Number(corporationId);
-  const requestedCorporationId = !Number.isNaN(numericRequestedCorporation)
-    ? numericRequestedCorporation
-    : undefined;
+  const requestedCorporationId = Number.isNaN(numericRequestedCorporation)
+    ? undefined
+    : numericRequestedCorporation;
 
   const corporation = await prisma.corporation.findFirstOrThrow({
     select: {
@@ -117,9 +116,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ corporationId: string }>;
-}) {
+}>) {
   const { corporationId } = await params;
 
   try {
@@ -132,9 +131,9 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ corporationId: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<Loader />}>
       <PageContent params={params} />

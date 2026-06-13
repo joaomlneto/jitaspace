@@ -2,9 +2,9 @@ import pLimit from "p-limit";
 
 import { getUniverseStargatesStargateId } from "@jitaspace/esi-client";
 
+import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
-import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeStargatesEventPayload {
@@ -15,6 +15,130 @@ export interface ScrapeStargatesEventPayload {
 }
 
 type StatsKey = "stargates";
+
+const processStargateBatch = async (
+  thisBatchStargateIds: number[],
+  batchIndex: number,
+  limit: ReturnType<typeof pLimit>,
+): Promise<BatchStepResult<StatsKey>> => {
+  console.log(`starting batch ${batchIndex + 1}`);
+  const stepStartTime = performance.now();
+
+  const stargateIdsInDatabase = await prisma.stargate
+    .findMany({
+      select: {
+        stargateId: true,
+      },
+    })
+    .then((res) => res.map((stargate) => stargate.stargateId));
+
+  const fetchStargates = async (stargateIds: number[]) =>
+    Promise.all(
+      stargateIds.map((stargateId) =>
+        limit(async () =>
+          getUniverseStargatesStargateId(stargateId)
+            .then((res) => res.data)
+            .then((stargate) => ({
+              stargateId: stargate.stargate_id,
+              name: stargate.name,
+              typeId: stargate.type_id,
+              //position: stargate.position,
+              solarSystemId: stargate.system_id,
+              destinationStargateId: stargate.destination.stargate_id,
+              isDeleted: false,
+            })),
+        ),
+      ),
+    );
+
+  const thisBatchStargates = await fetchStargates(thisBatchStargateIds);
+
+  const missingDestinations = thisBatchStargates
+    .map((stargate) => stargate.destinationStargateId)
+    .filter(
+      (stargateId) =>
+        !stargateIdsInDatabase.includes(stargateId) &&
+        !thisBatchStargates.some(
+          (stargate) => stargate.stargateId == stargateId,
+        ),
+    );
+
+  thisBatchStargates.push(...(await fetchStargates(missingDestinations)));
+
+  const stargateChanges = await updateTable({
+    fetchLocalEntries: async () =>
+      prisma.stargate
+        .findMany({
+          where: {
+            stargateId: {
+              in: thisBatchStargateIds,
+            },
+          },
+        })
+        .then((entries) =>
+          entries.map((entry) =>
+            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+          ),
+        ),
+    fetchRemoteEntries: async () => thisBatchStargates,
+    batchCreate: async (entries) => {
+      // step one: create stargates, but no links
+      await limit(() =>
+        prisma.stargate.createMany({
+          data: entries.map((entry) => ({
+            ...entry,
+            destinationStargateId: undefined,
+          })),
+        }),
+      );
+      // step two: update the stargates with their respective links
+      return Promise.all(
+        entries.map((entry) =>
+          limit(async () =>
+            prisma.stargate.update({
+              data: {
+                destinationStargateId: entry.destinationStargateId,
+              },
+              where: {
+                stargateId: entry.stargateId,
+              },
+            }),
+          ),
+        ),
+      );
+    },
+    batchDelete: (entries) =>
+      prisma.stargate.updateMany({
+        data: {
+          isDeleted: true,
+        },
+        where: {
+          stargateId: {
+            in: entries.map((entry) => entry.stargateId),
+          },
+        },
+      }),
+    batchUpdate: (entries) =>
+      Promise.all(
+        entries.map((entry) =>
+          limit(async () =>
+            prisma.stargate.update({
+              data: entry,
+              where: { stargateId: entry.stargateId },
+            }),
+          ),
+        ),
+      ),
+    idAccessor: (e) => e.stargateId,
+  });
+
+  return {
+    stats: {
+      stargates: stargateChanges,
+    },
+    elapsed: performance.now() - stepStartTime,
+  };
+};
 
 export const scrapeEsiStargates = defineJob<
   ScrapeStargatesEventPayload["data"]
@@ -39,7 +163,7 @@ export const scrapeEsiStargates = defineJob<
       const batchIds = (batchIndex: number) =>
         stargateIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
       return {
-        batches: [...Array(numBatches).keys()].map((batchId) =>
+        batches: [...new Array(numBatches).keys()].map((batchId) =>
           batchIds(batchId),
         ),
       };
@@ -49,147 +173,8 @@ export const scrapeEsiStargates = defineJob<
     const limit = pLimit(20);
 
     for (let i = 0; i < batches.length; i++) {
-      const result = await ctx.run(
-        `Batch ${i + 1}/${batches.length}`,
-        async (): Promise<BatchStepResult<StatsKey>> => {
-          console.log(`starting batch ${i + 1}`);
-          const stepStartTime = performance.now();
-          const thisBatchStargateIds = batches[i]!;
-
-          const stargateIdsInDatabase = await prisma.stargate
-            .findMany({
-              select: {
-                stargateId: true,
-              },
-            })
-            .then((res) => res.map((stargate) => stargate.stargateId));
-
-          const fetchStargates = async (stargateIds: number[]) =>
-            Promise.all(
-              stargateIds.map((stargateId) =>
-                limit(async () =>
-                  getUniverseStargatesStargateId(stargateId)
-                    .then((res) => res.data)
-                    .then((stargate) => ({
-                      stargateId: stargate.stargate_id,
-                      name: stargate.name,
-                      typeId: stargate.type_id,
-                      //position: stargate.position,
-                      solarSystemId: stargate.system_id,
-                      destinationStargateId: stargate.destination.stargate_id,
-                      isDeleted: false,
-                    })),
-                ),
-              ),
-            );
-
-          const thisBatchStargates = await fetchStargates(thisBatchStargateIds);
-
-          const missingDestinations = thisBatchStargates
-            .map((stargate) => stargate.destinationStargateId)
-            .filter(
-              (stargateId) =>
-                !stargateIdsInDatabase.includes(stargateId) &&
-                !thisBatchStargates.some(
-                  (stargate) => stargate.stargateId == stargateId,
-                ),
-            );
-
-          thisBatchStargates.push(
-            ...(await fetchStargates(missingDestinations)),
-          );
-
-          const stargateChanges = await updateTable({
-            fetchLocalEntries: async () =>
-              prisma.stargate
-                .findMany({
-                  where: {
-                    stargateId: {
-                      in: thisBatchStargateIds,
-                    },
-                  },
-                })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
-            fetchRemoteEntries: async () => thisBatchStargates,
-            batchCreate: (entries) => {
-              // step one: create stargates, but no links
-              return limit(() =>
-                prisma.stargate.createMany({
-                  data: entries.map((entry) => ({
-                    ...entry,
-                    destinationStargateId: undefined,
-                  })),
-                }),
-              ).then(() =>
-                Promise.all(
-                  entries.map((entry) =>
-                    limit(async () =>
-                      prisma.stargate.update({
-                        data: {
-                          destinationStargateId: entry.destinationStargateId,
-                        },
-                        where: {
-                          stargateId: entry.stargateId,
-                        },
-                      }),
-                    ),
-                  ),
-                ),
-              );
-              //throw new NonRetriableError("XXX");
-              // step two: update the stargates with their respective links
-              /*
-                              await Promise.all(
-                                entries.map((entry) =>
-                                  limit(async () =>
-                                    prisma.stargate.update({
-                                      data: {
-                                        destinationStargateId: entry.destinationStargateId,
-                                      },
-                                      where: {
-                                        stargateId: entry.stargateId,
-                                      },
-                                    }),
-                                  ),
-                                ),
-                              );*/
-            },
-            batchDelete: (entries) =>
-              prisma.stargate.updateMany({
-                data: {
-                  isDeleted: true,
-                },
-                where: {
-                  stargateId: {
-                    in: entries.map((entry) => entry.stargateId),
-                  },
-                },
-              }),
-            batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.stargate.update({
-                      data: entry,
-                      where: { stargateId: entry.stargateId },
-                    }),
-                  ),
-                ),
-              ),
-            idAccessor: (e) => e.stargateId,
-          });
-
-          return {
-            stats: {
-              stargates: stargateChanges,
-            },
-            elapsed: performance.now() - stepStartTime,
-          };
-        },
+      const result = await ctx.run(`Batch ${i + 1}/${batches.length}`, () =>
+        processStargateBatch(batches[i]!, i, limit),
       );
       results.push(result);
     }

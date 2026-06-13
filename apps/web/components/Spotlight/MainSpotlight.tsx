@@ -1,9 +1,9 @@
 "use client";
 
+import type { SpotlightActionData } from "@mantine/spotlight";
 import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedValue } from "@mantine/hooks";
-import type { SpotlightActionData } from "@mantine/spotlight";
 import { Spotlight } from "@mantine/spotlight";
 
 import type { EsiSearchCategory } from "@jitaspace/hooks";
@@ -11,6 +11,44 @@ import { useEsiNameLookup, useEsiSearch } from "@jitaspace/hooks";
 import { EveEntityAvatar } from "@jitaspace/ui";
 
 import { jitaApps } from "~/config/apps";
+
+type AppRouter = ReturnType<typeof useRouter>;
+
+const navigateToEntity = (
+  router: AppRouter,
+  category: EsiSearchCategory,
+  entityId: number,
+) => {
+  switch (category) {
+    case "alliance":
+      router.push(`/alliance/${entityId}`);
+      break;
+    case "agent":
+    case "character":
+      router.push(`/character/${entityId}`);
+      break;
+    case "corporation":
+      router.push(`/corporation/${entityId}`);
+      break;
+    case "faction":
+      router.push(`/faction/${entityId}`);
+      break;
+    case "solar_system":
+      router.push(`/solar_system/${entityId}`);
+      break;
+    case "station":
+      router.push(`/station/${entityId}`);
+      break;
+    case "structure":
+      router.push(`/structure/${entityId}`);
+      break;
+    case "inventory_type":
+      router.push(`/type/${entityId}`);
+      break;
+    default:
+      console.error(`Unknown category ${category}`);
+  }
+};
 
 export const MainSpotlight = () => {
   const router = useRouter();
@@ -73,37 +111,7 @@ export const MainSpotlight = () => {
                 size={32}
               />
             ),
-            onClick: () => {
-              switch (category) {
-                case "alliance":
-                  void router.push(`/alliance/${entityId}`);
-                  break;
-                case "agent":
-                case "character":
-                  void router.push(`/character/${entityId}`);
-                  break;
-                case "corporation":
-                  void router.push(`/corporation/${entityId}`);
-                  break;
-                case "faction":
-                  void router.push(`/faction/${entityId}`);
-                  break;
-                case "solar_system":
-                  void router.push(`/solar_system/${entityId}`);
-                  break;
-                case "station":
-                  void router.push(`/station/${entityId}`);
-                  break;
-                case "structure":
-                  void router.push(`/structure/${entityId}`);
-                  break;
-                case "inventory_type":
-                  void router.push(`/type/${entityId}`);
-                  break;
-                default:
-                  console.error(`Unknown category ${category}`);
-              }
-            },
+            onClick: () => navigateToEntity(router, category, entityId),
           }));
         },
       ),

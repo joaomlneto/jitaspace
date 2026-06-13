@@ -10,11 +10,8 @@ import { memo, useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
-import type {
-  FuzzworkTypeMarketAggregate} from "@jitaspace/hooks";
-import {
-  useFuzzworkRegionalMarketAggregates,
-} from "@jitaspace/hooks";
+import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
+import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import {
   CorporationAnchor,
   CorporationAvatar,
@@ -79,8 +76,6 @@ function makeCorporationFilter(
     column,
   }: {
     column: MRT_Column<AugmentedOffer>;
-    header: unknown;
-    table: unknown;
   }) {
     return (
       <EveEntitySelect
@@ -102,8 +97,6 @@ function makeItemFilter(sortedTypes: { typeId: number; name: string }[]) {
     column,
   }: {
     column: MRT_Column<AugmentedOffer>;
-    header: unknown;
-    table: unknown;
   }) {
     return (
       <EveEntitySelect
@@ -237,10 +230,7 @@ function requiredItemsBuyTotalCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
         <Group key={typeId} wrap="nowrap" justify="space-between">
           <TypeAvatar typeId={typeId} size="sm" />
           {marketStats && (
-            <ISKAmount
-              inherit
-              amount={marketStats.buy.percentile * quantity}
-            />
+            <ISKAmount inherit amount={marketStats.buy.percentile * quantity} />
           )}
         </Group>
       ))}

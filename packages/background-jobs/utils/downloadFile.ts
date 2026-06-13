@@ -39,7 +39,7 @@ export const downloadTarBz2FileAndParseJson = async (url: string) => {
 
   const files: { name: string; content: object }[] = [];
   const extract = tar.extract();
-  const decompressedStream = nodeStream.pipe(bz2()).pipe(extract);
+  nodeStream.pipe(bz2()).pipe(extract);
 
   // Decompress bz2 stream and parse contents
   await new Promise<void>((resolve, reject) => {

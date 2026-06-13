@@ -7,6 +7,6 @@ import { MessagePanel } from "~/components/EveMail";
 
 export function ViewMailMessageModal({
   innerProps,
-}: ContextModalProps<MessagePanelProps>) {
+}: Readonly<ContextModalProps<MessagePanelProps>>) {
   return <MessagePanel {...innerProps} />;
 }

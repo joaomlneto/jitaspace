@@ -10,7 +10,6 @@ import { CorporationAvatar } from "./CorporationAvatar";
 import { FactionAvatar } from "./FactionAvatar";
 import { StarAvatar } from "./StarAvatar";
 
-
 export type SolarSystemSovereigntyAvatarProps = Omit<AvatarProps, "src"> & {
   solarSystemId?: string | number | null;
 };
@@ -20,8 +19,8 @@ export const SolarSystemSovereigntyAvatar = memo(
     const normalizedSolarSystemId = useMemo(
       () =>
         typeof solarSystemId === "string"
-          ? parseInt(solarSystemId, 10)
-          : solarSystemId ?? 1,
+          ? Number.parseInt(solarSystemId, 10)
+          : (solarSystemId ?? 1),
       [solarSystemId],
     );
     const { data } = useSolarSystem(normalizedSolarSystemId);

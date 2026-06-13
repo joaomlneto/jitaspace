@@ -9,6 +9,16 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+const fetchConstellation = (constellationId: number) =>
+  getUniverseConstellationsConstellationId(constellationId)
+    .then((res) => res.data)
+    .then((constellation) => ({
+      constellationId: constellation.constellation_id,
+      name: constellation.name,
+      regionId: constellation.region_id,
+      isDeleted: false,
+    }));
+
 export interface ScrapeConstellationEventPayload {
   data: {};
 }
@@ -49,16 +59,7 @@ export const scrapeEsiConstellations = defineJob<
       fetchRemoteEntries: async () =>
         Promise.all(
           constellationIds.map((constellationId) =>
-            limit(async () =>
-              getUniverseConstellationsConstellationId(constellationId)
-                .then((res) => res.data)
-                .then((constellation) => ({
-                  constellationId: constellation.constellation_id,
-                  name: constellation.name,
-                  regionId: constellation.region_id,
-                  isDeleted: false,
-                })),
-            ),
+            limit(() => fetchConstellation(constellationId)),
           ),
         ),
       batchCreate: (entries) =>

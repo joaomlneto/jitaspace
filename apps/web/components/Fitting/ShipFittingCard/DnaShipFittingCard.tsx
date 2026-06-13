@@ -1,7 +1,7 @@
 "use client";
 
-import { memo, useMemo } from "react";
 import type { CardProps } from "@mantine/core";
+import { memo, useMemo } from "react";
 
 import type { FittingItemFlag } from "@jitaspace/hooks";
 import { useTypes } from "@jitaspace/hooks";
@@ -25,17 +25,31 @@ import { ShipFittingCard } from "./ShipFittingCard";
 
 // EVE dogma effect IDs that identify a module's slot type
 const SLOT_EFFECT_TO_PREFIX: Record<number, string> = {
-  12: "HiSlot",    // hiPower
-  13: "MedSlot",   // medPower
-  11: "LoSlot",    // loPower
+  12: "HiSlot", // hiPower
+  13: "MedSlot", // medPower
+  11: "LoSlot", // loPower
   2663: "RigSlot", // rigSlot
   3772: "SubSystemSlot", // subSystem
-  6306: "ServiceSlot",   // serviceSlot
+  6306: "ServiceSlot", // serviceSlot
 };
 
 interface RawDnaItem {
   typeId: number;
   quantity: number;
+}
+
+// Determine a module's slot prefix from its dogma effects (if type data is
+// loaded). Returns undefined for charges/drones/unknown items.
+function getSlotPrefix(
+  type: { dogma_effects?: { effect_id: number }[] } | undefined,
+): string | undefined {
+  if (!type?.dogma_effects) return undefined;
+  for (const { effect_id } of type.dogma_effects) {
+    if (SLOT_EFFECT_TO_PREFIX[effect_id]) {
+      return SLOT_EFFECT_TO_PREFIX[effect_id];
+    }
+  }
+  return undefined;
 }
 
 interface ParsedDnaFlat {
@@ -48,7 +62,7 @@ function parseDnaFlat(dna: string): ParsedDnaFlat {
   let i = 0;
   const rawItems: RawDnaItem[] = [];
 
-  const shipTypeId = parseInt(tokens[i++] ?? "0", 10);
+  const shipTypeId = Number.parseInt(tokens[i++] ?? "0", 10);
 
   while (i < tokens.length) {
     const token = tokens[i++]!;
@@ -60,11 +74,11 @@ function parseDnaFlat(dna: string): ParsedDnaFlat {
     const qtyPart = token.slice(semi + 1);
 
     // Strip trailing '_' that marks an offline/unfitted module
-    const typeId = parseInt(
+    const typeId = Number.parseInt(
       idPart.endsWith("_") ? idPart.slice(0, -1) : idPart,
       10,
     );
-    const quantity = parseInt(qtyPart, 10) || 1;
+    const quantity = Number.parseInt(qtyPart, 10) || 1;
 
     rawItems.push({ typeId, quantity });
   }
@@ -83,7 +97,13 @@ export type DnaShipFittingCardProps = Omit<CardProps, "children"> & {
 };
 
 export const DnaShipFittingCard = memo(
-  ({ dna, name, hideHeader, hideModules, ...cardProps }: DnaShipFittingCardProps) => {
+  ({
+    dna,
+    name,
+    hideHeader,
+    hideModules,
+    ...cardProps
+  }: DnaShipFittingCardProps) => {
     const { shipTypeId, rawItems } = useMemo(() => parseDnaFlat(dna), [dna]);
 
     const typeIds = useMemo(
@@ -92,23 +112,21 @@ export const DnaShipFittingCard = memo(
     );
     const { data: typeData } = useTypes(typeIds);
 
-    const items = useMemo<{ typeId: number; quantity: number; flag: FittingItemFlag }[]>(() => {
+    const items = useMemo<
+      { typeId: number; quantity: number; flag: FittingItemFlag }[]
+    >(() => {
       const slotCounters: Record<string, number> = {};
-      const result: { typeId: number; quantity: number; flag: FittingItemFlag }[] = [];
+      const result: {
+        typeId: number;
+        quantity: number;
+        flag: FittingItemFlag;
+      }[] = [];
 
       for (const { typeId, quantity } of rawItems) {
         const type = typeData[typeId];
 
         // Determine slot prefix from dogma effects (if type data is loaded)
-        let slotPrefix: string | undefined;
-        if (type?.dogma_effects) {
-          for (const { effect_id } of type.dogma_effects) {
-            if (SLOT_EFFECT_TO_PREFIX[effect_id]) {
-              slotPrefix = SLOT_EFFECT_TO_PREFIX[effect_id];
-              break;
-            }
-          }
-        }
+        const slotPrefix = getSlotPrefix(type);
 
         if (slotPrefix) {
           // Module: expand quantity into consecutive slots

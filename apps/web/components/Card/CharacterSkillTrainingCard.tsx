@@ -10,7 +10,6 @@ import { skillLevelRomanNumeral } from "@jitaspace/utils";
 
 import classes from "~/components/Card/SolarSystemCard.module.css";
 
-
 export interface CharacterSkillTrainingCardProps {
   characterId: number;
   fallback?: React.ReactNode;
@@ -22,22 +21,26 @@ export const CharacterSkillTrainingCard = ({
   fallback,
   hideFallback = false,
 }: CharacterSkillTrainingCardProps) => {
-  const { data, isLoading: _isLoading, error: _error } = useCharacterSkillQueue(characterId);
+  const {
+    data,
+    isLoading: _isLoading,
+    error: _error,
+  } = useCharacterSkillQueue(characterId);
 
   if (!data) {
     return hideFallback
       ? null
-      : fallback ?? (
+      : (fallback ?? (
           <Text size="xs" c="dimmed">
             Character skill queue not available
           </Text>
-        );
+        ));
   }
 
-  const activeSkill = data?.data.filter(
+  const activeSkill = data?.data.find(
     (skill) =>
       skill.finish_date && skill.finish_date > new Date().toISOString(),
-  )[0];
+  );
 
   const skillDuration =
     activeSkill?.start_date && activeSkill?.finish_date

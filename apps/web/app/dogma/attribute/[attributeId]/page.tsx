@@ -1,12 +1,11 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 import { Loader } from "@mantine/core";
 
-import { prisma } from "~/lib/db";
-
 import type { PageProps } from "./page.client";
+import { prisma } from "~/lib/db";
 import DogmaAttributePage from "./page.client";
 
 async function getAttributeData(attributeId: number): Promise<PageProps> {
@@ -117,9 +116,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ attributeId: string }>;
-}) {
+}>) {
   const { attributeId: attributeIdParam } = await params;
   const attributeId = Number(attributeIdParam);
   if (!Number.isFinite(attributeId)) {
@@ -133,9 +132,9 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ attributeId: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<Loader />}>
       <PageContent params={params} />

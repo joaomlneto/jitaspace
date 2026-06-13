@@ -15,6 +15,22 @@ export interface ScrapeMarketGroupsEventPayload {
   };
 }
 
+const fetchMarketGroup = (
+  marketGroupId: number,
+  limit: ReturnType<typeof pLimit>,
+) =>
+  limit(async () =>
+    getMarketsGroupsMarketGroupId(marketGroupId)
+      .then((res) => res.data)
+      .then((marketGroup) => ({
+        marketGroupId: marketGroup.market_group_id,
+        name: marketGroup.name,
+        parentMarketGroupId: marketGroup.parent_group_id ?? null,
+        description: marketGroup.description,
+        isDeleted: false,
+      })),
+  );
+
 export const scrapeEsiMarketGroups = defineJob<
   ScrapeMarketGroupsEventPayload["data"]
 >({
@@ -52,17 +68,7 @@ export const scrapeEsiMarketGroups = defineJob<
       fetchRemoteEntries: async () =>
         Promise.all(
           marketGroupIds.map((marketGroupId) =>
-            limit(async () =>
-              getMarketsGroupsMarketGroupId(marketGroupId)
-                .then((res) => res.data)
-                .then((marketGroup) => ({
-                  marketGroupId: marketGroup.market_group_id,
-                  name: marketGroup.name,
-                  parentMarketGroupId: marketGroup.parent_group_id ?? null,
-                  description: marketGroup.description,
-                  isDeleted: false,
-                })),
-            ),
+            fetchMarketGroup(marketGroupId, limit),
           ),
         ),
       batchCreate: async (entries) => {

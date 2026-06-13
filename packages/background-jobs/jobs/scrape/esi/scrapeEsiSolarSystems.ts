@@ -9,9 +9,9 @@ import {
   getUniverseSystemsSystemId,
 } from "@jitaspace/esi-client";
 
+import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { Prisma, prisma } from "../../../db";
-import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeSolarSystemsEventPayload {
@@ -27,6 +27,148 @@ type StatsKey =
   | "stars"
   | "moons"
   | "asteroidBelts";
+
+type Limit = ReturnType<typeof pLimit>;
+
+// Strip the local-only timestamp columns so DB rows can be compared against
+// the ESI payloads. Extracted to module scope to keep the per-table callbacks
+// from nesting functions too deeply (sonar S2004).
+const stripTimestamps = <T extends { createdAt: unknown; updatedAt: unknown }>(
+  entries: T[],
+) =>
+  entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"]));
+
+const fetchSolarSystem = (limit: Limit, solarSystemId: number) =>
+  limit(async () =>
+    getUniverseSystemsSystemId(solarSystemId).then((res) => res.data),
+  );
+
+const fetchSolarSystemRow = (limit: Limit, solarSystemId: number) =>
+  limit(async () =>
+    getUniverseSystemsSystemId(solarSystemId)
+      .then((res) => res.data)
+      .then((solarSystem) => ({
+        solarSystemId: solarSystem.system_id,
+        constellationId: solarSystem.constellation_id,
+        name: solarSystem.name,
+        securityClass: solarSystem.security_class ?? null,
+        securityStatus: new Prisma.Decimal(solarSystem.security_status),
+        starId: solarSystem.star_id ?? null,
+        isDeleted: false,
+      })),
+  );
+
+const fetchPlanetRow = (limit: Limit, planetId: number) =>
+  limit(async () =>
+    getUniversePlanetsPlanetId(planetId)
+      .then((res) => res.data)
+      .then((planet) => ({
+        solarSystemId: planet.system_id,
+        planetId: planet.planet_id,
+        name: planet.name,
+        typeId: planet.type_id,
+        isDeleted: false,
+      })),
+  );
+
+const fetchMoonRow = (
+  limit: Limit,
+  moonPlanetIndex: Record<number, number>,
+  moonId: number,
+) =>
+  limit(async () =>
+    getUniverseMoonsMoonId(moonId)
+      .then((res) => res.data)
+      .then((moon) => ({
+        moonId: moon.moon_id,
+        name: moon.name,
+        planetId: moonPlanetIndex[moon.moon_id]!,
+        isDeleted: false,
+      })),
+  );
+
+const fetchAsteroidBeltRow = (
+  limit: Limit,
+  asteroidBeltPlanetIndex: Record<number, number>,
+  asteroidBeltId: number,
+) =>
+  limit(async () =>
+    getUniverseAsteroidBeltsAsteroidBeltId(asteroidBeltId)
+      .then((res) => res.data)
+      .then((asteroidBelt) => ({
+        asteroidBeltId: asteroidBeltId,
+        name: asteroidBelt.name,
+        planetId: asteroidBeltPlanetIndex[asteroidBeltId]!,
+        isDeleted: false,
+      })),
+  );
+
+const fetchStarRow = (limit: Limit, starId: number) =>
+  limit(async () =>
+    getUniverseStarsStarId(starId)
+      .then((res) => res.data)
+      .then((star) => ({
+        starId,
+        name: star.name,
+        solarSystemId: star.solar_system_id,
+        age: BigInt(star.age),
+        luminosity: new Prisma.Decimal(star.luminosity),
+        radius: BigInt(star.radius),
+        // Widen the ESI spectral-class enum to string so the inferred StarRow
+        // matches the Prisma column type (and the local-entries shape) when
+        // updateTable infers a single row type from both sides.
+        spectralClass: star.spectral_class as string,
+        temperature: BigInt(star.temperature),
+        typeId: star.type_id,
+        isDeleted: false,
+      })),
+  );
+
+type SolarSystemRow = Awaited<ReturnType<typeof fetchSolarSystemRow>>;
+type PlanetRow = Awaited<ReturnType<typeof fetchPlanetRow>>;
+type MoonRow = Awaited<ReturnType<typeof fetchMoonRow>>;
+type AsteroidBeltRow = Awaited<ReturnType<typeof fetchAsteroidBeltRow>>;
+type StarRow = Awaited<ReturnType<typeof fetchStarRow>>;
+
+const updateSolarSystem = (limit: Limit, entry: SolarSystemRow) =>
+  limit(async () =>
+    prisma.solarSystem.update({
+      data: entry,
+      where: { solarSystemId: entry.solarSystemId },
+    }),
+  );
+
+const updatePlanet = (limit: Limit, entry: PlanetRow) =>
+  limit(async () =>
+    prisma.planet.update({
+      data: entry,
+      where: { planetId: entry.planetId },
+    }),
+  );
+
+const updateMoon = (limit: Limit, entry: MoonRow) =>
+  limit(async () =>
+    prisma.moon.update({
+      data: entry,
+      where: { moonId: entry.moonId },
+    }),
+  );
+
+const updateAsteroidBelt = (limit: Limit, entry: AsteroidBeltRow) =>
+  limit(async () =>
+    prisma.asteroidBelt.update({
+      data: entry,
+      where: { asteroidBeltId: entry.asteroidBeltId },
+    }),
+  );
+
+const updateStar = (limit: Limit, entry: StarRow) =>
+  limit(async () =>
+    prisma.star.update({
+      data: entry,
+      where: { starId: entry.starId },
+    }),
+  );
 
 export const scrapeEsiSolarSystems = defineJob<
   ScrapeSolarSystemsEventPayload["data"]
@@ -51,7 +193,9 @@ export const scrapeEsiSolarSystems = defineJob<
           batchIndex * batchSize,
           (batchIndex + 1) * batchSize,
         );
-      return [...Array(numBatches).keys()].map((batchId) => batchIds(batchId));
+      return [...new Array(numBatches).keys()].map((batchId) =>
+        batchIds(batchId),
+      );
     });
 
     const results: (BatchStepResult<StatsKey> & {
@@ -69,11 +213,7 @@ export const scrapeEsiSolarSystems = defineJob<
 
           const esiSolarSystems = await Promise.all(
             thisBatchIds.map((solarSystemId) =>
-              limit(async () =>
-                getUniverseSystemsSystemId(solarSystemId).then(
-                  (res) => res.data,
-                ),
-              ),
+              fetchSolarSystem(limit, solarSystemId),
             ),
           );
 
@@ -95,7 +235,7 @@ export const scrapeEsiSolarSystems = defineJob<
 
           const thisBatchStarIds = esiSolarSystems
             .map((solarSystem) => solarSystem.star_id)
-            .filter((x) => x) as number[]; // FIXME shouldnt need type casting
+            .filter(Boolean) as number[]; // FIXME shouldnt need type casting
 
           const thisBatchMoons = thisBatchPlanets.flatMap((planet) =>
             (planet.moons ?? []).map((moonId) => ({
@@ -141,29 +281,11 @@ export const scrapeEsiSolarSystems = defineJob<
                     },
                   },
                 })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
+                .then(stripTimestamps),
             fetchRemoteEntries: async () =>
               Promise.all(
                 thisBatchIds.map((solarSystemId) =>
-                  limit(async () =>
-                    getUniverseSystemsSystemId(solarSystemId)
-                      .then((res) => res.data)
-                      .then((solarSystem) => ({
-                        solarSystemId: solarSystem.system_id,
-                        constellationId: solarSystem.constellation_id,
-                        name: solarSystem.name,
-                        securityClass: solarSystem.security_class ?? null,
-                        securityStatus: new Prisma.Decimal(
-                          solarSystem.security_status,
-                        ),
-                        starId: solarSystem.star_id ?? null,
-                        isDeleted: false,
-                      })),
-                  ),
+                  fetchSolarSystemRow(limit, solarSystemId),
                 ),
               ),
             batchCreate: (entries) =>
@@ -185,14 +307,7 @@ export const scrapeEsiSolarSystems = defineJob<
               }),
             batchUpdate: (entries) =>
               Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.solarSystem.update({
-                      data: entry,
-                      where: { solarSystemId: entry.solarSystemId },
-                    }),
-                  ),
-                ),
+                entries.map((entry) => updateSolarSystem(limit, entry)),
               ),
             idAccessor: (e) => e.solarSystemId,
           });
@@ -207,25 +322,11 @@ export const scrapeEsiSolarSystems = defineJob<
                     },
                   },
                 })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
+                .then(stripTimestamps),
             fetchRemoteEntries: async () =>
               Promise.all(
                 thisBatchPlanetIds.map((planetId) =>
-                  limit(async () =>
-                    getUniversePlanetsPlanetId(planetId)
-                      .then((res) => res.data)
-                      .then((planet) => ({
-                        solarSystemId: planet.system_id,
-                        planetId: planet.planet_id,
-                        name: planet.name,
-                        typeId: planet.type_id,
-                        isDeleted: false,
-                      })),
-                  ),
+                  fetchPlanetRow(limit, planetId),
                 ),
               ),
             batchCreate: (entries) =>
@@ -246,16 +347,7 @@ export const scrapeEsiSolarSystems = defineJob<
                 },
               }),
             batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.planet.update({
-                      data: entry,
-                      where: { planetId: entry.planetId },
-                    }),
-                  ),
-                ),
-              ),
+              Promise.all(entries.map((entry) => updatePlanet(limit, entry))),
             idAccessor: (e) => e.planetId,
           });
 
@@ -339,24 +431,11 @@ export const scrapeEsiSolarSystems = defineJob<
                     },
                   },
                 })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
+                .then(stripTimestamps),
             fetchRemoteEntries: async () =>
               Promise.all(
                 thisBatchMoonIds.map((moonId) =>
-                  limit(async () =>
-                    getUniverseMoonsMoonId(moonId)
-                      .then((res) => res.data)
-                      .then((moon) => ({
-                        moonId: moon.moon_id,
-                        name: moon.name,
-                        planetId: moonPlanetIndex[moon.moon_id]!,
-                        isDeleted: false,
-                      })),
-                  ),
+                  fetchMoonRow(limit, moonPlanetIndex, moonId),
                 ),
               ),
             batchCreate: (entries) =>
@@ -377,16 +456,7 @@ export const scrapeEsiSolarSystems = defineJob<
                 },
               }),
             batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.moon.update({
-                      data: entry,
-                      where: { moonId: entry.moonId },
-                    }),
-                  ),
-                ),
-              ),
+              Promise.all(entries.map((entry) => updateMoon(limit, entry))),
             idAccessor: (e) => e.moonId,
           });
 
@@ -400,23 +470,14 @@ export const scrapeEsiSolarSystems = defineJob<
                     },
                   },
                 })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
+                .then(stripTimestamps),
             fetchRemoteEntries: async () =>
               Promise.all(
                 thisBatchAsteroidBeltIds.map((asteroidBeltId) =>
-                  limit(async () =>
-                    getUniverseAsteroidBeltsAsteroidBeltId(asteroidBeltId)
-                      .then((res) => res.data)
-                      .then((asteroidBelt) => ({
-                        asteroidBeltId: asteroidBeltId,
-                        name: asteroidBelt.name,
-                        planetId: asteroidBeltPlanetIndex[asteroidBeltId]!,
-                        isDeleted: false,
-                      })),
+                  fetchAsteroidBeltRow(
+                    limit,
+                    asteroidBeltPlanetIndex,
+                    asteroidBeltId,
                   ),
                 ),
               ),
@@ -439,14 +500,7 @@ export const scrapeEsiSolarSystems = defineJob<
               }),
             batchUpdate: (entries) =>
               Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.asteroidBelt.update({
-                      data: entry,
-                      where: { asteroidBeltId: entry.asteroidBeltId },
-                    }),
-                  ),
-                ),
+                entries.map((entry) => updateAsteroidBelt(limit, entry)),
               ),
             idAccessor: (e) => e.asteroidBeltId,
           });
@@ -461,31 +515,10 @@ export const scrapeEsiSolarSystems = defineJob<
                     },
                   },
                 })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
+                .then(stripTimestamps),
             fetchRemoteEntries: async () =>
               Promise.all(
-                thisBatchStarIds.map((starId) =>
-                  limit(async () =>
-                    getUniverseStarsStarId(starId)
-                      .then((res) => res.data)
-                      .then((star) => ({
-                        starId,
-                        name: star.name,
-                        solarSystemId: star.solar_system_id,
-                        age: BigInt(star.age),
-                        luminosity: new Prisma.Decimal(star.luminosity),
-                        radius: BigInt(star.radius),
-                        spectralClass: star.spectral_class,
-                        temperature: BigInt(star.temperature),
-                        typeId: star.type_id,
-                        isDeleted: false,
-                      })),
-                  ),
-                ),
+                thisBatchStarIds.map((starId) => fetchStarRow(limit, starId)),
               ),
             batchCreate: (entries) =>
               limit(() =>
@@ -505,16 +538,7 @@ export const scrapeEsiSolarSystems = defineJob<
                 },
               }),
             batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.star.update({
-                      data: entry,
-                      where: { starId: entry.starId },
-                    }),
-                  ),
-                ),
-              ),
+              Promise.all(entries.map((entry) => updateStar(limit, entry))),
             idAccessor: (e) => e.starId,
           });
 
