@@ -10,6 +10,10 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
+// jsdom does not implement scrollIntoView — Mantine's Combobox (Select) calls it
+// when highlighting options.
+window.HTMLElement.prototype.scrollIntoView = () => {};
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: (query: string) => ({

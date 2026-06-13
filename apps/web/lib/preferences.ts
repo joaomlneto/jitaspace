@@ -113,7 +113,3 @@ export const setStoredEsiAcceptLanguage = (value: EsiAcceptLanguage) => {
 export const setStoredAppTheme = (value: AppTheme) => {
   usePreferencesStore.getState().setAppTheme(value);
 };
-
-export const setStoredExperimentalDataTables = (value: boolean) => {
-  usePreferencesStore.getState().setExperimentalDataTables(value);
-};

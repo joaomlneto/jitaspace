@@ -364,3 +364,87 @@ describe("DataTable — column visibility", () => {
     expect(screen.getAllByRole("columnheader").length).toBe(2);
   });
 });
+
+describe("DataTable — custom sortAccessor & display-only columns", () => {
+  it("sorts numerically via a custom sortAccessor", async () => {
+    const cols: DataTableColumn<Row>[] = [
+      { id: "name", header: "Name", accessor: "name" },
+      {
+        id: "rank",
+        header: "Rank",
+        accessor: "score",
+        sortable: true,
+        sortAccessor: (r) => r.score,
+      },
+    ];
+    renderWithMantine(<DataTable columns={cols} data={data} />);
+    const rankHeader = screen.getByText("Rank").closest("th")!;
+
+    // Numeric columns sort descending on the first click (TanStack default).
+    await userEvent.click(rankHeader);
+    let rows = screen.getAllByRole("row");
+    expect(rows[1]).toHaveTextContent("Alice"); // 90
+    expect(rows[3]).toHaveTextContent("Bob"); // 75
+
+    await userEvent.click(rankHeader); // ascending
+    rows = screen.getAllByRole("row");
+    expect(rows[1]).toHaveTextContent("Bob");
+  });
+
+  it("sorts a sortAccessor returning string and null values", async () => {
+    interface LRow {
+      label: string | null;
+    }
+    const cols: DataTableColumn<LRow>[] = [
+      {
+        id: "label",
+        header: "Label",
+        accessor: "label",
+        sortable: true,
+        sortAccessor: (r) => r.label,
+      },
+    ];
+    const ldata: LRow[] = [
+      { label: "b" },
+      { label: null },
+      { label: null },
+      { label: "a" },
+    ];
+    renderWithMantine(<DataTable columns={cols} data={ldata} />);
+    await userEvent.click(screen.getByText("Label").closest("th")!);
+    // header + 4 rows; sorting executes compareValues over null/string pairs
+    expect(screen.getAllByRole("row")).toHaveLength(5);
+  });
+
+  it("renders a no-accessor column and a function accessor, keyed by rowId", () => {
+    const cols: DataTableColumn<Row>[] = [
+      { id: "blank", header: "Blank" }, // no accessor, no cell -> empty render
+      { id: "label", header: "Label", accessor: (r) => `${r.name}-${r.score}` },
+    ];
+    renderWithMantine(
+      <DataTable columns={cols} data={data} rowId={(r) => r.name} />,
+    );
+    expect(screen.getByText("Alice-90")).toBeInTheDocument();
+    expect(screen.getByText("Blank")).toBeInTheDocument();
+  });
+});
+
+describe("DataTable — pagination interaction", () => {
+  const many: Row[] = Array.from({ length: 30 }, (_, i) => ({
+    name: `Row ${i}`,
+    score: i,
+  }));
+
+  it("changes the current page", async () => {
+    renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={many}
+        withPagination
+        defaultPageSize={10}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "2" }));
+    expect(screen.getByText("Row 10")).toBeInTheDocument();
+  });
+});
