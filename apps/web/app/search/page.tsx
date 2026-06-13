@@ -71,9 +71,9 @@ function SearchView() {
 
 function SearchActionList({
   actions,
-}: {
+}: Readonly<{
   actions: ReturnType<typeof useSearchActions>["filteredActions"];
-}) {
+}>) {
   return (
     <Stack gap={4}>
       {actions.map(({ id, label, description, leftSection, onClick }) => (
