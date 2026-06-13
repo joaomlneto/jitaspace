@@ -1,9 +1,24 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, Group, Menu, Tabs, Text, UnstyledButton } from "@mantine/core";
+import {
+  Button,
+  Card,
+  Group,
+  Menu,
+  Switch,
+  Tabs,
+  Text,
+  UnstyledButton,
+} from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
-import { IconChevronDown, IconRefresh, IconRestore, IconSettings } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconFlask,
+  IconRefresh,
+  IconRestore,
+  IconSettings,
+} from "@tabler/icons-react";
 import ReactCountryFlag from "react-country-flag";
 
 import { setAcceptLanguage } from "@jitaspace/esi-client";
@@ -23,10 +38,16 @@ export function SettingsCard() {
     (state) => state.esiAcceptLanguage,
   );
   const selectedTheme = usePreferencesStore((state) => state.appTheme);
+  const experimentalDataTables = usePreferencesStore(
+    (state) => state.experimentalDataTables,
+  );
   const setSelectedAcceptLanguage = usePreferencesStore(
     (state) => state.setEsiAcceptLanguage,
   );
   const setSelectedTheme = usePreferencesStore((state) => state.setAppTheme);
+  const setExperimentalDataTables = usePreferencesStore(
+    (state) => state.setExperimentalDataTables,
+  );
 
   const {
     dismissedIds,
@@ -109,6 +130,9 @@ export function SettingsCard() {
         <Tabs.List mb="md">
           <Tabs.Tab value="general" leftSection={<IconSettings size={16} />}>
             General
+          </Tabs.Tab>
+          <Tabs.Tab value="experimental" leftSection={<IconFlask size={16} />}>
+            Experimental
           </Tabs.Tab>
           <Tabs.Tab value="reset" leftSection={<IconRefresh size={16} />}>
             Reset
@@ -205,6 +229,36 @@ export function SettingsCard() {
               </Menu.Target>
               <Menu.Dropdown>{themeItems}</Menu.Dropdown>
             </Menu>
+          </Group>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="experimental">
+          <Text fz="xs" c="dimmed" mt={3} mb="md">
+            Try out features that are still in development.
+          </Text>
+
+          <Group
+            justify="space-between"
+            className={classes.item}
+            wrap="nowrap"
+            gap="xl"
+          >
+            <div>
+              <Text>New data tables</Text>
+              <Text size="xs" c="dimmed">
+                Enable the experimental DataTable components. When on, each table
+                shows an engine selector (TanStack or mantine-datatable). When
+                off, the classic mantine-react-table is used everywhere.
+              </Text>
+            </div>
+            <Switch
+              className={classes.switch}
+              checked={experimentalDataTables}
+              onChange={(event) =>
+                setExperimentalDataTables(event.currentTarget.checked)
+              }
+              aria-label="Enable experimental data tables"
+            />
           </Group>
         </Tabs.Panel>
 
