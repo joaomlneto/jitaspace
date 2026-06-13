@@ -1,5 +1,4 @@
 import type { JWTVerifyGetKey } from "jose";
-import { createRemoteJWKSet, jwtVerify } from "jose";
 
 import type { EveSsoAccessTokenPayload } from "./getEveSsoAccessTokenPayload";
 
@@ -26,8 +25,6 @@ const EVE_SSO_ALGORITHMS = ["RS256", "ES256"];
 // `createRemoteJWKSet` caches fetched keys (and refreshes on an unknown `kid`),
 // so build it once and reuse it across calls.
 let remoteJwks: JWTVerifyGetKey | undefined;
-const defaultJwks = (): JWTVerifyGetKey =>
-  (remoteJwks ??= createRemoteJWKSet(new URL(EVE_SSO_JWKS_URI)));
 
 /**
  * Verify an EVE Online SSO access token: checks the JWT signature against EVE's
@@ -37,6 +34,10 @@ const defaultJwks = (): JWTVerifyGetKey =>
  * Unlike {@link getEveSsoAccessTokenPayload} — which only base64-decodes the
  * payload — a successful call here cryptographically proves EVE issued the
  * token, so its claims can be trusted.
+ *
+ * `jose` is imported dynamically so this server-only, ESM-only dependency stays
+ * out of the client bundle and out of consumers' eager module graphs (e.g. the
+ * client-side `useAuthStore`, which only needs `getEveSsoAccessTokenPayload`).
  */
 export async function verifyEveSsoAccessToken(
   token: string,
@@ -47,7 +48,13 @@ export async function verifyEveSsoAccessToken(
     audience?: string | string[];
   },
 ): Promise<EveSsoAccessTokenPayload> {
-  const { payload } = await jwtVerify(token, options?.jwks ?? defaultJwks(), {
+  const { createRemoteJWKSet, jwtVerify } = await import("jose");
+
+  const jwks =
+    options?.jwks ??
+    (remoteJwks ??= createRemoteJWKSet(new URL(EVE_SSO_JWKS_URI)));
+
+  const { payload } = await jwtVerify(token, jwks, {
     algorithms: EVE_SSO_ALGORITHMS,
     issuer: options?.issuer ?? EVE_SSO_ISSUERS,
     audience: options?.audience ?? EVE_SSO_AUDIENCE,
