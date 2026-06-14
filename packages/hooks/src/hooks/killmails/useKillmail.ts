@@ -1,9 +1,3 @@
 "use client";
 
-import { useGetKillmailsKillmailIdKillmailHash } from "@jitaspace/esi-client";
-
-
-
-
-
-export const useKillmail = useGetKillmailsKillmailIdKillmailHash;
+export { useGetKillmailsKillmailIdKillmailHash as useKillmail } from "@jitaspace/esi-client";

@@ -2,9 +2,9 @@ import pLimit from "p-limit";
 
 import { getUniverseMoonsMoonId } from "@jitaspace/esi-client";
 
+import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
-import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeMoonsEventPayload {
@@ -15,6 +15,33 @@ export interface ScrapeMoonsEventPayload {
 }
 
 type StatsKey = "moons";
+
+// Extracted to keep the per-batch callbacks below from nesting too deeply.
+const fetchRemoteMoon = (
+  limit: ReturnType<typeof pLimit>,
+  moon: { moonId: number; planetId: number },
+) =>
+  limit(async () =>
+    getUniverseMoonsMoonId(moon.moonId)
+      .then((res) => res.data)
+      .then((esiMoon) => ({
+        moonId: esiMoon.moon_id,
+        name: esiMoon.name,
+        planetId: moon.planetId,
+        isDeleted: false,
+      })),
+  );
+
+const updateMoon = (
+  limit: ReturnType<typeof pLimit>,
+  entry: { moonId: number; name: string; planetId: number; isDeleted: boolean },
+) =>
+  limit(async () =>
+    prisma.moon.update({
+      data: entry,
+      where: { moonId: entry.moonId },
+    }),
+  );
 
 export const scrapeEsiMoons = defineJob<ScrapeMoonsEventPayload["data"]>({
   id: "scrape-esi-moons",
@@ -36,7 +63,9 @@ export const scrapeEsiMoons = defineJob<ScrapeMoonsEventPayload["data"]>({
       const numBatches = Math.ceil(moonIds.length / batchSize);
       const batchIds = (batchIndex: number) =>
         moonIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      return [...Array(numBatches).keys()].map((batchId) => batchIds(batchId));
+      return [...new Array(numBatches).keys()].map((batchId) =>
+        batchIds(batchId),
+      );
     });
 
     const results: BatchStepResult<StatsKey>[] = [];
@@ -52,34 +81,21 @@ export const scrapeEsiMoons = defineJob<ScrapeMoonsEventPayload["data"]>({
           const thisBatchMoonIds = thisBatchMoons.map((moon) => moon.moonId);
 
           const moonChanges = await updateTable({
-            fetchLocalEntries: async () =>
-              prisma.moon
-                .findMany({
-                  where: {
-                    moonId: {
-                      in: thisBatchMoonIds,
-                    },
+            fetchLocalEntries: async () => {
+              const entries = await prisma.moon.findMany({
+                where: {
+                  moonId: {
+                    in: thisBatchMoonIds,
                   },
-                })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
+                },
+              });
+              return entries.map((entry) =>
+                excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              );
+            },
             fetchRemoteEntries: async () =>
               Promise.all(
-                thisBatchMoons.map((moon) =>
-                  limit(async () =>
-                    getUniverseMoonsMoonId(moon.moonId)
-                      .then((res) => res.data)
-                      .then((esiMoon) => ({
-                        moonId: esiMoon.moon_id,
-                        name: esiMoon.name,
-                        planetId: moon.planetId,
-                        isDeleted: false,
-                      })),
-                  ),
-                ),
+                thisBatchMoons.map((moon) => fetchRemoteMoon(limit, moon)),
               ),
             batchCreate: (entries) =>
               limit(() =>
@@ -99,16 +115,7 @@ export const scrapeEsiMoons = defineJob<ScrapeMoonsEventPayload["data"]>({
                 },
               }),
             batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.moon.update({
-                      data: entry,
-                      where: { moonId: entry.moonId },
-                    }),
-                  ),
-                ),
-              ),
+              Promise.all(entries.map((entry) => updateMoon(limit, entry))),
             idAccessor: (e) => e.moonId,
           });
 

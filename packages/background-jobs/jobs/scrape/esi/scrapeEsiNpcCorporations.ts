@@ -52,11 +52,11 @@ export const scrapeEsiNpcCorporations = defineJob<
     const ceoIds = npcCorporations
       .map((corporation) => corporation.ceo_id)
       // filter null records
-      .filter((ceoId) => ceoId) as number[]; // FIXME: should not need typecast
+      .filter(Boolean) as number[]; // FIXME: should not need typecast
     const creatorIds = npcCorporations
       .map((corporation) => corporation.creator_id)
       // filter null records
-      .filter((creatorId) => creatorId) as number[]; // FIXME: should not need typecast
+      .filter(Boolean) as number[]; // FIXME: should not need typecast
 
     const characterIds = [...new Set([...ceoIds, ...creatorIds])];
 
@@ -72,7 +72,7 @@ export const scrapeEsiNpcCorporations = defineJob<
     );
 
     // bootstrap missing corporationIds
-    const corporationIdsInDb = await prisma.corporation.createMany({
+    await prisma.corporation.createMany({
       data: npcCorporations.map((corporation) => ({
         corporationId: corporation.corporationId,
         memberCount: corporation.member_count,

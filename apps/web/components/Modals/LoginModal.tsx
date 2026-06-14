@@ -94,7 +94,7 @@ export function LoginModal({
             onChange={() => toggleAppScopeDetails()}
           />
           <SimpleGrid my="xl" spacing={0} cols={{ base: 1, sm: 2 }}>
-            {[...Object.values(characterApps)].map((feature) => (
+            {Object.values(characterApps).map((feature) => (
               <AppCheckboxCard
                 app={feature}
                 selectedScopes={[...selectedScopes]}

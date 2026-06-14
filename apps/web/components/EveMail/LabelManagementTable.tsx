@@ -3,10 +3,10 @@ import { openConfirmModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
 import { useCharacterMailLabels } from "@jitaspace/hooks";
-import { MailLabelColorSwatch } from "~/components/ColorSwatch";
-import { LabelName } from "~/components/Text";
 import { isSpecialLabelId } from "@jitaspace/utils";
 
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
+import { LabelName } from "~/components/Text";
 
 export interface LabelManagementTableProps {
   characterId: number;
@@ -16,6 +16,30 @@ export function LabelManagementTable({
   characterId,
 }: Readonly<LabelManagementTableProps>) {
   const { data: labels, deleteLabel } = useCharacterMailLabels(characterId);
+
+  const handleDeleteLabel = async (
+    labelId: number | undefined,
+    labelName: string | undefined,
+  ) => {
+    if (!labelId) {
+      return showNotification({
+        title: "Error deleting label",
+        message: `Error deleting label ${labelName}: No label id`,
+      });
+    }
+    const result = await deleteLabel(labelId);
+    if (result.success) {
+      showNotification({
+        title: "Label deleted",
+        message: `Label ${labelName} deleted. It make take up to 30 seconds to disappear from the list.`,
+      });
+    } else {
+      showNotification({
+        title: "Error deleting label",
+        message: result.error,
+      });
+    }
+  };
 
   return (
     <Table verticalSpacing="xs" highlightOnHover>
@@ -57,26 +81,7 @@ export function LabelManagementTable({
                         cancel: "Cancel",
                       },
                       onConfirm: () =>
-                        void (async () => {
-                          if (!label.label_id) {
-                            return showNotification({
-                              title: "Error deleting label",
-                              message: `Error deleting label ${label.name}: No label id`,
-                            });
-                          }
-                          const result = await deleteLabel(label.label_id);
-                          if (result.success) {
-                            showNotification({
-                              title: "Label deleted",
-                              message: `Label ${label.name} deleted. It make take up to 30 seconds to disappear from the list.`,
-                            });
-                          } else {
-                            showNotification({
-                              title: "Error deleting label",
-                              message: result.error,
-                            });
-                          }
-                        })(),
+                        void handleDeleteLabel(label.label_id, label.name),
                     });
                   }}
                 >

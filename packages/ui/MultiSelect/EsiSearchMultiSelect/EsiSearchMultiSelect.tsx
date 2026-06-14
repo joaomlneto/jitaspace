@@ -4,7 +4,8 @@ import React, { memo, useMemo, useState } from "react";
 import { Group, Loader, MultiSelect, Pill, rem } from "@mantine/core";
 import { useDebouncedValue, useUncontrolled } from "@mantine/hooks";
 
-import { type EsiSearchCategory, useEsiSearch } from "@jitaspace/hooks";
+import type { EsiSearchCategory } from "@jitaspace/hooks";
+import { useEsiSearch } from "@jitaspace/hooks";
 
 import { EveEntityAvatar } from "../../Avatar";
 import { EveEntityName } from "../../Text";
@@ -74,12 +75,14 @@ export const EsiSearchMultiSelect = memo(
       return { data, categoryByValue };
     }, [searchResult]);
 
-    const nothingFoundMessage =
-      searchValue.length < MIN_SEARCH_LENGTH
-        ? `Type at least ${MIN_SEARCH_LENGTH} characters to search for results`
-        : isLoadingData
-          ? "Searching…"
-          : "No results found";
+    let nothingFoundMessage: string;
+    if (searchValue.length < MIN_SEARCH_LENGTH) {
+      nothingFoundMessage = `Type at least ${MIN_SEARCH_LENGTH} characters to search for results`;
+    } else if (isLoadingData) {
+      nothingFoundMessage = "Searching…";
+    } else {
+      nothingFoundMessage = "No results found";
+    }
 
     return (
       <MultiSelect

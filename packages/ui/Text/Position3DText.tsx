@@ -1,11 +1,8 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Skeleton, Text, type TextProps } from "@mantine/core";
-
-
-
-
+import { Skeleton, Text } from "@mantine/core";
 
 export type Position3DTextProps = TextProps & {
   position?: number[];
@@ -24,7 +21,7 @@ export const Position3DText = memo(
 
     return (
       <Text {...otherProps}>
-        {x !== undefined ? `x: ${x}` : ""}
+        {x === undefined ? "" : `x: ${x}`}
         {y !== undefined && (
           <>
             <br />

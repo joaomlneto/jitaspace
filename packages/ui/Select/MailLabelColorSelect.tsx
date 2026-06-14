@@ -4,6 +4,7 @@ import type { ColorInputProps } from "@mantine/core";
 import React, { memo, useState } from "react";
 import { ActionIcon, ColorInput } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
+
 import { getRandomArrayEntry } from "@jitaspace/utils";
 
 const mailLabelColors = {
@@ -31,7 +32,7 @@ export const MailLabelColorSelect = memo(
   ({ ...otherProps }: ColorInputProps) => {
     const colors = Object.keys(mailLabelColors);
     const getRandomColor = () => getRandomArrayEntry(colors);
-    const [value, onChange] = useState(otherProps.value ?? getRandomColor());
+    const [value, setValue] = useState(otherProps.value ?? getRandomColor());
 
     return (
       <ColorInput
@@ -45,7 +46,7 @@ export const MailLabelColorSelect = memo(
             onClick={() => {
               const color = getRandomColor();
               otherProps.onChange?.(color);
-              onChange(color);
+              setValue(color);
             }}
           >
             <IconRefresh size="1rem" />
@@ -54,7 +55,7 @@ export const MailLabelColorSelect = memo(
         value={otherProps.value ?? value}
         onChange={(color: string) => {
           otherProps.onChange?.(color);
-          onChange(color);
+          setValue(color);
         }}
         w={140}
       />

@@ -15,6 +15,18 @@ import { isResearchAgent } from "../../../helpers/agents.ts";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+const fetchAgentInSpace = (characterId: number) =>
+  getAgentInSpaceById(characterId)
+    .then((res) => res.data)
+    .then((agent) => ({
+      characterId: agent.characterID,
+      dungeonId: agent.dungeonID,
+      solarSystemId: agent.solarSystemID,
+      spawnPointId: agent.spawnPointID,
+      typeId: agent.typeID,
+      isDeleted: false,
+    }));
+
 export interface ScrapeAgentsEventPayload {
   data: {
     batchSize?: number;
@@ -250,18 +262,7 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
       fetchRemoteEntries: async () =>
         Promise.all(
           agentsInSpaceCharacterIds.map((characterId) =>
-            limit(async () =>
-              getAgentInSpaceById(characterId)
-                .then((res) => res.data)
-                .then((agent) => ({
-                  characterId: agent.characterID,
-                  dungeonId: agent.dungeonID,
-                  solarSystemId: agent.solarSystemID,
-                  spawnPointId: agent.spawnPointID,
-                  typeId: agent.typeID,
-                  isDeleted: false,
-                })),
-            ),
+            limit(() => fetchAgentInSpace(characterId)),
           ),
         ),
       batchCreate: (entries) =>

@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  GetUniverseSystemsSystemIdQueryResponse,
-  useGetUniverseSystemsSystemId,
-} from "@jitaspace/esi-client";
+import { GetUniverseSystemsSystemIdQueryResponse } from "@jitaspace/esi-client";
 
 export type SolarSystem = GetUniverseSystemsSystemIdQueryResponse;
 
-export const useSolarSystem = useGetUniverseSystemsSystemId;
+export { useGetUniverseSystemsSystemId as useSolarSystem } from "@jitaspace/esi-client";

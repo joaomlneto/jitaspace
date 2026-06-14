@@ -16,6 +16,15 @@ export interface CompareTableProps {
   typeIds: number[];
 }
 
+function findAttributeValue(
+  type: { dogma_attributes?: { attribute_id: number; value: number }[] },
+  attributeId: number | undefined,
+): number | undefined {
+  return type.dogma_attributes?.find(
+    (attribute) => attribute.attribute_id === attributeId,
+  )?.value;
+}
+
 export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
   const { data: types } = useTypes(typeIds);
 
@@ -41,9 +50,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
       attributeId,
       values: sortedTypes.map((type) => ({
         typeId: type.type_id,
-        value: type.dogma_attributes?.find(
-          (attribute) => attribute.attribute_id === attributeId,
-        )?.value,
+        value: findAttributeValue(type, attributeId),
       })),
     }));
     /*attributeList.forEach(

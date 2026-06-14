@@ -33,7 +33,7 @@ export function useAllianceContacts(allianceId: number) {
     },
   );
 
-  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
+  const { data, isLoading, error, refetch } =
     useGetAlliancesAllianceIdContactsInfinite(
       allianceId ?? 0,
       {},
@@ -46,7 +46,7 @@ export function useAllianceContacts(allianceId: number) {
             getAlliancesAllianceIdContacts(
               allianceId ?? 0,
               {
-                page: pageParam as number,
+                page: pageParam,
               },
               { ...authHeaders },
             ),

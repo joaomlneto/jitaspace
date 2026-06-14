@@ -61,9 +61,9 @@ export interface RateLimitRequestEntry {
 
 const parseWindow = (window: string | undefined): number => {
   if (!window) return 0;
-  const match = window.match(/^(\d+)([mh])$/);
-  if (!match || !match[1] || !match[2]) return 0;
-  const value = parseInt(match[1], 10);
+  const match = /^(\d+)([mh])$/.exec(window);
+  if (!match?.[1] || !match[2]) return 0;
+  const value = Number.parseInt(match[1], 10);
   const unit = match[2];
   if (unit === "m") return value * 60;
   if (unit === "h") return value * 3600;
@@ -451,8 +451,8 @@ export const updateRateLimitState = (
   const [limitPart, windowPart] = limitHeader.split("/");
   if (!limitPart) return false;
 
-  const limit = parseInt(limitPart, 10);
-  const remaining = parseInt(remainingHeader, 10);
+  const limit = Number.parseInt(limitPart, 10);
+  const remaining = Number.parseInt(remainingHeader, 10);
   const parsedWindowSeconds = parseWindow(windowPart);
 
   if (!Number.isFinite(limit) || !Number.isFinite(remaining) || limit <= 0) {

@@ -21,9 +21,8 @@ import {
   TypeName,
 } from "@jitaspace/ui";
 
-import { DogmaAttributeName, DogmaEffectName } from "~/components/Text";
-
 import { MailMessageViewer } from "~/components/EveMail";
+import { DogmaAttributeName, DogmaEffectName } from "~/components/Text";
 
 export interface PageProps {
   effectId: number;

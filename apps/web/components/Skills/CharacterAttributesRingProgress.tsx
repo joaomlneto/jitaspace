@@ -14,16 +14,15 @@ import {
 } from "@mantine/core";
 import { format } from "date-fns";
 
+import type { EveIconProps } from "@jitaspace/eve-icons";
 import {
   AttributesIcon,
   CharismaAttributeSmallIcon,
   IntelligenceAttributeSmallIcon,
   MemoryAttributeSmallIcon,
   PerceptionAttributeSmallIcon,
-  WillpowerAttributeSmallIcon
-  
+  WillpowerAttributeSmallIcon,
 } from "@jitaspace/eve-icons";
-import type {EveIconProps} from "@jitaspace/eve-icons";
 import { useCharacterAttributes } from "@jitaspace/hooks/src/hooks/skills";
 
 export const characterAttributes = [
@@ -107,8 +106,17 @@ export function CharacterAttributesRingProgress({
 
   const remapCooldownElapsed =
     data?.data.accrued_remap_cooldown_date &&
-    new Date(data.data.accrued_remap_cooldown_date).getTime() <
-      new Date().getTime();
+    new Date(data.data.accrued_remap_cooldown_date).getTime() < Date.now();
+
+  const hasBonusRemaps = (data?.data.bonus_remaps ?? 0) > 0;
+  let remapStatusLabel: string;
+  if (remapCooldownElapsed) {
+    remapStatusLabel = "Available";
+  } else if (hasBonusRemaps) {
+    remapStatusLabel = "Bonus";
+  } else {
+    remapStatusLabel = "No";
+  }
 
   return (
     <SimpleGrid cols={{ base: 1, 500: 2, sm: 3, lg: 6 }}>
@@ -141,11 +149,7 @@ export function CharacterAttributesRingProgress({
                   </Group>
                   <Group gap="xs">
                     <Text fw={700} size="xl">
-                      {remapCooldownElapsed
-                        ? "Available"
-                        : (data?.data.bonus_remaps ?? 0) > 0
-                          ? "Bonus"
-                          : "No"}
+                      {remapStatusLabel}
                     </Text>
                   </Group>
                 </Stack>

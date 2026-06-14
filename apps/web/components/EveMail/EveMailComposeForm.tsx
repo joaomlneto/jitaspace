@@ -27,6 +27,12 @@ export interface EveMailComposeFormProps {
   onSend?: () => void;
 }
 
+const toMailRecipients = (recipients: string[]) =>
+  recipients.map((r) => ({
+    recipient_id: Number(r),
+    recipient_type: "character" as const,
+  }));
+
 export function EveMailComposeForm({
   onSend,
 }: Readonly<EveMailComposeFormProps>) {
@@ -72,10 +78,7 @@ export function EveMailComposeForm({
         {
           approved_cost: 0,
           body: htmlToEveMail(values.body),
-          recipients: values.recipients.map((r) => ({
-            recipient_id: Number(r),
-            recipient_type: "character",
-          })),
+          recipients: toMailRecipients(values.recipients),
           subject: values.subject,
         },
         authHeaders,
@@ -140,10 +143,7 @@ export function EveMailComposeForm({
                 {
                   approved_cost: details.totalCost,
                   body: htmlToEveMail(values.body),
-                  recipients: values.recipients.map((r) => ({
-                    recipient_id: Number(r),
-                    recipient_type: "character",
-                  })),
+                  recipients: toMailRecipients(values.recipients),
                   subject: values.subject,
                 },
                 authHeaders,

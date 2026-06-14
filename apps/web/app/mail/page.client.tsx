@@ -25,10 +25,10 @@ import {
   GroupListIcon,
 } from "@jitaspace/eve-icons";
 import { useCharacterMails, useSelectedCharacter } from "@jitaspace/hooks";
-import { EveMailLabelMultiSelect } from "~/components/MultiSelect/EveMailLabelMultiSelect";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxTable } from "~/components/EveMail";
+import { EveMailLabelMultiSelect } from "~/components/MultiSelect/EveMailLabelMultiSelect";
 
 export default function Page() {
   const router = useRouter();
@@ -145,7 +145,7 @@ export default function Page() {
                   const params = new URLSearchParams({
                     labels: value.join(","),
                   });
-                  void router.push(`${pathname}?${params.toString()}`);
+                  router.push(`${pathname}?${params.toString()}`);
                 }}
                 defaultValue={selectedLabels}
               />

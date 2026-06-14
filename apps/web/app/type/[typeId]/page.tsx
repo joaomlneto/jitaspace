@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
 import { HttpStatusCode } from "axios";
-import { Loader } from "@mantine/core";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 
 import TypePage from "./page.client";
@@ -115,7 +115,7 @@ export default function Page({
   params: Promise<{ typeId: string }>;
 }>) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

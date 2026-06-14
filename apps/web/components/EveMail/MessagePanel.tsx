@@ -1,4 +1,4 @@
-import { Group, JsonInput, Spoiler, Stack, Text } from "@mantine/core";
+import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
 import {
   useCharacterMail,
@@ -16,12 +16,11 @@ import {
   FormattedDateText,
 } from "@jitaspace/ui";
 
-import { MailLabelColorSwatch } from "~/components/ColorSwatch";
-import { LabelName, MailingListName } from "~/components/Text";
-
 import type { MailboxTableProps } from "~/components/EveMail/MailboxTable";
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 import { MessageMenu } from "~/components/EveMail/MessageMenu";
+import { LabelName, MailingListName } from "~/components/Text";
 
 export interface MessagePanelProps {
   characterId: number;

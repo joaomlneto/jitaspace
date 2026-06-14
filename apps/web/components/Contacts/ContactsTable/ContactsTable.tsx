@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Badge, Group, Table, Text } from "@mantine/core";
 
 import type {
@@ -43,6 +44,16 @@ export const ContactsTable = ({
         {contacts
           ?.sort((a, b) => b.standing - a.standing)
           .map((contact) => {
+            let blockedCell: ReactNode;
+            if (contact.is_blocked === undefined) {
+              blockedCell = (
+                <Text c="dimmed">
+                  <i>Unknown</i>
+                </Text>
+              );
+            } else {
+              blockedCell = contact.is_blocked ? "Yes" : "No";
+            }
             return (
               <Table.Tr key={contact.contact_id}>
                 <Table.Td>
@@ -85,19 +96,7 @@ export const ContactsTable = ({
                 <Table.Td>
                   <StandingsBadge standing={contact.standing} size="sm" />
                 </Table.Td>
-                {!hideBlockedColumn && (
-                  <Table.Td>
-                    {contact.is_blocked === undefined ? (
-                      <Text c="dimmed">
-                        <i>Unknown</i>
-                      </Text>
-                    ) : contact.is_blocked ? (
-                      "Yes"
-                    ) : (
-                      "No"
-                    )}
-                  </Table.Td>
-                )}
+                {!hideBlockedColumn && <Table.Td>{blockedCell}</Table.Td>}
               </Table.Tr>
             );
           })}

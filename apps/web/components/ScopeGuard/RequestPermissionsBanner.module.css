@@ -14,7 +14,7 @@
 }
 
 .title {
-    font-family: "Greycliff CF, var(--mantine-font-family)";
+    font-family: "Greycliff CF, var(--mantine-font-family)", sans-serif;
     text-align: center;
     font-weight: 900;
     font-size: 38px;

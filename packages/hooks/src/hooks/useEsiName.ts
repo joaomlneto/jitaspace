@@ -179,10 +179,21 @@ export function useEsiName(
   loading: boolean;
   error?: string;
 } {
+  let idCacheKey: string;
+  if (id === undefined) {
+    idCacheKey = "";
+  } else if (typeof id === "string") {
+    idCacheKey = id;
+  } else {
+    idCacheKey = id.toString();
+  }
+
   const [{ status, value, error }, fetchName] = useCache(
     fetchCache,
-    id === undefined ? "" : typeof id === "string" ? id : id?.toString(),
-    { category },
+    idCacheKey,
+    {
+      category,
+    },
   );
 
   useEffect(() => {
@@ -197,7 +208,7 @@ export function useEsiName(
   return {
     loading: status === "loading",
     name: value?.name,
-    category: value?.category as ResolvableEntityCategory,
+    category: value?.category,
     error: error?.message,
   };
 }

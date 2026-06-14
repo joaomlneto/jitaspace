@@ -35,7 +35,7 @@ export const EveEntitySelect = memo(
             label:
               name ??
               getNameFromCache(
-                typeof id === "string" ? parseInt(id, 10) : id,
+                typeof id === "string" ? Number.parseInt(id, 10) : id,
               ) ??
               "",
           }))

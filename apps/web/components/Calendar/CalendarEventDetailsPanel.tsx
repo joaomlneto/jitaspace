@@ -17,9 +17,8 @@ import {
 import { CalendarEventOwnerAvatar } from "~/components/Avatar";
 import { CalendarEventResponseBadge } from "~/components/Badge";
 import { CalendarEventHumanDurationText } from "~/components/DurationText";
-import { CalendarEventAttendanceSelect } from "~/components/Select";
-
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
+import { CalendarEventAttendanceSelect } from "~/components/Select";
 
 export interface CalendarEventPanelProps {
   characterId: number;

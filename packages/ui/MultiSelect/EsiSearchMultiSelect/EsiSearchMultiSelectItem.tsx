@@ -1,8 +1,8 @@
 "use client";
 
+import type { ComboboxLikeRenderOptionInput } from "@mantine/core";
 import React from "react";
 import { Avatar, Badge, Group, rem, Text } from "@mantine/core";
-import type { ComboboxLikeRenderOptionInput } from "@mantine/core";
 
 import type { EsiSearchCategory as GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/hooks";
 

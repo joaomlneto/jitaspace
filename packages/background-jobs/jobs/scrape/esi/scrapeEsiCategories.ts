@@ -13,6 +13,22 @@ export interface ScrapeCategoriesEventPayload {
   data: {};
 }
 
+// Extracted to keep the per-category fetch from nesting too deeply.
+const fetchRemoteCategory = (
+  limit: ReturnType<typeof pLimit>,
+  categoryId: number,
+) =>
+  limit(async () =>
+    getUniverseCategoriesCategoryId(categoryId)
+      .then((res) => res.data)
+      .then((category) => ({
+        categoryId: category.category_id,
+        name: category.name,
+        published: category.published,
+        isDeleted: false,
+      })),
+  );
+
 export const scrapeEsiCategories = defineJob<
   ScrapeCategoriesEventPayload["data"]
 >({
@@ -47,16 +63,7 @@ export const scrapeEsiCategories = defineJob<
       fetchRemoteEntries: async () =>
         Promise.all(
           categoryIds.map((categoryId) =>
-            limit(async () =>
-              getUniverseCategoriesCategoryId(categoryId)
-                .then((res) => res.data)
-                .then((category) => ({
-                  categoryId: category.category_id,
-                  name: category.name,
-                  published: category.published,
-                  isDeleted: false,
-                })),
-            ),
+            fetchRemoteCategory(limit, categoryId),
           ),
         ),
       batchCreate: (entries) =>

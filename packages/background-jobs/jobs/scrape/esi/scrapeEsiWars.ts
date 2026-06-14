@@ -1,9 +1,9 @@
 import { getWars } from "@jitaspace/esi-client";
 
+import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
-import type { BatchStepResult, CrudStatistics } from "../../../types";
 
 export interface ScrapeWarsEventPayload {
   data: {
@@ -81,7 +81,7 @@ export const scrapeEsiWars = defineJob<ScrapeWarsEventPayload["data"]>({
           batchIndex * batchSize,
           (batchIndex + 1) * batchSize,
         );
-      return [...Array(numBatches).keys()].map((batchId) =>
+      return [...new Array(numBatches).keys()].map((batchId) =>
         batchTypeIds(batchId),
       );
     });
