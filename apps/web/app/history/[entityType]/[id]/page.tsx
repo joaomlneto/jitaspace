@@ -3,6 +3,18 @@ import { Loader } from "@mantine/core";
 
 import EntityHistoryClient from "./page.client";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ entityType: string; id: string }>;
+}) {
+  const { entityType, id } = await params;
+  return {
+    title: `${entityType} ${id} — Change History`,
+    description: `Change history for EVE Online ${entityType} ${id} across client builds.`,
+  };
+}
+
 async function PageContent({
   params,
 }: {

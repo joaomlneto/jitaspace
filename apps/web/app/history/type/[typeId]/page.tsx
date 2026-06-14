@@ -3,6 +3,18 @@ import { Loader } from "@mantine/core";
 
 import TypeHistoryClient from "./page.client";
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ typeId: string }>;
+}) {
+  const { typeId } = await params;
+  return {
+    title: `Type ${typeId} — Change History`,
+    description: `How EVE Online type ${typeId} has changed across client builds.`,
+  };
+}
+
 async function PageContent({
   params,
 }: {
