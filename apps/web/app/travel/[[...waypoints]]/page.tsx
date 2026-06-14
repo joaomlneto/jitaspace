@@ -64,9 +64,9 @@ async function getTravelData(waypoints: string[] | undefined): Promise<{
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ waypoints?: string[] }>;
-}) {
+}>) {
   const { waypoints } = await params;
 
   try {
@@ -84,9 +84,9 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ waypoints?: string[] }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />

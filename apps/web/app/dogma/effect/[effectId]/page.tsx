@@ -112,9 +112,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ effectId: string }>;
-}) {
+}>) {
   const { effectId: effectIdParam } = await params;
   const effectId = Number(effectIdParam);
   if (!Number.isFinite(effectId)) {
@@ -131,9 +131,9 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ effectId: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />

@@ -117,9 +117,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ attributeId: string }>;
-}) {
+}>) {
   const { attributeId: attributeIdParam } = await params;
   const attributeId = Number(attributeIdParam);
   if (!Number.isFinite(attributeId)) {
@@ -133,9 +133,9 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ attributeId: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
