@@ -5,7 +5,7 @@ import React, { memo, useMemo } from "react";
 import { Badge, Group, Loader, rem, Select } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 
-import { type EsiSearchCategory as GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/hooks";
+import type { EsiSearchCategory as GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/hooks";
 import { useEsiNameLookup, useEsiSearch } from "@jitaspace/hooks";
 
 import { EveEntityAvatar } from "../../Avatar";
@@ -22,7 +22,7 @@ export type EsiSearchSelectProps = Omit<
 export const EsiSearchSelect = memo(
   ({ categories, debounceTime, ...otherProps }: EsiSearchSelectProps) => {
     const [value, setValue] = React.useState<string | null>(null);
-    const [searchValue, onSearchChange] = React.useState<string>("");
+    const [searchValue, setSearchValue] = React.useState<string>("");
     const [debouncedSearchValue] = useDebouncedValue(
       searchValue,
       debounceTime ?? 1000,
@@ -63,6 +63,15 @@ export const EsiSearchSelect = memo(
     const isLoadingData: boolean =
       isLoading || searchValue !== debouncedSearchValue;
 
+    let nothingFoundMessage: string;
+    if ((searchValue ?? "").length < 3) {
+      nothingFoundMessage = "Type at least 3 characters to search for results";
+    } else if (isLoadingData) {
+      nothingFoundMessage = "Searching…";
+    } else {
+      nothingFoundMessage = "No results found";
+    }
+
     return (
       <Select
         filter={({ options }) => options}
@@ -74,7 +83,7 @@ export const EsiSearchSelect = memo(
         }}
         searchable
         searchValue={searchValue}
-        onSearchChange={onSearchChange}
+        onSearchChange={setSearchValue}
         renderOption={({ option }) => {
           const category = (
             option as typeof option & {
@@ -104,13 +113,7 @@ export const EsiSearchSelect = memo(
           );
         }}
         rightSection={isLoadingData && <Loader size="sm" />}
-        nothingFoundMessage={
-          (searchValue ?? "").length < 3
-            ? "Type at least 3 characters to search for results"
-            : isLoadingData
-              ? "Searching…"
-              : "No results found"
-        }
+        nothingFoundMessage={nothingFoundMessage}
         {...otherProps}
       />
     );

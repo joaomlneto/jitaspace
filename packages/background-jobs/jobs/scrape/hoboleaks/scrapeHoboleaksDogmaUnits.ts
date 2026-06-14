@@ -26,7 +26,7 @@ export const scrapeHoboleaksDogmaUnits = defineJob<
       (res) => res.json(),
     );
 
-    const dogmaUnitIds = Object.keys(dogmaUnits).map((k) => Number(k));
+    const dogmaUnitIds = Object.keys(dogmaUnits).map(Number);
 
     const limit = pLimit(20);
 

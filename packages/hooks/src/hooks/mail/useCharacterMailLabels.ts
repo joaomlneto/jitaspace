@@ -51,7 +51,7 @@ export function useCharacterMailLabels(characterId: number) {
     }
 
     await deleteCharactersCharacterIdMailLabelsLabelId(
-      characterId!,
+      characterId,
       labelId,
       authHeaders,
     );

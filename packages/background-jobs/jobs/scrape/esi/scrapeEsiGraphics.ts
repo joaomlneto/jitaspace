@@ -13,6 +13,25 @@ export interface ScrapeGraphicsEventPayload {
   data: {};
 }
 
+type Limit = ReturnType<typeof pLimit>;
+
+const fetchRemoteGraphic = (limit: Limit, graphicId: number) =>
+  limit(() =>
+    getUniverseGraphicsGraphicId(graphicId)
+      .then((res) => res.data)
+      .then((graphic) => ({
+        graphicId: graphic.graphic_id,
+        graphicFile: graphic.graphic_file ?? null,
+        collisionFile: graphic.collision_file ?? null,
+        iconFolder: graphic.icon_folder ?? null,
+        sofDna: graphic.sof_dna ?? null,
+        sofHullName: graphic.sof_hull_name ?? null,
+        sofRaceName: graphic.sof_race_name ?? null,
+        sofFactionName: graphic.sof_fation_name ?? null,
+        isDeleted: false,
+      })),
+  );
+
 export const scrapeEsiGraphics = defineJob<ScrapeGraphicsEventPayload["data"]>({
   id: "scrape-esi-graphics",
   name: "Scrape Graphics",
@@ -44,23 +63,7 @@ export const scrapeEsiGraphics = defineJob<ScrapeGraphicsEventPayload["data"]>({
           ),
       fetchRemoteEntries: async () =>
         Promise.all(
-          graphicIds.map((graphicId) =>
-            limit(async () =>
-              getUniverseGraphicsGraphicId(graphicId)
-                .then((res) => res.data)
-                .then((graphic) => ({
-                  graphicId: graphic.graphic_id,
-                  graphicFile: graphic.graphic_file ?? null,
-                  collisionFile: graphic.collision_file ?? null,
-                  iconFolder: graphic.icon_folder ?? null,
-                  sofDna: graphic.sof_dna ?? null,
-                  sofHullName: graphic.sof_hull_name ?? null,
-                  sofRaceName: graphic.sof_race_name ?? null,
-                  sofFactionName: graphic.sof_fation_name ?? null,
-                  isDeleted: false,
-                })),
-            ),
-          ),
+          graphicIds.map((graphicId) => fetchRemoteGraphic(limit, graphicId)),
         ),
       batchCreate: (entries) =>
         limit(() =>

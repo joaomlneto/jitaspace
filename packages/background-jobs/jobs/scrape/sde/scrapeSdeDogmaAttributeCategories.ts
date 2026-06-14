@@ -15,6 +15,24 @@ export interface ScrapeDogmaAttributeCategoriesEventPayload {
   };
 }
 
+type LimitFunction = ReturnType<typeof pLimit>;
+
+const fetchDogmaAttributeCategory = (
+  attributeCategoryId: number,
+  limit: LimitFunction,
+) =>
+  limit(async () => {
+    const dogmaAttributeCategory = await getDogmaAttributeCategoryById(
+      attributeCategoryId,
+    ).then((res) => res.data);
+    return {
+      attributeCategoryId: attributeCategoryId,
+      name: dogmaAttributeCategory.name,
+      description: dogmaAttributeCategory.description ?? null,
+      isDeleted: false,
+    };
+  });
+
 export const scrapeSdeDogmaAttributeCategories = defineJob<
   ScrapeDogmaAttributeCategoriesEventPayload["data"]
 >({
@@ -50,16 +68,7 @@ export const scrapeSdeDogmaAttributeCategories = defineJob<
       fetchRemoteEntries: async () =>
         Promise.all(
           dogmaAttributeCategoryIds.map((attributeCategoryId) =>
-            limit(async () =>
-              getDogmaAttributeCategoryById(attributeCategoryId)
-                .then((res) => res.data)
-                .then((dogmaAttributeCategory) => ({
-                  attributeCategoryId: attributeCategoryId,
-                  name: dogmaAttributeCategory.name,
-                  description: dogmaAttributeCategory.description ?? null,
-                  isDeleted: false,
-                })),
-            ),
+            fetchDogmaAttributeCategory(attributeCategoryId, limit),
           ),
         ),
       batchCreate: (entries) =>

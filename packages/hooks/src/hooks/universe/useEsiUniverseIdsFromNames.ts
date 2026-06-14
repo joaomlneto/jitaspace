@@ -8,7 +8,10 @@ import {
 } from "@jitaspace/esi-client";
 
 export const useEsiUniverseIdsFromNames = (names: string[]) => {
-  const sortedNames = useMemo(() => names.sort((a, b) => a.localeCompare(b)), [names]);
+  const sortedNames = useMemo(
+    () => names.toSorted((a, b) => a.localeCompare(b)),
+    [names],
+  );
 
   const sortedNamesAsString = useMemo(
     () => JSON.stringify(sortedNames),

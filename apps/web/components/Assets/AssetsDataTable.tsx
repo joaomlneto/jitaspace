@@ -80,7 +80,7 @@ export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {
         },
         Cell: ({ renderedCellValue: _renderedCellValue, row: _row, cell }) => {
           const value = cell.getValue<number>();
-          return value !== undefined ? <ISKAmount amount={value} /> : undefined;
+          return value === undefined ? undefined : <ISKAmount amount={value} />;
         },
       },
     ],

@@ -8,7 +8,7 @@ import { ShipFittingCard } from "~/components/Fitting";
 
 export function CurrentShipFittingModal({
   innerProps,
-}: ContextModalProps<{ characterId: number }>) {
+}: Readonly<ContextModalProps<{ characterId: number }>>) {
   const fit = useCharacterCurrentFit(innerProps.characterId);
   return (
     <ShipFittingCard

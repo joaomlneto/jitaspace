@@ -4,10 +4,6 @@ import { useMemo } from "react";
 
 import { useGetAggregates } from "@jitaspace/fuzzworks-market-client";
 
-
-
-
-
 export type FuzzworkMarketAggregateStats = {
   weightedAverage: number;
   max: number;
@@ -27,7 +23,10 @@ export const useFuzzworkRegionalMarketAggregates = (
   typeIds: number[],
   regionId: number,
 ) => {
-  const sortedTypeIds = useMemo(() => typeIds.sort((a, b) => a - b), [typeIds]);
+  const sortedTypeIds = useMemo(
+    () => typeIds.toSorted((a, b) => a - b),
+    [typeIds],
+  );
   const query = useGetAggregates(
     {
       // FIXME: Generator wont support specifying array of integers for a query parameter.

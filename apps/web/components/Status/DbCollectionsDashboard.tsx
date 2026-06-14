@@ -84,7 +84,7 @@ function getCollectionItemPreview(item: unknown): string {
 function CollectionStats({
   collection,
   onOpenCollection,
-}: CollectionStatsProps) {
+}: Readonly<CollectionStatsProps>) {
   const { data: items } = useLiveQuery(collection.collection);
   const count = items?.length ?? 0;
 
@@ -113,7 +113,7 @@ function CollectionBrowserModal({
   opened,
   collection,
   onClose,
-}: CollectionBrowserModalProps) {
+}: Readonly<CollectionBrowserModalProps>) {
   const { data: items } = useLiveQuery(collection.collection);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(

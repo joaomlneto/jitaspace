@@ -23,8 +23,8 @@ export const scrapeHoboleaksDogmaEffectCategories = defineJob<
       "https://sde.hoboleaks.space/tq/dogmaeffectcategories.json",
     ).then((res) => res.json());
 
-    const dogmaEffectCategoryIds = Object.keys(dogmaEffectCategories).map((k) =>
-      Number(k),
+    const dogmaEffectCategoryIds = Object.keys(dogmaEffectCategories).map(
+      Number,
     );
 
     const limit = pLimit(20);

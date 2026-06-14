@@ -32,7 +32,7 @@ export const useCharacterAssets = (characterId?: number) => {
             getCharactersCharacterIdAssets(
               characterId ?? 0,
               {
-                page: pageParam as number,
+                page: pageParam,
               },
               { ...authHeaders },
             ),
@@ -85,13 +85,11 @@ export const useCharacterAssets = (characterId?: number) => {
     > = {};
 
     locationsList.forEach((asset) => {
-      if (!locations[asset.location_id]) {
-        locations[asset.location_id] = {
-          location_id: asset.location_id,
-          location_type: asset.location_type,
-          items: [],
-        };
-      }
+      locations[asset.location_id] ??= {
+        location_id: asset.location_id,
+        location_type: asset.location_type,
+        items: [],
+      };
 
       locations[asset.location_id]?.items.push(asset.item_id);
     });

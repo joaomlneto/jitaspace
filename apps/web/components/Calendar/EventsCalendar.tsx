@@ -20,9 +20,7 @@ export default function EventsCalendar({
       const date = new Date(event.event_date);
       date.setHours(0, 0, 0, 0);
       const dateString = date.getTime();
-      if (!eventsPerDate[dateString]) {
-        eventsPerDate[dateString] = [];
-      }
+      eventsPerDate[dateString] ??= [];
       eventsPerDate[dateString]?.push(event);
     });
   }

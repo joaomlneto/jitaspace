@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo } from "react";
-import { Group, Stack, useMantineTheme } from "@mantine/core";
+import { Group, Stack } from "@mantine/core";
 
 import { useCharacter } from "@jitaspace/hooks";
 
@@ -9,13 +9,11 @@ import { AllianceAnchor, CharacterAnchor, CorporationAnchor } from "../Anchor";
 import { AllianceAvatar, CharacterAvatar, CorporationAvatar } from "../Avatar";
 import { AllianceName, CharacterName, CorporationName } from "../Text";
 
-
 interface CharacterCardProps {
   characterId: number;
 }
 
 export const CharacterCard = memo(({ characterId }: CharacterCardProps) => {
-  const theme = useMantineTheme();
   const { data } = useCharacter(characterId);
   return (
     <Stack gap="xs">

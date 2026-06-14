@@ -19,9 +19,11 @@ import { LabelManagementTable } from "~/components/EveMail";
 export function ManageMailLabelsModal({
   context,
   id,
-}: ContextModalProps<{
-  /* empty */
-}>) {
+}: Readonly<
+  ContextModalProps<{
+    /* empty */
+  }>
+>) {
   const character = useSelectedCharacter();
   const characterId = character?.characterId;
   const { accessToken, authHeaders } = useAccessToken({

@@ -23,7 +23,7 @@ export const scrapeHoboleaksAgentTypes = defineJob<
       "https://sde.hoboleaks.space/tq/agenttypes.json",
     ).then((res) => res.json());
 
-    const agentTypeIds = Object.keys(agentTypes).map((k) => Number(k));
+    const agentTypeIds = Object.keys(agentTypes).map(Number);
 
     const limit = pLimit(20);
 

@@ -12,6 +12,18 @@ export interface ScrapeSdeRacesEventPayload {
   };
 }
 
+const fetchRace = (raceId: number, limit: ReturnType<typeof pLimit>) =>
+  limit(async () =>
+    getRaceById(raceId)
+      .then((res) => res.data)
+      .then((race) => ({
+        raceId: race.raceID,
+        name: race.name.en!,
+        description: race.description.en ?? null,
+        isDeleted: false,
+      })),
+  );
+
 export const scrapeSdeRaces = defineJob<ScrapeSdeRacesEventPayload["data"]>({
   id: "scrape-sde-races",
   name: "Scrape Races",
@@ -44,20 +56,7 @@ export const scrapeSdeRaces = defineJob<ScrapeSdeRacesEventPayload["data"]>({
             ),
           ),
       fetchRemoteEntries: async () =>
-        Promise.all(
-          raceIds.map((raceId) =>
-            limit(async () =>
-              getRaceById(raceId)
-                .then((res) => res.data)
-                .then((race) => ({
-                  raceId: race.raceID,
-                  name: race.name.en!,
-                  description: race.description.en ?? null,
-                  isDeleted: false,
-                })),
-            ),
-          ),
-        ),
+        Promise.all(raceIds.map((raceId) => fetchRace(raceId, limit))),
       batchCreate: (entries) =>
         limit(() =>
           prisma.race.createMany({

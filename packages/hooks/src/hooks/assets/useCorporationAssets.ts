@@ -18,7 +18,7 @@ export const useCorporationAssets = (corporationId?: number) => {
     roles: ["Director"],
   });
 
-  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
+  const { data, isLoading, error, refetch } =
     useGetCorporationsCorporationIdAssetsInfinite(
       corporationId ?? 0,
       {},
@@ -31,7 +31,7 @@ export const useCorporationAssets = (corporationId?: number) => {
             getCorporationsCorporationIdAssets(
               corporationId ?? 0,
               {
-                page: pageParam as number,
+                page: pageParam,
               },
               { ...authHeaders },
             ),
@@ -92,13 +92,11 @@ export const useCorporationAssets = (corporationId?: number) => {
     > = {};
 
     locationsList.forEach((asset) => {
-      if (!locations[asset.location_id]) {
-        locations[asset.location_id] = {
-          location_id: asset.location_id,
-          location_type: asset.location_type,
-          items: [],
-        };
-      }
+      locations[asset.location_id] ??= {
+        location_id: asset.location_id,
+        location_type: asset.location_type,
+        items: [],
+      };
 
       locations[asset.location_id]?.items.push(asset.item_id);
     });

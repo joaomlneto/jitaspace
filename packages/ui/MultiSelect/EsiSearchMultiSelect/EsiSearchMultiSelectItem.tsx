@@ -1,8 +1,8 @@
 "use client";
 
+import type { ComboboxLikeRenderOptionInput } from "@mantine/core";
 import React from "react";
 import { Avatar, Badge, Group, rem, Text } from "@mantine/core";
-import type { ComboboxLikeRenderOptionInput } from "@mantine/core";
 
 import type { EsiSearchCategory as GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/hooks";
 
@@ -20,7 +20,7 @@ export type EsiSearchMultiSelectItemProps =
 
 export function EsiSearchMultiSelectItem({
   option,
-}: EsiSearchMultiSelectItemProps) {
+}: Readonly<EsiSearchMultiSelectItemProps>) {
   const { value, category } = option;
   return (
     <Group wrap="nowrap" justify="space-between">

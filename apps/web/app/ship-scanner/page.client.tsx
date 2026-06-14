@@ -179,7 +179,7 @@ function mergeAndConvertScans(scans: ScanResult[]) {
   return convertScan(mergedScans);
 }
 
-export default function Page({ ships }: PageProps) {
+export default function Page({ ships }: Readonly<PageProps>) {
   const [shipTypeId, setShipTypeId] = useState<number | undefined>();
   const [scans, setScans] = useState<ScanResult[]>([]);
   const { data: shipData } = useType(

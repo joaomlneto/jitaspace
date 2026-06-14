@@ -2,9 +2,9 @@ import pLimit from "p-limit";
 
 import { getUniversePlanetsPlanetId } from "@jitaspace/esi-client";
 
+import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
-import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapePlanetsEventPayload {
@@ -15,6 +15,78 @@ export interface ScrapePlanetsEventPayload {
 }
 
 type StatsKey = "planets";
+
+type LimitFunction = ReturnType<typeof pLimit>;
+
+type EsiPlanet = Awaited<ReturnType<typeof getUniversePlanetsPlanetId>>["data"];
+
+const fetchPlanetsForBatch = (thisBatchIds: number[], limit: LimitFunction) =>
+  Promise.all(
+    thisBatchIds.map((planetId) =>
+      limit(async () =>
+        getUniversePlanetsPlanetId(planetId).then((res) => res.data),
+      ),
+    ),
+  );
+
+const updatePlanetsBatch = (
+  thisBatchIds: number[],
+  thisBatchPlanets: EsiPlanet[],
+  limit: LimitFunction,
+) =>
+  updateTable({
+    fetchLocalEntries: async () =>
+      prisma.planet
+        .findMany({
+          where: {
+            planetId: {
+              in: thisBatchIds,
+            },
+          },
+        })
+        .then((entries) =>
+          entries.map((entry) =>
+            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+          ),
+        ),
+    fetchRemoteEntries: async () =>
+      thisBatchPlanets.map((planet) => ({
+        solarSystemId: planet.system_id,
+        planetId: planet.planet_id,
+        name: planet.name,
+        typeId: planet.type_id,
+        isDeleted: false,
+      })),
+    batchCreate: (entries) =>
+      limit(() =>
+        prisma.planet.createMany({
+          data: entries,
+        }),
+      ),
+    batchDelete: (entries) =>
+      prisma.planet.updateMany({
+        data: {
+          isDeleted: true,
+        },
+        where: {
+          planetId: {
+            in: entries.map((entry) => entry.planetId),
+          },
+        },
+      }),
+    batchUpdate: (entries) =>
+      Promise.all(
+        entries.map((entry) =>
+          limit(async () =>
+            prisma.planet.update({
+              data: entry,
+              where: { planetId: entry.planetId },
+            }),
+          ),
+        ),
+      ),
+    idAccessor: (e) => e.planetId,
+  });
 
 export const scrapeEsiPlanets = defineJob<ScrapePlanetsEventPayload["data"]>({
   id: "scrape-esi-planets",
@@ -36,7 +108,9 @@ export const scrapeEsiPlanets = defineJob<ScrapePlanetsEventPayload["data"]>({
       const numBatches = Math.ceil(planetIds.length / batchSize);
       const batchIds = (batchIndex: number) =>
         planetIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      return [...Array(numBatches).keys()].map((batchId) => batchIds(batchId));
+      return [...new Array(numBatches).keys()].map((batchId) =>
+        batchIds(batchId),
+      );
     });
 
     const results: BatchStepResult<StatsKey>[] = [];
@@ -52,67 +126,16 @@ export const scrapeEsiPlanets = defineJob<ScrapePlanetsEventPayload["data"]>({
           const stepStartTime = performance.now();
           const thisBatchIds = batches[i]!;
 
-          const thisBatchPlanets = await Promise.all(
-            thisBatchIds.map((planetId) =>
-              limit(async () =>
-                getUniversePlanetsPlanetId(planetId).then((res) => res.data),
-              ),
-            ),
+          const thisBatchPlanets = await fetchPlanetsForBatch(
+            thisBatchIds,
+            limit,
           );
 
-          const planetChanges = await updateTable({
-            fetchLocalEntries: async () =>
-              prisma.planet
-                .findMany({
-                  where: {
-                    planetId: {
-                      in: thisBatchIds,
-                    },
-                  },
-                })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
-            fetchRemoteEntries: async () =>
-              thisBatchPlanets.map((planet) => ({
-                solarSystemId: planet.system_id,
-                planetId: planet.planet_id,
-                name: planet.name,
-                typeId: planet.type_id,
-                isDeleted: false,
-              })),
-            batchCreate: (entries) =>
-              limit(() =>
-                prisma.planet.createMany({
-                  data: entries,
-                }),
-              ),
-            batchDelete: (entries) =>
-              prisma.planet.updateMany({
-                data: {
-                  isDeleted: true,
-                },
-                where: {
-                  planetId: {
-                    in: entries.map((entry) => entry.planetId),
-                  },
-                },
-              }),
-            batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.planet.update({
-                      data: entry,
-                      where: { planetId: entry.planetId },
-                    }),
-                  ),
-                ),
-              ),
-            idAccessor: (e) => e.planetId,
-          });
+          const planetChanges = await updatePlanetsBatch(
+            thisBatchIds,
+            thisBatchPlanets,
+            limit,
+          );
 
           return {
             stats: {

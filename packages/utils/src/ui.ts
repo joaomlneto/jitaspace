@@ -11,9 +11,5 @@ export function getAvatarSize<
     return sizes[size] as number;
   }
 
-  if (typeof size === "number") {
-    size;
-  }
-
   return 1024;
 }

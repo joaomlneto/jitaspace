@@ -1,10 +1,12 @@
 "use client";
 
+import type { AvatarProps } from "@mantine/core";
 import React, { memo } from "react";
-import { Avatar, Skeleton, type AvatarProps } from "@mantine/core";
+import { Avatar, Skeleton } from "@mantine/core";
 
+import type { ResolvableEntityCategory } from "@jitaspace/hooks";
 import { UnknownIcon } from "@jitaspace/eve-icons";
-import { useEsiName, type ResolvableEntityCategory } from "@jitaspace/hooks";
+import { useEsiName } from "@jitaspace/hooks";
 import { getAvatarSize } from "@jitaspace/utils";
 
 import { AllianceAvatar } from "./AllianceAvatar";
@@ -13,7 +15,6 @@ import { CharacterAvatar } from "./CharacterAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
 import { FactionAvatar } from "./FactionAvatar";
 import { TypeAvatar } from "./TypeAvatar";
-
 
 export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
   entityId?: string | number;
@@ -29,23 +30,25 @@ export const EveEntityAvatar = memo(
     ...otherProps
   }: EveEntityAvatarProps) => {
     const { category, loading, error } = useEsiName(entityId, categoryHint);
-    entityId = typeof entityId === "string" ? parseInt(entityId, 10) : entityId;
+    entityId =
+      typeof entityId === "string" ? Number.parseInt(entityId, 10) : entityId;
 
     if (entityId === undefined || loading) {
-      return <Skeleton
-        radius={otherProps.radius}
-        height={otherProps.size}
-        width={otherProps.size}
-        circle
-      >
-        <Avatar
-          size={otherProps.size}
+      return (
+        <Skeleton
           radius={otherProps.radius}
-          {...otherProps}
-        />
-      </Skeleton>;
+          height={otherProps.size}
+          width={otherProps.size}
+          circle
+        >
+          <Avatar
+            size={otherProps.size}
+            radius={otherProps.radius}
+            {...otherProps}
+          />
+        </Skeleton>
+      );
     }
-
 
     if (!category || error) {
       const size = getAvatarSize({

@@ -1,20 +1,17 @@
 "use client";
 
+import type { SelectProps } from "@mantine/core";
 import { memo, useMemo, useState } from "react";
-import { Select, type SelectProps } from "@mantine/core";
+import { Select } from "@mantine/core";
 
 import { useCharacterAssets, useEsiNameLookup } from "@jitaspace/hooks";
-
-
-
-
 
 export type AssetLocationSelectItemProps = Omit<SelectProps, "data">;
 
 export const AssetLocationSelect = memo(
   ({ ...otherProps }: AssetLocationSelectItemProps) => {
     const { locations } = useCharacterAssets();
-    const [value, onChange] = useState<string | null>();
+    const [value, setValue] = useState<string | null>();
 
     const locationEntries = useMemo(
       () => Object.values(locations).map((loc) => ({ id: loc.location_id })),
@@ -38,7 +35,7 @@ export const AssetLocationSelect = memo(
           value={otherProps.value ?? value}
           onChange={(value: string | null, options) => {
             otherProps.onChange?.(value, options);
-            onChange(value);
+            setValue(value);
           }}
           miw={300}
           clearable

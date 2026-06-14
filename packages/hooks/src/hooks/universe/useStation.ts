@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  GetUniverseStationsStationIdQueryResponse,
-  useGetUniverseStationsStationId,
-} from "@jitaspace/esi-client";
+import type { GetUniverseStationsStationIdQueryResponse } from "@jitaspace/esi-client";
+
+export { useGetUniverseStationsStationId as useStation } from "@jitaspace/esi-client";
 
 export type Station = GetUniverseStationsStationIdQueryResponse;
-
-export const useStation = useGetUniverseStationsStationId;
