@@ -15,6 +15,7 @@ import {
   getTypeByIdQueryOptions,
 } from "@jitaspace/sde-client";
 
+import { sdeLabel } from "./_diff";
 import {
   CategoryAnchor,
   CategoryName,
@@ -34,12 +35,26 @@ import {
   TypeAnchor,
   TypeName,
 } from "./_sde-ui";
-import { sdeLabel } from "./_diff";
 
 // Entities newer than the published SDE 404 on the name lookup (our history is
 // generated straight from the client, which can be ahead of the SDE release) —
 // fall back to the raw id instead of a skeleton, and don't retry the 404.
-function AttributeLabel({ id }: { id: number }) {
+
+function renderAttributeContent(
+  id: number,
+  name: string | undefined,
+  isPending: boolean,
+) {
+  if (name) return <DogmaAttributeName span size="xs" name={name} />;
+  if (isPending) return <DogmaAttributeName span size="xs" />;
+  return (
+    <Text span size="xs">
+      #{id}
+    </Text>
+  );
+}
+
+function AttributeLabel({ id }: Readonly<{ id: number }>) {
   const query = useQuery({
     ...getDogmaAttributeByIdQueryOptions(id),
     staleTime: Infinity,
@@ -48,20 +63,26 @@ function AttributeLabel({ id }: { id: number }) {
   const name = sdeLabel(query.data?.data);
   return (
     <DogmaAttributeAnchor attributeId={id} size="xs">
-      {name ? (
-        <DogmaAttributeName span size="xs" name={name} />
-      ) : query.isPending ? (
-        <DogmaAttributeName span size="xs" />
-      ) : (
-        <Text span size="xs">
-          #{id}
-        </Text>
-      )}
+      {renderAttributeContent(id, name, query.isPending)}
     </DogmaAttributeAnchor>
   );
 }
 
-function EffectLabel({ id }: { id: number }) {
+function renderEffectContent(
+  id: number,
+  name: string | undefined,
+  isPending: boolean,
+) {
+  if (name) return <DogmaEffectName span size="xs" name={name} />;
+  if (isPending) return <DogmaEffectName span size="xs" />;
+  return (
+    <Text span size="xs">
+      #{id}
+    </Text>
+  );
+}
+
+function EffectLabel({ id }: Readonly<{ id: number }>) {
   const query = useQuery({
     ...getDogmaEffectByIdQueryOptions(id),
     staleTime: Infinity,
@@ -70,15 +91,7 @@ function EffectLabel({ id }: { id: number }) {
   const name = sdeLabel(query.data?.data);
   return (
     <DogmaEffectAnchor effectId={id} size="xs">
-      {name ? (
-        <DogmaEffectName span size="xs" name={name} />
-      ) : query.isPending ? (
-        <DogmaEffectName span size="xs" />
-      ) : (
-        <Text span size="xs">
-          #{id}
-        </Text>
-      )}
+      {renderEffectContent(id, name, query.isPending)}
     </DogmaEffectAnchor>
   );
 }
@@ -94,7 +107,7 @@ export function DogmaValue({
   attributeId,
   value,
   ...textProps
-}: { attributeId: number; value: number } & TextProps) {
+}: Readonly<{ attributeId: number; value: number } & TextProps>) {
   const attribute = useQuery({
     ...getDogmaAttributeByIdQueryOptions(attributeId),
     staleTime: Infinity,
@@ -123,6 +136,28 @@ export function DogmaValue({
   );
 }
 
+function pickFromColor(
+  from: number,
+  to: number,
+  highColor: string,
+  lowColor: string,
+): string | undefined {
+  if (from === to) return undefined;
+  if (from > to) return highColor;
+  return lowColor;
+}
+
+function pickToColor(
+  from: number,
+  to: number,
+  highColor: string,
+  lowColor: string,
+): string | undefined {
+  if (from === to) return undefined;
+  if (to > from) return highColor;
+  return lowColor;
+}
+
 /**
  * A dogma attribute's value going `from → to`, formatted for its unit and
  * coloured by direction *and* the attribute's `highIsGood` flag: the higher
@@ -135,11 +170,11 @@ export function AttributeValueChange({
   id,
   from,
   to,
-}: {
+}: Readonly<{
   id: number;
   from: number;
   to: number;
-}) {
+}>) {
   const query = useQuery({
     ...getDogmaAttributeByIdQueryOptions(id),
     staleTime: Infinity,
@@ -149,8 +184,8 @@ export function AttributeValueChange({
     ?.highIsGood;
   const highColor = highIsGood === false ? "red" : "green";
   const lowColor = highIsGood === false ? "green" : "red";
-  const fromColor = from === to ? undefined : from > to ? highColor : lowColor;
-  const toColor = from === to ? undefined : to > from ? highColor : lowColor;
+  const fromColor = pickFromColor(from, to, highColor, lowColor);
+  const toColor = pickToColor(from, to, highColor, lowColor);
   return (
     <Text span size="xs">
       {": "}
@@ -164,7 +199,7 @@ export function AttributeValueChange({
 type LabelSize = "xs" | "sm";
 
 /** Dimmed " › " separator between breadcrumb crumbs. */
-function CrumbSep({ size }: { size: LabelSize }) {
+function CrumbSep({ size }: Readonly<{ size: LabelSize }>) {
   return (
     <Text span size={size} c="dimmed">
       {" › "}
@@ -172,7 +207,25 @@ function CrumbSep({ size }: { size: LabelSize }) {
   );
 }
 
-function CategoryLabel({ id, size = "xs" }: { id: number; size?: LabelSize }) {
+function renderCategoryContent(
+  id: number,
+  size: LabelSize,
+  name: string | undefined,
+  isPending: boolean,
+) {
+  if (name) return <CategoryName span size={size} name={name} />;
+  if (isPending) return <CategoryName span size={size} />;
+  return (
+    <Text span size={size}>
+      #{id}
+    </Text>
+  );
+}
+
+function CategoryLabel({
+  id,
+  size = "xs",
+}: Readonly<{ id: number; size?: LabelSize }>) {
   const query = useQuery({
     ...getCategoryByIdQueryOptions(id),
     staleTime: Infinity,
@@ -181,16 +234,23 @@ function CategoryLabel({ id, size = "xs" }: { id: number; size?: LabelSize }) {
   const name = sdeLabel(query.data?.data);
   return (
     <CategoryAnchor categoryId={id} size={size} c="dimmed">
-      {name ? (
-        <CategoryName span size={size} name={name} />
-      ) : query.isPending ? (
-        <CategoryName span size={size} />
-      ) : (
-        <Text span size={size}>
-          #{id}
-        </Text>
-      )}
+      {renderCategoryContent(id, size, name, query.isPending)}
     </CategoryAnchor>
+  );
+}
+
+function renderGroupContent(
+  id: number,
+  size: LabelSize,
+  name: string | undefined,
+  isPending: boolean,
+) {
+  if (name) return <GroupName span size={size} name={name} />;
+  if (isPending) return <GroupName span size={size} />;
+  return (
+    <Text span size={size}>
+      #{id}
+    </Text>
   );
 }
 
@@ -200,11 +260,11 @@ export function GroupLabel({
   id,
   size = "xs",
   dim = false,
-}: {
+}: Readonly<{
   id: number;
   size?: LabelSize;
   dim?: boolean;
-}) {
+}>) {
   const query = useQuery({
     ...getGroupByIdQueryOptions(id),
     staleTime: Infinity,
@@ -221,22 +281,17 @@ export function GroupLabel({
         </>
       )}
       <GroupAnchor groupId={id} size={size} c={dim ? "dimmed" : undefined}>
-        {name ? (
-          <GroupName span size={size} name={name} />
-        ) : query.isPending ? (
-          <GroupName span size={size} />
-        ) : (
-          <Text span size={size}>
-            #{id}
-          </Text>
-        )}
+        {renderGroupContent(id, size, name, query.isPending)}
       </GroupAnchor>
     </>
   );
 }
 
 /** Breadcrumbed type: Category › Group › Type. */
-export function TypeLabel({ id, size = "xs" }: { id: number; size?: LabelSize }) {
+export function TypeLabel({
+  id,
+  size = "xs",
+}: Readonly<{ id: number; size?: LabelSize }>) {
   const query = useQuery({
     ...getTypeByIdQueryOptions(id),
     staleTime: Infinity,
@@ -258,16 +313,31 @@ export function TypeLabel({ id, size = "xs" }: { id: number; size?: LabelSize })
   );
 }
 
+function renderMarketGroupContent(
+  id: number,
+  size: LabelSize,
+  name: string | undefined,
+  isPending: boolean,
+) {
+  if (name) return <MarketGroupName span size={size} name={name} />;
+  if (isPending) return <MarketGroupName span size={size} />;
+  return (
+    <Text span size={size}>
+      #{id}
+    </Text>
+  );
+}
+
 /** Breadcrumbed market group: the full parent chain, recursively. */
 export function MarketGroupLabel({
   id,
   size = "xs",
   dim = false,
-}: {
+}: Readonly<{
   id: number;
   size?: LabelSize;
   dim?: boolean;
-}) {
+}>) {
   const query = useQuery({
     ...getMarketGroupByIdQueryOptions(id),
     staleTime: Infinity,
@@ -288,21 +358,31 @@ export function MarketGroupLabel({
         size={size}
         c={dim ? "dimmed" : undefined}
       >
-        {name ? (
-          <MarketGroupName span size={size} name={name} />
-        ) : query.isPending ? (
-          <MarketGroupName span size={size} />
-        ) : (
-          <Text span size={size}>
-            #{id}
-          </Text>
-        )}
+        {renderMarketGroupContent(id, size, name, query.isPending)}
       </MarketGroupAnchor>
     </>
   );
 }
 
-export function RaceLabel({ id, size = "xs" }: { id: number; size?: LabelSize }) {
+function renderRaceContent(
+  id: number,
+  size: LabelSize,
+  name: string | undefined,
+  isPending: boolean,
+) {
+  if (name) return <RaceName span size={size} name={name} />;
+  if (isPending) return <RaceName span size={size} />;
+  return (
+    <Text span size={size}>
+      #{id}
+    </Text>
+  );
+}
+
+export function RaceLabel({
+  id,
+  size = "xs",
+}: Readonly<{ id: number; size?: LabelSize }>) {
   const query = useQuery({
     ...getRaceByIdQueryOptions(id),
     staleTime: Infinity,
@@ -311,15 +391,7 @@ export function RaceLabel({ id, size = "xs" }: { id: number; size?: LabelSize })
   const name = sdeLabel(query.data?.data);
   return (
     <RaceAnchor raceId={id} size={size}>
-      {name ? (
-        <RaceName span size={size} name={name} />
-      ) : query.isPending ? (
-        <RaceName span size={size} />
-      ) : (
-        <Text span size={size}>
-          #{id}
-        </Text>
-      )}
+      {renderRaceContent(id, size, name, query.isPending)}
     </RaceAnchor>
   );
 }
@@ -327,10 +399,10 @@ export function RaceLabel({ id, size = "xs" }: { id: number; size?: LabelSize })
 export function FactionLabel({
   id,
   size = "xs",
-}: {
+}: Readonly<{
   id: number;
   size?: LabelSize;
-}) {
+}>) {
   return (
     <FactionAnchor factionId={id} size={size}>
       <FactionName span size={size} factionId={id} />
@@ -339,7 +411,10 @@ export function FactionLabel({
 }
 
 /** Name + link for a sub-record key, resolved by the kind of id it holds. */
-export function SubKeyLabel({ keyField, id }: { keyField: string; id: string }) {
+export function SubKeyLabel({
+  keyField,
+  id,
+}: Readonly<{ keyField: string; id: string }>) {
   const numeric = Number(id);
   if (Number.isFinite(numeric)) {
     if (keyField === "attributeID") return <AttributeLabel id={numeric} />;

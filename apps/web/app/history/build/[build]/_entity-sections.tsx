@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Anchor, Badge, Group, List, Spoiler, Text, Title } from "@mantine/core";
+import {
+  Anchor,
+  Badge,
+  Group,
+  List,
+  Spoiler,
+  Text,
+  Title,
+} from "@mantine/core";
 
 import type { BuildChanges } from "~/lib/history";
 import { collectionMeta, entityTypeMeta } from "~/lib/history";
@@ -96,15 +104,21 @@ const entityRank = (et: string) => {
   return i === -1 ? ENTITY_ORDER.length : i;
 };
 
+function badgeSuffix(kind: string): string {
+  if (kind === "added") return " +";
+  if (kind === "removed") return " −";
+  return "";
+}
+
 function EntityRow({
   entityType,
   id,
   badges,
-}: {
+}: Readonly<{
   entityType: string;
   id: number;
   badges?: { collection: string; kind: string }[];
-}) {
+}>) {
   return (
     <Group gap="xs" wrap="nowrap">
       <Anchor component={Link} href={`/history/${entityType}/${id}`}>
@@ -127,7 +141,7 @@ function EntityRow({
             color={meta.color}
           >
             {meta.label}
-            {kind === "added" ? " +" : kind === "removed" ? " −" : ""}
+            {badgeSuffix(kind)}
           </Badge>
         );
       })}
@@ -140,12 +154,12 @@ function ChangeList({
   color,
   entityType,
   rows,
-}: {
+}: Readonly<{
   title: string;
   color: string;
   entityType: string;
   rows: { id: number; badges?: { collection: string; kind: string }[] }[];
-}) {
+}>) {
   if (rows.length === 0) return null;
   return (
     <div>
@@ -177,10 +191,10 @@ function ChangeList({
 function EntityTypeSection({
   entityType,
   changes,
-}: {
+}: Readonly<{
   entityType: string;
   changes: BuildChanges["changes"];
-}) {
+}>) {
   const primary = primaryOf(entityType);
   const isPrimary = (c?: string) => (c ?? "types") === primary;
   const plural = entityTypeMeta(entityType).plural.toLowerCase();
@@ -235,9 +249,9 @@ function EntityTypeSection({
  */
 export function EntityChangeSections({
   changes,
-}: {
+}: Readonly<{
   changes: BuildChanges["changes"];
-}) {
+}>) {
   const byEntityType = new Map<string, BuildChanges["changes"]>();
   for (const c of changes) {
     const et = c.entityType ?? "type";

@@ -20,7 +20,9 @@ import { getBuildChanges, getResourceIndex } from "~/lib/history-actions";
 import { EntityChangeSections } from "./_entity-sections";
 import { ResourceChanges } from "./_resource-sections";
 
-export default function BuildHistoryClient({ build }: { build: number }) {
+export default function BuildHistoryClient({
+  build,
+}: Readonly<{ build: number }>) {
   const { data, isLoading } = useQuery({
     queryKey: ["history-build", build],
     queryFn: () => getBuildChanges(build),

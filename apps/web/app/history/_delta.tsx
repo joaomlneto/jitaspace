@@ -4,12 +4,9 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Anchor, Group, Spoiler, Stack, Text } from "@mantine/core";
 
-import { ISKAmount } from "./_sde-ui";
-
+import type { SubRow } from "./_diff";
 import type { FieldDelta } from "~/lib/history";
 import { formatValue } from "~/lib/history";
-
-import type { SubRow } from "./_diff";
 import {
   arrayKeyOf,
   diffLeaves,
@@ -29,6 +26,7 @@ import {
   SubKeyLabel,
   TypeLabel,
 } from "./_labels";
+import { ISKAmount } from "./_sde-ui";
 
 /**
  * Entity-aware rendering for well-known type metadata fields (groupID, raceID,
@@ -101,7 +99,7 @@ export function entityValueFor(
  * Full rendering of a field value: keyed arrays of records become one named,
  * linked row per entry; everything else falls back to formatted text.
  */
-export function RichValue({ value }: { value: unknown }) {
+export function RichValue({ value }: Readonly<{ value: unknown }>) {
   if (Array.isArray(value)) {
     const keyField = arrayKeyOf(value);
     if (keyField) {
@@ -149,7 +147,21 @@ export function RichValue({ value }: { value: unknown }) {
   return <Text size="sm">{formatValue(value)}</Text>;
 }
 
-function CappedRows({ rows }: { rows: SubRow[] }) {
+/** Colour for a sub-row marker/text by its change kind. */
+function rowColor(kind: SubRow["kind"]): string | undefined {
+  if (kind === "added") return "green";
+  if (kind === "removed") return "red";
+  return undefined;
+}
+
+/** Leading marker glyph for a sub-row by its change kind. */
+function rowMarker(kind: SubRow["kind"]): string {
+  if (kind === "added") return "+";
+  if (kind === "removed") return "−";
+  return "~";
+}
+
+function CappedRows({ rows }: Readonly<{ rows: SubRow[] }>) {
   return (
     <Spoiler
       maxHeight={SPOILER_MAX_HEIGHT}
@@ -159,12 +171,7 @@ function CappedRows({ rows }: { rows: SubRow[] }) {
     >
       <Stack gap={1}>
         {rows.map((r) => {
-          const color =
-            r.kind === "added"
-              ? "green"
-              : r.kind === "removed"
-                ? "red"
-                : undefined;
+          const color = rowColor(r.kind);
           const strike =
             r.kind === "removed"
               ? { textDecoration: "line-through" as const }
@@ -172,7 +179,7 @@ function CappedRows({ rows }: { rows: SubRow[] }) {
           return (
             <Group gap={4} key={`${r.kind}-${r.key}`}>
               <Text size="xs" c={color}>
-                {r.kind === "added" ? "+" : r.kind === "removed" ? "−" : "~"}
+                {rowMarker(r.kind)}
               </Text>
               {r.label}
               {r.node ?? (
@@ -188,16 +195,82 @@ function CappedRows({ rows }: { rows: SubRow[] }) {
   );
 }
 
+/** Sub-row for an entry present in `from` but gone in `to`. */
+function removedKeyedRow(
+  keyField: string,
+  k: string,
+  prev: Record<string, unknown>,
+): SubRow {
+  return {
+    key: k,
+    kind: "removed",
+    label: <SubKeyLabel keyField={keyField} id={k} />,
+    // a removed dogma attribute renders its value formatted for its unit
+    node:
+      keyField === "attributeID" && typeof prev.value === "number" ? (
+        <DogmaValue
+          attributeId={Number(k)}
+          value={prev.value}
+          c="red"
+          td="line-through"
+        />
+      ) : undefined,
+    text: `(${restSummary(prev, keyField)})`,
+  };
+}
+
+/** Sub-row for an entry whose value changed between `from` and `to`. */
+function changedKeyedRow(
+  keyField: string,
+  k: string,
+  prev: Record<string, unknown>,
+  next: Record<string, unknown>,
+): SubRow {
+  // Dogma attribute values get direction- + highIsGood-aware colouring.
+  const node =
+    keyField === "attributeID" &&
+    typeof prev.value === "number" &&
+    typeof next.value === "number" ? (
+      <AttributeValueChange id={Number(k)} from={prev.value} to={next.value} />
+    ) : undefined;
+  return {
+    key: k,
+    kind: "changed",
+    label: <SubKeyLabel keyField={keyField} id={k} />,
+    node,
+    text: `: ${restSummary(prev, keyField)} → ${restSummary(next, keyField)}`,
+  };
+}
+
+/** Sub-row for an entry newly present in `to`. */
+function addedKeyedRow(
+  keyField: string,
+  k: string,
+  next: Record<string, unknown>,
+): SubRow {
+  return {
+    key: k,
+    kind: "added",
+    label: <SubKeyLabel keyField={keyField} id={k} />,
+    // a newly-added dogma attribute renders its value formatted for its unit
+    node:
+      keyField === "attributeID" && typeof next.value === "number" ? (
+        <DogmaValue attributeId={Number(k)} value={next.value} c="green" />
+      ) : undefined,
+    text: `(${restSummary(next, keyField)})`,
+  };
+}
+
 /** Element-level diff of two arrays of records sharing an identifying field. */
 function KeyedArrayDiff({
   from,
   to,
   keyField,
-}: {
+}: Readonly<{
   from: Record<string, unknown>[];
   to: Record<string, unknown>[];
   keyField: string;
-}) {
+}>) {
   const fromMap = new Map(from.map((o) => [keyLabel(o[keyField]), o]));
   const toMap = new Map(to.map((o) => [keyLabel(o[keyField]), o]));
   const rows: SubRow[] = [];
@@ -205,56 +278,14 @@ function KeyedArrayDiff({
   for (const [k, prev] of fromMap) {
     const next = toMap.get(k);
     if (next === undefined) {
-      rows.push({
-        key: k,
-        kind: "removed",
-        label: <SubKeyLabel keyField={keyField} id={k} />,
-        // a removed dogma attribute renders its value formatted for its unit
-        node:
-          keyField === "attributeID" && typeof prev.value === "number" ? (
-            <DogmaValue
-              attributeId={Number(k)}
-              value={prev.value}
-              c="red"
-              td="line-through"
-            />
-          ) : undefined,
-        text: `(${restSummary(prev, keyField)})`,
-      });
+      rows.push(removedKeyedRow(keyField, k, prev));
     } else if (JSON.stringify(prev) !== JSON.stringify(next)) {
-      // Dogma attribute values get direction- + highIsGood-aware colouring.
-      const node =
-        keyField === "attributeID" &&
-        typeof prev.value === "number" &&
-        typeof next.value === "number" ? (
-          <AttributeValueChange
-            id={Number(k)}
-            from={prev.value}
-            to={next.value}
-          />
-        ) : undefined;
-      rows.push({
-        key: k,
-        kind: "changed",
-        label: <SubKeyLabel keyField={keyField} id={k} />,
-        node,
-        text: `: ${restSummary(prev, keyField)} → ${restSummary(next, keyField)}`,
-      });
+      rows.push(changedKeyedRow(keyField, k, prev, next));
     }
   }
   for (const [k, next] of toMap) {
     if (!fromMap.has(k)) {
-      rows.push({
-        key: k,
-        kind: "added",
-        label: <SubKeyLabel keyField={keyField} id={k} />,
-        // a newly-added dogma attribute renders its value formatted for its unit
-        node:
-          keyField === "attributeID" && typeof next.value === "number" ? (
-            <DogmaValue attributeId={Number(k)} value={next.value} c="green" />
-          ) : undefined,
-        text: `(${restSummary(next, keyField)})`,
-      });
+      rows.push(addedKeyedRow(keyField, k, next));
     }
   }
 
@@ -269,7 +300,10 @@ function KeyedArrayDiff({
 }
 
 /** Set diff of two arrays of primitives. */
-function PrimitiveArrayDiff({ from, to }: { from: unknown[]; to: unknown[] }) {
+function PrimitiveArrayDiff({
+  from,
+  to,
+}: Readonly<{ from: unknown[]; to: unknown[] }>) {
   const fromSet = new Set(from.map(keyLabel));
   const toSet = new Set(to.map(keyLabel));
   const rows: SubRow[] = [];
@@ -289,8 +323,17 @@ function PrimitiveArrayDiff({ from, to }: { from: unknown[]; to: unknown[] }) {
   return <CappedRows rows={rows} />;
 }
 
+/** Text for a single diff leaf, formatted by its change kind. */
+function leafText(leaf: ReturnType<typeof diffLeaves>[number]): string {
+  if (leaf.kind === "changed") {
+    return `${formatValue(leaf.from)} → ${formatValue(leaf.to)}`;
+  }
+  if (leaf.kind === "added") return formatValue(leaf.to);
+  return formatValue(leaf.from);
+}
+
 /** Recursive object/array diff: surfaces only the leaves that differ, by path. */
-function DeepDiff({ from, to }: { from: unknown; to: unknown }) {
+function DeepDiff({ from, to }: Readonly<{ from: unknown; to: unknown }>) {
   const leaves = diffLeaves(from, to);
   if (leaves.length === 0) {
     return (
@@ -308,18 +351,13 @@ function DeepDiff({ from, to }: { from: unknown; to: unknown }) {
           {leaf.path.join(" › ")}
         </Text>
       ) : undefined,
-    text:
-      leaf.kind === "changed"
-        ? `${formatValue(leaf.from)} → ${formatValue(leaf.to)}`
-        : leaf.kind === "added"
-          ? formatValue(leaf.to)
-          : formatValue(leaf.from),
+    text: leafText(leaf),
   }));
   return <CappedRows rows={rows} />;
 }
 
 /** Best-effort readable rendering for a changed field value. */
-function SmartChanged({ delta }: { delta: FieldDelta }) {
+function SmartChanged({ delta }: Readonly<{ delta: FieldDelta }>) {
   const { from, to } = delta;
   if (Array.isArray(from) && Array.isArray(to)) {
     const keyField = arrayKeyOf(from) ?? arrayKeyOf(to);
@@ -353,12 +391,12 @@ export function DeltaValue({
   delta,
   kind,
   entityType,
-}: {
+}: Readonly<{
   field: string;
   delta: FieldDelta;
   kind: "added" | "removed" | "changed";
   entityType?: string;
-}) {
+}>) {
   if (kind === "changed") {
     // Arrays diff better element-wise (added/removed entries) than as two whole
     // renders joined by an arrow — keep them on the SmartChanged path.

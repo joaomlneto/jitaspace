@@ -5,9 +5,9 @@ import TypeHistoryClient from "./page.client";
 
 export async function generateMetadata({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ typeId: string }>;
-}) {
+}>) {
   const { typeId } = await params;
   return {
     title: `Type ${typeId} — Change History`,
@@ -17,18 +17,18 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ typeId: string }>;
-}) {
+}>) {
   const { typeId } = await params;
   return <TypeHistoryClient typeId={Number(typeId)} />;
 }
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ typeId: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<Loader />}>
       <PageContent params={params} />

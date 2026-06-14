@@ -34,11 +34,11 @@ export function EntityHistory({
   entityType,
   entityId,
   renderHeader,
-}: {
+}: Readonly<{
   entityType: string;
   entityId: number;
   renderHeader: (timeline: EntityTimeline | null) => ReactNode;
-}) {
+}>) {
   const { data, isLoading } = useQuery({
     queryKey: ["history-entity", entityType, entityId],
     queryFn: () => getEntityTimeline(entityType, entityId),

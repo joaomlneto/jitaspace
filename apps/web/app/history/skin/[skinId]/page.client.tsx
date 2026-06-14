@@ -5,7 +5,9 @@ import { Text, Title } from "@mantine/core";
 import { latestFieldValue } from "~/lib/history";
 import { EntityHistory } from "../../EntityHistory";
 
-export default function SkinHistoryClient({ skinId }: { skinId: number }) {
+export default function SkinHistoryClient({
+  skinId,
+}: Readonly<{ skinId: number }>) {
   return (
     <EntityHistory
       entityType="skin"

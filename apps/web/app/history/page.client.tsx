@@ -75,18 +75,18 @@ export default function HistoryIndexClient() {
 
   // newest build first; recount each build against the checked collections and
   // (unless the toggle is on) drop builds whose remaining count is zero
+  const typesActive = active.includes("types");
+  const getVisibleCount = (b: (typeof data.builds)[number]): number => {
+    if (b.byCollection) {
+      return Object.entries(b.byCollection)
+        .filter(([c]) => active.includes(c))
+        .reduce((sum, [, n]) => sum + n, 0);
+    }
+    return typesActive ? b.changeCount : 0;
+  };
   const builds = [...data.builds]
     .sort((a, b) => b.build - a.build)
-    .map((b) => ({
-      ...b,
-      visibleCount: b.byCollection
-        ? Object.entries(b.byCollection)
-            .filter(([c]) => active.includes(c))
-            .reduce((sum, [, n]) => sum + n, 0)
-        : active.includes("types")
-          ? b.changeCount
-          : 0,
-    }))
+    .map((b) => ({ ...b, visibleCount: getVisibleCount(b) }))
     .filter((b) => showUnchanged || b.visibleCount > 0);
 
   return (

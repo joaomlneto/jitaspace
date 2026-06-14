@@ -4,10 +4,11 @@ import Link from "next/link";
 import { Anchor, Group, Image, Text, Title } from "@mantine/core";
 
 import { TypeName } from "../../_sde-ui";
-
 import { EntityHistory } from "../../EntityHistory";
 
-export default function TypeHistoryClient({ typeId }: { typeId: number }) {
+export default function TypeHistoryClient({
+  typeId,
+}: Readonly<{ typeId: number }>) {
   return (
     <EntityHistory
       entityType="type"

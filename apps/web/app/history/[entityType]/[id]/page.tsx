@@ -5,9 +5,9 @@ import EntityHistoryClient from "./page.client";
 
 export async function generateMetadata({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ entityType: string; id: string }>;
-}) {
+}>) {
   const { entityType, id } = await params;
   return {
     title: `${entityType} ${id} — Change History`,
@@ -17,18 +17,18 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ entityType: string; id: string }>;
-}) {
+}>) {
   const { entityType, id } = await params;
   return <EntityHistoryClient entityType={entityType} entityId={Number(id)} />;
 }
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ entityType: string; id: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<Loader />}>
       <PageContent params={params} />

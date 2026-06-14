@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
 import type { TextProps } from "@mantine/core";
+import type { ReactNode } from "react";
 import { Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 

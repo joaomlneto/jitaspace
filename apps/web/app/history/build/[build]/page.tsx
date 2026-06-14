@@ -5,9 +5,9 @@ import BuildHistoryClient from "./page.client";
 
 export async function generateMetadata({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ build: string }>;
-}) {
+}>) {
   const { build } = await params;
   return {
     title: `Build ${build} — Change History`,
@@ -17,18 +17,18 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ build: string }>;
-}) {
+}>) {
   const { build } = await params;
   return <BuildHistoryClient build={Number(build)} />;
 }
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ build: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<Loader />}>
       <PageContent params={params} />

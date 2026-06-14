@@ -5,9 +5,9 @@ import SkinHistoryClient from "./page.client";
 
 export async function generateMetadata({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ skinId: string }>;
-}) {
+}>) {
   const { skinId } = await params;
   return {
     title: `SKIN ${skinId} — Change History`,
@@ -17,18 +17,18 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ skinId: string }>;
-}) {
+}>) {
   const { skinId } = await params;
   return <SkinHistoryClient skinId={Number(skinId)} />;
 }
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ skinId: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<Loader />}>
       <PageContent params={params} />

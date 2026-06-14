@@ -6,9 +6,9 @@ import { EntityHistory } from "../../EntityHistory";
 
 export default function SkinMaterialHistoryClient({
   skinMaterialId,
-}: {
+}: Readonly<{
   skinMaterialId: number;
-}) {
+}>) {
   return (
     <EntityHistory
       entityType="skinMaterial"

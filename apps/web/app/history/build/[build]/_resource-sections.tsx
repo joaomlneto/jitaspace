@@ -14,8 +14,8 @@ import {
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
-import { getFileDiff, getStringChanges } from "~/lib/history-actions";
 import type { Counts, StringChange } from "~/lib/resource-history";
+import { getFileDiff, getStringChanges } from "~/lib/history-actions";
 import { LANGUAGE_LABEL } from "~/lib/resource-history";
 
 const SPOILER_MAX_HEIGHT = 520;
@@ -26,11 +26,11 @@ function PathList({
   title,
   color,
   paths,
-}: {
+}: Readonly<{
   title: string;
   color: string;
   paths: string[];
-}) {
+}>) {
   if (paths.length === 0) return null;
   return (
     <div>
@@ -60,7 +60,36 @@ function PathList({
   );
 }
 
-function FileChanges({ build, counts }: { build: number; counts: Counts }) {
+function resolveFileChangesContent(
+  data:
+    | { added: string[]; changed: string[]; removed: string[] }
+    | null
+    | undefined,
+  isFetching: boolean,
+) {
+  if (!data && isFetching) {
+    return <Loader size="xs" />;
+  }
+  if (data) {
+    return (
+      <>
+        <PathList title="New" color="green" paths={data.added} />
+        <PathList title="Changed" color="blue" paths={data.changed} />
+        <PathList title="Removed" color="red" paths={data.removed} />
+      </>
+    );
+  }
+  return (
+    <Text size="xs" c="dimmed">
+      No file list recorded.
+    </Text>
+  );
+}
+
+function FileChanges({
+  build,
+  counts,
+}: Readonly<{ build: number; counts: Counts }>) {
   const [open, setOpen] = useState(false);
   const { data, isFetching } = useQuery({
     queryKey: ["res-files", build],
@@ -95,26 +124,26 @@ function FileChanges({ build, counts }: { build: number; counts: Counts }) {
       </Group>
       {open && (
         <Stack gap="xs" mt="xs" pl="md">
-          {!data && isFetching ? (
-            <Loader size="xs" />
-          ) : data ? (
-            <>
-              <PathList title="New" color="green" paths={data.added} />
-              <PathList title="Changed" color="blue" paths={data.changed} />
-              <PathList title="Removed" color="red" paths={data.removed} />
-            </>
-          ) : (
-            <Text size="xs" c="dimmed">
-              No file list recorded.
-            </Text>
-          )}
+          {resolveFileChangesContent(data, isFetching)}
         </Stack>
       )}
     </div>
   );
 }
 
-function StringList({ changes }: { changes: StringChange[] }) {
+function stringChangeColor(kind: StringChange["kind"]): string | undefined {
+  if (kind === "added") return "green";
+  if (kind === "removed") return "red";
+  return undefined;
+}
+
+function stringChangePrefix(kind: StringChange["kind"]): string {
+  if (kind === "added") return "+";
+  if (kind === "removed") return "−";
+  return "~";
+}
+
+function StringList({ changes }: Readonly<{ changes: StringChange[] }>) {
   return (
     <Spoiler
       maxHeight={SPOILER_MAX_HEIGHT}
@@ -124,12 +153,7 @@ function StringList({ changes }: { changes: StringChange[] }) {
     >
       <Stack gap={1}>
         {changes.map((c) => {
-          const color =
-            c.kind === "added"
-              ? "green"
-              : c.kind === "removed"
-                ? "red"
-                : undefined;
+          const color = stringChangeColor(c.kind);
           return (
             <Group
               gap={4}
@@ -138,7 +162,7 @@ function StringList({ changes }: { changes: StringChange[] }) {
               wrap="nowrap"
             >
               <Text size="xs" c={color}>
-                {c.kind === "added" ? "+" : c.kind === "removed" ? "−" : "~"}
+                {stringChangePrefix(c.kind)}
               </Text>
               <Text size="xs" c="dimmed">
                 #{c.id}
@@ -174,15 +198,32 @@ function StringList({ changes }: { changes: StringChange[] }) {
   );
 }
 
+function resolveStringLangContent(
+  data: StringChange[] | null | undefined,
+  isFetching: boolean,
+) {
+  if (!data && isFetching) {
+    return <Loader size="xs" />;
+  }
+  if (data) {
+    return <StringList changes={data} />;
+  }
+  return (
+    <Text size="xs" c="dimmed">
+      No changes.
+    </Text>
+  );
+}
+
 function StringLang({
   build,
   lang,
   counts,
-}: {
+}: Readonly<{
   build: number;
   lang: string;
   counts: Counts;
-}) {
+}>) {
   const [open, setOpen] = useState(false);
   const { data, isFetching } = useQuery({
     queryKey: ["res-strings", build, lang],
@@ -207,15 +248,7 @@ function StringLang({
       </Group>
       {open && (
         <div style={{ paddingLeft: "var(--mantine-spacing-md)" }}>
-          {!data && isFetching ? (
-            <Loader size="xs" />
-          ) : data ? (
-            <StringList changes={data} />
-          ) : (
-            <Text size="xs" c="dimmed">
-              No changes.
-            </Text>
-          )}
+          {resolveStringLangContent(data, isFetching)}
         </div>
       )}
     </div>
@@ -227,16 +260,18 @@ export function ResourceChanges({
   build,
   files,
   strings,
-}: {
+}: Readonly<{
   build: number;
   files: Counts;
   strings: Record<string, Counts>;
-}) {
+}>) {
   const langs = Object.entries(strings)
     .filter(([, c]) => total(c) > 0)
-    .sort(([a], [b]) =>
-      a === "en-us" ? -1 : b === "en-us" ? 1 : a.localeCompare(b),
-    );
+    .sort(([a], [b]) => {
+      if (a === "en-us") return -1;
+      if (b === "en-us") return 1;
+      return a.localeCompare(b);
+    });
   if (total(files) === 0 && langs.length === 0) return null;
   return (
     <Paper withBorder p="lg" radius="md">

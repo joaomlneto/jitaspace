@@ -127,71 +127,113 @@ export function enumerateLeaves(
         enumerateLeaves(o, [...path, keyLabel(o[keyField])], kind),
       );
     }
-    return value.flatMap((v, i) => enumerateLeaves(v, [...path, `[${i}]`], kind));
+    return value.flatMap((v, i) =>
+      enumerateLeaves(v, [...path, `[${i}]`], kind),
+    );
   }
-  return [{ path, kind, ...(kind === "added" ? { to: value } : { from: value }) }];
+  return [
+    { path, kind, ...(kind === "added" ? { to: value } : { from: value }) },
+  ];
 }
 
-/** Recursively collect the differing leaves between two (possibly nested) values. */
+/**
+ * Recursively collect the differing leaves between two (possibly nested)
+ * values. Dispatches to a strategy per shape; the helpers below do the work.
+ */
 export function diffLeaves(
   from: unknown,
   to: unknown,
   path: string[] = [],
 ): Leaf[] {
-  // both plain objects → compare key by key (order-independent)
-  if (isPlainObject(from) && isPlainObject(to)) {
-    const out: Leaf[] = [];
-    for (const k of new Set([...Object.keys(from), ...Object.keys(to)])) {
-      const inFrom = k in from;
-      const inTo = k in to;
-      if (inFrom && inTo) out.push(...diffLeaves(from[k], to[k], [...path, k]));
-      else if (inTo) out.push(...enumerateLeaves(to[k], [...path, k], "added"));
-      else out.push(...enumerateLeaves(from[k], [...path, k], "removed"));
-    }
-    return out;
-  }
-  if (Array.isArray(from) && Array.isArray(to)) {
-    // arrays of records sharing an id → diff by that id (stable across reorders)
-    const keyField = arrayKeyOf(from) ?? arrayKeyOf(to);
-    if (keyField && from.every(isPlainObject) && to.every(isPlainObject)) {
-      const fromMap = new Map(from.map((o) => [keyLabel(o[keyField]), o]));
-      const toMap = new Map(to.map((o) => [keyLabel(o[keyField]), o]));
-      const out: Leaf[] = [];
-      for (const [k, v] of fromMap) {
-        const next = toMap.get(k);
-        if (next) out.push(...diffLeaves(v, next, [...path, k]));
-        else out.push(...enumerateLeaves(v, [...path, k], "removed"));
-      }
-      for (const [k, v] of toMap) {
-        if (!fromMap.has(k))
-          out.push(...enumerateLeaves(v, [...path, k], "added"));
-      }
-      return out;
-    }
-    // arrays of primitives → set diff of the elements (under this path)
-    if (!from.some(isPlainObject) && !to.some(isPlainObject)) {
-      const fromSet = new Set(from.map(keyLabel));
-      const toSet = new Set(to.map(keyLabel));
-      const out: Leaf[] = [];
-      for (const v of fromSet)
-        if (!toSet.has(v)) out.push({ path, kind: "removed", from: v });
-      for (const v of toSet)
-        if (!fromSet.has(v)) out.push({ path, kind: "added", to: v });
-      return out; // empty ⇒ pure reorder ⇒ no meaningful change
-    }
-    // positional / mixed arrays → diff element by element
-    const out: Leaf[] = [];
-    const len = Math.max(from.length, to.length);
-    for (let i = 0; i < len; i++) {
-      const k = `[${i}]`;
-      if (i >= from.length)
-        out.push(...enumerateLeaves(to[i], [...path, k], "added"));
-      else if (i >= to.length)
-        out.push(...enumerateLeaves(from[i], [...path, k], "removed"));
-      else out.push(...diffLeaves(from[i], to[i], [...path, k]));
-    }
-    return out;
-  }
+  if (isPlainObject(from) && isPlainObject(to))
+    return diffObjects(from, to, path);
+  if (Array.isArray(from) && Array.isArray(to))
+    return diffArrays(from, to, path);
   // scalar / type-mismatch leaf
   return deepEqual(from, to) ? [] : [{ path, kind: "changed", from, to }];
+}
+
+/** Both plain objects → compare key by key (order-independent). */
+function diffObjects(
+  from: Record<string, unknown>,
+  to: Record<string, unknown>,
+  path: string[],
+): Leaf[] {
+  const out: Leaf[] = [];
+  for (const k of new Set([...Object.keys(from), ...Object.keys(to)])) {
+    const inFrom = k in from;
+    const inTo = k in to;
+    if (inFrom && inTo) out.push(...diffLeaves(from[k], to[k], [...path, k]));
+    else if (inTo) out.push(...enumerateLeaves(to[k], [...path, k], "added"));
+    else out.push(...enumerateLeaves(from[k], [...path, k], "removed"));
+  }
+  return out;
+}
+
+/** Both arrays → pick the element-matching strategy by element shape. */
+function diffArrays(from: unknown[], to: unknown[], path: string[]): Leaf[] {
+  // arrays of records sharing an id → diff by that id (stable across reorders)
+  const keyField = arrayKeyOf(from) ?? arrayKeyOf(to);
+  if (keyField && from.every(isPlainObject) && to.every(isPlainObject))
+    return diffKeyedArrays(from, to, keyField, path);
+  // arrays of primitives → set diff of the elements (under this path)
+  if (!from.some(isPlainObject) && !to.some(isPlainObject))
+    return diffPrimitiveArrays(from, to, path);
+  // positional / mixed arrays → diff element by element
+  return diffPositionalArrays(from, to, path);
+}
+
+/** Arrays of records keyed by a shared id field, matched across reorders. */
+function diffKeyedArrays(
+  from: Record<string, unknown>[],
+  to: Record<string, unknown>[],
+  keyField: string,
+  path: string[],
+): Leaf[] {
+  const fromMap = new Map(from.map((o) => [keyLabel(o[keyField]), o]));
+  const toMap = new Map(to.map((o) => [keyLabel(o[keyField]), o]));
+  const out: Leaf[] = [];
+  for (const [k, v] of fromMap) {
+    const next = toMap.get(k);
+    if (next) out.push(...diffLeaves(v, next, [...path, k]));
+    else out.push(...enumerateLeaves(v, [...path, k], "removed"));
+  }
+  for (const [k, v] of toMap)
+    if (!fromMap.has(k)) out.push(...enumerateLeaves(v, [...path, k], "added"));
+  return out;
+}
+
+/** Arrays of primitives → set diff of the elements (empty ⇒ pure reorder). */
+function diffPrimitiveArrays(
+  from: unknown[],
+  to: unknown[],
+  path: string[],
+): Leaf[] {
+  const fromSet = new Set(from.map(keyLabel));
+  const toSet = new Set(to.map(keyLabel));
+  const out: Leaf[] = [];
+  for (const v of fromSet)
+    if (!toSet.has(v)) out.push({ path, kind: "removed", from: v });
+  for (const v of toSet)
+    if (!fromSet.has(v)) out.push({ path, kind: "added", to: v });
+  return out;
+}
+
+/** Positional / mixed arrays → diff element by element. */
+function diffPositionalArrays(
+  from: unknown[],
+  to: unknown[],
+  path: string[],
+): Leaf[] {
+  const out: Leaf[] = [];
+  const len = Math.max(from.length, to.length);
+  for (let i = 0; i < len; i++) {
+    const k = `[${i}]`;
+    if (i >= from.length)
+      out.push(...enumerateLeaves(to[i], [...path, k], "added"));
+    else if (i >= to.length)
+      out.push(...enumerateLeaves(from[i], [...path, k], "removed"));
+    else out.push(...diffLeaves(from[i], to[i], [...path, k]));
+  }
+  return out;
 }

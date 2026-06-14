@@ -5,17 +5,16 @@ import { Badge, Table, Text } from "@mantine/core";
 
 import type { TimelineEvent } from "~/lib/history";
 import { deltaKind } from "~/lib/history";
-
+import { DeltaValue, entityValueFor, RichValue } from "./_delta";
 import { DELTA_COLOR } from "./_diff";
 import { SubKeyLabel } from "./_labels";
-import { DeltaValue, entityValueFor, RichValue } from "./_delta";
 
 // One fixed-column grid shared by every section (added and modified alike), so
 // field / badge / value line up identically across the whole timeline.
 const FIELD_COL_WIDTH = 240;
 const BADGE_COL_WIDTH = 90;
 
-function FieldsTable({ children }: { children: ReactNode }) {
+function FieldsTable({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <Table
       layout="fixed"
@@ -33,11 +32,11 @@ function FieldRow({
   label,
   badge,
   children,
-}: {
+}: Readonly<{
   label: ReactNode;
   badge?: ReactNode;
   children: ReactNode;
-}) {
+}>) {
   // A badge'd row (added/removed) is single-line; baseline-align so the small
   // badge text sits on the same baseline as the larger value (centre-aligning
   // wouldn't, because the font sizes differ). Badge-less rows (changed) may hold
@@ -61,10 +60,10 @@ function FieldRow({
 export function EventContent({
   event,
   entityType,
-}: {
+}: Readonly<{
   event: TimelineEvent;
   entityType: string;
-}) {
+}>) {
   const isTypes = (event.collection ?? "types") === "types";
   // In requiredSkillsForTypes the field names themselves are skill typeIDs.
   const fieldLabel = (field: string) =>

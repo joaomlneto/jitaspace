@@ -14,10 +14,10 @@ import { EntityHistory } from "../../EntityHistory";
 export default function EntityHistoryClient({
   entityType,
   entityId,
-}: {
+}: Readonly<{
   entityType: string;
   entityId: number;
-}) {
+}>) {
   const meta = entityTypeMeta(entityType);
   return (
     <EntityHistory
