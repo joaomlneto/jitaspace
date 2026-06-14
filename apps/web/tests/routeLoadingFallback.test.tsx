@@ -14,16 +14,31 @@ import { PageSkeleton } from "~/components/PageSkeleton";
 // export runs that wrapper without awaiting the async content, letting us assert
 // — across every route — that the shared loading skeleton is used.
 
-// Some route content components pull in ESM-only table libraries that Jest does
-// not transform. We only assert the Suspense fallback (not the content), so stub
-// them out to let the page modules load.
-jest.mock("mantine-react-table", () => ({
-  MantineReactTable: () => null,
-  useMantineReactTable: () => ({}),
-}));
-jest.mock("mantine-datatable", () => ({
-  DataTable: () => null,
-}));
+// We only assert the Suspense fallback element — never render the page content —
+// so we stub out everything the page modules pull in that isn't available in the
+// coverage CI job (which runs install + test only, no `kubb:generate` and no
+// Prisma client). Existing page tests mock these same modules. Catch-all proxies
+// return a no-op for any named export, which is enough to let the modules load.
+jest.mock("@jitaspace/hooks", () => new Proxy({}, { get: () => () => null }));
+jest.mock("@jitaspace/ui", () => new Proxy({}, { get: () => () => null }));
+jest.mock(
+  "@jitaspace/esi-client",
+  () => new Proxy({}, { get: () => () => null }),
+);
+jest.mock(
+  "@jitaspace/sde-client",
+  () => new Proxy({}, { get: () => () => null }),
+);
+jest.mock(
+  "@jitaspace/tiptap-eve",
+  () => new Proxy({}, { get: () => () => null }),
+);
+jest.mock(
+  "mantine-react-table",
+  () => new Proxy({}, { get: () => () => null }),
+);
+jest.mock("mantine-datatable", () => new Proxy({}, { get: () => () => null }));
+jest.mock("~/lib/db", () => ({ prisma: {} }));
 
 jest.mock("next/cache", () => ({
   cacheLife: () => undefined,
