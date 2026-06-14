@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react";
-import { Badge, Group } from "@mantine/core";
+import { Badge, Group, rem } from "@mantine/core";
 import type {
   MRT_ColumnDef} from "mantine-react-table";
 import {
@@ -211,6 +211,9 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
     columns,
     positionPagination: "top",
     enableFacetedValues: true,
+    // Reserve vertical space so the table doesn't grow (and push the page down)
+    // as the wallet journal loads in.
+    mantineTableContainerProps: { style: { minHeight: rem(420) } },
     data: entries,
     initialState: {
       density: "xs",
