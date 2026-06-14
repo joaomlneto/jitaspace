@@ -82,6 +82,9 @@ const notAvailableText = "Not available";
 /** The Forge — the region containing Jita, EVE's main trade hub. */
 const THE_FORGE_REGION_ID = 10000002;
 
+/** Inventory category for ship hulls — used to gate ship-only external links. */
+const SHIP_CATEGORY_ID = 6;
+
 /** Image variations that look good rendered large (vs. small square icons). */
 const LARGE_IMAGE_VARIATIONS = new Set(["render", "bp", "bpc"]);
 
@@ -590,6 +593,18 @@ export default function TypePage({
                 >
                   EVE Tycoon
                 </Button>
+                {categoryId === SHIP_CATEGORY_ID && (
+                  <Button
+                    component={Link}
+                    href={`https://eveworkbench.com/fits?ship=${typeId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="xs"
+                    leftSection={<IconExternalLink size={14} />}
+                  >
+                    EVE Workbench
+                  </Button>
+                )}
               </Group>
             </Stack>
           </Group>

@@ -1,7 +1,7 @@
 {
   "name": "JitaSpace WebApp",
   "buildCommand": "(cd ../.. && pnpm db:generate && pnpm db:push) && pnpm dlx turbo run build --filter=@jitaspace/web",
-  "installCommand": "pnpm --filter !mobile install --store=node_modules/.pnpm-store",
+  "installCommand": "pnpm --filter !mobile install --package-import-method=copy",
   "env": {
     "ENABLE_EXPERIMENTAL_COREPACK": "1"
   }

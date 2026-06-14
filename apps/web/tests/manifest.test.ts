@@ -49,4 +49,18 @@ describe("web app manifest", () => {
     );
     expect(formFactors).toEqual(["wide", "narrow"]);
   });
+
+  it("exposes app shortcuts, each tagged for analytics", () => {
+    const shortcuts = result.shortcuts ?? [];
+    expect(shortcuts.length).toBeGreaterThan(0);
+
+    // Search must be reachable from the jump list.
+    expect(shortcuts.map((s) => s.name)).toContain("Search");
+
+    // Every shortcut points at an in-app route tagged as a PWA shortcut.
+    for (const shortcut of shortcuts) {
+      expect(shortcut.url.startsWith("/")).toBe(true);
+      expect(shortcut.url).toContain("?source=pwa-shortcut");
+    }
+  });
 });

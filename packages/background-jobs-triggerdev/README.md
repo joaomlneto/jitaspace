@@ -39,9 +39,22 @@ Deployment runs through the official **Trigger.dev GitHub + Vercel integrations*
 Action or `TRIGGER_ACCESS_TOKEN` secret in this repo. For a manual/local deploy:
 `pnpm deploy` (runs `trigger.dev deploy`).
 
-**Prisma 7:** modern-mode `prismaExtension` does **not** run `prisma generate`,
-so the generated client must exist before deploy. The repo's `pnpm install`
-postinstall generates it, so the integration's install step covers this.
+Because this is a monorepo, set these in the Trigger.dev project's **build
+settings** (Console → Project → Settings):
+
+| Setting             | Value                                                   |
+| ------------------- | ------------------------------------------------------- |
+| Trigger config file | `packages/background-jobs-triggerdev/trigger.config.ts` |
+| Install command     | `pnpm install`                                          |
+| Pre-build command   | `pnpm db:generate`                                      |
+
+The **pre-build command** is load-bearing: modern-mode `prismaExtension` does
+**not** run `prisma generate`, and the native build server only runs
+`pnpm install` + the bundle (never `turbo build`), so the Prisma client
+(`packages/db/prisma/generated`) would be missing when esbuild bundles
+`db/index.ts`. `pnpm db:generate` runs after install and before the build, and is
+offline (no `DATABASE_URL` needed). The kubb-generated `*-client` packages already
+self-generate via their own `postinstall`, so they're present after install.
 
 ## Status dashboard
 
