@@ -20,7 +20,9 @@ export interface PageProps {
   >;
 }
 
-export default function DogmaAttributesPage({ attributes }: PageProps) {
+export default function DogmaAttributesPage({
+  attributes,
+}: Readonly<PageProps>) {
   const data = useMemo(() => Object.values(attributes), [attributes]);
   const columns = useMemo<
     MRT_ColumnDef<{

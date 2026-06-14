@@ -58,7 +58,7 @@ interface CharacterAttributesRingProgressProps {
 
 export function CharacterAttributesRingProgress({
   characterId,
-}: CharacterAttributesRingProgressProps) {
+}: Readonly<CharacterAttributesRingProgressProps>) {
   const { data, error, isLoading } = useCharacterAttributes(characterId);
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();

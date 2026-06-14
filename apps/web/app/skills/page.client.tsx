@@ -32,7 +32,7 @@ export interface SkillsPageProps {
   }[];
 }
 
-export default function SkillsPage({ groups }: SkillsPageProps) {
+export default function SkillsPage({ groups }: Readonly<SkillsPageProps>) {
   const character = useSelectedCharacter();
   return (
     <ScopeGuard

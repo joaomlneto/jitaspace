@@ -43,7 +43,7 @@ export function MessagePanel({
   hideRecipients,
   hideSender,
   hideSubject,
-}: MessagePanelProps) {
+}: Readonly<MessagePanelProps>) {
   const { data: labels } = useCharacterMailLabels(characterId);
   const { data: mail } = useCharacterMail(characterId, messageId);
   const { data: mailingLists } = useCharacterMailingLists(characterId);

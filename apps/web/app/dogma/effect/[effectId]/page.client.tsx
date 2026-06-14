@@ -59,7 +59,7 @@ export default function DogmaEffectPage({
   types,
   modifiers,
   groups,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const { data: effect } = useDogmaEffect(effectId);
 
   const sortedGroups = useMemo(

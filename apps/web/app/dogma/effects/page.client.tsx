@@ -20,7 +20,7 @@ export interface PageProps {
   >;
 }
 
-export default function DogmaEffectsPage({ effects }: PageProps) {
+export default function DogmaEffectsPage({ effects }: Readonly<PageProps>) {
   const data = useMemo(() => Object.values(effects), [effects]);
   const columns = useMemo<
     MRT_ColumnDef<{

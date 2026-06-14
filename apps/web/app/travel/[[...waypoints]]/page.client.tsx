@@ -32,7 +32,7 @@ export interface TravelPageProps {
 export default function TravelPage({
   solarSystems,
   initialWaypoints,
-}: TravelPageProps) {
+}: Readonly<TravelPageProps>) {
   const router = useRouter();
 
   const graph = useMemo(() => {

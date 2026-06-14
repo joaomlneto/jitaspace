@@ -51,7 +51,7 @@ export default function DogmaAttributePage({
   iconId,
   types,
   groups,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const groupTypes = useMemo(() => {
     const map: Record<number, (typeof types)[number][]> = {};
     groups.forEach(

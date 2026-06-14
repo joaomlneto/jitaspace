@@ -36,7 +36,7 @@ const allAppScopes = [
 
 export function LoginModal({
   innerProps,
-}: ContextModalProps<{ scopes?: ESIScope[] }>) {
+}: Readonly<ContextModalProps<{ scopes?: ESIScope[] }>>) {
   const [showAppSelector, { toggle: toggleAppSelector }] = useDisclosure(false);
   const [showScopesTable, { toggle }] = useDisclosure(false);
   const [showAppScopeDetails, { toggle: toggleAppScopeDetails }] =

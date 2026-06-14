@@ -246,7 +246,7 @@ export default function TypePage({
   typeId,
   typeName,
   typeDescription,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const character = useSelectedCharacter();
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();

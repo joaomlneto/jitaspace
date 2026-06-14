@@ -63,9 +63,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ groupId: string }>;
-}) {
+}>) {
   const { groupId: groupIdParam } = await params;
   const groupId = Number(groupIdParam);
 
@@ -109,9 +109,9 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ groupId: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<Loader />}>
       <PageContent params={params} />

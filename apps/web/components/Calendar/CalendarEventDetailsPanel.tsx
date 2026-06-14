@@ -29,7 +29,7 @@ export interface CalendarEventPanelProps {
 export function CalendarEventDetailsPanel({
   characterId,
   eventId,
-}: CalendarEventPanelProps) {
+}: Readonly<CalendarEventPanelProps>) {
   const { data: event, canRespondToEvents } = useCalendarEvent(
     characterId,
     eventId,

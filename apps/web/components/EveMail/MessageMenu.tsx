@@ -48,7 +48,7 @@ export function MessageMenu({
   mail,
   mutate,
   data,
-}: MessageMenuProps) {
+}: Readonly<MessageMenuProps>) {
   const { authHeaders } = useAccessToken({
     characterId,
     scopes: ["esi-mail.organize_mail.v1"],

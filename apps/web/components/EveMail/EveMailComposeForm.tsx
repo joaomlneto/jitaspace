@@ -27,7 +27,9 @@ export interface EveMailComposeFormProps {
   onSend?: () => void;
 }
 
-export function EveMailComposeForm({ onSend }: EveMailComposeFormProps) {
+export function EveMailComposeForm({
+  onSend,
+}: Readonly<EveMailComposeFormProps>) {
   const selectedCharacter = useSelectedCharacter();
   const characterId = selectedCharacter?.characterId;
   const { authHeaders, accessToken } = useAccessToken({

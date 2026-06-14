@@ -36,7 +36,7 @@ export default function LPStoreAllPage({
   corporations,
   types,
   offers,
-}: LPStoreAllPageProps) {
+}: Readonly<LPStoreAllPageProps>) {
   return (
     <Container size="xl">
       <Stack>

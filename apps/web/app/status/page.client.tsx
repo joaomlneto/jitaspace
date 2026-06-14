@@ -48,7 +48,7 @@ export interface PageProps {
 export default function StatusPage({
   vercelStatusData,
   sdeLastModifiedData,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const { data: sdeVersionData } = useGetVersion();
 
   const { data: tqStatus } = useServerStatus();

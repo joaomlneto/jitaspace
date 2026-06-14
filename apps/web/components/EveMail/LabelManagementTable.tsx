@@ -14,7 +14,7 @@ export interface LabelManagementTableProps {
 
 export function LabelManagementTable({
   characterId,
-}: LabelManagementTableProps) {
+}: Readonly<LabelManagementTableProps>) {
   const { data: labels, deleteLabel } = useCharacterMailLabels(characterId);
 
   return (

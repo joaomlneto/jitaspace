@@ -20,7 +20,7 @@ export type EsiSearchMultiSelectItemProps =
 
 export function EsiSearchMultiSelectItem({
   option,
-}: EsiSearchMultiSelectItemProps) {
+}: Readonly<EsiSearchMultiSelectItemProps>) {
   const { value, category } = option;
   return (
     <Group wrap="nowrap" justify="space-between">

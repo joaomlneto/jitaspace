@@ -27,7 +27,7 @@ export interface RequestPermissionsBannerProps {
 
 export function RequestPermissionsBanner({
   requiredScopes,
-}: RequestPermissionsBannerProps) {
+}: Readonly<RequestPermissionsBannerProps>) {
   const selectedCharacter = useSelectedCharacter();
   const grantedScopes = useMemo(
     () => selectedCharacter?.accessTokenPayload.scp ?? [],
