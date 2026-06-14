@@ -4,6 +4,10 @@ packages:
   - tooling/*
 
 overrides:
+  # Keep a single @tanstack/query-core so react-query's QueryClient and
+  # @tanstack/db collections share one type identity (avoids ERR "#private
+  # refers to a different member" in @jitaspace/hooks).
+  "@tanstack/query-core": 5.100.14
   "@types/react": 19.2.15
   "@types/react-dom": 19.2.3
   "prosemirror-model": "1.25.7"
