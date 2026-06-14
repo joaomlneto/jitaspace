@@ -27,6 +27,7 @@
     "@jitaspace/datatable-mantine": "workspace:*",
     "@jitaspace/datatable-tanstack": "workspace:*",
     "@jitaspace/db": "workspace:*",
+    "@jitaspace/db-history": "workspace:*",
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/esi-metadata": "workspace:*",
     "@jitaspace/eve-icons": "workspace:*",

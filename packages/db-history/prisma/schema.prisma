@@ -1,0 +1,99 @@
+// Standalone change-history schema (isolated from @jitaspace/db).
+// Four tables: Build, Collection, Entity, Change — see the design discussion.
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "cockroachdb"
+}
+
+enum Op {
+  added
+  modified
+  removed
+}
+
+/// EVE server whose client-build pointer a build was observed on.
+enum Server {
+  tranquility
+  singularity
+}
+
+/// One version of the game data. A build is server-independent content, and its
+/// build number is its natural identity — so the build number is the primary key.
+model Build {
+  buildNumber Int          @id
+  releasedAt  DateTime?
+  /// Which server's build pointer first surfaced this build (the diff's context).
+  server      Server?
+  /// The build this one's changes are computed against (the diff's "from" side).
+  /// null ⇒ genesis build (everything is "added"). Self-relation, so the baseline
+  /// is always a real Build row — see the monitor's per-server baseline rules.
+  baselineNumber Int?
+  baseline       Build?      @relation("baseline", fields: [baselineNumber], references: [buildNumber])
+  derivedBuilds  Build[]     @relation("baseline")
+  changes     Change[]
+  fileChanges FileChange[]
+
+  @@index([baselineNumber])
+  @@index([server, buildNumber])
+}
+
+/// Raw resource-file changes (path-keyed, so they can't share Entity's integer key).
+model FileChange {
+  id          Int    @id @default(sequence())
+  build       Build  @relation(fields: [buildNumber], references: [buildNumber])
+  buildNumber Int
+  path        String
+  op          Op
+
+  @@index([buildNumber])
+}
+
+/// The registry of tracked datasets (≈ resource-server files). Add a row → track more.
+model Collection {
+  id         Int      @id @default(sequence())
+  name       String   @unique
+  entityKind String
+  sourceFile String
+  changes    Change[]
+}
+
+/// A "thing" with identity (kind, eveId) and an optional parent / root-ancestor.
+model Entity {
+  id          Int      @id @default(sequence())
+  kind        String
+  eveId       Int
+  name        String?
+  parentId    Int?
+  parent      Entity?  @relation("tree", fields: [parentId], references: [id])
+  children    Entity[] @relation("tree")
+  rootId      Int?
+  root        Entity?  @relation("root", fields: [rootId], references: [id])
+  descendants Entity[] @relation("root")
+  changes     Change[]
+
+  @@unique([kind, eveId])
+  @@index([parentId])
+  @@index([rootId])
+}
+
+/// The history: one row = "entity X changed in build B (from collection C)".
+model Change {
+  id           Int        @id @default(sequence())
+  build        Build      @relation(fields: [buildNumber], references: [buildNumber])
+  buildNumber  Int
+  collection   Collection @relation(fields: [collectionId], references: [id])
+  collectionId Int
+  entity       Entity     @relation(fields: [entityId], references: [id])
+  entityId     Int
+  op           Op
+  data         Json
+
+  @@index([buildNumber])
+  @@index([entityId])
+  @@index([collectionId])
+}
