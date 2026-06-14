@@ -2,8 +2,9 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
-import { Container, Group, Loader, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Container, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { TypeAnchor, TypeAvatar } from "@jitaspace/ui";
 
@@ -113,7 +114,7 @@ export default function Page({
   params: Promise<{ groupId: string }>;
 }) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );
