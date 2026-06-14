@@ -3,6 +3,7 @@
 import { memo, useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 
+import type { DataTableColumn } from "@jitaspace/datatable";
 import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
 import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import {
@@ -14,7 +15,6 @@ import {
   TypeAvatar,
   TypeName,
 } from "@jitaspace/ui";
-import type { DataTableColumn } from "@jitaspace/datatable";
 
 import { DataTable } from "~/components/DataTable";
 import { usePreferencesStore } from "~/lib/preferences";
@@ -395,10 +395,12 @@ const LoyaltyPointsTableExperimental = memo(
           id: "jita5psellisklp",
           header: "Jita 5% Sell ISK/LP",
           accessor: (row) =>
-            ((row.marketStats?.sell.percentile ?? 0) -
-              (row.iskCost ?? 0) -
-              requiredItemsSellCost(row)) /
-            row.lpCost,
+            row.lpCost > 0
+              ? ((row.marketStats?.sell.percentile ?? 0) -
+                  (row.iskCost ?? 0) -
+                  requiredItemsSellCost(row)) /
+                row.lpCost
+              : undefined,
           sortable: true,
           align: "right",
           cell: iskPerLpCell,
@@ -443,10 +445,12 @@ const LoyaltyPointsTableExperimental = memo(
           id: "jita5pbuyisklp",
           header: "Jita 5% Buy ISK/LP",
           accessor: (row) =>
-            ((row.marketStats?.buy.percentile ?? 0) -
-              (row.iskCost ?? 0) -
-              requiredItemsBuyCost(row)) /
-            row.lpCost,
+            row.lpCost > 0
+              ? ((row.marketStats?.buy.percentile ?? 0) -
+                  (row.iskCost ?? 0) -
+                  requiredItemsBuyCost(row)) /
+                row.lpCost
+              : undefined,
           sortable: true,
           align: "right",
           cell: iskPerLpCell,
