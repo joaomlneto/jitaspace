@@ -19,7 +19,10 @@ export interface PageSkeletonProps {
  * already-reserved layout instead of pushing the page down — keeping Cumulative
  * Layout Shift low both on first paint and on client-side navigation.
  */
-export function PageSkeleton({ size = "xl", rows = 8 }: PageSkeletonProps) {
+export function PageSkeleton({
+  size = "xl",
+  rows = 8,
+}: Readonly<PageSkeletonProps>) {
   const rowKeys = Array.from({ length: rows }, (_, i) => `page-skeleton-${i}`);
   return (
     <Container size={size} role="status" aria-label="Loading">
