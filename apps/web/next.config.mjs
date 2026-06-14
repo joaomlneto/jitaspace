@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { withSentryConfig } from "@sentry/nextjs";
 import { createJiti } from "jiti";
 
@@ -72,9 +73,33 @@ const config = {
   ],
 
   env: {
-    NEXT_PUBLIC_MODIFIED_DATE: new Date().toISOString(),
+    NEXT_PUBLIC_MODIFIED_DATE: getModifiedDate(),
   },
 };
+
+/**
+ * Timestamp surfaced as "Website Updated On" on the status page.
+ *
+ * Derived from the deployed commit's git committer date rather than
+ * `new Date()`. A wall-clock timestamp is non-deterministic, so Turborepo /
+ * Vercel build caching would restore a previously-built `.next` artifact — with
+ * its stale inlined date — on every cache hit, and `next build` (hence this
+ * file) never re-runs to refresh it. The commit date is stable per revision, so
+ * it only moves when the site's code actually changed. Falls back to wall-clock
+ * time when git isn't available (e.g. some local shells).
+ */
+function getModifiedDate() {
+  try {
+    const iso = execSync("git show -s --format=%cI HEAD", {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+    if (iso) return new Date(iso).toISOString();
+  } catch {
+    // git unavailable or not a checkout — fall back below.
+  }
+  return new Date().toISOString();
+}
 
 export default withSentryConfig(config, {
   // For all available options, see:
