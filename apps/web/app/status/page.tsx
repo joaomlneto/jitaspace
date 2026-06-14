@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import { Loader } from "@mantine/core";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
 import StatusPageClient from "./page.client";
 
@@ -42,7 +42,7 @@ async function StatusPageContent() {
 
 export default function StatusPage() {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <StatusPageContent />
     </Suspense>
   );

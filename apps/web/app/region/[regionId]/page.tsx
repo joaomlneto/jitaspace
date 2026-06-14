@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { Loader } from "@mantine/core";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 
 import PageClient from "./page.client";
@@ -31,7 +31,7 @@ export async function generateMetadata({
 
 export default function Page() {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageClient />
     </Suspense>
   );
