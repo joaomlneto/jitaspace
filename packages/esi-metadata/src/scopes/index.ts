@@ -1,3 +1,3 @@
 export * from "./descriptions";
-export * from "./endpoints";
+export * from "./endpoints.generated";
 export * from "./scopes";
