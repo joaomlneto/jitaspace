@@ -17,7 +17,7 @@ export interface MarketTypePageProps {
 export default function MarketTypePage({
   typeId,
   typeName,
-}: MarketTypePageProps) {
+}: Readonly<MarketTypePageProps>) {
   const { data } = useTypeMarketOrders(typeId);
 
   const mergedRegionalOrders = useMemo(
@@ -34,8 +34,6 @@ export default function MarketTypePage({
     () => mergedRegionalOrders.filter((order) => order.is_buy_order),
     [mergedRegionalOrders],
   );
-
-  // TODO FIXME: Resolve location without causing errors (private structures)
 
   return (
     <Container size="xl">
