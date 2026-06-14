@@ -1,20 +1,12 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
-import {
-  Container,
-  Group,
-  Loader,
-  SimpleGrid,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { cacheLife } from "next/cache";
+import type { Metadata } from "next";
+import { Container, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
-import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
-
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 interface PageProps {
   name?: string;
@@ -70,9 +62,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: Readonly<{
+}: {
   params: Promise<{ categoryId: string }>;
-}>) {
+}) {
   const { categoryId: categoryIdParam } = await params;
   const categoryId = Number(categoryIdParam);
   if (!categoryIdParam || Number.isNaN(categoryId)) {
@@ -89,7 +81,9 @@ async function PageContent({
     notFound();
   }
 
-  const sortedGroups = [...groups].sort((a, b) => a.name.localeCompare(b.name));
+  const sortedGroups = [...groups].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   return (
     <Container size="md">
@@ -117,11 +111,11 @@ async function PageContent({
 
 export default function Page({
   params,
-}: Readonly<{
+}: {
   params: Promise<{ categoryId: string }>;
-}>) {
+}) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

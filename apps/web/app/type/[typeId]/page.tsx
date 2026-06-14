@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
-import { Loader } from "@mantine/core";
+import { cacheLife } from "next/cache";
+import type { Metadata } from "next";
 import { HttpStatusCode } from "axios";
 
-import type { PageProps } from "./page.client";
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+
 import TypePage from "./page.client";
+import type { PageProps } from "./page.client";
 
 function stripHtml(s: string): string {
   let out = "";
@@ -35,10 +36,11 @@ async function getTypeData(typeId: number): Promise<PageProps> {
     },
   });
 
-  const typeImageVariations: string[] =
-    ((await fetch(`https://images.evetech.net/types/${typeId}`).then((res) => {
-      return res.status === HttpStatusCode.NotFound ? [] : res.json();
-    })) as string[]) ?? [];
+  const typeImageVariations: string[] = ((await fetch(
+    `https://images.evetech.net/types/${typeId}`,
+  ).then((res) => {
+    return res.status === HttpStatusCode.NotFound ? [] : res.json();
+  })) as string[]) ?? [];
 
   const variation: string | undefined =
     !typeImageVariations || typeImageVariations?.includes("icon")
@@ -63,7 +65,8 @@ export async function generateMetadata({
   if (!typeId) return {};
 
   try {
-    const { typeName, typeDescription, ogImageUrl } = await getTypeData(typeId);
+    const { typeName, typeDescription, ogImageUrl } =
+      await getTypeData(typeId);
     const description = typeDescription
       ? stripHtml(typeDescription).slice(0, 200)
       : undefined;
@@ -89,9 +92,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: Readonly<{
+}: {
   params: Promise<{ typeId: string }>;
-}>) {
+}) {
   const { typeId: typeIdParam } = await params;
   const typeId = Number(typeIdParam);
   if (!typeId) {
@@ -108,11 +111,11 @@ async function PageContent({
 
 export default function Page({
   params,
-}: Readonly<{
+}: {
   params: Promise<{ typeId: string }>;
-}>) {
+}) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
-import { Container, Group, Loader, Stack, Title } from "@mantine/core";
+import { Container, Group, Stack, Title } from "@mantine/core";
 
 export const metadata = {
   title: "Active Wars",
@@ -9,6 +9,7 @@ export const metadata = {
     "Live list of active wars in EVE Online — track ongoing conflicts between corporations and alliances.",
 };
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { WarsIcon } from "@jitaspace/eve-icons";
 
@@ -131,7 +132,7 @@ async function ActiveWarsContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <ActiveWarsContent />
     </Suspense>
   );
