@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react";
-import { Group } from "@mantine/core";
+import { Group, rem } from "@mantine/core";
 import { addDays } from "date-fns";
 import type {
   MRT_ColumnDef} from "mantine-react-table";
@@ -140,6 +140,9 @@ export const MarketOrdersDataTable = memo(
       columns,
       positionPagination: "top",
       enableFacetedValues: true,
+      // Reserve vertical space so the table doesn't grow (and push the rest of
+      // the page down) as market orders stream in region by region.
+      mantineTableContainerProps: { style: { minHeight: rem(360) } },
       data: orders,
       initialState: {
         density: "xs",

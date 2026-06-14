@@ -63,13 +63,6 @@ const config = {
       source: "/analytics/:match*",
       destination: "https://analytics.umami.is/:match*", // Proxy to Umami
     },
-    {
-      // Serve a single static shell for every /market/<typeId> URL instead of
-      // rendering (and ISR-caching) one page per type id. The browser keeps the
-      // pretty /market/<typeId> URL; the client reads the id from the path.
-      source: "/market/:typeId",
-      destination: "/market",
-    },
   ],
 
   env: {
