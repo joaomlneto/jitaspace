@@ -14,12 +14,9 @@ import {
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
+import { getFileDiff, getStringChanges } from "~/lib/history-actions";
 import type { Counts, StringChange } from "~/lib/resource-history";
-import {
-  fetchFileDiff,
-  fetchStringChanges,
-  LANGUAGE_LABEL,
-} from "~/lib/resource-history";
+import { LANGUAGE_LABEL } from "~/lib/resource-history";
 
 const SPOILER_MAX_HEIGHT = 520;
 
@@ -67,7 +64,7 @@ function FileChanges({ build, counts }: { build: number; counts: Counts }) {
   const [open, setOpen] = useState(false);
   const { data, isFetching } = useQuery({
     queryKey: ["res-files", build],
-    queryFn: () => fetchFileDiff(build),
+    queryFn: () => getFileDiff(build),
     enabled: open,
     staleTime: Infinity,
   });
@@ -189,7 +186,7 @@ function StringLang({
   const [open, setOpen] = useState(false);
   const { data, isFetching } = useQuery({
     queryKey: ["res-strings", build, lang],
-    queryFn: () => fetchStringChanges(build, lang),
+    queryFn: () => getStringChanges(build, lang),
     enabled: open,
     staleTime: Infinity,
   });

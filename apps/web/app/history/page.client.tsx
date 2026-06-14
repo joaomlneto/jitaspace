@@ -22,11 +22,8 @@ import {
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
-import {
-  collectionMeta,
-  entityTypeMeta,
-  fetchHistoryIndex,
-} from "~/lib/history";
+import { collectionMeta, entityTypeMeta } from "~/lib/history";
+import { getHistoryIndex } from "~/lib/history-actions";
 
 export default function HistoryIndexClient() {
   const router = useRouter();
@@ -38,7 +35,7 @@ export default function HistoryIndexClient() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["history-index"],
-    queryFn: fetchHistoryIndex,
+    queryFn: getHistoryIndex,
     staleTime: Infinity,
   });
 

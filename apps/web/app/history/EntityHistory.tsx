@@ -19,8 +19,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 import type { EntityTimeline, TimelineEvent } from "~/lib/history";
-import { collectionMeta, fetchEntityTimeline } from "~/lib/history";
-
+import { collectionMeta } from "~/lib/history";
+import { getEntityTimeline } from "~/lib/history-actions";
 import { KIND_COLOR } from "./_diff";
 import { EventContent } from "./_event";
 
@@ -41,7 +41,7 @@ export function EntityHistory({
 }) {
   const { data, isLoading } = useQuery({
     queryKey: ["history-entity", entityType, entityId],
-    queryFn: () => fetchEntityTimeline(entityType, entityId),
+    queryFn: () => getEntityTimeline(entityType, entityId),
     staleTime: Infinity,
   });
   // Collections currently checked; null ⇒ all (until the user unchecks one).

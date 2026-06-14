@@ -15,20 +15,20 @@ import {
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
-import { collectionMeta, fetchBuildChanges } from "~/lib/history";
-import { fetchResourceIndex } from "~/lib/resource-history";
+import { collectionMeta } from "~/lib/history";
+import { getBuildChanges, getResourceIndex } from "~/lib/history-actions";
 import { EntityChangeSections } from "./_entity-sections";
 import { ResourceChanges } from "./_resource-sections";
 
 export default function BuildHistoryClient({ build }: { build: number }) {
   const { data, isLoading } = useQuery({
     queryKey: ["history-build", build],
-    queryFn: () => fetchBuildChanges(build),
+    queryFn: () => getBuildChanges(build),
     staleTime: Infinity,
   });
   const { data: resourceIndex, isLoading: resLoading } = useQuery({
     queryKey: ["resource-index"],
-    queryFn: fetchResourceIndex,
+    queryFn: getResourceIndex,
     staleTime: Infinity,
   });
   // Collections currently checked; null ⇒ all (until the user unchecks one).

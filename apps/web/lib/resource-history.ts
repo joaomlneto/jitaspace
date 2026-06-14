@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 /**
- * Reader-side schema for the resource-level change history (raw files +
- * localization strings), produced by the CLI `build-resource-history` command
- * and served as static JSON under `public/history/resources/`.
+ * Reader-side schemas + types for the resource-level change history (raw files
+ * + localization strings). Read from the standalone history database via the
+ * server functions in `~/lib/history-actions`.
  */
 
 const Counts = z.object({
@@ -55,23 +55,3 @@ export const LANGUAGE_LABEL: Record<string, string> = {
   ru: "Russian",
   zh: "Chinese",
 };
-
-// ── client-side fetchers (static JSON under /history/resources) ──────────────
-
-async function fetchJson<T>(
-  url: string,
-  schema: z.ZodType<T>,
-): Promise<T | null> {
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  return schema.parse(await res.json());
-}
-
-export const fetchResourceIndex = () =>
-  fetchJson("/api/history-db/resources/index", ResourceIndex);
-
-export const fetchFileDiff = (build: number) =>
-  fetchJson(`/api/history-db/resources/files/${build}`, FileDiff);
-
-export const fetchStringChanges = (build: number, lang: string) =>
-  fetchJson(`/api/history-db/resources/strings/${build}/${lang}`, StringChanges);

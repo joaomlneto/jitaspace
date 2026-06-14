@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 /**
- * Reader-side schema for the file-backed change-history, mirroring the output
- * of the CLI `build-history` command (apps/cli/utils/history.ts). Files live
- * under `public/history/` and are fetched as static JSON — no database.
+ * Reader-side schemas, types and display metadata for the change-history
+ * viewer. The data is produced by the change-history pipeline and read from the
+ * standalone history database via the server functions in `~/lib/history-actions`.
  *
- * Keep these shapes in sync with the generator. `v` versions the payload.
+ * `v` versions the payload; keep these shapes in sync with the producer.
  */
 
 export const FieldDelta = z.object({
@@ -112,31 +112,6 @@ export function latestFieldValue(
   }
   return undefined;
 }
-
-// ── fetchers (client-side; static JSON under /history) ─────────────────────
-
-async function fetchJson<T>(
-  url: string,
-  schema: z.ZodType<T>,
-): Promise<T | null> {
-  const res = await fetch(url);
-  if (!res.ok) return null; // 404 ⇒ no history for this entity/build
-  return schema.parse(await res.json());
-}
-
-export const fetchHistoryIndex = () =>
-  fetchJson("/api/history-db/index", HistoryIndex);
-
-// Now served from the CockroachDB history database (was /history/build/{N}.json).
-export const fetchBuildChanges = (build: number) =>
-  fetchJson(`/api/history-db/build/${build}`, BuildChanges);
-
-/** Timeline for any entity kind ("type", "skin", "skinMaterial"). */
-export const fetchEntityTimeline = (entityType: string, entityId: number) =>
-  fetchJson(`/api/history-db/entity/${entityType}/${entityId}`, EntityTimeline);
-
-export const fetchTypeTimeline = (typeId: number) =>
-  fetchEntityTimeline("type", typeId);
 
 // ── value formatting for display ───────────────────────────────────────────
 
@@ -257,7 +232,10 @@ export const ENTITY_TYPE_META: Record<
   npcCharacter: { label: "NPC character", plural: "NPC characters" },
   agentInSpace: { label: "Agent in space", plural: "Agents in space" },
   schematic: { label: "Schematic", plural: "Schematics" },
-  stationOperation: { label: "Station operation", plural: "Station operations" },
+  stationOperation: {
+    label: "Station operation",
+    plural: "Station operations",
+  },
   stationService: { label: "Station service", plural: "Station services" },
   region: { label: "Region", plural: "Regions" },
   constellation: { label: "Constellation", plural: "Constellations" },
