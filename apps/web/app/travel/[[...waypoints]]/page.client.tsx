@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Container,
@@ -53,19 +53,35 @@ export default function TravelPage({
   const [lowSecPenalty, setLowSecPenalty] = useState<number>(0);
   const [highSecPenalty, setHighSecPenalty] = useState<number>(0);
 
+  // The penalty sliders fire `onChange` continuously while dragging. Running the
+  // NBA* pathfinder over the full New Eden graph (thousands of systems) on every
+  // tick blocks the main thread and wrecks Interaction to Next Paint. Deferring
+  // the values the route depends on keeps the slider thumb and live labels
+  // responsive (urgent update), while React recomputes the route as a
+  // lower-priority, interruptible transition that coalesces rapid changes.
+  const deferredNullSecPenalty = useDeferredValue(nullSecPenalty);
+  const deferredLowSecPenalty = useDeferredValue(lowSecPenalty);
+  const deferredHighSecPenalty = useDeferredValue(highSecPenalty);
+
   const route = useMemo(() => {
     if (!graph || waypoints.length < 2) return [];
     const pathFinder = path.nba(graph, {
       distance(fromNode, toNode, _link) {
         const destinationSecurityStatus = toNode.data.securityStatus;
-        if (destinationSecurityStatus < 0) return 1 + nullSecPenalty;
-        if (destinationSecurityStatus < 0.5) return 1 + lowSecPenalty;
-        if (destinationSecurityStatus >= 0.5) return 1 + highSecPenalty;
+        if (destinationSecurityStatus < 0) return 1 + deferredNullSecPenalty;
+        if (destinationSecurityStatus < 0.5) return 1 + deferredLowSecPenalty;
+        if (destinationSecurityStatus >= 0.5) return 1 + deferredHighSecPenalty;
         return 1;
       },
     });
     return pathFinder.find(waypoints[1]!, waypoints[0]!);
-  }, [graph, waypoints, nullSecPenalty, lowSecPenalty, highSecPenalty]);
+  }, [
+    graph,
+    waypoints,
+    deferredNullSecPenalty,
+    deferredLowSecPenalty,
+    deferredHighSecPenalty,
+  ]);
 
   const solarSystemSelectData = useMemo(() => {
     return Object.entries(solarSystems ?? {})
@@ -89,6 +105,7 @@ export default function TravelPage({
               label="Waypoint"
               data={solarSystemSelectData}
               searchable
+              limit={100}
               value={waypoints[index]}
               onChange={(value) => {
                 if (value === null) {
