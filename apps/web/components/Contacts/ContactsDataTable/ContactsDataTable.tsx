@@ -1,10 +1,4 @@
-import type {
-  MRT_Cell,
-  MRT_Column,
-  MRT_ColumnDef,
-  MRT_Row,
-} from "mantine-react-table";
-import type { ReactNode } from "react";
+import type { MRT_Cell, MRT_ColumnDef, MRT_Row } from "mantine-react-table";
 import { memo, useMemo } from "react";
 import { Badge, Group, Text } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
@@ -33,16 +27,7 @@ export interface ContactsDataTableProps {
 const capitalizeFirstLetter = (s: string) =>
   s.charAt(0).toUpperCase() + s.slice(1);
 
-type ContactCellProps = {
-  cell: MRT_Cell<Contact>;
-  column: MRT_Column<Contact>;
-  renderedCellValue: number | ReactNode | string;
-  renderedColumnIndex?: number;
-  renderedRowIndex?: number;
-  row: MRT_Row<Contact>;
-};
-
-function ContactNameCell({ row }: ContactCellProps) {
+function ContactNameCell({ row }: Readonly<{ row: MRT_Row<Contact> }>) {
   return (
     <Group wrap="nowrap">
       <StandingIndicator standing={row.original.standing}>
@@ -66,7 +51,7 @@ function ContactNameCell({ row }: ContactCellProps) {
   );
 }
 
-function ContactWatchedCell({ cell }: ContactCellProps) {
+function ContactWatchedCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
   return cell.getValue<boolean>() ? (
     <Badge variant="filled" size="xs">
       watched
@@ -74,7 +59,7 @@ function ContactWatchedCell({ cell }: ContactCellProps) {
   ) : null;
 }
 
-function ContactBlockedCell({ cell }: ContactCellProps) {
+function ContactBlockedCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
   const isBlocked = cell.getValue<boolean | undefined>();
   if (isBlocked !== undefined) {
     return (
@@ -86,7 +71,7 @@ function ContactBlockedCell({ cell }: ContactCellProps) {
   return isBlocked ? "Yes" : "No";
 }
 
-function ContactStandingsCell({ cell }: ContactCellProps) {
+function ContactStandingsCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
   return <StandingsBadge standing={cell.getValue<number>()} />;
 }
 

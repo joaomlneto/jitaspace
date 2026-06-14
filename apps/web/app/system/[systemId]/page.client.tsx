@@ -163,15 +163,7 @@ export default function Page() {
             </Group>
           )}
           {solarSystem?.data.planets?.map(
-            ({
-              planet_id,
-              moons,
-              asteroid_belts,
-            }: {
-              planet_id: number;
-              moons?: number[];
-              asteroid_belts?: number[];
-            }) => (
+            ({ planet_id, moons, asteroid_belts }) => (
               <Group key={planet_id}>
                 <Group wrap="nowrap">
                   <PlanetAvatar planetId={planet_id} size="sm" />

@@ -104,25 +104,25 @@ const fetchAsteroidBeltRow = (
   );
 
 const fetchStarRow = (limit: Limit, starId: number) =>
-  limit(async () =>
-    getUniverseStarsStarId(starId)
-      .then((res) => res.data)
-      .then((star) => ({
-        starId,
-        name: star.name,
-        solarSystemId: star.solar_system_id,
-        age: BigInt(star.age),
-        luminosity: new Prisma.Decimal(star.luminosity),
-        radius: BigInt(star.radius),
-        // Widen the ESI spectral-class enum to string so the inferred StarRow
-        // matches the Prisma column type (and the local-entries shape) when
-        // updateTable infers a single row type from both sides.
-        spectralClass: star.spectral_class as string,
-        temperature: BigInt(star.temperature),
-        typeId: star.type_id,
-        isDeleted: false,
-      })),
-  );
+  limit(async () => {
+    const { data: star } = await getUniverseStarsStarId(starId);
+    // Widen the ESI spectral-class enum to string (via an annotated local, not
+    // a cast) so the inferred StarRow matches the Prisma column type and the
+    // local-entries shape when updateTable infers a single row type from both.
+    const spectralClass: string = star.spectral_class;
+    return {
+      starId,
+      name: star.name,
+      solarSystemId: star.solar_system_id,
+      age: BigInt(star.age),
+      luminosity: new Prisma.Decimal(star.luminosity),
+      radius: BigInt(star.radius),
+      spectralClass,
+      temperature: BigInt(star.temperature),
+      typeId: star.type_id,
+      isDeleted: false,
+    };
+  });
 
 type SolarSystemRow = Awaited<ReturnType<typeof fetchSolarSystemRow>>;
 type PlanetRow = Awaited<ReturnType<typeof fetchPlanetRow>>;
@@ -235,7 +235,7 @@ export const scrapeEsiSolarSystems = defineJob<
 
           const thisBatchStarIds = esiSolarSystems
             .map((solarSystem) => solarSystem.star_id)
-            .filter(Boolean) as number[]; // FIXME shouldnt need type casting
+            .filter((starId): starId is number => Boolean(starId));
 
           const thisBatchMoons = thisBatchPlanets.flatMap((planet) =>
             (planet.moons ?? []).map((moonId) => ({

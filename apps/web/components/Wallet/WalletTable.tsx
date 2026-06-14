@@ -4,7 +4,6 @@ import type {
   MRT_ColumnDef,
   MRT_Row,
 } from "mantine-react-table";
-import type { ReactNode } from "react";
 import { memo, useMemo } from "react";
 import { Badge, Group } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
@@ -19,16 +18,9 @@ import {
   ISKAmount,
 } from "@jitaspace/ui";
 
-type WalletCellProps = {
-  cell: MRT_Cell<CharacterWalletJournalEntry>;
-  column: MRT_Column<CharacterWalletJournalEntry>;
-  renderedCellValue: number | ReactNode | string;
-  renderedColumnIndex?: number;
-  renderedRowIndex?: number;
-  row: MRT_Row<CharacterWalletJournalEntry>;
-};
-
-function DateCell({ cell }: WalletCellProps) {
+function DateCell({
+  cell,
+}: Readonly<{ cell: MRT_Cell<CharacterWalletJournalEntry> }>) {
   return (
     <DateHoverCard date={cell.getValue<Date>()}>
       <FormattedDateText size="sm" date={cell.getValue<Date>()} />
@@ -38,13 +30,13 @@ function DateCell({ cell }: WalletCellProps) {
 
 function DateHeader({
   column,
-}: {
-  column: MRT_Column<CharacterWalletJournalEntry>;
-}) {
+}: Readonly<{ column: MRT_Column<CharacterWalletJournalEntry> }>) {
   return <em>{column.columnDef.header}</em>;
 }
 
-function ContextTypeCell({ row }: WalletCellProps) {
+function ContextTypeCell({
+  row,
+}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
   return row.original.context_id_type ? (
     <Badge size="sm" variant="light">
       {row.original.context_id_type?.replaceAll("_", " ")}
@@ -52,7 +44,9 @@ function ContextTypeCell({ row }: WalletCellProps) {
   ) : undefined;
 }
 
-function FirstPartyCell({ row }: WalletCellProps) {
+function FirstPartyCell({
+  row,
+}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
   return (
     <Group>
       <Group wrap="nowrap">
@@ -69,7 +63,9 @@ function FirstPartyCell({ row }: WalletCellProps) {
   );
 }
 
-function SecondPartyCell({ row }: WalletCellProps) {
+function SecondPartyCell({
+  row,
+}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
   return (
     <Group>
       <Group wrap="nowrap">
@@ -86,7 +82,9 @@ function SecondPartyCell({ row }: WalletCellProps) {
   );
 }
 
-function OtherPartyCell({ cell }: WalletCellProps) {
+function OtherPartyCell({
+  cell,
+}: Readonly<{ cell: MRT_Cell<CharacterWalletJournalEntry> }>) {
   return (
     <Group>
       <Group wrap="nowrap">
@@ -103,7 +101,9 @@ function OtherPartyCell({ cell }: WalletCellProps) {
   );
 }
 
-function AmountCell({ row }: WalletCellProps) {
+function AmountCell({
+  row,
+}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
   return row.original.amount === undefined ? undefined : (
     <ISKAmount
       size="sm"
@@ -113,7 +113,9 @@ function AmountCell({ row }: WalletCellProps) {
   );
 }
 
-function TaxReceiverCell({ row }: WalletCellProps) {
+function TaxReceiverCell({
+  row,
+}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
   return row.original.tax_receiver_id ? (
     <Group>
       <Group wrap="nowrap">

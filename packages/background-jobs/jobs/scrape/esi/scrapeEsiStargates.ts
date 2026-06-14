@@ -35,19 +35,19 @@ const processStargateBatch = async (
   const fetchStargates = async (stargateIds: number[]) =>
     Promise.all(
       stargateIds.map((stargateId) =>
-        limit(async () =>
-          getUniverseStargatesStargateId(stargateId)
-            .then((res) => res.data)
-            .then((stargate) => ({
-              stargateId: stargate.stargate_id,
-              name: stargate.name,
-              typeId: stargate.type_id,
-              //position: stargate.position,
-              solarSystemId: stargate.system_id,
-              destinationStargateId: stargate.destination.stargate_id,
-              isDeleted: false,
-            })),
-        ),
+        limit(async () => {
+          const { data: stargate } =
+            await getUniverseStargatesStargateId(stargateId);
+          return {
+            stargateId: stargate.stargate_id,
+            name: stargate.name,
+            typeId: stargate.type_id,
+            //position: stargate.position,
+            solarSystemId: stargate.system_id,
+            destinationStargateId: stargate.destination.stargate_id,
+            isDeleted: false,
+          };
+        }),
       ),
     );
 

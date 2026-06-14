@@ -43,7 +43,7 @@ export interface WarsTableProps {
   wars: War[];
 }
 
-function WarIdCell({ row }: { row: MRT_Row<War> }) {
+function WarIdCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
     <WarAnchor inherit warId={row.original.warId} target="_blank">
       {row.original.warId}
@@ -51,7 +51,7 @@ function WarIdCell({ row }: { row: MRT_Row<War> }) {
   );
 }
 
-function AggressorCell({ row }: { row: MRT_Row<War> }) {
+function AggressorCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
     <Group>
       {row.original.aggressorCorporationId && (
@@ -94,7 +94,7 @@ function AggressorCell({ row }: { row: MRT_Row<War> }) {
   );
 }
 
-function DefenderCell({ row }: { row: MRT_Row<War> }) {
+function DefenderCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
     <Group>
       {row.original.defenderCorporationId && (
@@ -137,7 +137,7 @@ function DefenderCell({ row }: { row: MRT_Row<War> }) {
   );
 }
 
-function AlliesCell({ row }: { row: MRT_Row<War> }) {
+function AlliesCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
     <Group>
       {row.original.allianceAllies.map((allyAllianceId) => (
@@ -164,7 +164,7 @@ function AlliesCell({ row }: { row: MRT_Row<War> }) {
   );
 }
 
-function DeclaredDateCell({ row }: { row: MRT_Row<War> }) {
+function DeclaredDateCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
     <DateHoverCard date={new Date(row.original.declaredDate)}>
       <FormattedDateText inherit date={new Date(row.original.declaredDate)} />
@@ -172,7 +172,7 @@ function DeclaredDateCell({ row }: { row: MRT_Row<War> }) {
   );
 }
 
-function StartedDateCell({ row }: { row: MRT_Row<War> }) {
+function StartedDateCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
     row.original.startedDate && (
       <DateHoverCard date={new Date(row.original.startedDate)}>
@@ -182,7 +182,7 @@ function StartedDateCell({ row }: { row: MRT_Row<War> }) {
   );
 }
 
-function RetractedDateCell({ row }: { row: MRT_Row<War> }) {
+function RetractedDateCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
     row.original.retractedDate && (
       <DateHoverCard date={new Date(row.original.retractedDate)}>
@@ -195,7 +195,7 @@ function RetractedDateCell({ row }: { row: MRT_Row<War> }) {
   );
 }
 
-function FinishedDateCell({ row }: { row: MRT_Row<War> }) {
+function FinishedDateCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
     row.original.finishedDate && (
       <DateHoverCard date={new Date(row.original.finishedDate)}>
@@ -205,7 +205,7 @@ function FinishedDateCell({ row }: { row: MRT_Row<War> }) {
   );
 }
 
-function UpdatedAtCell({ row }: { row: MRT_Row<War> }) {
+function UpdatedAtCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
     row.original.updatedAt && (
       <DateHoverCard date={new Date(row.original.updatedAt)}>

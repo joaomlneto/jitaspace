@@ -78,27 +78,26 @@ async function processTypeBatch(
     fetchRemoteEntries: async () =>
       Promise.all(
         thisBatchTypeIds.map((typeId) =>
-          limit(async () =>
-            getUniverseTypesTypeId(typeId)
-              .then((res) => res.data)
-              .then((type) => ({
-                typeId: type.type_id,
-                iconId: resolveTypeIconId(type),
-                name: type.name,
-                description: type.description,
-                published: type.published,
-                capacity: type.capacity ?? null,
-                marketGroupId: type.market_group_id ?? null,
-                graphicId: type.graphic_id ?? null,
-                groupId: type.group_id,
-                mass: type.mass ?? null,
-                packagedVolume: type.packaged_volume ?? null,
-                portionSize: type.portion_size ?? null,
-                radius: type.radius ?? null,
-                volume: type.volume ?? null,
-                isDeleted: false,
-              })),
-          ),
+          limit(async () => {
+            const { data: type } = await getUniverseTypesTypeId(typeId);
+            return {
+              typeId: type.type_id,
+              iconId: resolveTypeIconId(type),
+              name: type.name,
+              description: type.description,
+              published: type.published,
+              capacity: type.capacity ?? null,
+              marketGroupId: type.market_group_id ?? null,
+              graphicId: type.graphic_id ?? null,
+              groupId: type.group_id,
+              mass: type.mass ?? null,
+              packagedVolume: type.packaged_volume ?? null,
+              portionSize: type.portion_size ?? null,
+              radius: type.radius ?? null,
+              volume: type.volume ?? null,
+              isDeleted: false,
+            };
+          }),
         ),
       ),
     batchCreate: (entries) =>

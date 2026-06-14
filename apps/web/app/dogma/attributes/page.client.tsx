@@ -19,7 +19,7 @@ export interface PageProps {
   attributes: Record<number, DogmaAttributeRow>;
 }
 
-function NameCell({ row }: { row: MRT_Row<DogmaAttributeRow> }) {
+function NameCell({ row }: Readonly<{ row: MRT_Row<DogmaAttributeRow> }>) {
   return (
     <DogmaAttributeAnchor
       attributeId={row.original.attributeId}

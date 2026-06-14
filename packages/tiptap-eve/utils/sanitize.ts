@@ -7,7 +7,7 @@
  * matching the in-game two-line-break spacing.
  */
 export const convertEveMailLineBreaks = (body: string): string =>
-  body.replaceAll(/\r\n/g, "<br>");
+  body.replaceAll("\r\n", "<br>");
 
 /**
  * EVE mail bodies use <color=0xAARRGGBB>TEXT</color> for coloured text.
@@ -52,7 +52,7 @@ export const sanitizeFormattedEveString = (str: string): string => {
       const charCode = Number.parseInt(str.slice(2), 16);
       return String.fromCodePoint(charCode);
     });
-    str = str.replaceAll("\\'", "'");
+    str = str.replaceAll(String.raw`\'`, "'");
   }
   // replace unicode escape sequences with actual characters
   str = str.replaceAll(/\\u[0-9a-fA-F]{4}/g, (s) =>
