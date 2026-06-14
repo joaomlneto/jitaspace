@@ -102,7 +102,8 @@ const ROUTES = [
     Page: require("~/app/lp-store/[corporationId]/page").default,
   },
   { name: "mail", Page: require("~/app/mail/page").default },
-  { name: "market", Page: require("~/app/market/page").default },
+  // /market is now a static landing; the Suspense fallback lives on the item route.
+  { name: "market/[typeId]", Page: require("~/app/market/[typeId]/page").default },
   { name: "planet", Page: require("~/app/planet/[planetId]/page").default },
   { name: "race", Page: require("~/app/race/[raceId]/page").default },
   { name: "region", Page: require("~/app/region/[regionId]/page").default },
