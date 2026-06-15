@@ -6,10 +6,11 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ReactQueryStreamedHydration } from "@tanstack/react-query-next-experimental";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { PersistQueryClientProvider, removeOldestQuery } from "@tanstack/react-query-persist-client";
 import { del, get, set } from "idb-keyval";
 
 import { setAcceptLanguage, setUserAgent } from "@jitaspace/esi-client";
+import { useAuthStore } from "@jitaspace/hooks";
 
 import { usePreferencesStore } from "~/lib/preferences";
 
@@ -31,6 +32,9 @@ const hasIndexedDb =
 
 const queryCachePersister = createAsyncStoragePersister({
   key: "JITASPACE_QUERY_CACHE",
+  // If a write fails (e.g. IndexedDB quota exceeded), drop the oldest query and
+  // retry rather than silently giving up on persistence entirely.
+  retry: removeOldestQuery,
   storage: hasIndexedDb
     ? {
         getItem: (key) => get<string>(key).then((value) => value ?? null),
@@ -88,6 +92,24 @@ export const MyQueryClientProvider = ({
     return () => {
       unsubscribe();
     };
+  }, [client]);
+
+  // Purge the cache when the last character signs out. `enabled` only gates
+  // fetching, not reads of restored data, and nothing sweeps IndexedDB while
+  // the app is closed — so without this the previous user's mail/wallet/etc.
+  // would linger in memory and on disk. Both removeCharacter (active-character
+  // logout) and logout() empty `characters`, so we key off that transition.
+  useEffect(() => {
+    const unsubscribe = useAuthStore.subscribe((state, previousState) => {
+      const hadCharacters = Object.keys(previousState.characters).length > 0;
+      const hasCharacters = Object.keys(state.characters).length > 0;
+      if (hadCharacters && !hasCharacters) {
+        client.clear();
+        void queryCachePersister.removeClient();
+      }
+    });
+
+    return unsubscribe;
   }, [client]);
 
   return (
