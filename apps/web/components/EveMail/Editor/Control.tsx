@@ -1,14 +1,10 @@
+import type { RichTextEditorControlProps } from "@mantine/tiptap";
 import { forwardRef } from "react";
 import { UnstyledButton, useProps } from "@mantine/core";
-import {
-  useRichTextEditorContext
-  
-} from "@mantine/tiptap";
-import type {RichTextEditorControlProps} from "@mantine/tiptap";
+import { useRichTextEditorContext } from "@mantine/tiptap";
 import cx from "clsx";
 
 import classes from "./Control.module.css";
-
 
 const defaultProps: Partial<RichTextEditorControlProps> = {
   interactive: true,
@@ -36,12 +32,12 @@ export const Control = forwardRef<
       data-rich-text-editor-control
       // @ts-expect-error: property can be overwritten
       tabIndex={interactive ? 0 : -1}
-      data-interactive={interactive || undefined}
-      data-active={active || undefined}
+      data-interactive={interactive ? true : undefined}
+      data-active={active ? true : undefined}
       // @ts-expect-error: property can be overwritten
-      aria-pressed={(active && interactive) || undefined}
+      aria-pressed={active && interactive ? true : undefined}
       // @ts-expect-error: property can be overwritten
-      aria-hidden={!interactive || undefined}
+      aria-hidden={!interactive ? true : undefined}
       ref={ref}
       unstyled={unstyled}
       {...others}

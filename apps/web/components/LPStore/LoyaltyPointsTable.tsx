@@ -46,7 +46,7 @@ interface LoyaltyPointsTableProps {
   }[];
 }
 
-type AugmentedOffer = {
+interface AugmentedOffer {
   offerId: number;
   corporationId: number;
   typeId: number;
@@ -62,7 +62,7 @@ type AugmentedOffer = {
   typeName: string | undefined;
   corporationName: string | undefined;
   marketStats?: FuzzworkTypeMarketAggregate;
-};
+}
 
 type LpColumn = DataTableColumn<AugmentedOffer>;
 
@@ -72,17 +72,13 @@ type LpColumn = DataTableColumn<AugmentedOffer>;
 
 function requiredItemsSellCost(row: AugmentedOffer): number {
   return row.requiredItems
-    .map(
-      (item) => (item.marketStats?.sell.percentile ?? 0) * (item.quantity ?? 1),
-    )
+    .map((item) => (item.marketStats?.sell.percentile ?? 0) * item.quantity)
     .reduce((a, b) => a + b, 0);
 }
 
 function requiredItemsBuyCost(row: AugmentedOffer): number {
   return row.requiredItems
-    .map(
-      (item) => (item.marketStats?.buy.percentile ?? 0) * (item.quantity ?? 1),
-    )
+    .map((item) => (item.marketStats?.buy.percentile ?? 0) * item.quantity)
     .reduce((a, b) => a + b, 0);
 }
 
@@ -157,7 +153,7 @@ function lpCostCell(row: AugmentedOffer) {
 }
 
 function iskCostCell(row: AugmentedOffer) {
-  return <ISKAmount inherit ta="right" amount={row.iskCost ?? 0} />;
+  return <ISKAmount inherit ta="right" amount={row.iskCost} />;
 }
 
 function akCostCell(_row: AugmentedOffer, value: unknown) {
@@ -399,7 +395,7 @@ const LoyaltyPointsTableExperimental = memo(
           accessor: (row) =>
             row.lpCost > 0
               ? ((row.marketStats?.sell.percentile ?? 0) -
-                  (row.iskCost ?? 0) -
+                  row.iskCost -
                   requiredItemsSellCost(row)) /
                 row.lpCost
               : undefined,
@@ -449,7 +445,7 @@ const LoyaltyPointsTableExperimental = memo(
           accessor: (row) =>
             row.lpCost > 0
               ? ((row.marketStats?.buy.percentile ?? 0) -
-                  (row.iskCost ?? 0) -
+                  row.iskCost -
                   requiredItemsBuyCost(row)) /
                 row.lpCost
               : undefined,
@@ -461,7 +457,7 @@ const LoyaltyPointsTableExperimental = memo(
           id: "jitasplit",
           header: "Jita Split",
           accessor: (row) =>
-            row.marketStats?.buy && row.marketStats?.sell
+            row.marketStats
               ? (row.marketStats.buy.percentile +
                   row.marketStats.sell.percentile) /
                 2
@@ -481,7 +477,7 @@ const LoyaltyPointsTableExperimental = memo(
                   (((item.marketStats?.buy.percentile ?? 0) +
                     (item.marketStats?.sell.percentile ?? 0)) /
                     2) *
-                  (item.quantity ?? 1),
+                  item.quantity,
               )
               .reduce((a, b) => a + b, 0),
           sortable: true,

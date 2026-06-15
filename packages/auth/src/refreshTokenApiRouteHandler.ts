@@ -69,8 +69,12 @@ export const refreshTokenApiRouteHandler = async (
     );
   }
 
-  // check if null
-  if (env.EVE_CLIENT_ID === undefined || env.EVE_CLIENT_SECRET === undefined) {
+  // The env schema types these as required strings, but when SKIP_ENV_VALIDATION
+  // is set the values are passed through unvalidated and may be undefined at
+  // runtime, so guard against that explicitly.
+  const eveClientId = env.EVE_CLIENT_ID as string | undefined;
+  const eveClientSecret = env.EVE_CLIENT_SECRET as string | undefined;
+  if (eveClientId === undefined || eveClientSecret === undefined) {
     return Response.json(
       { error: "EVE_CLIENT_ID or EVE_CLIENT_SECRET is undefined" },
       { status: HttpStatusCode.InternalServerError },
@@ -79,8 +83,8 @@ export const refreshTokenApiRouteHandler = async (
 
   // Attempt to refresh token
   const { access_token, refresh_token } = await refreshEveSsoToken({
-    eveClientId: env.EVE_CLIENT_ID,
-    eveClientSecret: env.EVE_CLIENT_SECRET,
+    eveClientId,
+    eveClientSecret,
     refreshToken,
   });
 

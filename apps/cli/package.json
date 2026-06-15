@@ -18,10 +18,10 @@
   },
   "devDependencies": {
     "@asteasolutions/zod-to-openapi": "^4.8.0",
-    "@jitaspace/sde-utils": "workspace:*",
     "@commander-js/extra-typings": "^14.0.0",
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/sde-utils": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
     "@jsonhero/schema-infer": "^0.1.5",
     "@openapi-contrib/json-schema-to-openapi-schema": "^2.2.6",

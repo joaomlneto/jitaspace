@@ -16,7 +16,7 @@ export function useCharacterMailLabels(characterId: number) {
   });
 
   const labels = useGetCharactersCharacterIdMailLabels(
-    characterId ?? 0,
+    characterId,
     { ...authHeaders },
     {
       query: {

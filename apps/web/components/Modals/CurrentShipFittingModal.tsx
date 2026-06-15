@@ -15,7 +15,7 @@ export function CurrentShipFittingModal({
       name={fit.name}
       shipTypeId={fit.shipTypeId}
       description="Current Ship"
-      items={(fit?.items ?? []).map((item) => ({
+      items={(fit.items ?? []).map((item) => ({
         typeId: item.type_id,
         flag: item.location_flag,
         quantity: item.quantity,

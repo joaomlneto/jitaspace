@@ -3,8 +3,8 @@ import pLimit from "p-limit";
 
 import type { GetCorporationsCorporationIdQueryResponse } from "@jitaspace/esi-client";
 
+import type { Corporation } from "../db";
 import { MAX_DB_PARALLELISM } from "../config";
-import type { Corporation} from "../db";
 import { prisma } from "../db";
 import { excludeObjectKeys, updateTable } from "../utils";
 
@@ -16,7 +16,7 @@ export const convertEsiCorporationToDomain = (
   corporationId: corporation.corporationId,
   allianceId: corporation.alliance_id ?? null,
   ceoId: corporation.ceo_id,
-  creatorId: corporation.creator_id ?? null,
+  creatorId: corporation.creator_id,
   dateFounded: corporation.date_founded
     ? new Date(corporation.date_founded)
     : null,
@@ -26,7 +26,7 @@ export const convertEsiCorporationToDomain = (
   memberCount: corporation.member_count,
   name: corporation.name,
   shares: corporation.shares ? BigInt(corporation.shares) : null,
-  taxRate: corporation.tax_rate ?? null,
+  taxRate: corporation.tax_rate,
   ticker: corporation.ticker,
   url: corporation.url ?? null,
   warEligible: corporation.war_eligible ?? null,
@@ -41,6 +41,7 @@ export const mergeEsiEntriesIntoCorporationsTable = (
 ) =>
   mergeEntriesIntoCorporationsTable(
     corporations.map(convertEsiCorporationToDomain),
+    limit,
   );
 
 export const mergeEntriesIntoCorporationsTable = (
@@ -60,7 +61,7 @@ export const mergeEntriesIntoCorporationsTable = (
         .then((entries) =>
           entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
         ),
-    fetchRemoteEntries: async () => corporations,
+    fetchRemoteEntries: () => Promise.resolve(corporations),
     batchCreate: (entries) =>
       limit(() =>
         prisma.corporation.createMany({

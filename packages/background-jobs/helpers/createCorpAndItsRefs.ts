@@ -121,12 +121,10 @@ export const createCorpAndItsRefRecords = async ({
     getRequiredAllianceIds().filter((id) => !existingAllianceIds.has(id));
 
   const getRequiredBloodlineIds = () => [
-    ...new Set(
-      [
-        ...missingBloodlineIds,
-        ...characters.map((character) => character.bloodlineId),
-      ].filter((id) => id != null),
-    ),
+    ...new Set([
+      ...missingBloodlineIds,
+      ...characters.map((character) => character.bloodlineId),
+    ]),
   ];
 
   const getMissingBloodlineIds = () =>
@@ -196,13 +194,11 @@ export const createCorpAndItsRefRecords = async ({
     getRequiredFactionIds().filter((id) => !existingFactionIds.has(id));
 
   const getRequiredRaceIds = () => [
-    ...new Set(
-      [
-        ...missingRaceIds,
-        ...characters.map((character) => character.raceId),
-        ...bloodlines.map((bloodline) => bloodline.raceId),
-      ].filter((id) => id != null),
-    ),
+    ...new Set([
+      ...missingRaceIds,
+      ...characters.map((character) => character.raceId),
+      ...bloodlines.map((bloodline) => bloodline.raceId),
+    ]),
   ];
 
   const getMissingRaceIds = () =>
@@ -223,9 +219,7 @@ export const createCorpAndItsRefRecords = async ({
     getRequiredStationIds().filter((id) => !existingStationIds.has(id));
 
   const getRequiredWarIds = () => [
-    ...new Set(
-      [...missingWarIds].filter((id) => id != null).filter((id) => id != 1),
-    ),
+    ...new Set([...missingWarIds].filter((id) => id != 1)),
   ];
 
   const getMissingWarIds = () =>
@@ -568,7 +562,7 @@ export const createCorpAndItsRefRecords = async ({
     );
 
     for (const war of wars) {
-      if (war.warId == null || existingDbWarIds.has(war.warId)) continue;
+      if (existingDbWarIds.has(war.warId)) continue;
 
       const {
         allianceAllies: _allianceAllies,
@@ -735,7 +729,7 @@ const fetchCorporationsFromEsi = (
             memberCount: corporation.member_count,
             name: corporation.name,
             shares: corporation.shares ? BigInt(corporation.shares) : null,
-            taxRate: corporation.tax_rate ?? null,
+            taxRate: corporation.tax_rate,
             ticker: corporation.ticker,
             url: corporation.url ?? null,
             warEligible: corporation.war_eligible ?? null,
@@ -857,11 +851,11 @@ const fetchWarsFromEsi = (warIds: number[]) =>
             aggressorAllianceId: war.aggressor.alliance_id ?? null,
             aggressorCorporationId: war.aggressor.corporation_id ?? null,
             aggressorIskDestroyed: war.aggressor.isk_destroyed,
-            aggressorShipsKilled: war.aggressor.ships_killed ?? null,
+            aggressorShipsKilled: war.aggressor.ships_killed,
             defenderAllianceId: war.defender.alliance_id ?? null,
             defenderCorporationId: war.defender.corporation_id ?? null,
             defenderIskDestroyed: war.defender.isk_destroyed,
-            defenderShipsKilled: war.defender.ships_killed ?? null,
+            defenderShipsKilled: war.defender.ships_killed,
             /*
             allianceAllies:
               war.allies

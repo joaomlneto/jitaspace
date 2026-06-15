@@ -8,12 +8,12 @@ import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 import { AttributesIcon } from "@jitaspace/eve-icons";
 import { DogmaAttributeAnchor } from "@jitaspace/ui";
 
-type DogmaAttributeRow = {
+interface DogmaAttributeRow {
   attributeId: number;
   name: string | null;
   displayName: string | null;
   numTypeIds: number;
-};
+}
 
 export interface PageProps {
   attributes: Record<number, DogmaAttributeRow>;

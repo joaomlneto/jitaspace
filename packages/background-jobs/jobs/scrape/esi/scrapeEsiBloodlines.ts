@@ -8,7 +8,7 @@ import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRef
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeBloodlinesEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const scrapeEsiBloodlines = defineJob<
@@ -46,21 +46,23 @@ export const scrapeEsiBloodlines = defineJob<
               excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
             ),
           ),
-      fetchRemoteEntries: async () =>
-        bloodlines.map((bloodline) => ({
-          bloodlineId: bloodline.bloodline_id,
-          corporationId: bloodline.corporation_id,
-          name: bloodline.name,
-          description: bloodline.description,
-          shipTypeId: bloodline.ship_type_id,
-          raceId: bloodline.race_id,
-          charisma: bloodline.charisma,
-          intelligence: bloodline.intelligence,
-          memory: bloodline.memory,
-          perception: bloodline.perception,
-          willpower: bloodline.willpower,
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          bloodlines.map((bloodline) => ({
+            bloodlineId: bloodline.bloodline_id,
+            corporationId: bloodline.corporation_id,
+            name: bloodline.name,
+            description: bloodline.description,
+            shipTypeId: bloodline.ship_type_id,
+            raceId: bloodline.race_id,
+            charisma: bloodline.charisma,
+            intelligence: bloodline.intelligence,
+            memory: bloodline.memory,
+            perception: bloodline.perception,
+            willpower: bloodline.willpower,
+            isDeleted: false,
+          })),
+        ),
 
       batchCreate: (entries) =>
         limit(() =>

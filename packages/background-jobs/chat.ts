@@ -1,4 +1,5 @@
-import { createChat, type ChatInstance } from "@jitaspace/chat";
+import type { ChatInstance } from "@jitaspace/chat";
+import { createChat } from "@jitaspace/chat";
 
 import { env } from "./env";
 
@@ -14,10 +15,6 @@ import { env } from "./env";
 let chatInstance: ChatInstance | undefined;
 
 const getChat = (): ChatInstance => {
-  // `@jitaspace/chat` is fully typed and type-checks, but type-aware lint
-  // resolves this cross-package workspace import as `any` (a pre-existing
-  // limitation that affects other workspace imports too).
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
   chatInstance ??= createChat({
     discordBotToken: env.DISCORD_BOT_TOKEN,
     discordUpdatesChannelId: env.DISCORD_UPDATES_CHANNEL_ID,

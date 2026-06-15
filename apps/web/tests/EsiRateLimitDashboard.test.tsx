@@ -150,7 +150,9 @@ describe("EsiRateLimitDashboard", () => {
 
     // Header + compatibility date
     expect(screen.getByText("ESI Rate Limits")).toBeInTheDocument();
-    expect(screen.getByText(/Compatibility date: 2025-12-16/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Compatibility date: 2025-12-16/),
+    ).toBeInTheDocument();
 
     // Summary card labels
     expect(screen.getByText("Buckets")).toBeInTheDocument();
@@ -173,7 +175,6 @@ describe("EsiRateLimitDashboard", () => {
   });
 
   it("falls back to a generic character label when the name is unknown", () => {
-    const now = Date.now();
     mockUseEsiRateLimit.mockReturnValue({
       "market::character:42": {
         bucketKey: "market::character:42",

@@ -1,8 +1,6 @@
-import { ESIScope } from "./scopes";
+import type { ESIScope } from "./scopes";
 
-export const scopeDescriptions: {
-  [scope in ESIScope]: string;
-} = {
+export const scopeDescriptions: Record<ESIScope, string> = {
   //publicData: "Allows access to public data.",
   "esi-alliances.read_contacts.v1":
     "Allows reading of an alliance's contact list and standings.",
@@ -132,5 +130,8 @@ export const scopeDescriptions: {
 };
 
 export function getScopeDescription(scope: ESIScope): string {
-  return scopeDescriptions[scope] ?? "";
+  // The generated scope union can lag behind ESI, so a caller-supplied scope may
+  // be absent at runtime even though the mapped type guarantees completeness.
+  const description = scopeDescriptions[scope] as string | undefined;
+  return description ?? "";
 }

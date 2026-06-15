@@ -1,14 +1,14 @@
 "use client";
 
-import React, { memo } from "react";
+import { memo } from "react";
 import { Skeleton, Text } from "@mantine/core";
 
 import { EveEntityCard } from "./EveEntityCard";
 
-export type EveMailSenderCardProps = {
+export interface EveMailSenderCardProps {
   senderId?: number;
   isLoading?: boolean;
-};
+}
 
 export const EveMailSenderCard = memo(
   ({ senderId, isLoading }: EveMailSenderCardProps) => {

@@ -37,7 +37,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
       ...new Set(
         sortedTypes
           .flatMap((type) => type.dogma_attributes ?? [])
-          .map((entry) => entry?.attribute_id),
+          .map((entry) => entry.attribute_id),
       ),
     ],
     [sortedTypes],
@@ -67,7 +67,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
       .map((entry) => entry.attributeId);
   }, [attributeTypeValues]);
 
-  const { data: attributes } = useDogmaAttributes(nonEqualAttributeIds ?? []);
+  const { data: attributes } = useDogmaAttributes(nonEqualAttributeIds);
 
   const sortedAttributes = useMemo(
     () =>

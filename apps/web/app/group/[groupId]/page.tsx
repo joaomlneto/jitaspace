@@ -45,7 +45,10 @@ async function getGroupData(groupId: number): Promise<PageProps> {
 
   return {
     name: group.name,
-    types: group.types ?? [],
+    // Defensive: guard against a malformed relation payload before the
+    // consumer spreads it. `Array.isArray` is a runtime type guard, so this
+    // stays lint-clean even though the Prisma type is already an array.
+    types: Array.isArray(group.types) ? group.types : [],
   };
 }
 

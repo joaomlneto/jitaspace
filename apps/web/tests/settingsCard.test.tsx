@@ -54,7 +54,7 @@ describe("SettingsCard", () => {
 
     expect(languageControl).toBeTruthy();
 
-    fireEvent.click(languageControl as HTMLButtonElement);
+    fireEvent.click(languageControl!);
     fireEvent.click(await screen.findByText("French"));
 
     const stored = JSON.parse(
@@ -100,7 +100,7 @@ describe("SettingsCard", () => {
 
     expect(languageControl).toBeTruthy();
 
-    fireEvent.click(languageControl as HTMLButtonElement);
+    fireEvent.click(languageControl!);
 
     expect(await screen.findByText("French")).toBeInTheDocument();
     expect(await screen.findByText("Japanese")).toBeInTheDocument();

@@ -38,7 +38,7 @@ import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 export default function Page() {
   const character = useSelectedCharacter();
   const params = useParams();
-  const rawAllianceId = params?.allianceId;
+  const rawAllianceId = params.allianceId;
   const allianceId = Number(
     typeof rawAllianceId === "string" ? rawAllianceId : rawAllianceId?.[0],
   );
@@ -58,7 +58,7 @@ export default function Page() {
           <Title order={3}>
             <AllianceName span allianceId={allianceId} />
           </Title>
-          {alliance?.data.ticker && <Badge>{alliance?.data.ticker}</Badge>}
+          {alliance?.data.ticker && <Badge>{alliance.data.ticker}</Badge>}
           {character !== null && (
             <OpenInformationWindowActionIcon
               characterId={character.characterId}
@@ -140,16 +140,16 @@ export default function Page() {
               <Text>Executor</Text>
               <Group wrap="nowrap">
                 <CorporationAvatar
-                  corporationId={alliance?.data.executor_corporation_id}
+                  corporationId={alliance.data.executor_corporation_id}
                   size="sm"
                 />
                 <Anchor
                   component={Link}
-                  href={`/corporation/${alliance?.data.executor_corporation_id}`}
+                  href={`/corporation/${alliance.data.executor_corporation_id}`}
                 >
                   <CorporationName
                     span
-                    corporationId={alliance?.data.executor_corporation_id}
+                    corporationId={alliance.data.executor_corporation_id}
                   />
                 </Anchor>
               </Group>
@@ -170,15 +170,12 @@ export default function Page() {
             <Group justify="space-between">
               <Text>Factional Warfare</Text>
               <Group wrap="nowrap">
-                <FactionAvatar
-                  factionId={alliance?.data.faction_id}
-                  size="sm"
-                />
+                <FactionAvatar factionId={alliance.data.faction_id} size="sm" />
                 <Anchor
                   component={Link}
-                  href={`/faction/${alliance?.data.faction_id}`}
+                  href={`/faction/${alliance.data.faction_id}`}
                 >
-                  <FactionName span factionId={alliance?.data.faction_id} />
+                  <FactionName span factionId={alliance.data.faction_id} />
                 </Anchor>
               </Group>
             </Group>

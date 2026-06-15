@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  GetCharactersCharacterIdCalendarQueryResponse,
-  useGetCharactersCharacterIdCalendarEventId,
-} from "@jitaspace/esi-client";
+import type { GetCharactersCharacterIdCalendarQueryResponse } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 

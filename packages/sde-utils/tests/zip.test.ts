@@ -56,7 +56,7 @@ describe("sdeZipChecksum", () => {
   });
 
   it("reports progress over file entries only (directories skipped)", async () => {
-    const calls: Array<[number, number]> = [];
+    const calls: [number, number][] = [];
     await sdeZipChecksum(FIXTURE_ZIP, (current, total) =>
       calls.push([current, total]),
     );
@@ -94,7 +94,7 @@ describe("unzipSde + sdeFolderChecksum", () => {
   });
 
   it("invokes the progress callback once per extracted file", async () => {
-    const calls: Array<[number, number]> = [];
+    const calls: [number, number][] = [];
     await unzipSde(FIXTURE_ZIP, target, (current, total) =>
       calls.push([current, total]),
     );

@@ -1,12 +1,11 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
-
-import { PageSkeleton } from "~/components/PageSkeleton";
-import { prisma } from "~/lib/db";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
 import type { PageProps } from "./page.client";
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { prisma } from "~/lib/db";
 import DogmaAttributePage from "./page.client";
 
 async function getAttributeData(attributeId: number): Promise<PageProps> {
@@ -107,7 +106,9 @@ export async function generateMetadata({
       where: { attributeId },
     });
     if (!attribute) return {};
-    const title = attribute.displayName || attribute.name || undefined;
+    const title =
+      [attribute.displayName, attribute.name].find((value) => value) ??
+      undefined;
     const description = attribute.description?.slice(0, 200) ?? undefined;
     return { title, description };
   } catch {

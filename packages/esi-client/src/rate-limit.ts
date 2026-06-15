@@ -27,7 +27,7 @@ export const DEFAULT_RATE_LIMIT_USER_ID = "anonymous";
 export const getRateLimitBucketKey = (
   group: RateLimitGroup,
   userId: RateLimitUserId = DEFAULT_RATE_LIMIT_USER_ID,
-) => `${group}::${userId}` as RateLimitBucketKey;
+): RateLimitBucketKey => `${group}::${userId}`;
 
 export interface RateLimitBucketConfig {
   group: RateLimitGroup;
@@ -70,15 +70,29 @@ const parseWindow = (window: string | undefined): number => {
   return 0;
 };
 
+const DEFAULT_BUCKET_WINDOW_SECONDS = 60;
+
+// Returns the first strictly-positive candidate window (in seconds), falling
+// back to a sane default. Zero or undefined windows are invalid for rate
+// limiting and are skipped rather than used.
+const firstPositiveWindowSeconds = (
+  ...candidates: (number | undefined)[]
+): number => {
+  for (const candidate of candidates) {
+    if (typeof candidate === "number" && candidate > 0) {
+      return candidate;
+    }
+  }
+  return DEFAULT_BUCKET_WINDOW_SECONDS;
+};
+
 const routeMatchersByGroup: Record<RateLimitGroup, string[]> = {};
 
 const addRouteMatcher = (group: RateLimitGroup, routeMatcher: string) => {
-  if (!routeMatchersByGroup[group]) {
-    routeMatchersByGroup[group] = [];
-  }
+  const routeMatchers = (routeMatchersByGroup[group] ??= []);
 
-  if (!routeMatchersByGroup[group].includes(routeMatcher)) {
-    routeMatchersByGroup[group].push(routeMatcher);
+  if (!routeMatchers.includes(routeMatcher)) {
+    routeMatchers.push(routeMatcher);
   }
 };
 
@@ -104,12 +118,10 @@ for (const [routeKey, group] of Object.entries(
 for (const [operationId, group] of Object.entries(
   buildDataTyped.operationRateLimitGroups ?? {},
 )) {
-  if (!routeMatchersByGroup[group]) {
-    routeMatchersByGroup[group] = [];
-  }
+  const routeMatchers = (routeMatchersByGroup[group] ??= []);
 
-  if (routeMatchersByGroup[group].length === 0) {
-    routeMatchersByGroup[group].push(`operation:${operationId}`);
+  if (routeMatchers.length === 0) {
+    routeMatchers.push(`operation:${operationId}`);
   }
 }
 
@@ -151,7 +163,9 @@ const createRuntime = (limit: number, windowSeconds: number) => {
   const safeWindowMs = Math.max(1000, Math.floor(windowSeconds * 1000));
 
   return {
-    limiter: new LiteRateLimiter(() => {}, {
+    // The limiter is used purely for token accounting (maybeExecute /
+    // getRemainingInWindow); it never runs work, so the callback is a no-op.
+    limiter: new LiteRateLimiter(() => undefined, {
       limit: safeLimit,
       window: safeWindowMs,
       windowType: "sliding",
@@ -166,14 +180,14 @@ type RateLimitRuntime = ReturnType<typeof createRuntime>;
 
 const rateLimitRuntimes: Record<RateLimitBucketKey, RateLimitRuntime> = {};
 
-let rateLimitState: Record<RateLimitBucketKey, RateLimitState> = {};
+const rateLimitState: Record<RateLimitBucketKey, RateLimitState> = {};
 
 const toHeaderValue = (value: unknown): string | undefined => {
   if (typeof value === "string") return value;
   if (typeof value === "number") return value.toString();
 
   if (Array.isArray(value) && value.length > 0) {
-    const first = value[0];
+    const first: unknown = value[0];
     if (typeof first === "string" || typeof first === "number") {
       return first.toString();
     }
@@ -460,12 +474,14 @@ export const updateRateLimitState = (
   }
 
   const bucketKey = getRateLimitBucketKey(group, userId);
-  const fallbackWindowSeconds =
-    rateLimitState[bucketKey]?.windowSeconds ||
-    RATE_LIMIT_BUCKET_CONFIGS[group]?.windowSeconds ||
-    60;
-  const windowSeconds =
-    parsedWindowSeconds > 0 ? parsedWindowSeconds : fallbackWindowSeconds;
+  // Pick the first strictly-positive window: header value, then any window we
+  // already track for this bucket, then the configured group window, else 60.
+  // A zero/undefined window is invalid for rate limiting, so it is skipped.
+  const windowSeconds = firstPositiveWindowSeconds(
+    parsedWindowSeconds,
+    rateLimitState[bucketKey]?.windowSeconds,
+    RATE_LIMIT_BUCKET_CONFIGS[group]?.windowSeconds,
+  );
 
   resetRuntimeFromHeaders(group, userId, limit, windowSeconds, remaining);
   notify();
@@ -589,15 +605,19 @@ export const cleanupTokens = () => {
   }
 };
 
-if (typeof setInterval !== "undefined") {
-  const cleanupInterval = setInterval(cleanupTokens, 1000);
+// `setInterval` returns a `number` in browsers but a `NodeJS.Timeout` (with an
+// `unref` method) in Node. This guard narrows the handle to the Node shape so
+// the Node-only `unref()` call stays type-safe across both environments.
+const hasUnref = (value: unknown): value is { unref: () => void } =>
+  typeof value === "object" &&
+  value !== null &&
+  "unref" in value &&
+  typeof value.unref === "function";
 
-  if (
-    typeof cleanupInterval === "object" &&
-    cleanupInterval !== null &&
-    "unref" in cleanupInterval &&
-    typeof cleanupInterval.unref === "function"
-  ) {
+if (typeof setInterval !== "undefined") {
+  const cleanupInterval: unknown = setInterval(cleanupTokens, 1000);
+
+  if (hasUnref(cleanupInterval)) {
     cleanupInterval.unref();
   }
 }

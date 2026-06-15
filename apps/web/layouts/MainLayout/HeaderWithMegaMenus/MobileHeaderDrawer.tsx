@@ -5,10 +5,8 @@ import {
   Divider,
   Drawer,
   Group,
-  Loader,
   rem,
   ScrollArea,
-  Text,
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";
@@ -28,8 +26,8 @@ import UserButton from "~/layouts/MainLayout/UserButton";
 
 export interface MobileHeaderDrawerProps {
   opened: boolean;
-  toggle: Function;
-  close: Function;
+  toggle: () => void;
+  close: () => void;
 }
 
 export const MobileHeaderDrawer = memo(
@@ -78,12 +76,6 @@ export const MobileHeaderDrawer = memo(
             />
 
             <Group justify="center" grow pb="xl">
-              {false && (
-                <Group>
-                  <Loader size="sm" />
-                  <Text>Loading session…</Text>
-                </Group>
-              )}
               {characterIds.length > 0 && <UserButton />}
               {characterIds.length === 0 && (
                 <LoginWithEveOnlineButton

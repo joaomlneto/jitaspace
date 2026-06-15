@@ -48,14 +48,16 @@ export function MailMessageViewer({
     return externalLinkColor;
   };
 
-  const html = (editor?.getHTML() ?? "Loading...").replace(
-    /<a\b([^>]*)\bhref="([^"]*)"([^>]*)>/g,
-    (_, before: string, href: string, after: string) => {
-      const translatedHref = renderEveHref(href);
-      const color = getLinkColor(href, translatedHref);
-      return `<a${before}href="${translatedHref}"${after} style="color:${color};font-weight:600;">`;
-    },
-  );
+  const html = editor
+    .getHTML()
+    .replace(
+      /<a\b([^>]*)\bhref="([^"]*)"([^>]*)>/g,
+      (_, before: string, href: string, after: string) => {
+        const translatedHref = renderEveHref(href);
+        const color = getLinkColor(href, translatedHref);
+        return `<a${before}href="${translatedHref}"${after} style="color:${color};font-weight:600;">`;
+      },
+    );
 
   const handleLinkInteraction = (
     e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>,
@@ -78,9 +80,9 @@ export function MailMessageViewer({
     } else if (href?.startsWith("fitting:")) {
       e.preventDefault();
       const dna = href.slice("fitting:".length);
-      const name = anchor.textContent ?? undefined;
+      const name = anchor.textContent;
       openModal({
-        title: name ?? "Ship Fitting",
+        title: name,
         size: "lg",
         children: <DnaShipFittingCard dna={dna} name={name} />,
       });

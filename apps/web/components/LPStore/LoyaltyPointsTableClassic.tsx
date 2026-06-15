@@ -49,7 +49,7 @@ interface LoyaltyPointsTableProps {
   }[];
 }
 
-type AugmentedOffer = {
+interface AugmentedOffer {
   offerId: number;
   corporationId: number;
   typeId: number;
@@ -65,7 +65,7 @@ type AugmentedOffer = {
   typeName: string | undefined;
   corporationName: string | undefined;
   marketStats?: FuzzworkTypeMarketAggregate;
-};
+}
 
 // ---------------------------------------------------------------------------
 // Filter renderers (factories closing over the sorted option lists)
@@ -121,7 +121,7 @@ function makeItemFilter(sortedTypes: { typeId: number; name: string }[]) {
 // ---------------------------------------------------------------------------
 
 function lpCostSliderLabel(value: number) {
-  return value?.toLocaleString?.();
+  return value.toLocaleString();
 }
 
 function iskCostSliderLabel(value: number) {
@@ -189,7 +189,7 @@ function lpCostCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
 }
 
 function iskCostCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
-  return <ISKAmount inherit ta="right" amount={row.original.iskCost ?? 0} />;
+  return <ISKAmount inherit ta="right" amount={row.original.iskCost} />;
 }
 
 function requiredItemsCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
@@ -481,8 +481,7 @@ export const LoyaltyPointsTableClassic = memo(
             row.requiredItems
               .map(
                 (item) =>
-                  (item.marketStats?.sell.percentile ?? 0) *
-                  (item.quantity ?? 1),
+                  (item.marketStats?.sell.percentile ?? 0) * item.quantity,
               )
               .reduce((a, b) => a + b, 0),
           Cell: iskAmountValueCell,
@@ -496,8 +495,7 @@ export const LoyaltyPointsTableClassic = memo(
             row.requiredItems
               .map(
                 (item) =>
-                  (item.marketStats?.sell.percentile ?? 0) *
-                  (item.quantity ?? 1),
+                  (item.marketStats?.sell.percentile ?? 0) * item.quantity,
               )
               .reduce((a, b) => a + b, 0),
           Cell: iskAmountValueCell,
@@ -509,12 +507,12 @@ export const LoyaltyPointsTableClassic = memo(
           accessorFn: (row) =>
             row.lpCost > 0
               ? ((row.marketStats?.sell.percentile ?? 0) -
-                  (row.iskCost ?? 0) -
+                  row.iskCost -
                   row.requiredItems
                     .map(
                       (item) =>
                         (item.marketStats?.sell.percentile ?? 0) *
-                        (item.quantity ?? 1),
+                        item.quantity,
                     )
                     .reduce((a, b) => a + b, 0)) /
                 row.lpCost
@@ -544,8 +542,7 @@ export const LoyaltyPointsTableClassic = memo(
             row.requiredItems
               .map(
                 (item) =>
-                  (item.marketStats?.buy.percentile ?? 0) *
-                  (item.quantity ?? 1),
+                  (item.marketStats?.buy.percentile ?? 0) * item.quantity,
               )
               .reduce((a, b) => a + b, 0),
           Cell: iskAmountValueCell,
@@ -559,8 +556,7 @@ export const LoyaltyPointsTableClassic = memo(
             row.requiredItems
               .map(
                 (item) =>
-                  (item.marketStats?.buy.percentile ?? 0) *
-                  (item.quantity ?? 1),
+                  (item.marketStats?.buy.percentile ?? 0) * item.quantity,
               )
               .reduce((a, b) => a + b, 0),
           Cell: iskAmountValueCell,
@@ -572,12 +568,11 @@ export const LoyaltyPointsTableClassic = memo(
           accessorFn: (row) =>
             row.lpCost > 0
               ? ((row.marketStats?.buy.percentile ?? 0) -
-                  (row.iskCost ?? 0) -
+                  row.iskCost -
                   row.requiredItems
                     .map(
                       (item) =>
-                        (item.marketStats?.buy.percentile ?? 0) *
-                        (item.quantity ?? 1),
+                        (item.marketStats?.buy.percentile ?? 0) * item.quantity,
                     )
                     .reduce((a, b) => a + b, 0)) /
                 row.lpCost
@@ -589,7 +584,7 @@ export const LoyaltyPointsTableClassic = memo(
           header: "Jita Split",
           size: 10,
           accessorFn: (row) =>
-            row.marketStats?.buy && row.marketStats?.sell
+            row.marketStats
               ? (row.marketStats.buy.percentile +
                   row.marketStats.sell.percentile) /
                 2
@@ -607,13 +602,13 @@ export const LoyaltyPointsTableClassic = memo(
                   (((item.marketStats?.buy.percentile ?? 0) +
                     (item.marketStats?.sell.percentile ?? 0)) /
                     2) *
-                  (item.quantity ?? 1),
+                  item.quantity,
               )
               .reduce((a, b) => a + b, 0),
           Cell: iskAmountValueCell,
         },
       ],
-      // eslint-disable-next-line react-hooks/exhaustive-deps -- preserve the
+
       // original component's empty dependency array (the filter option lists are
       // captured on first render, matching long-standing behaviour).
       [],

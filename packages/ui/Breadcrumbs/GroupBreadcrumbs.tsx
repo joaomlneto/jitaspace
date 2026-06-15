@@ -1,7 +1,7 @@
 "use client";
 
 import type { BreadcrumbsProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import Link from "next/link";
 import { Anchor, Breadcrumbs, Text } from "@mantine/core";
 
@@ -16,7 +16,13 @@ export type GroupBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
 };
 
 export const GroupBreadcrumbs = memo(
-  ({ groupId, groupName, categoryId, categoryName, ...otherProps }: GroupBreadcrumbsProps) => {
+  ({
+    groupId,
+    groupName,
+    categoryId,
+    categoryName,
+    ...otherProps
+  }: GroupBreadcrumbsProps) => {
     return (
       <Breadcrumbs {...otherProps}>
         <Anchor component={Link} href="/categories">

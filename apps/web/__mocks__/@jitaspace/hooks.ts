@@ -8,12 +8,12 @@
  */
 
 // jest is a global injected by the test runner — use it directly.
-// eslint-disable-next-line no-undef
-export const useFuzzworkRegionalMarketAggregates = (
-  jest as typeof import("@jest/globals")["jest"]
-).fn(() => ({ data: {} as Record<number, unknown> }));
 
-export type FuzzworkTypeMarketAggregate = {
+export const useFuzzworkRegionalMarketAggregates = (
+  jest as (typeof import("@jest/globals"))["jest"]
+).fn(() => ({ data: {} }));
+
+export interface FuzzworkTypeMarketAggregate {
   buy: { percentile: number; volume: number };
   sell: { percentile: number; volume: number };
-};
+}

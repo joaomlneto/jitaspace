@@ -29,7 +29,7 @@ import { RaceName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();
-  const rawStationId = params?.stationId;
+  const rawStationId = params.stationId;
   const stationId = Number(
     typeof rawStationId === "string" ? rawStationId : rawStationId?.[0],
   );

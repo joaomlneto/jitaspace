@@ -1,4 +1,4 @@
-import { ESIScope } from "./scopes";
+import type { ESIScope } from "./scopes";
 
 /**
  * Code to generate this, considering `spec` contains the `swagger.json`:
@@ -16,9 +16,7 @@ import { ESIScope } from "./scopes";
  * console.log(scopes);
  */
 
-export const endpointScopes: {
-  [endpoint: string]: { [method: string]: ESIScope[] };
-} = {
+export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/alliances/": { get: [] },
   "/alliances/{alliance_id}/": { get: [] },
   "/alliances/{alliance_id}/contacts/": {

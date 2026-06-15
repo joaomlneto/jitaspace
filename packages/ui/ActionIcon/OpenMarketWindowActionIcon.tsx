@@ -2,12 +2,13 @@
 
 import { memo } from "react";
 import { ActionIcon, Tooltip } from "@mantine/core";
+
 import { MarketIcon } from "@jitaspace/eve-icons";
 
-export type OpenMarketWindowActionIconProps = {
+export interface OpenMarketWindowActionIconProps {
   onOpen?: () => void;
   disabled?: boolean;
-};
+}
 
 export const OpenMarketWindowActionIcon = memo(
   ({ onOpen, disabled }: OpenMarketWindowActionIconProps) => {
@@ -15,7 +16,7 @@ export const OpenMarketWindowActionIcon = memo(
       <Tooltip color="dark" label="Open market window in the EVE client.">
         <ActionIcon
           variant="light"
-          disabled={disabled || !onOpen}
+          disabled={!onOpen || disabled}
           radius="xl"
           onClick={onOpen}
         >

@@ -261,7 +261,7 @@ describe("client rate-limit integration", () => {
 
   it("applies token-cost rules across route, method, and status permutations", async () => {
     const requestSpy = jest.spyOn(axiosInstance, "request");
-    const permutations: Array<{
+    const permutations: {
       method: "GET" | "POST" | "PUT" | "DELETE";
       url: string;
       endpoint: string;
@@ -269,7 +269,7 @@ describe("client rate-limit integration", () => {
       status: number;
       expectedTokenCost: number;
       isError: boolean;
-    }> = [
+    }[] = [
       {
         method: "GET",
         url: "/status",
@@ -485,7 +485,7 @@ describe("client rate-limit integration", () => {
       unknown
     >;
 
-    expect(requestHeaders["Authorization"]).toBe("Bearer test-token");
+    expect(requestHeaders.Authorization).toBe("Bearer test-token");
     expect(requestHeaders["X-User-Agent"]).toBe("global-agent/4.0");
     expect(requestHeaders["Accept-Language"]).toBe("fr-FR");
   });
@@ -558,7 +558,7 @@ describe("client rate-limit integration", () => {
 
   it("ignores invalid retry-after header formats", async () => {
     const requestSpy = jest.spyOn(axiosInstance, "request");
-    const retryAfterValues: Array<Record<string, unknown>> = [
+    const retryAfterValues: Record<string, unknown>[] = [
       {},
       { "retry-after": "0" },
       { "retry-after": "-5" },
@@ -580,7 +580,7 @@ describe("client rate-limit integration", () => {
 
   it("applies token-cost rules at status code boundaries", async () => {
     const requestSpy = jest.spyOn(axiosInstance, "request");
-    const statusPermutations: Array<{ status: number; tokenCost: number }> = [
+    const statusPermutations: { status: number; tokenCost: number }[] = [
       { status: 299, tokenCost: 2 },
       { status: 300, tokenCost: 1 },
       { status: 399, tokenCost: 1 },

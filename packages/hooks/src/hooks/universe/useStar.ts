@@ -1,6 +1,6 @@
 "use client";
 
-import { GetUniverseStarsStarIdQueryResponse } from "@jitaspace/esi-client";
+import type { GetUniverseStarsStarIdQueryResponse } from "@jitaspace/esi-client";
 
 export type Star = GetUniverseStarsStarIdQueryResponse;
 

@@ -5,7 +5,7 @@ import { prisma } from "../../../db";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeDogmaEffectCategoriesEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const scrapeHoboleaksDogmaEffectCategories = defineJob<
@@ -19,9 +19,9 @@ export const scrapeHoboleaksDogmaEffectCategories = defineJob<
     const stepStartTime = performance.now();
 
     // Get all Dogma Effect Categories in Hoboleaks
-    const dogmaEffectCategories: Record<number, string> = await fetch(
+    const dogmaEffectCategories = await fetch(
       "https://sde.hoboleaks.space/tq/dogmaeffectcategories.json",
-    ).then((res) => res.json());
+    ).then((res) => res.json() as Promise<Record<number, string>>);
 
     const dogmaEffectCategoryIds = Object.keys(dogmaEffectCategories).map(
       Number,
@@ -42,13 +42,15 @@ export const scrapeHoboleaksDogmaEffectCategories = defineJob<
           .then((entries) =>
             entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
           ),
-      fetchRemoteEntries: async () =>
-        Object.entries(dogmaEffectCategories).map(
-          ([effectCategoryId, name]) => ({
-            effectCategoryId: Number(effectCategoryId),
-            name,
-            isDeleted: false,
-          }),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          Object.entries(dogmaEffectCategories).map(
+            ([effectCategoryId, name]) => ({
+              effectCategoryId: Number(effectCategoryId),
+              name,
+              isDeleted: false,
+            }),
+          ),
         ),
       batchCreate: (entries) =>
         limit(() =>

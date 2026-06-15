@@ -16,12 +16,18 @@ const fetchRace = (raceId: number, limit: ReturnType<typeof pLimit>) =>
   limit(async () =>
     getRaceById(raceId)
       .then((res) => res.data)
-      .then((race) => ({
-        raceId: race.raceID,
-        name: race.name.en!,
-        description: race.description.en ?? null,
-        isDeleted: false,
-      })),
+      .then((race) => {
+        const name = race.name.en;
+        if (name === undefined) {
+          throw new Error(`Race ${race.raceID} is missing an English name`);
+        }
+        return {
+          raceId: race.raceID,
+          name,
+          description: race.description.en ?? null,
+          isDeleted: false,
+        };
+      }),
   );
 
 export const scrapeSdeRaces = defineJob<ScrapeSdeRacesEventPayload["data"]>({

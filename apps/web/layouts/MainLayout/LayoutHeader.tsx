@@ -12,7 +12,6 @@ import {
   Drawer,
   Group,
   Kbd,
-  Loader,
   rem,
   ScrollArea,
   Stack,
@@ -34,7 +33,7 @@ import UserButton from "./UserButton";
 
 export function LayoutHeader() {
   const pathname = usePathname();
-  const pinned = useHeadroom({ fixedAt: 120 });
+  const { pinned } = useHeadroom({ fixedAt: 120 });
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
   const _theme = useMantineTheme();
@@ -64,8 +63,7 @@ export function LayoutHeader() {
             <Group style={{ height: "100%" }} gap={0} visibleFrom="sm">
               {Object.values(characterApps).map((app) => {
                 const _isActive =
-                  app.url !== undefined &&
-                  (pathname?.startsWith(app.url) ?? false);
+                  app.url !== undefined && pathname.startsWith(app.url);
                 return (
                   <Tooltip
                     key={app.name}
@@ -104,12 +102,6 @@ export function LayoutHeader() {
             </Group>
 
             <Group visibleFrom="sm">
-              {false && (
-                <Group>
-                  <Loader size="sm" />
-                  <Text>Loading session…</Text>
-                </Group>
-              )}
               {character !== null && <UserButton />}
               {character === null && (
                 <LoginWithEveOnlineButton
@@ -153,8 +145,7 @@ export function LayoutHeader() {
           />
           {Object.values(characterApps).map((app) => {
             const _isActive =
-              app.url !== undefined &&
-              (pathname?.startsWith(app.url) ?? false);
+              app.url !== undefined && pathname.startsWith(app.url);
             return (
               <Link
                 key={app.name}
@@ -182,12 +173,6 @@ export function LayoutHeader() {
           />
 
           <Group justify="center" grow pb="xl">
-            {false && (
-              <Group>
-                <Loader size="sm" />
-                <Text>Loading session…</Text>
-              </Group>
-            )}
             {character !== null && <UserButton />}
             {character === null && (
               <LoginWithEveOnlineButton

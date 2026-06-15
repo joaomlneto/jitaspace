@@ -1,7 +1,8 @@
 "use client";
 
-import React, { memo } from "react";
-import { Avatar, type AvatarProps } from "@mantine/core";
+import type { AvatarProps } from "@mantine/core";
+import { memo } from "react";
+import { Avatar } from "@mantine/core";
 
 import { AllianceAvatar } from "./AllianceAvatar";
 import { CorporationAvatar } from "./CorporationAvatar";
@@ -18,9 +19,7 @@ export const WarDefenderAvatar = memo(
     ...otherProps
   }: WarDefenderAvatarProps) => {
     if (defenderAllianceId) {
-      return (
-        <AllianceAvatar allianceId={defenderAllianceId} {...otherProps} />
-      );
+      return <AllianceAvatar allianceId={defenderAllianceId} {...otherProps} />;
     }
 
     if (defenderCorporationId) {

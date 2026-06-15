@@ -3,7 +3,7 @@ import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRef
 import { drainQueue } from "./drainQueue";
 
 export interface ProcessRedisCorporationIdsQueueEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const processRedisCorporationIds = defineJob<

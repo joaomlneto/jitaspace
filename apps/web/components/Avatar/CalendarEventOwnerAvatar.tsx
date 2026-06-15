@@ -1,7 +1,8 @@
 "use client";
 
+import type { AvatarProps } from "@mantine/core";
 import { memo } from "react";
-import { type AvatarProps } from "@mantine/core";
+
 import { useCalendarEvent } from "@jitaspace/hooks";
 import { CalendarEventOwnerAvatar as UICalendarEventOwnerAvatar } from "@jitaspace/ui";
 

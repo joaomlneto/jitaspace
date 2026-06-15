@@ -8,7 +8,7 @@ import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRef
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeRacesEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const scrapeEsiRaces = defineJob<ScrapeRacesEventPayload["data"]>({
@@ -44,14 +44,16 @@ export const scrapeEsiRaces = defineJob<ScrapeRacesEventPayload["data"]>({
               excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
             ),
           ),
-      fetchRemoteEntries: async () =>
-        races.map((race) => ({
-          raceId: race.race_id,
-          name: race.name,
-          description: race.description,
-          factionId: race.alliance_id,
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          races.map((race) => ({
+            raceId: race.race_id,
+            name: race.name,
+            description: race.description,
+            factionId: race.alliance_id,
+            isDeleted: false,
+          })),
+        ),
 
       batchCreate: (entries) =>
         limit(() =>

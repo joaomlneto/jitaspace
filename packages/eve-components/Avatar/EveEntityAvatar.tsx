@@ -1,7 +1,7 @@
 "use client";
 
 import type { AvatarProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import { Avatar, Skeleton } from "@mantine/core";
 
 import type { ResolvableEntityCategory } from "@jitaspace/hooks";

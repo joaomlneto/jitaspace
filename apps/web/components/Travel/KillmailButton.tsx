@@ -36,11 +36,11 @@ interface KillButtonProps {
   killmailHash: string;
 }
 
-type KillmailAttacker = {
+interface KillmailAttacker {
   character_id?: number;
   corporation_id?: number;
   faction_id?: number;
-};
+}
 
 function AttackerAvatar({
   attacker,
@@ -168,9 +168,9 @@ export const KillmailButton = memo(
             )}
             <Group>
               {data?.data.killmail_time && (
-                <DateHoverCard date={new Date(data?.data.killmail_time)}>
+                <DateHoverCard date={new Date(data.data.killmail_time)}>
                   <TimeAgoText
-                    date={new Date(data?.data.killmail_time)}
+                    date={new Date(data.data.killmail_time)}
                     addSuffix
                   />
                 </DateHoverCard>

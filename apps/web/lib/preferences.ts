@@ -34,14 +34,14 @@ export type EsiAcceptLanguage =
   (typeof ESI_ACCEPT_LANGUAGE_OPTIONS)[number]["languageCode"];
 export type AppTheme = (typeof APP_THEME_OPTIONS)[number]["value"];
 
-type PreferencesState = {
+interface PreferencesState {
   esiAcceptLanguage: EsiAcceptLanguage;
   appTheme: AppTheme;
   experimentalDataTables: boolean;
   setEsiAcceptLanguage: (value: EsiAcceptLanguage) => void;
   setAppTheme: (value: AppTheme) => void;
   setExperimentalDataTables: (value: boolean) => void;
-};
+}
 
 export const sanitizeAppTheme = (
   value: string | null | undefined,

@@ -2,7 +2,13 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 
 import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
 
@@ -11,10 +17,7 @@ import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
 // @jitaspace/ui supplies the ISKAmount / EveEntity* / date children — stub them
 // to no-ops; the assertable text (balance "… ISK", description, reason, and the
 // context-type Badge) is produced by the cells themselves.
-jest.mock(
-  "@jitaspace/ui",
-  () => new Proxy({}, { get: () => () => null }),
-);
+jest.mock("@jitaspace/ui", () => new Proxy({}, { get: () => () => null }));
 jest.mock(
   "@jitaspace/eve-icons",
   () => new Proxy({}, { get: () => () => null }),
@@ -117,7 +120,7 @@ describe("WalletTable", () => {
     }
     let el: HTMLElement | null = labelNode;
     for (let i = 0; i < 8 && el; i++) {
-      const sw = el.querySelector('[role="switch"]') as HTMLElement | null;
+      const sw = el.querySelector('[role="switch"]');
       if (sw) {
         fireEvent.click(sw);
         return;
