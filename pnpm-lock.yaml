@@ -173,6 +173,9 @@ importers:
       '@jitaspace/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@jitaspace/db-history':
+        specifier: workspace:*
+        version: link:../../packages/db-history
       '@jitaspace/esi-client':
         specifier: workspace:*
         version: link:../../packages/esi-client
@@ -956,6 +959,52 @@ importers:
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@swc/core@1.15.40)(jiti@2.7.0)(postcss@8.5.15)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.9.0)
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/db-history:
+    dependencies:
+      '@prisma/adapter-pg':
+        specifier: ^7.8.0
+        version: 7.8.0
+      '@prisma/client':
+        specifier: ^7.8.0
+        version: 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.3.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
+      pg:
+        specifier: ^8.21.0
+        version: 8.21.0
+    devDependencies:
+      '@jitaspace/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@jitaspace/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@jitaspace/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@types/node':
+        specifier: ^24.12.4
+        version: 24.12.4
+      '@types/pg':
+        specifier: ^8.20.0
+        version: 8.20.0
+      concurrently:
+        specifier: ^9.2.1
+        version: 9.2.1
+      eslint:
+        specifier: ^9.39.4
+        version: 9.39.4(jiti@2.7.0)
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      prisma:
+        specifier: ^7.8.0
+        version: 7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.3.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
