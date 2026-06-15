@@ -118,7 +118,7 @@ export function buildTimelineChartModel(
 
   const populated = [...byWeek.keys()].sort((a, b) => a.localeCompare(b));
   const first = populated[0];
-  const last = populated[populated.length - 1];
+  const last = populated.at(-1);
   if (!first || !last) return empty;
 
   // a continuous weekly axis reads as a real timeline (gaps = quiet weeks);
