@@ -9,7 +9,6 @@
 
 import { readdirSync, readFileSync } from "fs";
 import { join, relative } from "path";
-
 import { describe, expect, it } from "@jest/globals";
 
 // ---------------------------------------------------------------------------
@@ -27,6 +26,7 @@ const EXCLUDED_PAGES = new Set([
   "app/skills/page.tsx", // personal skill queue — auth required
   "app/structure/[structureId]/page.tsx", // player structures may require auth
   "app/travel/[[...waypoints]]/page.tsx", // personal travel planner — auth required
+  "app/type/[typeId]/[tab]/page.tsx", // redirect-only route to /type/[typeId]?tab= — renders no content
 ]);
 
 // ---------------------------------------------------------------------------
