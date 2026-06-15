@@ -14,9 +14,19 @@ const jiti = createJiti(import.meta.url);
  *
  * IMPORTANT: this is shipped **report-only** — it is sent as the
  * `Content-Security-Policy-Report-Only` header (see `headers()` below), so the
- * browser reports violations to Sentry (via the `report-uri` tunnel) WITHOUT
- * blocking anything. This lets us observe real-world violations against actual
- * traffic before switching to an enforced policy.
+ * browser reports violations WITHOUT blocking anything. This lets us observe
+ * real-world violations against actual traffic before switching to an enforced
+ * policy.
+ *
+ * Reports go to Sentry's Security ("CSP") endpoint, derived from the browser
+ * DSN in `instrumentation-client.ts`. NOTE: this is deliberately NOT the
+ * `/monitoring` route. That route is Sentry's envelope *tunnel* (`tunnelRoute`
+ * below) — it only understands the SDK's envelope transport format and would
+ * reject `application/csp-report` payloads, so browser CSP reports must be sent
+ * to the Security endpoint directly. It is cross-origin, so ad-blockers may drop
+ * a fraction of reports; acceptable for a report-only sampling phase. If we need
+ * ad-blocker-resistant capture later, add a same-origin `/api/csp-report` route
+ * that forwards to this endpoint.
  *
  * Path to an *enforced* policy (a separate, future task — do NOT enable here):
  *   1. Generate a per-request nonce in `middleware.ts`.
@@ -25,14 +35,25 @@ const jiti = createJiti(import.meta.url);
  *   3. Replace `'unsafe-inline'` with `'nonce-<value>'` below, then rename the
  *      header from `Content-Security-Policy-Report-Only` to
  *      `Content-Security-Policy` (and drop `'unsafe-inline'`).
+ *   4. Keep `connect-src` / `img-src` in sync as new external origins are added
+ *      — the report-only phase exists precisely to surface anything missing
+ *      before it can break a page.
  *
- * Origins allow-listed below are the ones the app legitimately talks to:
- * EVE image CDNs, Google Tag Manager / Analytics, and the Sentry (`/monitoring`)
- * and Umami (`/analytics`) same-origin proxies.
+ * Origins allow-listed below are the ones the app legitimately talks to from the
+ * browser:
+ *   - img:     EVE image CDNs (`images.evetech.net`, `web.ccpgamescdn.com`) and
+ *              the item-icon host (`iec.jita.space`).
+ *   - script:  Google Tag Manager.
+ *   - connect: the EVE data plane the client-side React Query hooks fetch
+ *              directly — ESI, the self-hosted SDE, and the EVE-Kill / EVE Tycoon
+ *              / Fuzzwork market+killboard APIs — plus Google Analytics and the
+ *              same-origin Sentry (`/monitoring`) and Umami (`/analytics`)
+ *              proxies. (`report-uri` is exempt from `connect-src`, so the
+ *              Sentry ingest host does not need to be listed here.)
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "img-src 'self' https://images.evetech.net https://web.ccpgamescdn.com data:",
+  "img-src 'self' https://images.evetech.net https://web.ccpgamescdn.com https://iec.jita.space data:",
   // FUTURE WORK: `'unsafe-inline'` is unavoidable here until we emit a
   // per-request nonce (Next.js injects inline bootstrap scripts; GTM is loaded
   // from googletagmanager.com). Removing it is the goal of the nonce migration
@@ -40,10 +61,17 @@ const contentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
   // Mantine emits inline styles; same per-request-nonce caveat as script-src.
   "style-src 'self' 'unsafe-inline'",
-  "connect-src 'self' https://www.google-analytics.com /monitoring /analytics",
+  // Browser-side data fetches: the EVE data plane (ESI, self-hosted SDE, and the
+  // market/killboard clients), Google Analytics (incl. regional
+  // `*.google-analytics.com` collectors), and the same-origin Sentry/Umami
+  // proxies.
+  "connect-src 'self' https://esi.evetech.net https://sde.jita.space https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://www.google-analytics.com https://*.google-analytics.com /monitoring /analytics",
   "frame-ancestors 'none'",
-  // Sentry tunnel (see `tunnelRoute` below); report-only violations land here.
-  "report-uri /monitoring",
+  // Sentry Security (CSP) endpoint derived from the browser DSN — see the note
+  // above on why this is NOT the `/monitoring` tunnel. TODO: `report-uri` is
+  // deprecated in favour of the Reporting API (`Reporting-Endpoints` +
+  // `report-to`); migrate when we move to an enforced policy.
+  "report-uri https://o4507086334001152.ingest.de.sentry.io/api/4507086337540176/security/?sentry_key=8ce4a77ec56a1b9fa5c8081b394c3636",
 ].join("; ");
 
 /** @type {import("next").NextConfig} */
@@ -117,7 +145,9 @@ const config = {
       source: "/(.*)",
       headers: [
         { key: "X-Content-Type-Options", value: "nosniff" },
-        { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        // DENY (not SAMEORIGIN) to match the CSP `frame-ancestors 'none'` — the
+        // app embeds none of its own pages in frames, so deny framing outright.
+        { key: "X-Frame-Options", value: "DENY" },
         { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
         {
           key: "Permissions-Policy",
@@ -126,10 +156,11 @@ const config = {
       ],
     },
     {
-      // HSTS + CSP are intentionally NOT applied to /api/* so programmatic
-      // consumers aren't constrained by a browser-oriented policy. The negative
-      // lookahead matches every path EXCEPT those starting with `api/` (it still
-      // matches the site root `/` and all page routes).
+      // HSTS + CSP are browser-oriented directives that have no effect on
+      // programmatic (non-browser) API consumers, so we scope them to page
+      // routes and keep /api/* responses header-light. The negative lookahead
+      // matches every path EXCEPT those starting with `api/` (it still matches
+      // the site root `/` and all page routes).
       source: "/((?!api/).*)",
       headers: [
         {
