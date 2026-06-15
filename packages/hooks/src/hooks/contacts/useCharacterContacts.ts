@@ -10,8 +10,8 @@ import {
   useGetCharactersCharacterIdContactsLabels,
 } from "@jitaspace/esi-client";
 
-import { useAccessToken } from "../auth";
 import { offlinePersistedQueryOptions } from "../../offlineQueryOptions";
+import { useAccessToken } from "../auth";
 
 export type CharacterContact =
   GetCharactersCharacterIdContactsQueryResponse[number];

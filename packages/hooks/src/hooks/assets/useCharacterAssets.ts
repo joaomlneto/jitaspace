@@ -8,8 +8,8 @@ import {
   useGetCharactersCharacterIdAssetsInfinite,
 } from "@jitaspace/esi-client";
 
-import { useAccessToken } from "../auth";
 import { offlinePersistedQueryOptions } from "../../offlineQueryOptions";
+import { useAccessToken } from "../auth";
 
 export type CharacterAsset =
   GetCharactersCharacterIdAssetsQueryResponse[number];

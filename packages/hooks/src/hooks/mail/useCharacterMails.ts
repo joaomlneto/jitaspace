@@ -8,8 +8,8 @@ import {
   useGetCharactersCharacterIdMailInfinite,
 } from "@jitaspace/esi-client";
 
-import { useAccessToken } from "../auth";
 import { offlinePersistedQueryOptions } from "../../offlineQueryOptions";
+import { useAccessToken } from "../auth";
 
 export function useCharacterMails(characterId?: number, labels: number[] = []) {
   const { accessToken, authHeaders } = useAccessToken({
