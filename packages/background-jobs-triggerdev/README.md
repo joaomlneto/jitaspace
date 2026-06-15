@@ -14,8 +14,9 @@ Trigger.dev task (or a scheduled task for the cron job) and exported from
   `triggerAndWait().unwrap()`, `sleep`→`wait.for`, `singleton`/`concurrencyLimit`→
   `queue.concurrencyLimit`, `retries`→`retry.maxAttempts = retries + 1`,
   `NonRetriableError`→`AbortTaskRunError`).
-- `src/trigger/index.ts` — one literal named export per job, so the build can
-  statically index each task. Generated from the registry; keep in sync.
+- `src/trigger/index.ts` — loops `registry.jobs` and registers one Trigger task
+  per job, so the set can't drift from the registry. Trigger v4 indexes by
+  registration, not export, so nothing here is exported.
 
 ## Setup
 
