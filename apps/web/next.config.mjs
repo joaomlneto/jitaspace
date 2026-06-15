@@ -44,12 +44,15 @@ const jiti = createJiti(import.meta.url);
  *   - img:     EVE image CDNs (`images.evetech.net`, `web.ccpgamescdn.com`) and
  *              the item-icon host (`iec.jita.space`).
  *   - script:  Google Tag Manager.
- *   - connect: the EVE data plane the client-side React Query hooks fetch
- *              directly — ESI, the self-hosted SDE, and the EVE-Kill / EVE Tycoon
- *              / Fuzzwork market+killboard APIs — plus Google Analytics and the
- *              same-origin Sentry (`/monitoring`) and Umami (`/analytics`)
- *              proxies. (`report-uri` is exempt from `connect-src`, so the
- *              Sentry ingest host does not need to be listed here.)
+ *   - worker:  `blob:` for Sentry Session Replay's compression Web Worker.
+ *   - connect: data the client-side hooks (React Query / SWR) fetch directly —
+ *              the EVE data plane (ESI, the self-hosted SDE, the EVE-Kill / EVE
+ *              Tycoon / Fuzzwork market APIs, and the zKillboard killmail API),
+ *              `images.evetech.net` (also fetched as JSON to choose an image
+ *              variant, so it's in `connect-src` as well as `img-src`), Google
+ *              Analytics, and the same-origin Sentry (`/monitoring`) and Umami
+ *              (`/analytics`) proxies. (`report-uri` is exempt from
+ *              `connect-src`, so the Sentry ingest host isn't listed here.)
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -61,11 +64,18 @@ const contentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
   // Mantine emits inline styles; same per-request-nonce caveat as script-src.
   "style-src 'self' 'unsafe-inline'",
-  // Browser-side data fetches: the EVE data plane (ESI, self-hosted SDE, and the
-  // market/killboard clients), Google Analytics (incl. regional
-  // `*.google-analytics.com` collectors), and the same-origin Sentry/Umami
-  // proxies.
-  "connect-src 'self' https://esi.evetech.net https://sde.jita.space https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://www.google-analytics.com https://*.google-analytics.com /monitoring /analytics",
+  // Sentry Session Replay (enabled in instrumentation-client.ts) compresses
+  // events in a Web Worker loaded from a `blob:` URL. Without this it falls back
+  // to default-src 'self', which blocks the blob worker.
+  "worker-src 'self' blob:",
+  // Browser-side data fetches (client-side React Query / SWR hooks): the EVE
+  // data plane — ESI, self-hosted SDE, EVE-Kill / EVE Tycoon / Fuzzwork market,
+  // and the zKillboard killmail API (kill page + Travel panel) — plus
+  // images.evetech.net, which is also fetched as JSON to choose an image variant
+  // and so needs connect-src in addition to img-src. Then Google Analytics
+  // (incl. regional `*.google-analytics.com` collectors) and the same-origin
+  // Sentry/Umami proxies.
+  "connect-src 'self' https://esi.evetech.net https://sde.jita.space https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com /monitoring /analytics",
   "frame-ancestors 'none'",
   // Sentry Security (CSP) endpoint derived from the browser DSN — see the note
   // above on why this is NOT the `/monitoring` tunnel. TODO: `report-uri` is
