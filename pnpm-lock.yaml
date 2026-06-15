@@ -1639,9 +1639,6 @@ importers:
 
   packages/kv:
     dependencies:
-      '@jitaspace/esi-client':
-        specifier: workspace:*
-        version: link:../esi-client
       bull:
         specifier: ^4.16.5
         version: 4.16.5
