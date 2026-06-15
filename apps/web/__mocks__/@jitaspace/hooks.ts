@@ -17,3 +17,13 @@ export type FuzzworkTypeMarketAggregate = {
   buy: { percentile: number; volume: number };
   sell: { percentile: number; volume: number };
 };
+
+// Minimal stand-in for the Zustand auth store. MyQueryClientProvider only uses
+// `subscribe` (to clear the query cache on logout); the unsubscribe is a no-op.
+export const useAuthStore = Object.assign(
+  () => ({ characters: {}, selectedCharacter: null }),
+  {
+    subscribe: (_listener: unknown) => () => undefined,
+    getState: () => ({ characters: {}, selectedCharacter: null }),
+  },
+);
