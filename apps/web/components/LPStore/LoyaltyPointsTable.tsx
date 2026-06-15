@@ -4,7 +4,6 @@ import { memo, useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
 import {
   CorporationName,
   TypeAnchor,
@@ -18,9 +17,22 @@ import {
   TypeAvatar,
 } from "@jitaspace/ui";
 
+import type { AugmentedOffer } from "./pricing";
 import { DataTable } from "~/components/DataTable";
 import { usePreferencesStore } from "~/lib/preferences";
 import { LoyaltyPointsTableClassic } from "./LoyaltyPointsTableClassic";
+import {
+  buyIskPerLp,
+  buyProfit,
+  requiredItemsBuyCost,
+  requiredItemsSellCost,
+  requiredItemsSplitCost,
+  rewardBuyValue,
+  rewardSellValue,
+  rewardSplitValue,
+  sellIskPerLp,
+  sellProfit,
+} from "./pricing";
 
 interface LoyaltyPointsTableProps {
   corporations: {
@@ -46,45 +58,7 @@ interface LoyaltyPointsTableProps {
   }[];
 }
 
-type AugmentedOffer = {
-  offerId: number;
-  corporationId: number;
-  typeId: number;
-  quantity: number;
-  akCost: number | null;
-  lpCost: number;
-  iskCost: number;
-  requiredItems: {
-    typeId: number;
-    quantity: number;
-    marketStats?: FuzzworkTypeMarketAggregate;
-  }[];
-  typeName: string | undefined;
-  corporationName: string | undefined;
-  marketStats?: FuzzworkTypeMarketAggregate;
-};
-
 type LpColumn = DataTableColumn<AugmentedOffer>;
-
-// ---------------------------------------------------------------------------
-// Derived-value helpers used in multiple accessors
-// ---------------------------------------------------------------------------
-
-function requiredItemsSellCost(row: AugmentedOffer): number {
-  return row.requiredItems
-    .map(
-      (item) => (item.marketStats?.sell.percentile ?? 0) * (item.quantity ?? 1),
-    )
-    .reduce((a, b) => a + b, 0);
-}
-
-function requiredItemsBuyCost(row: AugmentedOffer): number {
-  return row.requiredItems
-    .map(
-      (item) => (item.marketStats?.buy.percentile ?? 0) * (item.quantity ?? 1),
-    )
-    .reduce((a, b) => a + b, 0);
-}
 
 // ---------------------------------------------------------------------------
 // Shared cell renderers — agnostic signature: (row, value) => ReactNode
@@ -360,7 +334,7 @@ const LoyaltyPointsTableExperimental = memo(
         {
           id: "jita5psell",
           header: "Jita 5% Sell Price",
-          accessor: (row) => row.marketStats?.sell.percentile,
+          accessor: rewardSellValue,
           sortable: true,
           defaultVisible: false,
           align: "right",
@@ -385,9 +359,7 @@ const LoyaltyPointsTableExperimental = memo(
         {
           id: "jita5psellprofit",
           header: "Jita 5% Sell Profit",
-          accessor: (row) =>
-            (row.marketStats?.sell.percentile ?? 0) -
-            requiredItemsSellCost(row),
+          accessor: sellProfit,
           sortable: true,
           defaultVisible: false,
           align: "right",
@@ -396,13 +368,7 @@ const LoyaltyPointsTableExperimental = memo(
         {
           id: "jita5psellisklp",
           header: "Jita 5% Sell ISK/LP",
-          accessor: (row) =>
-            row.lpCost > 0
-              ? ((row.marketStats?.sell.percentile ?? 0) -
-                  (row.iskCost ?? 0) -
-                  requiredItemsSellCost(row)) /
-                row.lpCost
-              : undefined,
+          accessor: sellIskPerLp,
           sortable: true,
           align: "right",
           cell: iskPerLpCell,
@@ -410,7 +376,7 @@ const LoyaltyPointsTableExperimental = memo(
         {
           id: "jita5pbuy",
           header: "Jita 5% Buy Price",
-          accessor: (row) => row.marketStats?.buy.percentile,
+          accessor: rewardBuyValue,
           sortable: true,
           defaultVisible: false,
           align: "right",
@@ -436,8 +402,7 @@ const LoyaltyPointsTableExperimental = memo(
         {
           id: "jita5pbuyprofit",
           header: "Jita 5% Buy Profit",
-          accessor: (row) =>
-            (row.marketStats?.buy.percentile ?? 0) - requiredItemsBuyCost(row),
+          accessor: buyProfit,
           sortable: true,
           defaultVisible: false,
           align: "right",
@@ -446,13 +411,7 @@ const LoyaltyPointsTableExperimental = memo(
         {
           id: "jita5pbuyisklp",
           header: "Jita 5% Buy ISK/LP",
-          accessor: (row) =>
-            row.lpCost > 0
-              ? ((row.marketStats?.buy.percentile ?? 0) -
-                  (row.iskCost ?? 0) -
-                  requiredItemsBuyCost(row)) /
-                row.lpCost
-              : undefined,
+          accessor: buyIskPerLp,
           sortable: true,
           align: "right",
           cell: iskPerLpCell,
@@ -460,12 +419,7 @@ const LoyaltyPointsTableExperimental = memo(
         {
           id: "jitasplit",
           header: "Jita Split",
-          accessor: (row) =>
-            row.marketStats?.buy && row.marketStats?.sell
-              ? (row.marketStats.buy.percentile +
-                  row.marketStats.sell.percentile) /
-                2
-              : undefined,
+          accessor: rewardSplitValue,
           sortable: true,
           defaultVisible: false,
           align: "right",
@@ -474,16 +428,7 @@ const LoyaltyPointsTableExperimental = memo(
         {
           id: "reqitemsjitasplit",
           header: "Required Items Jita 5% Split",
-          accessor: (row) =>
-            row.requiredItems
-              .map(
-                (item) =>
-                  (((item.marketStats?.buy.percentile ?? 0) +
-                    (item.marketStats?.sell.percentile ?? 0)) /
-                    2) *
-                  (item.quantity ?? 1),
-              )
-              .reduce((a, b) => a + b, 0),
+          accessor: requiredItemsSplitCost,
           sortable: true,
           defaultVisible: false,
           align: "right",
