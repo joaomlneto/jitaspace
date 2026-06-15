@@ -23,6 +23,7 @@
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "prepublishOnly": "pnpm build",
+    "test": "jest",
     "type-check": "tsc --jsx react-jsx --noEmit"
   },
   "dependencies": {
@@ -45,12 +46,20 @@
     "react-dom": "^19.2.6"
   },
   "devDependencies": {
+    "@jest/globals": "^30.4.1",
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
+    "@swc/core": "^1.15.40",
+    "@swc/jest": "^0.2.39",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
     "@types/react": "^19.1.6",
     "eslint": "^9.39.4",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
     "prettier": "^3.8.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",

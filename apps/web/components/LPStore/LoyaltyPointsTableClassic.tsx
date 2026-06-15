@@ -505,16 +505,18 @@ export const LoyaltyPointsTableClassic = memo(
           header: "Jita 5% Sell ISK/LP",
           size: 10,
           accessorFn: (row) =>
-            ((row.marketStats?.sell.percentile ?? 0) -
-              (row.iskCost ?? 0) -
-              row.requiredItems
-                .map(
-                  (item) =>
-                    (item.marketStats?.sell.percentile ?? 0) *
-                    (item.quantity ?? 1),
-                )
-                .reduce((a, b) => a + b, 0)) /
-            row.lpCost,
+            row.lpCost > 0
+              ? ((row.marketStats?.sell.percentile ?? 0) -
+                  (row.iskCost ?? 0) -
+                  row.requiredItems
+                    .map(
+                      (item) =>
+                        (item.marketStats?.sell.percentile ?? 0) *
+                        (item.quantity ?? 1),
+                    )
+                    .reduce((a, b) => a + b, 0)) /
+                row.lpCost
+              : undefined,
           Cell: iskPerLpValueCell,
         },
         {
@@ -566,16 +568,18 @@ export const LoyaltyPointsTableClassic = memo(
           header: "Jita 5% Buy ISK/LP",
           size: 10,
           accessorFn: (row) =>
-            ((row.marketStats?.buy.percentile ?? 0) -
-              (row.iskCost ?? 0) -
-              row.requiredItems
-                .map(
-                  (item) =>
-                    (item.marketStats?.buy.percentile ?? 0) *
-                    (item.quantity ?? 1),
-                )
-                .reduce((a, b) => a + b, 0)) /
-            row.lpCost,
+            row.lpCost > 0
+              ? ((row.marketStats?.buy.percentile ?? 0) -
+                  (row.iskCost ?? 0) -
+                  row.requiredItems
+                    .map(
+                      (item) =>
+                        (item.marketStats?.buy.percentile ?? 0) *
+                        (item.quantity ?? 1),
+                    )
+                    .reduce((a, b) => a + b, 0)) /
+                row.lpCost
+              : undefined,
           Cell: iskPerLpValueCell,
         },
         {
