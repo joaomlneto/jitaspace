@@ -1548,9 +1548,6 @@ importers:
       '@jitaspace/esi-metadata':
         specifier: workspace:*
         version: link:../esi-metadata
-      '@jitaspace/evetycoon-client':
-        specifier: workspace:*
-        version: link:../evetycoon-client
       '@jitaspace/fuzzworks-market-client':
         specifier: workspace:*
         version: link:../fuzzworks-market-client
