@@ -17,7 +17,6 @@
     "@hapi/iron": "^7.0.1",
     "@jitaspace/auth-utils": "workspace:*",
     "@jitaspace/esi-metadata": "workspace:*",
-    "next": "^16.2.6",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
   },

@@ -1,4 +1,3 @@
-import { type NextApiRequest, type NextApiResponse } from "next";
 import { HttpStatusCode } from "axios";
 import z from "zod";
 
@@ -23,17 +22,18 @@ const ACCESS_TOKEN_TOO_OLD_TIME = 30 * 24 * 3600 * 1000; // 30 days
 // TODO: Support optionally requesting a subset of existing scopes
 // See https://docs.esi.evetech.net/docs/sso/refreshing_access_tokens.html
 
+/**
+ * Framework-agnostic handler that refreshes an EVE SSO access token.
+ *
+ * Takes and returns Web standard `Request`/`Response` so it can be wired up to
+ * any runtime (Next.js Route Handler, server action, plain fetch server, a
+ * future mobile backend, …) without depending on Next.js. The request body is
+ * the sealed `tokenRefreshData` string produced by {@link sealDataWithAuthSecret}.
+ */
 export const refreshTokenApiRouteHandler = async (
-  req: NextApiRequest,
-  res: NextApiResponse<
-    | { error: string }
-    | {
-        accessToken: string;
-        refreshTokenData: string;
-      }
-  >,
-) => {
-  const body = req.body;
+  request: Request,
+): Promise<Response> => {
+  const body = await request.text();
 
   // Confirm body is an (encrypted) string
   z.string().parse(body);
@@ -55,23 +55,26 @@ export const refreshTokenApiRouteHandler = async (
     Date.now() <
     accessTokenExpiration * 1000 - REFRESH_TOKEN_BEFORE_EXP_TIME
   ) {
-    return res
-      .status(HttpStatusCode.TooEarly)
-      .json({ error: "Token is not expired nor is about to expire." });
+    return Response.json(
+      { error: "Token is not expired nor is about to expire." },
+      { status: HttpStatusCode.TooEarly },
+    );
   }
 
   // Check if access token is too old to be refreshed
   if (Date.now() > accessTokenExpiration * 1000 + ACCESS_TOKEN_TOO_OLD_TIME) {
-    return res
-      .status(HttpStatusCode.Gone)
-      .json({ error: "Access token is too old. Must reauthenticate." });
+    return Response.json(
+      { error: "Access token is too old. Must reauthenticate." },
+      { status: HttpStatusCode.Gone },
+    );
   }
 
   // check if null
   if (env.EVE_CLIENT_ID === undefined || env.EVE_CLIENT_SECRET === undefined) {
-    return res
-      .status(HttpStatusCode.InternalServerError)
-      .json({ error: "EVE_CLIENT_ID or EVE_CLIENT_SECRET is undefined" });
+    return Response.json(
+      { error: "EVE_CLIENT_ID or EVE_CLIENT_SECRET is undefined" },
+      { status: HttpStatusCode.InternalServerError },
+    );
   }
 
   // Attempt to refresh token
@@ -85,9 +88,10 @@ export const refreshTokenApiRouteHandler = async (
   const payload = getEveSsoAccessTokenPayload(access_token);
 
   if (!payload)
-    return res
-      .status(HttpStatusCode.InternalServerError)
-      .json({ error: "Unable to decode payload of refreshed token." });
+    return Response.json(
+      { error: "Unable to decode payload of refreshed token." },
+      { status: HttpStatusCode.InternalServerError },
+    );
 
   const sealedRefreshData = await sealDataWithAuthSecret({
     data: {
@@ -97,7 +101,7 @@ export const refreshTokenApiRouteHandler = async (
     secret: env.NEXTAUTH_SECRET,
   });
 
-  return res.json({
+  return Response.json({
     accessToken: access_token,
     refreshTokenData: sealedRefreshData,
   });
