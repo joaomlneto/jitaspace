@@ -5,23 +5,25 @@ import { Group, Loader, Stack, Text, UnstyledButton } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useKillmail } from "@jitaspace/hooks";
 import {
-  AllianceAnchor,
-  AllianceAvatar,
   AllianceName,
   CharacterAnchor,
-  CharacterAvatar,
   CharacterName,
-  CorporationAnchor,
-  CorporationAvatar,
   CorporationName,
   SolarSystemAnchor,
   SolarSystemName,
   SolarSystemSovereigntyAvatar,
   TypeAnchor,
-  TypeAvatar,
   TypeName,
+} from "@jitaspace/eve-components";
+import { useKillmail } from "@jitaspace/hooks";
+import {
+  AllianceAnchor,
+  AllianceAvatar,
+  CharacterAvatar,
+  CorporationAnchor,
+  CorporationAvatar,
+  TypeAvatar,
 } from "@jitaspace/ui";
 
 import { EsiKillmailFittingCard } from "~/components/Fitting";

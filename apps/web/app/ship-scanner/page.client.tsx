@@ -22,8 +22,9 @@ import { IconX } from "@tabler/icons-react";
 
 import type { FittingItemFlag } from "@jitaspace/hooks";
 import { itemsFlagEnum } from "@jitaspace/esi-client";
+import { EveEntitySelect, TypeAnchor } from "@jitaspace/eve-components";
 import { useEsiTypeIdsFromNames } from "@jitaspace/hooks";
-import { EveEntitySelect, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
+import { TypeAvatar } from "@jitaspace/ui";
 
 import { ShipFittingCard } from "~/components/Fitting";
 

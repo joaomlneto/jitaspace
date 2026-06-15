@@ -19,8 +19,9 @@ import {
 import { openContextModal } from "@mantine/modals";
 import { useShallow } from "zustand/shallow";
 
+import { AllianceCard } from "@jitaspace/eve-components";
 import { useAuthenticatedCharacterIds, useAuthStore } from "@jitaspace/hooks";
-import { AllianceCard, CharacterAvatar } from "@jitaspace/ui";
+import { CharacterAvatar } from "@jitaspace/ui";
 
 import { AuthenticatedCharacterCard, CorporationCard } from "~/components/Card";
 import { DevelopmentModeAlert } from "~/components/debug";

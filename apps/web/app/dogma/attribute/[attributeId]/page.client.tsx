@@ -14,8 +14,9 @@ import {
   Title,
 } from "@mantine/core";
 
+import { TypeAnchor } from "@jitaspace/eve-components";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import { DogmaAttributeValue, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
+import { DogmaAttributeValue, TypeAvatar } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
 

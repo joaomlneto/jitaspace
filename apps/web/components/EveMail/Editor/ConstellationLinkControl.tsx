@@ -1,34 +1,25 @@
+import type { PopoverProps } from "@mantine/core";
 import type React from "react";
 import { forwardRef } from "react";
-import {
-  Button,
-  Popover,
-  useMantineTheme,
-  useProps
-
-} from "@mantine/core";
-import type {PopoverProps} from "@mantine/core";
+import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
+import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { Systems2Icon } from "@jitaspace/eve-icons";
-import { EsiSearchSelect } from "@jitaspace/ui";
 
-import {
-  ControlBase
-
-} from "~/components/EveMail/Editor/ControlBase";
-import type {RichTextEditorControlBaseProps} from "~/components/EveMail/Editor/ControlBase";
+import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
+import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
 import classes from "./LinkControl.module.css";
 
-
-export interface RichTextEditorLinkControlProps
-  extends Partial<RichTextEditorControlBaseProps> {
+export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorControlBaseProps> {
   /** Props added to Popover component */
   popoverProps?: Partial<PopoverProps>;
 }
 
-const ConstellationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
+const ConstellationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
+  size,
+}) => (
   <div style={{ position: "relative", width: size, height: size }}>
     <Systems2Icon fill alt="" />
   </div>

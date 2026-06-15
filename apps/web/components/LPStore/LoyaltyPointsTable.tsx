@@ -5,15 +5,17 @@ import { Group, Stack, Text, Tooltip } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
+import {
+  CorporationName,
+  TypeAnchor,
+  TypeName,
+} from "@jitaspace/eve-components";
 import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import {
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
   ISKAmount,
-  TypeAnchor,
   TypeAvatar,
-  TypeName,
 } from "@jitaspace/ui";
 
 import { DataTable } from "~/components/DataTable";

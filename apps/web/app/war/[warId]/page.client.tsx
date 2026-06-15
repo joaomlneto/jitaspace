@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import { AllianceName, CorporationName } from "@jitaspace/eve-components";
 import { WarReportIcon } from "@jitaspace/eve-icons";
 import {
   useSelectedCharacter,
@@ -14,10 +15,8 @@ import {
 import {
   AllianceAnchor,
   AllianceAvatar,
-  AllianceName,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
   FormattedDateText,
   ISKAmount,
@@ -26,16 +25,19 @@ import {
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { WarAggressorAnchor, WarDefenderAnchor } from "~/components/Anchor";
 import { WarAggressorAvatar, WarDefenderAvatar } from "~/components/Avatar";
-import { AllianceTickerBadge, CorporationTickerBadge, WarAggressorTickerBadge, WarDefenderTickerBadge } from "~/components/Badge";
+import {
+  AllianceTickerBadge,
+  CorporationTickerBadge,
+  WarAggressorTickerBadge,
+  WarDefenderTickerBadge,
+} from "~/components/Badge";
+import { KillmailCard } from "~/components/Killmails";
 import { WarAggressorName, WarDefenderName } from "~/components/Text";
 
-import { KillmailCard } from "~/components/Killmails";
 export default function Page() {
   const params = useParams();
   const rawWarId = params?.warId;
-  const warId = Number(
-    typeof rawWarId === "string" ? rawWarId : rawWarId?.[0],
-  );
+  const warId = Number(typeof rawWarId === "string" ? rawWarId : rawWarId?.[0]);
   const character = useSelectedCharacter();
   const { data: war } = useWar(warId);
   const { data: killmails } = useWarKillmails(warId);

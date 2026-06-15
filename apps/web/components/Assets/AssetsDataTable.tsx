@@ -4,8 +4,9 @@ import { Group } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type { CharacterAsset } from "@jitaspace/hooks";
+import { TypeAnchor } from "@jitaspace/eve-components";
 import { useEsiNameLookup, useMarketPrices } from "@jitaspace/hooks";
-import { ISKAmount, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
+import { ISKAmount, TypeAvatar } from "@jitaspace/ui";
 
 interface AssetsDataTableProps {
   entries: CharacterAsset[];

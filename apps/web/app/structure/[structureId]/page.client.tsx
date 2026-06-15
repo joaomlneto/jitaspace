@@ -4,26 +4,24 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useSelectedCharacter, useStructure } from "@jitaspace/hooks";
 import {
   EveEntityName,
   SolarSystemName,
   StructureName,
   TypeName,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { useSelectedCharacter, useStructure } from "@jitaspace/hooks";
 
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
 import { StructureAvatar } from "~/components/Avatar";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
-
 import { ScopeGuard } from "~/components/ScopeGuard";
+
 export default function Page() {
   const params = useParams();
   const rawStructureId = params?.structureId;
   const structureId = Number(
-    typeof rawStructureId === "string"
-      ? rawStructureId
-      : rawStructureId?.[0],
+    typeof rawStructureId === "string" ? rawStructureId : rawStructureId?.[0],
   );
   const character = useSelectedCharacter();
   const { data: structure } = useStructure(structureId ?? 0);

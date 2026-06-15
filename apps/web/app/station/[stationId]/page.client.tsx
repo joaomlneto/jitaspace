@@ -13,14 +13,14 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,
   SolarSystemName,
   StationName,
   TypeName,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
 
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
 import { StationAvatar } from "~/components/Avatar";

@@ -11,16 +11,18 @@ import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
+import {
+  CorporationName,
+  EveEntitySelect,
+  TypeAnchor,
+  TypeName,
+} from "@jitaspace/eve-components";
 import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import {
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
-  EveEntitySelect,
   ISKAmount,
-  TypeAnchor,
   TypeAvatar,
-  TypeName,
 } from "@jitaspace/ui";
 
 interface LoyaltyPointsTableProps {

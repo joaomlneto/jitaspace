@@ -13,17 +13,19 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import {
+  AllianceName,
+  CharacterAnchor,
+  CharacterName,
+  CorporationName,
+} from "@jitaspace/eve-components";
 import { useCorporation } from "@jitaspace/hooks";
 import {
   AllianceAnchor,
   AllianceAvatar,
-  AllianceName,
-  CharacterAnchor,
   CharacterAvatar,
-  CharacterName,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
   FormattedDateText,
 } from "@jitaspace/ui";

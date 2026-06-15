@@ -30,6 +30,7 @@
     "@jitaspace/db-history": "workspace:*",
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/esi-metadata": "workspace:*",
+    "@jitaspace/eve-components": "workspace:*",
     "@jitaspace/eve-icons": "workspace:*",
     "@jitaspace/eve-scrape": "workspace:*",
     "@jitaspace/hooks": "workspace:*",

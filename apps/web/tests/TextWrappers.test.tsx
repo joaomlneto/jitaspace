@@ -1,9 +1,30 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { describe, expect, it } from "@jest/globals";
 import type { ReactNode } from "react";
+import { describe, expect, it } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
+
+// Import from the barrel so index.ts is covered too.
+import {
+  AsteroidBeltName,
+  BloodlineName,
+  CalendarEventOwnerName,
+  CategoryName,
+  DogmaAttributeName,
+  DogmaEffectName,
+  GroupName,
+  LabelName,
+  MailingListName,
+  MarketGroupName,
+  MoonName,
+  PlanetName,
+  RaceName,
+  StargateName,
+  StarName,
+  WarAggressorName,
+  WarDefenderName,
+} from "~/components/Text";
 
 // ---------------------------------------------------------------------------
 // Mock @jitaspace/hooks. Each hook returns data shaped exactly as the matching
@@ -14,7 +35,9 @@ jest.mock("@jitaspace/hooks", () => ({
   // { data: { data: { name } } }
   useAsteroidBelt: () => ({ data: { data: { name: "Asteroid Belt Value" } } }),
   useCategory: () => ({ data: { data: { name: "Category Value" } } }),
-  useDogmaAttribute: () => ({ data: { data: { name: "Dogma Attribute Value" } } }),
+  useDogmaAttribute: () => ({
+    data: { data: { name: "Dogma Attribute Value" } },
+  }),
   useDogmaEffect: () => ({ data: { data: { name: "Dogma Effect Value" } } }),
   useGroup: () => ({ data: { data: { name: "Group Value" } } }),
   useMoon: () => ({ data: { data: { name: "Moon Value" } } }),
@@ -79,21 +102,55 @@ jest.mock("@jitaspace/hooks", () => ({
 // passthrough that renders the key prop it receives.
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/ui", () => ({
-  AsteroidBeltName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  BloodlineName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  CategoryName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  DogmaAttributeName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  DogmaEffectName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  GroupName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  LabelName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  MailingListName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  MarketGroupName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  MoonName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  PlanetName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  RaceName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  StargateName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
-  StarName: ({ name }: { name?: ReactNode }) => <span>{String(name ?? "")}</span>,
+  AsteroidBeltName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  BloodlineName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  CategoryName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  DogmaAttributeName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  DogmaEffectName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  GroupName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  LabelName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  MailingListName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  MarketGroupName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  MoonName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  PlanetName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  RaceName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  StargateName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+  StarName: ({ name }: { name?: ReactNode }) => (
+    <span>{String(name ?? "")}</span>
+  ),
+}));
 
+// ---------------------------------------------------------------------------
+// Mock @jitaspace/eve-components. The dumb name components a wrapper renders
+// that moved out of @jitaspace/ui are stubbed here as passthroughs.
+// ---------------------------------------------------------------------------
+jest.mock("@jitaspace/eve-components", () => ({
   // CalendarEventOwnerName branches
   AllianceName: ({ allianceId }: { allianceId?: number }) => (
     <span>{`Alliance ${allianceId ?? ""}`}</span>
@@ -116,36 +173,19 @@ jest.mock("@jitaspace/ui", () => ({
   }: {
     aggressorAllianceId?: number;
     aggressorCorporationId?: number;
-  }) => <span>{`Aggressor ${aggressorAllianceId ?? ""}/${aggressorCorporationId ?? ""}`}</span>,
+  }) => (
+    <span>{`Aggressor ${aggressorAllianceId ?? ""}/${aggressorCorporationId ?? ""}`}</span>
+  ),
   WarDefenderName: ({
     defenderAllianceId,
     defenderCorporationId,
   }: {
     defenderAllianceId?: number;
     defenderCorporationId?: number;
-  }) => <span>{`Defender ${defenderAllianceId ?? ""}/${defenderCorporationId ?? ""}`}</span>,
+  }) => (
+    <span>{`Defender ${defenderAllianceId ?? ""}/${defenderCorporationId ?? ""}`}</span>
+  ),
 }));
-
-// Import from the barrel so index.ts is covered too.
-import {
-  AsteroidBeltName,
-  BloodlineName,
-  CalendarEventOwnerName,
-  CategoryName,
-  DogmaAttributeName,
-  DogmaEffectName,
-  GroupName,
-  LabelName,
-  MailingListName,
-  MarketGroupName,
-  MoonName,
-  PlanetName,
-  RaceName,
-  StargateName,
-  StarName,
-  WarAggressorName,
-  WarDefenderName,
-} from "~/components/Text";
 
 function renderWithMantine(node: ReactNode) {
   return render(<MantineProvider>{node}</MantineProvider>);
@@ -254,7 +294,9 @@ describe("Text wrappers", () => {
     });
 
     it("falls back to EveEntityName when owner_type is unknown", () => {
-      renderWithMantine(<CalendarEventOwnerName characterId={1} eventId={999} />);
+      renderWithMantine(
+        <CalendarEventOwnerName characterId={1} eventId={999} />,
+      );
       expect(screen.getByText("EveEntityName Fallback")).toBeInTheDocument();
     });
   });

@@ -14,25 +14,27 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useCharacter, useSelectedCharacter } from "@jitaspace/hooks";
-import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
-import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  AllianceAvatar,
   AllianceName,
-  CharacterAvatar,
   CharacterName,
-  CorporationAvatar,
   CorporationName,
-  DateHoverCard,
-  FormattedDateText,
   SolarSystemAnchor,
   SolarSystemName,
   StationAnchor,
   StationName,
   TypeAnchor,
-  TypeAvatar,
   TypeName,
+} from "@jitaspace/eve-components";
+import { useCharacter, useSelectedCharacter } from "@jitaspace/hooks";
+import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
+import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
+import {
+  AllianceAvatar,
+  CharacterAvatar,
+  CorporationAvatar,
+  DateHoverCard,
+  FormattedDateText,
+  TypeAvatar,
 } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
