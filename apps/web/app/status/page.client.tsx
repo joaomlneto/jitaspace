@@ -35,6 +35,7 @@ import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
 import { env } from "~/env";
+import { DatabaseDashboard } from "../../components/Status/DatabaseDashboard";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
 import { EsiStatusDashboard } from "../../components/Status/EsiStatusDashboard";
 import { InngestJobsDashboard } from "../../components/Status/InngestJobsDashboard";
@@ -302,6 +303,8 @@ export default function StatusPage({
         <InngestJobsDashboard />
 
         <TriggerJobsDashboard />
+
+        <DatabaseDashboard />
 
         <EsiRateLimitDashboard />
       </Stack>
