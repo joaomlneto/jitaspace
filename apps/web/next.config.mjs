@@ -56,6 +56,12 @@ const jiti = createJiti(import.meta.url);
  */
 const contentSecurityPolicy = [
   "default-src 'self'",
+  // Defense-in-depth (OWASP-recommended), both safe — the app uses neither a
+  // `<base>` tag nor `<object>`/`<embed>`. `base-uri` can't be constrained by
+  // any other directive, so pin it to block `<base href>` hijacking; `object-src
+  // 'none'` shuts off legacy plugin embedding vectors.
+  "base-uri 'self'",
+  "object-src 'none'",
   "img-src 'self' https://images.evetech.net https://web.ccpgamescdn.com https://iec.jita.space data:",
   // FUTURE WORK: `'unsafe-inline'` is unavoidable here until we emit a
   // per-request nonce (Next.js injects inline bootstrap scripts; GTM is loaded
