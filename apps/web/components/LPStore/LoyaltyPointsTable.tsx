@@ -5,15 +5,12 @@ import { Group, Stack, Text, Tooltip } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
 import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
-import {
-  CorporationName,
-  TypeAnchor,
-  TypeName,
-} from "@jitaspace/eve-components";
+import { TypeAnchor } from "@jitaspace/eve-components";
 import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import {
   CorporationAnchor,
   CorporationAvatar,
+  EveEntityNameDisplay,
   ISKAmount,
   TypeAvatar,
 } from "@jitaspace/ui";
@@ -57,6 +54,7 @@ type AugmentedOffer = {
   requiredItems: {
     typeId: number;
     quantity: number;
+    typeName: string | undefined;
     marketStats?: FuzzworkTypeMarketAggregate;
   }[];
   typeName: string | undefined;
@@ -117,14 +115,14 @@ function corporationCell(row: AugmentedOffer) {
     <Group>
       <Tooltip
         label={
-          <CorporationName corporationId={row.corporationId} lineClamp={1} />
+          <EveEntityNameDisplay name={row.corporationName} lineClamp={1} />
         }
         color="dark"
       >
         <Group wrap="nowrap">
           <CorporationAvatar corporationId={row.corporationId} size="sm" />
           <CorporationAnchor corporationId={row.corporationId} target="_blank">
-            <CorporationName corporationId={row.corporationId} />
+            <EveEntityNameDisplay name={row.corporationName} />
           </CorporationAnchor>
         </Group>
       </Tooltip>
@@ -142,7 +140,7 @@ function itemCell(row: AugmentedOffer) {
       <TypeAvatar typeId={row.typeId} size="sm" />
       {row.quantity !== 1 && <Text size="sm">{row.quantity}</Text>}
       <TypeAnchor typeId={row.typeId} target="_blank">
-        <TypeName span typeId={row.typeId} size="sm" />
+        <EveEntityNameDisplay span name={row.typeName} size="sm" />
       </TypeAnchor>
     </Group>
   );
@@ -169,12 +167,17 @@ function akCostCell(_row: AugmentedOffer, value: unknown) {
 function requiredItemsCell(row: AugmentedOffer) {
   return (
     <Stack gap="xs">
-      {row.requiredItems.map(({ quantity, typeId }) => (
+      {row.requiredItems.map(({ quantity, typeId, typeName }) => (
         <Group key={typeId} wrap="nowrap" gap="xs">
           <TypeAvatar typeId={typeId} size="sm" />
           {quantity !== 1 && <Text size="sm">{quantity}</Text>}
           <TypeAnchor typeId={typeId} target="_blank">
-            <TypeName span typeId={typeId} size="sm" lineClamp={1} />
+            <EveEntityNameDisplay
+              span
+              name={typeName}
+              size="sm"
+              lineClamp={1}
+            />
           </TypeAnchor>
         </Group>
       ))}
@@ -252,6 +255,7 @@ const LoyaltyPointsTableExperimental = memo(
           ...offer,
           requiredItems: offer.requiredItems.map((item) => ({
             ...item,
+            typeName: typeNames[item.typeId],
             marketStats: marketStats.data?.[item.typeId],
           })),
           typeName: typeNames[offer.typeId],

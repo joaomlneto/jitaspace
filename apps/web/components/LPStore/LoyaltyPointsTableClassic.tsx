@@ -11,16 +11,12 @@ import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
-import {
-  CorporationName,
-  EveEntitySelect,
-  TypeAnchor,
-  TypeName,
-} from "@jitaspace/eve-components";
+import { EveEntitySelect, TypeAnchor } from "@jitaspace/eve-components";
 import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import {
   CorporationAnchor,
   CorporationAvatar,
+  EveEntityNameDisplay,
   ISKAmount,
   TypeAvatar,
 } from "@jitaspace/ui";
@@ -60,6 +56,7 @@ type AugmentedOffer = {
   requiredItems: {
     typeId: number;
     quantity: number;
+    typeName: string | undefined;
     marketStats?: FuzzworkTypeMarketAggregate;
   }[];
   typeName: string | undefined;
@@ -137,8 +134,8 @@ function corporationCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
     <Group>
       <Tooltip
         label={
-          <CorporationName
-            corporationId={row.original.corporationId}
+          <EveEntityNameDisplay
+            name={row.original.corporationName}
             lineClamp={1}
           />
         }
@@ -153,7 +150,7 @@ function corporationCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
             corporationId={row.original.corporationId}
             target="_blank"
           >
-            <CorporationName corporationId={row.original.corporationId} />
+            <EveEntityNameDisplay name={row.original.corporationName} />
           </CorporationAnchor>
         </Group>
       </Tooltip>
@@ -169,9 +166,9 @@ function itemCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
         <Text size="sm">{row.original.quantity}</Text>
       )}
       <TypeAnchor typeId={row.original.typeId} target="_blank">
-        <TypeName
+        <EveEntityNameDisplay
           span
-          typeId={row.original.typeId}
+          name={row.original.typeName}
           size="sm"
           //lineClamp={1}
         />
@@ -195,12 +192,17 @@ function iskCostCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
 function requiredItemsCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
   return (
     <Stack gap="xs">
-      {row.original.requiredItems.map(({ quantity, typeId }) => (
+      {row.original.requiredItems.map(({ quantity, typeId, typeName }) => (
         <Group key={typeId} wrap="nowrap" gap="xs">
           <TypeAvatar typeId={typeId} size="sm" />
           {quantity !== 1 && <Text size="sm">{quantity}</Text>}
           <TypeAnchor typeId={typeId} target="_blank">
-            <TypeName span typeId={typeId} size="sm" lineClamp={1} />
+            <EveEntityNameDisplay
+              span
+              name={typeName}
+              size="sm"
+              lineClamp={1}
+            />
           </TypeAnchor>
         </Group>
       ))}
@@ -333,6 +335,7 @@ export const LoyaltyPointsTableClassic = memo(
           ...offer,
           requiredItems: offer.requiredItems.map((item) => ({
             ...item,
+            typeName: typeNames[item.typeId],
             marketStats: marketStats.data?.[item.typeId],
           })),
           typeName: typeNames[offer.typeId],
