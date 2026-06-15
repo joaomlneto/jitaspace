@@ -24,6 +24,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { collectionMeta, entityTypeMeta } from "~/lib/history";
 import { getHistoryIndex } from "~/lib/history-actions";
+import { HistoryTimelineChart } from "./_timeline-chart";
 
 export default function HistoryIndexClient() {
   const router = useRouter();
@@ -118,6 +119,8 @@ export default function HistoryIndexClient() {
             </Chip.Group>
           </Group>
         </div>
+
+        <HistoryTimelineChart builds={data.builds} collections={active} />
 
         <Group align="flex-end" gap="sm">
           {entityTypes.length > 1 && (
