@@ -7,10 +7,12 @@ import { fireEvent, render, screen } from "@testing-library/react";
 // ---------------------------------------------------------------------------
 // next/navigation — the page client receives props directly; mock defensively.
 // ---------------------------------------------------------------------------
+const mockUseSearchParams = jest.fn(() => new URLSearchParams());
 jest.mock("next/navigation", () => ({
   useParams: () => ({ typeId: "30" }),
   useRouter: () => ({}),
   usePathname: () => "/",
+  useSearchParams: () => mockUseSearchParams(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -180,6 +182,7 @@ describe("Type page (client)", () => {
     mockUseGetUniverseGroupsGroupId.mockReset();
     mockUseQueries.mockReset();
     mockUseQuery.mockReset();
+    mockUseSearchParams.mockReset();
 
     // Defaults exercised by the "full data" path.
     mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
@@ -201,6 +204,9 @@ describe("Type page (client)", () => {
 
     // The type image-variations query — no variations (falls back to icon).
     mockUseQuery.mockReturnValue({ data: [] });
+
+    // No ?tab= query param by default; deep-link tests override this.
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
 
     // Attribute queries -> a category id (4 and 161 -> 7, 999 -> undefined).
     // Category queries -> a name. Unit queries -> a display symbol.
@@ -288,6 +294,31 @@ describe("Type page (client)", () => {
     expect(screen.getAllByText("Jita Sell").length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Average Price")).toBeInTheDocument();
     expect(screen.getByText("Adjusted Price")).toBeInTheDocument();
+  });
+
+  it("opens the tab named by the ?tab= query parameter on first render", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=market"));
+    renderPage();
+
+    // The Market panel is active without any click, so its content is shown.
+    // (keepMounted is false, so only the active panel renders.)
+    expect(screen.getByText("Jita / The Forge")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Market/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("falls back to the Overview tab for an unknown ?tab= value", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=bogus"));
+    renderPage();
+
+    // Overview content is shown and remains the selected tab.
+    expect(screen.getByText("Identity & Classification")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Overview/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   it("groups attributes by category (with an 'Other' bucket) on the Attributes tab", () => {
