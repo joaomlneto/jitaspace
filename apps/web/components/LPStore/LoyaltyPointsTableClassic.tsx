@@ -10,7 +10,6 @@ import { memo, useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
-import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
 import {
   CorporationName,
   EveEntitySelect,
@@ -24,6 +23,20 @@ import {
   ISKAmount,
   TypeAvatar,
 } from "@jitaspace/ui";
+
+import type { AugmentedOffer } from "./pricing";
+import {
+  buyIskPerLp,
+  buyProfit,
+  requiredItemsBuyCost,
+  requiredItemsSellCost,
+  requiredItemsSplitCost,
+  rewardBuyValue,
+  rewardSellValue,
+  rewardSplitValue,
+  sellIskPerLp,
+  sellProfit,
+} from "./pricing";
 
 interface LoyaltyPointsTableProps {
   corporations: {
@@ -47,24 +60,6 @@ interface LoyaltyPointsTableProps {
       quantity: number;
     }[];
   }[];
-}
-
-interface AugmentedOffer {
-  offerId: number;
-  corporationId: number;
-  typeId: number;
-  quantity: number;
-  akCost: number | null;
-  lpCost: number;
-  iskCost: number;
-  requiredItems: {
-    typeId: number;
-    quantity: number;
-    marketStats?: FuzzworkTypeMarketAggregate;
-  }[];
-  typeName: string | undefined;
-  corporationName: string | undefined;
-  marketStats?: FuzzworkTypeMarketAggregate;
 }
 
 // ---------------------------------------------------------------------------
@@ -461,7 +456,7 @@ export const LoyaltyPointsTableClassic = memo(
         {
           id: "jita5psell",
           header: "Jita 5% Sell Price",
-          accessorKey: "marketStats.sell.percentile",
+          accessorFn: rewardSellValue,
           size: 10,
           Cell: iskAmountValueCell,
         },
@@ -477,52 +472,27 @@ export const LoyaltyPointsTableClassic = memo(
           id: "reqitemsjita5psell",
           header: "Required Items Jita 5% Sell",
           size: 10,
-          accessorFn: (row) =>
-            row.requiredItems
-              .map(
-                (item) =>
-                  (item.marketStats?.sell.percentile ?? 0) * item.quantity,
-              )
-              .reduce((a, b) => a + b, 0),
+          accessorFn: requiredItemsSellCost,
           Cell: iskAmountValueCell,
         },
         {
           id: "jita5psellprofit",
           header: "Jita 5% Sell Profit",
           size: 10,
-          accessorFn: (row) =>
-            (row.marketStats?.sell.percentile ?? 0) -
-            row.requiredItems
-              .map(
-                (item) =>
-                  (item.marketStats?.sell.percentile ?? 0) * item.quantity,
-              )
-              .reduce((a, b) => a + b, 0),
+          accessorFn: sellProfit,
           Cell: iskAmountValueCell,
         },
         {
           id: "jita5psellisklp",
           header: "Jita 5% Sell ISK/LP",
           size: 10,
-          accessorFn: (row) =>
-            row.lpCost > 0
-              ? ((row.marketStats?.sell.percentile ?? 0) -
-                  row.iskCost -
-                  row.requiredItems
-                    .map(
-                      (item) =>
-                        (item.marketStats?.sell.percentile ?? 0) *
-                        item.quantity,
-                    )
-                    .reduce((a, b) => a + b, 0)) /
-                row.lpCost
-              : undefined,
+          accessorFn: sellIskPerLp,
           Cell: iskPerLpValueCell,
         },
         {
           id: "jita5pbuy",
           header: "Jita 5% Buy Price",
-          accessorKey: "marketStats.buy.percentile",
+          accessorFn: rewardBuyValue,
           size: 10,
           Cell: iskAmountValueCell,
         },
@@ -538,77 +508,39 @@ export const LoyaltyPointsTableClassic = memo(
           id: "reqitemsjita5pbuy",
           header: "Required Items Jita 5% Buy",
           size: 10,
-          accessorFn: (row) =>
-            row.requiredItems
-              .map(
-                (item) =>
-                  (item.marketStats?.buy.percentile ?? 0) * item.quantity,
-              )
-              .reduce((a, b) => a + b, 0),
+          accessorFn: requiredItemsBuyCost,
           Cell: iskAmountValueCell,
         },
         {
           id: "jita5pbuyprofit",
           header: "Jita 5% Buy Profit",
           size: 10,
-          accessorFn: (row) =>
-            (row.marketStats?.buy.percentile ?? 0) -
-            row.requiredItems
-              .map(
-                (item) =>
-                  (item.marketStats?.buy.percentile ?? 0) * item.quantity,
-              )
-              .reduce((a, b) => a + b, 0),
+          accessorFn: buyProfit,
           Cell: iskAmountValueCell,
         },
         {
           id: "jita5pbuyisklp",
           header: "Jita 5% Buy ISK/LP",
           size: 10,
-          accessorFn: (row) =>
-            row.lpCost > 0
-              ? ((row.marketStats?.buy.percentile ?? 0) -
-                  row.iskCost -
-                  row.requiredItems
-                    .map(
-                      (item) =>
-                        (item.marketStats?.buy.percentile ?? 0) * item.quantity,
-                    )
-                    .reduce((a, b) => a + b, 0)) /
-                row.lpCost
-              : undefined,
+          accessorFn: buyIskPerLp,
           Cell: iskPerLpValueCell,
         },
         {
           id: "jitasplit",
           header: "Jita Split",
           size: 10,
-          accessorFn: (row) =>
-            row.marketStats
-              ? (row.marketStats.buy.percentile +
-                  row.marketStats.sell.percentile) /
-                2
-              : null,
+          accessorFn: rewardSplitValue,
           Cell: iskAmountValueCell,
         },
         {
           id: "reqitemsjitasplit",
           header: "Required Items Jita 5% Split",
           size: 10,
-          accessorFn: (row) =>
-            row.requiredItems
-              .map(
-                (item) =>
-                  (((item.marketStats?.buy.percentile ?? 0) +
-                    (item.marketStats?.sell.percentile ?? 0)) /
-                    2) *
-                  item.quantity,
-              )
-              .reduce((a, b) => a + b, 0),
+          accessorFn: requiredItemsSplitCost,
           Cell: iskAmountValueCell,
         },
       ],
-
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- preserve the
       // original component's empty dependency array (the filter option lists are
       // captured on first render, matching long-standing behaviour).
       [],
