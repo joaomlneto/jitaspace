@@ -7,13 +7,13 @@ import {
   wait,
 } from "@trigger.dev/sdk";
 
-import { NonRetriableError } from "@jitaspace/background-jobs";
 import type {
   JobContext,
   JobDefinition,
   JobDuration,
   JobLogger,
 } from "@jitaspace/background-jobs";
+import { NonRetriableError } from "@jitaspace/background-jobs";
 
 // Minimal shape we need from a created task to back `ctx.invoke`.
 interface TriggerableTask {
@@ -122,8 +122,8 @@ const runJob = async (
 
 /**
  * Wrap a platform-agnostic job as a Trigger.dev task (or scheduled task for
- * cron jobs). Must be called from a top-level named export so the Trigger build
- * can index the task — see `src/trigger/index.ts`.
+ * cron jobs). Calling this registers the task with Trigger; v4 indexes tasks by
+ * registration rather than export; `src/trigger/index.ts` iterates the registry.
  */
 export function toTriggerTask(job: JobDefinition) {
   const created =

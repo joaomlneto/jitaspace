@@ -1,14 +1,17 @@
 "use client";
 
+import type { PropsWithChildren } from "react";
 import React, { memo } from "react";
 import { type AnchorProps } from "@mantine/core";
 
 import { WarAggressorAnchor as UIWarAggressorAnchor } from "@jitaspace/eve-components";
 import { useWar } from "@jitaspace/hooks";
 
-export type WarAggressorAnchorProps = AnchorProps & {
-  warId?: number;
-};
+export type WarAggressorAnchorProps = PropsWithChildren<
+  AnchorProps & {
+    warId?: number;
+  }
+>;
 
 export const WarAggressorAnchor = memo(
   ({ warId, ...otherProps }: WarAggressorAnchorProps) => {

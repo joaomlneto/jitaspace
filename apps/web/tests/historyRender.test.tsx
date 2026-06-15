@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
@@ -7,6 +14,12 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 const mockUseQuery = jest.fn();
 jest.mock("@tanstack/react-query", () => ({
   useQuery: (opts: unknown) => mockUseQuery(opts),
+}));
+
+// The history index page embeds the recharts-backed activity BarChart; stub it
+// so these render tests don't depend on chart layout in jsdom.
+jest.mock("@mantine/charts", () => ({
+  BarChart: () => <div data-testid="barchart" />,
 }));
 
 // Stub the server functions so the Prisma-backed @jitaspace/db-history module is
@@ -79,7 +92,10 @@ const TIMELINE = {
       collection: "types",
       v: 1,
       kind: "modified",
-      fields: { designerIDs: { to: [1000049] }, mass: { from: 1000, to: 1100 } },
+      fields: {
+        designerIDs: { to: [1000049] },
+        mass: { from: 1000, to: 1100 },
+      },
     },
     {
       build: 98,
@@ -125,10 +141,38 @@ const BUILD_CHANGES = {
   build: 3383521,
   date: "2026-06-08",
   changes: [
-    { entityId: 91920, entityType: "type", collection: "types", v: 1, kind: "added", values: {} },
-    { entityId: 587, entityType: "type", collection: "typeDogma", v: 1, kind: "modified", fields: {} },
-    { entityId: 999, entityType: "type", collection: "types", v: 1, kind: "removed", values: {} },
-    { entityId: 1, entityType: "skin", collection: "skins", v: 1, kind: "added", values: {} },
+    {
+      entityId: 91920,
+      entityType: "type",
+      collection: "types",
+      v: 1,
+      kind: "added",
+      values: {},
+    },
+    {
+      entityId: 587,
+      entityType: "type",
+      collection: "typeDogma",
+      v: 1,
+      kind: "modified",
+      fields: {},
+    },
+    {
+      entityId: 999,
+      entityType: "type",
+      collection: "types",
+      v: 1,
+      kind: "removed",
+      values: {},
+    },
+    {
+      entityId: 1,
+      entityType: "skin",
+      collection: "skins",
+      v: 1,
+      kind: "added",
+      values: {},
+    },
   ],
 };
 
@@ -151,7 +195,12 @@ const HISTORY_INDEX = {
   entityTypes: ["type", "skin"],
   entityIdsByType: { type: [587], skin: [1] },
   builds: [
-    { build: 100, date: "2025-01-01", changeCount: 5, byCollection: { types: 3, typeDogma: 2 } },
+    {
+      build: 100,
+      date: "2025-01-01",
+      changeCount: 5,
+      byCollection: { types: 3, typeDogma: 2 },
+    },
     { build: 99, date: "2024-06-01", changeCount: 0 },
   ],
 };
@@ -164,7 +213,10 @@ function dataFor(opts: { queryKey?: unknown[] }) {
   if (k === "history-build") return { data: BUILD_CHANGES, ...ready };
   if (k === "resource-index") return { data: RESOURCE_INDEX, ...ready };
   if (k === "res-files")
-    return { data: { added: ["res:/a.png"], changed: ["res:/b.png"], removed: [] }, ...ready };
+    return {
+      data: { added: ["res:/a.png"], changed: ["res:/b.png"], removed: [] },
+      ...ready,
+    };
   if (k === "res-strings")
     return { data: [{ id: 1, kind: "added", to: "Hello" }], ...ready };
   // SDE name lookups (getTypeByIdQueryOptions etc.)
@@ -176,7 +228,9 @@ const wrap = (ui: React.ReactNode) =>
 
 beforeEach(() => {
   mockUseQuery.mockReset();
-  mockUseQuery.mockImplementation((opts: { queryKey?: unknown[] }) => dataFor(opts));
+  mockUseQuery.mockImplementation((opts: { queryKey?: unknown[] }) =>
+    dataFor(opts),
+  );
 });
 afterEach(cleanup);
 
@@ -184,18 +238,16 @@ afterEach(cleanup);
 
 describe("HistoryIndexClient", () => {
   it("renders the build timeline + tracking chips", async () => {
-    const { default: HistoryIndexClient } = await import(
-      "~/app/history/page.client"
-    );
+    const { default: HistoryIndexClient } =
+      await import("~/app/history/page.client");
     wrap(<HistoryIndexClient />);
     expect(screen.getByText("Type Change History")).toBeTruthy();
     expect(screen.getByText("Build 100")).toBeTruthy();
   });
 
   it("shows the loader while pending and an empty state with no data", async () => {
-    const { default: HistoryIndexClient } = await import(
-      "~/app/history/page.client"
-    );
+    const { default: HistoryIndexClient } =
+      await import("~/app/history/page.client");
     mockUseQuery.mockReturnValue({ data: undefined, isLoading: true });
     const { unmount } = wrap(<HistoryIndexClient />);
     unmount();
@@ -238,9 +290,8 @@ describe("EntityHistory", () => {
 
 describe("BuildHistoryClient", () => {
   it("renders new/removed/changed sections + resources, and expands lazy lists", async () => {
-    const { default: BuildHistoryClient } = await import(
-      "~/app/history/build/[build]/page.client"
-    );
+    const { default: BuildHistoryClient } =
+      await import("~/app/history/build/[build]/page.client");
     wrap(<BuildHistoryClient build={3383521} />);
     expect(screen.getByText("Build 3383521")).toBeTruthy();
     expect(screen.getByText("Resources")).toBeTruthy();
@@ -254,18 +305,14 @@ describe("BuildHistoryClient", () => {
 
 describe("detail page clients + index page", () => {
   it("renders the type / skin / skinMaterial / entity history clients", async () => {
-    const { default: TypeHistoryClient } = await import(
-      "~/app/history/type/[typeId]/page.client"
-    );
-    const { default: SkinHistoryClient } = await import(
-      "~/app/history/skin/[skinId]/page.client"
-    );
-    const { default: SkinMaterialHistoryClient } = await import(
-      "~/app/history/skinMaterial/[skinMaterialId]/page.client"
-    );
-    const { default: EntityHistoryClient } = await import(
-      "~/app/history/[entityType]/[id]/page.client"
-    );
+    const { default: TypeHistoryClient } =
+      await import("~/app/history/type/[typeId]/page.client");
+    const { default: SkinHistoryClient } =
+      await import("~/app/history/skin/[skinId]/page.client");
+    const { default: SkinMaterialHistoryClient } =
+      await import("~/app/history/skinMaterial/[skinMaterialId]/page.client");
+    const { default: EntityHistoryClient } =
+      await import("~/app/history/[entityType]/[id]/page.client");
     expect(() => wrap(<TypeHistoryClient typeId={587} />)).not.toThrow();
     expect(() => wrap(<SkinHistoryClient skinId={1} />)).not.toThrow();
     expect(() =>
