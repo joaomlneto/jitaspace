@@ -12,7 +12,7 @@
     "db:studio": "prisma studio --browser none",
     "db:generate": "pnpm with-env prisma generate",
     "db:generate:watch": "pnpm with-env prisma generate --watch",
-    "db:push": "pnpm with-env prisma db push",
+    "db:push": "echo 'skip: @jitaspace/db-history is read-only — the eve-builds schema is owned by the ingestion pipeline, never pushed from the web app'",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "postinstall": "pnpm db:generate",
