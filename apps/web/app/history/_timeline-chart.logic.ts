@@ -116,7 +116,7 @@ export function buildTimelineChartModel(
   }
   if (byWeek.size === 0) return empty;
 
-  const populated = [...byWeek.keys()].sort();
+  const populated = [...byWeek.keys()].sort((a, b) => a.localeCompare(b));
   const first = populated[0];
   const last = populated[populated.length - 1];
   if (!first || !last) return empty;

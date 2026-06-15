@@ -22,7 +22,9 @@ export function HistoryTimelineChart({
 }: Readonly<{ builds: HistoryBuild[]; collections: string[] }>) {
   // Re-fold only when the data or the active-collection set actually changes
   // (the parent hands us a fresh `collections` array on every render).
-  const activeKey = [...collections].sort().join(",");
+  const activeKey = [...collections]
+    .sort((a, b) => a.localeCompare(b))
+    .join(",");
   const model = useMemo(
     () =>
       buildTimelineChartModel(builds, activeKey ? activeKey.split(",") : []),
