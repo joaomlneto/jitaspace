@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import type { LPStoreAllPageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import { collectLpStoreOfferTypeIds } from "./collectTypeIds";
 import LPStoreAllPage from "./page.client";
 
 export const metadata = {
@@ -66,12 +67,10 @@ export default async function Page() {
       lpCost: Number(offer.lpCost),
     }));
 
-    const typeIds = [
-      ...new Set([
-        ...offersWithoutRequiredItems.map((offer) => offer.typeId),
-        ...requiredItems.map((item) => item.typeId),
-      ]),
-    ];
+    const typeIds = collectLpStoreOfferTypeIds(
+      offersWithoutRequiredItems,
+      requiredItems,
+    );
 
     types = await prisma.type.findMany({
       select: {
