@@ -3,7 +3,7 @@
 import type { PropsWithChildren } from "react";
 import { useEffect, useState } from "react";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
-import { QueryClient } from "@tanstack/react-query";
+import { defaultShouldDehydrateQuery, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ReactQueryStreamedHydration } from "@tanstack/react-query-next-experimental";
 import { PersistQueryClientProvider, removeOldestQuery } from "@tanstack/react-query-persist-client";
@@ -57,17 +57,10 @@ export const MyQueryClientProvider = ({
   children,
   esiUserAgent,
 }: MyQueryClientProviderProps) => {
-  const [client] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            // Keep data around long enough to be persisted and shown offline.
-            gcTime: PERSIST_MAX_AGE,
-          },
-        },
-      }),
-  );
+  // No blanket gcTime: only the hooks that opt into offline persistence (via
+  // `meta.persist`, see @jitaspace/hooks offlinePersistedQueryOptions) set a
+  // long gcTime. Everything else keeps the default in-memory lifetime.
+  const [client] = useState(() => new QueryClient());
 
   useEffect(() => {
     void (async () => {
@@ -119,6 +112,15 @@ export const MyQueryClientProvider = ({
         persister: queryCachePersister,
         maxAge: PERSIST_MAX_AGE,
         buster: PERSIST_BUSTER,
+        dehydrateOptions: {
+          // Persist only queries that explicitly opt in via `meta.persist`
+          // (the offline-worthy character hooks), not the whole cache. This
+          // bounds the serialized payload and avoids writing volatile/heavy
+          // data to disk.
+          shouldDehydrateQuery: (query) =>
+            defaultShouldDehydrateQuery(query) &&
+            query.meta?.persist === true,
+        },
       }}
     >
       <ReactQueryStreamedHydration>{children}</ReactQueryStreamedHydration>

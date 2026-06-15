@@ -6,6 +6,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { offlinePersistedQueryOptions } from "../../offlineQueryOptions";
 
 export type CharacterWalletJournalEntry =
   GetCharactersCharacterIdWalletJournalQueryResponse[number];
@@ -21,6 +22,7 @@ export const useCharacterWalletJournal = (characterId?: number) => {
     { ...authHeaders },
     {
       query: {
+        ...offlinePersistedQueryOptions,
         enabled: characterId !== undefined && accessToken !== null,
       },
     },

@@ -9,6 +9,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { offlinePersistedQueryOptions } from "../../offlineQueryOptions";
 
 export type CharacterAsset =
   GetCharactersCharacterIdAssetsQueryResponse[number];
@@ -26,6 +27,7 @@ export const useCharacterAssets = (characterId?: number) => {
       { ...authHeaders },
       {
         query: {
+          ...offlinePersistedQueryOptions,
           enabled: characterId !== undefined && accessToken !== null,
           initialPageParam: 1,
           queryFn: ({ pageParam }) =>

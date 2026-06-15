@@ -8,6 +8,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { offlinePersistedQueryOptions } from "../../offlineQueryOptions";
 
 export function useCharacterMailLabels(characterId: number) {
   const { accessToken, authHeaders, character } = useAccessToken({
@@ -20,6 +21,7 @@ export function useCharacterMailLabels(characterId: number) {
     { ...authHeaders },
     {
       query: {
+        ...offlinePersistedQueryOptions,
         enabled: accessToken !== null,
       },
     },

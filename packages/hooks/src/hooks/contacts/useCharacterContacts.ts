@@ -11,6 +11,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { offlinePersistedQueryOptions } from "../../offlineQueryOptions";
 
 export type CharacterContact =
   GetCharactersCharacterIdContactsQueryResponse[number];
@@ -29,6 +30,7 @@ export function useCharacterContacts(characterId: number) {
     { ...authHeaders },
     {
       query: {
+        ...offlinePersistedQueryOptions,
         enabled: !!characterId && accessToken !== null,
         refetchOnWindowFocus: false,
       },
@@ -42,6 +44,7 @@ export function useCharacterContacts(characterId: number) {
       { ...authHeaders },
       {
         query: {
+          ...offlinePersistedQueryOptions,
           enabled: characterId !== undefined && accessToken !== null,
           initialPageParam: 1,
           queryFn: ({ pageParam }) =>

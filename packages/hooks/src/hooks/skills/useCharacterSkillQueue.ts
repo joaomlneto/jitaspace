@@ -3,6 +3,7 @@
 import { useGetCharactersCharacterIdSkillqueue } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { offlinePersistedQueryOptions } from "../../offlineQueryOptions";
 
 export const useCharacterSkillQueue = (characterId: number) => {
   const { accessToken, authHeaders } = useAccessToken({
@@ -14,6 +15,7 @@ export const useCharacterSkillQueue = (characterId: number) => {
     { ...authHeaders },
     {
       query: {
+        ...offlinePersistedQueryOptions,
         enabled: !!characterId && accessToken !== null,
       },
     },

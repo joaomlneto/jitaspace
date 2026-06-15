@@ -3,6 +3,7 @@
 import { useGetCharactersCharacterIdWallet } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { offlinePersistedQueryOptions } from "../../offlineQueryOptions";
 
 export const useCharacterWalletBalance = (characterId?: number) => {
   const { accessToken, authHeaders } = useAccessToken({
@@ -17,6 +18,7 @@ export const useCharacterWalletBalance = (characterId?: number) => {
       { ...authHeaders },
       {
         query: {
+          ...offlinePersistedQueryOptions,
           enabled: characterId !== null && accessToken !== null,
         },
       },

@@ -6,6 +6,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { offlinePersistedQueryOptions } from "../../offlineQueryOptions";
 
 export type CharacterSkill =
   GetCharactersCharacterIdSkillsQueryResponse["skills"][number];
@@ -23,6 +24,7 @@ export const useCharacterSkills = (characterId: number) => {
       { ...authHeaders },
       {
         query: {
+          ...offlinePersistedQueryOptions,
           enabled: !!characterId && accessToken !== null,
         },
       },
