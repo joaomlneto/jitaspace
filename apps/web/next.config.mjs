@@ -9,6 +9,43 @@ const jiti = createJiti(import.meta.url);
  */
 !process.env.SKIP_ENV_VALIDATION && (await jiti.import("./env"));
 
+/**
+ * Content-Security-Policy for the web app.
+ *
+ * IMPORTANT: this is shipped **report-only** — it is sent as the
+ * `Content-Security-Policy-Report-Only` header (see `headers()` below), so the
+ * browser reports violations to Sentry (via the `report-uri` tunnel) WITHOUT
+ * blocking anything. This lets us observe real-world violations against actual
+ * traffic before switching to an enforced policy.
+ *
+ * Path to an *enforced* policy (a separate, future task — do NOT enable here):
+ *   1. Generate a per-request nonce in `middleware.ts`.
+ *   2. Thread that nonce through every Next.js `<Script>` and inline `<style>`
+ *      tag (e.g. `<Script nonce={nonce}>`, `<style nonce={nonce}>`).
+ *   3. Replace `'unsafe-inline'` with `'nonce-<value>'` below, then rename the
+ *      header from `Content-Security-Policy-Report-Only` to
+ *      `Content-Security-Policy` (and drop `'unsafe-inline'`).
+ *
+ * Origins allow-listed below are the ones the app legitimately talks to:
+ * EVE image CDNs, Google Tag Manager / Analytics, and the Sentry (`/monitoring`)
+ * and Umami (`/analytics`) same-origin proxies.
+ */
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "img-src 'self' https://images.evetech.net https://web.ccpgamescdn.com data:",
+  // FUTURE WORK: `'unsafe-inline'` is unavoidable here until we emit a
+  // per-request nonce (Next.js injects inline bootstrap scripts; GTM is loaded
+  // from googletagmanager.com). Removing it is the goal of the nonce migration
+  // described above.
+  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+  // Mantine emits inline styles; same per-request-nonce caveat as script-src.
+  "style-src 'self' 'unsafe-inline'",
+  "connect-src 'self' https://www.google-analytics.com /monitoring /analytics",
+  "frame-ancestors 'none'",
+  // Sentry tunnel (see `tunnelRoute` below); report-only violations land here.
+  "report-uri /monitoring",
+].join("; ");
+
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
@@ -70,6 +107,42 @@ const config = {
       // pretty /market/<typeId> URL; the client reads the id from the path.
       source: "/market/:typeId",
       destination: "/market",
+    },
+  ],
+
+  headers: async () => [
+    {
+      // Baseline hardening headers — safe to send on every response, including
+      // /api/* (they don't constrain programmatic JSON consumers of the API).
+      source: "/(.*)",
+      headers: [
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "X-Frame-Options", value: "SAMEORIGIN" },
+        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        {
+          key: "Permissions-Policy",
+          value: "camera=(), microphone=(), geolocation=()",
+        },
+      ],
+    },
+    {
+      // HSTS + CSP are intentionally NOT applied to /api/* so programmatic
+      // consumers aren't constrained by a browser-oriented policy. The negative
+      // lookahead matches every path EXCEPT those starting with `api/` (it still
+      // matches the site root `/` and all page routes).
+      source: "/((?!api/).*)",
+      headers: [
+        {
+          key: "Strict-Transport-Security",
+          value: "max-age=63072000; includeSubDomains; preload",
+        },
+        {
+          // Report-only for now — see the `contentSecurityPolicy` doc comment
+          // above for why and for the path to an enforced policy.
+          key: "Content-Security-Policy-Report-Only",
+          value: contentSecurityPolicy,
+        },
+      ],
     },
   ],
 
