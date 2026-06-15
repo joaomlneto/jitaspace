@@ -15,19 +15,15 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import { AllianceName, CorporationName } from "@jitaspace/eve-components";
 import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  AllianceAvatar,
-  AllianceName,
-  CorporationAvatar,
-  CorporationName,
-} from "@jitaspace/ui";
+import { AllianceAvatar, CorporationAvatar } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import { MailMessageViewer } from "~/components/EveMail";
 import { CorporationAllianceHistoryTimeline } from "~/components/Timeline";
 
-import { MailMessageViewer } from "~/components/EveMail";
 export default function Page() {
   const params = useParams();
   const rawCorporationId = params?.corporationId;

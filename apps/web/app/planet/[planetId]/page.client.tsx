@@ -4,13 +4,9 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
+import { SolarSystemName, TypeName } from "@jitaspace/eve-components";
 import { usePlanet } from "@jitaspace/hooks";
-import {
-  Position3DText,
-  SolarSystemName,
-  TypeAvatar,
-  TypeName,
-} from "@jitaspace/ui";
+import { Position3DText, TypeAvatar } from "@jitaspace/ui";
 
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 

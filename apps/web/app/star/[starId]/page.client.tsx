@@ -3,13 +3,13 @@
 import { useParams } from "next/navigation";
 import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { useStar } from "@jitaspace/hooks";
 import {
   SolarSystemAnchor,
   SolarSystemName,
   TypeAnchor,
   TypeName,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { useStar } from "@jitaspace/hooks";
 
 import { StarAvatar } from "~/components/Avatar";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";

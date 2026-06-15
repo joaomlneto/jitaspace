@@ -4,8 +4,9 @@ import type React from "react";
 import { Card, Group, RingProgress, Text } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
 
+import { TypeName } from "@jitaspace/eve-components";
 import { useCharacterSkillQueue } from "@jitaspace/hooks";
-import { TimeAgoText, TypeAvatar, TypeName } from "@jitaspace/ui";
+import { TimeAgoText, TypeAvatar } from "@jitaspace/ui";
 import { skillLevelRomanNumeral } from "@jitaspace/utils";
 
 import classes from "~/components/Card/SolarSystemCard.module.css";

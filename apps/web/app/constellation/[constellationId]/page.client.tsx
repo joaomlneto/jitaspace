@@ -12,12 +12,12 @@ import {
   Title,
 } from "@mantine/core";
 
-import { useConstellation } from "@jitaspace/hooks";
 import {
   ConstellationName,
   RegionName,
   SolarSystemName,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { useConstellation } from "@jitaspace/hooks";
 
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 

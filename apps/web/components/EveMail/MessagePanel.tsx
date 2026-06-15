@@ -1,20 +1,19 @@
 import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
 import {
-  useCharacterMail,
-  useCharacterMailingLists,
-  useCharacterMailLabels,
-} from "@jitaspace/hooks";
-import {
-  DateHoverCard,
   EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
   EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
-  FormattedDateText,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import {
+  useCharacterMail,
+  useCharacterMailingLists,
+  useCharacterMailLabels,
+} from "@jitaspace/hooks";
+import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import type { MailboxTableProps } from "~/components/EveMail/MailboxTable";
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";

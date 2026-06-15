@@ -16,11 +16,15 @@ jest.mock("@jitaspace/hooks", () => ({
 // stub them so the NavLink body still renders in jsdom. TypeAnchor must pass
 // its children through, since the skill names are rendered inside it.
 jest.mock("@jitaspace/ui", () => ({
+  SkillBar: () => null,
+}));
+
+// TypeAnchor / TypeName moved to @jitaspace/eve-components.
+jest.mock("@jitaspace/eve-components", () => ({
   TypeAnchor: ({ children }: { children?: ReactNode }) => (
     <span>{children}</span>
   ),
   TypeName: ({ typeId }: { typeId: number }) => <span>{`Type ${typeId}`}</span>,
-  SkillBar: () => null,
 }));
 
 const group = {

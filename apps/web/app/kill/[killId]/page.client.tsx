@@ -19,29 +19,31 @@ import {
 import { IconExternalLink, IconShield, IconSword } from "@tabler/icons-react";
 import useSWR from "swr";
 
+import {
+  AllianceName,
+  CharacterAnchor,
+  CharacterName,
+  CorporationName,
+  FactionAnchor,
+  FactionName,
+  SolarSystemAnchor,
+  SolarSystemName,
+  SolarSystemSovereigntyAvatar,
+  TypeAnchor,
+  TypeName,
+} from "@jitaspace/eve-components";
 import { useKillmail } from "@jitaspace/hooks";
 import {
   AllianceAnchor,
   AllianceAvatar,
-  AllianceName,
-  CharacterAnchor,
   CharacterAvatar,
-  CharacterName,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
-  FactionAnchor,
   FactionAvatar,
-  FactionName,
   ISKAmount,
-  SolarSystemAnchor,
-  SolarSystemName,
-  SolarSystemSovereigntyAvatar,
   TimeAgoText,
-  TypeAnchor,
   TypeAvatar,
-  TypeName,
 } from "@jitaspace/ui";
 
 import { EsiKillmailFittingCard } from "~/components/Fitting";

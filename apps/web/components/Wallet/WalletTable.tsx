@@ -10,13 +10,11 @@ import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
 import {
-  DateHoverCard,
   EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
-  FormattedDateText,
-  ISKAmount,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { DateHoverCard, FormattedDateText, ISKAmount } from "@jitaspace/ui";
 
 function DateCell({
   cell,

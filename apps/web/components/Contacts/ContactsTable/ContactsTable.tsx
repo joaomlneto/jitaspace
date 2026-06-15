@@ -13,9 +13,8 @@ import {
   EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
-  StandingIndicator,
-  StandingsBadge,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { StandingIndicator, StandingsBadge } from "@jitaspace/ui";
 
 export interface ContactsTableProps {
   contacts?: (AllianceContact & CorporationContact & CharacterContact)[];

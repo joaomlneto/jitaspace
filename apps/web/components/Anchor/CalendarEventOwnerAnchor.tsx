@@ -3,8 +3,9 @@
 import type { PropsWithChildren } from "react";
 import React, { memo } from "react";
 import { type AnchorProps } from "@mantine/core";
+
+import { CalendarEventOwnerAnchor as UICalendarEventOwnerAnchor } from "@jitaspace/eve-components";
 import { useCalendarEvent } from "@jitaspace/hooks";
-import { CalendarEventOwnerAnchor as UICalendarEventOwnerAnchor } from "@jitaspace/ui";
 
 export type CalendarEventOwnerAnchorProps = PropsWithChildren<
   AnchorProps & {

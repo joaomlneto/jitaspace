@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 
@@ -42,43 +42,8 @@ jest.mock("@jitaspace/hooks", () => ({
 // as a passthrough that surfaces the props it received so we can assert them.
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/ui", () => ({
-  EveMailSenderCard: ({
-    senderId,
-    isLoading,
-  }: {
-    senderId?: number;
-    isLoading?: boolean;
-  }) => (
-    <div data-testid="ui-mail-sender-card" data-loading={String(!!isLoading)}>
-      {`Sender ${senderId ?? ""}`}
-    </div>
-  ),
-  SolarSystemName: ({
-    solarSystemId,
-  }: {
-    solarSystemId?: number | string;
-  }) => <span>{`SolarSystemName ${solarSystemId ?? ""}`}</span>,
-  SolarSystemSovereigntyAvatar: ({
-    solarSystemId,
-  }: {
-    solarSystemId?: number | string;
-  }) => <span>{`Sov ${solarSystemId ?? ""}`}</span>,
-  StationName: ({ stationId }: { stationId?: number }) => (
-    <span>{`StationName ${stationId ?? ""}`}</span>
-  ),
   GroupBreadcrumbs: (props: Record<string, unknown>) => (
     <div data-testid="ui-group-breadcrumbs">{JSON.stringify(props)}</div>
-  ),
-  SolarSystemBreadcrumbs: (props: Record<string, unknown>) => (
-    <div data-testid="ui-solar-system-breadcrumbs">{JSON.stringify(props)}</div>
-  ),
-  TypeInventoryBreadcrumbs: (props: Record<string, unknown>) => (
-    <div data-testid="ui-type-inventory-breadcrumbs">
-      {JSON.stringify(props)}
-    </div>
-  ),
-  TypeMarketBreadcrumbs: (props: Record<string, unknown>) => (
-    <div data-testid="ui-type-market-breadcrumbs">{JSON.stringify(props)}</div>
   ),
   OpenInformationWindowActionIcon: ({
     onOpen,
@@ -170,6 +135,46 @@ jest.mock("@jitaspace/ui", () => ({
 }));
 
 // ---------------------------------------------------------------------------
+// "@jitaspace/eve-components" mocks. Same passthrough stubs as above, for the
+// dumb components that moved out of @jitaspace/ui into @jitaspace/eve-components.
+// ---------------------------------------------------------------------------
+jest.mock("@jitaspace/eve-components", () => ({
+  EveMailSenderCard: ({
+    senderId,
+    isLoading,
+  }: {
+    senderId?: number;
+    isLoading?: boolean;
+  }) => (
+    <div data-testid="ui-mail-sender-card" data-loading={String(!!isLoading)}>
+      {`Sender ${senderId ?? ""}`}
+    </div>
+  ),
+  SolarSystemName: ({ solarSystemId }: { solarSystemId?: number | string }) => (
+    <span>{`SolarSystemName ${solarSystemId ?? ""}`}</span>
+  ),
+  SolarSystemSovereigntyAvatar: ({
+    solarSystemId,
+  }: {
+    solarSystemId?: number | string;
+  }) => <span>{`Sov ${solarSystemId ?? ""}`}</span>,
+  StationName: ({ stationId }: { stationId?: number }) => (
+    <span>{`StationName ${stationId ?? ""}`}</span>
+  ),
+  SolarSystemBreadcrumbs: (props: Record<string, unknown>) => (
+    <div data-testid="ui-solar-system-breadcrumbs">{JSON.stringify(props)}</div>
+  ),
+  TypeInventoryBreadcrumbs: (props: Record<string, unknown>) => (
+    <div data-testid="ui-type-inventory-breadcrumbs">
+      {JSON.stringify(props)}
+    </div>
+  ),
+  TypeMarketBreadcrumbs: (props: Record<string, unknown>) => (
+    <div data-testid="ui-type-market-breadcrumbs">{JSON.stringify(props)}</div>
+  ),
+}));
+
+// ---------------------------------------------------------------------------
 // "~/components/*" sub-modules that SolarSystemCard / StationCard render.
 // Stub them as passthrough markers so we don't drag heavy deps into the test
 // and so the wrappers under test stay isolated.
@@ -244,9 +249,7 @@ describe("EveMailSenderCard", () => {
       EveMailSenderCard,
     } = require("../components/Card/EveMailSenderCard");
 
-    renderWithMantine(
-      <EveMailSenderCard characterId={42} messageId={7} />,
-    );
+    renderWithMantine(<EveMailSenderCard characterId={42} messageId={7} />);
 
     expect(mockUseCharacterMail).toHaveBeenCalledWith(42, 7);
     expect(screen.getByTestId("ui-mail-sender-card")).toHaveTextContent(
@@ -690,9 +693,7 @@ describe("CalendarEventAttendanceSelect", () => {
 
     // onRespond is a no-op without crashing (esi-client mock not required here).
     fireEvent.click(screen.getByRole("button", { name: "respond" }));
-    expect(
-      screen.getByRole("button", { name: "respond" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "respond" })).toBeInTheDocument();
   });
 
   it("surfaces the loading state while the event is fetching", () => {

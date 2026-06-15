@@ -15,6 +15,11 @@ import type {
   CalendarEventAttendee,
   CalendarEventAttendeeResponse,
 } from "@jitaspace/hooks";
+import {
+  CharacterAnchor,
+  CharacterName,
+  EveEntityNameAnchor,
+} from "@jitaspace/eve-components";
 import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import {
   useCalendarEvent,
@@ -22,11 +27,8 @@ import {
   useSelectedCharacter,
 } from "@jitaspace/hooks";
 import {
-  CharacterAnchor,
   CharacterAvatar,
-  CharacterName,
   DateHoverCard,
-  EveEntityNameAnchor,
   FormattedDateText,
 } from "@jitaspace/ui";
 

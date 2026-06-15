@@ -182,6 +182,9 @@ importers:
       '@jitaspace/esi-metadata':
         specifier: workspace:*
         version: link:../../packages/esi-metadata
+      '@jitaspace/eve-components':
+        specifier: workspace:*
+        version: link:../../packages/eve-components
       '@jitaspace/eve-icons':
         specifier: workspace:*
         version: link:../../packages/eve-icons
@@ -1133,6 +1136,97 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/eve-components:
+    dependencies:
+      '@jitaspace/eve-icons':
+        specifier: workspace:*
+        version: link:../eve-icons
+      '@jitaspace/hooks':
+        specifier: workspace:*
+        version: link:../hooks
+      '@jitaspace/sde-client':
+        specifier: workspace:*
+        version: link:../sde-client
+      '@jitaspace/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@jitaspace/utils':
+        specifier: workspace:*
+        version: link:../utils
+      '@mantine/core':
+        specifier: 9.3.0
+        version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@mantine/hooks':
+        specifier: 9.3.0
+        version: 9.3.0(react@19.2.6)
+      date-fns:
+        specifier: ^4.3.0
+        version: 4.3.0
+      next:
+        specifier: 16.2.6
+        version: 16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      react:
+        specifier: ^19.2.6
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.2.6
+        version: 19.2.6(react@19.2.6)
+    devDependencies:
+      '@jest/globals':
+        specifier: ^30.4.1
+        version: 30.4.1
+      '@jitaspace/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@jitaspace/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@jitaspace/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@swc/core':
+        specifier: ^1.15.40
+        version: 1.15.40
+      '@swc/jest':
+        specifier: ^0.2.39
+        version: 0.2.39(@swc/core@1.15.40)
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^16.3.2
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@testing-library/user-event':
+        specifier: ^14.6.1
+        version: 14.6.1(@testing-library/dom@10.4.1)
+      '@types/jest':
+        specifier: ^30.0.0
+        version: 30.0.0
+      '@types/node':
+        specifier: ^24.12.4
+        version: 24.12.4
+      '@types/react':
+        specifier: 19.2.15
+        version: 19.2.15
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.15)
+      eslint:
+        specifier: ^9.39.4
+        version: 9.39.4(jiti@2.7.0)
+      jest:
+        specifier: ^30.4.2
+        version: 30.4.2(@types/node@24.12.4)(ts-node@10.9.2(@swc/core@1.15.40)(@types/node@24.12.4)(typescript@5.9.3))
+      jest-environment-jsdom:
+        specifier: ^30.4.1
+        version: 30.4.1
+      prettier:
+        specifier: ^3.8.3
+        version: 3.8.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   packages/eve-data:
     devDependencies:
       '@jest/globals':
@@ -1771,12 +1865,6 @@ importers:
       '@jitaspace/eve-icons':
         specifier: workspace:*
         version: link:../eve-icons
-      '@jitaspace/hooks':
-        specifier: workspace:*
-        version: link:../hooks
-      '@jitaspace/sde-client':
-        specifier: workspace:*
-        version: link:../sde-client
       '@jitaspace/utils':
         specifier: workspace:*
         version: link:../utils

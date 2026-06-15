@@ -11,19 +11,21 @@ import {
   Tooltip,
 } from "@mantine/core";
 
+import {
+  CharacterName,
+  CorporationName,
+  FactionName,
+  TypeName,
+} from "@jitaspace/eve-components";
 import { CombatLogIcon, MercenaryIcon, WarsIcon } from "@jitaspace/eve-icons";
 import { useKillmail } from "@jitaspace/hooks";
 import {
   CharacterAvatar,
-  CharacterName,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
   FactionAvatar,
-  FactionName,
   TimeAgoText,
   TypeAvatar,
-  TypeName,
   WarAnchor,
 } from "@jitaspace/ui";
 

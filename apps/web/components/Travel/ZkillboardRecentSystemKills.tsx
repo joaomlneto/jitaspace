@@ -3,7 +3,8 @@ import { Group, Loader, Spoiler, Stack, Text } from "@mantine/core";
 import { subHours } from "date-fns";
 import useSWR from "swr";
 
-import { EveEntityName, TimeAgoText } from "@jitaspace/ui";
+import { EveEntityName } from "@jitaspace/eve-components";
+import { TimeAgoText } from "@jitaspace/ui";
 
 import { KillmailButton } from "./KillmailButton";
 
