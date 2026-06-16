@@ -1,4 +1,5 @@
 export * from "./downloadAndExtractSde";
+export * from "./ingestSde";
 export * from "./ingestSdeAgentsInSpace";
 export * from "./ingestSdeAgentTypes";
 export * from "./ingestSdeAncestries";

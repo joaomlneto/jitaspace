@@ -32,11 +32,13 @@ jest.mock("p-limit", () => ({
 
 let jobs: typeof Jobs;
 let registry: typeof Registry;
+let sdeIngestJobIds: string[];
 
 beforeAll(async () => {
   const mod = await import("../jobs");
   jobs = mod.jobs;
   registry = mod.registry;
+  sdeIngestJobIds = mod.SDE_INGEST_JOB_IDS;
 });
 
 const JOBS_DIR = join(__dirname, "..", "jobs");
@@ -100,5 +102,25 @@ describe("background-jobs registry", () => {
     expect(referenced.size).toBeGreaterThan(0);
     const unknown = [...referenced].filter((id) => !registry.has(id));
     expect(unknown).toEqual([]);
+  });
+
+  // The `ingest-sde-all` orchestrator and `bootstrapDatabase` both drive this
+  // shared, FK-ordered list via `ctx.invoke`, so guard it explicitly (the
+  // generic ctx.invoke scan above can't see ids that come from a constant).
+  it("SDE_INGEST_JOB_IDS all resolve to registered jobs", () => {
+    const unknown = sdeIngestJobIds.filter((id) => !registry.has(id));
+    expect(unknown).toEqual([]);
+  });
+
+  it("SDE_INGEST_JOB_IDS covers exactly the per-file ingest-sde jobs", () => {
+    // Catches a new `ingest-sde-*` job left out of the shared pipeline list
+    // (and the orchestrator id leaking into its own list).
+    const perFile = jobs
+      .map((job) => job.id)
+      .filter((id) => id.startsWith("ingest-sde-") && id !== "ingest-sde-all")
+      .sort((a, b) => a.localeCompare(b));
+    expect([...sdeIngestJobIds].sort((a, b) => a.localeCompare(b))).toEqual(
+      perFile,
+    );
   });
 });
