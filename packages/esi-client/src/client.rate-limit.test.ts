@@ -14,6 +14,17 @@ import {
   getWaitTime,
 } from "./rate-limit";
 
+// Capture the real timer globals before any test installs fake timers. Jest's
+// `useRealTimers()` does not reliably restore them in this @swc/jest + node
+// setup, which would leave `setTimeout` undefined for later tests (the rate
+// limiter calls it internally). Restored in afterEach below.
+const realTimerGlobals = {
+  setTimeout: globalThis.setTimeout,
+  clearTimeout: globalThis.clearTimeout,
+  setInterval: globalThis.setInterval,
+  clearInterval: globalThis.clearInterval,
+};
+
 const STATUS_GROUP = "status";
 const TEST_USER = "anonymous";
 const CHAR_SOCIAL_GROUP = "char-social";
@@ -56,6 +67,11 @@ describe("client rate-limit integration", () => {
   });
 
   afterEach(() => {
+    // Force real timers back (and re-install the captured globals, since
+    // useRealTimers() does not reliably restore them here) so a fake-timers
+    // test cannot break `setTimeout` for the tests that follow it.
+    jest.useRealTimers();
+    Object.assign(globalThis, realTimerGlobals);
     jest.restoreAllMocks();
   });
 
