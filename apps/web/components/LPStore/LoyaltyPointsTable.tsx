@@ -131,7 +131,7 @@ function lpCostCell(row: AugmentedOffer) {
 }
 
 function iskCostCell(row: AugmentedOffer) {
-  return <ISKAmount inherit ta="right" amount={row.iskCost ?? 0} />;
+  return <ISKAmount inherit ta="right" amount={row.iskCost} />;
 }
 
 function akCostCell(_row: AugmentedOffer, value: unknown) {

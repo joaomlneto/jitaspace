@@ -1,7 +1,7 @@
 "use client";
 
 import type { TextProps } from "@mantine/core";
-import React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Skeleton, Text, Tooltip } from "@mantine/core";
 
 export type ISKAmountProps = TextProps & {
@@ -34,7 +34,7 @@ export const ISKAmount = memo(
       return (
         (amount / item.value).toFixed(digits).replace(rx, "$1") + item.symbol
       );
-    }, [amount, digits]);
+    }, [amount, digits, showFullAmount]);
 
     if (amount == null)
       return (

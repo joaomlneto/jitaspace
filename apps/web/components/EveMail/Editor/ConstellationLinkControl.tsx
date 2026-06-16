@@ -40,8 +40,8 @@ export const ConstellationLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setConstellationId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setConstellationId(href);
   };
 
   const handleClose = () => {
@@ -51,16 +51,18 @@ export const ConstellationLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    constellationId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:4//${constellationId}`,
-          })
-          .run();
+    if (constellationId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:4//${constellationId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -85,7 +87,7 @@ export const ConstellationLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || ConstellationLinkIcon}
+          icon={icon ?? ConstellationLinkIcon}
           aria-label="Link Constellation"
           title="Link Constellation"
           onClick={handleOpen}

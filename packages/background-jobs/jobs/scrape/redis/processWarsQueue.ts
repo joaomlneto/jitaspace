@@ -30,11 +30,11 @@ const buildWarEntry = (warId: number, war: GetWarsWarId200) => ({
   aggressorAllianceId: war.aggressor.alliance_id ?? null,
   aggressorCorporationId: war.aggressor.corporation_id ?? null,
   aggressorIskDestroyed: war.aggressor.isk_destroyed,
-  aggressorShipsKilled: war.aggressor.ships_killed ?? null,
+  aggressorShipsKilled: war.aggressor.ships_killed,
   defenderAllianceId: war.defender.alliance_id ?? null,
   defenderCorporationId: war.defender.corporation_id ?? null,
   defenderIskDestroyed: war.defender.isk_destroyed,
-  defenderShipsKilled: war.defender.ships_killed ?? null,
+  defenderShipsKilled: war.defender.ships_killed,
   isDeleted: false,
 });
 

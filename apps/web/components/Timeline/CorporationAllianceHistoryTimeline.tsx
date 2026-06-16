@@ -1,7 +1,7 @@
 "use client";
 
+import type { TimelineProps } from "@mantine/core";
 import { memo } from "react";
-import { type TimelineProps } from "@mantine/core";
 
 import { CorporationAllianceHistoryTimeline as UICorporationAllianceHistoryTimeline } from "@jitaspace/eve-components";
 import { useCorporationAllianceHistory } from "@jitaspace/hooks";

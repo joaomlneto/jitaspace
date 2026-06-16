@@ -41,8 +41,8 @@ export const CorporationLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setCorporationId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setCorporationId(href);
   };
 
   const handleClose = () => {
@@ -52,16 +52,18 @@ export const CorporationLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    corporationId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:2//${corporationId}`,
-          })
-          .run();
+    if (corporationId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:2//${corporationId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -86,7 +88,7 @@ export const CorporationLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || CorporationLinkIcon}
+          icon={icon ?? CorporationLinkIcon}
           aria-label="Link Corporation"
           title="Link Corporation"
           onClick={handleOpen}

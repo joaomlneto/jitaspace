@@ -80,8 +80,11 @@ function parseScan(scan: string) {
       currentCategory = CATEGORY_KEY[line] ?? null;
     } else {
       if (currentCategory === null) throw new Error("Invalid Scan");
-      if (result[currentCategory].some((item) => item.name === line)) {
-        result[currentCategory].find((item) => item.name === line)!.quantity++;
+      const existing = result[currentCategory].find(
+        (item) => item.name === line,
+      );
+      if (existing) {
+        existing.quantity++;
       } else {
         result[currentCategory].push({ name: line, quantity: 1 });
       }
@@ -99,18 +102,14 @@ function mergeScans(scans: ScanResult[]) {
     charges: [],
   };
   for (const scan of scans) {
-    for (const [key, modules] of Object.entries(scan)) {
-      const category = key as keyof ScanResult;
-      for (const shipModule of modules) {
+    for (const category of Object.keys(scan) as (keyof ScanResult)[]) {
+      for (const shipModule of scan[category]) {
         // check if module already exists. if so, set quantity to the max of both quantities. otherwise, push the module.
-        if (result[category].some((item) => item.name === shipModule.name)) {
-          result[category].find(
-            (item) => item.name === shipModule.name,
-          )!.quantity = Math.max(
-            result[category].find((item) => item.name === shipModule.name)!
-              .quantity,
-            shipModule.quantity,
-          );
+        const existing = result[category].find(
+          (item) => item.name === shipModule.name,
+        );
+        if (existing) {
+          existing.quantity = Math.max(existing.quantity, shipModule.quantity);
         } else {
           result[category].push(shipModule);
         }
@@ -191,7 +190,7 @@ export default function Page({ ships }: Readonly<PageProps>) {
 
   const handlePaste: React.ClipboardEventHandler = (event) => {
     event.preventDefault();
-    const pastedText = event.clipboardData?.getData("text");
+    const pastedText = event.clipboardData.getData("text");
     try {
       const parsedScan = parseScan(pastedText.trim());
       setScans((prev) => [...prev, parsedScan]);
@@ -282,12 +281,14 @@ export default function Page({ ships }: Readonly<PageProps>) {
                       <HoverCard.Dropdown m={0} p={0}>
                         <ShipFittingCard
                           shipTypeId={shipTypeId ? Number(shipTypeId) : 670}
-                          items={convertScan(scan).map((item) => ({
-                            ...item,
-                            typeId: xx.data?.find(
+                          items={convertScan(scan).flatMap((item) => {
+                            const typeId = xx.data.find(
                               (type) => type.name == item.name,
-                            )?.id!,
-                          }))}
+                            )?.id;
+                            return typeId === undefined
+                              ? []
+                              : [{ ...item, typeId }];
+                          })}
                         />
                       </HoverCard.Dropdown>
                     </HoverCard>
@@ -322,10 +323,12 @@ export default function Page({ ships }: Readonly<PageProps>) {
               //showEmptySections
               //showEmptySlots
               //showExcessModules
-              items={scanItems.map((item) => ({
-                ...item,
-                typeId: xx.data?.find((type) => type.name == item.name)?.id!,
-              }))}
+              items={scanItems.flatMap((item) => {
+                const typeId = xx.data.find(
+                  (type) => type.name == item.name,
+                )?.id;
+                return typeId === undefined ? [] : [{ ...item, typeId }];
+              })}
             />
           </Stack>
         </SimpleGrid>

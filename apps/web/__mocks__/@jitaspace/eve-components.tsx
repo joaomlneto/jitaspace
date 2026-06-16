@@ -21,7 +21,11 @@ type AnyProps = Record<string, unknown> & { children?: React.ReactNode };
 const childrenStub =
   (testid?: string) =>
   ({ children }: AnyProps) =>
-    React.createElement("span", testid ? { "data-testid": testid } : null, children);
+    React.createElement(
+      "span",
+      testid ? { "data-testid": testid } : null,
+      children,
+    );
 
 // --- Anchors (render children) ---
 export const CalendarEventOwnerAnchor = childrenStub();
@@ -41,11 +45,19 @@ export const WarDefenderAnchor = childrenStub();
 
 // --- Names (mirror the prior @jitaspace/ui stub output that tests assert on) ---
 export const CharacterName = ({ characterId }: AnyProps) =>
-  React.createElement("span", null, `char-${characterId}`);
+  React.createElement("span", null, `char-${String(characterId)}`);
 export const CorporationName = ({ corporationId }: AnyProps) =>
-  React.createElement("span", { "data-testid": "corp-name" }, `corp-${corporationId}`);
+  React.createElement(
+    "span",
+    { "data-testid": "corp-name" },
+    `corp-${String(corporationId)}`,
+  );
 export const TypeName = ({ typeId }: AnyProps) =>
-  React.createElement("span", { "data-testid": "type-name" }, `type-${typeId}`);
+  React.createElement(
+    "span",
+    { "data-testid": "type-name" },
+    `type-${String(typeId)}`,
+  );
 export const AllianceName = () => null;
 export const AssetLocationName = () => null;
 export const ConstellationName = () => null;

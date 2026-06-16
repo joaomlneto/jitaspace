@@ -26,7 +26,12 @@ jest.mock("@mantine/hooks", () => {
     jest.requireActual<typeof import("@mantine/hooks")>("@mantine/hooks");
   return {
     ...actual,
-    useDebouncedValue: (value: unknown) => [value, () => {}],
+    useDebouncedValue: (value: unknown) => [
+      value,
+      () => {
+        /* no-op cancel: the stub resolves synchronously, nothing to cancel */
+      },
+    ],
   };
 });
 

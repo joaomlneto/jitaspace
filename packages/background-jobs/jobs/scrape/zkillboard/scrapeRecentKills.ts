@@ -265,7 +265,7 @@ const buildKillmailRows = (packages: R2Z2Package[]): KillmailRows => {
           typeId: item.item_type_id,
           quantityDestroyed: item.quantity_destroyed ?? null,
           quantityDropped: item.quantity_dropped ?? null,
-          singleton: toBigInt(item.singleton ?? 0),
+          singleton: toBigInt(item.singleton),
         });
       },
     );
@@ -282,7 +282,7 @@ const buildKillmailRows = (packages: R2Z2Package[]): KillmailRows => {
         weaponTypeId: attacker.weapon_type_id ?? null,
         damageDone: attacker.damage_done,
         finalBlow: attacker.final_blow,
-        securityStatus: attacker.security_status ?? 0,
+        securityStatus: attacker.security_status,
       });
       add(missingAllianceIds, attacker.alliance_id);
       add(missingCharacterIds, attacker.character_id);
@@ -367,7 +367,7 @@ const collectKillmailPackages = async (
   return { packages, cursor, rateLimitUntilMs };
 };
 
-export interface ScrapeRecentKillsEventPayload {}
+export type ScrapeRecentKillsEventPayload = Record<string, never>;
 
 export const scrapeZkillboardRecentKills =
   defineJob<ScrapeRecentKillsEventPayload>({
@@ -448,9 +448,10 @@ export const scrapeZkillboardRecentKills =
         );
 
         if (nextSequenceValue === null) {
-          nextSequenceValue = latestSequenceValue as string;
+          const initialCursor = latestSequenceValue as string;
+          nextSequenceValue = initialCursor;
           await ctx.run("Initialize R2Z2 cursor", async () => {
-            await redis.set(R2Z2_CURSOR_KEY, nextSequenceValue!);
+            await redis.set(R2Z2_CURSOR_KEY, initialCursor);
           });
         }
 
@@ -482,7 +483,7 @@ export const scrapeZkillboardRecentKills =
           });
           return {
             processed: 0,
-            nextSequence: cursor?.toString(),
+            nextSequence: cursor.toString(),
             latestSequence: latestSequence.toString(),
           };
         }

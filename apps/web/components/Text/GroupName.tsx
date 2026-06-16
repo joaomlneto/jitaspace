@@ -1,7 +1,8 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import { memo } from "react";
-import { type TextProps } from "@mantine/core";
+
 import { useGroup } from "@jitaspace/hooks";
 import { GroupName as UIGroupName } from "@jitaspace/ui";
 

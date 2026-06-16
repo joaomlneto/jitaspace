@@ -1,7 +1,7 @@
 "use client";
 
 import type { TimelineProps } from "@mantine/core";
-import React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import Link from "next/link";
 import { Anchor, Badge, Group, Text, Timeline } from "@mantine/core";
 import { format } from "date-fns";
@@ -10,12 +10,12 @@ import { AllianceAvatar } from "@jitaspace/ui";
 
 import { AllianceName } from "../Text";
 
-export type AllianceHistoryEntry = {
+export interface AllianceHistoryEntry {
   alliance_id?: number;
   is_deleted?: boolean;
   record_id: number;
   start_date: string;
-};
+}
 
 type AllianceHistoryEntryWithEnd = AllianceHistoryEntry & {
   end_date?: string;

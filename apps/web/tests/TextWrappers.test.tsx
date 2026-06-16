@@ -102,48 +102,20 @@ jest.mock("@jitaspace/hooks", () => ({
 // passthrough that renders the key prop it receives.
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/ui", () => ({
-  AsteroidBeltName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  BloodlineName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  CategoryName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  DogmaAttributeName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  DogmaEffectName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  GroupName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  LabelName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  MailingListName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  MarketGroupName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  MoonName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  PlanetName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  RaceName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  StargateName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
-  StarName: ({ name }: { name?: ReactNode }) => (
-    <span>{String(name ?? "")}</span>
-  ),
+  AsteroidBeltName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  BloodlineName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  CategoryName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  DogmaAttributeName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  DogmaEffectName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  GroupName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  LabelName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  MailingListName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  MarketGroupName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  MoonName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  PlanetName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  RaceName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  StargateName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
+  StarName: ({ name }: { name?: ReactNode }) => <span>{name}</span>,
 }));
 
 // ---------------------------------------------------------------------------

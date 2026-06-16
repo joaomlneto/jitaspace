@@ -1,4 +1,5 @@
 import { Readable } from "node:stream";
+import type { ReadableStream as NodeWebReadableStream } from "node:stream/web";
 import tar from "tar-stream";
 import bz2 from "unbzip2-stream";
 
@@ -32,9 +33,13 @@ export const downloadTarBz2FileAndParseJson = async (url: string) => {
 
   console.log(`Processing wars package for ${url}`);
 
-  // Convert the Web ReadableStream to a Node.js ReadableStream
-  // @ts-expect-error
-  const nodeStream = Readable.fromWeb(response.body);
+  // Convert the Web ReadableStream to a Node.js ReadableStream. `response.body`
+  // is the DOM `ReadableStream` from the global `fetch`; at runtime it is the
+  // same object `Readable.fromWeb` expects (`node:stream/web`'s ReadableStream),
+  // so we retype it across the two structurally-identical declarations.
+  const nodeStream = Readable.fromWeb(
+    response.body as NodeWebReadableStream<Uint8Array>,
+  );
   console.log(`Converted Web ReadableStream to Node.js ReadableStream`);
 
   const files: { name: string; content: object }[] = [];
@@ -47,11 +52,14 @@ export const downloadTarBz2FileAndParseJson = async (url: string) => {
 
     extract.on("entry", (header, stream, next) => {
       const chunks: Buffer[] = [];
-      stream.on("data", (chunk) => chunks.push(chunk));
+      stream.on("data", (chunk: Buffer) => chunks.push(chunk));
       stream.on("end", () => {
+        const content = JSON.parse(
+          Buffer.concat(chunks).toString("utf8"),
+        ) as object;
         files.push({
           name: header.name,
-          content: JSON.parse(Buffer.concat(chunks).toString("utf8")),
+          content,
         });
         next();
       });

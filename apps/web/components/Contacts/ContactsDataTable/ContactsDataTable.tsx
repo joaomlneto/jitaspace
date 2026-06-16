@@ -67,7 +67,8 @@ function ContactBlockedCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
       </Text>
     );
   }
-  return isBlocked ? "Yes" : "No";
+  // Only reached when `isBlocked` is undefined.
+  return "No";
 }
 
 function ContactStandingsCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
@@ -131,7 +132,7 @@ export const ContactsDataTable = memo(
           accessorKey: "label_ids",
           Cell: ({ cell }) => (
             <Group gap="xs">
-              {cell.getValue<number[]>()?.map((labelId) => (
+              {cell.getValue<number[]>().map((labelId) => (
                 <Badge size="sm" key={labelId}>
                   {labelName[labelId] ?? JSON.stringify(cell.getValue())}
                 </Badge>

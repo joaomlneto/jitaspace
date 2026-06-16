@@ -12,7 +12,7 @@ import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
 export default function Page() {
   const params = useParams();
-  const rawPlanetId = params?.planetId;
+  const rawPlanetId = params.planetId;
   const planetId = Number(
     typeof rawPlanetId === "string" ? rawPlanetId : rawPlanetId?.[0],
   );
@@ -55,7 +55,7 @@ export default function Page() {
             size="xs"
             position={
               planet?.data.position
-                ? Object.values(planet?.data.position)
+                ? Object.values(planet.data.position)
                 : undefined
             }
           />

@@ -1,7 +1,7 @@
 "use client";
 
 import type { SelectProps } from "@mantine/core";
-import React, { memo, useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Loader, Select } from "@mantine/core";
 import { openConfirmModal } from "@mantine/modals";
 
@@ -35,10 +35,10 @@ export const CalendarEventAttendanceSelect = memo(
     onRespond,
     ...otherProps
   }: CalendarEventAttendanceSelectProps) => {
-    const [value, setValue] =
-      useState<CalendarEventAttendanceResponse | null>(
-        (otherProps.value as CalendarEventAttendanceResponse) ?? null,
-      );
+    const [value, setValue] = useState<CalendarEventAttendanceResponse | null>(
+      (otherProps.value as CalendarEventAttendanceResponse | null | undefined) ??
+        null,
+    );
 
     useEffect(() => {
       if (value === null && initialResponse) {
@@ -64,7 +64,11 @@ export const CalendarEventAttendanceSelect = memo(
           if (value === newValue) return;
           if (!canRespond) return;
           if (newValue === null) return;
-          if (!responseOptions.includes(newValue as CalendarEventAttendanceResponse))
+          if (
+            !responseOptions.includes(
+              newValue as CalendarEventAttendanceResponse,
+            )
+          )
             return;
           openConfirmModal({
             title: "Are you sure?",

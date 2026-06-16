@@ -35,8 +35,8 @@ export const RouteTable = memo(({ route }: RouteTableProps) => {
   }, [systemKillsData]);
 
   const killStatisticsDate: Date | null = useMemo(() => {
-    const headerValue = systemKillsData?.headers?.["last-modified"];
-    if (headerValue) return new Date(headerValue);
+    const headerValue: unknown = systemKillsData?.headers["last-modified"];
+    if (typeof headerValue === "string") return new Date(headerValue);
     return null;
   }, [systemKillsData]);
 

@@ -1,6 +1,13 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { render, screen, waitFor } from "@testing-library/react";
 
 // ---------------------------------------------------------------------------
@@ -14,11 +21,18 @@ import { render, screen, waitFor } from "@testing-library/react";
 const mockAddCharacter = jest.fn<() => Promise<void>>();
 const mockRehydrate = jest.fn<() => Promise<void>>();
 const mockRefreshCharacterToken =
-  jest.fn<(token: string) => Promise<{ accessToken: string; refreshTokenData: string }>>();
+  jest.fn<
+    (
+      token: string,
+    ) => Promise<{ accessToken: string; refreshTokenData: string }>
+  >();
 
 let storeState: {
   addCharacter: typeof mockAddCharacter;
-  characters: Record<string, { accessTokenExpirationDate: string; refreshToken: string }>;
+  characters: Record<
+    string,
+    { accessTokenExpirationDate: string; refreshToken: string }
+  >;
 } = { addCharacter: mockAddCharacter, characters: {} };
 
 const useAuthStore = (() => storeState) as unknown as {
@@ -109,7 +123,7 @@ describe("EsiClientSSOAccessTokenInjector", () => {
   it("swallows refresh errors without crashing", async () => {
     const consoleError = jest
       .spyOn(console, "error")
-      .mockImplementation(() => {});
+      .mockImplementation(() => undefined);
     mockRefreshCharacterToken.mockRejectedValueOnce(new Error("boom"));
     storeState = {
       addCharacter: mockAddCharacter,

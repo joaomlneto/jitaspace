@@ -20,7 +20,7 @@ const fetchConstellation = (constellationId: number) =>
     }));
 
 export interface ScrapeConstellationEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const scrapeEsiConstellations = defineJob<

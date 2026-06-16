@@ -41,7 +41,7 @@ export default function Page() {
 
   const assetEntries = useMemo(
     () =>
-      Object.values(assets ?? {}).map((asset) => ({
+      Object.values(assets).map((asset) => ({
         id: asset.type_id,
         category: "inventory_type" as const,
       })),
@@ -59,7 +59,7 @@ export default function Page() {
 
   const entries = useMemo(
     () =>
-      Object.values(assets ?? {})
+      Object.values(assets)
         .filter((asset) => asset.location_type !== "item")
         .filter(
           (asset) =>
@@ -138,10 +138,8 @@ export default function Page() {
           </Group>
           <Text size="sm" c="dimmed">
             {filtersEnabled
-              ? `Showing ${entries.length}/${
-                  (Object.keys(assets) ?? []).length
-                } assets`
-              : `${(Object.keys(assets) ?? []).length} assets`}
+              ? `Showing ${entries.length}/${Object.keys(assets).length} assets`
+              : `${Object.keys(assets).length} assets`}
           </Text>
           <Text size="sm" c="dimmed">
             Total value: <ISKAmount span amount={totalPrice} />

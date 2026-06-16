@@ -10,7 +10,7 @@ import { prisma } from "../../../db";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeCategoriesEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 // Extracted to keep the per-category fetch from nesting too deeply.

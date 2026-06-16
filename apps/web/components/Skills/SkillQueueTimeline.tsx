@@ -108,14 +108,12 @@ export const SkillQueueTimeline = memo(
                             <Text size="sm">{entry.level_end_sp}</Text>
                           </Group>
                         )}
-                        {entry.queue_position !== undefined && (
-                          <Group justify="space-between">
-                            <Text size="sm" c="dimmed">
-                              Queue Position
-                            </Text>
-                            <Text size="sm">{entry.queue_position}</Text>
-                          </Group>
-                        )}
+                        <Group justify="space-between">
+                          <Text size="sm" c="dimmed">
+                            Queue Position
+                          </Text>
+                          <Text size="sm">{entry.queue_position}</Text>
+                        </Group>
                         <Anchor
                           component={Link}
                           href={`https://everef.net/type/${entry.skill_id}`}

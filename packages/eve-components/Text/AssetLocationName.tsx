@@ -1,7 +1,7 @@
 "use client";
 
 import type { TextProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import { Text } from "@mantine/core";
 
 import { useCharacterAssets } from "@jitaspace/hooks";

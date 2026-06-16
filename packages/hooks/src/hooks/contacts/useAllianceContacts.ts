@@ -1,9 +1,11 @@
 "use client";
 
-import {
-  getAlliancesAllianceIdContacts,
+import type {
   GetAlliancesAllianceIdContactsLabelsQueryResponse,
   GetAlliancesAllianceIdContactsQueryResponse,
+} from "@jitaspace/esi-client";
+import {
+  getAlliancesAllianceIdContacts,
   useGetAlliancesAllianceIdContactsInfinite,
   useGetAlliancesAllianceIdContactsLabels,
 } from "@jitaspace/esi-client";
@@ -23,7 +25,7 @@ export function useAllianceContacts(allianceId: number) {
   });
 
   const { data: labels } = useGetAlliancesAllianceIdContactsLabels(
-    allianceId ?? 0,
+    allianceId,
     { ...authHeaders },
     {
       query: {
@@ -35,25 +37,26 @@ export function useAllianceContacts(allianceId: number) {
 
   const { data, isLoading, error, refetch } =
     useGetAlliancesAllianceIdContactsInfinite(
-      allianceId ?? 0,
+      allianceId,
       {},
       { ...authHeaders },
       {
         query: {
-          enabled: accessToken !== null && allianceId !== undefined,
+          enabled: accessToken !== null,
           initialPageParam: 1,
           queryFn: ({ pageParam }) =>
             getAlliancesAllianceIdContacts(
-              allianceId ?? 0,
+              allianceId,
               {
                 page: pageParam,
               },
               { ...authHeaders },
             ),
           getNextPageParam: (lastPage, pages) => {
-            const numPages: number | undefined = lastPage.headers?.["x-pages"];
+            const xPages: unknown = lastPage.headers["x-pages"];
+            const numPages = typeof xPages === "string" ? Number(xPages) : 0;
             const nextPage = pages.length + 1;
-            if (nextPage > (numPages ?? 0)) return undefined;
+            if (nextPage > numPages) return undefined;
             return nextPage;
           },
         },
@@ -61,7 +64,7 @@ export function useAllianceContacts(allianceId: number) {
     );
 
   return {
-    data: (data?.pages ?? []).flatMap((res) => res.data ?? []),
+    data: (data?.pages ?? []).flatMap((res) => res.data),
     labels: labels?.data ?? [],
     error,
     isLoading,

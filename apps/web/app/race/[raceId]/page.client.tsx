@@ -13,7 +13,7 @@ import { RaceName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();
-  const rawRaceId = params?.raceId;
+  const rawRaceId = params.raceId;
   const raceId = Number(
     typeof rawRaceId === "string" ? rawRaceId : rawRaceId?.[0],
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo } from "react";
+import { memo } from "react";
 import { Group, Stack } from "@mantine/core";
 
 import { useCharacter } from "@jitaspace/hooks";
@@ -35,12 +35,12 @@ export const CharacterCard = memo(({ characterId }: CharacterCardProps) => {
             <Group gap="xs">
               <CorporationAvatar
                 size="xs"
-                corporationId={data?.corporationId}
+                corporationId={data.corporationId}
               />
               <CorporationAnchor corporationId={data.corporationId}>
                 <CorporationName
                   size="xs"
-                  corporationId={data?.corporationId}
+                  corporationId={data.corporationId}
                 />
               </CorporationAnchor>
             </Group>

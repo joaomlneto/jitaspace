@@ -1,7 +1,7 @@
 "use client";
 
-import React, { memo, useMemo } from "react";
-import { type AvatarProps } from "@mantine/core";
+import type { AvatarProps } from "@mantine/core";
+import { memo, useMemo } from "react";
 
 import { useSolarSystem, useSolarSystemSovereignty } from "@jitaspace/hooks";
 import {

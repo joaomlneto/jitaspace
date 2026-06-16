@@ -39,8 +39,8 @@ export const AllianceLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setAllianceId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setAllianceId(href);
   };
 
   const handleClose = () => {
@@ -50,16 +50,18 @@ export const AllianceLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    allianceId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:16159//${allianceId}`,
-          })
-          .run();
+    if (allianceId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:16159//${allianceId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -84,7 +86,7 @@ export const AllianceLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || AllianceLinkIcon}
+          icon={icon ?? AllianceLinkIcon}
           aria-label="Link Alliance"
           title="Link Alliance"
           onClick={handleOpen}

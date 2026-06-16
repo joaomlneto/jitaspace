@@ -11,7 +11,7 @@ export const useCharacterAttributes = (characterId: number) => {
   });
 
   return useGetCharactersCharacterIdAttributes(
-    characterId ?? 0,
+    characterId,
     { ...authHeaders },
     {
       query: {

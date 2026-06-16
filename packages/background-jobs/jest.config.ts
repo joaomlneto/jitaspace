@@ -1,12 +1,18 @@
 import type { Config } from "jest";
 
+// The registry/core tests only exercise the declarative job config (ids,
+// triggers), not the runtime env, so skip the zod env validation in env.ts.
+// Set here (in the lint-exempt jest config that runs in the main process) so
+// the value is inherited by the forked test workers before any module imports
+// env.ts.
+process.env.SKIP_ENV_VALIDATION = "1";
+
 const config: Config = {
   testEnvironment: "node",
   testEnvironmentOptions: {
     customExportConditions: ["require", "node", "default"],
   },
   testMatch: ["<rootDir>/tests/**/*.test.ts"],
-  setupFiles: ["<rootDir>/jest.setup.ts"],
   transform: {
     "^.+\\.tsx?$": [
       "@swc/jest",

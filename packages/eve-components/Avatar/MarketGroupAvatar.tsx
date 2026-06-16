@@ -1,7 +1,7 @@
 "use client";
 
+import type { AvatarProps } from "@mantine/core";
 import { memo } from "react";
-import { type AvatarProps } from "@mantine/core";
 
 import { useMarketGroup } from "@jitaspace/hooks";
 
@@ -14,7 +14,7 @@ export type MarketGroupAvatarProps = Omit<AvatarProps, "src"> & {
 export const MarketGroupAvatar = memo(
   ({ marketGroupId, ...otherProps }: MarketGroupAvatarProps) => {
     const marketGroup = useMarketGroup(marketGroupId);
-    const iconId = marketGroup?.iconID ?? 0;
+    const iconId = marketGroup.iconID ?? 0;
     return <EveIconAvatar iconId={iconId} {...otherProps} />;
   },
 );

@@ -12,7 +12,7 @@ export const useCharacterCurrentShip = (characterId: number) => {
   return {
     hasToken: accessToken !== null,
     ...useGetCharactersCharacterIdShip(
-      characterId ?? 0,
+      characterId,
       { ...authHeaders },
       {
         query: {

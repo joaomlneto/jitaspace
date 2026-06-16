@@ -19,12 +19,12 @@ import { ScopeGuard } from "~/components/ScopeGuard";
 
 export default function Page() {
   const params = useParams();
-  const rawStructureId = params?.structureId;
+  const rawStructureId = params.structureId;
   const structureId = Number(
     typeof rawStructureId === "string" ? rawStructureId : rawStructureId?.[0],
   );
   const character = useSelectedCharacter();
-  const { data: structure } = useStructure(structureId ?? 0);
+  const { data: structure } = useStructure(structureId);
 
   if (!Number.isFinite(structureId)) {
     return null;

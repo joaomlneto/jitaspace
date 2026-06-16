@@ -37,7 +37,7 @@ function ContextTypeCell({
 }: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
   return row.original.context_id_type ? (
     <Badge size="sm" variant="light">
-      {row.original.context_id_type?.replaceAll("_", " ")}
+      {row.original.context_id_type.replaceAll("_", " ")}
     </Badge>
   ) : undefined;
 }

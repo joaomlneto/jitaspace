@@ -55,6 +55,12 @@ interface CharacterAttributesRingProgressProps {
   characterId: number;
 }
 
+// Reads the wall clock, so it lives outside the component body to keep render
+// pure (React flags `Date.now()` called directly during render).
+function isRemapCooldownElapsed(cooldownDate: string): boolean {
+  return new Date(cooldownDate).getTime() < Date.now();
+}
+
 export function CharacterAttributesRingProgress({
   characterId,
 }: Readonly<CharacterAttributesRingProgressProps>) {
@@ -105,8 +111,8 @@ export function CharacterAttributesRingProgress({
   });
 
   const remapCooldownElapsed =
-    data?.data.accrued_remap_cooldown_date &&
-    new Date(data.data.accrued_remap_cooldown_date).getTime() < Date.now();
+    data?.data.accrued_remap_cooldown_date !== undefined &&
+    isRemapCooldownElapsed(data.data.accrued_remap_cooldown_date);
 
   const hasBonusRemaps = (data?.data.bonus_remaps ?? 0) > 0;
   let remapStatusLabel: string;

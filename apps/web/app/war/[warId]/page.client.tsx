@@ -36,7 +36,7 @@ import { WarAggressorName, WarDefenderName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();
-  const rawWarId = params?.warId;
+  const rawWarId = params.warId;
   const warId = Number(typeof rawWarId === "string" ? rawWarId : rawWarId?.[0]);
   const character = useSelectedCharacter();
   const { data: war } = useWar(warId);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { Container, Group, Stack, Title } from "@mantine/core";
 
@@ -11,6 +11,13 @@ import { TypeAvatar } from "@jitaspace/ui";
 
 import { MarketOrdersDataTable } from "~/components/Market";
 
+// `mounted` gate implemented without a setState-in-effect: the store never
+// emits, so the value is the client snapshot (`true`) after hydration and the
+// server snapshot (`false`) during SSR.
+const subscribeNever = (): (() => void) => () => undefined;
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 export default function Page() {
   // Every /market/<typeId> URL is rewritten to this single static /market shell
   // (see next.config.mjs), so there is no route param to read — we derive the
@@ -19,12 +26,15 @@ export default function Page() {
   // avoiding a hydration mismatch; the id is applied right after mount and on
   // subsequent client-side navigation between items.
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    subscribeNever,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
 
   const typeId = useMemo(() => {
     if (!mounted) return undefined;
-    const match = /^\/market\/(\d+)/.exec(pathname ?? "");
+    const match = /^\/market\/(\d+)/.exec(pathname);
     return match ? Number(match[1]) : undefined;
   }, [mounted, pathname]);
 

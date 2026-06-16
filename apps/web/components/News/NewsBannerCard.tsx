@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Badge, Box, Button, CloseButton, Stack, Text } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { type NewsItem } from "~/config/news";
+import type { NewsItem } from "~/config/news";
 import { formatNewsDate } from "./formatNewsDate";
 
 export interface NewsBannerCardProps {

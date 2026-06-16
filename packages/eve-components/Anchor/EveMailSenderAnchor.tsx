@@ -1,16 +1,17 @@
 "use client";
 
 import type { AnchorProps } from "@mantine/core";
-import React, { memo } from "react";
-import { type LinkProps } from "next/link";
+import type { LinkProps } from "next/link";
+import type React from "react";
+import { memo } from "react";
 import { Anchor } from "@mantine/core";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
 
-export type MailingList = {
+export interface MailingList {
   mailing_list_id: number;
   name: string;
-};
+}
 
 export type EveMailSenderNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
