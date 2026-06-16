@@ -51,7 +51,8 @@ export const AgentsTable = ({
     const index: Record<string, string> = {};
     agentDivisions.forEach(
       (division) =>
-        (index[division.npcCorporationDivisionId] = division.name ?? "Unknown"),
+        (index[division.npcCorporationDivisionId] =
+          typeof division.name === "string" ? division.name : "Unknown"),
     );
     return index;
   }, [agentTypes]);

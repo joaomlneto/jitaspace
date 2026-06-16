@@ -14,16 +14,14 @@ export default function EventsCalendar({
 }: CharacterMonthCalendarProps) {
   const eventsPerDate: Record<string, CalendarEvent[]> = {};
 
-  if (events) {
-    events.forEach((event) => {
-      if (!event.event_date) return;
-      const date = new Date(event.event_date);
-      date.setHours(0, 0, 0, 0);
-      const dateString = date.getTime();
-      eventsPerDate[dateString] ??= [];
-      eventsPerDate[dateString]?.push(event);
-    });
-  }
+  (Array.isArray(events) ? events : []).forEach((event) => {
+    if (!event.event_date) return;
+    const date = new Date(event.event_date);
+    date.setHours(0, 0, 0, 0);
+    const dateString = date.getTime().toString();
+    const bucket = (eventsPerDate[dateString] ??= []);
+    bucket.push(event);
+  });
 
   return (
     <Calendar

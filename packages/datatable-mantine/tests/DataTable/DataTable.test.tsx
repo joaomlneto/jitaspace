@@ -24,10 +24,18 @@ beforeAll(() => {
       matches: !query,
       media: query,
       onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
+      addListener: () => {
+        /* deprecated no-op */
+      },
+      removeListener: () => {
+        /* deprecated no-op */
+      },
+      addEventListener: () => {
+        /* no-op */
+      },
+      removeEventListener: () => {
+        /* no-op */
+      },
       dispatchEvent: () => false,
     }),
   });
@@ -64,7 +72,8 @@ const renderWithMantine = (ui: React.ReactElement) =>
  */
 const headerTexts = (): string[] =>
   Array.from(document.querySelectorAll("thead th")).map(
-    (th) => th.textContent ?? "",
+    // `textContent` on an element node is always a string (never null here).
+    (th) => th.textContent,
   );
 
 const hasHeader = (label: string): boolean =>
@@ -81,10 +90,10 @@ const dataRows = (): HTMLElement[] =>
     .filter((row) => within(row).queryAllByRole("columnheader").length === 0)
     .filter((row) => row.querySelectorAll("td").length > 0)
     // Only rows that actually contain a known data value.
-    .filter((row) => /Alice|Bob|Charlie|Row \d+/.test(row.textContent ?? ""));
+    .filter((row) => /Alice|Bob|Charlie|Row \d+/.test(row.textContent));
 
 const nameOrder = (): string[] =>
-  dataRows().map((row) => row.textContent!.match(/Alice|Bob|Charlie/)![0]);
+  dataRows().map((row) => /Alice|Bob|Charlie/.exec((row.textContent))![0]);
 
 describe("DataTable — basic rendering", () => {
   it("renders all column headers by their header text", () => {
@@ -243,9 +252,9 @@ describe("DataTable — sorting", () => {
     const order = screen
       .getAllByRole("row")
       .filter((row) => row.querySelectorAll("td").length > 0)
-      .map((row) => row.textContent ?? "")
+      .map((row) => row.textContent)
       .filter((t) => /Adams|Brown|Carter/.test(t))
-      .map((t) => t.match(/Zoe|Amy|Bea/)![0]);
+      .map((t) => /Zoe|Amy|Bea/.exec(t)![0]);
     expect(order).toEqual(["Zoe", "Amy", "Bea"]);
   });
 
@@ -273,7 +282,7 @@ describe("DataTable — sorting", () => {
     const ascending = screen
       .getAllByRole("row")
       .filter((row) => row.querySelectorAll("td").length > 0)
-      .map((row) => row.textContent!.match(/Zed|Ann|Mel/)![0]);
+      .map((row) => /Zed|Ann|Mel/.exec((row.textContent))![0]);
     // "false" sorts before "true": Ann first, then the two active rows.
     expect(ascending[0]).toBe("Ann");
   });

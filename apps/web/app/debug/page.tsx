@@ -2,13 +2,13 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 
-import { prisma } from "~/lib/db";
-
-import DebugPage from "./page.client";
 import type { PageProps } from "./page.client";
+import { env } from "~/env";
+import { prisma } from "~/lib/db";
+import DebugPage from "./page.client";
 
 export async function DebugPageContent() {
-  if (process.env.NODE_ENV === "production") {
+  if (env.NODE_ENV === "production") {
     notFound();
   }
   await connection();
@@ -51,7 +51,9 @@ export async function DebugPageContent() {
   const dbStats = await Promise.all(
     dbModels.map(async (name) => ({
       name,
-      count: await (prisma[name as keyof typeof prisma] as { count: () => Promise<number> }).count(),
+      count: await (
+        prisma[name as keyof typeof prisma] as { count: () => Promise<number> }
+      ).count(),
     })),
   );
 
@@ -59,19 +61,18 @@ export async function DebugPageContent() {
     database: dbStats,
     queues: queuesStatus,
     vars: {
-      NODE_ENV: process.env.NODE_ENV,
-      NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-      DATABASE_URL: process.env.DATABASE_URL,
-      REDIS_URL: process.env.REDIS_URL,
-      EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
-      EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
-      INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
-      CRON_SECRET: process.env.CRON_SECRET,
-      SKIP_BUILD_STATIC_GENERATION: process.env.SKIP_BUILD_STATIC_GENERATION,
-      NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
-      NEXT_PUBLIC_GOOGLE_TAG_ID: process.env.NEXT_PUBLIC_GOOGLE_TAG_ID,
-      NEXT_PUBLIC_DISCORD_INVITE_LINK:
-        process.env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
+      NODE_ENV: env.NODE_ENV,
+      NEXTAUTH_SECRET: env.NEXTAUTH_SECRET,
+      DATABASE_URL: env.DATABASE_URL,
+      REDIS_URL: env.REDIS_URL,
+      EVE_CLIENT_ID: env.EVE_CLIENT_ID,
+      EVE_CLIENT_SECRET: env.EVE_CLIENT_SECRET,
+      INNGEST_SIGNING_KEY: env.INNGEST_SIGNING_KEY,
+      CRON_SECRET: env.CRON_SECRET,
+      SKIP_BUILD_STATIC_GENERATION: env.SKIP_BUILD_STATIC_GENERATION,
+      NEXT_PUBLIC_UMAMI_WEBSITE_ID: env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
+      NEXT_PUBLIC_GOOGLE_TAG_ID: env.NEXT_PUBLIC_GOOGLE_TAG_ID,
+      NEXT_PUBLIC_DISCORD_INVITE_LINK: env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
     },
   };
 

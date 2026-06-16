@@ -1,15 +1,15 @@
 // FIXME: REWRITE THIS FILE IN PROPER TYPESCRIPT!
 
-export type FittingModule = {
+export interface FittingModule {
   name: string;
   quantity: number;
-};
+}
 
 export type FittingModuleWithAmmo = FittingModule & {
   ammo?: string;
 };
 
-export type ShipFitting = {
+export interface ShipFitting {
   typeName: string;
   shipName: string;
   highSlots: FittingModuleWithAmmo[];
@@ -19,7 +19,7 @@ export type ShipFitting = {
   subsystemSlots: FittingModule[];
   droneBay: FittingModule[];
   cargoHold: FittingModule[];
-};
+}
 
 export const LOW_SLOTS_ATTRIBUTE_ID = 12;
 export const MID_SLOTS_ATTRIBUTE_ID = 13;
@@ -97,7 +97,7 @@ export const parseEFTFitString = (
   while (lines[lineIndex].length > 0) {
     // @ts-expect-error guaranteed to exist
     const [name, ammo] = lines[lineIndex++].split(",").map((s) => s.trim());
-    fit.midSlots.push({ name: name!, ammo, quantity: 1 });
+    fit.midSlots.push({ name: name ?? "", ammo, quantity: 1 });
   }
   lineIndex++;
 
@@ -106,7 +106,7 @@ export const parseEFTFitString = (
   while (lines[lineIndex].length > 0) {
     // @ts-expect-error guaranteed to exist
     const [name, ammo] = lines[lineIndex++].split(",").map((s) => s.trim());
-    fit.highSlots.push({ name: name!, ammo, quantity: 1 });
+    fit.highSlots.push({ name: name ?? "", ammo, quantity: 1 });
   }
   lineIndex++;
 

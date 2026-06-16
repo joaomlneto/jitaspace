@@ -11,14 +11,16 @@ import {
 } from "react";
 import axios from "axios";
 
-type EsiClientStatistics = {
+interface EsiClientStatistics {
   esiErrorsRemaining?: number;
   esiErrorsResetOn?: Date;
   setEsiErrorInfo: (remaining: number, reset: number) => void;
-};
+}
 
 const defaultEsiClientStatistics: EsiClientStatistics = {
-  setEsiErrorInfo: () => {},
+  setEsiErrorInfo: () => {
+    // no-op: error limits are tracked by the provider's axios interceptor
+  },
 };
 
 const EsiClientStatistics = createContext<EsiClientStatistics>(
@@ -54,7 +56,9 @@ export const EsiClientStatisticsProvider = memo(
       () => ({
         esiErrorsRemaining,
         esiErrorsResetOn,
-        setEsiErrorInfo: () => {},
+        setEsiErrorInfo: () => {
+          // no-op: error limits are tracked by the axios interceptor above
+        },
       }),
       [esiErrorsRemaining, esiErrorsResetOn],
     );
@@ -69,13 +73,5 @@ export const EsiClientStatisticsProvider = memo(
 EsiClientStatisticsProvider.displayName = "EsiClientStatisticsProvider";
 
 export function useEsiClientStatistics() {
-  const ctx = useContext(EsiClientStatistics);
-
-  if (!ctx) {
-    throw new Error(
-      "[@jitaspace/esi-client] EsiClientStatisticsProvider was not found in tree",
-    );
-  }
-
-  return ctx;
+  return useContext(EsiClientStatistics);
 }

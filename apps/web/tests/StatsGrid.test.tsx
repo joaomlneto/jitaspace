@@ -12,7 +12,7 @@ function renderComponent(data: unknown) {
   const { StatsGrid } = require("~/components/UI/StatsGrid");
   return render(
     <MantineProvider>
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      {}
       <StatsGrid data={data as any} />
     </MantineProvider>,
   );

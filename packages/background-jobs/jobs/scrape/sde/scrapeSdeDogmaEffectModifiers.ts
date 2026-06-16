@@ -40,15 +40,15 @@ export const scrapeSdeDogmaEffectModifiers = defineJob<
     );
 
     const dogmaEffectModifiers = dogmaEffects.flatMap(({ effectId, effect }) =>
-      (effect.modifierInfo ?? []).map((modifier, index) => ({
+      effect.modifierInfo.map((modifier, index) => ({
         effectId,
         modifierIndex: index,
-        domain: modifier.domain ?? null,
-        targetEffectId: modifier.effectID ?? null,
+        domain: modifier.domain,
+        targetEffectId: modifier.effectID,
         func: modifier.func,
-        modifiedAttributeId: modifier.modifiedAttributeID ?? null,
-        modifyingAttributeId: modifier.modifyingAttributeID ?? null,
-        operator: modifier.operation ?? null,
+        modifiedAttributeId: modifier.modifiedAttributeID,
+        modifyingAttributeId: modifier.modifyingAttributeID,
+        operator: modifier.operation,
         groupId: modifier.groupID,
         skillTypeId: modifier.skillTypeID,
         isDeleted: false,
@@ -70,7 +70,7 @@ export const scrapeSdeDogmaEffectModifiers = defineJob<
               excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
             ),
           ),
-      fetchRemoteEntries: async () => dogmaEffectModifiers,
+      fetchRemoteEntries: () => Promise.resolve(dogmaEffectModifiers),
       batchCreate: (entries) =>
         limit(() =>
           prisma.dogmaEffectModifier.createMany({

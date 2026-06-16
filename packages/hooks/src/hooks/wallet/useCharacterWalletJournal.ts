@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  GetCharactersCharacterIdWalletJournalQueryResponse,
-  useGetCharactersCharacterIdWalletJournal,
-} from "@jitaspace/esi-client";
+import type { GetCharactersCharacterIdWalletJournalQueryResponse } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdWalletJournal } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 

@@ -61,7 +61,12 @@ const useSWRImmutable = jest.fn();
 
 jest.mock("swr/immutable", () => ({
   __esModule: true,
-  default: (...args: unknown[]) => useSWRImmutable(...args),
+  // Wrap in a `use`-prefixed function expression so the forwarded call is
+  // treated as a custom hook by rules-of-hooks, while keeping the lazy lookup
+  // of `useSWRImmutable` (the factory runs before that const is initialized).
+  default: function useSWRImmutableMock(...args: unknown[]) {
+    return useSWRImmutable(...args);
+  },
 }));
 
 // eve-icons pulls in a large SVG import chain; stub the two used here as simple
@@ -386,7 +391,9 @@ describe("MarketGroupAvatar", () => {
   });
 
   it("defaults the iconID to 0 when the group is unknown", () => {
-    useMarketGroup.mockReturnValue(undefined);
+    // useMarketGroup always returns an object (it spreads optional ESI/SDE data
+    // into a fresh object); an unknown group yields one with no `iconID`.
+    useMarketGroup.mockReturnValue({});
     const { container } = renderWithMantine(
       <MarketGroupAvatar marketGroupId={999} />,
     );

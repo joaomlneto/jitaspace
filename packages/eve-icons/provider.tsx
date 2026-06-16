@@ -11,8 +11,9 @@ export const EveIconsContext = React.createContext<EveIconsContextType>(
 );
 
 export function useEveIconsConfig() {
-  const ctx = useContext(EveIconsContext);
-  return ctx ?? DEFAULT_EVE_ICONS_CONTEXT;
+  // `EveIconsContext` is created with a non-nullable default, so `useContext`
+  // always returns a defined value even without a Provider above.
+  return useContext(EveIconsContext);
 }
 
 export const EveIconsContextProvider = ({

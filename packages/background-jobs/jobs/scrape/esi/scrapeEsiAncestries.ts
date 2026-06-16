@@ -7,7 +7,7 @@ import { prisma } from "../../../db";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeAncestriesEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const scrapeEsiAncestries = defineJob<
@@ -41,16 +41,18 @@ export const scrapeEsiAncestries = defineJob<
               excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
             ),
           ),
-      fetchRemoteEntries: async () =>
-        ancestries.map((ancestry) => ({
-          ancestryId: ancestry.id,
-          name: ancestry.name,
-          shortDescription: ancestry.short_description ?? null,
-          description: ancestry.description,
-          iconId: ancestry.icon_id ?? null,
-          bloodlineId: ancestry.bloodline_id,
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          ancestries.map((ancestry) => ({
+            ancestryId: ancestry.id,
+            name: ancestry.name,
+            shortDescription: ancestry.short_description ?? null,
+            description: ancestry.description,
+            iconId: ancestry.icon_id ?? null,
+            bloodlineId: ancestry.bloodline_id,
+            isDeleted: false,
+          })),
+        ),
 
       batchCreate: (entries) =>
         limit(() =>

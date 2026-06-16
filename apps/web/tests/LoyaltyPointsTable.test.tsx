@@ -1,7 +1,8 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { jest } from "@jest/globals";
 import React from "react";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -404,7 +405,7 @@ describe("LoyaltyPointsTable — zero-LP offers (divide-by-zero guard)", () => {
     "renders a blank ISK/LP (never Infinity) for a 0 LP cost offer — %s engine",
     (_label, experimental) => {
       usePreferencesStore.setState({
-        experimentalDataTables: experimental as boolean,
+        experimentalDataTables: experimental,
       });
       wrap(
         React.createElement(LoyaltyPointsTable, {

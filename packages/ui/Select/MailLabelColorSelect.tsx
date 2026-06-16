@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColorInputProps } from "@mantine/core";
-import React, { memo, useState } from "react";
+import { memo, useState } from "react";
 import { ActionIcon, ColorInput } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 

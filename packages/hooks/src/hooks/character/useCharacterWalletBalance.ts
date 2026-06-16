@@ -17,7 +17,7 @@ export const useCharacterWalletBalance = (characterId?: number) => {
       { ...authHeaders },
       {
         query: {
-          enabled: characterId !== null && accessToken !== null,
+          enabled: characterId !== undefined && accessToken !== null,
         },
       },
     ),

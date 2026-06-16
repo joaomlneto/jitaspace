@@ -1,7 +1,7 @@
 import { defineJob } from "../core";
 
 export interface BootstrapDatabaseEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const bootstrapDatabase = defineJob<

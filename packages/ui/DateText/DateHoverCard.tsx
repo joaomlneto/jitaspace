@@ -1,7 +1,9 @@
 "use client";
 
-import React, { memo, type ReactNode } from "react";
-import { Group, HoverCard, type HoverCardProps, Stack, Text } from "@mantine/core";
+import type { HoverCardProps } from "@mantine/core";
+import type { ReactNode } from "react";
+import { memo } from "react";
+import { Group, HoverCard, Stack, Text } from "@mantine/core";
 import { format, formatDistanceToNow } from "date-fns";
 
 type DateHoverCardProps = HoverCardProps & {

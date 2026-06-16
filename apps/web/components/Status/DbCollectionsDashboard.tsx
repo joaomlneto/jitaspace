@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Badge,
   Button,
@@ -26,7 +26,7 @@ const DEFAULT_COLLECTION_BROWSER_PAGE_SIZE = 50;
 
 interface CollectionDefinition {
   name: string;
-  collection: any;
+  collection: typeof db.esiNamesCollection;
 }
 
 interface CollectionStatsProps {
@@ -85,8 +85,9 @@ function CollectionStats({
   collection,
   onOpenCollection,
 }: Readonly<CollectionStatsProps>) {
-  const { data: items } = useLiveQuery(collection.collection);
-  const count = items?.length ?? 0;
+  const { data } = useLiveQuery(collection.collection);
+  const items = Array.isArray(data) ? data : [];
+  const count = items.length;
 
   return (
     <Table.Tr>
@@ -114,33 +115,33 @@ function CollectionBrowserModal({
   collection,
   onClose,
 }: Readonly<CollectionBrowserModalProps>) {
-  const { data: items } = useLiveQuery(collection.collection);
+  const { data } = useLiveQuery(collection.collection);
+  const items = Array.isArray(data) ? data : [];
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(
     DEFAULT_COLLECTION_BROWSER_PAGE_SIZE.toString(),
   );
 
   const pageSizeNumber = Number(pageSize);
-  const totalCount = items?.length ?? 0;
+  const totalCount = items.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSizeNumber));
 
-  useEffect(() => {
+  // Reset to the first page whenever the collection or page size changes, and
+  // clamp the current page if it ends up past the last page. Adjusting state
+  // during render (rather than in an effect) avoids an extra render pass and
+  // the cascading-render warning. https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  const resetKey = `${collection.name}:${pageSizeNumber}`;
+  const [lastResetKey, setLastResetKey] = useState(resetKey);
+  if (lastResetKey !== resetKey) {
+    setLastResetKey(resetKey);
     setPage(1);
-  }, [collection.name]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [pageSizeNumber]);
-
-  useEffect(() => {
-    if (page > totalPages) {
-      setPage(totalPages);
-    }
-  }, [page, totalPages]);
+  } else if (page > totalPages) {
+    setPage(totalPages);
+  }
 
   const visibleItems = useMemo(() => {
     const start = (page - 1) * pageSizeNumber;
-    return items?.slice(start, start + pageSizeNumber) ?? [];
+    return items.slice(start, start + pageSizeNumber);
   }, [items, page, pageSizeNumber]);
 
   const rangeStart = totalCount === 0 ? 0 : (page - 1) * pageSizeNumber + 1;

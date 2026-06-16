@@ -1,7 +1,6 @@
 "use client";
 
 import type { ComboboxLikeRenderOptionInput } from "@mantine/core";
-import React from "react";
 import { Avatar, Badge, Group, rem, Text } from "@mantine/core";
 
 import type { EsiSearchCategory as GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/hooks";
@@ -9,11 +8,11 @@ import type { EsiSearchCategory as GetCharactersCharacterIdSearchQueryParamsCate
 import { EveEntityAvatar } from "../../Avatar";
 import { EveEntityName } from "../../Text";
 
-export type EsiSearchMultiSelectItemOption = {
+export interface EsiSearchMultiSelectItemOption {
   value: string;
   label: string;
   category?: GetCharactersCharacterIdSearchQueryParamsCategoriesEnum;
-};
+}
 
 export type EsiSearchMultiSelectItemProps =
   ComboboxLikeRenderOptionInput<EsiSearchMultiSelectItemOption>;

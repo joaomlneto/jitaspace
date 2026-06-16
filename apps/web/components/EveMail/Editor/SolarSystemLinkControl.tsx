@@ -40,8 +40,8 @@ export const SolarSystemLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setSolarSystemId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setSolarSystemId(href);
   };
 
   const handleClose = () => {
@@ -51,16 +51,18 @@ export const SolarSystemLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    SolarSystemId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:5//${SolarSystemId}`,
-          })
-          .run();
+    if (SolarSystemId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:5//${SolarSystemId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -85,7 +87,7 @@ export const SolarSystemLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || SolarSystemLinkIcon}
+          icon={icon ?? SolarSystemLinkIcon}
           aria-label="Link Solar System"
           title="Link Solar System"
           onClick={handleOpen}

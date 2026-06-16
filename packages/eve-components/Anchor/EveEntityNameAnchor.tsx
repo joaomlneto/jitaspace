@@ -1,10 +1,11 @@
 "use client";
 
-import React, { memo } from "react";
-import { type LinkProps } from "next/link";
-import { type AnchorProps } from "@mantine/core";
+import type { AnchorProps } from "@mantine/core";
+import type { LinkProps } from "next/link";
+import type React from "react";
+import { memo } from "react";
 
-import { type ResolvableEntityCategory } from "@jitaspace/hooks";
+import type { ResolvableEntityCategory } from "@jitaspace/hooks";
 
 import { EveEntityName } from "../Text";
 import { EveEntityAnchor } from "./EveEntityAnchor";

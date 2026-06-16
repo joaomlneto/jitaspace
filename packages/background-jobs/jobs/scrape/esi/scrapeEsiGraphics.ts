@@ -10,7 +10,7 @@ import { prisma } from "../../../db";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeGraphicsEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 type Limit = ReturnType<typeof pLimit>;

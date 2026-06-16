@@ -34,11 +34,11 @@ jest.mock(
   },
 );
 
-type SectionItem = {
+interface SectionItem {
   typeId: number;
   quantity?: number;
   ammo?: { typeId?: number; quantity: number };
-};
+}
 
 function renderSection(props: {
   header: string;
@@ -116,6 +116,8 @@ describe("ShipFittingCardModulesSection", () => {
     });
     expect(screen.queryByText(/Empty Slots/)).not.toBeInTheDocument();
     expect(screen.queryByText("Too many modules")).not.toBeInTheDocument();
-    expect(screen.getByTestId("module-entry")).toHaveTextContent("entry:900:x1");
+    expect(screen.getByTestId("module-entry")).toHaveTextContent(
+      "entry:900:x1",
+    );
   });
 });

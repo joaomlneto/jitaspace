@@ -48,7 +48,7 @@ export const DesktopMailboxTable = ({
                 <Popover width={250} withArrow shadow="md">
                   <Popover.Target>
                     <Group wrap="nowrap" key={mail.mail_id}>
-                      {mail?.from && (
+                      {mail.from && (
                         <>
                           <EveMailSenderAvatar
                             from={mail.from}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Alert, Anchor, Button, Group } from "@mantine/core";
 
-export interface DevelopmentModeAlertProps {}
+export type DevelopmentModeAlertProps = Record<string, never>;
 
 export const DevelopmentModeAlert = (_props: DevelopmentModeAlertProps) => {
   return (

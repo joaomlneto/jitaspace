@@ -79,12 +79,18 @@ const fetchMoonRow = (
   limit(async () =>
     getUniverseMoonsMoonId(moonId)
       .then((res) => res.data)
-      .then((moon) => ({
-        moonId: moon.moon_id,
-        name: moon.name,
-        planetId: moonPlanetIndex[moon.moon_id]!,
-        isDeleted: false,
-      })),
+      .then((moon) => {
+        const planetId = moonPlanetIndex[moon.moon_id];
+        if (planetId === undefined) {
+          throw new Error(`No planetId indexed for moon ${moon.moon_id}`);
+        }
+        return {
+          moonId: moon.moon_id,
+          name: moon.name,
+          planetId,
+          isDeleted: false,
+        };
+      }),
   );
 
 const fetchAsteroidBeltRow = (
@@ -95,12 +101,20 @@ const fetchAsteroidBeltRow = (
   limit(async () =>
     getUniverseAsteroidBeltsAsteroidBeltId(asteroidBeltId)
       .then((res) => res.data)
-      .then((asteroidBelt) => ({
-        asteroidBeltId: asteroidBeltId,
-        name: asteroidBelt.name,
-        planetId: asteroidBeltPlanetIndex[asteroidBeltId]!,
-        isDeleted: false,
-      })),
+      .then((asteroidBelt) => {
+        const planetId = asteroidBeltPlanetIndex[asteroidBeltId];
+        if (planetId === undefined) {
+          throw new Error(
+            `No planetId indexed for asteroid belt ${asteroidBeltId}`,
+          );
+        }
+        return {
+          asteroidBeltId: asteroidBeltId,
+          name: asteroidBelt.name,
+          planetId,
+          isDeleted: false,
+        };
+      }),
   );
 
 const fetchStarRow = (limit: Limit, starId: number) =>
@@ -204,12 +218,11 @@ export const scrapeEsiSolarSystems = defineJob<
     })[] = [];
     const limit = pLimit(20);
 
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<(typeof results)[number]> => {
           const stepStartTime = performance.now();
-          const thisBatchIds = batches[i]!;
 
           const esiSolarSystems = await Promise.all(
             thisBatchIds.map((solarSystemId) =>

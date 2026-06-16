@@ -1,7 +1,7 @@
 "use client";
 
 import type { SelectProps } from "@mantine/core";
-import React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Group, Select, Text } from "@mantine/core";
 
 import { useEsiNameLookup } from "@jitaspace/hooks";
@@ -39,7 +39,7 @@ export const EveEntitySelect = memo(
               ) ??
               "",
           }))
-          .sort((a, b) => (a.label ?? "").localeCompare(b.label ?? ""))}
+          .sort((a, b) => a.label.localeCompare(b.label))}
         renderOption={({ option }) => (
           <Group wrap="nowrap" gap="xs">
             <EveEntityAvatar entityId={option.value} size={24} />

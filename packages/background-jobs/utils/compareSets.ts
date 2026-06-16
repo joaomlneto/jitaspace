@@ -67,9 +67,12 @@ export const compareSets = <T extends object>({
   );
 
   // determine which records did not change
-  const equal = commonRecords.filter((record) =>
-    recordsAreEqual(indexBefore[getId(record)]!, record),
-  );
+  const equal = commonRecords.filter((record) => {
+    const before = indexBefore[getId(record)];
+    // `commonRecords` only contains keys present in both sets, so `before` is
+    // always defined here; guard anyway to satisfy the type checker.
+    return before !== undefined && recordsAreEqual(before, record);
+  });
   const equalKeys = new Set(equal.map((record) => getId(record)));
 
   // determine which records have been modified

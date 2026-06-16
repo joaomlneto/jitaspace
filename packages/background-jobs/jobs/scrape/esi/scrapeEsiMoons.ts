@@ -9,7 +9,7 @@ import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeMoonsEventPayload {
   data: {
-    moons: { moonId: number; planetId: number }[];
+    moons?: { moonId: number; planetId: number }[];
     batchSize?: number;
   };
 }
@@ -51,33 +51,32 @@ export const scrapeEsiMoons = defineJob<ScrapeMoonsEventPayload["data"]>({
   retries: 5,
   handler: async (ctx) => {
     const batchSize = ctx.payload.batchSize ?? 1000;
-    const moonIds = ctx.payload.moons;
+    const moonIds = ctx.payload.moons ?? [];
 
-    if ((ctx.payload.moons ?? []).length == 0)
+    if (moonIds.length == 0)
       throw new NonRetriableError("Invalid moonIds");
 
     // Split IDs in batches
-    const batches = await ctx.run("Fetch Solar System IDs", async () => {
+    const batches = await ctx.run("Fetch Solar System IDs", () => {
       moonIds.sort((a, b) => a.moonId - b.moonId);
 
       const numBatches = Math.ceil(moonIds.length / batchSize);
       const batchIds = (batchIndex: number) =>
         moonIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      return [...new Array(numBatches).keys()].map((batchId) =>
-        batchIds(batchId),
+      return Promise.resolve(
+        [...new Array(numBatches).keys()].map((batchId) => batchIds(batchId)),
       );
     });
 
     const results: BatchStepResult<StatsKey>[] = [];
     const limit = pLimit(20);
 
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchMoons] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
           console.log(`starting batch ${i + 1}`);
           const stepStartTime = performance.now();
-          const thisBatchMoons = batches[i]!;
           const thisBatchMoonIds = thisBatchMoons.map((moon) => moon.moonId);
 
           const moonChanges = await updateTable({

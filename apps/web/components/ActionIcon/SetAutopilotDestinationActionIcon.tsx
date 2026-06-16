@@ -1,16 +1,17 @@
 "use client";
 
 import { memo, useCallback } from "react";
+
 import { postUiAutopilotWaypoint } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
 import { SetAutopilotDestinationActionIcon as UISetAutopilotDestinationActionIcon } from "@jitaspace/ui";
 
-export type SetAutopilotDestinationActionIconProps = {
+export interface SetAutopilotDestinationActionIconProps {
   destinationId?: number;
   characterId?: number;
   addToBeginning?: boolean;
   clearOtherWaypoints?: boolean;
-};
+}
 
 export const SetAutopilotDestinationActionIcon = memo(
   ({
@@ -46,4 +47,5 @@ export const SetAutopilotDestinationActionIcon = memo(
     );
   },
 );
-SetAutopilotDestinationActionIcon.displayName = "SetAutopilotDestinationActionIcon";
+SetAutopilotDestinationActionIcon.displayName =
+  "SetAutopilotDestinationActionIcon";

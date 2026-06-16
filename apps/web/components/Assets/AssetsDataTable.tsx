@@ -80,7 +80,7 @@ export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {
           return adjustedPrice ? adjustedPrice * row.quantity : undefined;
         },
         Cell: ({ renderedCellValue: _renderedCellValue, row: _row, cell }) => {
-          const value = cell.getValue<number>();
+          const value = cell.getValue<number | undefined>();
           return value === undefined ? undefined : <ISKAmount amount={value} />;
         },
       },

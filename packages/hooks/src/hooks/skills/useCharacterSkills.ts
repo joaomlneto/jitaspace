@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  GetCharactersCharacterIdSkillsQueryResponse,
-  useGetCharactersCharacterIdSkills,
-} from "@jitaspace/esi-client";
+import type { GetCharactersCharacterIdSkillsQueryResponse } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdSkills } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 
@@ -19,7 +17,7 @@ export const useCharacterSkills = (characterId: number) => {
   return {
     hasToken: !!accessToken,
     ...useGetCharactersCharacterIdSkills(
-      characterId ?? 1,
+      characterId,
       { ...authHeaders },
       {
         query: {

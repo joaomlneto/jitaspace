@@ -1,7 +1,7 @@
 "use client";
 
-import React, { memo } from "react";
-import { type TextProps } from "@mantine/core";
+import type { TextProps } from "@mantine/core";
+import { memo } from "react";
 
 import { AllianceName } from "./AllianceName";
 import { CorporationName } from "./CorporationName";

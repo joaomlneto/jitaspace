@@ -1,9 +1,7 @@
 "use client";
 
-import {
-  GetUniverseStructuresStructureIdQueryResponse,
-  useGetUniverseStructuresStructureId,
-} from "@jitaspace/esi-client";
+import type { GetUniverseStructuresStructureIdQueryResponse } from "@jitaspace/esi-client";
+import { useGetUniverseStructuresStructureId } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 

@@ -61,13 +61,16 @@ export default function DogmaEffectPage({
   const { data: effect } = useDogmaEffect(effectId);
 
   const sortedGroups = useMemo(
-    () => (groups ?? []).sort((a, b) => a.name.localeCompare(b.name)),
+    () =>
+      (Array.isArray(groups) ? groups : []).sort((a, b) =>
+        a.name.localeCompare(b.name),
+      ),
     [groups],
   );
 
   const groupTypes = useMemo(() => {
     const map: Record<number, (typeof types)[number][]> = {};
-    groups?.forEach(
+    (Array.isArray(groups) ? groups : []).forEach(
       (group) =>
         (map[group.groupId] = types.filter(
           (type) => type.groupId === group.groupId,

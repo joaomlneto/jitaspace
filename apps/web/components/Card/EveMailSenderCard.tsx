@@ -5,10 +5,10 @@ import { memo } from "react";
 import { EveMailSenderCard as UIEveMailSenderCard } from "@jitaspace/eve-components";
 import { useCharacterMail } from "@jitaspace/hooks";
 
-export type EveMailSenderCardProps = {
+export interface EveMailSenderCardProps {
   characterId?: number;
   messageId?: number;
-};
+}
 
 export const EveMailSenderCard = memo(
   ({ characterId, messageId }: EveMailSenderCardProps) => {

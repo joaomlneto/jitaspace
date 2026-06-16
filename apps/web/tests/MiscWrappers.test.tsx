@@ -298,7 +298,7 @@ describe("SolarSystemCard", () => {
 
     // The real SolarSystemBreadcrumbs renders the (mocked) UI breadcrumbs.
     const breadcrumbProps = JSON.parse(
-      screen.getByTestId("ui-solar-system-breadcrumbs").textContent ?? "{}",
+      screen.getByTestId("ui-solar-system-breadcrumbs").textContent,
     );
     expect(breadcrumbProps.solarSystemId).toBe(30000142);
     expect(breadcrumbProps.hideSolarSystem).toBe(true);
@@ -322,7 +322,7 @@ describe("StationCard", () => {
 
     // The real SolarSystemBreadcrumbs is fed the station's system id.
     const breadcrumbProps = JSON.parse(
-      screen.getByTestId("ui-solar-system-breadcrumbs").textContent ?? "{}",
+      screen.getByTestId("ui-solar-system-breadcrumbs").textContent,
     );
     expect(breadcrumbProps.solarSystemId).toBe(30000142);
   });
@@ -357,7 +357,7 @@ describe("GroupBreadcrumbs", () => {
     expect(mockUseCategory).toHaveBeenCalledWith(6);
 
     const props = JSON.parse(
-      screen.getByTestId("ui-group-breadcrumbs").textContent ?? "{}",
+      screen.getByTestId("ui-group-breadcrumbs").textContent,
     );
     expect(props.groupId).toBe(25);
     expect(props.groupName).toBe("Frigate");
@@ -394,7 +394,7 @@ describe("SolarSystemBreadcrumbs", () => {
     expect(mockUseConstellation).toHaveBeenCalledWith(20000001);
 
     const props = JSON.parse(
-      screen.getByTestId("ui-solar-system-breadcrumbs").textContent ?? "{}",
+      screen.getByTestId("ui-solar-system-breadcrumbs").textContent,
     );
     expect(props.solarSystemId).toBe(30000142);
     expect(props.constellationId).toBe(20000001);
@@ -439,7 +439,7 @@ describe("TypeInventoryBreadcrumbs", () => {
     expect(mockUseCategory).toHaveBeenCalledWith(6);
 
     const props = JSON.parse(
-      screen.getByTestId("ui-type-inventory-breadcrumbs").textContent ?? "{}",
+      screen.getByTestId("ui-type-inventory-breadcrumbs").textContent,
     );
     expect(props.typeId).toBe(587);
     expect(props.groupId).toBe(25);
@@ -486,7 +486,7 @@ describe("TypeMarketBreadcrumbs", () => {
     expect(mockUseType).toHaveBeenCalledWith(587);
 
     const props = JSON.parse(
-      screen.getByTestId("ui-type-market-breadcrumbs").textContent ?? "{}",
+      screen.getByTestId("ui-type-market-breadcrumbs").textContent,
     );
     expect(props.typeId).toBe(587);
     expect(props.showType).toBe(true);
@@ -508,7 +508,7 @@ describe("TypeMarketBreadcrumbs", () => {
     expect(mockUseType).toHaveBeenCalledWith(587);
 
     const props = JSON.parse(
-      screen.getByTestId("ui-type-market-breadcrumbs").textContent ?? "{}",
+      screen.getByTestId("ui-type-market-breadcrumbs").textContent,
     );
     expect(props.marketGroups).toBeUndefined();
   });

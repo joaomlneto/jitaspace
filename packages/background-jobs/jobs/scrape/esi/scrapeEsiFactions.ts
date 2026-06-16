@@ -8,7 +8,7 @@ import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRef
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeFactionsEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const scrapeEsiFactions = defineJob<ScrapeFactionsEventPayload["data"]>({
@@ -44,20 +44,22 @@ export const scrapeEsiFactions = defineJob<ScrapeFactionsEventPayload["data"]>({
               excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
             ),
           ),
-      fetchRemoteEntries: async () =>
-        factions.map((faction) => ({
-          factionId: faction.faction_id,
-          corporationId: faction.corporation_id ?? null,
-          description: faction.description,
-          isUnique: faction.is_unique,
-          militiaCorporationId: faction.militia_corporation_id ?? null,
-          name: faction.name,
-          sizeFactor: faction.size_factor,
-          solarSystemId: faction.solar_system_id ?? null,
-          stationCount: faction.station_count,
-          stationSystemCount: faction.station_system_count,
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          factions.map((faction) => ({
+            factionId: faction.faction_id,
+            corporationId: faction.corporation_id ?? null,
+            description: faction.description,
+            isUnique: faction.is_unique,
+            militiaCorporationId: faction.militia_corporation_id ?? null,
+            name: faction.name,
+            sizeFactor: faction.size_factor,
+            solarSystemId: faction.solar_system_id ?? null,
+            stationCount: faction.station_count,
+            stationSystemCount: faction.station_system_count,
+            isDeleted: false,
+          })),
+        ),
 
       batchCreate: (entries) =>
         limit(() =>

@@ -53,11 +53,11 @@
     "@types/node": "^24.12.4",
     "@types/react": "^19.1.6",
     "eslint": "^9.39.4",
-    "react": "^19.2.6",
-    "tsup": "^8.5.1",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "prettier": "^3.8.3",
+    "react": "^19.2.6",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"

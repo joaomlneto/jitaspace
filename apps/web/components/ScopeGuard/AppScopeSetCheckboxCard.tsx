@@ -12,12 +12,11 @@ import {
 } from "@mantine/core";
 import cx from "clsx";
 
-import type {ESIScope} from "@jitaspace/esi-metadata";
+import type { ESIScope } from "@jitaspace/esi-metadata";
 import { InfoIcon } from "@jitaspace/eve-icons";
 
-import type {AppScopeSet} from "~/config/apps";
+import type { AppScopeSet } from "~/config/apps";
 import classes from "./AppScopeSetCheckboxCard.module.css";
-
 
 export type AppScopeSetCheckboxCardProps = Omit<
   React.ComponentPropsWithoutRef<"button">,
@@ -25,8 +24,8 @@ export type AppScopeSetCheckboxCardProps = Omit<
 > & {
   scopeSet: AppScopeSet;
   selectedScopes: ESIScope[];
-  onScopeSelect?(scope: ESIScope[]): void;
-  onScopeDeselect?(scope: ESIScope[]): void;
+  onScopeSelect?: (scope: ESIScope[]) => void;
+  onScopeDeselect?: (scope: ESIScope[]) => void;
   showDescription?: boolean;
   badge?: string;
 };

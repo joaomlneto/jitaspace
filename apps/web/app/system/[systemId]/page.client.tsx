@@ -54,7 +54,7 @@ function IndustryIconRender(props: EveIconProps) {
 
 export default function Page() {
   const params = useParams();
-  const rawSystemId = params?.systemId;
+  const rawSystemId = params.systemId;
   const systemId = Number(
     typeof rawSystemId === "string" ? rawSystemId : rawSystemId?.[0],
   );
@@ -252,17 +252,14 @@ export default function Page() {
           <Text>Position</Text>
           <Position3DText
             size="xs"
-            position={
-              sdeSolarSystem?.data.position?.x !== undefined &&
-              sdeSolarSystem.data.position?.y !== undefined &&
-              sdeSolarSystem.data.position?.z !== undefined
-                ? [
-                    sdeSolarSystem.data.position.x,
-                    sdeSolarSystem.data.position.y,
-                    sdeSolarSystem.data.position.z,
-                  ]
-                : undefined
-            }
+            position={(() => {
+              const position = sdeSolarSystem?.data.position;
+              return position?.x !== undefined &&
+                position.y !== undefined &&
+                position.z !== undefined
+                ? [position.x, position.y, position.z]
+                : undefined;
+            })()}
           />
         </Group>
       </Stack>
