@@ -75,7 +75,7 @@ async function getEffectData(effectId: number): Promise<PageProps> {
 
   return {
     effectId,
-    name: [effect.displayName, effect.name].find((value) => value) ?? null,
+    name: [effect.displayName, effect.name].find(Boolean) ?? null,
     description: effect.description?.length ? effect.description : null,
     published: effect.published ?? null,
     modifiers: effect.DogmaEffectModifiers,
@@ -102,7 +102,7 @@ export async function generateMetadata({
     });
     if (!effect) return {};
     const title =
-      [effect.displayName, effect.name].find((value) => value) ?? undefined;
+      [effect.displayName, effect.name].find(Boolean) ?? undefined;
     const description = effect.description?.slice(0, 200) ?? undefined;
     return { title, description };
   } catch {

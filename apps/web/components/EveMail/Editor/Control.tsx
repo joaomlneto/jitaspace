@@ -37,7 +37,7 @@ export const Control = forwardRef<
       // @ts-expect-error: property can be overwritten
       aria-pressed={active && interactive ? true : undefined}
       // @ts-expect-error: property can be overwritten
-      aria-hidden={!interactive ? true : undefined}
+      aria-hidden={interactive ? undefined : true}
       ref={ref}
       unstyled={unstyled}
       {...others}

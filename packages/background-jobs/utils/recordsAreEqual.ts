@@ -20,7 +20,6 @@ export const recordsAreEqual = <
 
       // check if we are comparing Decimals (decimal.js)
       if (Decimal.isDecimal(aValue)) {
-        //console.log("decimal", aValue, bValue);
         return aValue.comparedTo(bValue as Decimal.Value) == 0;
       }
 
@@ -32,7 +31,6 @@ export const recordsAreEqual = <
 
       // check if we are comparing objects
       if (typeof aValue == "object") {
-        //console.log("object", aValue, bValue);
         return recordsAreEqual(
           aValue as Record<string, unknown>,
           bValue as Record<string, unknown>,
@@ -46,7 +44,6 @@ export const recordsAreEqual = <
         typeof bValue == "number" &&
         (aValue % 1 !== 0 || bValue % 1 !== 0)
       ) {
-        //console.log("number", aValue, bValue);
         return aValue.toString() == bValue.toString();
       }
 

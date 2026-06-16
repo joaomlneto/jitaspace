@@ -107,7 +107,7 @@ export async function generateMetadata({
     });
     if (!attribute) return {};
     const title =
-      [attribute.displayName, attribute.name].find((value) => value) ??
+      [attribute.displayName, attribute.name].find(Boolean) ??
       undefined;
     const description = attribute.description?.slice(0, 200) ?? undefined;
     return { title, description };
