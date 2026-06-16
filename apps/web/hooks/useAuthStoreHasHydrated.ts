@@ -14,10 +14,15 @@ import { useAuthStore } from "@jitaspace/hooks";
  * session has had a chance to load.
  */
 export const useAuthStoreHasHydrated = (): boolean => {
-  // Initialise from the current state (false during SSR and the first client
-  // render; true if a later mount happens after rehydration), then subscribe.
-  const [hasHydrated, setHasHydrated] = useState(() =>
-    useAuthStore.persist.hasHydrated(),
+  // Read the current state lazily, and only in the browser: the persisted
+  // store's `persist` API isn't wired up during SSR / prerender (no
+  // localStorage in Node), so touching it there throws. Server and the first
+  // client render therefore start `false` — matching each other, so no
+  // hydration mismatch — and the subscription below flips it to `true` once the
+  // store finishes rehydrating. A mount that happens after rehydration (e.g. a
+  // later client navigation) starts `true` straight away.
+  const [hasHydrated, setHasHydrated] = useState(
+    () => typeof window !== "undefined" && useAuthStore.persist.hasHydrated(),
   );
 
   useEffect(
