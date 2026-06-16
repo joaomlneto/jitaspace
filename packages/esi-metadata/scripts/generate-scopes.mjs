@@ -57,7 +57,7 @@ async function main() {
   const scopeObj =
     spec?.components?.securitySchemes?.OAuth2?.flows?.authorizationCode?.scopes;
   if (!scopeObj) throw new Error("Could not find OAuth2 scopes in spec securitySchemes");
-  const scopeList = Object.keys(scopeObj).sort();
+  const scopeList = Object.keys(scopeObj).sort((a, b) => a.localeCompare(b));
   const scopeSet = new Set(scopeList);
 
   const scopesCode = await format(
@@ -72,7 +72,7 @@ async function main() {
   const paths = spec?.paths ?? {};
   /** @type {Record<string, Record<string, string[]>>} */
   const endpointScopes = {};
-  for (const path of Object.keys(paths).sort()) {
+  for (const path of Object.keys(paths).sort((a, b) => a.localeCompare(b))) {
     const key = path.endsWith("/") ? path : `${path}/`;
     const methods = paths[path] ?? {};
     /** @type {Record<string, string[]>} */
