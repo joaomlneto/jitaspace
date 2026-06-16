@@ -11,7 +11,6 @@ import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import { EveEntitySelect, TypeAnchor } from "@jitaspace/eve-components";
-import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 import {
   CorporationAnchor,
   CorporationAvatar,
@@ -33,6 +32,7 @@ import {
   sellIskPerLp,
   sellProfit,
 } from "./pricing";
+import { useAugmentedOffers } from "./useAugmentedOffers";
 
 interface LoyaltyPointsTableProps {
   corporations: {
@@ -295,49 +295,8 @@ function iskPerLpValueCell({ cell }: { cell: MRT_Cell<AugmentedOffer> }) {
  */
 export const LoyaltyPointsTableClassic = memo(
   ({ corporations, types, offers }: LoyaltyPointsTableProps) => {
-    const sortedCorporations = useMemo(
-      () => [...corporations].sort((a, b) => a.name.localeCompare(b.name)),
-      [corporations],
-    );
-
-    const sortedTypes = useMemo(
-      () => [...types].sort((a, b) => a.name.localeCompare(b.name)),
-      [types],
-    );
-
-    const typeIds = useMemo(() => types.map((type) => type.typeId), [types]);
-
-    const marketStats = useFuzzworkRegionalMarketAggregates(typeIds, 10000002);
-
-    const typeNames = useMemo(() => {
-      const map: Record<number, string> = {};
-      types.forEach((type) => (map[type.typeId] = type.name));
-      return map;
-    }, [types]);
-
-    const corporationNames = useMemo(() => {
-      const map: Record<number, string> = {};
-      corporations.forEach(
-        (corporation) => (map[corporation.corporationId] = corporation.name),
-      );
-      return map;
-    }, [corporations]);
-
-    const augmentedOffers = useMemo<AugmentedOffer[]>(
-      () =>
-        offers.map((offer) => ({
-          ...offer,
-          requiredItems: offer.requiredItems.map((item) => ({
-            ...item,
-            typeName: typeNames[item.typeId],
-            marketStats: marketStats.data?.[item.typeId],
-          })),
-          typeName: typeNames[offer.typeId],
-          corporationName: corporationNames[offer.corporationId],
-          marketStats: marketStats.data?.[offer.typeId],
-        })),
-      [offers, typeNames, corporationNames, marketStats.data],
-    );
+    const { sortedCorporations, sortedTypes, augmentedOffers } =
+      useAugmentedOffers({ corporations, types, offers });
 
     const columns = useMemo<MRT_ColumnDef<AugmentedOffer>[]>(
       () => [
