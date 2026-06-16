@@ -25,6 +25,8 @@ dist/
 
 # production
 build
+# …except the history viewer's Next.js route segment literally named `build`
+!apps/web/app/history/build/
 
 # misc
 .DS_Store

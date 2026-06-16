@@ -2,12 +2,14 @@ import type { CardProps } from "@mantine/core";
 import { memo } from "react";
 import { Card, Group } from "@mantine/core";
 
+import {
+  SolarSystemName,
+  SolarSystemSovereigntyAvatar,
+} from "@jitaspace/eve-components";
 import { useSolarSystem } from "@jitaspace/hooks";
-import { SolarSystemName, SolarSystemSovereigntyAvatar } from "@jitaspace/ui";
 
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { SolarSystemBreadcrumbs } from "~/components/Breadcrumbs";
-
 import classes from "./SolarSystemCard.module.css";
 
 export type SolarSystemCardProps = Omit<CardProps, "children"> & {

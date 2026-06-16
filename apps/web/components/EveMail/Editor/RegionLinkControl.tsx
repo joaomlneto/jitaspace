@@ -1,29 +1,18 @@
+import type { PopoverProps } from "@mantine/core";
 import type React from "react";
 import { forwardRef } from "react";
-import {
-  Button,
-  Popover,
-  useMantineTheme,
-  useProps
-
-} from "@mantine/core";
-import type {PopoverProps} from "@mantine/core";
+import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
+import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { MapIcon } from "@jitaspace/eve-icons";
-import { EsiSearchSelect } from "@jitaspace/ui";
 
-import {
-  ControlBase
-
-} from "~/components/EveMail/Editor/ControlBase";
-import type {RichTextEditorControlBaseProps} from "~/components/EveMail/Editor/ControlBase";
+import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
+import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
 import classes from "./LinkControl.module.css";
 
-
-export interface RichTextEditorLinkControlProps
-  extends Partial<RichTextEditorControlBaseProps> {
+export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorControlBaseProps> {
   /** Props added to Popover component */
   popoverProps?: Partial<PopoverProps>;
 }
@@ -49,8 +38,8 @@ export const RegionLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setRegionId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setRegionId(href);
   };
 
   const handleClose = () => {
@@ -60,16 +49,18 @@ export const RegionLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    regionId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:3//${regionId}`,
-          })
-          .run();
+    if (regionId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:3//${regionId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -94,7 +85,7 @@ export const RegionLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || RegionLinkIcon}
+          icon={icon ?? RegionLinkIcon}
           aria-label="Link Region"
           title="Link Region"
           onClick={handleOpen}

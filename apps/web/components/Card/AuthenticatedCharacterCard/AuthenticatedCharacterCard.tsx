@@ -11,6 +11,12 @@ import {
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
+import {
+  AllianceName,
+  CharacterName,
+  CharacterOnlineIndicator,
+  CorporationName,
+} from "@jitaspace/eve-components";
 import { WalletIcon } from "@jitaspace/eve-icons";
 import {
   useAuthenticatedCharacter,
@@ -20,13 +26,9 @@ import { useCharacterWalletBalance } from "@jitaspace/hooks/src/hooks/character/
 import {
   AllianceAnchor,
   AllianceAvatar,
-  AllianceName,
   CharacterAvatar,
-  CharacterName,
-  CharacterOnlineIndicator,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
   ISKAmount,
   TypeAvatar,
 } from "@jitaspace/ui";

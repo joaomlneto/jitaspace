@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo
-} from "react";
+import { useCallback, useMemo } from "react";
 import {
   Center,
   Container,
@@ -18,6 +15,7 @@ import {
 import { useForm } from "@mantine/form";
 import { usePagination } from "@mantine/hooks";
 
+import { AssetLocationSelect } from "@jitaspace/eve-components";
 import { AssetsIcon } from "@jitaspace/eve-icons";
 import {
   useCharacterAssets,
@@ -25,11 +23,10 @@ import {
   useMarketPrices,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
-import { AssetLocationSelect, ISKAmount } from "@jitaspace/ui";
+import { ISKAmount } from "@jitaspace/ui";
 
 import { AssetsDataTable } from "~/components/Assets/AssetsDataTable";
 import { ScopeGuard } from "~/components/ScopeGuard";
-
 
 export default function Page() {
   const character = useSelectedCharacter();
@@ -44,7 +41,7 @@ export default function Page() {
 
   const assetEntries = useMemo(
     () =>
-      Object.values(assets ?? {}).map((asset) => ({
+      Object.values(assets).map((asset) => ({
         id: asset.type_id,
         category: "inventory_type" as const,
       })),
@@ -62,7 +59,7 @@ export default function Page() {
 
   const entries = useMemo(
     () =>
-      Object.values(assets ?? {})
+      Object.values(assets)
         .filter((asset) => asset.location_type !== "item")
         .filter(
           (asset) =>
@@ -116,54 +113,52 @@ export default function Page() {
     <ScopeGuard requiredScopes={["esi-assets.read_assets.v1"]}>
       <Container size="xl">
         <Stack>
-        <Group>
-          <AssetsIcon width={48} />
-          <Title order={1}>Assets</Title>
-          {(isLoading || numUndefinedNames > 0) && <Loader />}
-        </Group>
-        <Group align="end">
-          <AssetLocationSelect
-            size="xs"
-            label="Filter by location"
-            value={filterForm.values.location_id?.toString()}
-            onChange={(value) => {
-              filterForm.setFieldValue(
-                "location_id",
-                value ? Number.parseInt(value, 10) : null,
-              );
-            }}
-          />
-          <TextInput
-            label="Filter by name"
-            size="xs"
-            {...filterForm.getInputProps("name")}
-          />
-        </Group>
-        <Text size="sm" c="dimmed">
-          {filtersEnabled
-            ? `Showing ${entries.length}/${
-                (Object.keys(assets) ?? []).length
-              } assets`
-            : `${(Object.keys(assets) ?? []).length} assets`}
-        </Text>
-        <Text size="sm" c="dimmed">
-          Total value: <ISKAmount span amount={totalPrice} />
-        </Text>
-        {numUndefinedNames > 0 && (
-          <Text c="red" size="sm">
-            Resolving names for {numUndefinedNames} items…
+          <Group>
+            <AssetsIcon width={48} />
+            <Title order={1}>Assets</Title>
+            {(isLoading || numUndefinedNames > 0) && <Loader />}
+          </Group>
+          <Group align="end">
+            <AssetLocationSelect
+              size="xs"
+              label="Filter by location"
+              value={filterForm.values.location_id?.toString()}
+              onChange={(value) => {
+                filterForm.setFieldValue(
+                  "location_id",
+                  value ? Number.parseInt(value, 10) : null,
+                );
+              }}
+            />
+            <TextInput
+              label="Filter by name"
+              size="xs"
+              {...filterForm.getInputProps("name")}
+            />
+          </Group>
+          <Text size="sm" c="dimmed">
+            {filtersEnabled
+              ? `Showing ${entries.length}/${Object.keys(assets).length} assets`
+              : `${Object.keys(assets).length} assets`}
           </Text>
-        )}
-        <Center>
-          <Pagination
-            total={numPages}
-            value={pagination.active}
-            onChange={pagination.setPage}
+          <Text size="sm" c="dimmed">
+            Total value: <ISKAmount span amount={totalPrice} />
+          </Text>
+          {numUndefinedNames > 0 && (
+            <Text c="red" size="sm">
+              Resolving names for {numUndefinedNames} items…
+            </Text>
+          )}
+          <Center>
+            <Pagination
+              total={numPages}
+              value={pagination.active}
+              onChange={pagination.setPage}
+            />
+          </Center>
+          <AssetsDataTable
+            entries={entries.slice(offset, offset + ENTRIES_PER_PAGE)}
           />
-        </Center>
-        <AssetsDataTable
-          entries={entries.slice(offset, offset + ENTRIES_PER_PAGE)}
-        />
         </Stack>
       </Container>
     </ScopeGuard>

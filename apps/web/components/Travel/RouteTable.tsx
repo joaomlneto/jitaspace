@@ -1,18 +1,13 @@
 import { memo, useMemo } from "react";
 import { Anchor, Group, Table, Text, Tooltip } from "@mantine/core";
 
+import { SolarSystemAnchor, SolarSystemName } from "@jitaspace/eve-components";
 import { InfoIcon } from "@jitaspace/eve-icons";
 import { useAllSolarSystemKills } from "@jitaspace/hooks";
-import {
-  SolarSystemAnchor,
-  SolarSystemName,
-  TimeAgoText,
-} from "@jitaspace/ui";
+import { TimeAgoText } from "@jitaspace/ui";
 
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
-
 import { ZkillboardRecentSystemKills } from "~/components/Travel/ZkillboardRecentSystemKills";
-
 
 interface RouteTableProps {
   route: {
@@ -40,8 +35,8 @@ export const RouteTable = memo(({ route }: RouteTableProps) => {
   }, [systemKillsData]);
 
   const killStatisticsDate: Date | null = useMemo(() => {
-    const headerValue = systemKillsData?.headers?.["last-modified"];
-    if (headerValue) return new Date(headerValue);
+    const headerValue: unknown = systemKillsData?.headers["last-modified"];
+    if (typeof headerValue === "string") return new Date(headerValue);
     return null;
   }, [systemKillsData]);
 

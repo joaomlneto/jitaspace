@@ -15,6 +15,22 @@ export interface ScrapeStationServicesEventPayload {
   };
 }
 
+// Extracted to keep the per-service fetch from nesting too deeply.
+const fetchRemoteStationService = (
+  limit: ReturnType<typeof pLimit>,
+  stationServiceId: number,
+) =>
+  limit(async () =>
+    getStationServiceById(stationServiceId)
+      .then((res) => res.data)
+      .then((stationService) => ({
+        stationServiceId: stationService.stationServiceID,
+        name: stationService.serviceName.en ?? null,
+        description: stationService.description?.en ?? null,
+        isDeleted: false,
+      })),
+  );
+
 export const scrapeSdeStationServices = defineJob<
   ScrapeStationServicesEventPayload["data"]
 >({
@@ -51,16 +67,7 @@ export const scrapeSdeStationServices = defineJob<
       fetchRemoteEntries: async () =>
         Promise.all(
           stationServiceIds.map((stationServiceId) =>
-            limit(async () =>
-              getStationServiceById(stationServiceId)
-                .then((res) => res.data)
-                .then((stationService) => ({
-                  stationServiceId: stationService.stationServiceID,
-                  name: stationService.serviceName.en ?? null,
-                  description: stationService.description?.en ?? null,
-                  isDeleted: false,
-                })),
-            ),
+            fetchRemoteStationService(limit, stationServiceId),
           ),
         ),
       batchCreate: (entries) =>

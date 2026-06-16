@@ -1,11 +1,8 @@
 import { memo } from "react";
 import { Group, Text } from "@mantine/core";
 
-import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/ui";
-
-
-
-
+import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/ui";
 
 export interface ShipFittingCardModuleSectionEntryProps {
   typeId: number;

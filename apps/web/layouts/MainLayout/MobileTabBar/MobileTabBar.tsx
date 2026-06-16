@@ -27,13 +27,23 @@ interface Tab {
 const tabs: Tab[] = [
   { label: "Home", href: "/", Icon: IconHome, match: ["/"] },
   { label: "Search", href: "/search", Icon: IconSearch, match: ["/search"] },
-  { label: "Market", href: "/market", Icon: IconShoppingCart, match: ["/market"] },
-  { label: "Map", href: "/regions", Icon: IconMap, match: ["/regions", "/region"] },
+  {
+    label: "Market",
+    href: "/market",
+    Icon: IconShoppingCart,
+    match: ["/market"],
+  },
+  {
+    label: "Map",
+    href: "/regions",
+    Icon: IconMap,
+    match: ["/regions", "/region"],
+  },
 ];
 
 function isActive(pathname: string | null, tab: Tab): boolean {
   if (tab.href === "/") return pathname === "/";
-  return (tab.match ?? []).some((prefix) => pathname?.startsWith(prefix));
+  return tab.match.some((prefix) => pathname?.startsWith(prefix));
 }
 
 function TabBarLinks({ pathname }: Readonly<{ pathname: string | null }>) {

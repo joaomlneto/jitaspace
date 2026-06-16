@@ -17,6 +17,11 @@ export interface ScrapeLoyaltyStoreOffersEventPayload {
   };
 }
 
+async function fetchCorporationLoyaltyStoreOffers(corporationId: number) {
+  const res = await getLoyaltyStoresCorporationIdOffers(corporationId);
+  return res.data.map((offer) => ({ corporationId, ...offer }));
+}
+
 export const scrapeEsiLoyaltyStoreOffers = defineJob<
   ScrapeLoyaltyStoreOffersEventPayload["data"]
 >({
@@ -43,11 +48,7 @@ export const scrapeEsiLoyaltyStoreOffers = defineJob<
     const thisBatchLoyaltyStoreOffers = (
       await Promise.all(
         corporationIds.map((corporationId) =>
-          limit(async () =>
-            getLoyaltyStoresCorporationIdOffers(corporationId).then((res) =>
-              res.data.map((offer) => ({ corporationId, ...offer })),
-            ),
-          ),
+          limit(() => fetchCorporationLoyaltyStoreOffers(corporationId)),
         ),
       )
     ).flat();
@@ -74,17 +75,19 @@ export const scrapeEsiLoyaltyStoreOffers = defineJob<
               excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
             ),
           ),
-      fetchRemoteEntries: async () =>
-        thisBatchLoyaltyStoreOffers.map((offer) => ({
-          offerId: offer.offer_id,
-          corporationId: offer.corporationId,
-          typeId: offer.type_id,
-          quantity: offer.quantity,
-          akCost: offer.ak_cost ?? null,
-          iskCost: BigInt(offer.isk_cost),
-          lpCost: BigInt(offer.lp_cost),
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          thisBatchLoyaltyStoreOffers.map((offer) => ({
+            offerId: offer.offer_id,
+            corporationId: offer.corporationId,
+            typeId: offer.type_id,
+            quantity: offer.quantity,
+            akCost: offer.ak_cost ?? null,
+            iskCost: BigInt(offer.isk_cost),
+            lpCost: BigInt(offer.lp_cost),
+            isDeleted: false,
+          })),
+        ),
       batchCreate: (entries) => {
         return limit(() =>
           prisma.loyaltyStoreOffer.createMany({
@@ -135,14 +138,16 @@ export const scrapeEsiLoyaltyStoreOffers = defineJob<
               excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
             ),
           ),
-      fetchRemoteEntries: async () =>
-        requiredItems.map((item) => ({
-          offerId: item.offerId,
-          corporationId: item.corporationId,
-          typeId: item.type_id,
-          quantity: item.quantity,
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          requiredItems.map((item) => ({
+            offerId: item.offerId,
+            corporationId: item.corporationId,
+            typeId: item.type_id,
+            quantity: item.quantity,
+            isDeleted: false,
+          })),
+        ),
       batchCreate: (entries) => {
         return limit(() =>
           prisma.loyaltyStoreOfferRequiredItem.createMany({

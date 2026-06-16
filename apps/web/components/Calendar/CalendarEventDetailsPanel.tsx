@@ -4,22 +4,23 @@ import type {
   CalendarEventAttendee,
   CalendarEventAttendeeResponse,
 } from "@jitaspace/hooks";
-import { useCalendarEvent, useCalendarEventAttendees } from "@jitaspace/hooks";
 import {
   CharacterAnchor,
-  CharacterAvatar,
   CharacterName,
-  DateHoverCard,
   EveEntityNameAnchor,
+} from "@jitaspace/eve-components";
+import { useCalendarEvent, useCalendarEventAttendees } from "@jitaspace/hooks";
+import {
+  CharacterAvatar,
+  DateHoverCard,
   FormattedDateText,
 } from "@jitaspace/ui";
 
 import { CalendarEventOwnerAvatar } from "~/components/Avatar";
 import { CalendarEventResponseBadge } from "~/components/Badge";
 import { CalendarEventHumanDurationText } from "~/components/DurationText";
-import { CalendarEventAttendanceSelect } from "~/components/Select";
-
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
+import { CalendarEventAttendanceSelect } from "~/components/Select";
 
 export interface CalendarEventPanelProps {
   characterId: number;
@@ -29,7 +30,7 @@ export interface CalendarEventPanelProps {
 export function CalendarEventDetailsPanel({
   characterId,
   eventId,
-}: CalendarEventPanelProps) {
+}: Readonly<CalendarEventPanelProps>) {
   const { data: event, canRespondToEvents } = useCalendarEvent(
     characterId,
     eventId,
@@ -70,10 +71,10 @@ export function CalendarEventDetailsPanel({
       <Group justify="space-between" mt="xl">
         <Text>When</Text>
         <DateHoverCard
-          date={event?.data.date ? new Date(event?.data.date) : undefined}
+          date={event?.data.date ? new Date(event.data.date) : undefined}
         >
           <FormattedDateText
-            date={event?.data.date ? new Date(event?.data.date) : undefined}
+            date={event?.data.date ? new Date(event.data.date) : undefined}
             format="yyyy-MM-dd HH:mm"
           />
         </DateHoverCard>
@@ -112,9 +113,7 @@ export function CalendarEventDetailsPanel({
           />
         )}
       </Group>
-      {event?.data.text && (
-        <MailMessageViewer content={event?.data.text ?? ""} />
-      )}
+      {event?.data.text && <MailMessageViewer content={event.data.text} />}
       <Title order={4} mt="xl">
         Attendees
       </Title>

@@ -2,20 +2,39 @@ import pLimit from "p-limit";
 
 import { getUniverseStationsStationId } from "@jitaspace/esi-client";
 
+import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
-import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeStationsEventPayload {
   data: {
-    stationIds: number[];
+    stationIds?: number[];
     batchSize?: number;
   };
 }
 
 type StatsKey = "stations";
+
+const fetchStation = (stationId: number, limit: ReturnType<typeof pLimit>) =>
+  limit(async () =>
+    getUniverseStationsStationId(stationId)
+      .then((res) => res.data)
+      .then((station) => ({
+        stationId: station.station_id,
+        name: station.name,
+        solarSystemId: station.system_id === 1 ? null : station.system_id,
+        typeId: station.type_id,
+        maxDockableShipVolume: station.max_dockable_ship_volume,
+        officeRentalCost: station.office_rental_cost,
+        ownerId: station.owner ?? null,
+        raceId: station.race_id ?? null,
+        reprocessingEfficiency: station.reprocessing_efficiency,
+        reprocessingStationsTake: station.reprocessing_stations_take,
+        isDeleted: false,
+      })),
+  );
 
 export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
   id: "scrape-esi-stations",
@@ -27,72 +46,62 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
     const batchSize = ctx.payload.batchSize ?? 1000;
     const stationIds = ctx.payload.stationIds ?? [];
 
-    if (ctx.payload.stationIds.length == 0)
+    if (stationIds.length == 0)
       throw new NonRetriableError("Invalid station IDs");
 
     // Split IDs in batches
-    const { batches } = await ctx.run("Fetch Station IDs", async () => {
+    const { batches } = await ctx.run("Fetch Station IDs", () => {
       stationIds.sort((a, b) => a - b);
 
       const numBatches = Math.ceil(stationIds.length / batchSize);
       const batchIds = (batchIndex: number) =>
         stationIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      return {
-        batches: [...Array(numBatches).keys()].map((batchId) =>
+      return Promise.resolve({
+        batches: [...new Array(numBatches).keys()].map((batchId) =>
           batchIds(batchId),
         ),
-      };
+      });
     });
 
     const results: BatchStepResult<StatsKey>[] = [];
     const limit = pLimit(20);
 
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchStationIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<(typeof results)[number]> => {
           console.log(`starting batch ${i + 1}`);
           const stepStartTime = performance.now();
-          const thisBatchStationIds = batches[i]!;
 
           await createCorpAndItsRefRecords({
             missingStationIds: new Set(thisBatchStationIds),
           });
 
-          const stationIdsInDatabase = await prisma.station
-            .findMany({
-              select: {
-                stationId: true,
-              },
-            })
-            .then((res) => res.map((stargate) => stargate.stationId));
-
           const fetchStations = async (stationIds: number[]) =>
             Promise.all(
-              stationIds.map((stationId) =>
-                limit(async () =>
-                  getUniverseStationsStationId(stationId)
-                    .then((res) => res.data)
-                    .then((station) => ({
-                      stationId: station.station_id,
-                      name: station.name,
-                      solarSystemId:
-                        station.system_id !== 1 ? station.system_id : null,
-                      typeId: station.type_id,
-                      maxDockableShipVolume: station.max_dockable_ship_volume,
-                      officeRentalCost: station.office_rental_cost,
-                      ownerId: station.owner ?? null,
-                      raceId: station.race_id ?? null,
-                      reprocessingEfficiency: station.reprocessing_efficiency,
-                      reprocessingStationsTake:
-                        station.reprocessing_stations_take,
-                      isDeleted: false,
-                    })),
-                ),
-              ),
+              stationIds.map((stationId) => fetchStation(stationId, limit)),
             );
 
           const thisBatchStations = await fetchStations(thisBatchStationIds);
+
+          const stripTimestamps = <
+            T extends { updatedAt: unknown; createdAt: unknown },
+          >(
+            entries: T[],
+          ) =>
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            );
+
+          const updateOneStation = (
+            entry: (typeof thisBatchStations)[number],
+          ) =>
+            limit(async () =>
+              prisma.station.update({
+                data: entry,
+                where: { stationId: entry.stationId },
+              }),
+            );
 
           const stationChanges = await updateTable({
             fetchLocalEntries: async () =>
@@ -104,12 +113,8 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
                     },
                   },
                 })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
-            fetchRemoteEntries: async () => thisBatchStations,
+                .then(stripTimestamps),
+            fetchRemoteEntries: () => Promise.resolve(thisBatchStations),
             batchCreate: (entries) =>
               limit(() =>
                 prisma.station.createMany({
@@ -128,16 +133,7 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
                 },
               }),
             batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.station.update({
-                      data: entry,
-                      where: { stationId: entry.stationId },
-                    }),
-                  ),
-                ),
-              ),
+              Promise.all(entries.map(updateOneStation)),
             idAccessor: (e) => e.stationId,
           });
 

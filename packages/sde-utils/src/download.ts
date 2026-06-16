@@ -21,7 +21,10 @@ export async function downloadFile(
     fs.mkdirSync(destinationPath, { recursive: true });
   }
 
-  if (res.body === null) {
+  // @types/node-fetch types `body` as non-nullable, but at runtime node-fetch
+  // can yield a null body (e.g. 204 / HEAD responses), so widen to reflect that.
+  const body = res.body as NodeJS.ReadableStream | null;
+  if (body === null) {
     throw new Error("Response body is empty");
   }
 
@@ -31,12 +34,12 @@ export async function downloadFile(
       10,
     );
     let bytesReceived = 0;
-    res.body.on("data", (chunk: Buffer) => {
+    body.on("data", (chunk: Buffer) => {
       bytesReceived += chunk.length;
       onProgress(bytesReceived, totalBytes);
     });
   }
 
   const fileStream = fs.createWriteStream(destination);
-  await finished(res.body.pipe(fileStream));
+  await finished(body.pipe(fileStream));
 }

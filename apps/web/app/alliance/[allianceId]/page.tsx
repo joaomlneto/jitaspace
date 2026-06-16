@@ -1,5 +1,5 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { getAlliancesAllianceId } from "@jitaspace/esi-client";
 
@@ -16,7 +16,7 @@ export async function generateMetadata({
   if (!Number.isSafeInteger(id) || id <= 0) return {};
   try {
     const res = await getAlliancesAllianceId(id);
-    const name = res.data?.name;
+    const name = res.data.name;
     const logoUrl = `https://images.evetech.net/alliances/${id}/logo`;
     return {
       title: name,

@@ -1,7 +1,7 @@
 "use client";
 
 import type { AvatarProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import { Avatar, Skeleton } from "@mantine/core";
 
 import {
@@ -34,18 +34,12 @@ export const CalendarEventOwnerAvatar = memo(
 
     return (
       {
-        alliance: (
-          <AllianceAvatar allianceId={ownerId} {...otherProps} />
-        ),
-        character: (
-          <CharacterAvatar characterId={ownerId} {...otherProps} />
-        ),
+        alliance: <AllianceAvatar allianceId={ownerId} {...otherProps} />,
+        character: <CharacterAvatar characterId={ownerId} {...otherProps} />,
         corporation: (
           <CorporationAvatar corporationId={ownerId} {...otherProps} />
         ),
-        faction: (
-          <FactionAvatar factionId={ownerId} {...otherProps} />
-        ),
+        faction: <FactionAvatar factionId={ownerId} {...otherProps} />,
         eve_server: <AllianceAvatar allianceId={434243723} {...otherProps} />,
       }[ownerType] ?? <Avatar {...otherProps} />
     );

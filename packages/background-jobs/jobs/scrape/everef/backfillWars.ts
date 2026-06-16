@@ -1,4 +1,4 @@
-import type {GetWarsWarId200} from "@jitaspace/esi-client";
+import type { GetWarsWarId200 } from "@jitaspace/esi-client";
 
 import { defineJob } from "../../../core";
 import { getKv } from "../../../kv";
@@ -44,7 +44,7 @@ export const backfillEveRefWars = defineJob<
     console.log("Got files!");
 
     const numBatches = Math.ceil(files.length / batchSize);
-    const batches = [...Array(numBatches).keys()].map((batchId) =>
+    const batches = [...new Array(numBatches).keys()].map((batchId) =>
       files.slice(batchId * batchSize, (batchId + 1) * batchSize),
     );
 

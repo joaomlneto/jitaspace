@@ -10,8 +10,18 @@ import { prisma } from "../../../db";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeRegionEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
+
+const fetchRegion = (regionId: number) =>
+  getUniverseRegionsRegionId(regionId)
+    .then((res) => res.data)
+    .then((region) => ({
+      regionId: region.region_id,
+      name: region.name,
+      description: region.description ?? null,
+      isDeleted: false,
+    }));
 
 export const scrapeEsiRegions = defineJob<ScrapeRegionEventPayload["data"]>({
   id: "scrape-esi-regions",
@@ -45,18 +55,7 @@ export const scrapeEsiRegions = defineJob<ScrapeRegionEventPayload["data"]>({
           ),
       fetchRemoteEntries: async () =>
         Promise.all(
-          thisBatchIds.map((regionId) =>
-            limit(async () =>
-              getUniverseRegionsRegionId(regionId)
-                .then((res) => res.data)
-                .then((region) => ({
-                  regionId: region.region_id,
-                  name: region.name,
-                  description: region.description ?? null,
-                  isDeleted: false,
-                })),
-            ),
-          ),
+          thisBatchIds.map((regionId) => limit(() => fetchRegion(regionId))),
         ),
       batchCreate: (entries) =>
         limit(() =>

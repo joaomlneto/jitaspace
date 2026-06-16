@@ -29,18 +29,20 @@ export interface TravelPageProps {
   >;
 }
 
+type SolarSystemNodeData = TravelPageProps["solarSystems"][string];
+
 export default function TravelPage({
   solarSystems,
   initialWaypoints,
-}: TravelPageProps) {
+}: Readonly<TravelPageProps>) {
   const router = useRouter();
 
   const graph = useMemo(() => {
-    const graph = createGraph();
-    Object.entries(solarSystems ?? {}).forEach(([v, solarSystem]) => {
+    const graph = createGraph<SolarSystemNodeData>();
+    Object.entries(solarSystems).forEach(([v, solarSystem]) => {
       graph.addNode(v, solarSystem);
     });
-    Object.entries(solarSystems ?? {}).forEach(([v, { neighbors }]) => {
+    Object.entries(solarSystems).forEach(([v, { neighbors }]) => {
       neighbors.forEach((u) => graph.addLink(v, u.toString()));
     });
     return graph;
@@ -64,7 +66,9 @@ export default function TravelPage({
   const deferredHighSecPenalty = useDeferredValue(highSecPenalty);
 
   const route = useMemo(() => {
-    if (!graph || waypoints.length < 2) return [];
+    const start = waypoints[1];
+    const end = waypoints[0];
+    if (start === undefined || end === undefined) return [];
     const pathFinder = path.nba(graph, {
       distance(fromNode, toNode, _link) {
         const destinationSecurityStatus = toNode.data.securityStatus;
@@ -74,7 +78,7 @@ export default function TravelPage({
         return 1;
       },
     });
-    return pathFinder.find(waypoints[1]!, waypoints[0]!);
+    return pathFinder.find(start, end);
   }, [
     graph,
     waypoints,
@@ -84,7 +88,7 @@ export default function TravelPage({
   ]);
 
   const solarSystemSelectData = useMemo(() => {
-    return Object.entries(solarSystems ?? {})
+    return Object.entries(solarSystems)
       .map(([solarSystemId, { name }]) => ({
         value: solarSystemId,
         label: name,
@@ -115,7 +119,7 @@ export default function TravelPage({
                 }
                 router.push(
                   `/travel/${waypoints
-                    .map((systemId) => solarSystems[systemId]!.name)
+                    .map((systemId) => solarSystems[systemId]?.name ?? "")
                     .join("/")}`,
                 );
               }}

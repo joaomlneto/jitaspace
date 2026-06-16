@@ -4,23 +4,19 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
+import { CorporationName, TypeName } from "@jitaspace/eve-components";
 import { useBloodline } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  CorporationAvatar,
-  CorporationName,
-  TypeAvatar,
-  TypeName,
-} from "@jitaspace/ui";
+import { CorporationAvatar, TypeAvatar } from "@jitaspace/ui";
 
 import { RaceAvatar } from "~/components/Avatar";
-import { BloodlineName, RaceName } from "~/components/Text";
-
 import { MailMessageViewer } from "~/components/EveMail";
 import { characterAttributes } from "~/components/Skills";
+import { BloodlineName, RaceName } from "~/components/Text";
+
 export default function Page() {
   const params = useParams();
-  const rawBloodlineId = params?.bloodlineId;
+  const rawBloodlineId = params.bloodlineId;
   const bloodlineId = Number(
     typeof rawBloodlineId === "string" ? rawBloodlineId : rawBloodlineId?.[0],
   );
@@ -89,7 +85,7 @@ export default function Page() {
                   .toUpperCase()
                   .concat((attributeName as string).substring(1))}
               </Text>
-              <Text>{bloodline?.[attributeName]}</Text>
+              <Text>{bloodline[attributeName]}</Text>
             </Group>
           ))}
       </Stack>

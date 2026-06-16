@@ -1,7 +1,9 @@
 import * as Sentry from "@sentry/nextjs";
 
+import { env } from "~/env";
+
 Sentry.init({
-  enabled: process.env.NODE_ENV === "production",
+  enabled: env.NODE_ENV === "production",
   dsn: "https://8ce4a77ec56a1b9fa5c8081b394c3636@o4507086334001152.ingest.de.sentry.io/4507086337540176",
 
   // Add optional integrations for additional features

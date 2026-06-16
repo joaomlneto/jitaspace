@@ -4,7 +4,8 @@ import { baseConfig, restrictEnvAccess } from "@jitaspace/eslint-config/base";
 
 export default defineConfig(
   {
-    ignores: ["dist/**"],
+    // Generated kubb output is not hand-maintained; keep it out of lint.
+    ignores: ["dist/**", "src/generated/**"],
   },
   baseConfig,
   restrictEnvAccess,

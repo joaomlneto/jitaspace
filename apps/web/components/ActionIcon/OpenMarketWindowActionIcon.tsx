@@ -1,14 +1,15 @@
 "use client";
 
 import { memo, useCallback } from "react";
+
 import { postUiOpenwindowMarketdetails } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
 import { OpenMarketWindowActionIcon as UIOpenMarketWindowActionIcon } from "@jitaspace/ui";
 
-export type OpenMarketWindowActionIconProps = {
+export interface OpenMarketWindowActionIconProps {
   typeId?: number;
   characterId?: number;
-};
+}
 
 export const OpenMarketWindowActionIcon = memo(
   ({ typeId, characterId, ...otherProps }: OpenMarketWindowActionIconProps) => {

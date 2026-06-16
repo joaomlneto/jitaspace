@@ -1,9 +1,13 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+
+import type * as OpenInformationWindowActionIconModule from "../../ActionIcon/OpenInformationWindowActionIcon";
+import type * as OpenMarketWindowActionIconModule from "../../ActionIcon/OpenMarketWindowActionIcon";
+import type * as SetAutopilotDestinationActionIconModule from "../../ActionIcon/SetAutopilotDestinationActionIcon";
 
 // MarketIcon pulls in the (heavy) eve-icons sprite machinery — stub it out.
 jest.mock("@jitaspace/eve-icons", () => ({
@@ -12,15 +16,12 @@ jest.mock("@jitaspace/eve-icons", () => ({
   ),
 }));
 
-const {
-  OpenInformationWindowActionIcon,
-} = require("../../ActionIcon/OpenInformationWindowActionIcon") as typeof import("../../ActionIcon/OpenInformationWindowActionIcon");
-const {
-  OpenMarketWindowActionIcon,
-} = require("../../ActionIcon/OpenMarketWindowActionIcon") as typeof import("../../ActionIcon/OpenMarketWindowActionIcon");
-const {
-  SetAutopilotDestinationActionIcon,
-} = require("../../ActionIcon/SetAutopilotDestinationActionIcon") as typeof import("../../ActionIcon/SetAutopilotDestinationActionIcon");
+const { OpenInformationWindowActionIcon } =
+  require("../../ActionIcon/OpenInformationWindowActionIcon") as typeof OpenInformationWindowActionIconModule;
+const { OpenMarketWindowActionIcon } =
+  require("../../ActionIcon/OpenMarketWindowActionIcon") as typeof OpenMarketWindowActionIconModule;
+const { SetAutopilotDestinationActionIcon } =
+  require("../../ActionIcon/SetAutopilotDestinationActionIcon") as typeof SetAutopilotDestinationActionIconModule;
 
 const renderWithMantine = (ui: React.ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);

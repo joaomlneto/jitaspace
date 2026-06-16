@@ -12,7 +12,7 @@ declare const AXIOS_HEADERS: string;
 /**
  * Subset of AxiosRequestConfig
  */
-export type RequestConfig<TData = unknown> = {
+export interface RequestConfig<TData = unknown> {
   baseURL?: string;
   url?: string;
   method?: "GET" | "PUT" | "PATCH" | "POST" | "DELETE" | "OPTIONS" | "HEAD";
@@ -27,17 +27,17 @@ export type RequestConfig<TData = unknown> = {
     | "stream";
   signal?: AbortSignal;
   headers?: AxiosRequestConfig["headers"];
-};
+}
 
 /**
  * Subset of AxiosResponse
  */
-export type ResponseConfig<TData = unknown> = {
+export interface ResponseConfig<TData = unknown> {
   data: TData;
   status: number;
   statusText: string;
   headers: AxiosResponse["headers"];
-};
+}
 
 export type ResponseErrorConfig<TError = unknown> = AxiosError<TError>;
 

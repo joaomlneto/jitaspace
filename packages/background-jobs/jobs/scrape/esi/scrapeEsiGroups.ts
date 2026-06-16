@@ -5,9 +5,10 @@ import {
   getUniverseGroupsGroupId,
 } from "@jitaspace/esi-client";
 
+import type { Group } from "../../../db";
+import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeGroupsEventPayload {
@@ -16,6 +17,40 @@ export interface ScrapeGroupsEventPayload {
   };
 }
 type StatsKey = "groups";
+
+type Limit = ReturnType<typeof pLimit>;
+
+interface GroupEntry {
+  groupId: number;
+  name: string;
+  categoryId: number;
+  published: boolean;
+  isDeleted: boolean;
+}
+
+const excludeGroupTimestamps = (entry: Group) =>
+  excludeObjectKeys(entry, ["updatedAt", "createdAt"]);
+
+const fetchRemoteGroup = (limit: Limit, groupId: number) =>
+  limit(() =>
+    getUniverseGroupsGroupId(groupId)
+      .then((res) => res.data)
+      .then((group) => ({
+        groupId: group.group_id,
+        name: group.name,
+        categoryId: group.category_id,
+        published: group.published,
+        isDeleted: false,
+      })),
+  );
+
+const updateGroup = (limit: Limit, entry: GroupEntry) =>
+  limit(() =>
+    prisma.group.update({
+      data: entry,
+      where: { groupId: entry.groupId },
+    }),
+  );
 
 export const scrapeEsiGroups = defineJob<ScrapeGroupsEventPayload["data"]>({
   id: "scrape-esi-groups",
@@ -28,7 +63,7 @@ export const scrapeEsiGroups = defineJob<ScrapeGroupsEventPayload["data"]>({
     // Get all Group IDs in ESI
     const batches = await ctx.run("Fetch Group IDs", async () => {
       const firstPage = await getUniverseGroups();
-      const numPages = Number(firstPage.headers?.["x-pages"]);
+      const numPages = Number(firstPage.headers["x-pages"]);
       const groupIds = firstPage.data;
       for (let page = 2; page <= numPages; page++) {
         groupIds.push(
@@ -40,19 +75,20 @@ export const scrapeEsiGroups = defineJob<ScrapeGroupsEventPayload["data"]>({
       const numBatches = Math.ceil(groupIds.length / batchSize);
       const batchIds = (batchIndex: number) =>
         groupIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      return [...Array(numBatches).keys()].map((batchId) => batchIds(batchId));
+      return [...new Array(numBatches).keys()].map((batchId) =>
+        batchIds(batchId),
+      );
     });
 
     const results: BatchStepResult<StatsKey>[] = [];
     const limit = pLimit(20);
 
     // update records in batches
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
           const stepStartTime = performance.now();
-          const thisBatchIds = batches[i]!;
 
           const groupChanges = await updateTable({
             fetchLocalEntries: async () =>
@@ -64,26 +100,10 @@ export const scrapeEsiGroups = defineJob<ScrapeGroupsEventPayload["data"]>({
                     },
                   },
                 })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
+                .then((entries) => entries.map(excludeGroupTimestamps)),
             fetchRemoteEntries: async () =>
               Promise.all(
-                thisBatchIds.map((groupId) =>
-                  limit(async () =>
-                    getUniverseGroupsGroupId(groupId)
-                      .then((res) => res.data)
-                      .then((group) => ({
-                        groupId: group.group_id,
-                        name: group.name,
-                        categoryId: group.category_id,
-                        published: group.published,
-                        isDeleted: false,
-                      })),
-                  ),
-                ),
+                thisBatchIds.map((groupId) => fetchRemoteGroup(limit, groupId)),
               ),
             batchCreate: (entries) =>
               limit(() =>
@@ -103,16 +123,7 @@ export const scrapeEsiGroups = defineJob<ScrapeGroupsEventPayload["data"]>({
                 },
               }),
             batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.group.update({
-                      data: entry,
-                      where: { groupId: entry.groupId },
-                    }),
-                  ),
-                ),
-              ),
+              Promise.all(entries.map((entry) => updateGroup(limit, entry))),
             idAccessor: (e) => e.groupId,
           });
 

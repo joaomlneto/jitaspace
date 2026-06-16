@@ -1,15 +1,15 @@
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
+import type { PageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import DogmaAttributesPage from "./page.client";
 
 export const metadata = {
   title: "Dogma Attributes",
-  description: "Browse all EVE Online dogma attributes used in ship and module balancing.",
+  description:
+    "Browse all EVE Online dogma attributes used in ship and module balancing.",
 };
-
-import DogmaAttributesPage from "./page.client";
-import type { PageProps } from "./page.client";
 
 export default async function Page() {
   "use cache";
@@ -39,9 +39,10 @@ export default async function Page() {
         attributeId: true,
       },
     });
-    count.forEach(
-      (entry) => (map[entry.attributeId]!.numTypeIds = entry._count.attributeId),
-    );
+    count.forEach((entry) => {
+      const attribute = map[entry.attributeId];
+      if (attribute) attribute.numTypeIds = entry._count.attributeId;
+    });
 
     attributes = map;
   } catch {

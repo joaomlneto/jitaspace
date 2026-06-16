@@ -19,29 +19,31 @@ import {
 import { IconExternalLink, IconShield, IconSword } from "@tabler/icons-react";
 import useSWR from "swr";
 
+import {
+  AllianceName,
+  CharacterAnchor,
+  CharacterName,
+  CorporationName,
+  FactionAnchor,
+  FactionName,
+  SolarSystemAnchor,
+  SolarSystemName,
+  SolarSystemSovereigntyAvatar,
+  TypeAnchor,
+  TypeName,
+} from "@jitaspace/eve-components";
 import { useKillmail } from "@jitaspace/hooks";
 import {
   AllianceAnchor,
   AllianceAvatar,
-  AllianceName,
-  CharacterAnchor,
   CharacterAvatar,
-  CharacterName,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
-  FactionAnchor,
   FactionAvatar,
-  FactionName,
   ISKAmount,
-  SolarSystemAnchor,
-  SolarSystemName,
-  SolarSystemSovereigntyAvatar,
   TimeAgoText,
-  TypeAnchor,
   TypeAvatar,
-  TypeName,
 } from "@jitaspace/ui";
 
 import { EsiKillmailFittingCard } from "~/components/Fitting";
@@ -62,15 +64,45 @@ interface ZkillboardKill {
   };
 }
 
+function AttackerPilot({
+  attacker,
+}: Readonly<{ attacker: { character_id?: number; faction_id?: number } }>) {
+  if (attacker.character_id) {
+    return (
+      <>
+        <CharacterAvatar characterId={attacker.character_id} size="xs" />
+        <CharacterAnchor characterId={attacker.character_id}>
+          <CharacterName size="sm" characterId={attacker.character_id} />
+        </CharacterAnchor>
+      </>
+    );
+  }
+  if (attacker.faction_id) {
+    return (
+      <>
+        <FactionAvatar factionId={attacker.faction_id} size="xs" />
+        <FactionAnchor factionId={attacker.faction_id}>
+          <FactionName size="sm" factionId={attacker.faction_id} />
+        </FactionAnchor>
+      </>
+    );
+  }
+  return (
+    <Text size="sm" c="dimmed">
+      NPC
+    </Text>
+  );
+}
+
 export default function Page() {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  const rawKillId = params?.killId;
+  const rawKillId = params.killId;
   const killId = Number(
     typeof rawKillId === "string" ? rawKillId : rawKillId?.[0],
   );
-  const hashParam = searchParams?.get("hash") ?? undefined;
+  const hashParam = searchParams.get("hash") ?? undefined;
 
   // Fetch from zKillboard only when no hash is provided
   const { data: zkbData, isLoading: zkbLoading } = useSWR<ZkillboardKill[]>(
@@ -80,8 +112,8 @@ export default function Page() {
     (url: string) => fetch(url).then((r) => r.json()),
   );
 
-  const hash = hashParam ?? zkbData?.[0]?.zkb?.hash;
-  const zkbMeta = !hashParam ? zkbData?.[0]?.zkb : undefined;
+  const hash = hashParam ?? zkbData?.[0]?.zkb.hash;
+  const zkbMeta = hashParam ? undefined : zkbData?.[0]?.zkb;
 
   const { data: killmail } = useKillmail(hash ?? "", killId, undefined, {
     query: { enabled: !!hash && Number.isFinite(killId) },
@@ -89,8 +121,7 @@ export default function Page() {
 
   if (!Number.isFinite(killId)) return null;
 
-  const zkbNotFound =
-    !hashParam && !zkbLoading && zkbData !== undefined && zkbData.length === 0;
+  const zkbNotFound = !hashParam && !zkbLoading && zkbData?.length === 0;
   const isLoading =
     (!hashParam && zkbLoading) || (!zkbNotFound && !!hash && !killmail?.data);
 
@@ -115,7 +146,11 @@ export default function Page() {
             be unavailable.
           </Text>
           <Link href={`https://zkillboard.com/kill/${killId}`} target="_blank">
-            <Button size="xs" variant="outline" leftSection={<IconExternalLink size={14} />}>
+            <Button
+              size="xs"
+              variant="outline"
+              leftSection={<IconExternalLink size={14} />}
+            >
               View on zKillboard
             </Button>
           </Link>
@@ -127,7 +162,7 @@ export default function Page() {
   const km = killmail.data;
   const totalDamage = km.victim.damage_taken;
   const sortedAttackers = [...km.attackers].sort(
-    (a, b) => (b.damage_done ?? 0) - (a.damage_done ?? 0),
+    (a, b) => b.damage_done - a.damage_done,
   );
 
   const droppedItems =
@@ -318,7 +353,10 @@ export default function Page() {
             </Card>
           </Grid.Col>
           <Grid.Col span={{ base: 12, sm: 6 }}>
-            <EsiKillmailFittingCard killmailId={killId} killmailHash={hash!} />
+            <EsiKillmailFittingCard
+              killmailId={killId}
+              killmailHash={hash ?? ""}
+            />
           </Grid.Col>
         </Grid>
 
@@ -342,8 +380,10 @@ export default function Page() {
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {sortedAttackers.map((attacker, i) => (
-                <Table.Tr key={i}>
+              {sortedAttackers.map((attacker) => (
+                <Table.Tr
+                  key={`${attacker.character_id ?? ""}-${attacker.corporation_id ?? ""}-${attacker.faction_id ?? ""}-${attacker.ship_type_id ?? ""}-${attacker.weapon_type_id ?? ""}-${attacker.damage_done}`}
+                >
                   <Table.Td>
                     <Group gap="xs" wrap="nowrap">
                       {attacker.final_blow && (
@@ -351,37 +391,7 @@ export default function Page() {
                           Final
                         </Badge>
                       )}
-                      {attacker.character_id ? (
-                        <>
-                          <CharacterAvatar
-                            characterId={attacker.character_id}
-                            size="xs"
-                          />
-                          <CharacterAnchor characterId={attacker.character_id}>
-                            <CharacterName
-                              size="sm"
-                              characterId={attacker.character_id}
-                            />
-                          </CharacterAnchor>
-                        </>
-                      ) : attacker.faction_id ? (
-                        <>
-                          <FactionAvatar
-                            factionId={attacker.faction_id}
-                            size="xs"
-                          />
-                          <FactionAnchor factionId={attacker.faction_id}>
-                            <FactionName
-                              size="sm"
-                              factionId={attacker.faction_id}
-                            />
-                          </FactionAnchor>
-                        </>
-                      ) : (
-                        <Text size="sm" c="dimmed">
-                          NPC
-                        </Text>
-                      )}
+                      <AttackerPilot attacker={attacker} />
                     </Group>
                   </Table.Td>
                   <Table.Td>
@@ -446,13 +456,13 @@ export default function Page() {
                   </Table.Td>
                   <Table.Td>
                     <Text size="sm">
-                      {(attacker.damage_done ?? 0).toLocaleString()}
+                      {attacker.damage_done.toLocaleString()}
                     </Text>
                   </Table.Td>
                   <Table.Td>
                     <Text size="sm" c="dimmed">
                       {totalDamage > 0
-                        ? `${Math.round(((attacker.damage_done ?? 0) / totalDamage) * 100)}%`
+                        ? `${Math.round((attacker.damage_done / totalDamage) * 100)}%`
                         : "—"}
                     </Text>
                   </Table.Td>
@@ -481,8 +491,8 @@ export default function Page() {
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>
-                        {droppedItems.map((item, i) => (
-                          <Table.Tr key={i}>
+                        {droppedItems.map((item) => (
+                          <Table.Tr key={`${item.item_type_id}-${item.flag}`}>
                             <Table.Td>
                               <Group gap="xs" wrap="nowrap">
                                 <TypeAvatar
@@ -523,8 +533,8 @@ export default function Page() {
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>
-                        {destroyedItems.map((item, i) => (
-                          <Table.Tr key={i}>
+                        {destroyedItems.map((item) => (
+                          <Table.Tr key={`${item.item_type_id}-${item.flag}`}>
                             <Table.Td>
                               <Group gap="xs" wrap="nowrap">
                                 <TypeAvatar

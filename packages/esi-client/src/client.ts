@@ -1,4 +1,9 @@
-import type { AxiosError, AxiosHeaders, AxiosRequestConfig, AxiosResponse } from "axios";
+import type {
+  AxiosError,
+  AxiosHeaders,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from "axios";
 import axios from "axios";
 
 import buildData from "./build-data.json";
@@ -7,7 +12,7 @@ import {
   getWaitTime,
   recordRateLimitRequest,
   updateRateLimitState,
-  updateRetryAfter
+  updateRetryAfter,
 } from "./rate-limit";
 
 declare const AXIOS_BASE: string;
@@ -16,7 +21,7 @@ declare const AXIOS_HEADERS: string;
 /**
  * Subset of AxiosRequestConfig
  */
-export type RequestConfig<TData = unknown> = {
+export interface RequestConfig<TData = unknown> {
   baseURL?: string;
   url?: string;
   method?: "GET" | "PUT" | "PATCH" | "POST" | "DELETE" | "OPTIONS" | "HEAD";
@@ -35,17 +40,17 @@ export type RequestConfig<TData = unknown> = {
   rateLimitUserId?: string;
   userAgent?: string;
   acceptLanguage?: string;
-};
+}
 
 /**
  * Subset of AxiosResponse
  */
-export type ResponseConfig<TData = unknown> = {
+export interface ResponseConfig<TData = unknown> {
   data: TData;
   status: number;
   statusText: string;
   headers: AxiosResponse["headers"];
-};
+}
 
 export type ResponseErrorConfig<TError = unknown> = AxiosError<TError>;
 
@@ -59,11 +64,11 @@ export type Client = <TData = unknown, _TError = unknown, TVariables = unknown>(
 ) => Promise<ResponseConfig<TData>>;
 
 let _config: Partial<RequestConfig> = {
-  baseURL: typeof AXIOS_BASE !== "undefined" ? AXIOS_BASE : undefined,
+  baseURL: typeof AXIOS_BASE === "undefined" ? undefined : AXIOS_BASE,
   headers:
-    typeof AXIOS_HEADERS !== "undefined"
-      ? (JSON.parse(AXIOS_HEADERS) as AxiosHeaders)
-      : undefined,
+    typeof AXIOS_HEADERS === "undefined"
+      ? undefined
+      : (JSON.parse(AXIOS_HEADERS) as AxiosHeaders),
 };
 
 export const getConfig = () => _config;
@@ -223,7 +228,7 @@ const routeGroupMappings: RouteGroupMapping[] = Object.entries(
   .filter((mapping): mapping is RouteGroupMapping => mapping !== null);
 
 const getRequestEndpoint = (url: string): string => {
-  let path = url.split("?")[0] || "";
+  let path = url.split("?")[0] ?? "";
   if (path.startsWith("https://esi.evetech.net")) {
     path = path.replace("https://esi.evetech.net", "");
   }
@@ -310,7 +315,7 @@ const getHeaderValue = (
     }
 
     if (Array.isArray(value) && value.length > 0) {
-      const first = value[0];
+      const first: unknown = value[0];
       if (typeof first === "string" || typeof first === "number") {
         return first.toString();
       }
@@ -438,10 +443,7 @@ const getTokenCost = (status: number): number => {
 const getRatelimitUsedFromHeaders = (
   headers: AxiosResponse["headers"] | undefined,
 ): number | null => {
-  const usedHeader = getHeaderValue(
-    headers as AxiosRequestConfig["headers"],
-    "x-ratelimit-used",
-  );
+  const usedHeader = getHeaderValue(headers, "x-ratelimit-used");
 
   if (!usedHeader) {
     return null;
@@ -470,8 +472,7 @@ const getRetryAfterSecondsFromHeaders = (
     (typeof directHeaderValue === "string" ||
     typeof directHeaderValue === "number"
       ? directHeaderValue.toString()
-      : undefined) ??
-    getHeaderValue(headers as AxiosRequestConfig["headers"], "retry-after");
+      : undefined) ?? getHeaderValue(headers, "retry-after");
 
   if (!retryAfterHeader) {
     return null;
@@ -584,12 +585,81 @@ const resolveAcceptLanguage = (
   return undefined;
 };
 
+const applySuccessRateLimit = <TData>(
+  group: string,
+  response: ResponseConfig<TData>,
+  endpoint: string,
+  params: unknown,
+  userId: string,
+): void => {
+  const ratelimitUsed = getRatelimitUsedFromHeaders(response.headers);
+  const consumedTokens = ratelimitUsed ?? getTokenCost(response.status);
+  const didSyncFromHeaders = updateRateLimitState(
+    group,
+    response.headers,
+    userId,
+  );
+
+  if (!didSyncFromHeaders) {
+    consumeTokens(group, consumedTokens - MAX_IN_FLIGHT_TOKEN_COST, userId);
+  }
+
+  recordRateLimitRequest(
+    group,
+    {
+      endpoint,
+      params,
+      statusCode: response.status,
+      tokenCost: consumedTokens,
+    },
+    userId,
+  );
+};
+
+const applyErrorRateLimit = <TError>(
+  group: string,
+  errorResponse: NonNullable<AxiosError<TError>["response"]>,
+  endpoint: string,
+  params: unknown,
+  userId: string,
+): void => {
+  const ratelimitUsed = getRatelimitUsedFromHeaders(errorResponse.headers);
+  const consumedTokens = ratelimitUsed ?? getTokenCost(errorResponse.status);
+  const retryAfterSeconds = getRetryAfterSecondsFromHeaders(
+    errorResponse.headers,
+  );
+  const didSyncFromHeaders = updateRateLimitState(
+    group,
+    errorResponse.headers,
+    userId,
+  );
+
+  if (!didSyncFromHeaders) {
+    consumeTokens(group, consumedTokens - MAX_IN_FLIGHT_TOKEN_COST, userId);
+  }
+
+  recordRateLimitRequest(
+    group,
+    {
+      endpoint,
+      params,
+      statusCode: errorResponse.status,
+      tokenCost: consumedTokens,
+    },
+    userId,
+  );
+
+  if (errorResponse.status === 429 && retryAfterSeconds !== null) {
+    updateRetryAfter(group, retryAfterSeconds, userId);
+  }
+};
+
 export const client = async <TData, TError = unknown, TVariables = unknown>(
   config: RequestConfig<TVariables>,
 ): Promise<ResponseConfig<TData>> => {
   const globalConfig = getConfig();
-  const method = config.method || "GET";
-  const url = config.url || "";
+  const method = config.method ?? "GET";
+  const url = config.url ?? "";
   const endpoint = getRequestEndpoint(url);
   const userId = resolveRateLimitUserId(config, globalConfig);
   const operationId = config.operationId ?? globalConfig.operationId;
@@ -622,66 +692,20 @@ export const client = async <TData, TError = unknown, TVariables = unknown>(
     });
 
     if (group) {
-      const ratelimitUsed = getRatelimitUsedFromHeaders(response.headers);
-      const consumedTokens = ratelimitUsed ?? getTokenCost(response.status);
-      const didSyncFromHeaders = updateRateLimitState(
-        group,
-        response.headers as Record<string, string>,
-        userId,
-      );
-
-      if (!didSyncFromHeaders) {
-        consumeTokens(group, consumedTokens - MAX_IN_FLIGHT_TOKEN_COST, userId);
-      }
-
-      recordRateLimitRequest(
-        group,
-        {
-          endpoint,
-          params: config.params,
-          statusCode: response.status,
-          tokenCost: consumedTokens,
-        },
-        userId,
-      );
+      applySuccessRateLimit(group, response, endpoint, config.params, userId);
     }
 
     return response;
   } catch (e) {
     const axiosError = e as AxiosError<TError>;
     if (group && axiosError.response) {
-      const ratelimitUsed = getRatelimitUsedFromHeaders(
-        axiosError.response.headers,
-      );
-      const consumedTokens =
-        ratelimitUsed ?? getTokenCost(axiosError.response.status);
-      const retryAfterSeconds = getRetryAfterSecondsFromHeaders(
-        axiosError.response.headers,
-      );
-      const didSyncFromHeaders = updateRateLimitState(
+      applyErrorRateLimit(
         group,
-        axiosError.response.headers as Record<string, string>,
+        axiosError.response,
+        endpoint,
+        config.params,
         userId,
       );
-
-      if (!didSyncFromHeaders) {
-        consumeTokens(group, consumedTokens - MAX_IN_FLIGHT_TOKEN_COST, userId);
-      }
-
-      recordRateLimitRequest(
-        group,
-        {
-          endpoint,
-          params: config.params,
-          statusCode: axiosError.response.status,
-          tokenCost: consumedTokens,
-        },
-        userId,
-      );
-
-      if (axiosError.response.status === 429 && retryAfterSeconds !== null) {
-        updateRetryAfter(group, retryAfterSeconds, userId);
-      }
     }
     throw e;
   }

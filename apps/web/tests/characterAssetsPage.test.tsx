@@ -1,20 +1,17 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 const mockUseSelectedCharacter = jest.fn();
-const mockUseCharacterAssets = jest.fn<
-  () => { assets: Record<number, object>; isLoading: boolean }
->();
-const mockUseEsiNameLookup = jest.fn<
-  () => Record<string, { value?: { name: string } } | undefined>
->();
-const mockUseMarketPrices = jest.fn<
-  () => { data: Record<number, { adjusted_price?: number }> }
->();
+const mockUseCharacterAssets =
+  jest.fn<() => { assets: Record<number, object>; isLoading: boolean }>();
+const mockUseEsiNameLookup =
+  jest.fn<() => Record<string, { value?: { name: string } } | undefined>>();
+const mockUseMarketPrices =
+  jest.fn<() => { data: Record<number, { adjusted_price?: number }> }>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: () => mockUseSelectedCharacter(),
@@ -24,6 +21,13 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
+  ISKAmount: ({ amount }: { amount: number; span?: boolean }) => (
+    <span data-testid="isk-amount">{amount.toFixed(2)}</span>
+  ),
+}));
+
+// AssetLocationSelect moved to @jitaspace/eve-components.
+jest.mock("@jitaspace/eve-components", () => ({
   AssetLocationSelect: ({
     onChange,
   }: {
@@ -38,9 +42,6 @@ jest.mock("@jitaspace/ui", () => ({
       <option value="60003760">Jita</option>
       <option value="60008526">Amarr</option>
     </select>
-  ),
-  ISKAmount: ({ amount }: { amount: number; span?: boolean }) => (
-    <span data-testid="isk-amount">{amount.toFixed(2)}</span>
   ),
 }));
 

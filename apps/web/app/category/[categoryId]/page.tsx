@@ -62,9 +62,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ categoryId: string }>;
-}) {
+}>) {
   const { categoryId: categoryIdParam } = await params;
   const categoryId = Number(categoryIdParam);
   if (!categoryIdParam || Number.isNaN(categoryId)) {
@@ -111,9 +111,9 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ categoryId: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />

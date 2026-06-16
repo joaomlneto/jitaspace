@@ -1,32 +1,20 @@
+import type { PopoverProps } from "@mantine/core";
 import type React from "react";
 import { forwardRef } from "react";
-import {
-  Button,
-  Popover,
-  useMantineTheme,
-  useProps
-  
-} from "@mantine/core";
-import type {PopoverProps} from "@mantine/core";
+import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
 import { getUniverseStationsStationId } from "@jitaspace/esi-client";
+import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { StationIcon } from "@jitaspace/eve-icons";
-import { EsiSearchSelect } from "@jitaspace/ui";
 
+import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
 import { StationAvatar } from "~/components/Avatar";
-
-import {
-  ControlBase
-  
-} from "~/components/EveMail/Editor/ControlBase";
-import type {RichTextEditorControlBaseProps} from "~/components/EveMail/Editor/ControlBase";
+import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
 import classes from "./LinkControl.module.css";
 
-
-export interface RichTextEditorLinkControlProps
-  extends Partial<RichTextEditorControlBaseProps> {
+export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorControlBaseProps> {
   /** Props added to Popover component */
   popoverProps?: Partial<PopoverProps>;
 }
@@ -52,8 +40,8 @@ export const StationLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setStationId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setStationId(href);
   };
 
   const handleClose = () => {
@@ -62,11 +50,13 @@ export const StationLinkControl = forwardRef<
   };
 
   const setLink = () => {
-    void getUniverseStationsStationId(parseInt(stationId, 10)).then((data) => {
-      handleClose();
-      stationId === ""
-        ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-        : editor
+    void getUniverseStationsStationId(Number.parseInt(stationId, 10)).then(
+      (data) => {
+        handleClose();
+        if (stationId === "") {
+          editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+        } else {
+          editor
             ?.chain()
             .focus()
             .extendMarkRange("link")
@@ -74,7 +64,9 @@ export const StationLinkControl = forwardRef<
               href: `showinfo:${data.data.type_id}//${stationId}`,
             })
             .run();
-    });
+        }
+      },
+    );
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -99,7 +91,7 @@ export const StationLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || StationLinkIcon}
+          icon={icon ?? StationLinkIcon}
           aria-label="Link Station"
           title="Link Station"
           onClick={handleOpen}

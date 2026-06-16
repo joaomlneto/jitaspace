@@ -11,19 +11,21 @@ import {
   Tooltip,
 } from "@mantine/core";
 
+import {
+  CharacterName,
+  CorporationName,
+  FactionName,
+  TypeName,
+} from "@jitaspace/eve-components";
 import { CombatLogIcon, MercenaryIcon, WarsIcon } from "@jitaspace/eve-icons";
 import { useKillmail } from "@jitaspace/hooks";
 import {
   CharacterAvatar,
-  CharacterName,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
   FactionAvatar,
-  FactionName,
   TimeAgoText,
   TypeAvatar,
-  TypeName,
   WarAnchor,
 } from "@jitaspace/ui";
 
@@ -32,6 +34,36 @@ import { WarAggressorName, WarDefenderName } from "~/components/Text";
 interface KillButtonProps {
   killmailId: number;
   killmailHash: string;
+}
+
+interface KillmailAttacker {
+  character_id?: number;
+  corporation_id?: number;
+  faction_id?: number;
+}
+
+function AttackerAvatar({
+  attacker,
+}: Readonly<{ attacker: KillmailAttacker }>) {
+  if (attacker.character_id) {
+    return <CharacterAvatar characterId={attacker.character_id} size="sm" />;
+  }
+  if (attacker.corporation_id) {
+    return (
+      <CorporationAvatar corporationId={attacker.corporation_id} size="sm" />
+    );
+  }
+  return <FactionAvatar factionId={attacker.faction_id} size="sm" />;
+}
+
+function AttackerName({ attacker }: Readonly<{ attacker: KillmailAttacker }>) {
+  if (attacker.character_id) {
+    return <CharacterName characterId={attacker.character_id} />;
+  }
+  if (attacker.corporation_id) {
+    return <CorporationName corporationId={attacker.corporation_id} />;
+  }
+  return <FactionName factionId={attacker.faction_id} size="sm" />;
 }
 
 export const KillmailButton = memo(
@@ -88,34 +120,8 @@ export const KillmailButton = memo(
                   {data?.data.attackers.map((attacker) => (
                     <Group key={attacker.character_id}>
                       <Group>
-                        {attacker.character_id ? (
-                          <CharacterAvatar
-                            characterId={attacker.character_id}
-                            size="sm"
-                          />
-                        ) : attacker.corporation_id ? (
-                          <CorporationAvatar
-                            corporationId={attacker.corporation_id}
-                            size="sm"
-                          />
-                        ) : (
-                          <FactionAvatar
-                            factionId={attacker.faction_id}
-                            size="sm"
-                          />
-                        )}
-                        {attacker.character_id ? (
-                          <CharacterName characterId={attacker.character_id} />
-                        ) : attacker.corporation_id ? (
-                          <CorporationName
-                            corporationId={attacker.corporation_id}
-                          />
-                        ) : (
-                          <FactionName
-                            factionId={attacker.faction_id}
-                            size="sm"
-                          />
-                        )}
+                        <AttackerAvatar attacker={attacker} />
+                        <AttackerName attacker={attacker} />
                       </Group>
                       <Group>
                         <TypeAvatar typeId={attacker.ship_type_id} size="sm" />
@@ -129,24 +135,16 @@ export const KillmailButton = memo(
               <Group gap={4}>
                 <MercenaryIcon width={32} />
                 <Avatar.Group spacing="xs">
-                  {data?.data.attackers.map((attacker) =>
-                    attacker.character_id ? (
-                      <CharacterAvatar
-                        characterId={attacker.character_id}
-                        size="sm"
-                      />
-                    ) : attacker.corporation_id ? (
-                      <CorporationAvatar
-                        corporationId={attacker.corporation_id}
-                        size="sm"
-                      />
-                    ) : (
-                      <FactionAvatar
-                        factionId={attacker.faction_id}
-                        size="sm"
-                      />
-                    ),
-                  )}
+                  {data?.data.attackers.map((attacker) => (
+                    <AttackerAvatar
+                      key={
+                        attacker.character_id ??
+                        attacker.corporation_id ??
+                        attacker.faction_id
+                      }
+                      attacker={attacker}
+                    />
+                  ))}
                 </Avatar.Group>
               </Group>
             </Tooltip>
@@ -170,9 +168,9 @@ export const KillmailButton = memo(
             )}
             <Group>
               {data?.data.killmail_time && (
-                <DateHoverCard date={new Date(data?.data.killmail_time)}>
+                <DateHoverCard date={new Date(data.data.killmail_time)}>
                   <TimeAgoText
-                    date={new Date(data?.data.killmail_time)}
+                    date={new Date(data.data.killmail_time)}
                     addSuffix
                   />
                 </DateHoverCard>

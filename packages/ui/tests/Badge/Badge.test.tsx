@@ -25,7 +25,10 @@ const renderWithMantine = (ui: ReactElement) =>
 
 describe("Ticker badges (Alliance / Corporation / WarAggressor / WarDefender)", () => {
   it.each<[string, (ticker?: string) => ReactElement]>([
-    ["AllianceTickerBadge", (ticker) => <AllianceTickerBadge ticker={ticker} />],
+    [
+      "AllianceTickerBadge",
+      (ticker) => <AllianceTickerBadge ticker={ticker} />,
+    ],
     [
       "CorporationTickerBadge",
       (ticker) => <CorporationTickerBadge ticker={ticker} />,
@@ -44,7 +47,10 @@ describe("Ticker badges (Alliance / Corporation / WarAggressor / WarDefender)", 
   });
 
   it.each<[string, (ticker?: string) => ReactElement]>([
-    ["AllianceTickerBadge", (ticker) => <AllianceTickerBadge ticker={ticker} />],
+    [
+      "AllianceTickerBadge",
+      (ticker) => <AllianceTickerBadge ticker={ticker} />,
+    ],
     [
       "CorporationTickerBadge",
       (ticker) => <CorporationTickerBadge ticker={ticker} />,
@@ -57,12 +63,15 @@ describe("Ticker badges (Alliance / Corporation / WarAggressor / WarDefender)", 
       "WarDefenderTickerBadge",
       (ticker) => <WarDefenderTickerBadge ticker={ticker} />,
     ],
-  ])("%s renders a skeleton placeholder when ticker is missing", (_label, make) => {
-    const { container } = renderWithMantine(make(undefined));
-    // Placeholder badge text used inside the skeleton.
-    expect(screen.getByText("XXXXX")).toBeInTheDocument();
-    expect(container.querySelector(".mantine-Skeleton-root")).toBeTruthy();
-  });
+  ])(
+    "%s renders a skeleton placeholder when ticker is missing",
+    (_label, make) => {
+      const { container } = renderWithMantine(make(undefined));
+      // Placeholder badge text used inside the skeleton.
+      expect(screen.getByText("XXXXX")).toBeInTheDocument();
+      expect(container.querySelector(".mantine-Skeleton-root")).toBeTruthy();
+    },
+  );
 });
 
 describe("CalendarEventResponseBadge", () => {

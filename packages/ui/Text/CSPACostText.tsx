@@ -1,7 +1,8 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import { memo } from "react";
-import { Text, type TextProps } from "@mantine/core";
+import { Text } from "@mantine/core";
 
 export type CSPACostTextProps = TextProps & {
   cost?: number | null;

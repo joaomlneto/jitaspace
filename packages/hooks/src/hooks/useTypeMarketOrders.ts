@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import type { GetMarketsRegionIdOrdersQueryResponse } from "@jitaspace/esi-client";
 import {
   getMarketsRegionIdOrders,
-  GetMarketsRegionIdOrdersQueryResponse,
   useGetUniverseRegions,
 } from "@jitaspace/esi-client";
 
@@ -31,7 +31,8 @@ export function useTypeMarketOrders(typeId?: number) {
         order_type: "all",
       });
       const orders = firstPage.data;
-      const numPages = firstPage.headers?.["x-pages"];
+      const xPages: unknown = firstPage.headers["x-pages"];
+      const numPages = typeof xPages === "string" ? Number(xPages) : 0;
       for (let page = 2; page <= numPages; page++) {
         const pageResults = await getMarketsRegionIdOrders(regionId, {
           page,

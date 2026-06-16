@@ -21,16 +21,16 @@ export const backfillEveKillAllianceIds = defineJob<
     const url = ctx.payload.url;
 
     // TODO: Retrieve Alliance IDs from EVE Kill API
-    const allianceIds: number[] = await fetch(
+    const allianceIds = await fetch(
       url ?? "http://127.0.0.1:8080/alliance_ids2.json",
-    ).then((res) => res.json());
+    ).then((res) => res.json() as Promise<number[]>);
 
     allianceIds.sort((a, b) => a - b);
 
     console.log(allianceIds.length, "Alliance IDs found");
 
     const numBatches = Math.ceil(allianceIds.length / batchSize);
-    const batches = [...Array(numBatches).keys()].map((batchId) =>
+    const batches = [...new Array(numBatches).keys()].map((batchId) =>
       allianceIds.slice(batchId * batchSize, (batchId + 1) * batchSize),
     );
 

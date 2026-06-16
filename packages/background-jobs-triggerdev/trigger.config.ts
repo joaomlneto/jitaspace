@@ -1,3 +1,5 @@
+import { sentryEsbuildPlugin } from "@sentry/esbuild-plugin";
+import { esbuildPlugin } from "@trigger.dev/build/extensions";
 import { prismaExtension } from "@trigger.dev/build/extensions/prisma";
 import { defineConfig } from "@trigger.dev/sdk";
 
@@ -28,6 +30,24 @@ export default defineConfig({
     },
   },
   build: {
-    extensions: [prismaExtension({ mode: "modern" })],
+    extensions: [
+      prismaExtension({ mode: "modern" }),
+      // Upload task source maps to Sentry for readable stack traces. Opt-in:
+      // only runs when SENTRY_AUTH_TOKEN (write scope) is present in the deploy
+      // env — error capture itself (src/trigger/init.ts) needs only the DSN.
+      // All three Sentry vars are reused from Vercel (synced to the Trigger env).
+      ...(process.env.SENTRY_AUTH_TOKEN
+        ? [
+            esbuildPlugin(
+              sentryEsbuildPlugin({
+                org: process.env.SENTRY_ORG,
+                project: process.env.SENTRY_PROJECT,
+                authToken: process.env.SENTRY_AUTH_TOKEN,
+              }),
+              { placement: "last", target: "deploy" },
+            ),
+          ]
+        : []),
+    ],
   },
 });

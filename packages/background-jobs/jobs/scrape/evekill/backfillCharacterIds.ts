@@ -26,16 +26,16 @@ export const backfillEveKillCharacterIds = defineJob<
     }
 
     // TODO: Retrieve Character IDs from EVE Kill API
-    const characterIds: number[] = await fetch(
+    const characterIds = await fetch(
       "http://127.0.0.1:8080/chids2.json",
-    ).then((res) => res.json());
+    ).then((res) => res.json() as Promise<number[]>);
 
     characterIds.sort((a, b) => a - b);
 
     console.log(characterIds.length, "character IDs found");
 
     const numBatches = Math.ceil(characterIds.length / batchSize);
-    const batches = [...Array(numBatches).keys()].map((batchId) =>
+    const batches = [...new Array(numBatches).keys()].map((batchId) =>
       characterIds.slice(batchId * batchSize, (batchId + 1) * batchSize),
     );
 

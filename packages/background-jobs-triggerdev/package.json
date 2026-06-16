@@ -18,12 +18,14 @@
   "dependencies": {
     "@jitaspace/background-jobs": "workspace:*",
     "@jitaspace/db": "workspace:*",
+    "@sentry/node": "^10.53.1",
     "@trigger.dev/sdk": "^4.4.6"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
+    "@sentry/esbuild-plugin": "^5.3.0",
     "@trigger.dev/build": "^4.4.6",
     "@types/node": "^24.12.4",
     "eslint": "^9.39.4",

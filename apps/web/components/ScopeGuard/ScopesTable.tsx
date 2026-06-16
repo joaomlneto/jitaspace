@@ -16,7 +16,10 @@ export function ScopesTable({
   showRawScopeNames,
 }: Readonly<ScopesTableProps>) {
   const normalizedScopes = useMemo(
-    () => (Array.isArray(scopes) ? scopes.toSorted((a, b) => a.localeCompare(b)) : []),
+    () =>
+      Array.isArray(scopes)
+        ? scopes.toSorted((a, b) => a.localeCompare(b))
+        : [],
     [scopes],
   );
 
@@ -64,13 +67,11 @@ export function ScopesTable({
               </>
             )}
             {showRawScopeNames && (
-              <>
-                <Table.Td>
-                  <Badge size="xs" variant="light" color="dark">
-                    {scope.id}
-                  </Badge>
-                </Table.Td>
-              </>
+              <Table.Td>
+                <Badge size="xs" variant="light" color="dark">
+                  {scope.id}
+                </Badge>
+              </Table.Td>
             )}
             <Table.Td align="left">{scope.description}</Table.Td>
           </Table.Tr>

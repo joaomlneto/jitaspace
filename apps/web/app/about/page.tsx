@@ -14,7 +14,8 @@ import {
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
 import { Email } from "react-obfuscate-email";
 
-import { CharacterAnchor, CharacterAvatar, CharacterName } from "@jitaspace/ui";
+import { CharacterAnchor, CharacterName } from "@jitaspace/eve-components";
+import { CharacterAvatar } from "@jitaspace/ui";
 
 import { env } from "~/env";
 
