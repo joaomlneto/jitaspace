@@ -11,35 +11,37 @@ import {
   Title,
 } from "@mantine/core";
 
-import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import type {
   CalendarEventAttendee,
-  CalendarEventAttendeeResponse} from "@jitaspace/hooks";
+  CalendarEventAttendeeResponse,
+} from "@jitaspace/hooks";
+import {
+  CharacterAnchor,
+  CharacterName,
+  EveEntityNameAnchor,
+} from "@jitaspace/eve-components";
+import { CalendarIcon, WarningIcon } from "@jitaspace/eve-icons";
 import {
   useCalendarEvent,
   useCalendarEventAttendees,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
 import {
-  CharacterAnchor,
   CharacterAvatar,
-  CharacterName,
   DateHoverCard,
-  EveEntityNameAnchor,
   FormattedDateText,
 } from "@jitaspace/ui";
 
 import { CalendarEventOwnerAvatar } from "~/components/Avatar";
 import { CalendarEventResponseBadge } from "~/components/Badge";
 import { CalendarEventHumanDurationText } from "~/components/DurationText";
-
 import { MailMessageViewer } from "~/components/EveMail";
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ eventId: string }>;
-}) {
+}>) {
   const { eventId: eventIdStr } = React.use(params);
   const eventId = Number.parseInt(eventIdStr, 10);
   //const eventId = Number.parseInt(toArrayIfNot(router.query.eventId, 10)[0] ?? "");
@@ -75,92 +77,88 @@ export default function Page({
   );
 
   return (
-    <>
-      <Container>
-        <Stack>
-          <Group>
-            <CalendarIcon width={48} />
-            <Title order={1}>Calendar</Title>
-            {loading && <Loader />}
-          </Group>
-          <Title order={4}>
-            {event?.data.importance === 1 && <WarningIcon width={32} />}
-            {event?.data.title}
-          </Title>
-          <MailMessageViewer content={event?.data.text ?? ""} />
-          <Group justify="space-between" mt="xl">
-            <Text>When</Text>
-            <DateHoverCard
+    <Container>
+      <Stack>
+        <Group>
+          <CalendarIcon width={48} />
+          <Title order={1}>Calendar</Title>
+          {loading && <Loader />}
+        </Group>
+        <Title order={4}>
+          {event?.data.importance === 1 && <WarningIcon width={32} />}
+          {event?.data.title}
+        </Title>
+        <MailMessageViewer content={event?.data.text ?? ""} />
+        <Group justify="space-between" mt="xl">
+          <Text>When</Text>
+          <DateHoverCard
+            date={event?.data.date ? new Date(event?.data.date) : undefined}
+          >
+            <FormattedDateText
               date={event?.data.date ? new Date(event?.data.date) : undefined}
-            >
-              <FormattedDateText
-                date={event?.data.date ? new Date(event?.data.date) : undefined}
-                format="yyyy-MM-dd HH:mm"
-              />
-            </DateHoverCard>
-          </Group>
-          <Group justify="space-between">
-            <Text>Duration</Text>
+              format="yyyy-MM-dd HH:mm"
+            />
+          </DateHoverCard>
+        </Group>
+        <Group justify="space-between">
+          <Text>Duration</Text>
+          {character && (
+            <CalendarEventHumanDurationText
+              characterId={character.characterId}
+              eventId={eventId}
+            />
+          )}
+        </Group>
+        <Group justify="space-between">
+          <Text>Owner</Text>
+          <Group wrap="nowrap">
             {character && (
-              <CalendarEventHumanDurationText
+              <CalendarEventOwnerAvatar
                 characterId={character.characterId}
                 eventId={eventId}
+                size="sm"
               />
             )}
+            <EveEntityNameAnchor entityId={event?.data.owner_id} />
           </Group>
-          <Group justify="space-between">
-            <Text>Owner</Text>
-            <Group wrap="nowrap">
-              {character && (
-                <CalendarEventOwnerAvatar
-                  characterId={character.characterId}
-                  eventId={eventId}
+        </Group>
+        <Group justify="space-between">
+          <Text>Response</Text>
+          {character && (
+            <CalendarEventResponseBadge
+              characterId={character.characterId}
+              eventId={eventId}
+            />
+          )}
+        </Group>
+        <Title order={4} mt="xl">
+          Attendees
+        </Title>
+        <Stack>
+          {sortedAttendees.map((attendee) => (
+            <Group key={attendee.character_id} justify="space-between">
+              <Group key={attendee.event_response} wrap="nowrap">
+                <CharacterAvatar
+                  characterId={attendee.character_id}
                   size="sm"
+                  radius="xl"
                 />
-              )}
-              <EveEntityNameAnchor entityId={event?.data.owner_id} />
-            </Group>
-          </Group>
-          <Group justify="space-between">
-            <Text>Response</Text>
-            {character && (
-              <CalendarEventResponseBadge
-                characterId={character.characterId}
-                eventId={eventId}
-              />
-            )}
-          </Group>
-          <Title order={4} mt="xl">
-            Attendees
-          </Title>
-          <Stack>
-            {sortedAttendees.map((attendee) => (
-              <Group key={attendee.character_id} justify="space-between">
-                <Group key={attendee.event_response} wrap="nowrap">
-                  <CharacterAvatar
-                    characterId={attendee.character_id}
-                    size="sm"
-                    radius="xl"
-                  />
-                  <CharacterAnchor characterId={attendee.character_id}>
-                    <CharacterName span characterId={attendee.character_id} />
-                  </CharacterAnchor>
-                </Group>
-                <Badge
-                  variant="light"
-                  color={
-                    eventResponseColor[
-                      attendee.event_response ?? "not_responded"
-                    ]
-                  }
-                >
-                  {attendee.event_response}
-                </Badge>
+                <CharacterAnchor characterId={attendee.character_id}>
+                  <CharacterName span characterId={attendee.character_id} />
+                </CharacterAnchor>
               </Group>
-            ))}
-          </Stack>
+              <Badge
+                variant="light"
+                color={
+                  eventResponseColor[attendee.event_response ?? "not_responded"]
+                }
+              >
+                {attendee.event_response}
+              </Badge>
+            </Group>
+          ))}
         </Stack>
-      </Container>
-    </>
+      </Stack>
+    </Container>
   );
 }

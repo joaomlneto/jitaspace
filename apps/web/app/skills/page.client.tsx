@@ -5,12 +5,12 @@ import { Container, Grid, Group, Stack, Title } from "@mantine/core";
 import { SkillsIcon } from "@jitaspace/eve-icons";
 import { useSelectedCharacter } from "@jitaspace/hooks";
 
+import { ScopeGuard } from "~/components/ScopeGuard";
 import {
   CharacterAttributesRingProgress,
   SkillQueueTimeline,
   SkillTreeNav,
 } from "~/components/Skills";
-import { ScopeGuard } from "~/components/ScopeGuard";
 
 export interface SkillsPageProps {
   groups: {
@@ -32,7 +32,7 @@ export interface SkillsPageProps {
   }[];
 }
 
-export default function SkillsPage({ groups }: SkillsPageProps) {
+export default function SkillsPage({ groups }: Readonly<SkillsPageProps>) {
   const character = useSelectedCharacter();
   return (
     <ScopeGuard

@@ -1,0 +1,586 @@
+"use client";
+
+import type {
+  MRT_Cell,
+  MRT_Column,
+  MRT_ColumnDef,
+  MRT_Row,
+} from "mantine-react-table";
+import { memo, useMemo } from "react";
+import { Group, Stack, Text, Tooltip } from "@mantine/core";
+import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
+
+import {
+  CorporationName,
+  EveEntitySelect,
+  TypeAnchor,
+  TypeName,
+} from "@jitaspace/eve-components";
+import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
+import {
+  CorporationAnchor,
+  CorporationAvatar,
+  ISKAmount,
+  TypeAvatar,
+} from "@jitaspace/ui";
+
+import type { AugmentedOffer } from "./pricing";
+import {
+  buyIskPerLp,
+  buyProfit,
+  requiredItemsBuyCost,
+  requiredItemsSellCost,
+  requiredItemsSplitCost,
+  rewardBuyValue,
+  rewardSellValue,
+  rewardSplitValue,
+  sellIskPerLp,
+  sellProfit,
+} from "./pricing";
+
+interface LoyaltyPointsTableProps {
+  corporations: {
+    corporationId: number;
+    name: string;
+  }[];
+  types: {
+    typeId: number;
+    name: string;
+  }[];
+  offers: {
+    offerId: number;
+    corporationId: number;
+    typeId: number;
+    quantity: number;
+    akCost: number | null;
+    lpCost: number;
+    iskCost: number;
+    requiredItems: {
+      typeId: number;
+      quantity: number;
+    }[];
+  }[];
+}
+
+// ---------------------------------------------------------------------------
+// Filter renderers (factories closing over the sorted option lists)
+// ---------------------------------------------------------------------------
+
+function makeCorporationFilter(
+  sortedCorporations: { corporationId: number; name: string }[],
+) {
+  return function CorporationFilter({
+    column,
+  }: {
+    column: MRT_Column<AugmentedOffer>;
+  }) {
+    return (
+      <EveEntitySelect
+        miw={200}
+        entityIds={sortedCorporations.map((corporation) => ({
+          id: corporation.corporationId,
+          name: corporation.name,
+        }))}
+        searchable
+        clearable
+        onChange={column.setFilterValue}
+      />
+    );
+  };
+}
+
+function makeItemFilter(sortedTypes: { typeId: number; name: string }[]) {
+  return function ItemFilter({
+    column,
+  }: {
+    column: MRT_Column<AugmentedOffer>;
+  }) {
+    return (
+      <EveEntitySelect
+        miw={250}
+        entityIds={sortedTypes.map((type) => ({
+          id: type.typeId,
+          name: type.name,
+        }))}
+        searchable
+        clearable
+        onChange={column.setFilterValue}
+        limit={500}
+      />
+    );
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Range-slider label renderers
+// ---------------------------------------------------------------------------
+
+function lpCostSliderLabel(value: number) {
+  return value?.toLocaleString?.();
+}
+
+function iskCostSliderLabel(value: number) {
+  return <ISKAmount amount={value} />;
+}
+
+// ---------------------------------------------------------------------------
+// Cell renderers
+// ---------------------------------------------------------------------------
+
+function corporationCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
+  return (
+    <Group>
+      <Tooltip
+        label={
+          <CorporationName
+            corporationId={row.original.corporationId}
+            lineClamp={1}
+          />
+        }
+        color="dark"
+      >
+        <Group wrap="nowrap">
+          <CorporationAvatar
+            corporationId={row.original.corporationId}
+            size="sm"
+          />
+          <CorporationAnchor
+            corporationId={row.original.corporationId}
+            target="_blank"
+          >
+            <CorporationName corporationId={row.original.corporationId} />
+          </CorporationAnchor>
+        </Group>
+      </Tooltip>
+    </Group>
+  );
+}
+
+function itemCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
+  return (
+    <Group wrap="nowrap">
+      <TypeAvatar typeId={row.original.typeId} size="sm" />
+      {row.original.quantity !== 1 && (
+        <Text size="sm">{row.original.quantity}</Text>
+      )}
+      <TypeAnchor typeId={row.original.typeId} target="_blank">
+        <TypeName
+          span
+          typeId={row.original.typeId}
+          size="sm"
+          //lineClamp={1}
+        />
+      </TypeAnchor>
+    </Group>
+  );
+}
+
+function lpCostCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
+  return (
+    <Text inherit ta="right">
+      {row.original.lpCost.toLocaleString()} LP
+    </Text>
+  );
+}
+
+function iskCostCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
+  return <ISKAmount inherit ta="right" amount={row.original.iskCost ?? 0} />;
+}
+
+function requiredItemsCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
+  return (
+    <Stack gap="xs">
+      {row.original.requiredItems.map(({ quantity, typeId }) => (
+        <Group key={typeId} wrap="nowrap" gap="xs">
+          <TypeAvatar typeId={typeId} size="sm" />
+          {quantity !== 1 && <Text size="sm">{quantity}</Text>}
+          <TypeAnchor typeId={typeId} target="_blank">
+            <TypeName span typeId={typeId} size="sm" lineClamp={1} />
+          </TypeAnchor>
+        </Group>
+      ))}
+    </Stack>
+  );
+}
+
+function requiredItemsBuyUnitCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
+  return (
+    <Stack gap="xs">
+      {row.original.requiredItems.map(
+        ({ quantity: _quantity, typeId, marketStats }) => (
+          <Group key={typeId} wrap="nowrap" justify="space-between">
+            <TypeAvatar typeId={typeId} size="sm" />
+            {marketStats && (
+              <ISKAmount inherit amount={marketStats.buy.percentile} />
+            )}
+          </Group>
+        ),
+      )}
+    </Stack>
+  );
+}
+
+function requiredItemsBuyTotalCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
+  return (
+    <Stack gap="xs">
+      {row.original.requiredItems.map(({ quantity, typeId, marketStats }) => (
+        <Group key={typeId} wrap="nowrap" justify="space-between">
+          <TypeAvatar typeId={typeId} size="sm" />
+          {marketStats && (
+            <ISKAmount inherit amount={marketStats.buy.percentile * quantity} />
+          )}
+        </Group>
+      ))}
+    </Stack>
+  );
+}
+
+function requiredItemsSellUnitCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
+  return (
+    <Stack gap="xs">
+      {row.original.requiredItems.map(
+        ({ quantity: _quantity, typeId, marketStats }) => (
+          <Group key={typeId} wrap="nowrap" justify="space-between">
+            <TypeAvatar typeId={typeId} size="sm" />
+            {marketStats && (
+              <ISKAmount inherit amount={marketStats.sell.percentile} />
+            )}
+          </Group>
+        ),
+      )}
+    </Stack>
+  );
+}
+
+function requiredItemsSellTotalCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
+  return (
+    <Stack gap="xs">
+      {row.original.requiredItems.map(({ quantity, typeId, marketStats }) => (
+        <Group key={typeId} wrap="nowrap" justify="space-between">
+          <TypeAvatar typeId={typeId} size="sm" />
+          {marketStats && (
+            <ISKAmount
+              inherit
+              amount={marketStats.sell.percentile * quantity}
+            />
+          )}
+        </Group>
+      ))}
+    </Stack>
+  );
+}
+
+function iskAmountValueCell({ cell }: { cell: MRT_Cell<AugmentedOffer> }) {
+  const amount = cell.getValue<number | undefined>();
+  if (amount === undefined) return null;
+  return <ISKAmount inherit ta="right" amount={amount} />;
+}
+
+function iskPerLpValueCell({ cell }: { cell: MRT_Cell<AugmentedOffer> }) {
+  const amount = cell.getValue<number | undefined>();
+  if (amount === undefined) return null;
+  return (
+    <Text inherit ta="right">
+      {amount.toFixed(0)} ISK/LP
+    </Text>
+  );
+}
+
+/**
+ * The original bespoke `mantine-react-table` implementation of the LP Store
+ * table — full per-column filtering (corporation/item dropdowns, cost range
+ * sliders), faceted values, density toggle, etc. Rendered when the experimental
+ * "New data tables" setting is OFF, preserving the long-standing behaviour.
+ */
+export const LoyaltyPointsTableClassic = memo(
+  ({ corporations, types, offers }: LoyaltyPointsTableProps) => {
+    const sortedCorporations = useMemo(
+      () => [...corporations].sort((a, b) => a.name.localeCompare(b.name)),
+      [corporations],
+    );
+
+    const sortedTypes = useMemo(
+      () => [...types].sort((a, b) => a.name.localeCompare(b.name)),
+      [types],
+    );
+
+    const typeIds = useMemo(() => types.map((type) => type.typeId), [types]);
+
+    const marketStats = useFuzzworkRegionalMarketAggregates(typeIds, 10000002);
+
+    const typeNames = useMemo(() => {
+      const map: Record<number, string> = {};
+      types.forEach((type) => (map[type.typeId] = type.name));
+      return map;
+    }, [types]);
+
+    const corporationNames = useMemo(() => {
+      const map: Record<number, string> = {};
+      corporations.forEach(
+        (corporation) => (map[corporation.corporationId] = corporation.name),
+      );
+      return map;
+    }, [corporations]);
+
+    const augmentedOffers = useMemo<AugmentedOffer[]>(
+      () =>
+        offers.map((offer) => ({
+          ...offer,
+          requiredItems: offer.requiredItems.map((item) => ({
+            ...item,
+            marketStats: marketStats.data?.[item.typeId],
+          })),
+          typeName: typeNames[offer.typeId],
+          corporationName: corporationNames[offer.corporationId],
+          marketStats: marketStats.data?.[offer.typeId],
+        })),
+      [offers, typeNames, corporationNames, marketStats.data],
+    );
+
+    const columns = useMemo<MRT_ColumnDef<AugmentedOffer>[]>(
+      () => [
+        {
+          id: "id",
+          header: "Offer ID",
+          accessorKey: "offerId",
+          size: 40,
+        },
+        {
+          header: "Corporation",
+          accessorKey: "corporationId",
+          size: 40,
+          sortingFn: (a, b) =>
+            (a.original.corporationName ?? "").localeCompare(
+              b.original.corporationName ?? "",
+            ),
+          Filter: makeCorporationFilter(sortedCorporations),
+          Cell: corporationCell,
+        },
+        {
+          id: "quantity",
+          header: "Quantity",
+          accessorKey: "quantity",
+          size: 1,
+          mantineTableHeadCellProps: {
+            align: "right",
+          },
+          mantineTableBodyCellProps: {
+            align: "right",
+          },
+        },
+        {
+          header: "Item",
+          accessorKey: "typeId",
+          size: 300,
+          enableColumnFilter: true,
+          sortingFn: (a, b) =>
+            (a.original.typeName ?? "").localeCompare(
+              b.original.typeName ?? "",
+            ),
+          Filter: makeItemFilter(sortedTypes),
+          Cell: itemCell,
+        },
+        {
+          header: "LP Cost",
+          accessorKey: "lpCost",
+          size: 10,
+          filterVariant: "range-slider",
+          mantineFilterRangeSliderProps: {
+            label: lpCostSliderLabel,
+          },
+          Cell: lpCostCell,
+        },
+        {
+          header: "ISK Cost",
+          accessorKey: "iskCost",
+          size: 10,
+          filterVariant: "range-slider",
+          mantineFilterRangeSliderProps: {
+            label: iskCostSliderLabel,
+          },
+          Cell: iskCostCell,
+        },
+        {
+          header: "AK Cost",
+          accessorKey: "akCost",
+          size: 40,
+          filterVariant: "range-slider",
+          mantineTableBodyCellProps: {
+            align: "right",
+          },
+        },
+        {
+          header: "Required Items",
+          accessorKey: "requiredItems",
+          size: 300,
+          enableColumnFilter: false,
+          enableSorting: false,
+          Cell: requiredItemsCell,
+        },
+        {
+          id: "reqitems5pbuydetailsunit",
+          header: "Required Items Jita 5% Buy Unit Prices",
+          accessorKey: "requiredItems",
+          size: 10,
+          enableColumnFilter: false,
+          enableSorting: false,
+          Cell: requiredItemsBuyUnitCell,
+        },
+        {
+          id: "reqitems5pbuydetailstotal",
+          header: "Required Items Jita 5% Buy Prices for Quantities",
+          accessorKey: "requiredItems",
+          size: 10,
+          enableColumnFilter: false,
+          enableSorting: false,
+          Cell: requiredItemsBuyTotalCell,
+        },
+        {
+          id: "reqitems5pselldetails",
+          header: "Required Items Jita 5% Sell Unit Prices",
+          accessorKey: "requiredItems",
+          size: 10,
+          enableColumnFilter: false,
+          enableSorting: false,
+          Cell: requiredItemsSellUnitCell,
+        },
+        {
+          id: "reqitems5pselldetailstotal",
+          header: "Required Items Jita 5% Sell Prices for Quantities",
+          accessorKey: "requiredItems",
+          size: 10,
+          enableColumnFilter: false,
+          enableSorting: false,
+          Cell: requiredItemsSellTotalCell,
+        },
+        {
+          id: "jita5psell",
+          header: "Jita 5% Sell Price",
+          accessorFn: rewardSellValue,
+          size: 10,
+          Cell: iskAmountValueCell,
+        },
+        {
+          header: "Jita Sell Volume",
+          accessorKey: "marketStats.sell.volume",
+          size: 10,
+          mantineTableBodyCellProps: {
+            align: "right",
+          },
+        },
+        {
+          id: "reqitemsjita5psell",
+          header: "Required Items Jita 5% Sell",
+          size: 10,
+          accessorFn: requiredItemsSellCost,
+          Cell: iskAmountValueCell,
+        },
+        {
+          id: "jita5psellprofit",
+          header: "Jita 5% Sell Profit",
+          size: 10,
+          accessorFn: sellProfit,
+          Cell: iskAmountValueCell,
+        },
+        {
+          id: "jita5psellisklp",
+          header: "Jita 5% Sell ISK/LP",
+          size: 10,
+          accessorFn: sellIskPerLp,
+          Cell: iskPerLpValueCell,
+        },
+        {
+          id: "jita5pbuy",
+          header: "Jita 5% Buy Price",
+          accessorFn: rewardBuyValue,
+          size: 10,
+          Cell: iskAmountValueCell,
+        },
+        {
+          header: "Jita Buy Volume",
+          accessorKey: "marketStats.buy.volume",
+          size: 10,
+          mantineTableBodyCellProps: {
+            align: "right",
+          },
+        },
+        {
+          id: "reqitemsjita5pbuy",
+          header: "Required Items Jita 5% Buy",
+          size: 10,
+          accessorFn: requiredItemsBuyCost,
+          Cell: iskAmountValueCell,
+        },
+        {
+          id: "jita5pbuyprofit",
+          header: "Jita 5% Buy Profit",
+          size: 10,
+          accessorFn: buyProfit,
+          Cell: iskAmountValueCell,
+        },
+        {
+          id: "jita5pbuyisklp",
+          header: "Jita 5% Buy ISK/LP",
+          size: 10,
+          accessorFn: buyIskPerLp,
+          Cell: iskPerLpValueCell,
+        },
+        {
+          id: "jitasplit",
+          header: "Jita Split",
+          size: 10,
+          accessorFn: rewardSplitValue,
+          Cell: iskAmountValueCell,
+        },
+        {
+          id: "reqitemsjitasplit",
+          header: "Required Items Jita 5% Split",
+          size: 10,
+          accessorFn: requiredItemsSplitCost,
+          Cell: iskAmountValueCell,
+        },
+      ],
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- preserve the
+      // original component's empty dependency array (the filter option lists are
+      // captured on first render, matching long-standing behaviour).
+      [],
+    );
+
+    const table = useMantineReactTable({
+      columns,
+      positionPagination: "top",
+      enableFacetedValues: true,
+      data: augmentedOffers, //must be memoized or stable (useState, useMemo, defined outside of this component, etc.)
+      initialState: {
+        density: "xs",
+        sorting: [{ id: "id", desc: true }],
+        pagination: {
+          pageIndex: 0,
+          pageSize: 25,
+        },
+        columnVisibility: {
+          id: false,
+          quantity: false,
+          corporationId: sortedCorporations.length > 1,
+          akCost: offers.some((offer) => offer.akCost),
+          reqitems5pbuydetailsunit: false,
+          reqitems5pbuydetailstotal: false,
+          reqitems5pselldetailsunit: false,
+          reqitems5pselldetailstotal: false,
+          jita5pbuy: false,
+          reqitemsjita5pbuy: false,
+          jita5pbuyprofit: false,
+          jitasplit: false,
+          reqitemsjitasplit: false,
+          jita5psell: false,
+          //reqitemsjita5psell: false, // this can be seen as the cost to buy items off the market
+          jita5psellprofit: false,
+        },
+        //showColumnFilters: true,
+      },
+    });
+
+    return <MantineReactTable table={table} />;
+  },
+);
+LoyaltyPointsTableClassic.displayName = "LoyaltyPointsTableClassic";

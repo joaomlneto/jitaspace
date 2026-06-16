@@ -1,27 +1,25 @@
-import { Group, JsonInput, Spoiler, Stack, Text } from "@mantine/core";
+import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
 import {
-  useCharacterMail,
-  useCharacterMailingLists,
-  useCharacterMailLabels,
-} from "@jitaspace/hooks";
-import {
-  DateHoverCard,
   EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
   EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
-  FormattedDateText,
-} from "@jitaspace/ui";
-
-import { MailLabelColorSwatch } from "~/components/ColorSwatch";
-import { LabelName, MailingListName } from "~/components/Text";
+} from "@jitaspace/eve-components";
+import {
+  useCharacterMail,
+  useCharacterMailingLists,
+  useCharacterMailLabels,
+} from "@jitaspace/hooks";
+import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import type { MailboxTableProps } from "~/components/EveMail/MailboxTable";
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 import { MessageMenu } from "~/components/EveMail/MessageMenu";
+import { LabelName, MailingListName } from "~/components/Text";
 
 export interface MessagePanelProps {
   characterId: number;
@@ -43,7 +41,7 @@ export function MessagePanel({
   hideRecipients,
   hideSender,
   hideSubject,
-}: MessagePanelProps) {
+}: Readonly<MessagePanelProps>) {
   const { data: labels } = useCharacterMailLabels(characterId);
   const { data: mail } = useCharacterMail(characterId, messageId);
   const { data: mailingLists } = useCharacterMailingLists(characterId);

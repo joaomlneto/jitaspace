@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
-import { Loader } from "@mantine/core";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 
 import LPStoreCorporationPage from "./page.client";
@@ -117,9 +117,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ corporationId: string }>;
-}) {
+}>) {
   const { corporationId } = await params;
 
   try {
@@ -132,11 +132,11 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ corporationId: string }>;
-}) {
+}>) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

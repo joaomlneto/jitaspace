@@ -2,8 +2,8 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
-import { Loader } from "@mantine/core";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 
 import type { PageProps } from "./page.client";
@@ -83,6 +83,7 @@ async function getAttributeData(attributeId: number): Promise<PageProps> {
     published: attribute.published ?? null,
     stackable: attribute.stackable ?? null,
     unit: attribute.DogmaUnit?.displayName ?? attribute.DogmaUnit?.name ?? null,
+    unitId: attribute.unitId ?? null,
     iconId: attribute.iconId ?? null,
     types: attribute.TypeAttributes.map((entry) => ({
       ...entry.type,
@@ -116,9 +117,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ attributeId: string }>;
-}) {
+}>) {
   const { attributeId: attributeIdParam } = await params;
   const attributeId = Number(attributeIdParam);
   if (!Number.isFinite(attributeId)) {
@@ -132,11 +133,11 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ attributeId: string }>;
-}) {
+}>) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

@@ -2,8 +2,9 @@
 
 import { memo, useMemo } from "react";
 import { type BreadcrumbsProps } from "@mantine/core";
+
+import { TypeMarketBreadcrumbs as UITypeMarketBreadcrumbs } from "@jitaspace/eve-components";
 import { useMarketGroup, useType } from "@jitaspace/hooks";
-import { TypeMarketBreadcrumbs as UITypeMarketBreadcrumbs } from "@jitaspace/ui";
 
 export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   typeId?: string | number;
@@ -42,7 +43,18 @@ export const TypeMarketBreadcrumbs = memo(
         }
       }
       return groups.length > 0 ? groups : undefined;
-    }, [level1, level1Id, level2, level2Id, level3, level3Id, level4, level4Id, level5, level5Id]);
+    }, [
+      level1,
+      level1Id,
+      level2,
+      level2Id,
+      level3,
+      level3Id,
+      level4,
+      level4Id,
+      level5,
+      level5Id,
+    ]);
 
     return (
       <UITypeMarketBreadcrumbs

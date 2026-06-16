@@ -33,7 +33,7 @@ export function useCorporationContacts(corporationId: number) {
     },
   );
 
-  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
+  const { data, isLoading, error, refetch } =
     useGetCorporationsCorporationIdContactsInfinite(
       corporationId ?? 0,
       {},
@@ -46,7 +46,7 @@ export function useCorporationContacts(corporationId: number) {
             getCorporationsCorporationIdContacts(
               corporationId ?? 0,
               {
-                page: pageParam as number,
+                page: pageParam,
               },
               { ...authHeaders },
             ),

@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
-import { Loader } from "@mantine/core";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { toArrayIfNot } from "@jitaspace/utils";
 
@@ -64,9 +64,9 @@ async function getTravelData(waypoints: string[] | undefined): Promise<{
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ waypoints?: string[] }>;
-}) {
+}>) {
   const { waypoints } = await params;
 
   try {
@@ -84,11 +84,11 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ waypoints?: string[] }>;
-}) {
+}>) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

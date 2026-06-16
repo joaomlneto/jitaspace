@@ -4,8 +4,9 @@ import { Group } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type { CharacterAsset } from "@jitaspace/hooks";
+import { TypeAnchor } from "@jitaspace/eve-components";
 import { useEsiNameLookup, useMarketPrices } from "@jitaspace/hooks";
-import { ISKAmount, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
+import { ISKAmount, TypeAvatar } from "@jitaspace/ui";
 
 interface AssetsDataTableProps {
   entries: CharacterAsset[];
@@ -80,7 +81,7 @@ export const AssetsDataTable = memo(({ entries }: AssetsDataTableProps) => {
         },
         Cell: ({ renderedCellValue: _renderedCellValue, row: _row, cell }) => {
           const value = cell.getValue<number>();
-          return value !== undefined ? <ISKAmount amount={value} /> : undefined;
+          return value === undefined ? undefined : <ISKAmount amount={value} />;
         },
       },
     ],

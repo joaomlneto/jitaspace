@@ -1,9 +1,3 @@
 "use client";
 
-import { useGetAlliancesAllianceId } from "@jitaspace/esi-client";
-
-
-
-
-
-export const useEsiAllianceInformation = useGetAlliancesAllianceId;
+export { useGetAlliancesAllianceId as useEsiAllianceInformation } from "@jitaspace/esi-client";

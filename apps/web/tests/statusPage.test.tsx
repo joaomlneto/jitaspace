@@ -61,6 +61,14 @@ jest.mock("../components/Status/InngestJobsDashboard", () => ({
   InngestJobsDashboard: () => <div>Inngest Jobs Dashboard</div>,
 }));
 
+jest.mock("../components/Status/TriggerJobsDashboard", () => ({
+  TriggerJobsDashboard: () => <div>Trigger Jobs Dashboard</div>,
+}));
+
+jest.mock("../components/Status/DatabaseDashboard", () => ({
+  DatabaseDashboard: () => <div>Database Dashboard</div>,
+}));
+
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({
@@ -162,6 +170,7 @@ describe("Status Page", () => {
     // Dashboards render
     expect(screen.getByText("Rate Limit Dashboard")).toBeInTheDocument();
     expect(screen.getByText("Inngest Jobs Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Database Dashboard")).toBeInTheDocument();
   });
 
   it("renders outdated branches and partial ESI degradation", () => {

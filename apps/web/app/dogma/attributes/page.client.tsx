@@ -1,6 +1,6 @@
 "use client";
 
-import type { MRT_ColumnDef } from "mantine-react-table";
+import type { MRT_ColumnDef, MRT_Row } from "mantine-react-table";
 import { useMemo } from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
@@ -8,28 +8,33 @@ import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 import { AttributesIcon } from "@jitaspace/eve-icons";
 import { DogmaAttributeAnchor } from "@jitaspace/ui";
 
+type DogmaAttributeRow = {
+  attributeId: number;
+  name: string | null;
+  displayName: string | null;
+  numTypeIds: number;
+};
+
 export interface PageProps {
-  attributes: Record<
-    number,
-    {
-      attributeId: number;
-      name: string | null;
-      displayName: string | null;
-      numTypeIds: number;
-    }
-  >;
+  attributes: Record<number, DogmaAttributeRow>;
 }
 
-export default function DogmaAttributesPage({ attributes }: PageProps) {
+function NameCell({ row }: Readonly<{ row: MRT_Row<DogmaAttributeRow> }>) {
+  return (
+    <DogmaAttributeAnchor
+      attributeId={row.original.attributeId}
+      target="_blank"
+    >
+      {row.original.name}
+    </DogmaAttributeAnchor>
+  );
+}
+
+export default function DogmaAttributesPage({
+  attributes,
+}: Readonly<PageProps>) {
   const data = useMemo(() => Object.values(attributes), [attributes]);
-  const columns = useMemo<
-    MRT_ColumnDef<{
-      attributeId: number;
-      name: string | null;
-      displayName: string | null;
-      numTypeIds: number;
-    }>[]
-  >(
+  const columns = useMemo<MRT_ColumnDef<DogmaAttributeRow>[]>(
     () => [
       {
         id: "id",
@@ -42,14 +47,7 @@ export default function DogmaAttributesPage({ attributes }: PageProps) {
         header: "Name",
         accessorKey: "name",
         size: 40,
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-          <DogmaAttributeAnchor
-            attributeId={row.original.attributeId}
-            target="_blank"
-          >
-            {row.original.name}
-          </DogmaAttributeAnchor>
-        ),
+        Cell: NameCell,
       },
       {
         id: "displayName",

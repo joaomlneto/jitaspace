@@ -132,7 +132,7 @@ export const parseEFTFitString = (
     fit.droneBay.push({
       name: tokens.slice(0, -1).join(" "),
       // @ts-expect-error guaranteed to exist
-      quantity: Number(tokens.slice(-1)[0].slice(1)),
+      quantity: Number(tokens.at(-1).slice(1)),
     });
     lineIndex++;
   }
@@ -146,7 +146,7 @@ export const parseEFTFitString = (
     fit.cargoHold.push({
       name: tokens.slice(0, -1).join(" "),
       // @ts-expect-error guaranteed to exist
-      quantity: Number(tokens.slice(-1)[0].slice(1)),
+      quantity: Number(tokens.at(-1).slice(1)),
     });
     lineIndex++;
   }
@@ -160,35 +160,35 @@ export function toEFTFitString(fit: ShipFitting) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     ...fit.lowSlots.flatMap((module) =>
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      Array(module.quantity).fill(`${module.name}`),
+      new Array(module.quantity).fill(`${module.name}`),
     ),
     "",
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     ...fit.midSlots.flatMap((module) =>
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      Array(module.quantity).fill(
-        `${module.name}${module.ammo ? `, ${module.ammo}` : ""}`,
+      new Array(module.quantity).fill(
+        `${module.name}${module.ammo ? ", " + module.ammo : ""}`,
       ),
     ),
     "",
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     ...fit.highSlots.flatMap((module) =>
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      Array(module.quantity).fill(
-        `${module.name}${module.ammo ? `, ${module.ammo}` : ""}`,
+      new Array(module.quantity).fill(
+        `${module.name}${module.ammo ? ", " + module.ammo : ""}`,
       ),
     ),
     "",
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     ...fit.rigSlots.flatMap((module) =>
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      Array(module.quantity).fill(`${module.name}`),
+      new Array(module.quantity).fill(`${module.name}`),
     ),
     "",
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     ...fit.subsystemSlots.flatMap((module) =>
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      Array(module.quantity).fill(`${module.name}`),
+      new Array(module.quantity).fill(`${module.name}`),
     ),
     "",
     ...fit.droneBay.flatMap((module) => `${module.name} x${module.quantity}`),

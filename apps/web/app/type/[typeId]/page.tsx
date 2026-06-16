@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
 import { HttpStatusCode } from "axios";
-import { Loader } from "@mantine/core";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 
 import TypePage from "./page.client";
@@ -92,9 +92,9 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ typeId: string }>;
-}) {
+}>) {
   const { typeId: typeIdParam } = await params;
   const typeId = Number(typeIdParam);
   if (!typeId) {
@@ -111,11 +111,11 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ typeId: string }>;
-}) {
+}>) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

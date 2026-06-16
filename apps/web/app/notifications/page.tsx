@@ -10,20 +10,15 @@ import {
 } from "@mantine/core";
 import { IconMail, IconMailOpened } from "@tabler/icons-react";
 
+import { EveEntityAvatar, EveEntityName } from "@jitaspace/eve-components";
 import { MemberIcon } from "@jitaspace/eve-icons";
 import {
   useEsiCharacterNotifications,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
-import {
-  DateHoverCard,
-  EveEntityAvatar,
-  EveEntityName,
-  TimeAgoText,
-} from "@jitaspace/ui";
+import { DateHoverCard, TimeAgoText } from "@jitaspace/ui";
 
 import { ScopeGuard } from "~/components/ScopeGuard";
-
 
 export default function Page() {
   const character = useSelectedCharacter();

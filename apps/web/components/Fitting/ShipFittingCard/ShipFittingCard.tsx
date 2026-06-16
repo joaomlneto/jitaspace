@@ -1,13 +1,12 @@
+import type { CardProps } from "@mantine/core";
 import { memo, useMemo } from "react";
-import { Card, JsonInput  } from "@mantine/core";
-import type {CardProps} from "@mantine/core";
+import { Card } from "@mantine/core";
 
 import type { FittingItemFlag } from "@jitaspace/hooks";
 
 import classes from "./ShipFittingCard.module.css";
 import { ShipFittingCardHeader } from "./ShipFittingCardHeader";
 import { ShipFittingCardModulesSection } from "./ShipFittingCardModulesSection";
-
 
 export type ShipFittingCardProps = Omit<CardProps, "children"> & {
   name?: string;
@@ -28,8 +27,9 @@ export type ShipFittingCardProps = Omit<CardProps, "children"> & {
 export const ShipFittingCard = memo(
   ({
     name,
-    description,
-    fittingId,
+    // destructured to keep them out of `otherProps` (not valid DOM attributes)
+    description: _description,
+    fittingId: _fittingId,
     items,
     shipTypeId,
     hideHeader = false,
@@ -133,25 +133,6 @@ export const ShipFittingCard = memo(
                 items={section.items}
               />
             ))}
-        {false && (
-          <JsonInput
-            value={JSON.stringify(
-              {
-                name,
-                description,
-                fittingId,
-                items,
-                shipTypeId,
-                hideHeader,
-                hideModules,
-              },
-              null,
-              2,
-            )}
-            readOnly
-            autosize
-          />
-        )}
       </Card>
     );
   },

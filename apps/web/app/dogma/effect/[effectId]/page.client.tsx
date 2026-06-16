@@ -11,19 +11,17 @@ import {
   Title,
 } from "@mantine/core";
 
+import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
 import { useDogmaEffect } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   DogmaAttributeAnchor,
   DogmaEffectAnchor,
-  TypeAnchor,
   TypeAvatar,
-  TypeName,
 } from "@jitaspace/ui";
 
-import { DogmaAttributeName, DogmaEffectName } from "~/components/Text";
-
 import { MailMessageViewer } from "~/components/EveMail";
+import { DogmaAttributeName, DogmaEffectName } from "~/components/Text";
 
 export interface PageProps {
   effectId: number;
@@ -59,7 +57,7 @@ export default function DogmaEffectPage({
   types,
   modifiers,
   groups,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const { data: effect } = useDogmaEffect(effectId);
 
   const sortedGroups = useMemo(

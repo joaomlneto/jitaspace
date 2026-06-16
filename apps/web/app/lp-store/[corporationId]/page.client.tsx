@@ -37,7 +37,7 @@ export default function LPStoreCorporationPage({
   corporation,
   offers,
   types,
-}: LPStoreCorporationPageProps) {
+}: Readonly<LPStoreCorporationPageProps>) {
   return (
     <>
       <Container size="xl">

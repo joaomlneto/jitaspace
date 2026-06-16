@@ -16,8 +16,6 @@
   },
   "dependencies": {
     "@jitaspace/eve-icons": "workspace:*",
-    "@jitaspace/hooks": "workspace:*",
-    "@jitaspace/sde-client": "workspace:*",
     "@jitaspace/utils": "workspace:*",
     "@mantine/carousel": "9.3.0",
     "@mantine/core": "9.3.0",

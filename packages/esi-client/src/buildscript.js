@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync } from "fs";
-import path, { join } from "path";
-import { fileURLToPath } from "url";
+import { readFileSync, writeFileSync } from "node:fs";
+import path, { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // Workaround for ESM import in Node.js
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file

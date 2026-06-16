@@ -97,8 +97,16 @@ const config: Config = {
   // single module
   moduleNameMapper: {
     "^~/(.*)$": "<rootDir>/$1",
-    "^@jitaspace/tiptap-eve$":
-      "<rootDir>/../../packages/tiptap-eve/index.ts",
+    // Redirect @jitaspace/* packages to lightweight stubs so their real
+    // sources (which transitively import @tanstack/db-ivm and @tabler/icons-react
+    // — packages with ESM syntax in CJS bundles) are never loaded during jest runs.
+    "^@jitaspace/hooks$": "<rootDir>/__mocks__/@jitaspace/hooks.ts",
+    "^@jitaspace/ui$": "<rootDir>/__mocks__/@jitaspace/ui.tsx",
+    "^@jitaspace/eve-components$":
+      "<rootDir>/__mocks__/@jitaspace/eve-components.tsx",
+    // Load datatable source directly so jest transforms it via SWC.
+    "^@jitaspace/datatable$": "<rootDir>/../../packages/datatable/index.ts",
+    "^@jitaspace/tiptap-eve$": "<rootDir>/../../packages/tiptap-eve/index.ts",
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module

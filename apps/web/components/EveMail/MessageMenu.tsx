@@ -14,8 +14,9 @@ import {
   putCharactersCharacterIdMailMailId,
 } from "@jitaspace/esi-client";
 import { useAccessToken, useCharacterMailLabels } from "@jitaspace/hooks";
-import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { isSpecialLabelId } from "@jitaspace/utils";
+
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 
 interface Message {
   //from?: number;
@@ -48,12 +49,126 @@ export function MessageMenu({
   mail,
   mutate,
   data,
-}: MessageMenuProps) {
+}: Readonly<MessageMenuProps>) {
   const { authHeaders } = useAccessToken({
     characterId,
     scopes: ["esi-mail.organize_mail.v1"],
   });
   const { data: labels } = useCharacterMailLabels(characterId);
+
+  const handleToggleLabel = async (label: {
+    label_id?: number;
+    name?: string;
+  }) => {
+    if (characterId === undefined) {
+      return showNotification({
+        title: "Error",
+        message: "Not authenticated.",
+        color: "red",
+      });
+    }
+    if (mail.mail_id === undefined) {
+      return showNotification({
+        title: "Error",
+        message: "Message ID is undefined.",
+      });
+    }
+    const hasLabel = label.label_id && mail.labels?.includes(label.label_id);
+    const removeLabel = (labelId: number) => labelId !== label.label_id;
+    await putCharactersCharacterIdMailMailId(
+      characterId,
+      mail.mail_id,
+      {
+        labels: hasLabel
+          ? mail.labels?.filter(removeLabel)
+          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            [...(mail.labels ?? []), label.label_id!],
+      },
+      authHeaders,
+    );
+
+    // optimistic update
+    const item = data?.find((item) => item.mail_id === mail.mail_id);
+    if (item) {
+      item.labels = hasLabel
+        ? mail.labels?.filter(removeLabel)
+        : [...(mail.labels ?? []), label.label_id!];
+    }
+
+    // Show a notification
+    showNotification({
+      title: "Message Updated",
+      message: `Message updated successfully. It may take up to 30 seconds for the change to be visible.`,
+    });
+    mutate?.();
+  };
+
+  const handleToggleRead = async () => {
+    if (characterId === undefined) {
+      return showNotification({
+        title: "Error",
+        message: "Not authenticated.",
+        color: "red",
+      });
+    }
+
+    if (mail.mail_id === undefined) {
+      return showNotification({
+        title: "Error",
+        message: "Message ID is undefined.",
+      });
+    }
+    await putCharactersCharacterIdMailMailId(
+      characterId,
+      mail.mail_id,
+      {
+        read: !mail.is_read,
+      },
+      authHeaders,
+    );
+    if (data) {
+      data.find((item) => item.mail_id === mail.mail_id)!.is_read =
+        !mail.is_read;
+    }
+    showNotification({
+      title: "Message Updated",
+      message: `Message marked successfully as ${
+        mail.is_read ? "Read" : "Unread"
+      }. It may take up to 30 seconds for the change to be visible.`,
+    });
+    mutate?.();
+  };
+
+  const handleDeleteMessage = async () => {
+    if (characterId === undefined) {
+      return showNotification({
+        title: "Error",
+        message: "Not authenticated.",
+        color: "red",
+      });
+    }
+
+    if (mail.mail_id === undefined) {
+      return showNotification({
+        title: "Error",
+        message: "Message ID is undefined.",
+      });
+    }
+    await deleteCharactersCharacterIdMailMailId(
+      characterId,
+      mail.mail_id,
+      authHeaders,
+    );
+    if (data) {
+      data.find((message) => message.mail_id === mail.mail_id)!.isDeleted =
+        true;
+    }
+    showNotification({
+      title: "Message Deleted",
+      message: `Message deleted successfully. It may take up to 30 seconds for the change to be visible.`,
+    });
+    mutate?.();
+  };
 
   return (
     <Menu>
@@ -70,57 +185,7 @@ export function MessageMenu({
             <Menu.Item
               key={label.label_id}
               className="umami--click--modify-label-menu-item"
-              onClick={() => {
-                void (async () => {
-                  if (characterId === undefined) {
-                    return showNotification({
-                      title: "Error",
-                      message: "Not authenticated.",
-                      color: "red",
-                    });
-                  }
-                  if (mail.mail_id === undefined) {
-                    return showNotification({
-                      title: "Error",
-                      message: "Message ID is undefined.",
-                    });
-                  }
-                  await putCharactersCharacterIdMailMailId(
-                    characterId,
-                    mail.mail_id,
-                    {
-                      labels:
-                        label.label_id && mail.labels?.includes(label.label_id)
-                          ? mail.labels?.filter(
-                              (labelId) => labelId !== label.label_id,
-                            )
-                          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                            [...(mail.labels ?? []), label.label_id!],
-                    },
-                    authHeaders,
-                  );
-
-                  // optimistic update
-                  const item = data?.find(
-                    (item) => item.mail_id === mail.mail_id,
-                  );
-                  if (item) {
-                    item.labels =
-                      label.label_id && mail.labels?.includes(label.label_id)
-                        ? mail.labels?.filter(
-                            (labelId) => labelId !== label.label_id,
-                          )
-                        : [...(mail.labels ?? []), label.label_id!];
-                  }
-
-                  // Show a notification
-                  showNotification({
-                    title: "Message Updated",
-                    message: `Message updated successfully. It may take up to 30 seconds for the change to be visible.`,
-                  });
-                  mutate?.();
-                })();
-              }}
+              onClick={() => void handleToggleLabel(label)}
             >
               <Group>
                 <MailLabelColorSwatch
@@ -146,43 +211,7 @@ export function MessageMenu({
           leftSection={
             mail.is_read ? <IconMailOpened size={16} /> : <IconMail size={16} />
           }
-          onClick={() => {
-            void (async () => {
-              if (characterId === undefined) {
-                return showNotification({
-                  title: "Error",
-                  message: "Not authenticated.",
-                  color: "red",
-                });
-              }
-
-              if (mail.mail_id === undefined) {
-                return showNotification({
-                  title: "Error",
-                  message: "Message ID is undefined.",
-                });
-              }
-              await putCharactersCharacterIdMailMailId(
-                characterId,
-                mail.mail_id,
-                {
-                  read: !mail.is_read,
-                },
-                authHeaders,
-              );
-              if (data) {
-                data.find((item) => item.mail_id === mail.mail_id)!.is_read =
-                  !mail.is_read;
-              }
-              showNotification({
-                title: "Message Updated",
-                message: `Message marked successfully as ${
-                  mail.is_read ? "Read" : "Unread"
-                }. It may take up to 30 seconds for the change to be visible.`,
-              });
-              mutate?.();
-            })();
-          }}
+          onClick={() => void handleToggleRead()}
         >
           Mark as {mail.is_read ? "Unread" : "Read"}
         </Menu.Item>
@@ -203,38 +232,7 @@ export function MessageMenu({
                   cannot be undone.
                 </Text>
               ),
-              onConfirm: () =>
-                void (async () => {
-                  if (characterId === undefined) {
-                    return showNotification({
-                      title: "Error",
-                      message: "Not authenticated.",
-                      color: "red",
-                    });
-                  }
-
-                  if (mail.mail_id === undefined) {
-                    return showNotification({
-                      title: "Error",
-                      message: "Message ID is undefined.",
-                    });
-                  }
-                  await deleteCharactersCharacterIdMailMailId(
-                    characterId,
-                    mail.mail_id,
-                    authHeaders,
-                  );
-                  if (data) {
-                    data.find(
-                      (message) => message.mail_id === mail.mail_id,
-                    )!.isDeleted = true;
-                  }
-                  showNotification({
-                    title: "Message Deleted",
-                    message: `Message deleted successfully. It may take up to 30 seconds for the change to be visible.`,
-                  });
-                  mutate?.();
-                })(),
+              onConfirm: () => void handleDeleteMessage(),
             });
           }}
         >

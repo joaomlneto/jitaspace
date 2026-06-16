@@ -8,15 +8,19 @@ export const ServerStatusIndicator = memo(() => {
 
   const isVip = !!data?.data.vip;
 
+  let swatchColor: string;
+  if (isSuccess) {
+    swatchColor = "green";
+  } else if (isVip) {
+    swatchColor = "yellow";
+  } else {
+    swatchColor = "red";
+  }
+
   return (
     <Group gap={4} wrap="nowrap">
       {isLoading && <Loader size={12} />}
-      {!isLoading && (
-        <ColorSwatch
-          size={12}
-          color={isSuccess ? "green" : isVip ? "yellow" : "red"}
-        />
-      )}
+      {!isLoading && <ColorSwatch size={12} color={swatchColor} />}
       {isLoading && <Text size="xs">Checking...</Text>}
       {!isLoading && isSuccess && !isVip && (
         <Text size="xs">{data?.data.players.toLocaleString()}</Text>

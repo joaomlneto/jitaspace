@@ -1,22 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  Button,
-  CopyButton,
-  Group,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Button, CopyButton, Group, Stack, Text, Title } from "@mantine/core";
 
+import { CharacterName } from "@jitaspace/eve-components";
 import { useAuthenticatedCharacter } from "@jitaspace/hooks";
-import {
-  CharacterAvatar,
-  CharacterName,
-  DateHoverCard,
-  TimeAgoText,
-} from "@jitaspace/ui";
+import { CharacterAvatar, DateHoverCard, TimeAgoText } from "@jitaspace/ui";
 
 import { ScopesTable } from "~/components/ScopeGuard";
 

@@ -35,9 +35,11 @@ import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
 import { env } from "~/env";
+import { DatabaseDashboard } from "../../components/Status/DatabaseDashboard";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
 import { EsiStatusDashboard } from "../../components/Status/EsiStatusDashboard";
 import { InngestJobsDashboard } from "../../components/Status/InngestJobsDashboard";
+import { TriggerJobsDashboard } from "../../components/Status/TriggerJobsDashboard";
 
 export interface PageProps {
   vercelStatusData: VercelStatusResponse | null;
@@ -47,7 +49,7 @@ export interface PageProps {
 export default function StatusPage({
   vercelStatusData,
   sdeLastModifiedData,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const { data: sdeVersionData } = useGetVersion();
 
   const { data: tqStatus } = useServerStatus();
@@ -263,9 +265,7 @@ export default function StatusPage({
                     <IconActivity size={20} />
                   </ActionIcon>
                 </Group>
-                {!esiStatus ? (
-                  <Loader size="sm" />
-                ) : (
+                {esiStatus ? (
                   <Badge
                     color={nonOkEndpointsCount === 0 ? "green" : "yellow"}
                     variant="light"
@@ -274,6 +274,8 @@ export default function StatusPage({
                       ? "All Systems Operational"
                       : "Partial Degradation"}
                   </Badge>
+                ) : (
+                  <Loader size="sm" />
                 )}
               </Group>
               <Stack gap="xs">
@@ -299,6 +301,10 @@ export default function StatusPage({
         </SimpleGrid>
 
         <InngestJobsDashboard />
+
+        <TriggerJobsDashboard />
+
+        <DatabaseDashboard />
 
         <EsiRateLimitDashboard />
       </Stack>

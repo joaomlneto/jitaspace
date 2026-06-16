@@ -5,11 +5,8 @@ import Link from "next/link";
 import { NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
-import { MarketGroupAvatar, TypeAvatar } from "@jitaspace/ui";
-
-
-
-
+import { MarketGroupAvatar } from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/ui";
 
 interface MarketGroupNavLinkProps {
   marketGroups: Record<
@@ -26,7 +23,11 @@ interface MarketGroupNavLinkProps {
 }
 
 export const MarketGroupNavLink = memo(
-  ({ marketGroups, marketGroupId, expand: _expand = true }: MarketGroupNavLinkProps) => {
+  ({
+    marketGroups,
+    marketGroupId,
+    expand: _expand = true,
+  }: MarketGroupNavLinkProps) => {
     const marketGroup = marketGroups[marketGroupId];
     const [opened, { toggle }] = useDisclosure(false);
 

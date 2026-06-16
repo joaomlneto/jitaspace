@@ -16,19 +16,21 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { format } from "date-fns";
 
 import {
+  AllianceName,
+  CharacterName,
+  CorporationName,
+  FactionName,
+} from "@jitaspace/eve-components";
+import {
   useEsiAllianceInformation,
   useEsiAllianceMemberCorporations,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
 import {
   AllianceAvatar,
-  AllianceName,
   CharacterAvatar,
-  CharacterName,
   CorporationAvatar,
-  CorporationName,
   FactionAvatar,
-  FactionName,
 } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";

@@ -1,6 +1,5 @@
-import fs from "fs";
-import path from "path";
-
+import fs from "node:fs";
+import path from "node:path";
 import { Container, Typography } from "@mantine/core";
 import Markdown from "react-markdown";
 

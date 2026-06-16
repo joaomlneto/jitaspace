@@ -32,7 +32,7 @@ export interface EsiStatusDashboardProps {
 
 export function EsiStatusDashboard({
   initialShowAll = false,
-}: EsiStatusDashboardProps) {
+}: Readonly<EsiStatusDashboardProps>) {
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
     useState(initialShowAll);
 

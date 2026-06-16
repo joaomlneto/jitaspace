@@ -7,7 +7,9 @@ export interface MailingListsTableProps {
   characterId: number;
 }
 
-export function MailingListsTable({ characterId }: MailingListsTableProps) {
+export function MailingListsTable({
+  characterId,
+}: Readonly<MailingListsTableProps>) {
   const { data, error } = useCharacterMailingLists(characterId);
 
   return (

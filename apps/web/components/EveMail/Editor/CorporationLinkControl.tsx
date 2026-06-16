@@ -1,34 +1,26 @@
+import type { PopoverProps } from "@mantine/core";
 import type React from "react";
 import { forwardRef } from "react";
-import {
-  Button,
-  Popover,
-  useMantineTheme,
-  useProps
-  
-} from "@mantine/core";
-import type {PopoverProps} from "@mantine/core";
+import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
+import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { CorporationIcon } from "@jitaspace/eve-icons";
-import { CorporationAvatar, EsiSearchSelect } from "@jitaspace/ui";
+import { CorporationAvatar } from "@jitaspace/ui";
 
-import {
-  ControlBase
-  
-} from "~/components/EveMail/Editor/ControlBase";
-import type {RichTextEditorControlBaseProps} from "~/components/EveMail/Editor/ControlBase";
+import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
+import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
 import classes from "./LinkControl.module.css";
 
-
-export interface RichTextEditorLinkControlProps
-  extends Partial<RichTextEditorControlBaseProps> {
+export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorControlBaseProps> {
   /** Props added to Popover component */
   popoverProps?: Partial<PopoverProps>;
 }
 
-const CorporationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
+const CorporationLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
+  size,
+}) => (
   <div style={{ position: "relative", width: size, height: size }}>
     <CorporationIcon fill alt="" />
   </div>

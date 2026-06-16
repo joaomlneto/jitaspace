@@ -9,7 +9,6 @@ import {
   FocusTrap,
   Group,
   HoverCard,
-  JsonInput,
   SimpleGrid,
   Stack,
   Text,
@@ -23,8 +22,9 @@ import { IconX } from "@tabler/icons-react";
 
 import type { FittingItemFlag } from "@jitaspace/hooks";
 import { itemsFlagEnum } from "@jitaspace/esi-client";
-import { useEsiTypeIdsFromNames, useType } from "@jitaspace/hooks";
-import { EveEntitySelect, TypeAnchor, TypeAvatar } from "@jitaspace/ui";
+import { EveEntitySelect, TypeAnchor } from "@jitaspace/eve-components";
+import { useEsiTypeIdsFromNames } from "@jitaspace/hooks";
+import { TypeAvatar } from "@jitaspace/ui";
 
 import { ShipFittingCard } from "~/components/Fitting";
 
@@ -179,14 +179,9 @@ function mergeAndConvertScans(scans: ScanResult[]) {
   return convertScan(mergedScans);
 }
 
-export default function Page({ ships }: PageProps) {
+export default function Page({ ships }: Readonly<PageProps>) {
   const [shipTypeId, setShipTypeId] = useState<number | undefined>();
   const [scans, setScans] = useState<ScanResult[]>([]);
-  const { data: shipData } = useType(
-    shipTypeId ?? 0,
-    {},
-    { query: { enabled: shipTypeId !== undefined } },
-  );
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
   const _mergedScans = useMemo(() => mergeScans(scans), [scans]);
@@ -335,33 +330,6 @@ export default function Page({ ships }: PageProps) {
           </Stack>
         </SimpleGrid>
       </Stack>
-      {false && (
-        <JsonInput
-          label="IDs from Names"
-          value={JSON.stringify(xx, null, 2)}
-          readOnly
-          autosize
-          maxRows={40}
-        />
-      )}
-      {false && (
-        <JsonInput
-          label="Scans"
-          value={JSON.stringify(scans, null, 2)}
-          readOnly
-          autosize
-          maxRows={40}
-        />
-      )}
-      {false && (
-        <JsonInput
-          label="Selected Ship Data"
-          value={JSON.stringify(shipData, null, 2)}
-          readOnly
-          autosize
-          maxRows={10}
-        />
-      )}
     </Container>
   );
 }

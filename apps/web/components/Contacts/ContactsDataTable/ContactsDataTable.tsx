@@ -1,11 +1,7 @@
+import type { MRT_Cell, MRT_ColumnDef, MRT_Row } from "mantine-react-table";
 import { memo, useMemo } from "react";
 import { Badge, Group, Text } from "@mantine/core";
-import type {
-  MRT_ColumnDef} from "mantine-react-table";
-import {
-  MantineReactTable,
-  useMantineReactTable,
-} from "mantine-react-table";
+import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type {
   AllianceContact,
@@ -16,13 +12,8 @@ import {
   EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
-  StandingIndicator,
-  StandingsBadge,
-} from "@jitaspace/ui";
-
-
-
-
+} from "@jitaspace/eve-components";
+import { StandingIndicator, StandingsBadge } from "@jitaspace/ui";
 
 type Contact = AllianceContact & CorporationContact & CharacterContact;
 export interface ContactsDataTableProps {
@@ -34,6 +25,54 @@ export interface ContactsDataTableProps {
 
 const capitalizeFirstLetter = (s: string) =>
   s.charAt(0).toUpperCase() + s.slice(1);
+
+function ContactNameCell({ row }: Readonly<{ row: MRT_Row<Contact> }>) {
+  return (
+    <Group wrap="nowrap">
+      <StandingIndicator standing={row.original.standing}>
+        <EveEntityAvatar
+          entityId={row.original.contact_id}
+          category={row.original.contact_type}
+          size="sm"
+        />
+      </StandingIndicator>
+      <EveEntityAnchor
+        size="sm"
+        entityId={row.original.contact_id}
+        category={row.original.contact_type}
+      >
+        <EveEntityName
+          entityId={row.original.contact_id}
+          category={row.original.contact_type}
+        />
+      </EveEntityAnchor>
+    </Group>
+  );
+}
+
+function ContactWatchedCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
+  return cell.getValue<boolean>() ? (
+    <Badge variant="filled" size="xs">
+      watched
+    </Badge>
+  ) : null;
+}
+
+function ContactBlockedCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
+  const isBlocked = cell.getValue<boolean | undefined>();
+  if (isBlocked !== undefined) {
+    return (
+      <Text size="sm" c="dimmed" fs="italic">
+        Unknown
+      </Text>
+    );
+  }
+  return isBlocked ? "Yes" : "No";
+}
+
+function ContactStandingsCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
+  return <StandingsBadge standing={cell.getValue<number>()} />;
+}
 
 export const ContactsDataTable = memo(
   ({
@@ -71,55 +110,20 @@ export const ContactsDataTable = memo(
           header: "Contact",
           accessorKey: "contact_id",
           size: 40,
-          Cell: ({ row }) => (
-            <Group wrap="nowrap">
-              <StandingIndicator standing={row.original.standing}>
-                <EveEntityAvatar
-                  entityId={row.original.contact_id}
-                  category={row.original.contact_type}
-                  size="sm"
-                />
-              </StandingIndicator>
-              <EveEntityAnchor
-                size="sm"
-                entityId={row.original.contact_id}
-                category={row.original.contact_type}
-              >
-                <EveEntityName
-                  entityId={row.original.contact_id}
-                  category={row.original.contact_type}
-                />
-              </EveEntityAnchor>
-            </Group>
-          ),
+          Cell: ContactNameCell,
         },
         {
           id: "isWatched",
           header: "Watchlist",
           accessorFn: (row) => row.is_watched ?? false,
           filterVariant: "checkbox",
-          Cell: ({ cell }) =>
-            cell.getValue<boolean>() ? (
-              <Badge variant="filled" size="xs">
-                watched
-              </Badge>
-            ) : null,
+          Cell: ContactWatchedCell,
         },
         {
           id: "isBlocked",
           header: "Blocked",
           accessorKey: "is_blocked",
-          Cell: ({ cell }) => {
-            const isBlocked = cell.getValue<boolean | undefined>();
-            if (isBlocked !== undefined) {
-              return (
-                <Text size="sm" c="dimmed" fs="italic">
-                  Unknown
-                </Text>
-              );
-            }
-            return isBlocked ? "Yes" : "No";
-          },
+          Cell: ContactBlockedCell,
         },
         {
           id: "labels",
@@ -146,9 +150,7 @@ export const ContactsDataTable = memo(
             max: 10,
             step: 0.1,
           },
-          Cell: ({ cell }) => (
-            <StandingsBadge standing={cell.getValue<number>()} />
-          ),
+          Cell: ContactStandingsCell,
         },
       ],
       [labelName],

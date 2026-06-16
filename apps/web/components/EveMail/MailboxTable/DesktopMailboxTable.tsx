@@ -3,22 +3,20 @@ import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
 import {
-  useCharacterMailingLists,
-  useCharacterMailLabels,
-} from "@jitaspace/hooks";
-import {
-  DateHoverCard,
   EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
-  FormattedDateText,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import {
+  useCharacterMailingLists,
+  useCharacterMailLabels,
+} from "@jitaspace/hooks";
+import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
+import type { MailboxTableProps } from "~/components/EveMail";
 import { EveMailSenderCard } from "~/components/Card";
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { LabelName } from "~/components/Text";
-
-import type { MailboxTableProps } from "~/components/EveMail";
 import { MessageMenu } from "../MessageMenu";
 
 export const DesktopMailboxTable = ({

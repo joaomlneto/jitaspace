@@ -1,35 +1,46 @@
 "use client";
 
-import { useCharacter, useSelectedCharacter } from "@jitaspace/hooks";
-import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
-import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
-  AllianceAvatar,
+  Anchor,
+  Badge,
+  Button,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import { IconExternalLink } from "@tabler/icons-react";
+
+import {
   AllianceName,
-  CharacterAvatar,
   CharacterName,
-  CorporationAvatar,
   CorporationName,
-  DateHoverCard,
-  FormattedDateText,
   SolarSystemAnchor,
   SolarSystemName,
   StationAnchor,
   StationName,
   TypeAnchor,
+  TypeName,
+} from "@jitaspace/eve-components";
+import { useCharacter, useSelectedCharacter } from "@jitaspace/hooks";
+import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
+import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
+import {
+  AllianceAvatar,
+  CharacterAvatar,
+  CorporationAvatar,
+  DateHoverCard,
+  FormattedDateText,
   TypeAvatar,
-  TypeName
 } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { StationAvatar } from "~/components/Avatar";
-import { BloodlineName, RaceName } from "~/components/Text";
-import { Anchor, Badge, Button, Container, Group, Stack, Text, Title } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-
 import { MailMessageViewer } from "~/components/EveMail";
+import { BloodlineName, RaceName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();
@@ -50,6 +61,13 @@ export default function Page() {
     return null;
   }
 
+  let npcBadgeLabel: string;
+  if (character?.type === "agent") {
+    npcBadgeLabel = character.isResearchAgent ? "Research Agent" : "Agent";
+  } else {
+    npcBadgeLabel = "NPC";
+  }
+
   return (
     <Container size="sm">
       <Stack>
@@ -58,15 +76,7 @@ export default function Page() {
           <Title order={3}>
             <CharacterName span characterId={characterId} />
           </Title>
-          {character?.isNpc && (
-            <Badge>
-              {character.type === "agent"
-                ? character.isResearchAgent
-                  ? "Research Agent"
-                  : "Agent"
-                : "NPC"}
-            </Badge>
-          )}
+          {character?.isNpc && <Badge>{npcBadgeLabel}</Badge>}
           {selectedCharacter && (
             <OpenInformationWindowActionIcon
               characterId={selectedCharacter.characterId}

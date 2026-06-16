@@ -13,8 +13,8 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import { ConstellationName, RegionName } from "@jitaspace/eve-components";
 import { useRegion } from "@jitaspace/hooks";
-import { ConstellationName, RegionName } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
 

@@ -7,6 +7,6 @@ import { AuthenticatedCharacterTokenDetailsPanel } from "~/components/Auth";
 
 export function SsoTokenModal({
   innerProps,
-}: ContextModalProps<AuthenticatedCharacterTokenDetailsPanelProps>) {
+}: Readonly<ContextModalProps<AuthenticatedCharacterTokenDetailsPanelProps>>) {
   return <AuthenticatedCharacterTokenDetailsPanel {...innerProps} />;
 }

@@ -16,6 +16,7 @@ publicHoistPattern:
 strictPeerDependencies: false
 enablePrePostScripts: true
 allowBuilds:
+  '@depot/cli': false
   '@kubb/cli': true
   '@prisma/client': true
   '@prisma/engines': true

@@ -9,6 +9,8 @@ import "@mantine/carousel/styles.css";
 import "@mantine/spotlight/styles.css";
 import "@mantine/nprogress/styles.css";
 import "mantine-react-table/styles.css";
+import "mantine-datatable/styles.css";
+import "./globals.css";
 
 import type { Viewport } from "next";
 import type { ReactNode } from "react";
@@ -30,6 +32,7 @@ import { MainLayout } from "~/layouts";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
 import { DEFAULT_ESI_ACCEPT_LANGUAGE } from "~/lib/preferences";
 import { AppMantineProvider } from "./mantine-provider";
+import { splashScreenLink, splashScreens } from "./splashScreens";
 
 const APP_NAME = "JitaSpace";
 const APP_DEFAULT_TITLE = "JitaSpace";
@@ -50,7 +53,9 @@ export const metadata = {
   description: APP_DESCRIPTION,
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    // black-translucent lets the web app draw behind the iOS status bar so the
+    // dark header extends edge-to-edge (paired with viewport-fit=cover below).
+    statusBarStyle: "black-translucent",
     title: APP_DEFAULT_TITLE,
   },
   formatDetection: {
@@ -85,7 +90,10 @@ export const metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#9bb4d0",
+  // Matches the manifest theme_color and the dark app header so the installed
+  // PWA title bar (and mobile status bar) blend with the UI. The runtime
+  // theme-color meta tag takes precedence over the manifest, so keep them in sync.
+  themeColor: "#04070c",
 };
 
 export default function RootLayout({
@@ -100,6 +108,17 @@ export default function RootLayout({
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
         />
+        {splashScreens.map((screen) => {
+          const { href, media } = splashScreenLink(screen);
+          return (
+            <link
+              key={screen.name}
+              rel="apple-touch-startup-image"
+              media={media}
+              href={href}
+            />
+          );
+        })}
       </head>
       <body>
         <Script

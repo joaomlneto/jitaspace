@@ -31,6 +31,7 @@ import {
 import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
+import { EveIconAvatar, TypeAnchor, TypeName } from "@jitaspace/eve-components";
 import {
   useFuzzworkTypeMarketStats,
   useMarketPrices,
@@ -46,13 +47,11 @@ import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   CategoryAnchor,
   DogmaAttributeAnchor,
+  DogmaAttributeValue,
   DogmaEffectAnchor,
-  EveIconAvatar,
   GroupAnchor,
   ISKAmount,
   MarketGroupAnchor,
-  TypeAnchor,
-  TypeName,
 } from "@jitaspace/ui";
 
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
@@ -81,6 +80,9 @@ const notAvailableText = "Not available";
 /** The Forge — the region containing Jita, EVE's main trade hub. */
 const THE_FORGE_REGION_ID = 10000002;
 
+/** Inventory category for ship hulls — used to gate ship-only external links. */
+const SHIP_CATEGORY_ID = 6;
+
 /** Image variations that look good rendered large (vs. small square icons). */
 const LARGE_IMAGE_VARIATIONS = new Set(["render", "bp", "bpc"]);
 
@@ -100,25 +102,26 @@ interface MarketPriceEntry {
   adjusted_price?: number;
 }
 
-const booleanBadge = (value: boolean | null | undefined) => (
-  <Badge
-    color={
-      value === undefined || value === null ? "gray" : value ? "teal" : "red"
-    }
-    variant="light"
-  >
-    {value === undefined || value === null ? "Unknown" : value ? "Yes" : "No"}
-  </Badge>
-);
-
-/** Turn ASCII unit shorthand from the SDE into nicer typography (m3 -> m³). */
-const prettifyUnitSymbol = (symbol?: string): string | undefined =>
-  symbol
-    ? symbol
-        .replaceAll(/m3/gi, "m³")
-        .replaceAll("^3", "³")
-        .replaceAll("^2", "²")
-    : undefined;
+const booleanBadge = (value: boolean | null | undefined) => {
+  const isUnknown = value === undefined || value === null;
+  let color: string;
+  if (isUnknown) {
+    color = "gray";
+  } else {
+    color = value ? "teal" : "red";
+  }
+  let label: string;
+  if (isUnknown) {
+    label = "Unknown";
+  } else {
+    label = value ? "Yes" : "No";
+  }
+  return (
+    <Badge color={color} variant="light">
+      {label}
+    </Badge>
+  );
+};
 
 /** Locale-format a number, keeping useful precision for small fractions. */
 const formatNumber = (value: number): string => {
@@ -129,37 +132,6 @@ const formatNumber = (value: number): string => {
   if (abs < 1) maximumFractionDigits = 4;
   if (abs < 0.001) maximumFractionDigits = 6;
   return value.toLocaleString(undefined, { maximumFractionDigits });
-};
-
-/**
- * Format a dogma attribute value the way the EVE client does, applying the
- * well-known unit transforms (resistances, percentages, multipliers) and
- * otherwise appending the unit symbol. Transforms are documented in the SDE
- * unit descriptions and verified against in-game values.
- */
-const formatAttributeValue = (value: number, unit?: UnitInfo): string => {
-  switch (unit?.unitId) {
-    // Inverse Absolute Percent — resistances. 0.0 => 100%, 1.0 => 0%.
-    case 108:
-      return `${formatNumber((1 - value) * 100)}%`;
-    // Absolute Percent. 0.0 => 0%, 1.0 => 100%.
-    case 127:
-      return `${formatNumber(value * 100)}%`;
-    // Modifier Percent — multiplier shown as a signed %. 1.1 => +10%, 0.9 => -10%.
-    case 109: {
-      const percent = (value - 1) * 100;
-      return `${percent > 0 ? "+" : ""}${formatNumber(percent)}%`;
-    }
-    // Boolean flag.
-    case 137:
-      return value >= 1 ? "Yes" : "No";
-    default: {
-      const symbol = prettifyUnitSymbol(unit?.symbol);
-      if (!symbol) return formatNumber(value);
-      if (symbol === "%") return `${formatNumber(value)}%`;
-      return `${formatNumber(value)} ${symbol}`;
-    }
-  }
 };
 
 function SectionHeading({
@@ -266,9 +238,14 @@ function AttributeValue({
       );
     default:
       return (
-        <Text ff="monospace" fw={600} c="eve.2">
-          {formatAttributeValue(value, unit)}
-        </Text>
+        <DogmaAttributeValue
+          value={value}
+          unitId={unit?.unitId}
+          unitSymbol={unit?.symbol}
+          ff="monospace"
+          fw={600}
+          c="eve.2"
+        />
       );
   }
 }
@@ -277,7 +254,7 @@ export default function TypePage({
   typeId,
   typeName,
   typeDescription,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const character = useSelectedCharacter();
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();
@@ -614,6 +591,18 @@ export default function TypePage({
                 >
                   EVE Tycoon
                 </Button>
+                {categoryId === SHIP_CATEGORY_ID && (
+                  <Button
+                    component={Link}
+                    href={`https://eveworkbench.com/fits?ship=${typeId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="xs"
+                    leftSection={<IconExternalLink size={14} />}
+                  >
+                    EVE Workbench
+                  </Button>
+                )}
               </Group>
             </Stack>
           </Group>

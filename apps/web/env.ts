@@ -12,16 +12,38 @@ const server = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string(),
 
+  /**
+   * Change-history database (the eve-builds CockroachDB, `history` schema),
+   * read by @jitaspace/db-history. Optional so the rest of the app builds
+   * without it; the /history pages need it set to return data.
+   */
+  HISTORY_DATABASE_URL: z.string().url().optional(),
+  HISTORY_DATABASE_SCHEMA: z.string().optional(),
+
   EVE_CLIENT_ID: z.string(),
   EVE_CLIENT_SECRET: z.string(),
 
   INNGEST_SIGNING_KEY: z.string().min(1),
+  /**
+   * Whether the Inngest serve route (`/api/inngest`) is live. Inngest has been
+   * superseded by Trigger.dev; defaults off so the same jobs don't run on both
+   * platforms. Set to "true" to re-enable Inngest (rollback).
+   */
+  INNGEST_ENABLED: z.enum(["true", "false"]).optional(),
   /**
    * Overrides the Inngest REST API base URL used by the status endpoint
    * (defaults to https://api.inngest.com in production and the local
    * `inngest dev` server otherwise).
    */
   INNGEST_BASE_URL: z.string().url().optional(),
+  /**
+   * Trigger.dev secret key (tr_prod_… / tr_dev_…) used by the status
+   * dashboard's runs.list calls. Optional: the dashboard degrades to an
+   * "unavailable" state when unset.
+   */
+  TRIGGER_SECRET_KEY: z.string().optional(),
+  /** Overrides the Trigger.dev API base URL (defaults to https://api.trigger.dev). */
+  TRIGGER_API_URL: z.string().url().optional(),
   CRON_SECRET: z.string().min(16),
 
   SKIP_BUILD_STATIC_GENERATION: z.string(),
@@ -54,10 +76,15 @@ const processEnv = {
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   DATABASE_URL: process.env.DATABASE_URL,
   REDIS_URL: process.env.REDIS_URL,
+  HISTORY_DATABASE_URL: process.env.HISTORY_DATABASE_URL,
+  HISTORY_DATABASE_SCHEMA: process.env.HISTORY_DATABASE_SCHEMA,
   EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
   EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
   INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
+  INNGEST_ENABLED: process.env.INNGEST_ENABLED,
   INNGEST_BASE_URL: process.env.INNGEST_BASE_URL,
+  TRIGGER_SECRET_KEY: process.env.TRIGGER_SECRET_KEY,
+  TRIGGER_API_URL: process.env.TRIGGER_API_URL,
   CRON_SECRET: process.env.CRON_SECRET,
   SKIP_BUILD_STATIC_GENERATION: process.env.SKIP_BUILD_STATIC_GENERATION,
   NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,

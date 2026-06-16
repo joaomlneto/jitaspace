@@ -48,7 +48,7 @@ export function useCharacterContacts(characterId: number) {
             getCharactersCharacterIdContacts(
               characterId ?? 0,
               {
-                page: pageParam as number,
+                page: pageParam,
               },
               { ...authHeaders },
             ),
