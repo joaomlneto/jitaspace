@@ -1,7 +1,7 @@
 import { defineJob } from "../core";
 
 export interface BootstrapDatabaseEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const bootstrapDatabase = defineJob<
@@ -42,6 +42,78 @@ export const bootstrapDatabase = defineJob<
     await ctx.invoke("scrape-esi-npc-corporations", {});
     await ctx.invoke("scrape-sde-agents", {});
     await ctx.invoke("scrape-esi-loyalty-store-offers", {});
+
+    // Direct SDE-archive ingest pipeline. These jobs coexist with the scrapers
+    // above (the diff machinery only writes the columns each job owns, so SDE
+    // and ESI never clobber each other) and also add the tables the scrapers
+    // don't cover (celestials, blueprints, certificates, skins, metaGroups,
+    // contraband, the planetary / dogma reference tables, etc.). Ordered so the
+    // block is FK-consistent on its own: graphics/icons/marketGroups before
+    // types; regions → constellations → solarSystems → celestials; parents
+    // before their child tables.
+    await ctx.invoke("ingest-sde-graphics", {});
+    await ctx.invoke("ingest-sde-icons", {});
+    await ctx.invoke("ingest-sde-market-groups", {});
+    await ctx.invoke("ingest-sde-meta-groups", {});
+    await ctx.invoke("ingest-sde-categories", {});
+    await ctx.invoke("ingest-sde-groups", {});
+    await ctx.invoke("ingest-sde-dogma-attribute-categories", {});
+    await ctx.invoke("ingest-sde-dogma-units", {});
+    await ctx.invoke("ingest-sde-dogma-attributes", {});
+    await ctx.invoke("ingest-sde-dogma-effects", {});
+    await ctx.invoke("ingest-sde-agent-types", {});
+    await ctx.invoke("ingest-sde-station-services", {});
+    await ctx.invoke("ingest-sde-npc-corporation-divisions", {});
+    await ctx.invoke("ingest-sde-station-operations", {});
+
+    await ctx.invoke("ingest-sde-types", {});
+    await ctx.invoke("ingest-sde-factions", {});
+    await ctx.invoke("ingest-sde-type-dogma", {});
+    await ctx.invoke("ingest-sde-type-materials", {});
+    await ctx.invoke("ingest-sde-type-bonus", {});
+    await ctx.invoke("ingest-sde-type-lists", {});
+    await ctx.invoke("ingest-sde-compressible-types", {});
+    await ctx.invoke("ingest-sde-blueprints", {});
+    await ctx.invoke("ingest-sde-certificates", {});
+    await ctx.invoke("ingest-sde-masteries", {});
+    await ctx.invoke("ingest-sde-skin-materials", {});
+    await ctx.invoke("ingest-sde-skins", {});
+    await ctx.invoke("ingest-sde-skin-licenses", {});
+    await ctx.invoke("ingest-sde-contraband-types", {});
+    await ctx.invoke("ingest-sde-control-tower-resources", {});
+    await ctx.invoke("ingest-sde-dynamic-item-attributes", {});
+    await ctx.invoke("ingest-sde-dbuff-collections", {});
+    await ctx.invoke("ingest-sde-sovereignty-upgrades", {});
+
+    await ctx.invoke("ingest-sde-races", {});
+    await ctx.invoke("ingest-sde-bloodlines", {});
+    await ctx.invoke("ingest-sde-ancestries", {});
+
+    await ctx.invoke("ingest-sde-regions", {});
+    await ctx.invoke("ingest-sde-constellations", {});
+    await ctx.invoke("ingest-sde-solar-systems", {});
+    await ctx.invoke("ingest-sde-stars", {});
+    await ctx.invoke("ingest-sde-stargates", {});
+    await ctx.invoke("ingest-sde-planets", {});
+    await ctx.invoke("ingest-sde-moons", {});
+    await ctx.invoke("ingest-sde-asteroid-belts", {});
+    await ctx.invoke("ingest-sde-stations", {});
+    await ctx.invoke("ingest-sde-map-secondary-suns", {});
+    await ctx.invoke("ingest-sde-planet-resources", {});
+    await ctx.invoke("ingest-sde-planet-schematics", {});
+
+    await ctx.invoke("ingest-sde-agents-in-space", {});
+
+    await ctx.invoke("ingest-sde-corporation-activities", {});
+    await ctx.invoke("ingest-sde-mercenary-tactical-operations", {});
+    await ctx.invoke("ingest-sde-freelance-job-schemas", {});
+    await ctx.invoke("ingest-sde-dungeons", {});
+    await ctx.invoke("ingest-sde-clone-grades", {});
+    await ctx.invoke("ingest-sde-character-attributes", {});
+    await ctx.invoke("ingest-sde-character-titles", {});
+    await ctx.invoke("ingest-sde-archetypes", {});
+    await ctx.invoke("ingest-sde-landmarks", {});
+    await ctx.invoke("ingest-sde-translation-languages", {});
 
     // Fire-and-forget: kick off the full wars backfill without blocking.
     await ctx.send("scrape-esi-wars", { fetchAllPages: true });

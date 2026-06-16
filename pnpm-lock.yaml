@@ -566,6 +566,9 @@ importers:
       '@jitaspace/sde-client':
         specifier: workspace:*
         version: link:../sde-client
+      '@jitaspace/sde-utils':
+        specifier: workspace:*
+        version: link:../sde-utils
       axios:
         specifier: ^1.16.1
         version: 1.16.1

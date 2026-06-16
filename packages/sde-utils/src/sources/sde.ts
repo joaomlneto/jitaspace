@@ -37,6 +37,7 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "categories.yaml": addId("categoryID"),
   "certificates.yaml": addId("certificateID"),
   "characterAttributes.yaml": addId("attributeID"),
+  "characterTitles.yaml": noTransform("characterTitleID", "string"),
   "cloneGrades.yaml": addId("cloneGradeID"),
   "compressibleTypes.yaml": addId("typeID"),
   "contrabandTypes.yaml": addId("typeID"),

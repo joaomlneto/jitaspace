@@ -13,6 +13,17 @@ jest.mock("../db", () => ({ prisma: {}, Prisma: {} }));
 jest.mock("../chat", () => ({ postUpdateCard: jest.fn() }));
 jest.mock("@jitaspace/esi-client", () => ({}));
 jest.mock("@jitaspace/sde-client", () => ({}));
+// sde-utils' barrel re-exports with `.js` extensions (NodeNext ESM), which the
+// Jest resolver can't map back to the `.ts` source. The handlers only need it at
+// runtime, so stub the exports the job modules import at load time.
+jest.mock("@jitaspace/sde-utils", () => ({
+  downloadFile: jest.fn(),
+  unzipSde: jest.fn(),
+  SDE_DOWNLOAD_URL: "https://example.test/sde.zip",
+  ensureSdePresentAndExtracted: jest.fn(),
+  loadFile: jest.fn(),
+  sdeInputFiles: {},
+}));
 // p-limit is ESM-only and only used inside handlers, not in the registry config.
 jest.mock("p-limit", () => ({
   __esModule: true,
