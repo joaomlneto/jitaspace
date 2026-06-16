@@ -18,9 +18,10 @@ const SDE_ARCHIVE_FILENAME = "sde.zip";
 /**
  * Download the EVE Online Static Data Export (SDE) archive and extract it.
  *
- * Scaffold only: it downloads + extracts into a temporary directory, reports
- * what it found, and cleans up. Downstream processing (parsing the YAML,
- * upserting into the DB, …) is not wired up yet — see the TODO in the handler.
+ * A standalone download/extract probe: it downloads + extracts into a temporary
+ * directory, reports what it found, and cleans up. It does not hand the files to
+ * downstream processing — each `ingest-sde-*` job downloads + parses the archive
+ * itself, so this exists to validate (and time) the download/extract path.
  *
  * The whole download/extract runs inside a single `ctx.run` step on purpose:
  * the work writes to an ephemeral temp directory, and on the Inngest adapter any
@@ -63,11 +64,10 @@ export const downloadAndExtractSde = defineJob<
           extractedFiles,
         });
 
-        // TODO: hand the extracted SDE in `extractDir` off to downstream
-        // processing here (parse the YAML files, upsert into the DB, …) before
-        // the temporary working directory is removed in the `finally` below.
-        // Runs execute in an ephemeral container, so the files do not outlive
-        // this handler.
+        // The extracted files are not handed downstream here — each
+        // `ingest-sde-*` job downloads + parses the archive independently. Runs
+        // execute in an ephemeral container, so the files do not outlive this
+        // handler (the working directory is removed in the `finally` below).
 
         return { zipBytes, extractedFiles };
       } finally {

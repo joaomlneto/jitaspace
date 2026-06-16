@@ -94,6 +94,19 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
               excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
             );
 
+          const updateOneStation = (
+            entry: Omit<
+              Awaited<ReturnType<typeof prisma.station.findMany>>[number],
+              "createdAt" | "updatedAt"
+            >,
+          ) =>
+            limit(() =>
+              prisma.station.update({
+                data: entry,
+                where: { stationId: entry.stationId },
+              }),
+            );
+
           const stationChanges = await updateTable({
             fetchLocalEntries: async () =>
               prisma.station
@@ -124,16 +137,7 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
                 },
               }),
             batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.station.update({
-                      data: entry,
-                      where: { stationId: entry.stationId },
-                    }),
-                  ),
-                ),
-              ),
+              Promise.all(entries.map(updateOneStation)),
             idAccessor: (e) => e.stationId,
           });
 

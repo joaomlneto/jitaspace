@@ -64,19 +64,20 @@ export async function ingestSdeTable<
   const managedKeys = new Set(sample ? Object.keys(sample) : []);
   const ids = remote.map((row) => row[idField] as number);
 
+  // Strip a local row down to only the columns this file owns.
+  const toManagedRow = (row: Record<string, unknown>): Row =>
+    Object.fromEntries(
+      Object.entries(row).filter(([key]) => managedKeys.has(key)),
+    ) as Row;
+
   return updateTable<Row, number>({
     idAccessor: (row) => row[idField] as number,
-    fetchLocalEntries: async () =>
-      delegate
-        .findMany({ where: { [idField]: { in: ids } } })
-        .then((rows) =>
-          rows.map(
-            (row) =>
-              Object.fromEntries(
-                Object.entries(row).filter(([key]) => managedKeys.has(key)),
-              ) as Row,
-          ),
-        ),
+    fetchLocalEntries: async () => {
+      const rows = await delegate.findMany({
+        where: { [idField]: { in: ids } },
+      });
+      return rows.map(toManagedRow);
+    },
     fetchRemoteEntries: () => Promise.resolve(remote),
     batchCreate: (rows) => limit(() => delegate.createMany({ data: rows })),
     batchUpdate: (rows) =>

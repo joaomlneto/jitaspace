@@ -19,9 +19,7 @@ export function plainString(value: unknown): string | null {
 }
 
 /** A required numeric SDE field (id / foreign key). */
-export function requiredNumber(value: unknown): number {
-  return Number(value);
-}
+export const requiredNumber: (value: unknown) => number = Number;
 
 /** An optional numeric SDE field — null when absent. */
 export function optionalNumber(value: unknown): number | null {
@@ -35,9 +33,7 @@ export function requiredBigInt(value: unknown): bigint {
 }
 
 /** A required boolean SDE field. */
-export function requiredBoolean(value: unknown): boolean {
-  return Boolean(value);
-}
+export const requiredBoolean: (value: unknown) => boolean = Boolean;
 
 /** An optional boolean SDE field — null when absent. */
 export function optionalBoolean(value: unknown): boolean | null {

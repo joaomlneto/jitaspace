@@ -35,6 +35,15 @@ type ActivityType = (typeof ACTIVITY_TYPES)[number];
 const isActivity = (name: string): name is ActivityType =>
   (ACTIVITY_TYPES as readonly string[]).includes(name);
 
+/** Map the `{ typeID, … }` entries whose type is real, dropping dangling refs. */
+function guardedRows<T extends { typeID: number }, R>(
+  items: T[] | undefined,
+  typeIds: Set<number>,
+  toRow: (item: T) => R,
+): R[] {
+  return (items ?? []).filter((item) => typeIds.has(item.typeID)).map(toRow);
+}
+
 export const ingestSdeBlueprints = defineJob<
   IngestSdeBlueprintsEventPayload["data"]
 >({
@@ -74,37 +83,34 @@ export const ingestSdeBlueprints = defineJob<
           time: requiredNumber(body.time),
           isDeleted: false,
         });
-        for (const m of body.materials ?? []) {
-          if (!typeIds.has(m.typeID)) continue;
-          materials.push({
+        materials.push(
+          ...guardedRows(body.materials, typeIds, (m) => ({
             blueprintTypeId,
             activity: name,
             materialTypeId: m.typeID,
             quantity: requiredNumber(m.quantity),
             isDeleted: false,
-          });
-        }
-        for (const p of body.products ?? []) {
-          if (!typeIds.has(p.typeID)) continue;
-          products.push({
+          })),
+        );
+        products.push(
+          ...guardedRows(body.products, typeIds, (p) => ({
             blueprintTypeId,
             activity: name,
             productTypeId: p.typeID,
             quantity: requiredNumber(p.quantity),
             probability: optionalNumber(p.probability),
             isDeleted: false,
-          });
-        }
-        for (const s of body.skills ?? []) {
-          if (!typeIds.has(s.typeID)) continue;
-          skills.push({
+          })),
+        );
+        skills.push(
+          ...guardedRows(body.skills, typeIds, (s) => ({
             blueprintTypeId,
             activity: name,
             skillTypeId: s.typeID,
             level: requiredNumber(s.level),
             isDeleted: false,
-          });
-        }
+          })),
+        );
       }
     }
 
