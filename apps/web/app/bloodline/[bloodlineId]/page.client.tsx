@@ -16,7 +16,7 @@ import { BloodlineName, RaceName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();
-  const rawBloodlineId = params?.bloodlineId;
+  const rawBloodlineId = params.bloodlineId;
   const bloodlineId = Number(
     typeof rawBloodlineId === "string" ? rawBloodlineId : rawBloodlineId?.[0],
   );
@@ -85,7 +85,7 @@ export default function Page() {
                   .toUpperCase()
                   .concat((attributeName as string).substring(1))}
               </Text>
-              <Text>{bloodline?.[attributeName]}</Text>
+              <Text>{bloodline[attributeName]}</Text>
             </Group>
           ))}
       </Stack>

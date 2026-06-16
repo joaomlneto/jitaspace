@@ -83,7 +83,7 @@ export function EveMailComposeForm({
         },
         authHeaders,
       );
-      if (result.status === HttpStatusCode.Created) {
+      if (result.status === Number(HttpStatusCode.Created)) {
         showNotification({
           message: "Message sent",
         });
@@ -148,7 +148,7 @@ export function EveMailComposeForm({
                 },
                 authHeaders,
               );
-              if (result.status === HttpStatusCode.Created) {
+              if (result.status === Number(HttpStatusCode.Created)) {
                 showNotification({
                   message: `Message sent. You were charged ${details.totalCost} ISK for CSPA.`,
                 });

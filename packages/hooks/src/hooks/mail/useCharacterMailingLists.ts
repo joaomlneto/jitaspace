@@ -11,7 +11,7 @@ export function useCharacterMailingLists(characterId: number) {
   });
 
   return useGetCharactersCharacterIdMailLists(
-    characterId ?? 1,
+    characterId,
     { ...authHeaders },
     {
       query: {

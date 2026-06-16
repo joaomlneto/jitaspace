@@ -1,7 +1,7 @@
 "use client";
 
 import type { BreadcrumbsProps, TextProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import { Breadcrumbs } from "@mantine/core";
 
 import {

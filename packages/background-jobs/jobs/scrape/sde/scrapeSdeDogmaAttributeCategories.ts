@@ -28,7 +28,7 @@ const fetchDogmaAttributeCategory = (
     return {
       attributeCategoryId: attributeCategoryId,
       name: dogmaAttributeCategory.name,
-      description: dogmaAttributeCategory.description ?? null,
+      description: dogmaAttributeCategory.description,
       isDeleted: false,
     };
   });

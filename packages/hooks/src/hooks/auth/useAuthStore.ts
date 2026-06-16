@@ -44,7 +44,7 @@ export interface SsoAuthState {
 
 export const useAuthStore = create(
   persist<SsoAuthState>(
-    (set, get) => ({
+    (set) => ({
       characters: {},
       selectedCharacter: null,
       addCharacter: async ({

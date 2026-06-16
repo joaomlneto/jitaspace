@@ -8,8 +8,6 @@ import {
   Center,
   Container,
   Group,
-  Loader,
-  Text,
   Title,
   UnstyledButton,
   useMantineTheme,
@@ -110,12 +108,6 @@ export function HeaderWithMegaMenus({
             </Group>
 
             <Group visibleFrom="sm">
-              {false && (
-                <Group>
-                  <Loader size="sm" />
-                  <Text>Loading session…</Text>
-                </Group>
-              )}
               {characterIds.length > 0 && <UserButton />}
               {characterIds.length === 0 && (
                 <LoginWithEveOnlineButton

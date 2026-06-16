@@ -41,8 +41,8 @@ export const CharacterLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setCharacterId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setCharacterId(href);
   };
 
   const handleClose = () => {
@@ -52,16 +52,18 @@ export const CharacterLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    characterId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:1373//${characterId}`,
-          })
-          .run();
+    if (characterId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:1373//${characterId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -86,7 +88,7 @@ export const CharacterLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || CharacterLinkIcon}
+          icon={icon ?? CharacterLinkIcon}
           aria-label="Link Character"
           title="Link Character"
           onClick={handleOpen}

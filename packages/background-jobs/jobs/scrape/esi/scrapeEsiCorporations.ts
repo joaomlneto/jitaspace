@@ -26,7 +26,7 @@ const fetchCharacterWithId = (characterId: number) =>
 
 export interface ScrapeCorporationsEventPayload {
   data: {
-    corporationIds: number[];
+    corporationIds?: number[];
     batchSize?: number;
   };
 }
@@ -87,21 +87,23 @@ const processCorporationBatch = async (
             excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
           ),
         ),
-    fetchRemoteEntries: async () =>
-      characters.map((character) => ({
-        characterId: character.characterId,
-        birthday: new Date(character.birthday),
-        bloodlineId: character.bloodline_id,
-        corporationId: character.corporation_id,
-        description: character.description ?? null,
-        factionId: character.faction_id ?? null,
-        gender: character.gender,
-        name: character.name,
-        raceId: character.race_id,
-        securityStatus: character.security_status ?? null,
-        title: character.title ?? null,
-        isDeleted: false,
-      })),
+    fetchRemoteEntries: () =>
+      Promise.resolve(
+        characters.map((character) => ({
+          characterId: character.characterId,
+          birthday: new Date(character.birthday),
+          bloodlineId: character.bloodline_id,
+          corporationId: character.corporation_id,
+          description: character.description ?? null,
+          factionId: character.faction_id ?? null,
+          gender: character.gender,
+          name: character.name,
+          raceId: character.race_id,
+          securityStatus: character.security_status ?? null,
+          title: character.title ?? null,
+          isDeleted: false,
+        })),
+      ),
     batchCreate: (entries) =>
       limit(() =>
         prisma.character.createMany({
@@ -148,27 +150,29 @@ const processCorporationBatch = async (
             excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
           ),
         ),
-    fetchRemoteEntries: async () =>
-      thisBatchCorporations.map((corporation) => ({
-        corporationId: corporation.corporationId,
-        allianceId: corporation.alliance_id ?? null,
-        ceoId: corporation.ceo_id > 1 ? corporation.ceo_id : null,
-        creatorId: corporation.creator_id > 1 ? corporation.creator_id : null,
-        dateFounded: corporation.date_founded
-          ? new Date(corporation.date_founded)
-          : null,
-        description: corporation.description ?? null,
-        factionId: corporation.faction_id ?? null,
-        homeStationId: corporation.home_station_id ?? null,
-        memberCount: corporation.member_count,
-        name: corporation.name,
-        shares: corporation.shares ? BigInt(corporation.shares) : null,
-        taxRate: corporation.tax_rate ?? null,
-        ticker: corporation.ticker,
-        url: corporation.url ?? null,
-        warEligible: corporation.war_eligible ?? null,
-        isDeleted: false,
-      })),
+    fetchRemoteEntries: () =>
+      Promise.resolve(
+        thisBatchCorporations.map((corporation) => ({
+          corporationId: corporation.corporationId,
+          allianceId: corporation.alliance_id ?? null,
+          ceoId: corporation.ceo_id > 1 ? corporation.ceo_id : null,
+          creatorId: corporation.creator_id > 1 ? corporation.creator_id : null,
+          dateFounded: corporation.date_founded
+            ? new Date(corporation.date_founded)
+            : null,
+          description: corporation.description ?? null,
+          factionId: corporation.faction_id ?? null,
+          homeStationId: corporation.home_station_id ?? null,
+          memberCount: corporation.member_count,
+          name: corporation.name,
+          shares: corporation.shares ? BigInt(corporation.shares) : null,
+          taxRate: corporation.tax_rate,
+          ticker: corporation.ticker,
+          url: corporation.url ?? null,
+          warEligible: corporation.war_eligible ?? null,
+          isDeleted: false,
+        })),
+      ),
     batchCreate: (entries) =>
       limit(() =>
         prisma.corporation.createMany({
@@ -218,9 +222,9 @@ export const scrapeEsiCorporations = defineJob<
   retries: 5,
   handler: async (ctx) => {
     const batchSize = ctx.payload.batchSize ?? 1000;
-    const corporationIds: number[] = ctx.payload.corporationIds;
+    const corporationIds: number[] = ctx.payload.corporationIds ?? [];
 
-    if ((ctx.payload.corporationIds ?? []).length == 0)
+    if (corporationIds.length == 0)
       throw new NonRetriableError("Invalid corporationIds");
 
     // Split IDs in batches
@@ -239,9 +243,9 @@ export const scrapeEsiCorporations = defineJob<
     const results: BatchStepResult<StatsKey>[] = [];
     const limit = pLimit(20);
 
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, batch] of batches.entries()) {
       const result = await ctx.run(`Batch ${i + 1}/${batches.length}`, () =>
-        processCorporationBatch(batches[i]!, limit),
+        processCorporationBatch(batch, limit),
       );
       results.push(result);
     }

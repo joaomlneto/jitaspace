@@ -1,7 +1,7 @@
 "use client";
 
+import type { BreadcrumbsProps, TextProps } from "@mantine/core";
 import { memo } from "react";
-import { type BreadcrumbsProps, type TextProps } from "@mantine/core";
 
 import { SolarSystemBreadcrumbs as UISolarSystemBreadcrumbs } from "@jitaspace/eve-components";
 import { useConstellation, useSolarSystem } from "@jitaspace/hooks";

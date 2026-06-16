@@ -1,6 +1,6 @@
-import { type ESIScope } from "@jitaspace/esi-metadata";
+import type { ESIScope } from "@jitaspace/esi-metadata";
 
-export type EveSsoAccessTokenPayload = {
+export interface EveSsoAccessTokenPayload {
   scp: ESIScope[];
   jti: string;
   kid: string;
@@ -15,7 +15,7 @@ export type EveSsoAccessTokenPayload = {
   exp: number;
   iat: number;
   iss: string;
-};
+}
 
 export function getEveSsoAccessTokenPayload(
   token: string | undefined,

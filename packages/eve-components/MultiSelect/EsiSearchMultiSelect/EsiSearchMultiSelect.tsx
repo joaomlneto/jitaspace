@@ -1,6 +1,7 @@
 "use client";
 
-import React, { memo, useMemo, useState } from "react";
+import type React from "react";
+import { memo, useMemo, useState } from "react";
 import { Group, Loader, MultiSelect, Pill, rem } from "@mantine/core";
 import { useDebouncedValue, useUncontrolled } from "@mantine/hooks";
 
@@ -11,7 +12,7 @@ import { EveEntityAvatar } from "../../Avatar";
 import { EveEntityName } from "../../Text";
 import { EsiSearchMultiSelectItem } from "./EsiSearchMultiSelectItem";
 
-export type EsiSearchMultiSelectProps = {
+export interface EsiSearchMultiSelectProps {
   categories: EsiSearchCategory[];
   debounceTime?: number;
   value?: string[];
@@ -23,7 +24,7 @@ export type EsiSearchMultiSelectProps = {
   placeholder?: string;
   disabled?: boolean;
   readOnly?: boolean;
-};
+}
 
 const MIN_SEARCH_LENGTH = 3;
 const MAX_RESULTS_PER_CATEGORY = 100;

@@ -1,7 +1,7 @@
 "use client";
 
 import type { BreadcrumbsProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import Link from "next/link";
 import { Anchor, Breadcrumbs, Text } from "@mantine/core";
 
@@ -10,10 +10,10 @@ import { MarketGroupAnchor, MarketGroupName } from "@jitaspace/ui";
 import { TypeAnchor } from "../Anchor";
 import { TypeName } from "../Text";
 
-export type MarketGroupEntry = {
+export interface MarketGroupEntry {
   market_group_id: number;
   name: string;
-};
+}
 
 export type TypeMarketBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   typeId?: string | number;

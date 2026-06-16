@@ -1,17 +1,17 @@
 "use client";
 
 import type { AvatarGroupProps, AvatarProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import { Avatar, Skeleton, Tooltip } from "@mantine/core";
 
 import { CharacterAvatar } from "@jitaspace/ui";
 
 import { CharacterName } from "../Text";
 
-export type CalendarEventAttendee = {
+export interface CalendarEventAttendee {
   character_id?: number;
   event_response?: string;
-};
+}
 
 export type CalendarEventAttendeesAvatarGroupProps = AvatarProps & {
   attendees?: CalendarEventAttendee[];

@@ -5,7 +5,7 @@ import { Container, Stack, Text, Title } from "@mantine/core";
 
 export default function Page() {
   const params = useParams();
-  const rawContractId = params?.contractId;
+  const rawContractId = params.contractId;
   const contractId =
     typeof rawContractId === "string" ? rawContractId : rawContractId?.[0];
 

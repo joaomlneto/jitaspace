@@ -33,11 +33,17 @@ export const MarketGroupNavLink = memo(
 
     const childrenMarketGroups = useMemo(
       () =>
-        (marketGroup?.childrenMarketGroupIds ?? []).map(
-          (childMarketGroupId) => ({
-            marketGroupId: childMarketGroupId,
-            ...marketGroups[childMarketGroupId]!,
-          }),
+        (marketGroup?.childrenMarketGroupIds ?? []).flatMap(
+          (childMarketGroupId) => {
+            const childMarketGroup = marketGroups[childMarketGroupId];
+            if (!childMarketGroup) return [];
+            return [
+              {
+                marketGroupId: childMarketGroupId,
+                ...childMarketGroup,
+              },
+            ];
+          },
         ),
       [marketGroups, marketGroup],
     );

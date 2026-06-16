@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import {
   act,
@@ -140,15 +140,15 @@ describe("news", () => {
 
       await waitFor(() => expect(result.current.activeItems).toHaveLength(2));
 
-      act(() => result.current.dismiss("a"));
+      await act(() => result.current.dismiss("a"));
       await waitFor(() =>
-        expect(
-          result.current.activeItems.map((i: NewsItem) => i.id),
-        ).toEqual(["b"]),
+        expect(result.current.activeItems.map((i: NewsItem) => i.id)).toEqual([
+          "b",
+        ]),
       );
       expect(result.current.dismissedIds).toContain("a");
 
-      act(() => result.current.reset());
+      await act(() => result.current.reset());
       await waitFor(() => expect(result.current.activeItems).toHaveLength(2));
       expect(result.current.dismissedIds).toHaveLength(0);
     });

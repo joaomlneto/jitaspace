@@ -9,7 +9,7 @@ import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapePlanetsEventPayload {
   data: {
-    planetIds: number[];
+    planetIds?: number[];
     batchSize?: number;
   };
 }
@@ -49,14 +49,16 @@ const updatePlanetsBatch = (
             excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
           ),
         ),
-    fetchRemoteEntries: async () =>
-      thisBatchPlanets.map((planet) => ({
-        solarSystemId: planet.system_id,
-        planetId: planet.planet_id,
-        name: planet.name,
-        typeId: planet.type_id,
-        isDeleted: false,
-      })),
+    fetchRemoteEntries: () =>
+      Promise.resolve(
+        thisBatchPlanets.map((planet) => ({
+          solarSystemId: planet.system_id,
+          planetId: planet.planet_id,
+          name: planet.name,
+          typeId: planet.type_id,
+          isDeleted: false,
+        })),
+      ),
     batchCreate: (entries) =>
       limit(() =>
         prisma.planet.createMany({
@@ -96,35 +98,32 @@ export const scrapeEsiPlanets = defineJob<ScrapePlanetsEventPayload["data"]>({
   retries: 5,
   handler: async (ctx) => {
     const batchSize = ctx.payload.batchSize ?? 1000;
-    const planetIds: number[] = ctx.payload.planetIds;
+    const planetIds: number[] = ctx.payload.planetIds ?? [];
 
-    if ((ctx.payload.planetIds ?? []).length == 0)
+    if (planetIds.length == 0)
       throw new NonRetriableError("Invalid planetIds");
 
     // Split IDs in batches
-    const batches = await ctx.run("Fetch Solar System IDs", async () => {
+    const batches = await ctx.run("Fetch Solar System IDs", () => {
       planetIds.sort((a, b) => a - b);
 
       const numBatches = Math.ceil(planetIds.length / batchSize);
       const batchIds = (batchIndex: number) =>
         planetIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      return [...new Array(numBatches).keys()].map((batchId) =>
-        batchIds(batchId),
+      return Promise.resolve(
+        [...new Array(numBatches).keys()].map((batchId) => batchIds(batchId)),
       );
     });
 
     const results: BatchStepResult<StatsKey>[] = [];
     const limit = pLimit(20);
 
-    const moons: { moonId: number; planetId: number }[] = [];
-
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
           console.log(`starting batch ${i + 1}`);
           const stepStartTime = performance.now();
-          const thisBatchIds = batches[i]!;
 
           const thisBatchPlanets = await fetchPlanetsForBatch(
             thisBatchIds,

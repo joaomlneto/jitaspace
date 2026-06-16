@@ -1,6 +1,6 @@
 "use client";
 
-import { GetCorporationsCorporationIdQueryResponse } from "@jitaspace/esi-client";
+import type { GetCorporationsCorporationIdQueryResponse } from "@jitaspace/esi-client";
 
 export type Corporation = GetCorporationsCorporationIdQueryResponse;
 

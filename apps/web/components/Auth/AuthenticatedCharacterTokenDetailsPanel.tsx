@@ -22,7 +22,7 @@ export const AuthenticatedCharacterTokenDetailsPanel = ({
     if (character == null) {
       return null;
     }
-    return new Date(character?.accessTokenExpirationDate);
+    return new Date(character.accessTokenExpirationDate);
   }, [character?.accessTokenExpirationDate]);
 
   if (character == null) {

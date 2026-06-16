@@ -116,7 +116,7 @@ function makeItemFilter(sortedTypes: { typeId: number; name: string }[]) {
 // ---------------------------------------------------------------------------
 
 function lpCostSliderLabel(value: number) {
-  return value?.toLocaleString?.();
+  return value.toLocaleString();
 }
 
 function iskCostSliderLabel(value: number) {
@@ -184,7 +184,7 @@ function lpCostCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
 }
 
 function iskCostCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
-  return <ISKAmount inherit ta="right" amount={row.original.iskCost ?? 0} />;
+  return <ISKAmount inherit ta="right" amount={row.original.iskCost} />;
 }
 
 function requiredItemsCell({ row }: { row: MRT_Row<AugmentedOffer> }) {

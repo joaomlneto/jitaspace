@@ -36,7 +36,7 @@ export const CharacterButton = memo(
               <ConditionalWrapper
                 condition={showOnlineIndicator && characterId !== undefined}
                 wrapper={(children) => (
-                  <CharacterOnlineIndicator characterId={characterId!}>
+                  <CharacterOnlineIndicator characterId={characterId ?? 0}>
                     {children}
                   </CharacterOnlineIndicator>
                 )}

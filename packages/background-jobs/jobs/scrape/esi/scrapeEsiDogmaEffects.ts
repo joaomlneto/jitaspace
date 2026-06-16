@@ -133,12 +133,11 @@ export const scrapeEsiDogmaEffects = defineJob<
     const limit = pLimit(20);
 
     // update in batches
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
           const stepStartTime = performance.now();
-          const thisBatchIds = batches[i]!;
 
           const dogmaEffectsChanges = await updateDogmaEffectsBatch(
             thisBatchIds,

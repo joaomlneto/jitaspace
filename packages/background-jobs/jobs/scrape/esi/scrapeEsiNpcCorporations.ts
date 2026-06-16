@@ -12,7 +12,7 @@ import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRef
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeNpcCorporationsEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const scrapeEsiNpcCorporations = defineJob<
@@ -113,21 +113,23 @@ export const scrapeEsiNpcCorporations = defineJob<
               excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
             ),
           ),
-      fetchRemoteEntries: async () =>
-        characters.map((character) => ({
-          characterId: character.characterId,
-          birthday: new Date(character.birthday),
-          bloodlineId: character.bloodline_id,
-          corporationId: character.corporation_id,
-          description: character.description ?? null,
-          factionId: character.faction_id ?? null,
-          gender: character.gender,
-          name: character.name,
-          raceId: character.race_id,
-          securityStatus: character.security_status ?? null,
-          title: character.title ?? null,
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          characters.map((character) => ({
+            characterId: character.characterId,
+            birthday: new Date(character.birthday),
+            bloodlineId: character.bloodline_id,
+            corporationId: character.corporation_id,
+            description: character.description ?? null,
+            factionId: character.faction_id ?? null,
+            gender: character.gender,
+            name: character.name,
+            raceId: character.race_id,
+            securityStatus: character.security_status ?? null,
+            title: character.title ?? null,
+            isDeleted: false,
+          })),
+        ),
       batchCreate: (entries) =>
         limit(() =>
           prisma.character.createMany({
@@ -177,30 +179,32 @@ export const scrapeEsiNpcCorporations = defineJob<
               excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
             ),
           ),
-      fetchRemoteEntries: async () =>
-        npcCorporations.map((corporation) => ({
-          corporationId: corporation.corporationId,
-          allianceId: corporation.alliance_id ?? null,
-          ceoId: corporation.ceo_id,
-          creatorId: corporation.creator_id,
-          dateFounded: corporation.date_founded
-            ? new Date(corporation.date_founded)
-            : null,
-          description: corporation.description ?? null,
-          factionId: corporation.faction_id ?? null,
-          homeStationId:
-            (corporation?.home_station_id ?? 0) > 1
-              ? corporation.home_station_id
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          npcCorporations.map((corporation) => ({
+            corporationId: corporation.corporationId,
+            allianceId: corporation.alliance_id ?? null,
+            ceoId: corporation.ceo_id,
+            creatorId: corporation.creator_id,
+            dateFounded: corporation.date_founded
+              ? new Date(corporation.date_founded)
               : null,
-          memberCount: corporation.member_count,
-          name: corporation.name,
-          shares: corporation.shares ? BigInt(corporation.shares) : null,
-          taxRate: corporation.tax_rate ?? null,
-          ticker: corporation.ticker,
-          url: corporation.url ?? null,
-          warEligible: corporation.war_eligible ?? null,
-          isDeleted: false,
-        })),
+            description: corporation.description ?? null,
+            factionId: corporation.faction_id ?? null,
+            homeStationId:
+              (corporation.home_station_id ?? 0) > 1
+                ? corporation.home_station_id
+                : null,
+            memberCount: corporation.member_count,
+            name: corporation.name,
+            shares: corporation.shares ? BigInt(corporation.shares) : null,
+            taxRate: corporation.tax_rate,
+            ticker: corporation.ticker,
+            url: corporation.url ?? null,
+            warEligible: corporation.war_eligible ?? null,
+            isDeleted: false,
+          })),
+        ),
       batchCreate: (entries) =>
         limit(() =>
           prisma.corporation.createMany({

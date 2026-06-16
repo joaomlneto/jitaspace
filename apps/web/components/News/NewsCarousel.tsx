@@ -2,12 +2,10 @@
 
 import { Carousel } from "@mantine/carousel";
 
+import type { UseDismissedNewsOptions } from "./useDismissedNews";
 import { NewsBannerCard } from "./NewsBannerCard";
 import classes from "./NewsCarousel.module.css";
-import {
-  useDismissedNews,
-  type UseDismissedNewsOptions,
-} from "./useDismissedNews";
+import { useDismissedNews } from "./useDismissedNews";
 
 export type NewsCarouselProps = UseDismissedNewsOptions;
 

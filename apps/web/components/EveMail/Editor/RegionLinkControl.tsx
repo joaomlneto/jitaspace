@@ -38,8 +38,8 @@ export const RegionLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setRegionId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setRegionId(href);
   };
 
   const handleClose = () => {
@@ -49,16 +49,18 @@ export const RegionLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    regionId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:3//${regionId}`,
-          })
-          .run();
+    if (regionId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:3//${regionId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -83,7 +85,7 @@ export const RegionLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || RegionLinkIcon}
+          icon={icon ?? RegionLinkIcon}
           aria-label="Link Region"
           title="Link Region"
           onClick={handleOpen}

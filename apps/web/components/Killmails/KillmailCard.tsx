@@ -46,15 +46,15 @@ export const KillmailCard = memo(
         <Group>
           <Stack>
             <CharacterAvatar
-              characterId={data?.data.victim.character_id}
+              characterId={data.data.victim.character_id}
               size="lg"
             />
           </Stack>
           <Stack gap="xs">
-            <CharacterAnchor characterId={data?.data.victim.character_id}>
+            <CharacterAnchor characterId={data.data.victim.character_id}>
               <CharacterName
                 size="md"
-                characterId={data?.data.victim.character_id}
+                characterId={data.data.victim.character_id}
                 fw={700}
               />
             </CharacterAnchor>
@@ -62,7 +62,7 @@ export const KillmailCard = memo(
               <Group gap="xs">
                 <CorporationAvatar
                   size="xs"
-                  corporationId={data?.data.victim.corporation_id}
+                  corporationId={data.data.victim.corporation_id}
                 />
                 <CorporationAnchor
                   corporationId={data.data.victim.corporation_id}
@@ -91,11 +91,11 @@ export const KillmailCard = memo(
           </Stack>
           <Stack gap="xs">
             <Group gap="xs">
-              <TypeAvatar typeId={data?.data.victim.ship_type_id} size="sm" />
-              <TypeAnchor typeId={data?.data.victim.ship_type_id}>
+              <TypeAvatar typeId={data.data.victim.ship_type_id} size="sm" />
+              <TypeAnchor typeId={data.data.victim.ship_type_id}>
                 <TypeName
                   size="md"
-                  typeId={data?.data.victim.ship_type_id}
+                  typeId={data.data.victim.ship_type_id}
                   fw={700}
                 />
               </TypeAnchor>
@@ -126,13 +126,13 @@ export const KillmailCard = memo(
             </Group>
             <Group gap="xs">
               <SolarSystemSovereigntyAvatar
-                solarSystemId={data?.data.solar_system_id}
+                solarSystemId={data.data.solar_system_id}
                 size="sm"
               />
-              <SolarSystemAnchor solarSystemId={data?.data.solar_system_id}>
+              <SolarSystemAnchor solarSystemId={data.data.solar_system_id}>
                 <SolarSystemName
                   size="md"
-                  solarSystemId={data?.data.solar_system_id}
+                  solarSystemId={data.data.solar_system_id}
                   fw={700}
                 />
               </SolarSystemAnchor>

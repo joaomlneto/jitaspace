@@ -16,7 +16,7 @@ import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
 export default function Page() {
   const params = useParams();
-  const rawStarId = params?.starId;
+  const rawStarId = params.starId;
   const starId = Number(
     typeof rawStarId === "string" ? rawStarId : rawStarId?.[0],
   );

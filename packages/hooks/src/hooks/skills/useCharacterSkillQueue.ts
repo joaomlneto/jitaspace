@@ -10,7 +10,7 @@ export const useCharacterSkillQueue = (characterId: number) => {
     scopes: ["esi-skills.read_skillqueue.v1"],
   });
   return useGetCharactersCharacterIdSkillqueue(
-    characterId ?? 1,
+    characterId,
     { ...authHeaders },
     {
       query: {

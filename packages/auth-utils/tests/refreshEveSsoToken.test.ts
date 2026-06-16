@@ -21,7 +21,7 @@ describe("refreshEveSsoToken", () => {
       expires_in: 1199,
     });
     const fetchMock = jest.fn().mockResolvedValue({ ok: true, json });
-    global.fetch = fetchMock as unknown as typeof fetch;
+    global.fetch = fetchMock;
 
     const result = await refreshEveSsoToken(params);
 
@@ -37,7 +37,7 @@ describe("refreshEveSsoToken", () => {
       expires_in: 1199,
     });
     const fetchMock = jest.fn().mockResolvedValue({ ok: true, json });
-    global.fetch = fetchMock as unknown as typeof fetch;
+    global.fetch = fetchMock;
 
     await refreshEveSsoToken(params);
 
@@ -62,7 +62,7 @@ describe("refreshEveSsoToken", () => {
       ok: false,
       status: 401,
       statusText: "Unauthorized",
-    }) as unknown as typeof fetch;
+    });
 
     await expect(refreshEveSsoToken(params)).rejects.toThrow(
       "error refreshing access token",
@@ -77,7 +77,7 @@ describe("refreshEveSsoToken", () => {
       ok: false,
       status: 500,
       statusText: "Internal Server Error",
-    }) as unknown as typeof fetch;
+    });
 
     await expect(refreshEveSsoToken(params)).rejects.toThrow();
     expect(consoleSpy).toHaveBeenCalledTimes(1);

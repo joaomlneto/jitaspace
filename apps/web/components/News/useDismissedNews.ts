@@ -1,12 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { useLocalStorage } from "@mantine/hooks";
 
-import { newsItems, type NewsItem } from "~/config/news";
+import type { NewsItem } from "~/config/news";
+import { newsItems } from "~/config/news";
 
 /** Default localStorage key for dismissed news on the home page. */
 export const DEFAULT_NEWS_STORAGE_KEY = "jitaspace/dismissed-news";
+
+// `mounted` gate implemented without a setState-in-effect: the store never
+// emits, so the value is the client snapshot (`true`) after hydration and the
+// server snapshot (`false`) during SSR/prerender.
+const subscribeNever = (): (() => void) => () => undefined;
+const getMountedClientSnapshot = () => true;
+const getMountedServerSnapshot = () => false;
 
 export interface UseDismissedNewsOptions {
   /** Override the localStorage key (used to keep preview variants independent). */
@@ -66,8 +74,11 @@ export function useDismissedNews(
     defaultValue: [],
   });
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    subscribeNever,
+    getMountedClientSnapshot,
+    getMountedServerSnapshot,
+  );
 
   const dismiss = useCallback(
     (id: string) =>

@@ -39,8 +39,8 @@ export const ItemTypeLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setItemTypeId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setItemTypeId(href);
   };
 
   const handleClose = () => {
@@ -50,16 +50,18 @@ export const ItemTypeLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    itemTypeId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:${itemTypeId}`,
-          })
-          .run();
+    if (itemTypeId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:${itemTypeId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -84,7 +86,7 @@ export const ItemTypeLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || ItemTypeLinkIcon}
+          icon={icon ?? ItemTypeLinkIcon}
           aria-label="Link ItemType"
           title="Link ItemType"
           onClick={handleOpen}

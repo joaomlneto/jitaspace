@@ -1,7 +1,8 @@
 "use client";
 
-import React, { memo, useCallback } from "react";
-import { type AnchorProps } from "@mantine/core";
+import type { AnchorProps } from "@mantine/core";
+import { memo, useCallback } from "react";
+
 import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
 import { OpenInformationWindowAnchor as UIOpenInformationWindowAnchor } from "@jitaspace/ui";
@@ -12,7 +13,11 @@ export type OpenInformationWindowAnchorProps = AnchorProps & {
 };
 
 export const OpenInformationWindowAnchor = memo(
-  ({ entityId, characterId, ...otherProps }: OpenInformationWindowAnchorProps) => {
+  ({
+    entityId,
+    characterId,
+    ...otherProps
+  }: OpenInformationWindowAnchorProps) => {
     const { accessToken, authHeaders } = useAccessToken({
       characterId,
       scopes: ["esi-ui.open_window.v1"],

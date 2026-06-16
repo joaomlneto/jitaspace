@@ -1,15 +1,15 @@
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
+import type { PageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import DogmaEffectsPage from "./page.client";
 
 export const metadata = {
   title: "Dogma Effects",
-  description: "Browse all EVE Online dogma effects applied by ships, modules, and skills.",
+  description:
+    "Browse all EVE Online dogma effects applied by ships, modules, and skills.",
 };
-
-import DogmaEffectsPage from "./page.client";
-import type { PageProps } from "./page.client";
 
 export default async function Page() {
   "use cache";
@@ -39,9 +39,10 @@ export default async function Page() {
         effectId: true,
       },
     });
-    count.forEach(
-      (entry) => (map[entry.effectId]!.numTypeIds = entry._count.effectId),
-    );
+    count.forEach((entry) => {
+      const effect = map[entry.effectId];
+      if (effect) effect.numTypeIds = entry._count.effectId;
+    });
 
     effects = map;
   } catch {

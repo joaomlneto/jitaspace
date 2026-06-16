@@ -6,9 +6,12 @@ import { MantineProvider } from "@mantine/core";
 import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import type * as SkillBarModule from "../../SkillLevelBar/SkillBar";
+
 // SkillBar has no external @jitaspace deps — it only reads the colour scheme
 // from Mantine and renders five 8x8 level squares inside a Tooltip.
-const { SkillBar } = require("../../SkillLevelBar/SkillBar") as typeof import("../../SkillLevelBar/SkillBar");
+const { SkillBar } =
+  require("../../SkillLevelBar/SkillBar") as typeof SkillBarModule;
 
 const renderWithMantine = (ui: ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);

@@ -1,7 +1,7 @@
 "use client";
 
+import type { BreadcrumbsProps } from "@mantine/core";
 import { memo } from "react";
-import { type BreadcrumbsProps } from "@mantine/core";
 
 import { TypeInventoryBreadcrumbs as UITypeInventoryBreadcrumbs } from "@jitaspace/eve-components";
 import { useCategory, useGroup, useType } from "@jitaspace/hooks";

@@ -1,6 +1,6 @@
 "use client";
 
-import { GetUniverseCategoriesCategoryIdQueryResponse } from "@jitaspace/esi-client";
+import type { GetUniverseCategoriesCategoryIdQueryResponse } from "@jitaspace/esi-client";
 
 export type Category = GetUniverseCategoriesCategoryIdQueryResponse;
 

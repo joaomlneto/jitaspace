@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import React, { memo } from "react";
+import { memo } from "react";
 import { Badge, Card, Flex, Group, Skeleton, Stack, Text } from "@mantine/core";
 
 import {
