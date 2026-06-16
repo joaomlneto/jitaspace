@@ -15,6 +15,10 @@ export interface AugmentedOffer {
   requiredItems: {
     typeId: number;
     quantity: number;
+    // Display-only, resolved on the server and threaded through by the table so
+    // required-item names render without per-row name hooks. The pricing helpers
+    // below never read it, so it is optional for non-display callers.
+    typeName?: string;
     marketStats?: FuzzworkTypeMarketAggregate;
   }[];
   typeName: string | undefined;
