@@ -1,9 +1,8 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
-import { Loader } from "@mantine/core";
+import { Suspense } from "react";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
-
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -22,7 +21,7 @@ export async function generateMetadata({
     if (!faction) return {};
     return {
       title: faction.name,
-      description: faction.description?.slice(0, 200) ?? undefined,
+      description: faction.description.slice(0, 200),
     };
   } catch {
     return {};
@@ -31,7 +30,7 @@ export async function generateMetadata({
 
 export default function Page() {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageClient />
     </Suspense>
   );

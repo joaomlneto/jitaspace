@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  getUniverseTypesTypeId,
+import type {
   GetUniverseTypesTypeIdHeaderParams,
   GetUniverseTypesTypeIdQueryResponse,
 } from "@jitaspace/esi-client";
+import { getUniverseTypesTypeId } from "@jitaspace/esi-client";
 
 export const useTypes = (
   typeIds: number[],

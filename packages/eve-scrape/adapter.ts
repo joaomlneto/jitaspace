@@ -1,3 +1,4 @@
+import type { GetFunctionInput } from "inngest";
 import {
   eventType,
   NonRetriableError as InngestNonRetriableError,
@@ -14,6 +15,11 @@ import { NonRetriableError, registry } from "@jitaspace/background-jobs";
 import { client } from "./client";
 
 type InngestFunctionRef = ReturnType<typeof client.createFunction>;
+
+// The fully-typed handler context for our client, including the built-in
+// middleware extensions (`logger`) and step tooling. Inngest types the bare
+// `createFunction` handler arg as `any`, so name it explicitly.
+type InngestHandlerCtx = GetFunctionInput<typeof client>;
 
 // Inngest types `retries` as a 0–20 literal union; our jobs only use 0/3/5.
 // prettier-ignore
@@ -54,12 +60,14 @@ const toInngestFunction = (job: JobDefinition): InngestFunctionRef =>
         ? {}
         : { retries: job.retries as InngestRetries }),
     },
-    async (inngestCtx) => {
-      const { event, step, logger } = inngestCtx;
-      const attempt = (inngestCtx as { attempt?: number }).attempt ?? 0;
+    async (inngestCtx: InngestHandlerCtx) => {
+      const { event, step, logger, attempt } = inngestCtx;
+      // `event.data` is `EventPayload["data"]` (typed `any` upstream); the job
+      // contract treats the payload as opaque `unknown`.
+      const payload: unknown = event.data;
 
       const ctx: JobContext = {
-        payload: (event as { data?: unknown }).data,
+        payload,
         attempt: attempt + 1,
         logger: {
           debug: (message, meta) => logger.debug(message, meta),
@@ -67,8 +75,14 @@ const toInngestFunction = (job: JobDefinition): InngestFunctionRef =>
           warn: (message, meta) => logger.warn(message, meta),
           error: (message, meta) => logger.error(message, meta),
         },
-        run: <T>(name: string, fn: () => Promise<T>): Promise<T> =>
-          step.run(name, fn),
+        run: async <T>(name: string, fn: () => Promise<T>): Promise<T> => {
+          // Inngest deep-clones step results to JSON (`Jsonify<T>`); the
+          // platform-agnostic contract treats the result as the original `T`.
+          // All step payloads here are already JSON-safe, so the runtime value
+          // matches — bridge the two at this adapter boundary.
+          const result = await step.run(name, fn);
+          return result as Awaited<T>;
+        },
         sleep: (name, duration) =>
           step.sleep(name, toInngestDuration(duration)),
         send: async (jobId, payload) => {
@@ -77,15 +91,18 @@ const toInngestFunction = (job: JobDefinition): InngestFunctionRef =>
             data: (payload ?? {}) as Record<string, unknown>,
           });
         },
-        invoke: <R>(jobId: string, payload: unknown): Promise<R> => {
+        invoke: async <R>(jobId: string, payload: unknown): Promise<R> => {
           const target = fnById.get(jobId);
           if (!target) {
             throw new Error(`Cannot invoke unknown job id: ${jobId}`);
           }
-          return step.invoke(`invoke:${jobId}`, {
+          // `step.invoke` resolves to the target's (JSON-serialized) output as
+          // `unknown`; the caller declares the expected shape via `R`.
+          const result = await step.invoke(`invoke:${jobId}`, {
             function: target,
-            data: (payload ?? {}) as Record<string, unknown>,
+            data: payload ?? {},
           });
+          return result as R;
         },
       };
 

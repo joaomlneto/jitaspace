@@ -44,10 +44,7 @@ export const CharacterMenu = ({
     <Menu {...otherProps}>
       <Menu.Target>{children}</Menu.Target>
       <Menu.Dropdown>
-        {false && <Menu.Item>Open</Menu.Item>}
-        {false && <Menu.Divider />}
         <Menu.Label>View Character in…</Menu.Label>
-        {false && <Menu.Item>EVE Online</Menu.Item>}
         <Menu.Item
           component={CharacterPageLink}
           characterId={characterId}

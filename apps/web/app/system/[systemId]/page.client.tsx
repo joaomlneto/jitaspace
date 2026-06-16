@@ -14,6 +14,12 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import type { EveIconProps } from "@jitaspace/eve-icons";
+import {
+  SolarSystemName,
+  StationAnchor,
+  StationName,
+} from "@jitaspace/eve-components";
 import { IndustryIcon } from "@jitaspace/eve-icons";
 import {
   useSelectedCharacter,
@@ -21,27 +27,34 @@ import {
   useSolarSystemCostIndices,
 } from "@jitaspace/hooks";
 import { useGetSolarSystemById } from "@jitaspace/sde-client";
-import {
-  Position3DText,
-  SolarSystemName,
-  StarAnchor,
-  StationAnchor,
-  StationName,
-  TypeAvatar,
-} from "@jitaspace/ui";
+import { Position3DText, StarAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
 import { StargateDestinationAnchor } from "~/components/Anchor";
-import { PlanetAvatar, StarAvatar, StargateAvatar, StationAvatar } from "~/components/Avatar";
+import {
+  PlanetAvatar,
+  StarAvatar,
+  StargateAvatar,
+  StationAvatar,
+} from "~/components/Avatar";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { SolarSystemBreadcrumbs } from "~/components/Breadcrumbs";
-import { AsteroidBeltName, MoonName, PlanetName, StargateName, StarName } from "~/components/Text";
-
+import {
+  AsteroidBeltName,
+  MoonName,
+  PlanetName,
+  StargateName,
+  StarName,
+} from "~/components/Text";
 import { StatsGrid } from "~/components/UI";
+
+function IndustryIconRender(props: EveIconProps) {
+  return <IndustryIcon {...props} />;
+}
 
 export default function Page() {
   const params = useParams();
-  const rawSystemId = params?.systemId;
+  const rawSystemId = params.systemId;
   const systemId = Number(
     typeof rawSystemId === "string" ? rawSystemId : rawSystemId?.[0],
   );
@@ -148,15 +161,7 @@ export default function Page() {
             </Group>
           )}
           {solarSystem?.data.planets?.map(
-            ({
-              planet_id,
-              moons,
-              asteroid_belts,
-            }: {
-              planet_id: number;
-              moons?: number[];
-              asteroid_belts?: number[];
-            }) => (
+            ({ planet_id, moons, asteroid_belts }) => (
               <Group key={planet_id}>
                 <Group wrap="nowrap">
                   <PlanetAvatar planetId={planet_id} size="sm" />
@@ -198,7 +203,7 @@ export default function Page() {
               data={(
                 solarSystemCostIndicesData[systemId]?.cost_indices ?? []
               ).map((index) => ({
-                icon: (props) => <IndustryIcon {...props} />,
+                icon: IndustryIconRender,
                 title: index.activity.replaceAll("_", " "),
                 value: index.cost_index.toString(),
               }))}
@@ -247,18 +252,14 @@ export default function Page() {
           <Text>Position</Text>
           <Position3DText
             size="xs"
-            position={
-              sdeSolarSystem?.data.position &&
-              sdeSolarSystem.data.position.x !== undefined &&
-              sdeSolarSystem.data.position.y !== undefined &&
-              sdeSolarSystem.data.position.z !== undefined
-                ? [
-                    sdeSolarSystem.data.position.x,
-                    sdeSolarSystem.data.position.y,
-                    sdeSolarSystem.data.position.z,
-                  ]
-                : undefined
-            }
+            position={(() => {
+              const position = sdeSolarSystem?.data.position;
+              return position?.x !== undefined &&
+                position.y !== undefined &&
+                position.z !== undefined
+                ? [position.x, position.y, position.z]
+                : undefined;
+            })()}
           />
         </Group>
       </Stack>

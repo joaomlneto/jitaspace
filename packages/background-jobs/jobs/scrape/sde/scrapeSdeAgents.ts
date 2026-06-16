@@ -15,6 +15,18 @@ import { isResearchAgent } from "../../../helpers/agents.ts";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
+const fetchAgentInSpace = (characterId: number) =>
+  getAgentInSpaceById(characterId)
+    .then((res) => res.data)
+    .then((agent) => ({
+      characterId: agent.characterID,
+      dungeonId: agent.dungeonID,
+      solarSystemId: agent.solarSystemID,
+      spawnPointId: agent.spawnPointID,
+      typeId: agent.typeID,
+      isDeleted: false,
+    }));
+
 export interface ScrapeAgentsEventPayload {
   data: {
     batchSize?: number;
@@ -81,16 +93,30 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
           .then((entries) =>
             entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
           ),
-      fetchRemoteEntries: async () =>
-        npcCharacters.map((npcCharacter) => ({
-          characterId: npcCharacter.characterID,
-          agentTypeId: npcCharacter.agent.agentTypeID!,
-          agentDivisionId: npcCharacter.agent.divisionID!,
-          isLocator: npcCharacter.agent.isLocator ?? false,
-          level: npcCharacter.agent.level!,
-          stationId: npcCharacter.locationID,
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          npcCharacters.map((npcCharacter) => {
+            const { agentTypeID, divisionID, level } = npcCharacter.agent;
+            if (
+              agentTypeID === undefined ||
+              divisionID === undefined ||
+              level === undefined
+            ) {
+              throw new Error(
+                `Agent ${npcCharacter.characterID} is missing required SDE fields (agentTypeID/divisionID/level)`,
+              );
+            }
+            return {
+              characterId: npcCharacter.characterID,
+              agentTypeId: agentTypeID,
+              agentDivisionId: divisionID,
+              isLocator: npcCharacter.agent.isLocator ?? false,
+              level,
+              stationId: npcCharacter.locationID,
+              isDeleted: false,
+            };
+          }),
+        ),
       batchCreate: (entries) =>
         limit(() =>
           prisma.agent.createMany({
@@ -141,11 +167,13 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
           .then((entries) =>
             entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
           ),
-      fetchRemoteEntries: async () =>
-        researchAgentCharacters.map((agent) => ({
-          characterId: agent.characterID,
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          researchAgentCharacters.map((agent) => ({
+            characterId: agent.characterID,
+            isDeleted: false,
+          })),
+        ),
       batchCreate: (entries) =>
         limit(() =>
           prisma.researchAgent.createMany({
@@ -190,13 +218,15 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
           .then((entries) =>
             entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
           ),
-      fetchRemoteEntries: async () =>
-        researchAgentCharacters.flatMap((agent) =>
-          agent.skills.flatMap((typeId) => ({
-            characterId: agent.characterID,
-            typeId: typeId.typeID,
-            isDeleted: false,
-          })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          researchAgentCharacters.flatMap((agent) =>
+            agent.skills.flatMap((typeId) => ({
+              characterId: agent.characterID,
+              typeId: typeId.typeID,
+              isDeleted: false,
+            })),
+          ),
         ),
       batchCreate: (entries) =>
         limit(() =>
@@ -250,18 +280,7 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
       fetchRemoteEntries: async () =>
         Promise.all(
           agentsInSpaceCharacterIds.map((characterId) =>
-            limit(async () =>
-              getAgentInSpaceById(characterId)
-                .then((res) => res.data)
-                .then((agent) => ({
-                  characterId: agent.characterID,
-                  dungeonId: agent.dungeonID,
-                  solarSystemId: agent.solarSystemID,
-                  spawnPointId: agent.spawnPointID,
-                  typeId: agent.typeID,
-                  isDeleted: false,
-                })),
-            ),
+            limit(() => fetchAgentInSpace(characterId)),
           ),
         ),
       batchCreate: (entries) =>

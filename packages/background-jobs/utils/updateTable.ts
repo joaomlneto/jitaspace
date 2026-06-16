@@ -4,7 +4,7 @@ import { recordsAreEqual } from "./recordsAreEqual";
 
 // FIXME: Add support for ETags!
 export const updateTable = async <
-  DbType extends Record<string | number, any>,
+  DbType extends object,
   IdType extends string | number,
 >({
   idAccessor,
@@ -21,11 +21,11 @@ export const updateTable = async <
   // function that retrieves all relevant entries from ESI
   fetchRemoteEntries: () => Promise<DbType[]>;
   // function to create array of entries
-  batchCreate: (entries: DbType[]) => Promise<any>;
+  batchCreate: (entries: DbType[]) => Promise<unknown>;
   // function to update array of entries
-  batchUpdate: (entries: DbType[]) => Promise<any>;
+  batchUpdate: (entries: DbType[]) => Promise<unknown>;
   // function to delete array of entries
-  batchDelete: (entries: DbType[]) => Promise<any>;
+  batchDelete: (entries: DbType[]) => Promise<unknown>;
 }): Promise<CrudStatistics> => {
   const esiEntries = await fetchRemoteEntries();
   const dbEntries = await fetchLocalEntries();

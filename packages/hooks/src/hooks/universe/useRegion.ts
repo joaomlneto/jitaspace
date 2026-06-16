@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  GetUniverseRegionsRegionIdQueryResponse,
-  useGetUniverseRegionsRegionId,
-} from "@jitaspace/esi-client";
+import type { GetUniverseRegionsRegionIdQueryResponse } from "@jitaspace/esi-client";
 
 export type Region = GetUniverseRegionsRegionIdQueryResponse;
 
-export const useRegion = useGetUniverseRegionsRegionId;
+export { useGetUniverseRegionsRegionId as useRegion } from "@jitaspace/esi-client";

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import React, { memo } from "react";
+import { memo } from "react";
 import {
   Anchor,
   Badge,
@@ -13,17 +13,19 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import {
+  AllianceName,
+  CharacterAnchor,
+  CharacterName,
+  CorporationName,
+} from "@jitaspace/eve-components";
 import { useCorporation } from "@jitaspace/hooks";
 import {
   AllianceAnchor,
   AllianceAvatar,
-  AllianceName,
-  CharacterAnchor,
   CharacterAvatar,
-  CharacterName,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
   FormattedDateText,
 } from "@jitaspace/ui";
@@ -46,9 +48,16 @@ export const CorporationCard = memo(
     const corporationData = corporation?.data;
     const description = stripHtml(corporationData?.description);
     const taxRate =
-      corporationData?.tax_rate != null
-        ? `${(corporationData.tax_rate * 100).toFixed(1)}%`
-        : null;
+      corporationData?.tax_rate == null
+        ? null
+        : `${(corporationData.tax_rate * 100).toFixed(1)}%`;
+
+    let warEligibleLabel = "N/A";
+    if (corporationData?.war_eligible === true) {
+      warEligibleLabel = "Yes";
+    } else if (corporationData?.war_eligible === false) {
+      warEligibleLabel = "No";
+    }
 
     return (
       <Card withBorder radius="md">
@@ -141,7 +150,9 @@ export const CorporationCard = memo(
               </Text>
               <Skeleton visible={!corporationData} width="auto">
                 <Text size="xs">
-                  {corporationData?.member_count?.toLocaleString() ?? "N/A"}
+                  {typeof corporationData?.member_count === "number"
+                    ? corporationData.member_count.toLocaleString()
+                    : "N/A"}
                 </Text>
               </Skeleton>
             </Group>
@@ -185,19 +196,13 @@ export const CorporationCard = memo(
                 War eligible
               </Text>
               <Skeleton visible={!corporationData} width="auto">
-                <Text size="xs">
-                  {corporationData?.war_eligible == null
-                    ? "N/A"
-                    : corporationData.war_eligible
-                      ? "Yes"
-                      : "No"}
-                </Text>
+                <Text size="xs">{warEligibleLabel}</Text>
               </Skeleton>
             </Group>
           </Stack>
         </Card.Section>
 
-        {(description || corporationData?.url) && (
+        {(Boolean(description) || Boolean(corporationData?.url)) && (
           <Card.Section p="xs" withBorder>
             <Stack gap="xs">
               {description && (

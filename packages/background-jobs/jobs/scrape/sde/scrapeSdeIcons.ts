@@ -12,6 +12,15 @@ export interface ScrapeIconsEventPayload {
   };
 }
 
+const fetchRemoteIcon = (iconId: number) =>
+  getIconById(iconId)
+    .then((res) => res.data)
+    .then((icon) => ({
+      iconId: icon.iconID,
+      iconFile: icon.iconFile,
+      isDeleted: false,
+    }));
+
 export const scrapeSdeIcons = defineJob<ScrapeIconsEventPayload["data"]>({
   id: "scrape-sde-icons",
   name: "Scrape Icons",
@@ -41,17 +50,7 @@ export const scrapeSdeIcons = defineJob<ScrapeIconsEventPayload["data"]>({
           ),
       fetchRemoteEntries: async () =>
         Promise.all(
-          iconIds.map((iconId) =>
-            limit(async () =>
-              getIconById(iconId)
-                .then((res) => res.data)
-                .then((icon) => ({
-                  iconId: icon.iconID,
-                  iconFile: icon.iconFile,
-                  isDeleted: false,
-                })),
-            ),
-          ),
+          iconIds.map((iconId) => limit(() => fetchRemoteIcon(iconId))),
         ),
       batchCreate: (entries) =>
         limit(() =>

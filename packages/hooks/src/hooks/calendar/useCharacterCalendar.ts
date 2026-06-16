@@ -31,7 +31,7 @@ export const useCharacterCalendar = (characterId?: number) => {
     );
 
   return {
-    events: (data?.pages ?? []).flatMap((res) => res.data ?? []),
+    events: (data?.pages ?? []).flatMap((res) => res.data),
     hasMoreEvents: hasNextPage,
     loadMoreEvents: fetchNextPage,
     error,

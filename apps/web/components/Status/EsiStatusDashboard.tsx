@@ -32,7 +32,7 @@ export interface EsiStatusDashboardProps {
 
 export function EsiStatusDashboard({
   initialShowAll = false,
-}: EsiStatusDashboardProps) {
+}: Readonly<EsiStatusDashboardProps>) {
   const [showAllEsiEndpoints, setShowAllEsiEndpoints] =
     useState(initialShowAll);
 
@@ -49,7 +49,8 @@ export function EsiStatusDashboard({
     routes
       .filter((entry) => showAllEsiEndpoints || entry.status !== "OK")
       .forEach((entry) => {
-        const group = entry.path.split("/")[1] || "Other";
+        const pathSegment = entry.path.split("/")[1];
+        const group = pathSegment?.length ? pathSegment : "Other";
         result[group] = [...(result[group] ?? []), entry];
       });
     return result;

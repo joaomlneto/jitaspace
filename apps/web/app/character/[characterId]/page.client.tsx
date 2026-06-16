@@ -1,39 +1,50 @@
 "use client";
 
-import { useCharacter, useSelectedCharacter } from "@jitaspace/hooks";
-import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
-import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
-  AllianceAvatar,
+  Anchor,
+  Badge,
+  Button,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+import { IconExternalLink } from "@tabler/icons-react";
+
+import {
   AllianceName,
-  CharacterAvatar,
   CharacterName,
-  CorporationAvatar,
   CorporationName,
-  DateHoverCard,
-  FormattedDateText,
   SolarSystemAnchor,
   SolarSystemName,
   StationAnchor,
   StationName,
   TypeAnchor,
+  TypeName,
+} from "@jitaspace/eve-components";
+import { useCharacter, useSelectedCharacter } from "@jitaspace/hooks";
+import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
+import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
+import {
+  AllianceAvatar,
+  CharacterAvatar,
+  CorporationAvatar,
+  DateHoverCard,
+  FormattedDateText,
   TypeAvatar,
-  TypeName
 } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { StationAvatar } from "~/components/Avatar";
-import { BloodlineName, RaceName } from "~/components/Text";
-import { Anchor, Badge, Button, Container, Group, Stack, Text, Title } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-
 import { MailMessageViewer } from "~/components/EveMail";
+import { BloodlineName, RaceName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();
-  const rawCharacterId = params?.characterId;
+  const rawCharacterId = params.characterId;
   const characterId = Number(
     typeof rawCharacterId === "string" ? rawCharacterId : rawCharacterId?.[0],
   );
@@ -50,6 +61,13 @@ export default function Page() {
     return null;
   }
 
+  let npcBadgeLabel: string;
+  if (character?.type === "agent") {
+    npcBadgeLabel = character.isResearchAgent ? "Research Agent" : "Agent";
+  } else {
+    npcBadgeLabel = "NPC";
+  }
+
   return (
     <Container size="sm">
       <Stack>
@@ -58,15 +76,7 @@ export default function Page() {
           <Title order={3}>
             <CharacterName span characterId={characterId} />
           </Title>
-          {character?.isNpc && (
-            <Badge>
-              {character.type === "agent"
-                ? character.isResearchAgent
-                  ? "Research Agent"
-                  : "Agent"
-                : "NPC"}
-            </Badge>
-          )}
+          {character?.isNpc && <Badge>{npcBadgeLabel}</Badge>}
           {selectedCharacter && (
             <OpenInformationWindowActionIcon
               characterId={selectedCharacter.characterId}
@@ -103,17 +113,14 @@ export default function Page() {
             <Text>Corporation</Text>
             <Group>
               <CorporationAvatar
-                corporationId={character?.corporationId}
+                corporationId={character.corporationId}
                 size="sm"
               />
               <Anchor
                 component={Link}
-                href={`/corporation/${character?.corporationId}`}
+                href={`/corporation/${character.corporationId}`}
               >
-                <CorporationName
-                  span
-                  corporationId={character?.corporationId}
-                />
+                <CorporationName span corporationId={character.corporationId} />
               </Anchor>
             </Group>
           </Group>
@@ -122,12 +129,12 @@ export default function Page() {
           <Group justify="space-between">
             <Text>Alliance</Text>
             <Group>
-              <AllianceAvatar allianceId={character?.allianceId} size="sm" />
+              <AllianceAvatar allianceId={character.allianceId} size="sm" />
               <Anchor
                 component={Link}
-                href={`/alliance/${character?.allianceId}`}
+                href={`/alliance/${character.allianceId}`}
               >
-                <AllianceName span allianceId={character?.allianceId} />
+                <AllianceName span allianceId={character.allianceId} />
               </Anchor>
             </Group>
           </Group>
@@ -135,13 +142,13 @@ export default function Page() {
         {character?.gender && (
           <Group justify="space-between">
             <Text>Gender</Text>
-            <Text>{character?.gender === "male" ? "Male" : "Female"}</Text>
+            <Text>{character.gender === "male" ? "Male" : "Female"}</Text>
           </Group>
         )}
         {character?.securityStatus !== undefined && (
           <Group justify="space-between">
             <Text>Security Status</Text>
-            <Text>{character?.securityStatus}</Text>
+            <Text>{character.securityStatus}</Text>
           </Group>
         )}
         {character?.birthday && (
@@ -248,8 +255,8 @@ export default function Page() {
         {character && (
           <MailMessageViewer
             content={
-              character?.description
-                ? sanitizeFormattedEveString(character?.description)
+              character.description
+                ? sanitizeFormattedEveString(character.description)
                 : "No description"
             }
           />

@@ -1,7 +1,5 @@
 "use server";
 
-import type { NextApiRequest, NextApiResponse } from "next";
-
 import { refreshTokenApiRouteHandler } from "@jitaspace/auth";
 
 import { env } from "~/env";
@@ -18,40 +16,17 @@ interface RefreshTokenApiResult {
   body: RefreshTokenApiResponseBody | undefined;
 }
 
-const createNextApiResponseAdapter = () => {
-  let statusCode = 200;
-  let body: RefreshTokenApiResponseBody | undefined;
-
-  const response = {
-    setHeader() {
-      return response;
-    },
-    status(code: number) {
-      statusCode = code;
-      return response;
-    },
-    json(value: RefreshTokenApiResponseBody) {
-      body = value;
-      return response;
-    },
-  } as unknown as NextApiResponse<RefreshTokenApiResponseBody>;
-
-  return {
-    response,
-    result: () => ({ statusCode, body }),
-  };
-};
-
 const refreshCharacterTokenResult = async (
   refreshTokenData: string,
 ): Promise<RefreshTokenApiResult> => {
-  const { response, result } = createNextApiResponseAdapter();
-
-  await refreshTokenApiRouteHandler(
-    {
+  // `refreshTokenApiRouteHandler` is a framework-agnostic Web handler
+  // (Request -> Response). We invoke it in-process here; the URL is unused by
+  // the handler and only exists to satisfy the `Request` constructor.
+  const response = await refreshTokenApiRouteHandler(
+    new Request("https://jita.space/api/auth/refresh-token", {
+      method: "POST",
       body: refreshTokenData,
-    } as NextApiRequest,
-    response,
+    }),
     {
       nextAuthSecret: env.NEXTAUTH_SECRET,
       eveClientId: env.EVE_CLIENT_ID,
@@ -59,8 +34,8 @@ const refreshCharacterTokenResult = async (
     },
   );
 
-  const { statusCode, body } = result();
-  return { statusCode, body };
+  const body = (await response.json()) as RefreshTokenApiResponseBody;
+  return { statusCode: response.status, body };
 };
 
 export async function refreshCharacterToken(refreshTokenData: string) {

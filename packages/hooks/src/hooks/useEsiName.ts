@@ -28,12 +28,12 @@ import {
   stationRanges,
 } from "@jitaspace/esi-metadata";
 
-type EsiNameCacheValue = {
+interface EsiNameCacheValue {
   name: string;
   category:
     | GetCharactersCharacterIdSearchQueryParamsCategoriesEnum
     | "stargate";
-};
+}
 
 export type ResolvableEntityCategory =
   | GetCharactersCharacterIdSearchQueryParamsCategoriesEnum
@@ -133,8 +133,10 @@ const resolveNameOfKnownCategory = async (
           return data.data.name;
         },
       );
-    default:
-      throw new Error(`Unknown category ${category}!`);
+    default: {
+      const exhaustiveCategory: never = category;
+      throw new Error(`Unknown category ${String(exhaustiveCategory)}!`);
+    }
   }
 };
 
@@ -179,10 +181,21 @@ export function useEsiName(
   loading: boolean;
   error?: string;
 } {
+  let idCacheKey: string;
+  if (id === undefined) {
+    idCacheKey = "";
+  } else if (typeof id === "string") {
+    idCacheKey = id;
+  } else {
+    idCacheKey = id.toString();
+  }
+
   const [{ status, value, error }, fetchName] = useCache(
     fetchCache,
-    id === undefined ? "" : typeof id === "string" ? id : id?.toString(),
-    { category },
+    idCacheKey,
+    {
+      category,
+    },
   );
 
   useEffect(() => {
@@ -197,7 +210,7 @@ export function useEsiName(
   return {
     loading: status === "loading",
     name: value?.name,
-    category: value?.category as ResolvableEntityCategory,
+    category: value?.category,
     error: error?.message,
   };
 }
@@ -244,14 +257,15 @@ export function useEsiNames(
     id: number;
     category?: ResolvableEntityCategory;
   }[],
-): { [key: string]: CacheState<EsiNameCacheValue, Error> | undefined } {
+): Record<string, CacheState<EsiNameCacheValue, Error> | undefined> {
   const keys = useMemo(() => names.map((name) => name.id.toString()), [names]);
-  const [current, setCurrent] = useState<{
-    [key: string]: CacheState<EsiNameCacheValue, Error> | undefined;
-  }>(() => {
-    const initial: {
-      [key: string]: CacheState<EsiNameCacheValue, Error> | undefined;
-    } = {};
+  const [current, setCurrent] = useState<
+    Record<string, CacheState<EsiNameCacheValue, Error> | undefined>
+  >(() => {
+    const initial: Record<
+      string,
+      CacheState<EsiNameCacheValue, Error> | undefined
+    > = {};
     keys.forEach((key) => (initial[key] = fetchCache.read(key)));
     return initial;
   });

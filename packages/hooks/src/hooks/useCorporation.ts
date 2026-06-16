@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  GetCorporationsCorporationIdQueryResponse,
-  useGetCorporationsCorporationId,
-} from "@jitaspace/esi-client";
+import type { GetCorporationsCorporationIdQueryResponse } from "@jitaspace/esi-client";
 
 export type Corporation = GetCorporationsCorporationIdQueryResponse;
 
-export const useCorporation = useGetCorporationsCorporationId;
+export { useGetCorporationsCorporationId as useCorporation } from "@jitaspace/esi-client";

@@ -1,14 +1,9 @@
 {
+  "extends": "@jitaspace/tsconfig/base.json",
   "compilerOptions": {
-    "target": "ES2023",
-    "module": "Preserve",
-    "moduleResolution": "Bundler",
-    "skipLibCheck": true,
     "types": ["node", "jest"],
-    "jsx": "react-jsx",
-    "jsxImportSource": "@kubb/react",
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "allowImportingTsExtensions": true
-  }
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
+  },
+  "include": ["."],
+  "exclude": ["node_modules", "dist", "coverage"]
 }

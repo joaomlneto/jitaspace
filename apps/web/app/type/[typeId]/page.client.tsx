@@ -31,6 +31,7 @@ import {
 import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
+import { EveIconAvatar, TypeAnchor, TypeName } from "@jitaspace/eve-components";
 import {
   useFuzzworkTypeMarketStats,
   useMarketPrices,
@@ -48,12 +49,9 @@ import {
   DogmaAttributeAnchor,
   DogmaAttributeValue,
   DogmaEffectAnchor,
-  EveIconAvatar,
   GroupAnchor,
   ISKAmount,
   MarketGroupAnchor,
-  TypeAnchor,
-  TypeName,
 } from "@jitaspace/ui";
 
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
@@ -82,6 +80,9 @@ const notAvailableText = "Not available";
 /** The Forge — the region containing Jita, EVE's main trade hub. */
 const THE_FORGE_REGION_ID = 10000002;
 
+/** Inventory category for ship hulls — used to gate ship-only external links. */
+const SHIP_CATEGORY_ID = 6;
+
 /** Image variations that look good rendered large (vs. small square icons). */
 const LARGE_IMAGE_VARIATIONS = new Set(["render", "bp", "bpc"]);
 
@@ -101,16 +102,26 @@ interface MarketPriceEntry {
   adjusted_price?: number;
 }
 
-const booleanBadge = (value: boolean | null | undefined) => (
-  <Badge
-    color={
-      value === undefined || value === null ? "gray" : value ? "teal" : "red"
-    }
-    variant="light"
-  >
-    {value === undefined || value === null ? "Unknown" : value ? "Yes" : "No"}
-  </Badge>
-);
+const booleanBadge = (value: boolean | null | undefined) => {
+  const isUnknown = value === undefined || value === null;
+  let color: string;
+  if (isUnknown) {
+    color = "gray";
+  } else {
+    color = value ? "teal" : "red";
+  }
+  let label: string;
+  if (isUnknown) {
+    label = "Unknown";
+  } else {
+    label = value ? "Yes" : "No";
+  }
+  return (
+    <Badge color={color} variant="light">
+      {label}
+    </Badge>
+  );
+};
 
 /** Locale-format a number, keeping useful precision for small fractions. */
 const formatNumber = (value: number): string => {
@@ -243,7 +254,7 @@ export default function TypePage({
   typeId,
   typeName,
   typeDescription,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const character = useSelectedCharacter();
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();
@@ -580,6 +591,18 @@ export default function TypePage({
                 >
                   EVE Tycoon
                 </Button>
+                {categoryId === SHIP_CATEGORY_ID && (
+                  <Button
+                    component={Link}
+                    href={`https://eveworkbench.com/fits?ship=${typeId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="xs"
+                    leftSection={<IconExternalLink size={14} />}
+                  >
+                    EVE Workbench
+                  </Button>
+                )}
               </Group>
             </Stack>
           </Group>

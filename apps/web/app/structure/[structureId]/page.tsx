@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { Loader } from "@mantine/core";
+import { PageSkeleton } from "~/components/PageSkeleton";
 import PageClient from "./page.client";
 
 export default function Page() {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageClient />
     </Suspense>
   );

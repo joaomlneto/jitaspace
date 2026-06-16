@@ -1,14 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
-import {
-  MantineReactTable,
-  type MRT_ColumnDef,
-  type MRT_DensityState,
-  type MRT_SortingState,
-  type MRT_VisibilityState,
-  useMantineReactTable,
+import type {
+  MRT_ColumnDef,
+  MRT_DensityState,
+  MRT_SortingState,
+  MRT_VisibilityState,
 } from "mantine-react-table";
+import { useMemo } from "react";
+import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type {
   DataTableColumn,
@@ -41,7 +40,9 @@ function compareValues(
   return String(a).localeCompare(String(b));
 }
 
-function toDensity(verticalSpacing: DataTableSize | undefined): MRT_DensityState {
+function toDensity(
+  verticalSpacing: DataTableSize | undefined,
+): MRT_DensityState {
   switch (verticalSpacing) {
     case "md":
       return "md";
@@ -83,32 +84,39 @@ export function MantineReactTableImpl<TData>({
 
   const mrtColumns = useMemo<MRT_ColumnDef<Row>[]>(
     () =>
-      columns.map((col) => ({
-        id: col.id,
-        header: col.header,
-        accessorFn: (row) => filterableValue(readValue(col, row)),
-        enableSorting: col.sortable ?? false,
-        enableHiding: col.enableHiding ?? true,
-        ...(typeof col.width === "number" ? { size: col.width } : {}),
-        ...(col.sortAccessor
-          ? {
-              sortingFn: (a, b) =>
-                compareValues(
-                  col.sortAccessor!(a.original),
-                  col.sortAccessor!(b.original),
-                ),
-            }
-          : {}),
-        ...(col.cell
-          ? { Cell: ({ row }) => col.cell!(row.original, readValue(col, row.original)) }
-          : {}),
-        ...(col.align
-          ? {
-              mantineTableHeadCellProps: { align: col.align },
-              mantineTableBodyCellProps: { align: col.align },
-            }
-          : {}),
-      })),
+      columns.map((col) => {
+        const sortAccessor = col.sortAccessor;
+        const cell = col.cell;
+        return {
+          id: col.id,
+          header: col.header,
+          accessorFn: (row) => filterableValue(readValue(col, row)),
+          enableSorting: col.sortable ?? false,
+          enableHiding: col.enableHiding ?? true,
+          ...(typeof col.width === "number" ? { size: col.width } : {}),
+          ...(sortAccessor
+            ? {
+                sortingFn: (a, b) =>
+                  compareValues(
+                    sortAccessor(a.original),
+                    sortAccessor(b.original),
+                  ),
+              }
+            : {}),
+          ...(cell
+            ? {
+                Cell: ({ row }) =>
+                  cell(row.original, readValue(col, row.original)),
+              }
+            : {}),
+          ...(col.align
+            ? {
+                mantineTableHeadCellProps: { align: col.align },
+                mantineTableBodyCellProps: { align: col.align },
+              }
+            : {}),
+        };
+      }),
     [columns],
   );
 

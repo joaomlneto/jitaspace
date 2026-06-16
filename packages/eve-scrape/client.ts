@@ -10,7 +10,7 @@ export const client = new Inngest({
   // not in production so the SDK talks to the local `inngest dev` server;
   // production (Vercel) uses cloud mode with INNGEST_SIGNING_KEY. Set the
   // INNGEST_DEV env var to override.
-  isDev: process.env.NODE_ENV !== "production",
+  isDev: env.NODE_ENV !== "production",
   // Checkpointing is enabled by default in v4. These functions run on Vercel
   // (serverless), so cap the per-request runtime below the platform function
   // timeout — see `maxDuration` in apps/web/app/api/inngest/route.ts — so that

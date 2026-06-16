@@ -9,15 +9,11 @@ import {
   useMantineColorScheme,
 } from "@mantine/core";
 
-
-
-
-
-export type SkillBarProps = {
+export interface SkillBarProps {
   activeLevel?: number;
   requiredLevel?: number;
   requirementType?: "queued" | "missing" | "missingStrong";
-};
+}
 
 export const SkillBar = memo(
   ({
@@ -76,7 +72,7 @@ export const SkillBar = memo(
               <Text size="xs">Level trained:</Text>
               <Text size="xs">{activeLevel}</Text>
             </Group>
-            {requiredLevel && (
+            {!!requiredLevel && (
               <Group justify="space-between">
                 <Text size="xs">Level required:</Text>
                 <Text size="xs">{requiredLevel}</Text>

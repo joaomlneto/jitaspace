@@ -1,7 +1,8 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import { memo } from "react";
-import { type TextProps } from "@mantine/core";
+
 import { useStar } from "@jitaspace/hooks";
 import { StarName as UIStarName } from "@jitaspace/ui";
 

@@ -1,11 +1,11 @@
 export const REFRESH_TOKEN_ENDPOINT =
   "https://login.eveonline.com/v2/oauth/token";
 
-type SsoRefreshTokenSuccessResult = {
+interface SsoRefreshTokenSuccessResult {
   access_token: string;
   expires_in: number;
   refresh_token: string;
-};
+}
 
 export const refreshEveSsoToken = async (params: {
   eveClientId: string;

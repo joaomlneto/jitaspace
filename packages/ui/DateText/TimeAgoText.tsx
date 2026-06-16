@@ -1,13 +1,10 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import { memo, useEffect } from "react";
-import { Text, type TextProps } from "@mantine/core";
+import { Text } from "@mantine/core";
 import { useForceUpdate } from "@mantine/hooks";
 import { formatDistanceToNowStrict } from "date-fns";
-
-
-
-
 
 type TimeAgoTextProps = TextProps & {
   date: Date;

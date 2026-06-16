@@ -1,0 +1,24 @@
+"use client";
+
+import type { AnchorProps } from "@mantine/core";
+import type { LinkProps } from "next/link";
+import { memo } from "react";
+
+import { EveEntityAnchor } from "./EveEntityAnchor";
+
+export type TypeNameAnchorProps = AnchorProps &
+  Omit<LinkProps, "href"> &
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+    typeId?: number | string;
+  };
+
+export const TypeAnchor = memo(
+  ({ typeId, children, ...props }: TypeNameAnchorProps) => {
+    return (
+      <EveEntityAnchor entityId={typeId} category="inventory_type" {...props}>
+        {children}
+      </EveEntityAnchor>
+    );
+  },
+);
+TypeAnchor.displayName = "TypeNameAnchor";

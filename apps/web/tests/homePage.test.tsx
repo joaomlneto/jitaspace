@@ -1,16 +1,9 @@
-
-
-
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ImgHTMLAttributes, ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
-
-
-
-
 
 const mockUseAuthenticatedCharacterIds = jest.fn<() => number[]>();
 const mockUseAuthStore = jest.fn();
@@ -22,10 +15,14 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
+  CharacterAvatar: () => <div>Character Avatar</div>,
+}));
+
+// AllianceCard moved to @jitaspace/eve-components.
+jest.mock("@jitaspace/eve-components", () => ({
   AllianceCard: ({ allianceId }: { allianceId: number }) => (
     <span>{`Alliance ${allianceId}`}</span>
   ),
-  CharacterAvatar: () => <div>Character Avatar</div>,
 }));
 
 jest.mock("~/components/Card", () => ({
@@ -62,14 +59,20 @@ jest.mock("~/config/apps", () => ({
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ href, children }: { href?: string | object; children?: ReactNode }) => (
-    <a href={typeof href === "string" ? href : ""}>{children}</a>
-  ),
+  default: ({
+    href,
+    children,
+  }: {
+    href?: string | object;
+    children?: ReactNode;
+  }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
 jest.mock("next/image", () => ({
   __esModule: true,
-  default: (props: ImgHTMLAttributes<HTMLImageElement>) => <img alt={props.alt} {...props} />,
+  default: (props: ImgHTMLAttributes<HTMLImageElement>) => (
+    <img alt={props.alt} {...props} />
+  ),
 }));
 
 describe("home page corporations", () => {

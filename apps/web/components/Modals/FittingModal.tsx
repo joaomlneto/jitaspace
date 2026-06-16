@@ -7,6 +7,6 @@ import { ShipFittingCard } from "~/components/Fitting";
 
 export function FittingModal({
   innerProps,
-}: ContextModalProps<ShipFittingCardProps>) {
+}: Readonly<ContextModalProps<ShipFittingCardProps>>) {
   return <ShipFittingCard {...innerProps} />;
 }

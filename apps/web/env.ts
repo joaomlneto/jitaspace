@@ -7,10 +7,24 @@ import { z } from "zod";
 const server = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
 
+  /**
+   * Populated by Next.js to identify the active server runtime ("nodejs" or
+   * "edge"). Undefined outside the Next.js server runtime.
+   */
+  NEXT_RUNTIME: z.enum(["nodejs", "edge"]).optional(),
+
   NEXTAUTH_SECRET: z.string().min(1),
 
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string(),
+
+  /**
+   * Change-history database (the eve-builds CockroachDB, `history` schema),
+   * read by @jitaspace/db-history. Optional so the rest of the app builds
+   * without it; the /history pages need it set to return data.
+   */
+  HISTORY_DATABASE_URL: z.string().url().optional(),
+  HISTORY_DATABASE_SCHEMA: z.string().optional(),
 
   EVE_CLIENT_ID: z.string(),
   EVE_CLIENT_SECRET: z.string(),
@@ -57,6 +71,7 @@ const client = z.object({
 
   NEXT_PUBLIC_DISCORD_INVITE_LINK: z.string().url(),
   NEXT_PUBLIC_MODIFIED_DATE: z.string().optional(),
+  NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
 });
 
 /**
@@ -65,9 +80,12 @@ const client = z.object({
  */
 const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
+  NEXT_RUNTIME: process.env.NEXT_RUNTIME,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   DATABASE_URL: process.env.DATABASE_URL,
   REDIS_URL: process.env.REDIS_URL,
+  HISTORY_DATABASE_URL: process.env.HISTORY_DATABASE_URL,
+  HISTORY_DATABASE_SCHEMA: process.env.HISTORY_DATABASE_SCHEMA,
   EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
   EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
   INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
@@ -81,6 +99,7 @@ const processEnv = {
   NEXT_PUBLIC_GOOGLE_TAG_ID: process.env.NEXT_PUBLIC_GOOGLE_TAG_ID,
   NEXT_PUBLIC_DISCORD_INVITE_LINK: process.env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
   NEXT_PUBLIC_MODIFIED_DATE: process.env.NEXT_PUBLIC_MODIFIED_DATE,
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
 };
 
 // Don't touch the part below

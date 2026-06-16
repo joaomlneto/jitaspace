@@ -6,10 +6,12 @@ import { EsiKillmailFittingCard } from "~/components/Fitting";
 
 export function KillmailFittingModal({
   innerProps,
-}: ContextModalProps<{
-  killmailId: number;
-  killmailHash: string;
-}>) {
+}: Readonly<
+  ContextModalProps<{
+    killmailId: number;
+    killmailHash: string;
+  }>
+>) {
   return (
     <EsiKillmailFittingCard
       killmailId={innerProps.killmailId}

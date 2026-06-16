@@ -5,9 +5,9 @@ import {
   getDogmaAttributesAttributeId,
 } from "@jitaspace/esi-client";
 
+import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeDogmaAttributesEventPayload {
@@ -17,6 +17,54 @@ export interface ScrapeDogmaAttributesEventPayload {
 }
 
 type StatsKey = "dogmaAttributes";
+
+const fetchRemoteDogmaAttribute = (attributeId: number, iconIds: number[]) =>
+  getDogmaAttributesAttributeId(attributeId)
+    .then((res) => res.data)
+    .then((dogmaAttribute) => {
+      const missingIcon = Boolean(
+        dogmaAttribute.icon_id && !iconIds.includes(dogmaAttribute.icon_id),
+      );
+      if (missingIcon) {
+        console.warn("Dogma Attribute is missing icon entry", dogmaAttribute);
+      }
+      return {
+        missingIcon,
+        entry: {
+          attributeId: dogmaAttribute.attribute_id,
+          name: dogmaAttribute.name ?? null,
+          published: dogmaAttribute.published ?? null,
+          description: dogmaAttribute.description ?? null,
+          defaultValue: dogmaAttribute.default_value ?? null,
+          displayName: dogmaAttribute.display_name ?? null,
+          highIsGood: dogmaAttribute.high_is_good ?? null,
+          iconId:
+            dogmaAttribute.icon_id && iconIds.includes(dogmaAttribute.icon_id)
+              ? dogmaAttribute.icon_id
+              : null,
+          stackable: dogmaAttribute.stackable ?? null,
+          unitId: dogmaAttribute.unit_id ?? null,
+          isDeleted: false,
+        },
+      };
+    });
+
+type DogmaAttributeEntry = Awaited<
+  ReturnType<typeof fetchRemoteDogmaAttribute>
+>["entry"];
+
+const excludeDogmaTimestamps = <
+  T extends { updatedAt: unknown; createdAt: unknown },
+>(
+  entries: T[],
+) =>
+  entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"]));
+
+const updateDogmaAttribute = (entry: DogmaAttributeEntry) =>
+  prisma.dogmaAttribute.update({
+    data: entry,
+    where: { attributeId: entry.attributeId },
+  });
 
 export const scrapeEsiDogmaAttributes = defineJob<
   ScrapeDogmaAttributesEventPayload["data"]
@@ -39,7 +87,7 @@ export const scrapeEsiDogmaAttributes = defineJob<
           batchIndex * batchSize,
           (batchIndex + 1) * batchSize,
         );
-      return [...Array(numBatches).keys()].map((batchId) =>
+      return [...new Array(numBatches).keys()].map((batchId) =>
         batchTypeIds(batchId),
       );
     });
@@ -47,11 +95,15 @@ export const scrapeEsiDogmaAttributes = defineJob<
     const results: (BatchStepResult<StatsKey> & {
       numEntriesMissingIcon: number;
     })[] = [];
-    const totalEntriesMissingIcon = 0;
     const limit = pLimit(20);
 
+    const runBatchUpdate = (entries: DogmaAttributeEntry[]) =>
+      Promise.all(
+        entries.map((entry) => limit(() => updateDogmaAttribute(entry))),
+      );
+
     // update in batches
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<
@@ -60,7 +112,6 @@ export const scrapeEsiDogmaAttributes = defineJob<
           }
         > => {
           const stepStartTime = performance.now();
-          const thisBatchIds = batches[i]!;
 
           const iconIds = await prisma.icon
             .findMany({
@@ -70,44 +121,15 @@ export const scrapeEsiDogmaAttributes = defineJob<
             })
             .then((entries) => entries.map((entry) => entry.iconId));
 
-          let numEntriesMissingIcon = 0;
-
-          const remoteEntries = await Promise.all(
+          const remoteResults = await Promise.all(
             thisBatchIds.map((attributeId) =>
-              limit(async () =>
-                getDogmaAttributesAttributeId(attributeId)
-                  .then((res) => res.data)
-                  .then((dogmaAttribute) => ({
-                    attributeId: dogmaAttribute.attribute_id,
-                    name: dogmaAttribute.name ?? null,
-                    published: dogmaAttribute.published ?? null,
-                    description: dogmaAttribute.description ?? null,
-                    defaultValue: dogmaAttribute.default_value ?? null,
-                    displayName: dogmaAttribute.display_name ?? null,
-                    highIsGood: dogmaAttribute.high_is_good ?? null,
-                    iconId: (() => {
-                      if (
-                        dogmaAttribute.icon_id &&
-                        !iconIds.includes(dogmaAttribute.icon_id)
-                      ) {
-                        numEntriesMissingIcon++;
-                        console.warn(
-                          "Dogma Attribute is missing icon entry",
-                          dogmaAttribute,
-                        );
-                      }
-                      return dogmaAttribute.icon_id &&
-                        iconIds.includes(dogmaAttribute.icon_id)
-                        ? dogmaAttribute.icon_id
-                        : null;
-                    })(),
-                    stackable: dogmaAttribute.stackable ?? null,
-                    unitId: dogmaAttribute.unit_id ?? null,
-                    isDeleted: false,
-                  })),
-              ),
+              limit(() => fetchRemoteDogmaAttribute(attributeId, iconIds)),
             ),
           );
+          const remoteEntries = remoteResults.map((result) => result.entry);
+          const numEntriesMissingIcon = remoteResults.filter(
+            (result) => result.missingIcon,
+          ).length;
 
           const dogmaAttributesChanges = await updateTable({
             fetchLocalEntries: async () =>
@@ -119,12 +141,8 @@ export const scrapeEsiDogmaAttributes = defineJob<
                     },
                   },
                 })
-                .then((entries) =>
-                  entries.map((entry) =>
-                    excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-                  ),
-                ),
-            fetchRemoteEntries: async () => remoteEntries,
+                .then(excludeDogmaTimestamps),
+            fetchRemoteEntries: () => Promise.resolve(remoteEntries),
             batchCreate: (entries) =>
               limit(() =>
                 prisma.dogmaAttribute.createMany({
@@ -142,17 +160,7 @@ export const scrapeEsiDogmaAttributes = defineJob<
                   },
                 },
               }),
-            batchUpdate: (entries) =>
-              Promise.all(
-                entries.map((entry) =>
-                  limit(async () =>
-                    prisma.dogmaAttribute.update({
-                      data: entry,
-                      where: { attributeId: entry.attributeId },
-                    }),
-                  ),
-                ),
-              ),
+            batchUpdate: runBatchUpdate,
             idAccessor: (e) => e.attributeId,
           });
 

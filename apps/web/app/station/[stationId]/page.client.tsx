@@ -13,14 +13,14 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,
   SolarSystemName,
   StationName,
   TypeName,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
 
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
 import { StationAvatar } from "~/components/Avatar";
@@ -29,7 +29,7 @@ import { RaceName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();
-  const rawStationId = params?.stationId;
+  const rawStationId = params.stationId;
   const stationId = Number(
     typeof rawStationId === "string" ? rawStationId : rawStationId?.[0],
   );

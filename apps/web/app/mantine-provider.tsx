@@ -14,10 +14,7 @@ export const AppMantineProvider = ({ children }: PropsWithChildren) => {
     void usePreferencesStore.persist.rehydrate();
   }, []);
 
-  const theme = useMemo(
-    () => themes[selectedTheme] ?? themes.default,
-    [selectedTheme],
-  );
+  const theme = useMemo(() => themes[selectedTheme], [selectedTheme]);
 
   return (
     <MantineProvider

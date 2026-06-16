@@ -1,7 +1,13 @@
 import { Suspense } from "react";
 import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
-import { Container, Group, Loader, Stack, Title } from "@mantine/core";
+import { Container, Group, Stack, Title } from "@mantine/core";
+
+import { WarsIcon } from "@jitaspace/eve-icons";
+
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { WarsTable } from "~/components/Wars";
+import { prisma } from "~/lib/db";
 
 export const metadata = {
   title: "Active Wars",
@@ -9,12 +15,7 @@ export const metadata = {
     "Live list of active wars in EVE Online — track ongoing conflicts between corporations and alliances.",
 };
 
-import { prisma } from "~/lib/db";
-import { WarsIcon } from "@jitaspace/eve-icons";
-
-import { WarsTable } from "~/components/Wars";
-
-type War = {
+interface War {
   warId: number;
   aggressorCorporationId: number | null;
   aggressorAllianceId: number | null;
@@ -33,7 +34,7 @@ type War = {
   isOpenForAllies: boolean;
   retractedDate: string | null;
   updatedAt: string;
-};
+}
 
 async function getCachedWarsData(): Promise<War[]> {
   "use cache";
@@ -131,7 +132,7 @@ async function ActiveWarsContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <ActiveWarsContent />
     </Suspense>
   );

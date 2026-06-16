@@ -39,7 +39,10 @@ export const restrictEnvAccess = defineConfig(
 export const baseConfig = defineConfig(
   // Ignore files not tracked by VCS and any config files
   includeIgnoreFile(path.join(import.meta?.dirname, "../../.gitignore")),
-  { ignores: ["**/*.config.*"] },
+  // `includeIgnoreFile` only reads the root .gitignore; generated client code
+  // (kubb output) is excluded via *package-level* .gitignore files, so ignore
+  // it explicitly here to keep generated sources out of lint.
+  { ignores: ["**/*.config.*", "**/src/generated/**"] },
   {
     files: ["**/*.js", "**/*.ts", "**/*.tsx"],
     plugins: {
@@ -83,6 +86,28 @@ export const baseConfig = defineConfig(
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+  },
+  // Test files legitimately work with `any` (mocked modules), `require()`
+  // (mocks must be registered before the unit under test is imported), and
+  // non-null assertions on known-present fixtures. Relax the type-safety rules
+  // here while keeping them strict on application/library source.
+  {
+    files: [
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "**/tests/**/*.ts",
+      "**/tests/**/*.tsx",
+    ],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
     },
   },
 );

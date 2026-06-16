@@ -1,0 +1,46 @@
+"use client";
+
+import type { AnchorProps } from "@mantine/core";
+import type { LinkProps } from "next/link";
+import type React from "react";
+import { memo } from "react";
+
+import { AllianceAnchor, CorporationAnchor } from "@jitaspace/ui";
+
+import { EveEntityAnchor } from "./EveEntityAnchor";
+
+export type WarDefenderAnchorProps = AnchorProps &
+  Omit<LinkProps, "href"> &
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+    defenderAllianceId?: number;
+    defenderCorporationId?: number;
+  };
+
+export const WarDefenderAnchor = memo(
+  ({
+    defenderAllianceId,
+    defenderCorporationId,
+    children,
+    ...otherProps
+  }: WarDefenderAnchorProps) => {
+    if (defenderAllianceId)
+      return (
+        <AllianceAnchor allianceId={defenderAllianceId} {...otherProps}>
+          {children}
+        </AllianceAnchor>
+      );
+
+    if (defenderCorporationId)
+      return (
+        <CorporationAnchor
+          corporationId={defenderCorporationId}
+          {...otherProps}
+        >
+          {children}
+        </CorporationAnchor>
+      );
+
+    return <EveEntityAnchor {...otherProps}>{children}</EveEntityAnchor>;
+  },
+);
+WarDefenderAnchor.displayName = "WarDefenderAnchor";

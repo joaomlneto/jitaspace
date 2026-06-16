@@ -1,9 +1,11 @@
 "use client";
 
-import {
-  getCorporationsCorporationIdContacts,
+import type {
   GetCorporationsCorporationIdContactsLabelsQueryResponse,
   GetCorporationsCorporationIdContactsQueryResponse,
+} from "@jitaspace/esi-client";
+import {
+  getCorporationsCorporationIdContacts,
   useGetCorporationsCorporationIdContactsInfinite,
   useGetCorporationsCorporationIdContactsLabels,
 } from "@jitaspace/esi-client";
@@ -23,7 +25,7 @@ export function useCorporationContacts(corporationId: number) {
   });
 
   const { data: labels } = useGetCorporationsCorporationIdContactsLabels(
-    corporationId ?? 0,
+    corporationId,
     { ...authHeaders },
     {
       query: {
@@ -33,9 +35,9 @@ export function useCorporationContacts(corporationId: number) {
     },
   );
 
-  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
+  const { data, isLoading, error, refetch } =
     useGetCorporationsCorporationIdContactsInfinite(
-      corporationId ?? 0,
+      corporationId,
       {},
       { ...authHeaders },
       {
@@ -44,16 +46,17 @@ export function useCorporationContacts(corporationId: number) {
           initialPageParam: 1,
           queryFn: ({ pageParam }) =>
             getCorporationsCorporationIdContacts(
-              corporationId ?? 0,
+              corporationId,
               {
-                page: pageParam as number,
+                page: pageParam,
               },
               { ...authHeaders },
             ),
           getNextPageParam: (lastPage, pages) => {
-            const numPages: number | undefined = lastPage.headers?.["x-pages"];
+            const xPages: unknown = lastPage.headers["x-pages"];
+            const numPages = typeof xPages === "string" ? Number(xPages) : 0;
             const nextPage = pages.length + 1;
-            if (nextPage > (numPages ?? 0)) return undefined;
+            if (nextPage > numPages) return undefined;
             return nextPage;
           },
         },
@@ -61,7 +64,7 @@ export function useCorporationContacts(corporationId: number) {
     );
 
   return {
-    data: (data?.pages ?? []).flatMap((res) => res.data ?? []),
+    data: (data?.pages ?? []).flatMap((res) => res.data),
     labels: labels?.data ?? [],
     error,
     isLoading,

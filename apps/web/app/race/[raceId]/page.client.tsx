@@ -4,15 +4,16 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
+import { FactionName } from "@jitaspace/eve-components";
 import { useRace } from "@jitaspace/hooks";
-import { FactionAvatar, FactionName } from "@jitaspace/ui";
+import { FactionAvatar } from "@jitaspace/ui";
 
 import { RaceAvatar } from "~/components/Avatar";
 import { RaceName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();
-  const rawRaceId = params?.raceId;
+  const rawRaceId = params.raceId;
   const raceId = Number(
     typeof rawRaceId === "string" ? rawRaceId : rawRaceId?.[0],
   );

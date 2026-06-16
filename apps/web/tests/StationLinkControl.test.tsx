@@ -42,7 +42,7 @@ jest.mock("@jitaspace/eve-icons", () => ({
   StationIcon: () => <span>StationIcon</span>,
 }));
 
-jest.mock("@jitaspace/ui", () => ({
+jest.mock("@jitaspace/eve-components", () => ({
   EsiSearchSelect: (props: {
     placeholder?: string;
     value?: string;

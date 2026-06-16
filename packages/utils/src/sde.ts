@@ -7,7 +7,7 @@ export const toRomanNumeral = (value: number): string => {
   const integerValue = Math.trunc(value);
   if (integerValue <= 0) return String(integerValue);
 
-  const romanPairs: Array<{ value: number; symbol: string }> = [
+  const romanPairs: { value: number; symbol: string }[] = [
     { value: 1000, symbol: "M" },
     { value: 900, symbol: "CM" },
     { value: 500, symbol: "D" },
@@ -41,10 +41,10 @@ const resolveLocalizedName = (name?: LocalizedName): string | undefined => {
   return name.en ?? Object.values(name).find((value) => value !== undefined);
 };
 
-type SolarSystemNameInput = {
+interface SolarSystemNameInput {
   solarSystemName?: string;
   name?: LocalizedName;
-};
+}
 
 const resolveSolarSystemName = (input: SolarSystemNameInput): string =>
   input.solarSystemName ?? resolveLocalizedName(input.name) ?? "";
@@ -52,11 +52,11 @@ const resolveSolarSystemName = (input: SolarSystemNameInput): string =>
 export const formatStarName = (input: SolarSystemNameInput): string =>
   resolveSolarSystemName(input);
 
-type PlanetNameInput = {
+interface PlanetNameInput {
   celestialIndex: number;
   orbitName?: string;
   uniqueName?: LocalizedName;
-};
+}
 
 export const formatPlanetName = (input: PlanetNameInput): string => {
   const customName = resolveLocalizedName(input.uniqueName);
@@ -66,11 +66,11 @@ export const formatPlanetName = (input: PlanetNameInput): string => {
   return celestialIndex;
 };
 
-type MoonNameInput = {
+interface MoonNameInput {
   orbitIndex: number;
   orbitName?: string;
   uniqueName?: LocalizedName;
-};
+}
 
 export const formatMoonName = (input: MoonNameInput): string => {
   const customName = resolveLocalizedName(input.uniqueName);
@@ -79,11 +79,11 @@ export const formatMoonName = (input: MoonNameInput): string => {
   return `${input.orbitIndex}`;
 };
 
-type AsteroidBeltNameInput = {
+interface AsteroidBeltNameInput {
   orbitIndex: number;
   orbitName?: string;
   uniqueName?: LocalizedName;
-};
+}
 
 export const formatAsteroidBeltName = (
   input: AsteroidBeltNameInput,
@@ -95,12 +95,12 @@ export const formatAsteroidBeltName = (
   return `${input.orbitIndex}`;
 };
 
-type StationNameInput = {
+interface StationNameInput {
   orbitName?: string;
   corporationName?: string;
   operationName?: string | null;
   useOperationName?: boolean;
-};
+}
 
 export const formatStationName = (input: StationNameInput): string => {
   const orbitName = input.orbitName ?? "";

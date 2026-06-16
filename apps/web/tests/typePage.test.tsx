@@ -154,7 +154,6 @@ interface TypePageProps {
 // Require the page lazily so the jest.mock(...) factories above are active
 // before the module (and its transitively-mocked deps) are evaluated.
 function getPage(): React.ComponentType<TypePageProps> {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
   return require("~/app/type/[typeId]/page.client").default;
 }
 
@@ -248,6 +247,23 @@ describe("Type page (client)", () => {
       "href",
       "https://evetycoon.com/market/30",
     );
+
+    // The EVE Workbench fits link is ship-only; this type is category 4.
+    expect(
+      screen.queryByRole("link", { name: /EVE Workbench/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows the EVE Workbench fits link only for ships (category 6)", () => {
+    mockUseGetUniverseGroupsGroupId.mockReturnValue({
+      data: { data: { category_id: 6 } },
+    });
+
+    renderPage();
+
+    expect(
+      screen.getByRole("link", { name: /EVE Workbench/i }),
+    ).toHaveAttribute("href", "https://eveworkbench.com/fits?ship=30");
   });
 
   it("exposes Overview, Attributes, Market and Description tabs for full data", () => {

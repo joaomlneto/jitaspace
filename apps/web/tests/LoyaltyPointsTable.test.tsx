@@ -1,18 +1,15 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { jest } from "@jest/globals";
 import React from "react";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
-// @jitaspace/hooks is redirected to __mocks__/@jitaspace/hooks.ts via
-// moduleNameMapper — import the stub's jest.fn() directly so tests can
-// configure return values without needing their own jest.mock() calls.
-import {
-  useFuzzworkRegionalMarketAggregates,
-  type FuzzworkTypeMarketAggregate,
-} from "@jitaspace/hooks";
+import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
+import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 
+import { usePreferencesStore } from "~/lib/preferences";
 // @jitaspace/ui is redirected to __mocks__/@jitaspace/ui.tsx via moduleNameMapper
 // (same reason as hooks — real source pulls in @tabler/icons-react ESM bundles).
 
@@ -21,7 +18,10 @@ import {
 // @jitaspace/datatable is loaded via moduleNameMapper → real source → SWC
 // ---------------------------------------------------------------------------
 import { LoyaltyPointsTable } from "../components/LPStore/LoyaltyPointsTable";
-import { usePreferencesStore } from "~/lib/preferences";
+
+// @jitaspace/hooks is redirected to __mocks__/@jitaspace/hooks.ts via
+// moduleNameMapper — import the stub's jest.fn() directly so tests can
+// configure return values without needing their own jest.mock() calls.
 
 // ---------------------------------------------------------------------------
 // Fixtures
@@ -369,4 +369,48 @@ describe("LoyaltyPointsTable — classic engine (experimental off)", () => {
     // The per-table engine selector only appears in the experimental version.
     expect(screen.queryByText("Table engine")).not.toBeInTheDocument();
   });
+});
+
+describe("LoyaltyPointsTable — zero-LP offers (divide-by-zero guard)", () => {
+  const zeroLpOffer = {
+    offerId: 9001,
+    corporationId: 1,
+    typeId: 100,
+    quantity: 1,
+    akCost: null,
+    lpCost: 0,
+    iskCost: 0,
+    requiredItems: [],
+  };
+
+  beforeEach(() => {
+    (useFuzzworkRegionalMarketAggregates as jest.Mock).mockReturnValue({
+      data: { 100: MARKET_STATS, 200: MARKET_STATS },
+    });
+  });
+
+  it.each([
+    ["experimental", true],
+    ["classic", false],
+  ])(
+    "renders a blank ISK/LP (never Infinity) for a 0 LP cost offer — %s engine",
+    (_label, experimental) => {
+      usePreferencesStore.setState({
+        experimentalDataTables: experimental,
+      });
+      wrap(
+        React.createElement(LoyaltyPointsTable, {
+          corporations: singleCorp,
+          types,
+          offers: [zeroLpOffer],
+        }),
+      );
+      // The row rendered (LP Cost cell shows "0 LP") ...
+      expect(screen.getByText("0 LP")).toBeInTheDocument();
+      // ... but the lpCost > 0 guard yields a blank ISK/LP cell, never the
+      // Infinity / NaN that an unguarded divide-by-zero would produce.
+      expect(screen.queryByText(/Infinity/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
+    },
+  );
 });

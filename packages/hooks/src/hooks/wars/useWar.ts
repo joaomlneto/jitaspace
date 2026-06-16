@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  GetWarsWarIdQueryResponse,
-  useGetWarsWarId,
-} from "@jitaspace/esi-client";
+import type { GetWarsWarIdQueryResponse } from "@jitaspace/esi-client";
+
+export { useGetWarsWarId as useWar } from "@jitaspace/esi-client";
 
 export type War = GetWarsWarIdQueryResponse;
-
-export const useWar = useGetWarsWarId;

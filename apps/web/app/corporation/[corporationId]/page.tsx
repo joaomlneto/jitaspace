@@ -1,9 +1,9 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
-import { Loader } from "@mantine/core";
+import { Suspense } from "react";
 
 import { getCorporationsCorporationId } from "@jitaspace/esi-client";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import PageClient from "./page.client";
 
 function stripHtml(s: string): string {
@@ -28,8 +28,8 @@ export async function generateMetadata({
 
   try {
     const res = await getCorporationsCorporationId(id);
-    const name = res.data?.name;
-    const description = res.data?.description
+    const name = res.data.name;
+    const description = res.data.description
       ? stripHtml(res.data.description).slice(0, 200)
       : undefined;
     const logoUrl = `https://images.evetech.net/corporations/${id}/logo`;
@@ -55,7 +55,7 @@ export async function generateMetadata({
 
 export default function Page() {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageClient />
     </Suspense>
   );

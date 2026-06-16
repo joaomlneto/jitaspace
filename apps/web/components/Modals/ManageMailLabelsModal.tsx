@@ -19,9 +19,7 @@ import { LabelManagementTable } from "~/components/EveMail";
 export function ManageMailLabelsModal({
   context,
   id,
-}: ContextModalProps<{
-  /* empty */
-}>) {
+}: Readonly<ContextModalProps<Record<string, never>>>) {
   const character = useSelectedCharacter();
   const characterId = character?.characterId;
   const { accessToken, authHeaders } = useAccessToken({
@@ -85,8 +83,8 @@ export function ManageMailLabelsModal({
               showNotification({
                 title: "Error creating label",
                 message: `Error creating label ${values.name}: ${
-                  ((e as AxiosError).response?.data as { error?: unknown })
-                    .error
+                  ((e as AxiosError).response?.data as { error?: string })
+                    .error ?? ""
                 }`,
               });
             }
