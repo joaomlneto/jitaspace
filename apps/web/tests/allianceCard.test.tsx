@@ -15,19 +15,22 @@ jest.mock("@jitaspace/hooks", () => ({
     mockUseEsiAllianceMemberCorporations(allianceId),
 }));
 
-jest.mock("../../../packages/ui/Anchor", () => ({
+jest.mock("@jitaspace/ui", () => ({
   AllianceAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
   CorporationAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
-}));
-
-jest.mock("../../../packages/ui/Avatar", () => ({
   AllianceAvatar: ({ allianceId }: { allianceId: number | string }) => (
     <span>{`Alliance Avatar ${allianceId}`}</span>
   ),
+  FormattedDateText: ({ date }: { date: Date }) => (
+    <span>{`Date ${date.toISOString()}`}</span>
+  ),
 }));
 
-jest.mock("../../../packages/ui/Text", () => ({
+jest.mock("../../../packages/eve-components/Anchor", () => ({
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
+}));
+
+jest.mock("../../../packages/eve-components/Text", () => ({
   AllianceName: ({ allianceId }: { allianceId: number | string }) => (
     <span>{`Alliance ${allianceId}`}</span>
   ),
@@ -36,12 +39,6 @@ jest.mock("../../../packages/ui/Text", () => ({
   ),
   CorporationName: ({ corporationId }: { corporationId: number }) => (
     <span>{`Corporation ${corporationId}`}</span>
-  ),
-}));
-
-jest.mock("../../../packages/ui/DateText", () => ({
-  FormattedDateText: ({ date }: { date: Date }) => (
-    <span>{`Date ${date.toISOString()}`}</span>
   ),
 }));
 
@@ -76,7 +73,7 @@ describe("AllianceCard", () => {
       },
     });
 
-    const { AllianceCard } = require("../../../packages/ui/Card/AllianceCard");
+    const { AllianceCard } = require("../../../packages/eve-components/Card/AllianceCard");
     render(
       <MantineProvider>
         <AllianceCard allianceId={9900} />
@@ -117,7 +114,7 @@ describe("AllianceCard", () => {
       },
     });
 
-    const { AllianceCard } = require("../../../packages/ui/Card/AllianceCard");
+    const { AllianceCard } = require("../../../packages/eve-components/Card/AllianceCard");
     render(
       <MantineProvider>
         <AllianceCard allianceId={9901} />
@@ -144,7 +141,7 @@ describe("AllianceCard", () => {
       },
     });
 
-    const { AllianceCard } = require("../../../packages/ui/Card/AllianceCard");
+    const { AllianceCard } = require("../../../packages/eve-components/Card/AllianceCard");
     render(
       <MantineProvider>
         <AllianceCard

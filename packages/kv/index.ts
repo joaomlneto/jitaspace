@@ -1,8 +1,6 @@
 import Queue from "bull";
 import { createClient } from "redis";
 
-import type { GetWarsWarId200 } from "@jitaspace/esi-client";
-
 export interface CreateKvOptions {
   /** Redis connection URL. */
   redisUrl: string;
@@ -29,7 +27,11 @@ export async function createKv({ redisUrl }: CreateKvOptions) {
         "corporationIds",
         redisUrl,
       ),
-      war: new Queue<GetWarsWarId200[]>("wars", redisUrl),
+      // Payload type is intentionally `unknown`: kv is a generic Redis/queue
+      // wrapper with no knowledge of EVE domain shapes. Consumers assert the
+      // concrete element type at their call site (e.g. the wars drain handler
+      // in @jitaspace/background-jobs).
+      war: new Queue<unknown>("wars", redisUrl),
     },
   };
 

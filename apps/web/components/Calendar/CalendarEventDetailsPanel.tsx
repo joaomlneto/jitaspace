@@ -4,13 +4,15 @@ import type {
   CalendarEventAttendee,
   CalendarEventAttendeeResponse,
 } from "@jitaspace/hooks";
-import { useCalendarEvent, useCalendarEventAttendees } from "@jitaspace/hooks";
 import {
   CharacterAnchor,
-  CharacterAvatar,
   CharacterName,
-  DateHoverCard,
   EveEntityNameAnchor,
+} from "@jitaspace/eve-components";
+import { useCalendarEvent, useCalendarEventAttendees } from "@jitaspace/hooks";
+import {
+  CharacterAvatar,
+  DateHoverCard,
   FormattedDateText,
 } from "@jitaspace/ui";
 

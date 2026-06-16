@@ -1,13 +1,12 @@
 import { memo, useMemo } from "react";
 import { Group, JsonInput, Table } from "@mantine/core";
 
+import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
 import { useDogmaAttributes, useTypes } from "@jitaspace/hooks";
 import {
   DogmaAttributeAnchor,
   formatDogmaAttributeValue,
-  TypeAnchor,
   TypeAvatar,
-  TypeName,
 } from "@jitaspace/ui";
 
 import { DogmaAttributeName } from "~/components/Text";

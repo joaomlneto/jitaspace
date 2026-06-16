@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -33,20 +33,24 @@ jest.mock("@mantine/modals", () => ({
 
 jest.mock("@jitaspace/ui", () => ({
   DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#">{children}</a>
-  ),
   CharacterAvatar: ({ characterId }: { characterId?: number }) => (
     <span>{`CharAvatar ${characterId}`}</span>
+  ),
+  FormattedDateText: ({ date }: { date?: Date }) => (
+    <span>{date ? `Date ${date.toISOString()}` : "Date none"}</span>
+  ),
+}));
+
+// Components that moved to @jitaspace/eve-components are stubbed there.
+jest.mock("@jitaspace/eve-components", () => ({
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
   ),
   CharacterName: ({ characterId }: { characterId?: number }) => (
     <span>{`Char ${characterId}`}</span>
   ),
   EveEntityNameAnchor: ({ entityId }: { entityId?: number }) => (
     <a href="#">{`EntityAnchor ${entityId}`}</a>
-  ),
-  FormattedDateText: ({ date }: { date?: Date }) => (
-    <span>{date ? `Date ${date.toISOString()}` : "Date none"}</span>
   ),
   // Used by the Timeline component under test.
   CorporationAllianceHistoryTimeline: ({
@@ -158,9 +162,7 @@ describe("CalendarEventDetailsPanel", () => {
     },
   };
 
-  const renderPanel = (
-    eventOverride: Partial<typeof EVENT_VALUE> = {},
-  ) => {
+  const renderPanel = (eventOverride: Partial<typeof EVENT_VALUE> = {}) => {
     mockUseCalendarEvent.mockReturnValue({ ...EVENT_VALUE, ...eventOverride });
     mockUseCalendarEventAttendees.mockReturnValue(ATTENDEES_VALUE);
     const {
@@ -397,9 +399,7 @@ describe("CorporationAllianceHistoryTimeline", () => {
 
     expect(mockUseCorporationAllianceHistory).toHaveBeenCalledWith(98000001);
     expect(screen.getAllByTestId("timeline-record")).toHaveLength(2);
-    expect(
-      screen.getByText("record 1 alliance 99005338"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("record 1 alliance 99005338")).toBeInTheDocument();
     expect(screen.getByText("record 2 alliance none")).toBeInTheDocument();
   });
 

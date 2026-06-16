@@ -6,8 +6,8 @@ import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
 import { getUniverseStationsStationId } from "@jitaspace/esi-client";
+import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { StationIcon } from "@jitaspace/eve-icons";
-import { EsiSearchSelect } from "@jitaspace/ui";
 
 import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
 import { StationAvatar } from "~/components/Avatar";

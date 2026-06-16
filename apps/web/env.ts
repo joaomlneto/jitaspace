@@ -12,6 +12,14 @@ const server = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string(),
 
+  /**
+   * Change-history database (the eve-builds CockroachDB, `history` schema),
+   * read by @jitaspace/db-history. Optional so the rest of the app builds
+   * without it; the /history pages need it set to return data.
+   */
+  HISTORY_DATABASE_URL: z.string().url().optional(),
+  HISTORY_DATABASE_SCHEMA: z.string().optional(),
+
   EVE_CLIENT_ID: z.string(),
   EVE_CLIENT_SECRET: z.string(),
 
@@ -68,6 +76,8 @@ const processEnv = {
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   DATABASE_URL: process.env.DATABASE_URL,
   REDIS_URL: process.env.REDIS_URL,
+  HISTORY_DATABASE_URL: process.env.HISTORY_DATABASE_URL,
+  HISTORY_DATABASE_SCHEMA: process.env.HISTORY_DATABASE_SCHEMA,
   EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
   EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
   INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,

@@ -32,6 +32,20 @@ jest.mock("@jitaspace/ui", () => ({
   CharacterAvatar: ({ characterId }: { characterId?: number }) => (
     <span>{`char-avatar-${characterId ?? ""}`}</span>
   ),
+  CorporationAvatar: ({ corporationId }: { corporationId?: number }) => (
+    <span>{`corp-avatar-${corporationId ?? ""}`}</span>
+  ),
+  CorporationAnchor: ({
+    corporationId,
+    children,
+  }: {
+    corporationId?: number;
+    children?: ReactNode;
+  }) => <a href={`/corporation/${corporationId}`}>{children}</a>,
+}));
+
+// Components that moved to @jitaspace/eve-components are stubbed there.
+jest.mock("@jitaspace/eve-components", () => ({
   CharacterName: ({ characterId }: { characterId?: number }) => (
     <span>{`Character ${characterId ?? ""}`}</span>
   ),
@@ -42,19 +56,9 @@ jest.mock("@jitaspace/ui", () => ({
     characterId?: number;
     children?: ReactNode;
   }) => <a href={`/character/${characterId}`}>{children}</a>,
-  CorporationAvatar: ({ corporationId }: { corporationId?: number }) => (
-    <span>{`corp-avatar-${corporationId ?? ""}`}</span>
-  ),
   CorporationName: ({ corporationId }: { corporationId?: number }) => (
     <span>{`Corporation ${corporationId ?? ""}`}</span>
   ),
-  CorporationAnchor: ({
-    corporationId,
-    children,
-  }: {
-    corporationId?: number;
-    children?: ReactNode;
-  }) => <a href={`/corporation/${corporationId}`}>{children}</a>,
 }));
 
 jest.mock("~/components/Badge", () => ({

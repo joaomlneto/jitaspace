@@ -17,9 +17,9 @@ import { showNotification } from "@mantine/notifications";
 import { HttpStatusCode } from "axios";
 
 import { postCharactersCharacterIdMail } from "@jitaspace/esi-client";
+import { EmailRecipientSearchMultiSelect } from "@jitaspace/eve-components";
 import { useAccessToken, useSelectedCharacter } from "@jitaspace/hooks";
 import { htmlToEveMail } from "@jitaspace/tiptap-eve";
-import { EmailRecipientSearchMultiSelect } from "@jitaspace/ui";
 
 import { MailMessageEditor } from "~/components/EveMail/Editor/MailMessageEditor";
 

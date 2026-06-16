@@ -4,9 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Container, Group, Stack, Title } from "@mantine/core";
 
+import { TypeName } from "@jitaspace/eve-components";
 import { MarketIcon } from "@jitaspace/eve-icons";
 import { useTypeMarketOrders } from "@jitaspace/hooks";
-import { TypeAvatar, TypeName } from "@jitaspace/ui";
+import { TypeAvatar } from "@jitaspace/ui";
 
 import { MarketOrdersDataTable } from "~/components/Market";
 

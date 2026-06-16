@@ -1,0 +1,41 @@
+{
+  "name": "@jitaspace/db-history",
+  "description": "JitaSpace change-history database (standalone, isolated from @jitaspace/db)",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "db:studio": "prisma studio --browser none",
+    "db:generate": "pnpm with-env prisma generate",
+    "db:generate:watch": "pnpm with-env prisma generate --watch",
+    "db:push": "echo 'skip: @jitaspace/db-history is read-only — the eve-builds schema is owned by the ingestion pipeline, never pushed from the web app'",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
+    "lint:fix": "pnpm lint --fix",
+    "postinstall": "pnpm db:generate",
+    "type-check": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "dotenv": "^17.4.2",
+    "pg": "^8.21.0"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "@types/node": "^24.12.4",
+    "@types/pg": "^8.20.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.3",
+    "prisma": "^7.8.0",
+    "typescript": "^5.9.3"
+  },
+  "prettier": "@jitaspace/prettier-config"
+}

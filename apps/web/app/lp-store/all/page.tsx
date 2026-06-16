@@ -1,15 +1,16 @@
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
+import type { LPStoreAllPageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import { collectLpStoreOfferTypeIds } from "./collectTypeIds";
+import LPStoreAllPage from "./page.client";
 
 export const metadata = {
   title: "All LP Store Offers",
-  description: "Browse all Loyalty Point store offers from every NPC corporation in EVE Online.",
+  description:
+    "Browse all Loyalty Point store offers from every NPC corporation in EVE Online.",
 };
-
-import LPStoreAllPage from "./page.client";
-import type { LPStoreAllPageProps } from "./page.client";
 
 export default async function Page() {
   "use cache";
@@ -66,7 +67,10 @@ export default async function Page() {
       lpCost: Number(offer.lpCost),
     }));
 
-    const typeIds = [...new Set(requiredItems.map((item) => item.typeId))];
+    const typeIds = collectLpStoreOfferTypeIds(
+      offersWithoutRequiredItems,
+      requiredItems,
+    );
 
     types = await prisma.type.findMany({
       select: {

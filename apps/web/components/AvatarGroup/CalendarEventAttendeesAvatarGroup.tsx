@@ -2,8 +2,9 @@
 
 import { memo } from "react";
 import { type AvatarProps } from "@mantine/core";
+
+import { CalendarEventAttendeesAvatarGroup as UICalendarEventAttendeesAvatarGroup } from "@jitaspace/eve-components";
 import { useCalendarEventAttendees } from "@jitaspace/hooks";
-import { CalendarEventAttendeesAvatarGroup as UICalendarEventAttendeesAvatarGroup } from "@jitaspace/ui";
 
 export type CalendarEventAttendeesAvatarGroupProps = AvatarProps & {
   characterId?: number;
@@ -12,7 +13,12 @@ export type CalendarEventAttendeesAvatarGroupProps = AvatarProps & {
 };
 
 export const CalendarEventAttendeesAvatarGroup = memo(
-  ({ characterId, eventId, limit, ...otherProps }: CalendarEventAttendeesAvatarGroupProps) => {
+  ({
+    characterId,
+    eventId,
+    limit,
+    ...otherProps
+  }: CalendarEventAttendeesAvatarGroupProps) => {
     const { data } = useCalendarEventAttendees(characterId, eventId);
     return (
       <UICalendarEventAttendeesAvatarGroup
@@ -23,4 +29,5 @@ export const CalendarEventAttendeesAvatarGroup = memo(
     );
   },
 );
-CalendarEventAttendeesAvatarGroup.displayName = "CalendarEventAttendeesAvatarGroup";
+CalendarEventAttendeesAvatarGroup.displayName =
+  "CalendarEventAttendeesAvatarGroup";

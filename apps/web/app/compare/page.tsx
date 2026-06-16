@@ -1,13 +1,12 @@
 "use client";
 
-import { useState  } from "react";
+import { useState } from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
 
+import { EsiSearchMultiSelect } from "@jitaspace/eve-components";
 import { CompareToolIcon } from "@jitaspace/eve-icons";
-import { EsiSearchMultiSelect } from "@jitaspace/ui";
 
 import { CompareTable } from "~/components/Compare";
-
 
 export default function Page() {
   const [typeIds, setTypeIds] = useState<number[]>([]);

@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -22,20 +22,34 @@ jest.mock("@jitaspace/hooks", () => ({
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/ui", () => ({
   DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
-    <span data-testid="char-anchor">{children}</span>
-  ),
   CharacterAvatar: ({ characterId }: { characterId?: number }) => (
     <span data-testid="char-avatar">{`char-avatar-${characterId ?? "?"}`}</span>
-  ),
-  CharacterName: ({ characterId }: { characterId?: number }) => (
-    <span data-testid="char-name">{`char-${characterId ?? "?"}`}</span>
   ),
   CorporationAnchor: ({ children }: { children?: ReactNode }) => (
     <span data-testid="corp-anchor">{children}</span>
   ),
   CorporationAvatar: ({ corporationId }: { corporationId?: number }) => (
     <span data-testid="corp-avatar">{`corp-avatar-${corporationId ?? "?"}`}</span>
+  ),
+  TimeAgoText: ({ date }: { date: Date }) => (
+    <span data-testid="time-ago">{date.toISOString()}</span>
+  ),
+  DogmaAttributeAnchor: ({ children }: { children?: ReactNode }) => (
+    <span data-testid="attr-anchor">{children}</span>
+  ),
+  formatDogmaAttributeValue: (value: number) => value.toLocaleString(),
+  TypeAvatar: ({ typeId }: { typeId?: number }) => (
+    <span data-testid="type-avatar">{`type-avatar-${typeId ?? "?"}`}</span>
+  ),
+}));
+
+// Components that moved to @jitaspace/eve-components are stubbed there.
+jest.mock("@jitaspace/eve-components", () => ({
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <span data-testid="char-anchor">{children}</span>
+  ),
+  CharacterName: ({ characterId }: { characterId?: number }) => (
+    <span data-testid="char-name">{`char-${characterId ?? "?"}`}</span>
   ),
   CorporationName: ({ corporationId }: { corporationId?: number }) => (
     <span data-testid="corp-name">{`corp-${corporationId ?? "?"}`}</span>
@@ -52,18 +66,8 @@ jest.mock("@jitaspace/ui", () => ({
   EveEntityName: ({ entityId }: { entityId?: number }) => (
     <span data-testid="entity-name">{`entity-${entityId ?? "?"}`}</span>
   ),
-  TimeAgoText: ({ date }: { date: Date }) => (
-    <span data-testid="time-ago">{date.toISOString()}</span>
-  ),
-  DogmaAttributeAnchor: ({ children }: { children?: ReactNode }) => (
-    <span data-testid="attr-anchor">{children}</span>
-  ),
-  formatDogmaAttributeValue: (value: number) => value.toLocaleString(),
   TypeAnchor: ({ children }: { children?: ReactNode }) => (
     <span data-testid="type-anchor">{children}</span>
-  ),
-  TypeAvatar: ({ typeId }: { typeId?: number }) => (
-    <span data-testid="type-avatar">{`type-avatar-${typeId ?? "?"}`}</span>
   ),
   TypeName: ({ typeId }: { typeId?: number }) => (
     <span data-testid="type-name">{`type-${typeId ?? "?"}`}</span>
@@ -236,7 +240,10 @@ describe("AgentsTable", () => {
         agents={[{ ...SAMPLE_AGENT, agentDivisionId: 99 }]}
         agentTypes={agentTypes}
         agentDivisions={[
-          { name: undefined as unknown as string, npcCorporationDivisionId: 99 },
+          {
+            name: undefined as unknown as string,
+            npcCorporationDivisionId: 99,
+          },
         ]}
       />,
     );

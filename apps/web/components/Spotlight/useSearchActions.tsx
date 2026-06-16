@@ -1,13 +1,13 @@
 "use client";
 
+import type { SpotlightActionData } from "@mantine/spotlight";
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useDebouncedValue } from "@mantine/hooks";
-import type { SpotlightActionData } from "@mantine/spotlight";
 
 import type { EsiSearchCategory } from "@jitaspace/hooks";
+import { EveEntityAvatar } from "@jitaspace/eve-components";
 import { useEsiNameLookup, useEsiSearch } from "@jitaspace/hooks";
-import { EveEntityAvatar } from "@jitaspace/ui";
 
 import { jitaApps } from "~/config/apps";
 

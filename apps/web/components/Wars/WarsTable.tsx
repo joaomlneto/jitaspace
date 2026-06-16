@@ -5,13 +5,12 @@ import { useMemo } from "react";
 import { Group } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
+import { AllianceName, CorporationName } from "@jitaspace/eve-components";
 import {
   AllianceAnchor,
   AllianceAvatar,
-  AllianceName,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
   FormattedDateText,
   TimeAgoText,

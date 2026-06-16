@@ -15,6 +15,11 @@ import {
 import { IconExternalLink } from "@tabler/icons-react";
 
 import type { EveIconProps } from "@jitaspace/eve-icons";
+import {
+  SolarSystemName,
+  StationAnchor,
+  StationName,
+} from "@jitaspace/eve-components";
 import { IndustryIcon } from "@jitaspace/eve-icons";
 import {
   useSelectedCharacter,
@@ -22,14 +27,7 @@ import {
   useSolarSystemCostIndices,
 } from "@jitaspace/hooks";
 import { useGetSolarSystemById } from "@jitaspace/sde-client";
-import {
-  Position3DText,
-  SolarSystemName,
-  StarAnchor,
-  StationAnchor,
-  StationName,
-  TypeAvatar,
-} from "@jitaspace/ui";
+import { Position3DText, StarAnchor, TypeAvatar } from "@jitaspace/ui";
 
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
 import { StargateDestinationAnchor } from "~/components/Anchor";

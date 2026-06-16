@@ -14,13 +14,10 @@ import { IconExternalLink } from "@tabler/icons-react";
 import { format } from "date-fns";
 import humanizeDuration from "humanize-duration";
 
+import { TypeName } from "@jitaspace/eve-components";
 import { useCharacterSkillQueue } from "@jitaspace/hooks";
-import { TypeAvatar, TypeName } from "@jitaspace/ui";
+import { TypeAvatar } from "@jitaspace/ui";
 import { skillLevelRomanNumeral } from "@jitaspace/utils";
-
-
-
-
 
 export interface SkillQueueTimelineProps {
   characterId: number;
