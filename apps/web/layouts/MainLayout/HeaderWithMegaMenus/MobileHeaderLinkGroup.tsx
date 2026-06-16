@@ -24,7 +24,7 @@ import classes from "./HeaderWithMegaMenus.module.css";
 export interface MobileHeaderLinkGroupProps {
   title: string;
   Icon: (props: EveIconProps) => React.ReactElement;
-  onNavigation?: Function;
+  onNavigation?: () => void;
   items: Record<string, JitaApp>;
 }
 

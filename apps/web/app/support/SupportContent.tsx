@@ -30,11 +30,13 @@ import {
 
 import {
   CharacterAnchor,
-  CharacterAvatar,
   CharacterName,
+  CorporationName,
+} from "@jitaspace/eve-components";
+import {
+  CharacterAvatar,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
 } from "@jitaspace/ui";
 
 import { env } from "~/env";

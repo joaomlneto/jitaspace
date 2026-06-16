@@ -1,27 +1,26 @@
 "use client";
 
+import type { PropsWithChildren } from "react";
 import {
   createContext,
   memo,
   useContext,
   useEffect,
+  useMemo,
   useState,
-  type PropsWithChildren,
 } from "react";
 import axios from "axios";
 
-
-
-
-
-type EsiClientStatistics = {
+interface EsiClientStatistics {
   esiErrorsRemaining?: number;
   esiErrorsResetOn?: Date;
   setEsiErrorInfo: (remaining: number, reset: number) => void;
-};
+}
 
 const defaultEsiClientStatistics: EsiClientStatistics = {
-  setEsiErrorInfo: () => {},
+  setEsiErrorInfo: () => {
+    // no-op: error limits are tracked by the provider's axios interceptor
+  },
 };
 
 const EsiClientStatistics = createContext<EsiClientStatistics>(
@@ -41,25 +40,31 @@ export const EsiClientStatisticsProvider = memo(
         const remaining: string | undefined = res.headers.get(
           "x-esi-error-limit-remain",
         );
-        if (remaining) setEsiErrorsRemaining(parseInt(remaining, 10));
+        if (remaining) setEsiErrorsRemaining(Number.parseInt(remaining, 10));
         // @ts-expect-error type of res.headers.get not detected as function?
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const reset: string | undefined = res.headers.get(
           "x-esi-error-limit-reset",
         );
-        if (reset) setEsiErrorsResetOn(new Date(parseInt(reset, 10) * 1000));
+        if (reset)
+          setEsiErrorsResetOn(new Date(Number.parseInt(reset, 10) * 1000));
         return res;
       });
     }, []);
 
+    const value = useMemo<EsiClientStatistics>(
+      () => ({
+        esiErrorsRemaining,
+        esiErrorsResetOn,
+        setEsiErrorInfo: () => {
+          // no-op: error limits are tracked by the axios interceptor above
+        },
+      }),
+      [esiErrorsRemaining, esiErrorsResetOn],
+    );
+
     return (
-      <EsiClientStatistics.Provider
-        value={{
-          esiErrorsRemaining,
-          esiErrorsResetOn,
-          setEsiErrorInfo: () => {},
-        }}
-      >
+      <EsiClientStatistics.Provider value={value}>
         {children}
       </EsiClientStatistics.Provider>
     );
@@ -68,13 +73,5 @@ export const EsiClientStatisticsProvider = memo(
 EsiClientStatisticsProvider.displayName = "EsiClientStatisticsProvider";
 
 export function useEsiClientStatistics() {
-  const ctx = useContext(EsiClientStatistics);
-
-  if (!ctx) {
-    throw new Error(
-      "[@jitaspace/esi-client] EsiClientStatisticsProvider was not found in tree",
-    );
-  }
-
-  return ctx;
+  return useContext(EsiClientStatistics);
 }

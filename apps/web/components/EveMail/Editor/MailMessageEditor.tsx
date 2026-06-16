@@ -32,10 +32,6 @@ export function MailMessageEditor({
     },
   });
 
-  if (!editor) {
-    return <Text>Loading editor...</Text>;
-  }
-
   return (
     <Stack>
       <RichTextEditor editor={editor} mih={200} {...otherProps}>
@@ -63,11 +59,9 @@ export function MailMessageEditor({
           <RichTextEditor.ControlsGroup ml="auto">
             <Text
               size="sm"
-              color={
-                (editor?.getHTML().length ?? 0) - 7 >= 8000 ? "red" : "dimmed"
-              }
+              color={editor.getHTML().length - 7 >= 8000 ? "red" : "dimmed"}
             >
-              {(editor?.getHTML().length ?? 0) - 7}/8000
+              {editor.getHTML().length - 7}/8000
             </Text>
           </RichTextEditor.ControlsGroup>
         </RichTextEditor.Toolbar>

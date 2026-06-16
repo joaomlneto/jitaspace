@@ -39,7 +39,7 @@ export const EsiClientSSOAccessTokenInjector = ({
   // this refreshes tokens that expired or are close to expiring
   useEffect(() => {
     const timeUntilExpiration = () => {
-      const now = new Date().getTime();
+      const now = Date.now();
       return Math.min(
         ...Object.values(characters).map(
           (character) =>
@@ -49,7 +49,7 @@ export const EsiClientSSOAccessTokenInjector = ({
     };
     const timer = setTimeout(
       () => {
-        const now = new Date().getTime();
+        const now = Date.now();
         Object.values(characters)
           .filter(
             (character) =>

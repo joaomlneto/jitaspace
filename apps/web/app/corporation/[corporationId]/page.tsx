@@ -1,5 +1,5 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { getCorporationsCorporationId } from "@jitaspace/esi-client";
 
@@ -28,8 +28,8 @@ export async function generateMetadata({
 
   try {
     const res = await getCorporationsCorporationId(id);
-    const name = res.data?.name;
-    const description = res.data?.description
+    const name = res.data.name;
+    const description = res.data.description
       ? stripHtml(res.data.description).slice(0, 200)
       : undefined;
     const logoUrl = `https://images.evetech.net/corporations/${id}/logo`;

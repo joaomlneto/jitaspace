@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
 import type { EveIconProps } from "@jitaspace/eve-icons";
@@ -410,23 +409,6 @@ export const universeApps: Record<string, JitaApp> = {
                                 },*/
 };
 
-export const devApps: Record<string, JitaApp> = {
-  sde: {
-    name: "SDE REST API",
-    description:
-      "A REST API with an OpenAPI specification for EVE Online's Static Data Export.",
-    url: "https://sde.jita.space",
-    Icon: (props) =>
-      React.createElement(Image, {
-        src: "https://images.evetech.net/types/60753/icon?size=64",
-        alt: "SDE OpenAPI",
-        ...props,
-      }),
-    hotKey: ["⌘", "P"],
-    scopes: {},
-  },
-};
-
 export const extraJitaFeatures: AppScopeSet[] = [
   {
     reason: "Set in-game autopilot",
@@ -517,15 +499,5 @@ export const jitaApps: Record<
     apps: universeApps,
     name: "Universe",
     Icon: (props) => <MapIcon {...props} />,
-  },
-  developer: {
-    apps: devApps,
-    name: "Developer",
-    Icon: (props) =>
-      React.createElement(Image, {
-        src: "https://images.evetech.net/types/60753/icon?size=64",
-        alt: "SDE OpenAPI",
-        ...props,
-      }),
   },
 };

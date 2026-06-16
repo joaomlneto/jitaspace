@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
 
-import { compareSets } from "../../utils/compareSets";
 import { env } from "../../env";
+import { compareSets } from "../../utils/compareSets";
 
 jest.mock("inngest", () => ({
   NonRetriableError: class NonRetriableError extends Error {
@@ -13,7 +13,10 @@ jest.mock("inngest", () => ({
 }));
 jest.mock("../../env", () => ({ env: { NODE_ENV: "test" } }));
 
-interface Item { id: number; name: string }
+interface Item {
+  id: number;
+  name: string;
+}
 
 const getId = (item: Item) => item.id;
 const isEqual = (a: Item, b: Item) => a.name === b.name;

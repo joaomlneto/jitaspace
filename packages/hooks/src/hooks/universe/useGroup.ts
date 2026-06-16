@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  GetUniverseGroupsGroupIdQueryResponse,
-  useGetUniverseGroupsGroupId,
-} from "@jitaspace/esi-client";
+import type { GetUniverseGroupsGroupIdQueryResponse } from "@jitaspace/esi-client";
+
+export { useGetUniverseGroupsGroupId as useGroup } from "@jitaspace/esi-client";
 
 export type Group = GetUniverseGroupsGroupIdQueryResponse;
-
-export const useGroup = useGetUniverseGroupsGroupId;

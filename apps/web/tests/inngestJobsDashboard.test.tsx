@@ -91,7 +91,6 @@ const statusFixture: InngestStatusResponse = {
 
 function renderDashboard() {
   const { InngestJobsDashboard } =
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     require("../components/Status/InngestJobsDashboard") as typeof InngestJobsDashboardModule;
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },

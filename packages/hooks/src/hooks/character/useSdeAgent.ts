@@ -1,5 +1,3 @@
 "use client";
 
-import { useGetNpcCharacterById } from "@jitaspace/sde-client";
-
-export const useSdeAgent = useGetNpcCharacterById;
+export { useGetNpcCharacterById as useSdeAgent } from "@jitaspace/sde-client";

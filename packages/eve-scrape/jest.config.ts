@@ -1,5 +1,12 @@
 import type { Config } from "jest";
 
+// The registry tests only exercise the declarative Inngest config (function
+// registry), not the runtime env, so skip the zod env validation in
+// client/env.ts. Set here (jest loads this config in the parent process before
+// spawning workers, which inherit `process.env`) rather than in a setup file,
+// so the env contract is established before any module under test is imported.
+process.env.SKIP_ENV_VALIDATION = "1";
+
 const config: Config = {
   testEnvironment: "node",
   // Resolve the CJS build of dual-package deps (e.g. `inngest`, whose exports
@@ -8,7 +15,6 @@ const config: Config = {
     customExportConditions: ["require", "node", "default"],
   },
   testMatch: ["<rootDir>/tests/**/*.test.ts"],
-  setupFiles: ["<rootDir>/jest.setup.ts"],
   transform: {
     "^.+\\.tsx?$": [
       "@swc/jest",

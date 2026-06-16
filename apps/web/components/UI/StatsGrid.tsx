@@ -1,20 +1,12 @@
+import type { SimpleGridProps } from "@mantine/core";
 import type React from "react";
 import { memo } from "react";
-import {
-  Grid,
-  Group,
-  Paper,
-  SimpleGrid,
-  Text
-  
-} from "@mantine/core";
-import type {SimpleGridProps} from "@mantine/core";
+import { Grid, Group, Paper, SimpleGrid, Text } from "@mantine/core";
 import { IconArrowDownRight, IconArrowUpRight } from "@tabler/icons-react";
 
-import type {EveIconProps} from "@jitaspace/eve-icons";
+import type { EveIconProps } from "@jitaspace/eve-icons";
 
 import classes from "./StatsGrid.module.css";
-
 
 type StatsGridProps = SimpleGridProps & {
   data: {
@@ -29,12 +21,10 @@ type StatsGridProps = SimpleGridProps & {
 export const StatsGrid = memo(({ data, ...otherProps }: StatsGridProps) => {
   const stats = data.map((stat) => {
     //const Icon = icons[stat.icon];
-    const DiffIcon =
-      stat.diff == undefined
-        ? null
-        : stat.diff > 0
-          ? IconArrowUpRight
-          : IconArrowDownRight;
+    let DiffIcon: typeof IconArrowUpRight | null = null;
+    if (stat.diff != undefined) {
+      DiffIcon = stat.diff > 0 ? IconArrowUpRight : IconArrowDownRight;
+    }
 
     return (
       <Paper withBorder p="md" radius="md" key={stat.title}>

@@ -1,11 +1,8 @@
 "use client";
 
-import React, { memo, useMemo } from "react";
-import { Skeleton, Text, Tooltip, type TextProps } from "@mantine/core";
-
-
-
-
+import type { TextProps } from "@mantine/core";
+import { memo, useMemo } from "react";
+import { Skeleton, Text, Tooltip } from "@mantine/core";
 
 export type ISKAmountProps = TextProps & {
   amount?: number;
@@ -31,13 +28,13 @@ export const ISKAmount = memo(
         { value: 1, symbol: "" },
       ];
 
-      const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
+      const rx = /\.0+$|(\.\d*[1-9])0+$/;
       const item = lookup.find((item) => Math.abs(amount) >= item.value);
       if (!item) return "0";
       return (
         (amount / item.value).toFixed(digits).replace(rx, "$1") + item.symbol
       );
-    }, [amount, digits]);
+    }, [amount, digits, showFullAmount]);
 
     if (amount == null)
       return (

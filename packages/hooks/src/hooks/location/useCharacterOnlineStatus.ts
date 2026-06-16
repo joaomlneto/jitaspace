@@ -10,7 +10,7 @@ export const useCharacterOnlineStatus = (characterId: number) => {
     scopes: ["esi-location.read_online.v1"],
   });
   return useGetCharactersCharacterIdOnline(
-    characterId ?? 0,
+    characterId,
     { ...authHeaders },
     {
       query: {

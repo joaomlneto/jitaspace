@@ -2,10 +2,8 @@
 
 import { useMemo } from "react";
 
-import {
-  GetCharactersCharacterIdLoyaltyPointsQueryResponse,
-  useGetCharactersCharacterIdLoyaltyPoints,
-} from "@jitaspace/esi-client";
+import type { GetCharactersCharacterIdLoyaltyPointsQueryResponse } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdLoyaltyPoints } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 
@@ -19,7 +17,7 @@ export const useCharacterLoyaltyPoints = (characterId: number) => {
   });
 
   const query = useGetCharactersCharacterIdLoyaltyPoints(
-    characterId ?? 1,
+    characterId,
     { ...authHeaders },
     {
       query: {

@@ -1,15 +1,24 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
+/** Safely stringify an arbitrary cell value for the table-render stub. */
+function stringifyCellValue(value: unknown): string {
+  if (value == null) return "";
+  if (typeof value === "object") return JSON.stringify(value);
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean")
+    return String(value);
+  return "";
+}
+
 const mockUseMarketPrices =
   jest.fn<() => { data: Record<number, { adjusted_price?: number }> }>();
-const mockUseEsiNameLookup = jest.fn<
-  () => Record<string, { value?: { name: string } } | undefined>
->();
+const mockUseEsiNameLookup =
+  jest.fn<() => Record<string, { value?: { name: string } } | undefined>>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useMarketPrices: () => mockUseMarketPrices(),
@@ -26,13 +35,22 @@ jest.mock("@jitaspace/ui", () => ({
   TypeAvatar: () => null,
 }));
 
+// Shape produced by the mocked `useMantineReactTable` below (not the real
+// MRT_TableInstance — this stub only needs the precomputed rows).
+interface MockTable {
+  rows: { id: string | number; cells: { id: string; content: ReactNode }[] }[];
+}
+
 // Simplified mantine-react-table mock that renders rows with accessible data
 jest.mock("mantine-react-table", () => ({
-  MantineReactTable: ({ table }: { table: ReturnType<typeof mockTable> }) => (
+  MantineReactTable: ({ table }: { table: MockTable }) => (
     <table>
       <tbody>
         {table.rows.map(
-          (row: { id: string | number; cells: { id: string; content: ReactNode }[] }) => (
+          (row: {
+            id: string | number;
+            cells: { id: string; content: ReactNode }[];
+          }) => (
             <tr key={row.id} data-testid="table-row">
               {row.cells.map((cell) => (
                 <td key={cell.id}>{cell.content}</td>
@@ -46,7 +64,10 @@ jest.mock("mantine-react-table", () => ({
   useMantineReactTable: (config: {
     columns: {
       id: string;
-      Cell?: (args: { row: { original: unknown }; cell: { getValue: () => unknown } }) => ReactNode;
+      Cell?: (args: {
+        row: { original: unknown };
+        cell: { getValue: () => unknown };
+      }) => ReactNode;
       accessorKey?: string;
       accessorFn?: (row: unknown) => unknown;
     }[];
@@ -63,15 +84,13 @@ jest.mock("mantine-react-table", () => ({
               row: { original: row },
               cell: { getValue: () => value },
             })
-          : String(value ?? "");
+          : stringifyCellValue(value);
         return { id: col.id, content };
       }),
     }));
     return { rows };
   },
 }));
-
-type mockTable = ReturnType<typeof import("mantine-react-table")["useMantineReactTable"]>;
 
 const SAMPLE_ASSET = {
   item_id: 1001,
@@ -83,9 +102,7 @@ const SAMPLE_ASSET = {
   is_blueprint_copy: false,
 };
 
-function renderTable(
-  entries: typeof SAMPLE_ASSET[] = [],
-) {
+function renderTable(entries: (typeof SAMPLE_ASSET)[] = []) {
   const { AssetsDataTable } = require("~/components/Assets/AssetsDataTable");
   return render(
     <MantineProvider>
@@ -106,7 +123,10 @@ describe("AssetsDataTable", () => {
   });
 
   it("renders a row for each entry", () => {
-    renderTable([SAMPLE_ASSET, { ...SAMPLE_ASSET, item_id: 1002, type_id: 35 }]);
+    renderTable([
+      SAMPLE_ASSET,
+      { ...SAMPLE_ASSET, item_id: 1002, type_id: 35 },
+    ]);
     expect(screen.getAllByTestId("table-row")).toHaveLength(2);
   });
 

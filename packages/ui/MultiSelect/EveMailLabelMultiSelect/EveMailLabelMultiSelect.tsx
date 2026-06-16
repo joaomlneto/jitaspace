@@ -1,16 +1,17 @@
 "use client";
 
 import type { MultiSelectProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import { MultiSelect } from "@mantine/core";
+
 import { humanLabelName } from "@jitaspace/utils";
 
-export type MailLabel = {
+export interface MailLabel {
   label_id?: number;
   name?: string;
   color?: string;
   unread_count?: number;
-};
+}
 
 type EmailLabelMultiSelectProps = Omit<MultiSelectProps, "data"> & {
   labels?: MailLabel[];

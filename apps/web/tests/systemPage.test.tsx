@@ -1,7 +1,14 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { cleanup, render, screen } from "@testing-library/react";
 
@@ -43,9 +50,7 @@ jest.mock("@jitaspace/eve-icons", () => ({
 }));
 
 jest.mock("~/components/ActionIcon", () => ({
-  SetAutopilotDestinationActionIcon: () => (
-    <div data-testid="set-autopilot" />
-  ),
+  SetAutopilotDestinationActionIcon: () => <div data-testid="set-autopilot" />,
 }));
 
 jest.mock("~/components/Anchor", () => ({
@@ -72,7 +77,7 @@ jest.mock("~/components/Breadcrumbs", () => ({
 jest.mock("~/components/Text", () => ({
   AsteroidBeltName: () => <span>Asteroid Belt</span>,
   MoonName: () => <span>Moon</span>,
-  PlanetName: ({ span }: { span?: boolean }) => <span>Planet</span>,
+  PlanetName: () => <span>Planet</span>,
   StargateName: () => <span>Stargate</span>,
   StarName: () => <span>Star</span>,
 }));
@@ -180,10 +185,7 @@ describe("System page", () => {
     // External links
     expect(
       screen.getByRole("link", { name: /DOTLAN EveMaps/ }),
-    ).toHaveAttribute(
-      "href",
-      `https://evemaps.dotlan.net/system/${SYSTEM_ID}`,
-    );
+    ).toHaveAttribute("href", `https://evemaps.dotlan.net/system/${SYSTEM_ID}`);
     expect(screen.getByRole("link", { name: /zKillboard/ })).toHaveAttribute(
       "href",
       `https://zkillboard.com/system/${SYSTEM_ID}`,

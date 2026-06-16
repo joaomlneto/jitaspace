@@ -1,17 +1,22 @@
 "use client";
 
 import { memo, useCallback } from "react";
+
 import { postUiOpenwindowInformation } from "@jitaspace/esi-client";
 import { useAccessToken } from "@jitaspace/hooks";
 import { OpenInformationWindowActionIcon as UIOpenInformationWindowActionIcon } from "@jitaspace/ui";
 
-export type OpenInformationWindowActionIconProps = {
+export interface OpenInformationWindowActionIconProps {
   entityId?: number;
   characterId?: number;
-};
+}
 
 export const OpenInformationWindowActionIcon = memo(
-  ({ entityId, characterId, ...otherProps }: OpenInformationWindowActionIconProps) => {
+  ({
+    entityId,
+    characterId,
+    ...otherProps
+  }: OpenInformationWindowActionIconProps) => {
     const { accessToken, authHeaders } = useAccessToken({
       characterId,
       scopes: ["esi-ui.open_window.v1"],

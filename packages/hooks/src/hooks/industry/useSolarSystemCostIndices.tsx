@@ -2,9 +2,11 @@
 
 import { useMemo } from "react";
 
-import type { GetIndustrySystemsQueryResponse } from "@jitaspace/esi-client";
-import {
+import type {
   CostIndicesActivityEnum,
+  GetIndustrySystemsQueryResponse,
+} from "@jitaspace/esi-client";
+import {
   costIndicesActivityEnum,
   useGetIndustrySystems,
 } from "@jitaspace/esi-client";

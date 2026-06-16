@@ -5,9 +5,9 @@ import {
   getAlliancesAllianceIdCorporations,
 } from "@jitaspace/esi-client";
 
+import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
-import type { BatchStepResult, CrudStatistics } from "../../../types";
 
 export interface ScrapeAlliancesEventPayload {
   data: {
@@ -16,6 +16,16 @@ export interface ScrapeAlliancesEventPayload {
 }
 
 type StatsKey = "alliances";
+
+type LimitFunction = ReturnType<typeof pLimit>;
+
+const fetchAllianceMemberCorporations = (
+  allianceId: number,
+  limit: LimitFunction,
+) =>
+  limit(async () =>
+    getAlliancesAllianceIdCorporations(allianceId).then((res) => res.data),
+  );
 
 export const scrapeEsiAlliances = defineJob<
   ScrapeAlliancesEventPayload["data"]
@@ -36,28 +46,25 @@ export const scrapeEsiAlliances = defineJob<
       const numBatches = Math.ceil(allianceIds.length / batchSize);
       const batchIds = (batchIndex: number) =>
         allianceIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      return [...Array(numBatches).keys()].map((batchId) => batchIds(batchId));
+      return [...new Array(numBatches).keys()].map((batchId) =>
+        batchIds(batchId),
+      );
     });
 
     type StepResult = BatchStepResult<StatsKey>;
     const results: StepResult[] = [];
     const limit = pLimit(1);
 
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<StepResult> => {
           const stepStartTime = performance.now();
-          const thisBatchIds = batches[i]!;
 
           const esiAllianceMemberCorporations = (
             await Promise.all(
               thisBatchIds.map((allianceId) =>
-                limit(async () =>
-                  getAlliancesAllianceIdCorporations(allianceId).then(
-                    (res) => res.data,
-                  ),
-                ),
+                fetchAllianceMemberCorporations(allianceId, limit),
               ),
             )
           ).flat();

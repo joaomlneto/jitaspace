@@ -14,8 +14,9 @@ Trigger.dev task (or a scheduled task for the cron job) and exported from
   `triggerAndWait().unwrap()`, `sleep`→`wait.for`, `singleton`/`concurrencyLimit`→
   `queue.concurrencyLimit`, `retries`→`retry.maxAttempts = retries + 1`,
   `NonRetriableError`→`AbortTaskRunError`).
-- `src/trigger/index.ts` — one literal named export per job, so the build can
-  statically index each task. Generated from the registry; keep in sync.
+- `src/trigger/index.ts` — loops `registry.jobs` and registers one Trigger task
+  per job, so the set can't drift from the registry. Trigger v4 indexes by
+  registration, not export, so nothing here is exported.
 
 ## Setup
 
@@ -60,3 +61,15 @@ self-generate via their own `postinstall`, so they're present after install.
 
 The `/status` page in `apps/web` shows a Trigger.dev jobs dashboard backed by the
 Management API (`runs.list`), authenticated with `TRIGGER_SECRET_KEY`.
+
+## Error reporting (Sentry)
+
+Task failures report to Sentry (same project as `apps/web`) via
+`src/trigger/init.ts`: it calls `Sentry.init` and registers a global
+`tasks.onFailure` hook. It **reuses the web app's Sentry env vars** —
+`NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` —
+which are set in Vercel and synced to the Trigger env by the Vercel integration,
+so there's nothing extra to configure. Reporting is gated to production
+(`NODE_ENV === "production"`), so local `trigger.dev dev` runs stay quiet. When
+`SENTRY_AUTH_TOKEN` is present, `sentryEsbuildPlugin` also uploads source maps at
+deploy time for readable stack traces (skipped otherwise).

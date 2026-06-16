@@ -53,57 +53,55 @@ export const backfillEveRefKillmails = defineJob<
       const boundedBatchSize = Math.max(batchSize, 1 + files.length / 1000);
 
       const numBatches = Math.ceil(files.length / boundedBatchSize);
-      const batches = [...Array(numBatches).keys()].map((batchId) =>
+      const batches = [...new Array(numBatches).keys()].map((batchId) =>
         files.slice(batchId * batchSize, (batchId + 1) * batchSize),
       );
       return batches;
     });
 
     for (let i = startBatch; i < batches.length; i++) {
+      const batch = batches[i];
+      if (batch === undefined) continue;
       await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
           const batchStartTime = performance.now();
 
-          const remoteEntries: EveRefKillmailSchema[] = batches[i]!.map(
+          const remoteEntries: EveRefKillmailSchema[] = batch.flatMap(
             (file: { content: EveRefKillmailSchema[] }) => file.content,
-          ).flat();
+          );
 
           await createCorpAndItsRefRecords({
             missingAllianceIds: new Set(
               remoteEntries
-                .map((killmail) => [
+                .flatMap((killmail) => [
                   ...killmail.attackers.map((a) => a.alliance_id),
                   killmail.victim.alliance_id,
                 ])
-                .flat()
                 .filter((id) => id != null),
             ),
             missingCharacterIds: new Set(
               remoteEntries
-                .map((killmail) => [
+                .flatMap((killmail) => [
                   ...killmail.attackers.map((a) => a.character_id),
                   killmail.victim.character_id,
                 ])
-                .flat()
                 .filter((id) => id != null),
             ),
             missingCorporationIds: new Set(
               remoteEntries
-                .map((killmail) => [
+                .flatMap((killmail) => [
                   ...killmail.attackers.map((a) => a.corporation_id),
                   killmail.victim.alliance_id,
                 ])
-                .flat()
                 .filter((id) => id != null),
             ),
             missingFactionIds: new Set(
               remoteEntries
-                .map((killmail) => [
+                .flatMap((killmail) => [
                   ...killmail.attackers.map((a) => a.faction_id),
                   killmail.victim.faction_id,
                 ])
-                .flat()
                 .filter((id) => id != null),
             ),
           });

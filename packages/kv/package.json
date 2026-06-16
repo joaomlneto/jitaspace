@@ -15,7 +15,6 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@jitaspace/esi-client": "workspace:*",
     "bull": "^4.16.5",
     "redis": "^5.12.1"
   },

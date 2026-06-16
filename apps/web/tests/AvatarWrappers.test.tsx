@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -52,17 +52,6 @@ jest.mock("@jitaspace/ui", () => ({
   }) => (
     <span data-testid="ui-owner-avatar">{`owner ${ownerId} ${ownerType}`}</span>
   ),
-  CalendarEventAttendeesAvatarGroup: ({
-    attendees,
-    limit,
-  }: {
-    attendees?: { character_id?: number }[];
-    limit?: number;
-  }) => (
-    <span data-testid="ui-attendees">{`attendees ${
-      attendees?.length ?? 0
-    } limit ${limit ?? "none"}`}</span>
-  ),
   PlanetAvatar: ({ typeId }: { typeId?: number }) => (
     <span data-testid="ui-planet-avatar">{`planet type ${typeId}`}</span>
   ),
@@ -107,6 +96,22 @@ jest.mock("@jitaspace/ui", () => ({
   ),
   CalendarEventHumanDurationText: ({ durationMs }: { durationMs?: number }) => (
     <span data-testid="ui-duration-text">{`duration ${durationMs}`}</span>
+  ),
+}));
+
+// Components that moved to @jitaspace/eve-components are stubbed there so the
+// wrappers (which import them from that package) pick up these stubs.
+jest.mock("@jitaspace/eve-components", () => ({
+  CalendarEventAttendeesAvatarGroup: ({
+    attendees,
+    limit,
+  }: {
+    attendees?: { character_id?: number }[];
+    limit?: number;
+  }) => (
+    <span data-testid="ui-attendees">{`attendees ${
+      attendees?.length ?? 0
+    } limit ${limit ?? "none"}`}</span>
   ),
 }));
 
@@ -198,7 +203,9 @@ describe("Avatar wrappers", () => {
   });
 
   it("SolarSystemStarAvatar resolves the star via the solar system then passes its type id", () => {
-    mockUseSolarSystem.mockReturnValue({ data: { data: { star_id: 40000002 } } });
+    mockUseSolarSystem.mockReturnValue({
+      data: { data: { star_id: 40000002 } },
+    });
     mockUseStar.mockReturnValue({ data: { data: { type_id: 3800 } } });
 
     const { SolarSystemStarAvatar } = require("~/components/Avatar");
@@ -334,9 +341,9 @@ describe("Avatar wrappers", () => {
     expect(screen.getByTestId("ui-planet-avatar")).toHaveTextContent(
       "planet type undefined",
     );
-    expect(
-      screen.getByTestId("ui-solarsystemstar-avatar"),
-    ).toHaveTextContent("solarsystemstar type undefined");
+    expect(screen.getByTestId("ui-solarsystemstar-avatar")).toHaveTextContent(
+      "solarsystemstar type undefined",
+    );
     expect(screen.getByTestId("ui-star-avatar")).toHaveTextContent(
       "star type undefined",
     );

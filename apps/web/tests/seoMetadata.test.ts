@@ -47,49 +47,44 @@ describe("character/[characterId] generateMetadata", () => {
     mockGetCharactersCharacterId.mockResolvedValue({
       data: { name: "Jita Trader" },
     });
-    const { generateMetadata } = await import(
-      "~/app/character/[characterId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/character/[characterId]/page");
     const result = await generateMetadata({
       params: rp({ characterId: "90000001" }),
     });
     expect(result.title).toBe("Jita Trader");
     expect(
-      (result.openGraph as { images?: { url: string }[] })?.images?.[0]?.url,
+      (result.openGraph as { images?: { url: string }[] }).images?.[0]?.url,
     ).toContain("90000001");
   });
 
   it("returns empty object for id = 0", async () => {
-    const { generateMetadata } = await import(
-      "~/app/character/[characterId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/character/[characterId]/page");
     expect(
       await generateMetadata({ params: rp({ characterId: "0" }) }),
     ).toEqual({});
   });
 
   it("returns empty object for non-numeric id", async () => {
-    const { generateMetadata } = await import(
-      "~/app/character/[characterId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/character/[characterId]/page");
     expect(
       await generateMetadata({ params: rp({ characterId: "invalid" }) }),
     ).toEqual({});
   });
 
   it("returns empty object for negative id", async () => {
-    const { generateMetadata } = await import(
-      "~/app/character/[characterId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/character/[characterId]/page");
     expect(
       await generateMetadata({ params: rp({ characterId: "-1" }) }),
     ).toEqual({});
   });
 
   it("returns empty object for Infinity", async () => {
-    const { generateMetadata } = await import(
-      "~/app/character/[characterId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/character/[characterId]/page");
     expect(
       await generateMetadata({ params: rp({ characterId: "Infinity" }) }),
     ).toEqual({});
@@ -97,9 +92,8 @@ describe("character/[characterId] generateMetadata", () => {
 
   it("returns empty object when esi-client throws", async () => {
     mockGetCharactersCharacterId.mockRejectedValue(new Error("network error"));
-    const { generateMetadata } = await import(
-      "~/app/character/[characterId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/character/[characterId]/page");
     expect(
       await generateMetadata({ params: rp({ characterId: "90000001" }) }),
     ).toEqual({});
@@ -120,16 +114,15 @@ describe("corporation/[corporationId] generateMetadata", () => {
     mockGetCorporationsCorporationId.mockResolvedValue({
       data: { name: "Jita Corp", description: "<b>We trade</b>" },
     });
-    const { generateMetadata } = await import(
-      "~/app/corporation/[corporationId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/corporation/[corporationId]/page");
     const result = await generateMetadata({
       params: rp({ corporationId: "98000001" }),
     });
     expect(result.title).toBe("Jita Corp");
     expect(result.description).toBe("We trade");
     expect(
-      (result.openGraph as { images?: { url: string }[] })?.images?.[0]?.url,
+      (result.openGraph as { images?: { url: string }[] }).images?.[0]?.url,
     ).toContain("98000001");
   });
 
@@ -137,9 +130,8 @@ describe("corporation/[corporationId] generateMetadata", () => {
     mockGetCorporationsCorporationId.mockResolvedValue({
       data: { name: "Corp", description: "<p>Hello <b>world</b></p>" },
     });
-    const { generateMetadata } = await import(
-      "~/app/corporation/[corporationId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/corporation/[corporationId]/page");
     const result = await generateMetadata({
       params: rp({ corporationId: "98000001" }),
     });
@@ -150,9 +142,8 @@ describe("corporation/[corporationId] generateMetadata", () => {
     mockGetCorporationsCorporationId.mockResolvedValue({
       data: { name: "Corp", description: "x".repeat(300) },
     });
-    const { generateMetadata } = await import(
-      "~/app/corporation/[corporationId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/corporation/[corporationId]/page");
     const result = await generateMetadata({
       params: rp({ corporationId: "98000001" }),
     });
@@ -160,9 +151,8 @@ describe("corporation/[corporationId] generateMetadata", () => {
   });
 
   it("returns empty object for non-numeric id", async () => {
-    const { generateMetadata } = await import(
-      "~/app/corporation/[corporationId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/corporation/[corporationId]/page");
     expect(
       await generateMetadata({ params: rp({ corporationId: "abc" }) }),
     ).toEqual({});
@@ -170,9 +160,8 @@ describe("corporation/[corporationId] generateMetadata", () => {
 
   it("returns empty object when esi-client throws", async () => {
     mockGetCorporationsCorporationId.mockRejectedValue(new Error("network"));
-    const { generateMetadata } = await import(
-      "~/app/corporation/[corporationId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/corporation/[corporationId]/page");
     expect(
       await generateMetadata({ params: rp({ corporationId: "98000001" }) }),
     ).toEqual({});
@@ -193,31 +182,28 @@ describe("alliance/[allianceId] generateMetadata", () => {
     mockGetAlliancesAllianceId.mockResolvedValue({
       data: { name: "Pandemic Horde" },
     });
-    const { generateMetadata } = await import(
-      "~/app/alliance/[allianceId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/alliance/[allianceId]/page");
     const result = await generateMetadata({
       params: rp({ allianceId: "99005338" }),
     });
     expect(result.title).toBe("Pandemic Horde");
     expect(
-      (result.openGraph as { images?: { url: string }[] })?.images?.[0]?.url,
+      (result.openGraph as { images?: { url: string }[] }).images?.[0]?.url,
     ).toContain("99005338");
   });
 
   it("returns empty object for non-numeric id", async () => {
-    const { generateMetadata } = await import(
-      "~/app/alliance/[allianceId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/alliance/[allianceId]/page");
     expect(
       await generateMetadata({ params: rp({ allianceId: "xyz" }) }),
     ).toEqual({});
   });
 
   it("returns empty object for Infinity", async () => {
-    const { generateMetadata } = await import(
-      "~/app/alliance/[allianceId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/alliance/[allianceId]/page");
     expect(
       await generateMetadata({ params: rp({ allianceId: "Infinity" }) }),
     ).toEqual({});
@@ -225,9 +211,8 @@ describe("alliance/[allianceId] generateMetadata", () => {
 
   it("returns empty object when esi-client throws", async () => {
     mockGetAlliancesAllianceId.mockRejectedValue(new Error("network"));
-    const { generateMetadata } = await import(
-      "~/app/alliance/[allianceId]/page"
-    );
+    const { generateMetadata } =
+      await import("~/app/alliance/[allianceId]/page");
     expect(
       await generateMetadata({ params: rp({ allianceId: "99005338" }) }),
     ).toEqual({});

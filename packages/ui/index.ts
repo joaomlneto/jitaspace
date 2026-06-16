@@ -1,11 +1,9 @@
 export * from "./ActionIcon";
 export * from "./Anchor";
 export * from "./Avatar";
-export * from "./AvatarGroup";
 export * from "./Badge";
 export * from "./Breadcrumbs";
 export * from "./Button";
-export * from "./Card";
 export * from "./ColorSwatch";
 export * from "./DateText";
 export * from "./DurationText";
@@ -14,4 +12,3 @@ export * from "./MultiSelect";
 export * from "./Select";
 export * from "./SkillLevelBar";
 export * from "./Text";
-export * from "./Timeline";

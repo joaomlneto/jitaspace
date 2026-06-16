@@ -1,19 +1,14 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
-import {
-  type Column,
-  type ColumnDef,
-  type PaginationState,
-  type SortingState,
-  type VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
+import type {
+  Column,
+  ColumnDef,
+  PaginationState,
+  SortingState,
+  VisibilityState,
 } from "@tanstack/react-table";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
   Center,
@@ -29,6 +24,14 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
+import {
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 
 import type { DataTableColumn, DataTableProps } from "@jitaspace/datatable";
 
@@ -86,6 +89,10 @@ function buildColumnDefs<TData>(
   columns: DataTableColumn<TData>[],
 ): ColumnDef<TData>[] {
   return columns.map((col) => {
+    // Capture into a local so the closure below keeps the narrowed type
+    // (control-flow narrowing on `col.sortAccessor` does not reach into the
+    // nested `sortingFn` arrow).
+    const sortAccessor = col.sortAccessor;
     return {
       id: col.id,
       header: col.header,
@@ -93,13 +100,10 @@ function buildColumnDefs<TData>(
       enableHiding: col.enableHiding ?? true,
       ...accessorPartFor(col.accessor),
       ...(typeof col.width === "number" ? { size: col.width } : {}),
-      ...(col.sortAccessor
+      ...(sortAccessor
         ? {
             sortingFn: (a, b) =>
-              compareValues(
-                col.sortAccessor!(a.original),
-                col.sortAccessor!(b.original),
-              ),
+              compareValues(sortAccessor(a.original), sortAccessor(b.original)),
           }
         : {}),
       cell: (ctx) =>
@@ -146,11 +150,12 @@ export function DataTable<TData>({
       ? [{ id: initialSort.columnId, desc: initialSort.direction === "desc" }]
       : [],
   );
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() =>
-    columns.reduce<VisibilityState>((acc, col) => {
-      if (col.defaultVisible === false) acc[col.id] = false;
-      return acc;
-    }, {}),
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    () =>
+      columns.reduce<VisibilityState>((acc, col) => {
+        if (col.defaultVisible === false) acc[col.id] = false;
+        return acc;
+      }, {}),
   );
   const [globalFilter, setGlobalFilter] = useState("");
   const [columnsMenuOpened, setColumnsMenuOpened] = useState(false);

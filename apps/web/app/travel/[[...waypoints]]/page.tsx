@@ -1,13 +1,13 @@
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
-import { PageSkeleton } from "~/components/PageSkeleton";
-import { prisma } from "~/lib/db";
 import { toArrayIfNot } from "@jitaspace/utils";
 
-import TravelPage from "./page.client";
 import type { TravelPageProps } from "./page.client";
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { prisma } from "~/lib/db";
+import TravelPage from "./page.client";
 
 async function getTravelData(waypoints: string[] | undefined): Promise<{
   solarSystems: TravelPageProps["solarSystems"];
@@ -39,8 +39,10 @@ async function getTravelData(waypoints: string[] | undefined): Promise<{
     solarSystems[solarSystem.solarSystemId] = {
       name: solarSystem.name,
       securityStatus: solarSystem.securityStatus.toNumber(),
-      neighbors: solarSystem.stargates.flatMap(
-        (stargate) => stargate.DestinationStargate!.solarSystemId,
+      neighbors: solarSystem.stargates.flatMap((stargate) =>
+        stargate.DestinationStargate
+          ? [stargate.DestinationStargate.solarSystemId]
+          : [],
       ),
     };
   });
@@ -50,43 +52,44 @@ async function getTravelData(waypoints: string[] | undefined): Promise<{
       Object.entries(solarSystems).find(
         ([solarSystemId, { name }]) =>
           solarSystemId == waypoint ||
-          name.toLowerCase() == waypoint?.toLowerCase(),
+          name.toLowerCase() == waypoint.toLowerCase(),
       )?.[0] ?? null
     );
   };
 
   const initialWaypoints = toArrayIfNot(waypoints ?? [])
     .map((waypoint) => parseWaypoint(waypoint.replaceAll("_", " ")))
-    .filter((x) => x !== null) as string[];
+    .filter((x) => x !== null);
 
   return { solarSystems, initialWaypoints };
 }
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ waypoints?: string[] }>;
-}) {
+}>) {
   const { waypoints } = await params;
 
+  let travelData: Awaited<ReturnType<typeof getTravelData>>;
   try {
-    const { solarSystems, initialWaypoints } = await getTravelData(waypoints);
-    return (
-      <TravelPage
-        initialWaypoints={initialWaypoints}
-        solarSystems={solarSystems}
-      />
-    );
+    travelData = await getTravelData(waypoints);
   } catch {
     notFound();
   }
+  return (
+    <TravelPage
+      initialWaypoints={travelData.initialWaypoints}
+      solarSystems={travelData.solarSystems}
+    />
+  );
 }
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ waypoints?: string[] }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />

@@ -4,7 +4,6 @@ import { useMemo } from "react";
 
 import { useFuzzworkRegionalMarketAggregates } from "./useFuzzworkRegionalMarketAggregates";
 
-
 export const useFuzzworkTypeMarketStats = (
   typeId: number,
   regionId: number,
@@ -12,7 +11,7 @@ export const useFuzzworkTypeMarketStats = (
   const query = useFuzzworkRegionalMarketAggregates([typeId], regionId);
 
   const data = useMemo(() => {
-    if (!query.data || !query.data[typeId]) return null;
+    if (!query.data?.[typeId]) return null;
     return query.data[typeId];
   }, [query.data]);
 

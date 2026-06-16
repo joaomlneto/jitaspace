@@ -1,13 +1,12 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
+import type { LPStoreCorporationPageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
-
 import LPStoreCorporationPage from "./page.client";
-import type { LPStoreCorporationPageProps } from "./page.client";
 
 async function getLPStoreCorporationData(
   corporationId: string,
@@ -117,24 +116,25 @@ export async function generateMetadata({
 
 async function PageContent({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ corporationId: string }>;
-}) {
+}>) {
   const { corporationId } = await params;
 
+  let props: LPStoreCorporationPageProps;
   try {
-    const props = await getLPStoreCorporationData(corporationId);
-    return <LPStoreCorporationPage {...props} />;
+    props = await getLPStoreCorporationData(corporationId);
   } catch {
     notFound();
   }
+  return <LPStoreCorporationPage {...props} />;
 }
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ corporationId: string }>;
-}) {
+}>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />

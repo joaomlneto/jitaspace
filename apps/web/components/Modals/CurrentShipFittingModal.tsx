@@ -8,14 +8,14 @@ import { ShipFittingCard } from "~/components/Fitting";
 
 export function CurrentShipFittingModal({
   innerProps,
-}: ContextModalProps<{ characterId: number }>) {
+}: Readonly<ContextModalProps<{ characterId: number }>>) {
   const fit = useCharacterCurrentFit(innerProps.characterId);
   return (
     <ShipFittingCard
       name={fit.name}
       shipTypeId={fit.shipTypeId}
       description="Current Ship"
-      items={(fit?.items ?? []).map((item) => ({
+      items={(fit.items ?? []).map((item) => ({
         typeId: item.type_id,
         flag: item.location_flag,
         quantity: item.quantity,

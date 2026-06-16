@@ -1,7 +1,7 @@
 "use client";
 
-import { createCollection } from "@tanstack/db";
 import type { CollectionConfig, UtilsRecord } from "@tanstack/db";
+import { createCollection } from "@tanstack/db";
 import { parseLoadSubsetOptions } from "@tanstack/query-db-collection";
 import { QueryClient } from "@tanstack/react-query";
 
@@ -13,7 +13,7 @@ export type ResolvableEntityCategory =
   | GetCharactersCharacterIdSearchQueryParamsCategoriesEnum
   | "stargate";
 
-export type WithId<T, K extends string> = T & { [P in K]: number | string };
+export type WithId<T, K extends string> = T & Record<K, number | string>;
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,7 +37,7 @@ export function extractIdFromCtx(
 ): string | number | undefined {
   if (!ctx.meta?.loadSubsetOptions) return undefined;
   const params = parseLoadSubsetOptions(ctx.meta.loadSubsetOptions);
-  return params.filters?.find((f: { field: string | (string | number)[] }) =>
+  return params.filters.find((f: { field: string | (string | number)[] }) =>
     typeof f.field === "string"
       ? f.field.includes(fieldName)
       : f.field.some((part) => part.toString().includes(fieldName)),

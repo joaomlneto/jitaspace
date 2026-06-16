@@ -15,6 +15,19 @@ export interface ScrapeNpcCorporationDivisionsEventPayload {
   };
 }
 
+const fetchNpcCorporationDivision = async (corporationDivisionId: number) => {
+  const corporationDivision = await getNpcCorporationDivisionById(
+    corporationDivisionId,
+  ).then((res) => res.data);
+  return {
+    npcCorporationDivisionId: corporationDivision.npcCorporationDivisionID,
+    name: corporationDivision.name.en ?? corporationDivision.displayName,
+    internalName: corporationDivision.internalName,
+    leaderTypeName: corporationDivision.leaderTypeName.en ?? null,
+    isDeleted: false,
+  };
+};
+
 export const scrapeSdeNpcCorporationDivisions = defineJob<
   ScrapeNpcCorporationDivisionsEventPayload["data"]
 >({
@@ -51,20 +64,7 @@ export const scrapeSdeNpcCorporationDivisions = defineJob<
       fetchRemoteEntries: async () =>
         Promise.all(
           corporationDivisionIds.map((corporationDivisionId) =>
-            limit(async () =>
-              getNpcCorporationDivisionById(corporationDivisionId)
-                .then((res) => res.data)
-                .then((corporationDivision) => ({
-                  npcCorporationDivisionId:
-                    corporationDivision.npcCorporationDivisionID,
-                  name:
-                    corporationDivision.name.en ??
-                    corporationDivision.displayName,
-                  internalName: corporationDivision.internalName,
-                  leaderTypeName: corporationDivision.leaderTypeName.en ?? null,
-                  isDeleted: false,
-                })),
-            ),
+            limit(() => fetchNpcCorporationDivision(corporationDivisionId)),
           ),
         ),
       batchCreate: (entries) =>

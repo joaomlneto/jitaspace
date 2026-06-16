@@ -1,7 +1,8 @@
 "use client";
 
+import type { AvatarProps } from "@mantine/core";
 import { memo } from "react";
-import { type AvatarProps } from "@mantine/core";
+
 import { useStar } from "@jitaspace/hooks";
 import { StarAvatar as UIStarAvatar } from "@jitaspace/ui";
 
