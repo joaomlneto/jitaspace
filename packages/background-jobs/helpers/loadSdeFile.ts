@@ -6,22 +6,32 @@ import type { sdeInputFiles, SdeRecord } from "@jitaspace/sde-utils";
 import { ensureSdePresentAndExtracted, loadFile } from "@jitaspace/sde-utils";
 
 /**
- * Download + extract the EVE Online SDE archive into a throwaway temp directory,
- * hand the extracted root to `fn`, then remove the directory.
+ * Lazily download + extract the EVE Online SDE archive ONCE per process and
+ * cache the extracted root. The first `loadSdeFile`/`loadSdeFiles` call fetches
+ * the ~97MB ZIP into a temp directory; every later call in the same process
+ * reuses it.
  *
- * Note: this downloads and extracts the WHOLE archive (the SDE is distributed as
- * a single ZIP). One ingest job per file therefore re-downloads the archive per
- * job; acceptable for now, but a shared download is the obvious future
- * optimization.
+ * The temp directory is intentionally not cleaned up — it lives for the process
+ * lifetime so a single run that ingests many files (notably the `ingest-sde-all`
+ * pipeline, which runs every ingest in one process) downloads the SDE just once.
+ * Trigger.dev task processes are ephemeral, so the OS reclaims it when the run
+ * ends. A failed download clears the cache so a later call can retry.
+ *
+ * Each `ingest-sde-*` job run is its own process, so running them individually
+ * (or fanned out via `ctx.invoke`) still downloads the archive once per job.
  */
-async function withExtractedSde<T>(fn: (sdeRoot: string) => T): Promise<T> {
-  const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "jitaspace-sde-"));
-  try {
+let extractedSdeRoot: Promise<string> | null = null;
+
+function getExtractedSdeRoot(): Promise<string> {
+  extractedSdeRoot ??= (async () => {
+    const workDir = fs.mkdtempSync(path.join(os.tmpdir(), "jitaspace-sde-"));
     await ensureSdePresentAndExtracted(workDir);
-    return fn(path.join(workDir, "sde"));
-  } finally {
-    fs.rmSync(workDir, { recursive: true, force: true });
-  }
+    return path.join(workDir, "sde");
+  })().catch((error: unknown) => {
+    extractedSdeRoot = null;
+    throw error;
+  });
+  return extractedSdeRoot;
 }
 
 /**
@@ -31,22 +41,21 @@ async function withExtractedSde<T>(fn: (sdeRoot: string) => T): Promise<T> {
 export async function loadSdeFile(
   filename: keyof typeof sdeInputFiles,
 ): Promise<SdeRecord> {
-  return withExtractedSde((sdeRoot) => loadFile(filename, sdeRoot));
+  return loadFile(filename, await getExtractedSdeRoot());
 }
 
 /**
  * Parse several SDE files from a single download + extraction, keyed by filename.
  * Use when a job needs cross-file data (e.g. celestial names resolved from the
- * universe hierarchy) without re-downloading the archive per file.
+ * universe hierarchy).
  */
 export async function loadSdeFiles<F extends keyof typeof sdeInputFiles>(
   filenames: readonly F[],
 ): Promise<Record<F, SdeRecord>> {
-  return withExtractedSde((sdeRoot) => {
-    const result = {} as Record<F, SdeRecord>;
-    for (const filename of filenames) {
-      result[filename] = loadFile(filename, sdeRoot);
-    }
-    return result;
-  });
+  const sdeRoot = await getExtractedSdeRoot();
+  const result = {} as Record<F, SdeRecord>;
+  for (const filename of filenames) {
+    result[filename] = loadFile(filename, sdeRoot);
+  }
+  return result;
 }

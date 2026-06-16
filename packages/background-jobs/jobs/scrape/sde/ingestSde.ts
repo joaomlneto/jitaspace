@@ -86,29 +86,44 @@ export interface IngestSdeEventPayload {
 }
 
 /**
- * On-demand, end-to-end SDE ingest: runs every `ingest-sde-*` job in FK
- * dependency order, each as its own (retryable) child task, populating a fresh
- * database or updating an existing one — the per-file ingests are diff-based and
- * idempotent. Unlike `bootstrapDatabase` this runs ONLY the SDE pipeline (no
- * ESI / hoboleaks scrapers), so it is the job to run to "pull the latest SDE
- * into the database".
+ * On-demand, end-to-end SDE ingest: downloads the latest SDE ONCE and runs every
+ * `ingest-sde-*` job in FK dependency order, all within this single task — so the
+ * ~97MB archive is fetched a single time (`loadSdeFile` caches the extract per
+ * process). Populates a fresh database or updates an existing one (the per-file
+ * ingests are diff-based, chunked, and idempotent). Unlike `bootstrapDatabase`
+ * this runs ONLY the SDE pipeline (no ESI / hoboleaks scrapers), so it is the job
+ * to run to "pull the latest SDE into the database".
  *
- * Each child downloads the SDE archive independently (separate task runs don't
- * share a filesystem), so a full run fetches it once per file — acceptable for a
- * periodic sync; a shared download is the obvious future optimization. Switch
- * `trigger` to `{ type: "cron", cron: "0 12 * * 1" }` to run it on a schedule.
+ * Because everything runs in one task there is no per-file retry: a failure fails
+ * the whole sync, which then retries from the start (re-downloading once,
+ * re-diffing — cheap, since the ingests are idempotent). The individual
+ * `ingest-sde-*` tasks remain available for targeted re-runs. Assumes the non-SDE
+ * tables some SDE rows reference (e.g. `Corporation`, which bloodlines point at)
+ * already exist — run the ESI scrapers / `bootstrapDatabase` first on an empty
+ * database. Switch `trigger` to `{ type: "cron", cron: "0 12 * * 1" }` to run it
+ * on a schedule.
  */
 export const ingestSde = defineJob<IngestSdeEventPayload["data"]>({
   id: "ingest-sde-all",
   name: "Ingest SDE (full sync)",
   description:
-    "Download the latest EVE Online SDE and populate/update every SDE-derived table, in dependency order. Each file is ingested by its own retryable child job.",
+    "Download the latest EVE Online SDE once and populate/update every SDE-derived table, in dependency order, within a single task.",
   trigger: { type: "event" },
   concurrencyLimit: 1,
-  retries: 0,
+  retries: 1,
+  // Generous cap for the whole in-process pipeline; raise if a full run nears it.
+  maxDurationSeconds: 3600,
   handler: async (ctx) => {
+    // Run every ingest in THIS process (not as child tasks) so the SDE archive
+    // is downloaded only once. The lazy import breaks the module cycle (the
+    // registry is built from the jobs array, which includes this job) and is
+    // resolved at run time, after the graph is fully loaded.
+    const { registry } = await import("../../index");
+    const results: Record<string, unknown> = {};
     for (const jobId of SDE_INGEST_JOB_IDS) {
-      await ctx.invoke(jobId, {});
+      ctx.logger.info(`ingest-sde-all: ${jobId}`);
+      results[jobId] = await registry.get(jobId).handler(ctx);
     }
+    return { results };
   },
 });
