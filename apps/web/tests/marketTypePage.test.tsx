@@ -6,8 +6,6 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen, waitFor } from "@testing-library/react";
 
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
-
 // The market item page is an async server component: it reads params, loads the
 // type's name from prisma (wrapped in "use cache"), and renders a client view
 // with the live order tables. We mock prisma, next/cache, next/navigation, the
