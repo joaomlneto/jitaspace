@@ -2,6 +2,20 @@ import type { JobContext } from "./context";
 
 export type JobTrigger = { type: "event" } | { type: "cron"; cron: string };
 
+/**
+ * Resource preset for a run, matching Trigger.dev's machine presets. Only the
+ * Trigger.dev adapter honours it (Inngest manages resources itself); use it for
+ * memory/CPU-heavy jobs like the in-process `ingest-sde-all` pipeline.
+ */
+export type JobMachine =
+  | "micro"
+  | "small-1x"
+  | "small-2x"
+  | "medium-1x"
+  | "medium-2x"
+  | "large-1x"
+  | "large-2x";
+
 export interface JobDefinition<Payload = unknown, Result = unknown> {
   /**
    * Stable identifier. Doubles as the Inngest function id + trigger event name
@@ -24,6 +38,8 @@ export interface JobDefinition<Payload = unknown, Result = unknown> {
   retries?: number;
   /** Per-job execution cap in seconds. Maps to Trigger maxDuration; advisory on Inngest. */
   maxDurationSeconds?: number;
+  /** Resource preset (Trigger.dev only). For memory/CPU-heavy jobs. */
+  machine?: JobMachine;
   // Method syntax (not an arrow property) so `handler`'s parameter is checked
   // bivariantly — this lets a `JobDefinition<SpecificPayload>` live in a
   // `JobDefinition[]` (= `JobDefinition<unknown>[]`) registry without `any`.

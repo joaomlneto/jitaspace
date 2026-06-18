@@ -113,6 +113,11 @@ export const ingestSde = defineJob<IngestSdeEventPayload["data"]>({
   retries: 1,
   // Generous cap for the whole in-process pipeline; raise if a full run nears it.
   maxDurationSeconds: 3600,
+  // Running every ingest in one process peaks around ~1.3 GB (the type/dogma and
+  // moons sections), so it needs a roomy machine — the default presets OOM-kill
+  // it. 4 GB gives V8 headroom to GC under the working set; bump to large-1x if a
+  // future SDE grows it further.
+  machine: "medium-2x",
   handler: async (ctx) => {
     // Run every ingest in THIS process (not as child tasks) so the SDE archive
     // is downloaded only once. The lazy import breaks the module cycle (the
