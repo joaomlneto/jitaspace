@@ -110,6 +110,7 @@ const config = {
     "@jitaspace/hooks",
     "@jitaspace/kv",
     "@jitaspace/sde-client",
+    "@jitaspace/sde-utils",
     "@jitaspace/tiptap-eve",
     "@jitaspace/ui",
     "@jitaspace/utils",
