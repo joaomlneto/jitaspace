@@ -83,6 +83,7 @@ const taskOptions = (job: JobDefinition) => {
       ? {}
       : { retry: { maxAttempts: job.retries + 1 } }),
     ...(job.maxDurationSeconds ? { maxDuration: job.maxDurationSeconds } : {}),
+    ...(job.machine ? { machine: job.machine } : {}),
   };
 };
 
