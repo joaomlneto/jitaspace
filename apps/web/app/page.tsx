@@ -15,6 +15,11 @@ import { NewsCarousel } from "~/components/News";
 import { characterApps, universeApps } from "~/config/apps";
 import { env } from "~/env";
 
+const toolSections = [
+  { title: "Capsuleer Tools", apps: characterApps },
+  { title: "Universe", apps: universeApps },
+];
+
 export default function Page() {
   const authenticatedCharacterIds = useAuthenticatedCharacterIds();
   const authenticatedCorporationIds = useAuthStore(
@@ -108,23 +113,16 @@ export default function Page() {
           </section>
         )}
 
-        <section>
-          <SectionHeader title="Capsuleer Tools" />
-          <SimpleGrid spacing="md" cols={{ base: 1, xs: 2, sm: 3, lg: 4 }}>
-            {Object.values(characterApps).map((app) => (
-              <AppCard app={app} key={app.name} />
-            ))}
-          </SimpleGrid>
-        </section>
-
-        <section>
-          <SectionHeader title="Universe" />
-          <SimpleGrid spacing="md" cols={{ base: 1, xs: 2, sm: 3, lg: 4 }}>
-            {Object.values(universeApps).map((app) => (
-              <AppCard app={app} key={app.name} />
-            ))}
-          </SimpleGrid>
-        </section>
+        {toolSections.map(({ title, apps }) => (
+          <section key={title}>
+            <SectionHeader title={title} />
+            <SimpleGrid spacing="md" cols={{ base: 1, xs: 2, sm: 3, lg: 4 }}>
+              {Object.values(apps).map((app) => (
+                <AppCard app={app} key={app.name} />
+              ))}
+            </SimpleGrid>
+          </section>
+        ))}
       </Stack>
     </Container>
   );
