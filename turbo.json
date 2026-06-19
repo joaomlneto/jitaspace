@@ -40,6 +40,7 @@
     "CI",
     "VERCEL",
     "VERCEL_URL",
+    "TRIGGER_VERSION",
     "npm_lifecycle_event"
   ],
   "tasks": {
