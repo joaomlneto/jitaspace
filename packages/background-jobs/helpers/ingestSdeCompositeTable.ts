@@ -4,6 +4,22 @@ import type { CrudStatistics } from "../types";
 import type { SoftDeleteDelegate } from "./ingestSdeTable";
 import { excludeObjectKeys, updateTable } from "../utils";
 
+// CockroachDB/Postgres cap bind parameters per statement (Postgres wire limit:
+// 65535). The composite soft-delete builds an `OR` of N composite keys, spending
+// `keyFields.length` params per row — and Prisma does NOT split an `OR` across
+// statements the way it transparently chunks `createMany` / `IN (...)`. So cap
+// each soft-delete `OR` well under the limit (30000 / a 2-column key = 15000
+// rows per statement, leaving ample headroom under 65535).
+const MAX_DELETE_PARAMS = 30000;
+
+const chunkArray = <T>(items: T[], size: number): T[][] => {
+  const chunks: T[][] = [];
+  for (let offset = 0; offset < items.length; offset += size) {
+    chunks.push(items.slice(offset, offset + size));
+  }
+  return chunks;
+};
+
 /**
  * Diff-ingest a derived set of rows into a table with a (possibly composite)
  * primary key — like {@link import("./ingestSdeTable").ingestSdeTable} but for
@@ -21,6 +37,13 @@ import { excludeObjectKeys, updateTable } from "../utils";
  * Chunking by scope keeps the soft-delete correct — the scope bounds both the
  * local fetch and the remote rows, so within a chunk a local row with no
  * matching remote row is still detected and soft-deleted.
+ *
+ * Pass `softDelete: false` when another writer also owns the table — e.g. the
+ * ESI `scrapeEsiTypes` scraper also fills TypeAttribute / TypeEffect. The local
+ * fetch is then filtered to the remote keys, so the diff only creates/updates
+ * and never soft-deletes rows the other writer owns (the same "never delete what
+ * the SDE didn't fetch" guarantee {@link import("./ingestSdeTable").ingestSdeTable}
+ * gives for single-key tables).
  */
 export async function ingestSdeCompositeTable<
   Row extends Record<string, unknown>,
@@ -33,6 +56,12 @@ export async function ingestSdeCompositeTable<
   concurrency?: number;
   /** Parent (scope) ids diffed/written per chunk (bounds peak memory). */
   scopeChunkSize?: number;
+  /**
+   * Soft-delete local rows absent from the SDE (default true). Set false to
+   * coexist with another writer of the same table: the diff then only
+   * creates/updates and never deletes (see the function docs).
+   */
+  softDelete?: boolean;
 }): Promise<CrudStatistics> {
   const {
     delegate,
@@ -42,6 +71,7 @@ export async function ingestSdeCompositeTable<
     scopeIds,
     concurrency = 20,
     scopeChunkSize = 5000,
+    softDelete = true,
   } = opts;
   const limit = pLimit(concurrency);
 
@@ -81,17 +111,26 @@ export async function ingestSdeCompositeTable<
     const chunkRows = chunkScopeIds.flatMap(
       (scope) => rowsByScope.get(scope) ?? [],
     );
+    // Additive (coexist) mode: drop local rows whose key isn't in the SDE before
+    // diffing, so they're never seen as "deleted". This is the composite-key
+    // equivalent of scoping the fetch — a single WHERE can't express "key IN
+    // (these pairs)" cheaply — and gives the same never-delete-another-writer's-
+    // rows guarantee as `ingestSdeTable`.
+    const remoteKeys = softDelete ? null : new Set(chunkRows.map(keyOf));
     const chunkStats = await updateTable({
       idAccessor: keyOf,
       fetchLocalEntries: async () =>
         delegate
           .findMany({ where: { [scopeField]: { in: chunkScopeIds } } })
-          .then((local) =>
-            local.map(
+          .then((local) => {
+            const managed = local.map(
               (row) =>
                 excludeObjectKeys(row, ["updatedAt", "createdAt"]) as Row,
-            ),
-          ),
+            );
+            return remoteKeys
+              ? managed.filter((row) => remoteKeys.has(keyOf(row)))
+              : managed;
+          }),
       fetchRemoteEntries: () => Promise.resolve(chunkRows),
       batchCreate: (created) =>
         limit(() => delegate.createMany({ data: created })),
@@ -103,13 +142,23 @@ export async function ingestSdeCompositeTable<
             ),
           ),
         ),
+      // Chunk the soft-delete so a large `OR` never exceeds the DB's bind-param
+      // limit (see MAX_DELETE_PARAMS). In additive mode `deleted` is always
+      // empty (the fetch above filtered to remote keys), so this is a no-op.
       batchDelete: (deleted) =>
-        deleted.length === 0
-          ? Promise.resolve()
-          : delegate.updateMany({
-              data: { isDeleted: true },
-              where: { OR: deleted.map(keyValues) },
-            }),
+        Promise.all(
+          chunkArray(
+            deleted,
+            Math.max(1, Math.floor(MAX_DELETE_PARAMS / keyFields.length)),
+          ).map((slice) =>
+            limit(() =>
+              delegate.updateMany({
+                data: { isDeleted: true },
+                where: { OR: slice.map(keyValues) },
+              }),
+            ),
+          ),
+        ),
     });
     stats.created += chunkStats.created;
     stats.modified += chunkStats.modified;

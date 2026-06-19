@@ -62,12 +62,18 @@ export const ingestSdeTypeDogma = defineJob<
         })),
     );
 
+    // TypeAttribute / TypeEffect are also written by the ESI `scrapeEsiTypes`
+    // scraper (from `/universe/types/{id}` dogma), which currently reports more
+    // attributes than the SDE typeDogma.yaml lists. Run additively (never
+    // soft-delete) so this SDE ingest only fills/refreshes rows and never
+    // removes the ESI scraper's — the two writers coexist instead of fighting.
     const typeAttributes = await ingestSdeCompositeTable({
       delegate: prisma.typeAttribute,
       rows: attributeRows,
       keyFields: ["typeId", "attributeId"],
       scopeField: "typeId",
       scopeIds: typeIds,
+      softDelete: false,
     });
 
     const typeEffects = await ingestSdeCompositeTable({
@@ -76,6 +82,7 @@ export const ingestSdeTypeDogma = defineJob<
       keyFields: ["typeId", "effectId"],
       scopeField: "typeId",
       scopeIds: typeIds,
+      softDelete: false,
     });
 
     return {
