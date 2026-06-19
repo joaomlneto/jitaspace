@@ -23,6 +23,7 @@ export const ESI_ACCEPT_LANGUAGE_OPTIONS = [
 export const APP_THEME_OPTIONS = [
   { value: "default", label: "Default" },
   { value: "eve", label: "EVE" },
+  { value: "eve_v2", label: "EVE v2" },
   { value: "amarr", label: "Amarr" },
   { value: "caldari", label: "Caldari" },
   { value: "gallente", label: "Gallente" },
