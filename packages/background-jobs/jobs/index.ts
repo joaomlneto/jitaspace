@@ -106,6 +106,7 @@ import {
   scrapeSdeStationServices,
   scrapeZkillboardRecentKills,
   updateWars,
+  watchSde,
 } from "./scrape";
 import { testPing } from "./test";
 
@@ -222,6 +223,7 @@ export const jobs: JobDefinition[] = [
   scrapeZkillboardRecentKills,
   testPing,
   updateWars,
+  watchSde,
 ];
 
 /** Jobs indexed by id, for resolving `ctx.send`/`ctx.invoke` targets. */
