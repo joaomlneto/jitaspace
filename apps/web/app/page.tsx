@@ -1,38 +1,26 @@
 "use client";
 
-import Link from "next/link";
-import {
-  Anchor,
-  Badge,
-  Burger,
-  Card,
-  Container,
-  Group,
-  rem,
-  SimpleGrid,
-  Text,
-  Title,
-  UnstyledButton,
-  useMantineColorScheme,
-  useMantineTheme,
-} from "@mantine/core";
-import { openContextModal } from "@mantine/modals";
+import { Burger, Container, SimpleGrid, Stack } from "@mantine/core";
+
 import { useShallow } from "zustand/shallow";
 
 import { AllianceCard } from "@jitaspace/eve-components";
 import { useAuthenticatedCharacterIds, useAuthStore } from "@jitaspace/hooks";
-import { CharacterAvatar } from "@jitaspace/ui";
 
 import { AuthenticatedCharacterCard, CorporationCard } from "~/components/Card";
 import { DevelopmentModeAlert } from "~/components/debug";
+import { AddPilotCard, AppCard, SectionHeader } from "~/components/Home";
 import { AllianceMenu, CorporationMenu } from "~/components/Menu";
 import { NewsCarousel } from "~/components/News";
 import { characterApps, universeApps } from "~/config/apps";
 import { env } from "~/env";
 
+const toolSections = [
+  { title: "Capsuleer Tools", apps: characterApps },
+  { title: "Universe", apps: universeApps },
+];
+
 export default function Page() {
-  const theme = useMantineTheme();
-  const { colorScheme } = useMantineColorScheme();
   const authenticatedCharacterIds = useAuthenticatedCharacterIds();
   const authenticatedCorporationIds = useAuthStore(
     useShallow((state) => {
@@ -60,190 +48,82 @@ export default function Page() {
   );
 
   return (
-    <Container size="xl">
-      <NewsCarousel />
-      {env.NODE_ENV === "development" && <DevelopmentModeAlert />}
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-        {authenticatedCharacterIds.map((characterId) => (
-          <AuthenticatedCharacterCard
-            characterId={characterId}
-            key={characterId}
+    <Container size="xl" py="md">
+      <Stack gap={48}>
+        <NewsCarousel />
+        {env.NODE_ENV === "development" && <DevelopmentModeAlert />}
+
+        <section>
+          <SectionHeader
+            title="Pilots"
+            count={authenticatedCharacterIds.length || undefined}
           />
-        ))}
-      </SimpleGrid>
-      <Group wrap="nowrap" gap="xs" mt="md" mb="xl">
-        <CharacterAvatar characterId={1} size="sm" />
-        <Anchor
-          onClick={() => {
-            openContextModal({
-              modal: "login",
-              title: "Login",
-              size: "xl",
-              innerProps: {},
-            });
-          }}
-        >
-          Add character
-        </Anchor>
-      </Group>
-      <Text c="dimmed">Corporations:</Text>
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-        {authenticatedCorporationIds.map((corporationId) => (
-          <CorporationCard
-            corporationId={corporationId}
-            key={corporationId}
-            headerRightSection={
-              <CorporationMenu corporationId={corporationId}>
-                <Burger size="sm" />
-              </CorporationMenu>
-            }
-          />
-        ))}
-      </SimpleGrid>
-      <Text c="dimmed">Alliances:</Text>
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-        {authenticatedAllianceIds.map((allianceId) => (
-          <AllianceCard
-            allianceId={allianceId}
-            key={allianceId}
-            headerRightSection={
-              <AllianceMenu allianceId={allianceId}>
-                <Burger size="sm" />
-              </AllianceMenu>
-            }
-          />
-        ))}
-      </SimpleGrid>
-      <Title order={3}>Capsuleer Tools</Title>
-      <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2, sm: 3 }}>
-        {Object.values(characterApps).map((feature) => (
-          <UnstyledButton
-            component={Link}
-            href={feature.url ?? ""}
-            onClick={feature.onClick}
-            key={feature.name}
-          >
-            <Card
-              shadow="md"
-              radius="md"
-              styles={{
-                root: {
-                  height: "100%",
-                  transition: "transform 0.2s",
-                  border: `${rem(1)} solid ${
-                    colorScheme === "dark"
-                      ? theme.colors.dark[5]
-                      : theme.colors.gray[1]
-                  }`,
-                  /* // FIXME Mantine v7 migration
-              "&:hover": {
-                transform: "scale(1.05)",
-              },*/
-                },
-              }}
-              padding="xl"
-            >
-              <Container m={0} p={0} w={64} h={64}>
-                <feature.Icon
-                  height={64}
-                  width={64}
-                  color={theme.primaryColor}
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
+            {authenticatedCharacterIds.map((characterId) => (
+              <AuthenticatedCharacterCard
+                characterId={characterId}
+                key={characterId}
+              />
+            ))}
+            <AddPilotCard />
+          </SimpleGrid>
+        </section>
+
+        {authenticatedCorporationIds.length > 0 && (
+          <section>
+            <SectionHeader
+              title="Corporations"
+              count={authenticatedCorporationIds.length}
+            />
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
+              {authenticatedCorporationIds.map((corporationId) => (
+                <CorporationCard
+                  corporationId={corporationId}
+                  key={corporationId}
+                  headerRightSection={
+                    <CorporationMenu corporationId={corporationId}>
+                      <Burger size="sm" />
+                    </CorporationMenu>
+                  }
                 />
-              </Container>
-              <Group>
-                <Text
-                  fz="lg"
-                  fw={500}
-                  style={{
-                    "&::after": {
-                      content: '""',
-                      display: "block",
-                      backgroundColor: theme.primaryColor,
-                      width: rem(45),
-                      height: rem(2),
-                      marginTop: theme.spacing.sm,
-                    },
-                  }}
-                  mt="md"
-                >
-                  {feature.name}
-                </Text>
-                {feature.tags?.map((tag) => (
-                  <Badge key={tag}>{tag}</Badge>
-                ))}
-              </Group>
-              <Text fz="sm" c="dimmed" mt="sm">
-                {feature.description}
-              </Text>
-            </Card>
-          </UnstyledButton>
-        ))}
-      </SimpleGrid>
-      <Title order={3}>Universe</Title>
-      <SimpleGrid spacing="xl" my="xl" cols={{ base: 1, xs: 2, sm: 3 }}>
-        {Object.values(universeApps).map((feature) => (
-          <UnstyledButton
-            component={Link}
-            href={feature.url ?? ""}
-            onClick={feature.onClick}
-            key={feature.name}
-          >
-            <Card
-              shadow="md"
-              radius="md"
-              styles={{
-                root: {
-                  height: "100%",
-                  transition: "transform 0.2s",
-                  border: `${rem(1)} solid ${
-                    colorScheme === "dark"
-                      ? theme.colors.dark[5]
-                      : theme.colors.gray[1]
-                  }`,
-                  /* // FIXME Mantine v7 migration
-                  "&:hover": {
-                    transform: "scale(1.05)",
-                  },*/
-                },
-              }}
-              padding="xl"
-            >
-              <Container m={0} p={0} w={64} h={64}>
-                <feature.Icon
-                  height={64}
-                  width={64}
-                  color={theme.primaryColor}
+              ))}
+            </SimpleGrid>
+          </section>
+        )}
+
+        {authenticatedAllianceIds.length > 0 && (
+          <section>
+            <SectionHeader
+              title="Alliances"
+              count={authenticatedAllianceIds.length}
+            />
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
+              {authenticatedAllianceIds.map((allianceId) => (
+                <AllianceCard
+                  allianceId={allianceId}
+                  key={allianceId}
+                  headerRightSection={
+                    <AllianceMenu allianceId={allianceId}>
+                      <Burger size="sm" />
+                    </AllianceMenu>
+                  }
                 />
-              </Container>
-              <Group>
-                <Text
-                  fz="lg"
-                  fw={500}
-                  style={{
-                    "&::after": {
-                      content: '""',
-                      display: "block",
-                      backgroundColor: theme.primaryColor,
-                      width: rem(45),
-                      height: rem(2),
-                      marginTop: theme.spacing.sm,
-                    },
-                  }}
-                  mt="md"
-                >
-                  {feature.name}
-                </Text>
-                {feature.tags?.map((tag) => (
-                  <Badge key={tag}>{tag}</Badge>
-                ))}
-              </Group>
-              <Text fz="sm" c="dimmed" mt="sm">
-                {feature.description}
-              </Text>
-            </Card>
-          </UnstyledButton>
+              ))}
+            </SimpleGrid>
+          </section>
+        )}
+
+        {toolSections.map(({ title, apps }) => (
+          <section key={title}>
+            <SectionHeader title={title} />
+            <SimpleGrid spacing="md" cols={{ base: 1, xs: 2, sm: 3, lg: 4 }}>
+              {Object.values(apps).map((app) => (
+                <AppCard app={app} key={app.name} />
+              ))}
+            </SimpleGrid>
+          </section>
         ))}
-      </SimpleGrid>
+      </Stack>
     </Container>
   );
 }

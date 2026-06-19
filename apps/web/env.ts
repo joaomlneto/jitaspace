@@ -60,6 +60,15 @@ const server = z.object({
  * built with invalid env vars. To expose them to the client, prefix them with `NEXT_PUBLIC_`.
  */
 const client = z.object({
+  /**
+   * Next.js inlines `NODE_ENV` into the client bundle, so it must be part of
+   * the client schema as well. Without it, `env.NODE_ENV` is `undefined` in
+   * Client Components (the client proxy only carries vars from this schema),
+   * which silently breaks `NODE_ENV`-gated UI and causes dev-only SSR/CSR
+   * hydration mismatches.
+   */
+  NODE_ENV: z.enum(["development", "test", "production"]),
+
   NEXT_PUBLIC_UMAMI_WEBSITE_ID:
     process.env.NODE_ENV === "production"
       ? z.string().min(1)
