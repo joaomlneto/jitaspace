@@ -11,7 +11,7 @@ export interface AppCardProps {
   app: JitaApp;
 }
 
-export function AppCard({ app }: AppCardProps) {
+export function AppCard({ app }: Readonly<AppCardProps>) {
   return (
     <Tooltip
       label={app.description}

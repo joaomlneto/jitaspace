@@ -13,7 +13,11 @@ export interface SectionHeaderProps {
   action?: ReactNode;
 }
 
-export function SectionHeader({ title, count, action }: SectionHeaderProps) {
+export function SectionHeader({
+  title,
+  count,
+  action,
+}: Readonly<SectionHeaderProps>) {
   return (
     <Group
       justify="space-between"
