@@ -71,11 +71,12 @@ describe("background-jobs registry", () => {
     }
   });
 
-  it("has exactly one cron job (updateWars)", () => {
+  it("registers exactly the expected cron jobs", () => {
     const cronJobIds = jobs
       .filter((job) => job.trigger.type === "cron")
-      .map((job) => job.id);
-    expect(cronJobIds).toEqual(["esi-update-wars"]);
+      .map((job) => job.id)
+      .sort((a, b) => a.localeCompare(b));
+    expect(cronJobIds).toEqual(["esi-update-wars", "watch-sde"]);
   });
 
   it("resolves every job by id through the registry", () => {
