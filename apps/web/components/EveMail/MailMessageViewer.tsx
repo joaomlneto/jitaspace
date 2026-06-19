@@ -48,16 +48,17 @@ export function MailMessageViewer({
     return externalLinkColor;
   };
 
-  const html = editor
-    .getHTML()
-    .replace(
-      /<a\b([^>]*)\bhref="([^"]*)"([^>]*)>/g,
-      (_, before: string, href: string, after: string) => {
-        const translatedHref = renderEveHref(href);
-        const color = getLinkColor(href, translatedHref);
-        return `<a${before}href="${translatedHref}"${after} style="color:${color};font-weight:600;">`;
-      },
-    );
+  // `editor` is null on the first render (TipTap creates it in an effect after
+  // mount; see useEveEditor). Render empty until then — the editor re-renders
+  // this component with the real HTML once it exists.
+  const html = (editor?.getHTML() ?? "").replace(
+    /<a\b([^>]*)\bhref="([^"]*)"([^>]*)>/g,
+    (_, before: string, href: string, after: string) => {
+      const translatedHref = renderEveHref(href);
+      const color = getLinkColor(href, translatedHref);
+      return `<a${before}href="${translatedHref}"${after} style="color:${color};font-weight:600;">`;
+    },
+  );
 
   const handleLinkInteraction = (
     e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>,
