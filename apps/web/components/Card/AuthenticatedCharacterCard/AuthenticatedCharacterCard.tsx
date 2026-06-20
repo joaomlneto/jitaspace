@@ -2,7 +2,6 @@
 
 import type { CardProps } from "@mantine/core";
 import {
-  Alert,
   Burger,
   Button,
   Card,
@@ -63,39 +62,67 @@ export const AuthenticatedCharacterCard = ({
     return "character not found";
   }
 
+  // When EVE can no longer refresh the token, collapse the card to a red
+  // "session expired" state: just the avatar + name and the re-auth prompt.
+  // The detailed sections are hidden because their data is stale / unfetchable.
+  if (character.sessionExpired) {
+    return (
+      <Card
+        withBorder
+        radius="md"
+        padding="md"
+        className={classes.card}
+        {...otherProps}
+        style={{
+          ...otherProps.style,
+          backgroundColor: "var(--mantine-color-red-light)",
+          borderColor: "var(--mantine-color-red-filled)",
+        }}
+      >
+        <Stack gap="sm">
+          <Group wrap="nowrap" align="center">
+            <CharacterAvatar characterId={characterId} size={64} radius="md" />
+            <div>
+              <CharacterName
+                characterId={characterId}
+                fz="lg"
+                fw={500}
+                className={classes.headerName}
+              />
+              <Group wrap="nowrap" gap={6} mt={4}>
+                <RecruitmentIcon width={16} />
+                <Text size="sm" fw={500} c="red">
+                  Session expired
+                </Text>
+              </Group>
+            </div>
+          </Group>
+          <Text size="xs" c="red">
+            EVE can no longer refresh this character. Sign in again to keep using
+            it.
+          </Text>
+          <Button
+            size="xs"
+            color="red"
+            onClick={() =>
+              openContextModal({
+                modal: "login",
+                title: "Login",
+                size: "xl",
+                innerProps: {},
+              })
+            }
+          >
+            Sign in again
+          </Button>
+        </Stack>
+      </Card>
+    );
+  }
+
   return (
     <Card withBorder radius="md" className={classes.card} {...otherProps}>
       <Card.Section className={classes.imageSection}>
-        {character.sessionExpired && (
-          <Alert
-            color="red"
-            variant="light"
-            icon={<RecruitmentIcon width={18} />}
-            title="Session expired"
-            mb="xs"
-          >
-            <Stack gap="xs" align="flex-start">
-              <Text size="xs">
-                EVE can no longer refresh this character. Sign in again to keep
-                using it.
-              </Text>
-              <Button
-                size="xs"
-                color="red"
-                onClick={() =>
-                  openContextModal({
-                    modal: "login",
-                    title: "Login",
-                    size: "xl",
-                    innerProps: {},
-                  })
-                }
-              >
-                Sign in again
-              </Button>
-            </Stack>
-          </Alert>
-        )}
         <Group wrap="nowrap" justify="space-between" align="start">
           <Group wrap="nowrap" align="start">
             <CharacterOnlineIndicator characterId={characterId} offset={8}>
