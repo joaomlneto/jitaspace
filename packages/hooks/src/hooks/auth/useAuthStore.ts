@@ -44,7 +44,7 @@ export interface SsoAuthState {
 
 export const useAuthStore = create(
   persist<SsoAuthState>(
-    (set, get) => ({
+    (set) => ({
       characters: {},
       selectedCharacter: null,
       addCharacter: async ({
@@ -63,14 +63,19 @@ export const useAuthStore = create(
         const accessTokenExpirationDate = new Date(
           accessTokenPayload.exp * 1000,
         ).toString();
-        // Get character affiliation
-        const affiliation = (await postCharactersAffiliation([characterId]))
-          .data[0];
-        if (!affiliation) {
-          console.error("Error getting character affiliation");
-          return;
-        }
+        // Character affiliation is best-effort enrichment. A failure here must
+        // NOT discard the freshly-issued token: EVE rotates the refresh token on
+        // every refresh, so dropping it would throw away the only valid refresh
+        // token we have AND freeze the "last refreshed" timestamp the refresh
+        // handler relies on — eventually causing a false "token too old" lockout.
+        const affiliation = await postCharactersAffiliation([characterId])
+          .then((res) => res.data[0])
+          .catch((error: unknown) => {
+            console.error("Error getting character affiliation", error);
+            return undefined;
+          });
         set((state) => {
+          const existing = state.characters[characterId];
           return {
             ...state,
             characters: {
@@ -82,8 +87,15 @@ export const useAuthStore = create(
                 refreshToken,
                 characterId,
                 corporationRoles: [],
-                allianceId: affiliation.alliance_id,
-                corporationId: affiliation.corporation_id,
+                // Use freshly-fetched affiliation when available; otherwise keep
+                // whatever we already had so a transient ESI hiccup never blocks
+                // the token update.
+                allianceId: affiliation
+                  ? affiliation.alliance_id
+                  : existing?.allianceId,
+                corporationId: affiliation
+                  ? affiliation.corporation_id
+                  : (existing?.corporationId ?? 0),
                 affiliationExpirationDate: add(new Date(), { hours: 1 }),
               },
             },
