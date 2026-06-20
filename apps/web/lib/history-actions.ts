@@ -61,7 +61,10 @@ export async function getHistoryIndex(): Promise<HistoryIndex> {
     const toBuild = toBuildOf.get(g.diffId);
     if (!name || toBuild === undefined) continue;
     const m = perBuild.get(toBuild) ?? {};
-    m[name] = g._count;
+    // Multiple diffs can target the same build (e.g. connecting an SDE backfill
+    // onto the CDN era), so accumulate across them rather than overwrite — same
+    // diffId→toBuild collapse as getResourceIndex.
+    m[name] = (m[name] ?? 0) + g._count;
     perBuild.set(toBuild, m);
   }
 
