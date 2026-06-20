@@ -21,6 +21,13 @@ export default defineConfig({
   project: process.env.TRIGGER_PROJECT_REF ?? "proj_REPLACE_ME",
   dirs: ["./src/trigger"],
   runtime: "node-22",
+  // Default machine for every task. Each worker loads the whole task bundle
+  // (Prisma + the full ESI/SDE generated clients + Bull) regardless of which
+  // task it runs, and that baseline RSS exceeds micro's 0.25 GB — so "micro"
+  // OOM-kills even a trivial task (it bit watch-sde). small-1x (0.5 GB, also
+  // Trigger's own default) is the proven floor; heavy jobs opt UP per-task
+  // (e.g. ingest-sde-all → medium-2x).
+  machine: "small-1x",
   // Generous default; long jobs (solar systems, killmail backfill) set their own.
   maxDuration: 600,
   retries: {

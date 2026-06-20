@@ -33,8 +33,10 @@ export const watchSde = defineJob<WatchSdeEventPayload["data"]>({
     "Hourly HEAD on the SDE archive; triggers ingest-sde-all when its Last-Modified changes.",
   trigger: { type: "cron", cron: "TZ=UTC 0 * * * *" },
   singleton: true,
-  // One HEAD request + one Redis op — the smallest machine is plenty.
-  machine: "micro",
+  // No per-task machine: inherit the project default (small-1x). The handler is
+  // trivial (one HEAD + one Redis op), but every worker loads the full task
+  // bundle, whose baseline RSS exceeds micro's 0.25 GB — micro OOM-killed this
+  // job. See the `machine` default in trigger.config.ts.
   handler: async (ctx) => {
     const lastModified = (await latestSdeLastModified()).toISOString();
     const redis = await getRedis();
