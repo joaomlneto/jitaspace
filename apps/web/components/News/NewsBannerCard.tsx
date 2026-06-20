@@ -13,6 +13,13 @@ export interface NewsBannerCardProps {
 }
 
 /**
+ * Fixed height (px) of a news banner card. Exported so the carousel can reserve
+ * matching vertical space before it mounts, avoiding a layout shift (CLS) when
+ * the banner pops in after hydration.
+ */
+export const NEWS_BANNER_HEIGHT = 200;
+
+/**
  * Flashy, image-forward banner card (EVE-launcher style): a hero image with a
  * scrim that darkens the top (for the title) and the bottom (for the date /
  * message / CTA). Falls back to a solid accent colour when there is no image.
@@ -26,7 +33,7 @@ export function NewsBannerCard({
   return (
     <Box
       pos="relative"
-      h={200}
+      h={NEWS_BANNER_HEIGHT}
       bg={item.image ? undefined : `${color}.9`}
       style={{
         borderRadius: "var(--mantine-radius-md)",
