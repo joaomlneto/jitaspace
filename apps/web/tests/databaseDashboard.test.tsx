@@ -57,8 +57,8 @@ describe("DatabaseDashboard", () => {
 
     renderDashboard();
 
-    // Wait for data to load (the title renders even while loading). The largest
-    // table's label appears both in its row and in the "Largest Table" card.
+    // Wait for data to load (the title renders even while loading). Each table's
+    // humanized label appears in its table row.
     expect(
       (await screen.findAllByText("Killmail Victim")).length,
     ).toBeGreaterThanOrEqual(1);
@@ -67,12 +67,10 @@ describe("DatabaseDashboard", () => {
     // Physical table name is shown beneath the humanized label.
     expect(screen.getByText("KillmailVictim")).toBeInTheDocument();
 
-    // Largest-table count + total records (toLocaleString) appear.
+    // Total record count shows in the header badge; per-table counts in the rows
+    // (both via toLocaleString).
+    expect(screen.getByText("1,284,567 records")).toBeInTheDocument();
     expect(screen.getAllByText("1,234,567").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText("1,284,567").length).toBeGreaterThanOrEqual(1);
-
-    // 2 of 3 tables have records.
-    expect(screen.getByText("2 with records")).toBeInTheDocument();
   });
 
   it("shows an empty state when no tables are reported", async () => {
