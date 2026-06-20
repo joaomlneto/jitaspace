@@ -1,6 +1,6 @@
 {
   "name": "@jitaspace/background-jobs",
-  "description": "Platform-agnostic EVE Online background job logic (used by the Inngest and Trigger.dev adapters)",
+  "description": "Platform-agnostic EVE Online background job logic (run by the Trigger.dev adapter)",
   "version": "0.1.0",
   "private": true,
   "type": "module",

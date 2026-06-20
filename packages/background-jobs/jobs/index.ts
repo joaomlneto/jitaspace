@@ -111,10 +111,9 @@ import {
 import { testPing } from "./test";
 
 /**
- * The full set of platform-agnostic background jobs. The Inngest adapter
- * (`@jitaspace/eve-scrape`) and the Trigger.dev adapter
- * (`@jitaspace/background-jobs-triggerdev`) both build their platform-specific
- * functions/tasks from this single list.
+ * The full set of platform-agnostic background jobs. The Trigger.dev adapter
+ * (`@jitaspace/background-jobs-triggerdev`) builds its platform-specific tasks
+ * from this single list.
  */
 export const jobs: JobDefinition[] = [
   backfillEveKillAllianceIds,

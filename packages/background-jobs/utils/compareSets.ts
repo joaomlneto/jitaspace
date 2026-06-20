@@ -1,5 +1,4 @@
-import { NonRetriableError } from "inngest";
-
+import { NonRetriableError } from "../core/errors";
 import { env } from "../env";
 
 export const compareSets = <T extends object>({

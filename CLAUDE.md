@@ -74,8 +74,6 @@ Copy `.env.example` to `.env` at the repo root. `apps/web/env.ts` validates env 
 ```
 apps/
   web/   # Next.js 16 (App Router) — the main product, deployed to Vercel.
-         # The Inngest adapter + cron routes are co-hosted here (disabled
-         # fallback; the active jobs run on Trigger.dev).
   cli/   # Developer CLI utilities
 packages/
   auth/ auth-utils/          # NextAuth EVE SSO (OAuth2 PKCE + state), token seal/refresh
@@ -90,15 +88,13 @@ packages/
   chat/                      # Discord-backed in-app chat
   background-jobs/           # Platform-agnostic EVE-data background job logic (source of truth)
   background-jobs-triggerdev/ # Trigger.dev adapter (active runner) for background-jobs
-  eve-scrape/                # Inngest adapter (legacy/rollback) for background-jobs
   utils/ sde-utils/          # shared utilities
 tooling/
   eslint/ prettier/ tsconfig/  # shared presets (extend these, don't redefine)
 ```
 
 > Note: there is no `apps/worker` — background jobs run on Trigger.dev (the
-> `@jitaspace/background-jobs-triggerdev` adapter); the Inngest adapter stays
-> co-hosted in `apps/web` as a disabled fallback (`INNGEST_ENABLED`).
+> `@jitaspace/background-jobs-triggerdev` adapter).
 
 ## Tech Stack
 
@@ -108,7 +104,7 @@ tooling/
 - **Data fetching:** TanStack React Query 5
 - **DB / cache:** PostgreSQL + Prisma 7; Redis + Bull
 - **Auth:** NextAuth 4 with EVE Online SSO
-- **Background jobs:** Trigger.dev (active) — platform-agnostic logic in `@jitaspace/background-jobs`, run by the `background-jobs-triggerdev` adapter; Inngest (`eve-scrape`) retained as a disabled fallback (toggle `INNGEST_ENABLED`)
+- **Background jobs:** Trigger.dev — platform-agnostic logic in `@jitaspace/background-jobs`, run by the `background-jobs-triggerdev` adapter
 - **API codegen:** Kubb 3 (OpenAPI → TypeScript)
 - **Rich text:** Tiptap + EVE HTML extensions
 - **Testing:** Jest 30 (unit), Cypress 15 (E2E)
