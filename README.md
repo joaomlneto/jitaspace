@@ -6,7 +6,7 @@
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=joaomlneto_jitaspace&metric=bugs)](https://sonarcloud.io/summary/new_code?id=joaomlneto_jitaspace)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Discord](https://img.shields.io/discord/1127970667522949201?logo=discord&label=discord&color=5865F2)](https://discord.gg/fvcFu7j4dx)
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fjoaomlneto%2Fjitaspace&root-directory=apps%2Fweb&env=NEXTAUTH_SECRET%2CEVE_CLIENT_ID%2CEVE_CLIENT_SECRET%2CDATABASE_URL%2CREDIS_URL%2CINNGEST_SIGNING_KEY%2CINNGEST_EVENT_KEY%2CCRON_SECRET%2CESI_USER_AGENT%2CZKILLBOARD_USER_AGENT%2CNEXT_PUBLIC_DISCORD_INVITE_LINK%2CDISCORD_BOT_TOKEN%2CDISCORD_APPLICATION_ID%2CDISCORD_PUBLIC_KEY%2CDISCORD_UPDATES_CHANNEL_ID%2CNEXT_PUBLIC_UMAMI_WEBSITE_ID%2CNEXT_PUBLIC_GOOGLE_TAG_ID&envDescription=Required%20environment%20variables%20%E2%80%94%20see%20.env.example%20for%20details&envLink=https%3A%2F%2Fgithub.com%2Fjoaomlneto%2Fjitaspace%2Fblob%2Fmain%2F.env.example)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fjoaomlneto%2Fjitaspace&root-directory=apps%2Fweb&env=NEXTAUTH_SECRET%2CEVE_CLIENT_ID%2CEVE_CLIENT_SECRET%2CDATABASE_URL%2CREDIS_URL%2CCRON_SECRET%2CESI_USER_AGENT%2CZKILLBOARD_USER_AGENT%2CNEXT_PUBLIC_DISCORD_INVITE_LINK%2CDISCORD_BOT_TOKEN%2CDISCORD_APPLICATION_ID%2CDISCORD_PUBLIC_KEY%2CDISCORD_UPDATES_CHANNEL_ID%2CNEXT_PUBLIC_UMAMI_WEBSITE_ID%2CNEXT_PUBLIC_GOOGLE_TAG_ID&envDescription=Required%20environment%20variables%20%E2%80%94%20see%20.env.example%20for%20details&envLink=https%3A%2F%2Fgithub.com%2Fjoaomlneto%2Fjitaspace%2Fblob%2Fmain%2F.env.example)
 
 > An EVE Online companion app — mail, assets, market orders, wallet, killmails, and more, all in one place. **[Live at jita.space](https://www.jita.space)**
 
@@ -37,7 +37,7 @@
 | State | Zustand |
 | Database | PostgreSQL + Prisma 7 |
 | Cache & queues | Redis + Bull |
-| Background jobs | Inngest |
+| Background jobs | Trigger.dev |
 | Auth | Custom EVE Online SSO (OAuth2 + PKCE) |
 | Rich text | Tiptap + EVE HTML extensions |
 | API codegen | Kubb (OpenAPI → TypeScript) |
@@ -62,7 +62,7 @@ packages/
   ├─ esi-client/              ├─ ui/
   ├─ sde-client/              ├─ hooks/
   ├─ evekill-client/          ├─ chat/
-  ├─ fuzzworks-market-client/ ├─ eve-scrape/
+  ├─ fuzzworks-market-client/ ├─ background-jobs/
   └─ evetycoon-client/        └─ utils/
 
 tooling/
@@ -110,7 +110,7 @@ tooling/
 |---|---|
 | `@jitaspace/hooks` | React Query hooks for high-level ESI and third-party API interactions |
 | `@jitaspace/chat` | Discord-backed in-app chat client |
-| `@jitaspace/eve-scrape` | Inngest jobs for scheduled EVE data scraping and SDE imports |
+| `@jitaspace/background-jobs` | Platform-agnostic jobs for scheduled EVE data scraping and SDE imports (run by Trigger.dev) |
 | `@jitaspace/utils` | Shared utility functions |
 
 ---
@@ -150,8 +150,6 @@ Open `http://localhost:3000`.
 | `EVE_CLIENT_SECRET` | EVE Online SSO client secret |
 | `DATABASE_URL` | PostgreSQL connection string |
 | `REDIS_URL` | Redis URL (default: `redis://127.0.0.1:6379`) |
-| `INNGEST_SIGNING_KEY` | Inngest webhook signing key |
-| `INNGEST_EVENT_KEY` | Inngest event publishing key |
 | `CRON_SECRET` | Secret for Vercel Cron route protection |
 | `ESI_USER_AGENT` | User-agent for ESI API requests |
 | `ZKILLBOARD_USER_AGENT` | User-agent for zKillboard requests |
@@ -191,7 +189,7 @@ pnpm clean:workspaces # Clean all workspace build output
 
 Click **Deploy with Vercel** at the top of this README — it will fork the repo, prompt for all required environment variables, and deploy. You'll need a PostgreSQL database and Redis instance ready beforehand (e.g. [Neon](https://neon.tech/) + [Upstash](https://upstash.com/), [Railway](https://railway.app/), or self-hosted). After the first deploy, run `pnpm db:push` against your database to apply the schema.
 
-For manual setup: set `apps/web` as the Vercel root directory. Turborepo remote caching is supported out of the box. Inngest background jobs and cron routes are co-hosted in the same Next.js deployment.
+For manual setup: set `apps/web` as the Vercel root directory. Turborepo remote caching is supported out of the box. Background jobs run separately on Trigger.dev, deployed via its GitHub integration.
 
 ---
 

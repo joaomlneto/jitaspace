@@ -4,7 +4,7 @@ This file is a concise, actionable guide for automated coding agents (or humans)
 
 Big picture
 
-- Monorepo (Turborepo) containing two apps (apps/web, apps/cli) and many internal packages under `packages/` (db, auth, esi-client, esi-metadata, ui, utils, etc.). Background jobs run on Trigger.dev (the `background-jobs-triggerdev` adapter over the platform-agnostic `background-jobs` package); the Inngest adapter (`eve-scrape`) stays in `apps/web` as a disabled fallback, and there is no `apps/worker`. See `CLAUDE.md` for a short overview.
+- Monorepo (Turborepo) containing two apps (apps/web, apps/cli) and many internal packages under `packages/` (db, auth, esi-client, esi-metadata, ui, utils, etc.). Background jobs run on Trigger.dev (the `background-jobs-triggerdev` adapter over the platform-agnostic `background-jobs` package); there is no `apps/worker`. See `CLAUDE.md` for a short overview.
 - The web app (`apps/web`) is a Next.js 16 app that imports many local packages via `@jitaspace/*`. Local packages are consumed directly in source (see `apps/web/next.config.mjs` → `transpilePackages`).
 - Data layer: Prisma (packages/db) with a large schema at `packages/db/prisma/schema.prisma`. Database client is generated into the package (run `pnpm db:generate`).
 - API clients: generated with Kubb from OpenAPI specs (see `packages/esi-client/kubb.config.ts` and `packages/*-client/*/swagger.json`). Generated code lives under each client package (e.g. `packages/esi-client/src/generated`). Do NOT edit generated files.

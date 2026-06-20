@@ -1,5 +1,10 @@
 // Standalone change-history schema (isolated from @jitaspace/db).
-// Four tables: Build, Collection, Entity, Change — see the design discussion.
+// Tables: Build, BuildDiff, Collection, Entity, Change, FileChange.
+//
+// A diff between two builds is a first-class, IMMUTABLE BuildDiff row keyed by
+// its (fromBuild, toBuild) pair — never inferred from a build's baseline and
+// never mutated. Connecting two timelines (e.g. an SDE backfill onto the CDN
+// era) is an INSERT of a new BuildDiff, not an update of an existing build.
 
 generator client {
   provider = "prisma-client"
@@ -22,35 +27,52 @@ enum Server {
   singularity
 }
 
-/// One version of the game data. A build is server-independent content, and its
-/// build number is its natural identity — so the build number is the primary key.
+/// One version of the game data. Server-independent content; the build number is
+/// its natural identity (primary key). A build carries no diff of its own — the
+/// diff between two builds is an explicit {@link BuildDiff}.
 model Build {
   buildNumber Int          @id
   releasedAt  DateTime?
-  /// Which server's build pointer first surfaced this build (the diff's context).
+  /// Which server's build pointer first surfaced this build.
   server      Server?
-  /// The build this one's changes are computed against (the diff's "from" side).
-  /// null ⇒ genesis build (everything is "added"). Self-relation, so the baseline
-  /// is always a real Build row — see the monitor's per-server baseline rules.
-  baselineNumber Int?
-  baseline       Build?      @relation("baseline", fields: [baselineNumber], references: [buildNumber])
-  derivedBuilds  Build[]     @relation("baseline")
-  changes     Change[]
-  fileChanges FileChange[]
+  /// Diffs in which this build is the baseline ("from") / the target ("to").
+  diffsFrom BuildDiff[] @relation("diffFrom")
+  diffsTo   BuildDiff[] @relation("diffTo")
 
-  @@index([baselineNumber])
   @@index([server, buildNumber])
 }
 
-/// Raw resource-file changes (path-keyed, so they can't share Entity's integer key).
-model FileChange {
-  id          Int    @id @default(sequence())
-  build       Build  @relation(fields: [buildNumber], references: [buildNumber])
-  buildNumber Int
-  path        String
-  op          Op
+/// An explicit, immutable diff between an ordered pair of builds. Identity is the
+/// (fromBuild, toBuild) pair; once computed it is never updated. `fromBuild` null
+/// ⇒ genesis (the target is a full snapshot — every entity "added").
+model BuildDiff {
+  id        Int      @id @default(sequence())
+  /// Baseline ("from") build; null ⇒ genesis. A real Build row when set.
+  fromBuild Int?
+  from      Build?   @relation("diffFrom", fields: [fromBuild], references: [buildNumber])
+  /// Target ("to") build.
+  toBuild   Int
+  to        Build    @relation("diffTo", fields: [toBuild], references: [buildNumber])
+  createdAt   DateTime     @default(now())
+  changes     Change[]
+  fileChanges FileChange[]
 
-  @@index([buildNumber])
+  @@unique([fromBuild, toBuild])
+  @@index([toBuild])
+  @@index([fromBuild])
+}
+
+/// Raw resource-file changes for a diff (path-keyed, so they can't share Entity's
+/// integer key). Like Change, a file-change set is defined by the build PAIR, so
+/// it hangs off the BuildDiff (CDN-only; the SDE backfill produces no res files).
+model FileChange {
+  id     Int       @id @default(sequence())
+  diff   BuildDiff @relation(fields: [diffId], references: [id])
+  diffId Int
+  path   String
+  op     Op
+
+  @@index([diffId])
 }
 
 /// The registry of tracked datasets (≈ resource-server files). Add a row → track more.
@@ -81,11 +103,11 @@ model Entity {
   @@index([rootId])
 }
 
-/// The history: one row = "entity X changed in build B (from collection C)".
+/// The history: one row = "entity X changed in diff D (from collection C)".
 model Change {
   id           Int        @id @default(sequence())
-  build        Build      @relation(fields: [buildNumber], references: [buildNumber])
-  buildNumber  Int
+  diff         BuildDiff  @relation(fields: [diffId], references: [id])
+  diffId       Int
   collection   Collection @relation(fields: [collectionId], references: [id])
   collectionId Int
   entity       Entity     @relation(fields: [entityId], references: [id])
@@ -93,7 +115,7 @@ model Change {
   op           Op
   data         Json
 
-  @@index([buildNumber])
+  @@index([diffId])
   @@index([entityId])
   @@index([collectionId])
 }

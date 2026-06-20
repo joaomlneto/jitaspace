@@ -10,7 +10,7 @@ export default defineConfig(async () => {
     name: "sde-client",
     root: ".",
     input: {
-      path: "http://sde.jita.space/20260527/swagger.json",
+      path: "https://sde.jita.space/20260527/swagger.json",
     },
     output: {
       path: "./src/generated",

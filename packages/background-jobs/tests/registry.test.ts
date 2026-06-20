@@ -13,6 +13,17 @@ jest.mock("../db", () => ({ prisma: {}, Prisma: {} }));
 jest.mock("../chat", () => ({ postUpdateCard: jest.fn() }));
 jest.mock("@jitaspace/esi-client", () => ({}));
 jest.mock("@jitaspace/sde-client", () => ({}));
+// sde-utils' barrel re-exports with `.js` extensions (NodeNext ESM), which the
+// Jest resolver can't map back to the `.ts` source. The handlers only need it at
+// runtime, so stub the exports the job modules import at load time.
+jest.mock("@jitaspace/sde-utils", () => ({
+  downloadFile: jest.fn(),
+  unzipSde: jest.fn(),
+  SDE_DOWNLOAD_URL: "https://example.test/sde.zip",
+  ensureSdePresentAndExtracted: jest.fn(),
+  loadFile: jest.fn(),
+  sdeInputFiles: {},
+}));
 // p-limit is ESM-only and only used inside handlers, not in the registry config.
 jest.mock("p-limit", () => ({
   __esModule: true,
@@ -21,11 +32,13 @@ jest.mock("p-limit", () => ({
 
 let jobs: typeof Jobs;
 let registry: typeof Registry;
+let sdeIngestJobIds: string[];
 
 beforeAll(async () => {
   const mod = await import("../jobs");
   jobs = mod.jobs;
   registry = mod.registry;
+  sdeIngestJobIds = mod.SDE_INGEST_JOB_IDS;
 });
 
 const JOBS_DIR = join(__dirname, "..", "jobs");
@@ -58,11 +71,12 @@ describe("background-jobs registry", () => {
     }
   });
 
-  it("has exactly one cron job (updateWars)", () => {
+  it("registers exactly the expected cron jobs", () => {
     const cronJobIds = jobs
       .filter((job) => job.trigger.type === "cron")
-      .map((job) => job.id);
-    expect(cronJobIds).toEqual(["esi-update-wars"]);
+      .map((job) => job.id)
+      .sort((a, b) => a.localeCompare(b));
+    expect(cronJobIds).toEqual(["esi-update-wars", "watch-sde"]);
   });
 
   it("resolves every job by id through the registry", () => {
@@ -89,5 +103,25 @@ describe("background-jobs registry", () => {
     expect(referenced.size).toBeGreaterThan(0);
     const unknown = [...referenced].filter((id) => !registry.has(id));
     expect(unknown).toEqual([]);
+  });
+
+  // The `ingest-sde-all` orchestrator and `bootstrapDatabase` both drive this
+  // shared, FK-ordered list via `ctx.invoke`, so guard it explicitly (the
+  // generic ctx.invoke scan above can't see ids that come from a constant).
+  it("SDE_INGEST_JOB_IDS all resolve to registered jobs", () => {
+    const unknown = sdeIngestJobIds.filter((id) => !registry.has(id));
+    expect(unknown).toEqual([]);
+  });
+
+  it("SDE_INGEST_JOB_IDS covers exactly the per-file ingest-sde jobs", () => {
+    // Catches a new `ingest-sde-*` job left out of the shared pipeline list
+    // (and the orchestrator id leaking into its own list).
+    const perFile = jobs
+      .map((job) => job.id)
+      .filter((id) => id.startsWith("ingest-sde-") && id !== "ingest-sde-all")
+      .sort((a, b) => a.localeCompare(b));
+    expect([...sdeIngestJobIds].sort((a, b) => a.localeCompare(b))).toEqual(
+      perFile,
+    );
   });
 });

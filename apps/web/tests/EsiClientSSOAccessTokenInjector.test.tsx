@@ -1,39 +1,47 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { render, screen, waitFor } from "@testing-library/react";
 
 // ---------------------------------------------------------------------------
 // EsiClientSSOAccessTokenInjector renders its children and, on mount, (a)
 // rehydrates the persisted auth store and (b) schedules a timer that refreshes
-// any character whose access token is within ~40s of expiry. We mock the auth
-// store and the server action so we can drive both the "nothing to refresh"
-// and "refresh-and-store" branches with fake timers.
+// any character whose access token is within ~40s of expiry. The server action
+// reports a discriminated outcome: "refreshed" -> store it; "requires-reauth"
+// (EVE will not renew the refresh token) -> flag the session as expired (keep
+// the character); "error" -> log and keep retrying. We mock the auth store and
+// the action so we can drive every branch with fake timers.
 // ---------------------------------------------------------------------------
 
-const mockAddCharacter = jest.fn<() => Promise<void>>();
+type RefreshOutcome =
+  | { status: "refreshed"; accessToken: string; refreshTokenData: string }
+  | { status: "requires-reauth" }
+  | { status: "error"; message: string };
+
+const mockAddCharacter =
+  jest.fn<
+    (params: { accessToken: string; refreshToken: string }) => Promise<void>
+  >();
+const mockMarkSessionExpired = jest.fn<(characterId: number) => void>();
 const mockRehydrate = jest.fn<() => Promise<void>>();
 const mockRefreshCharacterToken =
-  jest.fn<
-    (
-      token: string,
-    ) => Promise<{ accessToken: string; refreshTokenData: string }>
-  >();
+  jest.fn<(token: string) => Promise<RefreshOutcome>>();
+
+interface Character {
+  characterId: number;
+  accessTokenExpirationDate: string;
+  refreshToken: string;
+}
 
 let storeState: {
   addCharacter: typeof mockAddCharacter;
-  characters: Record<
-    string,
-    { accessTokenExpirationDate: string; refreshToken: string }
-  >;
-} = { addCharacter: mockAddCharacter, characters: {} };
+  markCharacterSessionExpired: typeof mockMarkSessionExpired;
+  characters: Record<string, Character>;
+} = {
+  addCharacter: mockAddCharacter,
+  markCharacterSessionExpired: mockMarkSessionExpired,
+  characters: {},
+};
 
 const useAuthStore = (() => storeState) as unknown as {
   (): typeof storeState;
@@ -48,6 +56,14 @@ jest.mock("@jitaspace/hooks", () => ({
 jest.mock("~/components/EsiClientSSOAccessTokenInjector.actions", () => ({
   refreshCharacterToken: (token: string) => mockRefreshCharacterToken(token),
 }));
+
+function nearExpiry(characterId: number, refreshToken: string): Character {
+  return {
+    characterId,
+    accessTokenExpirationDate: new Date(Date.now() - 1000).toISOString(),
+    refreshToken,
+  };
+}
 
 function renderInjector() {
   const {
@@ -64,11 +80,18 @@ describe("EsiClientSSOAccessTokenInjector", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     mockAddCharacter.mockReset().mockResolvedValue(undefined);
+    mockMarkSessionExpired.mockReset();
     mockRehydrate.mockReset().mockResolvedValue(undefined);
-    mockRefreshCharacterToken
-      .mockReset()
-      .mockResolvedValue({ accessToken: "NEW_AT", refreshTokenData: "NEW_RT" });
-    storeState = { addCharacter: mockAddCharacter, characters: {} };
+    mockRefreshCharacterToken.mockReset().mockResolvedValue({
+      status: "refreshed",
+      accessToken: "NEW_AT",
+      refreshTokenData: "NEW_RT",
+    });
+    storeState = {
+      addCharacter: mockAddCharacter,
+      markCharacterSessionExpired: mockMarkSessionExpired,
+      characters: {},
+    };
   });
 
   afterEach(() => {
@@ -89,12 +112,11 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     // (expiring an hour later) is filtered out -> exercises both filter sides.
     storeState = {
       addCharacter: mockAddCharacter,
+      markCharacterSessionExpired: mockMarkSessionExpired,
       characters: {
-        soon: {
-          accessTokenExpirationDate: new Date(Date.now() - 1000).toISOString(),
-          refreshToken: "RT_EXPIRING",
-        },
+        soon: nearExpiry(1, "RT_EXPIRING"),
         later: {
+          characterId: 2,
           accessTokenExpirationDate: new Date(
             Date.now() + 60 * 60 * 1000,
           ).toISOString(),
@@ -120,19 +142,56 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     );
   });
 
-  it("swallows refresh errors without crashing", async () => {
+  it("flags the session as expired (without removing the character) when the refresh token is too old", async () => {
+    mockRefreshCharacterToken.mockResolvedValueOnce({ status: "requires-reauth" });
+    storeState = {
+      addCharacter: mockAddCharacter,
+      markCharacterSessionExpired: mockMarkSessionExpired,
+      characters: { "42": nearExpiry(42, "RT_OLD") },
+    };
+    renderInjector();
+
+    jest.advanceTimersByTime(2000);
+
+    expect(mockRefreshCharacterToken).toHaveBeenCalledWith("RT_OLD");
+    await waitFor(() =>
+      expect(mockMarkSessionExpired).toHaveBeenCalledWith(42),
+    );
+    expect(mockAddCharacter).not.toHaveBeenCalled();
+  });
+
+  it("logs and keeps the character on a transient error outcome", async () => {
+    const consoleError = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    mockRefreshCharacterToken.mockResolvedValueOnce({
+      status: "error",
+      message: "ESI down",
+    });
+    storeState = {
+      addCharacter: mockAddCharacter,
+      markCharacterSessionExpired: mockMarkSessionExpired,
+      characters: { "7": nearExpiry(7, "RT_TRANSIENT") },
+    };
+    renderInjector();
+
+    jest.advanceTimersByTime(2000);
+
+    await waitFor(() => expect(consoleError).toHaveBeenCalledWith("ESI down"));
+    expect(mockMarkSessionExpired).not.toHaveBeenCalled();
+    expect(mockAddCharacter).not.toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+
+  it("swallows unexpected refresh rejections without crashing", async () => {
     const consoleError = jest
       .spyOn(console, "error")
       .mockImplementation(() => undefined);
     mockRefreshCharacterToken.mockRejectedValueOnce(new Error("boom"));
     storeState = {
       addCharacter: mockAddCharacter,
-      characters: {
-        "1": {
-          accessTokenExpirationDate: new Date(Date.now() - 1000).toISOString(),
-          refreshToken: "RT_BAD",
-        },
-      },
+      markCharacterSessionExpired: mockMarkSessionExpired,
+      characters: { "1": nearExpiry(1, "RT_BAD") },
     };
     renderInjector();
 
@@ -141,6 +200,7 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     expect(mockRefreshCharacterToken).toHaveBeenCalledWith("RT_BAD");
     await waitFor(() => expect(consoleError).toHaveBeenCalled());
     expect(mockAddCharacter).not.toHaveBeenCalled();
+    expect(mockMarkSessionExpired).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
 });

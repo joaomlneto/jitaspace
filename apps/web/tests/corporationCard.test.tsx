@@ -178,4 +178,71 @@ describe("CorporationCard", () => {
 
     expect(screen.getByRole("button", { name: "Menu" })).toBeInTheDocument();
   });
+
+  it("in compact mode renders only the header and a valid homepage link", () => {
+    mockUseCorporation.mockReturnValue({
+      data: {
+        data: {
+          ceo_id: 91541581,
+          description: '<font size="16"><b>EVE University</b></font>',
+          member_count: 5716,
+          shares: 1000,
+          tax_rate: 0,
+          ticker: "E-UNI",
+          url: "https://www.eveuniversity.org",
+          war_eligible: false,
+        },
+      },
+    });
+
+    const {
+      CorporationCard,
+    } = require("../components/Card/CorporationCard/CorporationCard");
+    render(
+      <MantineProvider>
+        <CorporationCard corporationId={98553333} compact />
+      </MantineProvider>,
+    );
+
+    // Header is still rendered.
+    expect(screen.getByText("Corporation 98553333")).toBeInTheDocument();
+    expect(screen.getByText("E-UNI")).toBeInTheDocument();
+    expect(screen.getByText("CEO:")).toBeInTheDocument();
+
+    // The metadata block and description are hidden in compact mode.
+    expect(screen.queryByText("Members")).not.toBeInTheDocument();
+    expect(screen.queryByText("Tax rate")).not.toBeInTheDocument();
+    expect(screen.queryByText("Shares")).not.toBeInTheDocument();
+    expect(screen.queryByText("War eligible")).not.toBeInTheDocument();
+    expect(screen.queryByText(/EVE University/)).not.toBeInTheDocument();
+
+    // The homepage link survives because the URL is valid.
+    expect(
+      screen.getByRole("link", { name: "https://www.eveuniversity.org" }),
+    ).toHaveAttribute("href", "https://www.eveuniversity.org");
+  });
+
+  it("in compact mode hides the homepage link when the url is not valid", () => {
+    mockUseCorporation.mockReturnValue({
+      data: {
+        data: {
+          ticker: "E-UNI",
+          url: "none",
+        },
+      },
+    });
+
+    const {
+      CorporationCard,
+    } = require("../components/Card/CorporationCard/CorporationCard");
+    render(
+      <MantineProvider>
+        <CorporationCard corporationId={98553333} compact />
+      </MantineProvider>,
+    );
+
+    // Header still renders, but the invalid homepage URL is not shown.
+    expect(screen.getByText("E-UNI")).toBeInTheDocument();
+    expect(screen.queryByText("none")).not.toBeInTheDocument();
+  });
 });

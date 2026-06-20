@@ -7,9 +7,7 @@ import {
   ColorSwatch,
   Group,
   Loader,
-  Paper,
   ScrollArea,
-  SimpleGrid,
   Stack,
   Table,
   Text,
@@ -150,49 +148,6 @@ export function TriggerJobsDashboard() {
 
       {data && !data.error && (
         <>
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-            <Paper withBorder p="md" shadow="xs">
-              <Text size="xs" c="dimmed">
-                Active Jobs
-              </Text>
-              <Text size="xl" fw={700}>
-                {data.totals.jobs.toLocaleString()}
-              </Text>
-              <Text size="xs" c="dimmed">
-                with runs in the window
-              </Text>
-            </Paper>
-
-            <Paper withBorder p="md" shadow="xs">
-              <Text size="xs" c="dimmed">
-                Runs
-              </Text>
-              <Text size="xl" fw={700}>
-                {data.totals.runs.toLocaleString()}
-              </Text>
-              <Text size="xs" c="dimmed">
-                {data.totals.completed.toLocaleString()} completed ·{" "}
-                {data.totals.running.toLocaleString()} running
-              </Text>
-            </Paper>
-
-            <Paper withBorder p="md" shadow="xs">
-              <Text size="xs" c="dimmed">
-                Failed Runs
-              </Text>
-              <Text
-                size="xl"
-                fw={700}
-                c={data.totals.failed > 0 ? "red" : "green"}
-              >
-                {data.totals.failed.toLocaleString()}
-              </Text>
-              <Text size="xs" c="dimmed">
-                {data.totals.cancelled.toLocaleString()} cancelled
-              </Text>
-            </Paper>
-          </SimpleGrid>
-
           {sortedJobs.length === 0 ? (
             <Alert
               icon={<IconAlertCircle size="1rem" />}

@@ -29,7 +29,6 @@ allowBuilds:
   cypress: true
   es5-ext: true
   esbuild: true
-  inngest-cli: true
   lzma-native: true
   msgpackr-extract: true
   prisma: true

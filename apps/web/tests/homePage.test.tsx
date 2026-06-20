@@ -100,15 +100,15 @@ describe("home page corporations", () => {
       </MantineProvider>,
     );
 
-    expect(screen.getByText("Corporations:")).toBeInTheDocument();
+    expect(screen.getByText("Corporations")).toBeInTheDocument();
     expect(screen.getAllByText("Corporation 1")).toHaveLength(1);
     expect(screen.queryByText("Corporation 2")).not.toBeInTheDocument();
 
-    expect(screen.getByText("Alliances:")).toBeInTheDocument();
+    expect(screen.getByText("Alliances")).toBeInTheDocument();
     expect(screen.getAllByText("Alliance 10")).toHaveLength(1);
   });
 
-  it("renders no corporation or alliance cards when none are available", () => {
+  it("renders no corporation or alliance sections when none are available", () => {
     mockUseAuthenticatedCharacterIds.mockReturnValue([100]);
     mockUseAuthStore.mockImplementation((selector) =>
       selector({
@@ -125,9 +125,9 @@ describe("home page corporations", () => {
       </MantineProvider>,
     );
 
-    expect(screen.getByText("Corporations:")).toBeInTheDocument();
+    expect(screen.queryByText("Corporations")).not.toBeInTheDocument();
     expect(screen.queryByText("Corporation 100")).not.toBeInTheDocument();
-    expect(screen.getByText("Alliances:")).toBeInTheDocument();
+    expect(screen.queryByText("Alliances")).not.toBeInTheDocument();
     expect(screen.queryByText("Alliance 100")).not.toBeInTheDocument();
   });
 

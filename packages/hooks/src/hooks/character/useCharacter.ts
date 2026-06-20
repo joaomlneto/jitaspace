@@ -159,6 +159,10 @@ export const useCharacter = (
             locationId: agent.data.data.locationID,
             name: esiCharacter.data.data.name,
             raceId: esiCharacter.data.data.race_id,
+            description: esiCharacter.data.data.description,
+            factionId: esiCharacter.data.data.faction_id,
+            securityStatus: esiCharacter.data.data.security_status,
+            title: esiCharacter.data.data.title,
             ...researchAgentData,
             ...agentInSpaceData,
           }
@@ -188,6 +192,10 @@ export const useCharacter = (
             gender: esiCharacter.data.data.gender,
             name: esiCharacter.data.data.name,
             raceId: esiCharacter.data.data.race_id,
+            description: esiCharacter.data.data.description,
+            factionId: esiCharacter.data.data.faction_id,
+            securityStatus: esiCharacter.data.data.security_status,
+            title: esiCharacter.data.data.title,
           }
         : null,
     [esiCharacter.data, isNpc],

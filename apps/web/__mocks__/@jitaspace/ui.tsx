@@ -57,6 +57,26 @@ export const TypeName = ({
     `type-${typeId}`,
   );
 
+// --- Generic entity name (pure renderer of an already-resolved name) ---
+export const EveEntityNameDisplay = ({
+  name,
+  loading: _loading,
+  span: _span,
+  size: _size,
+  lineClamp: _lc,
+}: {
+  name?: string | null;
+  loading?: boolean;
+  span?: boolean;
+  size?: string;
+  lineClamp?: number;
+}) =>
+  React.createElement(
+    "span",
+    { "data-testid": "entity-name" },
+    name ?? "Unknown",
+  );
+
 // --- ISK ---
 export const ISKAmount = ({
   amount,

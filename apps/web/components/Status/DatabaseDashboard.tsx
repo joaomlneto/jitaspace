@@ -1,14 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
 import {
   Alert,
   Badge,
   Group,
   Loader,
-  Paper,
   ScrollArea,
-  SimpleGrid,
   Stack,
   Table,
   Text,
@@ -32,11 +29,6 @@ export function DatabaseDashboard() {
     refetchInterval: REFETCH_INTERVAL_MS,
     staleTime: REFETCH_INTERVAL_MS,
   });
-
-  const nonEmptyTables = useMemo(
-    () => data?.tables.filter((table) => table.rowCount > 0).length ?? 0,
-    [data],
-  );
 
   return (
     <Stack gap="md">
@@ -86,44 +78,6 @@ export function DatabaseDashboard() {
 
       {data && !data.error && (
         <>
-          <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-            <Paper withBorder p="md" shadow="xs">
-              <Text size="xs" c="dimmed">
-                Tables
-              </Text>
-              <Text size="xl" fw={700}>
-                {data.totals.tables.toLocaleString()}
-              </Text>
-              <Text size="xs" c="dimmed">
-                {nonEmptyTables.toLocaleString()} with records
-              </Text>
-            </Paper>
-
-            <Paper withBorder p="md" shadow="xs">
-              <Text size="xs" c="dimmed">
-                Total Records
-              </Text>
-              <Text size="xl" fw={700}>
-                {data.totals.rows.toLocaleString()}
-              </Text>
-              <Text size="xs" c="dimmed">
-                estimated across all tables
-              </Text>
-            </Paper>
-
-            <Paper withBorder p="md" shadow="xs">
-              <Text size="xs" c="dimmed">
-                Largest Table
-              </Text>
-              <Text size="xl" fw={700}>
-                {data.tables[0]?.rowCount.toLocaleString() ?? "0"}
-              </Text>
-              <Text size="xs" c="dimmed" truncate>
-                {data.tables[0]?.label ?? "-"}
-              </Text>
-            </Paper>
-          </SimpleGrid>
-
           {data.tables.length === 0 ? (
             <Alert
               icon={<IconAlertCircle size="1rem" />}

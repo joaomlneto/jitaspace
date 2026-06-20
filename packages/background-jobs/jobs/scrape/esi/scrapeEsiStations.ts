@@ -94,9 +94,12 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
             );
 
           const updateOneStation = (
-            entry: (typeof thisBatchStations)[number],
+            entry: Omit<
+              Awaited<ReturnType<typeof prisma.station.findMany>>[number],
+              "createdAt" | "updatedAt"
+            >,
           ) =>
-            limit(async () =>
+            limit(() =>
               prisma.station.update({
                 data: entry,
                 where: { stationId: entry.stationId },
