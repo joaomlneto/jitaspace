@@ -8,6 +8,7 @@ import {
   getEveSsoAccessTokenPayload,
 } from "@jitaspace/auth-utils";
 
+import { env } from "../env";
 import { unsealDataWithAuthSecret } from "../utils/unsealDataWithAuthSecret";
 import {
   completeLoginFlow,
@@ -17,7 +18,7 @@ import {
   sealLoginResult,
 } from "../src/oauth";
 
-const secret = process.env.NEXTAUTH_SECRET!;
+const secret = env.NEXTAUTH_SECRET;
 
 const stateFromUrl = (authorizationUrl: string) =>
   new URL(authorizationUrl).searchParams.get("state")!;

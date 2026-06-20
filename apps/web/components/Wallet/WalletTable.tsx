@@ -5,7 +5,7 @@ import type {
   MRT_Row,
 } from "mantine-react-table";
 import { memo, useMemo } from "react";
-import { Badge, Group } from "@mantine/core";
+import { Badge, Group, rem } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
@@ -37,7 +37,7 @@ function ContextTypeCell({
 }: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
   return row.original.context_id_type ? (
     <Badge size="sm" variant="light">
-      {row.original.context_id_type?.replaceAll("_", " ")}
+      {row.original.context_id_type.replaceAll("_", " ")}
     </Badge>
   ) : undefined;
 }
@@ -242,6 +242,9 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
     columns,
     positionPagination: "top",
     enableFacetedValues: true,
+    // Reserve vertical space so the table doesn't grow (and push the page down)
+    // as the wallet journal loads in.
+    mantineTableContainerProps: { style: { minHeight: rem(420) } },
     data: entries,
     initialState: {
       density: "xs",

@@ -4,6 +4,7 @@ export const TYPE_PAGE_TABS = [
   "attributes",
   "market",
   "description",
+  "history",
 ] as const;
 
 export type TypePageTab = (typeof TYPE_PAGE_TABS)[number];

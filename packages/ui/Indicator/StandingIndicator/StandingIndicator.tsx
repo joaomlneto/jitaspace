@@ -1,7 +1,7 @@
 "use client";
 
 import type { IndicatorProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import Image from "next/image";
 import { Indicator } from "@mantine/core";
 

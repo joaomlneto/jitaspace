@@ -11,7 +11,7 @@ export function useCharacterMail(characterId: number, messageId?: number) {
   });
 
   return useGetCharactersCharacterIdMailMailId(
-    characterId ?? 0,
+    characterId,
     messageId ?? 0,
     { ...authHeaders },
     {

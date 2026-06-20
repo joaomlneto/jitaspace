@@ -65,7 +65,7 @@ function parseDnaFlat(dna: string): ParsedDnaFlat {
   const shipTypeId = Number.parseInt(tokens[i++] ?? "0", 10);
 
   while (i < tokens.length) {
-    const token = tokens[i++]!;
+    const token = tokens[i++] ?? "";
     if (token === "") continue; // terminator / skip empty
     if (!token.includes(";")) continue; // malformed
 

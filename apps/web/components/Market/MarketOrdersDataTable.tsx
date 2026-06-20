@@ -107,8 +107,12 @@ export const MarketOrdersDataTable = memo(
         {
           id: "expires",
           header: "Expires",
-          accessorFn: (row) => {
-            return addDays(new Date(row.issued), 30);
+          accessorFn: (row): Date => {
+            const issued: unknown = row.issued;
+            return addDays(
+              new Date(typeof issued === "string" ? issued : ""),
+              30,
+            );
           },
           Cell: ({
             renderedCellValue: _renderedCellValue,

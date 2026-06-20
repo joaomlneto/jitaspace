@@ -1,6 +1,6 @@
 "use client";
 
-import { GetUniverseSystemsSystemIdQueryResponse } from "@jitaspace/esi-client";
+import type { GetUniverseSystemsSystemIdQueryResponse } from "@jitaspace/esi-client";
 
 export type SolarSystem = GetUniverseSystemsSystemIdQueryResponse;
 

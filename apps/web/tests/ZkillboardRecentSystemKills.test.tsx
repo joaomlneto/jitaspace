@@ -10,7 +10,7 @@ import { render, screen } from "@testing-library/react";
 // drive every branch (loading / loaded / lastChecked-from-Expires-header).
 // ---------------------------------------------------------------------------
 
-type SwrReturn = {
+interface SwrReturn {
   data?: {
     body?: unknown[];
     headers: { get: (name: string) => string | null };
@@ -18,7 +18,7 @@ type SwrReturn = {
   error?: unknown;
   isLoading: boolean;
   isValidating: boolean;
-};
+}
 
 const mockUseSWR = jest.fn<() => SwrReturn>();
 

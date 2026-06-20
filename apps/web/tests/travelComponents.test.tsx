@@ -139,12 +139,11 @@ describe("KillmailButton", () => {
 
   function renderButton(
     killmail: Partial<typeof baseKillmail> | undefined = baseKillmail,
+    killmailIsUndefined = false,
   ) {
     const { KillmailButton } = require("~/components/Travel/KillmailButton");
     mockUseKillmail.mockReturnValue(
-      killmail === undefined
-        ? { data: undefined }
-        : { data: { data: killmail } },
+      killmailIsUndefined ? { data: undefined } : { data: { data: killmail } },
     );
     return renderWithMantine(
       <KillmailButton killmailId={555} killmailHash="abc123" />,
@@ -152,7 +151,7 @@ describe("KillmailButton", () => {
   }
 
   it("renders without crashing when killmail data is undefined", () => {
-    renderButton(undefined);
+    renderButton(undefined, true);
     // The zkillboard link should still be present
     expect(screen.getByRole("link")).toHaveAttribute(
       "href",

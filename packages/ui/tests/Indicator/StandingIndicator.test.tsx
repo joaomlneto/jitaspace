@@ -4,6 +4,8 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render } from "@testing-library/react";
 
+import type * as StandingIndicatorModule from "../../Indicator/StandingIndicator/StandingIndicator";
+
 // StandingIndicator imports five binary .gif files and next/image. Jest cannot
 // transform the binary .gif assets, so stub each one (the StaticImageData shape
 // Next expects) and replace next/image with a plain <img>. Mocked relative to
@@ -14,7 +16,7 @@ jest.mock("next/image", () => ({
     const resolved =
       typeof src === "string"
         ? src
-        : ((src as { src?: string })?.src ?? "");
+        : ((src as { src?: string } | null)?.src ?? "");
     return <img src={resolved} alt={alt} />;
   },
 }));
@@ -50,9 +52,8 @@ jest.mock(
   { virtual: true },
 );
 
-const {
-  StandingIndicator,
-} = require("../../Indicator/StandingIndicator/StandingIndicator") as typeof import("../../Indicator/StandingIndicator/StandingIndicator");
+const { StandingIndicator } =
+  require("../../Indicator/StandingIndicator/StandingIndicator") as typeof StandingIndicatorModule;
 
 const renderWithMantine = (ui: React.ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);
@@ -117,7 +118,9 @@ describe("StandingIndicator", () => {
         <span>avatar</span>
       </StandingIndicator>,
     );
-    expect(container.querySelector(".mantine-Indicator-root")).toBeInTheDocument();
+    expect(
+      container.querySelector(".mantine-Indicator-root"),
+    ).toBeInTheDocument();
     expect(indicatorDot(container)).toBeInTheDocument();
   });
 });

@@ -55,12 +55,11 @@ export const scrapeEsiAlliances = defineJob<
     const results: StepResult[] = [];
     const limit = pLimit(1);
 
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<StepResult> => {
           const stepStartTime = performance.now();
-          const thisBatchIds = batches[i]!;
 
           const esiAllianceMemberCorporations = (
             await Promise.all(

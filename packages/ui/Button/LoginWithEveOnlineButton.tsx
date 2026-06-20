@@ -1,17 +1,14 @@
 "use client";
 
-import React, { memo } from "react";
-import Image, { type ImageProps } from "next/image";
+import type { UnstyledButtonProps } from "@mantine/core";
+import type { ImageProps } from "next/image";
+import { memo } from "react";
+import Image from "next/image";
 import {
   UnstyledButton,
   useMantineColorScheme,
   useMantineTheme,
-  type UnstyledButtonProps,
 } from "@mantine/core";
-
-
-
-
 
 export type LoginWithEveOnlineButtonProps = UnstyledButtonProps & {
   width?: number;

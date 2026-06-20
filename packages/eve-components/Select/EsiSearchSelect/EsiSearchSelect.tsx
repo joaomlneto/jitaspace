@@ -64,7 +64,7 @@ export const EsiSearchSelect = memo(
       isLoading || searchValue !== debouncedSearchValue;
 
     let nothingFoundMessage: string;
-    if ((searchValue ?? "").length < 3) {
+    if (searchValue.length < 3) {
       nothingFoundMessage = "Type at least 3 characters to search for results";
     } else if (isLoadingData) {
       nothingFoundMessage = "Searching…";

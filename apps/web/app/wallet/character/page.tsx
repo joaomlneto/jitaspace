@@ -8,6 +8,7 @@ import {
   useSelectedCharacter,
 } from "@jitaspace/hooks";
 
+import { PageSkeleton } from "~/components/PageSkeleton";
 import { WalletTable } from "~/components/Wallet";
 import { ScopeGuard } from "~/components/ScopeGuard";
 
@@ -16,7 +17,10 @@ export default function Page() {
   const { data } = useCharacterWalletJournal(character?.characterId);
 
   return (
-    <ScopeGuard requiredScopes={["esi-wallet.read_character_wallet.v1"]}>
+    <ScopeGuard
+      requiredScopes={["esi-wallet.read_character_wallet.v1"]}
+      loadingScopesComponent={<PageSkeleton />}
+    >
       <Container size="xl">
         <Stack>
           <Group>

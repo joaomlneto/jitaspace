@@ -10,7 +10,7 @@ const delay = (ms: number) =>
   });
 
 export interface UpdateActiveWarsEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const updateWars = defineJob<UpdateActiveWarsEventPayload["data"]>({
@@ -65,8 +65,7 @@ export const updateWars = defineJob<UpdateActiveWarsEventPayload["data"]>({
       missingWarIds: new Set([...missingWarIds, ...warsToUpdate]),
     });
 
-    for (let index = 0; index < warsToUpdate.length; index += 1) {
-      const warId = warsToUpdate[index]!;
+    for (const [index, warId] of warsToUpdate.entries()) {
       const requestStartedAt = Date.now();
       await getWarsWarId(warId)
         .then(({ data: war }) => ({
@@ -79,12 +78,12 @@ export const updateWars = defineJob<UpdateActiveWarsEventPayload["data"]>({
           isOpenForAllies: war.open_for_allies,
           aggressorAllianceId: war.aggressor.alliance_id ?? null,
           aggressorCorporationId: war.aggressor.corporation_id ?? null,
-          aggressorIskDestroyed: war.aggressor.isk_destroyed ?? null,
-          aggressorShipsKilled: war.aggressor.ships_killed ?? null,
+          aggressorIskDestroyed: war.aggressor.isk_destroyed,
+          aggressorShipsKilled: war.aggressor.ships_killed,
           defenderAllianceId: war.defender.alliance_id ?? null,
           defenderCorporationId: war.defender.corporation_id ?? null,
-          defenderIskDestroyed: war.defender.isk_destroyed ?? null,
-          defenderShipsKilled: war.defender.ships_killed ?? null,
+          defenderIskDestroyed: war.defender.isk_destroyed,
+          defenderShipsKilled: war.defender.ships_killed,
         }))
         .then((war) =>
           prisma.war.update({

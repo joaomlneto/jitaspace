@@ -69,10 +69,10 @@ export function MessagePanel({
             </EveMailSenderAnchor>
           </Group>
           {mail?.data.timestamp && (
-            <DateHoverCard date={new Date(mail?.data.timestamp)}>
+            <DateHoverCard date={new Date(mail.data.timestamp)}>
               <FormattedDateText
                 span
-                date={new Date(mail?.data.timestamp)}
+                date={new Date(mail.data.timestamp)}
                 format="yyyy-MM-dd HH:mm"
               />
             </DateHoverCard>
@@ -168,7 +168,7 @@ export function MessagePanel({
       )}
       {!hideSubject && <Text>Subject: {mail?.data.subject}</Text>}
       {!hideMessage && mail?.data.body && (
-        <MailMessageViewer content={mail?.data.body ?? ""} />
+        <MailMessageViewer content={mail.data.body ?? ""} />
       )}
     </Stack>
   );

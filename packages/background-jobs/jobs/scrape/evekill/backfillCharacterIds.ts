@@ -26,9 +26,9 @@ export const backfillEveKillCharacterIds = defineJob<
     }
 
     // TODO: Retrieve Character IDs from EVE Kill API
-    const characterIds: number[] = await fetch(
+    const characterIds = await fetch(
       "http://127.0.0.1:8080/chids2.json",
-    ).then((res) => res.json());
+    ).then((res) => res.json() as Promise<number[]>);
 
     characterIds.sort((a, b) => a - b);
 

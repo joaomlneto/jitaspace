@@ -60,12 +60,14 @@ export const backfillEveRefKillmails = defineJob<
     });
 
     for (let i = startBatch; i < batches.length; i++) {
+      const batch = batches[i];
+      if (batch === undefined) continue;
       await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
           const batchStartTime = performance.now();
 
-          const remoteEntries: EveRefKillmailSchema[] = batches[i]!.flatMap(
+          const remoteEntries: EveRefKillmailSchema[] = batch.flatMap(
             (file: { content: EveRefKillmailSchema[] }) => file.content,
           );
 

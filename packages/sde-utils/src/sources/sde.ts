@@ -4,11 +4,11 @@ import * as YAML from "js-yaml";
 
 export type SdeRecord = Record<string | number, unknown>;
 
-export type SdeSourceFile = {
+export interface SdeSourceFile {
   idAttributeName: string;
   idAttributeType: "string" | "number";
   transformations: ((data: unknown, file: SdeSourceFile) => SdeRecord)[];
-};
+}
 
 // Builder helpers to cut repetition in sdeInputFiles
 const addId = (idAttributeName: string): SdeSourceFile => ({
@@ -37,6 +37,7 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "categories.yaml": addId("categoryID"),
   "certificates.yaml": addId("certificateID"),
   "characterAttributes.yaml": addId("attributeID"),
+  "characterTitles.yaml": noTransform("characterTitleID", "string"),
   "cloneGrades.yaml": addId("cloneGradeID"),
   "compressibleTypes.yaml": addId("typeID"),
   "contrabandTypes.yaml": addId("typeID"),
@@ -115,8 +116,8 @@ export function addIdToItem(
   { idAttributeName, idAttributeType }: SdeSourceFile,
 ): SdeRecord {
   const obj = data as Record<string, SdeRecord>;
-  for (const id of Object.keys(obj)) {
-    obj[id]![idAttributeName] =
+  for (const [id, item] of Object.entries(obj)) {
+    item[idAttributeName] =
       idAttributeType === "number" ? Number.parseInt(id, 10) : id;
   }
   return obj;

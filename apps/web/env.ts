@@ -7,6 +7,12 @@ import { z } from "zod";
 const server = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
 
+  /**
+   * Populated by Next.js to identify the active server runtime ("nodejs" or
+   * "edge"). Undefined outside the Next.js server runtime.
+   */
+  NEXT_RUNTIME: z.enum(["nodejs", "edge"]).optional(),
+
   NEXTAUTH_SECRET: z.string().min(1),
 
   DATABASE_URL: z.string().url(),
@@ -54,6 +60,15 @@ const server = z.object({
  * built with invalid env vars. To expose them to the client, prefix them with `NEXT_PUBLIC_`.
  */
 const client = z.object({
+  /**
+   * Next.js inlines `NODE_ENV` into the client bundle, so it must be part of
+   * the client schema as well. Without it, `env.NODE_ENV` is `undefined` in
+   * Client Components (the client proxy only carries vars from this schema),
+   * which silently breaks `NODE_ENV`-gated UI and causes dev-only SSR/CSR
+   * hydration mismatches.
+   */
+  NODE_ENV: z.enum(["development", "test", "production"]),
+
   NEXT_PUBLIC_UMAMI_WEBSITE_ID:
     process.env.NODE_ENV === "production"
       ? z.string().min(1)
@@ -65,6 +80,7 @@ const client = z.object({
 
   NEXT_PUBLIC_DISCORD_INVITE_LINK: z.string().url(),
   NEXT_PUBLIC_MODIFIED_DATE: z.string().optional(),
+  NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
 });
 
 /**
@@ -73,6 +89,7 @@ const client = z.object({
  */
 const processEnv = {
   NODE_ENV: process.env.NODE_ENV,
+  NEXT_RUNTIME: process.env.NEXT_RUNTIME,
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   DATABASE_URL: process.env.DATABASE_URL,
   REDIS_URL: process.env.REDIS_URL,
@@ -91,6 +108,7 @@ const processEnv = {
   NEXT_PUBLIC_GOOGLE_TAG_ID: process.env.NEXT_PUBLIC_GOOGLE_TAG_ID,
   NEXT_PUBLIC_DISCORD_INVITE_LINK: process.env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
   NEXT_PUBLIC_MODIFIED_DATE: process.env.NEXT_PUBLIC_MODIFIED_DATE,
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
 };
 
 // Don't touch the part below

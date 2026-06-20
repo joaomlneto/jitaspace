@@ -156,7 +156,6 @@ interface TypePageProps {
 // Require the page lazily so the jest.mock(...) factories above are active
 // before the module (and its transitively-mocked deps) are evaluated.
 function getPage(): React.ComponentType<TypePageProps> {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return
   return require("~/app/type/[typeId]/page.client").default;
 }
 

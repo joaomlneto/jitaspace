@@ -8,7 +8,7 @@ import type { functions as Functions } from "../adapter";
 // adapter maps JobDefinitions onto the shared Inngest client correctly; the
 // real registry membership is covered by @jitaspace/background-jobs' own tests.
 jest.mock("@jitaspace/background-jobs", () => {
-  const noop = async () => undefined;
+  const noop = () => Promise.resolve(undefined);
   const jobs = [
     { id: "alpha-job", name: "Alpha", trigger: { type: "event" }, handler: noop },
     {

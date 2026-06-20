@@ -20,13 +20,13 @@ type StatsKey = "groups";
 
 type Limit = ReturnType<typeof pLimit>;
 
-type GroupEntry = {
+interface GroupEntry {
   groupId: number;
   name: string;
   categoryId: number;
   published: boolean;
   isDeleted: boolean;
-};
+}
 
 const excludeGroupTimestamps = (entry: Group) =>
   excludeObjectKeys(entry, ["updatedAt", "createdAt"]);
@@ -63,7 +63,7 @@ export const scrapeEsiGroups = defineJob<ScrapeGroupsEventPayload["data"]>({
     // Get all Group IDs in ESI
     const batches = await ctx.run("Fetch Group IDs", async () => {
       const firstPage = await getUniverseGroups();
-      const numPages = Number(firstPage.headers?.["x-pages"]);
+      const numPages = Number(firstPage.headers["x-pages"]);
       const groupIds = firstPage.data;
       for (let page = 2; page <= numPages; page++) {
         groupIds.push(
@@ -84,12 +84,11 @@ export const scrapeEsiGroups = defineJob<ScrapeGroupsEventPayload["data"]>({
     const limit = pLimit(20);
 
     // update records in batches
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
           const stepStartTime = performance.now();
-          const thisBatchIds = batches[i]!;
 
           const groupChanges = await updateTable({
             fetchLocalEntries: async () =>

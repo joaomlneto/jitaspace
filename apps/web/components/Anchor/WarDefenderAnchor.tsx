@@ -1,8 +1,8 @@
 "use client";
 
+import type { AnchorProps } from "@mantine/core";
 import type { PropsWithChildren } from "react";
-import React, { memo } from "react";
-import { type AnchorProps } from "@mantine/core";
+import { memo } from "react";
 
 import { WarDefenderAnchor as UIWarDefenderAnchor } from "@jitaspace/eve-components";
 import { useWar } from "@jitaspace/hooks";

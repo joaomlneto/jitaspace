@@ -1,8 +1,8 @@
 "use client";
 
+import type { AnchorProps } from "@mantine/core";
+import type { LinkProps } from "next/link";
 import { memo } from "react";
-import { type LinkProps } from "next/link";
-import { type AnchorProps } from "@mantine/core";
 
 import { EveEntityAnchor } from "./EveEntityAnchor";
 

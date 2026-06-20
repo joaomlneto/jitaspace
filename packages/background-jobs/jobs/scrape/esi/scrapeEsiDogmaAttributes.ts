@@ -95,7 +95,6 @@ export const scrapeEsiDogmaAttributes = defineJob<
     const results: (BatchStepResult<StatsKey> & {
       numEntriesMissingIcon: number;
     })[] = [];
-    const totalEntriesMissingIcon = 0;
     const limit = pLimit(20);
 
     const runBatchUpdate = (entries: DogmaAttributeEntry[]) =>
@@ -104,7 +103,7 @@ export const scrapeEsiDogmaAttributes = defineJob<
       );
 
     // update in batches
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<
@@ -113,7 +112,6 @@ export const scrapeEsiDogmaAttributes = defineJob<
           }
         > => {
           const stepStartTime = performance.now();
-          const thisBatchIds = batches[i]!;
 
           const iconIds = await prisma.icon
             .findMany({
@@ -144,7 +142,7 @@ export const scrapeEsiDogmaAttributes = defineJob<
                   },
                 })
                 .then(excludeDogmaTimestamps),
-            fetchRemoteEntries: async () => remoteEntries,
+            fetchRemoteEntries: () => Promise.resolve(remoteEntries),
             batchCreate: (entries) =>
               limit(() =>
                 prisma.dogmaAttribute.createMany({

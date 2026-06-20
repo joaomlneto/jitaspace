@@ -39,7 +39,7 @@ const APP_DEFAULT_TITLE = "JitaSpace";
 const APP_TITLE_TEMPLATE = "%s | JitaSpace";
 const APP_DESCRIPTION =
   "EVE Online companion app — browse items, characters, corporations, market data, ship fittings, and more.";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.jita.space";
+const SITE_URL = env.NEXT_PUBLIC_SITE_URL ?? "https://www.jita.space";
 const ESI_USER_AGENT = "jitaspace-web/0.1.0 (https://jita.space)";
 const ESI_ACCEPT_LANGUAGE = DEFAULT_ESI_ACCEPT_LANGUAGE;
 

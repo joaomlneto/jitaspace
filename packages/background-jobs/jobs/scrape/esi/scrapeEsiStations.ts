@@ -10,7 +10,7 @@ import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeStationsEventPayload {
   data: {
-    stationIds: number[];
+    stationIds?: number[];
     batchSize?: number;
   };
 }
@@ -46,33 +46,32 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
     const batchSize = ctx.payload.batchSize ?? 1000;
     const stationIds = ctx.payload.stationIds ?? [];
 
-    if (ctx.payload.stationIds.length == 0)
+    if (stationIds.length == 0)
       throw new NonRetriableError("Invalid station IDs");
 
     // Split IDs in batches
-    const { batches } = await ctx.run("Fetch Station IDs", async () => {
+    const { batches } = await ctx.run("Fetch Station IDs", () => {
       stationIds.sort((a, b) => a - b);
 
       const numBatches = Math.ceil(stationIds.length / batchSize);
       const batchIds = (batchIndex: number) =>
         stationIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      return {
+      return Promise.resolve({
         batches: [...new Array(numBatches).keys()].map((batchId) =>
           batchIds(batchId),
         ),
-      };
+      });
     });
 
     const results: BatchStepResult<StatsKey>[] = [];
     const limit = pLimit(20);
 
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchStationIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<(typeof results)[number]> => {
           console.log(`starting batch ${i + 1}`);
           const stepStartTime = performance.now();
-          const thisBatchStationIds = batches[i]!;
 
           await createCorpAndItsRefRecords({
             missingStationIds: new Set(thisBatchStationIds),
@@ -95,9 +94,12 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
             );
 
           const updateOneStation = (
-            entry: (typeof thisBatchStations)[number],
+            entry: Omit<
+              Awaited<ReturnType<typeof prisma.station.findMany>>[number],
+              "createdAt" | "updatedAt"
+            >,
           ) =>
-            limit(async () =>
+            limit(() =>
               prisma.station.update({
                 data: entry,
                 where: { stationId: entry.stationId },
@@ -115,7 +117,7 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
                   },
                 })
                 .then(stripTimestamps),
-            fetchRemoteEntries: async () => thisBatchStations,
+            fetchRemoteEntries: () => Promise.resolve(thisBatchStations),
             batchCreate: (entries) =>
               limit(() =>
                 prisma.station.createMany({

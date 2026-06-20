@@ -1,0 +1,45 @@
+.header {
+    margin-bottom: var(--mantine-spacing-md);
+}
+
+/* EVE-HUD accent bar to the left of the title */
+.bar {
+    flex: 0 0 auto;
+    width: rem(4px);
+    height: rem(22px);
+    border-radius: rem(2px);
+    background: linear-gradient(
+            180deg,
+            var(--mantine-primary-color-filled),
+            color-mix(in srgb, var(--mantine-primary-color-filled) 15%, transparent)
+    );
+    box-shadow: 0 0 rem(10px) color-mix(in srgb, var(--mantine-primary-color-filled) 45%, transparent);
+}
+
+.title {
+    white-space: nowrap;
+}
+
+/* Monospace count chip, e.g. "2" pilots */
+.count {
+    flex: 0 0 auto;
+    font-family: var(--mantine-font-family-monospace);
+    font-size: var(--mantine-font-size-xs);
+    line-height: 1;
+    color: var(--mantine-color-dimmed);
+    border: rem(1px) solid color-mix(in srgb, var(--mantine-primary-color-filled) 28%, transparent);
+    border-radius: var(--mantine-radius-xs);
+    padding: rem(3px) rem(8px);
+}
+
+/* Thin gradient rule that fills the remaining width */
+.rule {
+    flex: 1 1 auto;
+    min-width: rem(24px);
+    height: rem(1px);
+    background: linear-gradient(
+            90deg,
+            color-mix(in srgb, var(--mantine-primary-color-filled) 30%, transparent),
+            transparent
+    );
+}

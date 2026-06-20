@@ -23,6 +23,7 @@ export const ESI_ACCEPT_LANGUAGE_OPTIONS = [
 export const APP_THEME_OPTIONS = [
   { value: "default", label: "Default" },
   { value: "eve", label: "EVE" },
+  { value: "eve_v2", label: "EVE v2" },
   { value: "amarr", label: "Amarr" },
   { value: "caldari", label: "Caldari" },
   { value: "gallente", label: "Gallente" },
@@ -34,14 +35,14 @@ export type EsiAcceptLanguage =
   (typeof ESI_ACCEPT_LANGUAGE_OPTIONS)[number]["languageCode"];
 export type AppTheme = (typeof APP_THEME_OPTIONS)[number]["value"];
 
-type PreferencesState = {
+interface PreferencesState {
   esiAcceptLanguage: EsiAcceptLanguage;
   appTheme: AppTheme;
   experimentalDataTables: boolean;
   setEsiAcceptLanguage: (value: EsiAcceptLanguage) => void;
   setAppTheme: (value: AppTheme) => void;
   setExperimentalDataTables: (value: boolean) => void;
-};
+}
 
 export const sanitizeAppTheme = (
   value: string | null | undefined,

@@ -1,7 +1,7 @@
 "use client";
 
 import type { BadgeProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import { Badge, Skeleton } from "@mantine/core";
 
 export type WarAggressorTickerBadgeProps = Omit<BadgeProps, "children"> & {

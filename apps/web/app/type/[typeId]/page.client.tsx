@@ -26,6 +26,7 @@ import {
   IconCoin,
   IconExternalLink,
   IconFileText,
+  IconHistory,
   IconInfoCircle,
   IconListDetails,
 } from "@tabler/icons-react";
@@ -68,6 +69,7 @@ import {
   GroupName,
   MarketGroupName,
 } from "~/components/Text";
+import { EntityHistory } from "../../history/EntityHistory";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab } from "./tabs";
 
 export interface PageProps {
@@ -644,6 +646,9 @@ export default function TypePage({
                 Description
               </Tabs.Tab>
             )}
+            <Tabs.Tab value="history" leftSection={<IconHistory size={16} />}>
+              History
+            </Tabs.Tab>
           </Tabs.List>
 
           {/* Overview */}
@@ -916,6 +921,11 @@ export default function TypePage({
               </Paper>
             </Tabs.Panel>
           )}
+
+          {/* History — per-build change timeline (loaded on demand) */}
+          <Tabs.Panel value="history" pt="lg">
+            <EntityHistory entityType="type" entityId={typeId} embedded />
+          </Tabs.Panel>
         </Tabs>
       </Stack>
     </Container>

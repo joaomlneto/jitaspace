@@ -2,10 +2,12 @@
 
 import { useMemo } from "react";
 
-import {
+import type {
   GetCharactersCharacterIdAssetsQueryResponse,
-  getCorporationsCorporationIdAssets,
   GetCorporationsCorporationIdAssetsQueryResponse,
+} from "@jitaspace/esi-client";
+import {
+  getCorporationsCorporationIdAssets,
   useGetCorporationsCorporationIdAssetsInfinite,
 } from "@jitaspace/esi-client";
 
@@ -36,9 +38,10 @@ export const useCorporationAssets = (corporationId?: number) => {
               { ...authHeaders },
             ),
           getNextPageParam: (lastPage, pages) => {
-            const numPages: number | undefined = lastPage.headers?.["x-pages"];
+            const xPages: unknown = lastPage.headers["x-pages"];
+            const numPages = typeof xPages === "string" ? Number(xPages) : 0;
             const nextPage = pages.length + 1;
-            if (nextPage > (numPages ?? 0)) return undefined;
+            if (nextPage > numPages) return undefined;
             return nextPage;
           },
         },
@@ -92,13 +95,16 @@ export const useCorporationAssets = (corporationId?: number) => {
     > = {};
 
     locationsList.forEach((asset) => {
-      locations[asset.location_id] ??= {
-        location_id: asset.location_id,
-        location_type: asset.location_type,
-        items: [],
-      };
-
-      locations[asset.location_id]?.items.push(asset.item_id);
+      const existing = locations[asset.location_id];
+      if (existing) {
+        existing.items.push(asset.item_id);
+      } else {
+        locations[asset.location_id] = {
+          location_id: asset.location_id,
+          location_type: asset.location_type,
+          items: [asset.item_id],
+        };
+      }
     });
 
     return locations;

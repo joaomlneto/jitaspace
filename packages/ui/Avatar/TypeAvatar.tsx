@@ -1,7 +1,7 @@
 "use client";
 
+import type { AvatarProps } from "@mantine/core";
 import { memo } from "react";
-import { type AvatarProps } from "@mantine/core";
 import useSWRImmutable from "swr/immutable";
 
 import { UnknownIcon } from "@jitaspace/eve-icons";
@@ -19,7 +19,7 @@ export const TypeAvatar = memo(
       typeId && !variation
         ? `https://images.evetech.net/types/${typeId}`
         : null,
-      (input: RequestInfo | URL, init?: RequestInit | undefined) =>
+      (input: RequestInfo | URL, init?: RequestInit) =>
         fetch(input, init).then((res) => res.json()),
     );
     return (

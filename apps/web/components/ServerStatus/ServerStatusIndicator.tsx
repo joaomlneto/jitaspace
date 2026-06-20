@@ -23,7 +23,7 @@ export const ServerStatusIndicator = memo(() => {
       {!isLoading && <ColorSwatch size={12} color={swatchColor} />}
       {isLoading && <Text size="xs">Checking...</Text>}
       {!isLoading && isSuccess && !isVip && (
-        <Text size="xs">{data?.data.players.toLocaleString()}</Text>
+        <Text size="xs">{data.data.players.toLocaleString()}</Text>
       )}
       {!isLoading && isSuccess && isVip && <Text size="xs">VIP Mode</Text>}
       {!isLoading && !isSuccess && <Text size="xs">TQ Down</Text>}

@@ -15,7 +15,7 @@ export const useCharacterClones = (characterId: number) => {
   return {
     hasToken: !!accessToken,
     ...useGetCharactersCharacterIdClones(
-      characterId ?? 1,
+      characterId,
       { ...authHeaders },
       {
         query: {

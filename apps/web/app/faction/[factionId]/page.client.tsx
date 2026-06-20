@@ -10,7 +10,7 @@ import { FactionAvatar } from "@jitaspace/ui";
 
 export default function Page() {
   const params = useParams();
-  const rawFactionId = params?.factionId;
+  const rawFactionId = params.factionId;
   const factionId = Number(
     typeof rawFactionId === "string" ? rawFactionId : rawFactionId?.[0],
   );

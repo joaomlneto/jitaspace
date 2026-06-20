@@ -50,11 +50,9 @@ async function processTypeBatch(
       },
     })
     .then((entries) => entries.map((entry) => entry.iconId));
-  let numEntriesMissingIcon = 0;
 
   const resolveTypeIconId = (type: GetUniverseTypesTypeIdQueryResponse) => {
     if (type.icon_id && !iconIds.includes(type.icon_id)) {
-      numEntriesMissingIcon++;
       console.warn("Type is missing icon entry", type);
     }
     return type.icon_id && iconIds.includes(type.icon_id) ? type.icon_id : null;
@@ -298,7 +296,7 @@ export const scrapeEsiTypes = defineJob<ScrapeTypesEventPayload["data"]>({
     // Get all Type IDs in ESI
     const batches = await ctx.run("Fetch Type IDs", async () => {
       const firstPage = await getUniverseTypes();
-      const numPages = Number(firstPage.headers?.["x-pages"]);
+      const numPages = Number(firstPage.headers["x-pages"]);
       const typeIds = firstPage.data;
       for (let page = 2; page <= numPages; page++) {
         typeIds.push(
@@ -319,8 +317,7 @@ export const scrapeEsiTypes = defineJob<ScrapeTypesEventPayload["data"]>({
     const limit = pLimit(20);
 
     // update types in batches
-    for (let i = 0; i < batches.length; i++) {
-      const thisBatchTypeIds = batches[i]!;
+    for (const [i, thisBatchTypeIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         (): Promise<BatchStepResult<StatsKey>> =>

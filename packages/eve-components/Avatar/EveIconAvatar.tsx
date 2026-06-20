@@ -1,7 +1,7 @@
 "use client";
 
 import type { AvatarProps } from "@mantine/core";
-import React, { memo, useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Avatar, Skeleton } from "@mantine/core";
 
 import { useGetIconById } from "@jitaspace/sde-client";
@@ -19,7 +19,7 @@ export const EveIconAvatar = memo(
       const prefix = "res:/ui/texture/icons/";
       const filename = data?.data.iconFile.slice(prefix.length);
       return `https://iec.jita.space/items/${filename}`;
-    }, [data?.data?.iconFile]);
+    }, [data?.data.iconFile]);
 
     return (
       <Skeleton visible={isPending}>

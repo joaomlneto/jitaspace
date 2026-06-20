@@ -60,29 +60,25 @@ export function MessageMenu({
     label_id?: number;
     name?: string;
   }) => {
-    if (characterId === undefined) {
-      return showNotification({
-        title: "Error",
-        message: "Not authenticated.",
-        color: "red",
-      });
-    }
     if (mail.mail_id === undefined) {
       return showNotification({
         title: "Error",
         message: "Message ID is undefined.",
       });
     }
-    const hasLabel = label.label_id && mail.labels?.includes(label.label_id);
-    const removeLabel = (labelId: number) => labelId !== label.label_id;
+    const labelId = label.label_id;
+    if (labelId === undefined) {
+      return;
+    }
+    const hasLabel = mail.labels?.includes(labelId) ?? false;
+    const removeLabel = (id: number) => id !== labelId;
     await putCharactersCharacterIdMailMailId(
       characterId,
       mail.mail_id,
       {
         labels: hasLabel
           ? mail.labels?.filter(removeLabel)
-          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            [...(mail.labels ?? []), label.label_id!],
+          : [...(mail.labels ?? []), labelId],
       },
       authHeaders,
     );
@@ -92,7 +88,7 @@ export function MessageMenu({
     if (item) {
       item.labels = hasLabel
         ? mail.labels?.filter(removeLabel)
-        : [...(mail.labels ?? []), label.label_id!];
+        : [...(mail.labels ?? []), labelId];
     }
 
     // Show a notification
@@ -104,14 +100,6 @@ export function MessageMenu({
   };
 
   const handleToggleRead = async () => {
-    if (characterId === undefined) {
-      return showNotification({
-        title: "Error",
-        message: "Not authenticated.",
-        color: "red",
-      });
-    }
-
     if (mail.mail_id === undefined) {
       return showNotification({
         title: "Error",
@@ -126,9 +114,9 @@ export function MessageMenu({
       },
       authHeaders,
     );
-    if (data) {
-      data.find((item) => item.mail_id === mail.mail_id)!.is_read =
-        !mail.is_read;
+    const item = data?.find((item) => item.mail_id === mail.mail_id);
+    if (item) {
+      item.is_read = !mail.is_read;
     }
     showNotification({
       title: "Message Updated",
@@ -140,14 +128,6 @@ export function MessageMenu({
   };
 
   const handleDeleteMessage = async () => {
-    if (characterId === undefined) {
-      return showNotification({
-        title: "Error",
-        message: "Not authenticated.",
-        color: "red",
-      });
-    }
-
     if (mail.mail_id === undefined) {
       return showNotification({
         title: "Error",
@@ -159,9 +139,9 @@ export function MessageMenu({
       mail.mail_id,
       authHeaders,
     );
-    if (data) {
-      data.find((message) => message.mail_id === mail.mail_id)!.isDeleted =
-        true;
+    const message = data?.find((message) => message.mail_id === mail.mail_id);
+    if (message) {
+      message.isDeleted = true;
     }
     showNotification({
       title: "Message Deleted",

@@ -28,9 +28,9 @@ describe("scopeDescriptions", () => {
   });
 
   it("all description values are non-empty strings", () => {
-    for (const [key, value] of Object.entries(scopeDescriptions)) {
+    for (const value of Object.values(scopeDescriptions)) {
       expect(typeof value).toBe("string");
-      expect((value as string).length).toBeGreaterThan(0);
+      expect(value.length).toBeGreaterThan(0);
     }
   });
 

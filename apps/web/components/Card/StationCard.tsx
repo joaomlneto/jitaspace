@@ -26,7 +26,7 @@ export const StationCard = memo(
             <Group gap="xs" wrap="nowrap">
               {data?.data.system_id && (
                 <SolarSystemSecurityStatusBadge
-                  solarSystemId={data?.data.system_id}
+                  solarSystemId={data.data.system_id}
                   size="xs"
                   w={42}
                 />

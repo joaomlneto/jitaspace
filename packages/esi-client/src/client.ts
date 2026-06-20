@@ -21,7 +21,7 @@ declare const AXIOS_HEADERS: string;
 /**
  * Subset of AxiosRequestConfig
  */
-export type RequestConfig<TData = unknown> = {
+export interface RequestConfig<TData = unknown> {
   baseURL?: string;
   url?: string;
   method?: "GET" | "PUT" | "PATCH" | "POST" | "DELETE" | "OPTIONS" | "HEAD";
@@ -40,17 +40,17 @@ export type RequestConfig<TData = unknown> = {
   rateLimitUserId?: string;
   userAgent?: string;
   acceptLanguage?: string;
-};
+}
 
 /**
  * Subset of AxiosResponse
  */
-export type ResponseConfig<TData = unknown> = {
+export interface ResponseConfig<TData = unknown> {
   data: TData;
   status: number;
   statusText: string;
   headers: AxiosResponse["headers"];
-};
+}
 
 export type ResponseErrorConfig<TError = unknown> = AxiosError<TError>;
 
@@ -228,7 +228,7 @@ const routeGroupMappings: RouteGroupMapping[] = Object.entries(
   .filter((mapping): mapping is RouteGroupMapping => mapping !== null);
 
 const getRequestEndpoint = (url: string): string => {
-  let path = url.split("?")[0] || "";
+  let path = url.split("?")[0] ?? "";
   if (path.startsWith("https://esi.evetech.net")) {
     path = path.replace("https://esi.evetech.net", "");
   }
@@ -315,7 +315,7 @@ const getHeaderValue = (
     }
 
     if (Array.isArray(value) && value.length > 0) {
-      const first = value[0];
+      const first: unknown = value[0];
       if (typeof first === "string" || typeof first === "number") {
         return first.toString();
       }
@@ -658,8 +658,8 @@ export const client = async <TData, TError = unknown, TVariables = unknown>(
   config: RequestConfig<TVariables>,
 ): Promise<ResponseConfig<TData>> => {
   const globalConfig = getConfig();
-  const method = config.method || "GET";
-  const url = config.url || "";
+  const method = config.method ?? "GET";
+  const url = config.url ?? "";
   const endpoint = getRequestEndpoint(url);
   const userId = resolveRateLimitUserId(config, globalConfig);
   const operationId = config.operationId ?? globalConfig.operationId;

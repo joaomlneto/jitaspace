@@ -24,10 +24,10 @@ export const AssetLocationSelect = memo(
       <>
         <Select
           //itemComponent={AssetLocationSelectItem}
-          data={(Object.values(locations) ?? [])
+          data={Object.values(locations)
             .filter((location) => location.location_type !== "item")
             .map((location) => ({
-              value: location.location_id?.toString(),
+              value: location.location_id.toString(),
               label: `${getNameFromCache(location.location_id)} (${
                 location.location_type
               })`,

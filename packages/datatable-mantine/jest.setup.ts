@@ -5,9 +5,15 @@ Object.assign(global, { TextEncoder, TextDecoder });
 
 // jsdom does not implement ResizeObserver or matchMedia — Mantine requires both
 global.ResizeObserver = class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe() {
+    /* no-op: jsdom has no layout engine */
+  }
+  unobserve() {
+    /* no-op */
+  }
+  disconnect() {
+    /* no-op */
+  }
 };
 
 Object.defineProperty(window, "matchMedia", {
@@ -16,10 +22,18 @@ Object.defineProperty(window, "matchMedia", {
     matches: false,
     media: query,
     onchange: null,
-    addListener: () => {},
-    removeListener: () => {},
-    addEventListener: () => {},
-    removeEventListener: () => {},
+    addListener: () => {
+      /* deprecated no-op */
+    },
+    removeListener: () => {
+      /* deprecated no-op */
+    },
+    addEventListener: () => {
+      /* no-op */
+    },
+    removeEventListener: () => {
+      /* no-op */
+    },
     dispatchEvent: () => false,
   }),
 });
@@ -30,4 +44,6 @@ global.requestAnimationFrame = (cb) => {
   cb(performance.now());
   return 0;
 };
-global.cancelAnimationFrame = () => {};
+global.cancelAnimationFrame = () => {
+  /* no-op: rAF callbacks run synchronously above */
+};

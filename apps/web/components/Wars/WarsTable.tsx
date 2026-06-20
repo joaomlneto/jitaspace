@@ -206,15 +206,9 @@ function FinishedDateCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
 
 function UpdatedAtCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
-    row.original.updatedAt && (
-      <DateHoverCard date={new Date(row.original.updatedAt)}>
-        <TimeAgoText
-          inherit
-          date={new Date(row.original.updatedAt)}
-          addSuffix
-        />
-      </DateHoverCard>
-    )
+    <DateHoverCard date={new Date(row.original.updatedAt)}>
+      <TimeAgoText inherit date={new Date(row.original.updatedAt)} addSuffix />
+    </DateHoverCard>
   );
 }
 

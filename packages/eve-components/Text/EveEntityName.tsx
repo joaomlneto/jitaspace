@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import { type TextProps } from "@mantine/core";
+import type { TextProps } from "@mantine/core";
 
 import type { ResolvableEntityCategory } from "@jitaspace/hooks";
 import { useEsiName } from "@jitaspace/hooks";

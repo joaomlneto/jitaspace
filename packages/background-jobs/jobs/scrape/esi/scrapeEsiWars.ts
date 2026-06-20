@@ -89,12 +89,11 @@ export const scrapeEsiWars = defineJob<ScrapeWarsEventPayload["data"]>({
     const results: BatchStepResult<StatsKey>[] = [];
 
     // update types in batches
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, thisBatchWarIds] of batches.entries()) {
       const result = await ctx.run(
         `Batch ${i + 1}/${batches.length}`,
         async (): Promise<BatchStepResult<StatsKey>> => {
           const stepStartTime = performance.now();
-          const thisBatchWarIds = batches[i]!;
 
           await createCorpAndItsRefRecords({
             missingWarIds: new Set(thisBatchWarIds),

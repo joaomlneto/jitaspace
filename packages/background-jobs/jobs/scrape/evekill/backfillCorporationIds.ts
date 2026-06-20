@@ -21,9 +21,9 @@ export const backfillEveKillCorporationIds = defineJob<
     const url = ctx.payload.url;
 
     // TODO: Retrieve Corporation IDs from EVE Kill API
-    const corporationIds: number[] = await fetch(
+    const corporationIds = await fetch(
       url ?? "http://127.0.0.1:8080/corporation_ids2.json",
-    ).then((res) => res.json());
+    ).then((res) => res.json() as Promise<number[]>);
 
     corporationIds.sort((a, b) => a - b);
 

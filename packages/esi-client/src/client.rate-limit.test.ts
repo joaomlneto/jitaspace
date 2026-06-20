@@ -14,6 +14,17 @@ import {
   getWaitTime,
 } from "./rate-limit";
 
+// Capture the real timer globals before any test installs fake timers. Jest's
+// `useRealTimers()` does not reliably restore them in this @swc/jest + node
+// setup, which would leave `setTimeout` undefined for later tests (the rate
+// limiter calls it internally). Restored in afterEach below.
+const realTimerGlobals = {
+  setTimeout: globalThis.setTimeout,
+  clearTimeout: globalThis.clearTimeout,
+  setInterval: globalThis.setInterval,
+  clearInterval: globalThis.clearInterval,
+};
+
 const STATUS_GROUP = "status";
 const TEST_USER = "anonymous";
 const CHAR_SOCIAL_GROUP = "char-social";
@@ -56,6 +67,11 @@ describe("client rate-limit integration", () => {
   });
 
   afterEach(() => {
+    // Force real timers back (and re-install the captured globals, since
+    // useRealTimers() does not reliably restore them here) so a fake-timers
+    // test cannot break `setTimeout` for the tests that follow it.
+    jest.useRealTimers();
+    Object.assign(globalThis, realTimerGlobals);
     jest.restoreAllMocks();
   });
 
@@ -261,7 +277,7 @@ describe("client rate-limit integration", () => {
 
   it("applies token-cost rules across route, method, and status permutations", async () => {
     const requestSpy = jest.spyOn(axiosInstance, "request");
-    const permutations: Array<{
+    const permutations: {
       method: "GET" | "POST" | "PUT" | "DELETE";
       url: string;
       endpoint: string;
@@ -269,7 +285,7 @@ describe("client rate-limit integration", () => {
       status: number;
       expectedTokenCost: number;
       isError: boolean;
-    }> = [
+    }[] = [
       {
         method: "GET",
         url: "/status",
@@ -485,7 +501,7 @@ describe("client rate-limit integration", () => {
       unknown
     >;
 
-    expect(requestHeaders["Authorization"]).toBe("Bearer test-token");
+    expect(requestHeaders.Authorization).toBe("Bearer test-token");
     expect(requestHeaders["X-User-Agent"]).toBe("global-agent/4.0");
     expect(requestHeaders["Accept-Language"]).toBe("fr-FR");
   });
@@ -558,7 +574,7 @@ describe("client rate-limit integration", () => {
 
   it("ignores invalid retry-after header formats", async () => {
     const requestSpy = jest.spyOn(axiosInstance, "request");
-    const retryAfterValues: Array<Record<string, unknown>> = [
+    const retryAfterValues: Record<string, unknown>[] = [
       {},
       { "retry-after": "0" },
       { "retry-after": "-5" },
@@ -580,7 +596,7 @@ describe("client rate-limit integration", () => {
 
   it("applies token-cost rules at status code boundaries", async () => {
     const requestSpy = jest.spyOn(axiosInstance, "request");
-    const statusPermutations: Array<{ status: number; tokenCost: number }> = [
+    const statusPermutations: { status: number; tokenCost: number }[] = [
       { status: 299, tokenCost: 2 },
       { status: 300, tokenCost: 1 },
       { status: 399, tokenCost: 1 },

@@ -1,7 +1,8 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import { memo } from "react";
-import { type TextProps } from "@mantine/core";
+
 import { useRace } from "@jitaspace/hooks";
 import { RaceName as UIRaceName } from "@jitaspace/ui";
 

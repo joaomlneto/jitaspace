@@ -61,7 +61,7 @@ export function useSearchActions(query: string): SearchActionGroups {
   const navigate = useCallback(
     (url: string) => {
       // router.push returns a promise we intentionally don't await.
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+
       router.push(url);
     },
     [router],
@@ -133,8 +133,8 @@ export function useSearchActions(query: string): SearchActionGroups {
     const q = query.trim().toLowerCase();
     return actions.filter(
       (action) =>
-        action.label?.toLowerCase().includes(q) ||
-        action.description?.toLowerCase().includes(q),
+        (action.label?.toLowerCase().includes(q) ?? false) ||
+        (action.description?.toLowerCase().includes(q) ?? false),
     );
   }, [query, actions]);
 

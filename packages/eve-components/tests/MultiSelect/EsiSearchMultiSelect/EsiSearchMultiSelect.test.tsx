@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import React from "react";
+import type React from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -294,7 +294,7 @@ describe("EsiSearchMultiSelect", () => {
   // -------------------------------------------------------------------------
 
   describe("uncontrolled selection", () => {
-    it("adds a selected option to the pill list", async () => {
+    it("adds a selected option to the pill list", () => {
       mockUseEsiSearch.mockReturnValue(searchResultWith([123456789]));
 
       renderWithMantine(<EsiSearchMultiSelect categories={["character"]} />);
@@ -311,7 +311,7 @@ describe("EsiSearchMultiSelect", () => {
       ).toBe(true);
     });
 
-    it("clears the search field after selecting an option", async () => {
+    it("clears the search field after selecting an option", () => {
       mockUseEsiSearch.mockReturnValue(searchResultWith([123456789]));
 
       renderWithMantine(<EsiSearchMultiSelect categories={["character"]} />);

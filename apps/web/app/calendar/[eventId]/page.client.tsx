@@ -70,8 +70,8 @@ export default function Page({
       if (!b.event_response) {
         return -1;
       }
-      return (eventResponseColor[a.event_response] ?? "").localeCompare(
-        eventResponseColor[b.event_response] ?? "",
+      return eventResponseColor[a.event_response].localeCompare(
+        eventResponseColor[b.event_response],
       );
     },
   );
@@ -92,10 +92,10 @@ export default function Page({
         <Group justify="space-between" mt="xl">
           <Text>When</Text>
           <DateHoverCard
-            date={event?.data.date ? new Date(event?.data.date) : undefined}
+            date={event?.data.date ? new Date(event.data.date) : undefined}
           >
             <FormattedDateText
-              date={event?.data.date ? new Date(event?.data.date) : undefined}
+              date={event?.data.date ? new Date(event.data.date) : undefined}
               format="yyyy-MM-dd HH:mm"
             />
           </DateHoverCard>
