@@ -15,7 +15,9 @@ export interface SearchScopeNoticeProps {
  * so without a token the universe results never load and search is limited to the
  * app's own pages. Explains the limitation and offers a way to log in.
  */
-export function SearchScopeNotice({ onBeforeLogin }: SearchScopeNoticeProps) {
+export function SearchScopeNotice({
+  onBeforeLogin,
+}: Readonly<SearchScopeNoticeProps>) {
   return (
     <Alert
       variant="light"

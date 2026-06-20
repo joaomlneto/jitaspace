@@ -151,7 +151,9 @@ export function useSearchActions(query: string): SearchActionGroups {
     const _ungrouped: SpotlightActionData[] = [];
     for (const action of filteredActions) {
       if (action.group) {
-        (_groups[action.group] ??= []).push(action);
+        const group = _groups[action.group] ?? [];
+        _groups[action.group] = group;
+        group.push(action);
       } else {
         _ungrouped.push(action);
       }
