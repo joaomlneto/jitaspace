@@ -176,6 +176,37 @@ describe("AllianceCard", () => {
     renderWithMantine(<AllianceCard allianceId="42" />);
     expect(mockUseEsiAllianceInformation).toHaveBeenCalledWith(42);
   });
+
+  it("in compact mode renders only the header section", () => {
+    mockUseEsiAllianceInformation.mockReturnValue({
+      data: {
+        data: {
+          ticker: "TEST",
+          creator_id: 91000001,
+          executor_corporation_id: 98000002,
+          date_founded: "2010-01-01T00:00:00Z",
+        },
+      },
+    });
+    mockUseEsiAllianceMemberCorporations.mockReturnValue({
+      data: { data: [98000002, 98000003, 98000004] },
+    });
+
+    renderWithMantine(<AllianceCard allianceId={99000001} compact />);
+
+    // Header is still rendered.
+    expect(screen.getByText("Alliance 99000001")).toBeInTheDocument();
+    expect(screen.getByText("TEST")).toBeInTheDocument();
+    expect(screen.getByText("Creator:")).toBeInTheDocument();
+    expect(screen.getByText("Executor:")).toBeInTheDocument();
+
+    // The metadata and member-list sections are hidden in compact mode.
+    expect(screen.queryByText("Founded")).not.toBeInTheDocument();
+    expect(screen.queryByText("Member corporations")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Member corporation list"),
+    ).not.toBeInTheDocument();
+  });
 });
 
 // ---------------------------------------------------------------------------

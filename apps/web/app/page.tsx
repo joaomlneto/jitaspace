@@ -1,7 +1,6 @@
 "use client";
 
 import { Burger, Container, SimpleGrid, Stack } from "@mantine/core";
-
 import { useShallow } from "zustand/shallow";
 
 import { AllianceCard } from "@jitaspace/eve-components";
@@ -80,6 +79,7 @@ export default function Page() {
                 <CorporationCard
                   corporationId={corporationId}
                   key={corporationId}
+                  compact
                   headerRightSection={
                     <CorporationMenu corporationId={corporationId}>
                       <Burger size="sm" />
@@ -102,6 +102,7 @@ export default function Page() {
                 <AllianceCard
                   allianceId={allianceId}
                   key={allianceId}
+                  compact
                   headerRightSection={
                     <AllianceMenu allianceId={allianceId}>
                       <Burger size="sm" />
