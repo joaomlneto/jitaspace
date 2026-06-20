@@ -1,11 +1,15 @@
 "use client";
 
+import type { BreadcrumbsProps } from "@mantine/core";
 import { memo } from "react";
-import { type BreadcrumbsProps } from "@mantine/core";
-import { useCategory, useGroup, useType } from "@jitaspace/hooks";
-import { TypeInventoryBreadcrumbs as UITypeInventoryBreadcrumbs } from "@jitaspace/ui";
 
-export type TypeInventoryBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
+import { TypeInventoryBreadcrumbs as UITypeInventoryBreadcrumbs } from "@jitaspace/eve-components";
+import { useCategory, useGroup, useType } from "@jitaspace/hooks";
+
+export type TypeInventoryBreadcrumbsProps = Omit<
+  BreadcrumbsProps,
+  "children"
+> & {
   typeId?: string | number;
   showType?: boolean;
 };

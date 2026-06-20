@@ -37,7 +37,8 @@ jest.mock("@jitaspace/tiptap-eve", () => ({
 
 // Controlled recipient multiselect stub: renders a button that injects a
 // recipient id into the form, and surfaces the current value for assertions.
-jest.mock("@jitaspace/ui", () => ({
+// EmailRecipientSearchMultiSelect moved to @jitaspace/eve-components.
+jest.mock("@jitaspace/eve-components", () => ({
   EmailRecipientSearchMultiSelect: ({
     value,
     onChange,

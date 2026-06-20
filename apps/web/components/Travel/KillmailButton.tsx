@@ -11,19 +11,21 @@ import {
   Tooltip,
 } from "@mantine/core";
 
+import {
+  CharacterName,
+  CorporationName,
+  FactionName,
+  TypeName,
+} from "@jitaspace/eve-components";
 import { CombatLogIcon, MercenaryIcon, WarsIcon } from "@jitaspace/eve-icons";
 import { useKillmail } from "@jitaspace/hooks";
 import {
   CharacterAvatar,
-  CharacterName,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
   FactionAvatar,
-  FactionName,
   TimeAgoText,
   TypeAvatar,
-  TypeName,
   WarAnchor,
 } from "@jitaspace/ui";
 
@@ -34,11 +36,11 @@ interface KillButtonProps {
   killmailHash: string;
 }
 
-type KillmailAttacker = {
+interface KillmailAttacker {
   character_id?: number;
   corporation_id?: number;
   faction_id?: number;
-};
+}
 
 function AttackerAvatar({
   attacker,
@@ -166,9 +168,9 @@ export const KillmailButton = memo(
             )}
             <Group>
               {data?.data.killmail_time && (
-                <DateHoverCard date={new Date(data?.data.killmail_time)}>
+                <DateHoverCard date={new Date(data.data.killmail_time)}>
                   <TimeAgoText
-                    date={new Date(data?.data.killmail_time)}
+                    date={new Date(data.data.killmail_time)}
                     addSuffix
                   />
                 </DateHoverCard>

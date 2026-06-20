@@ -1,19 +1,21 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 // ---------------------------------------------------------------------------
-// refreshCharacterToken adapts the (Pages-style) refresh handler to a
-// serializable, discriminated outcome the client can act on:
-//   200 + token body        -> { status: "refreshed", ... }
-//   410 Gone                 -> { status: "requires-reauth" }   (too old)
-//   any other error / throw  -> { status: "error", message }
-// We replace @jitaspace/auth so no env validation / crypto runs, and emulate
-// the handler by writing to the response adapter it is handed.
+// refreshCharacterToken adapts the framework-agnostic refresh handler
+// (Request -> Response) to a serializable, discriminated outcome the client
+// can act on:
+//   2xx + token body         -> { status: "refreshed", ... }
+//   410 Gone                  -> { status: "requires-reauth" }   (too old)
+//   any other error / throw   -> { status: "error", message }
+// We replace @jitaspace/auth so no env validation / crypto runs, and return a
+// minimal Response-like object the action reads via .status / .json().
 // ---------------------------------------------------------------------------
 
-interface ResLike {
-  setHeader: () => ResLike;
-  status: (code: number) => ResLike;
-  json: (body: unknown) => ResLike;
+// The action builds a `new Request(...)` it never inspects (the handler is
+// mocked); jsdom's jest environment may not define the Web `Request`, so stub it.
+if (typeof globalThis.Request === "undefined") {
+  // A bare class accepts (and ignores) the constructor args the action passes.
+  (globalThis as { Request?: unknown }).Request = class {};
 }
 
 jest.mock("@jitaspace/auth", () => ({
@@ -23,19 +25,20 @@ jest.mock("@jitaspace/auth", () => ({
 
 const { refreshTokenApiRouteHandler: mockHandler } = require("@jitaspace/auth") as {
   refreshTokenApiRouteHandler: jest.MockedFunction<
-    (req: { body: string }, res: ResLike) => Promise<void>
+    (request: Request) => Promise<Response>
   >;
 };
 
 const { refreshCharacterToken } =
   require("~/components/EsiClientSSOAccessTokenInjector.actions") as typeof import("~/components/EsiClientSSOAccessTokenInjector.actions");
 
-/** Make the mocked handler respond like the real one: res.status(c).json(b). */
-function respondWith(statusCode: number, body: unknown) {
-  mockHandler.mockImplementationOnce((_req, res) => {
-    res.status(statusCode).json(body);
-    return Promise.resolve();
-  });
+/** Minimal Response-like value the action reads via `.status` / `.json()`. */
+function jsonResponse(status: number, body: unknown): Response {
+  return { status, json: () => Promise.resolve(body) } as unknown as Response;
+}
+
+function respondWith(status: number, body: unknown) {
+  mockHandler.mockResolvedValueOnce(jsonResponse(status, body));
 }
 
 describe("refreshCharacterToken", () => {

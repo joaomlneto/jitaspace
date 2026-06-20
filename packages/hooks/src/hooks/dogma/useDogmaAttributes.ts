@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  getDogmaAttributesAttributeId,
+import type {
   GetDogmaAttributesAttributeIdHeaderParams,
   GetDogmaAttributesAttributeIdQueryResponse,
 } from "@jitaspace/esi-client";
+import { getDogmaAttributesAttributeId } from "@jitaspace/esi-client";
 
 export const useDogmaAttributes = (
   attributeIds: number[],

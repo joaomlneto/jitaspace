@@ -10,18 +10,29 @@ import { memo, useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
-import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
-import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
+import { EveEntitySelect, TypeAnchor } from "@jitaspace/eve-components";
 import {
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
-  EveEntitySelect,
+  EveEntityNameDisplay,
   ISKAmount,
-  TypeAnchor,
   TypeAvatar,
-  TypeName,
 } from "@jitaspace/ui";
+
+import type { AugmentedOffer } from "./pricing";
+import {
+  buyIskPerLp,
+  buyProfit,
+  requiredItemsBuyCost,
+  requiredItemsSellCost,
+  requiredItemsSplitCost,
+  rewardBuyValue,
+  rewardSellValue,
+  rewardSplitValue,
+  sellIskPerLp,
+  sellProfit,
+} from "./pricing";
+import { useAugmentedOffers } from "./useAugmentedOffers";
 
 interface LoyaltyPointsTableProps {
   corporations: {
@@ -46,24 +57,6 @@ interface LoyaltyPointsTableProps {
     }[];
   }[];
 }
-
-type AugmentedOffer = {
-  offerId: number;
-  corporationId: number;
-  typeId: number;
-  quantity: number;
-  akCost: number | null;
-  lpCost: number;
-  iskCost: number;
-  requiredItems: {
-    typeId: number;
-    quantity: number;
-    marketStats?: FuzzworkTypeMarketAggregate;
-  }[];
-  typeName: string | undefined;
-  corporationName: string | undefined;
-  marketStats?: FuzzworkTypeMarketAggregate;
-};
 
 // ---------------------------------------------------------------------------
 // Filter renderers (factories closing over the sorted option lists)
@@ -119,7 +112,7 @@ function makeItemFilter(sortedTypes: { typeId: number; name: string }[]) {
 // ---------------------------------------------------------------------------
 
 function lpCostSliderLabel(value: number) {
-  return value?.toLocaleString?.();
+  return value.toLocaleString();
 }
 
 function iskCostSliderLabel(value: number) {
@@ -135,8 +128,8 @@ function corporationCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
     <Group>
       <Tooltip
         label={
-          <CorporationName
-            corporationId={row.original.corporationId}
+          <EveEntityNameDisplay
+            name={row.original.corporationName}
             lineClamp={1}
           />
         }
@@ -151,7 +144,7 @@ function corporationCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
             corporationId={row.original.corporationId}
             target="_blank"
           >
-            <CorporationName corporationId={row.original.corporationId} />
+            <EveEntityNameDisplay name={row.original.corporationName} />
           </CorporationAnchor>
         </Group>
       </Tooltip>
@@ -167,9 +160,9 @@ function itemCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
         <Text size="sm">{row.original.quantity}</Text>
       )}
       <TypeAnchor typeId={row.original.typeId} target="_blank">
-        <TypeName
+        <EveEntityNameDisplay
           span
-          typeId={row.original.typeId}
+          name={row.original.typeName}
           size="sm"
           //lineClamp={1}
         />
@@ -187,18 +180,23 @@ function lpCostCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
 }
 
 function iskCostCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
-  return <ISKAmount inherit ta="right" amount={row.original.iskCost ?? 0} />;
+  return <ISKAmount inherit ta="right" amount={row.original.iskCost} />;
 }
 
 function requiredItemsCell({ row }: { row: MRT_Row<AugmentedOffer> }) {
   return (
     <Stack gap="xs">
-      {row.original.requiredItems.map(({ quantity, typeId }) => (
+      {row.original.requiredItems.map(({ quantity, typeId, typeName }) => (
         <Group key={typeId} wrap="nowrap" gap="xs">
           <TypeAvatar typeId={typeId} size="sm" />
           {quantity !== 1 && <Text size="sm">{quantity}</Text>}
           <TypeAnchor typeId={typeId} target="_blank">
-            <TypeName span typeId={typeId} size="sm" lineClamp={1} />
+            <EveEntityNameDisplay
+              span
+              name={typeName}
+              size="sm"
+              lineClamp={1}
+            />
           </TypeAnchor>
         </Group>
       ))}
@@ -297,48 +295,8 @@ function iskPerLpValueCell({ cell }: { cell: MRT_Cell<AugmentedOffer> }) {
  */
 export const LoyaltyPointsTableClassic = memo(
   ({ corporations, types, offers }: LoyaltyPointsTableProps) => {
-    const sortedCorporations = useMemo(
-      () => [...corporations].sort((a, b) => a.name.localeCompare(b.name)),
-      [corporations],
-    );
-
-    const sortedTypes = useMemo(
-      () => [...types].sort((a, b) => a.name.localeCompare(b.name)),
-      [types],
-    );
-
-    const typeIds = useMemo(() => types.map((type) => type.typeId), [types]);
-
-    const marketStats = useFuzzworkRegionalMarketAggregates(typeIds, 10000002);
-
-    const typeNames = useMemo(() => {
-      const map: Record<number, string> = {};
-      types.forEach((type) => (map[type.typeId] = type.name));
-      return map;
-    }, [types]);
-
-    const corporationNames = useMemo(() => {
-      const map: Record<number, string> = {};
-      corporations.forEach(
-        (corporation) => (map[corporation.corporationId] = corporation.name),
-      );
-      return map;
-    }, [corporations]);
-
-    const augmentedOffers = useMemo<AugmentedOffer[]>(
-      () =>
-        offers.map((offer) => ({
-          ...offer,
-          requiredItems: offer.requiredItems.map((item) => ({
-            ...item,
-            marketStats: marketStats.data?.[item.typeId],
-          })),
-          typeName: typeNames[offer.typeId],
-          corporationName: corporationNames[offer.corporationId],
-          marketStats: marketStats.data?.[offer.typeId],
-        })),
-      [offers, typeNames, corporationNames, marketStats.data],
-    );
+    const { sortedCorporations, sortedTypes, augmentedOffers } =
+      useAugmentedOffers({ corporations, types, offers });
 
     const columns = useMemo<MRT_ColumnDef<AugmentedOffer>[]>(
       () => [
@@ -459,7 +417,7 @@ export const LoyaltyPointsTableClassic = memo(
         {
           id: "jita5psell",
           header: "Jita 5% Sell Price",
-          accessorKey: "marketStats.sell.percentile",
+          accessorFn: rewardSellValue,
           size: 10,
           Cell: iskAmountValueCell,
         },
@@ -475,54 +433,27 @@ export const LoyaltyPointsTableClassic = memo(
           id: "reqitemsjita5psell",
           header: "Required Items Jita 5% Sell",
           size: 10,
-          accessorFn: (row) =>
-            row.requiredItems
-              .map(
-                (item) =>
-                  (item.marketStats?.sell.percentile ?? 0) *
-                  (item.quantity ?? 1),
-              )
-              .reduce((a, b) => a + b, 0),
+          accessorFn: requiredItemsSellCost,
           Cell: iskAmountValueCell,
         },
         {
           id: "jita5psellprofit",
           header: "Jita 5% Sell Profit",
           size: 10,
-          accessorFn: (row) =>
-            (row.marketStats?.sell.percentile ?? 0) -
-            row.requiredItems
-              .map(
-                (item) =>
-                  (item.marketStats?.sell.percentile ?? 0) *
-                  (item.quantity ?? 1),
-              )
-              .reduce((a, b) => a + b, 0),
+          accessorFn: sellProfit,
           Cell: iskAmountValueCell,
         },
         {
           id: "jita5psellisklp",
           header: "Jita 5% Sell ISK/LP",
           size: 10,
-          accessorFn: (row) =>
-            row.lpCost > 0
-              ? ((row.marketStats?.sell.percentile ?? 0) -
-                  (row.iskCost ?? 0) -
-                  row.requiredItems
-                    .map(
-                      (item) =>
-                        (item.marketStats?.sell.percentile ?? 0) *
-                        (item.quantity ?? 1),
-                    )
-                    .reduce((a, b) => a + b, 0)) /
-                row.lpCost
-              : undefined,
+          accessorFn: sellIskPerLp,
           Cell: iskPerLpValueCell,
         },
         {
           id: "jita5pbuy",
           header: "Jita 5% Buy Price",
-          accessorKey: "marketStats.buy.percentile",
+          accessorFn: rewardBuyValue,
           size: 10,
           Cell: iskAmountValueCell,
         },
@@ -538,76 +469,35 @@ export const LoyaltyPointsTableClassic = memo(
           id: "reqitemsjita5pbuy",
           header: "Required Items Jita 5% Buy",
           size: 10,
-          accessorFn: (row) =>
-            row.requiredItems
-              .map(
-                (item) =>
-                  (item.marketStats?.buy.percentile ?? 0) *
-                  (item.quantity ?? 1),
-              )
-              .reduce((a, b) => a + b, 0),
+          accessorFn: requiredItemsBuyCost,
           Cell: iskAmountValueCell,
         },
         {
           id: "jita5pbuyprofit",
           header: "Jita 5% Buy Profit",
           size: 10,
-          accessorFn: (row) =>
-            (row.marketStats?.buy.percentile ?? 0) -
-            row.requiredItems
-              .map(
-                (item) =>
-                  (item.marketStats?.buy.percentile ?? 0) *
-                  (item.quantity ?? 1),
-              )
-              .reduce((a, b) => a + b, 0),
+          accessorFn: buyProfit,
           Cell: iskAmountValueCell,
         },
         {
           id: "jita5pbuyisklp",
           header: "Jita 5% Buy ISK/LP",
           size: 10,
-          accessorFn: (row) =>
-            row.lpCost > 0
-              ? ((row.marketStats?.buy.percentile ?? 0) -
-                  (row.iskCost ?? 0) -
-                  row.requiredItems
-                    .map(
-                      (item) =>
-                        (item.marketStats?.buy.percentile ?? 0) *
-                        (item.quantity ?? 1),
-                    )
-                    .reduce((a, b) => a + b, 0)) /
-                row.lpCost
-              : undefined,
+          accessorFn: buyIskPerLp,
           Cell: iskPerLpValueCell,
         },
         {
           id: "jitasplit",
           header: "Jita Split",
           size: 10,
-          accessorFn: (row) =>
-            row.marketStats?.buy && row.marketStats?.sell
-              ? (row.marketStats.buy.percentile +
-                  row.marketStats.sell.percentile) /
-                2
-              : null,
+          accessorFn: rewardSplitValue,
           Cell: iskAmountValueCell,
         },
         {
           id: "reqitemsjitasplit",
           header: "Required Items Jita 5% Split",
           size: 10,
-          accessorFn: (row) =>
-            row.requiredItems
-              .map(
-                (item) =>
-                  (((item.marketStats?.buy.percentile ?? 0) +
-                    (item.marketStats?.sell.percentile ?? 0)) /
-                    2) *
-                  (item.quantity ?? 1),
-              )
-              .reduce((a, b) => a + b, 0),
+          accessorFn: requiredItemsSplitCost,
           Cell: iskAmountValueCell,
         },
       ],

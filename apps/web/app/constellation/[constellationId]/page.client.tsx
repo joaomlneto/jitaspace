@@ -12,18 +12,18 @@ import {
   Title,
 } from "@mantine/core";
 
-import { useConstellation } from "@jitaspace/hooks";
 import {
   ConstellationName,
   RegionName,
   SolarSystemName,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { useConstellation } from "@jitaspace/hooks";
 
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
 export default function Page() {
   const params = useParams();
-  const rawConstellationId = params?.constellationId;
+  const rawConstellationId = params.constellationId;
   const constellationId = Number(
     typeof rawConstellationId === "string"
       ? rawConstellationId
@@ -51,7 +51,7 @@ export default function Page() {
                 component={Link}
                 href={`/region/${constellation.data.region_id}`}
               >
-                <RegionName span regionId={constellation?.data.region_id} />
+                <RegionName span regionId={constellation.data.region_id} />
               </Anchor>
             </Group>
           </Group>

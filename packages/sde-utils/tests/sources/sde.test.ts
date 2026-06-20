@@ -8,9 +8,10 @@ import {
   fixObjectIndices,
   fromArrayOfObjectsToMap,
   loadFile,
-  sdeInputFiles,
-  type SdeSourceFile,
+  sdeInputFiles
+  
 } from "../../src/sources/sde";
+import type {SdeSourceFile} from "../../src/sources/sde";
 
 describe("fromArrayOfObjectsToMap", () => {
   it("indexes an array of objects by the id attribute", () => {
@@ -159,7 +160,7 @@ describe("loadFile", () => {
 
   it("throws for a filename not present in the registry", () => {
     expect(() =>
-      loadFile("not-a-real-file.yaml" as keyof typeof sdeInputFiles, sdeRoot),
+      loadFile("not-a-real-file.yaml", sdeRoot),
     ).toThrow("not found in sdeInputFiles");
   });
 });

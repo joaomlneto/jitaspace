@@ -5,7 +5,7 @@ import { prisma } from "../../../db";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeDogmaUnitsEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const scrapeHoboleaksDogmaUnits = defineJob<
@@ -19,11 +19,16 @@ export const scrapeHoboleaksDogmaUnits = defineJob<
     const stepStartTime = performance.now();
 
     // Get all Dogma Units in Hoboleaks
-    const dogmaUnits: Record<
-      number,
-      { displayName?: string; description?: string; name: string }
-    > = await fetch("https://sde.hoboleaks.space/tq/dogmaunits.json").then(
-      (res) => res.json(),
+    const dogmaUnits = await fetch(
+      "https://sde.hoboleaks.space/tq/dogmaunits.json",
+    ).then(
+      (res) =>
+        res.json() as Promise<
+          Record<
+            number,
+            { displayName?: string; description?: string; name: string }
+          >
+        >,
     );
 
     const dogmaUnitIds = Object.keys(dogmaUnits).map(Number);
@@ -43,14 +48,16 @@ export const scrapeHoboleaksDogmaUnits = defineJob<
           .then((entries) =>
             entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
           ),
-      fetchRemoteEntries: async () =>
-        Object.entries(dogmaUnits).map(([unitId, dogmaUnit]) => ({
-          unitId: Number(unitId),
-          name: dogmaUnit.name,
-          description: dogmaUnit.description ?? null,
-          displayName: dogmaUnit.displayName ?? null,
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          Object.entries(dogmaUnits).map(([unitId, dogmaUnit]) => ({
+            unitId: Number(unitId),
+            name: dogmaUnit.name,
+            description: dogmaUnit.description ?? null,
+            displayName: dogmaUnit.displayName ?? null,
+            isDeleted: false,
+          })),
+        ),
       batchCreate: (entries) =>
         limit(() =>
           prisma.dogmaUnit.createMany({

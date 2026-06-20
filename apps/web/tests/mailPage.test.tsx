@@ -1,7 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import type { ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 
@@ -16,7 +15,7 @@ const mockGet = jest.fn<() => string | null>();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
-  useSearchParams: () => ({ get: (key: string) => mockGet() }),
+  useSearchParams: () => ({ get: (_key: string) => mockGet() }),
   usePathname: () => "/mail",
 }));
 
@@ -69,8 +68,18 @@ jest.mock("~/components/EveMail", () => ({
 }));
 
 const SAMPLE_MESSAGES = [
-  { mail_id: 1, subject: "Hello", from: 100, timestamp: "2025-01-01T00:00:00Z" },
-  { mail_id: 2, subject: "World", from: 101, timestamp: "2025-01-02T00:00:00Z" },
+  {
+    mail_id: 1,
+    subject: "Hello",
+    from: 100,
+    timestamp: "2025-01-01T00:00:00Z",
+  },
+  {
+    mail_id: 2,
+    subject: "World",
+    from: 101,
+    timestamp: "2025-01-02T00:00:00Z",
+  },
 ];
 
 function defaultMailReturn(overrides?: Record<string, unknown>) {
@@ -111,9 +120,7 @@ describe("Mail Page", () => {
     renderPage();
 
     expect(screen.getByText("EveMail")).toBeInTheDocument();
-    expect(screen.getByTestId("mailbox-table")).toHaveTextContent(
-      "2 messages",
-    );
+    expect(screen.getByTestId("mailbox-table")).toHaveTextContent("2 messages");
     // hasMoreMessages false + not loading -> "No more messages"
     expect(screen.getByText("No more messages")).toBeInTheDocument();
     // multiselect rendered because character present
@@ -199,8 +206,7 @@ describe("Mail Page", () => {
     fireEvent.click(screen.getByText("GroupListIcon"));
     const mailingListCalls = mockOpenContextModal.mock.calls.filter(
       (c) =>
-        (c[0] as { modal: string }).modal ===
-        "viewMailingListSubscriptions",
+        (c[0] as { modal: string }).modal === "viewMailingListSubscriptions",
     );
     expect(mailingListCalls).toHaveLength(0);
   });

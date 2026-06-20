@@ -9,11 +9,11 @@ import {
   useMantineColorScheme,
 } from "@mantine/core";
 
-export type SkillBarProps = {
+export interface SkillBarProps {
   activeLevel?: number;
   requiredLevel?: number;
   requirementType?: "queued" | "missing" | "missingStrong";
-};
+}
 
 export const SkillBar = memo(
   ({

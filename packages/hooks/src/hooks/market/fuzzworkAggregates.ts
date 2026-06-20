@@ -1,6 +1,6 @@
 import type { GetAggregatesQueryResponse } from "@jitaspace/fuzzworks-market-client";
 
-export type FuzzworkMarketAggregateStats = {
+export interface FuzzworkMarketAggregateStats {
   weightedAverage: number;
   max: number;
   stddev: number;
@@ -8,12 +8,12 @@ export type FuzzworkMarketAggregateStats = {
   volume: number;
   orderCount: number;
   percentile: number;
-};
+}
 
-export type FuzzworkTypeMarketAggregate = {
+export interface FuzzworkTypeMarketAggregate {
   buy: FuzzworkMarketAggregateStats;
   sell: FuzzworkMarketAggregateStats;
-};
+}
 
 // Fuzzwork serves aggregates over a GET with the type IDs in the query string.
 // The endpoint returns HTTP 414 (URI Too Long) once the URL grows past ~8KB

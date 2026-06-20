@@ -1,6 +1,7 @@
 "use client";
 
-import { CharacterSsoSession, useAuthStore } from "./useAuthStore";
+import type { CharacterSsoSession } from "./useAuthStore";
+import { useAuthStore } from "./useAuthStore";
 
 export const useAuthenticatedCharacter = (
   characterId: number,

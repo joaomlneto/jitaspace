@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -13,9 +13,12 @@ jest.mock("@jitaspace/hooks", () => ({
 
 jest.mock("@jitaspace/ui", () => ({
   DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
-  AllianceAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
-  CorporationAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
+  AllianceAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
+  CorporationAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
   AllianceAvatar: ({ allianceId }: { allianceId: number }) => (
     <span>{`Alliance Avatar ${allianceId}`}</span>
   ),
@@ -27,6 +30,16 @@ jest.mock("@jitaspace/ui", () => ({
   }: {
     corporationId: number | string;
   }) => <span>{`Corporation Avatar ${corporationId}`}</span>,
+  FormattedDateText: ({ date }: { date: Date }) => (
+    <span>{`Date ${date.toISOString()}`}</span>
+  ),
+}));
+
+// Components that moved to @jitaspace/eve-components are stubbed there.
+jest.mock("@jitaspace/eve-components", () => ({
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
   AllianceName: ({ allianceId }: { allianceId: number }) => (
     <span>{`Alliance ${allianceId}`}</span>
   ),
@@ -36,16 +49,17 @@ jest.mock("@jitaspace/ui", () => ({
   CorporationName: ({ corporationId }: { corporationId: number | string }) => (
     <span>{`Corporation ${corporationId}`}</span>
   ),
-  FormattedDateText: ({ date }: { date: Date }) => (
-    <span>{`Date ${date.toISOString()}`}</span>
-  ),
 }));
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ href, children }: { href?: string | object; children?: ReactNode }) => (
-    <a href={typeof href === "string" ? href : ""}>{children}</a>
-  ),
+  default: ({
+    href,
+    children,
+  }: {
+    href?: string | object;
+    children?: ReactNode;
+  }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
 describe("CorporationCard", () => {

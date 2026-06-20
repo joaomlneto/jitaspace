@@ -4,11 +4,11 @@ export const REFRESH_TOKEN_ENDPOINT =
 // TODO: Add option to specify subset of existing scopes
 // See https://docs.esi.evetech.net/docs/sso/refreshing_access_tokens.html
 
-type SsoRefreshTokenSuccessResult = {
+interface SsoRefreshTokenSuccessResult {
   access_token: string;
   expires_in: number;
   refresh_token: string;
-};
+}
 
 export const refreshEveSsoToken = async (params: {
   eveClientId: string;

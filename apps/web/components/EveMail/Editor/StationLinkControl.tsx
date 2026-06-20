@@ -6,8 +6,8 @@ import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
 import { getUniverseStationsStationId } from "@jitaspace/esi-client";
+import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { StationIcon } from "@jitaspace/eve-icons";
-import { EsiSearchSelect } from "@jitaspace/ui";
 
 import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
 import { StationAvatar } from "~/components/Avatar";
@@ -40,8 +40,8 @@ export const StationLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setStationId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setStationId(href);
   };
 
   const handleClose = () => {
@@ -53,16 +53,18 @@ export const StationLinkControl = forwardRef<
     void getUniverseStationsStationId(Number.parseInt(stationId, 10)).then(
       (data) => {
         handleClose();
-        stationId === ""
-          ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-          : editor
-              ?.chain()
-              .focus()
-              .extendMarkRange("link")
-              .setLink({
-                href: `showinfo:${data.data.type_id}//${stationId}`,
-              })
-              .run();
+        if (stationId === "") {
+          editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+        } else {
+          editor
+            ?.chain()
+            .focus()
+            .extendMarkRange("link")
+            .setLink({
+              href: `showinfo:${data.data.type_id}//${stationId}`,
+            })
+            .run();
+        }
       },
     );
   };
@@ -89,7 +91,7 @@ export const StationLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || StationLinkIcon}
+          icon={icon ?? StationLinkIcon}
           aria-label="Link Station"
           title="Link Station"
           onClick={handleOpen}

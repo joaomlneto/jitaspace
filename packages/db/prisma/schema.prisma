@@ -186,6 +186,17 @@ model Type {
   killmailVictims                 KillmailVictim[]                @relation("KillmailVictimShipType")
   killmailAttackerWeapons         KillmailAttacker[]              @relation("KillmailAttackerWeaponType")
   killmailVictimItems             KillmailVictimItems[]           @relation("KillmailVictimItemType")
+  blueprint                       Blueprint?                      @relation("BlueprintType")
+  blueprintMaterials              BlueprintMaterial[]             @relation("BlueprintMaterials")
+  blueprintProducts               BlueprintProduct[]              @relation("BlueprintProducts")
+  blueprintSkills                 BlueprintSkill[]                @relation("BlueprintSkills")
+  typeMaterials                   TypeMaterial[]                  @relation("TypeMaterialType")
+  usedAsMaterialIn                TypeMaterial[]                  @relation("TypeMaterialMaterial")
+  contrabandTypes                 ContrabandType[]
+  certificateSkills               CertificateSkill[]
+  certificateRecommendations      CertificateRecommendation[]
+  masteries                       Mastery[]
+  skinTypes                       SkinType[]
 
   @@index([marketGroupId])
   @@index([graphicId])
@@ -470,6 +481,7 @@ model Faction {
   races                Race[]             @relation("RaceFaction")
   killmailVictims      KillmailVictim[]   @relation("KillmailVictimFaction")
   killmailAttackers    KillmailAttacker[] @relation("KillmailAttackerFaction")
+  contrabandTypes      ContrabandType[]
 
   @@index([corporationId])
   @@index([militiaCorporationId])
@@ -539,8 +551,10 @@ model Station {
   solarSystemId            Int?
   stationType              Type             @relation(fields: [typeId], references: [typeId])
   typeId                   Int
-  maxDockableShipVolume    Float
-  officeRentalCost         Float
+  // Nullable: not present in the SDE (ESI-only). SDE station ingestion leaves
+  // these unset; the ESI scraper fills them.
+  maxDockableShipVolume    Float?
+  officeRentalCost         Float?
   owner                    Corporation?     @relation("StationOwner", fields: [ownerId], references: [corporationId])
   ownerId                  Int?
   // TODO add XYZ Position field
@@ -1257,4 +1271,758 @@ model ItemExchangeContract {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt()
   isDeleted  Boolean  @default(false)
+}
+
+// EVE Online manufacturing/research blueprints (from the SDE blueprints.yaml).
+// A blueprint has one row per activity (manufacturing, copying, research, etc.),
+// and each activity has its input materials, output products and required skills.
+enum BlueprintActivityType {
+  copying
+  invention
+  manufacturing
+  reaction
+  research_material
+  research_time
+}
+
+model Blueprint {
+  blueprintTypeId    Int                 @id
+  blueprintType      Type                @relation("BlueprintType", fields: [blueprintTypeId], references: [typeId])
+  maxProductionLimit Int
+  activities         BlueprintActivity[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt()
+  isDeleted          Boolean             @default(false)
+}
+
+model BlueprintActivity {
+  blueprintTypeId Int
+  blueprint       Blueprint             @relation(fields: [blueprintTypeId], references: [blueprintTypeId])
+  activity        BlueprintActivityType
+  time            Int
+  materials       BlueprintMaterial[]
+  products        BlueprintProduct[]
+  skills          BlueprintSkill[]
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt()
+  isDeleted       Boolean               @default(false)
+
+  @@id([blueprintTypeId, activity])
+}
+
+model BlueprintMaterial {
+  blueprintTypeId   Int
+  activity          BlueprintActivityType
+  blueprintActivity BlueprintActivity     @relation(fields: [blueprintTypeId, activity], references: [blueprintTypeId, activity])
+  materialTypeId    Int
+  materialType      Type                  @relation("BlueprintMaterials", fields: [materialTypeId], references: [typeId])
+  quantity          Int
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt()
+  isDeleted         Boolean               @default(false)
+
+  @@id([blueprintTypeId, activity, materialTypeId])
+  @@index([materialTypeId])
+}
+
+model BlueprintProduct {
+  blueprintTypeId   Int
+  activity          BlueprintActivityType
+  blueprintActivity BlueprintActivity     @relation(fields: [blueprintTypeId, activity], references: [blueprintTypeId, activity])
+  productTypeId     Int
+  productType       Type                  @relation("BlueprintProducts", fields: [productTypeId], references: [typeId])
+  quantity          Int
+  // Probability of a successful invention run; only set for `invention` products.
+  probability       Float?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt()
+  isDeleted         Boolean               @default(false)
+
+  @@id([blueprintTypeId, activity, productTypeId])
+  @@index([productTypeId])
+}
+
+model BlueprintSkill {
+  blueprintTypeId   Int
+  activity          BlueprintActivityType
+  blueprintActivity BlueprintActivity     @relation(fields: [blueprintTypeId, activity], references: [blueprintTypeId, activity])
+  skillTypeId       Int
+  skillType         Type                  @relation("BlueprintSkills", fields: [skillTypeId], references: [typeId])
+  level             Int
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt()
+  isDeleted         Boolean               @default(false)
+
+  @@id([blueprintTypeId, activity, skillTypeId])
+  @@index([skillTypeId])
+}
+
+// ---------------------------------------------------------------------------
+// SDE tables ingested directly from the Static Data Export (no ESI equivalent)
+// ---------------------------------------------------------------------------
+
+/// Tech level / faction grouping for items (metaGroups.yaml).
+model MetaGroup {
+  metaGroupId Int      @id
+  name        String
+  description String?
+  iconId      Int?
+  iconSuffix  String?
+  // RGB tint (0..1 floats) used to colour the meta-group badge; absent for some groups.
+  colorR      Float?
+  colorG      Float?
+  colorB      Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt()
+  isDeleted   Boolean  @default(false)
+}
+
+/// Reprocessing / refining output of a type (typeMaterials.yaml `materials`).
+model TypeMaterial {
+  typeId         Int
+  type           Type     @relation("TypeMaterialType", fields: [typeId], references: [typeId])
+  materialTypeId Int
+  materialType   Type     @relation("TypeMaterialMaterial", fields: [materialTypeId], references: [typeId])
+  quantity       Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt()
+  isDeleted      Boolean  @default(false)
+
+  @@id([typeId, materialTypeId])
+  @@index([typeId])
+  @@index([materialTypeId])
+}
+
+/// Per-faction contraband rules for a type (contrabandTypes.yaml).
+model ContrabandType {
+  typeId           Int
+  type             Type     @relation(fields: [typeId], references: [typeId])
+  factionId        Int
+  faction          Faction  @relation(fields: [factionId], references: [factionId])
+  attackMinSec     Float
+  confiscateMinSec Float
+  fineByValue      Float
+  standingLoss     Float
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt()
+  isDeleted        Boolean  @default(false)
+
+  @@id([typeId, factionId])
+  @@index([typeId])
+  @@index([factionId])
+}
+
+/// A mastery/competency certificate (certificates.yaml).
+model Certificate {
+  certificateId   Int                         @id
+  name            String
+  description     String
+  groupId         Int
+  skills          CertificateSkill[]
+  recommendations CertificateRecommendation[]
+  masteries       Mastery[]
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt()
+  isDeleted       Boolean                     @default(false)
+
+  @@index([groupId])
+}
+
+/// Required skill levels at each certificate grade (certificates.yaml `skillTypes`).
+model CertificateSkill {
+  certificateId Int
+  certificate   Certificate @relation(fields: [certificateId], references: [certificateId])
+  skillTypeId   Int
+  skillType     Type        @relation(fields: [skillTypeId], references: [typeId])
+  basic         Int
+  standard      Int
+  improved      Int
+  advanced      Int
+  elite         Int
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
+
+  @@id([certificateId, skillTypeId])
+  @@index([certificateId])
+  @@index([skillTypeId])
+}
+
+/// Types a certificate is recommended for (certificates.yaml `recommendedFor`).
+model CertificateRecommendation {
+  certificateId Int
+  certificate   Certificate @relation(fields: [certificateId], references: [certificateId])
+  typeId        Int
+  type          Type        @relation(fields: [typeId], references: [typeId])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
+
+  @@id([certificateId, typeId])
+  @@index([certificateId])
+  @@index([typeId])
+}
+
+/// Certificates earned by a type at each mastery level 0..4 (masteries.yaml).
+model Mastery {
+  typeId        Int
+  type          Type        @relation(fields: [typeId], references: [typeId])
+  masteryLevel  Int
+  certificateId Int
+  certificate   Certificate @relation(fields: [certificateId], references: [certificateId])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
+
+  @@id([typeId, masteryLevel, certificateId])
+  @@index([typeId])
+  @@index([certificateId])
+}
+
+/// A SKIN material / colour set (skinMaterials.yaml).
+model SkinMaterial {
+  skinMaterialId Int      @id
+  displayName    String?
+  materialSetId  Int
+  skins          Skin[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt()
+  isDeleted      Boolean  @default(false)
+
+  @@index([materialSetId])
+}
+
+/// A ship/structure SKIN (skins.yaml).
+model Skin {
+  skinId             Int           @id
+  skinMaterialId     Int
+  skinMaterial       SkinMaterial  @relation(fields: [skinMaterialId], references: [skinMaterialId])
+  internalName       String
+  allowCcpDevs       Boolean
+  isStructureSkin    Boolean?
+  skinDescription    String?
+  visibleSerenity    Boolean
+  visibleTranquility Boolean
+  types              SkinType[]
+  licenses           SkinLicense[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt()
+  isDeleted          Boolean       @default(false)
+
+  @@index([skinMaterialId])
+}
+
+/// Types a SKIN can be applied to (skins.yaml `types`).
+model SkinType {
+  skinId    Int
+  skin      Skin     @relation(fields: [skinId], references: [skinId])
+  typeId    Int
+  type      Type     @relation(fields: [typeId], references: [typeId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  isDeleted Boolean  @default(false)
+
+  @@id([skinId, typeId])
+  @@index([skinId])
+  @@index([typeId])
+}
+
+/// A SKIN license item that grants a SKIN (skinLicenses.yaml).
+model SkinLicense {
+  licenseTypeId Int      @id
+  skinId        Int
+  skin          Skin     @relation(fields: [skinId], references: [skinId])
+  duration      Int
+  isSingleUse   Boolean?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt()
+  isDeleted     Boolean  @default(false)
+
+  @@index([skinId])
+}
+
+/// What a TypeListEntry points at (type / group / category).
+enum TypeListRefType {
+  type
+  group
+  category
+}
+
+/// A named set of types defined by include/exclude rules (typeLists.yaml).
+model TypeList {
+  typeListId         Int             @id
+  name               String
+  displayName        String?
+  displayDescription String?
+  entries            TypeListEntry[]
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt()
+  isDeleted          Boolean         @default(false)
+}
+
+/// One include/exclude membership rule of a TypeList. `refId` is polymorphic
+/// (a type, group, or category id per `refType`), so it has no foreign key.
+model TypeListEntry {
+  typeListId Int
+  typeList   TypeList        @relation(fields: [typeListId], references: [typeListId])
+  included   Boolean
+  refType    TypeListRefType
+  refId      Int
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt()
+  isDeleted  Boolean         @default(false)
+
+  @@id([typeListId, included, refType, refId])
+  @@index([typeListId])
+}
+
+/// An NPC corporation activity category (corporationActivities.yaml).
+model CorporationActivity {
+  corporationActivityId Int      @id
+  name                  String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt()
+  isDeleted             Boolean  @default(false)
+}
+
+/// A Mercenary Den tactical operation (mercenaryTacticalOperations.yaml).
+model MercenaryTacticalOperation {
+  mercenaryTacticalOperationId Int      @id
+  name                         String
+  description                  String
+  // The dungeon this operation runs in. dungeons.yaml is not ingested, so this
+  // is a plain id with no foreign key.
+  dungeonId                    Int
+  anarchyImpact                Int
+  developmentImpact            Int
+  infomorphBonus               Int
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt()
+  isDeleted                    Boolean  @default(false)
+}
+
+/// A freelance job schema (freelanceJobSchemas.yaml). Only the descriptive
+/// fields and content tags are modelled; the deep `parameters` / contribution
+/// tuning config is not.
+model FreelanceJobSchema {
+  freelanceJobSchemaGroupId Int
+  name                      String
+  title                     String?
+  description               String?
+  iconId                    String?
+  progressDescription       String?
+  rewardDescription         String?
+  targetDescription         String?
+  tags                      FreelanceJobSchemaTag[]
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @updatedAt()
+  isDeleted                 Boolean                 @default(false)
+
+  @@id([freelanceJobSchemaGroupId, name])
+}
+
+/// One content tag of a freelance job schema (freelanceJobSchemas.yaml `contentTags`).
+model FreelanceJobSchemaTag {
+  freelanceJobSchemaGroupId Int
+  name                      String
+  schema                    FreelanceJobSchema @relation(fields: [freelanceJobSchemaGroupId, name], references: [freelanceJobSchemaGroupId, name])
+  tag                       String
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt()
+  isDeleted                 Boolean            @default(false)
+
+  @@id([freelanceJobSchemaGroupId, name, tag])
+  @@index([freelanceJobSchemaGroupId, name])
+}
+
+// ---------------------------------------------------------------------------
+// Further SDE reference tables. Cross-entity references (types, attributes,
+// factions, groups, skills) are stored as plain integer ids without foreign
+// keys, to keep these niche tables from adding back-relations to the `Type`
+// model. They are normalized internally (composite keys / child tables).
+// ---------------------------------------------------------------------------
+
+/// Maps a type to its compressed equivalent (compressibleTypes.yaml).
+model CompressibleType {
+  typeId           Int      @id
+  compressedTypeId Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt()
+  isDeleted        Boolean  @default(false)
+
+  @@index([compressedTypeId])
+}
+
+/// The 5 character attributes used in skill training (characterAttributes.yaml).
+model CharacterAttribute {
+  attributeId      Int      @id
+  name             String
+  description      String
+  shortDescription String
+  notes            String
+  iconId           Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt()
+  isDeleted        Boolean  @default(false)
+}
+
+/// A short identifier title a character can display (characterTitles.yaml).
+/// Keyed by a UUID string.
+model CharacterTitle {
+  id        String   @id
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  isDeleted Boolean  @default(false)
+}
+
+/// A client translation language (translationLanguages.yaml). Keyed by code.
+model TranslationLanguage {
+  languageId String   @id
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt()
+  isDeleted  Boolean  @default(false)
+}
+
+/// A site archetype, grouping dungeons by theme (archetypes.yaml).
+model Archetype {
+  archetypeId Int      @id
+  title       String?
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt()
+  isDeleted   Boolean  @default(false)
+}
+
+/// A named landmark in space (landmarks.yaml).
+model Landmark {
+  landmarkId  Int      @id
+  name        String
+  description String?
+  iconId      Int?
+  // The solar system the landmark is located in, when applicable.
+  locationId  Int?
+  positionX   Float
+  positionY   Float
+  positionZ   Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt()
+  isDeleted   Boolean  @default(false)
+}
+
+/// A secondary sun of a (binary) solar system (mapSecondarySuns.yaml).
+model MapSecondarySun {
+  secondarySunId     Int      @id
+  solarSystemId      Int
+  typeId             Int
+  effectBeaconTypeId Int
+  positionX          Float
+  positionY          Float
+  positionZ          Float
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt()
+  isDeleted          Boolean  @default(false)
+
+  @@index([solarSystemId])
+}
+
+/// A sovereignty hub upgrade (sovereigntyUpgrades.yaml).
+model SovereigntyUpgrade {
+  typeId                 Int      @id
+  mutuallyExclusiveGroup String
+  fuelTypeId             Int?
+  fuelHourlyUpkeep       Int?
+  fuelStartupCost        Int?
+  powerAllocation        Int?
+  powerProduction        Int?
+  workforceAllocation    Int?
+  workforceProduction    Int?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt()
+  isDeleted              Boolean  @default(false)
+}
+
+/// Sparse planetary colony resource of a planet (planetResources.yaml). Each
+/// planet provides exactly one of power / workforce / a reagent.
+model PlanetResource {
+  planetId                 Int      @id
+  power                    Int?
+  workforce                Int?
+  reagentTypeId            Int?
+  reagentAmountPerCycle    Int?
+  reagentCyclePeriod       Int?
+  reagentSecuredCapacity   Int?
+  reagentUnsecuredCapacity Int?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt()
+  isDeleted                Boolean  @default(false)
+}
+
+/// What a TypeBonusLine applies to.
+enum TypeBonusKind {
+  role
+  skill
+  misc
+}
+
+/// Per-type trait/bonus header (typeBonus.yaml).
+model TypeBonus {
+  typeId    Int             @id
+  iconId    Int?
+  lines     TypeBonusLine[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt()
+  isDeleted Boolean         @default(false)
+}
+
+/// One trait/bonus line of a type (typeBonus.yaml role/skill/misc bonuses).
+/// `skillTypeId` is 0 for role and misc bonuses; `sequence` preserves order.
+model TypeBonusLine {
+  typeId      Int
+  typeBonus   TypeBonus     @relation(fields: [typeId], references: [typeId])
+  kind        TypeBonusKind
+  skillTypeId Int
+  sequence    Int
+  bonus       Float?
+  bonusText   String?
+  importance  Int?
+  unitId      Int?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt()
+  isDeleted   Boolean       @default(false)
+
+  @@id([typeId, kind, skillTypeId, sequence])
+  @@index([typeId])
+}
+
+/// A control tower (POS) fuel/resource requirement line (controlTowerResources.yaml).
+/// `sequence` preserves order (a resourceTypeId can repeat across factions).
+model ControlTowerResource {
+  controlTowerTypeId Int
+  sequence           Int
+  purpose            Int
+  quantity           Int
+  resourceTypeId     Int
+  factionId          Int?
+  minSecurityLevel   Float?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt()
+  isDeleted          Boolean  @default(false)
+
+  @@id([controlTowerTypeId, sequence])
+}
+
+/// A mutaplasmid (dynamicItemAttributes.yaml) — the entity set; ranges and
+/// type mappings live in the child tables.
+model DynamicItemAttribute {
+  mutaplasmidTypeId Int                           @id
+  ranges            DynamicItemAttributeRange[]
+  mappings          DynamicItemAttributeMapping[]
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt()
+  isDeleted         Boolean                       @default(false)
+}
+
+/// The min/max range a mutaplasmid rolls for a dogma attribute.
+model DynamicItemAttributeRange {
+  mutaplasmidTypeId Int
+  mutaplasmid       DynamicItemAttribute @relation(fields: [mutaplasmidTypeId], references: [mutaplasmidTypeId])
+  attributeId       Int
+  min               Float
+  max               Float
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt()
+  isDeleted         Boolean              @default(false)
+
+  @@id([mutaplasmidTypeId, attributeId])
+}
+
+/// Which base type a mutaplasmid applies to and what it produces.
+model DynamicItemAttributeMapping {
+  mutaplasmidTypeId Int
+  mutaplasmid       DynamicItemAttribute @relation(fields: [mutaplasmidTypeId], references: [mutaplasmidTypeId])
+  resultingTypeId   Int
+  applicableTypeId  Int
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt()
+  isDeleted         Boolean              @default(false)
+
+  @@id([mutaplasmidTypeId, resultingTypeId, applicableTypeId])
+}
+
+/// What a DbuffModifier targets.
+enum DbuffModifierKind {
+  item
+  location
+  locationGroup
+  locationRequiredSkill
+}
+
+/// A dynamic buff collection (dbuffCollections.yaml).
+model DbuffCollection {
+  dbuffCollectionId    Int             @id
+  aggregateMode        String
+  developerDescription String
+  displayName          String?
+  operationName        String
+  showOutputValueInUI  String
+  modifiers            DbuffModifier[]
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt()
+  isDeleted            Boolean         @default(false)
+}
+
+/// One modifier of a dbuff collection. `groupId`/`skillId` are set only for the
+/// locationGroup / locationRequiredSkill kinds; `sequence` preserves order.
+model DbuffModifier {
+  dbuffCollectionId Int
+  dbuffCollection   DbuffCollection   @relation(fields: [dbuffCollectionId], references: [dbuffCollectionId])
+  kind              DbuffModifierKind
+  sequence          Int
+  dogmaAttributeId  Int
+  groupId           Int?
+  skillId           Int?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt()
+  isDeleted         Boolean           @default(false)
+
+  @@id([dbuffCollectionId, kind, sequence])
+}
+
+/// A planetary-industry production schematic (planetSchematics.yaml).
+model PlanetSchematic {
+  planetSchematicId Int                   @id
+  name              String
+  cycleTime         Int
+  types             PlanetSchematicType[]
+  pins              PlanetSchematicPin[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt()
+  isDeleted         Boolean               @default(false)
+}
+
+/// An input/output material of a planetary schematic.
+model PlanetSchematicType {
+  planetSchematicId Int
+  planetSchematic   PlanetSchematic @relation(fields: [planetSchematicId], references: [planetSchematicId])
+  typeId            Int
+  isInput           Boolean
+  quantity          Int
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt()
+  isDeleted         Boolean         @default(false)
+
+  @@id([planetSchematicId, typeId])
+}
+
+/// A pin (structure) type usable for a planetary schematic.
+model PlanetSchematicPin {
+  planetSchematicId Int
+  planetSchematic   PlanetSchematic @relation(fields: [planetSchematicId], references: [planetSchematicId])
+  pinTypeId         Int
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt()
+  isDeleted         Boolean         @default(false)
+
+  @@id([planetSchematicId, pinTypeId])
+}
+
+/// A dungeon / encounter site definition (dungeons.yaml).
+model Dungeon {
+  dungeonId           Int                  @id
+  name                String
+  description         String?
+  gameplayDescription String?
+  archetypeId         Int
+  factionId           Int?
+  allowedShips        DungeonAllowedShip[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt()
+  isDeleted           Boolean              @default(false)
+
+  @@index([archetypeId])
+}
+
+/// A ship type allowed to enter a dungeon (dungeons.yaml `allowedShipsList`).
+model DungeonAllowedShip {
+  dungeonId  Int
+  dungeon    Dungeon  @relation(fields: [dungeonId], references: [dungeonId])
+  shipTypeId Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt()
+  isDeleted  Boolean  @default(false)
+
+  @@id([dungeonId, shipTypeId])
+}
+
+/// An Alpha-clone skill grade (cloneGrades.yaml).
+model CloneGrade {
+  cloneGradeId Int               @id
+  name         String
+  skills       CloneGradeSkill[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt()
+  isDeleted    Boolean           @default(false)
+}
+
+/// The level cap a clone grade grants for a skill (cloneGrades.yaml `skills`).
+model CloneGradeSkill {
+  cloneGradeId Int
+  cloneGrade   CloneGrade @relation(fields: [cloneGradeId], references: [cloneGradeId])
+  skillTypeId  Int
+  level        Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt()
+  isDeleted    Boolean    @default(false)
+
+  @@id([cloneGradeId, skillTypeId])
+}
+
+/// A station operation type (stationOperations.yaml). The `operationName` is also
+/// used (by the stations ingest) to build `Station.name`; this captures the full
+/// operation definition. Cross-entity ids are plain integers (no foreign keys).
+model StationOperation {
+  stationOperationId  Int                           @id
+  activityId          Int
+  operationName       String
+  description         String?
+  border              Float
+  corridor            Float
+  fringe              Float
+  hub                 Float
+  ratio               Float
+  manufacturingFactor Float
+  researchFactor      Float
+  services            StationOperationService[]
+  stationTypes        StationOperationStationType[]
+  createdAt           DateTime                      @default(now())
+  updatedAt           DateTime                      @updatedAt()
+  isDeleted           Boolean                       @default(false)
+}
+
+/// A service offered by a station operation (stationOperations.yaml `services`).
+model StationOperationService {
+  stationOperationId Int
+  stationOperation   StationOperation @relation(fields: [stationOperationId], references: [stationOperationId])
+  serviceId          Int
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt()
+  isDeleted          Boolean          @default(false)
+
+  @@id([stationOperationId, serviceId])
+}
+
+/// The station type used per race for a station operation
+/// (stationOperations.yaml `stationTypes`).
+model StationOperationStationType {
+  stationOperationId Int
+  stationOperation   StationOperation @relation(fields: [stationOperationId], references: [stationOperationId])
+  raceId             Int
+  stationTypeId      Int
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt()
+  isDeleted          Boolean          @default(false)
+
+  @@id([stationOperationId, raceId])
 }

@@ -130,7 +130,7 @@ export function EsiRateLimitDashboard() {
       const remaining = Math.max(0, state.remaining);
       const windowSeconds = state.windowSeconds;
       const consumedTokens = state.consumedTokens;
-      const requestHistory = state.requestHistory ?? [];
+      const requestHistory = state.requestHistory;
       const usedTokensInWindow = requestHistory.reduce(
         (total, requestEntry) => total + requestEntry.tokenCost,
         0,

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { CharactersDetailGenderEnum } from "@jitaspace/esi-client";
+import type { CharactersDetailGenderEnum } from "@jitaspace/esi-client";
 import { isIdInRanges, npcCharacterIdRanges } from "@jitaspace/esi-metadata";
 import {
   useGetAgentInSpaceById,
@@ -13,7 +13,7 @@ import {
 import { useEsiCharacter } from "./useEsiCharacter";
 import { useSdeAgent } from "./useSdeAgent";
 
-export type PlayerCharacter = {
+export interface PlayerCharacter {
   allianceId?: number;
   birthday: Date | null;
   bloodlineId: number;
@@ -25,18 +25,18 @@ export type PlayerCharacter = {
   raceId: number;
   securityStatus?: number;
   title?: string;
-};
+}
 
-export type AgentInSpace = {
+export interface AgentInSpace {
   dungeonId: number;
   solarSystemId: number;
   spawnPointId: number;
   typeId: number;
-};
+}
 
-export type ResearchAgent = {
+export interface ResearchAgent {
   researchSkills: number[];
-};
+}
 
 export type AgentCharacter = {
   agentTypeId: number;
@@ -148,17 +148,21 @@ export const useCharacter = (
         ? {
             type: "agent",
             isNpc,
-            agentTypeId: agent.data.data.agent.agentTypeID!,
-            agentDivisionId: agent.data.data.agent.divisionID!,
+            agentTypeId: agent.data.data.agent.agentTypeID ?? 0,
+            agentDivisionId: agent.data.data.agent.divisionID ?? 0,
             birthday: characterBirthdayDate,
             bloodlineId: esiCharacter.data.data.bloodline_id,
             corporationId: agent.data.data.corporationID,
             gender: esiCharacter.data.data.gender,
             isLocator: agent.data.data.agent.isLocator ?? false,
-            level: agent.data.data.agent.level!,
+            level: agent.data.data.agent.level ?? 0,
             locationId: agent.data.data.locationID,
             name: esiCharacter.data.data.name,
             raceId: esiCharacter.data.data.race_id,
+            description: esiCharacter.data.data.description,
+            factionId: esiCharacter.data.data.faction_id,
+            securityStatus: esiCharacter.data.data.security_status,
+            title: esiCharacter.data.data.title,
             ...researchAgentData,
             ...agentInSpaceData,
           }
@@ -188,6 +192,10 @@ export const useCharacter = (
             gender: esiCharacter.data.data.gender,
             name: esiCharacter.data.data.name,
             raceId: esiCharacter.data.data.race_id,
+            description: esiCharacter.data.data.description,
+            factionId: esiCharacter.data.data.faction_id,
+            securityStatus: esiCharacter.data.data.security_status,
+            title: esiCharacter.data.data.title,
           }
         : null,
     [esiCharacter.data, isNpc],

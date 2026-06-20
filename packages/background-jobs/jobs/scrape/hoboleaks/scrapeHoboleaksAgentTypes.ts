@@ -5,7 +5,7 @@ import { prisma } from "../../../db";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeAgentTypesEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 export const scrapeHoboleaksAgentTypes = defineJob<
@@ -19,9 +19,9 @@ export const scrapeHoboleaksAgentTypes = defineJob<
     const stepStartTime = performance.now();
 
     // Get all Agent Types in Hoboleaks
-    const agentTypes: Record<number, string> = await fetch(
+    const agentTypes = await fetch(
       "https://sde.hoboleaks.space/tq/agenttypes.json",
-    ).then((res) => res.json());
+    ).then((res) => res.json() as Promise<Record<number, string>>);
 
     const agentTypeIds = Object.keys(agentTypes).map(Number);
 
@@ -40,12 +40,14 @@ export const scrapeHoboleaksAgentTypes = defineJob<
           .then((entries) =>
             entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
           ),
-      fetchRemoteEntries: async () =>
-        Object.entries(agentTypes).map(([agentTypeId, name]) => ({
-          agentTypeId: Number(agentTypeId),
-          name,
-          isDeleted: false,
-        })),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          Object.entries(agentTypes).map(([agentTypeId, name]) => ({
+            agentTypeId: Number(agentTypeId),
+            name,
+            isDeleted: false,
+          })),
+        ),
       batchCreate: (entries) =>
         limit(() =>
           prisma.agentType.createMany({

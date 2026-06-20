@@ -1,7 +1,8 @@
 "use client";
 
+import type { AvatarProps } from "@mantine/core";
 import { memo } from "react";
-import { type AvatarProps } from "@mantine/core";
+
 import { useRace } from "@jitaspace/hooks";
 import { RaceAvatar as UIRaceAvatar } from "@jitaspace/ui";
 
@@ -11,6 +12,7 @@ export type RaceAvatarProps = Omit<AvatarProps, "src"> & {
 
 export const RaceAvatar = memo(({ raceId, ...otherProps }: RaceAvatarProps) => {
   const { data: race } = useRace(raceId ?? 0);
-  return <UIRaceAvatar factionId={race?.faction_id?.toString()} {...otherProps} />;
+  const factionId = (race as { faction_id?: number } | undefined)?.faction_id;
+  return <UIRaceAvatar factionId={factionId?.toString()} {...otherProps} />;
 });
 RaceAvatar.displayName = "RaceAvatar";

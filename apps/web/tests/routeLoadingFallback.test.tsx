@@ -6,7 +6,6 @@ import { PageSkeleton } from "~/components/PageSkeleton";
 /* Loading each route's server component requires a dynamic `require` whose
    result is `any`; the unsafe-* rules below are inherent to that pattern (the
    same one existing page tests use). */
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
 
 // Every server page wraps its content in <Suspense fallback={<PageSkeleton />}>,
 // so the route reserves layout space while content streams in (replacing the old

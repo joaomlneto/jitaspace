@@ -10,7 +10,7 @@ import { prisma } from "../../../db";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeRegionEventPayload {
-  data: {};
+  data: Record<string, never>;
 }
 
 const fetchRegion = (regionId: number) =>

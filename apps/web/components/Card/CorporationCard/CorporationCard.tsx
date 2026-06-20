@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import React, { memo } from "react";
+import { memo } from "react";
 import {
   Anchor,
   Badge,
@@ -13,17 +13,19 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import {
+  AllianceName,
+  CharacterAnchor,
+  CharacterName,
+  CorporationName,
+} from "@jitaspace/eve-components";
 import { useCorporation } from "@jitaspace/hooks";
 import {
   AllianceAnchor,
   AllianceAvatar,
-  AllianceName,
-  CharacterAnchor,
   CharacterAvatar,
-  CharacterName,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
   FormattedDateText,
 } from "@jitaspace/ui";
@@ -148,7 +150,9 @@ export const CorporationCard = memo(
               </Text>
               <Skeleton visible={!corporationData} width="auto">
                 <Text size="xs">
-                  {corporationData?.member_count?.toLocaleString() ?? "N/A"}
+                  {typeof corporationData?.member_count === "number"
+                    ? corporationData.member_count.toLocaleString()
+                    : "N/A"}
                 </Text>
               </Skeleton>
             </Group>
@@ -198,7 +202,7 @@ export const CorporationCard = memo(
           </Stack>
         </Card.Section>
 
-        {(description || corporationData?.url) && (
+        {(Boolean(description) || Boolean(corporationData?.url)) && (
           <Card.Section p="xs" withBorder>
             <Stack gap="xs">
               {description && (

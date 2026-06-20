@@ -20,7 +20,7 @@ export function useCharacterMails(characterId?: number, labels: number[] = []) {
     () =>
       getCharactersCharacterIdMailQueryKey(characterId ?? 0, {
         // @ts-expect-error generated code parses this wrong as url param
-        labels: labels === undefined ? undefined : labels.join(","),
+        labels: labels.join(","),
       }),
     [characterId, labels, accessToken],
   );
@@ -41,7 +41,7 @@ export function useCharacterMails(characterId?: number, labels: number[] = []) {
               {
                 last_mail_id: pageParam,
                 // @ts-expect-error generated code parses this wrong as url param
-                labels: labels === undefined ? undefined : labels.join(","),
+                labels: labels.join(","),
               },
               { ...authHeaders },
             ),
@@ -57,7 +57,7 @@ export function useCharacterMails(characterId?: number, labels: number[] = []) {
     );
 
   return {
-    messages: (data?.pages ?? []).flatMap((res) => res.data ?? []),
+    messages: (data?.pages ?? []).flatMap((res) => res.data),
     hasMoreMessages: hasNextPage,
     loadMoreMessages: fetchNextPage,
     error,

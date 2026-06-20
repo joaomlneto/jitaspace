@@ -12,9 +12,8 @@ import {
   EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
-  StandingIndicator,
-  StandingsBadge,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { StandingIndicator, StandingsBadge } from "@jitaspace/ui";
 
 type Contact = AllianceContact & CorporationContact & CharacterContact;
 export interface ContactsDataTableProps {
@@ -68,7 +67,8 @@ function ContactBlockedCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
       </Text>
     );
   }
-  return isBlocked ? "Yes" : "No";
+  // Only reached when `isBlocked` is undefined.
+  return "No";
 }
 
 function ContactStandingsCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
@@ -132,7 +132,7 @@ export const ContactsDataTable = memo(
           accessorKey: "label_ids",
           Cell: ({ cell }) => (
             <Group gap="xs">
-              {cell.getValue<number[]>()?.map((labelId) => (
+              {cell.getValue<number[]>().map((labelId) => (
                 <Badge size="sm" key={labelId}>
                   {labelName[labelId] ?? JSON.stringify(cell.getValue())}
                 </Badge>

@@ -1,13 +1,12 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
+import type { PageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
-
 import DogmaEffectPage from "./page.client";
-import type { PageProps } from "./page.client";
 
 async function getEffectData(effectId: number): Promise<PageProps> {
   "use cache";
@@ -76,8 +75,8 @@ async function getEffectData(effectId: number): Promise<PageProps> {
 
   return {
     effectId,
-    name: effect.displayName || effect.name || null,
-    description: effect.description || null,
+    name: [effect.displayName, effect.name].find(Boolean) ?? null,
+    description: effect.description?.length ? effect.description : null,
     published: effect.published ?? null,
     modifiers: effect.DogmaEffectModifiers,
     types: effect.TypeEffect.map((entry) => ({
@@ -102,7 +101,8 @@ export async function generateMetadata({
       where: { effectId },
     });
     if (!effect) return {};
-    const title = effect.displayName || effect.name || undefined;
+    const title =
+      [effect.displayName, effect.name].find(Boolean) ?? undefined;
     const description = effect.description?.slice(0, 200) ?? undefined;
     return { title, description };
   } catch {
@@ -121,12 +121,13 @@ async function PageContent({
     notFound();
   }
 
+  let props: PageProps;
   try {
-    const props = await getEffectData(effectId);
-    return <DogmaEffectPage {...props} />;
+    props = await getEffectData(effectId);
   } catch {
     notFound();
   }
+  return <DogmaEffectPage {...props} />;
 }
 
 export default function Page({

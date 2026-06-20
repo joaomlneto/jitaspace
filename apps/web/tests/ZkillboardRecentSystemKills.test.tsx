@@ -10,12 +10,15 @@ import { render, screen } from "@testing-library/react";
 // drive every branch (loading / loaded / lastChecked-from-Expires-header).
 // ---------------------------------------------------------------------------
 
-type SwrReturn = {
-  data?: { body?: unknown[]; headers: { get: (name: string) => string | null } };
+interface SwrReturn {
+  data?: {
+    body?: unknown[];
+    headers: { get: (name: string) => string | null };
+  };
   error?: unknown;
   isLoading: boolean;
   isValidating: boolean;
-};
+}
 
 const mockUseSWR = jest.fn<() => SwrReturn>();
 
@@ -26,7 +29,20 @@ jest.mock("swr", () => ({
 
 // EveEntityName / TimeAgoText: pass-through stubs that surface the ids/dates so
 // we can assert on the grouped output without loading the real ui barrel.
+// EveEntityName moved to @jitaspace/eve-components.
 jest.mock("@jitaspace/ui", () => {
+  const React = require("react");
+  return {
+    TimeAgoText: ({ date }: { date?: Date }) =>
+      React.createElement(
+        "span",
+        { "data-testid": "time-ago" },
+        date instanceof Date ? date.toISOString() : "no-date",
+      ),
+  };
+});
+
+jest.mock("@jitaspace/eve-components", () => {
   const React = require("react");
   return {
     EveEntityName: ({ entityId }: { entityId?: number }) =>
@@ -34,12 +50,6 @@ jest.mock("@jitaspace/ui", () => {
         "span",
         { "data-testid": "entity-name" },
         `entity-${entityId ?? "?"}`,
-      ),
-    TimeAgoText: ({ date }: { date?: Date }) =>
-      React.createElement(
-        "span",
-        { "data-testid": "time-ago" },
-        date instanceof Date ? date.toISOString() : "no-date",
       ),
   };
 });
@@ -72,9 +82,7 @@ function kill(killmailId: number, locationID: number, hash: string) {
   return { killmail_id: killmailId, zkb: { locationID, hash } };
 }
 
-function renderComponent(
-  solarSystemId: number | string = 30000142,
-) {
+function renderComponent(solarSystemId: number | string = 30000142) {
   const {
     ZkillboardRecentSystemKills,
   } = require("~/components/Travel/ZkillboardRecentSystemKills");
@@ -148,12 +156,12 @@ describe("ZkillboardRecentSystemKills", () => {
     // Two distinct locations => an EveEntityName instance per location in the
     // summary (the component also repeats them inside the spoiler).
     const entityNames = screen.getAllByTestId("entity-name");
-    expect(
-      entityNames.some((n) => n.textContent === "entity-60003760"),
-    ).toBe(true);
-    expect(
-      entityNames.some((n) => n.textContent === "entity-30000142"),
-    ).toBe(true);
+    expect(entityNames.some((n) => n.textContent === "entity-60003760")).toBe(
+      true,
+    );
+    expect(entityNames.some((n) => n.textContent === "entity-30000142")).toBe(
+      true,
+    );
 
     // The summary row pairs each location's kill count with its EveEntityName.
     // The busy location (60003760) has 2 kills; that "2" count text is rendered

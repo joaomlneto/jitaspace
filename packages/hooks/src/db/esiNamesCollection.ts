@@ -17,7 +17,7 @@ export const esiNamesCollection = createQueryCollection<EsiName, number>(
       }
 
       return postUniverseNames([Number(id)], {}, {}).then(
-        (response) => response.data ?? [],
+        (response) => response.data,
       );
     },
     select: (data: EsiName[]) => data,

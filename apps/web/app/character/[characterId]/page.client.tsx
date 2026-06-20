@@ -14,25 +14,27 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { useCharacter, useSelectedCharacter } from "@jitaspace/hooks";
-import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
-import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
-  AllianceAvatar,
   AllianceName,
-  CharacterAvatar,
   CharacterName,
-  CorporationAvatar,
   CorporationName,
-  DateHoverCard,
-  FormattedDateText,
   SolarSystemAnchor,
   SolarSystemName,
   StationAnchor,
   StationName,
   TypeAnchor,
-  TypeAvatar,
   TypeName,
+} from "@jitaspace/eve-components";
+import { useCharacter, useSelectedCharacter } from "@jitaspace/hooks";
+import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
+import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
+import {
+  AllianceAvatar,
+  CharacterAvatar,
+  CorporationAvatar,
+  DateHoverCard,
+  FormattedDateText,
+  TypeAvatar,
 } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
@@ -42,7 +44,7 @@ import { BloodlineName, RaceName } from "~/components/Text";
 
 export default function Page() {
   const params = useParams();
-  const rawCharacterId = params?.characterId;
+  const rawCharacterId = params.characterId;
   const characterId = Number(
     typeof rawCharacterId === "string" ? rawCharacterId : rawCharacterId?.[0],
   );
@@ -111,17 +113,14 @@ export default function Page() {
             <Text>Corporation</Text>
             <Group>
               <CorporationAvatar
-                corporationId={character?.corporationId}
+                corporationId={character.corporationId}
                 size="sm"
               />
               <Anchor
                 component={Link}
-                href={`/corporation/${character?.corporationId}`}
+                href={`/corporation/${character.corporationId}`}
               >
-                <CorporationName
-                  span
-                  corporationId={character?.corporationId}
-                />
+                <CorporationName span corporationId={character.corporationId} />
               </Anchor>
             </Group>
           </Group>
@@ -130,12 +129,12 @@ export default function Page() {
           <Group justify="space-between">
             <Text>Alliance</Text>
             <Group>
-              <AllianceAvatar allianceId={character?.allianceId} size="sm" />
+              <AllianceAvatar allianceId={character.allianceId} size="sm" />
               <Anchor
                 component={Link}
-                href={`/alliance/${character?.allianceId}`}
+                href={`/alliance/${character.allianceId}`}
               >
-                <AllianceName span allianceId={character?.allianceId} />
+                <AllianceName span allianceId={character.allianceId} />
               </Anchor>
             </Group>
           </Group>
@@ -143,13 +142,13 @@ export default function Page() {
         {character?.gender && (
           <Group justify="space-between">
             <Text>Gender</Text>
-            <Text>{character?.gender === "male" ? "Male" : "Female"}</Text>
+            <Text>{character.gender === "male" ? "Male" : "Female"}</Text>
           </Group>
         )}
         {character?.securityStatus !== undefined && (
           <Group justify="space-between">
             <Text>Security Status</Text>
-            <Text>{character?.securityStatus}</Text>
+            <Text>{character.securityStatus}</Text>
           </Group>
         )}
         {character?.birthday && (
@@ -256,8 +255,8 @@ export default function Page() {
         {character && (
           <MailMessageViewer
             content={
-              character?.description
-                ? sanitizeFormattedEveString(character?.description)
+              character.description
+                ? sanitizeFormattedEveString(character.description)
                 : "No description"
             }
           />

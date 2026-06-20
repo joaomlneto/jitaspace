@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
+import { updateTable } from "../../utils/updateTable";
+
 // updateTable -> compareSets pulls in `inngest` and the zod-validated env.
 // Stub both so the test exercises only the sync/diff orchestration logic.
 jest.mock("inngest", () => ({
@@ -12,9 +14,10 @@ jest.mock("inngest", () => ({
 }));
 jest.mock("../../env", () => ({ env: { NODE_ENV: "test" } }));
 
-import { updateTable } from "../../utils/updateTable";
-
-type Row = { id: number; name: string };
+interface Row {
+  id: number;
+  name: string;
+}
 type BatchFn = jest.Mock<(entries: Row[]) => Promise<void>>;
 
 const idAccessor = (row: Row) => row.id;
@@ -25,19 +28,25 @@ describe("updateTable", () => {
   let batchDelete: BatchFn;
 
   beforeEach(() => {
-    batchCreate = jest.fn<(entries: Row[]) => Promise<void>>(async () => undefined);
-    batchUpdate = jest.fn<(entries: Row[]) => Promise<void>>(async () => undefined);
-    batchDelete = jest.fn<(entries: Row[]) => Promise<void>>(async () => undefined);
+    batchCreate = jest.fn<(entries: Row[]) => Promise<void>>(() =>
+      Promise.resolve(),
+    );
+    batchUpdate = jest.fn<(entries: Row[]) => Promise<void>>(() =>
+      Promise.resolve(),
+    );
+    batchDelete = jest.fn<(entries: Row[]) => Promise<void>>(() =>
+      Promise.resolve(),
+    );
   });
 
   const run = (local: Row[], remote: Row[]) =>
     updateTable<Row, number>({
       idAccessor,
-      fetchLocalEntries: async () => local,
-      fetchRemoteEntries: async () => remote,
-      batchCreate: batchCreate as never,
-      batchUpdate: batchUpdate as never,
-      batchDelete: batchDelete as never,
+      fetchLocalEntries: () => Promise.resolve(local),
+      fetchRemoteEntries: () => Promise.resolve(remote),
+      batchCreate,
+      batchUpdate,
+      batchDelete,
     });
 
   it("routes created/modified/deleted/equal rows to the right batch fns", async () => {
@@ -92,9 +101,18 @@ describe("updateTable", () => {
 
   it("invokes the batch functions in create -> update -> delete order", async () => {
     const order: string[] = [];
-    batchCreate.mockImplementation(async () => void order.push("create"));
-    batchUpdate.mockImplementation(async () => void order.push("update"));
-    batchDelete.mockImplementation(async () => void order.push("delete"));
+    batchCreate.mockImplementation(() => {
+      order.push("create");
+      return Promise.resolve();
+    });
+    batchUpdate.mockImplementation(() => {
+      order.push("update");
+      return Promise.resolve();
+    });
+    batchDelete.mockImplementation(() => {
+      order.push("delete");
+      return Promise.resolve();
+    });
 
     await run([{ id: 1, name: "x" }], [{ id: 2, name: "y" }]);
 

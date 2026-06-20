@@ -9,7 +9,7 @@ import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeStargatesEventPayload {
   data: {
-    stargateIds: number[];
+    stargateIds?: number[];
     batchSize?: number;
   };
 }
@@ -80,7 +80,7 @@ const processStargateBatch = async (
             excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
           ),
         ),
-    fetchRemoteEntries: async () => thisBatchStargates,
+    fetchRemoteEntries: () => Promise.resolve(thisBatchStargates),
     batchCreate: async (entries) => {
       // step one: create stargates, but no links
       await limit(() =>
@@ -150,31 +150,31 @@ export const scrapeEsiStargates = defineJob<
   retries: 5,
   handler: async (ctx) => {
     const batchSize = ctx.payload.batchSize ?? 1000;
-    const stargateIds = ctx.payload.stargateIds;
+    const stargateIds = ctx.payload.stargateIds ?? [];
 
-    if ((ctx.payload.stargateIds ?? []).length == 0)
+    if (stargateIds.length == 0)
       throw new NonRetriableError("Invalid stargateIds");
 
     // Split IDs in batches
-    const { batches } = await ctx.run("Fetch Stargate IDs", async () => {
+    const { batches } = await ctx.run("Fetch Stargate IDs", () => {
       stargateIds.sort((a, b) => a - b);
 
       const numBatches = Math.ceil(stargateIds.length / batchSize);
       const batchIds = (batchIndex: number) =>
         stargateIds.slice(batchIndex * batchSize, (batchIndex + 1) * batchSize);
-      return {
+      return Promise.resolve({
         batches: [...new Array(numBatches).keys()].map((batchId) =>
           batchIds(batchId),
         ),
-      };
+      });
     });
 
     const results: BatchStepResult<StatsKey>[] = [];
     const limit = pLimit(20);
 
-    for (let i = 0; i < batches.length; i++) {
+    for (const [i, batch] of batches.entries()) {
       const result = await ctx.run(`Batch ${i + 1}/${batches.length}`, () =>
-        processStargateBatch(batches[i]!, i, limit),
+        processStargateBatch(batch, i, limit),
       );
       results.push(result);
     }

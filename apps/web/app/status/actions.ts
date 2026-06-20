@@ -1,11 +1,17 @@
 "use server";
 
+import type { DatabaseStatusResponse } from "~/lib/databaseStatus";
 import type {
   InngestApiEvent,
   InngestStatusResponse,
 } from "~/lib/inngestStatus";
 import type { TriggerApiRun, TriggerStatusResponse } from "~/lib/triggerStatus";
+import { prisma } from "~/lib/db";
 import { env } from "~/env";
+import {
+  buildDatabaseStatusResponse,
+  DATABASE_STATUS_STALE_MINUTES,
+} from "~/lib/databaseStatus";
 import {
   buildInngestStatusResponse,
   collectTerminalRuns,
@@ -233,4 +239,83 @@ export async function getTriggerStatus(): Promise<TriggerStatusResponse> {
     };
   }
   return triggerCache.payload;
+}
+
+// ---------------------------------------------------------------------------
+// Database status
+//
+// Reports the estimated row count of every table in the connected database for
+// the status-page dashboard. The Prisma client must never reach the client;
+// this function only returns aggregated, plain-number counts. Responses are
+// cached for a few minutes so status-page polling does not hit the database on
+// every load.
+// ---------------------------------------------------------------------------
+
+const DATABASE_CACHE_TTL_MS = DATABASE_STATUS_STALE_MINUTES * 60 * 1000;
+
+/** A row-count estimate for one base table. */
+interface TableRowStatistic {
+  table_name: string;
+  // The pg adapter returns CockroachDB INT8 as a string to avoid precision
+  // loss; bigint/number are tolerated too, and the LEFT JOIN yields null for a
+  // table with no statistics yet. `Number(... ?? 0)` normalizes all of these.
+  estimated_row_count: string | number | bigint | null;
+}
+
+let databaseCache: {
+  expiresAt: number;
+  payload: DatabaseStatusResponse;
+} | null = null;
+
+const computeDatabaseStatus = async (): Promise<DatabaseStatusResponse> => {
+  const fetchedAt = new Date();
+
+  try {
+    // CockroachDB exposes cheap, pre-computed row-count estimates from the
+    // latest automatic table statistics. We deliberately use these instead of
+    // a `SELECT count(*)` per table: an exact count would full-scan every
+    // table (some with millions of rows) on the production cluster on every
+    // cache miss. The estimates are refreshed automatically and are plenty for
+    // a status dashboard (this is what CockroachDB's own DB Console shows).
+    //
+    // `crdb_internal.table_row_statistics` is cluster-wide, so we join against
+    // `crdb_internal.tables` and scope to the connected database's public
+    // schema to list exactly our application's tables. The LEFT JOIN keeps
+    // tables that have no statistics yet (estimate comes back null → 0).
+    const rows = await prisma.$queryRaw<TableRowStatistic[]>`
+      SELECT t.name AS table_name, s.estimated_row_count AS estimated_row_count
+      FROM crdb_internal.tables AS t
+      LEFT JOIN crdb_internal.table_row_statistics AS s ON s.table_id = t.table_id
+      WHERE t.database_name = current_database()
+        AND t.schema_name = 'public'
+        AND t.state = 'PUBLIC'
+    `;
+
+    return buildDatabaseStatusResponse({
+      rows: rows.map((row) => ({
+        name: row.table_name,
+        rowCount: Number(row.estimated_row_count ?? 0),
+      })),
+      fetchedAt,
+    });
+  } catch (error) {
+    return buildDatabaseStatusResponse({
+      rows: [],
+      fetchedAt,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+export async function getDatabaseStatus(): Promise<DatabaseStatusResponse> {
+  if (!databaseCache || Date.now() >= databaseCache.expiresAt) {
+    const payload = await computeDatabaseStatus();
+    databaseCache = {
+      payload,
+      expiresAt:
+        Date.now() +
+        (payload.error ? ERROR_CACHE_TTL_MS : DATABASE_CACHE_TTL_MS),
+    };
+  }
+  return databaseCache.payload;
 }

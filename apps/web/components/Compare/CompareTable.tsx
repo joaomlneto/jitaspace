@@ -1,13 +1,12 @@
 import { memo, useMemo } from "react";
 import { Group, JsonInput, Table } from "@mantine/core";
 
+import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
 import { useDogmaAttributes, useTypes } from "@jitaspace/hooks";
 import {
   DogmaAttributeAnchor,
   formatDogmaAttributeValue,
-  TypeAnchor,
   TypeAvatar,
-  TypeName,
 } from "@jitaspace/ui";
 
 import { DogmaAttributeName } from "~/components/Text";
@@ -38,7 +37,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
       ...new Set(
         sortedTypes
           .flatMap((type) => type.dogma_attributes ?? [])
-          .map((entry) => entry?.attribute_id),
+          .map((entry) => entry.attribute_id),
       ),
     ],
     [sortedTypes],
@@ -68,7 +67,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
       .map((entry) => entry.attributeId);
   }, [attributeTypeValues]);
 
-  const { data: attributes } = useDogmaAttributes(nonEqualAttributeIds ?? []);
+  const { data: attributes } = useDogmaAttributes(nonEqualAttributeIds);
 
   const sortedAttributes = useMemo(
     () =>

@@ -2,8 +2,8 @@ import pLimit from "p-limit";
 
 import type { GetCharactersCharacterIdQueryResponse } from "@jitaspace/esi-client";
 
+import type { Character } from "../db";
 import { MAX_DB_PARALLELISM } from "../config";
-import type { Character} from "../db";
 import { prisma } from "../db";
 import { excludeObjectKeys, updateTable } from "../utils";
 
@@ -48,7 +48,7 @@ export const mergeEntriesIntoCharactersTable = (
         .then((entries) =>
           entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
         ),
-    fetchRemoteEntries: async () => characters,
+    fetchRemoteEntries: () => Promise.resolve(characters),
     batchCreate: (entries) =>
       limit(() =>
         prisma.character.createMany({

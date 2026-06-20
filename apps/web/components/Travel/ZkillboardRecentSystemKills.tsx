@@ -3,7 +3,8 @@ import { Group, Loader, Spoiler, Stack, Text } from "@mantine/core";
 import { subHours } from "date-fns";
 import useSWR from "swr";
 
-import { EveEntityName, TimeAgoText } from "@jitaspace/ui";
+import { EveEntityName } from "@jitaspace/eve-components";
+import { TimeAgoText } from "@jitaspace/ui";
 
 import { KillmailButton } from "./KillmailButton";
 
@@ -35,10 +36,13 @@ export const ZkillboardRecentSystemKills = memo(
       error: _error,
       isLoading,
       isValidating,
-    } = useSWR<{
-      body: ZkillboardKill[] | undefined;
-      headers: Headers;
-    }>(
+    } = useSWR<
+      {
+        body: ZkillboardKill[] | undefined;
+        headers: Headers;
+      },
+      Error
+    >(
       `https://zkillboard.com/api/systemID/${solarSystemId}/pastSeconds/${pastSeconds}/`,
       (input: RequestInfo | URL, init?: RequestInit) =>
         fetch(input, init).then(async (res) => {
@@ -60,7 +64,7 @@ export const ZkillboardRecentSystemKills = memo(
 
     // retrieve the date of when result was generated
     const lastChecked = useMemo(() => {
-      const expiresHeader = data?.headers?.get("Expires");
+      const expiresHeader = data?.headers.get("Expires");
       if (expiresHeader == null) return null;
       const expires = new Date(expiresHeader);
       return subHours(expires, 1);
@@ -106,12 +110,12 @@ export const ZkillboardRecentSystemKills = memo(
         <Spoiler
           maxHeight={0}
           hideLabel="Collapse"
-          showLabel={`Show ${(data?.body ?? []).length} kills`}
+          showLabel={`Show ${data.body.length} kills`}
         >
           {locations.map((location) => (
             <>
               <EveEntityName inherit entityId={location} />
-              {(data?.body ?? [])
+              {(data.body ?? [])
                 .filter((kill) => kill.zkb.locationID === location)
                 .map((kill) => (
                   <Group key={kill.killmail_id}>

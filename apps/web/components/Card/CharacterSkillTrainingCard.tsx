@@ -4,8 +4,9 @@ import type React from "react";
 import { Card, Group, RingProgress, Text } from "@mantine/core";
 import { differenceInSeconds } from "date-fns";
 
+import { TypeName } from "@jitaspace/eve-components";
 import { useCharacterSkillQueue } from "@jitaspace/hooks";
-import { TimeAgoText, TypeAvatar, TypeName } from "@jitaspace/ui";
+import { TimeAgoText, TypeAvatar } from "@jitaspace/ui";
 import { skillLevelRomanNumeral } from "@jitaspace/utils";
 
 import classes from "~/components/Card/SolarSystemCard.module.css";
@@ -37,29 +38,29 @@ export const CharacterSkillTrainingCard = ({
         ));
   }
 
-  const activeSkill = data?.data.find(
+  const activeSkill = data.data.find(
     (skill) =>
       skill.finish_date && skill.finish_date > new Date().toISOString(),
   );
 
   const skillDuration =
-    activeSkill?.start_date && activeSkill?.finish_date
+    activeSkill?.start_date && activeSkill.finish_date
       ? differenceInSeconds(
-          new Date(activeSkill?.start_date),
-          new Date(activeSkill?.finish_date),
+          new Date(activeSkill.start_date),
+          new Date(activeSkill.finish_date),
         )
       : null;
 
   const elapsedTime =
-    activeSkill?.start_date && activeSkill?.finish_date
-      ? differenceInSeconds(new Date(activeSkill?.start_date), new Date())
+    activeSkill?.start_date && activeSkill.finish_date
+      ? differenceInSeconds(new Date(activeSkill.start_date), new Date())
       : null;
 
   const percentComplete =
     skillDuration && elapsedTime ? (elapsedTime / skillDuration) * 100 : 0;
 
   const finishDate = activeSkill?.finish_date
-    ? new Date(activeSkill?.finish_date)
+    ? new Date(activeSkill.finish_date)
     : null;
 
   return (
@@ -78,8 +79,8 @@ export const CharacterSkillTrainingCard = ({
           {activeSkill ? (
             <Group>
               <Text size="xs" fw={500} lineClamp={1}>
-                <TypeName span inherit typeId={data?.data[0]?.skill_id} />{" "}
-                {skillLevelRomanNumeral(activeSkill?.finished_level)}
+                <TypeName span inherit typeId={data.data[0]?.skill_id} />{" "}
+                {skillLevelRomanNumeral(activeSkill.finished_level)}
               </Text>
             </Group>
           ) : (

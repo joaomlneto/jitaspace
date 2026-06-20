@@ -1,6 +1,11 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import type {
+  DataTableSortStatus,
+  DataTableColumn as MdtColumn,
+} from "mantine-datatable";
+import type { ReactNode } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
   Checkbox,
@@ -10,11 +15,7 @@ import {
   Stack,
   TextInput,
 } from "@mantine/core";
-import {
-  DataTable as MantineDataTable,
-  type DataTableColumn as MdtColumn,
-  type DataTableSortStatus,
-} from "mantine-datatable";
+import { DataTable as MantineDataTable } from "mantine-datatable";
 
 import type {
   DataTableColumn,
@@ -86,7 +87,10 @@ export function DataTable<TData>({
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(
-    () => new Set(columns.filter((c) => c.defaultVisible === false).map((c) => c.id)),
+    () =>
+      new Set(
+        columns.filter((c) => c.defaultVisible === false).map((c) => c.id),
+      ),
   );
   const [columnsMenuOpened, setColumnsMenuOpened] = useState(false);
 
@@ -269,7 +273,9 @@ export function DataTable<TData>({
         fz={fontSize}
         minHeight={160}
         {...(onRowClick
-          ? { onRowClick: ({ record }: { record: TData }) => onRowClick(record) }
+          ? {
+              onRowClick: ({ record }: { record: TData }) => onRowClick(record),
+            }
           : {})}
         {...paginationProps}
       />

@@ -1,16 +1,13 @@
 import { describe, expect, it } from "@jest/globals";
 
-import {
-  createJobRegistry,
-  NonRetriableError,
-  type JobDefinition,
-} from "../core";
+import type { JobDefinition } from "../core";
+import { createJobRegistry, NonRetriableError } from "../core";
 
 const fakeJob = (id: string): JobDefinition => ({
   id,
   name: id,
   trigger: { type: "event" },
-  handler: async () => undefined,
+  handler: () => Promise.resolve(undefined),
 });
 
 describe("core", () => {

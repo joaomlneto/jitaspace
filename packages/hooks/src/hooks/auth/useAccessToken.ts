@@ -2,10 +2,11 @@
 
 import { useShallow } from "zustand/shallow";
 
-import { CharactersCharacterIdRolesGetRolesEnum } from "@jitaspace/esi-client";
-import { ESIScope } from "@jitaspace/esi-metadata";
+import type { CharactersCharacterIdRolesGetRolesEnum } from "@jitaspace/esi-client";
+import type { ESIScope } from "@jitaspace/esi-metadata";
 
-import { CharacterSsoSession, useAuthStore } from "./useAuthStore";
+import type { CharacterSsoSession } from "./useAuthStore";
+import { useAuthStore } from "./useAuthStore";
 
 const TOKEN_UNAVAILABLE = {
   character: null,
@@ -33,7 +34,7 @@ export const useAccessToken = (options: {
         (character) =>
           (characterId == undefined || character.characterId == characterId) &&
           (scopes ?? []).every((requiredScope) =>
-            character.accessTokenPayload?.scp?.includes(requiredScope),
+            character.accessTokenPayload.scp.includes(requiredScope),
           ),
       ),
     ),

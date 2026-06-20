@@ -5,13 +5,12 @@ import { useMemo } from "react";
 import { Group } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
+import { AllianceName, CorporationName } from "@jitaspace/eve-components";
 import {
   AllianceAnchor,
   AllianceAvatar,
-  AllianceName,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
   DateHoverCard,
   FormattedDateText,
   TimeAgoText,
@@ -207,15 +206,9 @@ function FinishedDateCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
 
 function UpdatedAtCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   return (
-    row.original.updatedAt && (
-      <DateHoverCard date={new Date(row.original.updatedAt)}>
-        <TimeAgoText
-          inherit
-          date={new Date(row.original.updatedAt)}
-          addSuffix
-        />
-      </DateHoverCard>
-    )
+    <DateHoverCard date={new Date(row.original.updatedAt)}>
+      <TimeAgoText inherit date={new Date(row.original.updatedAt)} addSuffix />
+    </DateHoverCard>
   );
 }
 

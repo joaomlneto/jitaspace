@@ -1,14 +1,22 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
-import { Container, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
+import {
+  Container,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 
-import { PageSkeleton } from "~/components/PageSkeleton";
-import { prisma } from "~/lib/db";
-import { TypeAnchor, TypeAvatar } from "@jitaspace/ui";
+import { TypeAnchor } from "@jitaspace/eve-components";
+import { TypeAvatar } from "@jitaspace/ui";
 
 import { GroupBreadcrumbs } from "~/components/Breadcrumbs";
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { prisma } from "~/lib/db";
 
 interface PageProps {
   name?: string;
@@ -37,7 +45,10 @@ async function getGroupData(groupId: number): Promise<PageProps> {
 
   return {
     name: group.name,
-    types: group.types ?? [],
+    // Defensive: guard against a malformed relation payload before the
+    // consumer spreads it. `Array.isArray` is a runtime type guard, so this
+    // stays lint-clean even though the Prisma type is already an array.
+    types: Array.isArray(group.types) ? group.types : [],
   };
 }
 
@@ -81,9 +92,7 @@ async function PageContent({
     notFound();
   }
 
-  const sortedTypes = [...types].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  const sortedTypes = [...types].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <Container size="md">

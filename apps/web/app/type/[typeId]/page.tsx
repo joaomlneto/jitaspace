@@ -1,14 +1,13 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 import { HttpStatusCode } from "axios";
 
+import type { PageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
-
 import TypePage from "./page.client";
-import type { PageProps } from "./page.client";
 
 function stripHtml(s: string): string {
   let out = "";
@@ -36,16 +35,15 @@ async function getTypeData(typeId: number): Promise<PageProps> {
     },
   });
 
-  const typeImageVariations: string[] = ((await fetch(
+  const typeImageVariations = (await fetch(
     `https://images.evetech.net/types/${typeId}`,
   ).then((res) => {
-    return res.status === HttpStatusCode.NotFound ? [] : res.json();
-  })) as string[]) ?? [];
+    return res.status === Number(HttpStatusCode.NotFound) ? [] : res.json();
+  })) as string[];
 
-  const variation: string | undefined =
-    !typeImageVariations || typeImageVariations?.includes("icon")
-      ? "icon"
-      : typeImageVariations[0];
+  const variation: string | undefined = typeImageVariations.includes("icon")
+    ? "icon"
+    : typeImageVariations[0];
 
   return {
     typeId,
@@ -65,8 +63,7 @@ export async function generateMetadata({
   if (!typeId) return {};
 
   try {
-    const { typeName, typeDescription, ogImageUrl } =
-      await getTypeData(typeId);
+    const { typeName, typeDescription, ogImageUrl } = await getTypeData(typeId);
     const description = typeDescription
       ? stripHtml(typeDescription).slice(0, 200)
       : undefined;
@@ -101,12 +98,13 @@ async function PageContent({
     notFound();
   }
 
+  let props: PageProps;
   try {
-    const props = await getTypeData(typeId);
-    return <TypePage {...props} />;
+    props = await getTypeData(typeId);
   } catch {
     notFound();
   }
+  return <TypePage {...props} />;
 }
 
 export default function Page({

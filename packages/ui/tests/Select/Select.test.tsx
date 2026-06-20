@@ -5,6 +5,9 @@ import { MantineProvider } from "@mantine/core";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import type * as CalendarEventAttendanceSelectModule from "../../Select/CalendarEventAttendanceSelect";
+import type * as MailLabelColorSelectModule from "../../Select/MailLabelColorSelect";
+
 // Capture the confirm-modal config so we can drive onConfirm manually.
 const mockOpenConfirmModal = jest.fn();
 jest.mock("@mantine/modals", () => ({
@@ -17,12 +20,10 @@ jest.mock("@jitaspace/utils", () => ({
   getRandomArrayEntry: (...args: unknown[]) => mockGetRandomArrayEntry(...args),
 }));
 
-const {
-  CalendarEventAttendanceSelect,
-} = require("../../Select/CalendarEventAttendanceSelect") as typeof import("../../Select/CalendarEventAttendanceSelect");
-const {
-  MailLabelColorSelect,
-} = require("../../Select/MailLabelColorSelect") as typeof import("../../Select/MailLabelColorSelect");
+const { CalendarEventAttendanceSelect } =
+  require("../../Select/CalendarEventAttendanceSelect") as typeof CalendarEventAttendanceSelectModule;
+const { MailLabelColorSelect } =
+  require("../../Select/MailLabelColorSelect") as typeof MailLabelColorSelectModule;
 
 const renderWithMantine = (ui: React.ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);
@@ -37,9 +38,7 @@ describe("CalendarEventAttendanceSelect", () => {
 
   it("renders the 'Not responded' placeholder by default", () => {
     renderWithMantine(<CalendarEventAttendanceSelect canRespond />);
-    expect(
-      screen.getByPlaceholderText("Not responded"),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Not responded")).toBeInTheDocument();
   });
 
   it("renders the formatted response options in the dropdown", async () => {

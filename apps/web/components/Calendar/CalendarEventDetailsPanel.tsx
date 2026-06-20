@@ -4,13 +4,15 @@ import type {
   CalendarEventAttendee,
   CalendarEventAttendeeResponse,
 } from "@jitaspace/hooks";
-import { useCalendarEvent, useCalendarEventAttendees } from "@jitaspace/hooks";
 import {
   CharacterAnchor,
-  CharacterAvatar,
   CharacterName,
-  DateHoverCard,
   EveEntityNameAnchor,
+} from "@jitaspace/eve-components";
+import { useCalendarEvent, useCalendarEventAttendees } from "@jitaspace/hooks";
+import {
+  CharacterAvatar,
+  DateHoverCard,
   FormattedDateText,
 } from "@jitaspace/ui";
 
@@ -69,10 +71,10 @@ export function CalendarEventDetailsPanel({
       <Group justify="space-between" mt="xl">
         <Text>When</Text>
         <DateHoverCard
-          date={event?.data.date ? new Date(event?.data.date) : undefined}
+          date={event?.data.date ? new Date(event.data.date) : undefined}
         >
           <FormattedDateText
-            date={event?.data.date ? new Date(event?.data.date) : undefined}
+            date={event?.data.date ? new Date(event.data.date) : undefined}
             format="yyyy-MM-dd HH:mm"
           />
         </DateHoverCard>
@@ -111,9 +113,7 @@ export function CalendarEventDetailsPanel({
           />
         )}
       </Group>
-      {event?.data.text && (
-        <MailMessageViewer content={event?.data.text ?? ""} />
-      )}
+      {event?.data.text && <MailMessageViewer content={event.data.text} />}
       <Title order={4} mt="xl">
         Attendees
       </Title>

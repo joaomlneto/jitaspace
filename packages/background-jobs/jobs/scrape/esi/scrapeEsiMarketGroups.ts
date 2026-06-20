@@ -64,7 +64,7 @@ export const scrapeEsiMarketGroups = defineJob<
     );
 
     const marketGroupChanges = await updateTable({
-      fetchLocalEntries: async () => localEntries,
+      fetchLocalEntries: () => Promise.resolve(localEntries),
       fetchRemoteEntries: async () =>
         Promise.all(
           marketGroupIds.map((marketGroupId) =>

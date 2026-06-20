@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -55,6 +55,13 @@ jest.mock("@jitaspace/utils", () => ({
 // Passthrough / simple stubs for UI components
 jest.mock("@jitaspace/ui", () => ({
   DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
+  FormattedDateText: ({ date }: { date?: Date }) => (
+    <span>{date ? `Date ${date.toISOString()}` : "Date none"}</span>
+  ),
+}));
+
+// Components that moved to @jitaspace/eve-components are stubbed there.
+jest.mock("@jitaspace/eve-components", () => ({
   EveEntityAnchor: ({ children }: { children?: ReactNode }) => (
     <a href="#">{children}</a>
   ),
@@ -72,9 +79,6 @@ jest.mock("@jitaspace/ui", () => ({
   ),
   EveMailSenderName: ({ from }: { from?: number }) => (
     <span>{`Sender ${from}`}</span>
-  ),
-  FormattedDateText: ({ date }: { date?: Date }) => (
-    <span>{date ? `Date ${date.toISOString()}` : "Date none"}</span>
   ),
 }));
 
@@ -222,7 +226,9 @@ describe("MessageMenu", () => {
     await user.click(screen.getByText("Remove Work"));
 
     expect(mockPutMail).toHaveBeenCalledTimes(1);
-    const body = (mockPutMail.mock.calls[0] as [number, number, { labels: number[] }])[2];
+    const body = (
+      mockPutMail.mock.calls[0] as [number, number, { labels: number[] }]
+    )[2];
     expect(body.labels).toEqual([]);
   });
 
@@ -234,7 +240,9 @@ describe("MessageMenu", () => {
     await user.click(screen.getByText("Mark as Read"));
 
     expect(mockPutMail).toHaveBeenCalledTimes(1);
-    const body = (mockPutMail.mock.calls[0] as [number, number, { read: boolean }])[2];
+    const body = (
+      mockPutMail.mock.calls[0] as [number, number, { read: boolean }]
+    )[2];
     expect(body.read).toBe(true);
     expect(data[0]!.is_read).toBe(true);
   });
@@ -269,11 +277,7 @@ describe("MessageMenu", () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(mockDeleteMail).toHaveBeenCalledWith(
-      123,
-      100,
-      expect.anything(),
-    );
+    expect(mockDeleteMail).toHaveBeenCalledWith(123, 100, expect.anything());
   });
 
   it("notifies an error instead of updating when the mail_id is undefined (label)", async () => {
@@ -598,9 +602,7 @@ describe("MessagePanel", () => {
       data: { data: { ...MAIL_VALUE.data.data, labels: [] } },
     });
     const { MessagePanel } = require("~/components/EveMail/MessagePanel");
-    withProvider(
-      <MessagePanel characterId={1} data={[]} messageId={1} />,
-    );
+    withProvider(<MessagePanel characterId={1} data={[]} messageId={1} />);
     expect(screen.getByText("No labels assigned")).toBeInTheDocument();
   });
 

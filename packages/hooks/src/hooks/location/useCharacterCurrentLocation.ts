@@ -10,7 +10,7 @@ export const useCharacterLocation = (characterId: number) => {
     scopes: ["esi-location.read_location.v1"],
   });
   return useGetCharactersCharacterIdLocation(
-    characterId ?? 0,
+    characterId,
     { ...authHeaders },
     {
       query: {

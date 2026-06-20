@@ -21,23 +21,33 @@ import { renderHook } from "@testing-library/react";
 import { create } from "zustand";
 import { useShallow } from "zustand/shallow";
 
-type Character = {
+interface Character {
   characterId: number;
   corporationId: number;
   allianceId?: number;
   scopes: string[];
-};
+}
 
-type StoreState = {
+interface StoreState {
   characters: Record<number, Character>;
-};
+}
 
 const makeStore = (characters: Record<number, Character>) =>
   create<StoreState>()(() => ({ characters }));
 
 const CHARACTERS: Record<number, Character> = {
-  100: { characterId: 100, corporationId: 1, allianceId: 10, scopes: ["esi-skills.read_skills.v1"] },
-  101: { characterId: 101, corporationId: 1, allianceId: 10, scopes: ["esi-wallet.read_character_wallet.v1"] },
+  100: {
+    characterId: 100,
+    corporationId: 1,
+    allianceId: 10,
+    scopes: ["esi-skills.read_skills.v1"],
+  },
+  101: {
+    characterId: 101,
+    corporationId: 1,
+    allianceId: 10,
+    scopes: ["esi-wallet.read_character_wallet.v1"],
+  },
   102: { characterId: 102, corporationId: 2, scopes: [] },
 };
 
@@ -45,14 +55,18 @@ describe("useShallow — Object.keys().map() pattern (useAuthenticatedCharacterI
   it("does not cause infinite re-renders", () => {
     const useStore = makeStore(CHARACTERS);
     renderHook(() =>
-      useStore(useShallow((state) => Object.keys(state.characters).map(Number))),
+      useStore(
+        useShallow((state) => Object.keys(state.characters).map(Number)),
+      ),
     );
   });
 
   it("returns the correct character ids", () => {
     const useStore = makeStore(CHARACTERS);
     const { result } = renderHook(() =>
-      useStore(useShallow((state) => Object.keys(state.characters).map(Number))),
+      useStore(
+        useShallow((state) => Object.keys(state.characters).map(Number)),
+      ),
     );
     expect(result.current).toEqual([100, 101, 102]);
   });
