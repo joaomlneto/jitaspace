@@ -138,23 +138,42 @@ export async function getEntityTimeline(
     select: {
       op: true,
       data: true,
-      diff: {
-        select: { to: { select: { buildNumber: true, releasedAt: true } } },
-      },
+      diffId: true,
       collection: { select: { name: true } },
     },
     orderBy: { diff: { toBuild: "asc" } },
   });
   if (rows.length === 0) return null;
 
-  const events = rows.map((r) => ({
-    build: r.diff.to.buildNumber,
-    date: ymd(r.diff.to.releasedAt),
-    collection: r.collection.name,
-    v: 1 as const,
-    kind: r.op,
-    ...(r.op === "modified" ? { fields: r.data } : { values: r.data }),
-  })) as EntityTimeline["events"];
+  // Resolve the build axis via lookups instead of the change→diff→to→Build
+  // relation chain. Each hop can dangle while the shared eve-builds DB is
+  // mid-migration (a missing BuildDiff, or a BuildDiff whose toBuild has no
+  // Build row), and traversing a null relation crashed the timeline. A change
+  // whose diff is gone can't be placed on the axis (skip it); a missing Build
+  // row yields a null date.
+  const [diffs, builds] = await Promise.all([
+    historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
+    historyDb.build.findMany({
+      select: { buildNumber: true, releasedAt: true },
+    }),
+  ]);
+  const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
+  const releasedAtOf = new Map(builds.map((b) => [b.buildNumber, b.releasedAt]));
+
+  const events = rows.flatMap((r) => {
+    const build = toBuildOf.get(r.diffId);
+    if (build === undefined) return [];
+    return [
+      {
+        build,
+        date: ymd(releasedAtOf.get(build) ?? null),
+        collection: r.collection.name,
+        v: 1 as const,
+        kind: r.op,
+        ...(r.op === "modified" ? { fields: r.data } : { values: r.data }),
+      },
+    ];
+  }) as EntityTimeline["events"];
 
   return { entityType, entityId, events };
 }

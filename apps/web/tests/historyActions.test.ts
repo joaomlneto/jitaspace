@@ -14,6 +14,12 @@ let mockCollections: { id: number; name: string }[] = [];
 let mockGrouped: { diffId: number; collectionId: number; _count: number }[] = [];
 let mockEntities: { kind: string; eveId: number }[] = [];
 let mockDiffs: { id: number; toBuild: number }[] = [];
+let mockChangeRows: {
+  op: "added" | "modified" | "removed";
+  data: unknown;
+  diffId: number;
+  collection: { name: string };
+}[] = [];
 
 jest.mock("@jitaspace/db-history", () => ({
   historyDb: {
@@ -24,7 +30,7 @@ jest.mock("@jitaspace/db-history", () => ({
     collection: { findMany: () => Promise.resolve(mockCollections) },
     change: {
       groupBy: () => Promise.resolve(mockGrouped),
-      findMany: () => Promise.resolve([]),
+      findMany: () => Promise.resolve(mockChangeRows),
     },
     entity: { findMany: () => Promise.resolve(mockEntities) },
     buildDiff: { findMany: () => Promise.resolve(mockDiffs) },
@@ -37,7 +43,7 @@ jest.mock("@jitaspace/db-history", () => ({
 
 // Lazy-require after jest.mock: next/jest (SWC) does not hoist jest.mock, so a
 // top-level import would load the real module before the stub is registered.
-const { getHistoryIndex } =
+const { getHistoryIndex, getEntityTimeline } =
   require("~/lib/history-actions") as typeof HistoryActions;
 
 describe("getHistoryIndex", () => {
@@ -85,5 +91,61 @@ describe("getHistoryIndex", () => {
     expect(build?.byCollection).toEqual({ types: 4, typeDogma: 1 });
     expect(build?.changeCount).toBe(5);
     expect(index.entityIdsByType).toEqual({ type: [587] });
+  });
+});
+
+describe("getEntityTimeline", () => {
+  it("survives dangling FKs: null date when the Build row is missing, skips changes with no diff", async () => {
+    // diff 10 → build 98 (present); diff 11 → build 99 (Build row missing);
+    // diff 999 is absent entirely (dangling Change.diffId).
+    mockDiffs = [
+      { id: 10, toBuild: 98 },
+      { id: 11, toBuild: 99 },
+    ];
+    mockBuilds = [{ buildNumber: 98, releasedAt: new Date("2024-01-01") }];
+    mockChangeRows = [
+      {
+        op: "added",
+        data: { typeName: "Rifter" },
+        diffId: 10,
+        collection: { name: "types" },
+      },
+      {
+        // BuildDiff resolves, but its toBuild (99) has no Build row → null date,
+        // yet the event must still render (build number comes from the diff map).
+        op: "modified",
+        data: { mass: { from: 1000, to: 1100 } },
+        diffId: 11,
+        collection: { name: "types" },
+      },
+      {
+        // The change's BuildDiff is gone entirely → can't place it; drop it.
+        op: "removed",
+        data: {},
+        diffId: 999,
+        collection: { name: "types" },
+      },
+    ];
+
+    const timeline = await getEntityTimeline("type", 587);
+
+    expect(timeline?.events).toEqual([
+      {
+        build: 98,
+        date: "2024-01-01",
+        collection: "types",
+        v: 1,
+        kind: "added",
+        values: { typeName: "Rifter" },
+      },
+      {
+        build: 99,
+        date: null,
+        collection: "types",
+        v: 1,
+        kind: "modified",
+        fields: { mass: { from: 1000, to: 1100 } },
+      },
+    ]);
   });
 });
