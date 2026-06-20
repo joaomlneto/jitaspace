@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Spotlight } from "@mantine/spotlight";
+import { Box } from "@mantine/core";
+import { closeSpotlight, Spotlight } from "@mantine/spotlight";
 
+import { SearchScopeNotice } from "./SearchScopeNotice";
 import { useSearchActions } from "./useSearchActions";
 
 export const MainSpotlight = () => {
   const [query, setQuery] = useState<string>("");
-  const { filteredActions, ungrouped, groups } = useSearchActions(query);
+  const { filteredActions, ungrouped, groups, canSearchEntities } =
+    useSearchActions(query);
 
   // Use the compound API so SpotlightActionsList is always mounted.
   // When SpotlightActionsList unmounts it clears listId to ""; pressing Enter
@@ -20,6 +23,11 @@ export const MainSpotlight = () => {
       onQueryChange={setQuery}
     >
       <Spotlight.Search />
+      {!canSearchEntities && (
+        <Box px="md" pt="xs">
+          <SearchScopeNotice onBeforeLogin={() => closeSpotlight()} />
+        </Box>
+      )}
       <Spotlight.ActionsList mah="60vh" style={{ overflowY: "auto" }}>
         {filteredActions.length > 0 ? (
           <>

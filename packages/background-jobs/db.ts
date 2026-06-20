@@ -12,8 +12,8 @@ import { env } from "./env";
  * module (`import { prisma, Prisma } from "../../../db"`).
  *
  * The instance is cached on `globalThis` under a shared key so that, in a single
- * process (e.g. local dev / the Next.js Inngest route), this package and the web
- * app reuse one client/connection pool instead of opening two.
+ * process (e.g. local dev, where this package runs inside the Next.js app), this
+ * package and the web app reuse one client/connection pool instead of opening two.
  */
 const globalForPrisma = globalThis as { __jitaspacePrisma?: Db };
 

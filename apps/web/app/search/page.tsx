@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 
+import { SearchScopeNotice } from "~/components/Spotlight/SearchScopeNotice";
 import { useSearchActions } from "~/components/Spotlight/useSearchActions";
 
 /**
@@ -24,7 +25,8 @@ import { useSearchActions } from "~/components/Spotlight/useSearchActions";
 function SearchView() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState<string>(searchParams.get("q") ?? "");
-  const { filteredActions, ungrouped, groups } = useSearchActions(query);
+  const { filteredActions, ungrouped, groups, canSearchEntities } =
+    useSearchActions(query);
 
   // Focus the search box on mount (this is a dedicated search destination).
   // Done via ref rather than the autoFocus attribute, which is an a11y smell.
@@ -47,11 +49,11 @@ function SearchView() {
           onChange={(event) => setQuery(event.currentTarget.value)}
         />
 
+        {!canSearchEntities && <SearchScopeNotice />}
+
         {filteredActions.length > 0 ? (
           <Stack gap="lg">
-            {ungrouped.length > 0 && (
-              <SearchActionList actions={ungrouped} />
-            )}
+            {ungrouped.length > 0 && <SearchActionList actions={ungrouped} />}
             {Object.entries(groups).map(([groupName, groupActions]) => (
               <Stack key={groupName} gap="xs">
                 <Text size="xs" tt="uppercase" c="dimmed" fw={700}>

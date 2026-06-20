@@ -106,7 +106,6 @@ const config = {
     "@jitaspace/esi-client",
     "@jitaspace/eve-components",
     "@jitaspace/eve-icons",
-    "@jitaspace/eve-scrape",
     "@jitaspace/hooks",
     "@jitaspace/kv",
     "@jitaspace/sde-client",

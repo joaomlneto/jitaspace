@@ -3,14 +3,6 @@ import { afterAll, beforeAll, describe, expect, it, jest } from "@jest/globals";
 import { env } from "../../env";
 import { compareSets } from "../../utils/compareSets";
 
-jest.mock("inngest", () => ({
-  NonRetriableError: class NonRetriableError extends Error {
-    constructor(message: string) {
-      super(message);
-      this.name = "NonRetriableError";
-    }
-  },
-}));
 jest.mock("../../env", () => ({ env: { NODE_ENV: "test" } }));
 
 interface Item {

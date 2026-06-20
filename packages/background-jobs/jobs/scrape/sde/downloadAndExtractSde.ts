@@ -24,9 +24,9 @@ const SDE_ARCHIVE_FILENAME = "sde.zip";
  * itself, so this exists to validate (and time) the download/extract path.
  *
  * The whole download/extract runs inside a single `ctx.run` step on purpose:
- * the work writes to an ephemeral temp directory, and on the Inngest adapter any
- * code outside a step re-runs on each step boundary, which would otherwise leave
- * the extract step looking in a different temp dir than the download wrote to.
+ * the work writes to an ephemeral temp directory, so keeping download and
+ * extract in one step ensures they share the same temp dir (and the step
+ * re-runs as a unit on retry).
  */
 export const downloadAndExtractSde = defineJob<
   DownloadAndExtractSdeEventPayload["data"]
