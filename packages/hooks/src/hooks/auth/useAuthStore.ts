@@ -25,6 +25,11 @@ export interface CharacterSsoSession {
   allianceId?: number;
   corporationRoles: CharactersCharacterIdRolesGetRolesEnum[];
   corporationRolesExpireOn?: number;
+  /**
+   * Set when EVE can no longer refresh this character's token. The session is
+   * kept (not removed) so the UI can flag it visually and offer re-authentication.
+   */
+  sessionExpired?: boolean;
 }
 
 // TODO: Update corporation roles hourly
@@ -36,6 +41,7 @@ export interface SsoAuthState {
     refreshToken: string;
   }) => Promise<void>;
   removeCharacter: (characterId: number) => void;
+  markCharacterSessionExpired: (characterId: number) => void;
   selectCharacter: (characterId: number) => void;
   logout: () => void;
 }
@@ -86,6 +92,9 @@ export const useAuthStore = create(
                 accessTokenExpirationDate,
                 refreshToken,
                 characterId,
+                // A fresh token means the session is alive again; clear any
+                // previously-flagged expiry (e.g. after re-authentication).
+                sessionExpired: false,
                 corporationRoles: [],
                 // Use freshly-fetched affiliation when available; otherwise keep
                 // whatever we already had so a transient ESI hiccup never blocks
@@ -116,6 +125,20 @@ export const useAuthStore = create(
             ...state,
             characters: remainingCharacters,
             selectedCharacter: remainingCharacterIds[0] ?? null,
+          };
+        }),
+      markCharacterSessionExpired: (characterId: number) =>
+        set((state) => {
+          const character = state.characters[characterId];
+          // Keep the character (do NOT remove it); just flag the session so the
+          // UI can mark it and prompt re-authentication.
+          if (!character) return state;
+          return {
+            ...state,
+            characters: {
+              ...state.characters,
+              [characterId]: { ...character, sessionExpired: true },
+            },
           };
         }),
       selectCharacter: (characterId: number) =>

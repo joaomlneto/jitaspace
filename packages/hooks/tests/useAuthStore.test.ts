@@ -111,4 +111,47 @@ describe("useAuthStore.addCharacter", () => {
     expect(mockAffiliation).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
+
+  it("flags a character's session as expired without removing it", async () => {
+    mockGetPayload.mockReturnValueOnce({ sub: SUB, exp: 1_000_000_000 });
+    mockAffiliation.mockResolvedValueOnce({
+      data: [{ character_id: CHARACTER_ID, corporation_id: 98 }],
+    });
+    await useAuthStore
+      .getState()
+      .addCharacter({ accessToken: "AT1", refreshToken: "RT1" });
+
+    useAuthStore.getState().markCharacterSessionExpired(CHARACTER_ID);
+
+    const character = useAuthStore.getState().characters[CHARACTER_ID];
+    expect(character).toBeDefined(); // kept, not removed
+    expect(character?.sessionExpired).toBe(true);
+  });
+
+  it("clears the session-expired flag when the character re-authenticates", async () => {
+    mockGetPayload.mockReturnValueOnce({ sub: SUB, exp: 1_000_000_000 });
+    mockAffiliation.mockResolvedValueOnce({
+      data: [{ character_id: CHARACTER_ID, corporation_id: 98 }],
+    });
+    await useAuthStore
+      .getState()
+      .addCharacter({ accessToken: "AT1", refreshToken: "RT1" });
+    useAuthStore.getState().markCharacterSessionExpired(CHARACTER_ID);
+    expect(
+      useAuthStore.getState().characters[CHARACTER_ID]?.sessionExpired,
+    ).toBe(true);
+
+    // Re-authentication (a fresh successful add) revives the session.
+    mockGetPayload.mockReturnValueOnce({ sub: SUB, exp: 2_000_000_000 });
+    mockAffiliation.mockResolvedValueOnce({
+      data: [{ character_id: CHARACTER_ID, corporation_id: 98 }],
+    });
+    await useAuthStore
+      .getState()
+      .addCharacter({ accessToken: "AT2", refreshToken: "RT2" });
+
+    expect(
+      useAuthStore.getState().characters[CHARACTER_ID]?.sessionExpired,
+    ).toBe(false);
+  });
 });

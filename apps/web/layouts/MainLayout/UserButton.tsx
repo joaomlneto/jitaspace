@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Group,
+  Indicator,
   Menu,
   Text,
   UnstyledButton,
@@ -46,6 +47,17 @@ export default function UserButton({ ...others }: UserButtonProps) {
   const characterId = character.characterId;
   const characterName = character.accessTokenPayload.name;
 
+  // Re-authentication uses the same EVE SSO login flow as adding a character;
+  // logging in again with an expired character refreshes its tokens and clears
+  // the `sessionExpired` flag.
+  const openLoginModal = () =>
+    openContextModal({
+      modal: "login",
+      title: "Login",
+      size: "xl",
+      innerProps: {},
+    });
+
   return (
     <Menu withArrow position="bottom" transitionProps={{ transition: "pop" }}>
       <Menu.Target>
@@ -66,17 +78,48 @@ export default function UserButton({ ...others }: UserButtonProps) {
           {...others}
         >
           <Group>
-            <CharacterAvatar characterId={characterId} radius="xl" size="sm" />
+            <Indicator
+              inline
+              disabled={!character.sessionExpired}
+              color="red"
+              size={12}
+              offset={4}
+              withBorder
+            >
+              <CharacterAvatar
+                characterId={characterId}
+                radius="xl"
+                size="sm"
+              />
+            </Indicator>
 
             <div style={{ flex: 1 }}>
               <Text size="sm" fw={500}>
                 {characterName}
               </Text>
+              {character.sessionExpired && (
+                <Text size="xs" c="red">
+                  Session expired
+                </Text>
+              )}
             </div>
           </Group>
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
+        {character.sessionExpired && (
+          <>
+            <Menu.Label c="red">Session expired</Menu.Label>
+            <Menu.Item
+              color="red"
+              leftSection={<RecruitmentIcon width={20} />}
+              onClick={openLoginModal}
+            >
+              Sign in again
+            </Menu.Item>
+            <Menu.Divider />
+          </>
+        )}
         {sortedCharacters.length > 1 && (
           <>
             <Menu.Label>Switch Character</Menu.Label>
@@ -86,12 +129,32 @@ export default function UserButton({ ...others }: UserButtonProps) {
                 <Menu.Item
                   key={character.characterId}
                   leftSection={
-                    <CharacterAvatar
-                      characterId={character.characterId}
-                      size={20}
-                    />
+                    <Indicator
+                      inline
+                      disabled={!character.sessionExpired}
+                      color="red"
+                      size={8}
+                      offset={2}
+                      withBorder
+                    >
+                      <CharacterAvatar
+                        characterId={character.characterId}
+                        size={20}
+                      />
+                    </Indicator>
                   }
-                  onClick={() => selectCharacter(character.characterId)}
+                  rightSection={
+                    character.sessionExpired ? (
+                      <Text size="xs" c="red">
+                        expired
+                      </Text>
+                    ) : undefined
+                  }
+                  onClick={() =>
+                    character.sessionExpired
+                      ? openLoginModal()
+                      : selectCharacter(character.characterId)
+                  }
                 >
                   {character.accessTokenPayload.name}
                 </Menu.Item>
@@ -113,14 +176,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
         </Menu.Item>
         <Menu.Item
           leftSection={<RecruitmentIcon width={20} />}
-          onClick={() => {
-            openContextModal({
-              modal: "login",
-              title: "Login",
-              size: "xl",
-              innerProps: {},
-            });
-          }}
+          onClick={openLoginModal}
         >
           Add Character
         </Menu.Item>
