@@ -2,10 +2,13 @@
 
 import type { CardProps } from "@mantine/core";
 import {
+  Alert,
   Burger,
+  Button,
   Card,
   Group,
   Skeleton,
+  Stack,
   Text,
   UnstyledButton,
 } from "@mantine/core";
@@ -17,7 +20,7 @@ import {
   CharacterOnlineIndicator,
   CorporationName,
 } from "@jitaspace/eve-components";
-import { WalletIcon } from "@jitaspace/eve-icons";
+import { RecruitmentIcon, WalletIcon } from "@jitaspace/eve-icons";
 import {
   useAuthenticatedCharacter,
   useCharacterSkills,
@@ -63,6 +66,36 @@ export const AuthenticatedCharacterCard = ({
   return (
     <Card withBorder radius="md" className={classes.card} {...otherProps}>
       <Card.Section className={classes.imageSection}>
+        {character.sessionExpired && (
+          <Alert
+            color="red"
+            variant="light"
+            icon={<RecruitmentIcon width={18} />}
+            title="Session expired"
+            mb="xs"
+          >
+            <Stack gap="xs" align="flex-start">
+              <Text size="xs">
+                EVE can no longer refresh this character. Sign in again to keep
+                using it.
+              </Text>
+              <Button
+                size="xs"
+                color="red"
+                onClick={() =>
+                  openContextModal({
+                    modal: "login",
+                    title: "Login",
+                    size: "xl",
+                    innerProps: {},
+                  })
+                }
+              >
+                Sign in again
+              </Button>
+            </Stack>
+          </Alert>
+        )}
         <Group wrap="nowrap" justify="space-between" align="start">
           <Group wrap="nowrap" align="start">
             <CharacterOnlineIndicator characterId={characterId} offset={8}>
