@@ -2,16 +2,13 @@ import { beforeAll, describe, expect, it, jest } from "@jest/globals";
 
 import type { ingestSdeCompositeTable as IngestSdeCompositeTable } from "../helpers/ingestSdeCompositeTable";
 
-// The helper pulls in p-limit (ESM) and, via ../utils, inngest + the zod-checked
-// env. Stub them so the test exercises only the diff/filter/chunk orchestration.
+// The helper pulls in p-limit (ESM) and, via ../utils, the zod-checked env.
+// Stub them so the test exercises only the diff/filter/chunk orchestration.
 // (@swc/jest doesn't hoist jest.mock, and p-limit crashes if loaded for real, so
 // the helper is imported lazily in beforeAll — after these mocks are registered.)
 jest.mock("p-limit", () => ({
   __esModule: true,
   default: () => (fn: () => unknown) => fn(),
-}));
-jest.mock("inngest", () => ({
-  NonRetriableError: class NonRetriableError extends Error {},
 }));
 jest.mock("../env", () => ({ env: { NODE_ENV: "test" } }));
 
