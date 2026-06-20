@@ -17,14 +17,23 @@ interface CharacterLike {
   corporationId: number;
   allianceId?: number;
   sessionExpired?: boolean;
+  accessTokenPayload: { name: string };
 }
 
 let character: CharacterLike | null = null;
 const mockOpenContextModal = jest.fn<(args: unknown) => void>();
+const mockOpenConfirmModal =
+  jest.fn<(args: { onConfirm?: () => void }) => void>();
+const mockRemoveCharacter = jest.fn<(characterId: number) => void>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useAuthenticatedCharacter: () => character,
   useCharacterSkills: () => ({ data: undefined, hasToken: false }),
+  useAuthStore: (
+    selector: (state: {
+      removeCharacter: typeof mockRemoveCharacter;
+    }) => unknown,
+  ) => selector({ removeCharacter: mockRemoveCharacter }),
 }));
 jest.mock(
   "@jitaspace/hooks/src/hooks/character/useCharacterWalletBalance",
@@ -48,6 +57,10 @@ jest.mock(
 );
 jest.mock("~/components/Menu", () => new Proxy({}, { get: () => () => null }));
 jest.mock("@mantine/modals", () => ({
+  modals: {
+    openConfirmModal: (args: { onConfirm?: () => void }) =>
+      mockOpenConfirmModal(args),
+  },
   openContextModal: (args: unknown) => mockOpenContextModal(args),
 }));
 
@@ -90,11 +103,18 @@ function loadCard() {
 describe("AuthenticatedCharacterCard session-expired marking", () => {
   beforeEach(() => {
     mockOpenContextModal.mockReset();
+    mockOpenConfirmModal.mockReset();
+    mockRemoveCharacter.mockReset();
     character = null;
   });
 
   it("flags an expired session and offers re-authentication", () => {
-    character = { characterId: 100, corporationId: 98, sessionExpired: true };
+    character = {
+      characterId: 100,
+      corporationId: 98,
+      sessionExpired: true,
+      accessTokenPayload: { name: "Aria Valen" },
+    };
     const AuthenticatedCharacterCard = loadCard();
     render(<AuthenticatedCharacterCard characterId={100} />);
 
@@ -106,8 +126,33 @@ describe("AuthenticatedCharacterCard session-expired marking", () => {
     );
   });
 
+  it("removes the character after confirmation", () => {
+    character = {
+      characterId: 100,
+      corporationId: 98,
+      sessionExpired: true,
+      accessTokenPayload: { name: "Aria Valen" },
+    };
+    const AuthenticatedCharacterCard = loadCard();
+    render(<AuthenticatedCharacterCard characterId={100} />);
+
+    fireEvent.click(screen.getByText("Remove character"));
+    expect(mockOpenConfirmModal).toHaveBeenCalledTimes(1);
+    expect(mockRemoveCharacter).not.toHaveBeenCalled();
+
+    // Confirming in the modal performs the removal.
+    const confirmArgs = mockOpenConfirmModal.mock.calls[0]?.[0];
+    confirmArgs?.onConfirm?.();
+    expect(mockRemoveCharacter).toHaveBeenCalledWith(100);
+  });
+
   it("shows no expiry banner for a healthy character", () => {
-    character = { characterId: 100, corporationId: 98, sessionExpired: false };
+    character = {
+      characterId: 100,
+      corporationId: 98,
+      sessionExpired: false,
+      accessTokenPayload: { name: "Pilot One" },
+    };
     const AuthenticatedCharacterCard = loadCard();
     render(<AuthenticatedCharacterCard characterId={100} />);
 
