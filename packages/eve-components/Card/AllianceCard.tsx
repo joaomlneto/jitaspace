@@ -21,10 +21,16 @@ import { AllianceName, CharacterName, CorporationName } from "../Text";
 interface AllianceCardProps {
   allianceId: string | number;
   headerRightSection?: ReactNode;
+  /**
+   * When set, render only the header section. The founded/member/creator/
+   * executor metadata and the member-corporation list are omitted. Used on the
+   * landing page.
+   */
+  compact?: boolean;
 }
 
 export const AllianceCard = memo(
-  ({ allianceId, headerRightSection }: AllianceCardProps) => {
+  ({ allianceId, headerRightSection, compact = false }: AllianceCardProps) => {
     const { data: allianceData } = useEsiAllianceInformation(
       Number(allianceId),
     );
@@ -85,116 +91,123 @@ export const AllianceCard = memo(
           </Group>
         </Card.Section>
 
-        <Card.Section p="xs" withBorder>
-          <Stack gap={6}>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">
-                Founded
-              </Text>
-              <Skeleton visible={!alliance} width="auto">
-                {alliance?.date_founded ? (
-                  <FormattedDateText
-                    date={new Date(alliance.date_founded)}
-                    size="xs"
-                  />
-                ) : (
-                  <Text size="xs">N/A</Text>
-                )}
-              </Skeleton>
-            </Group>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">
-                Member corporations
-              </Text>
-              <Skeleton
-                visible={!allianceMemberCorporationsData?.data}
-                width="auto"
-              >
-                <Text size="xs">
-                  {memberCorporationIds.length > 0
-                    ? memberCorporationIds.length.toLocaleString()
-                    : "N/A"}
-                </Text>
-              </Skeleton>
-            </Group>
-            <Group justify="space-between" align="start">
-              <Text size="xs" c="dimmed">
-                Creator corporation
-              </Text>
-              <Skeleton visible={!alliance} width="auto">
-                {alliance?.creator_corporation_id ? (
-                  <CorporationAnchor
-                    corporationId={alliance.creator_corporation_id}
+        {!compact && (
+          <>
+            <Card.Section p="xs" withBorder>
+              <Stack gap={6}>
+                <Group justify="space-between">
+                  <Text size="xs" c="dimmed">
+                    Founded
+                  </Text>
+                  <Skeleton visible={!alliance} width="auto">
+                    {alliance?.date_founded ? (
+                      <FormattedDateText
+                        date={new Date(alliance.date_founded)}
+                        size="xs"
+                      />
+                    ) : (
+                      <Text size="xs">N/A</Text>
+                    )}
+                  </Skeleton>
+                </Group>
+                <Group justify="space-between">
+                  <Text size="xs" c="dimmed">
+                    Member corporations
+                  </Text>
+                  <Skeleton
+                    visible={!allianceMemberCorporationsData?.data}
+                    width="auto"
                   >
-                    <CorporationName
-                      corporationId={alliance.creator_corporation_id}
-                      fz="xs"
-                    />
-                  </CorporationAnchor>
-                ) : (
-                  <Text size="xs">N/A</Text>
-                )}
-              </Skeleton>
-            </Group>
-            <Group justify="space-between" align="start">
-              <Text size="xs" c="dimmed">
-                Creator
-              </Text>
-              <Skeleton visible={!alliance} width="auto">
-                {alliance?.creator_id ? (
-                  <CharacterAnchor characterId={alliance.creator_id}>
-                    <CharacterName characterId={alliance.creator_id} fz="xs" />
-                  </CharacterAnchor>
-                ) : (
-                  <Text size="xs">N/A</Text>
-                )}
-              </Skeleton>
-            </Group>
-            <Group justify="space-between" align="start">
-              <Text size="xs" c="dimmed">
-                Executor corporation
-              </Text>
-              <Skeleton visible={!alliance} width="auto">
-                {alliance?.executor_corporation_id ? (
-                  <CorporationAnchor
-                    corporationId={alliance.executor_corporation_id}
-                  >
-                    <CorporationName
-                      corporationId={alliance.executor_corporation_id}
-                      fz="xs"
-                    />
-                  </CorporationAnchor>
-                ) : (
-                  <Text size="xs">N/A</Text>
-                )}
-              </Skeleton>
-            </Group>
-          </Stack>
-        </Card.Section>
-
-        <Card.Section p="xs" withBorder>
-          <Stack gap="xs">
-            {memberCorporationIds.length > 0 && (
-              <Stack gap={4}>
-                <Text size="xs" c="dimmed">
-                  Member corporation list
-                </Text>
-                <Flex gap="xs" wrap="wrap">
-                  {memberCorporationIds.map((corporationId) => (
-                    <Badge key={corporationId} variant="light">
-                      <CorporationAnchor corporationId={corporationId}>
+                    <Text size="xs">
+                      {memberCorporationIds.length > 0
+                        ? memberCorporationIds.length.toLocaleString()
+                        : "N/A"}
+                    </Text>
+                  </Skeleton>
+                </Group>
+                <Group justify="space-between" align="start">
+                  <Text size="xs" c="dimmed">
+                    Creator corporation
+                  </Text>
+                  <Skeleton visible={!alliance} width="auto">
+                    {alliance?.creator_corporation_id ? (
+                      <CorporationAnchor
+                        corporationId={alliance.creator_corporation_id}
+                      >
                         <CorporationName
-                          corporationId={corporationId}
+                          corporationId={alliance.creator_corporation_id}
                           fz="xs"
                         />
                       </CorporationAnchor>
-                    </Badge>
-                  ))}
-                </Flex>
+                    ) : (
+                      <Text size="xs">N/A</Text>
+                    )}
+                  </Skeleton>
+                </Group>
+                <Group justify="space-between" align="start">
+                  <Text size="xs" c="dimmed">
+                    Creator
+                  </Text>
+                  <Skeleton visible={!alliance} width="auto">
+                    {alliance?.creator_id ? (
+                      <CharacterAnchor characterId={alliance.creator_id}>
+                        <CharacterName
+                          characterId={alliance.creator_id}
+                          fz="xs"
+                        />
+                      </CharacterAnchor>
+                    ) : (
+                      <Text size="xs">N/A</Text>
+                    )}
+                  </Skeleton>
+                </Group>
+                <Group justify="space-between" align="start">
+                  <Text size="xs" c="dimmed">
+                    Executor corporation
+                  </Text>
+                  <Skeleton visible={!alliance} width="auto">
+                    {alliance?.executor_corporation_id ? (
+                      <CorporationAnchor
+                        corporationId={alliance.executor_corporation_id}
+                      >
+                        <CorporationName
+                          corporationId={alliance.executor_corporation_id}
+                          fz="xs"
+                        />
+                      </CorporationAnchor>
+                    ) : (
+                      <Text size="xs">N/A</Text>
+                    )}
+                  </Skeleton>
+                </Group>
               </Stack>
-            )}
-          </Stack>
-        </Card.Section>
+            </Card.Section>
+
+            <Card.Section p="xs" withBorder>
+              <Stack gap="xs">
+                {memberCorporationIds.length > 0 && (
+                  <Stack gap={4}>
+                    <Text size="xs" c="dimmed">
+                      Member corporation list
+                    </Text>
+                    <Flex gap="xs" wrap="wrap">
+                      {memberCorporationIds.map((corporationId) => (
+                        <Badge key={corporationId} variant="light">
+                          <CorporationAnchor corporationId={corporationId}>
+                            <CorporationName
+                              corporationId={corporationId}
+                              fz="xs"
+                            />
+                          </CorporationAnchor>
+                        </Badge>
+                      ))}
+                    </Flex>
+                  </Stack>
+                )}
+              </Stack>
+            </Card.Section>
+          </>
+        )}
       </Card>
     );
   },
