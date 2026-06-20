@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -52,6 +52,42 @@ function activeGroupName(pathname: string): string | null {
 }
 
 /**
+ * The desktop nav row. Split out so the `usePathname` read (in
+ * ActiveDesktopNavGroup) can live inside a <Suspense> boundary: a null pathname
+ * renders every trigger un-highlighted, which is the static-shell fallback.
+ */
+function DesktopNavGroup({ pathname }: { pathname: string | null }) {
+  const activeName = useMemo(
+    () => (pathname ? activeGroupName(pathname) : null),
+    [pathname],
+  );
+  return (
+    <Group h="100%" gap={2} visibleFrom="sm" wrap="nowrap">
+      {Object.values(jitaApps).map((group) => (
+        <DesktopNavMenu
+          key={group.name}
+          label={group.name}
+          Icon={group.Icon}
+          apps={group.apps}
+          active={group.name === activeName}
+        />
+      ))}
+    </Group>
+  );
+}
+
+/**
+ * Highlights the active section from usePathname. On dynamic routes (e.g.
+ * /contract/[id]) usePathname is request-time data that Next 16 cacheComponents
+ * only allows inside a <Suspense> boundary, so HeaderMenu wraps this and falls
+ * back to an un-highlighted nav in the prerendered shell.
+ */
+function ActiveDesktopNavGroup() {
+  const pathname = usePathname();
+  return <DesktopNavGroup pathname={pathname} />;
+}
+
+/**
  * Top navigation header for the MainLayout. Labelled "mega menu"-style
  * dropdowns (Character / Corporation / Alliance / Universe) replace the older
  * icon-only triggers, alongside a Spotlight-backed search box and the character
@@ -62,8 +98,6 @@ export function HeaderMenu() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
   const characterIds = useAuthenticatedCharacterIds();
-  const pathname = usePathname();
-  const activeName = useMemo(() => activeGroupName(pathname), [pathname]);
 
   return (
     <Box h="100%" px="md">
@@ -83,17 +117,9 @@ export function HeaderMenu() {
                 <ServerStatusIndicator />
               </Group>
 
-              <Group h="100%" gap={2} visibleFrom="sm" wrap="nowrap">
-                {Object.values(jitaApps).map((group) => (
-                  <DesktopNavMenu
-                    key={group.name}
-                    label={group.name}
-                    Icon={group.Icon}
-                    apps={group.apps}
-                    active={group.name === activeName}
-                  />
-                ))}
-              </Group>
+              <Suspense fallback={<DesktopNavGroup pathname={null} />}>
+                <ActiveDesktopNavGroup />
+              </Suspense>
             </Group>
 
             <Group gap="xs" visibleFrom="sm" wrap="nowrap">
