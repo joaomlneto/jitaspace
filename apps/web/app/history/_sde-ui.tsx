@@ -2,7 +2,8 @@
 
 import type { TextProps } from "@mantine/core";
 import type { ReactNode } from "react";
-import { Text } from "@mantine/core";
+import Link from "next/link";
+import { Anchor, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
 import { getTypeByIdQueryOptions } from "@jitaspace/sde-client";
@@ -11,9 +12,10 @@ import { getTypeByIdQueryOptions } from "@jitaspace/sde-client";
  * Local stand-ins for the `@jitaspace/ui` name/anchor components that were
  * removed with the hooks refactor (commit f5e47407). The history UI resolves
  * most names itself and passes `name=`, so these mostly just render that text;
- * `TypeName` fetches from the (surviving) SDE client. The per-entity link
- * targets no longer exist, so the `*Anchor` components render their content
- * inline rather than as links.
+ * `TypeName` fetches from the (surviving) SDE client. The `*Anchor` components
+ * link each resolved name to that entity's detail page (`/type/…`,
+ * `/dogma/attribute/…`, …); the market group is the lone exception, with no
+ * dedicated page yet, so it stays inline text.
  */
 
 function sdeLabel(data: unknown): string | undefined {
@@ -77,27 +79,92 @@ export function FactionName({
   return <Text {...p}>{name ?? `#${factionId ?? "?"}`}</Text>;
 }
 
-// ── anchors (link targets removed → render content inline) ───────────────────
-type AnchorProps = {
+// ── anchors (link each resolved name to that entity's detail page) ───────────
+// Each caller passes the entity's id (categoryId, attributeId, …) plus the
+// inline `size`/`c` it wants on the link. We turn that into a real `next/link`
+// anchor pointing at the matching detail route.
+interface AnchorBaseProps {
   size?: TextProps["size"];
   c?: TextProps["c"];
   children?: ReactNode;
-} & Record<string, unknown>;
-function Passthrough({ size, c, children }: AnchorProps) {
+}
+
+function LinkAnchor({
+  href,
+  size,
+  c,
+  children,
+}: AnchorBaseProps & { href: string }) {
+  return (
+    <Anchor component={Link} href={href} size={size} c={c}>
+      {children}
+    </Anchor>
+  );
+}
+
+export function CategoryAnchor({
+  categoryId,
+  ...rest
+}: AnchorBaseProps & { categoryId: number }) {
+  return <LinkAnchor href={`/category/${categoryId}`} {...rest} />;
+}
+
+export function GroupAnchor({
+  groupId,
+  ...rest
+}: AnchorBaseProps & { groupId: number }) {
+  return <LinkAnchor href={`/group/${groupId}`} {...rest} />;
+}
+
+export function RaceAnchor({
+  raceId,
+  ...rest
+}: AnchorBaseProps & { raceId: number }) {
+  return <LinkAnchor href={`/race/${raceId}`} {...rest} />;
+}
+
+export function FactionAnchor({
+  factionId,
+  ...rest
+}: AnchorBaseProps & { factionId: number }) {
+  return <LinkAnchor href={`/faction/${factionId}`} {...rest} />;
+}
+
+export function DogmaAttributeAnchor({
+  attributeId,
+  ...rest
+}: AnchorBaseProps & { attributeId: number }) {
+  return <LinkAnchor href={`/dogma/attribute/${attributeId}`} {...rest} />;
+}
+
+export function DogmaEffectAnchor({
+  effectId,
+  ...rest
+}: AnchorBaseProps & { effectId: number }) {
+  return <LinkAnchor href={`/dogma/effect/${effectId}`} {...rest} />;
+}
+
+export function TypeAnchor({
+  typeId,
+  ...rest
+}: AnchorBaseProps & { typeId: number }) {
+  return <LinkAnchor href={`/type/${typeId}`} {...rest} />;
+}
+
+// No dedicated market-group page exists yet, so this stays inline text rather
+// than linking to a route that would 404.
+export function MarketGroupAnchor({
+  marketGroupId: _marketGroupId,
+  size,
+  c,
+  children,
+}: AnchorBaseProps & { marketGroupId?: number }) {
   return (
     <Text span size={size} c={c}>
       {children}
     </Text>
   );
 }
-export const CategoryAnchor = Passthrough;
-export const GroupAnchor = Passthrough;
-export const MarketGroupAnchor = Passthrough;
-export const RaceAnchor = Passthrough;
-export const FactionAnchor = Passthrough;
-export const DogmaAttributeAnchor = Passthrough;
-export const DogmaEffectAnchor = Passthrough;
-export const TypeAnchor = Passthrough;
 
 // ── value formatters ─────────────────────────────────────────────────────────
 export function ISKAmount({ amount, ...p }: { amount: number } & TextProps) {
