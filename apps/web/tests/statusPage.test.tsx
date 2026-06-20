@@ -57,10 +57,6 @@ jest.mock("../components/Status/EsiStatusDashboard", () => ({
   EsiStatusDashboard: () => <div>ESI Status Dashboard</div>,
 }));
 
-jest.mock("../components/Status/InngestJobsDashboard", () => ({
-  InngestJobsDashboard: () => <div>Inngest Jobs Dashboard</div>,
-}));
-
 jest.mock("../components/Status/TriggerJobsDashboard", () => ({
   TriggerJobsDashboard: () => <div>Trigger Jobs Dashboard</div>,
 }));
@@ -169,7 +165,7 @@ describe("Status Page", () => {
 
     // Dashboards render
     expect(screen.getByText("Rate Limit Dashboard")).toBeInTheDocument();
-    expect(screen.getByText("Inngest Jobs Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Trigger Jobs Dashboard")).toBeInTheDocument();
     expect(screen.getByText("Database Dashboard")).toBeInTheDocument();
   });
 

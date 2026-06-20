@@ -77,8 +77,8 @@ const taskOptions = (job: JobDefinition) => {
   const concurrencyLimit = job.singleton ? 1 : job.concurrencyLimit;
   return {
     ...(concurrencyLimit ? { queue: { concurrencyLimit } } : {}),
-    // Inngest `retries: N` = N retries after the first attempt (N+1 total);
-    // Trigger `maxAttempts` is the total, so add one.
+    // JobDefinition `retries: N` = N retries after the first attempt (N+1
+    // total); Trigger `maxAttempts` is the total, so add one.
     ...(job.retries === undefined
       ? {}
       : { retry: { maxAttempts: job.retries + 1 } }),
@@ -87,7 +87,7 @@ const taskOptions = (job: JobDefinition) => {
   };
 };
 
-// Inngest cron strings may be prefixed `TZ=Area/City`; Trigger wants the
+// Job cron strings may be prefixed `TZ=Area/City`; Trigger wants the
 // pattern plus a separate timezone.
 const toTriggerCron = (
   cron: string,

@@ -38,7 +38,6 @@ import { env } from "~/env";
 import { DatabaseDashboard } from "../../components/Status/DatabaseDashboard";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
 import { EsiStatusDashboard } from "../../components/Status/EsiStatusDashboard";
-import { InngestJobsDashboard } from "../../components/Status/InngestJobsDashboard";
 import { TriggerJobsDashboard } from "../../components/Status/TriggerJobsDashboard";
 
 export interface PageProps {
@@ -299,8 +298,6 @@ export default function StatusPage({
             </Stack>
           </Card>
         </SimpleGrid>
-
-        <InngestJobsDashboard />
 
         <TriggerJobsDashboard />
 
