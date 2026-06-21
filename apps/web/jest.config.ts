@@ -107,6 +107,10 @@ const config: Config = {
     // Load datatable source directly so jest transforms it via SWC.
     "^@jitaspace/datatable$": "<rootDir>/../../packages/datatable/index.ts",
     "^@jitaspace/tiptap-eve$": "<rootDir>/../../packages/tiptap-eve/index.ts",
+    // next/cache builds a Request at load time and throws under jsdom; stub it
+    // so modules using `"use cache"` (reached transitively via the change-history
+    // server actions) can be imported in tests.
+    "^next/cache$": "<rootDir>/__mocks__/next-cache.ts",
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module
