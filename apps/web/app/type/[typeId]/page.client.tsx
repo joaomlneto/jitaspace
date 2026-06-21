@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Anchor,
   Badge,
@@ -69,6 +70,7 @@ import {
   MarketGroupName,
 } from "~/components/Text";
 import { EntityHistory } from "../../history/EntityHistory";
+import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab } from "./tabs";
 
 export interface PageProps {
   typeId: number;
@@ -258,6 +260,11 @@ export default function TypePage({
   typeDescription,
 }: Readonly<PageProps>) {
   const character = useSelectedCharacter();
+  // Deep-link support: `/type/{typeId}/{tab}` redirects here with `?tab=` set,
+  // selecting the initial tab. Unknown values fall back to the default tab.
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab = isTypePageTab(tabParam) ? tabParam : DEFAULT_TYPE_PAGE_TAB;
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();
   const [regionId] = useState(THE_FORGE_REGION_ID);
@@ -610,7 +617,7 @@ export default function TypePage({
           </Group>
         </Paper>
 
-        <Tabs defaultValue="overview" variant="outline" keepMounted={false}>
+        <Tabs defaultValue={initialTab} variant="outline" keepMounted={false}>
           <Tabs.List>
             <Tabs.Tab
               value="overview"

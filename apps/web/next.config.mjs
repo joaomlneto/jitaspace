@@ -154,6 +154,17 @@ const config = {
     },
   ],
 
+  redirects: async () => [
+    {
+      // Deep-link to a specific tab on a type page: /type/<id>/<tab> sends the
+      // browser to the canonical /type/<id>?tab=<tab>, which selects that tab.
+      // Unrecognised tab names are harmless — the page falls back to Overview.
+      source: "/type/:typeId/:tab",
+      destination: "/type/:typeId?tab=:tab",
+      permanent: false,
+    },
+  ],
+
   headers: async () => [
     {
       // Baseline hardening headers — safe to send on every response, including
