@@ -24,7 +24,7 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "kubb:generate": "node scripts/generate-scopes.mjs",
+    "kubb:generate": "tsx scripts/generate-scopes.ts",
     "clean": "rm -rf .turbo node_modules dist",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
@@ -47,6 +47,7 @@
     "jest": "^30.4.2",
     "prettier": "^3.8.3",
     "tsup": "^8.5.1",
+    "tsx": "^4.22.3",
     "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"
