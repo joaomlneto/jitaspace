@@ -76,7 +76,7 @@ apps/
   web/   # Next.js 16 (App Router) — the main product, deployed to Vercel.
   cli/   # Developer CLI utilities
 packages/
-  auth/ auth-utils/          # NextAuth EVE SSO (OAuth2 PKCE + state), token seal/refresh
+  auth/ auth-utils/          # EVE Online SSO (OAuth2 PKCE + state), token seal/refresh
   db/                        # Prisma 7 client + PostgreSQL schema
   kv/                        # Redis client + Bull job queues
   esi-client/ sde-client/    # Kubb-generated EVE API clients (ESI, self-hosted SDE)
@@ -103,7 +103,7 @@ tooling/
 - **Frontend:** Next.js 16 (App Router), React 19, Mantine 8, Zustand
 - **Data fetching:** TanStack React Query 5
 - **DB / cache:** PostgreSQL + Prisma 7; Redis + Bull
-- **Auth:** NextAuth 4 with EVE Online SSO
+- **Auth:** Custom EVE Online SSO OAuth2 flow (authorization code + PKCE)
 - **Background jobs:** Trigger.dev — platform-agnostic logic in `@jitaspace/background-jobs`, run by the `background-jobs-triggerdev` adapter
 - **API codegen:** Kubb 3 (OpenAPI → TypeScript)
 - **Rich text:** Tiptap + EVE HTML extensions
@@ -154,6 +154,6 @@ Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 p
 | Web routes        | `apps/web/app/`                                                                          |
 | DB schema         | `packages/db/prisma/schema.prisma`                                                       |
 | ESI client gen    | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json`                 |
-| Auth              | `packages/auth/src/auth-options.ts`                                                      |
+| Auth              | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)                        |
 | Shared tooling    | `tooling/eslint/src/base.ts`, `tooling/prettier/index.mjs`, `tooling/tsconfig/base.json` |
 | Test config (web) | `apps/web/jest.config.ts`, `apps/web/cypress.config.ts`                                  |

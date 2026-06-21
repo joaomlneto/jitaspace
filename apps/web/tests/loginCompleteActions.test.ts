@@ -16,10 +16,16 @@ jest.mock("@jitaspace/auth", () => ({
   readLoginResult: (...args: unknown[]) => mockReadLoginResult(...args),
 }));
 
+jest.mock("~/env", () => ({
+  env: { NEXTAUTH_SECRET: "test-nextauth-secret" },
+}));
+
 const loadConsume = () =>
-  (require("../app/login/complete/actions") as {
-    consumeLoginResult: () => Promise<unknown>;
-  }).consumeLoginResult;
+  (
+    require("../app/login/complete/actions") as {
+      consumeLoginResult: () => Promise<unknown>;
+    }
+  ).consumeLoginResult;
 
 describe("consumeLoginResult", () => {
   beforeEach(() => {
@@ -49,7 +55,9 @@ describe("consumeLoginResult", () => {
       accessToken: "AT",
       encryptedRefreshToken: "ERT",
     });
-    expect(mockReadLoginResult).toHaveBeenCalledWith("SEALED");
+    expect(mockReadLoginResult).toHaveBeenCalledWith("SEALED", {
+      nextAuthSecret: "test-nextauth-secret",
+    });
   });
 
   it("returns null when the sealed value cannot be unsealed", async () => {

@@ -5,6 +5,8 @@ import { cookies } from "next/headers";
 import type { LoginResult } from "@jitaspace/auth";
 import { getOAuthResultCookieName, readLoginResult } from "@jitaspace/auth";
 
+import { env } from "~/env";
+
 /**
  * Drains the single-use, httpOnly login-result cookie set by the OAuth callback
  * and returns the freshly-minted tokens to the client so they can be added to
@@ -26,7 +28,9 @@ export async function consumeLoginResult(): Promise<LoginResult | null> {
   if (!sealed) return null;
 
   try {
-    return await readLoginResult(sealed);
+    return await readLoginResult(sealed, {
+      nextAuthSecret: env.NEXTAUTH_SECRET,
+    });
   } catch {
     return null;
   }

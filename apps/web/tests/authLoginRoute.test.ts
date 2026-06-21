@@ -1,8 +1,8 @@
 /**
  * @jest-environment node
  */
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 const mockCreateLoginFlow = jest.fn();
 
@@ -13,11 +13,21 @@ jest.mock("@jitaspace/auth", () => ({
   OAUTH_FLOW_MAX_AGE_SECONDS: 900,
 }));
 
+jest.mock("~/env", () => ({
+  env: {
+    EVE_CLIENT_ID: "test-eve-client-id",
+    NEXTAUTH_SECRET: "test-nextauth-secret",
+  },
+}));
+
 // Loaded lazily (after the mock above is registered) — a top-level import
 // would be hoisted above jest.mock and pull in the real module.
 const loadGET = () =>
-  (require("../app/api/auth/login/route") as { GET: (req: NextRequest) => Promise<Response> })
-    .GET;
+  (
+    require("../app/api/auth/login/route") as {
+      GET: (req: NextRequest) => Promise<Response>;
+    }
+  ).GET;
 
 const headers = {
   "x-forwarded-host": "jita.space",
@@ -49,6 +59,8 @@ describe("GET /api/auth/login", () => {
       scopes: ["publicData", "esi-skills.read_skills.v1"],
       redirectUri: "https://jita.space/api/auth/callback/eveonline",
       returnTo: "/skills",
+      eveClientId: "test-eve-client-id",
+      nextAuthSecret: "test-nextauth-secret",
     });
 
     const cookie = res.headers

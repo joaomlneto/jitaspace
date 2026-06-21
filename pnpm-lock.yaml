@@ -501,6 +501,9 @@ importers:
       '@jitaspace/esi-metadata':
         specifier: workspace:*
         version: link:../esi-metadata
+      jose:
+        specifier: ^6.2.3
+        version: 6.2.3
       react:
         specifier: ^19.2.6
         version: 19.2.6

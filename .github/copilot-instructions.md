@@ -4,7 +4,7 @@
 
 Turborepo monorepo for an EVE Online companion web application. Two apps (`apps/web`, `apps/cli`) and 20+ shared packages under `packages/`. The main product is `apps/web`, a Next.js 16 app deployed to Vercel. Background jobs run on Trigger.dev (the `background-jobs-triggerdev` adapter); there is no `apps/worker`.
 
-**Tech stack:** Node.js >=24.15.0 · TypeScript 5.9 · Next.js 16 · React 19 · Mantine 8 · TanStack Query 5 · Prisma 7 + PostgreSQL · NextAuth 4 · Trigger.dev · Turborepo 2 · pnpm 11.3.0
+**Tech stack:** Node.js >=24.15.0 · TypeScript 5.9 · Next.js 16 · React 19 · Mantine 8 · TanStack Query 5 · Prisma 7 + PostgreSQL · EVE Online SSO (OAuth2 + PKCE) · Trigger.dev · Turborepo 2 · pnpm 11.3.0
 
 ---
 
@@ -103,7 +103,7 @@ Two GitHub Actions workflows run on every push:
 | Web app config             | `apps/web/next.config.mjs`, `apps/web/env.ts`                            |
 | DB schema                  | `packages/db/prisma/schema.prisma`                                       |
 | ESI API client generation  | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json` |
-| Auth config                | `packages/auth/src/auth-options.ts`                                      |
+| Auth config                | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)        |
 | Shared ESLint rules        | `tooling/eslint/src/base.ts`                                             |
 | Shared Prettier config     | `tooling/prettier/index.mjs`                                             |
 | Shared TypeScript config   | `tooling/tsconfig/base.json`                                             |

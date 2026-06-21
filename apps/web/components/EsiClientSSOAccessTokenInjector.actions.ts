@@ -2,6 +2,8 @@
 
 import { refreshTokenApiRouteHandler } from "@jitaspace/auth";
 
+import { env } from "~/env";
+
 type RefreshTokenApiResponseBody =
   | { error: string }
   | {
@@ -25,6 +27,11 @@ const refreshCharacterTokenResult = async (
       method: "POST",
       body: refreshTokenData,
     }),
+    {
+      nextAuthSecret: env.NEXTAUTH_SECRET,
+      eveClientId: env.EVE_CLIENT_ID,
+      eveClientSecret: env.EVE_CLIENT_SECRET,
+    },
   );
 
   const body = (await response.json()) as RefreshTokenApiResponseBody;
