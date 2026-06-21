@@ -33,6 +33,13 @@ jest.mock("~/lib/history-actions", () => ({
   getStringChanges: jest.fn(),
 }));
 
+// The index page server-fetches the day-cached index from ~/lib/history-cache;
+// stub it too so importing the page doesn't pull in @jitaspace/db-history.
+jest.mock("~/lib/history-cache", () => ({
+  getCachedHistoryIndex: jest.fn(),
+  getCachedEntityTimeline: jest.fn(),
+}));
+
 // Every `getXByIdQueryOptions(id)` returns a valid query-options object whose
 // queryKey the mocked useQuery resolves to a generic name.
 jest.mock(

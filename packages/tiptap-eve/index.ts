@@ -1,6 +1,6 @@
 "use client";
 
-import type { EditorOptions } from "@tiptap/react";
+import type { Editor, EditorOptions } from "@tiptap/react";
 import type { DependencyList } from "react";
 import HardBreak from "@tiptap/extension-hard-break";
 import { TextStyle } from "@tiptap/extension-text-style";
@@ -36,13 +36,19 @@ export const eveEditorExtensions = [
   EveFontColor,
 ];
 
+// Returns `Editor | null`: with `immediatelyRender: false` (the default below)
+// TipTap creates the editor in a post-mount effect, so it is `null` on the first
+// render. TipTap's own `useEditor` overload only narrows to `Editor | null` for a
+// *literal* `immediatelyRender: false`, but spreading `options` (whose
+// `immediatelyRender` is `boolean`) widens it back to the non-null overload — so
+// we state the nullable contract explicitly, forcing callers to guard `editor?.`.
 export const useEveEditor = (
   options: Partial<EditorOptions> & {
     immediatelyRender?: boolean;
     shouldRerenderOnTransaction?: boolean;
   },
   deps?: DependencyList,
-) => {
+): Editor | null => {
   return useEditor(
     {
       // TipTap 3 auto-detects Next.js and, unless this is set explicitly,

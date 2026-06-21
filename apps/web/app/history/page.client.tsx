@@ -34,6 +34,8 @@ export default function HistoryIndexClient() {
   const [selected, setSelected] = useState<string[] | null>(null);
   const [showUnchanged, setShowUnchanged] = useState(false);
 
+  // The query reads through the day-cached `getCachedHistoryIndex` (via the
+  // server action); staleTime: Infinity dedupes it within a session.
   const { data, isLoading } = useQuery({
     queryKey: ["history-index"],
     queryFn: getHistoryIndex,

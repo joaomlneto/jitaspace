@@ -11,7 +11,8 @@ import type * as HistoryActions from "~/lib/history-actions";
 
 let mockBuilds: { buildNumber: number; releasedAt: Date | null }[] = [];
 let mockCollections: { id: number; name: string }[] = [];
-let mockGrouped: { diffId: number; collectionId: number; _count: number }[] = [];
+let mockGrouped: { diffId: number; collectionId: number; _count: number }[] =
+  [];
 let mockEntities: { kind: string; eveId: number }[] = [];
 let mockDiffs: { id: number; toBuild: number }[] = [];
 let mockChangeRows: {
@@ -39,6 +40,14 @@ jest.mock("@jitaspace/db-history", () => ({
       findMany: () => Promise.resolve([]),
     },
   },
+}));
+
+// getHistoryIndex / getEntityTimeline delegate to "use cache" reads in
+// ~/lib/history-cache, which call cacheLife() — a no-op outside the Next.js
+// cache runtime, so stub it.
+jest.mock("next/cache", () => ({
+  cacheLife: () => undefined,
+  unstable_cacheLife: () => undefined,
 }));
 
 // Lazy-require after jest.mock: next/jest (SWC) does not hoist jest.mock, so a

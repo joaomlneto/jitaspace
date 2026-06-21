@@ -9,6 +9,10 @@ import type {
   ResourceIndex,
   StringChange,
 } from "~/lib/resource-history";
+import {
+  getCachedEntityTimeline,
+  getCachedHistoryIndex,
+} from "~/lib/history-cache";
 
 /**
  * Server functions backing the change-history viewer. Each queries the
@@ -29,67 +33,15 @@ const ymd = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 const opKey = (op: "added" | "modified" | "removed") =>
   op === "modified" ? "changed" : op;
 
-/** The HistoryIndex (SDE collections only; localization strings live elsewhere). */
+/**
+ * The HistoryIndex (SDE collections only; localization strings live elsewhere).
+ *
+ * Delegates to the day-cached {@link getCachedHistoryIndex} so client callers
+ * (React Query `queryFn`) and the `/history` server component share one cache
+ * entry rather than each re-querying the history DB.
+ */
 export async function getHistoryIndex(): Promise<HistoryIndex> {
-  const notStr = { name: { not: { startsWith: "strings:" } } };
-  const [builds, collections, grouped, entities, diffs] = await Promise.all([
-    historyDb.build.findMany({
-      orderBy: { buildNumber: "asc" },
-      select: { buildNumber: true, releasedAt: true },
-    }),
-    historyDb.collection.findMany({
-      where: notStr,
-      select: { id: true, name: true },
-    }),
-    historyDb.change.groupBy({
-      by: ["diffId", "collectionId"],
-      where: { collection: notStr },
-      _count: true,
-    }),
-    historyDb.entity.findMany({
-      where: { kind: { not: { startsWith: "string:" } } },
-      select: { kind: true, eveId: true },
-    }),
-    historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
-  ]);
-
-  const colName = new Map(collections.map((c) => [c.id, c.name]));
-  const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
-  const perBuild = new Map<number, Record<string, number>>();
-  for (const g of grouped) {
-    const name = colName.get(g.collectionId);
-    const toBuild = toBuildOf.get(g.diffId);
-    if (!name || toBuild === undefined) continue;
-    const m = perBuild.get(toBuild) ?? {};
-    // Multiple diffs can target the same build (e.g. connecting an SDE backfill
-    // onto the CDN era), so accumulate across them rather than overwrite — same
-    // diffId→toBuild collapse as getResourceIndex.
-    m[name] = (m[name] ?? 0) + g._count;
-    perBuild.set(toBuild, m);
-  }
-
-  const entityIdsByType: Record<string, number[]> = {};
-  for (const e of entities) (entityIdsByType[e.kind] ??= []).push(e.eveId);
-  for (const arr of Object.values(entityIdsByType)) arr.sort((a, b) => a - b);
-
-  const buildsOut = builds.map((b) => {
-    const byCollection = perBuild.get(b.buildNumber) ?? {};
-    const changeCount = Object.values(byCollection).reduce((a, c) => a + c, 0);
-    return {
-      build: b.buildNumber,
-      date: ymd(b.releasedAt),
-      changeCount,
-      ...(changeCount ? { byCollection } : {}),
-    };
-  });
-
-  return {
-    generatedAt: new Date().toISOString(),
-    collections: collections.map((c) => c.name),
-    entityTypes: Object.keys(entityIdsByType),
-    builds: buildsOut,
-    entityIdsByType,
-  };
+  return getCachedHistoryIndex();
 }
 
 /** Decoded-SDE changes for one build (reconstructed from the history DB). */
@@ -126,56 +78,18 @@ export async function getBuildChanges(
   return { build, date: ymd(b.releasedAt), changes };
 }
 
-/** Timeline for any entity kind ("type", "skin", "skinMaterial", …). */
+/**
+ * Timeline for any entity kind ("type", "skin", "skinMaterial", …).
+ *
+ * Delegates to the day-cached {@link getCachedEntityTimeline} (keyed per
+ * entityType+entityId) so the standalone history pages and the embedded History
+ * tabs share one cache entry per entity rather than re-querying on every view.
+ */
 export async function getEntityTimeline(
   entityType: string,
   entityId: number,
 ): Promise<EntityTimeline | null> {
-  if (!Number.isInteger(entityId)) return null;
-
-  const rows = await historyDb.change.findMany({
-    where: { entity: { kind: entityType, eveId: entityId } },
-    select: {
-      op: true,
-      data: true,
-      diffId: true,
-      collection: { select: { name: true } },
-    },
-    orderBy: { diff: { toBuild: "asc" } },
-  });
-  if (rows.length === 0) return null;
-
-  // Resolve the build axis via lookups instead of the change→diff→to→Build
-  // relation chain. Each hop can dangle while the shared eve-builds DB is
-  // mid-migration (a missing BuildDiff, or a BuildDiff whose toBuild has no
-  // Build row), and traversing a null relation crashed the timeline. A change
-  // whose diff is gone can't be placed on the axis (skip it); a missing Build
-  // row yields a null date.
-  const [diffs, builds] = await Promise.all([
-    historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
-    historyDb.build.findMany({
-      select: { buildNumber: true, releasedAt: true },
-    }),
-  ]);
-  const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
-  const releasedAtOf = new Map(builds.map((b) => [b.buildNumber, b.releasedAt]));
-
-  const events = rows.flatMap((r) => {
-    const build = toBuildOf.get(r.diffId);
-    if (build === undefined) return [];
-    return [
-      {
-        build,
-        date: ymd(releasedAtOf.get(build) ?? null),
-        collection: r.collection.name,
-        v: 1 as const,
-        kind: r.op,
-        ...(r.op === "modified" ? { fields: r.data } : { values: r.data }),
-      },
-    ];
-  }) as EntityTimeline["events"];
-
-  return { entityType, entityId, events };
+  return getCachedEntityTimeline(entityType, entityId);
 }
 
 /** The ResourceIndex — file + localization-string change counts per build. */
