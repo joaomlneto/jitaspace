@@ -10,6 +10,32 @@ import StarterKit from "@tiptap/starter-kit";
 
 import { EveFontColor, EveLink } from "./Extensions";
 
+// The extension set shared by every EVE rich-text editor. Exported so it can be
+// exercised directly (e.g. `new Editor({ extensions: eveEditorExtensions })`)
+// in tests without rendering the React hook — the parse→render round-trip is
+// where bugs like a color-less <font> tag crashing renderHTML hide.
+export const eveEditorExtensions = [
+  // TipTap 3's StarterKit now bundles Link, Underline and HardBreak.
+  // Disable them here so they don't collide with the customized versions
+  // (EveLink, the standalone Underline, and the HardBreak below) we add.
+  StarterKit.configure({
+    link: false,
+    underline: false,
+    hardBreak: false,
+  }),
+  HardBreak.extend({
+    addKeyboardShortcuts() {
+      return {
+        Enter: () => this.editor.commands.setHardBreak(),
+      };
+    },
+  }),
+  TextStyle,
+  Underline,
+  EveLink,
+  EveFontColor,
+];
+
 export const useEveEditor = (
   options: Partial<EditorOptions> & {
     immediatelyRender?: boolean;
@@ -26,27 +52,7 @@ export const useEveEditor = (
       // know to tolerate a `null` editor on the first render. Callers can
       // still override it via `options`.
       immediatelyRender: false,
-      extensions: [
-        // TipTap 3's StarterKit now bundles Link, Underline and HardBreak.
-        // Disable them here so they don't collide with the customized versions
-        // (EveLink, the standalone Underline, and the HardBreak below) we add.
-        StarterKit.configure({
-          link: false,
-          underline: false,
-          hardBreak: false,
-        }),
-        HardBreak.extend({
-          addKeyboardShortcuts() {
-            return {
-              Enter: () => this.editor.commands.setHardBreak(),
-            };
-          },
-        }),
-        TextStyle,
-        Underline,
-        EveLink,
-        EveFontColor,
-      ],
+      extensions: eveEditorExtensions,
       ...options,
     },
     deps,
