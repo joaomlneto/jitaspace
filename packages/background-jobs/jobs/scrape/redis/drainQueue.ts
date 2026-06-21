@@ -7,13 +7,13 @@ import { env } from "../../../env";
  * then return how many were processed.
  *
  * This replaces the old `kv.queues.X.process(cb)` worker pattern, which
- * registers a processor that never returns — it only "worked" on Inngest
- * because the serverless request was killed on timeout. A fresh queue instance
- * is created and closed per run, so this is safe to call repeatedly inside a
- * long-lived worker (e.g. Trigger.dev) without "handler already registered"
- * errors. Producers (the EVE Kill / EVE Ref backfills) still enqueue via the
- * shared lazy `kv` singleton; consumer and producer share the same underlying
- * Redis-backed queue by name.
+ * registers a processor that never returns — it only "worked" under the old
+ * serverless adapter, where the request was killed on timeout. A fresh queue
+ * instance is created and closed per run, so this is safe to call repeatedly
+ * inside a long-lived worker (e.g. Trigger.dev) without "handler already
+ * registered" errors. Producers (the EVE Kill / EVE Ref backfills) still
+ * enqueue via the shared lazy `kv` singleton; consumer and producer share the
+ * same underlying Redis-backed queue by name.
  */
 export async function drainQueue<T>(
   name: string,

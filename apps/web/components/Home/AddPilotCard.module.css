@@ -1,0 +1,53 @@
+.card {
+    height: 100%;
+    width: 100%;
+    min-height: rem(180px);
+    padding: var(--mantine-spacing-lg);
+    border-radius: var(--mantine-radius-xs);
+    border: rem(1px) dashed color-mix(in srgb, var(--mantine-primary-color-filled) 32%, transparent);
+    background: linear-gradient(
+            180deg,
+            rgba(26, 33, 45, 0.25) 0%,
+            rgba(8, 11, 18, 0.35) 100%
+    );
+    transition:
+            transform 160ms ease,
+            border-color 160ms ease,
+            background 160ms ease;
+}
+
+.card:hover,
+.card:focus-visible {
+    transform: translateY(rem(-3px));
+    border-color: color-mix(in srgb, var(--mantine-primary-color-filled) 68%, transparent);
+    background: linear-gradient(
+            180deg,
+            rgba(36, 46, 60, 0.4) 0%,
+            rgba(12, 18, 28, 0.5) 100%
+    );
+}
+
+.plus {
+    width: rem(52px);
+    height: rem(52px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--mantine-primary-color-filled);
+    border: rem(1px) solid color-mix(in srgb, var(--mantine-primary-color-filled) 45%, transparent);
+    box-shadow: 0 0 rem(18px) color-mix(in srgb, var(--mantine-primary-color-filled) 16%, transparent);
+    transition:
+            border-color 160ms ease,
+            box-shadow 160ms ease;
+}
+
+.card:hover .plus,
+.card:focus-visible .plus {
+    border-color: color-mix(in srgb, var(--mantine-primary-color-filled) 75%, transparent);
+    box-shadow: 0 0 rem(24px) color-mix(in srgb, var(--mantine-primary-color-filled) 26%, transparent);
+}
+
+.label {
+    letter-spacing: 0.06em;
+}

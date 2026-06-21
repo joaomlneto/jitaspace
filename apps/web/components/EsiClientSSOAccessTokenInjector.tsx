@@ -11,17 +11,35 @@ type AddCharacter = (params: {
   accessToken: string;
   refreshToken: string;
 }) => Promise<void>;
+type MarkSessionExpired = (characterId: number) => void;
 
 // Extracted to module scope so the effect below stays within the
 // max-nesting limit and the refresh/store/error flow reads top-to-bottom.
 async function refreshCharacterAndStore(
-  refreshToken: string,
+  character: { characterId: number; refreshToken: string },
   addCharacter: AddCharacter,
+  markSessionExpired: MarkSessionExpired,
 ) {
   try {
-    const { accessToken, refreshTokenData } =
-      await refreshCharacterToken(refreshToken);
-    await addCharacter({ accessToken, refreshToken: refreshTokenData });
+    const outcome = await refreshCharacterToken(character.refreshToken);
+    switch (outcome.status) {
+      case "refreshed":
+        await addCharacter({
+          accessToken: outcome.accessToken,
+          refreshToken: outcome.refreshTokenData,
+        });
+        break;
+      case "requires-reauth":
+        // EVE will not renew this refresh token (too old / revoked). Keep the
+        // character but flag its session as expired so the UI can mark it and
+        // prompt re-authentication, instead of silently re-attempting the
+        // doomed refresh on every load.
+        markSessionExpired(character.characterId);
+        break;
+      case "error":
+        console.error(outcome.message);
+        break;
+    }
   } catch (error) {
     console.error(error);
   }
@@ -30,7 +48,8 @@ async function refreshCharacterAndStore(
 export const EsiClientSSOAccessTokenInjector = ({
   children,
 }: PropsWithChildren) => {
-  const { addCharacter, characters } = useAuthStore();
+  const { addCharacter, markCharacterSessionExpired, characters } =
+    useAuthStore();
 
   useEffect(() => {
     void useAuthStore.persist.rehydrate();
@@ -59,15 +78,16 @@ export const EsiClientSSOAccessTokenInjector = ({
           .forEach(
             (character) =>
               void refreshCharacterAndStore(
-                character.refreshToken,
+                character,
                 addCharacter,
+                markCharacterSessionExpired,
               ),
           );
       },
       Math.max(timeUntilExpiration() - 30000, 1000),
     );
     return () => clearTimeout(timer);
-  }, [addCharacter, characters]);
+  }, [addCharacter, markCharacterSessionExpired, characters]);
 
   // TODO: another useEffect for when a token does expire, blocking it from being used to send requests to ESI!!!
 

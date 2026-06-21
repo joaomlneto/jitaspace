@@ -1,6 +1,13 @@
 import { getMarkAttributes, Mark, mergeAttributes } from "@tiptap/core";
 
-export const fromEveColor = (eveColor: string): string => {
+export const fromEveColor = (eveColor: string | null | undefined): string => {
+  // A <font> tag may carry no `color` attribute (e.g. `<font size="14">`
+  // section headers, which are extremely common in EVE descriptions and mail).
+  // TipTap then renders this mark with the attribute's default value of `null`,
+  // so guard against null/undefined/empty before touching `.length`. Without
+  // this, renderHTML throws and crashes the whole MailMessageViewer (e.g. the
+  // Description tab on /type/44992).
+  if (!eveColor) return "";
   if (eveColor.length === 9) {
     // 0x0RRGGBB — single-digit alpha prefix, strip "0x0"
     return `#${eveColor.slice(3)}`;

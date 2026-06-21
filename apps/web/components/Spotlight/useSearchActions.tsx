@@ -32,6 +32,12 @@ export interface SearchActionGroups {
   ungrouped: SpotlightActionData[];
   /** Actions keyed by their group label. */
   groups: Record<string, SpotlightActionData[]>;
+  /**
+   * Whether EVE entity search is reachable, i.e. a signed-in character holds the
+   * `esi-search.search_structures.v1` scope. When false, only the app/tool
+   * actions are available and the UI should surface that limitation.
+   */
+  canSearchEntities: boolean;
 }
 
 /**
@@ -43,7 +49,8 @@ export function useSearchActions(query: string): SearchActionGroups {
   const router = useRouter();
   const [debouncedQuery] = useDebouncedValue(query, 1000);
 
-  const { data: esiSearchData } = useEsiSearch(debouncedQuery);
+  const { data: esiSearchData, canSearchStructures } =
+    useEsiSearch(debouncedQuery);
 
   const entityEntries = useMemo(
     () =>
@@ -144,8 +151,9 @@ export function useSearchActions(query: string): SearchActionGroups {
     const _ungrouped: SpotlightActionData[] = [];
     for (const action of filteredActions) {
       if (action.group) {
-        _groups[action.group] ??= [];
-        _groups[action.group].push(action);
+        const group = _groups[action.group] ?? [];
+        _groups[action.group] = group;
+        group.push(action);
       } else {
         _ungrouped.push(action);
       }
@@ -153,5 +161,10 @@ export function useSearchActions(query: string): SearchActionGroups {
     return { ungrouped: _ungrouped, groups: _groups };
   }, [filteredActions]);
 
-  return { filteredActions, ungrouped, groups };
+  return {
+    filteredActions,
+    ungrouped,
+    groups,
+    canSearchEntities: canSearchStructures,
+  };
 }

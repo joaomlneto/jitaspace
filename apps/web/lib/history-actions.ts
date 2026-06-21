@@ -17,6 +17,10 @@ import type {
  * Client components invoke these (e.g. as React Query `queryFn`s); Next.js
  * keeps the Prisma client and the connection string server-side.
  *
+ * A change/file-change hangs off an immutable {@link BuildDiff} (an ordered
+ * build pair), not a single build — so "changes in build N" is the diff whose
+ * `toBuild` is N, and the build axis is recovered via `diff.toBuild`.
+ *
  * "Not found" resolves to `null` so callers can render an empty state.
  */
 
@@ -28,7 +32,7 @@ const opKey = (op: "added" | "modified" | "removed") =>
 /** The HistoryIndex (SDE collections only; localization strings live elsewhere). */
 export async function getHistoryIndex(): Promise<HistoryIndex> {
   const notStr = { name: { not: { startsWith: "strings:" } } };
-  const [builds, collections, grouped, entities] = await Promise.all([
+  const [builds, collections, grouped, entities, diffs] = await Promise.all([
     historyDb.build.findMany({
       orderBy: { buildNumber: "asc" },
       select: { buildNumber: true, releasedAt: true },
@@ -38,7 +42,7 @@ export async function getHistoryIndex(): Promise<HistoryIndex> {
       select: { id: true, name: true },
     }),
     historyDb.change.groupBy({
-      by: ["buildNumber", "collectionId"],
+      by: ["diffId", "collectionId"],
       where: { collection: notStr },
       _count: true,
     }),
@@ -46,16 +50,22 @@ export async function getHistoryIndex(): Promise<HistoryIndex> {
       where: { kind: { not: { startsWith: "string:" } } },
       select: { kind: true, eveId: true },
     }),
+    historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
   ]);
 
   const colName = new Map(collections.map((c) => [c.id, c.name]));
+  const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
   const perBuild = new Map<number, Record<string, number>>();
   for (const g of grouped) {
     const name = colName.get(g.collectionId);
-    if (!name) continue;
-    const m = perBuild.get(g.buildNumber) ?? {};
-    m[name] = g._count;
-    perBuild.set(g.buildNumber, m);
+    const toBuild = toBuildOf.get(g.diffId);
+    if (!name || toBuild === undefined) continue;
+    const m = perBuild.get(toBuild) ?? {};
+    // Multiple diffs can target the same build (e.g. connecting an SDE backfill
+    // onto the CDN era), so accumulate across them rather than overwrite — same
+    // diffId→toBuild collapse as getResourceIndex.
+    m[name] = (m[name] ?? 0) + g._count;
+    perBuild.set(toBuild, m);
   }
 
   const entityIdsByType: Record<string, number[]> = {};
@@ -93,7 +103,7 @@ export async function getBuildChanges(
 
   const rows = await historyDb.change.findMany({
     where: {
-      buildNumber: build,
+      diff: { toBuild: build },
       collection: { name: { not: { startsWith: "strings:" } } },
     },
     select: {
@@ -128,21 +138,42 @@ export async function getEntityTimeline(
     select: {
       op: true,
       data: true,
-      build: { select: { buildNumber: true, releasedAt: true } },
+      diffId: true,
       collection: { select: { name: true } },
     },
-    orderBy: { build: { buildNumber: "asc" } },
+    orderBy: { diff: { toBuild: "asc" } },
   });
   if (rows.length === 0) return null;
 
-  const events = rows.map((r) => ({
-    build: r.build.buildNumber,
-    date: ymd(r.build.releasedAt),
-    collection: r.collection.name,
-    v: 1 as const,
-    kind: r.op,
-    ...(r.op === "modified" ? { fields: r.data } : { values: r.data }),
-  })) as EntityTimeline["events"];
+  // Resolve the build axis via lookups instead of the change→diff→to→Build
+  // relation chain. Each hop can dangle while the shared eve-builds DB is
+  // mid-migration (a missing BuildDiff, or a BuildDiff whose toBuild has no
+  // Build row), and traversing a null relation crashed the timeline. A change
+  // whose diff is gone can't be placed on the axis (skip it); a missing Build
+  // row yields a null date.
+  const [diffs, builds] = await Promise.all([
+    historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
+    historyDb.build.findMany({
+      select: { buildNumber: true, releasedAt: true },
+    }),
+  ]);
+  const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
+  const releasedAtOf = new Map(builds.map((b) => [b.buildNumber, b.releasedAt]));
+
+  const events = rows.flatMap((r) => {
+    const build = toBuildOf.get(r.diffId);
+    if (build === undefined) return [];
+    return [
+      {
+        build,
+        date: ymd(releasedAtOf.get(build) ?? null),
+        collection: r.collection.name,
+        v: 1 as const,
+        kind: r.op,
+        ...(r.op === "modified" ? { fields: r.data } : { values: r.data }),
+      },
+    ];
+  }) as EntityTimeline["events"];
 
   return { entityType, entityId, events };
 }
@@ -150,20 +181,21 @@ export async function getEntityTimeline(
 /** The ResourceIndex — file + localization-string change counts per build. */
 export async function getResourceIndex(): Promise<ResourceIndex> {
   const strFilter = { name: { startsWith: "strings:" } };
-  const [fileAgg, strColls, strAgg, builds] = await Promise.all([
-    historyDb.fileChange.groupBy({ by: ["buildNumber", "op"], _count: true }),
+  const [fileAgg, strColls, strAgg, builds, diffs] = await Promise.all([
+    historyDb.fileChange.groupBy({ by: ["diffId", "op"], _count: true }),
     historyDb.collection.findMany({
       where: strFilter,
       select: { id: true, name: true },
     }),
     historyDb.change.groupBy({
-      by: ["buildNumber", "collectionId", "op"],
+      by: ["diffId", "collectionId", "op"],
       where: { collection: strFilter },
       _count: true,
     }),
     historyDb.build.findMany({
       select: { buildNumber: true, releasedAt: true },
     }),
+    historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
   ]);
 
   const buildInfo = new Map(builds.map((b) => [b.buildNumber, b]));
@@ -171,6 +203,7 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
     strColls.map((c) => [c.id, c.name.replace("strings:", "")]),
   );
   const languages = strColls.map((c) => c.name.replace("strings:", "")).sort();
+  const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
 
   const perBuild = new Map<
     number,
@@ -184,11 +217,15 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
     }
     return a;
   };
-  for (const g of fileAgg) ensure(g.buildNumber).files[opKey(g.op)] += g._count;
+  for (const g of fileAgg) {
+    const toBuild = toBuildOf.get(g.diffId);
+    if (toBuild !== undefined) ensure(toBuild).files[opKey(g.op)] += g._count;
+  }
   for (const g of strAgg) {
     const lang = langOf.get(g.collectionId);
-    if (!lang) continue;
-    const a = ensure(g.buildNumber);
+    const toBuild = toBuildOf.get(g.diffId);
+    if (!lang || toBuild === undefined) continue;
+    const a = ensure(toBuild);
     (a.strings[lang] ??= { added: 0, changed: 0, removed: 0 })[opKey(g.op)] +=
       g._count;
   }
@@ -212,7 +249,7 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
 /** Per-build raw-file diff (added / changed / removed paths). */
 export async function getFileDiff(build: number): Promise<FileDiff | null> {
   const rows = await historyDb.fileChange.findMany({
-    where: { build: { buildNumber: build } },
+    where: { diff: { toBuild: build } },
     select: { path: true, op: true },
   });
   if (rows.length === 0) return null;
@@ -231,7 +268,7 @@ export async function getStringChanges(
 ): Promise<StringChange[] | null> {
   const rows = await historyDb.change.findMany({
     where: {
-      build: { buildNumber: build },
+      diff: { toBuild: build },
       collection: { name: `strings:${lang}` },
     },
     select: { op: true, data: true, entity: { select: { eveId: true } } },

@@ -2,9 +2,8 @@
  * Types and pure aggregation logic for the Trigger.dev background-jobs status
  * server function (`app/status/actions.ts`) and the status-page dashboard.
  *
- * Unlike Inngest, the Trigger.dev Management API lists runs directly
- * (`GET /api/v1/runs`), so this is a straightforward group-by-task aggregation —
- * no event reconstruction or ULID decoding. It is still deliberately
+ * The Trigger.dev Management API lists runs directly (`GET /api/v1/runs`), so
+ * this is a straightforward group-by-task aggregation. It is deliberately
  * data-driven: only tasks with at least one run inside the window appear, and
  * display names are derived from task ids (which equal the job ids).
  *

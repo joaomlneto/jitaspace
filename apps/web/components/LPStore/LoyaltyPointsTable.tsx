@@ -4,15 +4,11 @@ import { memo, useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
-import {
-  CorporationName,
-  TypeAnchor,
-  TypeName,
-} from "@jitaspace/eve-components";
-import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
+import { TypeAnchor } from "@jitaspace/eve-components";
 import {
   CorporationAnchor,
   CorporationAvatar,
+  EveEntityNameDisplay,
   ISKAmount,
   TypeAvatar,
 } from "@jitaspace/ui";
@@ -33,6 +29,7 @@ import {
   sellIskPerLp,
   sellProfit,
 } from "./pricing";
+import { useAugmentedOffers } from "./useAugmentedOffers";
 
 interface LoyaltyPointsTableProps {
   corporations: {
@@ -91,14 +88,14 @@ function corporationCell(row: AugmentedOffer) {
     <Group>
       <Tooltip
         label={
-          <CorporationName corporationId={row.corporationId} lineClamp={1} />
+          <EveEntityNameDisplay name={row.corporationName} lineClamp={1} />
         }
         color="dark"
       >
         <Group wrap="nowrap">
           <CorporationAvatar corporationId={row.corporationId} size="sm" />
           <CorporationAnchor corporationId={row.corporationId} target="_blank">
-            <CorporationName corporationId={row.corporationId} />
+            <EveEntityNameDisplay name={row.corporationName} />
           </CorporationAnchor>
         </Group>
       </Tooltip>
@@ -116,7 +113,7 @@ function itemCell(row: AugmentedOffer) {
       <TypeAvatar typeId={row.typeId} size="sm" />
       {row.quantity !== 1 && <Text size="sm">{row.quantity}</Text>}
       <TypeAnchor typeId={row.typeId} target="_blank">
-        <TypeName span typeId={row.typeId} size="sm" />
+        <EveEntityNameDisplay span name={row.typeName} size="sm" />
       </TypeAnchor>
     </Group>
   );
@@ -143,12 +140,17 @@ function akCostCell(_row: AugmentedOffer, value: unknown) {
 function requiredItemsCell(row: AugmentedOffer) {
   return (
     <Stack gap="xs">
-      {row.requiredItems.map(({ quantity, typeId }) => (
+      {row.requiredItems.map(({ quantity, typeId, typeName }) => (
         <Group key={typeId} wrap="nowrap" gap="xs">
           <TypeAvatar typeId={typeId} size="sm" />
           {quantity !== 1 && <Text size="sm">{quantity}</Text>}
           <TypeAnchor typeId={typeId} target="_blank">
-            <TypeName span typeId={typeId} size="sm" lineClamp={1} />
+            <EveEntityNameDisplay
+              span
+              name={typeName}
+              size="sm"
+              lineClamp={1}
+            />
           </TypeAnchor>
         </Group>
       ))}
@@ -197,43 +199,11 @@ function makeRequiredItemsPriceColumn(
 
 const LoyaltyPointsTableExperimental = memo(
   ({ corporations, types, offers }: LoyaltyPointsTableProps) => {
-    const sortedCorporations = useMemo(
-      () => [...corporations].sort((a, b) => a.name.localeCompare(b.name)),
-      [corporations],
-    );
-
-    const typeIds = useMemo(() => types.map((type) => type.typeId), [types]);
-
-    const marketStats = useFuzzworkRegionalMarketAggregates(typeIds, 10000002);
-
-    const typeNames = useMemo(() => {
-      const map: Record<number, string> = {};
-      types.forEach((type) => (map[type.typeId] = type.name));
-      return map;
-    }, [types]);
-
-    const corporationNames = useMemo(() => {
-      const map: Record<number, string> = {};
-      corporations.forEach(
-        (corporation) => (map[corporation.corporationId] = corporation.name),
-      );
-      return map;
-    }, [corporations]);
-
-    const augmentedOffers = useMemo<AugmentedOffer[]>(
-      () =>
-        offers.map((offer) => ({
-          ...offer,
-          requiredItems: offer.requiredItems.map((item) => ({
-            ...item,
-            marketStats: marketStats.data?.[item.typeId],
-          })),
-          typeName: typeNames[offer.typeId],
-          corporationName: corporationNames[offer.corporationId],
-          marketStats: marketStats.data?.[offer.typeId],
-        })),
-      [offers, typeNames, corporationNames, marketStats.data],
-    );
+    const { sortedCorporations, augmentedOffers } = useAugmentedOffers({
+      corporations,
+      types,
+      offers,
+    });
 
     const showCorporation = sortedCorporations.length > 1;
     const showAkCost = offers.some((offer) => !!offer.akCost);

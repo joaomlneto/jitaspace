@@ -6,7 +6,7 @@ import { AppShell, Box, rem, useMantineTheme } from "@mantine/core";
 import { useHeadroom } from "@mantine/hooks";
 
 import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
-import { HeaderWithMegaMenus } from "~/layouts/MainLayout/HeaderWithMegaMenus";
+import { HeaderMenu } from "~/layouts/MainLayout/HeaderMenu";
 import { MobileTabBar } from "~/layouts/MainLayout/MobileTabBar";
 
 export function MainLayout({
@@ -32,7 +32,7 @@ export function MainLayout({
       {...otherProps}
     >
       <AppShell.Header>
-        <HeaderWithMegaMenus pinned={pinned} />
+        <HeaderMenu />
       </AppShell.Header>
       <AppShell.Main
         // The header overlaps the status-bar inset in standalone mode (its

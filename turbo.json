@@ -15,9 +15,6 @@
     "EXPO_ROUTER_APP_ROOT",
     "HISTORY_DATABASE_SCHEMA",
     "HISTORY_DATABASE_URL",
-    "INNGEST_ENABLED",
-    "INNGEST_EVENT_KEY",
-    "INNGEST_SIGNING_KEY",
     "LOGTAIL_SOURCE_TOKEN",
     "NEXTAUTH_SECRET",
     "NEXTAUTH_URL",
@@ -40,6 +37,7 @@
     "CI",
     "VERCEL",
     "VERCEL_URL",
+    "TRIGGER_VERSION",
     "npm_lifecycle_event"
   ],
   "tasks": {

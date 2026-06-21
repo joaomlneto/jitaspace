@@ -65,7 +65,7 @@ export const updateWars = defineJob<UpdateActiveWarsEventPayload["data"]>({
       missingWarIds: new Set([...missingWarIds, ...warsToUpdate]),
     });
 
-    for (const warId of warsToUpdate) {
+    for (const [index, warId] of warsToUpdate.entries()) {
       const requestStartedAt = Date.now();
       await getWarsWarId(warId)
         .then(({ data: war }) => ({

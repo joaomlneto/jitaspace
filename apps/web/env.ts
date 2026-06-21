@@ -29,19 +29,6 @@ const server = z.object({
   EVE_CLIENT_ID: z.string(),
   EVE_CLIENT_SECRET: z.string(),
 
-  INNGEST_SIGNING_KEY: z.string().min(1),
-  /**
-   * Whether the Inngest serve route (`/api/inngest`) is live. Inngest has been
-   * superseded by Trigger.dev; defaults off so the same jobs don't run on both
-   * platforms. Set to "true" to re-enable Inngest (rollback).
-   */
-  INNGEST_ENABLED: z.enum(["true", "false"]).optional(),
-  /**
-   * Overrides the Inngest REST API base URL used by the status endpoint
-   * (defaults to https://api.inngest.com in production and the local
-   * `inngest dev` server otherwise).
-   */
-  INNGEST_BASE_URL: z.string().url().optional(),
   /**
    * Trigger.dev secret key (tr_prod_… / tr_dev_…) used by the status
    * dashboard's runs.list calls. Optional: the dashboard degrades to an
@@ -60,6 +47,15 @@ const server = z.object({
  * built with invalid env vars. To expose them to the client, prefix them with `NEXT_PUBLIC_`.
  */
 const client = z.object({
+  /**
+   * Next.js inlines `NODE_ENV` into the client bundle, so it must be part of
+   * the client schema as well. Without it, `env.NODE_ENV` is `undefined` in
+   * Client Components (the client proxy only carries vars from this schema),
+   * which silently breaks `NODE_ENV`-gated UI and causes dev-only SSR/CSR
+   * hydration mismatches.
+   */
+  NODE_ENV: z.enum(["development", "test", "production"]),
+
   NEXT_PUBLIC_UMAMI_WEBSITE_ID:
     process.env.NODE_ENV === "production"
       ? z.string().min(1)
@@ -88,9 +84,6 @@ const processEnv = {
   HISTORY_DATABASE_SCHEMA: process.env.HISTORY_DATABASE_SCHEMA,
   EVE_CLIENT_ID: process.env.EVE_CLIENT_ID,
   EVE_CLIENT_SECRET: process.env.EVE_CLIENT_SECRET,
-  INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
-  INNGEST_ENABLED: process.env.INNGEST_ENABLED,
-  INNGEST_BASE_URL: process.env.INNGEST_BASE_URL,
   TRIGGER_SECRET_KEY: process.env.TRIGGER_SECRET_KEY,
   TRIGGER_API_URL: process.env.TRIGGER_API_URL,
   CRON_SECRET: process.env.CRON_SECRET,

@@ -2,12 +2,6 @@
 
 import type {} from "@mantine/core";
 
-declare module "@mantine/core" {
-  interface MantineThemeOther {
-    appBackground?: string;
-  }
-}
-
 import {
   Avatar,
   Badge,
@@ -22,6 +16,13 @@ import {
 } from "@mantine/core";
 
 import { colors } from "./colors";
+import { eveV2Theme } from "./eve-v2";
+
+declare module "@mantine/core" {
+  interface MantineThemeOther {
+    appBackground?: string;
+  }
+}
 
 const baseTheme = createTheme({
   // Mantine 9 changed the default radius from `sm` (4px) to `md` (8px).
@@ -240,6 +241,7 @@ const eveTheme = mergeThemeOverrides(
 export const themes = {
   default: baseTheme,
   eve: eveTheme,
+  eve_v2: mergeThemeOverrides(baseTheme, eveV2Theme),
   carbon: mergeThemeOverrides(
     eveTheme,
     createTheme({

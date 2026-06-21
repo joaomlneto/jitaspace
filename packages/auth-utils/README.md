@@ -4,7 +4,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/@jitaspace/auth-utils)](https://www.npmjs.com/package/@jitaspace/auth-utils)
 [![license](https://img.shields.io/npm/l/@jitaspace/auth-utils)](./LICENSE)
 
-Framework-agnostic [EVE Online](https://www.eveonline.com) SSO token utilities — exchange authorization codes, refresh access tokens, and decode ESI JWT payloads.
+Framework-agnostic [EVE Online](https://www.eveonline.com) SSO token utilities — exchange authorization codes, refresh and cryptographically verify access tokens, and decode ESI JWT payloads.
 
 ## Installation
 
@@ -24,7 +24,8 @@ Small helpers around the [EVE Online SSO OAuth2 flow](https://docs.esi.evetech.n
 |---|---|
 | `exchangeEveSsoToken` | Exchange an authorization code (with PKCE `code_verifier`) for access/refresh tokens |
 | `refreshEveSsoToken` | Refresh an access token using a refresh token |
-| `getEveSsoAccessTokenPayload` | Decode an EVE SSO access token's JWT payload (typed, including `scp: ESIScope[]`) |
+| `getEveSsoAccessTokenPayload` | Decode an EVE SSO access token's JWT payload (typed, including `scp: ESIScope[]`) — no signature check |
+| `verifyEveSsoAccessToken` | Cryptographically verify an access token against EVE's JWKS (signature + `iss`/`aud`/`exp`); server-only, uses `jose` |
 | `tokenRefreshDataSchema` | Zod schema validating token-refresh response data |
 
 ## Usage
@@ -58,5 +59,6 @@ const refreshed = await refreshEveSsoToken({
 
 ## Dependencies
 
+- [`jose`](https://github.com/panva/jose) — JWKS-based signature verification (dynamically imported; server-only)
 - [`zod`](https://zod.dev) — runtime validation of token-refresh response data
 - [`@jitaspace/esi-metadata`](https://www.npmjs.com/package/@jitaspace/esi-metadata) — the `ESIScope` union type used in the decoded token payload

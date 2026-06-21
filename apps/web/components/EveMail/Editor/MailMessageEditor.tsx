@@ -32,6 +32,11 @@ export function MailMessageEditor({
     },
   });
 
+  // `editor` is null on the first render (TipTap creates it in an effect after
+  // mount; see useEveEditor). Subtract the wrapping <p></p> (7 chars) to get
+  // the real content length; 0 while the editor is still null.
+  const contentLength = (editor?.getHTML().length ?? 7) - 7;
+
   return (
     <Stack>
       <RichTextEditor editor={editor} mih={200} {...otherProps}>
@@ -57,11 +62,8 @@ export function MailMessageEditor({
           </RichTextEditor.ControlsGroup>
 
           <RichTextEditor.ControlsGroup ml="auto">
-            <Text
-              size="sm"
-              color={editor.getHTML().length - 7 >= 8000 ? "red" : "dimmed"}
-            >
-              {editor.getHTML().length - 7}/8000
+            <Text size="sm" color={contentLength >= 8000 ? "red" : "dimmed"}>
+              {contentLength}/8000
             </Text>
           </RichTextEditor.ControlsGroup>
         </RichTextEditor.Toolbar>

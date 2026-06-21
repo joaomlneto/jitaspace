@@ -29,15 +29,21 @@ import { EventContent } from "./_event";
  * Fetches the entity's timeline, renders the collection-filter chips and the
  * per-build timeline. `renderHeader` lets each route supply its own heading
  * (icon, name, links), optionally using the loaded timeline for a label.
+ *
+ * `embedded` renders without the outer page `Container` (and typically without
+ * a header) so the timeline can sit inside a host that already provides one —
+ * e.g. the History tab on the type page.
  */
 export function EntityHistory({
   entityType,
   entityId,
   renderHeader,
+  embedded = false,
 }: Readonly<{
   entityType: string;
   entityId: number;
-  renderHeader: (timeline: EntityTimeline | null) => ReactNode;
+  renderHeader?: (timeline: EntityTimeline | null) => ReactNode;
+  embedded?: boolean;
 }>) {
   const { data, isLoading } = useQuery({
     queryKey: ["history-entity", entityType, entityId],
@@ -49,21 +55,30 @@ export function EntityHistory({
 
   if (isLoading) return <Loader />;
 
-  const header = renderHeader(data ?? null);
+  const header = renderHeader?.(data ?? null) ?? null;
+
+  // When embedded the host supplies the page Container, so render bare to avoid
+  // nesting containers (which would mis-constrain the timeline's width).
+  const wrap = (children: ReactNode) =>
+    embedded ? (
+      children
+    ) : (
+      <Container size="md" py="xl">
+        {children}
+      </Container>
+    );
 
   if (!data || data.events.length === 0) {
-    return (
-      <Container size="md" py="xl">
-        <Stack gap="lg">
-          {header}
-          <Alert color="gray">
-            No recorded changes for this entity across the tracked builds.{" "}
-            <Anchor component={Link} href="/history">
-              Back to history
-            </Anchor>
-          </Alert>
-        </Stack>
-      </Container>
+    return wrap(
+      <Stack gap="lg">
+        {header}
+        <Alert color="gray">
+          No recorded changes for this entity across the tracked builds.{" "}
+          <Anchor component={Link} href="/history">
+            Back to history
+          </Anchor>
+        </Alert>
+      </Stack>,
     );
   }
 
@@ -97,85 +112,83 @@ export function EntityHistory({
     else buildGroups.push({ build: e.build, date: e.date, events: [e] });
   }
 
-  return (
-    <Container size="md" py="xl">
-      <Stack gap="lg">
-        {header}
-        <Group gap="xs">
-          <Badge variant="light">{visibleEvents.length} events</Badge>
-          {seenCollections.length > 1 && (
-            <Chip.Group multiple value={active} onChange={setSelected}>
-              <Group gap={6}>
-                {seenCollections.map((c) => (
-                  <Chip
-                    key={c}
-                    value={c}
-                    size="xs"
-                    color={collectionMeta(c).color}
-                  >
-                    {collectionMeta(c).label}
-                  </Chip>
-                ))}
-              </Group>
-            </Chip.Group>
-          )}
-          <Anchor component={Link} href="/history" size="sm">
-            All history
-          </Anchor>
-        </Group>
+  return wrap(
+    <Stack gap="lg">
+      {header}
+      <Group gap="xs">
+        <Badge variant="light">{visibleEvents.length} events</Badge>
+        {seenCollections.length > 1 && (
+          <Chip.Group multiple value={active} onChange={setSelected}>
+            <Group gap={6}>
+              {seenCollections.map((c) => (
+                <Chip
+                  key={c}
+                  value={c}
+                  size="xs"
+                  color={collectionMeta(c).color}
+                >
+                  {collectionMeta(c).label}
+                </Chip>
+              ))}
+            </Group>
+          </Chip.Group>
+        )}
+        <Anchor component={Link} href="/history" size="sm">
+          All history
+        </Anchor>
+      </Group>
 
-        <Paper withBorder p="lg" radius="md">
-          {buildGroups.length === 0 && (
-            <Text size="sm" c="dimmed">
-              No changes match the selected collections.
-            </Text>
-          )}
-          <Timeline active={buildGroups.length} bulletSize={20} lineWidth={2}>
-            {buildGroups.map((group) => (
-              <Timeline.Item
-                key={group.build}
-                title={
-                  <Group gap="xs">
-                    <Anchor
-                      component={Link}
-                      href={`/history/build/${group.build}`}
-                      fw={500}
-                    >
-                      {group.date ?? `Build ${group.build}`}
-                    </Anchor>
-                    <Text size="xs" c="dimmed">
-                      build {group.build}
-                    </Text>
-                  </Group>
-                }
-              >
-                <Stack gap="sm" mt={2}>
-                  {group.events.map((event) => {
-                    const meta = collectionMeta(event.collection);
-                    return (
-                      <div key={event.collection ?? "types"}>
-                        <Group gap="xs">
-                          <Badge size="sm" variant="dot" color={meta.color}>
-                            {meta.label}
-                          </Badge>
-                          <Badge
-                            size="sm"
-                            variant="light"
-                            color={KIND_COLOR[event.kind]}
-                          >
-                            {event.kind}
-                          </Badge>
-                        </Group>
-                        <EventContent event={event} entityType={entityType} />
-                      </div>
-                    );
-                  })}
-                </Stack>
-              </Timeline.Item>
-            ))}
-          </Timeline>
-        </Paper>
-      </Stack>
-    </Container>
+      <Paper withBorder p="lg" radius="md">
+        {buildGroups.length === 0 && (
+          <Text size="sm" c="dimmed">
+            No changes match the selected collections.
+          </Text>
+        )}
+        <Timeline active={buildGroups.length} bulletSize={20} lineWidth={2}>
+          {buildGroups.map((group) => (
+            <Timeline.Item
+              key={group.build}
+              title={
+                <Group gap="xs">
+                  <Anchor
+                    component={Link}
+                    href={`/history/build/${group.build}`}
+                    fw={500}
+                  >
+                    {group.date ?? `Build ${group.build}`}
+                  </Anchor>
+                  <Text size="xs" c="dimmed">
+                    build {group.build}
+                  </Text>
+                </Group>
+              }
+            >
+              <Stack gap="sm" mt={2}>
+                {group.events.map((event) => {
+                  const meta = collectionMeta(event.collection);
+                  return (
+                    <div key={event.collection ?? "types"}>
+                      <Group gap="xs">
+                        <Badge size="sm" variant="dot" color={meta.color}>
+                          {meta.label}
+                        </Badge>
+                        <Badge
+                          size="sm"
+                          variant="light"
+                          color={KIND_COLOR[event.kind]}
+                        >
+                          {event.kind}
+                        </Badge>
+                      </Group>
+                      <EventContent event={event} entityType={entityType} />
+                    </div>
+                  );
+                })}
+              </Stack>
+            </Timeline.Item>
+          ))}
+        </Timeline>
+      </Paper>
+    </Stack>,
   );
 }

@@ -2,16 +2,8 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import { updateTable } from "../../utils/updateTable";
 
-// updateTable -> compareSets pulls in `inngest` and the zod-validated env.
-// Stub both so the test exercises only the sync/diff orchestration logic.
-jest.mock("inngest", () => ({
-  NonRetriableError: class NonRetriableError extends Error {
-    constructor(message: string) {
-      super(message);
-      this.name = "NonRetriableError";
-    }
-  },
-}));
+// updateTable -> compareSets reads the zod-validated env. Stub it so the test
+// exercises only the sync/diff orchestration logic.
 jest.mock("../../env", () => ({ env: { NODE_ENV: "test" } }));
 
 interface Row {

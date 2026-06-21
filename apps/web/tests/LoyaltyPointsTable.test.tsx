@@ -180,7 +180,7 @@ describe("LoyaltyPointsTable — basic rendering", () => {
     expect(screen.getAllByText("100").length).toBeGreaterThan(0);
   });
 
-  it("renders item type names via TypeName stub", () => {
+  it("renders item and corporation names resolved on the server (no per-row name hooks)", () => {
     wrap(
       React.createElement(LoyaltyPointsTable, {
         corporations,
@@ -188,7 +188,16 @@ describe("LoyaltyPointsTable — basic rendering", () => {
         offers,
       }),
     );
-    expect(screen.getAllByTestId("type-name").length).toBeGreaterThan(0);
+    // Names come straight from the resolved `types` / `corporations` props and
+    // render through EveEntityNameDisplay — not the per-row TypeName /
+    // CorporationName ESI-name hooks that used to fetch them client-side.
+    expect(screen.getAllByText("Item Alpha").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Item Beta").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Corp A").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Corp B").length).toBeGreaterThan(0);
+    // The per-row name components are gone from the table entirely.
+    expect(screen.queryAllByTestId("type-name")).toHaveLength(0);
+    expect(screen.queryAllByTestId("corp-name")).toHaveLength(0);
   });
 
   it("renders required-item type avatars", () => {

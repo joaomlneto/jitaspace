@@ -1,4 +1,5 @@
 import { defineJob } from "../core";
+import { SDE_INGEST_JOB_IDS } from "./scrape";
 
 export interface BootstrapDatabaseEventPayload {
   data: Record<string, never>;
@@ -42,6 +43,16 @@ export const bootstrapDatabase = defineJob<
     await ctx.invoke("scrape-esi-npc-corporations", {});
     await ctx.invoke("scrape-sde-agents", {});
     await ctx.invoke("scrape-esi-loyalty-store-offers", {});
+
+    // Direct SDE-archive ingest pipeline — the full FK-ordered set, shared with
+    // the standalone `ingest-sde-all` job. These jobs coexist with the scrapers
+    // above (the diff machinery only writes the columns each job owns, so SDE
+    // and ESI never clobber each other) and also add the tables the scrapers
+    // don't cover (celestials, blueprints, certificates, skins, metaGroups,
+    // contraband, the planetary / dogma reference tables, etc.).
+    for (const jobId of SDE_INGEST_JOB_IDS) {
+      await ctx.invoke(jobId, {});
+    }
 
     // Fire-and-forget: kick off the full wars backfill without blocking.
     await ctx.send("scrape-esi-wars", { fetchAllPages: true });

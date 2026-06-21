@@ -74,11 +74,9 @@ Copy `.env.example` to `.env` at the repo root. `apps/web/env.ts` validates env 
 ```
 apps/
   web/   # Next.js 16 (App Router) — the main product, deployed to Vercel.
-         # The Inngest adapter + cron routes are co-hosted here (disabled
-         # fallback; the active jobs run on Trigger.dev).
   cli/   # Developer CLI utilities
 packages/
-  auth/ auth-utils/          # NextAuth EVE SSO (OAuth2 PKCE + state), token seal/refresh
+  auth/ auth-utils/          # EVE Online SSO (OAuth2 PKCE + state), token seal/refresh
   db/                        # Prisma 7 client + PostgreSQL schema
   kv/                        # Redis client + Bull job queues
   esi-client/ sde-client/    # Kubb-generated EVE API clients (ESI, self-hosted SDE)
@@ -90,15 +88,13 @@ packages/
   chat/                      # Discord-backed in-app chat
   background-jobs/           # Platform-agnostic EVE-data background job logic (source of truth)
   background-jobs-triggerdev/ # Trigger.dev adapter (active runner) for background-jobs
-  eve-scrape/                # Inngest adapter (legacy/rollback) for background-jobs
   utils/ sde-utils/          # shared utilities
 tooling/
   eslint/ prettier/ tsconfig/  # shared presets (extend these, don't redefine)
 ```
 
 > Note: there is no `apps/worker` — background jobs run on Trigger.dev (the
-> `@jitaspace/background-jobs-triggerdev` adapter); the Inngest adapter stays
-> co-hosted in `apps/web` as a disabled fallback (`INNGEST_ENABLED`).
+> `@jitaspace/background-jobs-triggerdev` adapter).
 
 ## Tech Stack
 
@@ -107,8 +103,8 @@ tooling/
 - **Frontend:** Next.js 16 (App Router), React 19, Mantine 8, Zustand
 - **Data fetching:** TanStack React Query 5
 - **DB / cache:** PostgreSQL + Prisma 7; Redis + Bull
-- **Auth:** NextAuth 4 with EVE Online SSO
-- **Background jobs:** Trigger.dev (active) — platform-agnostic logic in `@jitaspace/background-jobs`, run by the `background-jobs-triggerdev` adapter; Inngest (`eve-scrape`) retained as a disabled fallback (toggle `INNGEST_ENABLED`)
+- **Auth:** Custom EVE Online SSO OAuth2 flow (authorization code + PKCE)
+- **Background jobs:** Trigger.dev — platform-agnostic logic in `@jitaspace/background-jobs`, run by the `background-jobs-triggerdev` adapter
 - **API codegen:** Kubb 3 (OpenAPI → TypeScript)
 - **Rich text:** Tiptap + EVE HTML extensions
 - **Testing:** Jest 30 (unit), Cypress 15 (E2E)
@@ -158,6 +154,6 @@ Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 p
 | Web routes        | `apps/web/app/`                                                                          |
 | DB schema         | `packages/db/prisma/schema.prisma`                                                       |
 | ESI client gen    | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json`                 |
-| Auth              | `packages/auth/src/auth-options.ts`                                                      |
+| Auth              | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)                        |
 | Shared tooling    | `tooling/eslint/src/base.ts`, `tooling/prettier/index.mjs`, `tooling/tsconfig/base.json` |
 | Test config (web) | `apps/web/jest.config.ts`, `apps/web/cypress.config.ts`                                  |

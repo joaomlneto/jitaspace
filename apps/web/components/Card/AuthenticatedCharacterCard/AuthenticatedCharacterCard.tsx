@@ -3,13 +3,15 @@
 import type { CardProps } from "@mantine/core";
 import {
   Burger,
+  Button,
   Card,
   Group,
   Skeleton,
+  Stack,
   Text,
   UnstyledButton,
 } from "@mantine/core";
-import { openContextModal } from "@mantine/modals";
+import { modals, openContextModal } from "@mantine/modals";
 
 import {
   AllianceName,
@@ -17,9 +19,10 @@ import {
   CharacterOnlineIndicator,
   CorporationName,
 } from "@jitaspace/eve-components";
-import { WalletIcon } from "@jitaspace/eve-icons";
+import { RecruitmentIcon, WalletIcon } from "@jitaspace/eve-icons";
 import {
   useAuthenticatedCharacter,
+  useAuthStore,
   useCharacterSkills,
 } from "@jitaspace/hooks";
 import { useCharacterWalletBalance } from "@jitaspace/hooks/src/hooks/character/useCharacterWalletBalance";
@@ -55,9 +58,93 @@ export const AuthenticatedCharacterCard = ({
 
   const { data: skills, hasToken: isAllowedToReadSP } =
     useCharacterSkills(characterId);
+  const removeCharacter = useAuthStore((state) => state.removeCharacter);
 
   if (!character) {
     return "character not found";
+  }
+
+  // When EVE can no longer refresh the token, collapse the card to a red
+  // "session expired" state: just the avatar + name and the re-auth prompt.
+  // The detailed sections are hidden because their data is stale / unfetchable.
+  if (character.sessionExpired) {
+    const characterName = character.accessTokenPayload.name;
+    const confirmRemoveCharacter = () =>
+      modals.openConfirmModal({
+        title: `Remove ${characterName}?`,
+        children: (
+          <Text size="sm">
+            Remove {characterName} from JitaSpace? You can add it back later by
+            signing in again.
+          </Text>
+        ),
+        labels: { confirm: "Remove", cancel: "Cancel" },
+        confirmProps: { color: "red" },
+        onConfirm: () => removeCharacter(characterId),
+      });
+
+    return (
+      <Card
+        withBorder
+        radius="md"
+        padding="md"
+        className={classes.card}
+        {...otherProps}
+        style={{
+          ...otherProps.style,
+          backgroundColor: "var(--mantine-color-red-light)",
+          borderColor: "var(--mantine-color-red-filled)",
+        }}
+      >
+        <Stack gap="sm">
+          <Group wrap="nowrap" align="center">
+            <CharacterAvatar characterId={characterId} size={64} radius="md" />
+            <div>
+              <CharacterName
+                characterId={characterId}
+                fz="lg"
+                fw={500}
+                className={classes.headerName}
+              />
+              <Group wrap="nowrap" gap={6} mt={4}>
+                <RecruitmentIcon width={16} />
+                <Text size="sm" fw={500} c="red">
+                  Session expired
+                </Text>
+              </Group>
+            </div>
+          </Group>
+          <Text size="xs" c="red">
+            EVE can no longer refresh this character. Sign in again to keep
+            using it.
+          </Text>
+          <Group gap="xs">
+            <Button
+              size="xs"
+              color="red"
+              onClick={() =>
+                openContextModal({
+                  modal: "login",
+                  title: "Login",
+                  size: "xl",
+                  innerProps: {},
+                })
+              }
+            >
+              Sign in again
+            </Button>
+            <Button
+              size="xs"
+              color="red"
+              variant="subtle"
+              onClick={confirmRemoveCharacter}
+            >
+              Remove character
+            </Button>
+          </Group>
+        </Stack>
+      </Card>
+    );
   }
 
   return (
