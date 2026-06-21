@@ -22,11 +22,14 @@ import {
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
+import type { HistoryIndex } from "~/lib/history";
 import { collectionMeta, entityTypeMeta } from "~/lib/history";
 import { getHistoryIndex } from "~/lib/history-actions";
 import { HistoryTimelineChart } from "./_timeline-chart";
 
-export default function HistoryIndexClient() {
+export default function HistoryIndexClient({
+  initialData,
+}: Readonly<{ initialData?: HistoryIndex }>) {
   const router = useRouter();
   const [entityId, setEntityId] = useState<number | string>("");
   const [entityType, setEntityType] = useState("type");
@@ -34,9 +37,12 @@ export default function HistoryIndexClient() {
   const [selected, setSelected] = useState<string[] | null>(null);
   const [showUnchanged, setShowUnchanged] = useState(false);
 
+  // `initialData` is the server's day-cached index; with staleTime: Infinity the
+  // query then never refetches. When it's absent (cold DB), the queryFn fetches.
   const { data, isLoading } = useQuery({
     queryKey: ["history-index"],
     queryFn: getHistoryIndex,
+    initialData,
     staleTime: Infinity,
   });
 
