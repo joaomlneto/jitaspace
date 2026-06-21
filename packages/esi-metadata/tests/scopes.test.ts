@@ -1,4 +1,4 @@
-import { scopes, scopeDescriptions } from "../src/scopes";
+import { getScopeDescription, scopeDescriptions, scopes } from "../src/scopes";
 
 const SCOPE_PATTERN = /^esi-[a-z_]+\.[a-z_]+\.v\d+$/;
 
@@ -20,12 +20,9 @@ describe("scopes array", () => {
 });
 
 describe("scopeDescriptions", () => {
-  it("has an entry for every scope in the scopes array", () => {
-    for (const scope of scopes) {
-      // Use `in` operator because toHaveProperty treats dots as path separators
-      expect(scope in scopeDescriptions).toBe(true);
-    }
-  });
+  // scopeDescriptions is a hand-curated overlay, not generated: it may omit
+  // scopes (the generator warns about those — a nag, not a failure). The hard
+  // invariants are that it contains no stale keys and no empty values.
 
   it("all description values are non-empty strings", () => {
     for (const value of Object.values(scopeDescriptions)) {
@@ -34,24 +31,17 @@ describe("scopeDescriptions", () => {
     }
   });
 
-  it("every key in scopeDescriptions is a valid scope", () => {
+  it("every key is a scope the spec still lists (no orphans)", () => {
     const scopeSet = new Set<string>(scopes);
     for (const key of Object.keys(scopeDescriptions)) {
       expect(scopeSet.has(key)).toBe(true);
     }
   });
 
-  it("has at least as many entries as the scopes array", () => {
-    expect(Object.keys(scopeDescriptions).length).toBeGreaterThanOrEqual(
-      scopes.length,
-    );
-  });
-
-  it("covers all scopes (100% description coverage)", () => {
-    const missingScopes = scopes.filter(
-      (scope) => !(scope in scopeDescriptions),
-    );
-    expect(missingScopes).toEqual([]);
+  it("all description keys match the ESI scope naming pattern", () => {
+    for (const key of Object.keys(scopeDescriptions)) {
+      expect(key).toMatch(SCOPE_PATTERN);
+    }
   });
 
   it("contains a known scope description spot-check (esi-wallet.read_character_wallet.v1)", () => {
@@ -69,10 +59,17 @@ describe("scopeDescriptions", () => {
   it("contains a known scope description spot-check (esi-skills.read_skills.v1)", () => {
     expect(scopeDescriptions["esi-skills.read_skills.v1"]).toContain("skills");
   });
+});
 
-  it("all description keys match the ESI scope naming pattern", () => {
-    for (const key of Object.keys(scopeDescriptions)) {
-      expect(key).toMatch(SCOPE_PATTERN);
-    }
+describe("getScopeDescription", () => {
+  it("returns the curated description for a described scope", () => {
+    expect(getScopeDescription("esi-skills.read_skills.v1")).toContain("skills");
+  });
+
+  it("falls back to the scope string for an undescribed scope", () => {
+    // A scope CCP may add before a curated description is written — the
+    // forgiving ESIScope type accepts it, and the lookup degrades gracefully.
+    const futureScope = "esi-some.future_scope.v9";
+    expect(getScopeDescription(futureScope)).toBe(futureScope);
   });
 });

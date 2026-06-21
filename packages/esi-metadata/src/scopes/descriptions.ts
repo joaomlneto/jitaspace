@@ -1,6 +1,9 @@
-import type { ESIScope } from "./scopes";
+import type { ESIScope, KnownESIScope } from "./scopes";
 
-export const scopeDescriptions: Record<ESIScope, string> = {
+// Hand-curated: the ESI OpenAPI spec only echoes the scope name, so real
+// descriptions live here. This is an overlay — scopes may be absent (the
+// generator warns when one is). Keys must be scopes the spec still lists.
+export const scopeDescriptions: Partial<Record<KnownESIScope, string>> = {
   //publicData: "Allows access to public data.",
   "esi-alliances.read_contacts.v1":
     "Allows reading of an alliance's contact list and standings.",
@@ -35,8 +38,6 @@ export const scopeDescriptions: Record<ESIScope, string> = {
   "esi-characters.read_medals.v1": "Allows reading a character's medals",
   "esi-characters.read_notifications.v1":
     "Allows reading a character's pending contact notifications",
-  "esi-characters.read_opportunities.v1":
-    "Allows reading opportunities of a character",
   "esi-characters.read_standings.v1": "Allows reading a character's standings.",
   "esi-characters.read_titles.v1": "Allows reading titles given to a character",
   "esi-characters.write_contacts.v1": "Allows management of contacts",
@@ -130,8 +131,5 @@ export const scopeDescriptions: Record<ESIScope, string> = {
 };
 
 export function getScopeDescription(scope: ESIScope): string {
-  // The generated scope union can lag behind ESI, so a caller-supplied scope may
-  // be absent at runtime even though the mapped type guarantees completeness.
-  const description = scopeDescriptions[scope] as string | undefined;
-  return description ?? "";
+  return scopeDescriptions[scope as KnownESIScope] ?? scope;
 }

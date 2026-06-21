@@ -1,20 +1,7 @@
-import type { ESIScope } from "./scopes";
+// This file is auto-generated from the EVE Online ESI OpenAPI spec.
+// Do not edit by hand — run `pnpm --filter @jitaspace/esi-metadata kubb:generate`.
 
-/**
- * Code to generate this, considering `spec` contains the `swagger.json`:
- *
- * const paths = Object.keys(spec.paths);
- * const scopes = {}
- * for (const pathName of paths) {
- *   scopes[pathName] = {}
- * 	const path = spec.paths[pathName];
- * 	const methods = Object.entries(path)
- *   for (const [methodName, method] of methods) {
- *     scopes[pathName][methodName] = method.security?.flatMap(entry => entry.evesso).filter(x => x) ?? [];
- * 	}
- * }
- * console.log(scopes);
- */
+import type { ESIScope } from "./scopes";
 
 export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/alliances/": { get: [] },
@@ -27,7 +14,6 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   },
   "/alliances/{alliance_id}/corporations/": { get: [] },
   "/alliances/{alliance_id}/icons/": { get: [] },
-  "/characters/affiliation/": { post: [] },
   "/characters/{character_id}/": { get: [] },
   "/characters/{character_id}/agents_research/": {
     get: ["esi-characters.read_agents_research.v1"],
@@ -89,6 +75,12 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
     delete: ["esi-fittings.write_fittings.v1"],
   },
   "/characters/{character_id}/fleet/": { get: ["esi-fleets.read_fleet.v1"] },
+  "/characters/{character_id}/freelance-jobs/": {
+    get: ["esi-characters.read_freelance_jobs.v1"],
+  },
+  "/characters/{character_id}/freelance-jobs/{job_id}/participation/": {
+    get: ["esi-characters.read_freelance_jobs.v1"],
+  },
   "/characters/{character_id}/fw/stats/": {
     get: ["esi-characters.read_fw_stats.v1"],
   },
@@ -111,6 +103,11 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
     get: ["esi-mail.read_mail.v1"],
     post: ["esi-mail.send_mail.v1"],
   },
+  "/characters/{character_id}/mail/{mail_id}/": {
+    delete: ["esi-mail.organize_mail.v1"],
+    get: ["esi-mail.read_mail.v1"],
+    put: ["esi-mail.organize_mail.v1"],
+  },
   "/characters/{character_id}/mail/labels/": {
     get: ["esi-mail.read_mail.v1"],
     post: ["esi-mail.organize_mail.v1"],
@@ -119,11 +116,6 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
     delete: ["esi-mail.organize_mail.v1"],
   },
   "/characters/{character_id}/mail/lists/": { get: ["esi-mail.read_mail.v1"] },
-  "/characters/{character_id}/mail/{mail_id}/": {
-    delete: ["esi-mail.organize_mail.v1"],
-    get: ["esi-mail.read_mail.v1"],
-    put: ["esi-mail.organize_mail.v1"],
-  },
   "/characters/{character_id}/medals/": {
     get: ["esi-characters.read_medals.v1"],
   },
@@ -138,9 +130,6 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   },
   "/characters/{character_id}/online/": {
     get: ["esi-location.read_online.v1"],
-  },
-  "/characters/{character_id}/opportunities/": {
-    get: ["esi-characters.read_opportunities.v1"],
   },
   "/characters/{character_id}/orders/": {
     get: ["esi-markets.read_character_orders.v1"],
@@ -183,9 +172,10 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/characters/{character_id}/wallet/transactions/": {
     get: ["esi-wallet.read_character_wallet.v1"],
   },
+  "/characters/affiliation/": { post: [] },
+  "/contracts/public/{region_id}/": { get: [] },
   "/contracts/public/bids/{contract_id}/": { get: [] },
   "/contracts/public/items/{contract_id}/": { get: [] },
-  "/contracts/public/{region_id}/": { get: [] },
   "/corporation/{corporation_id}/mining/extractions/": {
     get: ["esi-industry.read_corporation_mining.v1"],
   },
@@ -195,7 +185,6 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/corporation/{corporation_id}/mining/observers/{observer_id}/": {
     get: ["esi-industry.read_corporation_mining.v1"],
   },
-  "/corporations/npccorps/": { get: [] },
   "/corporations/{corporation_id}/": { get: [] },
   "/corporations/{corporation_id}/alliancehistory/": { get: [] },
   "/corporations/{corporation_id}/assets/": {
@@ -237,6 +226,12 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/corporations/{corporation_id}/facilities/": {
     get: ["esi-corporations.read_facilities.v1"],
   },
+  "/corporations/{corporation_id}/freelance-jobs/": {
+    get: ["esi-corporations.read_freelance_jobs.v1"],
+  },
+  "/corporations/{corporation_id}/freelance-jobs/{job_id}/participants/": {
+    get: ["esi-corporations.read_freelance_jobs.v1"],
+  },
   "/corporations/{corporation_id}/fw/stats/": {
     get: ["esi-corporations.read_fw_stats.v1"],
   },
@@ -271,6 +266,17 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/corporations/{corporation_id}/orders/history/": {
     get: ["esi-markets.read_corporation_orders.v1"],
   },
+  "/corporations/{corporation_id}/projects/": {
+    get: ["esi-corporations.read_projects.v1"],
+  },
+  "/corporations/{corporation_id}/projects/{project_id}/": {
+    get: ["esi-corporations.read_projects.v1"],
+  },
+  "/corporations/{corporation_id}/projects/{project_id}/contribution/{character_id}/":
+    { get: ["esi-corporations.read_projects.v1"] },
+  "/corporations/{corporation_id}/projects/{project_id}/contributors/": {
+    get: ["esi-corporations.read_projects.v1"],
+  },
   "/corporations/{corporation_id}/roles/": {
     get: ["esi-corporations.read_corporation_membership.v1"],
   },
@@ -304,6 +310,7 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/corporations/{corporation_id}/wallets/{division}/transactions/": {
     get: ["esi-wallet.read_corporation_wallets.v1"],
   },
+  "/corporations/npccorps/": { get: [] },
   "/dogma/attributes/": { get: [] },
   "/dogma/attributes/{attribute_id}/": { get: [] },
   "/dogma/dynamic/items/{type_id}/{item_id}/": { get: [] },
@@ -336,6 +343,8 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/fleets/{fleet_id}/wings/{wing_id}/squads/": {
     post: ["esi-fleets.write_fleet.v1"],
   },
+  "/freelance-jobs/": { get: [] },
+  "/freelance-jobs/{job_id}/": { get: [] },
   "/fw/leaderboards/": { get: [] },
   "/fw/leaderboards/characters/": { get: [] },
   "/fw/leaderboards/corporations/": { get: [] },
@@ -348,20 +357,19 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/insurance/prices/": { get: [] },
   "/killmails/{killmail_id}/{killmail_hash}/": { get: [] },
   "/loyalty/stores/{corporation_id}/offers/": { get: [] },
+  "/markets/{region_id}/history/": { get: [] },
+  "/markets/{region_id}/orders/": { get: [] },
+  "/markets/{region_id}/types/": { get: [] },
   "/markets/groups/": { get: [] },
   "/markets/groups/{market_group_id}/": { get: [] },
   "/markets/prices/": { get: [] },
   "/markets/structures/{structure_id}/": {
     get: ["esi-markets.structure_markets.v1"],
   },
-  "/markets/{region_id}/history/": { get: [] },
-  "/markets/{region_id}/orders/": { get: [] },
-  "/markets/{region_id}/types/": { get: [] },
-  "/opportunities/groups/": { get: [] },
-  "/opportunities/groups/{group_id}/": { get: [] },
-  "/opportunities/tasks/": { get: [] },
-  "/opportunities/tasks/{task_id}/": { get: [] },
-  "/route/{origin}/{destination}/": { get: [] },
+  "/meta/changelog/": { get: [] },
+  "/meta/compatibility-dates/": { get: [] },
+  "/meta/status/": { get: [] },
+  "/route/{origin_system_id}/{destination_system_id}/": { post: [] },
   "/sovereignty/campaigns/": { get: [] },
   "/sovereignty/map/": { get: [] },
   "/sovereignty/structures/": { get: [] },
