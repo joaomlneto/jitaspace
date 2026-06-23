@@ -2,17 +2,15 @@
 
 import { historyDb } from "@jitaspace/db-history";
 
-import type { BuildChanges, EntityTimeline, HistoryIndex } from "~/lib/history";
+import type { BuildChanges, EntityTimeline } from "~/lib/history";
 import type {
   Counts,
   FileDiff,
   ResourceIndex,
   StringChange,
 } from "~/lib/resource-history";
-import {
-  getCachedEntityTimeline,
-  getCachedHistoryIndex,
-} from "~/lib/history-cache";
+import { isBuildInHistoryScope } from "~/lib/history";
+import { getCachedEntityTimeline } from "~/lib/history-cache";
 
 /**
  * Server functions backing the change-history viewer. Each queries the
@@ -34,15 +32,24 @@ const opKey = (op: "added" | "modified" | "removed") =>
   op === "modified" ? "changed" : op;
 
 /**
- * The HistoryIndex (SDE collections only; localization strings live elsewhere).
- *
- * Delegates to the day-cached {@link getCachedHistoryIndex} so client callers
- * (React Query `queryFn`) and the `/history` server component share one cache
- * entry rather than each re-querying the history DB.
+ * Whether a build number is within the change-history scope, per
+ * {@link isBuildInHistoryScope}. Used to gate the build-addressed readers so a
+ * direct request for the pre-2012 baseline (build 80313) resolves to "not found"
+ * rather than serving its baseline snapshot.
  */
-export async function getHistoryIndex(): Promise<HistoryIndex> {
-  return getCachedHistoryIndex();
-}
+const isBuildNumberInScope = async (build: number): Promise<boolean> => {
+  const b = await historyDb.build.findUnique({
+    where: { buildNumber: build },
+    select: { releasedAt: true },
+  });
+  return b !== null && isBuildInHistoryScope(b.releasedAt);
+};
+
+/**
+ * The HistoryIndex is read directly from the day-cached {@link getCachedHistoryIndex}
+ * by the `/history` page's server component (see `app/history/page.tsx`), not
+ * through a server action — so there is no `getHistoryIndex` action here.
+ */
 
 /** Decoded-SDE changes for one build (reconstructed from the history DB). */
 export async function getBuildChanges(
@@ -52,6 +59,8 @@ export async function getBuildChanges(
 
   const b = await historyDb.build.findUnique({ where: { buildNumber: build } });
   if (!b) return null;
+  // Pre-2012 baseline (build 80313) is out of scope — render an empty state.
+  if (!isBuildInHistoryScope(b.releasedAt)) return null;
 
   const rows = await historyDb.change.findMany({
     where: {
@@ -148,6 +157,8 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
   for (const [bid, v] of perBuild) {
     const b = buildInfo.get(bid);
     if (!b) continue;
+    // Skip the pre-2012 baseline (build 80313), as the SDE index does.
+    if (!isBuildInHistoryScope(b.releasedAt)) continue;
     out.push({
       build: b.buildNumber,
       date: ymd(b.releasedAt),
@@ -162,6 +173,8 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
 
 /** Per-build raw-file diff (added / changed / removed paths). */
 export async function getFileDiff(build: number): Promise<FileDiff | null> {
+  if (!(await isBuildNumberInScope(build))) return null;
+
   const rows = await historyDb.fileChange.findMany({
     where: { diff: { toBuild: build } },
     select: { path: true, op: true },
@@ -180,6 +193,8 @@ export async function getStringChanges(
   build: number,
   lang: string,
 ): Promise<StringChange[] | null> {
+  if (!(await isBuildNumberInScope(build))) return null;
+
   const rows = await historyDb.change.findMany({
     where: {
       diff: { toBuild: build },

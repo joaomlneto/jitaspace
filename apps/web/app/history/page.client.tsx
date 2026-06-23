@@ -11,7 +11,6 @@ import {
   Chip,
   Container,
   Group,
-  Loader,
   NumberInput,
   Select,
   Stack,
@@ -20,13 +19,14 @@ import {
   Timeline,
   Title,
 } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
 
+import type { HistoryIndex } from "~/lib/history";
 import { collectionMeta, entityTypeMeta } from "~/lib/history";
-import { getHistoryIndex } from "~/lib/history-actions";
 import { HistoryTimelineChart } from "./_timeline-chart";
 
-export default function HistoryIndexClient() {
+export default function HistoryIndexClient({
+  initialIndex,
+}: Readonly<{ initialIndex: HistoryIndex | null }>) {
   const router = useRouter();
   const [entityId, setEntityId] = useState<number | string>("");
   const [entityType, setEntityType] = useState("type");
@@ -34,17 +34,9 @@ export default function HistoryIndexClient() {
   const [selected, setSelected] = useState<string[] | null>(null);
   const [showUnchanged, setShowUnchanged] = useState(false);
 
-  // The query reads through the day-cached `getCachedHistoryIndex` (via the
-  // server action); staleTime: Infinity dedupes it within a session.
-  const { data, isLoading } = useQuery({
-    queryKey: ["history-index"],
-    queryFn: getHistoryIndex,
-    staleTime: Infinity,
-  });
-
-  if (isLoading) return <Loader />;
-
-  if (!data) {
+  // The index is server-rendered (day-cached) and passed in as a prop; a null
+  // prop means no history exists yet or the read failed.
+  if (!initialIndex) {
     return (
       <Container size="md" py="xl">
         <Title order={2}>Type Change History</Title>
@@ -56,6 +48,7 @@ export default function HistoryIndexClient() {
       </Container>
     );
   }
+  const data = initialIndex;
 
   const collections = data.collections ?? ["types"];
   const active = selected ?? collections;
@@ -64,13 +57,12 @@ export default function HistoryIndexClient() {
   // entity kinds present, biggest population first (types dwarf the rest)
   const entityTypes = [...data.entityTypes].sort(
     (a, b) =>
-      (data.entityIdsByType[b]?.length ?? 0) -
-      (data.entityIdsByType[a]?.length ?? 0),
+      (data.entityCountsByType[b] ?? 0) - (data.entityCountsByType[a] ?? 0),
   );
   const countsLabel = entityTypes
     .map(
       (et) =>
-        `${(data.entityIdsByType[et]?.length ?? 0).toLocaleString()} ${entityTypeMeta(
+        `${(data.entityCountsByType[et] ?? 0).toLocaleString()} ${entityTypeMeta(
           et,
         ).plural.toLowerCase()}`,
     )

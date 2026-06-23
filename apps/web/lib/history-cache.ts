@@ -3,6 +3,7 @@ import { cacheLife } from "next/cache";
 import { historyDb } from "@jitaspace/db-history";
 
 import type { EntityTimeline, HistoryIndex } from "~/lib/history";
+import { isBuildInHistoryScope } from "~/lib/history";
 
 /**
  * Day-cached reads of the change-history data.
@@ -27,26 +28,33 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
   cacheLife("days");
 
   const notStr = { name: { not: { startsWith: "strings:" } } };
-  const [builds, collections, grouped, entities, diffs] = await Promise.all([
-    historyDb.build.findMany({
-      orderBy: { buildNumber: "asc" },
-      select: { buildNumber: true, releasedAt: true },
-    }),
-    historyDb.collection.findMany({
-      where: notStr,
-      select: { id: true, name: true },
-    }),
-    historyDb.change.groupBy({
-      by: ["diffId", "collectionId"],
-      where: { collection: notStr },
-      _count: true,
-    }),
-    historyDb.entity.findMany({
-      where: { kind: { not: { startsWith: "string:" } } },
-      select: { kind: true, eveId: true },
-    }),
-    historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
-  ]);
+  const [builds, collections, grouped, entityGroups, diffs] = await Promise.all(
+    [
+      historyDb.build.findMany({
+        orderBy: { buildNumber: "asc" },
+        select: { buildNumber: true, releasedAt: true },
+      }),
+      historyDb.collection.findMany({
+        where: notStr,
+        select: { id: true, name: true },
+      }),
+      historyDb.change.groupBy({
+        by: ["diffId", "collectionId"],
+        where: { collection: notStr },
+        _count: true,
+      }),
+      // Count entities per kind in the DB rather than fetching every changed
+      // entity's id: the client only needs the population size, and shipping the
+      // full id lists bloated the index payload (re-transferred on every refresh,
+      // since the page fetches it through a server action).
+      historyDb.entity.groupBy({
+        by: ["kind"],
+        where: { kind: { not: { startsWith: "string:" } } },
+        _count: true,
+      }),
+      historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
+    ],
+  );
 
   const colName = new Map(collections.map((c) => [c.id, c.name]));
   const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
@@ -63,27 +71,39 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
     perBuild.set(toBuild, m);
   }
 
-  const entityIdsByType: Record<string, number[]> = {};
-  for (const e of entities) (entityIdsByType[e.kind] ??= []).push(e.eveId);
-  for (const arr of Object.values(entityIdsByType)) arr.sort((a, b) => a - b);
+  // Entity populations (per kind) are intentionally NOT narrowed to the build
+  // scope floor — these drive the index's "entities with recorded changes"
+  // counts and the Kind selector, which describe the whole tracked dataset, not
+  // just the windowed build list. (An entity whose only change is the excluded
+  // baseline build still counts here, but its timeline renders empty.)
+  const entityCountsByType: Record<string, number> = {};
+  for (const g of entityGroups) entityCountsByType[g.kind] = g._count;
 
-  const buildsOut = builds.map((b) => {
-    const byCollection = perBuild.get(b.buildNumber) ?? {};
-    const changeCount = Object.values(byCollection).reduce((a, c) => a + c, 0);
-    return {
-      build: b.buildNumber,
-      date: ymd(b.releasedAt),
-      changeCount,
-      ...(changeCount ? { byCollection } : {}),
-    };
-  });
+  // Drop builds released before the scope floor (build 80313, the pre-2012
+  // baseline). This filters both the index list and the timeline chart, which
+  // reads the same `builds` array.
+  const buildsOut = builds
+    .filter((b) => isBuildInHistoryScope(b.releasedAt))
+    .map((b) => {
+      const byCollection = perBuild.get(b.buildNumber) ?? {};
+      const changeCount = Object.values(byCollection).reduce(
+        (a, c) => a + c,
+        0,
+      );
+      return {
+        build: b.buildNumber,
+        date: ymd(b.releasedAt),
+        changeCount,
+        ...(changeCount ? { byCollection } : {}),
+      };
+    });
 
   return {
     generatedAt: new Date().toISOString(),
     collections: collections.map((c) => c.name),
-    entityTypes: Object.keys(entityIdsByType),
+    entityTypes: Object.keys(entityCountsByType),
     builds: buildsOut,
-    entityIdsByType,
+    entityCountsByType,
   };
 }
 
@@ -136,10 +156,14 @@ export async function getCachedEntityTimeline(
   const events = rows.flatMap((r) => {
     const build = toBuildOf.get(r.diffId);
     if (build === undefined) return [];
+    const releasedAt = releasedAtOf.get(build) ?? null;
+    // Drop events on builds before the scope floor (build 80313, the pre-2012
+    // baseline) so timelines start at a real release, consistent with the index.
+    if (!isBuildInHistoryScope(releasedAt)) return [];
     return [
       {
         build,
-        date: ymd(releasedAtOf.get(build) ?? null),
+        date: ymd(releasedAt),
         collection: r.collection.name,
         v: 1 as const,
         kind: r.op,
@@ -147,6 +171,9 @@ export async function getCachedEntityTimeline(
       },
     ];
   }) as EntityTimeline["events"];
+  // Every recorded change fell on an out-of-scope build ⇒ treat as "not found"
+  // so the page renders its empty state (matching the no-rows case above).
+  if (events.length === 0) return null;
 
   return { entityType, entityId, events };
 }
