@@ -73,6 +73,10 @@ model FileChange {
   op     Op
 
   @@index([diffId])
+  // Covering index for the build-page file-change count (getResourceIndex):
+  // COUNT(*) GROUP BY (diffId, op). `@@index([diffId])` above is now a redundant
+  // prefix. Owned by the upstream ingestion pipeline; mirrored here for parity.
+  @@index([diffId, op])
 }
 
 /// The registry of tracked datasets (≈ resource-server files). Add a row → track more.
@@ -118,4 +122,12 @@ model Change {
   @@index([diffId])
   @@index([entityId])
   @@index([collectionId])
+  // Covering index for the change-count aggregations the `/history` readers run:
+  //   • index page  (getCachedHistoryIndex): COUNT(*) GROUP BY (collectionId, diffId)
+  //   • build pages (getResourceIndex):      COUNT(*) GROUP BY (collectionId, diffId, op)
+  // Without it the first groups the whole Change table via a full scan (~9s); the
+  // index makes both index-only counts. `@@index([collectionId])` above is now a
+  // redundant prefix. Owned by the upstream ingestion pipeline; mirrored here for
+  // parity (this package never pushes the schema).
+  @@index([collectionId, diffId, op])
 }
