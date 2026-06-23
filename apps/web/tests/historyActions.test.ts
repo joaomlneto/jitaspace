@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-// Type-only import: erased at runtime, so it does NOT load the real (Prisma-
-// backed) module; used only to type the lazy require() below.
+// Type-only imports: erased at runtime, so they do NOT load the real (Prisma-
+// backed) modules; used only to type the lazy require()s below.
 import type * as HistoryActions from "~/lib/history-actions";
+import type * as HistoryCache from "~/lib/history-cache";
+// Pure (no Prisma) — safe to import eagerly, unlike the actions module.
+import { HISTORY_MIN_RELEASE_DATE, isBuildInHistoryScope } from "~/lib/history";
 
 // Exercises the query logic in ~/lib/history-actions (the change-history server
 // functions) by stubbing @jitaspace/db-history so the real Prisma client is
@@ -21,19 +24,34 @@ let mockChangeRows: {
   diffId: number;
   collection: { name: string };
 }[] = [];
+// build.findUnique fixture (the build-addressed readers' scope gate); null ⇒
+// "build not found".
+let mockBuildUnique: { buildNumber: number; releasedAt: Date | null } | null =
+  null;
 
 jest.mock("@jitaspace/db-history", () => ({
   historyDb: {
     build: {
       findMany: () => Promise.resolve(mockBuilds),
-      findUnique: () => Promise.resolve(null),
+      findUnique: () => Promise.resolve(mockBuildUnique),
     },
     collection: { findMany: () => Promise.resolve(mockCollections) },
     change: {
       groupBy: () => Promise.resolve(mockGrouped),
       findMany: () => Promise.resolve(mockChangeRows),
     },
-    entity: { findMany: () => Promise.resolve(mockEntities) },
+    entity: {
+      // getCachedHistoryIndex counts entities per kind via groupBy; derive the
+      // grouped shape from the flat mockEntities fixture.
+      groupBy: () => {
+        const counts = new Map<string, number>();
+        for (const e of mockEntities)
+          counts.set(e.kind, (counts.get(e.kind) ?? 0) + 1);
+        return Promise.resolve(
+          [...counts].map(([kind, _count]) => ({ kind, _count })),
+        );
+      },
+    },
     buildDiff: { findMany: () => Promise.resolve(mockDiffs) },
     fileChange: {
       groupBy: () => Promise.resolve([]),
@@ -42,7 +60,7 @@ jest.mock("@jitaspace/db-history", () => ({
   },
 }));
 
-// getHistoryIndex / getEntityTimeline delegate to "use cache" reads in
+// getCachedHistoryIndex / getCachedEntityTimeline are "use cache" reads in
 // ~/lib/history-cache, which call cacheLife() — a no-op outside the Next.js
 // cache runtime, so stub it.
 jest.mock("next/cache", () => ({
@@ -52,10 +70,35 @@ jest.mock("next/cache", () => ({
 
 // Lazy-require after jest.mock: next/jest (SWC) does not hoist jest.mock, so a
 // top-level import would load the real module before the stub is registered.
-const { getHistoryIndex, getEntityTimeline } =
+// The index is read straight from the cache module (no server-action wrapper);
+// the build/entity readers live in history-actions.
+const { getEntityTimeline, getBuildChanges } =
   require("~/lib/history-actions") as typeof HistoryActions;
+const { getCachedHistoryIndex } =
+  require("~/lib/history-cache") as typeof HistoryCache;
 
-describe("getHistoryIndex", () => {
+describe("isBuildInHistoryScope", () => {
+  it("excludes builds released before the floor, includes the floor onward", () => {
+    expect(isBuildInHistoryScope(new Date("2011-05-06"))).toBe(false);
+    expect(isBuildInHistoryScope(new Date("2012-03-13"))).toBe(false);
+    expect(
+      isBuildInHistoryScope(new Date(`${HISTORY_MIN_RELEASE_DATE}T00:00:00Z`)),
+    ).toBe(true);
+    expect(isBuildInHistoryScope(new Date("2024-06-01"))).toBe(true);
+  });
+
+  it("treats an unknown (null) release date as in scope", () => {
+    expect(isBuildInHistoryScope(null)).toBe(true);
+    expect(isBuildInHistoryScope(undefined)).toBe(true);
+  });
+
+  it("accepts date strings, comparing on the YYYY-MM-DD prefix", () => {
+    expect(isBuildInHistoryScope("2011-12-31T23:59:59Z")).toBe(false);
+    expect(isBuildInHistoryScope(HISTORY_MIN_RELEASE_DATE)).toBe(true);
+  });
+});
+
+describe("getCachedHistoryIndex", () => {
   beforeEach(() => {
     mockBuilds = [{ buildNumber: 100, releasedAt: new Date("2025-01-15") }];
     mockCollections = [
@@ -78,7 +121,7 @@ describe("getHistoryIndex", () => {
       { diffId: 10, collectionId: 2, _count: 2 }, // typeDogma via diff 10
     ];
 
-    const index = await getHistoryIndex();
+    const index = await getCachedHistoryIndex();
     const build = index.builds.find((b) => b.build === 100);
 
     // 5 + 3 must be summed, not overwritten to 3.
@@ -94,12 +137,29 @@ describe("getHistoryIndex", () => {
       { diffId: 10, collectionId: 2, _count: 1 },
     ];
 
-    const index = await getHistoryIndex();
+    const index = await getCachedHistoryIndex();
     const build = index.builds.find((b) => b.build === 100);
 
     expect(build?.byCollection).toEqual({ types: 4, typeDogma: 1 });
     expect(build?.changeCount).toBe(5);
-    expect(index.entityIdsByType).toEqual({ type: [587] });
+    expect(index.entityCountsByType).toEqual({ type: 1 });
+  });
+
+  it("excludes the pre-2012 baseline (build 80313) from the build list", async () => {
+    mockBuilds = [
+      { buildNumber: 80313, releasedAt: new Date("2011-05-06") }, // baseline
+      { buildNumber: 600000, releasedAt: new Date(HISTORY_MIN_RELEASE_DATE) }, // on the floor
+      { buildNumber: 700000, releasedAt: new Date("2024-06-01") },
+      { buildNumber: 900000, releasedAt: null }, // undated ⇒ kept
+    ];
+    mockDiffs = [];
+    mockGrouped = [];
+
+    const index = await getCachedHistoryIndex();
+    const builds = index.builds.map((b) => b.build);
+
+    expect(builds).not.toContain(80313);
+    expect(builds).toEqual([600000, 700000, 900000]);
   });
 });
 
@@ -156,5 +216,71 @@ describe("getEntityTimeline", () => {
         fields: { mass: { from: 1000, to: 1100 } },
       },
     ]);
+  });
+
+  it("drops events on the pre-2012 baseline build but keeps in-scope ones", async () => {
+    // diff 10 → build 80313 (pre-floor, e.g. the baseline "added"); diff 11 →
+    // build 700000 (in scope).
+    mockDiffs = [
+      { id: 10, toBuild: 80313 },
+      { id: 11, toBuild: 700000 },
+    ];
+    mockBuilds = [
+      { buildNumber: 80313, releasedAt: new Date("2011-05-06") },
+      { buildNumber: 700000, releasedAt: new Date("2024-06-01") },
+    ];
+    mockChangeRows = [
+      {
+        op: "added",
+        data: { typeName: "Rifter" },
+        diffId: 10,
+        collection: { name: "types" },
+      },
+      {
+        op: "modified",
+        data: { mass: { from: 1000, to: 1100 } },
+        diffId: 11,
+        collection: { name: "types" },
+      },
+    ];
+
+    const timeline = await getEntityTimeline("type", 587);
+
+    expect(timeline?.events).toEqual([
+      {
+        build: 700000,
+        date: "2024-06-01",
+        collection: "types",
+        v: 1,
+        kind: "modified",
+        fields: { mass: { from: 1000, to: 1100 } },
+      },
+    ]);
+  });
+
+  it("returns null when an entity's only changes are on out-of-scope builds", async () => {
+    mockDiffs = [{ id: 10, toBuild: 80313 }];
+    mockBuilds = [{ buildNumber: 80313, releasedAt: new Date("2011-05-06") }];
+    mockChangeRows = [
+      {
+        op: "added",
+        data: { typeName: "Rifter" },
+        diffId: 10,
+        collection: { name: "types" },
+      },
+    ];
+
+    expect(await getEntityTimeline("type", 587)).toBeNull();
+  });
+});
+
+describe("getBuildChanges", () => {
+  it("returns null for the pre-2012 baseline build (80313)", async () => {
+    mockBuildUnique = {
+      buildNumber: 80313,
+      releasedAt: new Date("2011-05-06"),
+    };
+
+    expect(await getBuildChanges(80313)).toBeNull();
   });
 });

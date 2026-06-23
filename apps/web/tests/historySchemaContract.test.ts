@@ -1,6 +1,6 @@
-import { describe, expect, it } from "@jest/globals";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { describe, expect, it } from "@jest/globals";
 
 /**
  * Schema-contract regression test for the change-history reader.
@@ -83,7 +83,11 @@ const scalar = (type: string, optional = false): Field => ({
   optional,
   list: false,
 });
-const relation = (type: string): Field => ({ type, optional: false, list: false });
+const relation = (type: string): Field => ({
+  type,
+  optional: false,
+  list: false,
+});
 
 describe("db-history schema ↔ history-actions reader contract", () => {
   it("exposes exactly the expected models", () => {
@@ -106,7 +110,7 @@ describe("db-history schema ↔ history-actions reader contract", () => {
     ]);
   });
 
-  it("getHistoryIndex dependencies", () => {
+  it("getCachedHistoryIndex dependencies", () => {
     expect(field("Build", "buildNumber")).toEqual(scalar("Int"));
     expect(field("Build", "releasedAt")).toEqual(scalar("DateTime", true));
     expect(field("Collection", "id")).toEqual(scalar("Int"));
@@ -114,8 +118,9 @@ describe("db-history schema ↔ history-actions reader contract", () => {
     expect(field("Change", "diffId")).toEqual(scalar("Int"));
     expect(field("Change", "collectionId")).toEqual(scalar("Int"));
     expect(field("Change", "collection")).toEqual(relation("Collection"));
+    // The index counts entities per kind via groupBy(["kind"]) — it reads
+    // Entity.kind but no longer each Entity.eveId.
     expect(field("Entity", "kind")).toEqual(scalar("String"));
-    expect(field("Entity", "eveId")).toEqual(scalar("Int"));
     expect(field("BuildDiff", "id")).toEqual(scalar("Int"));
     expect(field("BuildDiff", "toBuild")).toEqual(scalar("Int"));
   });

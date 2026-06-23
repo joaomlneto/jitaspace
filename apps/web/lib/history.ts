@@ -49,8 +49,8 @@ export const HistoryIndex = z.object({
       byCollection: z.record(z.string(), z.number()).optional(),
     }),
   ),
-  /** entityIds with at least one event, per entity type, ascending. */
-  entityIdsByType: z.record(z.string(), z.array(z.number())),
+  /** Count of entities with at least one recorded change, per entity type. */
+  entityCountsByType: z.record(z.string(), z.number()),
 });
 export type HistoryIndex = z.infer<typeof HistoryIndex>;
 
@@ -88,6 +88,36 @@ export const EntityTimeline = z.object({
   events: z.array(TimelineEvent),
 });
 export type EntityTimeline = z.infer<typeof EntityTimeline>;
+
+// ── build scope ─────────────────────────────────────────────────────────────
+
+/**
+ * Inclusive release-date floor (UTC `YYYY-MM-DD`) for builds surfaced by the
+ * change-history viewer. Build 80313 — the pre-2012 SDE-backfill baseline — is
+ * dated before this, so it is excluded everywhere: the timeline starts at a real
+ * EVE release rather than the synthetic baseline (whose "every entity added"
+ * snapshot would otherwise dominate the counts and stretch the chart axis).
+ */
+export const HISTORY_MIN_RELEASE_DATE = "2012-03-14";
+
+/**
+ * Whether a build's release date places it within the change-history scope.
+ *
+ * A build released before {@link HISTORY_MIN_RELEASE_DATE} (e.g. build 80313) is
+ * out of scope. A build whose date is unknown (`null`) is treated as in scope —
+ * the floor only ever drops a build we can positively date as too old, so an
+ * undated build is never silently hidden.
+ */
+export function isBuildInHistoryScope(
+  releasedAt: Date | string | null | undefined,
+): boolean {
+  if (releasedAt == null) return true;
+  const ymd =
+    typeof releasedAt === "string"
+      ? releasedAt.slice(0, 10)
+      : releasedAt.toISOString().slice(0, 10);
+  return ymd >= HISTORY_MIN_RELEASE_DATE;
+}
 
 /**
  * Most recent known value of a top-level field across an entity's timeline.

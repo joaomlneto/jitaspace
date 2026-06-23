@@ -25,7 +25,6 @@ jest.mock("@mantine/charts", () => ({
 // Stub the server functions so the Prisma-backed @jitaspace/db-history module is
 // never loaded; they're only passed as queryFn to the (mocked) useQuery anyway.
 jest.mock("~/lib/history-actions", () => ({
-  getHistoryIndex: jest.fn(),
   getBuildChanges: jest.fn(),
   getEntityTimeline: jest.fn(),
   getResourceIndex: jest.fn(),
@@ -33,12 +32,14 @@ jest.mock("~/lib/history-actions", () => ({
   getStringChanges: jest.fn(),
 }));
 
-// The index page server-fetches the day-cached index from ~/lib/history-cache;
-// stub it too so importing the page doesn't pull in @jitaspace/db-history.
+// The index page server-renders the day-cached index from ~/lib/history-cache
+// (via _load-index); stub it and next/server's connection() so importing the page
+// doesn't pull in @jitaspace/db-history or need the Next request runtime.
 jest.mock("~/lib/history-cache", () => ({
   getCachedHistoryIndex: jest.fn(),
   getCachedEntityTimeline: jest.fn(),
 }));
+jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
 
 // Every `getXByIdQueryOptions(id)` returns a valid query-options object whose
 // queryKey the mocked useQuery resolves to a generic name.
@@ -200,7 +201,7 @@ const HISTORY_INDEX = {
   generatedAt: "x",
   collections: ["types", "typeDogma"],
   entityTypes: ["type", "skin"],
-  entityIdsByType: { type: [587], skin: [1] },
+  entityCountsByType: { type: 1, skin: 1 },
   builds: [
     {
       build: 100,
@@ -244,22 +245,18 @@ afterEach(cleanup);
 // ── tests ────────────────────────────────────────────────────────────────────
 
 describe("HistoryIndexClient", () => {
-  it("renders the build timeline + tracking chips", async () => {
+  it("renders the build timeline + tracking chips from the index prop", async () => {
     const { default: HistoryIndexClient } =
       await import("~/app/history/page.client");
-    wrap(<HistoryIndexClient />);
+    wrap(<HistoryIndexClient initialIndex={HISTORY_INDEX} />);
     expect(screen.getByText("Type Change History")).toBeTruthy();
     expect(screen.getByText("Build 100")).toBeTruthy();
   });
 
-  it("shows the loader while pending and an empty state with no data", async () => {
+  it("renders an empty state when the index prop is null", async () => {
     const { default: HistoryIndexClient } =
       await import("~/app/history/page.client");
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: true });
-    const { unmount } = wrap(<HistoryIndexClient />);
-    unmount();
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false });
-    wrap(<HistoryIndexClient />);
+    wrap(<HistoryIndexClient initialIndex={null} />);
     expect(screen.getByText(/No history has been generated/)).toBeTruthy();
   });
 });
