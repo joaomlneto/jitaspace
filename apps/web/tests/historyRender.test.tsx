@@ -259,6 +259,32 @@ describe("HistoryIndexClient", () => {
     wrap(<HistoryIndexClient initialIndex={null} />);
     expect(screen.getByText(/No history has been generated/)).toBeTruthy();
   });
+
+  it("virtualizes the build list — renders only a window, not every build", async () => {
+    const { default: HistoryIndexClient } =
+      await import("~/app/history/page.client");
+    // 80 changed builds; the windowed list should mount only ~one viewport.
+    const builds = Array.from({ length: 80 }, (_, i) => ({
+      build: 1000 + i,
+      date: "2024-01-01",
+      changeCount: 3,
+      byCollection: { types: 3 },
+    }));
+    wrap(
+      <HistoryIndexClient
+        initialIndex={{
+          generatedAt: "x",
+          collections: ["types"],
+          entityTypes: ["type"],
+          entityCountsByType: { type: 1 },
+          builds,
+        }}
+      />,
+    );
+    const rows = screen.getAllByText(/^Build \d+$/);
+    expect(rows.length).toBeGreaterThan(5); // a window did render
+    expect(rows.length).toBeLessThan(40); // but nowhere near all 80
+  });
 });
 
 describe("EntityHistory", () => {
