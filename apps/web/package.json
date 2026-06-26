@@ -82,6 +82,8 @@
     "ngraph.graph": "^20.1.2",
     "ngraph.path": "^1.6.1",
     "p-limit": "^7.3.0",
+    "posthog-js": "^1.395.0",
+    "posthog-node": "^5.38.6",
     "react": "^19.2.6",
     "react-country-flag": "^3.1.0",
     "react-dom": "^19.2.6",

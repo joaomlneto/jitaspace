@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Center, Loader, Stack, Text } from "@mantine/core";
+import posthog from "posthog-js";
 
 import { useAuthStore } from "@jitaspace/hooks";
 
@@ -43,9 +44,19 @@ export default function LoginCompletePage() {
             accessToken: result.accessToken,
             refreshToken: result.encryptedRefreshToken,
           });
+          const characterId = useAuthStore.getState().selectedCharacter;
+          if (characterId) {
+            posthog.identify(String(characterId), {
+              eve_character_id: characterId,
+            });
+          }
+          posthog.capture("user_logged_in", {
+            character_id: characterId,
+          });
         }
         router.replace(returnTo);
-      } catch {
+      } catch (error) {
+        posthog.captureException(error);
         setFailed(true);
       }
     })();

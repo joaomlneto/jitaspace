@@ -17,6 +17,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import posthog from "posthog-js";
 
 import {
   EvemailComposeIcon,
@@ -69,14 +70,15 @@ export default function Page() {
                 <ActionIcon
                   variant="default"
                   size="lg"
-                  onClick={() =>
+                  onClick={() => {
+                    posthog.capture("mail_compose_opened");
                     modals.openContextModal({
                       modal: "composeMail",
                       title: "Compose new message",
                       size: "xl",
                       innerProps: {},
-                    })
-                  }
+                    });
+                  }}
                 >
                   <EvemailComposeIcon
                     alt="Compose new message"
@@ -113,14 +115,15 @@ export default function Page() {
                 <ActionIcon
                   variant="default"
                   size="lg"
-                  onClick={() =>
+                  onClick={() => {
+                    posthog.capture("mail_labels_opened");
                     modals.openContextModal({
                       modal: "manageMailLabels",
                       title: "Manage Labels",
                       size: "md",
                       innerProps: {},
-                    })
-                  }
+                    });
+                  }}
                 >
                   <EveMailTagIcon alt="Labels" width={32} height={32} />
                 </ActionIcon>
@@ -160,7 +163,15 @@ export default function Page() {
           />
         )}
         {hasMoreMessages && (
-          <Button w="100%" onClick={() => loadMoreMessages()}>
+          <Button
+            w="100%"
+            onClick={() => {
+              posthog.capture("mail_load_more", {
+                current_message_count: messages.length,
+              });
+              void loadMoreMessages();
+            }}
+          >
             Load more messages
           </Button>
         )}

@@ -25,6 +25,25 @@ jest.mock("~/env", () => ({
   },
 }));
 
+const mockCapture = jest.fn();
+const mockShutdown = jest.fn(() => Promise.resolve(undefined));
+const mockGetPostHogClient = jest.fn();
+jest.mock("~/lib/posthog-server", () => ({
+  getPostHogClient: () => mockGetPostHogClient(),
+}));
+
+// `after` runs its callback outside a request scope in tests; invoke it inline.
+jest.mock("next/server", () => {
+  const actual = jest.requireActual<Record<string, unknown>>("next/server");
+  return { ...actual, after: (cb: () => unknown) => cb() };
+});
+
+// A JWT whose payload's `sub` encodes the given character id.
+const accessTokenFor = (id: number) =>
+  `header.${Buffer.from(
+    JSON.stringify({ sub: `CHARACTER:EVE:${id}` }),
+  ).toString("base64url")}.signature`;
+
 const loadGET = () =>
   (
     require("../app/api/auth/callback/eveonline/route") as {
@@ -46,6 +65,11 @@ describe("GET /api/auth/callback/eveonline", () => {
   beforeEach(() => {
     mockCompleteLoginFlow.mockReset();
     mockSealLoginResult.mockReset().mockResolvedValue("SEALED-RESULT");
+    mockCapture.mockReset();
+    mockShutdown.mockClear();
+    mockGetPostHogClient
+      .mockReset()
+      .mockReturnValue({ capture: mockCapture, shutdown: mockShutdown });
   });
 
   it("redirects home with auth_error when the provider reports an error", async () => {
@@ -69,6 +93,37 @@ describe("GET /api/auth/callback/eveonline", () => {
       .getSetCookie()
       .find((c) => c.startsWith("__Host-eve.oauth.result="));
     expect(cookie).toContain("__Host-eve.oauth.result=SEALED-RESULT");
+  });
+
+  it("captures login_initiated and flushes via after() for a valid token", async () => {
+    mockCompleteLoginFlow.mockResolvedValue({
+      accessToken: accessTokenFor(90000001),
+      encryptedRefreshToken: "ERT",
+      returnTo: "/",
+    });
+
+    const res = await loadGET()(request("code=the-code&state=the-state"));
+
+    expect(res.status).toBe(307);
+    expect(mockCapture).toHaveBeenCalledWith({
+      distinctId: "90000001",
+      event: "login_initiated",
+      properties: { character_id: 90000001 },
+    });
+    expect(mockShutdown).toHaveBeenCalled();
+  });
+
+  it("does not capture when PostHog is not configured", async () => {
+    mockGetPostHogClient.mockReturnValue(null);
+    mockCompleteLoginFlow.mockResolvedValue({
+      accessToken: accessTokenFor(90000001),
+      encryptedRefreshToken: "ERT",
+      returnTo: "/",
+    });
+
+    await loadGET()(request("code=the-code&state=the-state"));
+
+    expect(mockCapture).not.toHaveBeenCalled();
   });
 
   it("redirects to login_failed when completion throws", async () => {

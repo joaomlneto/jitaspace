@@ -17,6 +17,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconExternalLink, IconShield, IconSword } from "@tabler/icons-react";
+import posthog from "posthog-js";
 import useSWR from "swr";
 
 import {
@@ -204,6 +205,12 @@ export default function Page() {
             <Link
               href={`https://zkillboard.com/kill/${km.killmail_id}`}
               target="_blank"
+              onClick={() =>
+                posthog.capture("killmail_external_link_clicked", {
+                  killmail_id: km.killmail_id,
+                  destination: "zkillboard",
+                })
+              }
             >
               <Button
                 size="xs"
@@ -216,6 +223,12 @@ export default function Page() {
             <Link
               href={`https://eve-kill.com/kill/${km.killmail_id}`}
               target="_blank"
+              onClick={() =>
+                posthog.capture("killmail_external_link_clicked", {
+                  killmail_id: km.killmail_id,
+                  destination: "eve-kill",
+                })
+              }
             >
               <Button
                 size="xs"

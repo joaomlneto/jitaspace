@@ -1,8 +1,10 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { describe, expect, it, jest } from "@jest/globals";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+
+import { captureMock } from "../__mocks__/posthogMocks";
 
 // ---------------------------------------------------------------------------
 // The LP Store index page client is presentational: it takes a list of
@@ -15,8 +17,18 @@ import { render, screen } from "@testing-library/react";
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ children, href }: { children?: React.ReactNode; href?: string }) => (
-    <a href={typeof href === "string" ? href : "#"}>{children}</a>
+  default: ({
+    children,
+    href,
+    onClick,
+  }: {
+    children?: React.ReactNode;
+    href?: string;
+    onClick?: () => void;
+  }) => (
+    <a href={typeof href === "string" ? href : "#"} onClick={onClick}>
+      {children}
+    </a>
   ),
 }));
 
@@ -54,6 +66,21 @@ function renderPage(props: Record<string, unknown> = {}) {
 }
 
 describe("LP Store index page (client)", () => {
+  beforeEach(() => {
+    captureMock.mockClear();
+  });
+
+  it("captures lp_store_corporation_selected when a corporation is clicked", () => {
+    renderPage();
+
+    fireEvent.click(screen.getByText("Caldari Navy").closest("a")!);
+
+    expect(captureMock).toHaveBeenCalledWith("lp_store_corporation_selected", {
+      corporation_id: 1000035,
+      corporation_name: "Caldari Navy",
+    });
+  });
+
   it("renders the title, icon and the show-all-offers link", () => {
     renderPage();
     expect(screen.getByText("LP Store")).toBeInTheDocument();
@@ -70,12 +97,14 @@ describe("LP Store index page (client)", () => {
     expect(screen.getByText("Federation Navy")).toBeInTheDocument();
 
     // href replaces spaces with underscores: "Caldari Navy" -> "Caldari_Navy".
-    expect(
-      screen.getByText("Caldari Navy").closest("a"),
-    ).toHaveAttribute("href", "/lp-store/Caldari_Navy");
-    expect(
-      screen.getByText("Federation Navy").closest("a"),
-    ).toHaveAttribute("href", "/lp-store/Federation_Navy");
+    expect(screen.getByText("Caldari Navy").closest("a")).toHaveAttribute(
+      "href",
+      "/lp-store/Caldari_Navy",
+    );
+    expect(screen.getByText("Federation Navy").closest("a")).toHaveAttribute(
+      "href",
+      "/lp-store/Federation_Navy",
+    );
   });
 
   it("renders with no corporations (empty grid)", () => {

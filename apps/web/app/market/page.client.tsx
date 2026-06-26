@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { Container, Group, Stack, Title } from "@mantine/core";
+import posthog from "posthog-js";
 
 import { TypeName } from "@jitaspace/eve-components";
 import { MarketIcon } from "@jitaspace/eve-icons";
@@ -37,6 +38,12 @@ export default function Page() {
     const match = /^\/market\/(\d+)/.exec(pathname);
     return match ? Number(match[1]) : undefined;
   }, [mounted, pathname]);
+
+  useEffect(() => {
+    if (typeId) {
+      posthog.capture("market_item_viewed", { type_id: typeId });
+    }
+  }, [typeId]);
 
   const { data } = useTypeMarketOrders(typeId);
 
