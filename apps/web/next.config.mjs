@@ -153,8 +153,13 @@ const config = {
       destination: "https://gateway.umami.is/api/send", // Umami event gateway
     },
     {
+      // Must target `cloud.umami.is` (the canonical script host), NOT
+      // `analytics.umami.is` — the latter 301-redirects to `cloud.umami.is`,
+      // and Next.js forwards that redirect to the browser, which then loads a
+      // cross-origin script that `script-src 'self'` rejects (a CSP violation
+      // even though the proxied URL is same-origin). See JITASPACE-3T.
       source: "/analytics/:match*",
-      destination: "https://analytics.umami.is/:match*", // Proxy to Umami script
+      destination: "https://cloud.umami.is/:match*", // Proxy to Umami script
     },
     {
       // Serve a single static shell for every /market/<typeId> URL instead of
