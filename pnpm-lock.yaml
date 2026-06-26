@@ -335,11 +335,11 @@ importers:
         specifier: ^7.3.0
         version: 7.3.0
       posthog-js:
-        specifier: ^1.395.0
-        version: 1.395.0
+        specifier: 1.392.0
+        version: 1.392.0
       posthog-node:
-        specifier: ^5.38.6
-        version: 5.38.6(rxjs@7.8.2)
+        specifier: 5.38.2
+        version: 5.38.2(rxjs@7.8.2)
       react:
         specifier: ^19.2.6
         version: 19.2.6
@@ -4602,8 +4602,8 @@ packages:
   '@polka/url@0.5.0':
     resolution: {integrity: sha512-oZLYFEAzUKyi3SKnXvj32ZCEGH6RDnao7COuCVhDydMS9NrCSVXhM79VaKyP5+Zc33m0QXEd2DN3UkU7OsHcfw==}
 
-  '@posthog/core@1.38.0':
-    resolution: {integrity: sha512-QLrJh0hMVpEJXHNyiJR9YhvIO5tzLDedw4UHdvB+ub4fXHMtHCA8H44qgl11HWR3ajpjxtJ8hs3HyOGVF3Zc1w==}
+  '@posthog/core@1.37.3':
+    resolution: {integrity: sha512-Dvw4CTlRVH4K5ag/B8YIHgG4E27w43MCUsXpn1iKQHIggIMN3Shq9whG4Omm3OvXPF+VikBTmpyMKUjckPxw+g==}
 
   '@posthog/types@1.391.1':
     resolution: {integrity: sha512-ASwd7Nf4pViqdYRYaNRyPYRVKWa1CcHUAUWR0XeQJLGdNnsWACBwe0sSieb/cHnKsRXjRwO/23KIY83lm/Ccpw==}
@@ -10415,11 +10415,11 @@ packages:
     resolution: {integrity: sha512-Jtc2612XINuBjIl/QTWsV5UvE8UHuNblcO3vVADSrKsrc6RqGX6lOW1cEo3CM2v0XG4Nat8nI+YM7/f26VxXLw==}
     engines: {node: '>=12'}
 
-  posthog-js@1.395.0:
-    resolution: {integrity: sha512-5iTb00CGt2eQUUiBQysQiX89RAbCN6wK2sDNzvs9zv0alaY8mJ0ZySrUD3LQ+XyLhgM5pCpacBuUwChqiYDLDw==}
+  posthog-js@1.392.0:
+    resolution: {integrity: sha512-dOZMzav59dRzI4SNmF+ZoRWj6evUVNxTMuHgbQWt+vTJzVl9UvdsUPFBBa13Skcw8eTwXpB54089yaCrEv11Ew==}
 
-  posthog-node@5.38.6:
-    resolution: {integrity: sha512-Sm2mCAa9/lTTYppnKyy0AhQrriq8fOd8B2vwd3EE/9uihyIx9qkJ1xGYbvADxQJlF7HqM1/TIFCKsI0JvF8gjQ==}
+  posthog-node@5.38.2:
+    resolution: {integrity: sha512-eiKpU+vX4hVuHbO/EosvPHsmh2AVIdoVmWss/uUOs1t4b0ViCblw2o8OIFqHxKj3mYRnSOBlX0Dw3wBvcCaYpA==}
     engines: {node: ^20.20.0 || >=22.22.0}
     peerDependencies:
       rxjs: ^7.0.0
@@ -15170,7 +15170,7 @@ snapshots:
 
   '@polka/url@0.5.0': {}
 
-  '@posthog/core@1.38.0':
+  '@posthog/core@1.37.3':
     dependencies:
       '@posthog/types': 1.391.1
 
@@ -21812,9 +21812,9 @@ snapshots:
 
   postgres@3.4.7: {}
 
-  posthog-js@1.395.0:
+  posthog-js@1.392.0:
     dependencies:
-      '@posthog/core': 1.38.0
+      '@posthog/core': 1.37.3
       '@posthog/types': 1.391.1
       core-js: 3.49.0
       dompurify: 3.4.11
@@ -21823,9 +21823,9 @@ snapshots:
       query-selector-shadow-dom: 1.0.1
       web-vitals: 5.3.0
 
-  posthog-node@5.38.6(rxjs@7.8.2):
+  posthog-node@5.38.2(rxjs@7.8.2):
     dependencies:
-      '@posthog/core': 1.38.0
+      '@posthog/core': 1.37.3
     optionalDependencies:
       rxjs: 7.8.2
 
