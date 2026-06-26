@@ -125,8 +125,12 @@ export default function RootLayout({
           strategy="afterInteractive"
           async
           defer
-          // /analytics is a proxy to the umami server - set in next.config.mjs
+          // /analytics is a proxy to the umami server - set in next.config.mjs.
+          // data-host-url routes the event beacon (`<host-url>/api/send`)
+          // back through the same-origin proxy too, so it stays off the CSP
+          // third-party allow-list and survives ad blockers that block umami.is.
           src={"/analytics/script.js"}
+          data-host-url="/analytics"
           data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
           data-domains="www.jita.space"
         ></Script>
