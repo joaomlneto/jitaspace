@@ -142,8 +142,19 @@ const config = {
 
   rewrites: async () => [
     {
+      // Umami's tracker sends events to `<data-host-url>/api/send`, which
+      // defaults to the cloud collection gateway. The layout sets
+      // `data-host-url="/analytics"` so the beacon is same-origin (kept off
+      // `connect-src`'s third-party list and invisible to ad blockers that
+      // block `*.umami.is`); this rewrite forwards it to the gateway. Must
+      // come BEFORE the catch-all below — that one targets the script host,
+      // which does not serve `/api/send`.
+      source: "/analytics/api/send",
+      destination: "https://gateway.umami.is/api/send", // Umami event gateway
+    },
+    {
       source: "/analytics/:match*",
-      destination: "https://analytics.umami.is/:match*", // Proxy to Umami
+      destination: "https://analytics.umami.is/:match*", // Proxy to Umami script
     },
     {
       // Serve a single static shell for every /market/<typeId> URL instead of
