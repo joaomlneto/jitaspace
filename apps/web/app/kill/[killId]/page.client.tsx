@@ -161,6 +161,11 @@ export default function Page() {
   }
 
   const km = killmail.data;
+  const trackExternalLinkClick = (destination: "zkillboard" | "eve-kill") =>
+    posthog.capture("killmail_external_link_clicked", {
+      killmail_id: km.killmail_id,
+      destination,
+    });
   const totalDamage = km.victim.damage_taken;
   const sortedAttackers = [...km.attackers].sort(
     (a, b) => b.damage_done - a.damage_done,
@@ -205,12 +210,7 @@ export default function Page() {
             <Link
               href={`https://zkillboard.com/kill/${km.killmail_id}`}
               target="_blank"
-              onClick={() =>
-                posthog.capture("killmail_external_link_clicked", {
-                  killmail_id: km.killmail_id,
-                  destination: "zkillboard",
-                })
-              }
+              onClick={() => trackExternalLinkClick("zkillboard")}
             >
               <Button
                 size="xs"
@@ -223,12 +223,7 @@ export default function Page() {
             <Link
               href={`https://eve-kill.com/kill/${km.killmail_id}`}
               target="_blank"
-              onClick={() =>
-                posthog.capture("killmail_external_link_clicked", {
-                  killmail_id: km.killmail_id,
-                  destination: "eve-kill",
-                })
-              }
+              onClick={() => trackExternalLinkClick("eve-kill")}
             >
               <Button
                 size="xs"
