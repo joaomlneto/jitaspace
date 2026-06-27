@@ -111,6 +111,10 @@ const config: Config = {
     // so modules using `"use cache"` (reached transitively via the change-history
     // server actions) can be imported in tests.
     "^next/cache$": "<rootDir>/__mocks__/next-cache.ts",
+    // PostHog SDKs — stub so capture/identify are assertable jest.fn()s and no
+    // real analytics client is created during tests.
+    "^posthog-js$": "<rootDir>/__mocks__/posthog-js.ts",
+    "^posthog-node$": "<rootDir>/__mocks__/posthog-node.ts",
   },
 
   // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module

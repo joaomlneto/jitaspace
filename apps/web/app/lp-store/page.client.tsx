@@ -10,6 +10,7 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import posthog from "posthog-js";
 
 import { LPStoreIcon } from "@jitaspace/eve-icons";
 import { CorporationAvatar } from "@jitaspace/ui";
@@ -40,6 +41,12 @@ export default function LPStorePage({
               component={Link}
               href={`/lp-store/${corporation.name.replaceAll(" ", "_")}`}
               key={corporation.corporationId}
+              onClick={() =>
+                posthog.capture("lp_store_corporation_selected", {
+                  corporation_id: corporation.corporationId,
+                  corporation_name: corporation.name,
+                })
+              }
             >
               <Group>
                 <CorporationAvatar

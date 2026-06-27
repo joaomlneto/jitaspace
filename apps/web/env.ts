@@ -68,6 +68,11 @@ const client = z.object({
   NEXT_PUBLIC_DISCORD_INVITE_LINK: z.string().url(),
   NEXT_PUBLIC_MODIFIED_DATE: z.string().optional(),
   NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
+
+  // Optional: when unset, PostHog analytics is simply not initialized. This
+  // keeps local dev and preview deploys working without a PostHog project.
+  NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: z.string().min(1).optional(),
+  NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
 });
 
 /**
@@ -93,6 +98,9 @@ const processEnv = {
   NEXT_PUBLIC_DISCORD_INVITE_LINK: process.env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
   NEXT_PUBLIC_MODIFIED_DATE: process.env.NEXT_PUBLIC_MODIFIED_DATE,
   NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+  NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN:
+    process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN,
+  NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
 };
 
 // Don't touch the part below

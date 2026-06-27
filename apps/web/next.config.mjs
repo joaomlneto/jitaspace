@@ -81,7 +81,7 @@ const contentSecurityPolicy = [
   // and so needs connect-src in addition to img-src. Then Google Analytics
   // (incl. regional `*.google-analytics.com` collectors) and the same-origin
   // Sentry/Umami proxies.
-  "connect-src 'self' https://esi.evetech.net https://sde.jita.space https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com /monitoring /analytics",
+  "connect-src 'self' https://esi.evetech.net https://sde.jita.space https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com /monitoring /analytics /ingest",
   "frame-ancestors 'none'",
   // Sentry Security (CSP) endpoint derived from the browser DSN — see the note
   // above on why this is NOT the `/monitoring` tunnel. TODO: `report-uri` is
@@ -162,6 +162,18 @@ const config = {
       destination: "https://cloud.umami.is/:match*", // Proxy to Umami script
     },
     {
+      source: "/ingest/static/:path*",
+      destination: "https://eu-assets.i.posthog.com/static/:path*",
+    },
+    {
+      source: "/ingest/array/:path*",
+      destination: "https://eu-assets.i.posthog.com/array/:path*",
+    },
+    {
+      source: "/ingest/:path*",
+      destination: "https://eu.i.posthog.com/:path*",
+    },
+    {
       // Serve a single static shell for every /market/<typeId> URL instead of
       // rendering (and ISR-caching) one page per type id. The browser keeps the
       // pretty /market/<typeId> URL; the client reads the id from the path.
@@ -169,6 +181,7 @@ const config = {
       destination: "/market",
     },
   ],
+  skipTrailingSlashRedirect: true,
 
   redirects: async () => [
     {

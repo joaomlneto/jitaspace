@@ -25,6 +25,7 @@ allowBuilds:
   '@swc/core': true
   '@vercel/speed-insights': true
   aws-sdk: true
+  core-js: false
   core-js-pure: true
   cypress: true
   es5-ext: true

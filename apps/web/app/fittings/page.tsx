@@ -10,6 +10,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
+import posthog from "posthog-js";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
 import { EveEntitySelect } from "@jitaspace/eve-components";
@@ -66,6 +67,9 @@ export default function Page() {
           {character && hasScopesForCurrentFit ? (
             <UnstyledButton
               onClick={() => {
+                posthog.capture("current_ship_fitting_viewed", {
+                  character_id: character.characterId,
+                });
                 openContextModal({
                   modal: "currentShipFitting",
                   withCloseButton: false,
@@ -109,6 +113,11 @@ export default function Page() {
               <UnstyledButton
                 key={fit.fitting_id}
                 onClick={() => {
+                  posthog.capture("fitting_viewed", {
+                    fitting_id: fit.fitting_id,
+                    ship_type_id: fit.ship_type_id,
+                    fitting_name: fit.name,
+                  });
                   openContextModal({
                     modal: "fitting",
                     withCloseButton: false,

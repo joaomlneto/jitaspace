@@ -2,7 +2,9 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+
+import { captureMock } from "../__mocks__/posthogMocks";
 
 // ---------------------------------------------------------------------------
 // next/navigation — the page reads params.killId and searchParams.get("hash").
@@ -12,7 +14,9 @@ let mockHash: string | null = null;
 
 jest.mock("next/navigation", () => ({
   useParams: () => ({ killId: mockKillId }),
-  useSearchParams: () => ({ get: (key: string) => (key === "hash" ? mockHash : null) }),
+  useSearchParams: () => ({
+    get: (key: string) => (key === "hash" ? mockHash : null),
+  }),
   useRouter: () => ({ push: jest.fn() }),
   usePathname: () => "/",
 }));
@@ -173,6 +177,23 @@ describe("Kill page (client)", () => {
     expect(screen.getByText("Items")).toBeInTheDocument();
     expect(screen.getByText("Dropped (1)")).toBeInTheDocument();
     expect(screen.getByText("Destroyed (1)")).toBeInTheDocument();
+  });
+
+  it("captures killmail_external_link_clicked for the zKillboard and EVE-Kill links", () => {
+    captureMock.mockClear();
+    renderPage();
+
+    fireEvent.click(screen.getByText("zKillboard").closest("a")!);
+    expect(captureMock).toHaveBeenCalledWith("killmail_external_link_clicked", {
+      killmail_id: 123,
+      destination: "zkillboard",
+    });
+
+    fireEvent.click(screen.getByText("EVE-Kill").closest("a")!);
+    expect(captureMock).toHaveBeenCalledWith("killmail_external_link_clicked", {
+      killmail_id: 123,
+      destination: "eve-kill",
+    });
   });
 
   it("renders a loading state while zKillboard is still fetching", () => {

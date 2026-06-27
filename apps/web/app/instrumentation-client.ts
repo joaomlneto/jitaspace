@@ -1,4 +1,22 @@
 import { initBotId } from "botid/client/core";
+import posthog from "posthog-js";
+
+import { env } from "~/env";
+
+// Only initialize PostHog when a project token is configured. Without this
+// guard, posthog-js logs warnings on every page load in local dev / preview
+// deploys that have no PostHog project.
+if (env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN) {
+  posthog.init(env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, {
+    api_host: "/ingest",
+    ui_host: "https://eu.posthog.com",
+    // Newest defaults bundle supported by the pinned posthog-js — appropriate
+    // for a fresh integration with no legacy behaviour to preserve.
+    defaults: "2026-05-30",
+    capture_exceptions: true,
+    debug: env.NODE_ENV === "development",
+  });
+}
 
 // Define the paths that need bot protection.
 // These are paths that are routed to by your app.
