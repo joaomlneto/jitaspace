@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
     if (posthog) {
       posthog.capture({
         distinctId: String(characterId),
-        event: "login_initiated",
+        event: "login_callback_succeeded",
         properties: { character_id: characterId },
       });
       // Flush after the redirect is sent so analytics never blocks the login

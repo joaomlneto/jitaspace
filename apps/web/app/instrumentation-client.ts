@@ -10,7 +10,9 @@ if (env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN) {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, {
     api_host: "/ingest",
     ui_host: "https://eu.posthog.com",
-    defaults: "2026-01-30",
+    // Newest defaults bundle supported by the pinned posthog-js — appropriate
+    // for a fresh integration with no legacy behaviour to preserve.
+    defaults: "2026-05-30",
     capture_exceptions: true,
     debug: env.NODE_ENV === "development",
   });

@@ -95,7 +95,7 @@ describe("GET /api/auth/callback/eveonline", () => {
     expect(cookie).toContain("__Host-eve.oauth.result=SEALED-RESULT");
   });
 
-  it("captures login_initiated and flushes via after() for a valid token", async () => {
+  it("captures login_callback_succeeded and flushes via after() for a valid token", async () => {
     mockCompleteLoginFlow.mockResolvedValue({
       accessToken: accessTokenFor(90000001),
       encryptedRefreshToken: "ERT",
@@ -107,7 +107,7 @@ describe("GET /api/auth/callback/eveonline", () => {
     expect(res.status).toBe(307);
     expect(mockCapture).toHaveBeenCalledWith({
       distinctId: "90000001",
-      event: "login_initiated",
+      event: "login_callback_succeeded",
       properties: { character_id: 90000001 },
     });
     expect(mockShutdown).toHaveBeenCalled();

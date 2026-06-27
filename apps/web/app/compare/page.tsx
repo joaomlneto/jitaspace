@@ -26,7 +26,7 @@ export default function Page() {
             const newIds = values.map(Number);
             setTypeIds(newIds);
             if (newIds.length > typeIds.length) {
-              posthog.capture("compare_items_searched", {
+              posthog.capture("compare_items_added", {
                 type_ids: newIds,
                 item_count: newIds.length,
               });

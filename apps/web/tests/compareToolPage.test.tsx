@@ -50,7 +50,7 @@ describe("Compare tool page", () => {
     captureMock.mockClear();
   });
 
-  it("captures compare_items_searched only when items are added", () => {
+  it("captures compare_items_added only when items are added", () => {
     renderPage();
     expect(screen.getByTestId("compare-icon")).toBeInTheDocument();
 
@@ -59,7 +59,7 @@ describe("Compare tool page", () => {
     expect(screen.getByTestId("compare-table")).toHaveTextContent(
       "types:34,35",
     );
-    expect(captureMock).toHaveBeenCalledWith("compare_items_searched", {
+    expect(captureMock).toHaveBeenCalledWith("compare_items_added", {
       type_ids: [34, 35],
       item_count: 2,
     });

@@ -46,13 +46,13 @@ export default function LoginCompletePage() {
           });
           const characterId = useAuthStore.getState().selectedCharacter;
           if (characterId) {
+            // Identify BEFORE capturing so the completion event is attributed to
+            // the character (and merges the anonymous login_initiated event).
             posthog.identify(String(characterId), {
               eve_character_id: characterId,
             });
+            posthog.capture("user_logged_in", { character_id: characterId });
           }
-          posthog.capture("user_logged_in", {
-            character_id: characterId,
-          });
         }
         router.replace(returnTo);
       } catch (error) {
