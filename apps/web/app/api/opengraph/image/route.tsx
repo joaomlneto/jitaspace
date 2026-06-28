@@ -3,13 +3,11 @@ import { ImageResponse } from "@vercel/og";
 
 /* eslint-disable @next/next/no-img-element */
 
-// `@vercel/og`'s `ImageResponse` is designed for the Edge runtime. Pinning the
-// route to `edge` avoids the Node serverless bundle missing the native
-// `@vercel/og` module on Vercel (which produced a runtime
-// "Cannot find module .../@vercel/og/index.node.js" 500). The handler only uses
-// `URL` + `ImageResponse` — no Node-only APIs — so it is edge-safe.
-export const runtime = "edge";
-
+// NOTE: this route runs on the default Node runtime (the `edge` runtime is not
+// compatible with `cacheComponents` in next.config.mjs). To stop Vercel's
+// serverless bundler from tree-shaking away `@vercel/og`'s native module — which
+// produced a runtime "Cannot find module .../@vercel/og/index.node.js" 500 — the
+// module is force-included via `outputFileTracingIncludes` in next.config.mjs.
 export function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
