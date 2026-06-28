@@ -62,12 +62,12 @@ const contentSecurityPolicy = [
   // 'none'` shuts off legacy plugin embedding vectors.
   "base-uri 'self'",
   "object-src 'none'",
-  "img-src 'self' https://images.evetech.net https://web.ccpgamescdn.com https://iec.jita.space data:",
+  "img-src 'self' https://images.evetech.net https://web.ccpgamescdn.com https://iec.jita.space https://www.googletagmanager.com data:",
   // FUTURE WORK: `'unsafe-inline'` is unavoidable here until we emit a
   // per-request nonce (Next.js injects inline bootstrap scripts; GTM is loaded
   // from googletagmanager.com). Removing it is the goal of the nonce migration
   // described above.
-  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com",
   // Mantine emits inline styles; same per-request-nonce caveat as script-src.
   "style-src 'self' 'unsafe-inline'",
   // Sentry Session Replay (enabled in instrumentation-client.ts) compresses
@@ -81,7 +81,7 @@ const contentSecurityPolicy = [
   // and so needs connect-src in addition to img-src. Then Google Analytics
   // (incl. regional `*.google-analytics.com` collectors) and the same-origin
   // Sentry/Umami proxies.
-  "connect-src 'self' https://esi.evetech.net https://sde.jita.space https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com /monitoring /analytics /ingest",
+  "connect-src 'self' https://esi.evetech.net https://sde.jita.space https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://gateway.umami.is https://www.google.com /monitoring /analytics /ingest",
   "frame-ancestors 'none'",
   // Sentry Security (CSP) endpoint derived from the browser DSN — see the note
   // above on why this is NOT the `/monitoring` tunnel. TODO: `report-uri` is
