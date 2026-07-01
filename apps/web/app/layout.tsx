@@ -69,18 +69,19 @@ export const metadata = {
       template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
-    // og:image is provided by the `app/opengraph-image.jpg` file convention,
-    // which Next.js injects automatically (with the correct dimensions/type).
+    // No site-wide og:image: shared links render as a clean text preview
+    // (title + description + site icon), which reads better on Discord/WhatsApp.
+    // Per-entity pages still set their own og:image (character/corp portraits).
   },
   twitter: {
-    card: "summary_large_image",
+    // `summary`, not `summary_large_image`: there's no site-wide image to fill
+    // the large card.
+    card: "summary",
     title: {
       default: APP_DEFAULT_TITLE,
       template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
-    // twitter:image is omitted deliberately; X/Twitter falls back to the
-    // og:image above (the same static card), so there's no need to duplicate it.
   },
 };
 
