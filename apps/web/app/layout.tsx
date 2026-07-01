@@ -69,14 +69,8 @@ export const metadata = {
       template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
-    images: [
-      {
-        url: "/api/opengraph/image",
-        width: 1200,
-        height: 630,
-        alt: APP_NAME,
-      },
-    ],
+    // og:image is provided by the `app/opengraph-image.jpg` file convention,
+    // which Next.js injects automatically (with the correct dimensions/type).
   },
   twitter: {
     card: "summary_large_image",
@@ -85,7 +79,8 @@ export const metadata = {
       template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
-    images: ["/api/opengraph/image"],
+    // twitter:image is omitted deliberately; X/Twitter falls back to the
+    // og:image above (the same static card), so there's no need to duplicate it.
   },
 };
 

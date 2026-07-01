@@ -95,30 +95,6 @@ const config = {
   reactStrictMode: true,
   cacheComponents: true,
 
-  /**
-   * Force the native `@vercel/og` module into the OpenGraph route's serverless
-   * bundle. Vercel's file-tracing otherwise misses
-   * `next/dist/compiled/@vercel/og/index.node.js` (Next aliases `@vercel/og` to
-   * its own compiled copy), so `GET /api/opengraph/image` failed in production
-   * with "Cannot find module .../@vercel/og/index.node.js". The edge runtime —
-   * the usual fix for this — is incompatible with `cacheComponents`, so we keep
-   * the Node runtime and include the module explicitly instead.
-   *
-   * Globs are resolved with the Next project dir (`apps/web`) as the cwd. In
-   * this pnpm monorepo the dependency is hoisted to the repo-root `node_modules`
-   * (hence `../../`); the `./` variants cover a non-hoisted layout, and the
-   * standalone `@vercel/og` package is listed alongside the Next-compiled copy.
-   * A glob that matches nothing is harmless, so listing all four is safe.
-   */
-  outputFileTracingIncludes: {
-    "/api/opengraph/image": [
-      "../../node_modules/next/dist/compiled/@vercel/og/**/*",
-      "./node_modules/next/dist/compiled/@vercel/og/**/*",
-      "../../node_modules/@vercel/og/**/*",
-      "./node_modules/@vercel/og/**/*",
-    ],
-  },
-
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
     "@jitaspace/auth",

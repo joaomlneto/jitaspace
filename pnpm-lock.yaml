@@ -277,9 +277,6 @@ importers:
       '@vercel/analytics':
         specifier: ^2.0.1
         version: 2.0.1(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)
-      '@vercel/og':
-        specifier: ^0.11.1
-        version: 0.11.1
       '@vercel/speed-insights':
         specifier: ^2.0.0
         version: 2.0.0(next@16.2.6(@babel/core@7.27.4)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)
@@ -416,6 +413,9 @@ importers:
       '@types/react-html-parser':
         specifier: ^2.0.7
         version: 2.0.7
+      '@vercel/og':
+        specifier: ^0.11.1
+        version: 0.11.1
       cypress:
         specifier: ^15.15.0
         version: 15.15.0
