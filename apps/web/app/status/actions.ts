@@ -125,8 +125,9 @@ const DATABASE_CACHE_TTL_MS = DATABASE_STATUS_STALE_MINUTES * 60 * 1000;
 interface TableRowStatistic {
   table_name: string;
   // The pg adapter returns CockroachDB INT8 as a string to avoid precision
-  // loss; bigint/number are tolerated too, and the LEFT JOIN yields null for a
-  // table with no statistics yet. `Number(... ?? 0)` normalizes all of these.
+  // loss; bigint/number are tolerated too, and a table with no statistics yet
+  // reports 0 (null is tolerated defensively). `Number(... ?? 0)` normalizes
+  // all of these.
   estimated_row_count: string | number | bigint | null;
 }
 
@@ -146,17 +147,23 @@ const computeDatabaseStatus = async (): Promise<DatabaseStatusResponse> => {
     // cache miss. The estimates are refreshed automatically and are plenty for
     // a status dashboard (this is what CockroachDB's own DB Console shows).
     //
-    // `crdb_internal.table_row_statistics` is cluster-wide, so we join against
-    // `crdb_internal.tables` and scope to the connected database's public
-    // schema to list exactly our application's tables. The LEFT JOIN keeps
-    // tables that have no statistics yet (estimate comes back null → 0).
+    // We read them via `SHOW TABLES`, whose `estimated_row_count` column comes
+    // from those same statistics. We deliberately do NOT query
+    // `crdb_internal.table_row_statistics` directly: as of CockroachDB v26 (and
+    // on CockroachDB Cloud Basic/Standard) direct access to `crdb_internal` and
+    // `system` is restricted for non-admin roles and fails with error 42501
+    // ("Access to crdb_internal and system is restricted") unless the unsafe
+    // `allow_unsafe_internals` session var is set. `SHOW` statements are
+    // explicitly exempt from that gate, so they keep working in production.
+    //
+    // `SHOW TABLES` (no `FROM`) scopes to the connection's current database. We
+    // wrap it as a table expression (`[SHOW TABLES]`) so we can keep only base
+    // tables in the public schema (dropping views/sequences); `estimated_row_count`
+    // is 0 for tables whose statistics have not been computed yet.
     const rows = await prisma.$queryRaw<TableRowStatistic[]>`
-      SELECT t.name AS table_name, s.estimated_row_count AS estimated_row_count
-      FROM crdb_internal.tables AS t
-      LEFT JOIN crdb_internal.table_row_statistics AS s ON s.table_id = t.table_id
-      WHERE t.database_name = current_database()
-        AND t.schema_name = 'public'
-        AND t.state = 'PUBLIC'
+      SELECT table_name, estimated_row_count
+      FROM [SHOW TABLES]
+      WHERE type = 'table' AND schema_name = 'public'
     `;
 
     return buildDatabaseStatusResponse({
