@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/nextjs";
+import posthog from "posthog-js";
 
 import { env } from "~/env";
 
@@ -28,3 +29,19 @@ Sentry.init({
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;
+
+// Initialize PostHog analytics. This MUST live in the app-root
+// instrumentation-client file (not app/) — Next.js only executes the root one,
+// so posthog.init previously never ran and no client-side events were captured.
+// Only initialize when a project token is configured; NEXT_PUBLIC_* vars are
+// inlined at build time, so this must be present in the production build env.
+if (env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN) {
+  posthog.init(env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN, {
+    api_host: "/ingest",
+    ui_host: "https://eu.posthog.com",
+    // Newest defaults bundle supported by the pinned posthog-js.
+    defaults: "2026-05-30",
+    capture_exceptions: true,
+    debug: env.NODE_ENV === "development",
+  });
+}
