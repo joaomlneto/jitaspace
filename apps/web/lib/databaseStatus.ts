@@ -3,7 +3,7 @@
  * (`app/status/actions.ts`) and the status-page dashboard.
  *
  * The counts are CockroachDB's estimated row counts (read from the latest
- * table statistics via `crdb_internal.table_row_statistics`), not exact
+ * table statistics via `SHOW TABLES`' `estimated_row_count`), not exact
  * `count(*)` results — see `getDatabaseStatus` for why. This module only
  * shapes/aggregates the rows; the actual query lives in the server function.
  *
