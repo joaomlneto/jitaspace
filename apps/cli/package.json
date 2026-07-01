@@ -39,7 +39,7 @@
     "commander": "^15.0.0",
     "figlet": "^1.11.0",
     "inquirer": "^9.3.8",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^4.2.0",
     "js2schema": "^1.0.8",
     "node-fetch": "^2.7.0",
     "node-html-parser": "^7.1.0",
