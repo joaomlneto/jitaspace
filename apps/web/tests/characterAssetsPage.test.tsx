@@ -5,9 +5,20 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 
+/**
+ * Render test for the /assets/character page. The @jitaspace/hooks module is
+ * mocked so the page renders with a fixed character + fixture assets; the
+ * @jitaspace/ui + @jitaspace/eve-components imports resolve to the jest stubs
+ * (whose TypeAnchor renders its children, so resolved item names are assertable
+ * text). This covers the header, summary stats, loading/empty states and the
+ * search ⇄ location-tree switch.
+ */
+
 const mockUseSelectedCharacter = jest.fn();
 const mockUseCharacterAssets =
-  jest.fn<() => { assets: Record<number, object>; isLoading: boolean }>();
+  jest.fn<
+    (characterId?: number) => { assets: Record<number, object>; isLoading: boolean }
+  >();
 const mockUseEsiNameLookup =
   jest.fn<() => Record<string, { value?: { name: string } } | undefined>>();
 const mockUseMarketPrices =
@@ -15,78 +26,26 @@ const mockUseMarketPrices =
 
 jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: () => mockUseSelectedCharacter(),
-  useCharacterAssets: (...args: unknown[]) => mockUseCharacterAssets(...args),
-  useEsiNameLookup: (...args: unknown[]) => mockUseEsiNameLookup(...args),
+  useCharacterAssets: (characterId?: number) =>
+    mockUseCharacterAssets(characterId),
+  useEsiNameLookup: () => mockUseEsiNameLookup(),
   useMarketPrices: () => mockUseMarketPrices(),
 }));
 
-jest.mock("@jitaspace/ui", () => ({
-  ISKAmount: ({ amount }: { amount: number; span?: boolean }) => (
-    <span data-testid="isk-amount">{amount.toFixed(2)}</span>
-  ),
-}));
+jest.mock("@jitaspace/eve-icons", () => new Proxy({}, { get: () => () => null }));
 
-// AssetLocationSelect moved to @jitaspace/eve-components.
-jest.mock("@jitaspace/eve-components", () => ({
-  AssetLocationSelect: ({
-    onChange,
-  }: {
-    onChange?: (v: string | null, opts: object) => void;
-  }) => (
-    <select
-      data-testid="location-select"
-      aria-label="Filter by location"
-      onChange={(e) => onChange?.(e.target.value || null, {})}
-    >
-      <option value="">All</option>
-      <option value="60003760">Jita</option>
-      <option value="60008526">Amarr</option>
-    </select>
-  ),
-}));
-
-jest.mock("@jitaspace/eve-icons", () => ({
-  AssetsIcon: () => null,
-}));
-
-jest.mock("~/components/Assets/AssetsDataTable", () => ({
-  AssetsDataTable: ({ entries }: { entries: unknown[] }) => (
-    <div data-testid="assets-table">{entries.length} entries</div>
-  ),
-}));
-
+// Render past the scope gate; ScopeGuard itself is unit-tested elsewhere.
 jest.mock("~/components/ScopeGuard", () => ({
   ScopeGuard: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
+// A Rifter (with one fitted module) and a Tritanium stack, both in Jita.
+const JITA = 60003760;
+const SHIP = 1001;
 const SAMPLE_ASSETS = {
-  1001: {
-    item_id: 1001,
-    type_id: 34,
-    quantity: 500,
-    location_id: 60003760,
-    location_type: "station",
-    is_singleton: false,
-    is_blueprint_copy: false,
-  },
-  1002: {
-    item_id: 1002,
-    type_id: 35,
-    quantity: 100,
-    location_id: 60003760,
-    location_type: "item", // filtered out
-    is_singleton: false,
-    is_blueprint_copy: false,
-  },
-  1003: {
-    item_id: 1003,
-    type_id: 36,
-    quantity: 200,
-    location_id: 60008526,
-    location_type: "station",
-    is_singleton: false,
-    is_blueprint_copy: false,
-  },
+  1001: { item_id: SHIP, type_id: 587, quantity: 1, location_id: JITA, location_flag: "Hangar", location_type: "station", is_singleton: true },
+  2001: { item_id: 2001, type_id: 3001, quantity: 1, location_id: SHIP, location_flag: "HiSlot0", location_type: "item", is_singleton: true },
+  1002: { item_id: 1002, type_id: 34, quantity: 500, location_id: JITA, location_flag: "Hangar", location_type: "station", is_singleton: false },
 };
 
 function renderPage() {
@@ -100,89 +59,70 @@ function renderPage() {
 
 describe("Character Assets Page", () => {
   beforeEach(() => {
-    mockUseSelectedCharacter.mockReturnValue({ characterId: 123456789 });
+    mockUseSelectedCharacter.mockReturnValue({
+      characterId: 123456789,
+      accessTokenPayload: { scp: ["esi-assets.read_assets.v1"] },
+    });
     mockUseCharacterAssets.mockReturnValue({
       assets: SAMPLE_ASSETS,
       isLoading: false,
     });
     mockUseEsiNameLookup.mockReturnValue({
+      "587": { value: { name: "Rifter" } },
+      "3001": { value: { name: "125mm Gatling AutoCannon II" } },
       "34": { value: { name: "Tritanium" } },
-      "36": { value: { name: "Mexallon" } },
     });
     mockUseMarketPrices.mockReturnValue({ data: {} });
   });
 
-  it("renders the Assets title", () => {
+  it("renders the header and summary stats", () => {
     renderPage();
-    expect(screen.getByText("Assets")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Assets" })).toBeInTheDocument();
+    expect(screen.getByText("Value")).toBeInTheDocument();
+    expect(screen.getByText("Items")).toBeInTheDocument();
+    expect(screen.getByText("Locations")).toBeInTheDocument();
+    // Three stacks total (ship + fitted module + trit).
+    expect(screen.getByText("3")).toBeInTheDocument();
   });
 
-  it("passes the character ID to useCharacterAssets", () => {
+  it("passes the selected character id to the assets hook", () => {
     renderPage();
     expect(mockUseCharacterAssets).toHaveBeenCalledWith(123456789);
   });
 
-  it("shows the total asset count", () => {
+  it("auto-expands the sole location so its contents are visible", () => {
     renderPage();
-    // Object.keys(SAMPLE_ASSETS).length = 3
-    expect(screen.getByText("3 assets")).toBeInTheDocument();
+    // One location holding three stacks; a single location opens automatically.
+    expect(screen.getByText("3 items")).toBeInTheDocument();
+    expect(screen.getByText("Rifter")).toBeInTheDocument();
+    expect(screen.getByText("Tritanium")).toBeInTheDocument();
   });
 
-  it("filters out assets with location_type 'item'", () => {
+  it("switches to search results as you type and back when cleared", async () => {
     renderPage();
-    // 3 total assets, 1 has location_type=item → 2 rendered
-    expect(screen.getByTestId("assets-table")).toHaveTextContent("2 entries");
+    const input = screen.getByPlaceholderText("Search items…");
+
+    fireEvent.change(input, { target: { value: "rif" } });
+    expect(await screen.findByText("Rifter")).toBeInTheDocument();
+    expect(screen.getByText("1 match")).toBeInTheDocument();
+    // The location panel is replaced by the results list.
+    expect(screen.queryByText("3 items")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText("Clear search"));
+    expect(await screen.findByText("3 items")).toBeInTheDocument();
   });
 
-  it("shows the total ISK value", () => {
-    mockUseMarketPrices.mockReturnValue({
-      data: {
-        34: { adjusted_price: 5 }, // 500 * 5 = 2500
-        36: { adjusted_price: 10 }, // 200 * 10 = 2000
-      },
-    });
+  it("shows a loading state while the first assets are still loading", () => {
+    mockUseCharacterAssets.mockReturnValue({ assets: {}, isLoading: true });
     renderPage();
-    expect(screen.getByTestId("isk-amount")).toHaveTextContent("4500.00");
+    expect(screen.getByText("Loading your assets…")).toBeInTheDocument();
   });
 
-  it("shows a resolving-names message when names are still loading", () => {
-    mockUseEsiNameLookup.mockReturnValue({});
-    renderPage();
-    expect(screen.getByText(/Resolving names for/)).toBeInTheDocument();
-  });
-
-  it("does not show the resolving message once all names are loaded", () => {
-    renderPage();
-    expect(screen.queryByText(/Resolving names for/)).not.toBeInTheDocument();
-  });
-
-  it("shows filtered count and updates the table when name filter is applied", () => {
-    renderPage();
-    fireEvent.change(screen.getByLabelText("Filter by name"), {
-      target: { value: "Tritanium" },
-    });
-    expect(screen.getByText(/Showing 1\/3 assets/)).toBeInTheDocument();
-    expect(screen.getByTestId("assets-table")).toHaveTextContent("1 entries");
-  });
-
-  it("shows filtered count when location filter is applied", () => {
-    renderPage();
-    fireEvent.change(screen.getByTestId("location-select"), {
-      target: { value: "60003760" },
-    });
-    // Only SAMPLE_ASSETS[1001] is at 60003760 with location_type=station
-    expect(screen.getByText(/Showing 1\/3 assets/)).toBeInTheDocument();
-    expect(screen.getByTestId("assets-table")).toHaveTextContent("1 entries");
-  });
-
-  it("renders the AssetsDataTable", () => {
-    renderPage();
-    expect(screen.getByTestId("assets-table")).toBeInTheDocument();
-  });
-
-  it("renders without crashing when assets is empty", () => {
+  it("shows an empty state when the character owns nothing", () => {
     mockUseCharacterAssets.mockReturnValue({ assets: {}, isLoading: false });
     renderPage();
-    expect(screen.getByText("0 assets")).toBeInTheDocument();
+    expect(
+      screen.getByText(/No assets found for this character/),
+    ).toBeInTheDocument();
   });
 });
