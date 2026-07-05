@@ -83,4 +83,18 @@ describe("GET /api/auth/login", () => {
       expect.objectContaining({ returnTo: "/", scopes: [] }),
     );
   });
+
+  it("rejects backslash/control-char returnTo values that normalise cross-origin", async () => {
+    const GET = loadGET();
+    // "/\evil.com" is escaped as %5Cevil.com; browsers resolve it to
+    // https://evil.com/, so the guard must reject it.
+    const req = new NextRequest(
+      "https://jita.space/api/auth/login?returnTo=/%5Cevil.com",
+      { headers },
+    );
+    await GET(req);
+    expect(mockCreateLoginFlow).toHaveBeenLastCalledWith(
+      expect.objectContaining({ returnTo: "/" }),
+    );
+  });
 });

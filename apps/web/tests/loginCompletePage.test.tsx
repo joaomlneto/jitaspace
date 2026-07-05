@@ -110,6 +110,19 @@ describe("LoginCompletePage", () => {
     await waitFor(() => expect(captureExceptionMock).toHaveBeenCalled());
   });
 
+  it("redirects to / for a backslash returnTo that would normalise cross-origin", async () => {
+    window.history.pushState({}, "", "/login/complete?returnTo=/%5Cevil.com");
+    mockConsumeLoginResult.mockResolvedValue({
+      accessToken: "AT",
+      encryptedRefreshToken: "ERT",
+    });
+
+    const LoginCompletePage = loadPage();
+    render(<LoginCompletePage />);
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/"));
+  });
+
   it("redirects to / when there is no pending result", async () => {
     window.history.pushState({}, "", "/login/complete");
     mockConsumeLoginResult.mockResolvedValue(null);

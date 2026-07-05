@@ -1,5 +1,10 @@
 import type { NextRequest } from "next/server";
 
+// Re-exported so existing importers (e.g. the login route) keep a single
+// import site; the guard itself lives in a server-free module so it can be
+// shared with client components.
+export { sanitizeReturnTo } from "./returnTo";
+
 /**
  * Resolve the externally-visible origin of the request, honouring the
  * reverse-proxy headers Vercel sets. Used to build the OAuth `redirect_uri`
@@ -13,15 +18,4 @@ export function getRequestOrigin(req: NextRequest): string {
     forwardedProto?.split(",")[0]?.trim() ??
     req.nextUrl.protocol.replace(":", "");
   return `${proto}://${host}`;
-}
-
-/**
- * Open-redirect guard: only allow same-site relative paths. Rejects absolute
- * URLs and protocol-relative ("//evil.com") paths.
- */
-export function sanitizeReturnTo(returnTo: string | null | undefined): string {
-  if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) {
-    return returnTo;
-  }
-  return "/";
 }
