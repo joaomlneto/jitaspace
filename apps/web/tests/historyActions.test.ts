@@ -5,7 +5,11 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type * as HistoryActions from "~/lib/history-actions";
 import type * as HistoryCache from "~/lib/history-cache";
 // Pure (no Prisma) — safe to import eagerly, unlike the actions module.
-import { HISTORY_MIN_RELEASE_DATE, isBuildInHistoryScope } from "~/lib/history";
+import {
+  HISTORY_MIN_RELEASE_DATE,
+  isBuildInHistoryScope,
+  netOp,
+} from "~/lib/history";
 
 // Exercises the query logic in ~/lib/history-actions (the change-history server
 // functions) by stubbing @jitaspace/db-history so the real Prisma client is
@@ -29,6 +33,9 @@ let mockChangeRows: {
   data: unknown;
   diffId: number;
   collection: { name: string };
+  // Present only for the build-range reader (which selects the entity); the
+  // per-entity timeline reader filters by entity in the query and never reads it.
+  entity?: { kind: string; eveId: number };
 }[] = [];
 // fileChange.groupBy fixture (getResourceIndex's per-build file-change counts).
 let mockFileAgg: {
@@ -48,7 +55,16 @@ jest.mock("@jitaspace/db-history", () => ({
   historyDb: {
     build: {
       findMany: () => Promise.resolve(mockBuilds),
-      findUnique: () => Promise.resolve(mockBuildUnique),
+      // Look the build up by number so readers that fetch two builds (from + to)
+      // get distinct rows; fall back to the single mockBuildUnique fixture.
+      findUnique: (args: { where: { buildNumber: number } }) => {
+        const bn = args.where.buildNumber;
+        if (mockBuildUnique?.buildNumber === bn)
+          return Promise.resolve(mockBuildUnique);
+        return Promise.resolve(
+          mockBuilds.find((b) => b.buildNumber === bn) ?? null,
+        );
+      },
     },
     collection: { findMany: () => Promise.resolve(mockCollections) },
     change: {
@@ -87,8 +103,13 @@ jest.mock("next/cache", () => ({
 // top-level import would load the real module before the stub is registered.
 // The index is read straight from the cache module (no server-action wrapper);
 // the build/entity readers live in history-actions.
-const { getEntityTimeline, getBuildChanges, getResourceIndex, getFileDiff } =
-  require("~/lib/history-actions") as typeof HistoryActions;
+const {
+  getEntityTimeline,
+  getBuildChanges,
+  getBuildRangeChanges,
+  getResourceIndex,
+  getFileDiff,
+} = require("~/lib/history-actions") as typeof HistoryActions;
 const { getCachedHistoryIndex } =
   require("~/lib/history-cache") as typeof HistoryCache;
 
@@ -515,5 +536,129 @@ describe("getFileDiff", () => {
     };
 
     expect(await getFileDiff(700001)).toBeNull();
+  });
+});
+
+describe("netOp", () => {
+  it("folds an op sequence to its net effect across a range", () => {
+    expect(netOp(["added"])).toBe("added");
+    expect(netOp(["modified"])).toBe("modified");
+    expect(netOp(["removed"])).toBe("removed");
+    // added then later touched ⇒ still net-new at the endpoint
+    expect(netOp(["added", "modified"])).toBe("added");
+    // existed, then removed ⇒ net removed
+    expect(netOp(["modified", "removed"])).toBe("removed");
+    // existed (removed implies it was there), later re-added ⇒ net modified
+    expect(netOp(["removed", "added"])).toBe("modified");
+    expect(netOp(["modified", "modified"])).toBe("modified");
+  });
+
+  it("returns null for a transient entity or an empty sequence", () => {
+    expect(netOp(["added", "removed"])).toBeNull();
+    expect(netOp(["added", "modified", "removed"])).toBeNull();
+    expect(netOp([])).toBeNull();
+  });
+});
+
+describe("getBuildRangeChanges", () => {
+  const tq = (n: number, d: string) => ({
+    buildNumber: n,
+    releasedAt: new Date(d),
+    server: "tranquility" as const,
+  });
+  const row = (
+    op: "added" | "modified" | "removed",
+    diffId: number,
+    kind: string,
+    eveId: number,
+    collection = "types",
+  ) => ({
+    op,
+    data: {},
+    diffId,
+    collection: { name: collection },
+    entity: { kind, eveId },
+  });
+
+  it("folds every change in (from, to] into a net op per entity", async () => {
+    mockBuildUnique = null;
+    mockBuilds = [
+      tq(700000, "2024-06-01"),
+      tq(700001, "2024-06-02"),
+      tq(700002, "2024-06-03"),
+      tq(700003, "2024-06-04"),
+    ];
+    mockDiffs = [
+      { id: 31, toBuild: 700001 },
+      { id: 32, toBuild: 700002 },
+      { id: 33, toBuild: 700003 },
+    ];
+    mockChangeRows = [
+      row("modified", 31, "type", 587), // 587: modified …
+      row("modified", 33, "type", 587), // … then modified ⇒ net modified
+      row("added", 32, "type", 588), // 588: added ⇒ net added
+      row("added", 31, "type", 589), // 589: added …
+      row("removed", 33, "type", 589), // … then removed ⇒ transient, dropped
+      row("removed", 32, "type", 590, "typeDogma"), // 590/typeDogma: net removed
+    ];
+
+    const result = await getBuildRangeChanges(700000, 700003);
+    expect(result).not.toBeNull();
+    expect(result?.from).toBe(700000);
+    expect(result?.to).toBe(700003);
+    expect(result?.fromDate).toBe("2024-06-01");
+    expect(result?.toDate).toBe("2024-06-04");
+
+    const find = (id: number, collection: string) =>
+      result?.changes.find(
+        (c) => c.entityId === id && c.collection === collection,
+      );
+    expect(find(587, "types")?.kind).toBe("modified");
+    expect(find(588, "types")?.kind).toBe("added");
+    expect(find(590, "typeDogma")?.kind).toBe("removed");
+    expect(find(589, "types")).toBeUndefined(); // transient
+    expect(result?.changes).toHaveLength(3);
+  });
+
+  it("returns null for from >= to, a missing endpoint, or an out-of-scope endpoint", async () => {
+    mockBuildUnique = null;
+    mockBuilds = [
+      tq(700000, "2024-06-01"),
+      tq(700003, "2024-06-04"),
+      {
+        buildNumber: 700004,
+        releasedAt: new Date("2024-06-05"),
+        server: "singularity",
+      },
+    ];
+
+    expect(await getBuildRangeChanges(700003, 700000)).toBeNull(); // from >= to
+    expect(await getBuildRangeChanges(700000.5, 700003)).toBeNull(); // non-integer
+    expect(await getBuildRangeChanges(700000, 999999)).toBeNull(); // to missing
+    expect(await getBuildRangeChanges(700000, 700004)).toBeNull(); // to is Singularity
+  });
+
+  it("skips changes on out-of-scope intermediate builds (Singularity)", async () => {
+    mockBuildUnique = null;
+    mockBuilds = [
+      tq(700000, "2024-06-01"),
+      {
+        buildNumber: 700001,
+        releasedAt: new Date("2024-06-02"),
+        server: "singularity",
+      },
+      tq(700002, "2024-06-03"),
+    ];
+    mockDiffs = [
+      { id: 41, toBuild: 700001 }, // Singularity build in range
+      { id: 42, toBuild: 700002 },
+    ];
+    mockChangeRows = [
+      row("added", 41, "type", 700), // on the Singularity build ⇒ excluded
+      row("modified", 42, "type", 701),
+    ];
+
+    const result = await getBuildRangeChanges(700000, 700002);
+    expect(result?.changes.map((c) => c.entityId)).toEqual([701]);
   });
 });

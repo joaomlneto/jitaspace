@@ -62,6 +62,8 @@ jest.mock(
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
+  // The compare page reads the selected builds from the URL.
+  useSearchParams: () => new URLSearchParams("from=100&to=200"),
 }));
 
 jest.mock("next/link", () => ({
@@ -219,12 +221,37 @@ const HISTORY_INDEX = {
   ],
 };
 
+const RANGE_CHANGES = {
+  from: 100,
+  to: 200,
+  fromDate: "2025-01-01",
+  toDate: "2025-02-01",
+  changes: [
+    {
+      entityId: 587,
+      entityType: "type",
+      collection: "types",
+      v: 1,
+      kind: "modified",
+      fields: {},
+    },
+    {
+      entityId: 588,
+      entityType: "type",
+      collection: "types",
+      v: 1,
+      kind: "added",
+    },
+  ],
+};
+
 function dataFor(opts: { queryKey?: unknown[] }) {
   const k = opts.queryKey?.[0];
   const ready = { isLoading: false, isPending: false, isFetching: false };
   if (k === "history-index") return { data: HISTORY_INDEX, ...ready };
   if (k === "history-entity") return { data: TIMELINE, ...ready };
   if (k === "history-build") return { data: BUILD_CHANGES, ...ready };
+  if (k === "history-compare") return { data: RANGE_CHANGES, ...ready };
   if (k === "resource-index") return { data: RESOURCE_INDEX, ...ready };
   if (k === "res-files")
     return {
@@ -373,5 +400,26 @@ describe("detail page clients + index page", () => {
     expect(mod.metadata.title).toContain("Change History");
     const Page = mod.default;
     expect(() => wrap(<Page />)).not.toThrow();
+  });
+});
+
+describe("CompareBuildsClient", () => {
+  it("renders the net comparison for the from/to in the URL", async () => {
+    const { default: CompareBuildsClient } =
+      await import("~/app/history/compare/page.client");
+    wrap(
+      <CompareBuildsClient
+        builds={[
+          { build: 100, date: "2025-01-01" },
+          { build: 200, date: "2025-02-01" },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Compare builds")).toBeTruthy();
+    // result header, driven by the mocked ?from=100&to=200
+    expect(screen.getByText(/build 100 → build 200/)).toBeTruthy();
+    // reuses the build page's New / Changed sections for the net changes
+    expect(screen.getByText(/New types/)).toBeTruthy();
+    expect(screen.getByText(/Changed types/)).toBeTruthy();
   });
 });
