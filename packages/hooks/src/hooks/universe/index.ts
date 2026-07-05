@@ -10,6 +10,7 @@ export * from "./usePlanet";
 export * from "./useRace";
 export * from "./useRegion";
 export * from "./useSolarSystem";
+export * from "./useAllSolarSystemJumps";
 export * from "./useAllSolarSystemKills";
 export * from "./useStar";
 export * from "./useStargate";
