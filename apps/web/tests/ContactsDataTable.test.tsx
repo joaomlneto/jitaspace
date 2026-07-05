@@ -45,6 +45,14 @@ const CONTACT_PLAIN = {
   label_ids: [],
 } as unknown as Contact;
 
+const CONTACT_NO_LABELS = {
+  contact_id: 1003,
+  contact_type: "character",
+  standing: 0,
+  is_watched: false,
+  // label_ids omitted entirely — ESI leaves it out for contacts with no labels.
+} as unknown as Contact;
+
 const LABELS = [{ label_id: 10, label_name: "Friends" }];
 
 function renderTable(contacts: Contact[]) {
@@ -80,6 +88,14 @@ describe("ContactsDataTable", () => {
     renderTable([CONTACT_WATCHED]);
     // ContactBlockedCell returns the "Unknown" Text whenever is_blocked !== undefined
     expect(screen.getByText("Unknown")).toBeInTheDocument();
+  });
+
+  it("renders without crashing when a contact has no label_ids", () => {
+    // Regression guard: ESI omits `label_ids` for contacts with no labels, so
+    // the labels cell must optional-chain the `.map()`. The character contacts
+    // page crashed client-side when the `?.` was dropped.
+    renderTable([CONTACT_NO_LABELS]);
+    expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
   it("renders multiple rows for multiple contacts", () => {
