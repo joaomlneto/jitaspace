@@ -44,19 +44,43 @@ export const downloadTarBz2FileAndParseJson = async (url: string) => {
 
   const files: { name: string; content: object }[] = [];
   const extract = tar.extract();
-  nodeStream.pipe(bz2()).pipe(extract);
+
+  // Capture the bz2 transform so we can attach an "error" listener to it.
+  // `pipe()` does not forward errors downstream, so an "error" on the fetch
+  // body, the decompressor, or the extractor would otherwise go unhandled and
+  // the awaited Promise would never settle (the job hangs until it is killed).
+  const decompress = bz2();
+  nodeStream.pipe(decompress).pipe(extract);
 
   // Decompress bz2 stream and parse contents
   await new Promise<void>((resolve, reject) => {
-    //const csvStream = decompressedStream.pipe(csvParser());
+    // Reject on any failure along the pipeline so the Promise settles
+    // deterministically instead of hanging on a truncated or corrupt download.
+    nodeStream.on("error", reject);
+    decompress.on("error", reject);
+    extract.on("error", reject);
 
     extract.on("entry", (header, stream, next) => {
       const chunks: Buffer[] = [];
       stream.on("data", (chunk: Buffer) => chunks.push(chunk));
       stream.on("end", () => {
-        const content = JSON.parse(
-          Buffer.concat(chunks).toString("utf8"),
-        ) as object;
+        let content: object;
+        try {
+          content = JSON.parse(
+            Buffer.concat(chunks).toString("utf8"),
+          ) as object;
+        } catch (err) {
+          // A non-JSON entry would otherwise throw uncaught inside this event
+          // callback; route it to the Promise so the caller sees a rejection.
+          next(
+            new Error(
+              `Failed to parse JSON from archive entry "${header.name}": ${
+                err instanceof Error ? err.message : String(err)
+              }`,
+            ),
+          );
+          return;
+        }
         files.push({
           name: header.name,
           content,
