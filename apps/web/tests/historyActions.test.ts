@@ -22,7 +22,8 @@ let mockCollections: { id: number; name: string }[] = [];
 let mockGrouped: { diffId: number; collectionId: number; _count: number }[] =
   [];
 let mockEntities: { kind: string; eveId: number }[] = [];
-let mockDiffs: { id: number; toBuild: number }[] = [];
+let mockDiffs: { id: number; fromBuild?: number | null; toBuild: number }[] =
+  [];
 let mockChangeRows: {
   op: "added" | "modified" | "removed";
   data: unknown;
@@ -223,8 +224,8 @@ describe("getEntityTimeline", () => {
     // diff 10 → build 98 (present); diff 11 → build 99 (Build row missing);
     // diff 999 is absent entirely (dangling Change.diffId).
     mockDiffs = [
-      { id: 10, toBuild: 98 },
-      { id: 11, toBuild: 99 },
+      { id: 10, fromBuild: 97, toBuild: 98 },
+      { id: 11, fromBuild: 98, toBuild: 99 },
     ];
     mockBuilds = [{ buildNumber: 98, releasedAt: new Date("2024-01-01") }];
     mockChangeRows = [
@@ -258,6 +259,9 @@ describe("getEntityTimeline", () => {
         build: 98,
         date: "2024-01-01",
         collection: "types",
+        fromBuild: 97,
+        server: null,
+        provenance: "sde",
         v: 1,
         kind: "added",
         values: { typeName: "Rifter" },
@@ -266,6 +270,9 @@ describe("getEntityTimeline", () => {
         build: 99,
         date: null,
         collection: "types",
+        fromBuild: 98,
+        server: null,
+        provenance: "sde",
         v: 1,
         kind: "modified",
         fields: { mass: { from: 1000, to: 1100 } },
@@ -277,8 +284,8 @@ describe("getEntityTimeline", () => {
     // diff 10 → build 80313 (pre-floor, e.g. the baseline "added"); diff 11 →
     // build 700000 (in scope).
     mockDiffs = [
-      { id: 10, toBuild: 80313 },
-      { id: 11, toBuild: 700000 },
+      { id: 10, fromBuild: null, toBuild: 80313 },
+      { id: 11, fromBuild: 690000, toBuild: 700000 },
     ];
     mockBuilds = [
       { buildNumber: 80313, releasedAt: new Date("2011-05-06") },
@@ -306,6 +313,9 @@ describe("getEntityTimeline", () => {
         build: 700000,
         date: "2024-06-01",
         collection: "types",
+        fromBuild: 690000,
+        server: null,
+        provenance: "sde",
         v: 1,
         kind: "modified",
         fields: { mass: { from: 1000, to: 1100 } },
@@ -331,8 +341,8 @@ describe("getEntityTimeline", () => {
   it("drops events on test-server (Singularity) builds, keeps Tranquility ones", async () => {
     // diff 10 → build 700000 (Tranquility); diff 11 → build 700001 (Singularity)
     mockDiffs = [
-      { id: 10, toBuild: 700000 },
-      { id: 11, toBuild: 700001 },
+      { id: 10, fromBuild: 690000, toBuild: 700000 },
+      { id: 11, fromBuild: 700000, toBuild: 700001 },
     ];
     mockBuilds = [
       {
@@ -368,11 +378,76 @@ describe("getEntityTimeline", () => {
         build: 700000,
         date: "2024-06-01",
         collection: "types",
+        fromBuild: 690000,
+        server: "tranquility",
+        provenance: "sde",
         v: 1,
         kind: "added",
         values: { typeName: "Rifter" },
       },
     ]);
+  });
+
+  it("annotates events with the diff's from-build, server, and provenance", async () => {
+    // diff 20 carries resource-file changes ⇒ "resource-server"; diff 21 has
+    // none ⇒ "sde". Each event also gets its diff's fromBuild and its build's
+    // server.
+    mockDiffs = [
+      { id: 20, fromBuild: 690000, toBuild: 700000 },
+      { id: 21, fromBuild: 700000, toBuild: 700001 },
+    ];
+    mockBuilds = [
+      {
+        buildNumber: 700000,
+        releasedAt: new Date("2024-06-01"),
+        server: "tranquility",
+      },
+      { buildNumber: 700001, releasedAt: new Date("2024-06-02"), server: null }, // SDE
+    ];
+    mockFileAgg = [{ diffId: 20, op: "added", _count: 4 }]; // only diff 20 has res files
+    mockChangeRows = [
+      {
+        op: "modified",
+        data: { mass: { from: 1, to: 2 } },
+        diffId: 20,
+        collection: { name: "types" },
+      },
+      {
+        op: "added",
+        data: { typeName: "Ibis" },
+        diffId: 21,
+        collection: { name: "types" },
+      },
+    ];
+
+    const timeline = await getEntityTimeline("type", 587);
+
+    expect(timeline?.events).toEqual([
+      {
+        build: 700000,
+        date: "2024-06-01",
+        collection: "types",
+        fromBuild: 690000,
+        server: "tranquility",
+        provenance: "resource-server",
+        v: 1,
+        kind: "modified",
+        fields: { mass: { from: 1, to: 2 } },
+      },
+      {
+        build: 700001,
+        date: "2024-06-02",
+        collection: "types",
+        fromBuild: 700000,
+        server: null,
+        provenance: "sde",
+        v: 1,
+        kind: "added",
+        values: { typeName: "Ibis" },
+      },
+    ]);
+
+    mockFileAgg = []; // reset for subsequent suites
   });
 });
 

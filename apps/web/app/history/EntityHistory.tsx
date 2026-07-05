@@ -18,8 +18,13 @@ import {
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
-import type { EntityTimeline, TimelineEvent } from "~/lib/history";
-import { collectionMeta } from "~/lib/history";
+import type { EntityTimeline, Provenance, TimelineEvent } from "~/lib/history";
+import {
+  collectionMeta,
+  fromBuildLabel,
+  provenanceMeta,
+  serverMeta,
+} from "~/lib/history";
 import { getEntityTimeline } from "~/lib/history-actions";
 import { KIND_COLOR } from "./_diff";
 import { EventContent } from "./_event";
@@ -145,48 +150,82 @@ export function EntityHistory({
           </Text>
         )}
         <Timeline active={buildGroups.length} bulletSize={20} lineWidth={2}>
-          {buildGroups.map((group) => (
-            <Timeline.Item
-              key={group.build}
-              title={
-                <Group gap="xs">
-                  <Anchor
-                    component={Link}
-                    href={`/history/build/${group.build}`}
-                    fw={500}
-                  >
-                    {group.date ?? `Build ${group.build}`}
-                  </Anchor>
-                  <Text size="xs" c="dimmed">
-                    build {group.build}
-                  </Text>
-                </Group>
-              }
-            >
-              <Stack gap="sm" mt={2}>
-                {group.events.map((event) => {
-                  const meta = collectionMeta(event.collection);
-                  return (
-                    <div key={event.collection ?? "types"}>
-                      <Group gap="xs">
-                        <Badge size="sm" variant="dot" color={meta.color}>
-                          {meta.label}
-                        </Badge>
-                        <Badge
-                          size="sm"
-                          variant="light"
-                          color={KIND_COLOR[event.kind]}
-                        >
-                          {event.kind}
-                        </Badge>
-                      </Group>
-                      <EventContent event={event} entityType={entityType} />
-                    </div>
-                  );
-                })}
-              </Stack>
-            </Timeline.Item>
-          ))}
+          {buildGroups.map((group) => {
+            // Server is per target build (constant within the group). From-build
+            // and provenance are per diff, and a build can be reached by more
+            // than one diff (the SDE↔CDN junction), so surface the distinct set.
+            const server = group.events[0]?.server ?? null;
+            const fromBuilds = [
+              ...new Set(group.events.map((e) => e.fromBuild ?? null)),
+            ];
+            const provenances = [
+              ...new Set(
+                group.events
+                  .map((e) => e.provenance)
+                  .filter((p): p is Provenance => p !== undefined),
+              ),
+            ];
+            return (
+              <Timeline.Item
+                key={group.build}
+                title={
+                  <Group gap="xs">
+                    <Anchor
+                      component={Link}
+                      href={`/history/build/${group.build}`}
+                      fw={500}
+                    >
+                      {group.date ?? `Build ${group.build}`}
+                    </Anchor>
+                    <Text size="xs" c="dimmed">
+                      build {group.build} · from{" "}
+                      {fromBuilds.map(fromBuildLabel).join(", ")}
+                    </Text>
+                    <Badge
+                      size="xs"
+                      variant="light"
+                      color={serverMeta(server).color}
+                    >
+                      {serverMeta(server).label}
+                    </Badge>
+                    {provenances.map((p) => (
+                      <Badge
+                        key={p}
+                        size="xs"
+                        variant="light"
+                        color={provenanceMeta(p).color}
+                      >
+                        {provenanceMeta(p).label}
+                      </Badge>
+                    ))}
+                  </Group>
+                }
+              >
+                <Stack gap="sm" mt={2}>
+                  {group.events.map((event) => {
+                    const meta = collectionMeta(event.collection);
+                    return (
+                      <div key={event.collection ?? "types"}>
+                        <Group gap="xs">
+                          <Badge size="sm" variant="dot" color={meta.color}>
+                            {meta.label}
+                          </Badge>
+                          <Badge
+                            size="sm"
+                            variant="light"
+                            color={KIND_COLOR[event.kind]}
+                          >
+                            {event.kind}
+                          </Badge>
+                        </Group>
+                        <EventContent event={event} entityType={entityType} />
+                      </div>
+                    );
+                  })}
+                </Stack>
+              </Timeline.Item>
+            );
+          })}
         </Timeline>
       </Paper>
     </Stack>,
