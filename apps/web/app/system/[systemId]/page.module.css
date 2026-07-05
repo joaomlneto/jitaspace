@@ -1,0 +1,105 @@
+/* Hero panel ------------------------------------------------------------- */
+
+.hero {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Security-tinted glow bleeding in from the top-left corner, behind content. */
+.heroGlow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+            120% 150% at 14% 12%,
+            color-mix(in srgb, var(--sec-color) 32%, transparent) 0%,
+            color-mix(in srgb, var(--sec-color) 9%, transparent) 34%,
+            transparent 66%
+    );
+}
+
+.heroInner {
+    position: relative; /* sit above .heroGlow */
+}
+
+.starWrap {
+    position: relative;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 rem(1px) color-mix(in srgb, var(--sec-color) 55%, transparent),
+        0 0 rem(38px) rem(4px) color-mix(in srgb, var(--sec-color) 32%, transparent);
+}
+
+.title {
+    margin: 0;
+    font-size: clamp(rem(26px), 4vw, rem(38px));
+    line-height: 1.05;
+}
+
+/* Big colour-coded security number. */
+.secPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: rem(52px);
+    padding: rem(2px) rem(12px);
+    border-radius: var(--mantine-radius-sm);
+    font-weight: 700;
+    font-size: rem(20px);
+    line-height: 1.5;
+    letter-spacing: 0.03em;
+    box-shadow: inset 0 0 0 rem(1px) rgba(255, 255, 255, 0.12);
+}
+
+.band {
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+}
+
+/* Sovereignty / faction chip. */
+.holderChip {
+    display: inline-flex;
+    align-items: center;
+    gap: rem(8px);
+    padding: rem(3px) rem(10px) rem(3px) rem(4px);
+    border-radius: rem(999px);
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 0 0 rem(1px) rgba(147, 214, 224, 0.22);
+}
+
+/* Stat tiles ------------------------------------------------------------- */
+
+.statValue {
+    font-family: var(--mantine-font-family-monospace);
+    font-size: rem(24px);
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.statLabel {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* Celestial / connection rows ------------------------------------------- */
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: var(--mantine-spacing-sm);
+    padding: rem(8px) rem(10px);
+    border-radius: var(--mantine-radius-sm);
+    transition: background-color 120ms ease;
+}
+
+.row:hover {
+    background: rgba(147, 214, 224, 0.06);
+}
+
+/* Flag chips ------------------------------------------------------------- */
+
+.flag {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
