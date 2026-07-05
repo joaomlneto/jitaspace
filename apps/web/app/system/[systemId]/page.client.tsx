@@ -30,6 +30,7 @@ import {
   IconSwords,
 } from "@tabler/icons-react";
 
+import type { SolarSystem } from "@jitaspace/sde-client";
 import {
   AllianceName,
   CorporationName,
@@ -78,6 +79,29 @@ interface SovereigntyEntry {
   alliance_id?: number;
   corporation_id?: number;
   faction_id?: number;
+}
+
+/** Coarse security band shown next to the system name. */
+function getSecurityBand(
+  securityStatus: number | undefined,
+  isWormhole: boolean,
+): string | undefined {
+  if (securityStatus == null) return undefined;
+  if (isWormhole) return "W-Space";
+  return securityStatusBand(securityStatus);
+}
+
+/** Format a numeric value with a unit suffix, or an em dash when absent. */
+function withUnit(value: number | null | undefined, unit: string): string {
+  return value == null ? "—" : `${value.toLocaleString()} ${unit}`;
+}
+
+/**
+ * Stringify a number, or an em dash when absent. The SDE types mark some
+ * numeric fields as required but the data can omit them, so accept nullish.
+ */
+function formatNumber(value: number | null | undefined): string {
+  return value == null ? "—" : value.toString();
 }
 
 /** A single labelled live-activity metric. */
@@ -236,6 +260,227 @@ function SovereigntyLabel({ sov }: Readonly<{ sov: SovereigntyEntry }>) {
   return null;
 }
 
+interface FactionWarfare {
+  contested: string;
+  owner_faction_id: number;
+  victory_points: number;
+  victory_points_threshold: number;
+}
+
+interface Incursion {
+  faction_id: number;
+  has_boss: boolean;
+  influence: number;
+  state: string;
+}
+
+/** Sovereignty / faction-warfare / incursion status; null when none apply. */
+function SystemControlPanels({
+  systemId,
+  sov,
+  fw,
+  incursion,
+}: Readonly<{
+  systemId: number;
+  sov?: SovereigntyEntry;
+  fw?: FactionWarfare;
+  incursion?: Incursion;
+}>) {
+  const hasSovereignty = Boolean(
+    sov?.alliance_id ?? sov?.corporation_id ?? sov?.faction_id,
+  );
+  const hasFactionWarfare = fw != null;
+  const hasIncursion = incursion != null;
+
+  if (hasSovereignty || hasFactionWarfare || hasIncursion) {
+    return (
+      <SimpleGrid
+        cols={{ base: 1, md: hasFactionWarfare && hasIncursion ? 2 : 1 }}
+        spacing="md"
+      >
+        {hasSovereignty && sov && (
+          <Paper p="md" radius="md">
+            <Group gap="sm" wrap="nowrap">
+              <IconShieldHalf
+                size={22}
+                color="var(--mantine-color-eve_primary-4)"
+              />
+              <SolarSystemSovereigntyAvatar
+                solarSystemId={systemId}
+                size={34}
+                radius={999}
+              />
+              <div style={{ minWidth: 0 }}>
+                <Text size="xs" c="dimmed" className={classes.statLabel}>
+                  Sovereignty
+                </Text>
+                <Text fw={600}>
+                  <SovereigntyLabel sov={sov} />
+                </Text>
+              </div>
+            </Group>
+          </Paper>
+        )}
+
+        {fw && (
+          <Paper p="md" radius="md">
+            <Group justify="space-between" mb="xs">
+              <Group gap="xs">
+                <IconSwords size={18} color="var(--mantine-color-orange-5)" />
+                <Text fw={600}>Faction Warfare</Text>
+              </Group>
+              <Badge
+                variant="light"
+                color={fw.contested === "contested" ? "orange" : "gray"}
+                tt="capitalize"
+              >
+                {fw.contested}
+              </Badge>
+            </Group>
+            <Group gap={6} mb={6}>
+              <FactionAvatar factionId={fw.owner_faction_id} size={20} />
+              <Text size="sm">
+                <FactionName span factionId={fw.owner_faction_id} />
+              </Text>
+            </Group>
+            <Progress
+              value={
+                fw.victory_points_threshold > 0
+                  ? (fw.victory_points / fw.victory_points_threshold) * 100
+                  : 0
+              }
+              color="orange"
+              size="sm"
+            />
+            <Text size="xs" c="dimmed" mt={4}>
+              {fw.victory_points.toLocaleString()} /{" "}
+              {fw.victory_points_threshold.toLocaleString()} victory points
+            </Text>
+          </Paper>
+        )}
+
+        {incursion && (
+          <Paper p="md" radius="md">
+            <Group justify="space-between" mb="xs">
+              <Group gap="xs">
+                <IconAlertTriangle
+                  size={18}
+                  color="var(--mantine-color-red-5)"
+                />
+                <Text fw={600}>Incursion</Text>
+              </Group>
+              <Badge variant="light" color="red" tt="capitalize">
+                {incursion.state}
+              </Badge>
+            </Group>
+            <Group gap={6} mb={6}>
+              <FactionAvatar factionId={incursion.faction_id} size={20} />
+              <Text size="sm">
+                <FactionName span factionId={incursion.faction_id} />
+              </Text>
+              {incursion.has_boss && (
+                <Badge size="sm" variant="outline" color="red">
+                  Boss
+                </Badge>
+              )}
+            </Group>
+            <Progress value={incursion.influence * 100} color="red" size="sm" />
+            <Text size="xs" c="dimmed" mt={4}>
+              {(incursion.influence * 100).toFixed(0)}% influence
+            </Text>
+          </Paper>
+        )}
+      </SimpleGrid>
+    );
+  }
+
+  return null;
+}
+
+/** The "System Information" panel: physical data, faction owner and traits. */
+function SystemInfoSection({
+  securityStatus,
+  securityClass,
+  star,
+  sde,
+}: Readonly<{
+  securityStatus?: number;
+  securityClass?: string;
+  star?: { data: { spectral_class?: string; temperature?: number } };
+  sde?: SolarSystem;
+}>) {
+  return (
+    <section>
+      <SectionHeader title="System Information" />
+      <Paper p="lg" radius="md">
+        <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="lg">
+          <InfoItem
+            label="Security Status"
+            value={securityStatus?.toFixed(2) ?? "—"}
+          />
+          <InfoItem label="Security Class" value={securityClass ?? "—"} />
+          <InfoItem label="Star Type" value={star?.data.spectral_class ?? "—"} />
+          <InfoItem
+            label="Temperature"
+            value={withUnit(star?.data.temperature, "K")}
+          />
+          <InfoItem
+            label="Luminosity"
+            value={formatNumber(sde?.luminosity)}
+          />
+          <InfoItem label="Radius" value={withUnit(sde?.radius, "m")} />
+          {sde?.wormholeClassID != null && (
+            <InfoItem
+              label="Wormhole Class"
+              value={String(sde.wormholeClassID)}
+            />
+          )}
+          <InfoItem
+            label="Position"
+            value={
+              <Position3DText
+                size="xs"
+                position={
+                  sde?.position.x != null &&
+                  sde.position.y != null &&
+                  sde.position.z != null
+                    ? [sde.position.x, sde.position.y, sde.position.z]
+                    : undefined
+                }
+              />
+            }
+          />
+        </SimpleGrid>
+
+        {sde?.factionID != null && (
+          <Group gap="sm" mt="lg">
+            <FactionAvatar factionId={sde.factionID} size={28} radius={999} />
+            <div>
+              <Text size="xs" c="dimmed" className={classes.statLabel}>
+                Faction
+              </Text>
+              <Text size="sm" fw={500}>
+                <FactionName span factionId={sde.factionID} />
+              </Text>
+            </div>
+          </Group>
+        )}
+
+        {sde && (
+          <Group gap="xs" mt="lg">
+            <FlagChip label="Trade Hub" active={sde.hub} />
+            <FlagChip label="Border" active={sde.border} />
+            <FlagChip label="Fringe" active={sde.fringe} />
+            <FlagChip label="Corridor" active={sde.corridor} />
+            <FlagChip label="International" active={sde.international} />
+            <FlagChip label="Regional" active={sde.regional} />
+          </Group>
+        )}
+      </Paper>
+    </section>
+  );
+}
+
 const EXTERNAL_TOOLS = [
   { label: "DOTLAN", href: (id: number) => `https://evemaps.dotlan.net/system/${id}` },
   { label: "zKillboard", href: (id: number) => `https://zkillboard.com/system/${id}` },
@@ -274,16 +519,11 @@ export default function Page() {
 
   const securityStatus = data?.security_status;
   const secColor =
-    securityStatus != null
-      ? securityStatusColor(securityStatus)
-      : "var(--mantine-color-dark-4)";
-  const isWormhole = (securityStatus ?? 0) < -0.9;
-  const band =
     securityStatus == null
-      ? undefined
-      : isWormhole
-        ? "W-Space"
-        : securityStatusBand(securityStatus);
+      ? "var(--mantine-color-dark-4)"
+      : securityStatusColor(securityStatus);
+  const isWormhole = (securityStatus ?? 0) < -0.9;
+  const band = getSecurityBand(securityStatus, isWormhole);
   const secColorStyle = { "--sec-color": secColor } as CSSProperties;
 
   const planets = data?.planets ?? [];
@@ -308,8 +548,6 @@ export default function Page() {
   const hasSovereignty = Boolean(
     sov?.alliance_id ?? sov?.corporation_id ?? sov?.faction_id,
   );
-  const hasFactionWarfare = fw != null;
-  const hasIncursion = incursion != null;
   const systemCostIndices = Object.hasOwn(costIndices, systemId)
     ? (costIndices[systemId]?.cost_indices ?? [])
     : [];
@@ -471,108 +709,12 @@ export default function Page() {
         </section>
 
         {/* ---- Control: sovereignty / faction warfare / incursion ---- */}
-        {(hasSovereignty || hasFactionWarfare || hasIncursion) && (
-          <SimpleGrid
-            cols={{ base: 1, md: hasFactionWarfare && hasIncursion ? 2 : 1 }}
-            spacing="md"
-          >
-            {hasSovereignty && sov && (
-              <Paper p="md" radius="md">
-                <Group gap="sm" wrap="nowrap">
-                  <IconShieldHalf
-                    size={22}
-                    color="var(--mantine-color-eve_primary-4)"
-                  />
-                  <SolarSystemSovereigntyAvatar
-                    solarSystemId={systemId}
-                    size={34}
-                    radius={999}
-                  />
-                  <div style={{ minWidth: 0 }}>
-                    <Text size="xs" c="dimmed" className={classes.statLabel}>
-                      Sovereignty
-                    </Text>
-                    <Text fw={600}>
-                      <SovereigntyLabel sov={sov} />
-                    </Text>
-                  </div>
-                </Group>
-              </Paper>
-            )}
-
-            {fw && (
-              <Paper p="md" radius="md">
-                <Group justify="space-between" mb="xs">
-                  <Group gap="xs">
-                    <IconSwords
-                      size={18}
-                      color="var(--mantine-color-orange-5)"
-                    />
-                    <Text fw={600}>Faction Warfare</Text>
-                  </Group>
-                  <Badge
-                    variant="light"
-                    color={fw.contested === "contested" ? "orange" : "gray"}
-                    tt="capitalize"
-                  >
-                    {fw.contested}
-                  </Badge>
-                </Group>
-                <Group gap={6} mb={6}>
-                  <FactionAvatar factionId={fw.owner_faction_id} size={20} />
-                  <Text size="sm">
-                    <FactionName span factionId={fw.owner_faction_id} />
-                  </Text>
-                </Group>
-                <Progress
-                  value={
-                    fw.victory_points_threshold > 0
-                      ? (fw.victory_points / fw.victory_points_threshold) * 100
-                      : 0
-                  }
-                  color="orange"
-                  size="sm"
-                />
-                <Text size="xs" c="dimmed" mt={4}>
-                  {fw.victory_points.toLocaleString()} /{" "}
-                  {fw.victory_points_threshold.toLocaleString()} victory points
-                </Text>
-              </Paper>
-            )}
-
-            {incursion && (
-              <Paper p="md" radius="md">
-                <Group justify="space-between" mb="xs">
-                  <Group gap="xs">
-                    <IconAlertTriangle
-                      size={18}
-                      color="var(--mantine-color-red-5)"
-                    />
-                    <Text fw={600}>Incursion</Text>
-                  </Group>
-                  <Badge variant="light" color="red" tt="capitalize">
-                    {incursion.state}
-                  </Badge>
-                </Group>
-                <Group gap={6} mb={6}>
-                  <FactionAvatar factionId={incursion.faction_id} size={20} />
-                  <Text size="sm">
-                    <FactionName span factionId={incursion.faction_id} />
-                  </Text>
-                  {incursion.has_boss && (
-                    <Badge size="sm" variant="outline" color="red">
-                      Boss
-                    </Badge>
-                  )}
-                </Group>
-                <Progress value={incursion.influence * 100} color="red" size="sm" />
-                <Text size="xs" c="dimmed" mt={4}>
-                  {(incursion.influence * 100).toFixed(0)}% influence
-                </Text>
-              </Paper>
-            )}
-          </SimpleGrid>
-        )}
+        <SystemControlPanels
+          systemId={systemId}
+          sov={sov}
+          fw={fw}
+          incursion={incursion}
+        />
 
         {/* ---- Celestials + connections ---- */}
         <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
@@ -666,91 +808,12 @@ export default function Page() {
         )}
 
         {/* ---- System information ---- */}
-        <section>
-          <SectionHeader title="System Information" />
-          <Paper p="lg" radius="md">
-            <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="lg">
-              <InfoItem
-                label="Security Status"
-                value={securityStatus != null ? securityStatus.toFixed(2) : "—"}
-              />
-              <InfoItem
-                label="Security Class"
-                value={data?.security_class ?? "—"}
-              />
-              <InfoItem
-                label="Star Type"
-                value={star?.data.spectral_class ?? "—"}
-              />
-              <InfoItem
-                label="Temperature"
-                value={
-                  star?.data.temperature != null
-                    ? `${star.data.temperature.toLocaleString()} K`
-                    : "—"
-                }
-              />
-              <InfoItem
-                label="Luminosity"
-                value={sde?.luminosity != null ? sde.luminosity.toString() : "—"}
-              />
-              <InfoItem
-                label="Radius"
-                value={
-                  sde?.radius != null
-                    ? `${sde.radius.toLocaleString()} m`
-                    : "—"
-                }
-              />
-              {sde?.wormholeClassID != null && (
-                <InfoItem
-                  label="Wormhole Class"
-                  value={String(sde.wormholeClassID)}
-                />
-              )}
-              <InfoItem
-                label="Position"
-                value={
-                  <Position3DText
-                    size="xs"
-                    position={
-                      sde?.position.x != null &&
-                      sde.position.y != null &&
-                      sde.position.z != null
-                        ? [sde.position.x, sde.position.y, sde.position.z]
-                        : undefined
-                    }
-                  />
-                }
-              />
-            </SimpleGrid>
-
-            {sde?.factionID != null && (
-              <Group gap="sm" mt="lg">
-                <FactionAvatar factionId={sde.factionID} size={28} radius={999} />
-                <div>
-                  <Text size="xs" c="dimmed" className={classes.statLabel}>
-                    Faction
-                  </Text>
-                  <Text size="sm" fw={500}>
-                    <FactionName span factionId={sde.factionID} />
-                  </Text>
-                </div>
-              </Group>
-            )}
-
-            {sde && (
-              <Group gap="xs" mt="lg">
-                <FlagChip label="Trade Hub" active={sde.hub} />
-                <FlagChip label="Border" active={sde.border} />
-                <FlagChip label="Fringe" active={sde.fringe} />
-                <FlagChip label="Corridor" active={sde.corridor} />
-                <FlagChip label="International" active={sde.international} />
-                <FlagChip label="Regional" active={sde.regional} />
-              </Group>
-            )}
-          </Paper>
-        </section>
+        <SystemInfoSection
+          securityStatus={securityStatus}
+          securityClass={data?.security_class}
+          star={star}
+          sde={sde}
+        />
       </Stack>
     </Container>
   );
