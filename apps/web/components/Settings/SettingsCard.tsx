@@ -41,12 +41,18 @@ export function SettingsCard() {
   const experimentalDataTables = usePreferencesStore(
     (state) => state.experimentalDataTables,
   );
+  const experimentalActiveWars = usePreferencesStore(
+    (state) => state.experimentalActiveWars,
+  );
   const setSelectedAcceptLanguage = usePreferencesStore(
     (state) => state.setEsiAcceptLanguage,
   );
   const setSelectedTheme = usePreferencesStore((state) => state.setAppTheme);
   const setExperimentalDataTables = usePreferencesStore(
     (state) => state.setExperimentalDataTables,
+  );
+  const setExperimentalActiveWars = usePreferencesStore(
+    (state) => state.setExperimentalActiveWars,
   );
 
   const {
@@ -258,6 +264,30 @@ export function SettingsCard() {
                 setExperimentalDataTables(event.currentTarget.checked)
               }
               aria-label="Enable experimental data tables"
+            />
+          </Group>
+
+          <Group
+            justify="space-between"
+            className={classes.item}
+            wrap="nowrap"
+            gap="xl"
+          >
+            <div>
+              <Text>New Active Wars page</Text>
+              <Text size="xs" c="dimmed">
+                Replace the Active Wars table with the redesigned overview —
+                headline stats, aggressor and defender leaderboards, and a
+                filterable list you can switch between rows and a compact table.
+              </Text>
+            </div>
+            <Switch
+              className={classes.switch}
+              checked={experimentalActiveWars}
+              onChange={(event) =>
+                setExperimentalActiveWars(event.currentTarget.checked)
+              }
+              aria-label="Enable the new Active Wars page"
             />
           </Group>
         </Tabs.Panel>
