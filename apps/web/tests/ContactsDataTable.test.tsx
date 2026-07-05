@@ -32,7 +32,7 @@ const CONTACT_WATCHED = {
   contact_type: "character",
   standing: 7.5,
   is_watched: true,
-  is_blocked: true, // defined -> ContactBlockedCell renders "Unknown" text
+  is_blocked: true, // defined true -> ContactBlockedCell renders "Yes"
   label_ids: [10],
 } as unknown as Contact;
 
@@ -41,7 +41,7 @@ const CONTACT_PLAIN = {
   contact_type: "corporation",
   standing: -2.5,
   is_watched: false,
-  is_blocked: undefined, // undefined -> blocked cell falls through to "No"
+  is_blocked: undefined, // undefined -> ContactBlockedCell renders the dimmed "Unknown" text
   label_ids: [],
 } as unknown as Contact;
 
@@ -84,9 +84,15 @@ describe("ContactsDataTable", () => {
     expect(screen.getByText("Friends")).toBeInTheDocument();
   });
 
-  it("renders the 'Unknown' blocked text when is_blocked is defined", () => {
+  it("renders 'Yes' in the blocked column when is_blocked is true", () => {
     renderTable([CONTACT_WATCHED]);
-    // ContactBlockedCell returns the "Unknown" Text whenever is_blocked !== undefined
+    // ContactBlockedCell renders "Yes" for a defined truthy is_blocked value
+    expect(screen.getByText("Yes")).toBeInTheDocument();
+  });
+
+  it("renders the 'Unknown' blocked text when is_blocked is undefined", () => {
+    renderTable([CONTACT_PLAIN]);
+    // ContactBlockedCell renders the dimmed "Unknown" Text only when is_blocked is undefined
     expect(screen.getByText("Unknown")).toBeInTheDocument();
   });
 

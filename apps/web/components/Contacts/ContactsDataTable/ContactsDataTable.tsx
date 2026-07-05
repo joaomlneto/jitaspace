@@ -60,15 +60,14 @@ function ContactWatchedCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
 
 function ContactBlockedCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
   const isBlocked = cell.getValue<boolean | undefined>();
-  if (isBlocked !== undefined) {
+  if (isBlocked === undefined) {
     return (
       <Text size="sm" c="dimmed" fs="italic">
         Unknown
       </Text>
     );
   }
-  // Only reached when `isBlocked` is undefined.
-  return "No";
+  return isBlocked ? "Yes" : "No";
 }
 
 function ContactStandingsCell({ cell }: Readonly<{ cell: MRT_Cell<Contact> }>) {
