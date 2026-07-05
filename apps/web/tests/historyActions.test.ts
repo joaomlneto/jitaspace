@@ -12,7 +12,12 @@ import { HISTORY_MIN_RELEASE_DATE, isBuildInHistoryScope } from "~/lib/history";
 // never loaded. Mutable fixtures are reassigned per-test; the stub closes over
 // them by reference (mock-prefixed so the jest factory accepts them).
 
-let mockBuilds: { buildNumber: number; releasedAt: Date | null }[] = [];
+type ServerTag = "tranquility" | "singularity" | null;
+let mockBuilds: {
+  buildNumber: number;
+  releasedAt: Date | null;
+  server?: ServerTag;
+}[] = [];
 let mockCollections: { id: number; name: string }[] = [];
 let mockGrouped: { diffId: number; collectionId: number; _count: number }[] =
   [];
@@ -24,10 +29,19 @@ let mockChangeRows: {
   diffId: number;
   collection: { name: string };
 }[] = [];
+// fileChange.groupBy fixture (getResourceIndex's per-build file-change counts).
+let mockFileAgg: {
+  diffId: number;
+  op: "added" | "modified" | "removed";
+  _count: number;
+}[] = [];
 // build.findUnique fixture (the build-addressed readers' scope gate); null ⇒
 // "build not found".
-let mockBuildUnique: { buildNumber: number; releasedAt: Date | null } | null =
-  null;
+let mockBuildUnique: {
+  buildNumber: number;
+  releasedAt: Date | null;
+  server?: ServerTag;
+} | null = null;
 
 jest.mock("@jitaspace/db-history", () => ({
   historyDb: {
@@ -54,7 +68,7 @@ jest.mock("@jitaspace/db-history", () => ({
     },
     buildDiff: { findMany: () => Promise.resolve(mockDiffs) },
     fileChange: {
-      groupBy: () => Promise.resolve([]),
+      groupBy: () => Promise.resolve(mockFileAgg),
       findMany: () => Promise.resolve([]),
     },
   },
@@ -72,7 +86,7 @@ jest.mock("next/cache", () => ({
 // top-level import would load the real module before the stub is registered.
 // The index is read straight from the cache module (no server-action wrapper);
 // the build/entity readers live in history-actions.
-const { getEntityTimeline, getBuildChanges } =
+const { getEntityTimeline, getBuildChanges, getResourceIndex, getFileDiff } =
   require("~/lib/history-actions") as typeof HistoryActions;
 const { getCachedHistoryIndex } =
   require("~/lib/history-cache") as typeof HistoryCache;
@@ -95,6 +109,23 @@ describe("isBuildInHistoryScope", () => {
   it("accepts date strings, comparing on the YYYY-MM-DD prefix", () => {
     expect(isBuildInHistoryScope("2011-12-31T23:59:59Z")).toBe(false);
     expect(isBuildInHistoryScope(HISTORY_MIN_RELEASE_DATE)).toBe(true);
+  });
+
+  it("excludes test-server (Singularity) builds regardless of date", () => {
+    expect(isBuildInHistoryScope(new Date("2024-06-01"), "singularity")).toBe(
+      false,
+    );
+    // even an undated Singularity build is hidden (the null-date "in scope"
+    // default does not rescue a test-server build)
+    expect(isBuildInHistoryScope(null, "singularity")).toBe(false);
+  });
+
+  it("keeps Tranquility and SDE-backfill (null server) builds", () => {
+    expect(isBuildInHistoryScope(new Date("2024-06-01"), "tranquility")).toBe(
+      true,
+    );
+    expect(isBuildInHistoryScope(new Date("2024-06-01"), null)).toBe(true);
+    expect(isBuildInHistoryScope(new Date("2024-06-01"), undefined)).toBe(true);
   });
 });
 
@@ -160,6 +191,30 @@ describe("getCachedHistoryIndex", () => {
 
     expect(builds).not.toContain(80313);
     expect(builds).toEqual([600000, 700000, 900000]);
+  });
+
+  it("excludes test-server (Singularity) builds, keeps Tranquility and SDE", async () => {
+    mockBuilds = [
+      {
+        buildNumber: 700000,
+        releasedAt: new Date("2024-06-01"),
+        server: "tranquility",
+      },
+      {
+        buildNumber: 700001,
+        releasedAt: new Date("2024-06-02"),
+        server: "singularity", // test server — must be hidden
+      },
+      { buildNumber: 700002, releasedAt: new Date("2024-06-03"), server: null }, // SDE
+    ];
+    mockDiffs = [];
+    mockGrouped = [];
+
+    const index = await getCachedHistoryIndex();
+    const builds = index.builds.map((b) => b.build);
+
+    expect(builds).not.toContain(700001);
+    expect(builds).toEqual([700000, 700002]);
   });
 });
 
@@ -272,6 +327,53 @@ describe("getEntityTimeline", () => {
 
     expect(await getEntityTimeline("type", 587)).toBeNull();
   });
+
+  it("drops events on test-server (Singularity) builds, keeps Tranquility ones", async () => {
+    // diff 10 → build 700000 (Tranquility); diff 11 → build 700001 (Singularity)
+    mockDiffs = [
+      { id: 10, toBuild: 700000 },
+      { id: 11, toBuild: 700001 },
+    ];
+    mockBuilds = [
+      {
+        buildNumber: 700000,
+        releasedAt: new Date("2024-06-01"),
+        server: "tranquility",
+      },
+      {
+        buildNumber: 700001,
+        releasedAt: new Date("2024-06-02"),
+        server: "singularity",
+      },
+    ];
+    mockChangeRows = [
+      {
+        op: "added",
+        data: { typeName: "Rifter" },
+        diffId: 10,
+        collection: { name: "types" },
+      },
+      {
+        op: "modified",
+        data: { mass: { from: 1000, to: 1100 } },
+        diffId: 11,
+        collection: { name: "types" },
+      },
+    ];
+
+    const timeline = await getEntityTimeline("type", 587);
+
+    expect(timeline?.events).toEqual([
+      {
+        build: 700000,
+        date: "2024-06-01",
+        collection: "types",
+        v: 1,
+        kind: "added",
+        values: { typeName: "Rifter" },
+      },
+    ]);
+  });
 });
 
 describe("getBuildChanges", () => {
@@ -282,5 +384,61 @@ describe("getBuildChanges", () => {
     };
 
     expect(await getBuildChanges(80313)).toBeNull();
+  });
+
+  it("returns null for a test-server (Singularity) build", async () => {
+    mockBuildUnique = {
+      buildNumber: 700001,
+      releasedAt: new Date("2024-06-02"),
+      server: "singularity",
+    };
+
+    expect(await getBuildChanges(700001)).toBeNull();
+  });
+});
+
+describe("getResourceIndex", () => {
+  it("excludes test-server (Singularity) builds from the resource index", async () => {
+    mockBuilds = [
+      {
+        buildNumber: 700000,
+        releasedAt: new Date("2024-06-01"),
+        server: "tranquility",
+      },
+      {
+        buildNumber: 700001,
+        releasedAt: new Date("2024-06-02"),
+        server: "singularity",
+      },
+    ];
+    mockDiffs = [
+      { id: 10, toBuild: 700000 },
+      { id: 11, toBuild: 700001 },
+    ];
+    // Both builds have file changes; only the Tranquility one should survive.
+    mockFileAgg = [
+      { diffId: 10, op: "added", _count: 3 },
+      { diffId: 11, op: "added", _count: 5 },
+    ];
+    mockCollections = []; // no string collections
+    mockGrouped = []; // no string changes
+
+    const index = await getResourceIndex();
+    const builds = index.builds.map((b) => b.build);
+
+    expect(builds).toEqual([700000]);
+    expect(builds).not.toContain(700001);
+  });
+});
+
+describe("getFileDiff", () => {
+  it("returns null for a test-server (Singularity) build (scope gate)", async () => {
+    mockBuildUnique = {
+      buildNumber: 700001,
+      releasedAt: new Date("2024-06-02"),
+      server: "singularity",
+    };
+
+    expect(await getFileDiff(700001)).toBeNull();
   });
 });
