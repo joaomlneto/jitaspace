@@ -144,32 +144,46 @@ export async function getCachedEntityTimeline(
   // Build row), and traversing a null relation crashed the timeline. A change
   // whose diff is gone can't be placed on the axis (skip it); a missing Build
   // row yields a null date.
-  const [diffs, builds] = await Promise.all([
-    historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
+  const [diffs, builds, resfileDiffs] = await Promise.all([
+    historyDb.buildDiff.findMany({
+      select: { id: true, fromBuild: true, toBuild: true },
+    }),
     historyDb.build.findMany({
       select: { buildNumber: true, releasedAt: true, server: true },
     }),
+    // Which diffs carry resource-file changes → they came from the resource
+    // server (CDN); diffs with none are SDE-backfill diffs (the SDE produces no
+    // res files). This presence/absence is the only provenance signal — there is
+    // no explicit source field.
+    historyDb.fileChange.groupBy({ by: ["diffId"], _count: true }),
   ]);
   const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
+  const fromBuildOf = new Map(diffs.map((d) => [d.id, d.fromBuild]));
   const releasedAtOf = new Map(
     builds.map((b) => [b.buildNumber, b.releasedAt]),
   );
   const serverOf = new Map(builds.map((b) => [b.buildNumber, b.server]));
+  const resfileDiffIds = new Set(resfileDiffs.map((g) => g.diffId));
 
   const events = rows.flatMap((r) => {
     const build = toBuildOf.get(r.diffId);
     if (build === undefined) return [];
     const releasedAt = releasedAtOf.get(build) ?? null;
+    const server = serverOf.get(build) ?? null;
     // Drop events on out-of-scope builds — test-server (Singularity) builds and
     // pre-scope-floor builds (build 80313, the pre-2012 baseline) — so timelines
     // show only real Tranquility/SDE releases, consistent with the index.
-    if (!isBuildInHistoryScope(releasedAt, serverOf.get(build) ?? null))
-      return [];
+    if (!isBuildInHistoryScope(releasedAt, server)) return [];
     return [
       {
         build,
         date: ymd(releasedAt),
         collection: r.collection.name,
+        fromBuild: fromBuildOf.get(r.diffId) ?? null,
+        server,
+        provenance: resfileDiffIds.has(r.diffId)
+          ? ("resource-server" as const)
+          : ("sde" as const),
         v: 1 as const,
         kind: r.op,
         ...(r.op === "modified" ? { fields: r.data } : { values: r.data }),

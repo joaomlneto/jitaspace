@@ -85,6 +85,9 @@ const TIMELINE = {
       build: 100,
       date: "2025-01-01",
       collection: "typeDogma",
+      fromBuild: 99,
+      server: "tranquility",
+      provenance: "resource-server",
       v: 1,
       kind: "modified",
       fields: {
@@ -109,6 +112,9 @@ const TIMELINE = {
       build: 98,
       date: "2024-01-01",
       collection: "types",
+      fromBuild: 97,
+      server: "tranquility",
+      provenance: "sde",
       v: 1,
       kind: "added",
       values: { typeName: "Rifter", mass: 1067000 },
@@ -299,6 +305,12 @@ describe("EntityHistory", () => {
     );
     expect(screen.getByText("Rifter header")).toBeTruthy();
     expect(screen.getByText("2025-01-01")).toBeTruthy();
+    // per-entry provenance / server / from-build metadata
+    expect(screen.getAllByText("Tranquility").length).toBeGreaterThan(0);
+    expect(screen.getByText("Resource Server")).toBeTruthy();
+    expect(screen.getByText("SDE")).toBeTruthy();
+    expect(screen.getByText(/from build 99/)).toBeTruthy();
+    expect(screen.getByText(/from build 97/)).toBeTruthy();
   });
 
   it("renders an empty state when there are no events", async () => {

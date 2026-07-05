@@ -74,9 +74,15 @@ export type BuildChanges = z.infer<typeof BuildChanges>;
 
 export const TimelineEvent = z.intersection(
   z.object({
-    build: z.number(),
+    build: z.number(), // the diff's target ("to") build
     date: z.string().nullable(),
     collection: z.string().optional(), // absent ⇒ "types" (legacy files)
+    /** Baseline ("from") build of the diff; null ⇒ genesis snapshot. */
+    fromBuild: z.number().nullable().optional(),
+    /** Server the target build was observed on; null ⇒ SDE backfill (no pointer). */
+    server: z.enum(["tranquility", "singularity"]).nullable().optional(),
+    /** Where the change data came from — the SDE export or the resource server. */
+    provenance: z.enum(["sde", "resource-server"]).optional(),
   }),
   EntityChange,
 );
@@ -315,4 +321,47 @@ export function collectionMeta(collection?: string): {
       color: "gray",
     }
   );
+}
+
+// ── server & provenance display metadata ─────────────────────────────────────
+
+/**
+ * Where a change's data came from. `sde` = CCP's Static Data Export snapshot;
+ * `resource-server` = the live client resource server (CDN res files). Inferred
+ * from whether the diff carries res-file changes — the only available signal, as
+ * the SDE backfill produces no res files.
+ */
+export type Provenance = "sde" | "resource-server";
+
+const PROVENANCE_META: Record<Provenance, { label: string; color: string }> = {
+  sde: { label: "SDE", color: "grape" },
+  "resource-server": { label: "Resource Server", color: "cyan" },
+};
+
+/** Display label + color for a change's {@link Provenance}. */
+export function provenanceMeta(provenance: Provenance): {
+  label: string;
+  color: string;
+} {
+  return PROVENANCE_META[provenance];
+}
+
+/**
+ * Display label + color for the EVE server a build was observed on. The viewer
+ * is Tranquility-only (Singularity is filtered out upstream), and SDE-backfill
+ * builds carry no server pointer (`null`) — their data still reflects
+ * Tranquility, so both `"tranquility"` and `null` render as "Tranquility".
+ */
+export function serverMeta(server: BuildServer): {
+  label: string;
+  color: string;
+} {
+  if (server === "singularity")
+    return { label: "Singularity", color: "orange" };
+  return { label: "Tranquility", color: "teal" };
+}
+
+/** Human label for a diff's baseline build (null ⇒ the initial genesis snapshot). */
+export function fromBuildLabel(fromBuild: number | null | undefined): string {
+  return fromBuild == null ? "initial snapshot" : `build ${fromBuild}`;
 }
