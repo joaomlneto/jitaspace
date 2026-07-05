@@ -84,10 +84,10 @@ function securityStatusColor(sec: number): string {
 function SectionTitle({
   icon,
   children,
-}: {
+}: Readonly<{
   icon?: ReactNode;
   children: ReactNode;
-}) {
+}>) {
   return (
     <Group gap="xs" mb="md" wrap="nowrap">
       {icon}
@@ -99,7 +99,10 @@ function SectionTitle({
 }
 
 /** A single label / value row used inside the Details card. */
-function InfoRow({ label, children }: { label: string; children: ReactNode }) {
+function InfoRow({
+  label,
+  children,
+}: Readonly<{ label: string; children: ReactNode }>) {
   return (
     <Group justify="space-between" wrap="nowrap" gap="xl" align="center">
       <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
@@ -114,13 +117,15 @@ function InfoRow({ label, children }: { label: string; children: ReactNode }) {
  * Renders a capsuleer's age. The birthday row only mounts once character data
  * has loaded client-side, so a per-mount `now` is safe (no SSR/hydration gap).
  */
-function CharacterAge({ birthday }: { birthday: Date }) {
+function CharacterAge({ birthday }: Readonly<{ birthday: Date }>) {
   const [now] = useState(() => new Date());
   return <>{formatDistanceStrict(birthday, now)}</>;
 }
 
 /** Public employment history — the corporations a character has belonged to. */
-function CharacterEmploymentHistory({ characterId }: { characterId: number }) {
+function CharacterEmploymentHistory({
+  characterId,
+}: Readonly<{ characterId: number }>) {
   const { data, isLoading } =
     useGetCharactersCharacterIdCorporationhistory(characterId);
 
@@ -243,7 +248,7 @@ export default function Page() {
   }
 
   const cleanTitle = character?.title
-    ? character.title.replace(/<[^>]*>/g, "").trim()
+    ? character.title.replace(/<[^<>]*>/g, "").trim()
     : undefined;
 
   let npcBadgeLabel: string | undefined;
