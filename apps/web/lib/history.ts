@@ -101,16 +101,32 @@ export type EntityTimeline = z.infer<typeof EntityTimeline>;
 export const HISTORY_MIN_RELEASE_DATE = "2012-03-14";
 
 /**
- * Whether a build's release date places it within the change-history scope.
+ * EVE server a build's client-build pointer was observed on — mirrors the
+ * history DB's `Build.server` enum. `null`/absent ⇒ no live-server pointer, i.e.
+ * the SDE backfill, which the viewer keeps alongside Tranquility.
+ */
+export type BuildServer = "tranquility" | "singularity" | null;
+
+/**
+ * Whether a build is within the change-history scope, given its release date and
+ * the server its client-build pointer was observed on.
  *
- * A build released before {@link HISTORY_MIN_RELEASE_DATE} (e.g. build 80313) is
- * out of scope. A build whose date is unknown (`null`) is treated as in scope —
- * the floor only ever drops a build we can positively date as too old, so an
- * undated build is never silently hidden.
+ * Out of scope:
+ * - Test-server (Singularity) builds — the viewer surfaces only the live
+ *   Tranquility timeline plus the SDE backfill (whose `server` is null). This
+ *   holds regardless of date, so an undated Singularity build is still hidden.
+ * - Builds released before {@link HISTORY_MIN_RELEASE_DATE} (e.g. the pre-2012
+ *   baseline build 80313).
+ *
+ * A build whose date is unknown (`null`) is otherwise treated as in scope — the
+ * floor only ever drops a build we can positively date as too old, so an undated
+ * Tranquility/SDE build is never silently hidden.
  */
 export function isBuildInHistoryScope(
   releasedAt: Date | string | null | undefined,
+  server?: BuildServer,
 ): boolean {
+  if (server === "singularity") return false;
   if (releasedAt == null) return true;
   const ymd =
     typeof releasedAt === "string"

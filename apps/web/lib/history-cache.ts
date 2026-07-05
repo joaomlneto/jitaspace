@@ -32,7 +32,7 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
     [
       historyDb.build.findMany({
         orderBy: { buildNumber: "asc" },
-        select: { buildNumber: true, releasedAt: true },
+        select: { buildNumber: true, releasedAt: true, server: true },
       }),
       historyDb.collection.findMany({
         where: notStr,
@@ -79,11 +79,13 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
   const entityCountsByType: Record<string, number> = {};
   for (const g of entityGroups) entityCountsByType[g.kind] = g._count;
 
-  // Drop builds released before the scope floor (build 80313, the pre-2012
-  // baseline). This filters both the index list and the timeline chart, which
-  // reads the same `builds` array.
+  // Drop builds out of scope — test-server (Singularity) builds and the pre-2012
+  // baseline (build 80313). This filters both the index list and the timeline
+  // chart (which reads the same `builds` array); a dropped build's change counts
+  // sit in `perBuild` under its `toBuild` but are never read, since only the
+  // surviving builds are mapped below.
   const buildsOut = builds
-    .filter((b) => isBuildInHistoryScope(b.releasedAt))
+    .filter((b) => isBuildInHistoryScope(b.releasedAt, b.server))
     .map((b) => {
       const byCollection = perBuild.get(b.buildNumber) ?? {};
       const changeCount = Object.values(byCollection).reduce(
@@ -145,21 +147,24 @@ export async function getCachedEntityTimeline(
   const [diffs, builds] = await Promise.all([
     historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
     historyDb.build.findMany({
-      select: { buildNumber: true, releasedAt: true },
+      select: { buildNumber: true, releasedAt: true, server: true },
     }),
   ]);
   const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
   const releasedAtOf = new Map(
     builds.map((b) => [b.buildNumber, b.releasedAt]),
   );
+  const serverOf = new Map(builds.map((b) => [b.buildNumber, b.server]));
 
   const events = rows.flatMap((r) => {
     const build = toBuildOf.get(r.diffId);
     if (build === undefined) return [];
     const releasedAt = releasedAtOf.get(build) ?? null;
-    // Drop events on builds before the scope floor (build 80313, the pre-2012
-    // baseline) so timelines start at a real release, consistent with the index.
-    if (!isBuildInHistoryScope(releasedAt)) return [];
+    // Drop events on out-of-scope builds — test-server (Singularity) builds and
+    // pre-scope-floor builds (build 80313, the pre-2012 baseline) — so timelines
+    // show only real Tranquility/SDE releases, consistent with the index.
+    if (!isBuildInHistoryScope(releasedAt, serverOf.get(build) ?? null))
+      return [];
     return [
       {
         build,

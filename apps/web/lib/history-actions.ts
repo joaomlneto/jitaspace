@@ -34,15 +34,16 @@ const opKey = (op: "added" | "modified" | "removed") =>
 /**
  * Whether a build number is within the change-history scope, per
  * {@link isBuildInHistoryScope}. Used to gate the build-addressed readers so a
- * direct request for the pre-2012 baseline (build 80313) resolves to "not found"
- * rather than serving its baseline snapshot.
+ * direct request for an out-of-scope build — a test-server (Singularity) build,
+ * or the pre-2012 baseline (build 80313) — resolves to "not found" rather than
+ * serving its data.
  */
 const isBuildNumberInScope = async (build: number): Promise<boolean> => {
   const b = await historyDb.build.findUnique({
     where: { buildNumber: build },
-    select: { releasedAt: true },
+    select: { releasedAt: true, server: true },
   });
-  return b !== null && isBuildInHistoryScope(b.releasedAt);
+  return b !== null && isBuildInHistoryScope(b.releasedAt, b.server);
 };
 
 /**
@@ -59,8 +60,9 @@ export async function getBuildChanges(
 
   const b = await historyDb.build.findUnique({ where: { buildNumber: build } });
   if (!b) return null;
-  // Pre-2012 baseline (build 80313) is out of scope — render an empty state.
-  if (!isBuildInHistoryScope(b.releasedAt)) return null;
+  // Out of scope — a test-server (Singularity) build or the pre-2012 baseline
+  // (build 80313) — renders an empty state.
+  if (!isBuildInHistoryScope(b.releasedAt, b.server)) return null;
 
   const rows = await historyDb.change.findMany({
     where: {
@@ -116,7 +118,7 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
       _count: true,
     }),
     historyDb.build.findMany({
-      select: { buildNumber: true, releasedAt: true },
+      select: { buildNumber: true, releasedAt: true, server: true },
     }),
     historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
   ]);
@@ -157,8 +159,9 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
   for (const [bid, v] of perBuild) {
     const b = buildInfo.get(bid);
     if (!b) continue;
-    // Skip the pre-2012 baseline (build 80313), as the SDE index does.
-    if (!isBuildInHistoryScope(b.releasedAt)) continue;
+    // Skip out-of-scope builds — test-server (Singularity) builds and the
+    // pre-2012 baseline (build 80313) — as the SDE index does.
+    if (!isBuildInHistoryScope(b.releasedAt, b.server)) continue;
     out.push({
       build: b.buildNumber,
       date: ymd(b.releasedAt),
