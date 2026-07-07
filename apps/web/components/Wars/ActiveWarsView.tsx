@@ -38,7 +38,7 @@ function toTableWar(war: WarRoomWar): War {
  * experimental setting: the redesigned overview when enabled, otherwise the
  * long-standing table. Both render from the same server-fetched data.
  */
-export function ActiveWarsView({ data }: { data: WarRoomData }) {
+export function ActiveWarsView({ data }: Readonly<{ data: WarRoomData }>) {
   const experimental = usePreferencesStore(
     (state) => state.experimentalActiveWars,
   );

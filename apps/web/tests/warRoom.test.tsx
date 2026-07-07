@@ -173,7 +173,7 @@ describe("WarRoom overview", () => {
     expect(container.querySelector("table")).toBeInTheDocument();
     expect(screen.getByText("Balance")).toBeInTheDocument();
 
-    const sortable = container.querySelectorAll('[class*="sortable"]');
+    const sortable = container.querySelectorAll("th button");
     // first sortable header is the active "ISK dealt" sort → toggles to ascending
     fireEvent.click(sortable[0]!);
     expect(
@@ -184,9 +184,9 @@ describe("WarRoom overview", () => {
     expect(
       container.querySelector('th[aria-sort="descending"]'),
     ).toBeInTheDocument();
-    // keyboard activation is supported
-    fireEvent.keyDown(sortable[2]!, { key: "Enter" });
-    expect(container.querySelector("th[aria-sort]")).toBeInTheDocument();
+    // a third sortable header re-keys the sort
+    fireEvent.click(sortable[2]!);
+    expect(container.querySelector('th[aria-sort="descending"]')).toBeInTheDocument();
   });
 
   it("filters by status and attribute, showing an empty state", () => {

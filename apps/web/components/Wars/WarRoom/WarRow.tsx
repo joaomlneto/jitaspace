@@ -9,14 +9,15 @@ import { BalanceBar, IskFigure, StatusPill, WarEntity } from "./parts";
 import { allyCount, formatDuration } from "./utils";
 import classes from "./WarRoom.module.css";
 
-export function WarRow({ war }: { war: WarRoomWar }) {
+export function WarRow({ war }: Readonly<{ war: WarRoomWar }>) {
   const allies = allyCount(war);
+  const allyLabel = allies === 1 ? "ally" : "allies";
   const meta = [
     `${war.aggressorShipsKilled}·${war.defenderShipsKilled} ships`,
     war.status === "pending" ? "not started" : formatDuration(war.ageDays),
     war.isMutual ? "mutual" : null,
     war.isOpenForAllies ? "open for allies" : null,
-    allies > 0 ? `${allies} ${allies === 1 ? "ally" : "allies"}` : null,
+    allies > 0 ? `${allies} ${allyLabel}` : null,
   ].filter(Boolean);
 
   return (

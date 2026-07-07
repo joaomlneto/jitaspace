@@ -26,39 +26,38 @@ export function WarEntity({
   size = 20,
   reversed = false,
   linked = false,
-}: {
+}: Readonly<{
   side: "aggressor" | "defender";
   corporationId?: number;
   allianceId?: number;
   size?: number;
   reversed?: boolean;
   linked?: boolean;
-}) {
+}>) {
+  const isAlliance = allianceId != null;
   const ring = cx(
     classes.avatarRing,
     side === "aggressor" ? classes.agg : classes.def,
   );
 
-  const avatar =
-    allianceId != null ? (
-      <AllianceAvatar allianceId={allianceId} size={size} className={ring} />
-    ) : (
-      <CorporationAvatar
-        corporationId={corporationId}
-        size={size}
-        className={ring}
-      />
-    );
+  const avatar = isAlliance ? (
+    <AllianceAvatar allianceId={allianceId} size={size} className={ring} />
+  ) : (
+    <CorporationAvatar
+      corporationId={corporationId}
+      size={size}
+      className={ring}
+    />
+  );
 
-  const rawName =
-    allianceId != null ? (
-      <AllianceName allianceId={allianceId} className={classes.entityName} />
-    ) : (
-      <CorporationName
-        corporationId={corporationId}
-        className={classes.entityName}
-      />
-    );
+  const rawName = isAlliance ? (
+    <AllianceName allianceId={allianceId} className={classes.entityName} />
+  ) : (
+    <CorporationName
+      corporationId={corporationId}
+      className={classes.entityName}
+    />
+  );
 
   let name = rawName;
   if (linked && allianceId != null) {
@@ -95,10 +94,10 @@ export function WarEntity({
 export function BalanceBar({
   share,
   height,
-}: {
+}: Readonly<{
   share: number | null;
   height?: number;
-}) {
+}>) {
   const style: CSSProperties | undefined = height ? { height } : undefined;
   if (share === null) {
     return <span className={cx(classes.bal, classes.empty)} style={style} />;
@@ -115,15 +114,18 @@ export function BalanceBar({
 export function IskFigure({
   war,
   side,
-}: {
+}: Readonly<{
   war: WarRoomWar;
   side: "aggressor" | "defender";
-}) {
+}>) {
   const lead = leadingSide(war);
   const value =
     side === "aggressor" ? war.aggressorIskDestroyed : war.defenderIskDestroyed;
-  const emphasis =
-    lead === side ? classes.lead : lead ? classes.figDim : undefined;
+
+  let emphasis: string | undefined;
+  if (lead === side) emphasis = classes.lead;
+  else if (lead) emphasis = classes.figDim;
+
   return (
     <span
       className={cx(
@@ -143,7 +145,7 @@ export function statusDotClass(status: WarStatus): string | undefined {
   return classes.dotActive;
 }
 
-export function StatusPill({ status }: { status: WarStatus }) {
+export function StatusPill({ status }: Readonly<{ status: WarStatus }>) {
   return (
     <span className={classes.state}>
       <span className={cx(classes.dot, statusDotClass(status))} />

@@ -8,7 +8,7 @@ import { StatHeader } from "./StatHeader";
 import { WarList } from "./WarList";
 import classes from "./WarRoom.module.css";
 
-export function WarRoom({ data }: { data: WarRoomData }) {
+export function WarRoom({ data }: Readonly<{ data: WarRoomData }>) {
   const { stats, wars, topAggressors } = data;
 
   return (

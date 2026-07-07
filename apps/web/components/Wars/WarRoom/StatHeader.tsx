@@ -5,7 +5,7 @@ import { cx } from "./parts";
 import { formatCompactNumber, formatIskCompact } from "./utils";
 import classes from "./WarRoom.module.css";
 
-export function StatHeader({ stats }: { stats: WarRoomStats }) {
+export function StatHeader({ stats }: Readonly<{ stats: WarRoomStats }>) {
   const cells: { value: string; label: string; dot?: string }[] = [
     {
       value: formatCompactNumber(stats.activeCount),

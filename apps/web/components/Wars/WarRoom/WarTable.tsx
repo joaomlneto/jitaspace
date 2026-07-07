@@ -14,32 +14,31 @@ function SortableTh({
   sortKey,
   sortDir,
   onSort,
-}: {
+}: Readonly<{
   sortId: SortKey;
   label: string;
   sortKey: SortKey;
   sortDir: -1 | 1;
   onSort: (key: SortKey) => void;
-}) {
+}>) {
   const active = sortKey === sortId;
+  let ariaSort: "ascending" | "descending" | "none" = "none";
+  if (active) ariaSort = sortDir < 0 ? "descending" : "ascending";
+
+  // A real <button> keeps the header keyboard-accessible; aria-sort stays on the
+  // <th> (its native columnheader role supports it).
   return (
-    <th
-      className={cx(classes.num, classes.sortable)}
-      onClick={() => onSort(sortId)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onSort(sortId);
-        }
-      }}
-      tabIndex={0}
-      role="button"
-      aria-sort={active ? (sortDir < 0 ? "descending" : "ascending") : "none"}
-    >
-      {label}
-      {active ? (
-        <span className={classes.car}>{sortDir < 0 ? "↓" : "↑"}</span>
-      ) : null}
+    <th className={classes.num} aria-sort={ariaSort}>
+      <button
+        type="button"
+        className={classes.sortBtn}
+        onClick={() => onSort(sortId)}
+      >
+        {label}
+        {active ? (
+          <span className={classes.car}>{sortDir < 0 ? "↓" : "↑"}</span>
+        ) : null}
+      </button>
     </th>
   );
 }
@@ -49,12 +48,12 @@ export function WarTable({
   sortKey,
   sortDir,
   onSort,
-}: {
+}: Readonly<{
   wars: WarRoomWar[];
   sortKey: SortKey;
   sortDir: -1 | 1;
   onSort: (key: SortKey) => void;
-}) {
+}>) {
   return (
     <div className={classes.tableScroll}>
       <table className={classes.ledger}>

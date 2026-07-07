@@ -16,7 +16,7 @@ type ViewMode = "rows" | "table";
 const INITIAL_VISIBLE = 24;
 const VISIBLE_STEP = 24;
 
-export function WarList({ wars }: { wars: WarRoomWar[] }) {
+export function WarList({ wars }: Readonly<{ wars: WarRoomWar[] }>) {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [combat, setCombat] = useState(false);
   const [mutual, setMutual] = useState(false);
@@ -53,11 +53,39 @@ export function WarList({ wars }: { wars: WarRoomWar[] }) {
     }
   };
 
+  let listContent;
+  if (shown.length === 0) {
+    listContent = (
+      <div className={cx(classes.listCard, classes.empty)}>
+        No wars match these filters.
+      </div>
+    );
+  } else if (view === "table") {
+    listContent = (
+      <div className={classes.swap} key="table">
+        <WarTable
+          wars={shown}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSort={handleTableSort}
+        />
+      </div>
+    );
+  } else {
+    listContent = (
+      <div className={cx(classes.listCard, classes.swap)} key="rows">
+        {shown.map((war) => (
+          <WarRow key={war.warId} war={war} />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <section className={classes.section}>
       <div className={classes.sectionHead}>
         <div className={classes.sectionTitle}>
-          All wars
+          All wars{" "}
           <span className={classes.sectionSub}>
             {filtered.length.toLocaleString()} shown
           </span>
@@ -111,26 +139,7 @@ export function WarList({ wars }: { wars: WarRoomWar[] }) {
         </div>
       </div>
 
-      {shown.length === 0 ? (
-        <div className={cx(classes.listCard, classes.empty)}>
-          No wars match these filters.
-        </div>
-      ) : view === "table" ? (
-        <div className={classes.swap} key="table">
-          <WarTable
-            wars={shown}
-            sortKey={sortKey}
-            sortDir={sortDir}
-            onSort={handleTableSort}
-          />
-        </div>
-      ) : (
-        <div className={cx(classes.listCard, classes.swap)} key="rows">
-          {shown.map((war) => (
-            <WarRow key={war.warId} war={war} />
-          ))}
-        </div>
-      )}
+      {listContent}
 
       {visible < sorted.length ? (
         <div className={classes.moreWrap}>

@@ -13,11 +13,12 @@ import classes from "./WarRoom.module.css";
 function SideName({
   corporationId,
   allianceId,
-}: {
+}: Readonly<{
   corporationId?: number;
   allianceId?: number;
-}) {
-  return allianceId != null ? (
+}>) {
+  const isAlliance = allianceId != null;
+  return isAlliance ? (
     <AllianceName allianceId={allianceId} inherit span />
   ) : (
     <CorporationName corporationId={corporationId} inherit span />
@@ -28,11 +29,11 @@ function AggressorRow({
   aggressor,
   rank,
   max,
-}: {
+}: Readonly<{
   aggressor: WarRoomAggressor;
   rank: number;
   max: number;
-}) {
+}>) {
   const width = max > 0 ? Math.max((aggressor.warCount / max) * 100, 3) : 0;
   return (
     <div className={classes.blRow}>
@@ -68,11 +69,11 @@ function FightRow({
   war,
   rank,
   max,
-}: {
+}: Readonly<{
   war: WarRoomWar;
   rank: number;
   max: number;
-}) {
+}>) {
   const width = max > 0 ? Math.max((war.totalIskDestroyed / max) * 100, 3) : 0;
   return (
     <div className={classes.blRow}>
@@ -111,10 +112,10 @@ function FightRow({
 export function Belligerents({
   aggressors,
   wars,
-}: {
+}: Readonly<{
   aggressors: WarRoomAggressor[];
   wars: WarRoomWar[];
-}) {
+}>) {
   const heaviest = useMemo(
     () =>
       wars
@@ -132,7 +133,7 @@ export function Belligerents({
       <section>
         <div className={classes.sectionHead}>
           <div className={classes.sectionTitle}>
-            Most active aggressors
+            Most active aggressors{" "}
             <span className={classes.sectionSub}>wars declared</span>
           </div>
         </div>
@@ -151,7 +152,7 @@ export function Belligerents({
       <section>
         <div className={classes.sectionHead}>
           <div className={classes.sectionTitle}>
-            Heaviest fighting
+            Heaviest fighting{" "}
             <span className={classes.sectionSub}>by ISK destroyed</span>
           </div>
         </div>
