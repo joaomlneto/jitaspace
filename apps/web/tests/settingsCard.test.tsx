@@ -195,4 +195,26 @@ describe("SettingsCard", () => {
     fireEvent.click(toggle);
     expect(usePreferencesStore.getState().experimentalDataTables).toBe(true);
   });
+
+  it("toggles the new Active Wars page from the Experimental tab", async () => {
+    usePreferencesStore.setState({ experimentalActiveWars: false });
+
+    const { SettingsCard } = require("~/components/Settings/SettingsCard");
+
+    render(
+      <AppMantineProvider>
+        <SettingsCard />
+      </AppMantineProvider>,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Experimental" }));
+
+    const toggle = await screen.findByLabelText(
+      "Enable the new Active Wars page",
+    );
+    expect(toggle).not.toBeChecked();
+
+    fireEvent.click(toggle);
+    expect(usePreferencesStore.getState().experimentalActiveWars).toBe(true);
+  });
 });
