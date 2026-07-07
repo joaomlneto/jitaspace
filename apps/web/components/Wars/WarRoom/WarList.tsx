@@ -56,7 +56,7 @@ export function WarList({ wars }: Readonly<{ wars: WarRoomWar[] }>) {
   let listContent;
   if (shown.length === 0) {
     listContent = (
-      <div className={cx(classes.listCard, classes.empty)}>
+      <div className={cx(classes.listCard, classes.emptyMessage)}>
         No wars match these filters.
       </div>
     );

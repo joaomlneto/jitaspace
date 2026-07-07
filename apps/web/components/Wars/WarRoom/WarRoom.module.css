@@ -470,7 +470,10 @@
   justify-content: center;
   margin-top: var(--mantine-spacing-md);
 }
-.empty {
+/* Empty-list message. NOT named `.empty` — that would collide with the balance
+   bar's `.bal.empty` modifier (both resolve to the same CSS-module class) and
+   apply this padding to the thin empty bar. */
+.emptyMessage {
   padding: var(--mantine-spacing-xl);
   text-align: center;
   color: var(--ink-3);
