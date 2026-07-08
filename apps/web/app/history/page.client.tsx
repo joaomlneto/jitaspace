@@ -223,6 +223,9 @@ export default function HistoryIndexClient({
             How EVE Online static data has changed across {changedBuildCount}{" "}
             client builds. {countsLabel} with recorded changes.
           </Text>
+          <Anchor component={Link} href="/history/compare" size="sm" mt={4}>
+            Compare two builds →
+          </Anchor>
           <Group gap="xs" mt={8}>
             <Text size="xs" c="dimmed">
               Tracking:

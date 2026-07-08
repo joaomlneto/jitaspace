@@ -72,6 +72,21 @@ export const BuildChanges = z.object({
 });
 export type BuildChanges = z.infer<typeof BuildChanges>;
 
+/**
+ * The net difference between two builds — every entity that differs at the `to`
+ * build vs. the `from` build, folded across all the intermediate diffs. Reuses
+ * {@link BuildChanges}' `changes` shape so the same New / Removed / Changed
+ * section renderer can display it; each `kind` is the *net* op for that entity.
+ */
+export const BuildRangeChanges = z.object({
+  from: z.number(),
+  to: z.number(),
+  fromDate: z.string().nullable(),
+  toDate: z.string().nullable(),
+  changes: BuildChanges.shape.changes,
+});
+export type BuildRangeChanges = z.infer<typeof BuildRangeChanges>;
+
 export const TimelineEvent = z.intersection(
   z.object({
     build: z.number(), // the diff's target ("to") build
@@ -139,6 +154,30 @@ export function isBuildInHistoryScope(
       ? releasedAt.slice(0, 10)
       : releasedAt.toISOString().slice(0, 10);
   return ymd >= HISTORY_MIN_RELEASE_DATE;
+}
+
+/**
+ * Net effect of an entity+collection across a build range, folded from its ops
+ * in build order (oldest → newest). Used to compare two arbitrary builds: the
+ * stored diffs are (mostly) between adjacent builds, so "what changed between X
+ * and Y" is the fold of every op in `(X, Y]`.
+ *
+ * - starts with `added` ⇒ it did not exist at X; ends with `removed` ⇒ it does
+ *   not exist at Y.
+ * - born and retired within the range ⇒ transient, returns `null` (it is not a
+ *   difference between the endpoints).
+ * - existed at both ends but changed in between ⇒ `modified`.
+ */
+export function netOp(
+  ops: readonly ("added" | "modified" | "removed")[],
+): "added" | "modified" | "removed" | null {
+  if (ops.length === 0) return null;
+  const existedBefore = ops[0] !== "added";
+  const existsAfter = ops[ops.length - 1] !== "removed";
+  if (!existedBefore && !existsAfter) return null;
+  if (!existedBefore) return "added";
+  if (!existsAfter) return "removed";
+  return "modified";
 }
 
 /**
