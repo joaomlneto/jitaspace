@@ -2,8 +2,16 @@ import { cacheLife } from "next/cache";
 
 import { historyDb } from "@jitaspace/db-history";
 
-import type { EntityTimeline, HistoryIndex } from "~/lib/history";
-import { isBuildInHistoryScope } from "~/lib/history";
+import type {
+  BuildRangeChanges,
+  EntityTimeline,
+  HistoryIndex,
+} from "~/lib/history";
+import {
+  HISTORY_MIN_RELEASE_DATE,
+  isBuildInHistoryScope,
+  netOp,
+} from "~/lib/history";
 
 /**
  * Day-cached reads of the change-history data.
@@ -195,4 +203,103 @@ export async function getCachedEntityTimeline(
   if (events.length === 0) return null;
 
   return { entityType, entityId, events };
+}
+
+/**
+ * Cached net {@link BuildRangeChanges} between two builds.
+ *
+ * A fixed `(from, to)` pair is immutable — the diffs between two past builds
+ * never change (new builds only add future diffs) — so this is cached with the
+ * longest profile (`cacheLife("max")`, effectively forever), keyed on the pair.
+ *
+ * The heavy lifting is done in the DB. A wide range (e.g. builds years apart)
+ * spans hundreds of thousands of Change rows; fetching them all and folding in
+ * JS timed out. Instead a single grouped query returns just one row per changed
+ * `(entity, collection)` — the op at the earliest and latest in-scope build in
+ * the range — which {@link netOp} folds to a net op. Out-of-scope intermediate
+ * builds (Singularity / the pre-2012 baseline) are filtered in SQL, mirroring
+ * {@link isBuildInHistoryScope}; `::text` sidesteps enum-literal handling and the
+ * id is coerced because CockroachDB returns INT8 as a string.
+ *
+ * Returns `null` for invalid input (a missing or out-of-scope endpoint, or
+ * `from >= to`); an empty `changes` list means nothing changed between them.
+ */
+export async function getCachedBuildRangeChanges(
+  from: number,
+  to: number,
+): Promise<BuildRangeChanges | null> {
+  "use cache";
+  cacheLife("max");
+
+  if (!Number.isInteger(from) || !Number.isInteger(to) || from >= to)
+    return null;
+
+  const [fromB, toB] = await Promise.all([
+    historyDb.build.findUnique({
+      where: { buildNumber: from },
+      select: { releasedAt: true, server: true },
+    }),
+    historyDb.build.findUnique({
+      where: { buildNumber: to },
+      select: { releasedAt: true, server: true },
+    }),
+  ]);
+  if (!fromB || !isBuildInHistoryScope(fromB.releasedAt, fromB.server))
+    return null;
+  if (!toB || !isBuildInHistoryScope(toB.releasedAt, toB.server)) return null;
+
+  const floor = new Date(`${HISTORY_MIN_RELEASE_DATE}T00:00:00.000Z`);
+  const rows = await historyDb.$queryRaw<
+    {
+      entityType: string;
+      entityId: number | bigint | string;
+      collection: string;
+      firstOp: string;
+      lastOp: string;
+    }[]
+  >`
+    SELECT
+      e."kind"   AS "entityType",
+      e."eveId"  AS "entityId",
+      col."name" AS "collection",
+      (array_agg(c."op"::text ORDER BY d."toBuild" ASC))[1]  AS "firstOp",
+      (array_agg(c."op"::text ORDER BY d."toBuild" DESC))[1] AS "lastOp"
+    FROM "Change" c
+    JOIN "BuildDiff" d ON d."id" = c."diffId"
+    JOIN "Build" b ON b."buildNumber" = d."toBuild"
+    JOIN "Entity" e ON e."id" = c."entityId"
+    JOIN "Collection" col ON col."id" = c."collectionId"
+    WHERE d."toBuild" > ${from}
+      AND d."toBuild" <= ${to}
+      AND col."name" NOT LIKE 'strings:%'
+      AND b."server"::text IS DISTINCT FROM 'singularity'
+      AND (b."releasedAt" IS NULL OR b."releasedAt" >= ${floor})
+    GROUP BY e."kind", e."eveId", col."name"
+  `;
+
+  const changes = rows.flatMap((r) => {
+    const kind = netOp([
+      r.firstOp as "added" | "modified" | "removed",
+      r.lastOp as "added" | "modified" | "removed",
+    ]);
+    if (!kind) return []; // transient (added and removed within the range)
+    return [
+      {
+        entityId: Number(r.entityId),
+        entityType: r.entityType,
+        collection: r.collection,
+        v: 1 as const,
+        kind,
+        ...(kind === "modified" ? { fields: {} } : {}),
+      },
+    ];
+  }) as BuildRangeChanges["changes"];
+
+  return {
+    from,
+    to,
+    fromDate: ymd(fromB.releasedAt),
+    toDate: ymd(toB.releasedAt),
+    changes,
+  };
 }

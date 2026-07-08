@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Alert,
   Anchor,
@@ -56,9 +56,10 @@ function CompareResults({ data }: Readonly<{ data: BuildRangeChanges }>) {
 
 export default function CompareBuildsClient({
   builds,
-}: Readonly<{ builds: BuildOption[] }>) {
+  from,
+  to,
+}: Readonly<{ builds: BuildOption[]; from?: number; to?: number }>) {
   const router = useRouter();
-  const params = useSearchParams();
 
   const options = useMemo(
     () =>
@@ -69,28 +70,31 @@ export default function CompareBuildsClient({
     [builds],
   );
 
-  const [from, setFrom] = useState<string | null>(params.get("from"));
-  const [to, setTo] = useState<string | null>(params.get("to"));
+  const [fromSel, setFromSel] = useState<string | null>(
+    from != null ? String(from) : null,
+  );
+  const [toSel, setToSel] = useState<string | null>(
+    to != null ? String(to) : null,
+  );
 
-  // The comparison shown is driven by the URL, so it is shareable and the query
-  // key stays stable across re-renders.
-  const fromN = Number(params.get("from"));
-  const toN = Number(params.get("to"));
-  const ready =
-    Number.isInteger(fromN) &&
-    Number.isInteger(toN) &&
-    fromN > 0 &&
-    fromN < toN;
+  // The comparison shown is driven by the route (/history/compare/<from>/<to>),
+  // so it is shareable and the result is cached server-side.
+  const ready = from != null && to != null && from > 0 && from < to;
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["history-compare", fromN, toN],
-    queryFn: () => getBuildRangeChanges(fromN, toN),
+    queryKey: ["history-compare", from, to],
+    // `enabled: ready` already gates this on both being present; the guard just
+    // narrows the types (avoiding a non-null assertion).
+    queryFn: () =>
+      from != null && to != null
+        ? getBuildRangeChanges(from, to)
+        : Promise.resolve(null),
     enabled: ready,
     staleTime: Infinity,
   });
 
-  const outOfOrder = !!from && !!to && Number(from) >= Number(to);
-  const canCompare = !!from && !!to && !outOfOrder;
+  const outOfOrder = !!fromSel && !!toSel && Number(fromSel) >= Number(toSel);
+  const canCompare = !!fromSel && !!toSel && !outOfOrder;
 
   return (
     <Container size="md" py="xl">
@@ -112,8 +116,8 @@ export default function CompareBuildsClient({
             placeholder="older build"
             searchable
             data={options}
-            value={from}
-            onChange={setFrom}
+            value={fromSel}
+            onChange={setFromSel}
             nothingFoundMessage="No matching build"
             w={230}
           />
@@ -122,15 +126,14 @@ export default function CompareBuildsClient({
             placeholder="newer build"
             searchable
             data={options}
-            value={to}
-            onChange={setTo}
+            value={toSel}
+            onChange={setToSel}
             nothingFoundMessage="No matching build"
             w={230}
           />
           <Button
             onClick={() =>
-              canCompare &&
-              router.push(`/history/compare?from=${from}&to=${to}`)
+              canCompare && router.push(`/history/compare/${fromSel}/${toSel}`)
             }
             disabled={!canCompare}
           >
