@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import type {
   GetCharactersCharacterIdAssetsQueryResponse,
@@ -20,7 +20,7 @@ export const useCorporationAssets = (corporationId?: number) => {
     roles: ["Director"],
   });
 
-  const { data, isLoading, error, refetch } =
+  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCorporationsCorporationIdAssetsInfinite(
       corporationId ?? 0,
       {},
@@ -47,6 +47,11 @@ export const useCorporationAssets = (corporationId?: number) => {
         },
       },
     );
+
+  // fetch everything immediately
+  useEffect(() => {
+    if (hasNextPage) void fetchNextPage();
+  }, [hasNextPage, fetchNextPage]);
 
   const errorMessage = useMemo(() => {
     if (error) {

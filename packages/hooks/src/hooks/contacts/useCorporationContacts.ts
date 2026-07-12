@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 import type {
   GetCorporationsCorporationIdContactsLabelsQueryResponse,
   GetCorporationsCorporationIdContactsQueryResponse,
@@ -35,7 +37,7 @@ export function useCorporationContacts(corporationId: number) {
     },
   );
 
-  const { data, isLoading, error, refetch } =
+  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCorporationsCorporationIdContactsInfinite(
       corporationId,
       {},
@@ -62,6 +64,11 @@ export function useCorporationContacts(corporationId: number) {
         },
       },
     );
+
+  // fetch everything immediately
+  useEffect(() => {
+    if (hasNextPage) void fetchNextPage();
+  }, [hasNextPage, fetchNextPage]);
 
   return {
     data: (data?.pages ?? []).flatMap((res) => res.data),

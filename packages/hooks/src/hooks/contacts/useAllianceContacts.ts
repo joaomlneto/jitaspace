@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 import type {
   GetAlliancesAllianceIdContactsLabelsQueryResponse,
   GetAlliancesAllianceIdContactsQueryResponse,
@@ -35,7 +37,7 @@ export function useAllianceContacts(allianceId: number) {
     },
   );
 
-  const { data, isLoading, error, refetch } =
+  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetAlliancesAllianceIdContactsInfinite(
       allianceId,
       {},
@@ -62,6 +64,11 @@ export function useAllianceContacts(allianceId: number) {
         },
       },
     );
+
+  // fetch everything immediately
+  useEffect(() => {
+    if (hasNextPage) void fetchNextPage();
+  }, [hasNextPage, fetchNextPage]);
 
   return {
     data: (data?.pages ?? []).flatMap((res) => res.data),
