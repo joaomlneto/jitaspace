@@ -9,10 +9,12 @@ import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import TravelPage from "./page.client";
 
-async function getTravelData(waypoints: string[] | undefined): Promise<{
-  solarSystems: TravelPageProps["solarSystems"];
-  initialWaypoints: TravelPageProps["initialWaypoints"];
-}> {
+// The New Eden solar-system graph is invariant across every /travel/<...> URL,
+// so it is fetched and cached ONCE under an argument-free key and shared by all
+// of them. Keying this ~1MB+ payload on the catch-all waypoints would spawn a
+// separate cache entry per distinct URL — and any entry over the cache store's
+// size limit is silently not stored, forcing a full re-query on every request.
+async function getSolarSystems(): Promise<TravelPageProps["solarSystems"]> {
   "use cache";
   cacheLife("days");
 
@@ -47,21 +49,7 @@ async function getTravelData(waypoints: string[] | undefined): Promise<{
     };
   });
 
-  const parseWaypoint = (waypoint: string): string | null => {
-    return (
-      Object.entries(solarSystems).find(
-        ([solarSystemId, { name }]) =>
-          solarSystemId == waypoint ||
-          name.toLowerCase() == waypoint.toLowerCase(),
-      )?.[0] ?? null
-    );
-  };
-
-  const initialWaypoints = toArrayIfNot(waypoints ?? [])
-    .map((waypoint) => parseWaypoint(waypoint.replaceAll("_", " ")))
-    .filter((x) => x !== null);
-
-  return { solarSystems, initialWaypoints };
+  return solarSystems;
 }
 
 async function PageContent({
@@ -71,16 +59,30 @@ async function PageContent({
 }>) {
   const { waypoints } = await params;
 
-  let travelData: Awaited<ReturnType<typeof getTravelData>>;
+  let solarSystems: TravelPageProps["solarSystems"];
   try {
-    travelData = await getTravelData(waypoints);
+    solarSystems = await getSolarSystems();
   } catch {
     notFound();
   }
+
+  // Cheap, request-specific parsing lives OUTSIDE the cache so the expensive
+  // universe fetch above stays a single shared cache entry.
+  const parseWaypoint = (waypoint: string): string | null =>
+    Object.entries(solarSystems).find(
+      ([solarSystemId, { name }]) =>
+        solarSystemId == waypoint ||
+        name.toLowerCase() == waypoint.toLowerCase(),
+    )?.[0] ?? null;
+
+  const initialWaypoints = toArrayIfNot(waypoints ?? [])
+    .map((waypoint) => parseWaypoint(waypoint.replaceAll("_", " ")))
+    .filter((x) => x !== null);
+
   return (
     <TravelPage
-      initialWaypoints={travelData.initialWaypoints}
-      solarSystems={travelData.solarSystems}
+      initialWaypoints={initialWaypoints}
+      solarSystems={solarSystems}
     />
   );
 }

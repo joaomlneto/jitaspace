@@ -68,7 +68,9 @@ export default function TravelPage({
   const route = useMemo(() => {
     const start = waypoints[1];
     const end = waypoints[0];
-    if (start === undefined || end === undefined) return [];
+    // Empty slots are held as "" (see the Select onChange) — treat those, and
+    // missing entries, as "no waypoint" so we never hand ngraph an unknown node.
+    if (!start || !end) return [];
     const pathFinder = path.nba(graph, {
       distance(fromNode, toNode, _link) {
         const destinationSecurityStatus = toNode.data.securityStatus;
@@ -104,21 +106,34 @@ export default function TravelPage({
           <Title>Travel Planner</Title>
         </Group>
         <Group align="end">
-          {waypoints.map((waypoint, index) => (
+          {/* A route needs an origin and a destination, so always render at
+              least two selects — a bare /travel visit has no initial waypoints
+              and would otherwise show an empty, unusable form. */}
+          {Array.from({ length: Math.max(2, waypoints.length) }, (_, index) => (
             <Select
               label="Waypoint"
               data={solarSystemSelectData}
               searchable
               limit={100}
-              value={waypoints[index]}
+              // Deselecting a required waypoint (Mantine's default) would
+              // remove it with no way to add one back — keep it non-nullable.
+              allowDeselect={false}
+              // Padding slots are absent (undefined) or held as "" — both match
+              // no option, so the Select simply renders as empty/unselected.
+              value={waypoints[index] ?? null}
               onChange={(value) => {
-                if (value === null) {
-                  waypointHandlers.remove(index);
-                } else {
-                  waypointHandlers.setItem(index, value);
-                }
+                if (value === null) return;
+                // Build the next array explicitly and use it for BOTH the
+                // state update and the pushed URL. Reading `waypoints` after
+                // the async list-state update sees the stale pre-change array,
+                // which left the address bar one interaction behind.
+                const nextWaypoints = Array.from(
+                  { length: Math.max(waypoints.length, index + 1) },
+                  (_, i) => (i === index ? value : (waypoints[i] ?? "")),
+                );
+                waypointHandlers.setState(nextWaypoints);
                 router.push(
-                  `/travel/${waypoints
+                  `/travel/${nextWaypoints
                     .map((systemId) => solarSystems[systemId]?.name ?? "")
                     .join("/")}`,
                 );
