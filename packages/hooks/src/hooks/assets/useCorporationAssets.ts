@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import type {
   GetCharactersCharacterIdAssetsQueryResponse,
@@ -12,6 +12,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { useEagerlyFetchAllPages } from "../utils/useEagerlyFetchAllPages";
 
 export const useCorporationAssets = (corporationId?: number) => {
   const { accessToken, authHeaders } = useAccessToken({
@@ -48,10 +49,8 @@ export const useCorporationAssets = (corporationId?: number) => {
       },
     );
 
-  // fetch everything immediately
-  useEffect(() => {
-    if (hasNextPage) void fetchNextPage();
-  }, [hasNextPage, fetchNextPage]);
+  // eagerly load every page so the whole corporation inventory is available
+  useEagerlyFetchAllPages({ hasNextPage, fetchNextPage });
 
   const errorMessage = useMemo(() => {
     if (error) {
