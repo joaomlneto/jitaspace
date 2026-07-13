@@ -12,6 +12,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { useEagerlyFetchAllPages } from "../utils/useEagerlyFetchAllPages";
 
 export const useCorporationAssets = (corporationId?: number) => {
   const { accessToken, authHeaders } = useAccessToken({
@@ -20,7 +21,7 @@ export const useCorporationAssets = (corporationId?: number) => {
     roles: ["Director"],
   });
 
-  const { data, isLoading, error, refetch } =
+  const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCorporationsCorporationIdAssetsInfinite(
       corporationId ?? 0,
       {},
@@ -47,6 +48,9 @@ export const useCorporationAssets = (corporationId?: number) => {
         },
       },
     );
+
+  // eagerly load every page so the whole corporation inventory is available
+  useEagerlyFetchAllPages({ hasNextPage, fetchNextPage });
 
   const errorMessage = useMemo(() => {
     if (error) {

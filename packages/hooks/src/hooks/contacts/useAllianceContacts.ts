@@ -11,6 +11,8 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { esiInfiniteQueryNextPageParam } from "../utils/esiInfiniteQueryNextPageParam";
+import { useEsiContacts } from "../utils/useEsiContacts";
 
 export type AllianceContact =
   GetAlliancesAllianceIdContactsQueryResponse[number];
@@ -24,7 +26,7 @@ export function useAllianceContacts(allianceId: number) {
     scopes: ["esi-alliances.read_contacts.v1"],
   });
 
-  const { data: labels } = useGetAlliancesAllianceIdContactsLabels(
+  const labelsQuery = useGetAlliancesAllianceIdContactsLabels(
     allianceId,
     { ...authHeaders },
     {
@@ -35,39 +37,26 @@ export function useAllianceContacts(allianceId: number) {
     },
   );
 
-  const { data, isLoading, error, refetch } =
-    useGetAlliancesAllianceIdContactsInfinite(
-      allianceId,
-      {},
-      { ...authHeaders },
-      {
-        query: {
-          enabled: accessToken !== null,
-          initialPageParam: 1,
-          queryFn: ({ pageParam }) =>
-            getAlliancesAllianceIdContacts(
-              allianceId,
-              {
-                page: pageParam,
-              },
-              { ...authHeaders },
-            ),
-          getNextPageParam: (lastPage, pages) => {
-            const xPages: unknown = lastPage.headers["x-pages"];
-            const numPages = typeof xPages === "string" ? Number(xPages) : 0;
-            const nextPage = pages.length + 1;
-            if (nextPage > numPages) return undefined;
-            return nextPage;
-          },
-        },
+  const contactsQuery = useGetAlliancesAllianceIdContactsInfinite(
+    allianceId,
+    {},
+    { ...authHeaders },
+    {
+      query: {
+        enabled: accessToken !== null,
+        initialPageParam: 1,
+        queryFn: ({ pageParam }) =>
+          getAlliancesAllianceIdContacts(
+            allianceId,
+            {
+              page: pageParam,
+            },
+            { ...authHeaders },
+          ),
+        getNextPageParam: esiInfiniteQueryNextPageParam,
       },
-    );
+    },
+  );
 
-  return {
-    data: (data?.pages ?? []).flatMap((res) => res.data),
-    labels: labels?.data ?? [],
-    error,
-    isLoading,
-    mutate: refetch,
-  };
+  return useEsiContacts(contactsQuery, labelsQuery);
 }
