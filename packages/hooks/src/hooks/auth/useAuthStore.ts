@@ -4,16 +4,10 @@ import { add } from "date-fns";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type {
-  EveSsoAccessTokenPayload} from "@jitaspace/auth-utils";
-import {
-  getEveSsoAccessTokenPayload,
-} from "@jitaspace/auth-utils";
-import type {
-  CharactersCharacterIdRolesGetRolesEnum} from "@jitaspace/esi-client";
-import {
-  postCharactersAffiliation,
-} from "@jitaspace/esi-client";
+import type { EveSsoAccessTokenPayload } from "@jitaspace/auth-utils";
+import type { CharactersCharacterIdRolesGetRolesEnum } from "@jitaspace/esi-client";
+import { getEveSsoAccessTokenPayload } from "@jitaspace/auth-utils";
+import { postCharactersAffiliation } from "@jitaspace/esi-client";
 
 export interface CharacterSsoSession {
   accessToken: string;
@@ -133,6 +127,11 @@ export const useAuthStore = create(
           // Keep the character (do NOT remove it); just flag the session so the
           // UI can mark it and prompt re-authentication.
           if (!character) return state;
+          // Already flagged: return the SAME state so the store does not
+          // allocate a new object and notify subscribers. Otherwise the refresh
+          // effect (keyed on `characters` identity) would re-run and re-attempt
+          // the doomed refresh in a tight ~1s loop.
+          if (character.sessionExpired) return state;
           return {
             ...state,
             characters: {
