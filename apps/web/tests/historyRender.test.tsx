@@ -26,6 +26,7 @@ jest.mock("@mantine/charts", () => ({
 // never loaded; they're only passed as queryFn to the (mocked) useQuery anyway.
 jest.mock("~/lib/history-actions", () => ({
   getBuildChanges: jest.fn(),
+  getBuildRangeChanges: jest.fn(),
   getEntityTimeline: jest.fn(),
   getResourceIndex: jest.fn(),
   getFileDiff: jest.fn(),
@@ -404,11 +405,13 @@ describe("detail page clients + index page", () => {
 });
 
 describe("CompareBuildsClient", () => {
-  it("renders the net comparison for the from/to in the URL", async () => {
+  it("renders the net comparison for the from/to route params", async () => {
     const { default: CompareBuildsClient } =
       await import("~/app/history/compare/page.client");
     wrap(
       <CompareBuildsClient
+        from={100}
+        to={200}
         builds={[
           { build: 100, date: "2025-01-01" },
           { build: 200, date: "2025-02-01" },
@@ -416,10 +419,91 @@ describe("CompareBuildsClient", () => {
       />,
     );
     expect(screen.getByText("Compare builds")).toBeTruthy();
-    // result header, driven by the mocked ?from=100&to=200
+    // result header, driven by the from/to props
     expect(screen.getByText(/build 100 → build 200/)).toBeTruthy();
     // reuses the build page's New / Changed sections for the net changes
     expect(screen.getByText(/New types/)).toBeTruthy();
     expect(screen.getByText(/Changed types/)).toBeTruthy();
+    // the Compare button navigates to the /history/compare/<from>/<to> route
+    fireEvent.click(screen.getByText("Compare"));
+  });
+
+  it("renders the loading / error / not-found / empty / out-of-order states", async () => {
+    const { default: CompareBuildsClient } =
+      await import("~/app/history/compare/page.client");
+    const builds = [
+      { build: 100, date: "2025-01-01" },
+      { build: 200, date: "2025-02-01" },
+    ];
+    const show = (result: unknown, from = 100, to = 200) => {
+      mockUseQuery.mockImplementation(() => result);
+      wrap(<CompareBuildsClient from={from} to={to} builds={builds} />);
+    };
+
+    show({ isLoading: true });
+    expect(screen.getByText("Compare builds")).toBeTruthy(); // loader branch
+    cleanup();
+
+    show({ isError: true });
+    expect(screen.getByText(/Could not load/)).toBeTruthy();
+    cleanup();
+
+    show({ data: null });
+    expect(screen.getByText(/not in the tracked history/)).toBeTruthy();
+    cleanup();
+
+    show({
+      data: {
+        from: 100,
+        to: 200,
+        fromDate: "2025-01-01",
+        toDate: "2025-02-01",
+        changes: [],
+      },
+    });
+    expect(screen.getByText(/Nothing changed/)).toBeTruthy();
+    cleanup();
+
+    show({ data: undefined }, 200, 100); // from > to
+    expect(screen.getByText(/must be older/)).toBeTruthy();
+  });
+
+  it("wires the query function to getBuildRangeChanges", async () => {
+    const { default: CompareBuildsClient } =
+      await import("~/app/history/compare/page.client");
+    const actions = await import("~/lib/history-actions");
+    // Invoke the queryFn the component passes to useQuery.
+    mockUseQuery.mockImplementation((opts: { queryFn?: () => unknown }) => {
+      opts.queryFn?.();
+      return { data: RANGE_CHANGES, isLoading: false };
+    });
+    wrap(
+      <CompareBuildsClient
+        from={100}
+        to={200}
+        builds={[{ build: 100, date: null }]}
+      />,
+    );
+    expect(actions.getBuildRangeChanges).toHaveBeenCalledWith(100, 200);
+  });
+
+  it("covers the [from]/[to] route wrapper (metadata + page)", async () => {
+    const mod =
+      (await import("~/app/history/compare/[from]/[to]/page")) as unknown as {
+        generateMetadata: (a: {
+          params: Promise<{ from: string; to: string }>;
+        }) => Promise<{ title: string }>;
+        default: (p: {
+          params: Promise<{ from: string; to: string }>;
+        }) => React.ReactNode;
+      };
+    const meta = await mod.generateMetadata({
+      params: Promise.resolve({ from: "100", to: "200" }),
+    });
+    expect(meta.title).toContain("Compare builds 100");
+    const Page = mod.default;
+    expect(() =>
+      wrap(<Page params={Promise.resolve({ from: "100", to: "200" })} />),
+    ).not.toThrow();
   });
 });

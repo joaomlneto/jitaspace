@@ -43,6 +43,15 @@ let mockFileAgg: {
   op: "added" | "modified" | "removed";
   _count: number;
 }[] = [];
+// $queryRaw fixture: one aggregated (entity, collection) row per changed entity
+// for the build-range reader (op at the earliest + latest build in the range).
+let mockRangeRows: {
+  entityType: string;
+  entityId: number | string;
+  collection: string;
+  firstOp: string;
+  lastOp: string;
+}[] = [];
 // build.findUnique fixture (the build-addressed readers' scope gate); null ⇒
 // "build not found".
 let mockBuildUnique: {
@@ -88,6 +97,8 @@ jest.mock("@jitaspace/db-history", () => ({
       groupBy: () => Promise.resolve(mockFileAgg),
       findMany: () => Promise.resolve([]),
     },
+    // The build-range reader aggregates in one raw SQL query.
+    $queryRaw: () => Promise.resolve(mockRangeRows),
   },
 }));
 
@@ -566,44 +577,27 @@ describe("getBuildRangeChanges", () => {
     releasedAt: new Date(d),
     server: "tranquility" as const,
   });
-  const row = (
-    op: "added" | "modified" | "removed",
-    diffId: number,
-    kind: string,
-    eveId: number,
-    collection = "types",
-  ) => ({
-    op,
-    data: {},
-    diffId,
-    collection: { name: collection },
-    entity: { kind, eveId },
-  });
+  // One aggregated row per (entity, collection): the op at the earliest and the
+  // latest in-scope build in the range, as the DB query returns it.
+  const agg = (
+    entityType: string,
+    entityId: number | string,
+    collection: string,
+    firstOp: string,
+    lastOp: string,
+  ) => ({ entityType, entityId, collection, firstOp, lastOp });
 
-  it("folds every change in (from, to] into a net op per entity", async () => {
+  it("folds the DB's first/last op per entity into a net op", async () => {
     mockBuildUnique = null;
-    mockBuilds = [
-      tq(700000, "2024-06-01"),
-      tq(700001, "2024-06-02"),
-      tq(700002, "2024-06-03"),
-      tq(700003, "2024-06-04"),
-    ];
-    mockDiffs = [
-      { id: 31, toBuild: 700001 },
-      { id: 32, toBuild: 700002 },
-      { id: 33, toBuild: 700003 },
-    ];
-    mockChangeRows = [
-      row("modified", 31, "type", 587), // 587: modified …
-      row("modified", 33, "type", 587), // … then modified ⇒ net modified
-      row("added", 32, "type", 588), // 588: added ⇒ net added
-      row("added", 31, "type", 589), // 589: added …
-      row("removed", 33, "type", 589), // … then removed ⇒ transient, dropped
-      row("removed", 32, "type", 590, "typeDogma"), // 590/typeDogma: net removed
+    mockBuilds = [tq(700000, "2024-06-01"), tq(700003, "2024-06-04")];
+    mockRangeRows = [
+      agg("type", 587, "types", "modified", "modified"), // net modified
+      agg("type", "588", "types", "added", "added"), // net added (id as string)
+      agg("type", 589, "types", "added", "removed"), // transient -> dropped
+      agg("type", 590, "typeDogma", "removed", "removed"), // net removed
     ];
 
     const result = await getBuildRangeChanges(700000, 700003);
-    expect(result).not.toBeNull();
     expect(result?.from).toBe(700000);
     expect(result?.to).toBe(700003);
     expect(result?.fromDate).toBe("2024-06-01");
@@ -614,14 +608,15 @@ describe("getBuildRangeChanges", () => {
         (c) => c.entityId === id && c.collection === collection,
       );
     expect(find(587, "types")?.kind).toBe("modified");
-    expect(find(588, "types")?.kind).toBe("added");
+    expect(find(588, "types")?.kind).toBe("added"); // string id coerced to number
     expect(find(590, "typeDogma")?.kind).toBe("removed");
-    expect(find(589, "types")).toBeUndefined(); // transient
+    expect(find(589, "types")).toBeUndefined(); // transient dropped
     expect(result?.changes).toHaveLength(3);
   });
 
-  it("returns null for from >= to, a missing endpoint, or an out-of-scope endpoint", async () => {
+  it("returns null for from >= to, a non-integer, or a missing/out-of-scope endpoint", async () => {
     mockBuildUnique = null;
+    mockRangeRows = [];
     mockBuilds = [
       tq(700000, "2024-06-01"),
       tq(700003, "2024-06-04"),
@@ -638,27 +633,15 @@ describe("getBuildRangeChanges", () => {
     expect(await getBuildRangeChanges(700000, 700004)).toBeNull(); // to is Singularity
   });
 
-  it("skips changes on out-of-scope intermediate builds (Singularity)", async () => {
+  it("returns an empty change list when the endpoints exist but nothing changed", async () => {
     mockBuildUnique = null;
-    mockBuilds = [
-      tq(700000, "2024-06-01"),
-      {
-        buildNumber: 700001,
-        releasedAt: new Date("2024-06-02"),
-        server: "singularity",
-      },
-      tq(700002, "2024-06-03"),
-    ];
-    mockDiffs = [
-      { id: 41, toBuild: 700001 }, // Singularity build in range
-      { id: 42, toBuild: 700002 },
-    ];
-    mockChangeRows = [
-      row("added", 41, "type", 700), // on the Singularity build ⇒ excluded
-      row("modified", 42, "type", 701),
-    ];
+    mockBuilds = [tq(700000, "2024-06-01"), tq(700003, "2024-06-04")];
+    mockRangeRows = []; // the aggregation found nothing in the range
 
-    const result = await getBuildRangeChanges(700000, 700002);
-    expect(result?.changes.map((c) => c.entityId)).toEqual([701]);
+    const result = await getBuildRangeChanges(700000, 700003);
+    expect(result).not.toBeNull();
+    expect(result?.changes).toEqual([]);
+    expect(result?.fromDate).toBe("2024-06-01");
+    expect(result?.toDate).toBe("2024-06-04");
   });
 });
