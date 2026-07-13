@@ -267,6 +267,22 @@ describe("CalendarEventResponseBadge (wrapper)", () => {
       "no-response",
     );
   });
+
+  it("uses a provided response directly and skips the per-event fetch", () => {
+    mockUseCalendarEvent.mockReturnValue({ data: undefined });
+    const { CalendarEventResponseBadge } = badges();
+
+    renderWithMantine(
+      <CalendarEventResponseBadge characterId={123} response="declined" />,
+    );
+
+    // The response is already known (from the summary feed), so no event id is
+    // passed to the detail hook — its query stays disabled.
+    expect(mockUseCalendarEvent).toHaveBeenCalledWith(123, undefined);
+    expect(screen.getByTestId("ui-event-response")).toHaveTextContent(
+      "declined",
+    );
+  });
 });
 
 describe("MailLabelBadge (wrapper)", () => {

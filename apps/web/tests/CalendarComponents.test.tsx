@@ -82,33 +82,20 @@ jest.mock("~/components/Avatar", () => ({
   ),
 }));
 
-jest.mock("~/components/Anchor", () => ({
-  CalendarEventOwnerAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#">{children}</a>
-  ),
-}));
-
-jest.mock("~/components/AvatarGroup", () => ({
-  CalendarEventAttendeesAvatarGroup: ({ eventId }: { eventId?: number }) => (
-    <span>{`Attendees ${eventId}`}</span>
-  ),
-}));
-
 jest.mock("~/components/Badge", () => ({
-  CalendarEventResponseBadge: ({ eventId }: { eventId?: number }) => (
-    <span>{`ResponseBadge ${eventId}`}</span>
-  ),
+  // The list passes the summary's `response`; the details panel passes `eventId`.
+  CalendarEventResponseBadge: ({
+    eventId,
+    response,
+  }: {
+    eventId?: number;
+    response?: string;
+  }) => <span>{`ResponseBadge ${response ?? eventId}`}</span>,
 }));
 
 jest.mock("~/components/DurationText", () => ({
   CalendarEventHumanDurationText: ({ eventId }: { eventId?: number }) => (
     <span>{`Duration ${eventId}`}</span>
-  ),
-}));
-
-jest.mock("~/components/Text", () => ({
-  CalendarEventOwnerName: ({ eventId }: { eventId?: number }) => (
-    <span>{`OwnerName ${eventId}`}</span>
   ),
 }));
 
@@ -257,12 +244,14 @@ const SAMPLE_EVENTS = [
     event_date: "2024-06-01T18:00:00Z",
     title: "CTA Fleet",
     importance: 1,
+    event_response: "accepted",
   },
   {
     event_id: 12,
     event_date: "2024-06-02T20:00:00Z",
     title: "Mining Op",
     importance: 0,
+    event_response: "declined",
   },
 ];
 
@@ -291,10 +280,11 @@ describe("DesktopCalendarEventList", () => {
     );
   });
 
-  it("renders attendees and response badge per event", () => {
+  it("renders the response badge from the summary feed per event", () => {
     renderList();
-    expect(screen.getByText("Attendees 11")).toBeInTheDocument();
-    expect(screen.getByText("ResponseBadge 11")).toBeInTheDocument();
+    // The badge reads `event_response` from the summary — no per-row detail fetch.
+    expect(screen.getByText("ResponseBadge accepted")).toBeInTheDocument();
+    expect(screen.getByText("ResponseBadge declined")).toBeInTheDocument();
   });
 
   it("opens the view-calendar-event modal when a title is clicked", async () => {
@@ -332,10 +322,11 @@ describe("MobileCalendarEventList", () => {
     expect(screen.getByText("Mining Op")).toBeInTheDocument();
   });
 
-  it("renders attendees and response badge per event", () => {
+  it("renders the response badge from the summary feed per event", () => {
     renderList();
-    expect(screen.getByText("Attendees 11")).toBeInTheDocument();
-    expect(screen.getByText("ResponseBadge 11")).toBeInTheDocument();
+    // The badge reads `event_response` from the summary — no per-row detail fetch.
+    expect(screen.getByText("ResponseBadge accepted")).toBeInTheDocument();
+    expect(screen.getByText("ResponseBadge declined")).toBeInTheDocument();
   });
 
   it("opens the view-calendar-event modal when a title is clicked", async () => {
