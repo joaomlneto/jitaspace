@@ -1,16 +1,12 @@
 import type { TableProps } from "@mantine/core";
-import { Anchor, Group, Table, Title, Tooltip } from "@mantine/core";
+import { Anchor, Group, Table, Title } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
 import type { CalendarEvent } from "@jitaspace/hooks";
 import { WarningIcon } from "@jitaspace/eve-icons";
 import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
-import { CalendarEventOwnerAnchor } from "~/components/Anchor";
-import { CalendarEventOwnerAvatar } from "~/components/Avatar";
-import { CalendarEventAttendeesAvatarGroup } from "~/components/AvatarGroup";
 import { CalendarEventResponseBadge } from "~/components/Badge";
-import { CalendarEventOwnerName } from "~/components/Text";
 
 type EventListProps = TableProps & {
   characterId: number;
@@ -37,74 +33,41 @@ export function DesktopCalendarEventList({
               </DateHoverCard>
             </Table.Td>
             <Table.Td>
-              <Group wrap="nowrap">
-                <Tooltip
-                  label={
-                    <CalendarEventOwnerName
-                      characterId={characterId}
-                      eventId={event.event_id}
-                    />
-                  }
-                >
-                  <div>
-                    <CalendarEventOwnerAnchor
-                      characterId={characterId}
-                      eventId={event.event_id}
-                    >
-                      <CalendarEventOwnerAvatar
-                        characterId={characterId}
-                        eventId={event.event_id}
-                        size="sm"
-                      />
-                    </CalendarEventOwnerAnchor>
-                  </div>
-                </Tooltip>
-                <Group wrap="nowrap" gap="xs">
-                  {event.importance === 1 && <WarningIcon width={20} />}
-                  <Anchor
-                    size="sm"
-                    lineClamp={1}
-                    onClick={() => {
-                      if (event.event_id) {
-                        openContextModal({
-                          modal: "viewCalendarEvent",
-                          title: (
-                            <Title order={4}>
-                              {event.importance === 1 && (
-                                <WarningIcon width={32} />
-                              )}
-                              {event.title}
-                            </Title>
-                          ),
-                          size: "lg",
-                          innerProps: { characterId, eventId: event.event_id },
-                        });
-                      }
-                    }}
-                  >
-                    {event.title}
-                  </Anchor>
-                </Group>
-              </Group>
-            </Table.Td>
-            <Table.Td align="right" width={1}>
-              <Group justify="flex-end">
-                <CalendarEventAttendeesAvatarGroup
-                  characterId={characterId}
-                  eventId={event.event_id}
-                  limit={5}
+              {/* Owner and attendees are fetched per event (detail endpoint), so
+                  they are shown in the details modal rather than eagerly per row. */}
+              <Group wrap="nowrap" gap="xs">
+                {event.importance === 1 && <WarningIcon width={20} />}
+                <Anchor
                   size="sm"
-                  radius="xl"
-                />
+                  lineClamp={1}
+                  onClick={() => {
+                    if (event.event_id) {
+                      openContextModal({
+                        modal: "viewCalendarEvent",
+                        title: (
+                          <Title order={4}>
+                            {event.importance === 1 && (
+                              <WarningIcon width={32} />
+                            )}
+                            {event.title}
+                          </Title>
+                        ),
+                        size: "lg",
+                        innerProps: { characterId, eventId: event.event_id },
+                      });
+                    }
+                  }}
+                >
+                  {event.title}
+                </Anchor>
               </Group>
             </Table.Td>
             <Table.Td align="right" width={1}>
               <CalendarEventResponseBadge
                 size="sm"
                 variant="subtle"
-                characterId={characterId}
                 w={130}
-                eventId={event.event_id}
+                response={event.event_response}
               />
             </Table.Td>
           </Table.Tr>
