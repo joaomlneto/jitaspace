@@ -83,17 +83,19 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
     <>
       <Table highlightOnHover>
         <Table.Thead>
-          <th>Attribute</th>
-          {sortedTypes.map((type) => (
-            <th key={type.type_id}>
-              <Group gap="xs">
-                <TypeAvatar typeId={type.type_id} size="sm" />
-                <TypeAnchor typeId={type.type_id} target="_blank">
-                  <TypeName typeId={type.type_id} />
-                </TypeAnchor>
-              </Group>
-            </th>
-          ))}
+          <Table.Tr>
+            <Table.Th>Attribute</Table.Th>
+            {sortedTypes.map((type) => (
+              <Table.Th key={type.type_id}>
+                <Group gap="xs">
+                  <TypeAvatar typeId={type.type_id} size="sm" />
+                  <TypeAnchor typeId={type.type_id} target="_blank">
+                    <TypeName typeId={type.type_id} />
+                  </TypeAnchor>
+                </Group>
+              </Table.Th>
+            ))}
+          </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
           {sortedAttributes.map((attribute) => (
