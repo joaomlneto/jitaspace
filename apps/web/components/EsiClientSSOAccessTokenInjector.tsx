@@ -1,7 +1,7 @@
 "use client";
 
 import type { PropsWithChildren } from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { useAuthStore } from "@jitaspace/hooks";
 
@@ -61,6 +61,14 @@ export const EsiClientSSOAccessTokenInjector = ({
   const { addCharacter, markCharacterSessionExpired, characters } =
     useAuthStore();
 
+  // Character IDs with a refresh currently in flight. A refresh's store write
+  // is gated on an ESI affiliation fetch, so its round-trip can outlive the
+  // retry backoff below; excluding in-flight characters from the "due" set
+  // keeps the self-rescheduling tick from double-firing a refresh (a duplicate
+  // would present the already-rotated refresh token and waste a request). Held
+  // in a ref so it survives this effect's re-runs.
+  const inFlightRefreshes = useRef<Set<number>>(new Set());
+
   useEffect(() => {
     void useAuthStore.persist.rehydrate();
   }, []);
@@ -100,25 +108,30 @@ export const EsiClientSSOAccessTokenInjector = ({
     const runTick = () => {
       if (cancelled) return;
       const now = Date.now();
+      const inFlight = inFlightRefreshes.current;
       const due = refreshableCharacters().filter(
         (character) =>
+          !inFlight.has(character.characterId) &&
           new Date(character.accessTokenExpirationDate).getTime() - now <
-          REFRESH_WINDOW_MS,
+            REFRESH_WINDOW_MS,
       );
-      due.forEach(
-        (character) =>
-          void refreshCharacterAndStore(
-            character,
-            addCharacter,
-            markCharacterSessionExpired,
-          ),
-      );
+      due.forEach((character) => {
+        inFlight.add(character.characterId);
+        void refreshCharacterAndStore(
+          character,
+          addCharacter,
+          markCharacterSessionExpired,
+        ).finally(() => inFlight.delete(character.characterId));
+      });
       // Re-arm. A successful refresh calls addCharacter, which changes the
       // store and re-runs this effect (cancelling this timer) at the normal
-      // cadence; the RETRY_DELAY_MS floor after an attempt keeps a persistently
-      // failing refresh from retrying every second.
+      // cadence. Floor the delay at RETRY_DELAY_MS whenever a refresh is in
+      // flight (the ones just fired, or a slow earlier one still pending): it
+      // keeps a persistently failing refresh from retrying every second and
+      // avoids spinning while an in-flight refresh — excluded from `due` — is
+      // still settling.
       const delay =
-        due.length > 0
+        inFlight.size > 0
           ? Math.max(delayUntilNextRefresh(), RETRY_DELAY_MS)
           : delayUntilNextRefresh();
       timer = setTimeout(runTick, delay);

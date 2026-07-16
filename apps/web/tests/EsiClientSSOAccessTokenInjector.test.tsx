@@ -293,4 +293,28 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     );
     consoleError.mockRestore();
   });
+
+  it("does not fire a second refresh while one is still in flight for the same character", () => {
+    // A refresh whose round-trip outlives the retry backoff must not be
+    // double-fired: the duplicate would present the already-rotated refresh
+    // token. Model an in-flight refresh with a promise that never settles.
+    mockRefreshCharacterToken.mockReturnValueOnce(
+      new Promise<RefreshOutcome>(() => undefined),
+    );
+    storeState = {
+      addCharacter: mockAddCharacter,
+      markCharacterSessionExpired: mockMarkSessionExpired,
+      characters: { "3": nearExpiry(3, "RT_SLOW") },
+    };
+    renderInjector();
+
+    // First tick fires the (never-settling) refresh.
+    jest.advanceTimersByTime(2000);
+    expect(mockRefreshCharacterToken).toHaveBeenCalledTimes(1);
+
+    // Advancing past two retry backoffs must NOT fire a duplicate while the
+    // first refresh is still pending.
+    jest.advanceTimersByTime(60000);
+    expect(mockRefreshCharacterToken).toHaveBeenCalledTimes(1);
+  });
 });
