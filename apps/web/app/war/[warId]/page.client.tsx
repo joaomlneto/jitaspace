@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
@@ -34,6 +35,11 @@ import {
 import { KillmailCard } from "~/components/Killmails";
 import { WarAggressorName, WarDefenderName } from "~/components/Text";
 
+// How many killmail cards to mount at once. Each card fires its own ESI
+// requests, so rendering an entire war's worth (up to ~2000) at once floods
+// the rate-limited client and freezes the tab. We reveal them in batches.
+const KILLMAILS_PER_PAGE = 25;
+
 export default function Page() {
   const params = useParams();
   const rawWarId = params.warId;
@@ -42,9 +48,25 @@ export default function Page() {
   const { data: war } = useWar(warId);
   const { data: killmails } = useWarKillmails(warId);
 
+  const [visibleKillmailCount, setVisibleKillmailCount] =
+    useState(KILLMAILS_PER_PAGE);
+
+  // Reset the visible window when navigating between wars. The page component
+  // is reused across warId changes, so we reset during render (React's
+  // recommended pattern) instead of in an effect, which would cascade renders.
+  const [trackedWarId, setTrackedWarId] = useState(warId);
+  if (warId !== trackedWarId) {
+    setTrackedWarId(warId);
+    setVisibleKillmailCount(KILLMAILS_PER_PAGE);
+  }
+
   if (!Number.isFinite(warId)) {
     return null;
   }
+
+  const allKillmails = killmails?.data ?? [];
+  const visibleKillmails = allKillmails.slice(0, visibleKillmailCount);
+  const hasMoreKillmails = visibleKillmailCount < allKillmails.length;
 
   return (
     <Container size="lg">
@@ -209,15 +231,27 @@ export default function Page() {
             </Group>
           ))}
         </Stack>
-        <Title order={4}>Killmails ({(killmails?.data ?? []).length})</Title>
+        <Title order={4}>Killmails ({allKillmails.length})</Title>
         <Stack>
-          {(killmails?.data ?? []).map((killmail) => (
+          {visibleKillmails.map((killmail) => (
             <KillmailCard
               key={killmail.killmail_id}
               killmailId={killmail.killmail_id}
               killmailHash={killmail.killmail_hash}
             />
           ))}
+          {hasMoreKillmails && (
+            <Button
+              w="100%"
+              variant="default"
+              onClick={() =>
+                setVisibleKillmailCount((count) => count + KILLMAILS_PER_PAGE)
+              }
+            >
+              Load more killmails (
+              {allKillmails.length - visibleKillmails.length} remaining)
+            </Button>
+          )}
         </Stack>
       </Stack>
     </Container>
