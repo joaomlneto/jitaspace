@@ -13,13 +13,18 @@ type AddCharacter = (params: {
 }) => Promise<void>;
 type MarkSessionExpired = (characterId: number) => void;
 
-// Extracted to module scope so the effect below stays within the
-// max-nesting limit and the refresh/store/error flow reads top-to-bottom.
+// Extracted to module scope so the effect below stays within the max-nesting
+// limit and the refresh/store/error flow reads top-to-bottom. Marks the
+// character in-flight for the lifetime of the attempt (cleared in `finally`) so
+// the self-rescheduling tick never double-fires a still-pending refresh — a
+// duplicate would present the already-rotated refresh token and waste a request.
 async function refreshCharacterAndStore(
   character: { characterId: number; refreshToken: string },
   addCharacter: AddCharacter,
   markSessionExpired: MarkSessionExpired,
+  inFlight: Set<number>,
 ) {
+  inFlight.add(character.characterId);
   try {
     const outcome = await refreshCharacterToken(character.refreshToken);
     switch (outcome.status) {
@@ -45,6 +50,8 @@ async function refreshCharacterAndStore(
     }
   } catch (error) {
     console.error(error);
+  } finally {
+    inFlight.delete(character.characterId);
   }
 }
 
@@ -115,14 +122,15 @@ export const EsiClientSSOAccessTokenInjector = ({
           new Date(character.accessTokenExpirationDate).getTime() - now <
             REFRESH_WINDOW_MS,
       );
-      due.forEach((character) => {
-        inFlight.add(character.characterId);
-        void refreshCharacterAndStore(
-          character,
-          addCharacter,
-          markCharacterSessionExpired,
-        ).finally(() => inFlight.delete(character.characterId));
-      });
+      due.forEach(
+        (character) =>
+          void refreshCharacterAndStore(
+            character,
+            addCharacter,
+            markCharacterSessionExpired,
+            inFlight,
+          ),
+      );
       // Re-arm. A successful refresh calls addCharacter, which changes the
       // store and re-runs this effect (cancelling this timer) at the normal
       // cadence. Floor the delay at RETRY_DELAY_MS whenever a refresh is in
