@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 // ---------------------------------------------------------------------------
 // The Travel page uses next/navigation (useRouter), @jitaspace/eve-icons
@@ -46,8 +46,7 @@ const solarSystems = {
 };
 
 function renderPage(initialWaypoints: string[]) {
-  const Page =
-    require("~/app/travel/[[...waypoints]]/page.client").default;
+  const Page = require("~/app/travel/[[...waypoints]]/page.client").default;
   return render(
     <MantineProvider>
       <Page solarSystems={solarSystems} initialWaypoints={initialWaypoints} />
@@ -72,5 +71,30 @@ describe("Travel Page", () => {
     renderPage(["30000001"]);
 
     expect(screen.getByTestId("route-table")).toHaveTextContent("0 systems");
+  });
+
+  it("always renders two waypoint selects, even with no initial waypoints", () => {
+    // A bare /travel visit has no waypoints; the form must still be usable
+    // (a route needs both an origin and a destination).
+    renderPage([]);
+
+    // Each Select renders one combobox input; there must be two (origin + dest).
+    expect(screen.getAllByRole("combobox")).toHaveLength(2);
+  });
+
+  it("keeps the pushed URL in sync with the just-selected waypoints", () => {
+    renderPage([]);
+
+    // Every select renders the same option list into the DOM (each sorted
+    // Alpha/Beta/Delta/Gamma), with the first select's options appearing first.
+    // Clicking an option fires the Select's onChange regardless of dropdown
+    // visibility, so we click directly and disambiguate by DOM order.
+    fireEvent.click(screen.getAllByText("Delta")[0]!); // destination -> select 0
+    expect(mockPush).toHaveBeenLastCalledWith("/travel/Delta");
+
+    fireEvent.click(screen.getAllByText("Alpha")[1]!); // origin -> select 1
+    // The URL reflects BOTH selections — before the fix the second push read a
+    // stale waypoints array and dropped the change, lagging one interaction.
+    expect(mockPush).toHaveBeenLastCalledWith("/travel/Delta/Alpha");
   });
 });
