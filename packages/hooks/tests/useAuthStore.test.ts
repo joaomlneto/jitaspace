@@ -53,7 +53,9 @@ describe("useAuthStore.addCharacter", () => {
   it("stores the character with freshly-fetched affiliation on success", async () => {
     mockGetPayload.mockReturnValue({ sub: SUB, exp: 1_000_000_000 });
     mockAffiliation.mockResolvedValue({
-      data: [{ character_id: CHARACTER_ID, corporation_id: 98, alliance_id: 99 }],
+      data: [
+        { character_id: CHARACTER_ID, corporation_id: 98, alliance_id: 99 },
+      ],
     });
 
     await useAuthStore
@@ -71,7 +73,9 @@ describe("useAuthStore.addCharacter", () => {
     // Seed an existing session with a known corporation.
     mockGetPayload.mockReturnValueOnce({ sub: SUB, exp: 1_000_000_000 });
     mockAffiliation.mockResolvedValueOnce({
-      data: [{ character_id: CHARACTER_ID, corporation_id: 98, alliance_id: 99 }],
+      data: [
+        { character_id: CHARACTER_ID, corporation_id: 98, alliance_id: 99 },
+      ],
     });
     await useAuthStore
       .getState()
@@ -126,6 +130,28 @@ describe("useAuthStore.addCharacter", () => {
     const character = useAuthStore.getState().characters[CHARACTER_ID];
     expect(character).toBeDefined(); // kept, not removed
     expect(character?.sessionExpired).toBe(true);
+  });
+
+  it("is a no-op (no new state) when the session is already flagged expired", async () => {
+    mockGetPayload.mockReturnValueOnce({ sub: SUB, exp: 1_000_000_000 });
+    mockAffiliation.mockResolvedValueOnce({
+      data: [{ character_id: CHARACTER_ID, corporation_id: 98 }],
+    });
+    await useAuthStore
+      .getState()
+      .addCharacter({ accessToken: "AT1", refreshToken: "RT1" });
+
+    useAuthStore.getState().markCharacterSessionExpired(CHARACTER_ID);
+    const charactersAfterFirst = useAuthStore.getState().characters;
+
+    // Flagging an already-expired session must NOT allocate a new `characters`
+    // object, otherwise the refresh effect (keyed on its identity) re-runs and
+    // re-attempts the doomed refresh in a tight loop.
+    useAuthStore.getState().markCharacterSessionExpired(CHARACTER_ID);
+    const charactersAfterSecond = useAuthStore.getState().characters;
+
+    expect(charactersAfterSecond).toBe(charactersAfterFirst); // same reference
+    expect(charactersAfterSecond[CHARACTER_ID]?.sessionExpired).toBe(true);
   });
 
   it("clears the session-expired flag when the character re-authenticates", async () => {

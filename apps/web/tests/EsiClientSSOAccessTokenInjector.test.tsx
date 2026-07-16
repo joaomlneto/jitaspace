@@ -1,6 +1,13 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { render, screen, waitFor } from "@testing-library/react";
 
 // ---------------------------------------------------------------------------
@@ -31,6 +38,7 @@ interface Character {
   characterId: number;
   accessTokenExpirationDate: string;
   refreshToken: string;
+  sessionExpired?: boolean;
 }
 
 let storeState: {
@@ -65,6 +73,11 @@ function nearExpiry(characterId: number, refreshToken: string): Character {
   };
 }
 
+function expiredSession(characterId: number, refreshToken: string): Character {
+  // Past-expiry AND flagged as a dead session (EVE will not renew it).
+  return { ...nearExpiry(characterId, refreshToken), sessionExpired: true };
+}
+
 function renderInjector() {
   const {
     EsiClientSSOAccessTokenInjector,
@@ -95,7 +108,10 @@ describe("EsiClientSSOAccessTokenInjector", () => {
   });
 
   afterEach(() => {
-    jest.runOnlyPendingTimers();
+    // The refresh check re-schedules itself, so there is always a pending
+    // timer; drop it (rather than running it) to avoid a stray refresh firing
+    // after the assertions.
+    jest.clearAllTimers();
     jest.useRealTimers();
   });
 
@@ -143,7 +159,9 @@ describe("EsiClientSSOAccessTokenInjector", () => {
   });
 
   it("flags the session as expired (without removing the character) when the refresh token is too old", async () => {
-    mockRefreshCharacterToken.mockResolvedValueOnce({ status: "requires-reauth" });
+    mockRefreshCharacterToken.mockResolvedValueOnce({
+      status: "requires-reauth",
+    });
     storeState = {
       addCharacter: mockAddCharacter,
       markCharacterSessionExpired: mockMarkSessionExpired,
@@ -202,5 +220,101 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     expect(mockAddCharacter).not.toHaveBeenCalled();
     expect(mockMarkSessionExpired).not.toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+
+  it("never refreshes a character whose session is already expired", () => {
+    // A dead session is past expiry but must be skipped entirely: refreshing is
+    // pointless, and it must not drag the cadence down to a 1s doomed-retry loop.
+    storeState = {
+      addCharacter: mockAddCharacter,
+      markCharacterSessionExpired: mockMarkSessionExpired,
+      characters: { "5": expiredSession(5, "RT_DEAD") },
+    };
+    renderInjector();
+
+    // Advance well past the 1s floor the buggy version would have armed.
+    jest.advanceTimersByTime(10000);
+
+    expect(mockRefreshCharacterToken).not.toHaveBeenCalled();
+    expect(mockAddCharacter).not.toHaveBeenCalled();
+  });
+
+  it("refreshes only live sessions, ignoring expired ones in the cadence", async () => {
+    storeState = {
+      addCharacter: mockAddCharacter,
+      markCharacterSessionExpired: mockMarkSessionExpired,
+      characters: {
+        dead: expiredSession(5, "RT_DEAD"),
+        live: nearExpiry(6, "RT_LIVE"),
+      },
+    };
+    renderInjector();
+
+    jest.advanceTimersByTime(2000);
+
+    expect(mockRefreshCharacterToken).toHaveBeenCalledWith("RT_LIVE");
+    expect(mockRefreshCharacterToken).not.toHaveBeenCalledWith("RT_DEAD");
+    expect(mockRefreshCharacterToken).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(mockAddCharacter).toHaveBeenCalled());
+  });
+
+  it("re-arms a bounded retry after a transient error so refreshing resumes", async () => {
+    const consoleError = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+    // First attempt fails transiently; the default (beforeEach) success is used
+    // for the retry.
+    mockRefreshCharacterToken.mockResolvedValueOnce({
+      status: "error",
+      message: "ESI down",
+    });
+    storeState = {
+      addCharacter: mockAddCharacter,
+      markCharacterSessionExpired: mockMarkSessionExpired,
+      characters: { "9": nearExpiry(9, "RT_RETRY") },
+    };
+    renderInjector();
+
+    // First tick errors out and changes no state...
+    jest.advanceTimersByTime(2000);
+    await waitFor(() => expect(consoleError).toHaveBeenCalledWith("ESI down"));
+    expect(mockRefreshCharacterToken).toHaveBeenCalledTimes(1);
+    expect(mockAddCharacter).not.toHaveBeenCalled();
+
+    // ...but a retry is re-armed on a bounded backoff and eventually succeeds,
+    // rather than the token staying expired until a page reload.
+    jest.advanceTimersByTime(30000);
+    expect(mockRefreshCharacterToken).toHaveBeenCalledTimes(2);
+    await waitFor(() =>
+      expect(mockAddCharacter).toHaveBeenCalledWith({
+        accessToken: "NEW_AT",
+        refreshToken: "NEW_RT",
+      }),
+    );
+    consoleError.mockRestore();
+  });
+
+  it("does not fire a second refresh while one is still in flight for the same character", () => {
+    // A refresh whose round-trip outlives the retry backoff must not be
+    // double-fired: the duplicate would present the already-rotated refresh
+    // token. Model an in-flight refresh with a promise that never settles.
+    mockRefreshCharacterToken.mockReturnValueOnce(
+      new Promise<RefreshOutcome>(() => undefined),
+    );
+    storeState = {
+      addCharacter: mockAddCharacter,
+      markCharacterSessionExpired: mockMarkSessionExpired,
+      characters: { "3": nearExpiry(3, "RT_SLOW") },
+    };
+    renderInjector();
+
+    // First tick fires the (never-settling) refresh.
+    jest.advanceTimersByTime(2000);
+    expect(mockRefreshCharacterToken).toHaveBeenCalledTimes(1);
+
+    // Advancing past two retry backoffs must NOT fire a duplicate while the
+    // first refresh is still pending.
+    jest.advanceTimersByTime(60000);
+    expect(mockRefreshCharacterToken).toHaveBeenCalledTimes(1);
   });
 });
