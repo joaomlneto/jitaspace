@@ -149,8 +149,8 @@ importers:
         specifier: ^1.8.6
         version: 1.8.6(ee29021f47fff0af6ab5981ca3c39fe5)
       '@c15t/scripts':
-        specifier: ^1.0.1
-        version: 1.0.1
+        specifier: ^2.1.0
+        version: 2.1.0
       '@hapi/iron':
         specifier: ^7.0.1
         version: 7.0.1
@@ -2305,8 +2305,8 @@ packages:
       react: ^19.0.0 || ^19.0.0-rc || ^18.0.0 || ^17.0.0 || ^16.8.0
       react-dom: ^19.0.0 || ^19.0.0-rc || ^18.0.0 || ^17.0.0 || ^16.8.0
 
-  '@c15t/scripts@1.0.1':
-    resolution: {integrity: sha512-bzXJCvJd+mtUsMH7ny8kH4pWRZl9v1H5zbgVvk2bFTvO3Cr0TsUfQHpmuGJkIKn5W1cwUZ0+fpO8rIygHbmR4w==}
+  '@c15t/scripts@2.1.0':
+    resolution: {integrity: sha512-+4yU0LSeazBaEGGpx9uwVkfoQmFscnjRpx+5Y1E9b34TmoodIGrxX6klmroy71PHt+V+CnuLPU8oCD42m45jPQ==}
 
   '@c15t/translations@1.8.5':
     resolution: {integrity: sha512-2ywVBa1uDDMcQf8gKZ7wIlCXPVNn6qU/cARzTEkXHDI+8cHjc4I0PQK4whO+Cyts3HW4dA5RwgrHonqsE37rRw==}
@@ -12578,7 +12578,7 @@ snapshots:
       - use-sync-external-store
       - ws
 
-  '@c15t/scripts@1.0.1': {}
+  '@c15t/scripts@2.1.0': {}
 
   '@c15t/translations@1.8.5': {}
 
