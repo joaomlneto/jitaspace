@@ -162,7 +162,7 @@ export const useCharacter = (
             description: esiCharacter.data.data.description,
             factionId: esiCharacter.data.data.faction_id,
             securityStatus: esiCharacter.data.data.security_status,
-            title: esiCharacter.data.data.title,
+            title: esiCharacter.data.data.corporation_title,
             ...researchAgentData,
             ...agentInSpaceData,
           }
@@ -195,7 +195,7 @@ export const useCharacter = (
             description: esiCharacter.data.data.description,
             factionId: esiCharacter.data.data.faction_id,
             securityStatus: esiCharacter.data.data.security_status,
-            title: esiCharacter.data.data.title,
+            title: esiCharacter.data.data.corporation_title,
           }
         : null,
     [esiCharacter.data, isNpc],

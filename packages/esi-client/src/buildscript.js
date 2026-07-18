@@ -64,12 +64,23 @@ const getOperationId = (operation) => {
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
-// get the current date in YYYY-MM-DD format
-const esiCurrentDateString = "2025-12-16";
-
 const swaggerPath = join(__dirname, "..", "swagger.json");
 /** @type {unknown} */
 const swaggerData = JSON.parse(readFileSync(swaggerPath, "utf-8"));
+
+// ESI stamps the requested compatibility date into `info.version`, so reading it
+// back guarantees the date the client sends in X-Compatibility-Date matches the
+// spec it was generated from. A second hardcoded copy here would silently drift
+// from the `compatibility_date` in the `download-schema` script.
+const esiCurrentDateString = asRecord(asRecord(swaggerData).info).version;
+if (
+  typeof esiCurrentDateString !== "string" ||
+  !/^\d{4}-\d{2}-\d{2}$/.test(esiCurrentDateString)
+) {
+  throw new Error(
+    `Expected swagger.json info.version to be a YYYY-MM-DD compatibility date, got ${JSON.stringify(esiCurrentDateString)}`,
+  );
+}
 
 /** @type {Record<string, { maxTokens?: number; windowSize?: string }>} */
 const rateLimits = {};

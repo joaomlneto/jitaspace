@@ -15,12 +15,10 @@ const mockUseCharacterSkills = jest.fn();
 const mockUseCharacterWalletBalance = jest.fn();
 const mockUseCorporationHistory = jest.fn();
 
-// page.tsx imports getCharactersCharacterId for generateMetadata; page.client
+// page.tsx imports getCharactersDetail for generateMetadata; page.client
 // imports useGetCharactersCharacterIdCorporationhistory for the timeline.
 jest.mock("@jitaspace/esi-client", () => ({
-  getCharactersCharacterId: jest
-    .fn()
-    .mockResolvedValue({ data: { name: "Test" } }),
+  getCharactersDetail: jest.fn().mockResolvedValue({ data: { name: "Test" } }),
   useGetCharactersCharacterIdCorporationhistory: (...args: unknown[]) =>
     mockUseCorporationHistory(...args),
 }));
