@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 
-import { getCharactersCharacterId } from "@jitaspace/esi-client";
+import { getCharactersDetail } from "@jitaspace/esi-client";
 import {
   getAgentInSpaceById,
   getAllAgentInSpaceIds,
@@ -55,7 +55,7 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
     const characters = await Promise.all(
       agentCharacterIds.map((characterId) =>
         limit(async () =>
-          getCharactersCharacterId(characterId).then((res) => ({
+          getCharactersDetail(characterId).then((res) => ({
             characterId,
             ...res.data,
           })),

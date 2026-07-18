@@ -2,7 +2,7 @@ import type { LimitFunction } from "p-limit";
 import pLimit from "p-limit";
 
 import {
-  getCharactersCharacterId,
+  getCharactersDetail,
   getCorporationsCorporationId,
 } from "@jitaspace/esi-client";
 
@@ -19,7 +19,7 @@ const fetchCorporationWithId = (corporationId: number) =>
   }));
 
 const fetchCharacterWithId = (characterId: number) =>
-  getCharactersCharacterId(characterId).then((res) => ({
+  getCharactersDetail(characterId).then((res) => ({
     characterId,
     ...res.data,
   }));
@@ -100,7 +100,7 @@ const processCorporationBatch = async (
           name: character.name,
           raceId: character.race_id,
           securityStatus: character.security_status ?? null,
-          title: character.title ?? null,
+          title: character.corporation_title ?? null,
           isDeleted: false,
         })),
       ),

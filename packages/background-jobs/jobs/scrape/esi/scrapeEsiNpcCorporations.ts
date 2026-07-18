@@ -1,7 +1,7 @@
 import pLimit from "p-limit";
 
 import {
-  getCharactersCharacterId,
+  getCharactersDetail,
   getCorporationsCorporationId,
   getCorporationsNpccorps,
 } from "@jitaspace/esi-client";
@@ -63,7 +63,7 @@ export const scrapeEsiNpcCorporations = defineJob<
     const characters = await Promise.all(
       characterIds.map((characterId) =>
         limit(async () =>
-          getCharactersCharacterId(characterId).then((res) => ({
+          getCharactersDetail(characterId).then((res) => ({
             characterId,
             ...res.data,
           })),
@@ -126,7 +126,7 @@ export const scrapeEsiNpcCorporations = defineJob<
             name: character.name,
             raceId: character.race_id,
             securityStatus: character.security_status ?? null,
-            title: character.title ?? null,
+            title: character.corporation_title ?? null,
             isDeleted: false,
           })),
         ),

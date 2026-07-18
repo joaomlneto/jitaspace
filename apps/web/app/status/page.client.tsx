@@ -55,10 +55,12 @@ export default function StatusPage({
 
   const [opened, { open, close }] = useDisclosure(false);
 
-  const { data: esiStatus } = useGetMetaStatus(
-    { "X-Compatibility-Date": "2025-12-16" },
-    { query: { refetchInterval: 30 * 1000 } },
-  );
+  // Headers are omitted so the client falls back to the compatibility date the
+  // ESI client was generated against, rather than pinning a copy that silently
+  // goes stale whenever that date is bumped.
+  const { data: esiStatus } = useGetMetaStatus(undefined, {
+    query: { refetchInterval: 30 * 1000 },
+  });
 
   const webLastUpdatedDate: Date | null = useMemo(
     () =>
