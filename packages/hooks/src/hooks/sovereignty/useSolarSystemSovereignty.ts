@@ -15,8 +15,15 @@ export interface SolarSystemSovereignty {
  * Sovereignty owner of a solar system, flattened from the nested claim union
  * that `/sovereignty/systems` returns.
  *
- * Returns `undefined` for systems ESI reports no sovereignty for (such as
- * wormhole space), and an entry with no owner id for unclaimed K-space.
+ * Returns `undefined` for systems ESI reports no sovereignty for, and an entry
+ * with no owner id for unclaimed K-space.
+ *
+ * Behaviour change (ESI compatibility date 2026-07-17): `/sovereignty/systems`
+ * covers only K-space. The retired `/sovereignty/map` used to report NPC-faction
+ * sovereignty for the five Drifter-hub wormhole systems — Sentinel MZ (EDENCOM),
+ * Liberated Barbican (Minmatar), Sanctified Vidette (Amarr), Conflux Eyrie
+ * (Caldari) and Azdaja Redoubt (Triglavian) — which now resolve to no owner, so
+ * their sovereignty avatar falls back to a star. There is no replacement source.
  */
 export const useSolarSystemSovereignty = (
   solarSystemId: number,
