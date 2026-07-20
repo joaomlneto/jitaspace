@@ -168,6 +168,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
             openContextModal({
               modal: "settings",
               title: "Settings",
+              size: "xl",
               innerProps: {},
             });
           }}
