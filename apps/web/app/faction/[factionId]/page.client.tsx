@@ -5,11 +5,12 @@ import { useParams } from "next/navigation";
 import { Button, Container, Group, Stack, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
-import { FactionAvatar, FactionName } from "@jitaspace/ui";
+import { FactionName } from "@jitaspace/eve-components";
+import { FactionAvatar } from "@jitaspace/ui";
 
 export default function Page() {
   const params = useParams();
-  const rawFactionId = params?.factionId;
+  const rawFactionId = params.factionId;
   const factionId = Number(
     typeof rawFactionId === "string" ? rawFactionId : rawFactionId?.[0],
   );

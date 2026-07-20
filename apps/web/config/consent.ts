@@ -1,6 +1,6 @@
 "use client";
 
-import { ConsentManagerOptions } from "@c15t/nextjs";
+import type { ConsentManagerOptions } from "@c15t/nextjs";
 import { gtag } from "@c15t/scripts/google-tag";
 
 import { env } from "~/env.ts";
@@ -25,7 +25,7 @@ export const CONSENT_OPTIONS: ConsentManagerOptions & {
   },
   scripts: [
     gtag({
-      id: env.NEXT_PUBLIC_GOOGLE_TAG_ID!,
+      id: env.NEXT_PUBLIC_GOOGLE_TAG_ID ?? "",
       category: "measurement",
     }),
     {
@@ -35,7 +35,7 @@ export const CONSENT_OPTIONS: ConsentManagerOptions & {
       async: true,
       defer: true,
       attributes: {
-        "data-website-id": env.NEXT_PUBLIC_UMAMI_WEBSITE_ID!,
+        "data-website-id": env.NEXT_PUBLIC_UMAMI_WEBSITE_ID ?? "",
         "data-domains": "www.jita.space",
         strategy: "afterInteractive",
       },

@@ -2,16 +2,17 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 // ---------------------------------------------------------------------------
-// next/navigation — the page client receives props directly, but the route
-// segment reads the id via useParams; mock defensively so nothing throws.
+// next/navigation — the page client receives props directly; mock defensively.
 // ---------------------------------------------------------------------------
+const mockUseSearchParams = jest.fn(() => new URLSearchParams());
 jest.mock("next/navigation", () => ({
   useParams: () => ({ typeId: "30" }),
   useRouter: () => ({}),
   usePathname: () => "/",
+  useSearchParams: () => mockUseSearchParams(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -48,13 +49,19 @@ jest.mock("@jitaspace/sde-client", () => ({
     queryKey: ["dogmaAttributeCategory", categoryId],
     __categoryId: categoryId,
   }),
+  getDogmaUnitByIdQueryOptions: (unitId: number) => ({
+    queryKey: ["dogmaUnit", unitId],
+    __unitId: unitId,
+  }),
 }));
 
-// useQueries: for attribute queries return a category id derived from the
-// attribute, for category queries return a human-readable name.
+// useQueries: attribute queries -> a category id, category queries -> a name,
+// unit queries -> a display symbol. useQuery: the type image-variations fetch.
 const mockUseQueries = jest.fn();
+const mockUseQuery = jest.fn();
 jest.mock("@tanstack/react-query", () => ({
   useQueries: (...args: unknown[]) => mockUseQueries(...args),
+  useQuery: (...args: unknown[]) => mockUseQuery(...args),
 }));
 
 jest.mock("@jitaspace/tiptap-eve", () => ({
@@ -126,7 +133,7 @@ const FULL_TYPE_DATA = {
   dogma_attributes: [
     { attribute_id: 4, value: 100 }, // -> category 7 (named)
     { attribute_id: 161, value: 0.01 }, // -> category 7 (named)
-    { attribute_id: 999, value: 5 }, // -> no category (uncategorized)
+    { attribute_id: 999, value: 5 }, // -> no category (other)
   ],
   dogma_effects: [
     { effect_id: 11, is_default: true },
@@ -134,13 +141,35 @@ const FULL_TYPE_DATA = {
   ],
 };
 
-function renderPage(props?: Record<string, unknown>) {
-  const Page = require("~/app/type/[typeId]/page.client").default;
+interface QueryStub {
+  __attributeId?: number;
+  __categoryId?: number;
+  __unitId?: number;
+}
+
+interface TypePageProps {
+  typeId?: number;
+  typeName?: string;
+  typeDescription?: string;
+}
+
+// Require the page lazily so the jest.mock(...) factories above are active
+// before the module (and its transitively-mocked deps) are evaluated.
+function getPage(): React.ComponentType<TypePageProps> {
+  return require("~/app/type/[typeId]/page.client").default;
+}
+
+function renderPage(props: TypePageProps = {}) {
+  const TypePage = getPage();
   return render(
     <MantineProvider>
-      <Page typeId={30} {...props} />
+      <TypePage typeId={30} {...props} />
     </MantineProvider>,
   );
+}
+
+function clickTab(name: RegExp) {
+  fireEvent.click(screen.getByRole("tab", { name }));
 }
 
 describe("Type page (client)", () => {
@@ -151,6 +180,8 @@ describe("Type page (client)", () => {
     mockUseFuzzworkTypeMarketStats.mockReset();
     mockUseGetUniverseGroupsGroupId.mockReset();
     mockUseQueries.mockReset();
+    mockUseQuery.mockReset();
+    mockUseSearchParams.mockReset();
 
     // Defaults exercised by the "full data" path.
     mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
@@ -170,70 +201,137 @@ describe("Type page (client)", () => {
       data: { data: { category_id: 4 } },
     });
 
-    // First call: attribute queries -> map attribute_id to a category id
-    // (4 and 161 -> 7, 999 -> undefined). Second call: category queries ->
-    // return a name for category 7.
+    // The type image-variations query — no variations (falls back to icon).
+    mockUseQuery.mockReturnValue({ data: [] });
+
+    // No ?tab= query param by default; deep-link tests override this.
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+
+    // Attribute queries -> a category id (4 and 161 -> 7, 999 -> undefined).
+    // Category queries -> a name. Unit queries -> a display symbol.
     mockUseQueries.mockImplementation((arg: unknown) => {
-      const { queries } = arg as { queries: { __attributeId?: number; __categoryId?: number }[] };
+      const { queries } = arg as { queries: QueryStub[] };
       return queries.map((q) => {
         if (q.__attributeId !== undefined) {
-          const categoryID = q.__attributeId === 999 ? undefined : 7;
-          return { data: { data: { attributeCategoryID: categoryID } } };
+          const attributeCategoryID = q.__attributeId === 999 ? undefined : 7;
+          return { data: { data: { attributeCategoryID } } };
         }
-        // category query
-        return { data: { data: { name: "Armor" } } };
+        if (q.__categoryId !== undefined) {
+          return { data: { data: { name: "Armor" } } };
+        }
+        return { data: { data: { displayName: { en: "" } } } };
       });
     });
   });
 
-  it("renders every section with full data present", () => {
+  it("renders the hero and overview tab with full data", () => {
     renderPage();
 
-    // Title appears (h1 + identity name detail).
+    // Title (in the hero).
     expect(screen.getAllByText("Tritanium").length).toBeGreaterThanOrEqual(1);
 
-    // Identity & Classification
+    // Identity & Classification cards.
     expect(screen.getByText("Identity & Classification")).toBeInTheDocument();
     expect(screen.getByText("Type ID")).toBeInTheDocument();
-    expect(screen.getByText("Market Group ID")).toBeInTheDocument();
+    expect(screen.getByText("Group")).toBeInTheDocument();
+    expect(screen.getByText("Category")).toBeInTheDocument();
+    expect(screen.getByText("Market Group")).toBeInTheDocument();
+    expect(screen.getByText("Published")).toBeInTheDocument();
 
-    // Properties
+    // Properties cards (only those with values defined). "Volume" also
+    // appears as a hero quick-stat, so allow more than one match.
     expect(screen.getByText("Properties")).toBeInTheDocument();
-    expect(screen.getByText("Capacity")).toBeInTheDocument();
-    expect(screen.getByText("Icon ID")).toBeInTheDocument();
+    expect(screen.getAllByText("Volume").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Mass")).toBeInTheDocument();
 
-    // Description spoiler -> mail viewer
-    expect(screen.getByTestId("mail-viewer")).toHaveTextContent(
-      "A common mineral.",
+    // External resource links (always shown in the hero).
+    expect(screen.getByRole("link", { name: /EVE Ref/i })).toHaveAttribute(
+      "href",
+      "https://www.everef.net/type/30",
+    );
+    expect(screen.getByRole("link", { name: /EVE Tycoon/i })).toHaveAttribute(
+      "href",
+      "https://evetycoon.com/market/30",
     );
 
-    // Market Information + fuzzwork block
-    expect(screen.getByText("Market Information")).toBeInTheDocument();
-    expect(screen.getByText("Average Price")).toBeInTheDocument();
-    expect(screen.getByText("Adjusted Price")).toBeInTheDocument();
-    expect(screen.getByText("Jita Buy")).toBeInTheDocument();
-    expect(screen.getByText("Jita Split")).toBeInTheDocument();
-    expect(screen.getByText("Jita Sell")).toBeInTheDocument();
-
-    // Dogma attributes: categorized table renders (named + uncategorized)
-    expect(screen.getByText("Dogma Attributes")).toBeInTheDocument();
-    expect(screen.getByText("Armor (7)")).toBeInTheDocument();
-    expect(screen.getByText("Uncategorized")).toBeInTheDocument();
-
-    // Dogma effects table renders
-    expect(screen.getByText("Dogma Effects")).toBeInTheDocument();
-    expect(screen.getAllByText("Effect").length).toBeGreaterThanOrEqual(1);
-
-    // External links
+    // The EVE Workbench fits link is ship-only; this type is category 4.
     expect(
-      screen.getByRole("link", { name: /Eve Ref/ }),
-    ).toHaveAttribute("href", "https://www.everef.net/type/30");
-    expect(
-      screen.getByRole("link", { name: /EVE Tycoon/ }),
-    ).toHaveAttribute("href", "https://evetycoon.com/market/30");
+      screen.queryByRole("link", { name: /EVE Workbench/i }),
+    ).not.toBeInTheDocument();
   });
 
-  it("sorts multiple distinct categories numerically and places uncategorized last", () => {
+  it("shows the EVE Workbench fits link only for ships (category 6)", () => {
+    mockUseGetUniverseGroupsGroupId.mockReturnValue({
+      data: { data: { category_id: 6 } },
+    });
+
+    renderPage();
+
+    expect(
+      screen.getByRole("link", { name: /EVE Workbench/i }),
+    ).toHaveAttribute("href", "https://eveworkbench.com/fits?ship=30");
+  });
+
+  it("exposes Overview, Attributes, Market and Description tabs for full data", () => {
+    renderPage();
+    expect(screen.getByRole("tab", { name: /Overview/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Attributes/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Market/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("tab", { name: /Description/ }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows Jita market statistics on the Market tab", () => {
+    renderPage();
+    clickTab(/Market/);
+
+    expect(screen.getByText("Jita / The Forge")).toBeInTheDocument();
+    expect(screen.getByText("Jita Buy")).toBeInTheDocument();
+    expect(screen.getByText("Jita Split")).toBeInTheDocument();
+    // "Jita Sell" also appears as a hero quick-stat.
+    expect(screen.getAllByText("Jita Sell").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Average Price")).toBeInTheDocument();
+    expect(screen.getByText("Adjusted Price")).toBeInTheDocument();
+  });
+
+  it("opens the tab named by the ?tab= query parameter on first render", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=market"));
+    renderPage();
+
+    // The Market panel is active without any click, so its content is shown.
+    // (keepMounted is false, so only the active panel renders.)
+    expect(screen.getByText("Jita / The Forge")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Market/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("falls back to the Overview tab for an unknown ?tab= value", () => {
+    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=bogus"));
+    renderPage();
+
+    // Overview content is shown and remains the selected tab.
+    expect(screen.getByText("Identity & Classification")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Overview/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it("groups attributes by category (with an 'Other' bucket) on the Attributes tab", () => {
+    renderPage();
+    clickTab(/Attributes/);
+
+    // The section heading shares the label with the tab.
+    expect(screen.getAllByText("Attributes").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Armor")).toBeInTheDocument();
+    expect(screen.getByText("Other")).toBeInTheDocument();
+    expect(screen.getByText("Effects")).toBeInTheDocument();
+  });
+
+  it("sorts categories numerically and places the uncategorized bucket last", () => {
     mockUseType.mockReturnValue({
       data: {
         data: {
@@ -241,57 +339,77 @@ describe("Type page (client)", () => {
           dogma_attributes: [
             { attribute_id: 4, value: 1 }, // -> category 9
             { attribute_id: 50, value: 2 }, // -> category 3
-            { attribute_id: 999, value: 3 }, // -> uncategorized
+            { attribute_id: 999, value: 3 }, // -> other
           ],
         },
       },
     });
-
-    // attr 4 -> cat 9, attr 50 -> cat 3, attr 999 -> uncategorized.
     mockUseQueries.mockImplementation((arg: unknown) => {
-      const { queries } = arg as {
-        queries: { __attributeId?: number; __categoryId?: number }[];
-      };
+      const { queries } = arg as { queries: QueryStub[] };
       return queries.map((q) => {
         if (q.__attributeId !== undefined) {
           if (q.__attributeId === 999)
             return { data: { data: { attributeCategoryID: undefined } } };
-          const categoryID = q.__attributeId === 4 ? 9 : 3;
-          return { data: { data: { attributeCategoryID: categoryID } } };
+          return {
+            data: {
+              data: { attributeCategoryID: q.__attributeId === 4 ? 9 : 3 },
+            },
+          };
         }
-        // category query -> name keyed off categoryId
-        const name = q.__categoryId === 9 ? "Required Skills" : "Fitting";
-        return { data: { data: { name } } };
+        if (q.__categoryId !== undefined) {
+          const name = q.__categoryId === 9 ? "Required Skills" : "Fitting";
+          return { data: { data: { name } } };
+        }
+        return { data: { data: { displayName: { en: "" } } } };
       });
     });
 
     renderPage();
+    clickTab(/Attributes/);
 
-    // Numeric sort: category 3 ("Fitting") before category 9, uncategorized last.
-    expect(screen.getByText("Fitting (3)")).toBeInTheDocument();
-    expect(screen.getByText("Required Skills (9)")).toBeInTheDocument();
-    expect(screen.getByText("Uncategorized")).toBeInTheDocument();
+    const fitting = screen.getByText("Fitting"); // category 3
+    const skills = screen.getByText("Required Skills"); // category 9
+    const other = screen.getByText("Other"); // uncategorized
+
+    // Numeric order: category 3 before category 9, uncategorized last.
+    expect(
+      fitting.compareDocumentPosition(skills) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      skills.compareDocumentPosition(other) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
-  it("falls back to the unnamed category label when a category name is missing", () => {
-    // Category query returns no name -> "Category 7" fallback used.
+  it("falls back to a generated category label when the name is missing", () => {
     mockUseQueries.mockImplementation((arg: unknown) => {
-      const { queries } = arg as { queries: { __attributeId?: number; __categoryId?: number }[] };
+      const { queries } = arg as { queries: QueryStub[] };
       return queries.map((q) => {
         if (q.__attributeId !== undefined) {
-          const categoryID = q.__attributeId === 999 ? undefined : 7;
-          return { data: { data: { attributeCategoryID: categoryID } } };
+          const attributeCategoryID = q.__attributeId === 999 ? undefined : 7;
+          return { data: { data: { attributeCategoryID } } };
         }
-        return { data: undefined };
+        if (q.__categoryId !== undefined) {
+          return { data: undefined };
+        }
+        return { data: { data: { displayName: { en: "" } } } };
       });
     });
 
     renderPage();
-    expect(screen.getByText("Category 7 (7)")).toBeInTheDocument();
+    clickTab(/Attributes/);
+    expect(screen.getByText("Category 7")).toBeInTheDocument();
   });
 
-  it("renders fallbacks when optional data is empty/undefined", () => {
-    // No type data, no character, no prices, no fuzzwork stats, no group.
+  it("renders the description tab content", () => {
+    renderPage();
+    clickTab(/Description/);
+    expect(screen.getByTestId("mail-viewer")).toHaveTextContent(
+      "A common mineral.",
+    );
+  });
+
+  it("hides data-less tabs and shows fallbacks when optional data is empty", () => {
     mockUseSelectedCharacter.mockReturnValue(null);
     mockUseType.mockReturnValue({ data: undefined });
     mockUseMarketPrices.mockReturnValue({ data: {} });
@@ -301,57 +419,30 @@ describe("Type page (client)", () => {
 
     renderPage({ typeName: "Fallback Name", typeDescription: undefined });
 
-    // Sections still render with "Not available" placeholders.
+    // Overview still renders with "Not available" placeholders.
     expect(screen.getByText("Identity & Classification")).toBeInTheDocument();
     expect(screen.getAllByText("Not available").length).toBeGreaterThan(0);
 
-    // Fuzzwork block absent.
-    expect(screen.queryByText("Jita Buy")).not.toBeInTheDocument();
-
-    // Dogma sections show the empty placeholder.
-    expect(screen.getByText("Dogma Attributes")).toBeInTheDocument();
-    expect(screen.getByText("Dogma Effects")).toBeInTheDocument();
-
-    // No description spoiler when both description sources are empty.
-    expect(screen.queryByTestId("mail-viewer")).not.toBeInTheDocument();
-  });
-
-  it("uses the typeData group category id and handles undefined group_id/market_group_id", () => {
-    mockUseType.mockReturnValue({
-      data: {
-        data: {
-          type_id: 30,
-          name: "No Groups Item",
-          published: false,
-          // group_id and market_group_id intentionally undefined
-          dogma_attributes: [],
-          dogma_effects: [],
-        },
-      },
-    });
-    mockUseGetUniverseGroupsGroupId.mockReturnValue({
-      data: { data: {} }, // category_id undefined
-    });
-    mockUseQueries.mockReturnValue([]);
-
-    renderPage();
-
-    // category id undefined -> "Not available" used in Category + Category ID.
-    expect(screen.getByText("Market Group")).toBeInTheDocument();
-    expect(screen.getAllByText("Not available").length).toBeGreaterThan(0);
-    // booleanBadge false branch ("No") for unpublished.
-    expect(screen.getByText("Published")).toBeInTheDocument();
+    // Only the Overview tab is present; the rest are hidden.
+    expect(screen.getByRole("tab", { name: /Overview/ })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("tab", { name: /Attributes/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("tab", { name: /Market/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("tab", { name: /Description/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the loading state when typeId is falsy", () => {
-    const Page = require("~/app/type/[typeId]/page.client").default;
+    const TypePage = getPage();
     render(
       <MantineProvider>
-        <Page typeId={0} />
+        <TypePage typeId={0} />
       </MantineProvider>,
     );
-    expect(
-      screen.getByText("Loading type information..."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Loading type information...")).toBeInTheDocument();
   });
 });

@@ -3,21 +3,20 @@ import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
 import {
-  useCharacterMailingLists,
-  useCharacterMailLabels,
-} from "@jitaspace/hooks";
-import {
   EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
-  FormattedDateText,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import {
+  useCharacterMailingLists,
+  useCharacterMailLabels,
+} from "@jitaspace/hooks";
+import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
+import type { MailboxTableProps } from "~/components/EveMail";
 import { EveMailSenderCard } from "~/components/Card";
 import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { LabelName } from "~/components/Text";
-
-import type { MailboxTableProps } from "~/components/EveMail";
 import { MessageMenu } from "../MessageMenu";
 
 export const DesktopMailboxTable = ({
@@ -49,7 +48,7 @@ export const DesktopMailboxTable = ({
                 <Popover width={250} withArrow shadow="md">
                   <Popover.Target>
                     <Group wrap="nowrap" key={mail.mail_id}>
-                      {mail?.from && (
+                      {mail.from && (
                         <>
                           <EveMailSenderAvatar
                             from={mail.from}
@@ -117,13 +116,15 @@ export const DesktopMailboxTable = ({
               </Table.Td>
               <Table.Td>
                 {mail.timestamp && (
-                  <FormattedDateText
-                    size="xs"
-                    style={{ whiteSpace: "nowrap" }}
-                    date={new Date(mail.timestamp)}
-                    fw={mail.is_read ? "normal" : "bold"}
-                    format="yyyy-MM-dd HH:mm"
-                  />
+                  <DateHoverCard date={new Date(mail.timestamp)}>
+                    <FormattedDateText
+                      size="xs"
+                      style={{ whiteSpace: "nowrap" }}
+                      date={new Date(mail.timestamp)}
+                      fw={mail.is_read ? "normal" : "bold"}
+                      format="yyyy-MM-dd HH:mm"
+                    />
+                  </DateHoverCard>
                 )}
               </Table.Td>
               <Table.Td>

@@ -1,0 +1,127 @@
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { beforeAll, describe, expect, it, jest } from "@jest/globals";
+
+import type { jobs as Jobs, registry as Registry } from "../jobs";
+
+// Importing the job registry pulls in external IO clients at module load
+// (Prisma, the chat bot, ESI/SDE clients). Mock them so the import only
+// executes the declarative `defineJob` config we assert on here. (`kv` is
+// already lazy, so it has no import-time side effects, but we stub it anyway.)
+jest.mock("../kv", () => ({ getKv: jest.fn(), getRedis: jest.fn() }));
+jest.mock("../db", () => ({ prisma: {}, Prisma: {} }));
+jest.mock("../chat", () => ({ postUpdateCard: jest.fn() }));
+jest.mock("@jitaspace/esi-client", () => ({}));
+jest.mock("@jitaspace/sde-client", () => ({}));
+// sde-utils' barrel re-exports with `.js` extensions (NodeNext ESM), which the
+// Jest resolver can't map back to the `.ts` source. The handlers only need it at
+// runtime, so stub the exports the job modules import at load time.
+jest.mock("@jitaspace/sde-utils", () => ({
+  downloadFile: jest.fn(),
+  unzipSde: jest.fn(),
+  SDE_DOWNLOAD_URL: "https://example.test/sde.zip",
+  ensureSdePresentAndExtracted: jest.fn(),
+  loadFile: jest.fn(),
+  sdeInputFiles: {},
+}));
+// p-limit is ESM-only and only used inside handlers, not in the registry config.
+jest.mock("p-limit", () => ({
+  __esModule: true,
+  default: () => (fn: () => unknown) => fn(),
+}));
+
+let jobs: typeof Jobs;
+let registry: typeof Registry;
+let sdeIngestJobIds: string[];
+
+beforeAll(async () => {
+  const mod = await import("../jobs");
+  jobs = mod.jobs;
+  registry = mod.registry;
+  sdeIngestJobIds = mod.SDE_INGEST_JOB_IDS;
+});
+
+const JOBS_DIR = join(__dirname, "..", "jobs");
+
+const walkTsFiles = (dir: string): string[] =>
+  readdirSync(dir).flatMap((entry) => {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) return walkTsFiles(full);
+    return full.endsWith(".ts") ? [full] : [];
+  });
+
+describe("background-jobs registry", () => {
+  it("registers more than 40 jobs with unique, non-empty ids", () => {
+    expect(jobs.length).toBeGreaterThan(40);
+    const ids = jobs.map((job) => job.id);
+    expect(ids.every((id) => typeof id === "string" && id.length > 0)).toBe(
+      true,
+    );
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("gives every job a name and a valid trigger", () => {
+    for (const job of jobs) {
+      expect(typeof job.name).toBe("string");
+      expect(job.name.length).toBeGreaterThan(0);
+      expect(["event", "cron"]).toContain(job.trigger.type);
+      if (job.trigger.type === "cron") {
+        expect(typeof job.trigger.cron).toBe("string");
+      }
+    }
+  });
+
+  it("registers exactly the expected cron jobs", () => {
+    const cronJobIds = jobs
+      .filter((job) => job.trigger.type === "cron")
+      .map((job) => job.id)
+      .sort((a, b) => a.localeCompare(b));
+    expect(cronJobIds).toEqual(["esi-update-wars", "watch-sde"]);
+  });
+
+  it("resolves every job by id through the registry", () => {
+    for (const job of jobs) {
+      expect(registry.get(job.id)).toBe(job);
+    }
+  });
+
+  // The big safety net for string-based references: scan the handler source for
+  // every `ctx.send("…")` / `ctx.invoke("…")` target and assert it is a real
+  // job id. A typo here would otherwise only blow up at runtime.
+  it("references only job ids that exist (ctx.send / ctx.invoke)", () => {
+    const referenced = new Set<string>();
+    for (const file of walkTsFiles(JOBS_DIR)) {
+      const source = readFileSync(file, "utf8");
+      for (const match of source.matchAll(
+        /ctx\.(?:send|invoke)\(\s*["']([^"']+)["']/g,
+      )) {
+        const id = match[1];
+        if (id) referenced.add(id);
+      }
+    }
+
+    expect(referenced.size).toBeGreaterThan(0);
+    const unknown = [...referenced].filter((id) => !registry.has(id));
+    expect(unknown).toEqual([]);
+  });
+
+  // The `ingest-sde-all` orchestrator and `bootstrapDatabase` both drive this
+  // shared, FK-ordered list via `ctx.invoke`, so guard it explicitly (the
+  // generic ctx.invoke scan above can't see ids that come from a constant).
+  it("SDE_INGEST_JOB_IDS all resolve to registered jobs", () => {
+    const unknown = sdeIngestJobIds.filter((id) => !registry.has(id));
+    expect(unknown).toEqual([]);
+  });
+
+  it("SDE_INGEST_JOB_IDS covers exactly the per-file ingest-sde jobs", () => {
+    // Catches a new `ingest-sde-*` job left out of the shared pipeline list
+    // (and the orchestrator id leaking into its own list).
+    const perFile = jobs
+      .map((job) => job.id)
+      .filter((id) => id.startsWith("ingest-sde-") && id !== "ingest-sde-all")
+      .sort((a, b) => a.localeCompare(b));
+    expect([...sdeIngestJobIds].sort((a, b) => a.localeCompare(b))).toEqual(
+      perFile,
+    );
+  });
+});

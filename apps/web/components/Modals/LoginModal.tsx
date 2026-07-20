@@ -36,7 +36,7 @@ const allAppScopes = [
 
 export function LoginModal({
   innerProps,
-}: ContextModalProps<{ scopes?: ESIScope[] }>) {
+}: Readonly<ContextModalProps<{ scopes?: ESIScope[] }>>) {
   const [showAppSelector, { toggle: toggleAppSelector }] = useDisclosure(false);
   const [showScopesTable, { toggle }] = useDisclosure(false);
   const [showAppScopeDetails, { toggle: toggleAppScopeDetails }] =
@@ -94,7 +94,7 @@ export function LoginModal({
             onChange={() => toggleAppScopeDetails()}
           />
           <SimpleGrid my="xl" spacing={0} cols={{ base: 1, sm: 2 }}>
-            {[...Object.values(characterApps)].map((feature) => (
+            {Object.values(characterApps).map((feature) => (
               <AppCheckboxCard
                 app={feature}
                 selectedScopes={[...selectedScopes]}
@@ -134,7 +134,7 @@ export function LoginModal({
           </Center>
         </>
       )}
-      <Collapse in={showScopesTable}>
+      <Collapse expanded={showScopesTable}>
         <Text size="sm" c="dimmed">
           List of scopes to be requested:
         </Text>

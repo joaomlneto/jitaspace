@@ -1,22 +1,27 @@
 import { memo, useMemo } from "react";
 import { Group, JsonInput, Table } from "@mantine/core";
 
+import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
 import { useDogmaAttributes, useTypes } from "@jitaspace/hooks";
 import {
   DogmaAttributeAnchor,
-  TypeAnchor,
+  formatDogmaAttributeValue,
   TypeAvatar,
-  TypeName,
 } from "@jitaspace/ui";
 
 import { DogmaAttributeName } from "~/components/Text";
 
-
-
-
-
 export interface CompareTableProps {
   typeIds: number[];
+}
+
+function findAttributeValue(
+  type: { dogma_attributes?: { attribute_id: number; value: number }[] },
+  attributeId: number | undefined,
+): number | undefined {
+  return type.dogma_attributes?.find(
+    (attribute) => attribute.attribute_id === attributeId,
+  )?.value;
 }
 
 export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
@@ -32,7 +37,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
       ...new Set(
         sortedTypes
           .flatMap((type) => type.dogma_attributes ?? [])
-          .map((entry) => entry?.attribute_id),
+          .map((entry) => entry.attribute_id),
       ),
     ],
     [sortedTypes],
@@ -44,9 +49,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
       attributeId,
       values: sortedTypes.map((type) => ({
         typeId: type.type_id,
-        value: type.dogma_attributes?.find(
-          (attribute) => attribute.attribute_id === attributeId,
-        )?.value,
+        value: findAttributeValue(type, attributeId),
       })),
     }));
     /*attributeList.forEach(
@@ -64,7 +67,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
       .map((entry) => entry.attributeId);
   }, [attributeTypeValues]);
 
-  const { data: attributes } = useDogmaAttributes(nonEqualAttributeIds ?? []);
+  const { data: attributes } = useDogmaAttributes(nonEqualAttributeIds);
 
   const sortedAttributes = useMemo(
     () =>
@@ -80,17 +83,19 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
     <>
       <Table highlightOnHover>
         <Table.Thead>
-          <th>Attribute</th>
-          {sortedTypes.map((type) => (
-            <th key={type.type_id}>
-              <Group gap="xs">
-                <TypeAvatar typeId={type.type_id} size="sm" />
-                <TypeAnchor typeId={type.type_id} target="_blank">
-                  <TypeName typeId={type.type_id} />
-                </TypeAnchor>
-              </Group>
-            </th>
-          ))}
+          <Table.Tr>
+            <Table.Th>Attribute</Table.Th>
+            {sortedTypes.map((type) => (
+              <Table.Th key={type.type_id}>
+                <Group gap="xs">
+                  <TypeAvatar typeId={type.type_id} size="sm" />
+                  <TypeAnchor typeId={type.type_id} target="_blank">
+                    <TypeName typeId={type.type_id} />
+                  </TypeAnchor>
+                </Group>
+              </Table.Th>
+            ))}
+          </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
           {sortedAttributes.map((attribute) => (
@@ -103,15 +108,20 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
                   <DogmaAttributeName attributeId={attribute.attribute_id} />
                 </DogmaAttributeAnchor>
               </Table.Td>
-              {sortedTypes.map((type) => (
-                <Table.Td key={type.type_id}>
-                  {(type.dogma_attributes ?? [])
-                    .find(
-                      (entry) => entry.attribute_id === attribute.attribute_id,
-                    )
-                    ?.value.toLocaleString()}
-                </Table.Td>
-              ))}
+              {sortedTypes.map((type) => {
+                const value = (type.dogma_attributes ?? []).find(
+                  (entry) => entry.attribute_id === attribute.attribute_id,
+                )?.value;
+                return (
+                  <Table.Td key={type.type_id}>
+                    {value === undefined
+                      ? null
+                      : formatDogmaAttributeValue(value, {
+                          unitId: attribute.unit_id,
+                        })}
+                  </Table.Td>
+                );
+              })}
             </Table.Tr>
           ))}
         </Table.Tbody>

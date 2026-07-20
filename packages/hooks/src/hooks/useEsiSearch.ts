@@ -1,10 +1,10 @@
 "use client";
 
-import {
+import type {
   GetCharactersCharacterIdSearchHeaderParamsAcceptLanguageEnum,
   GetCharactersCharacterIdSearchQueryResponse,
-  useGetCharactersCharacterIdSearch,
 } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdSearch } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "./auth";
 
@@ -45,11 +45,14 @@ export function useEsiSearch(
           "station",
           "structure",
         ]
-      )?.join(","),
+      ).join(","),
       search: query,
       strict,
     },
-    { ...(language !== undefined && { "Accept-Language": language }), ...authHeaders },
+    {
+      ...(language !== undefined && { "Accept-Language": language }),
+      ...authHeaders,
+    },
     {
       query: {
         enabled: accessToken !== null && query.length >= 3,

@@ -3,17 +3,17 @@
 import type { UnstyledButtonProps } from "@mantine/core";
 import type React from "react";
 import { useMemo } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Group,
+  Indicator,
   Menu,
   Text,
   UnstyledButton,
   useMantineColorScheme,
   useMantineTheme,
 } from "@mantine/core";
-import { openContextModal } from "@mantine/modals";
+import { modals, openContextModal } from "@mantine/modals";
 
 import {
   RecruitmentIcon,
@@ -32,7 +32,7 @@ export default function UserButton({ ...others }: UserButtonProps) {
   const { colorScheme } = useMantineColorScheme();
   const router = useRouter();
   const character = useSelectedCharacter();
-  const { characters, selectCharacter, logout } = useAuthStore();
+  const { characters, selectCharacter, removeCharacter } = useAuthStore();
 
   const sortedCharacters = useMemo(
     () =>
@@ -46,6 +46,17 @@ export default function UserButton({ ...others }: UserButtonProps) {
 
   const characterId = character.characterId;
   const characterName = character.accessTokenPayload.name;
+
+  // Re-authentication uses the same EVE SSO login flow as adding a character;
+  // logging in again with an expired character refreshes its tokens and clears
+  // the `sessionExpired` flag.
+  const openLoginModal = () =>
+    openContextModal({
+      modal: "login",
+      title: "Login",
+      size: "xl",
+      innerProps: {},
+    });
 
   return (
     <Menu withArrow position="bottom" transitionProps={{ transition: "pop" }}>
@@ -67,17 +78,48 @@ export default function UserButton({ ...others }: UserButtonProps) {
           {...others}
         >
           <Group>
-            <CharacterAvatar characterId={characterId} radius="xl" size="sm" />
+            <Indicator
+              inline
+              disabled={!character.sessionExpired}
+              color="red"
+              size={12}
+              offset={4}
+              withBorder
+            >
+              <CharacterAvatar
+                characterId={characterId}
+                radius="xl"
+                size="sm"
+              />
+            </Indicator>
 
             <div style={{ flex: 1 }}>
               <Text size="sm" fw={500}>
                 {characterName}
               </Text>
+              {character.sessionExpired && (
+                <Text size="xs" c="red">
+                  Session expired
+                </Text>
+              )}
             </div>
           </Group>
         </UnstyledButton>
       </Menu.Target>
       <Menu.Dropdown>
+        {character.sessionExpired && (
+          <>
+            <Menu.Label c="red">Session expired</Menu.Label>
+            <Menu.Item
+              color="red"
+              leftSection={<RecruitmentIcon width={20} />}
+              onClick={openLoginModal}
+            >
+              Sign in again
+            </Menu.Item>
+            <Menu.Divider />
+          </>
+        )}
         {sortedCharacters.length > 1 && (
           <>
             <Menu.Label>Switch Character</Menu.Label>
@@ -87,12 +129,32 @@ export default function UserButton({ ...others }: UserButtonProps) {
                 <Menu.Item
                   key={character.characterId}
                   leftSection={
-                    <CharacterAvatar
-                      characterId={character.characterId}
-                      size={20}
-                    />
+                    <Indicator
+                      inline
+                      disabled={!character.sessionExpired}
+                      color="red"
+                      size={8}
+                      offset={2}
+                      withBorder
+                    >
+                      <CharacterAvatar
+                        characterId={character.characterId}
+                        size={20}
+                      />
+                    </Indicator>
                   }
-                  onClick={() => selectCharacter(character.characterId)}
+                  rightSection={
+                    character.sessionExpired ? (
+                      <Text size="xs" c="red">
+                        expired
+                      </Text>
+                    ) : undefined
+                  }
+                  onClick={() =>
+                    character.sessionExpired
+                      ? openLoginModal()
+                      : selectCharacter(character.characterId)
+                  }
                 >
                   {character.accessTokenPayload.name}
                 </Menu.Item>
@@ -102,30 +164,46 @@ export default function UserButton({ ...others }: UserButtonProps) {
         )}
         <Menu.Item
           leftSection={<SettingsIcon width={20} />}
-          component={Link}
-          href="/settings"
+          onClick={() => {
+            openContextModal({
+              modal: "settings",
+              title: "Settings",
+              innerProps: {},
+            });
+          }}
         >
           Settings
         </Menu.Item>
         <Menu.Item
           leftSection={<RecruitmentIcon width={20} />}
-          onClick={() => {
-            openContextModal({
-              modal: "login",
-              title: "Login",
-              size: "xl",
-              innerProps: {},
-            });
-          }}
+          onClick={openLoginModal}
         >
           Add Character
         </Menu.Item>
         <Menu.Item
           leftSection={<TerminateIcon width={20} />}
-          onClick={() => {
-            logout();
-            router.push("/");
-          }}
+          onClick={() =>
+            modals.openConfirmModal({
+              title: `Log out ${characterName}?`,
+              children: (
+                <Text size="sm">
+                  Are you sure you want to log out from character{" "}
+                  {characterName}?
+                </Text>
+              ),
+              labels: { confirm: "Confirm", cancel: "Cancel" },
+              confirmProps: { color: "red" },
+              onConfirm: () => {
+                removeCharacter(characterId);
+                // If that was the last character we're fully logged out, so
+                // go home. Otherwise removeCharacter() selects one of the
+                // remaining characters and we stay on the current page.
+                if (sortedCharacters.length <= 1) {
+                  router.push("/");
+                }
+              },
+            })
+          }
         >
           Logout
         </Menu.Item>

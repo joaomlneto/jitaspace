@@ -1,31 +1,41 @@
 import Queue from "bull";
 import { createClient } from "redis";
 
-import { GetWarsWarId200 } from "@jitaspace/esi-client";
+export interface CreateKvOptions {
+  /** Redis connection URL. */
+  redisUrl: string;
+}
 
-export const redis = await createClient({
-  url: process.env.REDIS_URL,
-}).connect();
+/**
+ * Create the Redis client and Bull queues.
+ *
+ * This package reads no environment variables: callers (apps) inject the Redis
+ * URL from their own validated env. The Redis client is connected eagerly, so
+ * this is async — callers typically `await` it once and re-export the result.
+ */
+export async function createKv({ redisUrl }: CreateKvOptions) {
+  const redis = await createClient({ url: redisUrl }).connect();
 
-const keys = {
-  killmails: "killmails",
-  wars: "wars",
-};
+  const kv = {
+    queues: {
+      allianceIds: new Queue<{ allianceIds: number[] }>("allianceIds", redisUrl),
+      characterIds: new Queue<{ characterIds: number[] }>(
+        "characterIds",
+        redisUrl,
+      ),
+      corporationIds: new Queue<{ corporationIds: number[] }>(
+        "corporationIds",
+        redisUrl,
+      ),
+      // Payload type is intentionally `unknown`: kv is a generic Redis/queue
+      // wrapper with no knowledge of EVE domain shapes. Consumers assert the
+      // concrete element type at their call site (e.g. the wars drain handler
+      // in @jitaspace/background-jobs).
+      war: new Queue<unknown>("wars", redisUrl),
+    },
+  };
 
-export const kv = {
-  queues: {
-    allianceIds: new Queue<{ allianceIds: number[] }>(
-      "allianceIds",
-      process.env.REDIS_URL as string,
-    ),
-    characterIds: new Queue<{ characterIds: number[] }>(
-      "characterIds",
-      process.env.REDIS_URL as string,
-    ),
-    corporationIds: new Queue<{ corporationIds: number[] }>(
-      "corporationIds",
-      process.env.REDIS_URL as string,
-    ),
-    war: new Queue<GetWarsWarId200[]>("wars", process.env.REDIS_URL as string),
-  },
-};
+  return { redis, kv };
+}
+
+export type Kv = Awaited<ReturnType<typeof createKv>>;

@@ -13,26 +13,31 @@
     "EVE_CLIENT_ID",
     "EVE_CLIENT_SECRET",
     "EXPO_ROUTER_APP_ROOT",
-    "INNGEST_EVENT_KEY",
-    "INNGEST_SIGNING_KEY",
+    "HISTORY_DATABASE_SCHEMA",
+    "HISTORY_DATABASE_URL",
     "LOGTAIL_SOURCE_TOKEN",
     "NEXTAUTH_SECRET",
     "NEXTAUTH_URL",
     "NEXT_PUBLIC_DISCORD_INVITE_LINK",
     "NEXT_PUBLIC_GOOGLE_TAG_ID",
+    "NEXT_PUBLIC_SENTRY_DSN",
     "NEXT_PUBLIC_UMAMI_WEBSITE_ID",
     "REDIS_URL",
     "SENTRY_AUTH_TOKEN",
     "SENTRY_ORG",
     "SENTRY_PROJECT",
     "SKIP_BUILD_STATIC_GENERATION",
-    "SKIP_ENV_VALIDATION"
+    "SKIP_ENV_VALIDATION",
+    "TRIGGER_API_URL",
+    "TRIGGER_PROJECT_REF",
+    "TRIGGER_SECRET_KEY"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
     "CI",
     "VERCEL",
     "VERCEL_URL",
+    "TRIGGER_VERSION",
     "npm_lifecycle_event"
   ],
   "tasks": {
@@ -57,7 +62,7 @@
       "cache": false
     },
     "build": {
-      "dependsOn": ["^build", "^db:generate", "kubb:generate"],
+      "dependsOn": ["^build", "db:generate", "^db:generate", "kubb:generate"],
       "inputs": ["**/*.ts", "**/*.tsx", "package.json", "tsconfig.json"],
       "outputs": [
         ".next/**",
@@ -111,6 +116,10 @@
       "dependsOn": ["^topo", "kubb:generate"],
       "inputs": ["**/*.ts", "**/*.tsx", "package.json", "tsconfig.json"],
       "outputs": ["node_modules/.cache/tsbuildinfo.json"]
+    },
+    "deploy": {
+      "dependsOn": ["^db:generate", "^build"],
+      "cache": false
     }
   }
 }

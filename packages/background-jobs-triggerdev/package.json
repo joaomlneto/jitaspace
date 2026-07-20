@@ -1,0 +1,37 @@
+{
+  "name": "@jitaspace/background-jobs-triggerdev",
+  "description": "Trigger.dev adapter that runs @jitaspace/background-jobs on Trigger.dev",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/trigger/index.ts",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules .trigger",
+    "deploy": "pnpm with-env trigger.dev deploy",
+    "dev": "pnpm with-env trigger.dev dev",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --jsx react-jsx --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@jitaspace/background-jobs": "workspace:*",
+    "@jitaspace/db": "workspace:*",
+    "@sentry/node": "^10.53.1",
+    "@trigger.dev/sdk": "^4.4.6"
+  },
+  "devDependencies": {
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "@sentry/esbuild-plugin": "^5.3.0",
+    "@trigger.dev/build": "^4.4.6",
+    "@types/node": "^24.12.4",
+    "eslint": "^9.39.4",
+    "prettier": "^3.8.3",
+    "trigger.dev": "^4.4.6",
+    "typescript": "^5.9.3"
+  },
+  "prettier": "@jitaspace/prettier-config"
+}

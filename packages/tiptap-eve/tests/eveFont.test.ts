@@ -36,6 +36,19 @@ describe("fromEveColor", () => {
     });
   });
 
+  describe("missing color attribute (TipTap default)", () => {
+    // A <font> tag without a `color` attribute (e.g. `<font size="14">` headers,
+    // ubiquitous in EVE descriptions/mail) renders with the mark's default,
+    // which TipTap resolves to `null`. fromEveColor must not throw on this — it
+    // used to read `.length` and crash the whole MailMessageViewer.
+    it.each([
+      ["null", null],
+      ["undefined", undefined],
+    ])("returns an empty string for %s", (_name, input) => {
+      expect(fromEveColor(input)).toBe("");
+    });
+  });
+
   describe("inline style integration", () => {
     // Verify the output format matches what renderHTML uses:
     // `font-size:${size}pt;color:${fromEveColor(color)}`

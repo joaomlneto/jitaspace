@@ -1,7 +1,7 @@
 "use client";
 
 import type { BadgeProps } from "@mantine/core";
-import React, { memo } from "react";
+import { memo } from "react";
 import { Badge, Skeleton } from "@mantine/core";
 
 export type CalendarEventResponse =
@@ -14,7 +14,7 @@ export type CalendarEventResponseBadgeProps = BadgeProps & {
   response?: CalendarEventResponse;
 };
 
-const eventResponseColor: { [key in CalendarEventResponse]: string } = {
+const eventResponseColor: Record<CalendarEventResponse, string> = {
   accepted: "green",
   tentative: "yellow",
   not_responded: "gray",

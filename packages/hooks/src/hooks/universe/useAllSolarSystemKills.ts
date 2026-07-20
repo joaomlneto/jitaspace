@@ -1,9 +1,3 @@
 "use client";
 
-import { useGetUniverseSystemKills } from "@jitaspace/esi-client";
-
-
-
-
-
-export const useAllSolarSystemKills = useGetUniverseSystemKills;
+export { useGetUniverseSystemKills as useAllSolarSystemKills } from "@jitaspace/esi-client";

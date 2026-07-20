@@ -2,13 +2,13 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { MetadataRoute } from "next";
 
-import { prisma } from "@jitaspace/db";
-
 import { CONFIG } from "~/config/constants.ts";
+import { env } from "~/env";
+import { prisma } from "~/lib/db";
 
 const MAX_URLS_PER_SITEMAP = 50000;
-const LAST_MODIFIED = process.env.NEXT_PUBLIC_MODIFIED_DATE
-  ? new Date(process.env.NEXT_PUBLIC_MODIFIED_DATE)
+const LAST_MODIFIED = env.NEXT_PUBLIC_MODIFIED_DATE
+  ? new Date(env.NEXT_PUBLIC_MODIFIED_DATE)
   : new Date();
 
 const APP_DIR = join(process.cwd(), "app");
@@ -101,7 +101,7 @@ export async function getSitemapUrls(): Promise<string[]> {
   return ids.map((id) => `${CONFIG.SITE_URL}/sitemap/${id}.xml`);
 }
 
-export async function generateSitemaps(): Promise<Array<{ id: number }>> {
+export async function generateSitemaps(): Promise<{ id: number }[]> {
   const ids = await getSitemapIds();
   return ids.map((id) => ({ id }));
 }

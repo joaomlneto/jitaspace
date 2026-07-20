@@ -1,0 +1,133 @@
+// Standalone change-history schema (isolated from @jitaspace/db).
+// Tables: Build, BuildDiff, Collection, Entity, Change, FileChange.
+//
+// A diff between two builds is a first-class, IMMUTABLE BuildDiff row keyed by
+// its (fromBuild, toBuild) pair — never inferred from a build's baseline and
+// never mutated. Connecting two timelines (e.g. an SDE backfill onto the CDN
+// era) is an INSERT of a new BuildDiff, not an update of an existing build.
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "cockroachdb"
+}
+
+enum Op {
+  added
+  modified
+  removed
+}
+
+/// EVE server whose client-build pointer a build was observed on.
+enum Server {
+  tranquility
+  singularity
+}
+
+/// One version of the game data. Server-independent content; the build number is
+/// its natural identity (primary key). A build carries no diff of its own — the
+/// diff between two builds is an explicit {@link BuildDiff}.
+model Build {
+  buildNumber Int          @id
+  releasedAt  DateTime?
+  /// Which server's build pointer first surfaced this build.
+  server      Server?
+  /// Diffs in which this build is the baseline ("from") / the target ("to").
+  diffsFrom BuildDiff[] @relation("diffFrom")
+  diffsTo   BuildDiff[] @relation("diffTo")
+
+  @@index([server, buildNumber])
+}
+
+/// An explicit, immutable diff between an ordered pair of builds. Identity is the
+/// (fromBuild, toBuild) pair; once computed it is never updated. `fromBuild` null
+/// ⇒ genesis (the target is a full snapshot — every entity "added").
+model BuildDiff {
+  id        Int      @id @default(sequence())
+  /// Baseline ("from") build; null ⇒ genesis. A real Build row when set.
+  fromBuild Int?
+  from      Build?   @relation("diffFrom", fields: [fromBuild], references: [buildNumber])
+  /// Target ("to") build.
+  toBuild   Int
+  to        Build    @relation("diffTo", fields: [toBuild], references: [buildNumber])
+  createdAt   DateTime     @default(now())
+  changes     Change[]
+  fileChanges FileChange[]
+
+  @@unique([fromBuild, toBuild])
+  @@index([toBuild])
+  @@index([fromBuild])
+}
+
+/// Raw resource-file changes for a diff (path-keyed, so they can't share Entity's
+/// integer key). Like Change, a file-change set is defined by the build PAIR, so
+/// it hangs off the BuildDiff (CDN-only; the SDE backfill produces no res files).
+model FileChange {
+  id     Int       @id @default(sequence())
+  diff   BuildDiff @relation(fields: [diffId], references: [id])
+  diffId Int
+  path   String
+  op     Op
+
+  @@index([diffId])
+  // Covering index for the build-page file-change count (getResourceIndex):
+  // COUNT(*) GROUP BY (diffId, op). `@@index([diffId])` above is now a redundant
+  // prefix. Owned by the upstream ingestion pipeline; mirrored here for parity.
+  @@index([diffId, op])
+}
+
+/// The registry of tracked datasets (≈ resource-server files). Add a row → track more.
+model Collection {
+  id         Int      @id @default(sequence())
+  name       String   @unique
+  entityKind String
+  sourceFile String
+  changes    Change[]
+}
+
+/// A "thing" with identity (kind, eveId) and an optional parent / root-ancestor.
+model Entity {
+  id          Int      @id @default(sequence())
+  kind        String
+  eveId       Int
+  name        String?
+  parentId    Int?
+  parent      Entity?  @relation("tree", fields: [parentId], references: [id])
+  children    Entity[] @relation("tree")
+  rootId      Int?
+  root        Entity?  @relation("root", fields: [rootId], references: [id])
+  descendants Entity[] @relation("root")
+  changes     Change[]
+
+  @@unique([kind, eveId])
+  @@index([parentId])
+  @@index([rootId])
+}
+
+/// The history: one row = "entity X changed in diff D (from collection C)".
+model Change {
+  id           Int        @id @default(sequence())
+  diff         BuildDiff  @relation(fields: [diffId], references: [id])
+  diffId       Int
+  collection   Collection @relation(fields: [collectionId], references: [id])
+  collectionId Int
+  entity       Entity     @relation(fields: [entityId], references: [id])
+  entityId     Int
+  op           Op
+  data         Json
+
+  @@index([diffId])
+  @@index([entityId])
+  @@index([collectionId])
+  // Covering index for the change-count aggregations the `/history` readers run:
+  //   • index page  (getCachedHistoryIndex): COUNT(*) GROUP BY (collectionId, diffId)
+  //   • build pages (getResourceIndex):      COUNT(*) GROUP BY (collectionId, diffId, op)
+  // Without it the first groups the whole Change table via a full scan (~9s); the
+  // index makes both index-only counts. `@@index([collectionId])` above is now a
+  // redundant prefix. Owned by the upstream ingestion pipeline; mirrored here for
+  // parity (this package never pushes the schema).
+  @@index([collectionId, diffId, op])
+}

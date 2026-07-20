@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 
-import { ItemsFlagEnum } from "@jitaspace/esi-client";
+import type { ItemsFlagEnum } from "@jitaspace/esi-client";
 
 import { useCharacterAssets } from "../assets";
 import { useCharacterCurrentShip } from "../location";
@@ -17,7 +17,7 @@ export const useCharacterCurrentFit = (characterId: number) => {
   const modules = useMemo(() => {
     if (!ship) return null;
     return Object.values(assets).filter(
-      (asset) => asset.location_id === ship?.data.ship_item_id,
+      (asset) => asset.location_id === ship.data.ship_item_id,
     );
   }, [ship, assets]);
 

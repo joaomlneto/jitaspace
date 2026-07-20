@@ -1,7 +1,8 @@
 "use client";
 
-import React, { memo } from "react";
-import { Skeleton, Text, type TextProps } from "@mantine/core";
+import type { TextProps } from "@mantine/core";
+import { memo } from "react";
+import { Skeleton, Text } from "@mantine/core";
 
 export type RaceNameProps = TextProps & {
   name?: string;

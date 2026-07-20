@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  GetCharactersCharacterIdQueryResponse,
-  useGetCharactersCharacterId,
-} from "@jitaspace/esi-client";
+import type { GetCharactersDetailQueryResponse } from "@jitaspace/esi-client";
 
-export type ESICharacterPublicInformation =
-  GetCharactersCharacterIdQueryResponse;
+export type ESICharacterPublicInformation = GetCharactersDetailQueryResponse;
 
-export const useEsiCharacter = useGetCharactersCharacterId;
+export { useGetCharactersDetail as useEsiCharacter } from "@jitaspace/esi-client";

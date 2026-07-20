@@ -2,9 +2,9 @@
 
 ## What This Repo Is
 
-Turborepo monorepo for an EVE Online companion web application. Three apps (`apps/web`, `apps/cli`, `apps/worker`) and 15+ shared packages under `packages/`. The main product is `apps/web`, a Next.js 16 app deployed to Vercel.
+Turborepo monorepo for an EVE Online companion web application. Two apps (`apps/web`, `apps/cli`) and 20+ shared packages under `packages/`. The main product is `apps/web`, a Next.js 16 app deployed to Vercel. Background jobs run on Trigger.dev (the `background-jobs-triggerdev` adapter); there is no `apps/worker`.
 
-**Tech stack:** Node.js >=24.16.0 · TypeScript 5.9 · Next.js 16 · React 19 · Mantine 8 · TanStack Query 5 · Prisma 7 + PostgreSQL · NextAuth 4 · Inngest · Turborepo 2 · pnpm 10.33.4
+**Tech stack:** Node.js >=24.15.0 · TypeScript 5.9 · Next.js 16 · React 19 · Mantine 8 · TanStack Query 5 · Prisma 7 + PostgreSQL · EVE Online SSO (OAuth2 + PKCE) · Trigger.dev · Turborepo 2 · pnpm 11.3.0
 
 ---
 
@@ -39,6 +39,7 @@ pnpm kubb:generate    # Generates API clients from OpenAPI specs in packages/*-c
 Turbo's `build` task declares these as dependencies, but always run them explicitly after a fresh clone or after changing the DB schema or any `swagger.json` / `kubb.config.ts`.
 
 **Never edit generated files directly:**
+
 - `packages/db/` (Prisma client) — edit `packages/db/prisma/schema.prisma`, then run `pnpm db:generate`
 - `packages/esi-client/src/generated/**` and other `packages/*-client/src/generated/**` — edit the `swagger.json` or `kubb.config.ts`, then run `pnpm kubb:generate`
 
@@ -65,6 +66,7 @@ pnpm test                          # Jest unit tests across workspaces (generate
 ```
 
 **Run in order for a full local CI check:**
+
 1. `pnpm db:generate`
 2. `SKIP_ENV_VALIDATION=1 pnpm build`
 3. `pnpm lint`
@@ -78,11 +80,13 @@ pnpm test                          # Jest unit tests across workspaces (generate
 Two GitHub Actions workflows run on every push:
 
 **Cypress Tests** (`.github/workflows/cypress.yml`):
+
 - Requires CockroachDB (v24.3.7) and Redis services
 - Sequence: `pnpm install` → push DB schema (`cd packages/db && pnpm exec prisma db push`) → `pnpm build` → start web server → Cypress E2E (parallel, 2 containers)
 - Uses `SKIP_ENV_VALIDATION=1`
 
 **SonarCloud** (`.github/workflows/sonarcloud.yml`):
+
 - Runs on `main` pushes and all PRs
 - Sequence: `pnpm install --frozen-lockfile` → `pnpm test` (produces coverage) → SonarQube scan
 - Uses `SKIP_ENV_VALIDATION=1` and a dummy `DATABASE_URL` for Prisma codegen in postinstall
@@ -91,20 +95,20 @@ Two GitHub Actions workflows run on every push:
 
 ## Key File Locations
 
-| Purpose | Path |
-|---|---|
-| Root scripts & pnpm config | `package.json`, `pnpm-workspace.yaml`, `.npmrc` |
-| Turbo pipeline config | `turbo.json` |
-| Web app entry & routes | `apps/web/app/` |
-| Web app config | `apps/web/next.config.mjs`, `apps/web/env.ts` |
-| DB schema | `packages/db/prisma/schema.prisma` |
-| ESI API client generation | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json` |
-| Auth config | `packages/auth/src/auth-options.ts` |
-| Shared ESLint rules | `tooling/eslint/src/base.ts` |
-| Shared Prettier config | `tooling/prettier/index.mjs` |
-| Shared TypeScript config | `tooling/tsconfig/base.json` |
-| Jest config (web) | `apps/web/jest.config.ts` |
-| Cypress config (web) | `apps/web/cypress.config.ts` |
+| Purpose                    | Path                                                                     |
+| -------------------------- | ------------------------------------------------------------------------ |
+| Root scripts & pnpm config | `package.json`, `pnpm-workspace.yaml`, `.npmrc`                          |
+| Turbo pipeline config      | `turbo.json`                                                             |
+| Web app entry & routes     | `apps/web/app/`                                                          |
+| Web app config             | `apps/web/next.config.mjs`, `apps/web/env.ts`                            |
+| DB schema                  | `packages/db/prisma/schema.prisma`                                       |
+| ESI API client generation  | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json` |
+| Auth config                | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)        |
+| Shared ESLint rules        | `tooling/eslint/src/base.ts`                                             |
+| Shared Prettier config     | `tooling/prettier/index.mjs`                                             |
+| Shared TypeScript config   | `tooling/tsconfig/base.json`                                             |
+| Jest config (web)          | `apps/web/jest.config.ts`                                                |
+| Cypress config (web)       | `apps/web/cypress.config.ts`                                             |
 
 ---
 

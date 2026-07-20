@@ -4,7 +4,9 @@
     "."
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist",
+    "coverage"
   ],
   "compilerOptions": {
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",

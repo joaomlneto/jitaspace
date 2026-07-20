@@ -1,9 +1,16 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 const WAR_ID = 30000142;
 
@@ -118,10 +125,7 @@ describe("War page", () => {
           finished: "2020-01-04T00:00:00Z",
           mutual: true,
           open_for_allies: true,
-          allies: [
-            { alliance_id: 99000003 },
-            { corporation_id: 1000036 },
-          ],
+          allies: [{ alliance_id: 99000003 }, { corporation_id: 1000036 }],
         },
       },
     });
@@ -173,6 +177,39 @@ describe("War page", () => {
     expect(screen.getByText("Killmails (3)")).toBeInTheDocument();
     expect(screen.getAllByTestId("killmail-card")).toHaveLength(3);
     expect(screen.getByText("Killmail 1")).toBeInTheDocument();
+  });
+
+  it("mounts killmails in bounded batches and reveals more on demand", () => {
+    mockUseSelectedCharacter.mockReturnValue(undefined);
+    mockUseWar.mockReturnValue({ data: undefined });
+    const killmails = Array.from({ length: 30 }, (_, index) => ({
+      killmail_id: index + 1,
+      killmail_hash: `hash${index + 1}`,
+    }));
+    mockUseWarKillmails.mockReturnValue({ data: { data: killmails } });
+
+    renderPage();
+
+    // Title reflects the FULL count, not the sliced window.
+    expect(screen.getByText("Killmails (30)")).toBeInTheDocument();
+
+    // Only the first batch of 25 cards is mounted initially.
+    expect(screen.getAllByTestId("killmail-card")).toHaveLength(25);
+    expect(screen.getByText("Killmail 25")).toBeInTheDocument();
+    expect(screen.queryByText("Killmail 26")).not.toBeInTheDocument();
+
+    // "Load more" reveals the next batch (capped at the total).
+    fireEvent.click(
+      screen.getByRole("button", { name: /Load more killmails/ }),
+    );
+
+    expect(screen.getAllByTestId("killmail-card")).toHaveLength(30);
+    expect(screen.getByText("Killmail 30")).toBeInTheDocument();
+
+    // Nothing left to load -> button gone.
+    expect(
+      screen.queryByRole("button", { name: /Load more killmails/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("renders the empty war state (no war data, no killmails)", () => {

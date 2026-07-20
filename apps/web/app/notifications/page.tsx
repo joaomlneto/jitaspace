@@ -7,24 +7,18 @@ import {
   Stack,
   Table,
   Title,
-  Tooltip,
 } from "@mantine/core";
 import { IconMail, IconMailOpened } from "@tabler/icons-react";
 
+import { EveEntityAvatar, EveEntityName } from "@jitaspace/eve-components";
 import { MemberIcon } from "@jitaspace/eve-icons";
 import {
   useEsiCharacterNotifications,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
-import {
-  EveEntityAvatar,
-  EveEntityName,
-  FormattedDateText,
-  TimeAgoText,
-} from "@jitaspace/ui";
+import { DateHoverCard, TimeAgoText } from "@jitaspace/ui";
 
 import { ScopeGuard } from "~/components/ScopeGuard";
-
 
 export default function Page() {
   const character = useSelectedCharacter();
@@ -59,21 +53,12 @@ export default function Page() {
                     <JsonInput value={notification.text} cols={80} autosize />
                   </Table.Td>
                   <Table.Td>
-                    <Tooltip
-                      color="dark"
-                      label={
-                        <FormattedDateText
-                          date={new Date(notification.timestamp)}
-                        />
-                      }
-                    >
-                      <div>
-                        <TimeAgoText
-                          date={new Date(notification.timestamp)}
-                          addSuffix
-                        />
-                      </div>
-                    </Tooltip>
+                    <DateHoverCard date={new Date(notification.timestamp)}>
+                      <TimeAgoText
+                        date={new Date(notification.timestamp)}
+                        addSuffix
+                      />
+                    </DateHoverCard>
                   </Table.Td>
                 </Table.Tr>
               ))}

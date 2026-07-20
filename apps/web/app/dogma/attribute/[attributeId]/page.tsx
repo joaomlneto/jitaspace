@@ -1,11 +1,11 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
-import { Loader } from "@mantine/core";
-
-import { prisma } from "@jitaspace/db";
+import { notFound } from "next/navigation";
 
 import type { PageProps } from "./page.client";
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { prisma } from "~/lib/db";
 import DogmaAttributePage from "./page.client";
 
 async function getAttributeData(attributeId: number): Promise<PageProps> {
@@ -82,6 +82,7 @@ async function getAttributeData(attributeId: number): Promise<PageProps> {
     published: attribute.published ?? null,
     stackable: attribute.stackable ?? null,
     unit: attribute.DogmaUnit?.displayName ?? attribute.DogmaUnit?.name ?? null,
+    unitId: attribute.unitId ?? null,
     iconId: attribute.iconId ?? null,
     types: attribute.TypeAttributes.map((entry) => ({
       ...entry.type,
@@ -91,11 +92,35 @@ async function getAttributeData(attributeId: number): Promise<PageProps> {
   };
 }
 
-async function PageContent({
+export async function generateMetadata({
   params,
 }: {
   params: Promise<{ attributeId: string }>;
-}) {
+}): Promise<Metadata> {
+  const { attributeId: raw } = await params;
+  const attributeId = Number(raw);
+  if (!Number.isSafeInteger(attributeId) || attributeId <= 0) return {};
+  try {
+    const attribute = await prisma.dogmaAttribute.findUnique({
+      select: { name: true, displayName: true, description: true },
+      where: { attributeId },
+    });
+    if (!attribute) return {};
+    const title =
+      [attribute.displayName, attribute.name].find(Boolean) ??
+      undefined;
+    const description = attribute.description?.slice(0, 200) ?? undefined;
+    return { title, description };
+  } catch {
+    return {};
+  }
+}
+
+async function PageContent({
+  params,
+}: Readonly<{
+  params: Promise<{ attributeId: string }>;
+}>) {
   const { attributeId: attributeIdParam } = await params;
   const attributeId = Number(attributeIdParam);
   if (!Number.isFinite(attributeId)) {
@@ -109,11 +134,11 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ attributeId: string }>;
-}) {
+}>) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

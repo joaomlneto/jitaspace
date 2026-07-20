@@ -2,11 +2,28 @@ import { TextDecoder, TextEncoder } from "util";
 
 Object.assign(global, { TextEncoder, TextDecoder });
 
+// Shared no-op for stubbed browser APIs that jsdom does not implement.
+const noop = (): void => undefined;
+
 // Mantine / floating-ui require these browser APIs in jsdom
 global.ResizeObserver = class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe = noop;
+  unobserve = noop;
+  disconnect = noop;
+};
+
+// Mantine Carousel (embla-carousel) uses IntersectionObserver, which jsdom
+// does not implement. A no-op stub lets carousel-bearing pages render in tests.
+global.IntersectionObserver = class IntersectionObserver {
+  readonly root = null;
+  readonly rootMargin = "";
+  readonly thresholds: readonly number[] = [];
+  observe = noop;
+  unobserve = noop;
+  disconnect = noop;
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
 };
 
 // Guarded so this setup is also safe in `@jest-environment node` test files,
@@ -18,10 +35,10 @@ if (typeof window !== "undefined") {
       matches: false,
       media: query,
       onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
+      addListener: noop,
+      removeListener: noop,
+      addEventListener: noop,
+      removeEventListener: noop,
       dispatchEvent: () => false,
     }),
   });

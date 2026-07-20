@@ -6,7 +6,7 @@ import { CalendarEventDetailsPanel } from "~/components/Calendar";
 
 export function ViewCalendarEventModal({
   innerProps,
-}: ContextModalProps<{ characterId: number; eventId: number }>) {
+}: Readonly<ContextModalProps<{ characterId: number; eventId: number }>>) {
   return (
     <CalendarEventDetailsPanel
       characterId={innerProps.characterId}

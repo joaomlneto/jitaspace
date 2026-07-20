@@ -48,11 +48,11 @@ describe("rate-limit", () => {
       windowSeconds: 900,
     });
     expect(
-      bucketConfigs.status.routeMatchers.some((matcher) =>
+      bucketConfigs.status?.routeMatchers.some((matcher) =>
         matcher.startsWith("get:/status"),
       ),
     ).toBe(true);
-    expect(bucketConfigs.status.routeCount).toBeGreaterThan(0);
+    expect(bucketConfigs.status?.routeCount).toBeGreaterThan(0);
   });
 
   it("tracks rate-limit buckets independently per user", () => {

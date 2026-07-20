@@ -2,7 +2,7 @@
   "name": "jitaspace",
   "private": true,
   "engines": {
-    "node": ">=24.16.0"
+    "node": ">=24.15.0"
   },
   "packageManager": "pnpm@11.3.0",
   "scripts": {
@@ -24,20 +24,19 @@
     "version-packages": "changeset version && node --import tsx/esm .changeset/stamp-changelog-dates.ts $(find . -name 'CHANGELOG.md' -not -path '*/node_modules/*')",
     "publish-packages": "pnpm version-packages && changeset publish",
     "preinstall": "npx only-allow pnpm",
+    "prepare": "git config core.hooksPath .githooks || true",
     "test": "turbo test",
     "test:watch": "turbo test:watch"
   },
-  "dependencies": {
+  "prettier": "@jitaspace/prettier-config",
+  "devDependencies": {
     "@changesets/cli": "^2.31.0",
     "@jitaspace/prettier-config": "workspace:*",
     "@manypkg/cli": "^0.25.1",
     "@turbo/gen": "^2.9.14",
     "prettier": "^3.8.3",
+    "tsx": "^4.22.3",
     "turbo": "^2.9.14",
     "typescript": "^5.9.3"
-  },
-  "prettier": "@jitaspace/prettier-config",
-  "devDependencies": {
-    "tsx": "^4.22.3"
   }
 }

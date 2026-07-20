@@ -13,14 +13,14 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import { ConstellationName, RegionName } from "@jitaspace/eve-components";
 import { useRegion } from "@jitaspace/hooks";
-import { ConstellationName, RegionName } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
 
 export default function Page() {
   const params = useParams();
-  const rawRegionId = params?.regionId;
+  const rawRegionId = params.regionId;
   const regionId = Number(
     typeof rawRegionId === "string" ? rawRegionId : rawRegionId?.[0],
   );
@@ -82,7 +82,7 @@ export default function Page() {
           </Link>
         </Group>
         {region?.data.description && (
-          <MailMessageViewer content={region?.data.description} />
+          <MailMessageViewer content={region.data.description} />
         )}
         <Title order={4}>Constellations:</Title>
         <List>

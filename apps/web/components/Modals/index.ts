@@ -5,6 +5,7 @@ import { FittingModal } from "./FittingModal";
 import { KillmailFittingModal } from "./KillmailFittingModal";
 import { LoginModal } from "./LoginModal";
 import { ManageMailLabelsModal } from "./ManageMailLabelsModal";
+import { SettingsModal } from "./SettingsModal";
 import { ViewCalendarEventModal } from "./ViewCalendarEventModal";
 import { ViewMailingListSubscriptionsModal } from "./ViewMailingListSubscriptionsModal";
 import { ViewMailMessageModal } from "./ViewMailMessageModal";
@@ -16,6 +17,7 @@ const contextModals = {
   killmailFitting: KillmailFittingModal,
   login: LoginModal,
   manageMailLabels: ManageMailLabelsModal,
+  settings: SettingsModal,
   ssoToken: SsoTokenModal,
   viewCalendarEvent: ViewCalendarEventModal,
   viewMailMessage: ViewMailMessageModal,

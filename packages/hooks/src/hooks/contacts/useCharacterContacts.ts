@@ -2,10 +2,12 @@
 
 import { useEffect } from "react";
 
-import {
-  getCharactersCharacterIdContacts,
+import type {
   GetCharactersCharacterIdContactsLabelsQueryResponse,
   GetCharactersCharacterIdContactsQueryResponse,
+} from "@jitaspace/esi-client";
+import {
+  getCharactersCharacterIdContacts,
   useGetCharactersCharacterIdContactsInfinite,
   useGetCharactersCharacterIdContactsLabels,
 } from "@jitaspace/esi-client";
@@ -25,7 +27,7 @@ export function useCharacterContacts(characterId: number) {
   });
 
   const { data: labels } = useGetCharactersCharacterIdContactsLabels(
-    characterId ?? 0,
+    characterId,
     { ...authHeaders },
     {
       query: {
@@ -37,25 +39,26 @@ export function useCharacterContacts(characterId: number) {
 
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
     useGetCharactersCharacterIdContactsInfinite(
-      characterId ?? 0,
+      characterId,
       {},
       { ...authHeaders },
       {
         query: {
-          enabled: characterId !== undefined && accessToken !== null,
+          enabled: accessToken !== null,
           initialPageParam: 1,
           queryFn: ({ pageParam }) =>
             getCharactersCharacterIdContacts(
-              characterId ?? 0,
+              characterId,
               {
-                page: pageParam as number,
+                page: pageParam,
               },
               { ...authHeaders },
             ),
           getNextPageParam: (lastPage, pages) => {
-            const numPages: number | undefined = lastPage.headers?.["x-pages"];
+            const xPages: unknown = lastPage.headers["x-pages"];
+            const numPages = typeof xPages === "string" ? Number(xPages) : 0;
             const nextPage = pages.length + 1;
-            if (nextPage > (numPages ?? 0)) return undefined;
+            if (nextPage > numPages) return undefined;
             return nextPage;
           },
         },
@@ -64,11 +67,11 @@ export function useCharacterContacts(characterId: number) {
 
   // fetch everything immediately
   useEffect(() => {
-    if (hasNextPage) fetchNextPage();
+    if (hasNextPage) void fetchNextPage();
   }, [hasNextPage, fetchNextPage]);
 
   return {
-    data: (data?.pages ?? []).flatMap((res) => res.data ?? []),
+    data: (data?.pages ?? []).flatMap((res) => res.data),
     labels: labels?.data ?? [],
     error,
     isLoading,

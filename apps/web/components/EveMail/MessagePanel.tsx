@@ -1,10 +1,5 @@
-import { Group, JsonInput, Spoiler, Stack, Text } from "@mantine/core";
+import { Group, Spoiler, Stack, Text } from "@mantine/core";
 
-import {
-  useCharacterMail,
-  useCharacterMailingLists,
-  useCharacterMailLabels,
-} from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityAvatar,
@@ -12,15 +7,19 @@ import {
   EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
-  FormattedDateText,
-} from "@jitaspace/ui";
-
-import { MailLabelColorSwatch } from "~/components/ColorSwatch";
-import { LabelName, MailingListName } from "~/components/Text";
+} from "@jitaspace/eve-components";
+import {
+  useCharacterMail,
+  useCharacterMailingLists,
+  useCharacterMailLabels,
+} from "@jitaspace/hooks";
+import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import type { MailboxTableProps } from "~/components/EveMail/MailboxTable";
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 import { MailMessageViewer } from "~/components/EveMail/MailMessageViewer";
 import { MessageMenu } from "~/components/EveMail/MessageMenu";
+import { LabelName, MailingListName } from "~/components/Text";
 
 export interface MessagePanelProps {
   characterId: number;
@@ -42,7 +41,7 @@ export function MessagePanel({
   hideRecipients,
   hideSender,
   hideSubject,
-}: MessagePanelProps) {
+}: Readonly<MessagePanelProps>) {
   const { data: labels } = useCharacterMailLabels(characterId);
   const { data: mail } = useCharacterMail(characterId, messageId);
   const { data: mailingLists } = useCharacterMailingLists(characterId);
@@ -70,11 +69,13 @@ export function MessagePanel({
             </EveMailSenderAnchor>
           </Group>
           {mail?.data.timestamp && (
-            <FormattedDateText
-              span
-              date={new Date(mail?.data.timestamp)}
-              format="yyyy-MM-dd HH:mm"
-            />
+            <DateHoverCard date={new Date(mail.data.timestamp)}>
+              <FormattedDateText
+                span
+                date={new Date(mail.data.timestamp)}
+                format="yyyy-MM-dd HH:mm"
+              />
+            </DateHoverCard>
           )}
         </Group>
       )}
@@ -155,7 +156,11 @@ export function MessagePanel({
               <MessageMenu
                 characterId={characterId}
                 data={data}
-                mail={mail.data}
+                mail={{
+                  mail_id: messageId,
+                  is_read: mail.data.read,
+                  labels: mail.data.labels,
+                }}
               />
             </Group>
           )}
@@ -163,7 +168,7 @@ export function MessagePanel({
       )}
       {!hideSubject && <Text>Subject: {mail?.data.subject}</Text>}
       {!hideMessage && mail?.data.body && (
-        <MailMessageViewer content={mail?.data.body ?? ""} />
+        <MailMessageViewer content={mail.data.body ?? ""} />
       )}
     </Stack>
   );

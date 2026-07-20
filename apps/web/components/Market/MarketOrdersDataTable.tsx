@@ -1,25 +1,14 @@
+import type { MRT_ColumnDef } from "mantine-react-table";
 import { memo, useMemo } from "react";
 import { Group } from "@mantine/core";
 import { addDays } from "date-fns";
-import type {
-  MRT_ColumnDef} from "mantine-react-table";
-import {
-  MantineReactTable,
-  useMantineReactTable,
-} from "mantine-react-table";
+import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type { RegionalMarketOrder } from "@jitaspace/hooks";
-import {
-  EveEntityAnchor,
-  EveEntityName,
-  TimeAgoText,
-} from "@jitaspace/ui";
+import { EveEntityAnchor, EveEntityName } from "@jitaspace/eve-components";
+import { DateHoverCard, TimeAgoText } from "@jitaspace/ui";
 
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
-
-
-
-
 
 interface MarketOrdersDataTableProps {
   orders: RegionalMarketOrder[];
@@ -68,7 +57,11 @@ export const MarketOrdersDataTable = memo(
           id: "location",
           header: "Location",
           accessorKey: "location_id",
-          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
+          Cell: ({
+            renderedCellValue: _renderedCellValue,
+            row,
+            cell: _cell,
+          }) => (
             <Group wrap="nowrap">
               <SolarSystemSecurityStatusBadge
                 solarSystemId={row.original.system_id}
@@ -97,22 +90,38 @@ export const MarketOrdersDataTable = memo(
           id: "issued",
           header: "Issued",
           accessorKey: "issued",
-          Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-            <TimeAgoText
-              inherit
-              date={new Date(row.original.issued)}
-              addSuffix
-            />
+          Cell: ({
+            renderedCellValue: _renderedCellValue,
+            row,
+            cell: _cell,
+          }) => (
+            <DateHoverCard date={new Date(row.original.issued)}>
+              <TimeAgoText
+                inherit
+                date={new Date(row.original.issued)}
+                addSuffix
+              />
+            </DateHoverCard>
           ),
         },
         {
           id: "expires",
           header: "Expires",
-          accessorFn: (row) => {
-            return addDays(new Date(row.issued), 30);
+          accessorFn: (row): Date => {
+            const issued: unknown = row.issued;
+            return addDays(
+              new Date(typeof issued === "string" ? issued : ""),
+              30,
+            );
           },
-          Cell: ({ renderedCellValue: _renderedCellValue, row: _row, cell }) => (
-            <TimeAgoText inherit date={cell.getValue<Date>()} addSuffix />
+          Cell: ({
+            renderedCellValue: _renderedCellValue,
+            row: _row,
+            cell,
+          }) => (
+            <DateHoverCard date={cell.getValue<Date>()}>
+              <TimeAgoText inherit date={cell.getValue<Date>()} addSuffix />
+            </DateHoverCard>
           ),
         },
         /*

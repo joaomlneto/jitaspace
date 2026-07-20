@@ -1,12 +1,12 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
-import { Loader } from "@mantine/core";
+import { notFound } from "next/navigation";
 
-import { prisma } from "@jitaspace/db";
-
-import DogmaEffectPage from "./page.client";
 import type { PageProps } from "./page.client";
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { prisma } from "~/lib/db";
+import DogmaEffectPage from "./page.client";
 
 async function getEffectData(effectId: number): Promise<PageProps> {
   "use cache";
@@ -75,8 +75,8 @@ async function getEffectData(effectId: number): Promise<PageProps> {
 
   return {
     effectId,
-    name: effect.displayName || effect.name || null,
-    description: effect.description || null,
+    name: [effect.displayName, effect.name].find(Boolean) ?? null,
+    description: effect.description?.length ? effect.description : null,
     published: effect.published ?? null,
     modifiers: effect.DogmaEffectModifiers,
     types: effect.TypeEffect.map((entry) => ({
@@ -87,32 +87,56 @@ async function getEffectData(effectId: number): Promise<PageProps> {
   };
 }
 
-async function PageContent({
+export async function generateMetadata({
   params,
 }: {
   params: Promise<{ effectId: string }>;
-}) {
+}): Promise<Metadata> {
+  const { effectId: raw } = await params;
+  const effectId = Number(raw);
+  if (!Number.isSafeInteger(effectId) || effectId <= 0) return {};
+  try {
+    const effect = await prisma.dogmaEffect.findUnique({
+      select: { name: true, displayName: true, description: true },
+      where: { effectId },
+    });
+    if (!effect) return {};
+    const title =
+      [effect.displayName, effect.name].find(Boolean) ?? undefined;
+    const description = effect.description?.slice(0, 200) ?? undefined;
+    return { title, description };
+  } catch {
+    return {};
+  }
+}
+
+async function PageContent({
+  params,
+}: Readonly<{
+  params: Promise<{ effectId: string }>;
+}>) {
   const { effectId: effectIdParam } = await params;
   const effectId = Number(effectIdParam);
   if (!Number.isFinite(effectId)) {
     notFound();
   }
 
+  let props: PageProps;
   try {
-    const props = await getEffectData(effectId);
-    return <DogmaEffectPage {...props} />;
+    props = await getEffectData(effectId);
   } catch {
     notFound();
   }
+  return <DogmaEffectPage {...props} />;
 }
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ effectId: string }>;
-}) {
+}>) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

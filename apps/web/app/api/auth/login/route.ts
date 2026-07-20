@@ -7,6 +7,7 @@ import {
   OAUTH_FLOW_MAX_AGE_SECONDS,
 } from "@jitaspace/auth";
 
+import { env } from "~/env";
 import { getRequestOrigin, sanitizeReturnTo } from "~/lib/serverAuth";
 
 /**
@@ -28,6 +29,8 @@ export async function GET(req: NextRequest) {
     scopes,
     redirectUri,
     returnTo,
+    eveClientId: env.EVE_CLIENT_ID,
+    nextAuthSecret: env.NEXTAUTH_SECRET,
   });
 
   const response = NextResponse.redirect(authorizationUrl);

@@ -1,24 +1,133 @@
-import { memo, useMemo } from "react";
-import { Badge, Group } from "@mantine/core";
 import type {
-  MRT_ColumnDef} from "mantine-react-table";
-import {
-  MantineReactTable,
-  useMantineReactTable,
+  MRT_Cell,
+  MRT_Column,
+  MRT_ColumnDef,
+  MRT_Row,
 } from "mantine-react-table";
+import { memo, useMemo } from "react";
+import { Badge, Group, rem } from "@mantine/core";
+import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
 import {
   EveEntityAnchor,
   EveEntityAvatar,
   EveEntityName,
-  FormattedDateText,
-  ISKAmount,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { DateHoverCard, FormattedDateText, ISKAmount } from "@jitaspace/ui";
 
+function DateCell({
+  cell,
+}: Readonly<{ cell: MRT_Cell<CharacterWalletJournalEntry> }>) {
+  return (
+    <DateHoverCard date={cell.getValue<Date>()}>
+      <FormattedDateText size="sm" date={cell.getValue<Date>()} />
+    </DateHoverCard>
+  );
+}
 
+function DateHeader({
+  column,
+}: Readonly<{ column: MRT_Column<CharacterWalletJournalEntry> }>) {
+  return <em>{column.columnDef.header}</em>;
+}
 
+function ContextTypeCell({
+  row,
+}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
+  return row.original.context_id_type ? (
+    <Badge size="sm" variant="light">
+      {row.original.context_id_type.replaceAll("_", " ")}
+    </Badge>
+  ) : undefined;
+}
 
+function FirstPartyCell({
+  row,
+}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
+  return (
+    <Group>
+      <Group wrap="nowrap">
+        <EveEntityAvatar entityId={row.original.first_party_id} size="sm" />
+        <EveEntityAnchor
+          size="sm"
+          entityId={row.original.first_party_id}
+          target="_blank"
+        >
+          <EveEntityName entityId={row.original.first_party_id} />
+        </EveEntityAnchor>
+      </Group>
+    </Group>
+  );
+}
+
+function SecondPartyCell({
+  row,
+}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
+  return (
+    <Group>
+      <Group wrap="nowrap">
+        <EveEntityAvatar entityId={row.original.second_party_id} size="sm" />
+        <EveEntityAnchor
+          size="sm"
+          entityId={row.original.second_party_id}
+          target="_blank"
+        >
+          <EveEntityName entityId={row.original.second_party_id} />
+        </EveEntityAnchor>
+      </Group>
+    </Group>
+  );
+}
+
+function OtherPartyCell({
+  cell,
+}: Readonly<{ cell: MRT_Cell<CharacterWalletJournalEntry> }>) {
+  return (
+    <Group>
+      <Group wrap="nowrap">
+        <EveEntityAvatar entityId={cell.getValue<number>()} size="sm" />
+        <EveEntityAnchor
+          size="sm"
+          entityId={cell.getValue<number>()}
+          target="_blank"
+        >
+          <EveEntityName entityId={cell.getValue<number>()} />
+        </EveEntityAnchor>
+      </Group>
+    </Group>
+  );
+}
+
+function AmountCell({
+  row,
+}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
+  return row.original.amount === undefined ? undefined : (
+    <ISKAmount
+      size="sm"
+      amount={Math.abs(row.original.amount)}
+      c={row.original.amount >= 0 ? "green" : "red"}
+    />
+  );
+}
+
+function TaxReceiverCell({
+  row,
+}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
+  return row.original.tax_receiver_id ? (
+    <Group>
+      <Group wrap="nowrap">
+        <EveEntityAvatar entityId={row.original.tax_receiver_id} size="sm" />
+        <EveEntityAnchor
+          entityId={row.original.tax_receiver_id}
+          target="_blank"
+        >
+          <EveEntityName entityId={row.original.tax_receiver_id} />
+        </EveEntityAnchor>
+      </Group>
+    </Group>
+  ) : undefined;
+}
 
 interface WalletTableProps {
   entries: CharacterWalletJournalEntry[];
@@ -44,10 +153,8 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         sortingFn: "datetime",
         size: 40,
         enableColumnFilterModes: false, //keep this as only date-range filter with between inclusive filterFn
-        Cell: ({ cell }) => (
-          <FormattedDateText size="sm" date={cell.getValue<Date>()} />
-        ), //render Date as a string
-        Header: ({ column }) => <em>{column.columnDef.header}</em>, //custom header markup
+        Cell: DateCell, //render Date as a string
+        Header: DateHeader, //custom header markup
       },
       {
         id: "context_id",
@@ -60,58 +167,21 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         header: "Context Type",
         accessorKey: "context_id_type",
         size: 40,
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
-          row.original.context_id_type ? (
-            <Badge size="sm" variant="light">
-              {row.original.context_id_type?.replaceAll("_", " ")}
-            </Badge>
-          ) : undefined,
+        Cell: ContextTypeCell,
       },
       {
         id: "firstParty",
         header: "First Party",
         accessorKey: "first_party_id",
         size: 40,
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-          <Group>
-            <Group wrap="nowrap">
-              <EveEntityAvatar
-                entityId={row.original.first_party_id}
-                size="sm"
-              />
-              <EveEntityAnchor
-                size="sm"
-                entityId={row.original.first_party_id}
-                target="_blank"
-              >
-                <EveEntityName entityId={row.original.first_party_id} />
-              </EveEntityAnchor>
-            </Group>
-          </Group>
-        ),
+        Cell: FirstPartyCell,
       },
       {
         id: "secondParty",
         header: "Second Party",
         accessorKey: "second_party_id",
         size: 40,
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-          <Group>
-            <Group wrap="nowrap">
-              <EveEntityAvatar
-                entityId={row.original.second_party_id}
-                size="sm"
-              />
-              <EveEntityAnchor
-                size="sm"
-                entityId={row.original.second_party_id}
-                target="_blank"
-              >
-                <EveEntityName entityId={row.original.second_party_id} />
-              </EveEntityAnchor>
-            </Group>
-          </Group>
-        ),
+        Cell: SecondPartyCell,
       },
       {
         id: "otherParty",
@@ -122,34 +192,14 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
             : row.first_party_id;
         },
         size: 40,
-        Cell: ({ cell }) => (
-          <Group>
-            <Group wrap="nowrap">
-              <EveEntityAvatar entityId={cell.getValue<number>()} size="sm" />
-              <EveEntityAnchor
-                size="sm"
-                entityId={cell.getValue<number>()}
-                target="_blank"
-              >
-                <EveEntityName entityId={cell.getValue<number>()} />
-              </EveEntityAnchor>
-            </Group>
-          </Group>
-        ),
+        Cell: OtherPartyCell,
       },
       {
         id: "amount",
         header: "Amount",
         accessorKey: "amount",
         size: 40,
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
-          row.original.amount !== undefined ? (
-            <ISKAmount
-              size="sm"
-              amount={Math.abs(row.original.amount)}
-              color={row.original.amount >= 0 ? "green" : "red"}
-            />
-          ) : undefined,
+        Cell: AmountCell,
       },
       {
         id: "balance",
@@ -182,23 +232,7 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         header: "Tax Receiver",
         accessorKey: "tax_receiver_id",
         size: 40,
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
-          row.original.tax_receiver_id ? (
-            <Group>
-              <Group wrap="nowrap">
-                <EveEntityAvatar
-                  entityId={row.original.tax_receiver_id}
-                  size="sm"
-                />
-                <EveEntityAnchor
-                  entityId={row.original.tax_receiver_id}
-                  target="_blank"
-                >
-                  <EveEntityName entityId={row.original.tax_receiver_id} />
-                </EveEntityAnchor>
-              </Group>
-            </Group>
-          ) : undefined,
+        Cell: TaxReceiverCell,
       },
     ],
     [],
@@ -208,6 +242,9 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
     columns,
     positionPagination: "top",
     enableFacetedValues: true,
+    // Reserve vertical space so the table doesn't grow (and push the page down)
+    // as the wallet journal loads in.
+    mantineTableContainerProps: { style: { minHeight: rem(420) } },
     data: entries,
     initialState: {
       density: "xs",

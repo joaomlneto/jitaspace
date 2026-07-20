@@ -23,7 +23,7 @@ describe("exchangeEveSsoToken", () => {
       token_type: "Bearer",
     });
     const fetchMock = jest.fn().mockResolvedValue({ ok: true, json });
-    global.fetch = fetchMock as unknown as typeof fetch;
+    global.fetch = fetchMock;
 
     const result = await exchangeEveSsoToken(params);
 
@@ -54,7 +54,7 @@ describe("exchangeEveSsoToken", () => {
         ok: false,
         status: 400,
         statusText: "Bad Request",
-      }) as unknown as typeof fetch;
+      });
 
     await expect(exchangeEveSsoToken(params)).rejects.toThrow(
       "error exchanging authorization code",

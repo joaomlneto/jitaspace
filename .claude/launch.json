@@ -2,10 +2,37 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "web",
+      "name": "Next.js Web",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@jitaspace/web", "dev"],
-      "port": 3000
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "All (Turbo)",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "port": 3000,
+      "autoPort": false
+    },
+    {
+      "name": "Prisma Studio",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@jitaspace/db",
+        "exec",
+        "dotenv",
+        "-e",
+        "../../.env",
+        "--",
+        "prisma",
+        "studio",
+        "--browser",
+        "none"
+      ],
+      "port": 5555,
+      "autoPort": false
     }
   ]
 }

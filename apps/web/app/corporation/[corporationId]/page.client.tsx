@@ -15,22 +15,18 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import { AllianceName, CorporationName } from "@jitaspace/eve-components";
 import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  AllianceAvatar,
-  AllianceName,
-  CorporationAvatar,
-  CorporationName,
-} from "@jitaspace/ui";
+import { AllianceAvatar, CorporationAvatar } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
+import { MailMessageViewer } from "~/components/EveMail";
 import { CorporationAllianceHistoryTimeline } from "~/components/Timeline";
 
-import { MailMessageViewer } from "~/components/EveMail";
 export default function Page() {
   const params = useParams();
-  const rawCorporationId = params?.corporationId;
+  const rawCorporationId = params.corporationId;
   const corporationId = Number(
     typeof rawCorporationId === "string"
       ? rawCorporationId
@@ -55,9 +51,7 @@ export default function Page() {
           <Title order={3}>
             <CorporationName span corporationId={corporationId} />
           </Title>
-          {corporation?.data.ticker && (
-            <Badge>{corporation?.data.ticker}</Badge>
-          )}
+          {corporation?.data.ticker && <Badge>{corporation.data.ticker}</Badge>}
           {character && (
             <OpenInformationWindowActionIcon
               characterId={character.characterId}
@@ -105,14 +99,14 @@ export default function Page() {
             <Text>Alliance</Text>
             <Group>
               <AllianceAvatar
-                allianceId={corporation?.data.alliance_id}
+                allianceId={corporation.data.alliance_id}
                 size="sm"
               />
               <Anchor
                 component={Link}
-                href={`/alliance/${corporation?.data.alliance_id}`}
+                href={`/alliance/${corporation.data.alliance_id}`}
               >
-                <AllianceName allianceId={corporation?.data.alliance_id} />
+                <AllianceName allianceId={corporation.data.alliance_id} />
               </Anchor>
             </Group>
           </Group>
@@ -126,8 +120,8 @@ export default function Page() {
             {corporation?.data && (
               <MailMessageViewer
                 content={
-                  corporation?.data.description
-                    ? sanitizeFormattedEveString(corporation?.data.description)
+                  corporation.data.description
+                    ? sanitizeFormattedEveString(corporation.data.description)
                     : "No description"
                 }
               />

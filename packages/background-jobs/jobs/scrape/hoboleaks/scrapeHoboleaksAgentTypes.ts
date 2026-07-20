@@ -1,0 +1,89 @@
+import pLimit from "p-limit";
+
+import { defineJob } from "../../../core";
+import { prisma } from "../../../db";
+import { excludeObjectKeys, updateTable } from "../../../utils";
+
+export interface ScrapeAgentTypesEventPayload {
+  data: Record<string, never>;
+}
+
+export const scrapeHoboleaksAgentTypes = defineJob<
+  ScrapeAgentTypesEventPayload["data"]
+>({
+  id: "scrape-hoboleaks-agent-types",
+  name: "Scrape Agent Types",
+  trigger: { type: "event" },
+  concurrencyLimit: 1,
+  handler: async () => {
+    const stepStartTime = performance.now();
+
+    // Get all Agent Types in Hoboleaks
+    const agentTypes = await fetch(
+      "https://sde.hoboleaks.space/tq/agenttypes.json",
+    ).then((res) => res.json() as Promise<Record<number, string>>);
+
+    const agentTypeIds = Object.keys(agentTypes).map(Number);
+
+    const limit = pLimit(20);
+
+    const agentTypeChanges = await updateTable({
+      fetchLocalEntries: async () =>
+        prisma.agentType
+          .findMany({
+            where: {
+              agentTypeId: {
+                in: agentTypeIds,
+              },
+            },
+          })
+          .then((entries) =>
+            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+          ),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          Object.entries(agentTypes).map(([agentTypeId, name]) => ({
+            agentTypeId: Number(agentTypeId),
+            name,
+            isDeleted: false,
+          })),
+        ),
+      batchCreate: (entries) =>
+        limit(() =>
+          prisma.agentType.createMany({
+            data: entries,
+          }),
+        ),
+      batchDelete: (entries) =>
+        prisma.agentType.updateMany({
+          data: {
+            isDeleted: true,
+          },
+          where: {
+            agentTypeId: {
+              in: entries.map((entry) => entry.agentTypeId),
+            },
+          },
+        }),
+      batchUpdate: (entries) =>
+        Promise.all(
+          entries.map((entry) =>
+            limit(async () =>
+              prisma.agentType.update({
+                data: entry,
+                where: { agentTypeId: entry.agentTypeId },
+              }),
+            ),
+          ),
+        ),
+      idAccessor: (e) => e.agentTypeId,
+    });
+
+    return {
+      stats: {
+        agentTypeChanges,
+      },
+      elapsed: performance.now() - stepStartTime,
+    };
+  },
+});

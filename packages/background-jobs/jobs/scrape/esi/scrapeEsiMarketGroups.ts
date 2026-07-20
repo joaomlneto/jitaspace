@@ -1,0 +1,156 @@
+import pLimit from "p-limit";
+
+import {
+  getMarketsGroups,
+  getMarketsGroupsMarketGroupId,
+} from "@jitaspace/esi-client";
+
+import { defineJob, NonRetriableError } from "../../../core";
+import { prisma } from "../../../db";
+import { excludeObjectKeys, updateTable } from "../../../utils";
+
+export interface ScrapeMarketGroupsEventPayload {
+  data: {
+    batchSize?: number;
+  };
+}
+
+const fetchMarketGroup = (
+  marketGroupId: number,
+  limit: ReturnType<typeof pLimit>,
+) =>
+  limit(async () =>
+    getMarketsGroupsMarketGroupId(marketGroupId)
+      .then((res) => res.data)
+      .then((marketGroup) => ({
+        marketGroupId: marketGroup.market_group_id,
+        name: marketGroup.name,
+        parentMarketGroupId: marketGroup.parent_group_id ?? null,
+        description: marketGroup.description,
+        isDeleted: false,
+      })),
+  );
+
+export const scrapeEsiMarketGroups = defineJob<
+  ScrapeMarketGroupsEventPayload["data"]
+>({
+  id: "scrape-esi-market-groups",
+  trigger: { type: "event" },
+  name: "Scrape Market Groups",
+  concurrencyLimit: 1,
+  handler: async () => {
+    // Get all Market Group IDs in ESI
+    const marketGroupIds = await getMarketsGroups().then((res) => res.data);
+    marketGroupIds.sort((a, b) => a - b);
+    const limit = pLimit(20);
+    const stepStartTime = performance.now();
+
+    const localEntries = await prisma.marketGroup
+      .findMany({
+        where: {
+          marketGroupId: {
+            in: marketGroupIds,
+          },
+        },
+      })
+      .then((entries) =>
+        entries.map((entry) =>
+          excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+        ),
+      );
+
+    const marketGroupIdsInDatabase = localEntries.map(
+      (entry) => entry.marketGroupId,
+    );
+
+    const marketGroupChanges = await updateTable({
+      fetchLocalEntries: () => Promise.resolve(localEntries),
+      fetchRemoteEntries: async () =>
+        Promise.all(
+          marketGroupIds.map((marketGroupId) =>
+            fetchMarketGroup(marketGroupId, limit),
+          ),
+        ),
+      batchCreate: async (entries) => {
+        let missingEntries = entries;
+
+        while (missingEntries.length > 0) {
+          const creatableEntries = missingEntries.filter(
+            (entry) =>
+              entry.parentMarketGroupId == null ||
+              marketGroupIdsInDatabase.includes(entry.parentMarketGroupId),
+          );
+
+          if (creatableEntries.length == 0) {
+            throw new NonRetriableError(
+              "Entries are missing but none can be created!",
+            );
+          }
+
+          const nonCreatableEntries = missingEntries.filter(
+            (entry) =>
+              entry.parentMarketGroupId != null &&
+              !marketGroupIdsInDatabase.includes(entry.parentMarketGroupId),
+          );
+
+          // sanity check
+          if (
+            missingEntries.length !=
+            creatableEntries.length + nonCreatableEntries.length
+          ) {
+            throw new NonRetriableError(
+              "Partitioning went wrong! Two plus two is no longer four.",
+            );
+          }
+
+          // create the missing entries!
+          await limit(() =>
+            prisma.marketGroup.createMany({
+              data: creatableEntries,
+            }),
+          );
+
+          missingEntries = nonCreatableEntries;
+          marketGroupIdsInDatabase.push(
+            ...creatableEntries.map((entry) => entry.marketGroupId),
+          );
+        }
+      },
+      batchDelete: (entries) =>
+        prisma.marketGroup.updateMany({
+          data: {
+            isDeleted: true,
+          },
+          where: {
+            marketGroupId: {
+              in: entries.map((entry) => entry.marketGroupId),
+            },
+          },
+        }),
+      batchUpdate: (entries) =>
+        Promise.all(
+          entries.map((entry) =>
+            limit(async () =>
+              prisma.marketGroup.update({
+                data: entry,
+                where: { marketGroupId: entry.marketGroupId },
+              }),
+            ),
+          ),
+        ),
+      idAccessor: (e) => e.marketGroupId,
+    });
+
+    return {
+      stats: {
+        marketGroups: {
+          created: marketGroupChanges.created,
+          deleted: marketGroupChanges.deleted,
+          modified: marketGroupChanges.modified,
+          equal: marketGroupChanges.equal,
+        },
+      },
+      elapsed: performance.now() - stepStartTime,
+    };
+  },
+});

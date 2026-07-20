@@ -1,12 +1,12 @@
 "use client";
 
+import type { AvatarProps } from "@mantine/core";
 import { memo } from "react";
-import { Avatar, type AvatarProps } from "@mantine/core";
+import { Avatar } from "@mantine/core";
 
 import { esiImageSizeClamp, getAvatarSize } from "@jitaspace/utils";
 
 import { sizes } from "./Avatar.styles";
-
 
 export type EveImageServerAvatarProps = Omit<AvatarProps, "src"> & {
   category?: "alliances" | "corporations" | "characters" | "types";

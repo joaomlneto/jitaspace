@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Card, Group, JsonInput, Stack, Text } from "@mantine/core";
+import { Card, Group, Stack, Text } from "@mantine/core";
 
 import classes from "./ShipFittingCard.module.css";
 import { ShipFittingCardModuleSectionEntry } from "./ShipFittingCardModuleSectionEntry";
@@ -52,27 +52,10 @@ export const ShipFittingCardModulesSection = memo(
           )}
           {showExcessModules && remainingSlots < 0 && (
             <Group gap="xs" pl={26}>
-              <Text size="xs" color="red">
+              <Text size="xs" c="red">
                 Too many modules
               </Text>
             </Group>
-          )}
-          {false && (
-            <JsonInput
-              value={JSON.stringify(
-                {
-                  header,
-                  items: items,
-                  numSlots,
-                  showEmptySlots,
-                  showExcessModules,
-                },
-                null,
-                2,
-              )}
-              readOnly
-              autosize
-            />
           )}
         </Stack>
       </Card.Section>

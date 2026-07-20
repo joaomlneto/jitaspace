@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 
 import {
   completeLoginFlow,
@@ -9,6 +9,9 @@ import {
   sealLoginResult,
 } from "@jitaspace/auth";
 
+import { env } from "~/env";
+import { extractCharacterIdFromAccessToken } from "~/lib/eveSsoToken";
+import { getPostHogClient } from "~/lib/posthog-server";
 import { getRequestOrigin } from "~/lib/serverAuth";
 
 /**
@@ -50,12 +53,30 @@ export async function GET(req: NextRequest) {
         code: params.get("code"),
         state: params.get("state"),
         sealedFlow,
+        eveClientId: env.EVE_CLIENT_ID,
+        eveClientSecret: env.EVE_CLIENT_SECRET,
+        nextAuthSecret: env.NEXTAUTH_SECRET,
       });
 
-    const sealedResult = await sealLoginResult({
-      accessToken,
-      encryptedRefreshToken,
-    });
+    const sealedResult = await sealLoginResult(
+      { accessToken, encryptedRefreshToken },
+      { nextAuthSecret: env.NEXTAUTH_SECRET },
+    );
+
+    const characterId = extractCharacterIdFromAccessToken(accessToken);
+    const posthog = characterId ? getPostHogClient() : null;
+    if (posthog) {
+      posthog.capture({
+        distinctId: String(characterId),
+        event: "login_callback_succeeded",
+        properties: { character_id: characterId },
+      });
+      // Flush after the redirect is sent so analytics never blocks the login
+      // hot path. On Vercel `after` runs via the platform's waitUntil lifecycle.
+      after(async () => {
+        await posthog.shutdown();
+      });
+    }
 
     const response = NextResponse.redirect(
       `${origin}/login/complete?returnTo=${encodeURIComponent(returnTo)}`,

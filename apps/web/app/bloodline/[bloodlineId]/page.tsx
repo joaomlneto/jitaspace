@@ -1,10 +1,36 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Loader } from "@mantine/core";
+
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { prisma } from "~/lib/db";
 import PageClient from "./page.client";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ bloodlineId: string }>;
+}): Promise<Metadata> {
+  const { bloodlineId } = await params;
+  const id = Number(bloodlineId);
+  if (!Number.isSafeInteger(id) || id <= 0) return {};
+  try {
+    const bloodline = await prisma.bloodline.findUnique({
+      select: { name: true, description: true },
+      where: { bloodlineId: id },
+    });
+    if (!bloodline) return {};
+    return {
+      title: bloodline.name,
+      description: bloodline.description.slice(0, 200),
+    };
+  } catch {
+    return {};
+  }
+}
 
 export default function Page() {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageClient />
     </Suspense>
   );

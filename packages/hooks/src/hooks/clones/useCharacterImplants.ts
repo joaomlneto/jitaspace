@@ -15,7 +15,7 @@ export const useCharacterImplants = (characterId: number) => {
   return {
     hasToken: !!accessToken,
     ...useGetCharactersCharacterIdImplants(
-      characterId ?? 1,
+      characterId,
       { ...authHeaders },
       {
         query: {

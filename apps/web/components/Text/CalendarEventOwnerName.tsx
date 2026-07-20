@@ -1,15 +1,16 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
 import { memo } from "react";
-import { type TextProps } from "@mantine/core";
-import { useCalendarEvent } from "@jitaspace/hooks";
+
 import {
   AllianceName,
   CharacterName,
   CorporationName,
   EveEntityName,
   FactionName,
-} from "@jitaspace/ui";
+} from "@jitaspace/eve-components";
+import { useCalendarEvent } from "@jitaspace/hooks";
 
 export type CalendarEventOwnerNameProps = TextProps & {
   characterId?: number;

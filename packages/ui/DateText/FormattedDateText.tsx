@@ -1,12 +1,10 @@
 "use client";
 
+import type { TextProps } from "@mantine/core";
+import type { FirstWeekContainsDate, Locale } from "date-fns";
 import { memo } from "react";
-import { Skeleton, Text, type TextProps } from "@mantine/core";
-import { FirstWeekContainsDate, format as formatFn, Locale } from "date-fns";
-
-
-
-
+import { Skeleton, Text } from "@mantine/core";
+import { format as formatFn } from "date-fns";
 
 type FormattedDateTextProps = Omit<TextProps, "children"> & {
   date?: Date;

@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
@@ -63,23 +63,6 @@ jest.mock("@jitaspace/ui", () => ({
     </span>
   ),
   // Anchors: expose the props they receive via data attributes / children.
-  CalendarEventOwnerAnchor: ({
-    ownerId,
-    ownerType,
-    children,
-  }: {
-    ownerId?: number;
-    ownerType?: string;
-    children?: ReactNode;
-  }) => (
-    <a
-      data-testid="ui-event-owner-anchor"
-      data-owner-id={ownerId ?? ""}
-      data-owner-type={ownerType ?? ""}
-    >
-      {children}
-    </a>
-  ),
   OpenInformationWindowAnchor: ({
     onOpen,
     disabled,
@@ -97,6 +80,28 @@ jest.mock("@jitaspace/ui", () => ({
     >
       {children}
     </button>
+  ),
+}));
+
+// Anchors that moved to @jitaspace/eve-components are stubbed there so the
+// wrappers (which import them from that package) pick up these stubs.
+jest.mock("@jitaspace/eve-components", () => ({
+  CalendarEventOwnerAnchor: ({
+    ownerId,
+    ownerType,
+    children,
+  }: {
+    ownerId?: number;
+    ownerType?: string;
+    children?: ReactNode;
+  }) => (
+    <a
+      data-testid="ui-event-owner-anchor"
+      data-owner-id={ownerId ?? ""}
+      data-owner-type={ownerType ?? ""}
+    >
+      {children}
+    </a>
   ),
   StargateDestinationAnchor: ({
     destinationSystemId,
@@ -262,6 +267,22 @@ describe("CalendarEventResponseBadge (wrapper)", () => {
       "no-response",
     );
   });
+
+  it("uses a provided response directly and skips the per-event fetch", () => {
+    mockUseCalendarEvent.mockReturnValue({ data: undefined });
+    const { CalendarEventResponseBadge } = badges();
+
+    renderWithMantine(
+      <CalendarEventResponseBadge characterId={123} response="declined" />,
+    );
+
+    // The response is already known (from the summary feed), so no event id is
+    // passed to the detail hook — its query stays disabled.
+    expect(mockUseCalendarEvent).toHaveBeenCalledWith(123, undefined);
+    expect(screen.getByTestId("ui-event-response")).toHaveTextContent(
+      "declined",
+    );
+  });
 });
 
 describe("MailLabelBadge (wrapper)", () => {
@@ -313,7 +334,9 @@ describe("SolarSystemSecurityStatusBadge (wrapper)", () => {
     });
     const { SolarSystemSecurityStatusBadge } = badges();
 
-    renderWithMantine(<SolarSystemSecurityStatusBadge solarSystemId={30000142} />);
+    renderWithMantine(
+      <SolarSystemSecurityStatusBadge solarSystemId={30000142} />,
+    );
 
     expect(mockUseSolarSystem).toHaveBeenCalledWith(30000142);
     expect(screen.getByTestId("ui-security-status")).toHaveTextContent("0.9");
@@ -326,7 +349,9 @@ describe("SolarSystemSecurityStatusBadge (wrapper)", () => {
     renderWithMantine(<SolarSystemSecurityStatusBadge />);
 
     expect(mockUseSolarSystem).toHaveBeenCalledWith(0);
-    expect(screen.getByTestId("ui-security-status")).toHaveTextContent("no-sec");
+    expect(screen.getByTestId("ui-security-status")).toHaveTextContent(
+      "no-sec",
+    );
   });
 });
 

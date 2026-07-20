@@ -1,0 +1,52 @@
+{
+  "name": "@jitaspace/background-jobs",
+  "description": "Platform-agnostic EVE Online background job logic (run by the Trigger.dev adapter)",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
+    "lint:fix": "pnpm lint --fix",
+    "test": "jest",
+    "type-check": "tsc --jsx react-jsx --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@jitaspace/chat": "workspace:*",
+    "@jitaspace/db": "workspace:*",
+    "@jitaspace/esi-client": "workspace:*",
+    "@jitaspace/evekill-client": "workspace:*",
+    "@jitaspace/kv": "workspace:*",
+    "@jitaspace/sde-client": "workspace:*",
+    "@jitaspace/sde-utils": "workspace:*",
+    "axios": "^1.16.1",
+    "bull": "^4.16.5",
+    "decimal.js": "^10.6.0",
+    "p-limit": "^7.3.0",
+    "tar-stream": "^3.2.0",
+    "unbzip2-stream": "^1.4.3",
+    "untar-to-memory": "^2.0.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.4.1",
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "@swc/jest": "^0.2.39",
+    "@types/bull": "^4.10.4",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.12.4",
+    "@types/tar-stream": "^3.1.4",
+    "@types/unbzip2-stream": "^1.4.3",
+    "eslint": "^9.39.4",
+    "jest": "^30.4.2",
+    "prettier": "^3.8.3",
+    "typescript": "^5.9.3"
+  },
+  "prettier": "@jitaspace/prettier-config"
+}
