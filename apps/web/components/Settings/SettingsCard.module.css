@@ -1,12 +1,3 @@
-.card {
-  max-width: 720px;
-  margin-inline: auto;
-}
-
-.title {
-  line-height: 1;
-}
-
 .item {
   padding-top: var(--mantine-spacing-md);
   padding-bottom: var(--mantine-spacing-md);
@@ -21,7 +12,9 @@
   padding: 8px var(--mantine-spacing-sm);
   border-radius: var(--mantine-radius-md);
   border: 1px solid var(--mantine-color-default-border);
-  transition: background-color 150ms ease, border-color 150ms ease;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
 }
 
 .control:hover {
