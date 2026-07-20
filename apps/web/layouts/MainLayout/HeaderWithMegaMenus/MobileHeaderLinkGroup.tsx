@@ -24,7 +24,7 @@ import classes from "./HeaderWithMegaMenus.module.css";
 export interface MobileHeaderLinkGroupProps {
   title: string;
   Icon: (props: EveIconProps) => React.ReactElement;
-  onNavigation?: Function;
+  onNavigation?: () => void;
   items: Record<string, JitaApp>;
 }
 
@@ -53,7 +53,7 @@ export const MobileHeaderLinkGroup = memo(
             <IconChevronDown size={16} color={theme.primaryColor} />
           </Center>
         </UnstyledButton>
-        <Collapse in={mobileCharacterAppsOpened} px="xs">
+        <Collapse expanded={mobileCharacterAppsOpened} px="xs">
           {Object.entries(items).map(([appKey, app]) => (
             <UnstyledButton
               component={Link}

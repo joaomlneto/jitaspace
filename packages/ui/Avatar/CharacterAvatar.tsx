@@ -1,10 +1,9 @@
 "use client";
 
+import type { AvatarProps } from "@mantine/core";
 import { memo } from "react";
-import { type AvatarProps } from "@mantine/core";
 
 import { EveImageServerAvatar } from "./EveImageServerAvatar";
-
 
 export type CharacterAvatarProps = Omit<AvatarProps, "src"> & {
   characterId?: number | string | null;

@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -34,6 +34,7 @@ jest.mock("@jitaspace/sde-client", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
+  DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
   FormattedDateText: ({ date }: { date?: Date }) => (
     <span>{date ? `Date ${date.toISOString()}` : "No date"}</span>
   ),
@@ -54,6 +55,14 @@ jest.mock("../components/Status/EsiRateLimitDashboard", () => ({
 
 jest.mock("../components/Status/EsiStatusDashboard", () => ({
   EsiStatusDashboard: () => <div>ESI Status Dashboard</div>,
+}));
+
+jest.mock("../components/Status/TriggerJobsDashboard", () => ({
+  TriggerJobsDashboard: () => <div>Trigger Jobs Dashboard</div>,
+}));
+
+jest.mock("../components/Status/DatabaseDashboard", () => ({
+  DatabaseDashboard: () => <div>Database Dashboard</div>,
 }));
 
 jest.mock("next/link", () => ({
@@ -156,6 +165,8 @@ describe("Status Page", () => {
 
     // Dashboards render
     expect(screen.getByText("Rate Limit Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Trigger Jobs Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Database Dashboard")).toBeInTheDocument();
   });
 
   it("renders outdated branches and partial ESI degradation", () => {

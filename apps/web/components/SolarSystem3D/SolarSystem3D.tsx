@@ -11,6 +11,7 @@ import type {
   StarInput,
   Vec3,
 } from "@jitaspace/solar-system-map";
+import { StationName } from "@jitaspace/eve-components";
 import { useSolarSystem } from "@jitaspace/hooks";
 import {
   getMoonByIdQueryOptions,
@@ -19,7 +20,6 @@ import {
   getStargateByIdQueryOptions,
   getStationByIdQueryOptions,
 } from "@jitaspace/sde-client";
-import { StationName } from "@jitaspace/ui";
 
 import {
   MoonName,

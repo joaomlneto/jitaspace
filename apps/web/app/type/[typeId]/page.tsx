@@ -1,13 +1,24 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 import { HttpStatusCode } from "axios";
-import { Loader } from "@mantine/core";
 
-import { prisma } from "@jitaspace/db";
-
-import TypePage from "./page.client";
 import type { PageProps } from "./page.client";
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { prisma } from "~/lib/db";
+import TypePage from "./page.client";
+
+function stripHtml(s: string): string {
+  let out = "";
+  let inTag = false;
+  for (const ch of s) {
+    if (ch === "<") inTag = true;
+    else if (ch === ">") inTag = false;
+    else if (!inTag) out += ch;
+  }
+  return out;
+}
 
 async function getTypeData(typeId: number): Promise<PageProps> {
   "use cache";
@@ -24,16 +35,15 @@ async function getTypeData(typeId: number): Promise<PageProps> {
     },
   });
 
-  const typeImageVariations: string[] = ((await fetch(
+  const typeImageVariations = (await fetch(
     `https://images.evetech.net/types/${typeId}`,
   ).then((res) => {
-    return res.status === HttpStatusCode.NotFound ? [] : res.json();
-  })) as string[]) ?? [];
+    return res.status === Number(HttpStatusCode.NotFound) ? [] : res.json();
+  })) as string[];
 
-  const variation: string | undefined =
-    !typeImageVariations || typeImageVariations?.includes("icon")
-      ? "icon"
-      : typeImageVariations[0];
+  const variation: string | undefined = typeImageVariations.includes("icon")
+    ? "icon"
+    : typeImageVariations[0];
 
   return {
     typeId,
@@ -43,32 +53,67 @@ async function getTypeData(typeId: number): Promise<PageProps> {
   };
 }
 
-async function PageContent({
+export async function generateMetadata({
   params,
 }: {
   params: Promise<{ typeId: string }>;
-}) {
+}): Promise<Metadata> {
+  const { typeId: typeIdParam } = await params;
+  const typeId = Number(typeIdParam);
+  if (!typeId) return {};
+
+  try {
+    const { typeName, typeDescription, ogImageUrl } = await getTypeData(typeId);
+    const description = typeDescription
+      ? stripHtml(typeDescription).slice(0, 200)
+      : undefined;
+    return {
+      title: typeName ?? undefined,
+      description,
+      openGraph: {
+        title: typeName ?? undefined,
+        description,
+        images: ogImageUrl ? [{ url: ogImageUrl, width: 64, height: 64 }] : [],
+      },
+      twitter: {
+        card: "summary",
+        title: typeName ?? undefined,
+        description,
+        images: ogImageUrl ? [ogImageUrl] : [],
+      },
+    };
+  } catch {
+    return {};
+  }
+}
+
+async function PageContent({
+  params,
+}: Readonly<{
+  params: Promise<{ typeId: string }>;
+}>) {
   const { typeId: typeIdParam } = await params;
   const typeId = Number(typeIdParam);
   if (!typeId) {
     notFound();
   }
 
+  let props: PageProps;
   try {
-    const props = await getTypeData(typeId);
-    return <TypePage {...props} />;
+    props = await getTypeData(typeId);
   } catch {
     notFound();
   }
+  return <TypePage {...props} />;
 }
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ typeId: string }>;
-}) {
+}>) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

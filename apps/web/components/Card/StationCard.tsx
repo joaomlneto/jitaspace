@@ -1,16 +1,14 @@
+import type { CardProps } from "@mantine/core";
 import { memo } from "react";
-import { Card, Group  } from "@mantine/core";
-import type {CardProps} from "@mantine/core";
+import { Card, Group } from "@mantine/core";
 
+import { StationName } from "@jitaspace/eve-components";
 import { useStation } from "@jitaspace/hooks";
-import { StationName } from "@jitaspace/ui";
 
 import { StationAvatar } from "~/components/Avatar";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { SolarSystemBreadcrumbs } from "~/components/Breadcrumbs";
-
 import classes from "./StationCard.module.css";
-
 
 export type StationCardProps = Omit<CardProps, "children"> & {
   stationId: number;
@@ -28,7 +26,7 @@ export const StationCard = memo(
             <Group gap="xs" wrap="nowrap">
               {data?.data.system_id && (
                 <SolarSystemSecurityStatusBadge
-                  solarSystemId={data?.data.system_id}
+                  solarSystemId={data.data.system_id}
                   size="xs"
                   w={42}
                 />

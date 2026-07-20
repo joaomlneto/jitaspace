@@ -1,12 +1,12 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
-import { Loader } from "@mantine/core";
+import { notFound } from "next/navigation";
 
-import { prisma } from "@jitaspace/db";
-
-import LPStoreCorporationPage from "./page.client";
 import type { LPStoreCorporationPageProps } from "./page.client";
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { prisma } from "~/lib/db";
+import LPStoreCorporationPage from "./page.client";
 
 async function getLPStoreCorporationData(
   corporationId: string,
@@ -89,28 +89,54 @@ async function getLPStoreCorporationData(
   };
 }
 
-async function PageContent({
+export async function generateMetadata({
   params,
 }: {
   params: Promise<{ corporationId: string }>;
-}) {
+}): Promise<Metadata> {
+  const { corporationId } = await params;
+  const id = Number(corporationId);
+  if (!Number.isSafeInteger(id) || id <= 0) return {};
+  try {
+    const corporation = await prisma.corporation.findUnique({
+      select: { name: true },
+      where: { corporationId: id },
+    });
+    const name = corporation?.name;
+    return {
+      title: name ? `${name} LP Store` : "LP Store",
+      description: name
+        ? `Browse Loyalty Point store offers from ${name} in EVE Online.`
+        : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+async function PageContent({
+  params,
+}: Readonly<{
+  params: Promise<{ corporationId: string }>;
+}>) {
   const { corporationId } = await params;
 
+  let props: LPStoreCorporationPageProps;
   try {
-    const props = await getLPStoreCorporationData(corporationId);
-    return <LPStoreCorporationPage {...props} />;
+    props = await getLPStoreCorporationData(corporationId);
   } catch {
     notFound();
   }
+  return <LPStoreCorporationPage {...props} />;
 }
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ corporationId: string }>;
-}) {
+}>) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

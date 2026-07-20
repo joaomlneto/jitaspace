@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
 import type { EveIconProps } from "@jitaspace/eve-icons";
@@ -34,7 +33,6 @@ export interface JitaApp {
   url?: string;
   onClick?: () => void;
   Icon: (props: EveIconProps) => React.ReactElement;
-  tags?: string[];
   hotKey?: string[];
   scopes: {
     required?: AppScopeSet[];
@@ -108,7 +106,6 @@ export const characterApps: Record<string, JitaApp> = {
     description: "View and manage your character's contacts.",
     url: "/contacts/character",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
-    tags: ["beta"],
     scopes: {
       optional: [
         {
@@ -135,7 +132,6 @@ export const characterApps: Record<string, JitaApp> = {
     description: "View and manage your character's ship fittings.",
     url: "/fittings",
     Icon: (props: EveIconProps) => React.createElement(FittingIcon, props),
-    tags: ["beta"],
     scopes: {
       required: [
         {
@@ -156,7 +152,6 @@ export const characterApps: Record<string, JitaApp> = {
     description: "Manage your skills and skills points on your characters.",
     url: "/skills",
     Icon: (props) => React.createElement(SkillsIcon, props),
-    tags: ["beta"],
     scopes: {
       required: [
         { reason: "Read Skills", scopes: ["esi-skills.read_skills.v1"] },
@@ -172,9 +167,7 @@ export const characterApps: Record<string, JitaApp> = {
     name: "Assets",
     description: "View and manage your character's assets.",
     url: "/assets/character",
-    Icon: (props) => React.createElement(AssetsIcon, props),
-    tags: ["beta"],
-    scopes: {
+    Icon: (props) => React.createElement(AssetsIcon, props),    scopes: {
       optional: [
         {
           reason: "View your character assets",
@@ -195,7 +188,6 @@ export const characterApps: Record<string, JitaApp> = {
     description: "View your character's and your corporation's wallet.",
     url: "/wallet/character",
     Icon: (props) => React.createElement(WalletIcon, props),
-    tags: ["beta"],
     scopes: {
       optional: [
         {
@@ -214,9 +206,7 @@ export const characterApps: Record<string, JitaApp> = {
     name: "Notifications",
     description: "View your character in-game notifications",
     url: "/notifications",
-    Icon: (props: EveIconProps) => React.createElement(MemberIcon, props),
-    tags: ["beta"],
-    scopes: {
+    Icon: (props: EveIconProps) => React.createElement(MemberIcon, props),    scopes: {
       required: [
         {
           reason: "Read Character Notifications",
@@ -235,7 +225,6 @@ export const corporationApps: Record<string, JitaApp> = {
     description: "View and manage your corporation's contacts.",
     url: "/contacts/corporation",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
-    tags: ["beta"],
     scopes: {
       optional: [
         {
@@ -262,9 +251,7 @@ export const corporationApps: Record<string, JitaApp> = {
     name: "Assets",
     description: "View and manage your corporation's assets.",
     url: "/assets/corporation",
-    Icon: (props) => React.createElement(AssetsIcon, props),
-    tags: ["beta"],
-    scopes: {
+    Icon: (props) => React.createElement(AssetsIcon, props),    scopes: {
       optional: [
         {
           reason: "View your character assets",
@@ -285,7 +272,6 @@ export const corporationApps: Record<string, JitaApp> = {
     description: "View your corporation's wallet balance and transactions.",
     url: "/wallet/corporation",
     Icon: (props) => React.createElement(WalletIcon, props),
-    tags: ["beta"],
     scopes: {
       optional: [
         {
@@ -307,7 +293,6 @@ export const allianceApps: Record<string, JitaApp> = {
     description: "View and manage your alliance's contacts.",
     url: "/contacts/alliance",
     Icon: (props: EveIconProps) => React.createElement(ContactsIcon, props),
-    tags: ["beta"],
     scopes: {
       optional: [
         {
@@ -334,7 +319,6 @@ export const universeApps: Record<string, JitaApp> = {
     url: "/active-wars",
     Icon: (props) => <WarsIcon {...props} />,
     scopes: {},
-    tags: [],
   },
   map: {
     name: "Map",
@@ -357,7 +341,6 @@ export const universeApps: Record<string, JitaApp> = {
     url: "/agents",
     Icon: (props) => <AgentFinderIcon {...props} />,
     scopes: {},
-    tags: ["beta"],
   },
   travel: {
     name: "Travel Planner",
@@ -365,7 +348,6 @@ export const universeApps: Record<string, JitaApp> = {
     url: "/travel/jita/amarr",
     Icon: (props) => <MapIcon {...props} />,
     scopes: {},
-    tags: ["beta"],
   },
   market: {
     name: "Market",
@@ -373,7 +355,6 @@ export const universeApps: Record<string, JitaApp> = {
     url: "/market",
     Icon: (props) => <MarketIcon {...props} />,
     scopes: {},
-    tags: ["beta"],
   },
   dogma: {
     name: "Dogma",
@@ -381,7 +362,6 @@ export const universeApps: Record<string, JitaApp> = {
     url: "/dogma",
     Icon: (props) => <AttributesIcon {...props} />,
     scopes: {},
-    tags: ["beta"],
   },
   /*
                                 search: {
@@ -408,23 +388,6 @@ export const universeApps: Record<string, JitaApp> = {
                                     ],
                                   },
                                 },*/
-};
-
-export const devApps: Record<string, JitaApp> = {
-  sde: {
-    name: "SDE REST API",
-    description:
-      "A REST API with an OpenAPI specification for EVE Online's Static Data Export.",
-    url: "https://sde.jita.space",
-    Icon: (props) =>
-      React.createElement(Image, {
-        src: "https://images.evetech.net/types/60753/icon?size=64",
-        alt: "SDE OpenAPI",
-        ...props,
-      }),
-    hotKey: ["⌘", "P"],
-    scopes: {},
-  },
 };
 
 export const extraJitaFeatures: AppScopeSet[] = [
@@ -517,15 +480,5 @@ export const jitaApps: Record<
     apps: universeApps,
     name: "Universe",
     Icon: (props) => <MapIcon {...props} />,
-  },
-  developer: {
-    apps: devApps,
-    name: "Developer",
-    Icon: (props) =>
-      React.createElement(Image, {
-        src: "https://images.evetech.net/types/60753/icon?size=64",
-        alt: "SDE OpenAPI",
-        ...props,
-      }),
   },
 };

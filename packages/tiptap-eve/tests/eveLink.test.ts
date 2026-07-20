@@ -1,6 +1,7 @@
 import { isAllowedUri } from "@tiptap/extension-link";
+import { registerCustomProtocol } from "linkifyjs";
 
-import { renderEveHref } from "../Extensions/EveLink";
+import { EveLink, renderEveHref } from "../Extensions/EveLink";
 
 describe("renderEveHref", () => {
   describe("regular URLs", () => {
@@ -219,23 +220,25 @@ describe("renderEveHref", () => {
 });
 
 describe("EveLink protocol configuration", () => {
-  // EveLink is configured with protocols: ["showinfo", "warReport", "killReport"].
-  // TipTap's setLink command calls isAllowedUri before applying the mark —
-  // if it returns false the command silently no-ops. These tests verify that
-  // our protocol list unlocks all EVE-specific schemes.
+  // EveLink registers all EVE schemes in lowercase because linkifyjs v4 (used by
+  // TipTap v3) rejects any non-lowercase custom scheme. The sample URLs below are
+  // camelCase — the form EVE actually puts in mail — to prove that isAllowedUri
+  // matches schemes case-insensitively, so camelCase hrefs in content are still
+  // recognised against the lowercase protocol list (which is why mail content is
+  // never lowercased).
   const eveProtocols = [
     "showinfo",
-    "warReport",
-    "killReport",
-    "recruitmentAd",
+    "warreport",
+    "killreport",
+    "recruitmentad",
     "contract",
-    "joinChannel",
-    "helpPointer",
-    "shipSkinListing",
+    "joinchannel",
+    "helppointer",
+    "shipskinlisting",
     "fitting",
     "localsvc",
     "opportunity",
-    "careerProgramNode",
+    "careerprogramnode",
     "fleet",
   ];
 
@@ -298,6 +301,36 @@ describe("EveLink protocol configuration", () => {
     ];
     for (const url of urls) {
       expect(isAllowedUri(url, eveProtocols)).toBeTruthy();
+    }
+  });
+});
+
+describe("EveLink registered protocols are linkifyjs-safe (regression)", () => {
+  // The /character/:id page crashed because EveLink registered camelCase scheme
+  // names, which linkifyjs v4's registerCustomProtocol() rejects. These tests
+  // lock in the requirement that every registered scheme is all-lowercase.
+  const registered = EveLink.options.protocols as string[];
+
+  it("registers at least the known EVE schemes", () => {
+    expect(registered).toEqual(expect.arrayContaining(["showinfo", "fleet"]));
+    expect(registered.length).toBeGreaterThanOrEqual(13);
+  });
+
+  it("registers every scheme in all-lowercase form", () => {
+    for (const scheme of registered) {
+      expect(scheme).toBe(scheme.toLowerCase());
+    }
+  });
+
+  it("every registered scheme is accepted by linkifyjs registerCustomProtocol", () => {
+    for (const scheme of registered) {
+      expect(() => registerCustomProtocol(scheme, true)).not.toThrow();
+    }
+  });
+
+  it("linkifyjs rejects the camelCase names EVE uses (why we lowercase)", () => {
+    for (const bad of ["warReport", "joinChannel", "shipSkinListing"]) {
+      expect(() => registerCustomProtocol(bad, true)).toThrow(/linkifyjs/);
     }
   });
 });

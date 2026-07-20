@@ -1,12 +1,18 @@
 import React from "react";
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 
-import { prisma } from "@jitaspace/db";
+import { RegionAnchor } from "@jitaspace/eve-components";
 import { MapIcon } from "@jitaspace/eve-icons";
-import { RegionAnchor } from "@jitaspace/ui";
 
+import { prisma } from "~/lib/db";
+
+export const metadata = {
+  title: "Regions",
+  description:
+    "Browse all regions in the EVE Online universe — New Eden's star clusters, systems, and constellations.",
+};
 
 interface PageProps {
   regions: { regionId: number; name: string }[];

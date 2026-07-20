@@ -1,7 +1,7 @@
 "use client";
 
-import React, { memo } from "react";
-import { type AvatarProps } from "@mantine/core";
+import type { AvatarProps } from "@mantine/core";
+import { memo } from "react";
 
 import { TypeAvatar } from "./TypeAvatar";
 

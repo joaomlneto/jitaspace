@@ -1,79 +1,28 @@
+import type { CardChild, FieldElement } from "chat";
 import { createDiscordAdapter } from "@chat-adapter/discord";
 import { createRedisState } from "@chat-adapter/state-redis";
 import {
   Actions,
   Button,
   Card,
-  CardChild,
   CardText,
   Chat,
   Divider,
   Field,
-  FieldElement,
   Fields,
   CardText as Text,
 } from "chat";
 
-const discordAdapter = process.env.DISCORD_BOT_TOKEN
-  ? createDiscordAdapter()
-  : undefined;
-
-export const chat = new Chat({
-  userName: "JitaSpace",
-  adapters: discordAdapter
-    ? {
-        discord: discordAdapter,
-      }
-    : {},
-  state: createRedisState(),
-});
-
-// Respond when someone @mentions the bot
-chat.onNewMention(async (thread) => {
-  await thread.subscribe();
-  await thread.post(
-    Card({
-      title: "Support",
-      children: [
-        Text(
-          "Hey! I'm here to help. Ask your question in this thread and I'll do my best to answer it.",
-        ),
-        Divider(),
-        Actions([
-          Button({
-            id: "escalate",
-            style: "danger",
-            label: "Do not click this test button",
-          }),
-        ]),
-      ],
-    }),
-  );
-});
-
-const updatesChannelId = process.env.DISCORD_UPDATES_CHANNEL_ID;
-
-export const updatesChannel =
-  discordAdapter && updatesChannelId
-    ? chat.channel(`discord:1127970667522949201:${updatesChannelId}`)
-    : null;
-
-// Respond when someone clicks escalate button
-chat.onAction("escalate", async (event) => {
-  await event.thread?.post(
-    `${event.user.fullName} disobeyed and clicked the test button.`,
-  );
-});
-
-// Respond to follow-up messages in subscribed threads
-chat.onSubscribedMessage(async (thread, message) => {
-  await thread.startTyping();
-  await thread.post(`You said: ${message.text}`);
-});
+export interface CreateChatOptions {
+  /** Discord bot token. When absent, the Discord adapter is disabled. */
+  discordBotToken?: string;
+  /** Discord channel id used for posting update cards. */
+  discordUpdatesChannelId?: string;
+}
 
 type UpdateStatus = "success" | "idle" | "rate_limited" | "failed";
 
-type UpdateCardOptions = {
+interface UpdateCardOptions {
   status: UpdateStatus;
   summary: string;
   processed?: number;
@@ -84,7 +33,7 @@ type UpdateCardOptions = {
   attackers?: number;
   victimItems?: number;
   throttledUntil?: string | null;
-};
+}
 
 const STATUS_LABELS: Record<UpdateStatus, string> = {
   success: "Success",
@@ -93,44 +42,110 @@ const STATUS_LABELS: Record<UpdateStatus, string> = {
   failed: "Failed",
 };
 
-export const postUpdateCard = async (options: UpdateCardOptions) => {
-  if (!updatesChannel) {
-    return;
-  }
+/**
+ * Create the chat bot (Discord adapter + handlers) and its helpers.
+ *
+ * This package reads no environment variables: callers (apps) inject the Discord
+ * bot token and updates-channel id from their own validated env.
+ */
+export function createChat({
+  discordBotToken,
+  discordUpdatesChannelId,
+}: CreateChatOptions = {}) {
+  const discordAdapter = discordBotToken
+    ? createDiscordAdapter({ botToken: discordBotToken })
+    : undefined;
 
-  const fields: FieldElement[] = [];
-  const addField = (
-    label: string,
-    value: string | number | bigint | null | undefined,
-  ) => {
-    if (value === null || value === undefined) return;
-    fields.push(
-      Field({
-        label,
-        value: value.toString(),
+  const chat = new Chat({
+    userName: "JitaSpace",
+    adapters: discordAdapter ? { discord: discordAdapter } : {},
+    state: createRedisState(),
+  });
+
+  // Respond when someone @mentions the bot
+  chat.onNewMention(async (thread) => {
+    await thread.subscribe();
+    await thread.post(
+      Card({
+        title: "Support",
+        children: [
+          Text(
+            "Hey! I'm here to help. Ask your question in this thread and I'll do my best to answer it.",
+          ),
+          Divider(),
+          Actions([
+            Button({
+              id: "escalate",
+              style: "danger",
+              label: "Do not click this test button",
+            }),
+          ]),
+        ],
+      }),
+    );
+  });
+
+  const updatesChannel =
+    discordAdapter && discordUpdatesChannelId
+      ? chat.channel(`discord:1127970667522949201:${discordUpdatesChannelId}`)
+      : null;
+
+  // Respond when someone clicks escalate button
+  chat.onAction("escalate", async (event) => {
+    await event.thread?.post(
+      `${event.user.fullName} disobeyed and clicked the test button.`,
+    );
+  });
+
+  // Respond to follow-up messages in subscribed threads
+  chat.onSubscribedMessage(async (thread, message) => {
+    await thread.startTyping();
+    await thread.post(`You said: ${message.text}`);
+  });
+
+  const postUpdateCard = async (options: UpdateCardOptions) => {
+    if (!updatesChannel) {
+      return;
+    }
+
+    const fields: FieldElement[] = [];
+    const addField = (
+      label: string,
+      value: string | number | bigint | null | undefined,
+    ) => {
+      if (value === null || value === undefined) return;
+      fields.push(
+        Field({
+          label,
+          value: value.toString(),
+        }),
+      );
+    };
+
+    addField("Processed", options.processed);
+    addField("Range", options.range);
+    addField("Lag", options.lag);
+    addField("Latest cursor", options.latestSequence ?? null);
+    addField("Next cursor", options.nextSequence ?? null);
+    addField("Attackers", options.attackers);
+    addField("Victim items", options.victimItems);
+    addField("Throttled until", options.throttledUntil ?? null);
+
+    const children: CardChild[] = [CardText(options.summary)];
+    if (fields.length > 0) {
+      children.push(Divider(), Fields(fields));
+    }
+
+    await updatesChannel.post(
+      Card({
+        title: "scrapeRecentKills",
+        subtitle: STATUS_LABELS[options.status],
+        children,
       }),
     );
   };
 
-  addField("Processed", options.processed);
-  addField("Range", options.range);
-  addField("Lag", options.lag);
-  addField("Latest cursor", options.latestSequence ?? null);
-  addField("Next cursor", options.nextSequence ?? null);
-  addField("Attackers", options.attackers);
-  addField("Victim items", options.victimItems);
-  addField("Throttled until", options.throttledUntil ?? null);
+  return { chat, updatesChannel, postUpdateCard };
+}
 
-  const children: CardChild[] = [CardText(options.summary)];
-  if (fields.length > 0) {
-    children.push(Divider(), Fields(fields));
-  }
-
-  await updatesChannel.post(
-    Card({
-      title: "scrapeRecentKills",
-      subtitle: STATUS_LABELS[options.status],
-      children,
-    }),
-  );
-};
+export type ChatInstance = ReturnType<typeof createChat>;

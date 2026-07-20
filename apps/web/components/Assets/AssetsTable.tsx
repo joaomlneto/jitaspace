@@ -1,8 +1,14 @@
-import type {CharacterAsset} from "@jitaspace/hooks";
-import {EveEntityAnchor, EveEntityName, ISKAmount, TypeAnchor, TypeAvatar, TypeName,} from "@jitaspace/ui";
-import {Badge, Group, Table} from "@mantine/core";
-import {memo} from "react";
+import { memo } from "react";
+import { Badge, Group, Table } from "@mantine/core";
 
+import type { CharacterAsset } from "@jitaspace/hooks";
+import {
+  EveEntityAnchor,
+  EveEntityName,
+  TypeAnchor,
+  TypeName,
+} from "@jitaspace/eve-components";
+import { ISKAmount, TypeAvatar } from "@jitaspace/ui";
 
 interface AssetsTableProps {
   assets: (CharacterAsset & {
@@ -11,7 +17,7 @@ interface AssetsTableProps {
   })[];
 }
 
-export const AssetsTable = memo(({assets}: AssetsTableProps) => {
+export const AssetsTable = memo(({ assets }: AssetsTableProps) => {
   return (
     <Table highlightOnHover>
       <Table.Thead>
@@ -29,9 +35,9 @@ export const AssetsTable = memo(({assets}: AssetsTableProps) => {
             <Table.Td>
               <Group gap="xs" justify="space-between">
                 <Group wrap="nowrap" gap="xs">
-                  <TypeAvatar size="xs" typeId={asset.type_id}/>
+                  <TypeAvatar size="xs" typeId={asset.type_id} />
                   <TypeAnchor typeId={asset.type_id}>
-                    <TypeName typeId={asset.type_id}/>
+                    <TypeName typeId={asset.type_id} />
                   </TypeAnchor>
                 </Group>
                 <Group gap="xs" justify="flex-end">
@@ -41,13 +47,13 @@ export const AssetsTable = memo(({assets}: AssetsTableProps) => {
               </Group>
             </Table.Td>
             <Table.Td>
-              {asset.price && <ISKAmount ta="right" amount={asset.price}/>}
+              {asset.price && <ISKAmount ta="right" amount={asset.price} />}
             </Table.Td>
 
             <Table.Td>
               <Group gap="xs">
                 <EveEntityAnchor entityId={asset.location_id}>
-                  <EveEntityName entityId={asset.location_id}/>
+                  <EveEntityName entityId={asset.location_id} />
                 </EveEntityAnchor>
               </Group>
             </Table.Td>

@@ -3,19 +3,18 @@ import { openContextModal } from "@mantine/modals";
 import { showNotification } from "@mantine/notifications";
 
 import {
-  useCharacterMailingLists,
-  useCharacterMailLabels,
-} from "@jitaspace/hooks";
-import {
   EveMailSenderAnchor,
   EveMailSenderAvatar,
   EveMailSenderName,
-  FormattedDateText,
-} from "@jitaspace/ui";
-
-import { MailLabelColorSwatch } from "~/components/ColorSwatch";
+} from "@jitaspace/eve-components";
+import {
+  useCharacterMailingLists,
+  useCharacterMailLabels,
+} from "@jitaspace/hooks";
+import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import type { MailboxTableProps } from "~/components/EveMail";
+import { MailLabelColorSwatch } from "~/components/ColorSwatch";
 
 export const MobileMailboxTable = ({
   characterId,
@@ -75,16 +74,14 @@ export const MobileMailboxTable = ({
                           ),
                       )}
                     {message.timestamp && (
-                      <FormattedDateText
-                        size="sm"
-                        date={
-                          message.timestamp
-                            ? new Date(message.timestamp)
-                            : undefined
-                        }
-                        format="LLL dd"
-                        fw={message.is_read ? "normal" : "bold"}
-                      />
+                      <DateHoverCard date={new Date(message.timestamp)}>
+                        <FormattedDateText
+                          size="sm"
+                          date={new Date(message.timestamp)}
+                          format="LLL dd"
+                          fw={message.is_read ? "normal" : "bold"}
+                        />
+                      </DateHoverCard>
                     )}
                   </Group>
                 </Group>

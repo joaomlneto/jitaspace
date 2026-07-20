@@ -1,0 +1,52 @@
+{
+  "name": "@jitaspace/eve-components",
+  "description": "EVE Online data-aware components for JitaSpace (smart wrappers over @jitaspace/ui + @jitaspace/hooks)",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "scripts": {
+    "clean": "rm -rf .turbo node_modules",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config .",
+    "lint:fix": "pnpm lint --fix",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@jitaspace/eve-icons": "workspace:*",
+    "@jitaspace/hooks": "workspace:*",
+    "@jitaspace/sde-client": "workspace:*",
+    "@jitaspace/ui": "workspace:*",
+    "@jitaspace/utils": "workspace:*",
+    "@mantine/core": "9.3.0",
+    "@mantine/hooks": "9.3.0",
+    "date-fns": "^4.3.0",
+    "next": "16.2.6",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@jest/globals": "^30.4.1",
+    "@jitaspace/eslint-config": "workspace:*",
+    "@jitaspace/prettier-config": "workspace:*",
+    "@jitaspace/tsconfig": "workspace:*",
+    "@swc/core": "^1.15.40",
+    "@swc/jest": "^0.2.39",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.12.4",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^9.39.4",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "prettier": "^3.8.3",
+    "typescript": "^5.9.3"
+  },
+  "prettier": "@jitaspace/prettier-config"
+}

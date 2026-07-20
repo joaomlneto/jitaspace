@@ -9,6 +9,8 @@ import "@mantine/carousel/styles.css";
 import "@mantine/spotlight/styles.css";
 import "@mantine/nprogress/styles.css";
 import "mantine-react-table/styles.css";
+import "mantine-datatable/styles.css";
+import "./globals.css";
 
 import type { Viewport } from "next";
 import type { ReactNode } from "react";
@@ -30,15 +32,19 @@ import { MainLayout } from "~/layouts";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
 import { DEFAULT_ESI_ACCEPT_LANGUAGE } from "~/lib/preferences";
 import { AppMantineProvider } from "./mantine-provider";
+import { splashScreenLink, splashScreens } from "./splashScreens";
 
 const APP_NAME = "JitaSpace";
 const APP_DEFAULT_TITLE = "JitaSpace";
-const APP_TITLE_TEMPLATE = "%s | " + APP_NAME;
-const APP_DESCRIPTION = "EVE Online tools";
+const APP_TITLE_TEMPLATE = "%s | JitaSpace";
+const APP_DESCRIPTION =
+  "EVE Online companion app — browse items, characters, corporations, market data, ship fittings, and more.";
+const SITE_URL = env.NEXT_PUBLIC_SITE_URL ?? "https://www.jita.space";
 const ESI_USER_AGENT = "jitaspace-web/0.1.0 (https://jita.space)";
 const ESI_ACCEPT_LANGUAGE = DEFAULT_ESI_ACCEPT_LANGUAGE;
 
 export const metadata = {
+  metadataBase: new URL(SITE_URL),
   applicationName: APP_NAME,
   title: {
     default: APP_DEFAULT_TITLE,
@@ -47,9 +53,10 @@ export const metadata = {
   description: APP_DESCRIPTION,
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    // black-translucent lets the web app draw behind the iOS status bar so the
+    // dark header extends edge-to-edge (paired with viewport-fit=cover below).
+    statusBarStyle: "black-translucent",
     title: APP_DEFAULT_TITLE,
-    // startUpImage: [],
   },
   formatDetection: {
     telephone: false,
@@ -62,8 +69,13 @@ export const metadata = {
       template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
+    // No site-wide og:image: shared links render as a clean text preview
+    // (title + description + site icon), which reads better on Discord/WhatsApp.
+    // Per-entity pages still set their own og:image (character/corp portraits).
   },
   twitter: {
+    // `summary`, not `summary_large_image`: there's no site-wide image to fill
+    // the large card.
     card: "summary",
     title: {
       default: APP_DEFAULT_TITLE,
@@ -74,7 +86,10 @@ export const metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#9bb4d0",
+  // Matches the manifest theme_color and the dark app header so the installed
+  // PWA title bar (and mobile status bar) blend with the UI. The runtime
+  // theme-color meta tag takes precedence over the manifest, so keep them in sync.
+  themeColor: "#04070c",
 };
 
 export default function RootLayout({
@@ -89,14 +104,29 @@ export default function RootLayout({
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"
         />
+        {splashScreens.map((screen) => {
+          const { href, media } = splashScreenLink(screen);
+          return (
+            <link
+              key={screen.name}
+              rel="apple-touch-startup-image"
+              media={media}
+              href={href}
+            />
+          );
+        })}
       </head>
       <body>
         <Script
           strategy="afterInteractive"
           async
           defer
-          // /analytics is a proxy to the umami server - set in next.config.mjs
+          // /analytics is a proxy to the umami server - set in next.config.mjs.
+          // data-host-url routes the event beacon (`<host-url>/api/send`)
+          // back through the same-origin proxy too, so it stays off the CSP
+          // third-party allow-list and survives ad blockers that block umami.is.
           src={"/analytics/script.js"}
+          data-host-url="/analytics"
           data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
           data-domains="www.jita.space"
         ></Script>
@@ -112,7 +142,9 @@ export default function RootLayout({
           >
             <EsiClientSSOAccessTokenInjector>
               <>
-                <Notifications />
+                {/* Mantine 9 changed the default so hovering any notification
+                    pauses all timers; keep the previous per-notification behavior. */}
+                <Notifications pauseResetOnHover="notification" />
                 <Suspense fallback={null}>
                   <RouterTransition />
                 </Suspense>

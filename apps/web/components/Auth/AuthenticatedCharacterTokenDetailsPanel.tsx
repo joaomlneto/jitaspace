@@ -1,23 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  Button,
-  CopyButton,
-  Group,
-  Stack,
-  Text,
-  Title,
-  Tooltip,
-} from "@mantine/core";
+import { Button, CopyButton, Group, Stack, Text, Title } from "@mantine/core";
 
+import { CharacterName } from "@jitaspace/eve-components";
 import { useAuthenticatedCharacter } from "@jitaspace/hooks";
-import {
-  CharacterAvatar,
-  CharacterName,
-  FormattedDateText,
-  TimeAgoText,
-} from "@jitaspace/ui";
+import { CharacterAvatar, DateHoverCard, TimeAgoText } from "@jitaspace/ui";
 
 import { ScopesTable } from "~/components/ScopeGuard";
 
@@ -34,7 +22,7 @@ export const AuthenticatedCharacterTokenDetailsPanel = ({
     if (character == null) {
       return null;
     }
-    return new Date(character?.accessTokenExpirationDate);
+    return new Date(character.accessTokenExpirationDate);
   }, [character?.accessTokenExpirationDate]);
 
   if (character == null) {
@@ -68,14 +56,9 @@ export const AuthenticatedCharacterTokenDetailsPanel = ({
       {expirationDate && (
         <Group justify="space-between">
           <Text>Token expiration</Text>
-          <Group>
-            <Tooltip
-              color="dark"
-              label={<FormattedDateText size="sm" date={expirationDate} />}
-            >
-              <TimeAgoText date={expirationDate} addSuffix />
-            </Tooltip>
-          </Group>
+          <DateHoverCard date={expirationDate}>
+            <TimeAgoText date={expirationDate} addSuffix />
+          </DateHoverCard>
         </Group>
       )}
 

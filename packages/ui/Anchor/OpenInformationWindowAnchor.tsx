@@ -1,8 +1,8 @@
 "use client";
 
 import type { AnchorProps } from "@mantine/core";
+import type { LinkProps } from "next/link";
 import { memo } from "react";
-import { type LinkProps } from "next/link";
 import { Anchor } from "@mantine/core";
 
 export type OpenInformationWindowAnchorProps = AnchorProps &
@@ -20,10 +20,7 @@ export const OpenInformationWindowAnchor = memo(
     ...props
   }: OpenInformationWindowAnchorProps) => {
     return (
-      <Anchor
-        {...props}
-        onClick={disabled ? undefined : onOpen}
-      >
+      <Anchor {...props} onClick={disabled ? undefined : onOpen}>
         {children}
       </Anchor>
     );

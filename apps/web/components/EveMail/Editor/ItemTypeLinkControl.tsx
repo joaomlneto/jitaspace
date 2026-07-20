@@ -1,29 +1,19 @@
+import type { PopoverProps } from "@mantine/core";
 import type React from "react";
 import { forwardRef } from "react";
-import {
-  Button,
-  Popover,
-  useMantineTheme,
-  useProps
-  
-} from "@mantine/core";
-import type {PopoverProps} from "@mantine/core";
+import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
+import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { ItemsIcon } from "@jitaspace/eve-icons";
-import { EsiSearchSelect, TypeAvatar } from "@jitaspace/ui";
+import { TypeAvatar } from "@jitaspace/ui";
 
-import {
-  ControlBase
-  
-} from "~/components/EveMail/Editor/ControlBase";
-import type {RichTextEditorControlBaseProps} from "~/components/EveMail/Editor/ControlBase";
+import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
+import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
 import classes from "./LinkControl.module.css";
 
-
-export interface RichTextEditorLinkControlProps
-  extends Partial<RichTextEditorControlBaseProps> {
+export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorControlBaseProps> {
   /** Props added to Popover component */
   popoverProps?: Partial<PopoverProps>;
 }
@@ -49,8 +39,8 @@ export const ItemTypeLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setItemTypeId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setItemTypeId(href);
   };
 
   const handleClose = () => {
@@ -60,16 +50,18 @@ export const ItemTypeLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    itemTypeId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:${itemTypeId}`,
-          })
-          .run();
+    if (itemTypeId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:${itemTypeId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -94,7 +86,7 @@ export const ItemTypeLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || ItemTypeLinkIcon}
+          icon={icon ?? ItemTypeLinkIcon}
           aria-label="Link ItemType"
           title="Link ItemType"
           onClick={handleOpen}

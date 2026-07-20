@@ -14,8 +14,9 @@ import {
   Title,
 } from "@mantine/core";
 
+import { TypeAnchor } from "@jitaspace/eve-components";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import { TypeAnchor, TypeAvatar } from "@jitaspace/ui";
+import { DogmaAttributeValue, TypeAvatar } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
 
@@ -30,6 +31,7 @@ export interface PageProps {
   published: boolean | null;
   stackable: boolean | null;
   unit: string | null;
+  unitId: number | null;
   iconId: number | null;
   types: { typeId: number; name: string; value: number; groupId: number }[];
   groups: { groupId: number; name: string }[];
@@ -46,10 +48,11 @@ export default function DogmaAttributePage({
   published,
   stackable,
   unit,
+  unitId,
   iconId,
   types,
   groups,
-}: PageProps) {
+}: Readonly<PageProps>) {
   const groupTypes = useMemo(() => {
     const map: Record<number, (typeof types)[number][]> = {};
     groups.forEach(
@@ -61,12 +64,19 @@ export default function DogmaAttributePage({
     return map;
   }, [types, groups]);
 
+  const booleanBadgeColor = (value: boolean | null) => {
+    if (value === null) return "gray";
+    return value ? "teal" : "red";
+  };
+
+  const booleanBadgeLabel = (value: boolean | null) => {
+    if (value === null) return "Unknown";
+    return value ? "Yes" : "No";
+  };
+
   const booleanBadge = (value: boolean | null) => (
-    <Badge
-      color={value === null ? "gray" : value ? "teal" : "red"}
-      variant="light"
-    >
-      {value === null ? "Unknown" : value ? "Yes" : "No"}
+    <Badge color={booleanBadgeColor(value)} variant="light">
+      {booleanBadgeLabel(value)}
     </Badge>
   );
 
@@ -74,14 +84,25 @@ export default function DogmaAttributePage({
     { label: "Attribute ID", value: attributeId },
     ...(name ? [{ label: "Name", value: name }] : []),
     ...(displayName ? [{ label: "Display Name", value: displayName }] : []),
-    ...(defaultValue !== null
-      ? [{ label: "Default Value", value: defaultValue }]
-      : []),
+    ...(defaultValue === null
+      ? []
+      : [
+          {
+            label: "Default Value",
+            value: (
+              <DogmaAttributeValue
+                value={defaultValue}
+                unitId={unitId ?? undefined}
+                unitSymbol={unit ?? undefined}
+              />
+            ),
+          },
+        ]),
     { label: "High is Good", value: booleanBadge(highIsGood) },
     { label: "Published", value: booleanBadge(published) },
     { label: "Stackable", value: booleanBadge(stackable) },
     ...(unit ? [{ label: "Unit", value: unit }] : []),
-    ...(iconId !== null ? [{ label: "Icon ID", value: iconId }] : []),
+    ...(iconId === null ? [] : [{ label: "Icon ID", value: iconId }]),
   ];
 
   return (
@@ -143,7 +164,13 @@ export default function DogmaAttributePage({
                           </TypeAnchor>
                         </Group>
                       </Table.Td>
-                      <Table.Td align="right">{type.value}</Table.Td>
+                      <Table.Td align="right">
+                        <DogmaAttributeValue
+                          value={type.value}
+                          unitId={unitId ?? undefined}
+                          unitSymbol={unit ?? undefined}
+                        />
+                      </Table.Td>
                     </Table.Tr>
                   ))}
                 </Table.Tbody>

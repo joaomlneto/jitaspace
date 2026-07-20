@@ -50,7 +50,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
     "@types/react": "^19.1.6",
-    "@types/react-dom": "^19.2.3",
+    "@types/react-dom": "^19.1.5",
     "@types/three": "^0.184.1",
     "eslint": "^9.39.4",
     "jest": "^30.4.2",

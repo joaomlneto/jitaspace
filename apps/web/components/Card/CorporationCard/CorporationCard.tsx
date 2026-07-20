@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import React, { memo } from "react";
+import { memo } from "react";
 import {
   Anchor,
   Badge,
@@ -13,23 +13,32 @@ import {
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
+import {
+  AllianceName,
+  CharacterAnchor,
+  CharacterName,
+  CorporationName,
+} from "@jitaspace/eve-components";
 import { useCorporation } from "@jitaspace/hooks";
 import {
   AllianceAnchor,
   AllianceAvatar,
-  AllianceName,
-  CharacterAnchor,
   CharacterAvatar,
-  CharacterName,
   CorporationAnchor,
   CorporationAvatar,
-  CorporationName,
+  DateHoverCard,
   FormattedDateText,
 } from "@jitaspace/ui";
 
 interface CorporationCardProps {
   corporationId: string | number;
   headerRightSection?: ReactNode;
+  /**
+   * When set, render only the header and — if the corporation has a valid
+   * homepage URL — the homepage link. The members/tax/shares/founded/war
+   * metadata and the description are omitted. Used on the landing page.
+   */
+  compact?: boolean;
 }
 
 const stripHtml = (value?: string) => {
@@ -39,15 +48,39 @@ const stripHtml = (value?: string) => {
     .trim();
 };
 
+const isValidHttpUrl = (value?: string) => {
+  if (!value) return false;
+  try {
+    const { protocol } = new URL(value);
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 export const CorporationCard = memo(
-  ({ corporationId, headerRightSection }: CorporationCardProps) => {
+  ({
+    corporationId,
+    headerRightSection,
+    compact = false,
+  }: CorporationCardProps) => {
     const { data: corporation } = useCorporation(Number(corporationId));
     const corporationData = corporation?.data;
     const description = stripHtml(corporationData?.description);
+    const homepageUrl = isValidHttpUrl(corporationData?.url)
+      ? corporationData?.url
+      : undefined;
     const taxRate =
-      corporationData?.tax_rate != null
-        ? `${(corporationData.tax_rate * 100).toFixed(1)}%`
-        : null;
+      corporationData?.tax_rate == null
+        ? null
+        : `${(corporationData.tax_rate * 100).toFixed(1)}%`;
+
+    let warEligibleLabel = "N/A";
+    if (corporationData?.war_eligible === true) {
+      warEligibleLabel = "Yes";
+    } else if (corporationData?.war_eligible === false) {
+      warEligibleLabel = "No";
+    }
 
     return (
       <Card withBorder radius="md">
@@ -132,82 +165,84 @@ export const CorporationCard = memo(
           </Group>
         </Card.Section>
 
-        <Card.Section p="xs" withBorder>
-          <Stack gap={6}>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">
-                Members
-              </Text>
-              <Skeleton visible={!corporationData} width="auto">
-                <Text size="xs">
-                  {corporationData?.member_count?.toLocaleString() ?? "N/A"}
+        {!compact && (
+          <Card.Section p="xs" withBorder>
+            <Stack gap={6}>
+              <Group justify="space-between">
+                <Text size="xs" c="dimmed">
+                  Members
                 </Text>
-              </Skeleton>
-            </Group>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">
-                Tax rate
-              </Text>
-              <Skeleton visible={!corporationData} width="auto">
-                <Text size="xs">{taxRate ?? "N/A"}</Text>
-              </Skeleton>
-            </Group>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">
-                Shares
-              </Text>
-              <Skeleton visible={!corporationData} width="auto">
-                <Text size="xs">
-                  {corporationData?.shares?.toLocaleString() ?? "N/A"}
+                <Skeleton visible={!corporationData} width="auto">
+                  <Text size="xs">
+                    {typeof corporationData?.member_count === "number"
+                      ? corporationData.member_count.toLocaleString()
+                      : "N/A"}
+                  </Text>
+                </Skeleton>
+              </Group>
+              <Group justify="space-between">
+                <Text size="xs" c="dimmed">
+                  Tax rate
                 </Text>
-              </Skeleton>
-            </Group>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">
-                Founded
-              </Text>
-              <Skeleton visible={!corporationData} width="auto">
-                {corporationData?.date_founded ? (
-                  <FormattedDateText
-                    date={new Date(corporationData.date_founded)}
-                    size="xs"
-                  />
-                ) : (
-                  <Text size="xs">N/A</Text>
-                )}
-              </Skeleton>
-            </Group>
-            <Group justify="space-between">
-              <Text size="xs" c="dimmed">
-                War eligible
-              </Text>
-              <Skeleton visible={!corporationData} width="auto">
-                <Text size="xs">
-                  {corporationData?.war_eligible == null
-                    ? "N/A"
-                    : corporationData.war_eligible
-                      ? "Yes"
-                      : "No"}
+                <Skeleton visible={!corporationData} width="auto">
+                  <Text size="xs">{taxRate ?? "N/A"}</Text>
+                </Skeleton>
+              </Group>
+              <Group justify="space-between">
+                <Text size="xs" c="dimmed">
+                  Shares
                 </Text>
-              </Skeleton>
-            </Group>
-          </Stack>
-        </Card.Section>
+                <Skeleton visible={!corporationData} width="auto">
+                  <Text size="xs">
+                    {corporationData?.shares?.toLocaleString() ?? "N/A"}
+                  </Text>
+                </Skeleton>
+              </Group>
+              <Group justify="space-between">
+                <Text size="xs" c="dimmed">
+                  Founded
+                </Text>
+                <Skeleton visible={!corporationData} width="auto">
+                  {corporationData?.date_founded ? (
+                    <DateHoverCard
+                      date={new Date(corporationData.date_founded)}
+                    >
+                      <FormattedDateText
+                        date={new Date(corporationData.date_founded)}
+                        size="xs"
+                      />
+                    </DateHoverCard>
+                  ) : (
+                    <Text size="xs">N/A</Text>
+                  )}
+                </Skeleton>
+              </Group>
+              <Group justify="space-between">
+                <Text size="xs" c="dimmed">
+                  War eligible
+                </Text>
+                <Skeleton visible={!corporationData} width="auto">
+                  <Text size="xs">{warEligibleLabel}</Text>
+                </Skeleton>
+              </Group>
+            </Stack>
+          </Card.Section>
+        )}
 
-        {(description || corporationData?.url) && (
+        {((!compact && Boolean(description)) || Boolean(homepageUrl)) && (
           <Card.Section p="xs" withBorder>
             <Stack gap="xs">
-              {description && (
+              {!compact && description && (
                 <Text size="xs" c="dimmed" lineClamp={4}>
                   {description}
                 </Text>
               )}
-              {corporationData?.url && (
-                <Anchor href={corporationData.url} target="_blank" size="xs">
+              {homepageUrl && (
+                <Anchor href={homepageUrl} target="_blank" size="xs">
                   <Group gap={4} wrap="nowrap">
                     <IconExternalLink size={14} />
                     <Text size="xs" truncate>
-                      {corporationData.url}
+                      {homepageUrl}
                     </Text>
                   </Group>
                 </Anchor>

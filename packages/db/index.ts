@@ -2,20 +2,32 @@ import { PrismaPg } from "@prisma/adapter-pg";
 
 import { PrismaClient } from "./prisma/generated/client";
 
-const globalForPrisma = globalThis as { prisma?: PrismaClient };
+export interface CreatePrismaClientOptions {
+  /** PostgreSQL/CockroachDB connection string. */
+  connectionString: string;
+  /** Log every query (handy in development). Defaults to `false`. */
+  logQueries?: boolean;
+}
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
-
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
+/**
+ * Create a {@link PrismaClient}.
+ *
+ * This package intentionally reads no environment variables: callers (apps)
+ * inject the connection string and options from their own validated env. See
+ * `apps/web/lib/db.ts` and `packages/eve-scrape/db.ts` for the per-consumer
+ * singletons.
+ */
+export function createPrismaClient({
+  connectionString,
+  logQueries = false,
+}: CreatePrismaClientOptions) {
+  const adapter = new PrismaPg({ connectionString });
+  return new PrismaClient({
     adapter,
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["query", "info", "error", "warn"]
-        : ["error"],
+    log: logQueries ? ["query", "info", "error", "warn"] : ["error"],
   });
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export type Db = ReturnType<typeof createPrismaClient>;
 
 export * from "./prisma/generated/client";

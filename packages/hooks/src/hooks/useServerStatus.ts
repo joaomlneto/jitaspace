@@ -1,5 +1,3 @@
 "use client";
 
-import { useGetStatus } from "@jitaspace/esi-client";
-
-export const useServerStatus = useGetStatus;
+export { useGetStatus as useServerStatus } from "@jitaspace/esi-client";

@@ -1,10 +1,9 @@
 "use client";
 
+import type { SelectProps } from "@mantine/core";
 import { memo, useCallback } from "react";
-import { type SelectProps } from "@mantine/core";
-import {
-  putCharactersCharacterIdCalendarEventId,
-} from "@jitaspace/esi-client";
+
+import { putCharactersCharacterIdCalendarEventId } from "@jitaspace/esi-client";
 import { useAccessToken, useCalendarEvent } from "@jitaspace/hooks";
 import { CalendarEventAttendanceSelect as UICalendarEventAttendanceSelect } from "@jitaspace/ui";
 
@@ -20,11 +19,16 @@ export type CalendarEventAttendanceSelectProps = Omit<SelectProps, "data"> & {
 };
 
 export const CalendarEventAttendanceSelect = memo(
-  ({ characterId, eventId, ...otherProps }: CalendarEventAttendanceSelectProps) => {
-    const { data: event, isLoading, canRespondToEvents } = useCalendarEvent(
-      characterId,
-      eventId,
-    );
+  ({
+    characterId,
+    eventId,
+    ...otherProps
+  }: CalendarEventAttendanceSelectProps) => {
+    const {
+      data: event,
+      isLoading,
+      canRespondToEvents,
+    } = useCalendarEvent(characterId, eventId);
     const { authHeaders } = useAccessToken({
       characterId,
       scopes: ["esi-calendar.respond_calendar_events.v1"],
@@ -47,7 +51,10 @@ export const CalendarEventAttendanceSelect = memo(
       <UICalendarEventAttendanceSelect
         eventTitle={event?.data.title}
         initialResponse={
-          event?.data.response as CalendarEventAttendanceResponse | null | undefined
+          event?.data.response as
+            | CalendarEventAttendanceResponse
+            | null
+            | undefined
         }
         canRespond={canRespondToEvents}
         isLoading={isLoading}

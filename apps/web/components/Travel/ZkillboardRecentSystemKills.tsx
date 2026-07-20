@@ -3,10 +3,10 @@ import { Group, Loader, Spoiler, Stack, Text } from "@mantine/core";
 import { subHours } from "date-fns";
 import useSWR from "swr";
 
-import { EveEntityName, TimeAgoText } from "@jitaspace/ui";
+import { EveEntityName } from "@jitaspace/eve-components";
+import { TimeAgoText } from "@jitaspace/ui";
 
 import { KillmailButton } from "./KillmailButton";
-
 
 interface ZkillboardRecentSystemKillsProps {
   solarSystemId: number | string;
@@ -31,10 +31,18 @@ interface ZkillboardKill {
 
 export const ZkillboardRecentSystemKills = memo(
   ({ solarSystemId, pastSeconds = 3600 }: ZkillboardRecentSystemKillsProps) => {
-    const { data, error: _error, isLoading, isValidating } = useSWR<{
-      body: ZkillboardKill[] | undefined;
-      headers: Headers;
-    }>(
+    const {
+      data,
+      error: _error,
+      isLoading,
+      isValidating,
+    } = useSWR<
+      {
+        body: ZkillboardKill[] | undefined;
+        headers: Headers;
+      },
+      Error
+    >(
       `https://zkillboard.com/api/systemID/${solarSystemId}/pastSeconds/${pastSeconds}/`,
       (input: RequestInfo | URL, init?: RequestInit) =>
         fetch(input, init).then(async (res) => {
@@ -56,7 +64,7 @@ export const ZkillboardRecentSystemKills = memo(
 
     // retrieve the date of when result was generated
     const lastChecked = useMemo(() => {
-      const expiresHeader = data?.headers?.get("Expires");
+      const expiresHeader = data?.headers.get("Expires");
       if (expiresHeader == null) return null;
       const expires = new Date(expiresHeader);
       return subHours(expires, 1);
@@ -86,43 +94,41 @@ export const ZkillboardRecentSystemKills = memo(
       );
 
     return (
-      <>
-        <Stack gap="xs">
-          {lastChecked && (
-            <Text size="xs" c="dimmed">
-              Last checked <TimeAgoText span date={lastChecked} addSuffix />.
-              Updates hourly.
-            </Text>
-          )}
+      <Stack gap="xs">
+        {lastChecked && (
+          <Text size="xs" c="dimmed">
+            Last checked <TimeAgoText span date={lastChecked} addSuffix />.
+            Updates hourly.
+          </Text>
+        )}
+        {locations.map((location) => (
+          <Group key={location} gap="xs">
+            {(locationKills[location] ?? []).length}{" "}
+            <EveEntityName inherit entityId={location} />
+          </Group>
+        ))}
+        <Spoiler
+          maxHeight={0}
+          hideLabel="Collapse"
+          showLabel={`Show ${data.body.length} kills`}
+        >
           {locations.map((location) => (
-            <Group gap="xs">
-              {(locationKills[location] ?? []).length}{" "}
+            <>
               <EveEntityName inherit entityId={location} />
-            </Group>
+              {(data.body ?? [])
+                .filter((kill) => kill.zkb.locationID === location)
+                .map((kill) => (
+                  <Group key={kill.killmail_id}>
+                    <KillmailButton
+                      killmailId={kill.killmail_id}
+                      killmailHash={kill.zkb.hash}
+                    />
+                  </Group>
+                ))}
+            </>
           ))}
-          <Spoiler
-            maxHeight={0}
-            hideLabel="Collapse"
-            showLabel={`Show ${(data?.body ?? []).length} kills`}
-          >
-            {locations.map((location) => (
-              <>
-                <EveEntityName inherit entityId={location} />
-                {(data?.body ?? [])
-                  .filter((kill) => kill.zkb.locationID === location)
-                  .map((kill) => (
-                    <Group>
-                      <KillmailButton
-                        killmailId={kill.killmail_id}
-                        killmailHash={kill.zkb.hash}
-                      />
-                    </Group>
-                  ))}
-              </>
-            ))}
-          </Spoiler>
-        </Stack>
-      </>
+        </Spoiler>
+      </Stack>
     );
   },
 );

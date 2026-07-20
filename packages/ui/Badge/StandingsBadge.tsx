@@ -1,16 +1,8 @@
 "use client";
 
+import type { BadgeProps } from "@mantine/core";
 import { memo } from "react";
-import {
-  Badge,
-  Skeleton,
-  useMantineTheme,
-  type BadgeProps,
-} from "@mantine/core";
-
-
-
-
+import { Badge, Skeleton, useMantineTheme } from "@mantine/core";
 
 export type StandingsBadgeProps = BadgeProps & {
   standing?: number;
@@ -50,16 +42,18 @@ export const StandingsBadge = memo(
 
     const roundedSecStatus = (Math.round(standing * 10) / 10).toFixed(1);
 
-    const className =
-      standing > 5
-        ? classes.darkblue
-        : standing > 0
-          ? classes.lightblue
-          : standing == 0
-            ? classes.gray
-            : standing >= -5
-              ? classes.orange
-              : classes.red;
+    let className: (typeof classes)[keyof typeof classes];
+    if (standing > 5) {
+      className = classes.darkblue;
+    } else if (standing > 0) {
+      className = classes.lightblue;
+    } else if (standing == 0) {
+      className = classes.gray;
+    } else if (standing >= -5) {
+      className = classes.orange;
+    } else {
+      className = classes.red;
+    }
 
     return (
       <Badge style={className} {...otherProps}>

@@ -2,6 +2,7 @@ export * from "./AllianceTickerBadge";
 export * from "./CalendarEventResponseBadge";
 export * from "./CorporationTickerBadge";
 export * from "./MailLabelBadge";
+export * from "./securityStatus";
 export * from "./SolarSystemSecurityStatusBadge";
 export * from "./StandingsBadge";
 export * from "./WarAggressorTickerBadge";

@@ -15,6 +15,7 @@ import { AllianceTickerBadge } from "../../Badge/AllianceTickerBadge";
 import { CalendarEventResponseBadge } from "../../Badge/CalendarEventResponseBadge";
 import { CorporationTickerBadge } from "../../Badge/CorporationTickerBadge";
 import { MailLabelBadge } from "../../Badge/MailLabelBadge";
+import { securityStatusBand } from "../../Badge/securityStatus";
 import { SolarSystemSecurityStatusBadge } from "../../Badge/SolarSystemSecurityStatusBadge";
 import { StandingsBadge } from "../../Badge/StandingsBadge";
 import { WarAggressorTickerBadge } from "../../Badge/WarAggressorTickerBadge";
@@ -25,7 +26,10 @@ const renderWithMantine = (ui: ReactElement) =>
 
 describe("Ticker badges (Alliance / Corporation / WarAggressor / WarDefender)", () => {
   it.each<[string, (ticker?: string) => ReactElement]>([
-    ["AllianceTickerBadge", (ticker) => <AllianceTickerBadge ticker={ticker} />],
+    [
+      "AllianceTickerBadge",
+      (ticker) => <AllianceTickerBadge ticker={ticker} />,
+    ],
     [
       "CorporationTickerBadge",
       (ticker) => <CorporationTickerBadge ticker={ticker} />,
@@ -44,7 +48,10 @@ describe("Ticker badges (Alliance / Corporation / WarAggressor / WarDefender)", 
   });
 
   it.each<[string, (ticker?: string) => ReactElement]>([
-    ["AllianceTickerBadge", (ticker) => <AllianceTickerBadge ticker={ticker} />],
+    [
+      "AllianceTickerBadge",
+      (ticker) => <AllianceTickerBadge ticker={ticker} />,
+    ],
     [
       "CorporationTickerBadge",
       (ticker) => <CorporationTickerBadge ticker={ticker} />,
@@ -57,12 +64,15 @@ describe("Ticker badges (Alliance / Corporation / WarAggressor / WarDefender)", 
       "WarDefenderTickerBadge",
       (ticker) => <WarDefenderTickerBadge ticker={ticker} />,
     ],
-  ])("%s renders a skeleton placeholder when ticker is missing", (_label, make) => {
-    const { container } = renderWithMantine(make(undefined));
-    // Placeholder badge text used inside the skeleton.
-    expect(screen.getByText("XXXXX")).toBeInTheDocument();
-    expect(container.querySelector(".mantine-Skeleton-root")).toBeTruthy();
-  });
+  ])(
+    "%s renders a skeleton placeholder when ticker is missing",
+    (_label, make) => {
+      const { container } = renderWithMantine(make(undefined));
+      // Placeholder badge text used inside the skeleton.
+      expect(screen.getByText("XXXXX")).toBeInTheDocument();
+      expect(container.querySelector(".mantine-Skeleton-root")).toBeTruthy();
+    },
+  );
 });
 
 describe("CalendarEventResponseBadge", () => {
@@ -139,5 +149,18 @@ describe("StandingsBadge", () => {
     const { container } = renderWithMantine(<StandingsBadge />);
     expect(screen.getByText("xxx")).toBeInTheDocument();
     expect(container.querySelector(".mantine-Skeleton-root")).toBeTruthy();
+  });
+});
+
+describe("securityStatusBand", () => {
+  it.each<[number, string]>([
+    [1.0, "High-Sec"],
+    [0.5, "High-Sec"],
+    [0.4, "Low-Sec"],
+    [0.1, "Low-Sec"],
+    [0, "Null-Sec"],
+    [-0.5, "Null-Sec"],
+  ])("classifies %p as %s", (securityStatus, expected) => {
+    expect(securityStatusBand(securityStatus)).toBe(expected);
   });
 });

@@ -1,10 +1,10 @@
 "use client";
 
-import {
+import type {
   CharactersCharacterIdCalendarEventIdAttendeesGet,
   CharactersCharacterIdCalendarEventIdAttendeesGetEventResponseEnum,
-  useGetCharactersCharacterIdCalendarEventIdAttendees,
 } from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdCalendarEventIdAttendees } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 

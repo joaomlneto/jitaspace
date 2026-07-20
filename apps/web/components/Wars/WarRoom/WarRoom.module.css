@@ -1,0 +1,499 @@
+/* ============================================================================
+   Active Wars — a compact, data-first read of New Eden's wars.
+   Killboard vernacular: hairline rules, monospace figures, muted surfaces.
+   Two low-saturation accents ENCODE the two sides (aggressor warm, defender
+   cool); semantic state colours are separate. Works under any dark app theme.
+   ========================================================================== */
+
+.root {
+  --agg: #d1795c;
+  --agg-dim: rgba(209, 121, 92, 0.16);
+  --agg-line: rgba(209, 121, 92, 0.44);
+  --def: #5f9cba;
+  --def-dim: rgba(95, 156, 186, 0.16);
+  --def-line: rgba(95, 156, 186, 0.44);
+  --st-active: #6fa66f;
+  --st-starting: #c2a15a;
+  --st-ending: #9aa4b2;
+  --line: rgba(150, 172, 200, 0.13);
+  --line-2: rgba(150, 172, 200, 0.24);
+  --surface: rgba(15, 18, 24, 0.62);
+  --surface-2: rgba(23, 27, 34, 0.66);
+  --ink: #e3e7ec;
+  --ink-2: #98a1af;
+  --ink-3: #646d7b;
+}
+
+.mono {
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.dim {
+  color: var(--ink-3);
+}
+
+/* ---- Masthead ---- */
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  margin-bottom: var(--mantine-spacing-md);
+}
+.title {
+  font-size: clamp(1.3rem, 2.6vw, 1.7rem);
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.1;
+}
+.subtitle {
+  color: var(--ink-2);
+  font-size: 0.82rem;
+}
+
+/* ---- Stat header (flat, no animation) ---- */
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(rem(112px), 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--mantine-radius-sm);
+  overflow: hidden;
+}
+.statCell {
+  background: var(--surface);
+  padding: rem(11px) rem(14px);
+}
+.statValue {
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.statLabel {
+  display: flex;
+  align-items: center;
+  gap: rem(5px);
+  font-size: rem(10px);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: rem(3px);
+}
+
+/* ---- Sections ---- */
+.section {
+  margin-top: var(--mantine-spacing-xl);
+}
+.sectionHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: rem(6px) var(--mantine-spacing-md);
+  margin-bottom: var(--mantine-spacing-sm);
+}
+.sectionTitle {
+  font-size: rem(13px);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+.sectionSub {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: rem(11px);
+  color: var(--ink-3);
+  font-weight: 400;
+  margin-left: rem(8px);
+}
+
+/* ---- Shared: entity, balance bar, state ---- */
+.entity {
+  display: flex;
+  align-items: center;
+  gap: rem(8px);
+  min-width: 0;
+}
+.entity.right {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.entityName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.avatarRing {
+  border-radius: var(--mantine-radius-xs);
+  flex: 0 0 auto;
+}
+.avatarRing.agg {
+  box-shadow: 0 0 0 1px var(--agg-line);
+}
+.avatarRing.def {
+  box-shadow: 0 0 0 1px var(--def-line);
+}
+
+.bal {
+  position: relative;
+  height: rem(6px);
+  border-radius: 999px;
+  background: rgba(150, 172, 200, 0.09);
+  overflow: hidden;
+  display: flex;
+}
+.bal .a {
+  height: 100%;
+  background: var(--agg);
+}
+.bal .d {
+  height: 100%;
+  background: var(--def);
+  margin-left: auto;
+}
+.bal::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -1px;
+  bottom: -1px;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.22);
+}
+.bal.empty {
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(150, 172, 200, 0.08),
+    rgba(150, 172, 200, 0.08) 5px,
+    transparent 5px,
+    transparent 10px
+  );
+}
+.bal.empty::after {
+  display: none;
+}
+
+.figA {
+  color: var(--agg);
+}
+.figD {
+  color: var(--def);
+}
+.lead {
+  font-weight: 650;
+}
+.figDim {
+  color: var(--ink-3);
+}
+
+.state {
+  display: inline-flex;
+  align-items: center;
+  gap: rem(6px);
+  font-size: rem(11px);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.dot {
+  width: rem(7px);
+  height: rem(7px);
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+.dotActive {
+  background: var(--st-active);
+}
+.dotStarting {
+  background: var(--st-starting);
+}
+.dotEnding {
+  background: var(--st-ending);
+}
+
+/* ---- Belligerents leaderboards ---- */
+.blCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--mantine-spacing-lg);
+}
+@media (max-width: 48em) {
+  .blCols {
+    grid-template-columns: 1fr;
+  }
+}
+.blCard {
+  border: 1px solid var(--line);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--surface);
+  padding: rem(10px) rem(14px) rem(6px);
+}
+.blRow {
+  display: grid;
+  grid-template-columns: rem(16px) 1fr auto;
+  gap: rem(10px);
+  align-items: center;
+  padding: rem(8px) 0;
+  border-bottom: 1px solid var(--line);
+}
+.blRow:last-child {
+  border-bottom: 0;
+}
+.blRank {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: rem(11px);
+  color: var(--ink-3);
+  text-align: right;
+}
+.blMain {
+  min-width: 0;
+}
+.blTrack {
+  height: rem(4px);
+  border-radius: 999px;
+  background: rgba(150, 172, 200, 0.09);
+  margin-top: rem(5px);
+  overflow: hidden;
+}
+.blFill {
+  height: 100%;
+  border-radius: 999px;
+}
+.blFill.a {
+  background: var(--agg);
+}
+.blFill.d {
+  background: var(--def);
+}
+.blMatch {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+  font-size: rem(13px);
+}
+
+.blVal {
+  text-align: right;
+  white-space: nowrap;
+}
+.blValNum {
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: rem(14px);
+  font-weight: 650;
+  color: var(--ink);
+}
+.blValSub {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: rem(10px);
+  color: var(--ink-3);
+}
+.blNote {
+  font-size: rem(11px);
+  color: var(--ink-3);
+  padding: rem(8px) 0 rem(4px);
+}
+
+/* ---- Controls ---- */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  margin-bottom: var(--mantine-spacing-sm);
+}
+.controlsGroup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: rem(8px);
+}
+.resultCount {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: rem(11px);
+  color: var(--ink-3);
+}
+
+/* ---- War list: rows (fixtures) ---- */
+.listCard {
+  border: 1px solid var(--line);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+.warRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(rem(132px), rem(208px)) minmax(
+      0,
+      1fr
+    );
+  gap: var(--mantine-spacing-md);
+  align-items: center;
+  padding: rem(11px) rem(14px);
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+.warRow:last-child {
+  border-bottom: 0;
+}
+.warRow:hover {
+  background: rgba(150, 172, 200, 0.035);
+}
+.rowMid {
+  display: flex;
+  flex-direction: column;
+  gap: rem(5px);
+}
+.rowFigs {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+  font-size: rem(11px);
+}
+.rowMeta {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: rem(4px) rem(12px);
+  font-family: var(--mantine-font-family-monospace);
+  font-size: rem(10.5px);
+  color: var(--ink-3);
+  padding-top: rem(1px);
+}
+.rowMeta .sep {
+  color: var(--line-2);
+}
+@media (max-width: 40em) {
+  .warRow {
+    grid-template-columns: 1fr;
+    gap: rem(8px);
+  }
+  .entity.right {
+    flex-direction: row;
+    text-align: left;
+  }
+}
+
+/* ---- War list: table (ledger) ---- */
+.tableScroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--surface);
+}
+.ledger {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: rem(660px);
+  font-size: rem(12.5px);
+}
+.ledger th {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: rem(10px);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  text-align: left;
+  padding: rem(8px) rem(10px);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  background: var(--surface-2);
+}
+.ledger th.num {
+  text-align: right;
+}
+.sortBtn {
+  appearance: none;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: rem(2px);
+}
+.sortBtn:hover {
+  color: var(--ink-2);
+}
+.ledger th .car {
+  color: var(--def);
+  margin-left: rem(2px);
+}
+.ledger td {
+  padding: rem(7px) rem(10px);
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.ledger tr:last-child td {
+  border-bottom: 0;
+}
+.ledger tbody tr:hover td {
+  background: rgba(150, 172, 200, 0.04);
+}
+.ledger td.num {
+  text-align: right;
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+}
+.ledger .balCell {
+  width: rem(104px);
+  min-width: rem(84px);
+}
+.ledger .nameCell {
+  max-width: rem(190px);
+}
+
+/* ---- Load more ---- */
+.moreWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--mantine-spacing-md);
+}
+/* Empty-list message. NOT named `.empty` — that would collide with the balance
+   bar's `.bal.empty` modifier (both resolve to the same CSS-module class) and
+   apply this padding to the thin empty bar. */
+.emptyMessage {
+  padding: var(--mantine-spacing-xl);
+  text-align: center;
+  color: var(--ink-3);
+  font-size: rem(13px);
+}
+
+/* subtle view swap */
+.swap {
+  animation: warFade 0.16s ease;
+}
+@keyframes warFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swap {
+    animation: none;
+  }
+}

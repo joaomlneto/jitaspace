@@ -6,12 +6,17 @@ packages:
 overrides:
   "@types/react": 19.2.15
   "@types/react-dom": 19.2.3
+  "prosemirror-model": "1.25.7"
+  "prosemirror-state": "1.4.4"
+  "prosemirror-transform": "1.12.0"
+  "prosemirror-view": "1.41.8"
 nodeLinker: hoisted
 publicHoistPattern:
   - '*prisma*'
 strictPeerDependencies: false
 enablePrePostScripts: true
 allowBuilds:
+  '@depot/cli': false
   '@kubb/cli': true
   '@prisma/client': true
   '@prisma/engines': true
@@ -20,11 +25,11 @@ allowBuilds:
   '@swc/core': true
   '@vercel/speed-insights': true
   aws-sdk: true
+  core-js: false
   core-js-pure: true
   cypress: true
   es5-ext: true
   esbuild: true
-  inngest-cli: true
   lzma-native: true
   msgpackr-extract: true
   prisma: true

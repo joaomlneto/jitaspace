@@ -1,34 +1,25 @@
+import type { PopoverProps } from "@mantine/core";
 import type React from "react";
 import { forwardRef } from "react";
-import {
-  Button,
-  Popover,
-  useMantineTheme,
-  useProps
-  
-} from "@mantine/core";
-import type {PopoverProps} from "@mantine/core";
+import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
+import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { SystemsIcon } from "@jitaspace/eve-icons";
-import { EsiSearchSelect } from "@jitaspace/ui";
 
-import {
-  ControlBase
-  
-} from "~/components/EveMail/Editor/ControlBase";
-import type {RichTextEditorControlBaseProps} from "~/components/EveMail/Editor/ControlBase";
+import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
+import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
 import classes from "./LinkControl.module.css";
 
-
-export interface RichTextEditorLinkControlProps
-  extends Partial<RichTextEditorControlBaseProps> {
+export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorControlBaseProps> {
   /** Props added to Popover component */
   popoverProps?: Partial<PopoverProps>;
 }
 
-const SolarSystemLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
+const SolarSystemLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
+  size,
+}) => (
   <div style={{ position: "relative", width: size, height: size }}>
     <SystemsIcon fill alt="" />
   </div>
@@ -49,8 +40,8 @@ export const SolarSystemLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setSolarSystemId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setSolarSystemId(href);
   };
 
   const handleClose = () => {
@@ -60,16 +51,18 @@ export const SolarSystemLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    SolarSystemId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:5//${SolarSystemId}`,
-          })
-          .run();
+    if (SolarSystemId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:5//${SolarSystemId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -94,7 +87,7 @@ export const SolarSystemLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || SolarSystemLinkIcon}
+          icon={icon ?? SolarSystemLinkIcon}
           aria-label="Link Solar System"
           title="Link Solar System"
           onClick={handleOpen}

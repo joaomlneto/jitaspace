@@ -1,0 +1,112 @@
+import pLimit from "p-limit";
+
+import { getUniverseBloodlines } from "@jitaspace/esi-client";
+
+import { defineJob } from "../../../core";
+import { prisma } from "../../../db";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
+import { excludeObjectKeys, updateTable } from "../../../utils";
+
+export interface ScrapeBloodlinesEventPayload {
+  data: Record<string, never>;
+}
+
+export const scrapeEsiBloodlines = defineJob<
+  ScrapeBloodlinesEventPayload["data"]
+>({
+  id: "scrape-esi-bloodlines",
+  name: "Scrape Bloodlines",
+  trigger: { type: "event" },
+  concurrencyLimit: 1,
+  handler: async (ctx) => {
+    const stepStartTime = performance.now();
+
+    const limit = pLimit(20);
+
+    // Get all Bloodlines in ESI
+    const bloodlines = await getUniverseBloodlines().then((res) => res.data);
+    const bloodlineIds = bloodlines.map((bloodline) => bloodline.bloodline_id);
+
+    await createCorpAndItsRefRecords({
+      missingBloodlineIds: new Set(bloodlineIds),
+    });
+
+    const bloodlineChanges = await updateTable({
+      fetchLocalEntries: async () =>
+        prisma.bloodline
+          .findMany({
+            where: {
+              bloodlineId: {
+                in: bloodlineIds,
+              },
+            },
+          })
+          .then((entries) =>
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
+          ),
+      fetchRemoteEntries: () =>
+        Promise.resolve(
+          bloodlines.map((bloodline) => ({
+            bloodlineId: bloodline.bloodline_id,
+            corporationId: bloodline.corporation_id,
+            name: bloodline.name,
+            description: bloodline.description,
+            shipTypeId: bloodline.ship_type_id,
+            raceId: bloodline.race_id,
+            charisma: bloodline.charisma,
+            intelligence: bloodline.intelligence,
+            memory: bloodline.memory,
+            perception: bloodline.perception,
+            willpower: bloodline.willpower,
+            isDeleted: false,
+          })),
+        ),
+
+      batchCreate: (entries) =>
+        limit(() =>
+          prisma.bloodline.createMany({
+            data: entries,
+          }),
+        ),
+      batchDelete: (entries) =>
+        prisma.bloodline.updateMany({
+          data: {
+            isDeleted: true,
+          },
+          where: {
+            bloodlineId: {
+              in: entries.map((entry) => entry.bloodlineId),
+            },
+          },
+        }),
+      batchUpdate: (entries) =>
+        Promise.all(
+          entries.map((entry) =>
+            limit(async () =>
+              prisma.bloodline.update({
+                data: entry,
+                where: { bloodlineId: entry.bloodlineId },
+              }),
+            ),
+          ),
+        ),
+      idAccessor: (e) => e.bloodlineId,
+    });
+
+    // Fire-and-forget: scrape the linked corporations.
+    await ctx.send("scrape-esi-corporations", {
+      corporationIds: [
+        ...new Set(bloodlines.map((bloodline) => bloodline.corporation_id)),
+      ],
+    });
+
+    return {
+      stats: {
+        bloodlineChanges,
+      },
+      elapsed: performance.now() - stepStartTime,
+    };
+  },
+});

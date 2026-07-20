@@ -7,6 +7,8 @@ export const PREFERENCES_STORAGE_KEY = "jitaspace.preferences";
 
 export const DEFAULT_ESI_ACCEPT_LANGUAGE = "en";
 export const DEFAULT_APP_THEME = "default";
+export const DEFAULT_EXPERIMENTAL_DATA_TABLES = false;
+export const DEFAULT_EXPERIMENTAL_ACTIVE_WARS = false;
 
 export const ESI_ACCEPT_LANGUAGE_OPTIONS = [
   { languageCode: "en", label: "English", countryCode: "GB" },
@@ -22,22 +24,28 @@ export const ESI_ACCEPT_LANGUAGE_OPTIONS = [
 export const APP_THEME_OPTIONS = [
   { value: "default", label: "Default" },
   { value: "eve", label: "EVE" },
+  { value: "eve_v2", label: "EVE v2" },
   { value: "amarr", label: "Amarr" },
   { value: "caldari", label: "Caldari" },
   { value: "gallente", label: "Gallente" },
   { value: "minmatar", label: "Minmatar" },
+  { value: "whpd", label: "WHPD" },
 ] as const;
 
 export type EsiAcceptLanguage =
   (typeof ESI_ACCEPT_LANGUAGE_OPTIONS)[number]["languageCode"];
 export type AppTheme = (typeof APP_THEME_OPTIONS)[number]["value"];
 
-type PreferencesState = {
+interface PreferencesState {
   esiAcceptLanguage: EsiAcceptLanguage;
   appTheme: AppTheme;
+  experimentalDataTables: boolean;
+  experimentalActiveWars: boolean;
   setEsiAcceptLanguage: (value: EsiAcceptLanguage) => void;
   setAppTheme: (value: AppTheme) => void;
-};
+  setExperimentalDataTables: (value: boolean) => void;
+  setExperimentalActiveWars: (value: boolean) => void;
+}
 
 export const sanitizeAppTheme = (
   value: string | null | undefined,
@@ -74,8 +82,14 @@ export const usePreferencesStore = create<PreferencesState>()(
     (set) => ({
       esiAcceptLanguage: DEFAULT_ESI_ACCEPT_LANGUAGE,
       appTheme: DEFAULT_APP_THEME,
+      experimentalDataTables: DEFAULT_EXPERIMENTAL_DATA_TABLES,
+      experimentalActiveWars: DEFAULT_EXPERIMENTAL_ACTIVE_WARS,
       setEsiAcceptLanguage: (value) => set({ esiAcceptLanguage: value }),
       setAppTheme: (value) => set({ appTheme: value }),
+      setExperimentalDataTables: (value) =>
+        set({ experimentalDataTables: value }),
+      setExperimentalActiveWars: (value) =>
+        set({ experimentalActiveWars: value }),
     }),
     {
       name: PREFERENCES_STORAGE_KEY,
@@ -89,6 +103,14 @@ export const usePreferencesStore = create<PreferencesState>()(
             sanitizeEsiAcceptLanguage(persisted.esiAcceptLanguage) ??
             DEFAULT_ESI_ACCEPT_LANGUAGE,
           appTheme: sanitizeAppTheme(persisted.appTheme) ?? DEFAULT_APP_THEME,
+          experimentalDataTables:
+            typeof persisted.experimentalDataTables === "boolean"
+              ? persisted.experimentalDataTables
+              : DEFAULT_EXPERIMENTAL_DATA_TABLES,
+          experimentalActiveWars:
+            typeof persisted.experimentalActiveWars === "boolean"
+              ? persisted.experimentalActiveWars
+              : DEFAULT_EXPERIMENTAL_ACTIVE_WARS,
         };
       },
     },

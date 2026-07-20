@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Sparkline } from "@mantine/charts";
+import dynamic from "next/dynamic";
 import {
   Alert,
   Badge,
@@ -29,6 +29,11 @@ import {
 } from "@jitaspace/esi-client";
 import { useAuthStore } from "@jitaspace/hooks";
 import { CharacterAvatar } from "@jitaspace/ui";
+
+const Sparkline = dynamic(
+  () => import("@mantine/charts").then((m) => m.Sparkline),
+  { ssr: false },
+);
 
 const formatWindow = (windowSeconds: number) => {
   if (windowSeconds <= 0) return "-";
@@ -76,7 +81,7 @@ const getCharacterIdFromRateLimitUserId = (userId: string): number | null => {
   }
 
   const userIdSegments = userId.split(":");
-  const maybeCharacterId = userIdSegments[userIdSegments.length - 1];
+  const maybeCharacterId = userIdSegments.at(-1);
 
   if (!maybeCharacterId || !/^\d+$/.test(maybeCharacterId)) {
     return null;
@@ -101,8 +106,8 @@ export function EsiRateLimitDashboard() {
   }, [characters]);
 
   useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(interval);
+    const interval = globalThis.setInterval(() => setNow(Date.now()), 1000);
+    return () => globalThis.clearInterval(interval);
   }, []);
 
   const buildDate = useMemo(() => getRateLimitBuildDate(), []);
@@ -125,7 +130,7 @@ export function EsiRateLimitDashboard() {
       const remaining = Math.max(0, state.remaining);
       const windowSeconds = state.windowSeconds;
       const consumedTokens = state.consumedTokens;
-      const requestHistory = state.requestHistory ?? [];
+      const requestHistory = state.requestHistory;
       const usedTokensInWindow = requestHistory.reduce(
         (total, requestEntry) => total + requestEntry.tokenCost,
         0,
@@ -156,7 +161,7 @@ export function EsiRateLimitDashboard() {
       const isAnonymousUser = isAnonymousRateLimitUser(state.userId);
       const characterId = getCharacterIdFromRateLimitUserId(state.userId);
       const characterName =
-        characterId != null ? characterNamesById[characterId] : undefined;
+        characterId == null ? undefined : characterNamesById[characterId];
 
       const nextResetAt =
         consumedTokens.length > 0 && windowSeconds > 0
@@ -269,7 +274,7 @@ export function EsiRateLimitDashboard() {
       )
       .reduce<number | null>((nearest, value) => {
         if (nearest === null) return value;
-        return value < nearest ? value : nearest;
+        return Math.min(value, nearest);
       }, null);
 
     return {

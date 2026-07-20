@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -12,9 +12,13 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
-  AllianceAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
-  CorporationAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
+  DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
+  AllianceAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
+  CorporationAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
   AllianceAvatar: ({ allianceId }: { allianceId: number }) => (
     <span>{`Alliance Avatar ${allianceId}`}</span>
   ),
@@ -26,6 +30,16 @@ jest.mock("@jitaspace/ui", () => ({
   }: {
     corporationId: number | string;
   }) => <span>{`Corporation Avatar ${corporationId}`}</span>,
+  FormattedDateText: ({ date }: { date: Date }) => (
+    <span>{`Date ${date.toISOString()}`}</span>
+  ),
+}));
+
+// Components that moved to @jitaspace/eve-components are stubbed there.
+jest.mock("@jitaspace/eve-components", () => ({
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
   AllianceName: ({ allianceId }: { allianceId: number }) => (
     <span>{`Alliance ${allianceId}`}</span>
   ),
@@ -35,16 +49,17 @@ jest.mock("@jitaspace/ui", () => ({
   CorporationName: ({ corporationId }: { corporationId: number | string }) => (
     <span>{`Corporation ${corporationId}`}</span>
   ),
-  FormattedDateText: ({ date }: { date: Date }) => (
-    <span>{`Date ${date.toISOString()}`}</span>
-  ),
 }));
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ href, children }: { href?: string | object; children?: ReactNode }) => (
-    <a href={typeof href === "string" ? href : ""}>{children}</a>
-  ),
+  default: ({
+    href,
+    children,
+  }: {
+    href?: string | object;
+    children?: ReactNode;
+  }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
 describe("CorporationCard", () => {
@@ -162,5 +177,72 @@ describe("CorporationCard", () => {
     );
 
     expect(screen.getByRole("button", { name: "Menu" })).toBeInTheDocument();
+  });
+
+  it("in compact mode renders only the header and a valid homepage link", () => {
+    mockUseCorporation.mockReturnValue({
+      data: {
+        data: {
+          ceo_id: 91541581,
+          description: '<font size="16"><b>EVE University</b></font>',
+          member_count: 5716,
+          shares: 1000,
+          tax_rate: 0,
+          ticker: "E-UNI",
+          url: "https://www.eveuniversity.org",
+          war_eligible: false,
+        },
+      },
+    });
+
+    const {
+      CorporationCard,
+    } = require("../components/Card/CorporationCard/CorporationCard");
+    render(
+      <MantineProvider>
+        <CorporationCard corporationId={98553333} compact />
+      </MantineProvider>,
+    );
+
+    // Header is still rendered.
+    expect(screen.getByText("Corporation 98553333")).toBeInTheDocument();
+    expect(screen.getByText("E-UNI")).toBeInTheDocument();
+    expect(screen.getByText("CEO:")).toBeInTheDocument();
+
+    // The metadata block and description are hidden in compact mode.
+    expect(screen.queryByText("Members")).not.toBeInTheDocument();
+    expect(screen.queryByText("Tax rate")).not.toBeInTheDocument();
+    expect(screen.queryByText("Shares")).not.toBeInTheDocument();
+    expect(screen.queryByText("War eligible")).not.toBeInTheDocument();
+    expect(screen.queryByText(/EVE University/)).not.toBeInTheDocument();
+
+    // The homepage link survives because the URL is valid.
+    expect(
+      screen.getByRole("link", { name: "https://www.eveuniversity.org" }),
+    ).toHaveAttribute("href", "https://www.eveuniversity.org");
+  });
+
+  it("in compact mode hides the homepage link when the url is not valid", () => {
+    mockUseCorporation.mockReturnValue({
+      data: {
+        data: {
+          ticker: "E-UNI",
+          url: "none",
+        },
+      },
+    });
+
+    const {
+      CorporationCard,
+    } = require("../components/Card/CorporationCard/CorporationCard");
+    render(
+      <MantineProvider>
+        <CorporationCard corporationId={98553333} compact />
+      </MantineProvider>,
+    );
+
+    // Header still renders, but the invalid homepage URL is not shown.
+    expect(screen.getByText("E-UNI")).toBeInTheDocument();
+    expect(screen.queryByText("none")).not.toBeInTheDocument();
   });
 });

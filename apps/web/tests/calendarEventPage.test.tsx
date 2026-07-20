@@ -1,8 +1,8 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { Suspense } from "react";
 import type { ReactNode } from "react";
+import { Suspense } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen, waitFor } from "@testing-library/react";
 
@@ -29,20 +29,25 @@ jest.mock("@jitaspace/eve-icons", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
-    <a href="#">{children}</a>
-  ),
+  DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
   CharacterAvatar: ({ characterId }: { characterId: number }) => (
     <span>{`Avatar ${characterId}`}</span>
+  ),
+  FormattedDateText: ({ date }: { date?: Date }) => (
+    <span>{date ? `Date ${date.toISOString()}` : "No date"}</span>
+  ),
+}));
+
+// Components that moved to @jitaspace/eve-components are stubbed there.
+jest.mock("@jitaspace/eve-components", () => ({
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
   ),
   CharacterName: ({ characterId }: { characterId: number }) => (
     <span>{`Name ${characterId}`}</span>
   ),
   EveEntityNameAnchor: ({ entityId }: { entityId?: number }) => (
     <a href="#">{`Entity ${entityId ?? "none"}`}</a>
-  ),
-  FormattedDateText: ({ date }: { date?: Date }) => (
-    <span>{date ? `Date ${date.toISOString()}` : "No date"}</span>
   ),
 }));
 

@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  GetUniversePlanetsPlanetIdQueryResponse,
-  useGetUniversePlanetsPlanetId,
-} from "@jitaspace/esi-client";
+import type { GetUniversePlanetsPlanetIdQueryResponse } from "@jitaspace/esi-client";
 
 export type Planet = GetUniversePlanetsPlanetIdQueryResponse;
 
-export const usePlanet = useGetUniversePlanetsPlanetId;
+export { useGetUniversePlanetsPlanetId as usePlanet } from "@jitaspace/esi-client";

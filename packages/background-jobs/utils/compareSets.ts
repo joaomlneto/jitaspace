@@ -1,0 +1,117 @@
+import { NonRetriableError } from "../core/errors";
+import { env } from "../env";
+
+export const compareSets = <T extends object>({
+  recordsBefore,
+  recordsAfter,
+  getId,
+  recordsAreEqual,
+}: {
+  recordsBefore: T[];
+  recordsAfter: T[];
+  getId: (t: T) => string | number;
+  recordsAreEqual: (a: T, b: T) => boolean;
+}) => {
+  const keysBefore = recordsBefore.map((record) => getId(record));
+  const keysAfter = recordsAfter.map((record) => getId(record));
+
+  const indexBefore: Record<string | number | symbol, T> = {};
+  recordsBefore.forEach((record) => (indexBefore[getId(record)] = record));
+
+  const indexAfter: Record<string | number | symbol, T> = {};
+  recordsAfter.forEach((record) => (indexAfter[getId(record)] = record));
+
+  // determine which records were created
+  const created: T[] = recordsAfter.filter(
+    (record) => !keysBefore.includes(getId(record)),
+  );
+
+  // determine which records were deleted
+  const deleted = recordsBefore.filter(
+    (record) => !keysAfter.includes(getId(record)),
+  );
+
+  // validate that object keys are the same
+  if (env.NODE_ENV === "development") {
+    const objKeysBefore = [
+      ...new Set(recordsBefore.flatMap((record) => Object.keys(record))),
+    ].filter(
+      (key) =>
+        key !== "updatedAt" && key !== "createdAt" && key !== "isDeleted",
+    );
+    const objKeysAfter = [
+      ...new Set(recordsAfter.flatMap((record) => Object.keys(record))),
+    ].filter(
+      (key) =>
+        key !== "updatedAt" && key !== "createdAt" && key !== "isDeleted",
+    );
+    objKeysBefore.sort((a, b) => a.localeCompare(b));
+    objKeysAfter.sort((a, b) => a.localeCompare(b));
+    if (!objKeysBefore.every((_, i) => objKeysBefore[i] == objKeysAfter[i])) {
+      console.log({
+        objKeysBefore,
+        objKeysAfter,
+        test: new Set(recordsAfter.flatMap((record) => Object.keys(record))),
+      });
+      throw new Error("KEY SETS DO NOT MATCH");
+    }
+  }
+
+  // get the records that are common to both sets
+  const commonKeys = new Set(
+    keysAfter.filter((key) => keysBefore.includes(key)),
+  );
+  const commonRecords = recordsAfter.filter((record) =>
+    commonKeys.has(getId(record)),
+  );
+
+  // determine which records did not change
+  const equal = commonRecords.filter((record) => {
+    const before = indexBefore[getId(record)];
+    // `commonRecords` only contains keys present in both sets, so `before` is
+    // always defined here; guard anyway to satisfy the type checker.
+    return before !== undefined && recordsAreEqual(before, record);
+  });
+  const equalKeys = new Set(equal.map((record) => getId(record)));
+
+  // determine which records have been modified
+  const modified = commonRecords.filter(
+    (record) => !equalKeys.has(getId(record)),
+  );
+
+  /*
+    modified.map((record) => {
+      const before = indexBefore[getId(record)];
+      const after = indexAfter[getId(record)];
+      console.log({ before, after });
+    });*/
+
+  // sanity check
+  const numInputs = new Set([
+    ...keysBefore.map((x) => x.toString()),
+    ...keysAfter.map((x) => x.toString()),
+  ]).size;
+  const numOutputs =
+    created.length + deleted.length + equal.length + modified.length;
+  if (numOutputs !== numInputs) {
+    console.log({
+      created,
+      deleted,
+      equal,
+      modified,
+      keysUnion: [
+        ...new Set([
+          ...keysBefore.map((x) => x.toString()),
+          ...keysAfter.map((x) => x.toString()),
+        ]),
+      ],
+      numInputs,
+      numOutputs,
+    });
+    throw new NonRetriableError(
+      "compareSets: input and output length do not match",
+    );
+  }
+
+  return { created, deleted, equal, modified };
+};

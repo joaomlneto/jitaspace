@@ -24,6 +24,34 @@ const STRUCTURE_TYPE_IDS = new Set([
   49600, 49601, 71116, 71117, 71118, 71119, 78260, 79172, 81826,
 ]);
 
+// Resolves a parsed `showinfo:` target (already split on "//") to an internal
+// route, or undefined when no rule matches (caller then falls through).
+const resolveShowInfoHref = (targetType: string[]): string | undefined => {
+  if (targetType.length === 1) {
+    return `/type/${targetType[0]}`;
+  }
+  if (targetType[0] === "2") return `/corporation/${targetType[1]}`;
+
+  if (targetType[0] === "3") return `/region/${targetType[1]}`;
+
+  if (targetType[0] === "4") return `/constellation/${targetType[1]}`;
+
+  if (targetType[0] === "5") return `/system/${targetType[1]}`;
+
+  if (targetType[0] === "16159") return `/alliance/${targetType[1]}`;
+
+  if (CHARACTER_TYPE_IDS.has(Number.parseInt(targetType[0] ?? "", 10)))
+    return `/character/${targetType[1]}`;
+
+  if (STATION_TYPE_IDS.has(Number.parseInt(targetType[0] ?? "", 10)))
+    return `/station/${targetType[1]}`;
+
+  if (STRUCTURE_TYPE_IDS.has(Number.parseInt(targetType[0] ?? "", 10)))
+    return `/structure/${targetType[1]}`;
+
+  return undefined;
+};
+
 // FIXME: These should be configurable
 export const renderEveHref = (href: string) => {
   const INVENTORY_INFO_PREFIX = "showinfo:";
@@ -33,28 +61,10 @@ export const renderEveHref = (href: string) => {
   const CONTRACT_PREFIX = "contract:";
 
   if (href.startsWith(INVENTORY_INFO_PREFIX)) {
-    const targetType = href.slice(INVENTORY_INFO_PREFIX.length).split("//");
-    if (targetType.length === 1) {
-      return `/type/${targetType[0]}`;
-    }
-    if (targetType[0] === "2") return `/corporation/${targetType[1]}`;
-
-    if (targetType[0] === "3") return `/region/${targetType[1]}`;
-
-    if (targetType[0] === "4") return `/constellation/${targetType[1]}`;
-
-    if (targetType[0] === "5") return `/system/${targetType[1]}`;
-
-    if (targetType[0] === "16159") return `/alliance/${targetType[1]}`;
-
-    if (CHARACTER_TYPE_IDS.has(parseInt(targetType[0] ?? "", 10)))
-      return `/character/${targetType[1]}`;
-
-    if (STATION_TYPE_IDS.has(parseInt(targetType[0] ?? "", 10)))
-      return `/station/${targetType[1]}`;
-
-    if (STRUCTURE_TYPE_IDS.has(parseInt(targetType[0] ?? "", 10)))
-      return `/structure/${targetType[1]}`;
+    const resolved = resolveShowInfoHref(
+      href.slice(INVENTORY_INFO_PREFIX.length).split("//"),
+    );
+    if (resolved !== undefined) return resolved;
   }
 
   if (href.startsWith(WAR_REPORT_PREFIX)) {
@@ -82,20 +92,31 @@ export const renderEveHref = (href: string) => {
   return href;
 };
 
+// TipTap 3 uses linkifyjs v4, whose registerCustomProtocol() rejects any scheme
+// that is not all-lowercase (RFC 3986). EVE's schemes are camelCase
+// (warReport:, joinChannel:, …), so the names registered here MUST be lowercase
+// or the editor throws at construction.
+//
+// This only affects scheme *registration*. linkifyjs's isAllowedUri() matches
+// schemes case-insensitively, so a camelCase href in mail content
+// (<a href="warReport:42">) is still recognised and preserved verbatim by
+// TipTap. That is why renderEveHref above and the click handlers in
+// MailMessageViewer match the original camelCase scheme names: the hrefs flowing
+// through the editor are never lowercased.
 export const EveLink = Link.configure({
   protocols: [
     "showinfo",
-    "warReport",
-    "killReport",
-    "recruitmentAd",
+    "warreport",
+    "killreport",
+    "recruitmentad",
     "contract",
-    "joinChannel",
-    "helpPointer",
-    "shipSkinListing",
+    "joinchannel",
+    "helppointer",
+    "shipskinlisting",
     "fitting",
     "localsvc",
     "opportunity",
-    "careerProgramNode",
+    "careerprogramnode",
     "fleet",
   ],
 });

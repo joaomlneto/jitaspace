@@ -1,23 +1,21 @@
 "use client";
 
+import type { MRT_ColumnDef } from "mantine-react-table";
 import { useMemo } from "react";
 import { Group, Text } from "@mantine/core";
-import type {
-  MRT_ColumnDef} from "mantine-react-table";
-import {
-  MantineReactTable,
-  useMantineReactTable,
-} from "mantine-react-table";
+import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import {
   CharacterAnchor,
-  CharacterAvatar,
   CharacterName,
-  CorporationAnchor,
-  CorporationAvatar,
   CorporationName,
   StationAnchor,
   StationName,
+} from "@jitaspace/eve-components";
+import {
+  CharacterAvatar,
+  CorporationAnchor,
+  CorporationAvatar,
 } from "@jitaspace/ui";
 
 import { StationAvatar } from "~/components/Avatar";
@@ -53,7 +51,8 @@ export const AgentsTable = ({
     const index: Record<string, string> = {};
     agentDivisions.forEach(
       (division) =>
-        (index[division.npcCorporationDivisionId] = division.name ?? "Unknown"),
+        (index[division.npcCorporationDivisionId] =
+          typeof division.name === "string" ? division.name : "Unknown"),
     );
     return index;
   }, [agentTypes]);

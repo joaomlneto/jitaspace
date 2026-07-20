@@ -5,6 +5,9 @@ import { MantineProvider } from "@mantine/core";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
+import type * as CalendarEventAttendanceSelectModule from "../../Select/CalendarEventAttendanceSelect";
+import type * as MailLabelColorSelectModule from "../../Select/MailLabelColorSelect";
+
 // Capture the confirm-modal config so we can drive onConfirm manually.
 const mockOpenConfirmModal = jest.fn();
 jest.mock("@mantine/modals", () => ({
@@ -17,12 +20,10 @@ jest.mock("@jitaspace/utils", () => ({
   getRandomArrayEntry: (...args: unknown[]) => mockGetRandomArrayEntry(...args),
 }));
 
-const {
-  CalendarEventAttendanceSelect,
-} = require("../../Select/CalendarEventAttendanceSelect") as typeof import("../../Select/CalendarEventAttendanceSelect");
-const {
-  MailLabelColorSelect,
-} = require("../../Select/MailLabelColorSelect") as typeof import("../../Select/MailLabelColorSelect");
+const { CalendarEventAttendanceSelect } =
+  require("../../Select/CalendarEventAttendanceSelect") as typeof CalendarEventAttendanceSelectModule;
+const { MailLabelColorSelect } =
+  require("../../Select/MailLabelColorSelect") as typeof MailLabelColorSelectModule;
 
 const renderWithMantine = (ui: React.ReactElement) =>
   render(<MantineProvider>{ui}</MantineProvider>);
@@ -37,14 +38,12 @@ describe("CalendarEventAttendanceSelect", () => {
 
   it("renders the 'Not responded' placeholder by default", () => {
     renderWithMantine(<CalendarEventAttendanceSelect canRespond />);
-    expect(
-      screen.getByPlaceholderText("Not responded"),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Not responded")).toBeInTheDocument();
   });
 
   it("renders the formatted response options in the dropdown", async () => {
     renderWithMantine(<CalendarEventAttendanceSelect canRespond />);
-    await userEvent.click(screen.getByRole("textbox"));
+    await userEvent.click(screen.getByRole("combobox"));
     // Underscored values are humanised: not_responded -> "Not responded"
     expect(
       screen.getByRole("option", { name: "Accepted", hidden: true }),
@@ -61,14 +60,14 @@ describe("CalendarEventAttendanceSelect", () => {
     renderWithMantine(
       <CalendarEventAttendanceSelect canRespond initialResponse="accepted" />,
     );
-    expect(screen.getByRole("textbox")).toHaveValue("Accepted");
+    expect(screen.getByRole("combobox")).toHaveValue("Accepted");
   });
 
   it("opens a confirmation modal when a new response is selected", async () => {
     renderWithMantine(
       <CalendarEventAttendanceSelect canRespond eventTitle="Fleet Op" />,
     );
-    await userEvent.click(screen.getByRole("textbox"));
+    await userEvent.click(screen.getByRole("combobox"));
     await userEvent.click(
       screen.getByRole("option", { name: "Accepted", hidden: true }),
     );
@@ -88,7 +87,7 @@ describe("CalendarEventAttendanceSelect", () => {
     renderWithMantine(
       <CalendarEventAttendanceSelect canRespond onRespond={onRespond} />,
     );
-    await userEvent.click(screen.getByRole("textbox"));
+    await userEvent.click(screen.getByRole("combobox"));
     await userEvent.click(
       screen.getByRole("option", { name: "Declined", hidden: true }),
     );
@@ -107,7 +106,7 @@ describe("CalendarEventAttendanceSelect", () => {
 
   it("reflects the confirmed response in the input value", async () => {
     renderWithMantine(<CalendarEventAttendanceSelect canRespond />);
-    await userEvent.click(screen.getByRole("textbox"));
+    await userEvent.click(screen.getByRole("combobox"));
     await userEvent.click(
       screen.getByRole("option", { name: "Tentative", hidden: true }),
     );
@@ -121,12 +120,12 @@ describe("CalendarEventAttendanceSelect", () => {
       config.onConfirm();
     });
 
-    expect(screen.getByRole("textbox")).toHaveValue("Tentative");
+    expect(screen.getByRole("combobox")).toHaveValue("Tentative");
   });
 
   it("does not open a confirmation modal when responses are read-only", async () => {
     renderWithMantine(<CalendarEventAttendanceSelect canRespond={false} />);
-    const input = screen.getByRole("textbox");
+    const input = screen.getByRole("combobox");
     // A read-only Select does not open its dropdown
     await userEvent.click(input);
     expect(input).toHaveAttribute("readonly");
@@ -147,7 +146,7 @@ describe("CalendarEventAttendanceSelect", () => {
     renderWithMantine(
       <CalendarEventAttendanceSelect canRespond onChange={callerOnChange} />,
     );
-    await userEvent.click(screen.getByRole("textbox"));
+    await userEvent.click(screen.getByRole("combobox"));
     await userEvent.click(
       screen.getByRole("option", { name: "Accepted", hidden: true }),
     );

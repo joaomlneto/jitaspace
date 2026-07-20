@@ -9,7 +9,13 @@ import {
   Title,
 } from "@mantine/core";
 
-import { prisma } from "@jitaspace/db";
+export const metadata = {
+  title: "Item Categories",
+  description:
+    "Browse all EVE Online item categories — ships, modules, ammunition, structures, and more.",
+};
+
+import { prisma } from "~/lib/db";
 import { ItemsIcon } from "@jitaspace/eve-icons";
 import { CategoryAnchor } from "@jitaspace/ui";
 

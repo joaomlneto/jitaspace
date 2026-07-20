@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -9,8 +9,7 @@ import { render, screen } from "@testing-library/react";
 // Shared hook mocks
 // ---------------------------------------------------------------------------
 const mockUseKillmail = jest.fn<() => { data?: unknown }>();
-const mockUseAllSolarSystemKills =
-  jest.fn<() => { data?: unknown }>();
+const mockUseAllSolarSystemKills = jest.fn<() => { data?: unknown }>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useKillmail: (...args: unknown[]) => mockUseKillmail(...args),
@@ -32,35 +31,40 @@ jest.mock("@jitaspace/eve-icons", () => ({
 // @jitaspace/ui -> render identifiable text so we can assert on entity ids
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/ui", () => ({
+  DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
   CharacterAvatar: ({ characterId }: { characterId?: number }) => (
     <span data-testid="char-avatar">{`char-avatar-${characterId ?? "?"}`}</span>
-  ),
-  CharacterName: ({ characterId }: { characterId?: number }) => (
-    <span data-testid="char-name">{`char-${characterId ?? "?"}`}</span>
   ),
   CorporationAvatar: ({ corporationId }: { corporationId?: number }) => (
     <span data-testid="corp-avatar">{`corp-avatar-${corporationId ?? "?"}`}</span>
   ),
-  CorporationName: ({ corporationId }: { corporationId?: number }) => (
-    <span data-testid="corp-name">{`corp-${corporationId ?? "?"}`}</span>
-  ),
   FactionAvatar: ({ factionId }: { factionId?: number }) => (
     <span data-testid="faction-avatar">{`faction-avatar-${factionId ?? "?"}`}</span>
   ),
-  FactionName: ({ factionId }: { factionId?: number }) => (
-    <span data-testid="faction-name">{`faction-${factionId ?? "?"}`}</span>
-  ),
   TypeAvatar: ({ typeId }: { typeId?: number }) => (
     <span data-testid="type-avatar">{`type-avatar-${typeId ?? "?"}`}</span>
-  ),
-  TypeName: ({ typeId }: { typeId?: number }) => (
-    <span data-testid="type-name">{`type-${typeId ?? "?"}`}</span>
   ),
   TimeAgoText: ({ date }: { date: Date }) => (
     <span data-testid="time-ago">{date.toISOString()}</span>
   ),
   WarAnchor: ({ children }: { children?: ReactNode }) => (
     <span data-testid="war-anchor">{children}</span>
+  ),
+}));
+
+// Components that moved to @jitaspace/eve-components are stubbed there.
+jest.mock("@jitaspace/eve-components", () => ({
+  CharacterName: ({ characterId }: { characterId?: number }) => (
+    <span data-testid="char-name">{`char-${characterId ?? "?"}`}</span>
+  ),
+  CorporationName: ({ corporationId }: { corporationId?: number }) => (
+    <span data-testid="corp-name">{`corp-${corporationId ?? "?"}`}</span>
+  ),
+  FactionName: ({ factionId }: { factionId?: number }) => (
+    <span data-testid="faction-name">{`faction-${factionId ?? "?"}`}</span>
+  ),
+  TypeName: ({ typeId }: { typeId?: number }) => (
+    <span data-testid="type-name">{`type-${typeId ?? "?"}`}</span>
   ),
   SolarSystemAnchor: ({ children }: { children?: ReactNode }) => (
     <span data-testid="solar-anchor">{children}</span>
@@ -98,7 +102,9 @@ jest.mock("~/components/Travel/ZkillboardRecentSystemKills", () => ({
     solarSystemId,
   }: {
     solarSystemId?: number | string;
-  }) => <span data-testid="zkill-recent">{`zkill-${solarSystemId ?? "?"}`}</span>,
+  }) => (
+    <span data-testid="zkill-recent">{`zkill-${solarSystemId ?? "?"}`}</span>
+  ),
 }));
 
 jest.mock("next/link", () => ({
@@ -133,10 +139,11 @@ describe("KillmailButton", () => {
 
   function renderButton(
     killmail: Partial<typeof baseKillmail> | undefined = baseKillmail,
+    killmailIsUndefined = false,
   ) {
     const { KillmailButton } = require("~/components/Travel/KillmailButton");
     mockUseKillmail.mockReturnValue(
-      killmail === undefined ? { data: undefined } : { data: { data: killmail } },
+      killmailIsUndefined ? { data: undefined } : { data: { data: killmail } },
     );
     return renderWithMantine(
       <KillmailButton killmailId={555} killmailHash="abc123" />,
@@ -144,11 +151,12 @@ describe("KillmailButton", () => {
   }
 
   it("renders without crashing when killmail data is undefined", () => {
-    renderButton(undefined);
+    renderButton(undefined, true);
     // The zkillboard link should still be present
-    expect(
-      screen.getByRole("link"),
-    ).toHaveAttribute("href", "https://zkillboard.com/kill/555/");
+    expect(screen.getByRole("link")).toHaveAttribute(
+      "href",
+      "https://zkillboard.com/kill/555/",
+    );
   });
 
   it("links to the zkillboard kill page", () => {
@@ -183,9 +191,7 @@ describe("KillmailButton", () => {
   it("renders an attacker with a corporation avatar when no character", () => {
     renderButton({
       ...baseKillmail,
-      attackers: [
-        { corporation_id: 700, ship_type_id: 400 } as never,
-      ],
+      attackers: [{ corporation_id: 700, ship_type_id: 400 } as never],
     });
     expect(screen.getAllByText("corp-avatar-700").length).toBeGreaterThan(0);
   });

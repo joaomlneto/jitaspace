@@ -4,16 +4,10 @@ import { add } from "date-fns";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type {
-  EveSsoAccessTokenPayload} from "@jitaspace/auth-utils";
-import {
-  getEveSsoAccessTokenPayload,
-} from "@jitaspace/auth-utils";
-import type {
-  CharactersCharacterIdRolesGetRolesEnum} from "@jitaspace/esi-client";
-import {
-  postCharactersAffiliation,
-} from "@jitaspace/esi-client";
+import type { EveSsoAccessTokenPayload } from "@jitaspace/auth-utils";
+import type { CharactersCharacterIdRolesGetRolesEnum } from "@jitaspace/esi-client";
+import { getEveSsoAccessTokenPayload } from "@jitaspace/auth-utils";
+import { postCharactersAffiliation } from "@jitaspace/esi-client";
 
 export interface CharacterSsoSession {
   accessToken: string;
@@ -25,6 +19,11 @@ export interface CharacterSsoSession {
   allianceId?: number;
   corporationRoles: CharactersCharacterIdRolesGetRolesEnum[];
   corporationRolesExpireOn?: number;
+  /**
+   * Set when EVE can no longer refresh this character's token. The session is
+   * kept (not removed) so the UI can flag it visually and offer re-authentication.
+   */
+  sessionExpired?: boolean;
 }
 
 // TODO: Update corporation roles hourly
@@ -36,6 +35,7 @@ export interface SsoAuthState {
     refreshToken: string;
   }) => Promise<void>;
   removeCharacter: (characterId: number) => void;
+  markCharacterSessionExpired: (characterId: number) => void;
   selectCharacter: (characterId: number) => void;
   logout: () => void;
 }
@@ -44,7 +44,7 @@ export interface SsoAuthState {
 
 export const useAuthStore = create(
   persist<SsoAuthState>(
-    (set, get) => ({
+    (set) => ({
       characters: {},
       selectedCharacter: null,
       addCharacter: async ({
@@ -63,14 +63,19 @@ export const useAuthStore = create(
         const accessTokenExpirationDate = new Date(
           accessTokenPayload.exp * 1000,
         ).toString();
-        // Get character affiliation
-        const affiliation = (await postCharactersAffiliation([characterId]))
-          .data[0];
-        if (!affiliation) {
-          console.error("Error getting character affiliation");
-          return;
-        }
+        // Character affiliation is best-effort enrichment. A failure here must
+        // NOT discard the freshly-issued token: EVE rotates the refresh token on
+        // every refresh, so dropping it would throw away the only valid refresh
+        // token we have AND freeze the "last refreshed" timestamp the refresh
+        // handler relies on — eventually causing a false "token too old" lockout.
+        const affiliation = await postCharactersAffiliation([characterId])
+          .then((res) => res.data[0])
+          .catch((error: unknown) => {
+            console.error("Error getting character affiliation", error);
+            return undefined;
+          });
         set((state) => {
+          const existing = state.characters[characterId];
           return {
             ...state,
             characters: {
@@ -81,9 +86,19 @@ export const useAuthStore = create(
                 accessTokenExpirationDate,
                 refreshToken,
                 characterId,
+                // A fresh token means the session is alive again; clear any
+                // previously-flagged expiry (e.g. after re-authentication).
+                sessionExpired: false,
                 corporationRoles: [],
-                allianceId: affiliation.alliance_id,
-                corporationId: affiliation.corporation_id,
+                // Use freshly-fetched affiliation when available; otherwise keep
+                // whatever we already had so a transient ESI hiccup never blocks
+                // the token update.
+                allianceId: affiliation
+                  ? affiliation.alliance_id
+                  : existing?.allianceId,
+                corporationId: affiliation
+                  ? affiliation.corporation_id
+                  : (existing?.corporationId ?? 0),
                 affiliationExpirationDate: add(new Date(), { hours: 1 }),
               },
             },
@@ -104,6 +119,25 @@ export const useAuthStore = create(
             ...state,
             characters: remainingCharacters,
             selectedCharacter: remainingCharacterIds[0] ?? null,
+          };
+        }),
+      markCharacterSessionExpired: (characterId: number) =>
+        set((state) => {
+          const character = state.characters[characterId];
+          // Keep the character (do NOT remove it); just flag the session so the
+          // UI can mark it and prompt re-authentication.
+          if (!character) return state;
+          // Already flagged: return the SAME state so the store does not
+          // allocate a new object and notify subscribers. Otherwise the refresh
+          // effect (keyed on `characters` identity) would re-run and re-attempt
+          // the doomed refresh in a tight ~1s loop.
+          if (character.sessionExpired) return state;
+          return {
+            ...state,
+            characters: {
+              ...state.characters,
+              [characterId]: { ...character, sessionExpired: true },
+            },
           };
         }),
       selectCharacter: (characterId: number) =>

@@ -1,34 +1,26 @@
+import type { PopoverProps } from "@mantine/core";
 import type React from "react";
 import { forwardRef } from "react";
-import {
-  Button,
-  Popover,
-  useMantineTheme,
-  useProps
-  
-} from "@mantine/core";
-import type {PopoverProps} from "@mantine/core";
+import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
+import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { ChannelOperatorIcon } from "@jitaspace/eve-icons";
-import { CharacterAvatar, EsiSearchSelect } from "@jitaspace/ui";
+import { CharacterAvatar } from "@jitaspace/ui";
 
-import {
-  ControlBase
-  
-} from "~/components/EveMail/Editor/ControlBase";
-import type {RichTextEditorControlBaseProps} from "~/components/EveMail/Editor/ControlBase";
+import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
+import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
 import classes from "./LinkControl.module.css";
 
-
-export interface RichTextEditorLinkControlProps
-  extends Partial<RichTextEditorControlBaseProps> {
+export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorControlBaseProps> {
   /** Props added to Popover component */
   popoverProps?: Partial<PopoverProps>;
 }
 
-const CharacterLinkIcon: RichTextEditorControlBaseProps["icon"] = ({ size }) => (
+const CharacterLinkIcon: RichTextEditorControlBaseProps["icon"] = ({
+  size,
+}) => (
   <div style={{ position: "relative", width: size, height: size }}>
     <ChannelOperatorIcon fill alt="" />
   </div>
@@ -49,8 +41,8 @@ export const CharacterLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setCharacterId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setCharacterId(href);
   };
 
   const handleClose = () => {
@@ -60,16 +52,18 @@ export const CharacterLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    characterId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:1373//${characterId}`,
-          })
-          .run();
+    if (characterId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:1373//${characterId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -94,7 +88,7 @@ export const CharacterLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || CharacterLinkIcon}
+          icon={icon ?? CharacterLinkIcon}
           aria-label="Link Character"
           title="Link Character"
           onClick={handleOpen}

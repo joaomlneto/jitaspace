@@ -1,9 +1,11 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
-import { Container, Group, Loader, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import type { Metadata } from "next";
+import { Container, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
-import { prisma } from "@jitaspace/db";
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { prisma } from "~/lib/db";
 import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 interface PageProps {
@@ -37,11 +39,32 @@ async function getCategoryData(categoryId: number): Promise<PageProps> {
   };
 }
 
-async function PageContent({
+export async function generateMetadata({
   params,
 }: {
   params: Promise<{ categoryId: string }>;
-}) {
+}): Promise<Metadata> {
+  const { categoryId: categoryIdParam } = await params;
+  const categoryId = Number(categoryIdParam);
+  if (!categoryId) return {};
+  try {
+    const { name } = await getCategoryData(categoryId);
+    return {
+      title: name,
+      description: name
+        ? `Browse EVE Online ${name} items by group.`
+        : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
+async function PageContent({
+  params,
+}: Readonly<{
+  params: Promise<{ categoryId: string }>;
+}>) {
   const { categoryId: categoryIdParam } = await params;
   const categoryId = Number(categoryIdParam);
   if (!categoryIdParam || Number.isNaN(categoryId)) {
@@ -68,7 +91,7 @@ async function PageContent({
         <Group gap="xl">
           <Title order={1}>{name}</Title>
         </Group>
-        <CategoryBreadcrumbs categoryId={categoryId} />
+        <CategoryBreadcrumbs categoryId={categoryId} categoryName={name} />
         <Stack gap="xs">
           <Title order={3}>Groups</Title>
           <SimpleGrid spacing="xs" cols={{ base: 1, xs: 2, md: 3 }}>
@@ -88,11 +111,11 @@ async function PageContent({
 
 export default function Page({
   params,
-}: {
+}: Readonly<{
   params: Promise<{ categoryId: string }>;
-}) {
+}>) {
   return (
-    <Suspense fallback={<Loader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <PageContent params={params} />
     </Suspense>
   );

@@ -1,17 +1,12 @@
 import type { TableProps } from "@mantine/core";
-import { Anchor, Group, Stack, Table, Title, Tooltip } from "@mantine/core";
+import { Anchor, Group, Stack, Table, Title } from "@mantine/core";
 import { openContextModal } from "@mantine/modals";
 
 import type { CalendarEvent } from "@jitaspace/hooks";
 import { WarningIcon } from "@jitaspace/eve-icons";
-import { FormattedDateText } from "@jitaspace/ui";
+import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
-import { CalendarEventOwnerAnchor } from "~/components/Anchor";
-import { CalendarEventOwnerAvatar } from "~/components/Avatar";
-import { CalendarEventAttendeesAvatarGroup } from "~/components/AvatarGroup";
 import { CalendarEventResponseBadge } from "~/components/Badge";
-import { CalendarEventHumanDurationText } from "~/components/DurationText";
-import { CalendarEventOwnerName } from "~/components/Text";
 
 type EventListProps = TableProps & {
   characterId: number;
@@ -30,58 +25,20 @@ export function MobileCalendarEventList({
           <Table.Tr key={event.event_id}>
             <Table.Td>
               <Stack>
+                {/* Owner and attendees are fetched per event (detail endpoint),
+                    so they are shown in the details modal rather than per row. */}
                 <Group justify="space-between" gap="xs">
-                  <Group>
-                    <Tooltip
-                      label={
-                        <CalendarEventHumanDurationText
-                          characterId={characterId}
-                          eventId={event.event_id}
-                        />
-                      }
-                    >
-                      <FormattedDateText
-                        size="sm"
-                        date={new Date(event.event_date ?? 0)}
-                        format="HH:mm"
-                      />
-                    </Tooltip>
-                    <Tooltip
-                      label={
-                        <CalendarEventOwnerName
-                          characterId={characterId}
-                          eventId={event.event_id}
-                        />
-                      }
-                    >
-                      <div>
-                        <CalendarEventOwnerAnchor
-                          characterId={characterId}
-                          eventId={event.event_id}
-                        >
-                          <CalendarEventOwnerAvatar
-                            characterId={characterId}
-                            eventId={event.event_id}
-                            size="sm"
-                          />
-                        </CalendarEventOwnerAnchor>
-                      </div>
-                    </Tooltip>
-                  </Group>
-                  <Group justify="flex-end">
-                    <CalendarEventAttendeesAvatarGroup
-                      characterId={characterId}
-                      eventId={event.event_id}
-                      limit={3}
+                  <DateHoverCard date={new Date(event.event_date ?? 0)}>
+                    <FormattedDateText
                       size="sm"
-                      radius="xl"
+                      date={new Date(event.event_date ?? 0)}
+                      format="HH:mm"
                     />
-                    <CalendarEventResponseBadge
-                      characterId={characterId}
-                      size="xs"
-                      eventId={event.event_id}
-                    />
-                  </Group>
+                  </DateHoverCard>
+                  <CalendarEventResponseBadge
+                    size="xs"
+                    response={event.event_response}
+                  />
                 </Group>
                 <Group wrap="nowrap" gap="xs">
                   {event.importance === 1 && <WarningIcon width={20} />}

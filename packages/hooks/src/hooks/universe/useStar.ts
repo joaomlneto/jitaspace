@@ -1,10 +1,7 @@
 "use client";
 
-import {
-  GetUniverseStarsStarIdQueryResponse,
-  useGetUniverseStarsStarId,
-} from "@jitaspace/esi-client";
+import type { GetUniverseStarsStarIdQueryResponse } from "@jitaspace/esi-client";
 
 export type Star = GetUniverseStarsStarIdQueryResponse;
 
-export const useStar = useGetUniverseStarsStarId;
+export { useGetUniverseStarsStarId as useStar } from "@jitaspace/esi-client";

@@ -1,9 +1,16 @@
 import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+
+import { prisma } from "~/lib/db";
+
 import LPStorePage from "./page.client";
 import type { LPStorePageProps } from "./page.client";
 
-import { prisma } from "@jitaspace/db";
+export const metadata = {
+  title: "LP Store",
+  description:
+    "Browse EVE Online Loyalty Point store offers — find what you can buy with LP from NPC corporations.",
+};
 
 export default async function Page() {
   "use cache";

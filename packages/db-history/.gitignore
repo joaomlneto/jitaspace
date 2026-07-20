@@ -1,0 +1,2 @@
+# ignore the prisma generated files
+/prisma/generated/

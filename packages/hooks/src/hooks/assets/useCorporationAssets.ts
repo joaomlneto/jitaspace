@@ -2,14 +2,17 @@
 
 import { useMemo } from "react";
 
-import {
+import type {
   GetCharactersCharacterIdAssetsQueryResponse,
-  getCorporationsCorporationIdAssets,
   GetCorporationsCorporationIdAssetsQueryResponse,
+} from "@jitaspace/esi-client";
+import {
+  getCorporationsCorporationIdAssets,
   useGetCorporationsCorporationIdAssetsInfinite,
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { useEagerlyFetchAllPages } from "../utils/useEagerlyFetchAllPages";
 
 export const useCorporationAssets = (corporationId?: number) => {
   const { accessToken, authHeaders } = useAccessToken({
@@ -31,19 +34,23 @@ export const useCorporationAssets = (corporationId?: number) => {
             getCorporationsCorporationIdAssets(
               corporationId ?? 0,
               {
-                page: pageParam as number,
+                page: pageParam,
               },
               { ...authHeaders },
             ),
           getNextPageParam: (lastPage, pages) => {
-            const numPages: number | undefined = lastPage.headers?.["x-pages"];
+            const xPages: unknown = lastPage.headers["x-pages"];
+            const numPages = typeof xPages === "string" ? Number(xPages) : 0;
             const nextPage = pages.length + 1;
-            if (nextPage > (numPages ?? 0)) return undefined;
+            if (nextPage > numPages) return undefined;
             return nextPage;
           },
         },
       },
     );
+
+  // eagerly load every page so the whole corporation inventory is available
+  useEagerlyFetchAllPages({ hasNextPage, fetchNextPage });
 
   const errorMessage = useMemo(() => {
     if (error) {
@@ -92,15 +99,16 @@ export const useCorporationAssets = (corporationId?: number) => {
     > = {};
 
     locationsList.forEach((asset) => {
-      if (!locations[asset.location_id]) {
+      const existing = locations[asset.location_id];
+      if (existing) {
+        existing.items.push(asset.item_id);
+      } else {
         locations[asset.location_id] = {
           location_id: asset.location_id,
           location_type: asset.location_type,
-          items: [],
+          items: [asset.item_id],
         };
       }
-
-      locations[asset.location_id]?.items.push(asset.item_id);
     });
 
     return locations;

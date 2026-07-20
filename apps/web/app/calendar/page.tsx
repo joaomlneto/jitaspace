@@ -26,91 +26,84 @@ export default function Page() {
     useCharacterCalendar(character?.characterId);
 
   const eventsPerDate: Record<string, CalendarEvent[]> = {};
-  if (events) {
-    events.forEach((event) => {
-      if (!event.event_date) return;
-      const date = new Date(event.event_date);
-      date.setHours(0, 0, 0, 0);
-      const dateString = date.getTime();
-      if (!eventsPerDate[dateString]) {
-        eventsPerDate[dateString] = [];
-      }
-      eventsPerDate[dateString]?.push(event);
-    });
-  }
+  (Array.isArray(events) ? events : []).forEach((event) => {
+    if (!event.event_date) return;
+    const date = new Date(event.event_date);
+    date.setHours(0, 0, 0, 0);
+    const dateString = date.getTime().toString();
+    const bucket = (eventsPerDate[dateString] ??= []);
+    bucket.push(event);
+  });
 
   return (
-    <>
-      <Container>
-        <Stack gap="xl">
-          <Group justify="space-between">
-            <Group>
-              <CalendarIcon width={48} />
-              <Title order={1}>Calendar</Title>
-              {isLoading && <Loader />}
-            </Group>
-            <Button
-              size="xs"
-              onClick={() =>
-                openModal({
-                  title: "Calendar View",
-                  size: "md",
-                  children: (
-                    <Center>
-                      <EventsCalendar
-                        events={events}
-                        size="xl"
-                        hiddenFrom="md"
-                      />
-                      <EventsCalendar
-                        events={events}
-                        size="sm"
-                        visibleFrom="md"
-                      />
-                    </Center>
-                  ),
-                })
-              }
-            >
-              Calendar View
-            </Button>
+    <Container>
+      <Stack gap="xl">
+        <Group justify="space-between">
+          <Group>
+            <CalendarIcon width={48} />
+            <Title order={1}>Calendar</Title>
+            {isLoading && <Loader />}
           </Group>
-          {Object.keys(eventsPerDate).map((dateString) => {
-            return (
-              <Stack key={dateString}>
-                <Title order={5}>
-                  {format(new Date(Number.parseInt(dateString, 10)), "LLLL dd - EEEE")}
-                </Title>
-                {character && (
-                  <CalendarEventList
-                    characterId={character.characterId}
-                    events={eventsPerDate[dateString] ?? []}
-                    highlightOnHover
-                  />
+          <Button
+            size="xs"
+            onClick={() =>
+              openModal({
+                title: "Calendar View",
+                size: "md",
+                children: (
+                  <Center>
+                    <EventsCalendar events={events} size="xl" hiddenFrom="md" />
+                    <EventsCalendar
+                      events={events}
+                      size="sm"
+                      visibleFrom="md"
+                    />
+                  </Center>
+                ),
+              })
+            }
+          >
+            Calendar View
+          </Button>
+        </Group>
+        {Object.keys(eventsPerDate).map((dateString) => {
+          return (
+            <Stack key={dateString}>
+              <Title order={5}>
+                {format(
+                  new Date(Number.parseInt(dateString, 10)),
+                  "LLLL dd - EEEE",
                 )}
-              </Stack>
-            );
-          })}
-        </Stack>
-        <Container my="xl">
-          {hasMoreEvents && (
-            <Button w="100%" onClick={() => loadMoreEvents()}>
-              Load more events
-            </Button>
-          )}
-          {isLoading && !hasMoreEvents && (
-            <Group wrap="nowrap">
-              <Loader size="sm" />
-              <Text>Loading events</Text>
-            </Group>
-          )}
-          {!isLoading && !hasMoreEvents && (
-            <Center>
-              <Text c="dimmed">No more events</Text>
-            </Center>
-          )}
-        </Container>
+              </Title>
+              {character && (
+                <CalendarEventList
+                  characterId={character.characterId}
+                  events={eventsPerDate[dateString] ?? []}
+                  highlightOnHover
+                />
+              )}
+            </Stack>
+          );
+        })}
+      </Stack>
+      <Container my="xl">
+        {hasMoreEvents && (
+          <Button w="100%" onClick={() => loadMoreEvents()}>
+            Load more events
+          </Button>
+        )}
+        {isLoading && !hasMoreEvents && (
+          <Group wrap="nowrap">
+            <Loader size="sm" />
+            <Text>Loading events</Text>
+          </Group>
+        )}
+        {!isLoading && !hasMoreEvents && (
+          <Center>
+            <Text c="dimmed">No more events</Text>
+          </Center>
+        )}
       </Container>
-    </>
+    </Container>
   );
 }

@@ -4,7 +4,9 @@ const config: Config = {
   testEnvironment: "node",
   testMatch: ["<rootDir>/tests/**/*.test.ts"],
   transform: {
-    "^.+\\.tsx?$": [
+    // Also transform .js so the ESM-only `jose` dependency (carved out of
+    // transformIgnorePatterns below) is compiled to CommonJS for Jest.
+    "^.+\\.[jt]sx?$": [
       "@swc/jest",
       {
         jsc: {
@@ -15,7 +17,10 @@ const config: Config = {
       },
     ],
   },
-  transformIgnorePatterns: ["/node_modules/(?!(@jitaspace))"],
+  // `jose` ships ESM only; let it through the transform instead of ignoring it.
+  transformIgnorePatterns: [
+    "/node_modules/(?!(\\.pnpm/.*?)?(@jitaspace|jose))",
+  ],
   collectCoverage: true,
   coverageDirectory: "coverage",
   coverageReporters: ["lcov", "text"],

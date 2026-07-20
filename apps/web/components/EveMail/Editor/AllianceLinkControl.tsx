@@ -1,29 +1,19 @@
+import type { PopoverProps } from "@mantine/core";
 import type React from "react";
 import { forwardRef } from "react";
-import {
-  Button,
-  Popover,
-  useMantineTheme,
-  useProps
-  
-} from "@mantine/core";
-import type {PopoverProps} from "@mantine/core";
+import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
+import { EsiSearchSelect } from "@jitaspace/eve-components";
 import { AlliancesIcon } from "@jitaspace/eve-icons";
-import { AllianceAvatar, EsiSearchSelect } from "@jitaspace/ui";
+import { AllianceAvatar } from "@jitaspace/ui";
 
-import {
-  ControlBase
-  
-} from "~/components/EveMail/Editor/ControlBase";
-import type {RichTextEditorControlBaseProps} from "~/components/EveMail/Editor/ControlBase";
+import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
+import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
 import classes from "./LinkControl.module.css";
 
-
-export interface RichTextEditorLinkControlProps
-  extends Partial<RichTextEditorControlBaseProps> {
+export interface RichTextEditorLinkControlProps extends Partial<RichTextEditorControlBaseProps> {
   /** Props added to Popover component */
   popoverProps?: Partial<PopoverProps>;
 }
@@ -49,8 +39,8 @@ export const AllianceLinkControl = forwardRef<
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    setAllianceId(linkData?.href || "");
+    const href = typeof linkData?.href === "string" ? linkData.href : "";
+    setAllianceId(href);
   };
 
   const handleClose = () => {
@@ -60,16 +50,18 @@ export const AllianceLinkControl = forwardRef<
 
   const setLink = () => {
     handleClose();
-    allianceId === ""
-      ? editor?.chain().focus().extendMarkRange("link").unsetLink().run()
-      : editor
-          ?.chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: `showinfo:16159//${allianceId}`,
-          })
-          .run();
+    if (allianceId === "") {
+      editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor
+        ?.chain()
+        .focus()
+        .extendMarkRange("link")
+        .setLink({
+          href: `showinfo:16159//${allianceId}`,
+        })
+        .run();
+    }
   };
 
   const handleInputKeydown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -94,7 +86,7 @@ export const AllianceLinkControl = forwardRef<
     >
       <Popover.Target>
         <ControlBase
-          icon={icon || AllianceLinkIcon}
+          icon={icon ?? AllianceLinkIcon}
           aria-label="Link Alliance"
           title="Link Alliance"
           onClick={handleOpen}

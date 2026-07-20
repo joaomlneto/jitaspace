@@ -1,9 +1,10 @@
 "use client";
 
+import type { BreadcrumbsProps, TextProps } from "@mantine/core";
 import { memo } from "react";
-import { type BreadcrumbsProps, type TextProps } from "@mantine/core";
+
+import { SolarSystemBreadcrumbs as UISolarSystemBreadcrumbs } from "@jitaspace/eve-components";
 import { useConstellation, useSolarSystem } from "@jitaspace/hooks";
-import { SolarSystemBreadcrumbs as UISolarSystemBreadcrumbs } from "@jitaspace/ui";
 
 export type SolarSystemBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
   solarSystemId?: string | number;
@@ -12,10 +13,16 @@ export type SolarSystemBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
 };
 
 export const SolarSystemBreadcrumbs = memo(
-  ({ solarSystemId, hideSolarSystem, textProps, ...otherProps }: SolarSystemBreadcrumbsProps) => {
-    const solarSystemIdNum = typeof solarSystemId === "string"
-      ? Number.parseInt(solarSystemId)
-      : solarSystemId;
+  ({
+    solarSystemId,
+    hideSolarSystem,
+    textProps,
+    ...otherProps
+  }: SolarSystemBreadcrumbsProps) => {
+    const solarSystemIdNum =
+      typeof solarSystemId === "string"
+        ? Number.parseInt(solarSystemId)
+        : solarSystemId;
     const { data: solarSystem } = useSolarSystem(solarSystemIdNum ?? 0);
     const constellationId = solarSystem?.data.constellation_id;
     const { data: constellation } = useConstellation(constellationId ?? 0);

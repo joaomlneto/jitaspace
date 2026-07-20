@@ -17,6 +17,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import posthog from "posthog-js";
 
 import {
   EvemailComposeIcon,
@@ -25,16 +26,16 @@ import {
   GroupListIcon,
 } from "@jitaspace/eve-icons";
 import { useCharacterMails, useSelectedCharacter } from "@jitaspace/hooks";
-import { EveMailLabelMultiSelect } from "~/components/MultiSelect/EveMailLabelMultiSelect";
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxTable } from "~/components/EveMail";
+import { EveMailLabelMultiSelect } from "~/components/MultiSelect/EveMailLabelMultiSelect";
 
 export default function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const _labels = toArrayIfNot(searchParams?.get("labels") ?? []);
+  const _labels = toArrayIfNot(searchParams.get("labels") ?? []);
   const character = useSelectedCharacter();
 
   const [selectedLabels, setSelectedLabels] = React.useState<string[]>([]);
@@ -69,14 +70,15 @@ export default function Page() {
                 <ActionIcon
                   variant="default"
                   size="lg"
-                  onClick={() =>
+                  onClick={() => {
+                    posthog.capture("mail_compose_opened");
                     modals.openContextModal({
                       modal: "composeMail",
                       title: "Compose new message",
                       size: "xl",
                       innerProps: {},
-                    })
-                  }
+                    });
+                  }}
                 >
                   <EvemailComposeIcon
                     alt="Compose new message"
@@ -101,7 +103,7 @@ export default function Page() {
                       title: "Active Mailing List Subscriptions",
                       size: "md",
                       innerProps: {
-                        characterId: character?.characterId,
+                        characterId: character.characterId,
                       },
                     });
                   }}
@@ -113,14 +115,15 @@ export default function Page() {
                 <ActionIcon
                   variant="default"
                   size="lg"
-                  onClick={() =>
+                  onClick={() => {
+                    posthog.capture("mail_labels_opened");
                     modals.openContextModal({
                       modal: "manageMailLabels",
                       title: "Manage Labels",
                       size: "md",
                       innerProps: {},
-                    })
-                  }
+                    });
+                  }}
                 >
                   <EveMailTagIcon alt="Labels" width={32} height={32} />
                 </ActionIcon>
@@ -145,7 +148,7 @@ export default function Page() {
                   const params = new URLSearchParams({
                     labels: value.join(","),
                   });
-                  void router.push(`${pathname}?${params.toString()}`);
+                  router.push(`${pathname}?${params.toString()}`);
                 }}
                 defaultValue={selectedLabels}
               />
@@ -160,7 +163,15 @@ export default function Page() {
           />
         )}
         {hasMoreMessages && (
-          <Button w="100%" onClick={() => loadMoreMessages()}>
+          <Button
+            w="100%"
+            onClick={() => {
+              posthog.capture("mail_load_more", {
+                current_message_count: messages.length,
+              });
+              void loadMoreMessages();
+            }}
+          >
             Load more messages
           </Button>
         )}

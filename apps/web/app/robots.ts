@@ -9,6 +9,21 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: [
+        "/assets",
+        "/calendar",
+        "/contacts",
+        "/debug",
+        "/fittings",
+        "/login",
+        "/mail",
+        "/notifications",
+        "/settings",
+        "/ship-scanner",
+        "/skills",
+        "/travel",
+        "/wallet",
+      ],
     },
     sitemap: sitemapUrls,
   };

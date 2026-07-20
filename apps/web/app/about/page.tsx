@@ -14,7 +14,8 @@ import {
 import { IconBrandDiscordFilled } from "@tabler/icons-react";
 import { Email } from "react-obfuscate-email";
 
-import { CharacterAnchor, CharacterAvatar, CharacterName } from "@jitaspace/ui";
+import { CharacterAnchor, CharacterName } from "@jitaspace/eve-components";
+import { CharacterAvatar } from "@jitaspace/ui";
 
 import { env } from "~/env";
 
@@ -140,8 +141,8 @@ export default function Page() {
             Your EVE user information (EVE SSO access tokens, character data) is
             not stored and is used exclusively for interactions with the EVE
             Online Login and API services, both managed by{" "}
-            <Anchor inherit href="https://www.ccpgames.com/" target="_blank">
-              CCP Games
+            <Anchor inherit href="https://fenriscreations.com" target="_blank">
+              Fenris Creations
             </Anchor>
             .
           </List.Item>
@@ -274,18 +275,19 @@ export default function Page() {
         <Title order={3}>Copyright Notice</Title>
         <Text size="sm">
           EVE Online, the EVE logo, EVE and all associated logos and designs are
-          the intellectual property of CCP hf. All artwork, screenshots,
-          characters, vehicles, storylines, world facts or other recognizable
-          features of the intellectual property relating to these trademarks are
-          likewise the intellectual property of CCP hf. EVE Online and the EVE
-          logo are the registered trademarks of CCP hf. All rights are reserved
-          worldwide. All other trademarks are the property of their respective
-          owners. CCP hf. has granted permission to www.jita.space to use EVE
-          Online and all associated logos and designs for promotional and
-          information purposes on its website but does not endorse, and is not
-          in any way affiliated with, www.jita.space. CCP is in no way
-          responsible for the content on or functioning of this website, nor can
-          it be liable for any damage arising from the use of this website.
+          the intellectual property of Fenris Creations. All artwork,
+          screenshots, characters, vehicles, storylines, world facts or other
+          recognizable features of the intellectual property relating to these
+          trademarks are likewise the intellectual property of Fenris Creations.
+          EVE Online and the EVE logo are the registered trademarks of Fenris
+          Creations. All rights are reserved worldwide. All other trademarks are
+          the property of their respective owners. Fenris Creations has granted
+          permission to www.jita.space to use EVE Online and all associated
+          logos and designs for promotional and information purposes on its
+          website but does not endorse, and is not in any way affiliated with,
+          www.jita.space. Fenris Creations is in no way responsible for the
+          content on or functioning of this website, nor can it be liable for
+          any damage arising from the use of this website.
         </Text>
       </Stack>
     </Container>
