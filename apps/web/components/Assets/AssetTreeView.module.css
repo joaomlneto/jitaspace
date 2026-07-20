@@ -1,0 +1,47 @@
+.row {
+    border-radius: var(--mantine-radius-sm);
+    transition: background-color 100ms ease;
+}
+
+.row:hover {
+    background-color: light-dark(
+        var(--mantine-color-gray-0),
+        var(--mantine-color-dark-6)
+    );
+}
+
+.clickable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.nested {
+    margin-left: var(--mantine-spacing-md);
+    border-left: rem(1px) solid
+        light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+    padding-left: var(--mantine-spacing-xs);
+}
+
+.locationHeader {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 100ms ease;
+    border-radius: var(--mantine-radius-md);
+}
+
+.locationHeader:hover {
+    background-color: light-dark(
+        var(--mantine-color-gray-0),
+        var(--mantine-color-dark-6)
+    );
+}
+
+.chevron {
+    flex-shrink: 0;
+    transition: transform 150ms ease;
+    color: var(--mantine-color-dimmed);
+}
+
+.chevronOpen {
+    transform: rotate(90deg);
+}
