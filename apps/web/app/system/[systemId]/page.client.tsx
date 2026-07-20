@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -72,6 +73,7 @@ import {
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { SolarSystemBreadcrumbs } from "~/components/Breadcrumbs";
 import { SectionHeader } from "~/components/Home";
+import { SolarSystem3D } from "~/components/SolarSystem3D";
 import { PlanetName, StarName } from "~/components/Text";
 import classes from "./page.module.css";
 
@@ -509,6 +511,7 @@ export default function Page() {
   const { data: allKills } = useAllSolarSystemKills();
   const { data: incursions } = useGetIncursions();
   const { data: fwSystems } = useGetFwSystems();
+  const [show3D, setShow3D] = useState(false);
 
   if (!Number.isFinite(systemId)) {
     return null;
@@ -814,6 +817,37 @@ export default function Page() {
           star={star}
           sde={sde}
         />
+
+        {/* ---- 3D system map (loaded on demand — pulls in three.js) ---- */}
+        <section>
+          <SectionHeader title="System Map" />
+          <Paper p="lg" radius="md">
+            {show3D ? (
+              <Stack gap="sm">
+                <SolarSystem3D solarSystemId={systemId} />
+                <Group justify="flex-end">
+                  <Button
+                    variant="subtle"
+                    size="xs"
+                    onClick={() => setShow3D(false)}
+                  >
+                    Hide 3D map
+                  </Button>
+                </Group>
+              </Stack>
+            ) : (
+              <Group justify="space-between" wrap="nowrap">
+                <Text size="sm" c="dimmed">
+                  Explore the star, planets, moons, stations and stargates in an
+                  interactive 3D view.
+                </Text>
+                <Button size="xs" onClick={() => setShow3D(true)}>
+                  Show 3D map
+                </Button>
+              </Group>
+            )}
+          </Paper>
+        </section>
       </Stack>
     </Container>
   );

@@ -36,6 +36,7 @@
     "@jitaspace/hooks": "workspace:*",
     "@jitaspace/kv": "workspace:*",
     "@jitaspace/sde-client": "workspace:*",
+    "@jitaspace/solar-system-map": "workspace:*",
     "@jitaspace/tiptap-eve": "workspace:*",
     "@jitaspace/ui": "workspace:*",
     "@jitaspace/utils": "workspace:*",

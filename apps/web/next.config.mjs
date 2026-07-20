@@ -110,6 +110,7 @@ const config = {
     "@jitaspace/kv",
     "@jitaspace/sde-client",
     "@jitaspace/sde-utils",
+    "@jitaspace/solar-system-map",
     "@jitaspace/tiptap-eve",
     "@jitaspace/ui",
     "@jitaspace/utils",
