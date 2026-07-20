@@ -448,6 +448,10 @@ export const extraJitaFeatures: AppScopeSet[] = [
     scopes: ["esi-characters.read_standings.v1"],
   },
   {
+    reason: "Read character loyalty points",
+    scopes: ["esi-characters.read_loyalty.v1"],
+  },
+  {
     reason: "View your character assets (and active ship fitting)",
     scopes: ["esi-assets.read_assets.v1"],
   },
