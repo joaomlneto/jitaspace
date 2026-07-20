@@ -1,23 +1,17 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 // ---------------------------------------------------------------------------
-// The mail page uses next/navigation (useRouter/useSearchParams/usePathname),
-// @jitaspace/hooks (useCharacterMails, useSelectedCharacter), @jitaspace/utils,
+// The mail page reads/writes the `?labels` query param via nuqs (see
+// withNuqsTestingAdapter below — it replaces the old next/navigation mock),
+// @jitaspace/hooks (useCharacterMails, useSelectedCharacter),
 // @jitaspace/eve-icons, @mantine/modals, and a couple of local components.
 // ---------------------------------------------------------------------------
-
-const mockPush = jest.fn();
-const mockGet = jest.fn<() => string | null>();
-
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mockPush }),
-  useSearchParams: () => ({ get: (_key: string) => mockGet() }),
-  usePathname: () => "/mail",
-}));
 
 const mockUseSelectedCharacter = jest.fn();
 const mockUseCharacterMails = jest.fn();
@@ -25,10 +19,6 @@ const mockUseCharacterMails = jest.fn();
 jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: () => mockUseSelectedCharacter(),
   useCharacterMails: (...args: unknown[]) => mockUseCharacterMails(...args),
-}));
-
-jest.mock("@jitaspace/utils", () => ({
-  toArrayIfNot: (v: unknown) => (Array.isArray(v) ? v : [v]),
 }));
 
 jest.mock("@jitaspace/eve-icons", () => ({
@@ -94,20 +84,21 @@ function defaultMailReturn(overrides?: Record<string, unknown>) {
   };
 }
 
-function renderPage() {
+function renderPage({
+  searchParams = "",
+  onUrlUpdate,
+}: { searchParams?: string; onUrlUpdate?: OnUrlUpdateFunction } = {}) {
   const Page = require("~/app/mail/page.client").default;
   return render(
     <MantineProvider>
       <Page />
     </MantineProvider>,
+    { wrapper: withNuqsTestingAdapter({ searchParams, onUrlUpdate }) },
   );
 }
 
 describe("Mail Page", () => {
   beforeEach(() => {
-    mockPush.mockReset();
-    mockGet.mockReset();
-    mockGet.mockReturnValue(null);
     mockUseSelectedCharacter.mockReset();
     mockUseCharacterMails.mockReset();
     mockOpenContextModal.mockReset();
@@ -150,15 +141,37 @@ describe("Mail Page", () => {
     );
   });
 
-  it("updates labels and navigates when the multiselect changes", () => {
+  // nuqs batches URL writes and flushes them asynchronously, so this assertion
+  // has to wait rather than read straight after the click.
+  it("writes the selected labels to the URL when the multiselect changes", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
+    mockUseCharacterMails.mockReturnValue(defaultMailReturn());
+
+    renderPage({ onUrlUpdate });
+
+    fireEvent.click(screen.getByTestId("label-multiselect"));
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalledTimes(1));
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe("?labels=1,2");
+  });
+
+  it("restores the selected labels from the URL on load", () => {
+    mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
+    mockUseCharacterMails.mockReturnValue(defaultMailReturn());
+
+    renderPage({ searchParams: "?labels=1,2" });
+
+    expect(mockUseCharacterMails).toHaveBeenCalledWith(123, [1, 2]);
+  });
+
+  it("requests all labels when the URL has no labels param", () => {
     mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
     mockUseCharacterMails.mockReturnValue(defaultMailReturn());
 
     renderPage();
 
-    fireEvent.click(screen.getByTestId("label-multiselect"));
-
-    expect(mockPush).toHaveBeenCalledWith("/mail?labels=1%2C2");
+    expect(mockUseCharacterMails).toHaveBeenCalledWith(123, []);
   });
 
   it("shows the load-more button when more messages are available", () => {

@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ActionIcon,
   Alert,
@@ -17,6 +15,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import posthog from "posthog-js";
 
 import {
@@ -26,19 +25,21 @@ import {
   GroupListIcon,
 } from "@jitaspace/eve-icons";
 import { useCharacterMails, useSelectedCharacter } from "@jitaspace/hooks";
-import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxTable } from "~/components/EveMail";
 import { EveMailLabelMultiSelect } from "~/components/MultiSelect/EveMailLabelMultiSelect";
 
 export default function Page() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const _labels = toArrayIfNot(searchParams.get("labels") ?? []);
   const character = useSelectedCharacter();
 
-  const [selectedLabels, setSelectedLabels] = React.useState<string[]>([]);
+  // parseAsArrayOf defaults to a comma separator, keeping the `?labels=1,2`
+  // format this page already wrote, so existing shared links keep working.
+  const [selectedLabels, setSelectedLabels] = useQueryState(
+    "labels",
+    parseAsArrayOf(parseAsString)
+      .withDefault([])
+      .withOptions({ history: "replace" }),
+  );
 
   const {
     messages,
@@ -143,14 +144,7 @@ export default function Page() {
                 style={{ minWidth: "240px" }}
                 label="Filter by label"
                 value={selectedLabels}
-                onChange={(value: string[]) => {
-                  setSelectedLabels(value);
-                  const params = new URLSearchParams({
-                    labels: value.join(","),
-                  });
-                  router.push(`${pathname}?${params.toString()}`);
-                }}
-                defaultValue={selectedLabels}
+                onChange={(value: string[]) => void setSelectedLabels(value)}
               />
             )}
           </Grid.Col>

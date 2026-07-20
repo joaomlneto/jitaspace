@@ -22,6 +22,7 @@ import { Notifications } from "@mantine/notifications";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { EsiClientSSOAccessTokenInjector } from "~/components/EsiClientSSOAccessTokenInjector";
 import { contextModals } from "~/components/Modals";
@@ -135,30 +136,32 @@ export default function RootLayout({
         )}
         <Analytics />
         <SpeedInsights />
-        <AppMantineProvider>
-          <MyQueryClientProvider
-            esiUserAgent={ESI_USER_AGENT}
-            esiAcceptLanguage={ESI_ACCEPT_LANGUAGE}
-          >
-            <EsiClientSSOAccessTokenInjector>
-              <>
-                {/* Mantine 9 changed the default so hovering any notification
-                    pauses all timers; keep the previous per-notification behavior. */}
-                <Notifications pauseResetOnHover="notification" />
-                <Suspense fallback={null}>
-                  <RouterTransition />
-                </Suspense>
-                <MainSpotlight />
-                <ModalsProvider
-                  modals={contextModals}
-                  modalProps={{ centered: true }}
-                >
-                  <MainLayout>{children}</MainLayout>
-                </ModalsProvider>
-              </>
-            </EsiClientSSOAccessTokenInjector>
-          </MyQueryClientProvider>
-        </AppMantineProvider>
+        <NuqsAdapter>
+          <AppMantineProvider>
+            <MyQueryClientProvider
+              esiUserAgent={ESI_USER_AGENT}
+              esiAcceptLanguage={ESI_ACCEPT_LANGUAGE}
+            >
+              <EsiClientSSOAccessTokenInjector>
+                <>
+                  {/* Mantine 9 changed the default so hovering any notification
+                      pauses all timers; keep the previous per-notification behavior. */}
+                  <Notifications pauseResetOnHover="notification" />
+                  <Suspense fallback={null}>
+                    <RouterTransition />
+                  </Suspense>
+                  <MainSpotlight />
+                  <ModalsProvider
+                    modals={contextModals}
+                    modalProps={{ centered: true }}
+                  >
+                    <MainLayout>{children}</MainLayout>
+                  </ModalsProvider>
+                </>
+              </EsiClientSSOAccessTokenInjector>
+            </MyQueryClientProvider>
+          </AppMantineProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );
