@@ -59,7 +59,9 @@ export const mergeEntriesIntoCorporationsTable = (
           },
         })
         .then((entries) =>
-          entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+          entries.map((entry) =>
+            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+          ),
         ),
     fetchRemoteEntries: () => Promise.resolve(corporations),
     batchCreate: (entries) =>
