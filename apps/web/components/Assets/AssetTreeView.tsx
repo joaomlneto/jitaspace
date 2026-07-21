@@ -29,7 +29,10 @@ const onToggleKey =
     }
   };
 
-function ExpandChevron({ open, hidden }: { open: boolean; hidden?: boolean }) {
+function ExpandChevron({
+  open,
+  hidden,
+}: Readonly<{ open: boolean; hidden?: boolean }>) {
   if (hidden) return <Box w={16} style={{ flexShrink: 0 }} />;
   return (
     <IconChevronRight

@@ -33,7 +33,7 @@ import { buildAssetTree } from "~/components/Assets/assetTree";
 import { CharacterAssetsTree } from "~/components/Assets/AssetTreeView";
 import { ScopeGuard } from "~/components/ScopeGuard";
 
-function Stat({ label, value }: { label: string; value: ReactNode }) {
+function Stat({ label, value }: Readonly<{ label: string; value: ReactNode }>) {
   return (
     <Stack gap={2}>
       <Text size="xs" c="dimmed" tt="uppercase" fw={600}>

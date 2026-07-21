@@ -23,7 +23,7 @@ export function AssetSearchResults({
   query,
   tree,
   getTypeName,
-}: AssetSearchResultsProps) {
+}: Readonly<AssetSearchResultsProps>) {
   const needle = query.trim().toLowerCase();
 
   const matches = useMemo(() => {
@@ -67,13 +67,16 @@ export function AssetSearchResults({
   }
 
   const shown = matches.slice(0, MAX_RESULTS);
+  const matchNoun = matches.length === 1 ? "match" : "matches";
+  const summary =
+    matches.length > MAX_RESULTS
+      ? `Showing ${MAX_RESULTS} of ${matches.length} matches`
+      : `${matches.length} ${matchNoun}`;
 
   return (
     <Stack gap={4}>
       <Text size="xs" c="dimmed">
-        {matches.length > MAX_RESULTS
-          ? `Showing ${MAX_RESULTS} of ${matches.length} matches`
-          : `${matches.length} ${matches.length === 1 ? "match" : "matches"}`}
+        {summary}
       </Text>
       <Paper withBorder radius="md" p={4}>
         {shown.map((match) => (

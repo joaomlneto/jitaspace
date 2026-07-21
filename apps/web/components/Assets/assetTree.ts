@@ -218,8 +218,16 @@ export function assetSection(flag: string): AssetSection {
 
 /** Best-effort humanisation of an unmapped flag, e.g. `SpecializedOreHold` → `Ore Hold`. */
 export function humanizeFlag(flag: string): string {
+  // Strip trailing digits without an un-anchored `\d+$` regex, whose multiple
+  // start positions give it super-linear backtracking on long inputs.
+  let end = flag.length;
+  while (end > 0) {
+    const code = flag.charCodeAt(end - 1);
+    if (code < 48 || code > 57) break;
+    end -= 1;
+  }
   const cleaned = flag
-    .replace(/\d+$/, "")
+    .slice(0, end)
     .replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/^Specialized /, "")
     .trim();
