@@ -222,8 +222,8 @@ export function humanizeFlag(flag: string): string {
   // start positions give it super-linear backtracking on long inputs.
   let end = flag.length;
   while (end > 0) {
-    const code = flag.charCodeAt(end - 1);
-    if (code < 48 || code > 57) break;
+    const char = flag[end - 1];
+    if (char === undefined || char < "0" || char > "9") break;
     end -= 1;
   }
   const cleaned = flag

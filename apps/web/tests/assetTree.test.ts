@@ -145,6 +145,13 @@ describe("humanizeFlag", () => {
     expect(humanizeFlag("StructureFuel")).toBe("Structure Fuel");
     expect(humanizeFlag("SpecializedAmmoHold")).toBe("Ammo Hold");
   });
+
+  it("strips trailing digits, e.g. the numbered corp hangars", () => {
+    expect(humanizeFlag("CorpSAG1")).toBe("Corp SAG");
+    expect(humanizeFlag("CorpSAG7")).toBe("Corp SAG");
+    // A flag that is only digits falls back to the raw flag.
+    expect(humanizeFlag("123")).toBe("123");
+  });
 });
 
 describe("groupBySection", () => {
