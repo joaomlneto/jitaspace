@@ -91,7 +91,9 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: () =>
         Promise.resolve(
@@ -165,7 +167,9 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: () =>
         Promise.resolve(
@@ -216,7 +220,9 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: () =>
         Promise.resolve(
@@ -275,7 +281,9 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: async () =>
         Promise.all(
