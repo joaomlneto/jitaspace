@@ -38,7 +38,9 @@ export const scrapeHoboleaksAgentTypes = defineJob<
             },
           })
           .then((entries) =>
-            entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+            entries.map((entry) =>
+              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            ),
           ),
       fetchRemoteEntries: () =>
         Promise.resolve(

@@ -144,7 +144,7 @@ async function processTypeBatch(
         })
         .then((entries) =>
           entries.map((record) =>
-            excludeObjectKeys(record, ["updatedAt", "isDeleted"]),
+            excludeObjectKeys(record, ["updatedAt", "createdAt", "isDeleted"]),
           ),
         ),
     fetchRemoteEntries: async () =>
@@ -209,7 +209,7 @@ async function processTypeBatch(
         })
         .then((entries) =>
           entries.map((record) =>
-            excludeObjectKeys(record, ["updatedAt", "isDeleted"]),
+            excludeObjectKeys(record, ["updatedAt", "createdAt", "isDeleted"]),
           ),
         ),
     fetchRemoteEntries: async () =>
