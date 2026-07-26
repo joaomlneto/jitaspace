@@ -1,7 +1,35 @@
 import * as Sentry from "@sentry/nextjs";
+import { initBotId } from "botid/client/core";
 import posthog from "posthog-js";
 
 import { env } from "~/env";
+
+/**
+ * Vercel BotID — invisible bot protection for the `/history` server actions.
+ *
+ * Those actions ({@link ~/lib/history-actions}) are unauthenticated and each
+ * call can run heavy range SQL against the build-history database and mint a
+ * permanent `"use cache"` entry, so they are the app's most attractive target
+ * for automated abuse. The corresponding `checkBotId()` guards live in
+ * `lib/history-actions.ts`.
+ *
+ * Server Actions POST to the *page* they are invoked from, so the paths below
+ * are page routes, not action names. This list MUST cover every page that
+ * invokes a guarded action: BotID only attaches its headers to requests
+ * matching these entries, and `checkBotId()` fails closed (reports a bot) when
+ * the headers are absent. Current invocation sites:
+ *   - `/history/build/*`, `/history/compare/*` and the entity pages under
+ *     `/history/*` (EntityHistory, _resource-sections, compare page.client)
+ *   - `/type/*` — the type page embeds <EntityHistory> in its History tab
+ * The `/history` index is server-rendered via `getCachedHistoryIndex`, not a
+ * client-invoked action, so it needs no entry.
+ */
+initBotId({
+  protect: [
+    { path: "/history/*", method: "POST" },
+    { path: "/type/*", method: "POST" },
+  ],
+});
 
 Sentry.init({
   enabled: env.NODE_ENV === "production",

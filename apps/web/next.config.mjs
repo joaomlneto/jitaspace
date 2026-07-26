@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import { withSentryConfig } from "@sentry/nextjs";
+import { withBotId } from "botid/next/config";
 import { createJiti } from "jiti";
 
 const jiti = createJiti(import.meta.url);
@@ -262,7 +263,11 @@ function getModifiedDate() {
   return new Date().toISOString();
 }
 
-export default withSentryConfig(config, {
+// `withBotId` injects the rewrites that proxy BotID's challenge script through
+// our own origin, so ad-blockers and third-party script blockers can't defeat
+// it. It wraps the Sentry-wrapped config (outermost) so its rewrites survive.
+export default withBotId(
+  withSentryConfig(config, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
@@ -298,4 +303,5 @@ export default withSentryConfig(config, {
       removeDebugLogging: true,
     },
   },
-});
+  }),
+);
