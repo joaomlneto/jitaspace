@@ -10,6 +10,10 @@ overrides:
   "prosemirror-state": "1.4.4"
   "prosemirror-transform": "1.12.0"
   "prosemirror-view": "1.41.8"
+  # next declares optionalDependencies.sharp "^0.34.5"; without this override pnpm
+  # keeps a nested vulnerable copy that Next's image pipeline resolves in preference
+  # to apps/web's own. Covers GHSA-f88m-g3jw-g9cj (libvips memory safety).
+  "sharp": "0.35.3"
 nodeLinker: hoisted
 publicHoistPattern:
   - '*prisma*'

@@ -23,7 +23,6 @@
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/sde-utils": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
-    "@jsonhero/schema-infer": "^0.1.5",
     "@openapi-contrib/json-schema-to-openapi-schema": "^2.2.6",
     "@types/async": "^3.2.25",
     "@types/cli-progress": "^3.11.6",
