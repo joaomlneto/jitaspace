@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   Container,
@@ -16,6 +16,12 @@ import {
 import { useListState } from "@mantine/hooks";
 import createGraph from "ngraph.graph";
 import path from "ngraph.path";
+import {
+  parseAsInteger,
+  parseAsStringLiteral,
+  throttle,
+  useQueryStates,
+} from "nuqs";
 
 import { MapIcon } from "@jitaspace/eve-icons";
 
@@ -30,6 +36,50 @@ export interface TravelPageProps {
 }
 
 type SolarSystemNodeData = TravelPageProps["solarSystems"][string];
+
+/**
+ * Route preferences are URL-synced, so the stored values are short slugs rather
+ * than the display labels (`?pref=secure`, not `?pref=More%20Secure`).
+ */
+const ROUTE_PREFERENCES = ["shortest", "secure", "insecure", "custom"] as const;
+type RoutePreference = (typeof ROUTE_PREFERENCES)[number];
+
+const ROUTE_PREFERENCE_OPTIONS: { value: RoutePreference; label: string }[] = [
+  { value: "shortest", label: "Shortest" },
+  { value: "secure", label: "More Secure" },
+  { value: "insecure", label: "Less Secure" },
+  { value: "custom", label: "Custom" },
+];
+
+/**
+ * The penalties each preset implies. Only "custom" reads them from the URL —
+ * for the presets they are derived, which keeps `?pref=secure` from also
+ * carrying three redundant penalty params that could be hand-edited into
+ * disagreeing with the preference they belong to.
+ */
+const PRESET_PENALTIES: Record<
+  Exclude<RoutePreference, "custom">,
+  { nullSec: number; lowSec: number; highSec: number }
+> = {
+  shortest: { nullSec: 0, lowSec: 0, highSec: 0 },
+  secure: { nullSec: 100, lowSec: 100, highSec: 0 },
+  insecure: { nullSec: 0, lowSec: 0, highSec: 100 },
+};
+
+const travelControlParsers = {
+  pref: parseAsStringLiteral(ROUTE_PREFERENCES).withDefault("shortest"),
+  nullSec: parseAsInteger.withDefault(0),
+  lowSec: parseAsInteger.withDefault(0),
+  highSec: parseAsInteger.withDefault(0),
+};
+
+// The penalty sliders fire onChange continuously while dragging, so throttle the
+// URL writes — nuqs still applies the value locally on every tick (the thumb
+// stays responsive), it just doesn't hand the History API one entry per pixel.
+const travelControlUrlOptions = {
+  history: "replace" as const,
+  limitUrlUpdates: throttle(500),
+};
 
 export default function TravelPage({
   solarSystems,
@@ -50,10 +100,14 @@ export default function TravelPage({
 
   const [waypoints, waypointHandlers] = useListState<string>(initialWaypoints);
 
-  const [routePreference, setRoutePreference] = useState<string>("Shortest");
-  const [nullSecPenalty, setNullSecPenalty] = useState<number>(0);
-  const [lowSecPenalty, setLowSecPenalty] = useState<number>(0);
-  const [highSecPenalty, setHighSecPenalty] = useState<number>(0);
+  const [{ pref: routePreference, nullSec, lowSec, highSec }, setControls] =
+    useQueryStates(travelControlParsers, travelControlUrlOptions);
+
+  // Presets derive their penalties; only "custom" uses the URL values.
+  const penalties =
+    routePreference === "custom"
+      ? { nullSec, lowSec, highSec }
+      : PRESET_PENALTIES[routePreference];
 
   // The penalty sliders fire `onChange` continuously while dragging. Running the
   // NBA* pathfinder over the full New Eden graph (thousands of systems) on every
@@ -61,9 +115,9 @@ export default function TravelPage({
   // the values the route depends on keeps the slider thumb and live labels
   // responsive (urgent update), while React recomputes the route as a
   // lower-priority, interruptible transition that coalesces rapid changes.
-  const deferredNullSecPenalty = useDeferredValue(nullSecPenalty);
-  const deferredLowSecPenalty = useDeferredValue(lowSecPenalty);
-  const deferredHighSecPenalty = useDeferredValue(highSecPenalty);
+  const deferredNullSecPenalty = useDeferredValue(penalties.nullSec);
+  const deferredLowSecPenalty = useDeferredValue(penalties.lowSec);
+  const deferredHighSecPenalty = useDeferredValue(penalties.highSec);
 
   const route = useMemo(() => {
     const start = waypoints[1];
@@ -147,61 +201,61 @@ export default function TravelPage({
             </Text>
             <SegmentedControl
               value={routePreference}
-              data={["Shortest", "More Secure", "Less Secure", "Custom"]}
+              data={ROUTE_PREFERENCE_OPTIONS}
               onChange={(value) => {
-                if (value === "Shortest") {
-                  setLowSecPenalty(0);
-                  setNullSecPenalty(0);
-                  setHighSecPenalty(0);
-                }
-                if (value === "More Secure") {
-                  setLowSecPenalty(100);
-                  setNullSecPenalty(100);
-                  setHighSecPenalty(0);
-                }
-                if (value === "Less Secure") {
-                  setLowSecPenalty(0);
-                  setNullSecPenalty(0);
-                  setHighSecPenalty(100);
-                }
-                setRoutePreference(value);
+                // Switching to Custom seeds the sliders from whatever the
+                // current preset resolves to, so they don't jump to zero;
+                // switching to a preset clears the penalty params (null) since
+                // the preset implies them.
+                void setControls(
+                  value === "custom"
+                    ? { pref: "custom", ...penalties }
+                    : {
+                        pref: value as RoutePreference,
+                        nullSec: null,
+                        lowSec: null,
+                        highSec: null,
+                      },
+                );
               }}
             />
           </div>
         </Group>
-        {routePreference === "Custom" && (
+        {routePreference === "custom" && (
           <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="xl">
+            {/* Controlled (not defaultValue) so a shared `?nullSec=…` link
+                actually moves the thumb. */}
             <div>
               <Text size="sm" fw={500}>
-                Null Sec Penalty ({nullSecPenalty})
+                Null Sec Penalty ({nullSec})
               </Text>
               <Slider
-                defaultValue={nullSecPenalty}
+                value={nullSec}
                 min={0}
                 max={500}
-                onChange={setNullSecPenalty}
+                onChange={(value) => void setControls({ nullSec: value })}
               />
             </div>
             <div>
               <Text size="sm" fw={500}>
-                Low Sec Penalty ({lowSecPenalty})
+                Low Sec Penalty ({lowSec})
               </Text>
               <Slider
-                defaultValue={lowSecPenalty}
+                value={lowSec}
                 min={0}
                 max={500}
-                onChange={setLowSecPenalty}
+                onChange={(value) => void setControls({ lowSec: value })}
               />
             </div>
             <div>
               <Text size="sm" fw={500}>
-                High Sec Penalty ({highSecPenalty})
+                High Sec Penalty ({highSec})
               </Text>
               <Slider
-                defaultValue={highSecPenalty}
+                value={highSec}
                 min={0}
                 max={500}
-                onChange={setHighSecPenalty}
+                onChange={(value) => void setControls({ highSec: value })}
               />
             </div>
           </SimpleGrid>

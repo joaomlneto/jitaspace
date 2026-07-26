@@ -1,8 +1,10 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 // ---------------------------------------------------------------------------
 // The Travel page uses next/navigation (useRouter), @jitaspace/eve-icons
@@ -45,12 +47,18 @@ const solarSystems = {
   "30000004": { name: "Delta", securityStatus: 0.9, neighbors: [30000003] },
 };
 
-function renderPage(initialWaypoints: string[]) {
+function renderPage(
+  initialWaypoints: string[],
+  adapter: { searchParams?: string; onUrlUpdate?: OnUrlUpdateFunction } = {},
+) {
   const Page = require("~/app/travel/[[...waypoints]]/page.client").default;
   return render(
     <MantineProvider>
       <Page solarSystems={solarSystems} initialWaypoints={initialWaypoints} />
     </MantineProvider>,
+    // The route preference + penalty sliders are nuqs-backed; hasMemory lets
+    // URL writes round-trip so the controls behave as they do in a browser.
+    { wrapper: withNuqsTestingAdapter({ hasMemory: true, ...adapter }) },
   );
 }
 
@@ -96,5 +104,82 @@ describe("Travel Page", () => {
     // The URL reflects BOTH selections — before the fix the second push read a
     // stale waypoints array and dropped the change, lagging one interaction.
     expect(mockPush).toHaveBeenLastCalledWith("/travel/Delta/Alpha");
+  });
+});
+
+describe("Travel Page route preference URL sync", () => {
+  const prefControl = (label: string) =>
+    screen.getByRole("radio", { name: label });
+
+  it("defaults to Shortest with no penalty sliders shown", () => {
+    renderPage(["30000001", "30000004"]);
+
+    expect(prefControl("Shortest")).toBeChecked();
+    expect(screen.queryByText(/Null Sec Penalty/)).toBeNull();
+  });
+
+  it("restores the preference from the URL on load", () => {
+    renderPage(["30000001", "30000004"], { searchParams: "?pref=secure" });
+
+    expect(prefControl("More Secure")).toBeChecked();
+    // A preset derives its penalties, so the custom sliders stay hidden.
+    expect(screen.queryByText(/Null Sec Penalty/)).toBeNull();
+  });
+
+  it("restores custom penalties from the URL and shows the sliders", () => {
+    renderPage(["30000001", "30000004"], {
+      searchParams: "?pref=custom&nullSec=250&lowSec=40&highSec=5",
+    });
+
+    expect(prefControl("Custom")).toBeChecked();
+    expect(screen.getByText("Null Sec Penalty (250)")).toBeInTheDocument();
+    expect(screen.getByText("Low Sec Penalty (40)")).toBeInTheDocument();
+    expect(screen.getByText("High Sec Penalty (5)")).toBeInTheDocument();
+  });
+
+  it("writes the chosen preference to the URL as a slug", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    renderPage(["30000001", "30000004"], { onUrlUpdate });
+
+    fireEvent.click(prefControl("Less Secure"));
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+    // Slug, not the display label — no "?pref=Less%20Secure".
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe(
+      "?pref=insecure",
+    );
+  });
+
+  // Presets imply their penalties, so switching to one must clear the params
+  // rather than leave a stale `nullSec` disagreeing with the preference.
+  it("clears penalty params when switching from custom back to a preset", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    renderPage(["30000001", "30000004"], {
+      searchParams: "?pref=custom&nullSec=250",
+      onUrlUpdate,
+    });
+
+    fireEvent.click(prefControl("Shortest"));
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe("");
+  });
+
+  // Switching to Custom should start from the preset you were on, not snap to
+  // zero — this was the pre-migration behaviour and is worth keeping.
+  it("seeds the custom sliders from the preset it was switched from", () => {
+    renderPage(["30000001", "30000004"], { searchParams: "?pref=secure" });
+
+    fireEvent.click(prefControl("Custom"));
+
+    expect(screen.getByText("Null Sec Penalty (100)")).toBeInTheDocument();
+    expect(screen.getByText("Low Sec Penalty (100)")).toBeInTheDocument();
+    expect(screen.getByText("High Sec Penalty (0)")).toBeInTheDocument();
+  });
+
+  it("ignores out-of-range preference values in a hand-edited URL", () => {
+    renderPage(["30000001", "30000004"], { searchParams: "?pref=bogus" });
+
+    expect(prefControl("Shortest")).toBeChecked();
   });
 });
