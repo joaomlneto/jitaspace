@@ -18,9 +18,12 @@ const INITIAL_VISIBLE = 24;
 const VISIBLE_STEP = 24;
 
 // The filter/sort/view controls are synced to the URL so a filtered view can be
-// shared, bookmarked, and survives a refresh. Parsers live at module scope for
-// stable references; each default matches the previous useState default, and
-// nuqs strips any param equal to its default so a pristine view has a clean URL.
+// shared, bookmarked, and survives a refresh. Each default matches the previous
+// useState default, and nuqs strips any param equal to its default so a pristine
+// view has a clean URL. Parsers sit at module scope purely to keep this 7-key map
+// out of the render body — nuqs keys its internal memos on stringified defaults
+// and key names rather than object identity, so an inline map (as on the simpler
+// mail page) is equally correct.
 const STATUS_VALUES = STATUS_FILTERS.map((option) => option.value);
 const SORT_VALUES = SORT_OPTIONS.map((option) => option.value);
 const SORT_DIRECTIONS = ["desc", "asc"] as const;

@@ -239,6 +239,32 @@ describe("WarRoom URL sync", () => {
       "status=starting",
     );
   });
+
+  // parseAsStringLiteral rejects anything outside its allowed values, so a
+  // hand-edited URL falls back to the defaults instead of filtering on garbage.
+  it("falls back to defaults for out-of-range param values", () => {
+    const { container } = renderRoom(richData(), {
+      searchParams: "?status=bogus&view=nope&sort=nonsense&dir=sideways",
+    });
+    // status=all → all 30 wars; view falls back to rows (no table)
+    expect(screen.getByText(/30 shown/)).toBeInTheDocument();
+    expect(container.querySelector("table")).toBeNull();
+  });
+
+  // clearOnDefault: returning a filter to its default must drop the param
+  // rather than leave `?status=all` in a shared link.
+  it("removes params from the URL when filters return to their defaults", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    const { container } = renderRoom(richData(), {
+      searchParams: "?status=starting",
+      onUrlUpdate,
+    });
+
+    fireEvent.click(container.querySelector('input[value="all"]')!);
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe("");
+  });
 });
 
 describe("WarRoom with no combat", () => {

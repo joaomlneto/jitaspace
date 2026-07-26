@@ -118,6 +118,7 @@ tooling/
 - **ESLint:** flat config only (`eslint.config.ts`); never `.eslintrc.*`. `apps/web` lints with `--flag unstable_native_nodejs_ts_config`.
 - **TypeScript:** `moduleResolution: Bundler`, `strict`, `noUncheckedIndexedAccess`; all packages extend `tooling/tsconfig/base.json`.
 - **Prettier import order** (via `@ianvs/prettier-plugin-sort-imports`): React/Next → third-party → `@jitaspace/*` types → `@jitaspace/*` values → relative.
+- **URL-synced filter state (nuqs):** use `useQueryState`/`useQueryStates` for filter/sort/view state that should be shareable (see `app/mail/page.client.tsx`, `components/Wars/WarRoom/WarList.tsx`). Two rules: (1) the consuming component **must** sit under a `<Suspense>` boundary — nuqs calls `useSearchParams()` internally, and without one the route silently drops out of static prerendering under `cacheComponents`; (2) prefer a validating parser (`parseAsInteger`, `parseAsStringLiteral`) over `parseAsString` so hand-edited URLs can't reach an API. Page-owned params may use bare names (`status`, `sort`); a **shared** component that adopts nuqs must namespace via `urlKeys` to avoid colliding with its host page.
 - **Build note:** `apps/web` sets `typescript.ignoreBuildErrors: true` in CI, so TS errors don't fail the Next build — but they still fail `pnpm type-check`. Always run `pnpm type-check` to validate types.
 
 ## Changesets

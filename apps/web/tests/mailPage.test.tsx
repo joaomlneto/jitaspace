@@ -35,19 +35,33 @@ jest.mock("@mantine/modals", () => ({
   },
 }));
 
+// Renders `value` so tests can assert what the page hands the (string-based)
+// MultiSelect, plus a clear button to exercise deselecting everything.
 jest.mock("~/components/MultiSelect/EveMailLabelMultiSelect", () => ({
   EveMailLabelMultiSelect: ({
+    value,
     onChange,
   }: {
+    value?: string[];
     onChange?: (value: string[]) => void;
   }) => (
-    <button
-      type="button"
-      data-testid="label-multiselect"
-      onClick={() => onChange?.(["1", "2"])}
-    >
-      Label MultiSelect
-    </button>
+    <>
+      <button
+        type="button"
+        data-testid="label-multiselect"
+        onClick={() => onChange?.(["1", "2"])}
+      >
+        Label MultiSelect
+      </button>
+      <button
+        type="button"
+        data-testid="label-clear"
+        onClick={() => onChange?.([])}
+      >
+        Clear labels
+      </button>
+      <span data-testid="label-value">{JSON.stringify(value)}</span>
+    </>
   ),
 }));
 
@@ -172,6 +186,45 @@ describe("Mail Page", () => {
     renderPage();
 
     expect(mockUseCharacterMails).toHaveBeenCalledWith(123, []);
+  });
+
+  it("passes the restored labels to the multiselect as strings", () => {
+    mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
+    mockUseCharacterMails.mockReturnValue(defaultMailReturn());
+
+    renderPage({ searchParams: "?labels=1,2" });
+
+    expect(screen.getByTestId("label-value")).toHaveTextContent('["1","2"]');
+  });
+
+  // The integer item-parser validates URL input: nuqs drops items it can't
+  // parse, so a hand-edited label id never reaches ESI as NaN.
+  it.each([
+    ["?labels=abc", []],
+    ["?labels=abc,2", [2]],
+    ["?labels=", []],
+  ])("ignores unparseable label ids in %s", (searchParams, expected) => {
+    mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
+    mockUseCharacterMails.mockReturnValue(defaultMailReturn());
+
+    renderPage({ searchParams });
+
+    expect(mockUseCharacterMails).toHaveBeenCalledWith(123, expected);
+  });
+
+  // clearOnDefault: deselecting everything must strip `labels` from the URL
+  // rather than leaving `?labels=` behind.
+  it("removes the labels param from the URL when the selection is cleared", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
+    mockUseCharacterMails.mockReturnValue(defaultMailReturn());
+
+    renderPage({ searchParams: "?labels=1,2", onUrlUpdate });
+
+    fireEvent.click(screen.getByTestId("label-clear"));
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalledTimes(1));
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe("");
   });
 
   it("shows the load-more button when more messages are available", () => {

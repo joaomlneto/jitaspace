@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
+import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs";
 import posthog from "posthog-js";
 
 import {
@@ -34,9 +34,11 @@ export default function Page() {
 
   // parseAsArrayOf defaults to a comma separator, keeping the `?labels=1,2`
   // format this page already wrote, so existing shared links keep working.
+  // The integer item-parser also validates: nuqs drops items it can't parse, so
+  // a hand-edited `?labels=abc,2` yields [2] instead of forwarding NaN to ESI.
   const [selectedLabels, setSelectedLabels] = useQueryState(
     "labels",
-    parseAsArrayOf(parseAsString)
+    parseAsArrayOf(parseAsInteger)
       .withDefault([])
       .withOptions({ history: "replace" }),
   );
@@ -48,7 +50,7 @@ export default function Page() {
     isLoading,
     mutate,
     error,
-  } = useCharacterMails(character?.characterId, selectedLabels.map(Number));
+  } = useCharacterMails(character?.characterId, selectedLabels);
 
   return (
     <Container size="xl">
@@ -143,8 +145,10 @@ export default function Page() {
                 size="xs"
                 style={{ minWidth: "240px" }}
                 label="Filter by label"
-                value={selectedLabels}
-                onChange={(value: string[]) => void setSelectedLabels(value)}
+                value={selectedLabels.map(String)}
+                onChange={(value: string[]) =>
+                  void setSelectedLabels(value.map(Number))
+                }
               />
             )}
           </Grid.Col>

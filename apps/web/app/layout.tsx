@@ -136,6 +136,11 @@ export default function RootLayout({
         )}
         <Analytics />
         <SpeedInsights />
+        {/* Enables nuqs `useQueryState`/`useQueryStates` app-wide (URL-synced
+            filter state). NOTE: nuqs calls `useSearchParams()` internally, so any
+            component using it must sit under a `<Suspense>` boundary — otherwise
+            that route silently drops out of static prerendering under
+            `cacheComponents`. See the nuqs notes in AGENTS.md / CLAUDE.md. */}
         <NuqsAdapter>
           <AppMantineProvider>
             <MyQueryClientProvider

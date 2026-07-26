@@ -21,6 +21,11 @@ Essential conventions (project-specific)
   - `!process.env.SKIP_ENV_VALIDATION && (await jiti.import("./env"))` — many dev/build steps validate env; set `SKIP_ENV_VALIDATION=1` for CI/docker/lint where appropriate.
 - Linting uses a flat ESLint config (`eslint.config.*`) and a shared tooling package under `tooling/eslint`.
 - Prettier config uses `@jitaspace/prettier-config` and import-sorting plugin is enabled globally.
+- URL-synced filter state uses **nuqs** (`NuqsAdapter` is in `apps/web/app/layout.tsx`; see `app/mail/page.client.tsx` and `components/Wars/WarRoom/WarList.tsx` for the pattern):
+  - The component calling `useQueryState`/`useQueryStates` **must** be under a `<Suspense>` boundary. nuqs uses `useSearchParams()` internally, so without one the route silently loses static prerendering under `cacheComponents`. There is no CI check for this — verify with `next build` that the route is still marked `○`.
+  - Prefer validating parsers (`parseAsInteger`, `parseAsStringLiteral`) over `parseAsString`; nuqs drops items/values a parser rejects, which keeps hand-edited URLs from reaching an API.
+  - Page-owned params can use bare names (`status`, `sort`, `view`); a **shared** component adopting nuqs must namespace its keys via `urlKeys` so it can't collide with the page hosting it.
+  - Tests must wrap renders in `withNuqsTestingAdapter` (`nuqs/adapters/testing`) with `{ hasMemory: true }` for interaction tests — without it URL writes don't round-trip and control clicks appear to do nothing.
 
 Key developer workflows (commands & examples)
 
