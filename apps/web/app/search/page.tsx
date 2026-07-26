@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useRef } from "react";
 import {
   Container,
   Group,
@@ -12,6 +11,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
+import { debounce, parseAsString, useQueryState } from "nuqs";
 
 import { SearchScopeNotice } from "~/components/Spotlight/SearchScopeNotice";
 import { useSearchActions } from "~/components/Spotlight/useSearchActions";
@@ -23,8 +23,17 @@ import { useSearchActions } from "~/components/Spotlight/useSearchActions";
  * opening a modal isn't appropriate.
  */
 function SearchView() {
-  const searchParams = useSearchParams();
-  const [query, setQuery] = useState<string>(searchParams.get("q") ?? "");
+  // `q` was previously read once on mount and never written back, so typing
+  // left the URL stale and a refresh emptied the box. nuqs keeps both
+  // directions in sync; the URL write is debounced so a burst of keystrokes
+  // doesn't churn history (the ESI call is separately debounced inside
+  // useSearchActions, so this only affects the address bar).
+  const [query, setQuery] = useQueryState(
+    "q",
+    parseAsString
+      .withDefault("")
+      .withOptions({ history: "replace", limitUrlUpdates: debounce(300) }),
+  );
   const { filteredActions, ungrouped, groups, canSearchEntities } =
     useSearchActions(query);
 
@@ -46,7 +55,7 @@ function SearchView() {
           leftSection={<IconSearch size={18} />}
           placeholder="Search characters, corporations, items, tools…"
           value={query}
-          onChange={(event) => setQuery(event.currentTarget.value)}
+          onChange={(event) => void setQuery(event.currentTarget.value)}
         />
 
         {!canSearchEntities && <SearchScopeNotice />}
