@@ -13,7 +13,7 @@ import pLimit from "p-limit";
 
 import {
   getAlliancesAllianceId,
-  getCharactersCharacterId,
+  getCharactersDetail,
   getCorporationsCorporationId,
   getUniverseBloodlines,
   getUniverseFactions,
@@ -669,7 +669,7 @@ const fetchCharactersFromEsi = (
   Promise.all(
     characterIds.map((characterId) =>
       limit(async () =>
-        getCharactersCharacterId(characterId)
+        getCharactersDetail(characterId)
           .then((res) => res.data)
           .then((character) => ({
             characterId,
@@ -682,7 +682,7 @@ const fetchCharactersFromEsi = (
             name: character.name,
             raceId: character.race_id,
             securityStatus: character.security_status ?? null,
-            title: character.title ?? null,
+            title: character.corporation_title ?? null,
             isDeleted: false,
           }))
           .catch((err) => {

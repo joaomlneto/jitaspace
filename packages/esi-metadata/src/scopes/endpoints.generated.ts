@@ -15,6 +15,12 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/alliances/{alliance_id}/corporations/": { get: [] },
   "/alliances/{alliance_id}/icons/": { get: [] },
   "/characters/{character_id}/": { get: [] },
+  "/characters/{character_id}/access-lists/": {
+    get: ["esi-access.read_lists.v1"],
+  },
+  "/characters/{character_id}/access-lists/{access_list_id}/": {
+    get: ["esi-access.read_lists.v1"],
+  },
   "/characters/{character_id}/agents_research/": {
     get: ["esi-characters.read_agents_research.v1"],
   },
@@ -119,6 +125,12 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/characters/{character_id}/medals/": {
     get: ["esi-characters.read_medals.v1"],
   },
+  "/characters/{character_id}/mercenary-tactical-operations/": {
+    get: ["esi-activities.read_character.v1"],
+  },
+  "/characters/{character_id}/mercenary-tactical-operations/{operation_id}/": {
+    get: ["esi-activities.read_character.v1"],
+  },
   "/characters/{character_id}/mining/": {
     get: ["esi-industry.read_character_mining.v1"],
   },
@@ -159,6 +171,12 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/characters/{character_id}/skills/": { get: ["esi-skills.read_skills.v1"] },
   "/characters/{character_id}/standings/": {
     get: ["esi-characters.read_standings.v1"],
+  },
+  "/characters/{character_id}/structures/mercenary-dens/": {
+    get: ["esi-structures.read_character.v1"],
+  },
+  "/characters/{character_id}/structures/mercenary-dens/{mercenary_den_id}/": {
+    get: ["esi-structures.read_character.v1"],
   },
   "/characters/{character_id}/titles/": {
     get: ["esi-characters.read_titles.v1"],
@@ -298,6 +316,17 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/corporations/{corporation_id}/structures/": {
     get: ["esi-corporations.read_structures.v1"],
   },
+  "/corporations/{corporation_id}/structures/skyhooks/": {
+    get: ["esi-structures.read_corporation.v1"],
+  },
+  "/corporations/{corporation_id}/structures/skyhooks/{skyhook_id}/": {
+    get: ["esi-structures.read_corporation.v1"],
+  },
+  "/corporations/{corporation_id}/structures/sovereignty-hubs/": {
+    get: ["esi-structures.read_corporation.v1"],
+  },
+  "/corporations/{corporation_id}/structures/sovereignty-hubs/{sovereignty_hub_id}/":
+    { get: ["esi-structures.read_corporation.v1"] },
   "/corporations/{corporation_id}/titles/": {
     get: ["esi-corporations.read_titles.v1"],
   },
@@ -368,11 +397,12 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   },
   "/meta/changelog/": { get: [] },
   "/meta/compatibility-dates/": { get: [] },
+  "/meta/name/": { get: [] },
   "/meta/status/": { get: [] },
   "/route/{origin_system_id}/{destination_system_id}/": { post: [] },
+  "/skyhooks/raidable/": { get: [] },
   "/sovereignty/campaigns/": { get: [] },
-  "/sovereignty/map/": { get: [] },
-  "/sovereignty/structures/": { get: [] },
+  "/sovereignty/systems/": { get: [] },
   "/status/": { get: [] },
   "/ui/autopilot/waypoint/": { post: ["esi-ui.write_waypoint.v1"] },
   "/ui/openwindow/contract/": { post: ["esi-ui.open_window.v1"] },

@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 
-import type { GetCharactersCharacterIdQueryResponse } from "@jitaspace/esi-client";
+import type { GetCharactersDetailQueryResponse } from "@jitaspace/esi-client";
 
 import type { Character } from "../db";
 import { MAX_DB_PARALLELISM } from "../config";
@@ -8,7 +8,7 @@ import { prisma } from "../db";
 import { excludeObjectKeys, updateTable } from "../utils";
 
 export const convertEsiCharacterToDomain = (
-  character: GetCharactersCharacterIdQueryResponse & { characterId: number },
+  character: GetCharactersDetailQueryResponse & { characterId: number },
 ): Omit<Character, "updatedAt" | "createdAt"> => ({
   characterId: character.characterId,
   birthday: new Date(character.birthday),
@@ -20,12 +20,12 @@ export const convertEsiCharacterToDomain = (
   name: character.name,
   raceId: character.race_id,
   securityStatus: character.security_status ?? null,
-  title: character.title ?? null,
+  title: character.corporation_title ?? null,
   isDeleted: false,
 });
 
 export const mergeEsiEntriesIntoCharactersTable = (
-  characters: (GetCharactersCharacterIdQueryResponse & {
+  characters: (GetCharactersDetailQueryResponse & {
     characterId: number;
   })[],
 ) =>
@@ -46,7 +46,9 @@ export const mergeEntriesIntoCharactersTable = (
           },
         })
         .then((entries) =>
-          entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+          entries.map((entry) =>
+            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+          ),
         ),
     fetchRemoteEntries: () => Promise.resolve(characters),
     batchCreate: (entries) =>

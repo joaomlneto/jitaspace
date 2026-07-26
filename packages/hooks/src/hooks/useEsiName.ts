@@ -7,7 +7,7 @@ import { createCache, useCache } from "@react-hook/cache";
 import type { GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
 import {
   getAlliancesAllianceId,
-  getCharactersCharacterId,
+  getCharactersDetail,
   getCorporationsCorporationId,
   getUniverseConstellationsConstellationId,
   getUniverseFactions,
@@ -90,7 +90,7 @@ const resolveNameOfKnownCategory = async (
       );
     case "agent":
     case "character":
-      return getCharactersCharacterId(Number(id), {}, {}).then((data) => {
+      return getCharactersDetail(Number(id), {}, {}).then((data) => {
         return data.data.name;
       });
     case "inventory_type":

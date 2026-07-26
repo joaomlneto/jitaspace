@@ -58,7 +58,7 @@ export const scrapeSdeRaces = defineJob<ScrapeSdeRacesEventPayload["data"]>({
           })
           .then((entries) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "factionId"]),
+              excludeObjectKeys(entry, ["updatedAt", "createdAt", "factionId"]),
             ),
           ),
       fetchRemoteEntries: async () =>

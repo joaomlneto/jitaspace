@@ -42,6 +42,58 @@ describe("eveEditorExtensions render round-trip", () => {
     expect(stripWs(html)).toContain("color:rgb(255,0,0)");
   });
 
+  it("clamps an oversized font-size to the maximum", () => {
+    const html = renderToHtml('<font size="9999">huge</font>');
+    expect(html).toContain("huge");
+    expect(stripWs(html)).toContain("font-size:72pt");
+    expect(stripWs(html)).not.toContain("font-size:9999pt");
+  });
+
+  describe("CSS injection hardening", () => {
+    // `color`/`size` come from attacker-controlled EVE HTML (other players' mail
+    // bodies, character bios). A crafted value must never break out of the CSS
+    // declaration and inject page-wide styling or an external tracking request.
+    const injectionMarkers = [
+      "position",
+      "background",
+      "url(",
+      "inset",
+      "z-index",
+      "fixed",
+    ];
+
+    it("strips a CSS breakout smuggled through the color attribute", () => {
+      const html = renderToHtml(
+        '<font color="blue;position:fixed;inset:0;z-index:99999;background:url(https://attacker/beacon)">x</font>',
+      );
+      expect(html).toContain("x");
+      for (const marker of injectionMarkers) {
+        expect(html).not.toContain(marker);
+      }
+    });
+
+    it("strips a CSS breakout smuggled through the size attribute", () => {
+      const html = renderToHtml(
+        '<font size="14pt;position:fixed;top:0;background:red">x</font>',
+      );
+      expect(html).toContain("x");
+      // Number.parseFloat("14pt;...") is 14, so a plain clamped size survives...
+      expect(stripWs(html)).toContain("font-size:14pt");
+      // ...but none of the injected declarations leak through.
+      for (const marker of injectionMarkers) {
+        expect(html).not.toContain(marker);
+      }
+    });
+
+    it("still renders a legitimate size + EVE color correctly", () => {
+      const html = renderToHtml('<font size="14" color="0x0FF0000">ok</font>');
+      expect(html).toContain("ok");
+      expect(stripWs(html)).toContain("font-size:14pt");
+      // jsdom serializes #FF0000 as rgb(255, 0, 0).
+      expect(stripWs(html)).toContain("color:rgb(255,0,0)");
+    });
+  });
+
   it("renders the PLEX description (mixed size-only and color-only fonts)", () => {
     // Trimmed, real ESI description for type 44992 — the content that crashed.
     const description =

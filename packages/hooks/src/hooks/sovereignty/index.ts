@@ -1,2 +1,2 @@
 export * from "./useSolarSystemSovereignty";
-export * from "./useSovereigntyMap";
+export * from "./useSovereigntySystems";

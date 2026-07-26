@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { getCharactersCharacterId } from "@jitaspace/esi-client";
+import { getCharactersDetail } from "@jitaspace/esi-client";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import PageClient from "./page.client";
@@ -15,7 +15,7 @@ export async function generateMetadata({
   const id = Number(characterId);
   if (!Number.isSafeInteger(id) || id <= 0) return {};
   try {
-    const res = await getCharactersCharacterId(id);
+    const res = await getCharactersDetail(id);
     const name = res.data.name;
     const portraitUrl = `https://images.evetech.net/characters/${id}/portrait`;
     return {

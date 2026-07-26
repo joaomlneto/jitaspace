@@ -17,13 +17,12 @@ jest.mock("~/app/alliance/[allianceId]/page.client", () => ({
 // ESI-client mocks
 // ---------------------------------------------------------------------------
 
-const mockGetCharactersCharacterId = jest.fn();
+const mockGetCharactersDetail = jest.fn();
 const mockGetCorporationsCorporationId = jest.fn();
 const mockGetAlliancesAllianceId = jest.fn();
 
 jest.mock("@jitaspace/esi-client", () => ({
-  getCharactersCharacterId: (...a: unknown[]) =>
-    mockGetCharactersCharacterId(...a),
+  getCharactersDetail: (...a: unknown[]) => mockGetCharactersDetail(...a),
   getCorporationsCorporationId: (...a: unknown[]) =>
     mockGetCorporationsCorporationId(...a),
   getAlliancesAllianceId: (...a: unknown[]) => mockGetAlliancesAllianceId(...a),
@@ -40,11 +39,11 @@ function rp<T>(obj: T): Promise<T> {
 describe("character/[characterId] generateMetadata", () => {
   beforeEach(() => {
     jest.resetModules();
-    mockGetCharactersCharacterId.mockReset();
+    mockGetCharactersDetail.mockReset();
   });
 
   it("returns name + portrait for a valid character id", async () => {
-    mockGetCharactersCharacterId.mockResolvedValue({
+    mockGetCharactersDetail.mockResolvedValue({
       data: { name: "Jita Trader" },
     });
     const { generateMetadata } =
@@ -91,7 +90,7 @@ describe("character/[characterId] generateMetadata", () => {
   });
 
   it("returns empty object when esi-client throws", async () => {
-    mockGetCharactersCharacterId.mockRejectedValue(new Error("network error"));
+    mockGetCharactersDetail.mockRejectedValue(new Error("network error"));
     const { generateMetadata } =
       await import("~/app/character/[characterId]/page");
     expect(

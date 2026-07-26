@@ -11,10 +11,10 @@ Provides fully typed axios-based API functions and TanStack React Query hooks fo
 ## Usage
 
 ```ts
-import { useGetCharactersCharacterId } from "@jitaspace/esi-client";
+import { useGetCharactersDetail } from "@jitaspace/esi-client";
 
 function CharacterInfo({ characterId }: { characterId: number }) {
-  const { data } = useGetCharactersCharacterId(characterId);
+  const { data } = useGetCharactersDetail(characterId);
   return <div>{data?.data.name}</div>;
 }
 ```

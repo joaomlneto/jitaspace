@@ -9,10 +9,13 @@ import { captureMock } from "../__mocks__/posthogMocks";
 // ---------------------------------------------------------------------------
 // The LP Store index page client is presentational: it takes a list of
 // corporations and renders a header, an "all offers" link, and a grid of
-// per-corporation anchors. The route's page.tsx is an async Server Component
-// (Prisma fetch), so page.client carries the renderable UI and is exercised
-// here. next/link is stubbed to a plain anchor; @jitaspace/ui is a
-// pass-through Proxy so CorporationAvatar/Text wrappers don't drop children.
+// per-corporation anchors. When a character is signed in it also shows that
+// character's loyalty-point balance per corporation. The route's page.tsx is
+// an async Server Component (Prisma fetch), so page.client carries the
+// renderable UI and is exercised here. next/link is stubbed to a plain anchor;
+// @jitaspace/ui is a pass-through Proxy so CorporationAvatar/Text wrappers
+// don't drop children; @jitaspace/hooks is stubbed so we can drive the
+// signed-in / loyalty-points state.
 // ---------------------------------------------------------------------------
 
 jest.mock("next/link", () => ({
@@ -50,6 +53,15 @@ jest.mock(
     ),
 );
 
+const mockUseSelectedCharacter = jest.fn();
+const mockUseCharacterLoyaltyPoints = jest.fn();
+
+jest.mock("@jitaspace/hooks", () => ({
+  useSelectedCharacter: () => mockUseSelectedCharacter(),
+  useCharacterLoyaltyPoints: (...args: unknown[]) =>
+    mockUseCharacterLoyaltyPoints(...args),
+}));
+
 const CORPORATIONS = [
   { corporationId: 1000035, name: "Caldari Navy" },
   { corporationId: 1000125, name: "Federation Navy" },
@@ -68,6 +80,13 @@ function renderPage(props: Record<string, unknown> = {}) {
 describe("LP Store index page (client)", () => {
   beforeEach(() => {
     captureMock.mockClear();
+    // Default: signed out — no character, no loyalty points.
+    mockUseSelectedCharacter.mockReturnValue(null);
+    mockUseCharacterLoyaltyPoints.mockReturnValue({
+      hasToken: false,
+      loyaltyPointsMap: {},
+      isLoading: false,
+    });
   });
 
   it("captures lp_store_corporation_selected when a corporation is clicked", () => {
@@ -111,5 +130,41 @@ describe("LP Store index page (client)", () => {
     renderPage({ corporations: [] });
     expect(screen.getByText("LP Store")).toBeInTheDocument();
     expect(screen.queryByText("Caldari Navy")).not.toBeInTheDocument();
+  });
+
+  it("does not show loyalty points when signed out", () => {
+    renderPage();
+    expect(screen.queryByText("0 LP")).not.toBeInTheDocument();
+    expect(screen.queryByText("500 LP")).not.toBeInTheDocument();
+  });
+
+  it("shows the character's loyalty points per corporation when signed in", () => {
+    mockUseSelectedCharacter.mockReturnValue({ characterId: 90000001 });
+    mockUseCharacterLoyaltyPoints.mockReturnValue({
+      hasToken: true,
+      loyaltyPointsMap: { 1000035: 500 },
+      isLoading: false,
+    });
+
+    renderPage();
+
+    // A corporation the character has LP with shows the balance...
+    expect(screen.getByText("500 LP")).toBeInTheDocument();
+    // ...while corporations with no LP show a zero balance (ESI omits zeroes).
+    expect(screen.getByText("0 LP")).toBeInTheDocument();
+  });
+
+  it("shows nothing (not a zero balance) while loyalty points are loading", () => {
+    mockUseSelectedCharacter.mockReturnValue({ characterId: 90000001 });
+    mockUseCharacterLoyaltyPoints.mockReturnValue({
+      hasToken: true,
+      loyaltyPointsMap: {},
+      isLoading: true,
+    });
+
+    renderPage();
+
+    expect(screen.queryByText("0 LP")).not.toBeInTheDocument();
+    expect(screen.queryByText("500 LP")).not.toBeInTheDocument();
   });
 });

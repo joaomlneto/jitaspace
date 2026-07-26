@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   Button,
-  Card,
   Group,
   Menu,
   Switch,
@@ -127,200 +126,194 @@ export function SettingsCard() {
       : "Dismissed news banners will reappear at the top of the home page.";
 
   return (
-    <Card withBorder radius="md" p="xl" className={classes.card}>
-      <Text fz="lg" className={classes.title} fw={500}>
-        Configure settings
-      </Text>
+    <Tabs defaultValue="general">
+      <Tabs.List mb="md">
+        <Tabs.Tab value="general" leftSection={<IconSettings size={16} />}>
+          General
+        </Tabs.Tab>
+        <Tabs.Tab value="experimental" leftSection={<IconFlask size={16} />}>
+          Experimental
+        </Tabs.Tab>
+        <Tabs.Tab value="reset" leftSection={<IconRefresh size={16} />}>
+          Reset
+        </Tabs.Tab>
+      </Tabs.List>
 
-      <Tabs defaultValue="general" mt="md">
-        <Tabs.List mb="md">
-          <Tabs.Tab value="general" leftSection={<IconSettings size={16} />}>
-            General
-          </Tabs.Tab>
-          <Tabs.Tab value="experimental" leftSection={<IconFlask size={16} />}>
-            Experimental
-          </Tabs.Tab>
-          <Tabs.Tab value="reset" leftSection={<IconRefresh size={16} />}>
-            Reset
-          </Tabs.Tab>
-        </Tabs.List>
+      <Tabs.Panel value="general">
+        <Text fz="xs" c="dimmed" mt={3} mb="md">
+          Choose the language for ESI requests and the UI theme.
+        </Text>
 
-        <Tabs.Panel value="general">
-          <Text fz="xs" c="dimmed" mt={3} mb="md">
-            Choose the language for ESI requests and the UI theme.
-          </Text>
+        <Group
+          justify="space-between"
+          className={classes.item}
+          wrap="nowrap"
+          gap="xl"
+        >
+          <div>
+            <Text>Language</Text>
+            <Text size="xs" c="dimmed">
+              Used in ESI requests through the `Accept-Language` header
+            </Text>
+          </div>
 
-          <Group
-            justify="space-between"
-            className={classes.item}
-            wrap="nowrap"
-            gap="xl"
+          <Menu
+            onOpen={() => setLanguageMenuOpened(true)}
+            onClose={() => setLanguageMenuOpened(false)}
+            radius="md"
+            width="target"
           >
-            <div>
-              <Text>Language</Text>
-              <Text size="xs" c="dimmed">
-                Used in ESI requests through the `Accept-Language` header
-              </Text>
-            </div>
-
-            <Menu
-              onOpen={() => setLanguageMenuOpened(true)}
-              onClose={() => setLanguageMenuOpened(false)}
-              radius="md"
-              width="target"
-            >
-              <Menu.Target>
-                <UnstyledButton
-                  className={classes.control}
-                  data-expanded={languageMenuOpened || undefined}
-                >
-                  <Group gap="xs">
-                    <ReactCountryFlag
-                      countryCode={selectedLanguage.countryCode}
-                      svg
-                      className={classes.flag}
-                      aria-label={`${selectedLanguage.label} flag`}
-                    />
-                    <span className={classes.label}>
-                      {selectedLanguage.label}
-                    </span>
-                  </Group>
-                  <IconChevronDown
-                    size={16}
-                    className={classes.icon}
-                    stroke={1.5}
+            <Menu.Target>
+              <UnstyledButton
+                className={classes.control}
+                data-expanded={languageMenuOpened || undefined}
+              >
+                <Group gap="xs">
+                  <ReactCountryFlag
+                    countryCode={selectedLanguage.countryCode}
+                    svg
+                    className={classes.flag}
+                    aria-label={`${selectedLanguage.label} flag`}
                   />
-                </UnstyledButton>
-              </Menu.Target>
-              <Menu.Dropdown>{languageItems}</Menu.Dropdown>
-            </Menu>
-          </Group>
+                  <span className={classes.label}>
+                    {selectedLanguage.label}
+                  </span>
+                </Group>
+                <IconChevronDown
+                  size={16}
+                  className={classes.icon}
+                  stroke={1.5}
+                />
+              </UnstyledButton>
+            </Menu.Target>
+            <Menu.Dropdown>{languageItems}</Menu.Dropdown>
+          </Menu>
+        </Group>
 
-          <Group
-            justify="space-between"
-            className={classes.item}
-            wrap="nowrap"
-            gap="xl"
+        <Group
+          justify="space-between"
+          className={classes.item}
+          wrap="nowrap"
+          gap="xl"
+        >
+          <div>
+            <Text>Theme</Text>
+            <Text size="xs" c="dimmed">
+              Choose the global UI theme
+            </Text>
+          </div>
+
+          <Menu
+            onOpen={() => setThemeMenuOpened(true)}
+            onClose={() => setThemeMenuOpened(false)}
+            radius="md"
+            width="target"
           >
-            <div>
-              <Text>Theme</Text>
-              <Text size="xs" c="dimmed">
-                Choose the global UI theme
-              </Text>
-            </div>
+            <Menu.Target>
+              <UnstyledButton
+                className={classes.control}
+                data-expanded={themeMenuOpened || undefined}
+                aria-label="Theme"
+              >
+                <Group gap="xs">
+                  <span className={classes.label}>
+                    {selectedThemeOption.label}
+                  </span>
+                </Group>
+                <IconChevronDown
+                  size={16}
+                  className={classes.icon}
+                  stroke={1.5}
+                />
+              </UnstyledButton>
+            </Menu.Target>
+            <Menu.Dropdown>{themeItems}</Menu.Dropdown>
+          </Menu>
+        </Group>
+      </Tabs.Panel>
 
-            <Menu
-              onOpen={() => setThemeMenuOpened(true)}
-              onClose={() => setThemeMenuOpened(false)}
-              radius="md"
-              width="target"
-            >
-              <Menu.Target>
-                <UnstyledButton
-                  className={classes.control}
-                  data-expanded={themeMenuOpened || undefined}
-                  aria-label="Theme"
-                >
-                  <Group gap="xs">
-                    <span className={classes.label}>
-                      {selectedThemeOption.label}
-                    </span>
-                  </Group>
-                  <IconChevronDown
-                    size={16}
-                    className={classes.icon}
-                    stroke={1.5}
-                  />
-                </UnstyledButton>
-              </Menu.Target>
-              <Menu.Dropdown>{themeItems}</Menu.Dropdown>
-            </Menu>
-          </Group>
-        </Tabs.Panel>
+      <Tabs.Panel value="experimental">
+        <Text fz="xs" c="dimmed" mt={3} mb="md">
+          Try out features that are still in development.
+        </Text>
 
-        <Tabs.Panel value="experimental">
-          <Text fz="xs" c="dimmed" mt={3} mb="md">
-            Try out features that are still in development.
-          </Text>
+        <Group
+          justify="space-between"
+          className={classes.item}
+          wrap="nowrap"
+          gap="xl"
+        >
+          <div>
+            <Text>New data tables</Text>
+            <Text size="xs" c="dimmed">
+              Enable the experimental DataTable components. When on, each table
+              shows an engine selector (TanStack or mantine-datatable). When
+              off, the classic mantine-react-table is used everywhere.
+            </Text>
+          </div>
+          <Switch
+            className={classes.switch}
+            checked={experimentalDataTables}
+            onChange={(event) =>
+              setExperimentalDataTables(event.currentTarget.checked)
+            }
+            aria-label="Enable experimental data tables"
+          />
+        </Group>
 
-          <Group
-            justify="space-between"
-            className={classes.item}
-            wrap="nowrap"
-            gap="xl"
+        <Group
+          justify="space-between"
+          className={classes.item}
+          wrap="nowrap"
+          gap="xl"
+        >
+          <div>
+            <Text>New Active Wars page</Text>
+            <Text size="xs" c="dimmed">
+              Replace the Active Wars table with the redesigned overview —
+              headline stats, aggressor and defender leaderboards, and a
+              filterable list you can switch between rows and a compact table.
+            </Text>
+          </div>
+          <Switch
+            className={classes.switch}
+            checked={experimentalActiveWars}
+            onChange={(event) =>
+              setExperimentalActiveWars(event.currentTarget.checked)
+            }
+            aria-label="Enable the new Active Wars page"
+          />
+        </Group>
+      </Tabs.Panel>
+
+      <Tabs.Panel value="reset">
+        <Text fz="xs" c="dimmed" mt={3} mb="md">
+          Restore things you have dismissed.
+        </Text>
+
+        <Group
+          justify="space-between"
+          className={classes.item}
+          wrap="nowrap"
+          gap="xl"
+        >
+          <div>
+            <Text>Hidden news</Text>
+            <Text size="xs" c="dimmed">
+              {hiddenNewsDescription}
+            </Text>
+          </div>
+
+          <Button
+            variant="default"
+            leftSection={<IconRestore size={16} />}
+            disabled={!newsMounted || hiddenNewsCount === 0}
+            onClick={handleResetHiddenNews}
           >
-            <div>
-              <Text>New data tables</Text>
-              <Text size="xs" c="dimmed">
-                Enable the experimental DataTable components. When on, each table
-                shows an engine selector (TanStack or mantine-datatable). When
-                off, the classic mantine-react-table is used everywhere.
-              </Text>
-            </div>
-            <Switch
-              className={classes.switch}
-              checked={experimentalDataTables}
-              onChange={(event) =>
-                setExperimentalDataTables(event.currentTarget.checked)
-              }
-              aria-label="Enable experimental data tables"
-            />
-          </Group>
-
-          <Group
-            justify="space-between"
-            className={classes.item}
-            wrap="nowrap"
-            gap="xl"
-          >
-            <div>
-              <Text>New Active Wars page</Text>
-              <Text size="xs" c="dimmed">
-                Replace the Active Wars table with the redesigned overview —
-                headline stats, aggressor and defender leaderboards, and a
-                filterable list you can switch between rows and a compact table.
-              </Text>
-            </div>
-            <Switch
-              className={classes.switch}
-              checked={experimentalActiveWars}
-              onChange={(event) =>
-                setExperimentalActiveWars(event.currentTarget.checked)
-              }
-              aria-label="Enable the new Active Wars page"
-            />
-          </Group>
-        </Tabs.Panel>
-
-        <Tabs.Panel value="reset">
-          <Text fz="xs" c="dimmed" mt={3} mb="md">
-            Restore things you have dismissed.
-          </Text>
-
-          <Group
-            justify="space-between"
-            className={classes.item}
-            wrap="nowrap"
-            gap="xl"
-          >
-            <div>
-              <Text>Hidden news</Text>
-              <Text size="xs" c="dimmed">
-                {hiddenNewsDescription}
-              </Text>
-            </div>
-
-            <Button
-              variant="default"
-              leftSection={<IconRestore size={16} />}
-              disabled={!newsMounted || hiddenNewsCount === 0}
-              onClick={handleResetHiddenNews}
-            >
-              Reset hidden news
-            </Button>
-          </Group>
-        </Tabs.Panel>
-      </Tabs>
-    </Card>
+            Reset hidden news
+          </Button>
+        </Group>
+      </Tabs.Panel>
+    </Tabs>
   );
 }

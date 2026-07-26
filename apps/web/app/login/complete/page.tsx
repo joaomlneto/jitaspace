@@ -7,12 +7,8 @@ import posthog from "posthog-js";
 
 import { useAuthStore } from "@jitaspace/hooks";
 
+import { sanitizeReturnTo } from "~/lib/returnTo";
 import { consumeLoginResult } from "./actions";
-
-function safeReturnTo(value: string | null): string {
-  if (value && value.startsWith("/") && !value.startsWith("//")) return value;
-  return "/";
-}
 
 /**
  * Terminal page of the OAuth flow: drains the single-use result cookie via a
@@ -29,7 +25,7 @@ export default function LoginCompletePage() {
     if (hasRun.current) return;
     hasRun.current = true;
 
-    const returnTo = safeReturnTo(
+    const returnTo = sanitizeReturnTo(
       new URLSearchParams(globalThis.location.search).get("returnTo"),
     );
 

@@ -60,7 +60,7 @@ const esiCharacterDetail = {
   description: "A short biography",
   faction_id: 500001,
   security_status: 4.2,
-  title: "Fleet Commander",
+  corporation_title: "Fleet Commander",
 };
 
 function querySuccess<T>(data: T) {
