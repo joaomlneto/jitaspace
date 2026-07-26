@@ -1,8 +1,10 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type { WarRoomData, WarRoomWar } from "~/components/Wars/WarRoom";
 
@@ -137,12 +139,19 @@ function richData(): WarRoomData {
   };
 }
 
-function renderRoom(data: WarRoomData) {
+function renderRoom(
+  data: WarRoomData,
+  adapter: { searchParams?: string; onUrlUpdate?: OnUrlUpdateFunction } = {},
+) {
   const { WarRoom } = require("~/components/Wars/WarRoom");
   return render(
     <MantineProvider>
       <WarRoom data={data} />
     </MantineProvider>,
+    // hasMemory makes the adapter round-trip URL updates back into the tree, so
+    // the filter/sort/view controls (now nuqs-backed) behave as they would in a
+    // real browser during these interaction tests.
+    { wrapper: withNuqsTestingAdapter({ hasMemory: true, ...adapter }) },
   );
 }
 
@@ -186,7 +195,9 @@ describe("WarRoom overview", () => {
     ).toBeInTheDocument();
     // a third sortable header re-keys the sort
     fireEvent.click(sortable[2]!);
-    expect(container.querySelector('th[aria-sort="descending"]')).toBeInTheDocument();
+    expect(
+      container.querySelector('th[aria-sort="descending"]'),
+    ).toBeInTheDocument();
   });
 
   it("filters by status and attribute, showing an empty state", () => {
@@ -199,6 +210,60 @@ describe("WarRoom overview", () => {
     expect(
       screen.getByText("No wars match these filters."),
     ).toBeInTheDocument();
+  });
+});
+
+describe("WarRoom URL sync", () => {
+  it("restores the status filter from the URL on load", () => {
+    // richData has a single 'pending' (Starting) war among 30.
+    renderRoom(richData(), { searchParams: "?status=starting" });
+    expect(screen.getByText(/1 shown/)).toBeInTheDocument();
+  });
+
+  it("restores the table view and sort direction from the URL on load", () => {
+    const { container } = renderRoom(richData(), {
+      searchParams: "?view=table&sort=ships&dir=asc",
+    });
+    expect(container.querySelector("table")).toBeInTheDocument();
+    expect(
+      container.querySelector('th[aria-sort="ascending"]'),
+    ).toBeInTheDocument();
+  });
+
+  it("writes the selected status filter to the URL", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    const { container } = renderRoom(richData(), { onUrlUpdate });
+    fireEvent.click(container.querySelector('input[value="starting"]')!);
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toContain(
+      "status=starting",
+    );
+  });
+
+  // parseAsStringLiteral rejects anything outside its allowed values, so a
+  // hand-edited URL falls back to the defaults instead of filtering on garbage.
+  it("falls back to defaults for out-of-range param values", () => {
+    const { container } = renderRoom(richData(), {
+      searchParams: "?status=bogus&view=nope&sort=nonsense&dir=sideways",
+    });
+    // status=all → all 30 wars; view falls back to rows (no table)
+    expect(screen.getByText(/30 shown/)).toBeInTheDocument();
+    expect(container.querySelector("table")).toBeNull();
+  });
+
+  // clearOnDefault: returning a filter to its default must drop the param
+  // rather than leave `?status=all` in a shared link.
+  it("removes params from the URL when filters return to their defaults", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    const { container } = renderRoom(richData(), {
+      searchParams: "?status=starting",
+      onUrlUpdate,
+    });
+
+    fireEvent.click(container.querySelector('input[value="all"]')!);
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe("");
   });
 });
 

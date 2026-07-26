@@ -2,28 +2,54 @@
 
 import { useMemo, useState } from "react";
 import { Button, Chip, SegmentedControl, Select } from "@mantine/core";
+import { parseAsBoolean, parseAsStringLiteral, useQueryStates } from "nuqs";
 
 import type { WarRoomWar } from "./types";
-import type { SortKey, StatusFilter } from "./utils";
+import type { SortKey } from "./utils";
 import { cx } from "./parts";
 import { filterWars, SORT_OPTIONS, sortWars, STATUS_FILTERS } from "./utils";
 import classes from "./WarRoom.module.css";
 import { WarRow } from "./WarRow";
 import { WarTable } from "./WarTable";
 
-type ViewMode = "rows" | "table";
+const VIEW_MODES = ["rows", "table"] as const;
 
 const INITIAL_VISIBLE = 24;
 const VISIBLE_STEP = 24;
 
+// The filter/sort/view controls are synced to the URL so a filtered view can be
+// shared, bookmarked, and survives a refresh. Each default matches the previous
+// useState default, and nuqs strips any param equal to its default so a pristine
+// view has a clean URL. Parsers sit at module scope purely to keep this 7-key map
+// out of the render body — nuqs keys its internal memos on stringified defaults
+// and key names rather than object identity, so an inline map (as on the simpler
+// mail page) is equally correct.
+const STATUS_VALUES = STATUS_FILTERS.map((option) => option.value);
+const SORT_VALUES = SORT_OPTIONS.map((option) => option.value);
+const SORT_DIRECTIONS = ["desc", "asc"] as const;
+
+const warControlParsers = {
+  status: parseAsStringLiteral(STATUS_VALUES).withDefault("all"),
+  combat: parseAsBoolean.withDefault(false),
+  mutual: parseAsBoolean.withDefault(false),
+  open: parseAsBoolean.withDefault(false),
+  view: parseAsStringLiteral(VIEW_MODES).withDefault("rows"),
+  sort: parseAsStringLiteral(SORT_VALUES).withDefault("isk"),
+  dir: parseAsStringLiteral(SORT_DIRECTIONS).withDefault("desc"),
+};
+
+// Match the mail page: replace history entries rather than pushing one per click.
+const warControlUrlOptions = { history: "replace" as const };
+
 export function WarList({ wars }: Readonly<{ wars: WarRoomWar[] }>) {
-  const [status, setStatus] = useState<StatusFilter>("all");
-  const [combat, setCombat] = useState(false);
-  const [mutual, setMutual] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [view, setView] = useState<ViewMode>("rows");
-  const [sortKey, setSortKey] = useState<SortKey>("isk");
-  const [sortDir, setSortDir] = useState<-1 | 1>(-1);
+  const [{ status, combat, mutual, open, view, sort, dir }, setControls] =
+    useQueryStates(warControlParsers, warControlUrlOptions);
+
+  // WarTable and sortWars use a numeric -1|1 direction; the URL keeps the more
+  // readable desc/asc, so convert at this boundary.
+  const sortDir: -1 | 1 = dir === "asc" ? 1 : -1;
+
+  // Load-more window is ephemeral pagination — deliberately not URL-synced.
   const [visible, setVisible] = useState(INITIAL_VISIBLE);
 
   const filtered = useMemo(
@@ -31,8 +57,8 @@ export function WarList({ wars }: Readonly<{ wars: WarRoomWar[] }>) {
     [wars, status, combat, mutual, open],
   );
   const sorted = useMemo(
-    () => sortWars(filtered, sortKey, sortDir),
-    [filtered, sortKey, sortDir],
+    () => sortWars(filtered, sort, sortDir),
+    [filtered, sort, sortDir],
   );
 
   // Reset the load-more window when the filters change (render-time, no effect).
@@ -46,10 +72,10 @@ export function WarList({ wars }: Readonly<{ wars: WarRoomWar[] }>) {
   const shown = sorted.slice(0, visible);
 
   const handleTableSort = (key: SortKey) => {
-    if (key === sortKey) setSortDir((dir) => (dir === -1 ? 1 : -1));
-    else {
-      setSortKey(key);
-      setSortDir(-1);
+    if (key === sort) {
+      void setControls({ dir: dir === "asc" ? "desc" : "asc" });
+    } else {
+      void setControls({ sort: key, dir: "desc" });
     }
   };
 
@@ -65,7 +91,7 @@ export function WarList({ wars }: Readonly<{ wars: WarRoomWar[] }>) {
       <div className={classes.swap} key="table">
         <WarTable
           wars={shown}
-          sortKey={sortKey}
+          sortKey={sort}
           sortDir={sortDir}
           onSort={handleTableSort}
         />
@@ -95,8 +121,10 @@ export function WarList({ wars }: Readonly<{ wars: WarRoomWar[] }>) {
             size="xs"
             w={168}
             aria-label="Sort wars"
-            value={sortKey}
-            onChange={(value) => value && setSortKey(value)}
+            value={sort}
+            onChange={(value) => {
+              if (value) void setControls({ sort: value });
+            }}
             data={SORT_OPTIONS.map((option) => ({
               value: option.value,
               label: option.label,
@@ -107,7 +135,7 @@ export function WarList({ wars }: Readonly<{ wars: WarRoomWar[] }>) {
           <SegmentedControl
             size="xs"
             value={view}
-            onChange={(value) => setView(value)}
+            onChange={(value) => void setControls({ view: value })}
             data={[
               { value: "rows", label: "Rows" },
               { value: "table", label: "Table" },
@@ -121,19 +149,34 @@ export function WarList({ wars }: Readonly<{ wars: WarRoomWar[] }>) {
           <SegmentedControl
             size="xs"
             value={status}
-            onChange={(value) => setStatus(value)}
+            onChange={(value) => void setControls({ status: value })}
             data={STATUS_FILTERS.map((option) => ({
               value: option.value,
               label: option.label,
             }))}
           />
-          <Chip size="xs" radius="sm" checked={combat} onChange={setCombat}>
+          <Chip
+            size="xs"
+            radius="sm"
+            checked={combat}
+            onChange={(checked) => void setControls({ combat: checked })}
+          >
             In combat
           </Chip>
-          <Chip size="xs" radius="sm" checked={mutual} onChange={setMutual}>
+          <Chip
+            size="xs"
+            radius="sm"
+            checked={mutual}
+            onChange={(checked) => void setControls({ mutual: checked })}
+          >
             Mutual
           </Chip>
-          <Chip size="xs" radius="sm" checked={open} onChange={setOpen}>
+          <Chip
+            size="xs"
+            radius="sm"
+            checked={open}
+            onChange={(checked) => void setControls({ open: checked })}
+          >
             Open for allies
           </Chip>
         </div>
