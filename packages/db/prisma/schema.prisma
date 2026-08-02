@@ -274,6 +274,12 @@ model DogmaAttribute {
   published              Boolean?
   stackable              Boolean?
   unitId                 Int?
+  // Only the SDE knows which category an attribute belongs to (ESI's dogma
+  // attribute endpoint does not expose one), so this column is owned by
+  // ingestSdeDogmaAttributes. Kept as a plain id rather than a relation because
+  // DogmaAttributeCategory rows are ingested by a separate job and an attribute
+  // may reference a category that has not landed yet.
+  attributeCategoryId    Int?
   Icon                   Icon?                 @relation(fields: [iconId], references: [iconId])
   DogmaUnit              DogmaUnit?            @relation(fields: [unitId], references: [unitId])
   /**
@@ -654,7 +660,6 @@ model Constellation {
   @@index([regionId])
 }
 
-// TODO add position,
 model SolarSystem {
   solarSystemId       Int            @id
   name                String
@@ -666,6 +671,23 @@ model SolarSystem {
   star                Star?          @relation("SolarSystemStar")
   starId              Int?
   stargates           Stargate[]     @relation("SolarSystemStargate")
+  // Everything below is SDE-only (ESI's solar system endpoint exposes none of
+  // it) and is owned by ingestSdeSolarSystems. `positionX/Y/Z` are the system's
+  // coordinates in metres, stored as Floats because the values run to ~1e17 and
+  // are only ever used for display.
+  luminosity          Float?
+  radius              Float?
+  positionX           Float?
+  positionY           Float?
+  positionZ           Float?
+  wormholeClassId     Int?
+  factionId           Int?
+  border              Boolean        @default(false)
+  corridor            Boolean        @default(false)
+  fringe              Boolean        @default(false)
+  hub                 Boolean        @default(false)
+  international       Boolean        @default(false)
+  regional            Boolean        @default(false)
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */

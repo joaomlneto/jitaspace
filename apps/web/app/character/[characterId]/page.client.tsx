@@ -49,7 +49,6 @@ import {
   useSelectedCharacter,
 } from "@jitaspace/hooks";
 import { useCharacterWalletBalance } from "@jitaspace/hooks/src/hooks/character/useCharacterWalletBalance";
-import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
@@ -237,11 +236,6 @@ export default function Page() {
     useCharacterWalletBalance(characterId);
   const { data: skills, hasToken: canReadSkills } =
     useCharacterSkills(characterId);
-
-  const { data: agentDivision } = useGetNpcCorporationDivisionById(
-    character?.type === "agent" ? character.agentDivisionId : 0,
-    { query: { enabled: character?.type === "agent" } },
-  );
 
   if (!Number.isFinite(characterId)) {
     return null;
@@ -505,7 +499,7 @@ export default function Page() {
                   </SectionTitle>
                   <Stack gap="sm">
                     <InfoRow label="Division">
-                      <Text span>{agentDivision?.data.name.en ?? "—"}</Text>
+                      <Text span>{character.agentDivisionName || "—"}</Text>
                     </InfoRow>
                     <InfoRow label="Agent Type">
                       <Text span>{character.agentTypeId}</Text>

@@ -3,7 +3,8 @@ import { defineJob } from "../../../core";
 /**
  * Every `ingest-sde-*` job id, in foreign-key dependency order:
  * graphics/icons/marketGroups before types; categories → groups → types;
- * dogma-units/categories → dogma-attributes → dogma-effects; types before their
+ * dogma-units/categories → dogma-attributes → dogma-effects → their modifiers
+ * (which also reference groups); types before their
  * child tables; certificates before masteries; skinMaterials → skins →
  * skinLicenses; factions before contraband; races → bloodlines → ancestries;
  * regions → constellations → solarSystems → {stars, stargates, planets} →
@@ -26,6 +27,7 @@ export const SDE_INGEST_JOB_IDS: string[] = [
   "ingest-sde-dogma-units",
   "ingest-sde-dogma-attributes",
   "ingest-sde-dogma-effects",
+  "ingest-sde-dogma-effect-modifiers",
   "ingest-sde-agent-types",
   "ingest-sde-station-services",
   "ingest-sde-npc-corporation-divisions",

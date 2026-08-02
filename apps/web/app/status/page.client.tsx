@@ -30,7 +30,6 @@ import {
   useGetMetaStatus,
 } from "@jitaspace/esi-client";
 import { useServerStatus } from "@jitaspace/hooks";
-import { useGetVersion } from "@jitaspace/sde-client";
 import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
@@ -43,14 +42,15 @@ import { TriggerJobsDashboard } from "../../components/Status/TriggerJobsDashboa
 export interface PageProps {
   vercelStatusData: VercelStatusResponse | null;
   sdeLastModifiedData: SdeLastModifiedResponse | null;
+  /** ISO timestamp of the newest row in our SDE-derived tables, or null. */
+  sdeDataUpdatedAt: string | null;
 }
 
 export default function StatusPage({
   vercelStatusData,
   sdeLastModifiedData,
+  sdeDataUpdatedAt,
 }: Readonly<PageProps>) {
-  const { data: sdeVersionData } = useGetVersion();
-
   const { data: tqStatus } = useServerStatus();
 
   const [opened, { open, close }] = useDisclosure(false);
@@ -78,12 +78,9 @@ export default function StatusPage({
     [sdeLastModifiedData],
   );
 
-  const sdeApiLastUpdatedDate: Date | null = useMemo(
-    () =>
-      sdeVersionData?.data.generationDate
-        ? new Date(sdeVersionData.data.generationDate)
-        : null,
-    [sdeVersionData],
+  const sdeDataUpdatedDate: Date | null = useMemo(
+    () => (sdeDataUpdatedAt ? new Date(sdeDataUpdatedAt) : null),
+    [sdeDataUpdatedAt],
   );
 
   const buildDate = useMemo(() => getRateLimitBuildDate(), []);
@@ -159,27 +156,32 @@ export default function StatusPage({
                       ))}
                   </Group>
                 </Group>
+                {/* When our own copy of the SDE last changed. The SDE now lives
+                    in our database (ingested from CCP's archive), so this is the
+                    newest timestamp across the SDE-derived tables — compared
+                    against CCP's latest release to flag a stale ingest. */}
                 <Group justify="space-between">
                   <Text size="sm" fw={500}>
-                    SDE API Updated On
+                    SDE Data Updated On
                   </Text>
                   <Group gap="xs">
-                    <Anchor href="https://sde.jita.space" size="sm">
-                      {!sdeApiLastUpdatedDate && <Loader size="xs" />}
-                      {sdeApiLastUpdatedDate && (
-                        <DateHoverCard date={sdeApiLastUpdatedDate}>
-                          <FormattedDateText date={sdeApiLastUpdatedDate} />
-                        </DateHoverCard>
-                      )}
-                    </Anchor>
-                    {sdeApiLastUpdatedDate &&
+                    {!sdeDataUpdatedDate && <Loader size="xs" />}
+                    {sdeDataUpdatedDate && (
+                      <DateHoverCard date={sdeDataUpdatedDate}>
+                        <FormattedDateText
+                          date={sdeDataUpdatedDate}
+                          size="sm"
+                        />
+                      </DateHoverCard>
+                    )}
+                    {sdeDataUpdatedDate &&
                       sdeLastModifiedDate &&
-                      (sdeApiLastUpdatedDate >= sdeLastModifiedDate ? (
-                        <Tooltip label="JitaSpace SDE API is up to date!">
+                      (sdeDataUpdatedDate >= sdeLastModifiedDate ? (
+                        <Tooltip label="JitaSpace SDE data is up to date!">
                           <IconCircleCheck color="green" size={14} />
                         </Tooltip>
                       ) : (
-                        <Tooltip label="JitaSpace SDE API is outdated!">
+                        <Tooltip label="JitaSpace SDE data is outdated!">
                           <IconCircleX color="red" size={14} />
                         </Tooltip>
                       ))}

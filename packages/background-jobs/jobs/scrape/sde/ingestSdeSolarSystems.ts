@@ -6,8 +6,10 @@ import { prisma } from "../../../db";
 import {
   enString,
   ingestSdeTable,
+  nestedNumber,
   optionalNumber,
   plainString,
+  requiredBoolean,
   requiredNumber,
 } from "../../../helpers";
 
@@ -40,6 +42,21 @@ export const ingestSdeSolarSystems = defineJob<
         securityClass: plainString(record.securityClass),
         securityStatus: new Decimal(optionalNumber(record.securityStatus) ?? 0),
         starId: optionalNumber(record.starID),
+        luminosity: optionalNumber(record.luminosity),
+        radius: optionalNumber(record.radius),
+        positionX: nestedNumber(record.position, "x"),
+        positionY: nestedNumber(record.position, "y"),
+        positionZ: nestedNumber(record.position, "z"),
+        wormholeClassId: optionalNumber(record.wormholeClassID),
+        factionId: optionalNumber(record.factionID),
+        // The SDE omits these flags entirely when false, so they are booleans
+        // (not nullable) and default to false rather than null.
+        border: requiredBoolean(record.border),
+        corridor: requiredBoolean(record.corridor),
+        fringe: requiredBoolean(record.fringe),
+        hub: requiredBoolean(record.hub),
+        international: requiredBoolean(record.international),
+        regional: requiredBoolean(record.regional),
         isDeleted: false,
       }),
     });

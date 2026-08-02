@@ -30,7 +30,6 @@ import {
   IconSwords,
 } from "@tabler/icons-react";
 
-import type { SolarSystem } from "@jitaspace/sde-client";
 import {
   AllianceName,
   CorporationName,
@@ -51,7 +50,6 @@ import {
   useStar,
   useStargate,
 } from "@jitaspace/hooks";
-import { useGetSolarSystemById } from "@jitaspace/sde-client";
 import {
   FactionAvatar,
   formatSecurityStatus,
@@ -79,6 +77,32 @@ interface SovereigntyEntry {
   alliance_id?: number;
   corporation_id?: number;
   faction_id?: number;
+}
+
+/**
+ * The solar-system columns only the SDE knows about (ESI's universe endpoint
+ * exposes none of them). Read from our database by the server component, since
+ * they never change between SDE releases.
+ */
+export interface SolarSystemSdeInfo {
+  luminosity: number | null;
+  radius: number | null;
+  positionX: number | null;
+  positionY: number | null;
+  positionZ: number | null;
+  wormholeClassId: number | null;
+  factionId: number | null;
+  border: boolean;
+  corridor: boolean;
+  fringe: boolean;
+  hub: boolean;
+  international: boolean;
+  regional: boolean;
+}
+
+export interface PageProps {
+  /** Absent when the system isn't in our database yet. */
+  sde?: SolarSystemSdeInfo;
 }
 
 /** Coarse security band shown next to the system name. */
@@ -407,7 +431,7 @@ function SystemInfoSection({
   securityStatus?: number;
   securityClass?: string;
   star?: { data: { spectral_class?: string; temperature?: number } };
-  sde?: SolarSystem;
+  sde?: SolarSystemSdeInfo;
 }>) {
   return (
     <section>
@@ -426,13 +450,16 @@ function SystemInfoSection({
           />
           <InfoItem
             label="Luminosity"
-            value={formatNumber(sde?.luminosity)}
+            value={formatNumber(sde?.luminosity ?? undefined)}
           />
-          <InfoItem label="Radius" value={withUnit(sde?.radius, "m")} />
-          {sde?.wormholeClassID != null && (
+          <InfoItem
+            label="Radius"
+            value={withUnit(sde?.radius ?? undefined, "m")}
+          />
+          {sde?.wormholeClassId != null && (
             <InfoItem
               label="Wormhole Class"
-              value={String(sde.wormholeClassID)}
+              value={String(sde.wormholeClassId)}
             />
           )}
           <InfoItem
@@ -441,10 +468,10 @@ function SystemInfoSection({
               <Position3DText
                 size="xs"
                 position={
-                  sde?.position.x != null &&
-                  sde.position.y != null &&
-                  sde.position.z != null
-                    ? [sde.position.x, sde.position.y, sde.position.z]
+                  sde?.positionX != null &&
+                  sde.positionY != null &&
+                  sde.positionZ != null
+                    ? [sde.positionX, sde.positionY, sde.positionZ]
                     : undefined
                 }
               />
@@ -452,15 +479,15 @@ function SystemInfoSection({
           />
         </SimpleGrid>
 
-        {sde?.factionID != null && (
+        {sde?.factionId != null && (
           <Group gap="sm" mt="lg">
-            <FactionAvatar factionId={sde.factionID} size={28} radius={999} />
+            <FactionAvatar factionId={sde.factionId} size={28} radius={999} />
             <div>
               <Text size="xs" c="dimmed" className={classes.statLabel}>
                 Faction
               </Text>
               <Text size="sm" fw={500}>
-                <FactionName span factionId={sde.factionID} />
+                <FactionName span factionId={sde.factionId} />
               </Text>
             </div>
           </Group>
@@ -491,7 +518,7 @@ const EXTERNAL_TOOLS = [
   },
 ];
 
-export default function Page() {
+export default function Page({ sde }: Readonly<PageProps>) {
   const params = useParams();
   const rawSystemId = params.systemId;
   const systemId = Number(
@@ -500,7 +527,6 @@ export default function Page() {
 
   const character = useSelectedCharacter();
   const { data: solarSystem } = useSolarSystem(systemId);
-  const { data: sdeSolarSystem } = useGetSolarSystemById(systemId);
   const starId = solarSystem?.data.star_id;
   const { data: star } = useStar(starId ?? 0);
   const sov = useSolarSystemSovereignty(systemId) as SovereigntyEntry | undefined;
@@ -515,7 +541,6 @@ export default function Page() {
   }
 
   const data = solarSystem?.data;
-  const sde = sdeSolarSystem?.data;
 
   const securityStatus = data?.security_status;
   const secColor =

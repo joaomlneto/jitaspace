@@ -25,10 +25,6 @@ jest.mock(
   () => new Proxy({}, { get: () => () => null }),
 );
 jest.mock(
-  "@jitaspace/sde-client",
-  () => new Proxy({}, { get: () => () => null }),
-);
-jest.mock(
   "@jitaspace/tiptap-eve",
   () => new Proxy({}, { get: () => () => null }),
 );

@@ -1,16 +1,13 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { renderHook } from "@testing-library/react";
 
-// useCharacter merges the public ESI character record with SDE agent data. The
-// generated @jitaspace/esi-client and @jitaspace/sde-client clients aren't built
-// in this workspace, and @swc/jest does not hoist jest.mock above imports, so
-// every dependency is mocked here and the hook under test is required lazily.
+// useCharacter merges the public ESI character record with the agent record from
+// our own database. The generated @jitaspace/esi-client isn't built in this
+// workspace, and @swc/jest does not hoist jest.mock above imports, so every
+// dependency is mocked here and the hook under test is required lazily.
 
 const mockUseEsiCharacter = jest.fn();
 const mockUseSdeAgent = jest.fn();
-const mockUseGetAllNpcCharacterIds = jest.fn();
-const mockUseGetAllAgentInSpaceIds = jest.fn();
-const mockUseGetAgentInSpaceById = jest.fn();
 
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
@@ -21,16 +18,6 @@ jest.mock("@jitaspace/esi-metadata", () => ({
   __esModule: true,
   isIdInRanges: () => false,
   npcCharacterIdRanges: [],
-}));
-
-jest.mock("@jitaspace/sde-client", () => ({
-  __esModule: true,
-  useGetAllNpcCharacterIds: (...args: unknown[]) =>
-    mockUseGetAllNpcCharacterIds(...args),
-  useGetAllAgentInSpaceIds: (...args: unknown[]) =>
-    mockUseGetAllAgentInSpaceIds(...args),
-  useGetAgentInSpaceById: (...args: unknown[]) =>
-    mockUseGetAgentInSpaceById(...args),
 }));
 
 jest.mock("../src/hooks/character/useEsiCharacter", () => ({
@@ -67,19 +54,13 @@ function querySuccess<T>(data: T) {
   return { data, error: null, isError: false, isLoading: false };
 }
 
-function queryIdle() {
-  return { data: undefined, error: null, isError: false, isLoading: false };
-}
-
 describe("useCharacter", () => {
   it("propagates the ESI description, faction, security status and title for a player", () => {
     mockUseEsiCharacter.mockReturnValue(
       querySuccess({ data: esiCharacterDetail }),
     );
-    mockUseGetAllNpcCharacterIds.mockReturnValue(querySuccess({ data: [] }));
-    mockUseSdeAgent.mockReturnValue(queryIdle());
-    mockUseGetAllAgentInSpaceIds.mockReturnValue(querySuccess({ data: [] }));
-    mockUseGetAgentInSpaceById.mockReturnValue(queryIdle());
+    // No Agent row for this character -> the player branch is taken.
+    mockUseSdeAgent.mockReturnValue(querySuccess(null));
 
     const { result } = renderHook(() => useCharacter(CHARACTER_ID));
 
@@ -94,27 +75,22 @@ describe("useCharacter", () => {
     mockUseEsiCharacter.mockReturnValue(
       querySuccess({ data: esiCharacterDetail }),
     );
-    // The character id is a known NPC agent -> the agent branch is taken.
-    mockUseGetAllNpcCharacterIds.mockReturnValue(
-      querySuccess({ data: [CHARACTER_ID] }),
-    );
+    // An Agent row exists for this character -> the agent branch is taken.
     mockUseSdeAgent.mockReturnValue(
       querySuccess({
-        data: {
-          agent: {
-            agentTypeID: 3,
-            divisionID: 22,
-            isLocator: true,
-            level: 4,
-          },
-          corporationID: 1000035,
-          locationID: 60000001,
-          skills: [],
-        },
+        characterId: CHARACTER_ID,
+        agentTypeId: 3,
+        agentDivisionId: 22,
+        agentDivisionName: "Distribution",
+        isLocator: true,
+        level: 4,
+        stationId: 60000001,
+        corporationId: 1000035,
+        isResearchAgent: false,
+        researchSkills: [],
+        agentInSpace: null,
       }),
     );
-    mockUseGetAllAgentInSpaceIds.mockReturnValue(querySuccess({ data: [] }));
-    mockUseGetAgentInSpaceById.mockReturnValue(queryIdle());
 
     const { result } = renderHook(() => useCharacter(CHARACTER_ID));
 
@@ -137,10 +113,7 @@ describe("useCharacter", () => {
       birthday: esiCharacterDetail.birthday,
     };
     mockUseEsiCharacter.mockReturnValue(querySuccess({ data: minimal }));
-    mockUseGetAllNpcCharacterIds.mockReturnValue(querySuccess({ data: [] }));
-    mockUseSdeAgent.mockReturnValue(queryIdle());
-    mockUseGetAllAgentInSpaceIds.mockReturnValue(querySuccess({ data: [] }));
-    mockUseGetAgentInSpaceById.mockReturnValue(queryIdle());
+    mockUseSdeAgent.mockReturnValue(querySuccess(null));
 
     const { result } = renderHook(() => useCharacter(CHARACTER_ID));
 

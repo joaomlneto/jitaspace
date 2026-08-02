@@ -60,10 +60,10 @@ packages/
   ├─ db/                      ├─ eve-icons/
   ├─ kv/                      ├─ tiptap-eve/
   ├─ esi-client/              ├─ ui/
-  ├─ sde-client/              ├─ hooks/
-  ├─ evekill-client/          ├─ chat/
-  ├─ fuzzworks-market-client/ ├─ background-jobs/
-  └─ evetycoon-client/        └─ utils/
+  ├─ evekill-client/          ├─ hooks/
+  ├─ fuzzworks-market-client/ ├─ chat/
+  ├─ evetycoon-client/        ├─ background-jobs/
+  └─ sde-utils/               └─ utils/
 
 tooling/
   ├─ eslint/    ├─ prettier/    └─ tsconfig/
@@ -89,7 +89,6 @@ tooling/
 | Package | API |
 |---|---|
 | `@jitaspace/esi-client` | [ESI](https://esi.evetech.net/) — EVE Online's official REST API |
-| `@jitaspace/sde-client` | Self-hosted SDE API at [sde.jita.space](https://sde.jita.space) |
 | `@jitaspace/evekill-client` | [EVE-KILL](https://eve-kill.com/) killmail data |
 | `@jitaspace/fuzzworks-market-client` | [Fuzzwork](https://market.fuzzwork.co.uk/) market aggregates |
 | `@jitaspace/evetycoon-client` | [EveTycoon](https://evetycoon.com/) market data _(currently blocked by CORS)_ |

@@ -5,14 +5,13 @@ import { beforeAll, describe, expect, it, jest } from "@jest/globals";
 import type { jobs as Jobs, registry as Registry } from "../jobs";
 
 // Importing the job registry pulls in external IO clients at module load
-// (Prisma, the chat bot, ESI/SDE clients). Mock them so the import only
+// (Prisma, the chat bot, the ESI client). Mock them so the import only
 // executes the declarative `defineJob` config we assert on here. (`kv` is
 // already lazy, so it has no import-time side effects, but we stub it anyway.)
 jest.mock("../kv", () => ({ getKv: jest.fn(), getRedis: jest.fn() }));
 jest.mock("../db", () => ({ prisma: {}, Prisma: {} }));
 jest.mock("../chat", () => ({ postUpdateCard: jest.fn() }));
 jest.mock("@jitaspace/esi-client", () => ({}));
-jest.mock("@jitaspace/sde-client", () => ({}));
 // sde-utils' barrel re-exports with `.js` extensions (NodeNext ESM), which the
 // Jest resolver can't map back to the `.ts` source. The handlers only need it at
 // runtime, so stub the exports the job modules import at load time.

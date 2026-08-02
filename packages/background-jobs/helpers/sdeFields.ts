@@ -26,6 +26,15 @@ export function optionalNumber(value: unknown): number | null {
   return value == null ? null : Number(value);
 }
 
+/**
+ * A numeric member of a nested SDE object field (e.g. `position.x`), or null
+ * when either the object or the member is absent.
+ */
+export function nestedNumber(value: unknown, key: string): number | null {
+  if (typeof value !== "object" || value === null) return null;
+  return optionalNumber((value as Record<string, unknown>)[key]);
+}
+
 /** A required SDE field for a `BigInt` column (rounded; non-finite → 0n). */
 export function requiredBigInt(value: unknown): bigint {
   const n = Number(value);

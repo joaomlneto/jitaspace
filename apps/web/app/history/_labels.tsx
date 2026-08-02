@@ -4,18 +4,8 @@ import type { TextProps } from "@mantine/core";
 import { Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
-import {
-  getCategoryByIdQueryOptions,
-  getDogmaAttributeByIdQueryOptions,
-  getDogmaEffectByIdQueryOptions,
-  getDogmaUnitByIdQueryOptions,
-  getGroupByIdQueryOptions,
-  getMarketGroupByIdQueryOptions,
-  getRaceByIdQueryOptions,
-  getTypeByIdQueryOptions,
-} from "@jitaspace/sde-client";
+import { sdeRecordQueryOptions } from "@jitaspace/hooks";
 
-import { sdeLabel } from "./_diff";
 import {
   CategoryAnchor,
   CategoryName,
@@ -36,9 +26,23 @@ import {
   TypeName,
 } from "./_sde-ui";
 
-// Entities newer than the published SDE 404 on the name lookup (our history is
-// generated straight from the client, which can be ahead of the SDE release) —
-// fall back to the raw id instead of a skeleton, and don't retry the 404.
+// Entities newer than the last SDE ingest aren't in the database yet (our
+// history is generated straight from the game client, which can be ahead of the
+// SDE release) — those lookups resolve to null, and each label falls back to the
+// raw id instead of hanging on a skeleton.
+
+/** Prefer an entity's display name, falling back to its internal name. */
+function preferredName(
+  record: { name?: string | null; displayName?: string | null } | null,
+): string | undefined {
+  if (!record) return undefined;
+  const display = record.displayName?.trim();
+  if (display) return display;
+  // Some reference rows carry an empty name; treat that as "no label" so the
+  // caller falls back to the raw id rather than rendering nothing.
+  const name = record.name?.trim();
+  return name === "" ? undefined : name;
+}
 
 function renderAttributeContent(
   id: number,
@@ -55,12 +59,8 @@ function renderAttributeContent(
 }
 
 function AttributeLabel({ id }: Readonly<{ id: number }>) {
-  const query = useQuery({
-    ...getDogmaAttributeByIdQueryOptions(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const name = sdeLabel(query.data?.data);
+  const query = useQuery(sdeRecordQueryOptions("dogma-attribute", id));
+  const name = preferredName(query.data ?? null);
   return (
     <DogmaAttributeAnchor attributeId={id} size="xs">
       {renderAttributeContent(id, name, query.isPending)}
@@ -83,12 +83,8 @@ function renderEffectContent(
 }
 
 function EffectLabel({ id }: Readonly<{ id: number }>) {
-  const query = useQuery({
-    ...getDogmaEffectByIdQueryOptions(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const name = sdeLabel(query.data?.data);
+  const query = useQuery(sdeRecordQueryOptions("dogma-effect", id));
+  const name = preferredName(query.data ?? null);
   return (
     <DogmaEffectAnchor effectId={id} size="xs">
       {renderEffectContent(id, name, query.isPending)}
@@ -98,9 +94,9 @@ function EffectLabel({ id }: Readonly<{ id: number }>) {
 
 /**
  * A single dogma attribute value, formatted for the attribute's unit. Resolves
- * the attribute's `unitID` and the unit's display symbol from the SDE, then
+ * the attribute's unit and that unit's display symbol from the database, then
  * defers to the shared <DogmaAttributeValue>. While the unit is still loading
- * (or the attribute is newer than the published SDE) it falls back to a plain
+ * (or the attribute is newer than the last SDE ingest) it falls back to a plain
  * number. Extra <Text> props (colour, strike-through) pass straight through.
  */
 export function DogmaValue({
@@ -108,22 +104,12 @@ export function DogmaValue({
   value,
   ...textProps
 }: Readonly<{ attributeId: number; value: number } & TextProps>) {
-  const attribute = useQuery({
-    ...getDogmaAttributeByIdQueryOptions(attributeId),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const unitId = (attribute.data?.data as { unitID?: number } | undefined)
-    ?.unitID;
-  const unit = useQuery({
-    ...getDogmaUnitByIdQueryOptions(unitId ?? 0),
-    staleTime: Infinity,
-    retry: false,
-    enabled: unitId !== undefined,
-  });
-  const symbol = (
-    unit.data?.data as { displayName?: { en?: string } } | undefined
-  )?.displayName?.en;
+  const attribute = useQuery(
+    sdeRecordQueryOptions("dogma-attribute", attributeId),
+  );
+  const unitId = attribute.data?.unitId ?? undefined;
+  const unit = useQuery(sdeRecordQueryOptions("dogma-unit", unitId));
+  const symbol = preferredName(unit.data ?? null);
   return (
     <DogmaAttributeValue
       span
@@ -175,13 +161,8 @@ export function AttributeValueChange({
   from: number;
   to: number;
 }>) {
-  const query = useQuery({
-    ...getDogmaAttributeByIdQueryOptions(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const highIsGood = (query.data?.data as { highIsGood?: boolean } | undefined)
-    ?.highIsGood;
+  const query = useQuery(sdeRecordQueryOptions("dogma-attribute", id));
+  const highIsGood = query.data?.highIsGood ?? undefined;
   const highColor = highIsGood === false ? "red" : "green";
   const lowColor = highIsGood === false ? "green" : "red";
   const fromColor = pickFromColor(from, to, highColor, lowColor);
@@ -226,12 +207,8 @@ function CategoryLabel({
   id,
   size = "xs",
 }: Readonly<{ id: number; size?: LabelSize }>) {
-  const query = useQuery({
-    ...getCategoryByIdQueryOptions(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const name = sdeLabel(query.data?.data);
+  const query = useQuery(sdeRecordQueryOptions("category", id));
+  const name = preferredName(query.data ?? null);
   return (
     <CategoryAnchor categoryId={id} size={size} c="dimmed">
       {renderCategoryContent(id, size, name, query.isPending)}
@@ -265,18 +242,14 @@ export function GroupLabel({
   size?: LabelSize;
   dim?: boolean;
 }>) {
-  const query = useQuery({
-    ...getGroupByIdQueryOptions(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const data = query.data?.data as { categoryID?: number } | undefined;
-  const name = sdeLabel(query.data?.data);
+  const query = useQuery(sdeRecordQueryOptions("group", id));
+  const categoryId = query.data?.categoryId;
+  const name = preferredName(query.data ?? null);
   return (
     <>
-      {data?.categoryID !== undefined && (
+      {categoryId !== undefined && (
         <>
-          <CategoryLabel id={data.categoryID} size={size} />
+          <CategoryLabel id={categoryId} size={size} />
           <CrumbSep size={size} />
         </>
       )}
@@ -292,17 +265,13 @@ export function TypeLabel({
   id,
   size = "xs",
 }: Readonly<{ id: number; size?: LabelSize }>) {
-  const query = useQuery({
-    ...getTypeByIdQueryOptions(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const data = query.data?.data as { groupID?: number } | undefined;
+  const query = useQuery(sdeRecordQueryOptions("type", id));
+  const groupId = query.data?.groupId;
   return (
     <>
-      {data?.groupID !== undefined && (
+      {groupId !== undefined && (
         <>
-          <GroupLabel id={data.groupID} size={size} dim />
+          <GroupLabel id={groupId} size={size} dim />
           <CrumbSep size={size} />
         </>
       )}
@@ -338,18 +307,14 @@ export function MarketGroupLabel({
   size?: LabelSize;
   dim?: boolean;
 }>) {
-  const query = useQuery({
-    ...getMarketGroupByIdQueryOptions(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const data = query.data?.data as { parentGroupID?: number } | undefined;
-  const name = sdeLabel(query.data?.data);
+  const query = useQuery(sdeRecordQueryOptions("market-group", id));
+  const parentMarketGroupId = query.data?.parentMarketGroupId ?? undefined;
+  const name = preferredName(query.data ?? null);
   return (
     <>
-      {data?.parentGroupID !== undefined && (
+      {parentMarketGroupId !== undefined && (
         <>
-          <MarketGroupLabel id={data.parentGroupID} size={size} dim />
+          <MarketGroupLabel id={parentMarketGroupId} size={size} dim />
           <CrumbSep size={size} />
         </>
       )}
@@ -383,12 +348,8 @@ export function RaceLabel({
   id,
   size = "xs",
 }: Readonly<{ id: number; size?: LabelSize }>) {
-  const query = useQuery({
-    ...getRaceByIdQueryOptions(id),
-    staleTime: Infinity,
-    retry: false,
-  });
-  const name = sdeLabel(query.data?.data);
+  const query = useQuery(sdeRecordQueryOptions("race", id));
+  const name = preferredName(query.data ?? null);
   return (
     <RaceAnchor raceId={id} size={size}>
       {renderRaceContent(id, size, name, query.isPending)}

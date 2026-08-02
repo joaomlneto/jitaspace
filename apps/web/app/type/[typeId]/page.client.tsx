@@ -30,7 +30,7 @@ import {
   IconInfoCircle,
   IconListDetails,
 } from "@tabler/icons-react";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
@@ -40,11 +40,6 @@ import {
   useSelectedCharacter,
   useType,
 } from "@jitaspace/hooks";
-import {
-  getDogmaAttributeByIdQueryOptions,
-  getDogmaAttributeCategoryByIdQueryOptions,
-  getDogmaUnitByIdQueryOptions,
-} from "@jitaspace/sde-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   CategoryAnchor,
@@ -73,11 +68,29 @@ import {
 import { EntityHistory } from "../../history/EntityHistory";
 import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab } from "./tabs";
 
+/**
+ * Static metadata for one dogma attribute, resolved from the database by the
+ * server component. The attribute *values* still come from ESI (live and
+ * authoritative); this is the reference data that used to be fetched per
+ * attribute from the SDE API on the client.
+ */
+export interface DogmaAttributeMeta {
+  attributeId: number;
+  name: string | null;
+  displayName: string | null;
+  iconId: number | null;
+  unitId: number | null;
+  unitSymbol: string | null;
+  categoryId: number | null;
+  categoryName: string | null;
+}
+
 export interface PageProps {
   typeId: number;
   ogImageUrl?: string;
   typeName?: string;
   typeDescription?: string;
+  dogmaAttributeMeta: DogmaAttributeMeta[];
 }
 
 const notAvailableText = "Not available";
@@ -259,6 +272,7 @@ export default function TypePage({
   typeId,
   typeName,
   typeDescription,
+  dogmaAttributeMeta,
 }: Readonly<PageProps>) {
   const character = useSelectedCharacter();
   // Deep-link support: `/type/{typeId}/{tab}` redirects here with `?tab=` set,
@@ -317,94 +331,48 @@ export default function TypePage({
     [typeData?.dogma_attributes],
   );
 
-  const dogmaAttributeQueries = useQueries({
-    queries: sortedDogmaAttributes.map((attribute) =>
-      getDogmaAttributeByIdQueryOptions(attribute.attribute_id),
-    ),
-  });
-
-  // Per-attribute SDE metadata (display name, icon, unit, category), keyed by id.
-  const attributeMetaById = useMemo(() => {
-    const metaById = new Map<
-      number,
-      {
-        displayName?: string;
-        name?: string;
-        iconId?: number;
-        unitId?: number;
-        categoryId?: number;
-      }
-    >();
-
-    sortedDogmaAttributes.forEach((attribute, index) => {
-      const data = dogmaAttributeQueries[index]?.data?.data;
-      if (data) {
-        // The generated SDE type marks `displayName` as required, but the API
-        // omits it for some internal attributes, so guard against undefined.
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        const displayName = data.displayName?.en?.trim();
-        metaById.set(attribute.attribute_id, {
-          displayName,
-          name: data.name,
-          iconId: data.iconID || undefined,
-          unitId: data.unitID || undefined,
-          categoryId: data.attributeCategoryID,
-        });
-      }
-    });
-
-    return metaById;
-  }, [dogmaAttributeQueries, sortedDogmaAttributes]);
-
-  // Resolve unit symbols once per unique unit id used by this type.
-  const unitIds = useMemo(() => {
-    const ids = new Set<number>();
-    for (const meta of attributeMetaById.values()) {
-      if (meta.unitId) ids.add(meta.unitId);
-    }
-    return Array.from(ids).sort((a, b) => a - b);
-  }, [attributeMetaById]);
-
-  const unitQueries = useQueries({
-    queries: unitIds.map((unitId) => getDogmaUnitByIdQueryOptions(unitId)),
-  });
+  // Per-attribute reference metadata (display name, icon, unit, category), keyed
+  // by id. Resolved from the database by the server component, so there are no
+  // per-attribute round trips on the client.
+  const attributeMetaById = useMemo(
+    () =>
+      new Map(
+        dogmaAttributeMeta.map((meta) => [
+          meta.attributeId,
+          {
+            displayName: meta.displayName?.trim() ?? undefined,
+            name: meta.name ?? undefined,
+            iconId: meta.iconId ?? undefined,
+            unitId: meta.unitId ?? undefined,
+            categoryId: meta.categoryId ?? undefined,
+          },
+        ]),
+      ),
+    [dogmaAttributeMeta],
+  );
 
   const unitById = useMemo(() => {
     const units = new Map<number, UnitInfo>();
-    unitIds.forEach((unitId, index) => {
-      const data = unitQueries[index]?.data?.data;
-      // `displayName` is typed as required but may be absent on some units.
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      units.set(unitId, { unitId, symbol: data?.displayName?.en });
-    });
-    return units;
-  }, [unitIds, unitQueries]);
-
-  const dogmaAttributeCategoryIds = useMemo(() => {
-    const categoryIds = new Set<number>();
-    for (const meta of attributeMetaById.values()) {
-      if (meta.categoryId !== undefined) categoryIds.add(meta.categoryId);
+    for (const meta of dogmaAttributeMeta) {
+      if (meta.unitId) {
+        units.set(meta.unitId, {
+          unitId: meta.unitId,
+          symbol: meta.unitSymbol ?? undefined,
+        });
+      }
     }
-    return Array.from(categoryIds).sort((a, b) => a - b);
-  }, [attributeMetaById]);
-
-  const dogmaAttributeCategoryQueries = useQueries({
-    queries: dogmaAttributeCategoryIds.map((categoryId) =>
-      getDogmaAttributeCategoryByIdQueryOptions(categoryId),
-    ),
-  });
+    return units;
+  }, [dogmaAttributeMeta]);
 
   const dogmaAttributeCategoryNamesById = useMemo(() => {
     const categoryNamesById = new Map<number, string>();
-    dogmaAttributeCategoryIds.forEach((categoryId, index) => {
-      const categoryName =
-        dogmaAttributeCategoryQueries[index]?.data?.data.name;
-      if (categoryName) {
-        categoryNamesById.set(categoryId, categoryName);
+    for (const meta of dogmaAttributeMeta) {
+      if (meta.categoryId !== null && meta.categoryName) {
+        categoryNamesById.set(meta.categoryId, meta.categoryName);
       }
-    });
+    }
     return categoryNamesById;
-  }, [dogmaAttributeCategoryIds, dogmaAttributeCategoryQueries]);
+  }, [dogmaAttributeMeta]);
 
   const categorizedDogmaAttributes = useMemo(() => {
     const grouped = new Map<

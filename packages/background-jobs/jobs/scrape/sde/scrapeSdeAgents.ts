@@ -1,31 +1,19 @@
 import pLimit from "p-limit";
 
 import { getCharactersDetail } from "@jitaspace/esi-client";
-import {
-  getAgentInSpaceById,
-  getAllAgentInSpaceIds,
-  getAllNpcCharacterIds,
-  getNpcCharacterById,
-} from "@jitaspace/sde-client";
 
+import type { Prisma } from "../../../db";
+import type { SdeNpcCharacter } from "../../../helpers/agents.ts";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { mergeEsiEntriesIntoCharactersTable } from "../../../helpers";
+import {
+  ingestSdeCompositeTable,
+  ingestSdeTable,
+  loadSdeFile,
+  mergeEsiEntriesIntoCharactersTable,
+} from "../../../helpers";
 import { isResearchAgent } from "../../../helpers/agents.ts";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
-import { excludeObjectKeys, updateTable } from "../../../utils";
-
-const fetchAgentInSpace = (characterId: number) =>
-  getAgentInSpaceById(characterId)
-    .then((res) => res.data)
-    .then((agent) => ({
-      characterId: agent.characterID,
-      dungeonId: agent.dungeonID,
-      solarSystemId: agent.solarSystemID,
-      spawnPointId: agent.spawnPointID,
-      typeId: agent.typeID,
-      isDeleted: false,
-    }));
 
 export interface ScrapeAgentsEventPayload {
   data: {
@@ -33,20 +21,43 @@ export interface ScrapeAgentsEventPayload {
   };
 }
 
+/**
+ * Agents, from npcCharacters.yaml in the SDE archive plus ESI for the character
+ * records they hang off.
+ *
+ * npcCharacters.yaml lists every NPC character; only those with an `agent` block
+ * are agents, so that block is the filter for every table written here. The
+ * Agent / ResearchAgent / ResearchAgentSkills rows come straight from the SDE,
+ * but `Agent.characterId` is a foreign key into `Character` — an ESI-owned
+ * table — so the ESI character details still have to be fetched and merged
+ * first. (Agents *in space* are a separate file and belong to
+ * `ingest-sde-agents-in-space`.)
+ *
+ * That ESI dependency is why this stays a `scrape-*` job outside the
+ * `ingest-sde-all` pipeline, which is deliberately SDE-only.
+ */
 export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
   id: "scrape-sde-agents",
   name: "Scrape Agents",
+  description:
+    "Ingest agents from the SDE's npcCharacters.yaml, backfilling their Character rows from ESI.",
   trigger: { type: "event" },
   concurrencyLimit: 1,
+  maxDurationSeconds: 1800,
   handler: async () => {
     const stepStartTime = performance.now();
     const limit = pLimit(20);
 
-    // Get all NPC Character IDs in SDE
-    const agentCharacterIds = await getAllNpcCharacterIds().then(
-      (res) => res.data,
-    );
-    agentCharacterIds.sort((a, b) => a - b);
+    const npcCharacters = await loadSdeFile("npcCharacters.yaml");
+    const agents = Object.entries(npcCharacters)
+      .map(([key, record]) => ({
+        characterId: Number(key),
+        record: record as SdeNpcCharacter,
+      }))
+      .filter(({ record }) => record.agent !== undefined)
+      .sort((a, b) => a.characterId - b.characterId);
+
+    const agentCharacterIds = agents.map((agent) => agent.characterId);
 
     await createCorpAndItsRefRecords({
       missingCharacterIds: new Set(agentCharacterIds),
@@ -63,269 +74,77 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
       ),
     );
 
-    // get IDs of agents in space
-    const agentsInSpaceCharacterIds = await getAllAgentInSpaceIds().then(
-      (res) => res.data,
-    );
-    agentsInSpaceCharacterIds.sort((a, b) => a - b);
-
     const characterChanges =
       await mergeEsiEntriesIntoCharactersTable(characters);
 
-    const npcCharacters = await Promise.all(
-      agentCharacterIds.map((characterId) =>
-        limit(async () =>
-          getNpcCharacterById(characterId).then((res) => res.data),
-        ),
+    const agentChanges = await ingestSdeTable({
+      filename: "npcCharacters.yaml",
+      idField: "characterId",
+      delegate: prisma.agent,
+      records: Object.fromEntries(
+        agents.map(({ characterId, record }) => [characterId, record]),
       ),
+      toRow: (record, id): Prisma.AgentCreateManyInput => {
+        const { agent, locationID } = record as unknown as SdeNpcCharacter;
+        const { agentTypeID, divisionID, level } = agent ?? {};
+        if (
+          agentTypeID === undefined ||
+          divisionID === undefined ||
+          level === undefined
+        ) {
+          throw new Error(
+            `Agent ${id} is missing required SDE fields (agentTypeID/divisionID/level)`,
+          );
+        }
+        return {
+          characterId: id,
+          agentTypeId: agentTypeID,
+          agentDivisionId: divisionID,
+          isLocator: agent?.isLocator ?? false,
+          level,
+          stationId: locationID,
+          isDeleted: false,
+        };
+      },
+    });
+
+    const researchAgents = agents.filter(({ record }) =>
+      isResearchAgent(record),
+    );
+    const researchAgentCharacterIds = researchAgents.map(
+      (agent) => agent.characterId,
     );
 
-    const agentChanges = await updateTable({
-      fetchLocalEntries: async () =>
-        prisma.agent
-          .findMany({
-            where: {
-              characterId: {
-                in: agentCharacterIds,
-              },
-            },
-          })
-          .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
-          ),
-      fetchRemoteEntries: () =>
-        Promise.resolve(
-          npcCharacters.map((npcCharacter) => {
-            const { agentTypeID, divisionID, level } = npcCharacter.agent;
-            if (
-              agentTypeID === undefined ||
-              divisionID === undefined ||
-              level === undefined
-            ) {
-              throw new Error(
-                `Agent ${npcCharacter.characterID} is missing required SDE fields (agentTypeID/divisionID/level)`,
-              );
-            }
-            return {
-              characterId: npcCharacter.characterID,
-              agentTypeId: agentTypeID,
-              agentDivisionId: divisionID,
-              isLocator: npcCharacter.agent.isLocator ?? false,
-              level,
-              stationId: npcCharacter.locationID,
-              isDeleted: false,
-            };
-          }),
-        ),
-      batchCreate: (entries) =>
-        limit(() =>
-          prisma.agent.createMany({
-            data: entries,
-          }),
-        ),
-      batchDelete: (entries) =>
-        prisma.agent.updateMany({
-          data: {
-            isDeleted: true,
-          },
-          where: {
-            characterId: {
-              in: entries.map((entry) => entry.characterId),
-            },
-          },
-        }),
-      batchUpdate: (entries) =>
-        Promise.all(
-          entries.map((entry) =>
-            limit(async () =>
-              prisma.agent.update({
-                data: entry,
-                where: { characterId: entry.characterId },
-              }),
-            ),
-          ),
-        ),
-      idAccessor: (e) => e.characterId,
+    const researchAgentsChanges = await ingestSdeTable({
+      filename: "npcCharacters.yaml",
+      idField: "characterId",
+      delegate: prisma.researchAgent,
+      records: Object.fromEntries(
+        researchAgents.map(({ characterId, record }) => [characterId, record]),
+      ),
+      toRow: (_record, id): Prisma.ResearchAgentCreateManyInput => ({
+        characterId: id,
+        isDeleted: false,
+      }),
     });
 
-    const researchAgentCharacters = npcCharacters.filter(isResearchAgent);
-    const researchAgentCharacterIds = researchAgentCharacters.map(
-      (npcCharacter) => npcCharacter.characterID,
-    );
-    researchAgentCharacterIds.sort((a, b) => a - b);
-
-    const researchAgentsChanges = await updateTable({
-      fetchLocalEntries: async () =>
-        prisma.researchAgent
-          .findMany({
-            where: {
-              characterId: {
-                in: researchAgentCharacterIds,
-              },
-            },
-          })
-          .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
-          ),
-      fetchRemoteEntries: () =>
-        Promise.resolve(
-          researchAgentCharacters.map((agent) => ({
-            characterId: agent.characterID,
-            isDeleted: false,
-          })),
-        ),
-      batchCreate: (entries) =>
-        limit(() =>
-          prisma.researchAgent.createMany({
-            data: entries,
-          }),
-        ),
-      batchDelete: (entries) =>
-        prisma.researchAgent.updateMany({
-          data: {
-            isDeleted: true,
-          },
-          where: {
-            characterId: {
-              in: entries.map((entry) => entry.characterId),
-            },
-          },
-        }),
-      batchUpdate: (entries) =>
-        Promise.all(
-          entries.map((entry) =>
-            limit(async () =>
-              prisma.researchAgent.update({
-                data: entry,
-                where: { characterId: entry.characterId },
-              }),
-            ),
-          ),
-        ),
-      idAccessor: (e) => e.characterId,
-    });
-
-    const researchAgentSkillChanges = await updateTable({
-      fetchLocalEntries: async () =>
-        prisma.researchAgentSkills
-          .findMany({
-            where: {
-              characterId: {
-                in: researchAgentCharacterIds,
-              },
-            },
-          })
-          .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
-          ),
-      fetchRemoteEntries: () =>
-        Promise.resolve(
-          researchAgentCharacters.flatMap((agent) =>
-            agent.skills.flatMap((typeId) => ({
-              characterId: agent.characterID,
-              typeId: typeId.typeID,
-              isDeleted: false,
-            })),
-          ),
-        ),
-      batchCreate: (entries) =>
-        limit(() =>
-          prisma.researchAgentSkills.createMany({
-            data: entries,
-          }),
-        ),
-      batchDelete: (entries) =>
-        prisma.researchAgentSkills.updateMany({
-          data: {
-            isDeleted: true,
-          },
-          where: {
-            characterId: {
-              in: entries.map((entry) => entry.characterId),
-            },
-          },
-        }),
-      batchUpdate: (entries) =>
-        Promise.all(
-          entries.map((entry) =>
-            limit(async () =>
-              prisma.researchAgentSkills.update({
-                data: entry,
-                where: {
-                  characterId_typeId: {
-                    characterId: entry.characterId,
-                    typeId: entry.typeId,
-                  },
-                },
-              }),
-            ),
-          ),
-        ),
-      idAccessor: (e) => `${e.characterId}:${e.typeId}`,
-    });
-
-    const agentsInSpaceChanges = await updateTable({
-      fetchLocalEntries: async () =>
-        prisma.agentInSpace
-          .findMany({
-            where: {
-              characterId: {
-                in: agentsInSpaceCharacterIds,
-              },
-            },
-          })
-          .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
-          ),
-      fetchRemoteEntries: async () =>
-        Promise.all(
-          agentsInSpaceCharacterIds.map((characterId) =>
-            limit(() => fetchAgentInSpace(characterId)),
-          ),
-        ),
-      batchCreate: (entries) =>
-        limit(() =>
-          prisma.agentInSpace.createMany({
-            data: entries,
-          }),
-        ),
-      batchDelete: (entries) =>
-        prisma.agentInSpace.updateMany({
-          data: {
-            isDeleted: true,
-          },
-          where: {
-            characterId: {
-              in: entries.map((entry) => entry.characterId),
-            },
-          },
-        }),
-      batchUpdate: (entries) =>
-        Promise.all(
-          entries.map((entry) =>
-            limit(async () =>
-              prisma.agentInSpace.update({
-                data: entry,
-                where: { characterId: entry.characterId },
-              }),
-            ),
-          ),
-        ),
-      idAccessor: (e) => e.characterId,
+    const researchAgentSkillChanges = await ingestSdeCompositeTable({
+      delegate: prisma.researchAgentSkills,
+      rows: researchAgents.flatMap(({ characterId, record }) =>
+        (record.skills ?? []).map((skill) => ({
+          characterId,
+          typeId: skill.typeID,
+          isDeleted: false,
+        })),
+      ),
+      keyFields: ["characterId", "typeId"],
+      scopeField: "characterId",
+      scopeIds: researchAgentCharacterIds,
     });
 
     return {
       stats: {
         agentChanges,
-        agentsInSpaceChanges,
         characterChanges,
         researchAgentsChanges,
         researchAgentSkillChanges,

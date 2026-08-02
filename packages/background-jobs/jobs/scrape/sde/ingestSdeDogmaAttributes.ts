@@ -42,6 +42,7 @@ export const ingestSdeDogmaAttributes = defineJob<
         published: optionalBoolean(record.published),
         unitId: optionalNumber(record.unitID),
         iconId: optionalNumber(record.iconID),
+        attributeCategoryId: optionalNumber(record.attributeCategoryID),
         isDeleted: false,
       }),
     });

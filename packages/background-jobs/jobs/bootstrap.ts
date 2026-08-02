@@ -18,13 +18,18 @@ export const bootstrapDatabase = defineJob<
     // child job completes before the next starts (previously a sendEvent +
     // waitForEvent pair per child). A child failure now propagates and fails
     // bootstrap at that step, instead of silently timing out after 1-3h.
+    // The `ingest-sde-*` jobs here also run in the full pipeline further down;
+    // they are pulled forward because the ESI scrapers that follow have foreign
+    // keys into the tables they fill (Icon, StationService,
+    // NpcCorporationDivision, Race). Re-running them later is a cheap no-op —
+    // the ingests are diff-based and idempotent.
     await ctx.invoke("scrape-hoboleaks-agent-types", {});
-    await ctx.invoke("scrape-sde-dogma-attribute-categories", {});
+    await ctx.invoke("ingest-sde-dogma-attribute-categories", {});
     await ctx.invoke("scrape-hoboleaks-dogma-effect-categories", {});
     await ctx.invoke("scrape-hoboleaks-dogma-units", {});
-    await ctx.invoke("scrape-sde-station-services", {});
-    await ctx.invoke("scrape-sde-npc-corporation-divisions", {});
-    await ctx.invoke("scrape-sde-icons", {});
+    await ctx.invoke("ingest-sde-station-services", {});
+    await ctx.invoke("ingest-sde-npc-corporation-divisions", {});
+    await ctx.invoke("ingest-sde-icons", {});
     await ctx.invoke("scrape-esi-graphics", {});
     await ctx.invoke("scrape-esi-market-groups", {});
     await ctx.invoke("scrape-esi-dogma-attributes", {});
@@ -36,7 +41,7 @@ export const bootstrapDatabase = defineJob<
     await ctx.invoke("scrape-esi-constellations", {});
     await ctx.invoke("scrape-esi-solar-systems", {});
     await ctx.invoke("scrape-esi-factions", {});
-    await ctx.invoke("scrape-sde-races", {});
+    await ctx.invoke("ingest-sde-races", {});
     await ctx.invoke("scrape-esi-races", {});
     await ctx.invoke("scrape-esi-bloodlines", {});
     await ctx.invoke("scrape-esi-ancestries", {});

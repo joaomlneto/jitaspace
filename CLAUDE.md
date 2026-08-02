@@ -79,7 +79,7 @@ packages/
   auth/ auth-utils/          # EVE Online SSO (OAuth2 PKCE + state), token seal/refresh
   db/                        # Prisma 7 client + PostgreSQL schema
   kv/                        # Redis client + Bull job queues
-  esi-client/ sde-client/    # Kubb-generated EVE API clients (ESI, self-hosted SDE)
+  esi-client/                # Kubb-generated EVE API client (ESI)
   evekill-client/ evetycoon-client/ fuzzworks-market-client/  # more generated clients
   esi-metadata/ eve-data/    # ESI scopes/ID ranges; static EVE datasets
   hooks/                     # React Query hooks over ESI / third-party APIs

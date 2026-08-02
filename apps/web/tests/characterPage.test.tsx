@@ -9,7 +9,6 @@ const CHARACTER_ID = 30000142;
 
 const mockUseCharacter = jest.fn();
 const mockUseSelectedCharacter = jest.fn();
-const mockUseGetNpcCorporationDivisionById = jest.fn();
 const mockUseAuthenticatedCharacter = jest.fn();
 const mockUseCharacterSkills = jest.fn();
 const mockUseCharacterWalletBalance = jest.fn();
@@ -45,11 +44,6 @@ jest.mock(
       mockUseCharacterWalletBalance(...args),
   }),
 );
-
-jest.mock("@jitaspace/sde-client", () => ({
-  useGetNpcCorporationDivisionById: (...args: unknown[]) =>
-    mockUseGetNpcCorporationDivisionById(...args),
-}));
 
 jest.mock("@jitaspace/tiptap-eve", () => ({
   sanitizeFormattedEveString: (s: string) => `sanitized:${s}`,
@@ -109,16 +103,12 @@ describe("Character page", () => {
   beforeEach(() => {
     mockUseCharacter.mockReset();
     mockUseSelectedCharacter.mockReset();
-    mockUseGetNpcCorporationDivisionById.mockReset();
     mockUseAuthenticatedCharacter.mockReset();
     mockUseCharacterSkills.mockReset();
     mockUseCharacterWalletBalance.mockReset();
     mockUseCorporationHistory.mockReset();
 
     // Sensible defaults — individual tests override as needed.
-    mockUseGetNpcCorporationDivisionById.mockReturnValue({
-      data: { data: { name: { en: "Distribution" } } },
-    });
     mockUseAuthenticatedCharacter.mockReturnValue(null);
     mockUseCharacterSkills.mockReturnValue({ hasToken: false });
     mockUseCharacterWalletBalance.mockReturnValue({ isAllowed: false });
@@ -140,6 +130,7 @@ describe("Character page", () => {
         isNpc: true,
         isResearchAgent: true,
         agentDivisionId: 22,
+        agentDivisionName: "Distribution",
         agentTypeId: 3,
         isLocator: true,
         level: 4,
@@ -184,10 +175,6 @@ describe("Character page", () => {
     const { container } = renderPage();
 
     expect(mockUseCharacter).toHaveBeenCalledWith(CHARACTER_ID);
-    // agent division hook called with the division id, query enabled
-    expect(mockUseGetNpcCorporationDivisionById).toHaveBeenCalledWith(22, {
-      query: { enabled: true },
-    });
 
     // Info window renders because a character is selected
     expect(screen.getAllByTestId("info-window").length).toBeGreaterThanOrEqual(
@@ -392,11 +379,6 @@ describe("Character page", () => {
     expect(
       screen.queryByText("No employment history available."),
     ).not.toBeInTheDocument();
-
-    // agent division hook disabled
-    expect(mockUseGetNpcCorporationDivisionById).toHaveBeenCalledWith(0, {
-      query: { enabled: false },
-    });
   });
 
   it("renders the server wrapper (page.tsx) inside a Suspense boundary", () => {

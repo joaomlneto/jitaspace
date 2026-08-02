@@ -23,7 +23,6 @@ const mockUseAllSolarSystemJumps = jest.fn();
 const mockUseAllSolarSystemKills = jest.fn();
 const mockUseStar = jest.fn();
 const mockUseStargate = jest.fn();
-const mockUseGetSolarSystemById = jest.fn();
 const mockUseGetFwSystems = jest.fn();
 const mockUseGetIncursions = jest.fn();
 
@@ -55,11 +54,6 @@ jest.mock("@jitaspace/hooks", () => ({
 jest.mock("@jitaspace/esi-client", () => ({
   useGetFwSystems: () => mockUseGetFwSystems(),
   useGetIncursions: () => mockUseGetIncursions(),
-}));
-
-jest.mock("@jitaspace/sde-client", () => ({
-  useGetSolarSystemById: (...args: unknown[]) =>
-    mockUseGetSolarSystemById(...args),
 }));
 
 // Only the handful of @jitaspace/ui exports the page actually uses. The pure
@@ -113,11 +107,15 @@ jest.mock("next/link", () => ({
   }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
-function renderPage() {
+/**
+ * The SDE-only system columns are a server-resolved prop now, not a hook, so
+ * tests pass them straight in.
+ */
+function renderPage(sde?: Record<string, unknown>) {
   const Page = require("~/app/system/[systemId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page />
+      <Page sde={sde} />
     </MantineProvider>,
   );
 }
@@ -133,7 +131,6 @@ describe("System page", () => {
     mockUseAllSolarSystemKills.mockReset().mockReturnValue({ data: { data: [] } });
     mockUseStar.mockReset().mockReturnValue({ data: undefined });
     mockUseStargate.mockReset().mockReturnValue({ data: undefined });
-    mockUseGetSolarSystemById.mockReset().mockReturnValue({ data: undefined });
     mockUseGetFwSystems.mockReset().mockReturnValue({ data: { data: [] } });
     mockUseGetIncursions.mockReset().mockReturnValue({ data: { data: [] } });
   });
@@ -157,23 +154,6 @@ describe("System page", () => {
           ],
           stargates: [50000001, 50000002],
           stations: [60000001, 60000002],
-        },
-      },
-    });
-    mockUseGetSolarSystemById.mockReturnValue({
-      data: {
-        data: {
-          luminosity: 1.692,
-          radius: 1234567,
-          position: { x: 1, y: 2, z: 3 },
-          hub: true,
-          border: true,
-          fringe: false,
-          corridor: false,
-          international: true,
-          regional: false,
-          factionID: 500001,
-          wormholeClassID: null,
         },
       },
     });
@@ -235,10 +215,23 @@ describe("System page", () => {
       },
     });
 
-    renderPage();
+    renderPage({
+      luminosity: 1.692,
+      radius: 1234567,
+      positionX: 1,
+      positionY: 2,
+      positionZ: 3,
+      wormholeClassId: null,
+      factionId: 500001,
+      hub: true,
+      border: true,
+      fringe: false,
+      corridor: false,
+      international: true,
+      regional: false,
+    });
 
     expect(mockUseSolarSystem).toHaveBeenCalledWith(SYSTEM_ID);
-    expect(mockUseGetSolarSystemById).toHaveBeenCalledWith(SYSTEM_ID);
 
     // Header widgets
     expect(screen.getByTestId("set-autopilot")).toBeInTheDocument();
@@ -332,22 +325,21 @@ describe("System page", () => {
         },
       },
     });
-    mockUseGetSolarSystemById.mockReturnValue({
-      data: {
-        data: {
-          position: { x: 1, y: 2, z: 3 },
-          hub: false,
-          border: false,
-          fringe: false,
-          corridor: false,
-          international: false,
-          regional: false,
-          wormholeClassID: 3,
-        },
-      },
+    renderPage({
+      luminosity: null,
+      radius: null,
+      positionX: 1,
+      positionY: 2,
+      positionZ: 3,
+      wormholeClassId: 3,
+      factionId: null,
+      hub: false,
+      border: false,
+      fringe: false,
+      corridor: false,
+      international: false,
+      regional: false,
     });
-
-    renderPage();
 
     expect(screen.getByText("W-Space")).toBeInTheDocument();
     expect(screen.getByText("Wormhole Class")).toBeInTheDocument();
@@ -367,10 +359,13 @@ describe("System page", () => {
     const WrapperPage = require("~/app/system/[systemId]/page").default;
     render(
       <MantineProvider>
-        <WrapperPage />
+        <WrapperPage params={Promise.resolve({ systemId: String(SYSTEM_ID) })} />
       </MantineProvider>,
     );
 
-    expect(screen.getByText("Stations")).toBeInTheDocument();
+    // The wrapper's content is an async server component (it awaits the params
+    // and the cached SDE lookup), so a client-side render only ever gets as far
+    // as the Suspense fallback.
+    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
   });
 });

@@ -4,7 +4,7 @@ import { render } from "@testing-library/react";
 jest.mock("@mantine/core", () => ({ Loader: () => null }));
 
 // Mock each client component so rendering the server page wrappers doesn't pull
-// in React Query / Mantine / sde-client.
+// in React Query / Mantine.
 jest.mock("~/app/history/type/[typeId]/page.client", () => ({
   default: () => null,
 }));

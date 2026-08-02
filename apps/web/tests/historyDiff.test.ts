@@ -8,7 +8,6 @@ import {
   isPlainObject,
   keyLabel,
   restSummary,
-  sdeLabel,
   summarize,
 } from "~/app/history/_diff";
 
@@ -58,22 +57,6 @@ describe("summarize", () => {
     expect(summarize([1, 2, 3])).toBe("3 entries");
     expect(summarize([1])).toBe("1 entry");
     expect(summarize(7)).toBe("7");
-  });
-});
-
-describe("sdeLabel", () => {
-  it("prefers displayName.en, then string name, then name.en, then nameID.en", () => {
-    expect(sdeLabel({ displayName: { en: "Display" }, name: "n" })).toBe(
-      "Display",
-    );
-    expect(sdeLabel({ name: "Plain" })).toBe("Plain");
-    expect(sdeLabel({ name: { en: "Localized" } })).toBe("Localized");
-    expect(sdeLabel({ nameID: { en: "ViaNameId" } })).toBe("ViaNameId");
-  });
-  it("returns undefined for missing / blank labels", () => {
-    expect(sdeLabel(undefined)).toBeUndefined();
-    expect(sdeLabel({})).toBeUndefined();
-    expect(sdeLabel({ name: "   " })).toBeUndefined();
   });
 });
 

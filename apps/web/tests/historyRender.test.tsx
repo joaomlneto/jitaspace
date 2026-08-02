@@ -42,24 +42,15 @@ jest.mock("~/lib/history-cache", () => ({
 }));
 jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
 
-// Every `getXByIdQueryOptions(id)` returns a valid query-options object whose
-// queryKey the mocked useQuery resolves to a generic name.
-jest.mock(
-  "@jitaspace/sde-client",
-  () =>
-    new Proxy(
-      {},
-      {
-        get: (_t, prop) =>
-          typeof prop === "string"
-            ? (id: number) => ({
-                queryKey: [prop, id],
-                queryFn: () => Promise.resolve({ data: { name: "Rifter" } }),
-              })
-            : undefined,
-      },
-    ),
-);
+// The history labels look entity names up through `sdeRecordQueryOptions`,
+// which hits the app's own `/api/sde` route. Return a valid query-options
+// object whose queryKey the mocked useQuery resolves to a generic name.
+jest.mock("@jitaspace/hooks", () => ({
+  sdeRecordQueryOptions: (resource: string, id: number | undefined) => ({
+    queryKey: ["sde", resource, id],
+    queryFn: () => Promise.resolve({ name: "Rifter" }),
+  }),
+}));
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),

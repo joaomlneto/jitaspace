@@ -35,6 +35,61 @@ async function getTypeData(typeId: number): Promise<PageProps> {
     },
   });
 
+  // Reference metadata for this type's dogma attributes: display name, icon,
+  // unit symbol and category. The client used to fetch this one attribute (and
+  // one unit, and one category) at a time from the SDE API; it is static data,
+  // so it is resolved here in a single query and cached with the page.
+  const typeAttributes = await prisma.typeAttribute.findMany({
+    select: {
+      attributeId: true,
+      attribute: {
+        select: {
+          name: true,
+          displayName: true,
+          iconId: true,
+          unitId: true,
+          attributeCategoryId: true,
+          DogmaUnit: { select: { displayName: true, name: true } },
+        },
+      },
+    },
+    where: { typeId },
+    orderBy: { attributeId: "asc" },
+  });
+
+  const categoryIds = [
+    ...new Set(
+      typeAttributes
+        .map((entry) => entry.attribute.attributeCategoryId)
+        .filter((id): id is number => id !== null),
+    ),
+  ];
+
+  const categories = await prisma.dogmaAttributeCategory.findMany({
+    select: { attributeCategoryId: true, name: true },
+    where: { attributeCategoryId: { in: categoryIds } },
+  });
+  const categoryNameById = new Map(
+    categories.map((category) => [category.attributeCategoryId, category.name]),
+  );
+
+  const dogmaAttributeMeta = typeAttributes.map((entry) => ({
+    attributeId: entry.attributeId,
+    name: entry.attribute.name,
+    displayName: entry.attribute.displayName,
+    iconId: entry.attribute.iconId,
+    unitId: entry.attribute.unitId,
+    unitSymbol:
+      entry.attribute.DogmaUnit?.displayName ??
+      entry.attribute.DogmaUnit?.name ??
+      null,
+    categoryId: entry.attribute.attributeCategoryId,
+    categoryName:
+      entry.attribute.attributeCategoryId === null
+        ? null
+        : (categoryNameById.get(entry.attribute.attributeCategoryId) ?? null),
+  }));
+
   const typeImageVariations = (await fetch(
     `https://images.evetech.net/types/${typeId}`,
   ).then((res) => {
@@ -50,6 +105,7 @@ async function getTypeData(typeId: number): Promise<PageProps> {
     ogImageUrl: `https://images.evetech.net/types/${typeId}/${variation}`,
     typeName: type.name,
     typeDescription: type.description,
+    dogmaAttributeMeta,
   };
 }
 
