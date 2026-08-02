@@ -17,6 +17,7 @@ import { useListState } from "@mantine/hooks";
 import createGraph from "ngraph.graph";
 import path from "ngraph.path";
 import {
+  createSerializer,
   parseAsInteger,
   parseAsStringLiteral,
   throttle,
@@ -80,6 +81,16 @@ const travelControlUrlOptions = {
   history: "replace" as const,
   limitUrlUpdates: throttle(500),
 };
+
+/**
+ * Waypoints live in the path, so changing one is a `router.push` to a new URL.
+ * That push has to carry the control params forward explicitly — nuqs derives
+ * its state from `useSearchParams()`, so a path-only push would drop them and
+ * silently reset the route preference. Serializing from the nuqs state (rather
+ * than re-reading `useSearchParams()`) also avoids losing a slider write that
+ * is still inside the throttle window when the waypoint changes.
+ */
+const serializeTravelUrl = createSerializer(travelControlParsers);
 
 export default function TravelPage({
   solarSystems,
@@ -186,10 +197,18 @@ export default function TravelPage({
                   (_, i) => (i === index ? value : (waypoints[i] ?? "")),
                 );
                 waypointHandlers.setState(nextWaypoints);
+                // Carry the control params across the navigation (see
+                // serializeTravelUrl). Serialize the raw URL state, NOT the
+                // derived `penalties` — for a preset the penalties are implied,
+                // and emitting them here would put back the redundant params
+                // that PRESET_PENALTIES exists to keep out of the URL.
                 router.push(
-                  `/travel/${nextWaypoints
-                    .map((systemId) => solarSystems[systemId]?.name ?? "")
-                    .join("/")}`,
+                  serializeTravelUrl(
+                    `/travel/${nextWaypoints
+                      .map((systemId) => solarSystems[systemId]?.name ?? "")
+                      .join("/")}`,
+                    { pref: routePreference, nullSec, lowSec, highSec },
+                  ),
                 );
               }}
               key={index}

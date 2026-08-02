@@ -110,7 +110,20 @@ export function EntityHistory({
   const seenCollections = [
     ...new Set(events.map((e) => e.collection ?? "types")),
   ];
-  const active = selected ?? seenCollections;
+  // The `histCollections` param is shared across entities, so it can name a
+  // collection this one doesn't have. Left alone that filters everything out
+  // AND renders no chip to untick it, stranding the view on "No changes match"
+  // over a non-empty timeline. Intersect to avoid that — but keep the
+  // tri-state intact: null ⇒ all, and a deliberate empty selection stays empty.
+  const selectedHere = selected?.filter((c) => seenCollections.includes(c));
+  let active: string[];
+  if (selected === null || selectedHere === undefined) {
+    active = seenCollections; // no param ⇒ everything
+  } else if (selected.length > 0 && selectedHere.length === 0) {
+    active = seenCollections; // param named only collections this entity lacks
+  } else {
+    active = selectedHere; // includes the user's deliberate "none"
+  }
   const visibleEvents = events.filter((e) =>
     active.includes(e.collection ?? "types"),
   );

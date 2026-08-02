@@ -66,6 +66,13 @@ function renderPage(searchParams = "") {
   );
 }
 
+// File scope so it applies to every describe here regardless of declaration
+// order — the tab-sync block below runs before the main one.
+afterEach(() => {
+  jest.clearAllMocks();
+  corporationId = "98000001";
+});
+
 describe("corporation page tab URL sync", () => {
   it("opens the Alliance History tab from ?tab=history", () => {
     mockUseCorporation.mockReturnValue({
@@ -82,11 +89,6 @@ describe("corporation page tab URL sync", () => {
 });
 
 describe("corporation page", () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-    corporationId = "98000001";
-  });
-
   it("renders all sections with rich corporation data", () => {
     mockUseSelectedCharacter.mockReturnValue({ characterId: 12345 });
     mockUseCorporation.mockReturnValue({

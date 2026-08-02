@@ -108,6 +108,10 @@ describe("Travel Page", () => {
 });
 
 describe("Travel Page route preference URL sync", () => {
+  beforeEach(() => {
+    mockPush.mockReset();
+  });
+
   const prefControl = (label: string) =>
     screen.getByRole("radio", { name: label });
 
@@ -175,6 +179,48 @@ describe("Travel Page route preference URL sync", () => {
     expect(screen.getByText("Null Sec Penalty (100)")).toBeInTheDocument();
     expect(screen.getByText("Low Sec Penalty (100)")).toBeInTheDocument();
     expect(screen.getByText("High Sec Penalty (0)")).toBeInTheDocument();
+  });
+
+  // Waypoints live in the path, so changing one is a router.push to a new URL.
+  // That push must carry the control params or the preference silently resets —
+  // which would defeat the whole point of syncing it.
+  it("carries the route preference across a waypoint change", () => {
+    renderPage([], { searchParams: "?pref=secure" });
+
+    fireEvent.click(screen.getAllByText("Delta")[0]!);
+
+    expect(mockPush).toHaveBeenLastCalledWith("/travel/Delta?pref=secure");
+  });
+
+  it("carries custom penalties across a waypoint change", () => {
+    renderPage([], {
+      searchParams: "?pref=custom&nullSec=250&lowSec=40",
+    });
+
+    fireEvent.click(screen.getAllByText("Delta")[0]!);
+
+    expect(mockPush).toHaveBeenLastCalledWith(
+      "/travel/Delta?pref=custom&nullSec=250&lowSec=40",
+    );
+  });
+
+  // A preset implies its penalties, so the carried URL must not regain the
+  // redundant params that PRESET_PENALTIES exists to keep out.
+  it("does not add redundant penalty params for a preset", () => {
+    renderPage([], { searchParams: "?pref=secure" });
+
+    fireEvent.click(screen.getAllByText("Delta")[0]!);
+
+    const pushed = mockPush.mock.calls.at(-1)![0] as string;
+    expect(pushed).not.toMatch(/nullSec|lowSec|highSec/);
+  });
+
+  it("leaves the pushed URL clean when everything is at its default", () => {
+    renderPage([]);
+
+    fireEvent.click(screen.getAllByText("Delta")[0]!);
+
+    expect(mockPush).toHaveBeenLastCalledWith("/travel/Delta");
   });
 
   it("ignores out-of-range preference values in a hand-edited URL", () => {

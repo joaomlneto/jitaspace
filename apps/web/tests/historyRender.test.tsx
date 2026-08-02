@@ -386,6 +386,44 @@ describe("EntityHistory", () => {
     expect(screen.getByText(/from build 97/)).toBeTruthy();
   });
 
+  // The histCollections param is shared across entities, so it can name a
+  // collection this one doesn't have. Without a guard that filters everything
+  // out AND renders no chip to untick, stranding the view.
+  it("ignores a collection the entity does not have rather than stranding", async () => {
+    const { EntityHistory } = await import("~/app/history/EntityHistory");
+    wrap(
+      <EntityHistory
+        entityType="type"
+        entityId={587}
+        renderHeader={() => <div>Rifter header</div>}
+      />,
+      "?histCollections=blueprints",
+    );
+
+    // The timeline still renders instead of "No changes match…".
+    expect(screen.getByText("2025-01-01")).toBeTruthy();
+    expect(
+      screen.queryByText(/No changes match the selected collections/),
+    ).toBeNull();
+  });
+
+  // …but a deliberate "untick everything" must still mean empty, not all.
+  it("keeps an empty selection empty", async () => {
+    const { EntityHistory } = await import("~/app/history/EntityHistory");
+    wrap(
+      <EntityHistory
+        entityType="type"
+        entityId={587}
+        renderHeader={() => <div>Rifter header</div>}
+      />,
+      "?histCollections=",
+    );
+
+    expect(
+      screen.getByText(/No changes match the selected collections/),
+    ).toBeTruthy();
+  });
+
   it("renders an empty state when there are no events", async () => {
     const { EntityHistory } = await import("~/app/history/EntityHistory");
     mockUseQuery.mockImplementation(() => ({
