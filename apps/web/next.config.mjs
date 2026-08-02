@@ -42,7 +42,7 @@ const jiti = createJiti(import.meta.url);
  * Origins allow-listed below are the ones the app legitimately talks to from the
  * browser:
  *   - img:     EVE image CDNs (`images.evetech.net`, `web.ccpgamescdn.com`) and
- *              the item-icon host (`iec.jita.space`).
+ *              the item-icon host (`icons.jita.space`).
  *   - script:  Google Tag Manager.
  *   - worker:  `blob:` for Sentry Session Replay's compression Web Worker.
  *   - connect: data the client-side hooks (React Query / SWR) fetch directly —
@@ -62,7 +62,7 @@ const contentSecurityPolicy = [
   // 'none'` shuts off legacy plugin embedding vectors.
   "base-uri 'self'",
   "object-src 'none'",
-  "img-src 'self' https://images.evetech.net https://web.ccpgamescdn.com https://iec.jita.space https://www.googletagmanager.com data:",
+  "img-src 'self' https://images.evetech.net https://web.ccpgamescdn.com https://icons.jita.space https://www.googletagmanager.com data:",
   // FUTURE WORK: `'unsafe-inline'` is unavoidable here until we emit a
   // per-request nonce (Next.js injects inline bootstrap scripts; GTM is loaded
   // from googletagmanager.com). Removing it is the goal of the nonce migration
@@ -114,6 +114,11 @@ const config = {
     "@jitaspace/tiptap-eve",
     "@jitaspace/ui",
     "@jitaspace/utils",
+    // nuqs is ESM-only. This entry exists SOLELY for next/jest: it's the only
+    // lever that carves nuqs out of jest's transformIgnorePatterns (jest.config.ts
+    // can append to that list but not relax it), so jest can down-compile the ESM.
+    // The Next build/dev bundler consumes nuqs's ESM fine without this.
+    "nuqs",
   ],
 
   /** Avoid bundling server-only worker dependencies */

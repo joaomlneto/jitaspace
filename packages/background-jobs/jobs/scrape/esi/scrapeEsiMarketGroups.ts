@@ -55,7 +55,10 @@ export const scrapeEsiMarketGroups = defineJob<
       })
       .then((entries) =>
         entries.map((entry) =>
-          excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+          // `iconId` is owned by ingestSdeMarketGroups — ESI's market group
+          // endpoint has no icon, so leaving it in would make every row differ
+          // from its remote counterpart and be rewritten on every run.
+          excludeObjectKeys(entry, ["updatedAt", "createdAt", "iconId"]),
         ),
       );
 

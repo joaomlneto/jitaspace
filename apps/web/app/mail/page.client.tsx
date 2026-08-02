@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   ActionIcon,
   Alert,
@@ -17,6 +15,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs";
 import posthog from "posthog-js";
 
 import {
@@ -26,19 +25,23 @@ import {
   GroupListIcon,
 } from "@jitaspace/eve-icons";
 import { useCharacterMails, useSelectedCharacter } from "@jitaspace/hooks";
-import { toArrayIfNot } from "@jitaspace/utils";
 
 import { MailboxTable } from "~/components/EveMail";
 import { EveMailLabelMultiSelect } from "~/components/MultiSelect/EveMailLabelMultiSelect";
 
 export default function Page() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const _labels = toArrayIfNot(searchParams.get("labels") ?? []);
   const character = useSelectedCharacter();
 
-  const [selectedLabels, setSelectedLabels] = React.useState<string[]>([]);
+  // parseAsArrayOf defaults to a comma separator, keeping the `?labels=1,2`
+  // format this page already wrote, so existing shared links keep working.
+  // The integer item-parser also validates: nuqs drops items it can't parse, so
+  // a hand-edited `?labels=abc,2` yields [2] instead of forwarding NaN to ESI.
+  const [selectedLabels, setSelectedLabels] = useQueryState(
+    "labels",
+    parseAsArrayOf(parseAsInteger)
+      .withDefault([])
+      .withOptions({ history: "replace" }),
+  );
 
   const {
     messages,
@@ -47,7 +50,7 @@ export default function Page() {
     isLoading,
     mutate,
     error,
-  } = useCharacterMails(character?.characterId, selectedLabels.map(Number));
+  } = useCharacterMails(character?.characterId, selectedLabels);
 
   return (
     <Container size="xl">
@@ -142,15 +145,10 @@ export default function Page() {
                 size="xs"
                 style={{ minWidth: "240px" }}
                 label="Filter by label"
-                value={selectedLabels}
-                onChange={(value: string[]) => {
-                  setSelectedLabels(value);
-                  const params = new URLSearchParams({
-                    labels: value.join(","),
-                  });
-                  router.push(`${pathname}?${params.toString()}`);
-                }}
-                defaultValue={selectedLabels}
+                value={selectedLabels.map(String)}
+                onChange={(value: string[]) =>
+                  void setSelectedLabels(value.map(Number))
+                }
               />
             )}
           </Grid.Col>
