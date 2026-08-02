@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it, jest } from "@jest/globals";
 
 import type { scrapeHoboleaksAgentTypes as ScrapeHoboleaksAgentTypes } from "../jobs/scrape/hoboleaks/scrapeHoboleaksAgentTypes";
+import type { CrudStatistics } from "../types";
 
 // The job pulls in p-limit (ESM) and a real Prisma client (via ../db, which
 // builds one from the zod-checked env). Stub both so the test exercises only the
@@ -39,9 +40,14 @@ const mockHoboleaksResponse = (agentTypes: Record<number, string>) => {
 // The record the job derives from that payload — no createdAt/updatedAt.
 const remoteRecord = { agentTypeId: 1, name: "BasicAgent", isDeleted: false };
 
-const runJob = () =>
+// `defineJob` is only given its Payload type argument, so its `Result` generic
+// falls back to `unknown` and the handler is typed `Promise<unknown>`. Assert
+// the shape the handler actually returns so the assertions below type-check.
+const runJob = async () =>
   // The handler ignores its context, so an empty one is enough.
-  scrapeHoboleaksAgentTypes.handler({} as never);
+  (await scrapeHoboleaksAgentTypes.handler({} as never)) as {
+    stats: { agentTypeChanges: CrudStatistics };
+  };
 
 describe("scrapeHoboleaksAgentTypes", () => {
   it("does not update a row whose only difference is the createdAt/updatedAt timestamps", async () => {
