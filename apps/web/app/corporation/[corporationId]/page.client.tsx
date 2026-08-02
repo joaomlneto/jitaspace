@@ -14,6 +14,7 @@ import {
   Title,
 } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { AllianceName, CorporationName } from "@jitaspace/eve-components";
 import { useCorporation, useSelectedCharacter } from "@jitaspace/hooks";
@@ -24,7 +25,22 @@ import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
 import { MailMessageViewer } from "~/components/EveMail";
 import { CorporationAllianceHistoryTimeline } from "~/components/Timeline";
 
+/** Tabs on the corporation detail page, in display order. */
+const CORPORATION_TABS = ["description", "history"] as const;
+type CorporationTab = (typeof CORPORATION_TABS)[number];
+const DEFAULT_CORPORATION_TAB: CorporationTab = "description";
+
+const isCorporationTab = (value: string | null): value is CorporationTab =>
+  value != null && (CORPORATION_TABS as readonly string[]).includes(value);
+
 export default function Page() {
+  // Keeps the open tab in the URL so a corp's alliance history is linkable.
+  const [activeTab, setActiveTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(CORPORATION_TABS)
+      .withDefault(DEFAULT_CORPORATION_TAB)
+      .withOptions({ history: "replace" }),
+  );
   const params = useParams();
   const rawCorporationId = params.corporationId;
   const corporationId = Number(
@@ -111,7 +127,12 @@ export default function Page() {
             </Group>
           </Group>
         )}
-        <Tabs defaultValue="description">
+        <Tabs
+          value={activeTab}
+          onChange={(value) => {
+            if (isCorporationTab(value)) void setActiveTab(value);
+          }}
+        >
           <Tabs.List>
             <Tabs.Tab value="description">Description</Tabs.Tab>
             <Tabs.Tab value="history">Alliance History</Tabs.Tab>
