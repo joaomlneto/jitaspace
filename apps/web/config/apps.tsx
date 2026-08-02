@@ -5,6 +5,7 @@ import type { EveIconProps } from "@jitaspace/eve-icons";
 import {
   AgentFinderIcon,
   AlliancesIcon,
+  AssetsIcon,
   AttributesIcon,
   CalendarIcon,
   CharacterSheetIcon,
@@ -162,27 +163,21 @@ export const characterApps: Record<string, JitaApp> = {
       ],
     },
   },
-  /*
   assets: {
     name: "Assets",
-    description: "View and manage your character's assets.",
+    description:
+      "Browse everything your character owns — drill into ships, containers and stations.",
     url: "/assets/character",
-    Icon: (props) => React.createElement(AssetsIcon, props),    scopes: {
-      optional: [
+    Icon: (props) => React.createElement(AssetsIcon, props),
+    scopes: {
+      required: [
         {
           reason: "View your character assets",
           scopes: ["esi-assets.read_assets.v1"],
         },
-        {
-          reason: "View your corporation assets",
-          scopes: [
-            "esi-characters.read_corporation_roles.v1",
-            "esi-assets.read_corporation_assets.v1",
-          ],
-        },
       ],
     },
-  },*/
+  },
   wallet: {
     name: "Wallet",
     description: "View your character's and your corporation's wallet.",

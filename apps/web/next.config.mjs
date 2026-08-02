@@ -114,6 +114,11 @@ const config = {
     "@jitaspace/tiptap-eve",
     "@jitaspace/ui",
     "@jitaspace/utils",
+    // nuqs is ESM-only. This entry exists SOLELY for next/jest: it's the only
+    // lever that carves nuqs out of jest's transformIgnorePatterns (jest.config.ts
+    // can append to that list but not relax it), so jest can down-compile the ESM.
+    // The Next build/dev bundler consumes nuqs's ESM fine without this.
+    "nuqs",
   ],
 
   /** Avoid bundling server-only worker dependencies */

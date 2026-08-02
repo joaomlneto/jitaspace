@@ -3,6 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 import type { WarRoomData, WarRoomWar } from "~/components/Wars/WarRoom";
 
@@ -97,6 +98,8 @@ function renderView(experimental: boolean) {
     <MantineProvider>
       <ActiveWarsView data={DATA} />
     </MantineProvider>,
+    // The overview renders WarList, whose controls are nuqs-backed.
+    { wrapper: withNuqsTestingAdapter({ hasMemory: true }) },
   );
 }
 
