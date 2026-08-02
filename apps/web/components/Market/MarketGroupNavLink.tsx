@@ -5,19 +5,26 @@ import Link from "next/link";
 import { NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
-import { MarketGroupAvatar } from "@jitaspace/eve-components";
-import { TypeAvatar } from "@jitaspace/ui";
+import { EveIconAvatar, TypeAvatar } from "@jitaspace/ui";
+
+/**
+ * The whole market tree, bundled by `MarketGroupsNavigation` from a single
+ * server-side query. Everything a NavLink renders — including the group icon —
+ * comes from here, so expanding the tree never hits the network.
+ */
+export type MarketGroupIndex = Record<
+  number,
+  {
+    name: string;
+    parentMarketGroupId: number | null;
+    childrenMarketGroupIds: number[];
+    types: { typeId: number; name: string }[];
+    iconId: number | null;
+  }
+>;
 
 interface MarketGroupNavLinkProps {
-  marketGroups: Record<
-    number,
-    {
-      name: string;
-      parentMarketGroupId: number | null;
-      childrenMarketGroupIds: number[];
-      types: { typeId: number; name: string }[];
-    }
-  >;
+  marketGroups: MarketGroupIndex;
   marketGroupId: number;
   expand?: boolean;
 }
@@ -71,7 +78,11 @@ export const MarketGroupNavLink = memo(
         opened={opened}
         onChange={() => toggle()}
         leftSection={
-          <MarketGroupAvatar size={24} marketGroupId={marketGroupId} />
+          <EveIconAvatar
+            size={24}
+            iconId={marketGroup.iconId}
+            alt={marketGroup.name}
+          />
         }
       >
         {opened &&

@@ -4,8 +4,7 @@ import type { AvatarProps } from "@mantine/core";
 import { memo } from "react";
 
 import { useMarketGroup } from "@jitaspace/hooks";
-
-import { EveIconAvatar } from "./EveIconAvatar";
+import { EveIconAvatar } from "@jitaspace/ui";
 
 export type MarketGroupAvatarProps = Omit<AvatarProps, "src"> & {
   marketGroupId: number;
