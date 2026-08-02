@@ -1,7 +1,7 @@
 import { cacheLife } from "next/cache";
 
+import type { MarketGroupIndex } from "./MarketGroupNavLink";
 import { prisma } from "~/lib/db";
-
 import { MarketGroupNavLink } from "./MarketGroupNavLink";
 
 export async function MarketGroupsNavigation() {
@@ -34,18 +34,19 @@ export async function MarketGroupsNavigation() {
           name: true,
         },
       },
+      // Bundling the icon here is what keeps the sidebar request-free: rendering
+      // it client-side used to cost two SDE lookups per group (the group, then
+      // its icon) plus an ESI market group call, i.e. ~3 requests per visible
+      // NavLink on load and on every expand.
+      icon: {
+        select: {
+          iconFile: true,
+        },
+      },
     },
   });
 
-  const marketGroupsIndex: Record<
-    number,
-    {
-      name: string;
-      parentMarketGroupId: number | null;
-      childrenMarketGroupIds: number[];
-      types: { typeId: number; name: string }[];
-    }
-  > = {};
+  const marketGroupsIndex: MarketGroupIndex = {};
   marketGroups.forEach(
     (marketGroup) =>
       (marketGroupsIndex[marketGroup.marketGroupId] = {
@@ -55,6 +56,7 @@ export async function MarketGroupsNavigation() {
           (childMarketGroup) => childMarketGroup.marketGroupId,
         ),
         types: marketGroup.types,
+        iconFile: marketGroup.icon?.iconFile ?? null,
       }),
   );
 

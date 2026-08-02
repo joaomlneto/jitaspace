@@ -2,6 +2,7 @@ export * from "./AllianceAvatar";
 export * from "./CalendarEventOwnerAvatar";
 export * from "./CharacterAvatar";
 export * from "./CorporationAvatar";
+export * from "./EveIconAvatarDisplay";
 export * from "./EveIconAvatarPlaceholder";
 export * from "./EveImageServerAvatar";
 export * from "./FactionAvatar";
