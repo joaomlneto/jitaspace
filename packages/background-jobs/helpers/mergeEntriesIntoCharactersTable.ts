@@ -46,7 +46,9 @@ export const mergeEntriesIntoCharactersTable = (
           },
         })
         .then((entries) =>
-          entries.map((entry) => excludeObjectKeys(entry, ["updatedAt"])),
+          entries.map((entry) =>
+            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+          ),
         ),
     fetchRemoteEntries: () => Promise.resolve(characters),
     batchCreate: (entries) =>

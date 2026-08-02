@@ -8,7 +8,7 @@ export const fromEveColor = (eveColor: string | null | undefined): string => {
   // this, renderHTML throws and crashes the whole MailMessageViewer (e.g. the
   // Description tab on /type/44992).
   if (!eveColor) return "";
-  if (eveColor.length === 9) {
+  if (eveColor.length === 9 && eveColor.startsWith("0x")) {
     // 0x0RRGGBB — single-digit alpha prefix, strip "0x0"
     return `#${eveColor.slice(3)}`;
   }
@@ -16,7 +16,15 @@ export const fromEveColor = (eveColor: string | null | undefined): string => {
     // 0xAARRGGBB — two-digit alpha, strip "0xAA"
     return `#${eveColor.slice(4)}`;
   }
-  return eveColor;
+  if (/^#[0-9a-fA-F]{3,8}$/.test(eveColor)) {
+    // Already a plain CSS hex color.
+    return eveColor;
+  }
+  // Reject anything else. `color` comes from attacker-controlled EVE HTML (other
+  // players' mail bodies and character bios); returning it unchanged would let a
+  // value like "blue;position:fixed;inset:0;background:url(https://attacker)"
+  // break out of the `color:` declaration and inject arbitrary inline CSS.
+  return "";
 };
 
 export interface FontColorMarkOptions {
@@ -52,19 +60,38 @@ export const EveFontColor = Mark.create<FontColorMarkOptions>({
 
   renderHTML({ HTMLAttributes }) {
     const styles: string[] = [];
-    if (HTMLAttributes.size) {
-      styles.push(`font-size:${HTMLAttributes.size}pt`);
+
+    // `size` and `color` come from attacker-controlled EVE HTML (other players'
+    // mail bodies and character bios), so both are validated before they reach
+    // the inline `style`, and neither raw value is spread onto the <span> as a
+    // DOM attribute — otherwise a payload like
+    // `<font size="14pt;position:fixed;inset:0;background:url(https://attacker)">`
+    // would break out of the declaration and inject page-wide CSS.
+    const { color, size, ...safeAttributes } = HTMLAttributes;
+
+    const fontSize = Number.parseFloat(String(size));
+    if (Number.isFinite(fontSize) && fontSize > 0) {
+      // Clamp so a single tag cannot blow up the layout (and can never be a
+      // vector for anything other than a plain numeric point size).
+      styles.push(`font-size:${Math.min(fontSize, 72)}pt`);
     }
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    const cssColor = fromEveColor(HTMLAttributes.color);
+    const cssColor = fromEveColor(color);
     if (cssColor) {
       styles.push(`color:${cssColor}`);
+      // Preserve the ORIGINAL EVE color string on the span only when it passed
+      // validation, so htmlToEveMail can losslessly round-trip composed mail
+      // (<span color="0x…"> → <color=0x…>). Invalid/attacker values are dropped.
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      safeAttributes.color = color;
     }
+
     return [
       "span",
       mergeAttributes(
         { ...this.options.HTMLAttributes },
-        { ...HTMLAttributes, style: styles.join(";") },
+        { ...safeAttributes, style: styles.join(";") },
       ),
       0,
     ];

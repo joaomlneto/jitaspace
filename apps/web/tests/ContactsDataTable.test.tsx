@@ -53,6 +53,16 @@ const CONTACT_NO_LABELS = {
   // label_ids omitted entirely — ESI leaves it out for contacts with no labels.
 } as unknown as Contact;
 
+const CONTACT_UNRESOLVED_LABEL = {
+  contact_id: 1004,
+  contact_type: "character",
+  standing: 1,
+  is_watched: false,
+  is_blocked: false,
+  // 10 resolves to "Friends"; 999 is absent from LABELS (deleted or not-yet-synced).
+  label_ids: [10, 999],
+} as unknown as Contact;
+
 const LABELS = [{ label_id: 10, label_name: "Friends" }];
 
 function renderTable(contacts: Contact[]) {
@@ -82,6 +92,16 @@ describe("ContactsDataTable", () => {
     renderTable([CONTACT_WATCHED]);
     // labels cell: labelName[labelId] -> "Friends"
     expect(screen.getByText("Friends")).toBeInTheDocument();
+  });
+
+  it("renders the raw label id when a label cannot be resolved", () => {
+    renderTable([CONTACT_UNRESOLVED_LABEL]);
+    // label_ids [10, 999]: 10 resolves to "Friends"; 999 is absent from LABELS.
+    // The fallback must render the individual id ("999"), not JSON.stringify of
+    // the whole label_ids array ("[10,999]").
+    expect(screen.getByText("Friends")).toBeInTheDocument();
+    expect(screen.getByText("999")).toBeInTheDocument();
+    expect(screen.queryByText("[10,999]")).not.toBeInTheDocument();
   });
 
   it("renders 'Yes' in the blocked column when is_blocked is true", () => {
