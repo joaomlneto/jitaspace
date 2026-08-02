@@ -73,7 +73,6 @@ export const WarDefenderName = () => null;
 
 // --- Avatars / cards / selects / breadcrumbs / timeline (render nothing) ---
 export const EveEntityAvatar = () => null;
-export const EveIconAvatar = () => null;
 export const EveMailSenderAvatar = () => null;
 export const MarketGroupAvatar = () => null;
 export const SolarSystemSovereigntyAvatar = () => null;

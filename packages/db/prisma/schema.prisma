@@ -93,6 +93,10 @@ model MarketGroup {
   parentMarketGroupId Int?
   parent              MarketGroup?  @relation("marketGroupParent", fields: [parentMarketGroupId], references: [marketGroupId], onDelete: Restrict, onUpdate: Restrict)
   children            MarketGroup[] @relation("marketGroupParent")
+  // Only the SDE knows a market group's icon (ESI's market group endpoint does
+  // not expose one), so this column is owned by ingestSdeMarketGroups.
+  icon                Icon?         @relation(fields: [iconId], references: [iconId])
+  iconId              Int?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
@@ -101,6 +105,7 @@ model MarketGroup {
   isDeleted           Boolean       @default(false)
 
   @@index([parentMarketGroupId])
+  @@index([iconId])
 }
 
 model Category {
@@ -408,19 +413,20 @@ model DogmaUnit {
 }
 
 model Icon {
-  iconId      Int              @id
-  description String?
-  iconFile    String
+  iconId       Int              @id
+  description  String?
+  iconFile     String
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt()
-  isDeleted   Boolean          @default(false)
-  attributes  DogmaAttribute[]
-  types       Type[]
-  effects     DogmaEffect[]
-  ancestries  Ancestry[]       @relation("AncestryIcon")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt()
+  isDeleted    Boolean          @default(false)
+  attributes   DogmaAttribute[]
+  types        Type[]
+  effects      DogmaEffect[]
+  ancestries   Ancestry[]       @relation("AncestryIcon")
+  marketGroups MarketGroup[]
 }
 
 model Alliance {
