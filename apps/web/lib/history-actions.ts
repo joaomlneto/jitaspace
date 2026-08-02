@@ -178,7 +178,12 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
   const langOf = new Map(
     strColls.map((c) => [c.id, c.name.replace("strings:", "")]),
   );
-  const languages = strColls.map((c) => c.name.replace("strings:", "")).sort();
+  // Explicit collator: a bare `.sort()` compares UTF-16 code units, which is
+  // only incidentally right for ASCII language codes and silently wrong the
+  // moment a non-ASCII tag appears.
+  const languages = strColls
+    .map((c) => c.name.replace("strings:", ""))
+    .sort((a, b) => a.localeCompare(b));
   const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
 
   const perBuild = new Map<
@@ -202,8 +207,12 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
     const toBuild = toBuildOf.get(g.diffId);
     if (!lang || toBuild === undefined) continue;
     const a = ensure(toBuild);
-    (a.strings[lang] ??= { added: 0, changed: 0, removed: 0 })[opKey(g.op)] +=
-      g._count;
+    let counts = a.strings[lang];
+    if (!counts) {
+      counts = { added: 0, changed: 0, removed: 0 };
+      a.strings[lang] = counts;
+    }
+    counts[opKey(g.op)] += g._count;
   }
 
   const out: ResourceIndex["builds"] = [];
