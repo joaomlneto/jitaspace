@@ -28,6 +28,9 @@ jest.mock(
 const ENTRY_POSITIVE = {
   id: 5001,
   date: "2024-01-01T12:00:00Z",
+  // transaction_tax has a description in the SDE -> Type cell takes its
+  // tooltip branch.
+  ref_type: "transaction_tax",
   context_id: 88,
   context_id_type: "market_transaction_id",
   first_party_id: 100,
@@ -46,6 +49,8 @@ const ENTRY_POSITIVE = {
 const ENTRY_NEGATIVE = {
   id: 5002,
   date: "2024-01-02T12:00:00Z",
+  // bounty_prizes has no SDE description -> Type cell takes its plain branch.
+  ref_type: "bounty_prizes",
   context_id: undefined,
   context_id_type: undefined,
   first_party_id: 400,
@@ -89,6 +94,39 @@ describe("WalletTable", () => {
     renderTable([ENTRY_POSITIVE]);
     // ContextTypeCell: context_id_type.replaceAll("_", " ")
     expect(screen.getByText("market transaction id")).toBeInTheDocument();
+  });
+
+  // The Type column filters via a multi-select, whose faceted options render the
+  // same labels outside the table body — so match the occurrence in a cell.
+  function typeCell(label: string) {
+    return screen
+      .getAllByText(label)
+      .find((node) => node.closest("td") !== null);
+  }
+
+  it("renders the entry type using EVE's own name for the ref_type", () => {
+    renderTable([ENTRY_POSITIVE, ENTRY_NEGATIVE]);
+    expect(typeCell("Transaction Tax")).toBeInTheDocument();
+    expect(typeCell("Bounty Prizes")).toBeInTheDocument();
+  });
+
+  it("marks entry types that carry a description as hoverable", () => {
+    renderTable([ENTRY_POSITIVE, ENTRY_NEGATIVE]);
+    // Mantine's Tooltip only mounts its label once opened (and floating-ui does
+    // not position in jsdom), so assert the affordance the tooltip branch adds
+    // instead: transaction_tax has a description, bounty_prizes does not.
+    expect(typeCell("Transaction Tax")).toHaveStyle({ cursor: "help" });
+    expect(typeCell("Bounty Prizes")).not.toHaveStyle({ cursor: "help" });
+  });
+
+  it("humanizes a ref_type that has no known entry type", () => {
+    renderTable([
+      {
+        ...ENTRY_POSITIVE,
+        ref_type: "some_future_fee",
+      } as unknown as CharacterWalletJournalEntry,
+    ]);
+    expect(typeCell("Some Future Fee")).toBeInTheDocument();
   });
 
   it("renders multiple rows including a negative-amount entry", () => {
