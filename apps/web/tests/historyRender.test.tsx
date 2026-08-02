@@ -8,6 +8,7 @@ import {
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 // ── mocks ────────────────────────────────────────────────────────────────────
 
@@ -265,8 +266,12 @@ function dataFor(opts: { queryKey?: unknown[] }) {
   return { data: { data: { name: "Rifter" } }, ...ready };
 }
 
-const wrap = (ui: React.ReactNode) =>
-  render(<MantineProvider>{ui}</MantineProvider>);
+// The collection filter chips (index, per-build and EntityHistory) are
+// nuqs-backed; hasMemory lets chip clicks round-trip through the URL.
+const wrap = (ui: React.ReactNode, searchParams = "") =>
+  render(<MantineProvider>{ui}</MantineProvider>, {
+    wrapper: withNuqsTestingAdapter({ hasMemory: true, searchParams }),
+  });
 
 beforeEach(() => {
   mockUseQuery.mockReset();
@@ -285,6 +290,46 @@ describe("HistoryIndexClient", () => {
     wrap(<HistoryIndexClient initialIndex={HISTORY_INDEX} />);
     expect(screen.getByText("Type Change History")).toBeTruthy();
     expect(screen.getByText("Build 100")).toBeTruthy();
+  });
+
+  // The chips filter is a tri-state: absent param ⇒ null ⇒ "all selected".
+  // Restoring from the URL must therefore narrow, not reset to everything.
+  it("restores the collection filter from the URL", async () => {
+    const { default: HistoryIndexClient } =
+      await import("~/app/history/page.client");
+    wrap(
+      <HistoryIndexClient initialIndex={HISTORY_INDEX} />,
+      "?collections=types",
+    );
+
+    // Mantine Chip renders input[type=checkbox] + a sibling label[for]; only
+    // the chip named in the URL should be checked.
+    const checked = screen
+      .getAllByRole("checkbox")
+      .filter((c) => (c as HTMLInputElement).checked)
+      .map((c) => document.querySelector(`label[for="${c.id}"]`)?.textContent);
+    // `types` renders with its display label from COLLECTION_META.
+    expect(checked).toEqual(["Type"]);
+  });
+
+  it("restores the show-unchanged toggle from the URL", async () => {
+    const { default: HistoryIndexClient } =
+      await import("~/app/history/page.client");
+    wrap(
+      <HistoryIndexClient initialIndex={HISTORY_INDEX} />,
+      "?unchanged=true",
+    );
+
+    // Build 99 has changeCount 0, so it is only listed when unchanged is on.
+    expect(screen.getByText("Build 99")).toBeTruthy();
+  });
+
+  it("hides unchanged builds by default", async () => {
+    const { default: HistoryIndexClient } =
+      await import("~/app/history/page.client");
+    wrap(<HistoryIndexClient initialIndex={HISTORY_INDEX} />);
+
+    expect(screen.queryByText("Build 99")).toBeNull();
   });
 
   it("renders an empty state when the index prop is null", async () => {
