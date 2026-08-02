@@ -33,7 +33,7 @@ import {
 import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
-import { EveIconAvatar, TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
 import {
   useFuzzworkTypeMarketStats,
   useMarketPrices,
@@ -51,6 +51,7 @@ import {
   DogmaAttributeAnchor,
   DogmaAttributeValue,
   DogmaEffectAnchor,
+  EveIconAvatar,
   GroupAnchor,
   ISKAmount,
   MarketGroupAnchor,

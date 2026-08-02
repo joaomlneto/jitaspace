@@ -8,11 +8,12 @@ export type EveIconAvatarPlaceholderProps = Omit<AvatarProps, "src">;
 
 export const EveIconAvatarPlaceholder = memo(
   ({ alt, ...otherProps }: EveIconAvatarPlaceholderProps) => {
-    const DEFAULT_FILENAME = "7_64_15.png";
+    // Icon id 0 is the icon server's "unknown icon" image.
+    const PLACEHOLDER_ICON_ID = 0;
 
     return (
       <Avatar
-        src={`https://iec.jita.space/items/${DEFAULT_FILENAME}`}
+        src={`https://icons.jita.space/icons/${PLACEHOLDER_ICON_ID}`}
         alt={alt ?? `Icon Placeholder`}
         {...otherProps}
       />

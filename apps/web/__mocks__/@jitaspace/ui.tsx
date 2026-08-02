@@ -33,6 +33,10 @@ export const CorporationName = ({
     `corp-${corporationId}`,
   );
 
+// --- Icons ---
+export const EveIconAvatar = () =>
+  React.createElement("span", { "data-testid": "eve-icon-avatar" });
+
 // --- Type (item) ---
 export const TypeAnchor = ({ children }: { children?: React.ReactNode }) =>
   React.createElement("span", { "data-testid": "type-anchor" }, children);
@@ -51,11 +55,7 @@ export const TypeName = ({
   size?: string;
   lineClamp?: number;
 }) =>
-  React.createElement(
-    "span",
-    { "data-testid": "type-name" },
-    `type-${typeId}`,
-  );
+  React.createElement("span", { "data-testid": "type-name" }, `type-${typeId}`);
 
 // --- Generic entity name (pure renderer of an already-resolved name) ---
 export const EveEntityNameDisplay = ({
@@ -99,11 +99,8 @@ export const AllianceTickerBadge = () => null;
 export const StationName = () => null;
 export const StationAnchor = ({ children }: { children?: React.ReactNode }) =>
   React.createElement("span", null, children);
-export const CharacterAnchor = ({
-  children,
-}: {
-  children?: React.ReactNode;
-}) => React.createElement("span", null, children);
+export const CharacterAnchor = ({ children }: { children?: React.ReactNode }) =>
+  React.createElement("span", null, children);
 export const CharacterAvatar = () => null;
 export const CharacterName = ({ characterId }: { characterId?: number }) =>
   React.createElement("span", null, `char-${characterId}`);

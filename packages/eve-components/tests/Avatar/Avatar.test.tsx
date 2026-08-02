@@ -26,7 +26,6 @@ import {
 } from "@jitaspace/ui";
 
 import { EveEntityAvatar } from "../../Avatar/EveEntityAvatar";
-import { EveIconAvatar } from "../../Avatar/EveIconAvatar";
 import { EveMailSenderAvatar } from "../../Avatar/EveMailSenderAvatar";
 import { MarketGroupAvatar } from "../../Avatar/MarketGroupAvatar";
 import { SolarSystemSovereigntyAvatar } from "../../Avatar/SolarSystemSovereigntyAvatar";
@@ -48,12 +47,6 @@ jest.mock("@jitaspace/hooks", () => ({
   useSolarSystem: (...args: unknown[]) => useSolarSystem(...args),
   useSolarSystemSovereignty: (...args: unknown[]) =>
     useSolarSystemSovereignty(...args),
-}));
-
-const useGetIconById = jest.fn();
-
-jest.mock("@jitaspace/sde-client", () => ({
-  useGetIconById: (...args: unknown[]) => useGetIconById(...args),
 }));
 
 // swr/immutable backs TypeAvatar's image-variation lookup.
@@ -97,10 +90,6 @@ beforeEach(() => {
     corporation_id: 98000001,
     faction_id: 500001,
   });
-  useGetIconById.mockReturnValue({
-    data: { data: { iconFile: "res:/ui/texture/icons/7_64_15.png" } },
-    isPending: false,
-  });
   useSWRImmutable.mockReturnValue({ data: ["icon"] });
 });
 
@@ -117,7 +106,6 @@ describe("Avatar components render", () => {
     ["CharacterAvatar", <CharacterAvatar characterId={90000001} />],
     ["CorporationAvatar", <CorporationAvatar corporationId={98000001} />],
     ["EveEntityAvatar", <EveEntityAvatar entityId={90000001} />],
-    ["EveIconAvatar", <EveIconAvatar iconId={25} />],
     ["EveIconAvatarPlaceholder", <EveIconAvatarPlaceholder />],
     [
       "EveImageServerAvatar",
@@ -338,42 +326,6 @@ describe("EveEntityAvatar", () => {
     // Unhandled categories fall through to a plain Mantine Avatar (no img).
     expect(container.querySelector("img")).not.toBeInTheDocument();
     expect(container).not.toBeEmptyDOMElement();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// EveIconAvatar + placeholder.
-// ---------------------------------------------------------------------------
-
-describe("EveIconAvatar", () => {
-  it("renders the resolved icon image", () => {
-    const { container } = renderWithMantine(<EveIconAvatar iconId={25} />);
-    const img = container.querySelector("img");
-    expect(img?.getAttribute("src")).toContain(
-      "https://iec.jita.space/items/7_64_15.png",
-    );
-  });
-
-  it("wraps in a visible skeleton while the icon query is pending", () => {
-    useGetIconById.mockReturnValue({ data: undefined, isPending: true });
-    const { container } = renderWithMantine(<EveIconAvatar iconId={25} />);
-    expect(
-      container.querySelector(".mantine-Skeleton-root"),
-    ).toBeInTheDocument();
-  });
-
-  it("defaults a null iconId to 0 when querying the icon", () => {
-    renderWithMantine(<EveIconAvatar iconId={null} />);
-    expect(useGetIconById).toHaveBeenCalledWith(0);
-  });
-});
-
-describe("EveIconAvatarPlaceholder", () => {
-  it("renders the default placeholder image", () => {
-    const { container } = renderWithMantine(<EveIconAvatarPlaceholder />);
-    expect(container.querySelector("img")?.getAttribute("src")).toContain(
-      "https://iec.jita.space/items/7_64_15.png",
-    );
   });
 });
 

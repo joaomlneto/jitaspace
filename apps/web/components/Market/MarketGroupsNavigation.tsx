@@ -34,15 +34,12 @@ export async function MarketGroupsNavigation() {
           name: true,
         },
       },
-      // Bundling the icon here is what keeps the sidebar request-free: rendering
-      // it client-side used to cost two SDE lookups per group (the group, then
-      // its icon) plus an ESI market group call, i.e. ~3 requests per visible
-      // NavLink on load and on every expand.
-      icon: {
-        select: {
-          iconFile: true,
-        },
-      },
+      // Bundling the icon id here is what keeps the sidebar request-free:
+      // resolving it client-side used to cost two SDE lookups per group (the
+      // group, then its icon) plus an ESI market group call, i.e. ~3 requests
+      // per visible NavLink on load and on every expand. The icon server
+      // addresses images by icon id, so the id alone is enough — no join.
+      iconId: true,
     },
   });
 
@@ -56,7 +53,7 @@ export async function MarketGroupsNavigation() {
           (childMarketGroup) => childMarketGroup.marketGroupId,
         ),
         types: marketGroup.types,
-        iconFile: marketGroup.icon?.iconFile ?? null,
+        iconId: marketGroup.iconId,
       }),
   );
 

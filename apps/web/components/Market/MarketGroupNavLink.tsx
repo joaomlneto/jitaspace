@@ -5,7 +5,7 @@ import Link from "next/link";
 import { NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
-import { EveIconAvatarDisplay, TypeAvatar } from "@jitaspace/ui";
+import { EveIconAvatar, TypeAvatar } from "@jitaspace/ui";
 
 /**
  * The whole market tree, bundled by `MarketGroupsNavigation` from a single
@@ -19,7 +19,7 @@ export type MarketGroupIndex = Record<
     parentMarketGroupId: number | null;
     childrenMarketGroupIds: number[];
     types: { typeId: number; name: string }[];
-    iconFile: string | null;
+    iconId: number | null;
   }
 >;
 
@@ -78,9 +78,9 @@ export const MarketGroupNavLink = memo(
         opened={opened}
         onChange={() => toggle()}
         leftSection={
-          <EveIconAvatarDisplay
+          <EveIconAvatar
             size={24}
-            iconFile={marketGroup.iconFile}
+            iconId={marketGroup.iconId}
             alt={marketGroup.name}
           />
         }
