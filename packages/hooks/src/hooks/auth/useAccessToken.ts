@@ -58,6 +58,9 @@ export const useAccessToken = (options: {
     useShallow((state) =>
       Object.values(state.characters).filter(
         (character) =>
+          // An expired session's token cannot authorise anything, so it must
+          // not be picked ahead of a live character that also matches.
+          !character.sessionExpired &&
           (characterId == undefined || character.characterId == characterId) &&
           (corporationId == undefined ||
             character.corporationId == corporationId) &&

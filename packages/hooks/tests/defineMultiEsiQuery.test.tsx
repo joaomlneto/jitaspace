@@ -19,6 +19,14 @@ jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
   postCharactersAffiliation: jest.fn(),
 }));
+// Real auth module except for the hydration flag, which tests drive directly:
+// there is no public way to put a rehydrated store back into its initial state.
+let hasHydrated = true;
+jest.mock("../src/hooks/auth", () => ({
+  __esModule: true,
+  ...jest.requireActual<Record<string, unknown>>("../src/hooks/auth"),
+  useAuthStoreHasHydrated: () => hasHydrated,
+}));
 
 const { useAuthStore } =
   require("../src/hooks/auth/useAuthStore") as typeof import("../src/hooks/auth/useAuthStore");
@@ -70,20 +78,27 @@ const login = (...sessions: CharacterSsoSession[]) =>
     selectedCharacter: sessions[0]?.characterId ?? null,
   });
 
-const wrapper = ({ children }: { children: ReactNode }) => {
+// The QueryClient is built per render tree rather than inside the component
+// body: a wrapper that constructs it inline throws the cache away on every
+// re-render, which quietly breaks any test calling rerender(). It is also
+// rebuilt per test, so cached data cannot leak between them.
+const makeWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return (
+  return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 };
+let wrapper: ReturnType<typeof makeWrapper>;
 
 const response = (data: Fitting[]) =>
   ({ data, headers: {} }) as unknown as ResponseConfig<Fitting[]>;
 
 beforeEach(() => {
   useAuthStore.setState({ characters: {}, selectedCharacter: null });
+  wrapper = makeWrapper();
+  hasHydrated = true;
 });
 
 describe("defineMultiEsiQuery", () => {
@@ -165,7 +180,117 @@ describe("defineMultiEsiQuery", () => {
     await waitFor(() =>
       expect(result.current.data).toEqual([{ fitting_id: 1, subjectId: 101 }]),
     );
+
+    // The failure is attributed to the subject that produced it, so a consumer
+    // can say "character 100 failed" rather than just "something failed".
     expect(result.current.errors).toHaveLength(1);
+    expect(result.current.errors[0]?.subjectId).toBe(100);
+    expect(result.current.errors[0]?.error).toBeInstanceOf(Error);
+  });
+
+  it("does not re-run select on every render", async () => {
+    login(character({ characterId: 100, scopes: [SCOPE] }));
+
+    // select does `{ ...item, subjectId }`, so the getter fires once per item
+    // per select execution. Reference identity cannot detect this: React Query's
+    // structural sharing hands back the previous array either way, so the only
+    // observable difference is the work done to get there.
+    let spreads = 0;
+    const item = {
+      get fitting_id() {
+        spreads += 1;
+        return 1;
+      },
+    };
+
+    const useMultiple = defineMultiEsiQuery<Fitting>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["fittings", subjectId],
+        queryFn: () =>
+          Promise.resolve({
+            data: [item],
+            headers: {},
+          } as unknown as ResponseConfig<Fitting[]>),
+      }),
+    });
+
+    const { result, rerender } = renderHook(() => useMultiple(), {
+      wrapper: makeWrapper(),
+    });
+    await waitFor(() => expect(result.current.data).toHaveLength(1));
+
+    const afterInitialFetch = spreads;
+    rerender();
+    rerender();
+    rerender();
+
+    expect(spreads).toBe(afterInitialFetch);
+  });
+
+  it("refetches every subject", async () => {
+    login(
+      character({ characterId: 100, scopes: [SCOPE] }),
+      character({ characterId: 101, scopes: [SCOPE] }),
+    );
+
+    const queryFn = jest.fn(() => Promise.resolve(response([])));
+    const useMultiple = defineMultiEsiQuery<Fitting>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["fittings", subjectId],
+        queryFn,
+      }),
+    });
+
+    const { result } = renderHook(() => useMultiple(), { wrapper });
+    await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(2));
+
+    result.current.refetch();
+
+    await waitFor(() => expect(queryFn).toHaveBeenCalledTimes(4));
+  });
+
+  it("stays pending until the persisted store has rehydrated", () => {
+    hasHydrated = false;
+    // No characters yet — but that is indistinguishable from "no characters at
+    // all" without the hydration flag, and every query reports settled-empty.
+    const useMultiple = defineMultiEsiQuery<Fitting>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["fittings", subjectId],
+        queryFn: () => Promise.resolve(response([])),
+      }),
+    });
+
+    const { result } = renderHook(() => useMultiple(), { wrapper });
+
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.data).toEqual([]);
+    // A consumer keying an empty state off isLoading would flash it here.
+    expect(result.current.isPending).toBe(true);
+  });
+
+  it("settles once hydrated with no eligible characters", () => {
+    login(character({ characterId: 100, scopes: [] }));
+
+    const useMultiple = defineMultiEsiQuery<Fitting>({
+      kind: "character",
+      scopes: [SCOPE],
+      query: (subjectId) => ({
+        queryKey: ["fittings", subjectId],
+        queryFn: () => Promise.resolve(response([])),
+      }),
+    });
+
+    const { result } = renderHook(() => useMultiple(), { wrapper });
+
+    // Genuinely empty, not still loading — the empty state is correct now.
+    expect(result.current.isPending).toBe(false);
+    expect(result.current.data).toEqual([]);
   });
 
   it("issues no queries when no character has the scope", () => {

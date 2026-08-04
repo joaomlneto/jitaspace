@@ -61,10 +61,17 @@ export const useEsiSubjects = (options: {
   // stable; the derived subjects are built outside it.
   const characters = useAuthStore(
     useShallow((state) =>
-      Object.values(state.characters).filter((character) =>
-        (scopes ?? []).every((requiredScope) =>
-          character.accessTokenPayload.scp.includes(requiredScope),
-        ),
+      Object.values(state.characters).filter(
+        (character) =>
+          // An expired session's token cannot authorise anything. Excluding it
+          // matters more here than in useAccessToken: because corporations and
+          // alliances are deduplicated, an expired character that wins the
+          // dedup would make that subject unreachable even when a live
+          // character in the same corporation is logged in.
+          !character.sessionExpired &&
+          (scopes ?? []).every((requiredScope) =>
+            character.accessTokenPayload.scp.includes(requiredScope),
+          ),
       ),
     ),
   );
@@ -75,8 +82,11 @@ export const useEsiSubjects = (options: {
     for (const character of characters) {
       const id = subjectIdOf(character, kind);
 
-      // A character with no alliance yields no alliance subject.
-      if (id == undefined) continue;
+      // Skips a character with no alliance, and one whose corporationId is
+      // still 0 because the affiliation lookup failed at login (see
+      // useAuthStore.addCharacter) — 0 is not a real corporation, and querying
+      // it would send an authenticated request for /corporations/0/....
+      if (!id) continue;
       // First eligible character wins; the rest authorise the same request.
       if (subjects.has(id)) continue;
 

@@ -53,8 +53,29 @@ describe("esiPagedQueryOptions", () => {
 
     await runQueryFn(fetchPage);
 
-    // Page 1 is fetched alone to learn the count; 2-4 then overlap.
-    expect(maxInFlight).toBeGreaterThan(1);
+    // Page 1 is fetched alone to learn the count; pages 2-4 then overlap, and
+    // three is under the pool limit so all three run at once.
+    expect(maxInFlight).toBe(3);
+  });
+
+  it("caps how many pages are in flight at once", async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const fetchPage = jest.fn(async (p: number) => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await Promise.resolve();
+      inFlight -= 1;
+      return page([p], "40");
+    });
+
+    const result = await runQueryFn(fetchPage);
+
+    // Every page is still fetched, but not all at once: an unbounded fan-out
+    // would put 39 requests on the wire simultaneously, per subject.
+    expect(fetchPage).toHaveBeenCalledTimes(40);
+    expect(result.data).toHaveLength(40);
+    expect(maxInFlight).toBeLessThanOrEqual(5);
   });
 
   it("threads the abort signal into every page", async () => {

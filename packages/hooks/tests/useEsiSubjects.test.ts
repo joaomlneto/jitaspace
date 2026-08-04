@@ -171,6 +171,71 @@ describe("useEsiSubjects — corporation kind", () => {
   });
 });
 
+describe("useEsiSubjects — unusable characters", () => {
+  it("skips a corporationId of 0 left behind by a failed affiliation lookup", () => {
+    // useAuthStore.addCharacter falls back to corporationId 0 when the
+    // affiliation call fails. 0 is not a corporation: querying it would send an
+    // authenticated GET /corporations/0/... and fail the whole aggregate.
+    login(
+      character({ characterId: 100, corporationId: 0, scopes: [ASSETS_SCOPE] }),
+      character({
+        characterId: 101,
+        corporationId: 2000,
+        scopes: [ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useEsiSubjects({ kind: "corporation", scopes: [ASSETS_SCOPE] }),
+    );
+
+    expect(result.current.map((s) => s.id)).toEqual([2000]);
+  });
+
+  it("skips characters whose session has expired", () => {
+    login(
+      character({
+        characterId: 100,
+        sessionExpired: true,
+        scopes: [MAIL_SCOPE],
+      }),
+      character({ characterId: 101, scopes: [MAIL_SCOPE] }),
+    );
+
+    const { result } = renderHook(() =>
+      useEsiSubjects({ kind: "character", scopes: [MAIL_SCOPE] }),
+    );
+
+    expect(result.current.map((s) => s.id)).toEqual([101]);
+  });
+
+  it("does not let an expired character win the corporation dedup", () => {
+    // The expired character sorts first, so without the filter it would claim
+    // corporation 1000 and make it unreachable despite a live token existing.
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        sessionExpired: true,
+        scopes: [ASSETS_SCOPE],
+      }),
+      character({
+        characterId: 101,
+        corporationId: 1000,
+        scopes: [ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useEsiSubjects({ kind: "corporation", scopes: [ASSETS_SCOPE] }),
+    );
+
+    expect(result.current.map((s) => [s.id, s.characterId])).toEqual([
+      [1000, 101],
+    ]);
+  });
+});
+
 describe("useEsiSubjects — alliance kind", () => {
   it("deduplicates and skips characters with no alliance", () => {
     login(
