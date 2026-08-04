@@ -15,22 +15,47 @@ const TOKEN_UNAVAILABLE = {
 };
 
 /**
+ * Pick the character to authorise a role-gated request with.
+ *
+ * A character's roles are only *known* once they have been read from ESI, which
+ * needs the corporation-roles scope; `corporationRolesExpireOn` is the marker
+ * that such a read succeeded. Characters whose known roles fall short are
+ * excluded, but one with unknown roles is not: we cannot prove it lacks the
+ * role, and excluding it would leave a user who never granted that scope with
+ * no token at all for every role-gated endpoint. Known holders are tried first,
+ * so a Director wins over an unknown sibling in the same corporation, and ESI
+ * still enforces the roles server-side on the fallback.
+ */
+const pickCharacter = (
+  candidates: CharacterSsoSession[],
+  requiredRoles: CharactersCharacterIdRolesGetRolesEnum[],
+): CharacterSsoSession | null => {
+  if (requiredRoles.length === 0) return candidates[0] ?? null;
+
+  const rolesAreKnown = (character: CharacterSsoSession) =>
+    character.corporationRolesExpireOn !== undefined;
+
+  return (
+    candidates.find(
+      (character) =>
+        rolesAreKnown(character) &&
+        requiredRoles.every((role) => character.corporationRoles.includes(role)),
+    ) ??
+    candidates.find((character) => !rolesAreKnown(character)) ??
+    null
+  );
+};
+
+/**
  * Pick a logged-in character whose token can authorise an ESI request.
  *
  * `characterId`, `corporationId` and `allianceId` narrow *which* character is
  * eligible: corporation- and alliance-scoped ESI routes are still authenticated
  * with a character token, so the caller has to end up with a character that
  * actually belongs to the corporation/alliance being queried. Every character
- * that clears the filters is equally able to authorise the request, so the
- * first one wins.
- *
- * `roles` is accepted but not yet enforced: CharacterSsoSession.corporationRoles
- * is initialised empty and never populated (useAuthStore still has to fetch and
- * refresh them), so filtering on it would leave every role-gated endpoint with
- * no token at all.
- * Call sites still declare the roles they need, so the check can be switched on
- * here in one place once roles are actually fetched. ESI enforces them
- * server-side in the meantime.
+ * that clears those filters is equally able to authorise the request, so the
+ * first one wins — except when `roles` is given, where a character known to
+ * hold them is preferred (see `pickCharacter`).
  */
 export const useAccessToken = (options: {
   characterId?: number;
@@ -43,7 +68,7 @@ export const useAccessToken = (options: {
   accessToken: string | null;
   authHeaders: Record<string, string>;
 } => {
-  const { characterId, corporationId, allianceId, scopes } = options;
+  const { characterId, corporationId, allianceId, scopes, roles } = options;
 
   const characters = useAuthStore(
     useShallow((state) =>
@@ -60,12 +85,14 @@ export const useAccessToken = (options: {
     ),
   );
 
+  const character = pickCharacter(characters, roles ?? []);
+
   // Check if character is logged in
-  if (!characters[0]) return TOKEN_UNAVAILABLE;
+  if (!character) return TOKEN_UNAVAILABLE;
 
   return {
-    character: characters[0],
-    accessToken: characters[0].accessToken,
-    authHeaders: { Authorization: `Bearer ${characters[0].accessToken}` },
+    character,
+    accessToken: character.accessToken,
+    authHeaders: { Authorization: `Bearer ${character.accessToken}` },
   };
 };
