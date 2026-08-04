@@ -7,15 +7,16 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { captureMock } from "../__mocks__/posthogMocks";
 
 const mockUseSelectedCharacter = jest.fn();
-const mockUseCharacterFittings = jest.fn();
+const mockUseMultipleCharacterFittings = jest.fn();
 jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: () => mockUseSelectedCharacter(),
-  useCharacterFittings: (...args: unknown[]) =>
-    mockUseCharacterFittings(...args),
+  useMultipleCharacterFittings: () => mockUseMultipleCharacterFittings(),
 }));
 
 jest.mock("@jitaspace/eve-components", () => ({
-  EveEntitySelect: () => <div data-testid="ship-type-select" />,
+  EveEntitySelect: ({ label }: { label?: string }) => (
+    <div data-testid={`select:${label}`} />
+  ),
 }));
 
 jest.mock("@jitaspace/eve-icons", () => ({
@@ -49,6 +50,16 @@ const FITTING = {
   name: "Rifter Roam",
   description: "fast",
   items: [{ type_id: 2456, flag: 27, quantity: 1 }],
+  subjectId: 90000001,
+};
+
+// A second character holding a fitting with the SAME fitting_id: ESI ids are
+// only unique within a character.
+const OTHER_CHARACTER_FITTING = {
+  ...FITTING,
+  name: "Punisher Roam",
+  ship_type_id: 597,
+  subjectId: 90000002,
 };
 
 function renderPage() {
@@ -65,9 +76,9 @@ describe("Fittings page", () => {
     captureMock.mockClear();
     mockOpenContextModal.mockReset();
     mockUseSelectedCharacter.mockReset().mockReturnValue(CHARACTER);
-    mockUseCharacterFittings
+    mockUseMultipleCharacterFittings
       .mockReset()
-      .mockReturnValue({ data: { data: [FITTING] } });
+      .mockReturnValue({ data: [FITTING, OTHER_CHARACTER_FITTING] });
   });
 
   it("captures current_ship_fitting_viewed and opens the modal", () => {
@@ -86,15 +97,34 @@ describe("Fittings page", () => {
   it("captures fitting_viewed for a saved fitting and opens the modal", () => {
     renderPage();
 
-    fireEvent.click(screen.getByTestId("saved-fit-card"));
+    fireEvent.click(screen.getAllByTestId("saved-fit-card")[0]!);
 
     expect(captureMock).toHaveBeenCalledWith("fitting_viewed", {
       fitting_id: 555,
       ship_type_id: 587,
       fitting_name: "Rifter Roam",
+      character_id: 90000001,
     });
     expect(mockOpenContextModal).toHaveBeenCalledWith(
       expect.objectContaining({ modal: "fitting" }),
     );
+  });
+
+  it("lists fittings from every logged-in character", () => {
+    renderPage();
+
+    // Both characters' fittings render even though they share a fitting_id.
+    expect(screen.getAllByTestId("saved-fit-card")).toHaveLength(2);
+  });
+
+  it("renders a character filter alongside the ship type filter", () => {
+    renderPage();
+
+    expect(
+      screen.getByTestId("select:Filter by ship type"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("select:Filter by character"),
+    ).toBeInTheDocument();
   });
 });

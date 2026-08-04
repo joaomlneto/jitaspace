@@ -15,7 +15,10 @@ import posthog from "posthog-js";
 import type { ESIScope } from "@jitaspace/esi-metadata";
 import { EveEntitySelect } from "@jitaspace/eve-components";
 import { FittingIcon } from "@jitaspace/eve-icons";
-import { useCharacterFittings, useSelectedCharacter } from "@jitaspace/hooks";
+import {
+  useMultipleCharacterFittings,
+  useSelectedCharacter,
+} from "@jitaspace/hooks";
 
 import {
   EsiCharacterShipFittingCard,
@@ -25,22 +28,35 @@ import { ScopeGuard } from "~/components/ScopeGuard";
 
 export default function Page() {
   const [selectedShipType, setSelectedShipType] = useState<string | null>(null);
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
+    null,
+  );
   const character = useSelectedCharacter();
-  const { data } = useCharacterFittings(character?.characterId);
+  // Every logged-in character that granted the fittings scope, not just the
+  // selected one. Each fitting carries the character it belongs to as
+  // `subjectId`.
+  const { data: fittings } = useMultipleCharacterFittings();
 
   const shipTypeIds = useMemo(
-    () => [...new Set(data?.data.map((fitting) => fitting.ship_type_id) ?? [])],
-    [data?.data],
+    () => [...new Set(fittings.map((fitting) => fitting.ship_type_id))],
+    [fittings],
+  );
+
+  const characterIds = useMemo(
+    () => [...new Set(fittings.map((fitting) => fitting.subjectId))],
+    [fittings],
   );
 
   const filteredFittings = useMemo(
     () =>
-      data?.data.filter(
+      fittings.filter(
         (fit) =>
-          selectedShipType === null ||
-          fit.ship_type_id === Number.parseInt(selectedShipType, 10),
-      ) ?? [],
-    [data?.data, selectedShipType],
+          (selectedShipType === null ||
+            fit.ship_type_id === Number.parseInt(selectedShipType, 10)) &&
+          (selectedCharacterId === null ||
+            fit.subjectId === Number.parseInt(selectedCharacterId, 10)),
+      ),
+    [fittings, selectedShipType, selectedCharacterId],
   );
 
   const requiredScopesForCurrentFit: ESIScope[] = [
@@ -107,16 +123,31 @@ export default function Page() {
               value={selectedShipType}
               onChange={setSelectedShipType}
             />
+            <EveEntitySelect
+              size="xs"
+              label="Filter by character"
+              entityIds={characterIds.map((id) => ({
+                id,
+              }))}
+              searchable
+              allowDeselect
+              clearable
+              value={selectedCharacterId}
+              onChange={setSelectedCharacterId}
+            />
           </Group>
           <Stack gap="xs">
             {filteredFittings.map((fit) => (
               <UnstyledButton
-                key={fit.fitting_id}
+                // fitting_id is only unique within a character, so two
+                // characters can hold the same id.
+                key={`${fit.subjectId}-${fit.fitting_id}`}
                 onClick={() => {
                   posthog.capture("fitting_viewed", {
                     fitting_id: fit.fitting_id,
                     ship_type_id: fit.ship_type_id,
                     fitting_name: fit.name,
+                    character_id: fit.subjectId,
                   });
                   openContextModal({
                     modal: "fitting",
@@ -141,13 +172,11 @@ export default function Page() {
                   });
                 }}
               >
-                {character && (
-                  <EsiCharacterShipFittingCard
-                    characterId={character.characterId}
-                    fittingId={fit.fitting_id}
-                    hideModules
-                  />
-                )}
+                <EsiCharacterShipFittingCard
+                  characterId={fit.subjectId}
+                  fittingId={fit.fitting_id}
+                  hideModules
+                />
               </UnstyledButton>
             ))}
           </Stack>
