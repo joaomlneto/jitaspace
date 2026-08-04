@@ -14,4 +14,4 @@ Two hooks are built on it: `useMultipleCharacterFittings` (simple, character-sco
 
 Also exports `useAuthStoreHasHydrated`, and fixes `useAccessToken` picking a character whose session has expired over a live one that matches equally well.
 
-`roles` is accepted but not yet enforced, matching `useAccessToken` — `corporationRoles` is still never populated.
+`roles` is enforced as a hard any-of filter, through a `characterHasAcceptedRole` helper now shared with `useAccessToken` so the two cannot drift. This matters more under a fan-out than for a single request: all role-gated ESI GET routes are corporation-scoped, so a wrong guess is one 403 per corporation on each of them, against an API that rate-limits on error rate.

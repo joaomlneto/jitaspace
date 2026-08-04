@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 
+import type { CharactersCharacterIdRolesGetRolesEnum } from "@jitaspace/esi-client";
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
 import type { CharacterSsoSession } from "../src/hooks/auth/useAuthStore";
@@ -26,6 +27,7 @@ jest.mock("@jitaspace/auth-utils", () => ({
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
   postCharactersAffiliation: jest.fn(),
+  getCharactersCharacterIdRoles: jest.fn(),
   getCharactersCharacterIdFittingsQueryOptions: (...args: unknown[]) =>
     mockFittingsQueryOptions(...args),
   getCorporationsCorporationIdAssets: (...args: unknown[]) =>
@@ -49,17 +51,19 @@ const character = ({
   characterId,
   corporationId = 0,
   scopes = [],
+  corporationRoles = [],
 }: {
   characterId: number;
   corporationId?: number;
   scopes?: ESIScope[];
+  corporationRoles?: CharactersCharacterIdRolesGetRolesEnum[];
 }): CharacterSsoSession => ({
   accessToken: `token-${characterId}`,
   accessTokenExpirationDate: new Date(0).toString(),
   refreshToken: `refresh-${characterId}`,
   characterId,
   corporationId,
-  corporationRoles: [],
+  corporationRoles,
   accessTokenPayload: {
     scp: scopes,
     sub: `CHARACTER:EVE:${characterId}`,
@@ -150,11 +154,13 @@ describe("useMultipleCorporationAssets", () => {
         characterId: 100,
         corporationId: 1000,
         scopes: [CORP_ASSETS_SCOPE],
+        corporationRoles: ["Director"],
       }),
       character({
         characterId: 101,
         corporationId: 2000,
         scopes: [CORP_ASSETS_SCOPE],
+        corporationRoles: ["Director"],
       }),
     );
     mockGetCorporationAssets.mockImplementation((corporationId, params) => {
@@ -194,17 +200,44 @@ describe("useMultipleCorporationAssets", () => {
     ]);
   });
 
+  it("issues no request for a corporation where nobody holds Director", async () => {
+    // The hook declares roles: ["Director"]. Filtering locally is what keeps a
+    // non-Director from generating one 403 per corporation, on every one of the
+    // role-gated routes, against an API that rate-limits on error rate.
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        scopes: [CORP_ASSETS_SCOPE],
+        corporationRoles: ["Accountant"],
+      }),
+    );
+    mockGetCorporationAssets.mockImplementation(() =>
+      Promise.resolve({ data: [], headers: {} }),
+    );
+
+    const { result } = renderHook(() => useMultipleCorporationAssets(), {
+      wrapper,
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(mockGetCorporationAssets).not.toHaveBeenCalled();
+    expect(result.current.subjectIds).toEqual([]);
+  });
+
   it("queries a corporation once even when several members are logged in", async () => {
     login(
       character({
         characterId: 100,
         corporationId: 1000,
         scopes: [CORP_ASSETS_SCOPE],
+        corporationRoles: ["Director"],
       }),
       character({
         characterId: 101,
         corporationId: 1000,
         scopes: [CORP_ASSETS_SCOPE],
+        corporationRoles: ["Director"],
       }),
     );
     mockGetCorporationAssets.mockImplementation(() =>

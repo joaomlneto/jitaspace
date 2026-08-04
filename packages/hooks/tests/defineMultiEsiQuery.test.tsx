@@ -18,6 +18,7 @@ jest.mock("@jitaspace/auth-utils", () => ({
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
   postCharactersAffiliation: jest.fn(),
+  getCharactersCharacterIdRoles: jest.fn(),
 }));
 // Real auth module except for the hydration flag, which tests drive directly:
 // there is no public way to put a rehydrated store back into its initial state.

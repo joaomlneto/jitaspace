@@ -11,6 +11,7 @@ jest.mock("@jitaspace/auth-utils", () => ({
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
   postCharactersAffiliation: jest.fn(),
+  getCharactersCharacterIdRoles: jest.fn(),
 }));
 
 const { useAuthStore } =

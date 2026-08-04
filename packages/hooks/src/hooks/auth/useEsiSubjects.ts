@@ -7,6 +7,7 @@ import type { CharactersCharacterIdRolesGetRolesEnum } from "@jitaspace/esi-clie
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
 import type { CharacterSsoSession } from "./useAuthStore";
+import { characterHasAcceptedRole } from "./characterHasAcceptedRole";
 import { useAuthStore } from "./useAuthStore";
 
 /** The kind of entity an authenticated ESI route is keyed on. */
@@ -45,17 +46,17 @@ function subjectIdOf(
  * alliances are deduplicated — several characters in the same corporation yield
  * one subject, since any of their tokens authorises the request equally well.
  *
- * `roles` is accepted but not yet enforced, matching useAccessToken:
- * CharacterSsoSession.corporationRoles is initialised empty and never populated,
- * so filtering on it would yield no subjects at all for role-gated endpoints.
- * ESI enforces roles server-side in the meantime.
+ * `roles` lists the roles that are ACCEPTED — holding any one is enough. See
+ * {@link characterHasAcceptedRole}, shared with useAccessToken. All role-gated
+ * ESI routes are corporation-scoped, so this only ever narrows corporation
+ * subjects.
  */
 export const useEsiSubjects = (options: {
   kind: EsiSubjectKind;
   scopes?: ESIScope[];
   roles?: CharactersCharacterIdRolesGetRolesEnum[];
 }): EsiSubject[] => {
-  const { kind, scopes } = options;
+  const { kind, scopes, roles } = options;
 
   // The selector returns store-owned objects only, so snapshot identity stays
   // stable; the derived subjects are built outside it.
@@ -71,7 +72,8 @@ export const useEsiSubjects = (options: {
           !character.sessionExpired &&
           (scopes ?? []).every((requiredScope) =>
             character.accessTokenPayload.scp.includes(requiredScope),
-          ),
+          ) &&
+          characterHasAcceptedRole(character, roles),
       ),
     ),
   );

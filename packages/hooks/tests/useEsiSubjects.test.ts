@@ -15,6 +15,7 @@ jest.mock("@jitaspace/auth-utils", () => ({
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
   postCharactersAffiliation: jest.fn(),
+  getCharactersCharacterIdRoles: jest.fn(),
 }));
 
 const { useAuthStore } =
@@ -233,6 +234,103 @@ describe("useEsiSubjects — unusable characters", () => {
     expect(result.current.map((s) => [s.id, s.characterId])).toEqual([
       [1000, 101],
     ]);
+  });
+});
+
+describe("useEsiSubjects — roles", () => {
+  it("keeps a corporation whose member holds an accepted role", () => {
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: ["Director"],
+        scopes: [ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useEsiSubjects({
+        kind: "corporation",
+        scopes: [ASSETS_SCOPE],
+        roles: ["Director"],
+      }),
+    );
+
+    expect(result.current.map((s) => s.id)).toEqual([1000]);
+  });
+
+  it("lets a role-holding member win the dedup over one without", () => {
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: ["Accountant"],
+        scopes: [ASSETS_SCOPE],
+      }),
+      character({
+        characterId: 101,
+        corporationId: 1000,
+        corporationRoles: ["Director"],
+        scopes: [ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useEsiSubjects({
+        kind: "corporation",
+        scopes: [ASSETS_SCOPE],
+        roles: ["Director"],
+      }),
+    );
+
+    // Without the roles filter character 100 would claim corporation 1000 and
+    // every request for it would 403.
+    expect(result.current.map((s) => [s.id, s.characterId])).toEqual([
+      [1000, 101],
+    ]);
+  });
+
+  it("yields no subject when no member holds an accepted role", () => {
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: ["Accountant"],
+        scopes: [ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useEsiSubjects({
+        kind: "corporation",
+        scopes: [ASSETS_SCOPE],
+        roles: ["Director"],
+      }),
+    );
+
+    // No request is issued at all, so the 403 never reaches ESI's error budget.
+    expect(result.current).toEqual([]);
+  });
+
+  it("excludes a character whose roles have never been read", () => {
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: [],
+        scopes: [ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useEsiSubjects({
+        kind: "corporation",
+        scopes: [ASSETS_SCOPE],
+        roles: ["Director"],
+      }),
+    );
+
+    expect(result.current).toEqual([]);
   });
 });
 
