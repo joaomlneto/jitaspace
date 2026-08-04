@@ -2110,3 +2110,615 @@ model StationOperationStationType {
 
   @@id([stationOperationId, raceId])
 }
+
+// ---------------------------------------------------------------------------
+// Agent missions and epic arcs (missions.yaml, epicArcs.yaml)
+//
+// Cross-entity ids here are plain Int columns rather than relations, matching
+// StationOperationService.serviceId / StationOperationStationType.stationTypeId:
+// these SDE tables reference a wide spread of entities, and a relation per id
+// would need a back-relation on every referenced model.
+// ---------------------------------------------------------------------------
+
+/// An agent mission (missions.yaml). The single-object `killMission`,
+/// `courierMission` and `missionRewards` sub-objects are flattened into
+/// prefixed columns, as MetaGroup does for `color`.
+model Mission {
+  missionId                      Int                    @id
+  name                           String
+  /// factions.yaml id of the mission's faction.
+  factionId                      Int?
+  /// npcCorporations.yaml id of the offering corporation.
+  corporationId                  Int?
+  /// agentTypes.yaml id.
+  agentTypeId                    Int?
+  expirationTime                 Int?
+  hasStandingRewards             Boolean?
+  /// types.yaml id of the gift handed over when the mission is offered.
+  initialAgentGiftTypeId         Int?
+  initialAgentGiftQuantity       Int?
+  // killMission.*
+  killDungeonId                  Int?
+  killObjectiveTypeId            Int?
+  killObjectiveQuantity          Int?
+  killDropItemInMissionContainer Boolean?
+  // courierMission.*
+  courierObjectiveTypeId         Int?
+  courierObjectiveQuantity       Int?
+  courierObjectiveSingleton      Boolean?
+  // missionRewards.*
+  rewardTypeId                   Int?
+  rewardQuantity                 Int?
+  bonusRewardTypeId              Int?
+  bonusRewardQuantity            Int?
+  bonusTimeInterval              Int?
+  messages                       MissionMessage[]
+  extraStandings                 MissionExtraStanding[]
+  epicArcMissions                EpicArcMission[]
+  createdAt                      DateTime               @default(now())
+  updatedAt                      DateTime               @updatedAt()
+  isDeleted                      Boolean                @default(false)
+
+  @@index([factionId])
+  @@index([corporationId])
+}
+
+/// One localized message slot on a mission (missions.yaml `messages`), keyed by
+/// its dotted message id (e.g. `messages.mission.briefing`). English text only,
+/// like every other localized column in this schema.
+model MissionMessage {
+  missionId Int
+  mission   Mission  @relation(fields: [missionId], references: [missionId])
+  key       String
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  isDeleted Boolean  @default(false)
+
+  @@id([missionId, key])
+  @@index([missionId])
+}
+
+/// Extra standing gained with a third-party faction (missions.yaml
+/// `extraStandings`), keyed by that faction's id.
+model MissionExtraStanding {
+  missionId Int
+  mission   Mission  @relation(fields: [missionId], references: [missionId])
+  factionId Int
+  value     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  isDeleted Boolean  @default(false)
+
+  @@id([missionId, factionId])
+  @@index([missionId])
+}
+
+/// An epic arc — a branching chain of missions (epicArcs.yaml).
+model EpicArc {
+  epicArcId          Int              @id
+  name               String
+  /// factions.yaml id.
+  factionId          Int?
+  /// icons.yaml id.
+  iconId             Int?
+  arcRestartInterval Int?
+  missions           EpicArcMission[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt()
+  isDeleted          Boolean          @default(false)
+
+  @@index([factionId])
+}
+
+/// A mission's node in an epic arc (epicArcs.yaml `missions`).
+model EpicArcMission {
+  epicArcId     Int
+  epicArc       EpicArc              @relation(fields: [epicArcId], references: [epicArcId])
+  missionId     Int
+  mission       Mission?             @relation(fields: [missionId], references: [missionId])
+  /// npcCharacters.yaml id of the agent offering this step.
+  agentId       Int?
+  failMissionId Int?
+  nextMissions  EpicArcMissionNext[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt()
+  isDeleted     Boolean              @default(false)
+
+  @@id([epicArcId, missionId])
+  @@index([epicArcId])
+  @@index([missionId])
+}
+
+/// An outgoing edge in the epic-arc mission graph
+/// (epicArcs.yaml `missions.*.nextMissions`).
+model EpicArcMissionNext {
+  epicArcId      Int
+  missionId      Int
+  epicArcMission EpicArcMission @relation(fields: [epicArcId, missionId], references: [epicArcId, missionId])
+  nextMissionId  Int
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt()
+  isDeleted      Boolean        @default(false)
+
+  @@id([epicArcId, missionId, nextMissionId])
+  @@index([epicArcId, missionId])
+}
+
+// ---------------------------------------------------------------------------
+// Ship tree (shipTreeElements/Factions/Groups.yaml, typeElements.yaml)
+//
+// The "elements" maps are `slot -> shipTreeElementID`: an ordered list of the
+// attributes shown for a group/faction/type in the in-game ship tree. The map
+// key is kept as `slot` so ordering survives.
+// ---------------------------------------------------------------------------
+
+/// A ship-tree attribute such as Armor or Shield (shipTreeElements.yaml).
+model ShipTreeElement {
+  shipTreeElementId Int      @id
+  name              String
+  description       String?
+  icon              String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt()
+  isDeleted         Boolean  @default(false)
+}
+
+/// Per-faction ship-tree presentation (shipTreeFactions.yaml), keyed by faction.
+model ShipTreeFaction {
+  factionId   Int                      @id
+  description String?
+  icon        String?
+  elements    ShipTreeFactionElement[]
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @updatedAt()
+  isDeleted   Boolean                  @default(false)
+}
+
+/// An element shown for a faction (shipTreeFactions.yaml `elements`).
+model ShipTreeFactionElement {
+  factionId         Int
+  shipTreeFaction   ShipTreeFaction @relation(fields: [factionId], references: [factionId])
+  slot              Int
+  shipTreeElementId Int
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt()
+  isDeleted         Boolean         @default(false)
+
+  @@id([factionId, slot])
+  @@index([factionId])
+}
+
+/// A ship-tree group such as Corvette or Cruiser (shipTreeGroups.yaml). This is
+/// the id `Type.shipTreeGroupId` points at.
+model ShipTreeGroup {
+  shipTreeGroupId Int                        @id
+  name            String
+  description     String?
+  icon            String?
+  iconLarge       String?
+  iconSmall       String?
+  iconSmallNpc    String?
+  elements        ShipTreeGroupElement[]
+  preReqSkills    ShipTreeGroupPreReqSkill[]
+  tierThresholds  SkinrTierThreshold[]
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt()
+  isDeleted       Boolean                    @default(false)
+}
+
+/// An element shown for a ship-tree group (shipTreeGroups.yaml `elements`).
+model ShipTreeGroupElement {
+  shipTreeGroupId   Int
+  shipTreeGroup     ShipTreeGroup @relation(fields: [shipTreeGroupId], references: [shipTreeGroupId])
+  slot              Int
+  shipTreeElementId Int
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt()
+  isDeleted         Boolean       @default(false)
+
+  @@id([shipTreeGroupId, slot])
+  @@index([shipTreeGroupId])
+}
+
+/// A skill prerequisite for a ship-tree group, per faction
+/// (shipTreeGroups.yaml `preReqSkills.<factionID>.skills.<typeID>`).
+model ShipTreeGroupPreReqSkill {
+  shipTreeGroupId Int
+  shipTreeGroup   ShipTreeGroup @relation(fields: [shipTreeGroupId], references: [shipTreeGroupId])
+  factionId       Int
+  skillTypeId     Int
+  level           Int?
+  display         Boolean?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt()
+  isDeleted       Boolean       @default(false)
+
+  @@id([shipTreeGroupId, factionId, skillTypeId])
+  @@index([shipTreeGroupId])
+}
+
+/// The ship-tree elements shown for a specific type (typeElements.yaml).
+model TypeElement {
+  typeId            Int
+  slot              Int
+  shipTreeElementId Int
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt()
+  isDeleted         Boolean  @default(false)
+
+  @@id([typeId, slot])
+  @@index([typeId])
+}
+
+// ---------------------------------------------------------------------------
+// Graphic material sets (graphicMaterialSets.yaml)
+// ---------------------------------------------------------------------------
+
+/// A Space-Object-Factory material set — the hull/pattern materials and tint
+/// colours applied to a ship graphic. This is the id `Graphic.sofMaterialSetId`
+/// and `SkinMaterial.materialSetId` point at. The four RGBA colour objects are
+/// flattened into prefixed columns, as MetaGroup does for `color`.
+model GraphicMaterialSet {
+  materialSetId   Int      @id
+  description     String?
+  sofFactionName  String?
+  sofRaceHint     String?
+  sofPatternName  String?
+  resPathInsert   String?
+  material1       String?
+  material2       String?
+  material3       String?
+  material4       String?
+  customMaterial1 String?
+  customMaterial2 String?
+  colorHullR      Float?
+  colorHullG      Float?
+  colorHullB      Float?
+  colorHullA      Float?
+  colorPrimaryR   Float?
+  colorPrimaryG   Float?
+  colorPrimaryB   Float?
+  colorPrimaryA   Float?
+  colorSecondaryR Float?
+  colorSecondaryG Float?
+  colorSecondaryB Float?
+  colorSecondaryA Float?
+  colorWindowR    Float?
+  colorWindowG    Float?
+  colorWindowB    Float?
+  colorWindowA    Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt()
+  isDeleted       Boolean  @default(false)
+}
+
+// ---------------------------------------------------------------------------
+// Military campaigns (militaryCampaigns.yaml, militaryCampaignObjectives.yaml)
+//
+// Both files are keyed by UUID, so the primary keys are String.
+// ---------------------------------------------------------------------------
+
+/// A faction military campaign (militaryCampaigns.yaml).
+model MilitaryCampaign {
+  militaryCampaignId String                       @id
+  title              String
+  subtitle           String?
+  targetProgress     Int?
+  /// factions.yaml id of the issuing faction (`issuer.factionID`).
+  issuerFactionId    Int?
+  annotations        MilitaryCampaignAnnotation[]
+  objectives         MilitaryCampaignObjective[]
+  createdAt          DateTime                     @default(now())
+  updatedAt          DateTime                     @updatedAt()
+  isDeleted          Boolean                      @default(false)
+}
+
+/// A presentation annotation on a campaign (militaryCampaigns.yaml
+/// `annotations`). CCP ships ~44 of these per campaign — mostly `res:/…` asset
+/// paths plus a few localized blurbs — and adds more over time, so they are
+/// stored key/value (English text for localized entries) rather than as one
+/// column per key.
+model MilitaryCampaignAnnotation {
+  militaryCampaignId String
+  militaryCampaign   MilitaryCampaign @relation(fields: [militaryCampaignId], references: [militaryCampaignId])
+  key                String
+  value              String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt()
+  isDeleted          Boolean          @default(false)
+
+  @@id([militaryCampaignId, key])
+  @@index([militaryCampaignId])
+}
+
+/// One objective within a campaign (militaryCampaignObjectives.yaml). The
+/// `rewards` and `annotations` sub-objects have a small fixed key set, so they
+/// are flattened into prefixed columns.
+model MilitaryCampaignObjective {
+  militaryCampaignObjectiveId     String                               @id
+  title                           String
+  subtitle                        String?
+  /// militaryCampaigns.yaml id (`campaignID`).
+  militaryCampaignId              String
+  militaryCampaign                MilitaryCampaign                     @relation(fields: [militaryCampaignId], references: [militaryCampaignId])
+  careerPath                      String?
+  targetProgress                  Int?
+  maxProgressPerParticipant       Int?
+  /// npcCharacters.yaml id.
+  presentingCharacterId           Int?
+  /// npcCorporations.yaml id (`issuer.corporationID`).
+  issuerCorporationId             Int?
+  // rewards.isk / rewards.lp / rewards.standing
+  iskAmountPerInterval            Float?
+  iskProgressInterval             Int?
+  iskIssuerCorporationId          Int?
+  lpAmountPerInterval             Float?
+  lpProgressInterval              Int?
+  lpIssuerCorporationId           Int?
+  standingGainPercentPerInterval  Float?
+  standingProgressInterval        Int?
+  standingIssuerCorporationId     Int?
+  // annotations.*
+  requiredEnlistmentWithFactionId Int?
+  restrictionTooltip              String?
+  warning1                        String?
+  warning2                        String?
+  /// contributionMethodConfiguration.name, e.g. "CompleteAgentMission".
+  contributionMethodName          String?
+  contentTags                     MilitaryCampaignObjectiveTag[]
+  parameters                      MilitaryCampaignObjectiveParameter[]
+  createdAt                       DateTime                             @default(now())
+  updatedAt                       DateTime                             @updatedAt()
+  isDeleted                       Boolean                              @default(false)
+
+  @@index([militaryCampaignId])
+}
+
+/// A content tag on an objective (militaryCampaignObjectives.yaml `contentTags`).
+model MilitaryCampaignObjectiveTag {
+  militaryCampaignObjectiveId String
+  objective                   MilitaryCampaignObjective @relation(fields: [militaryCampaignObjectiveId], references: [militaryCampaignObjectiveId])
+  tag                         String
+  createdAt                   DateTime                  @default(now())
+  updatedAt                   DateTime                  @updatedAt()
+  isDeleted                   Boolean                   @default(false)
+
+  @@id([militaryCampaignObjectiveId, tag])
+  @@index([militaryCampaignObjectiveId])
+}
+
+/// A parameter of an objective's contribution method
+/// (`contributionMethodConfiguration.parameters[].key`).
+model MilitaryCampaignObjectiveParameter {
+  militaryCampaignObjectiveId String
+  objective                   MilitaryCampaignObjective                 @relation(fields: [militaryCampaignObjectiveId], references: [militaryCampaignObjectiveId])
+  paramKey                    String
+  matcherValues               MilitaryCampaignObjectiveParameterValue[]
+  createdAt                   DateTime                                  @default(now())
+  updatedAt                   DateTime                                  @updatedAt()
+  isDeleted                   Boolean                                   @default(false)
+
+  @@id([militaryCampaignObjectiveId, paramKey])
+  @@index([militaryCampaignObjectiveId])
+}
+
+/// One matcher value for a contribution-method parameter
+/// (`parameters[].matcher.values[]`). Ordinal keys, like
+/// DogmaEffectModifier.modifierIndex: a matcher entry can carry a `valueType`
+/// with no `values`, so neither field is safe as part of the key.
+model MilitaryCampaignObjectiveParameterValue {
+  militaryCampaignObjectiveId String
+  paramKey                    String
+  parameter                   MilitaryCampaignObjectiveParameter @relation(fields: [militaryCampaignObjectiveId, paramKey], references: [militaryCampaignObjectiveId, paramKey])
+  matcherIndex                Int
+  valueIndex                  Int
+  valueType                   String
+  value                       String?
+  createdAt                   DateTime                           @default(now())
+  updatedAt                   DateTime                           @updatedAt()
+  isDeleted                   Boolean                            @default(false)
+
+  @@id([militaryCampaignObjectiveId, paramKey, matcherIndex, valueIndex])
+  @@index([militaryCampaignObjectiveId, paramKey])
+}
+
+// ---------------------------------------------------------------------------
+// SKINR — the in-game SKIN designer (skinr*.yaml, 9 files)
+//
+// Components (materials/patterns) are placed into slots; a slot configuration
+// says which slots a hull exposes. Point values and tier thresholds drive the
+// designer's cost/tier maths, and are keyed by (category, rarity) and
+// (shipTreeGroup, tier) respectively — the SDE ships them as bare numeric maps.
+// ---------------------------------------------------------------------------
+
+/// A SKINR component category — Material, Pattern, Metallic
+/// (skinrComponentCategories.yaml). `name` is a plain internal string here.
+model SkinrComponentCategory {
+  skinrComponentCategoryId Int                        @id
+  name                     String
+  components               SkinrComponent[]
+  pointValues              SkinrComponentPointValue[]
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt()
+  isDeleted                Boolean                    @default(false)
+}
+
+/// A SKINR component rarity tier (skinrComponentRarities.yaml).
+model SkinrComponentRarity {
+  skinrComponentRarityId Int                        @id
+  name                   String
+  rank                   Int?
+  components             SkinrComponent[]
+  pointValues            SkinrComponentPointValue[]
+  createdAt              DateTime                   @default(now())
+  updatedAt              DateTime                   @updatedAt()
+  isDeleted              Boolean                    @default(false)
+}
+
+/// Designer point cost per (category, rarity) (skinrComponentPointValues.yaml,
+/// a bare `rarity -> points` map keyed by category).
+model SkinrComponentPointValue {
+  skinrComponentCategoryId Int
+  category                 SkinrComponentCategory @relation(fields: [skinrComponentCategoryId], references: [skinrComponentCategoryId])
+  skinrComponentRarityId   Int
+  rarity                   SkinrComponentRarity   @relation(fields: [skinrComponentRarityId], references: [skinrComponentRarityId])
+  points                   Int
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt()
+  isDeleted                Boolean                @default(false)
+
+  @@id([skinrComponentCategoryId, skinrComponentRarityId])
+  @@index([skinrComponentCategoryId])
+  @@index([skinrComponentRarityId])
+}
+
+/// A SKINR component — one material or pattern (skinrComponents.yaml). The
+/// `sequenceBinder` sub-object is flattened into prefixed columns.
+model SkinrComponent {
+  skinrComponentId         Int                    @id
+  name                     String
+  skinrComponentCategoryId Int
+  category                 SkinrComponentCategory @relation(fields: [skinrComponentCategoryId], references: [skinrComponentCategoryId])
+  skinrComponentRarityId   Int
+  rarity                   SkinrComponentRarity   @relation(fields: [skinrComponentRarityId], references: [skinrComponentRarityId])
+  published                Boolean?
+  finish                   String?
+  iconFile                 String?
+  resourceFile             String?
+  projectionTypeU          String?
+  projectionTypeV          String?
+  /// sequenceBinder.itemTypeID / .count — the item and quantity consumed.
+  sequenceBinderItemTypeId Int?
+  sequenceBinderCount      Int?
+  associatedTypes          SkinrComponentType[]
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt()
+  isDeleted                Boolean                @default(false)
+
+  @@index([skinrComponentCategoryId])
+  @@index([skinrComponentRarityId])
+}
+
+/// A type that grants/uses a SKINR component
+/// (skinrComponents.yaml `associatedTypeIds[]`).
+model SkinrComponentType {
+  skinrComponentId   Int
+  skinrComponent     SkinrComponent @relation(fields: [skinrComponentId], references: [skinrComponentId])
+  typeId             Int
+  /// -1 means unlimited uses.
+  licenseUsesGranted Int?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt()
+  isDeleted          Boolean        @default(false)
+
+  @@id([skinrComponentId, typeId])
+  @@index([skinrComponentId])
+}
+
+/// A SKINR slot category (skinrSlotCategories.yaml).
+model SkinrSlotCategory {
+  skinrSlotCategoryId Int         @id
+  name                String
+  slots               SkinrSlot[]
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt()
+  isDeleted           Boolean     @default(false)
+}
+
+/// An internal slot name (skinrSlotNames.yaml), e.g. `primary_nanocoating`.
+model SkinrSlotName {
+  skinrSlotNameId Int      @id
+  name            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt()
+  isDeleted       Boolean  @default(false)
+}
+
+/// A SKINR slot (skinrSlots.yaml).
+model SkinrSlot {
+  skinrSlotId                Int                          @id
+  name                       String
+  skinrSlotCategoryId        Int?
+  category                   SkinrSlotCategory?           @relation(fields: [skinrSlotCategoryId], references: [skinrSlotCategoryId])
+  allowedComponentCategories SkinrSlotAllowedCategory[]
+  configurationSlots         SkinrSlotConfigurationSlot[]
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt()
+  isDeleted                  Boolean                      @default(false)
+
+  @@index([skinrSlotCategoryId])
+}
+
+/// A component category a slot accepts
+/// (skinrSlots.yaml `allowedDesignComponentCategories[]`).
+model SkinrSlotAllowedCategory {
+  skinrSlotId              Int
+  skinrSlot                SkinrSlot @relation(fields: [skinrSlotId], references: [skinrSlotId])
+  skinrComponentCategoryId Int
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt()
+  isDeleted                Boolean   @default(false)
+
+  @@id([skinrSlotId, skinrComponentCategoryId])
+  @@index([skinrSlotId])
+}
+
+/// A named set of slots offered to a group of hulls
+/// (skinrSlotConfigurations.yaml).
+model SkinrSlotConfiguration {
+  skinrSlotConfigurationId Int                          @id
+  name                     String
+  priority                 Int?
+  /// When true the configuration applies to every ship and `ships` is empty.
+  allowAllShips            Boolean?
+  slots                    SkinrSlotConfigurationSlot[]
+  ships                    SkinrSlotConfigurationShip[]
+  createdAt                DateTime                     @default(now())
+  updatedAt                DateTime                     @updatedAt()
+  isDeleted                Boolean                      @default(false)
+}
+
+/// A slot included in a configuration (skinrSlotConfigurations.yaml `config[]`).
+model SkinrSlotConfigurationSlot {
+  skinrSlotConfigurationId Int
+  configuration            SkinrSlotConfiguration @relation(fields: [skinrSlotConfigurationId], references: [skinrSlotConfigurationId])
+  skinrSlotId              Int
+  skinrSlot                SkinrSlot              @relation(fields: [skinrSlotId], references: [skinrSlotId])
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt()
+  isDeleted                Boolean                @default(false)
+
+  @@id([skinrSlotConfigurationId, skinrSlotId])
+  @@index([skinrSlotConfigurationId])
+  @@index([skinrSlotId])
+}
+
+/// A hull a configuration applies to (skinrSlotConfigurations.yaml `ships[]`).
+model SkinrSlotConfigurationShip {
+  skinrSlotConfigurationId Int
+  configuration            SkinrSlotConfiguration @relation(fields: [skinrSlotConfigurationId], references: [skinrSlotConfigurationId])
+  typeId                   Int
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt()
+  isDeleted                Boolean                @default(false)
+
+  @@id([skinrSlotConfigurationId, typeId])
+  @@index([skinrSlotConfigurationId])
+}
+
+/// Points needed to reach a SKIN tier, per ship-tree group
+/// (skinrTierThresholds.yaml, a bare `tier -> points` map keyed by
+/// shipTreeGroupID).
+model SkinrTierThreshold {
+  shipTreeGroupId Int
+  shipTreeGroup   ShipTreeGroup @relation(fields: [shipTreeGroupId], references: [shipTreeGroupId])
+  tier            Int
+  points          Int
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt()
+  isDeleted       Boolean       @default(false)
+
+  @@id([shipTreeGroupId, tier])
+  @@index([shipTreeGroupId])
+}
