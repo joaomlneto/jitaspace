@@ -1,7 +1,12 @@
 import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { enString, ingestSdeTable, requiredNumber } from "../../../helpers";
+import {
+  enString,
+  ingestSdeTable,
+  optionalNumber,
+  requiredNumber,
+} from "../../../helpers";
 
 export interface IngestSdeConstellationsEventPayload {
   data: Record<string, never>;
@@ -27,6 +32,7 @@ export const ingestSdeConstellations = defineJob<
         constellationId: id,
         name: enString(record.name) ?? "",
         regionId: requiredNumber(record.regionID),
+        wormholeClassId: optionalNumber(record.wormholeClassID),
         isDeleted: false,
       }),
     });

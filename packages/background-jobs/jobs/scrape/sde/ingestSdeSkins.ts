@@ -2,7 +2,6 @@ import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
-  enString,
   ingestSdeCompositeTable,
   loadSdeFiles,
   optionalBoolean,
@@ -20,7 +19,6 @@ interface SkinRecord {
   types?: number[];
   allowCCPDevs?: boolean;
   isStructureSkin?: boolean;
-  skinDescription?: unknown;
   visibleSerenity?: boolean;
   visibleTranquility?: boolean;
 }
@@ -63,7 +61,6 @@ export const ingestSdeSkins = defineJob<IngestSdeSkinsEventPayload["data"]>({
         internalName: plainString(record.internalName) ?? "",
         allowCcpDevs: requiredBoolean(record.allowCCPDevs),
         isStructureSkin: optionalBoolean(record.isStructureSkin),
-        skinDescription: enString(record.skinDescription),
         visibleSerenity: requiredBoolean(record.visibleSerenity),
         visibleTranquility: requiredBoolean(record.visibleTranquility),
         isDeleted: false,
