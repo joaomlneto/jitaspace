@@ -53,7 +53,12 @@ export const scrapeEsiConstellations = defineJob<
           })
           .then((entries) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              // wormholeClassId is owned by ingestSdeConstellations.
+              excludeObjectKeys(entry, [
+                "updatedAt",
+                "createdAt",
+                "wormholeClassId",
+              ]),
             ),
           ),
       fetchRemoteEntries: async () =>

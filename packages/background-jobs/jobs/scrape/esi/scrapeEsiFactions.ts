@@ -41,7 +41,13 @@ export const scrapeEsiFactions = defineJob<ScrapeFactionsEventPayload["data"]>({
           })
           .then((entries) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              // flatLogo / flatLogoWithName are owned by ingestSdeFactions.
+              excludeObjectKeys(entry, [
+                "updatedAt",
+                "createdAt",
+                "flatLogo",
+                "flatLogoWithName",
+              ]),
             ),
           ),
       fetchRemoteEntries: () =>

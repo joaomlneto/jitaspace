@@ -6,6 +6,7 @@ import { prisma } from "../../../db";
 import {
   enString,
   ingestSdeTable,
+  optionalBoolean,
   optionalNumber,
   plainString,
   requiredNumber,
@@ -40,6 +41,10 @@ export const ingestSdeSolarSystems = defineJob<
         securityClass: plainString(record.securityClass),
         securityStatus: new Decimal(optionalNumber(record.securityStatus) ?? 0),
         starId: optionalNumber(record.starID),
+        wormholeClassId: optionalNumber(record.wormholeClassID),
+        visualEffect: plainString(record.visualEffect),
+        isRegional: optionalBoolean(record.regional),
+        isInternational: optionalBoolean(record.international),
         isDeleted: false,
       }),
     });

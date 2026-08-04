@@ -5,6 +5,7 @@ import {
   enString,
   ingestSdeTable,
   loadSdeFiles,
+  plainString,
   requiredBoolean,
   requiredNumber,
 } from "../../../helpers";
@@ -76,6 +77,8 @@ export const ingestSdeFactions = defineJob<
         sizeFactor: requiredNumber(record.sizeFactor),
         stationCount: counts.get(id)?.stations ?? 0,
         stationSystemCount: counts.get(id)?.systems.size ?? 0,
+        flatLogo: plainString(record.flatLogo),
+        flatLogoWithName: plainString(record.flatLogoWithName),
         isDeleted: false,
       }),
     });

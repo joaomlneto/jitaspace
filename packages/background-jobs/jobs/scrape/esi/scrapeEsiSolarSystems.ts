@@ -9,6 +9,7 @@ import {
   getUniverseSystemsSystemId,
 } from "@jitaspace/esi-client";
 
+import type { SolarSystem } from "../../../db";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { Prisma, prisma } from "../../../db";
@@ -37,6 +38,21 @@ const stripTimestamps = <T extends { createdAt: unknown; updatedAt: unknown }>(
   entries: T[],
 ) =>
   entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"]));
+
+// SolarSystem additionally carries SDE-only columns (owned by
+// ingestSdeSolarSystems). ESI's /universe/systems/ exposes none of them, so they
+// must be stripped too or every row would diff as modified on every run.
+const stripSolarSystemSdeColumns = (entries: SolarSystem[]) =>
+  entries.map((entry) =>
+    excludeObjectKeys(entry, [
+      "updatedAt",
+      "createdAt",
+      "wormholeClassId",
+      "visualEffect",
+      "isRegional",
+      "isInternational",
+    ]),
+  );
 
 const fetchSolarSystem = (limit: Limit, solarSystemId: number) =>
   limit(async () =>
@@ -294,7 +310,7 @@ export const scrapeEsiSolarSystems = defineJob<
                     },
                   },
                 })
-                .then(stripTimestamps),
+                .then(stripSolarSystemSdeColumns),
             fetchRemoteEntries: async () =>
               Promise.all(
                 thisBatchIds.map((solarSystemId) =>
@@ -377,7 +393,12 @@ export const scrapeEsiSolarSystems = defineJob<
                                               })
                                               .then((entries) =>
                                                 entries.map((entry) =>
-                                                  excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+                                                  excludeObjectKeys(entry, [
+                                                    "updatedAt",
+                                                    "createdAt",
+                                                    // Owned by ingestSdeStations.
+                                                    "reprocessingHangarFlag",
+                                                  ]),
                                                 ),
                                               ),
                                           fetchRemoteEntries: async () =>

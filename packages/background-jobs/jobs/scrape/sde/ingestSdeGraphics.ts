@@ -1,7 +1,7 @@
 import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { ingestSdeTable, plainString } from "../../../helpers";
+import { ingestSdeTable, optionalNumber, plainString } from "../../../helpers";
 
 export interface IngestSdeGraphicsEventPayload {
   data: Record<string, never>;
@@ -30,6 +30,8 @@ export const ingestSdeGraphics = defineJob<
         sofFactionName: plainString(record.sofFactionName),
         sofHullName: plainString(record.sofHullName),
         sofRaceName: plainString(record.sofRaceName),
+        // graphicMaterialSets.yaml has no table, so this stays a plain id.
+        sofMaterialSetId: optionalNumber(record.sofMaterialSetID),
         isDeleted: false,
       }),
     });

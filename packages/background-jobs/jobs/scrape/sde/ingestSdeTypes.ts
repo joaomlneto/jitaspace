@@ -63,6 +63,13 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
           marketGroupIds,
           optionalNumber(record.marketGroupID),
         ),
+        // SDE-only columns. `shipTreeGroupID` points at shipTreeGroups.yaml,
+        // which has no table, so it is stored as a plain id.
+        basePrice: optionalNumber(record.basePrice),
+        metaLevel: optionalNumber(record.metaLevel),
+        techLevel: optionalNumber(record.techLevel),
+        soundId: optionalNumber(record.soundID),
+        shipTreeGroupId: optionalNumber(record.shipTreeGroupID),
         isDeleted: false,
       }),
     });
