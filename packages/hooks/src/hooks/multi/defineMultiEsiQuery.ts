@@ -11,7 +11,7 @@ import type {
 } from "@jitaspace/esi-client";
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
-import type { EsiSubjectKind } from "../auth";
+import type { EsiSubject, EsiSubjectKind } from "../auth";
 import { useAuthStoreHasHydrated, useEsiSubjects } from "../auth";
 
 /** An item tagged with the subject whose response it came from. */
@@ -101,6 +101,36 @@ function combineSubjectResults<TItem>(
   };
 }
 
+/** Attach the subject a response came from to each of its items. */
+function tagWithSubject<TItem>(
+  response: ResponseConfig<TItem[]>,
+  subjectId: number,
+): EsiSubjectItem<TItem>[] {
+  return response.data.map((item) => ({ ...item, subjectId }));
+}
+
+/**
+ * Build one subject's query options.
+ *
+ * Module-level rather than inline in the hook: the tagging closure would
+ * otherwise sit six callbacks deep, and this keeps `select` readable.
+ */
+function buildSubjectQuery<TItem>(
+  subject: EsiSubject,
+  query: (
+    subjectId: number,
+    authHeaders: Record<string, string>,
+  ) => EsiQuerySource<TItem>,
+): TaggedQueryOptions<TItem> {
+  return {
+    ...query(subject.id, subject.authHeaders),
+    // Tag here rather than in `combine`: this closure belongs to the same query
+    // as the subject it names, so the tag cannot drift from the data.
+    select: (response: ResponseConfig<TItem[]>) =>
+      tagWithSubject(response, subject.id),
+  } as unknown as TaggedQueryOptions<TItem>;
+}
+
 /**
  * Build a hook that runs the same ESI query across every subject the logged-in
  * characters can reach, and returns one flat list tagged by subject.
@@ -144,14 +174,7 @@ export function defineMultiEsiQuery<TItem>(config: {
     // closure each render re-runs the map and a deep `replaceEqualDeep` pass
     // over every item, for every subject, on every render.
     const queries = useMemo(
-      () =>
-        subjects.map((subject) => ({
-          ...query(subject.id, subject.authHeaders),
-          // Tag here rather than in `combine`: this closure belongs to the same
-          // query as the subject it names, so the tag cannot drift from the data.
-          select: (response: ResponseConfig<TItem[]>) =>
-            response.data.map((item) => ({ ...item, subjectId: subject.id })),
-        })) as unknown as TaggedQueryOptions<TItem>[],
+      () => subjects.map((subject) => buildSubjectQuery(subject, query)),
       [subjects],
     );
 
