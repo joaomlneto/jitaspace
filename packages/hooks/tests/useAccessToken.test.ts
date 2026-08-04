@@ -171,13 +171,13 @@ describe("useAccessToken — alliance filter", () => {
 });
 
 describe("useAccessToken — roles", () => {
-  // `roles` is enforced against `corporationRoles` exactly as `scopes` is
-  // enforced against the token's scp claim: no match, no token. The store only
-  // fills `corporationRoles` in once it has read them from ESI, and
-  // `corporationRolesExpireOn` marks when that happened.
+  // `roles` lists the roles that are ACCEPTED — holding any one of them is
+  // enough. No match means no token. The store only fills `corporationRoles` in
+  // once it has read them from ESI, and `corporationRolesExpireOn` marks when
+  // that happened.
   const rolesReadAt = Date.now() + 60 * 60 * 1000;
 
-  it("picks the character that holds the required roles", () => {
+  it("picks the character that holds the accepted role", () => {
     login(
       character({
         characterId: 100,
@@ -281,12 +281,15 @@ describe("useAccessToken — roles", () => {
     expect(result.current.character?.characterId).toBe(101);
   });
 
-  it("requires every listed role, not just one of them", () => {
+  it("accepts a character holding any one of the listed roles", () => {
+    // `roles` is an any-of list, mirroring ESI's x-required-roles: corporation
+    // wallets accept Accountant OR Junior_Accountant, and Junior_Accountant is
+    // the lesser of the two, so demanding both would lock out nearly everyone.
     login(
       character({
         characterId: 100,
         corporationId: 1000,
-        corporationRoles: ["Director"],
+        corporationRoles: ["Junior_Accountant"],
         corporationRolesExpireOn: rolesReadAt,
         scopes: [CORP_ASSETS_SCOPE],
       }),
@@ -296,7 +299,29 @@ describe("useAccessToken — roles", () => {
       useAccessToken({
         corporationId: 1000,
         scopes: [CORP_ASSETS_SCOPE],
-        roles: ["Director", "Accountant"],
+        roles: ["Accountant", "Junior_Accountant"],
+      }),
+    );
+
+    expect(result.current.accessToken).toBe("token-100");
+  });
+
+  it("excludes a character holding none of the listed roles", () => {
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: ["Trader"],
+        corporationRolesExpireOn: rolesReadAt,
+        scopes: [CORP_ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useAccessToken({
+        corporationId: 1000,
+        scopes: [CORP_ASSETS_SCOPE],
+        roles: ["Accountant", "Junior_Accountant"],
       }),
     );
 

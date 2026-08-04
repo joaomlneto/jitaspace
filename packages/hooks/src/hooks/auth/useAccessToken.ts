@@ -24,10 +24,17 @@ const TOKEN_UNAVAILABLE = {
  * that clears the filters is equally able to authorise the request, so the
  * first one wins.
  *
- * `roles` is enforced the same way as `scopes`: a character is only eligible if
- * `corporationRoles` — read from ESI by useAuthStore — actually contains every
- * required role. A character whose roles have never been read has an empty
- * list, so it is excluded rather than tried on spec; reading them needs
+ * `roles` lists the roles that are ACCEPTED, not ones that must all be held: a
+ * character is eligible if `corporationRoles` — read from ESI by useAuthStore —
+ * contains at least one of them. That mirrors ESI's own `x-required-roles`,
+ * which is an any-of list; of its 34 role-gated operations, five accept either
+ * of two roles (corporation wallets take Accountant OR Junior_Accountant, and
+ * Junior_Accountant is the lesser of the two, so demanding both would lock out
+ * essentially everyone). An empty or omitted list means "no role needed" and
+ * matches every character.
+ *
+ * A character whose roles have never been read has an empty list, so it matches
+ * nothing and is excluded rather than tried on spec. Reading them needs
  * `esi-characters.read_corporation_roles.v1`, so a character that never granted
  * that scope authorises nothing role-gated. That is deliberate: the scope is
  * not forced on anyone, and a character without it is simply treated as holding
@@ -45,6 +52,7 @@ export const useAccessToken = (options: {
   authHeaders: Record<string, string>;
 } => {
   const { characterId, corporationId, allianceId, scopes, roles } = options;
+  const acceptedRoles = roles ?? [];
 
   const characters = useAuthStore(
     useShallow((state) =>
@@ -57,9 +65,13 @@ export const useAccessToken = (options: {
           (scopes ?? []).every((requiredScope) =>
             character.accessTokenPayload.scp.includes(requiredScope),
           ) &&
-          (roles ?? []).every((requiredRole) =>
-            character.corporationRoles.includes(requiredRole),
-          ),
+          // Any-of, unlike `scopes` above: no roles listed means no role is
+          // needed, so the empty case has to short-circuit rather than fall
+          // through to `some`, which would be false and match nobody.
+          (acceptedRoles.length === 0 ||
+            acceptedRoles.some((acceptedRole) =>
+              character.corporationRoles.includes(acceptedRole),
+            )),
       ),
     ),
   );
