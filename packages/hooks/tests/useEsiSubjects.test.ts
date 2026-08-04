@@ -92,6 +92,17 @@ describe("useEsiSubjects — character kind", () => {
     ]);
   });
 
+  it("requires no scopes when none are given", () => {
+    login(
+      character({ characterId: 100 }),
+      character({ characterId: 101, scopes: [MAIL_SCOPE] }),
+    );
+
+    const { result } = renderHook(() => useEsiSubjects({ kind: "character" }));
+
+    expect(result.current.map((s) => s.id)).toEqual([100, 101]);
+  });
+
   it("excludes characters missing the required scope", () => {
     login(
       character({ characterId: 100, scopes: [MAIL_SCOPE] }),

@@ -6,6 +6,7 @@ import { useShallow } from "zustand/shallow";
 import type { CharactersCharacterIdRolesGetRolesEnum } from "@jitaspace/esi-client";
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
+import type { CharacterSsoSession } from "./useAuthStore";
 import { useAuthStore } from "./useAuthStore";
 
 /** The kind of entity an authenticated ESI route is keyed on. */
@@ -17,6 +18,21 @@ export interface EsiSubject {
   /** The character whose token authorises requests for this subject. */
   characterId: number;
   authHeaders: Record<string, string>;
+}
+
+/** The id a character contributes for a given subject kind, if any. */
+function subjectIdOf(
+  character: CharacterSsoSession,
+  kind: EsiSubjectKind,
+): number | undefined {
+  switch (kind) {
+    case "character":
+      return character.characterId;
+    case "corporation":
+      return character.corporationId;
+    case "alliance":
+      return character.allianceId;
+  }
 }
 
 /**
@@ -57,12 +73,7 @@ export const useEsiSubjects = (options: {
     const subjects = new Map<number, EsiSubject>();
 
     for (const character of characters) {
-      const id =
-        kind === "character"
-          ? character.characterId
-          : kind === "corporation"
-            ? character.corporationId
-            : character.allianceId;
+      const id = subjectIdOf(character, kind);
 
       // A character with no alliance yields no alliance subject.
       if (id == undefined) continue;
