@@ -171,12 +171,13 @@ describe("useAccessToken — alliance filter", () => {
 });
 
 describe("useAccessToken — roles", () => {
-  // `corporationRolesExpireOn` is what makes a character's roles *known*: it is
-  // only stamped once the store has read them from ESI. Roles being empty with
-  // no expiry means "never read", not "holds nothing".
+  // `roles` is enforced against `corporationRoles` exactly as `scopes` is
+  // enforced against the token's scp claim: no match, no token. The store only
+  // fills `corporationRoles` in once it has read them from ESI, and
+  // `corporationRolesExpireOn` marks when that happened.
   const rolesReadAt = Date.now() + 60 * 60 * 1000;
 
-  it("picks the character known to hold the required roles", () => {
+  it("picks the character that holds the required roles", () => {
     login(
       character({
         characterId: 100,
@@ -205,7 +206,7 @@ describe("useAccessToken — roles", () => {
     expect(result.current.character?.characterId).toBe(101);
   });
 
-  it("excludes a character whose known roles fall short", () => {
+  it("excludes a character whose roles fall short", () => {
     login(
       character({
         characterId: 100,
@@ -227,11 +228,12 @@ describe("useAccessToken — roles", () => {
     expect(result.current.accessToken).toBeNull();
   });
 
-  it("still authorises a character whose roles have never been read", () => {
+  it("excludes a character whose roles have never been read", () => {
     // Reading roles needs the corporation-roles scope, which the user may not
-    // have granted. Excluding these characters would leave every role-gated
-    // endpoint (corporation assets asks for Director) with no token at all, so
-    // unknown roles fall through and ESI enforces them server-side.
+    // have granted — so there is nothing to match `roles` against and the
+    // character is not eligible. Pages that pass `roles` therefore have to make
+    // that scope a ScopeGuard requirement, so the user is asked to grant it
+    // rather than left staring at "Token not available".
     login(
       character({
         characterId: 100,
@@ -249,10 +251,10 @@ describe("useAccessToken — roles", () => {
       }),
     );
 
-    expect(result.current.accessToken).toBe("token-100");
+    expect(result.current.accessToken).toBeNull();
   });
 
-  it("prefers a known role holder over a character with unknown roles", () => {
+  it("skips a character with unread roles in favour of a confirmed holder", () => {
     login(
       character({
         characterId: 100,
@@ -280,9 +282,31 @@ describe("useAccessToken — roles", () => {
     expect(result.current.character?.characterId).toBe(101);
   });
 
+  it("requires every listed role, not just one of them", () => {
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: ["Director"],
+        corporationRolesExpireOn: rolesReadAt,
+        scopes: [CORP_ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useAccessToken({
+        corporationId: 1000,
+        scopes: [CORP_ASSETS_SCOPE],
+        roles: ["Director", "Accountant"],
+      }),
+    );
+
+    expect(result.current.accessToken).toBeNull();
+  });
+
   it("keeps the first match when no roles are required", () => {
-    // Every other call site passes no roles; ordering there must not change
-    // just because a later character happens to have had its roles read.
+    // Every other call site passes no roles; an empty requirement must stay
+    // vacuously true rather than start demanding that roles have been read.
     login(
       character({ characterId: 100, corporationId: 1000 }),
       character({

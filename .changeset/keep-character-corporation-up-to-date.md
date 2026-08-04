@@ -5,3 +5,5 @@
 Fixed corporation and alliance pages still using your old corporation after you change corp. Your character's corporation and alliance are now re-checked every hour while you are signed in, instead of only when you sign in again — so corporation assets, contacts and other corporation pages follow you to your new corp.
 
 When you have several characters in the same corporation, pages that need a specific corporation role (such as corporation assets, which needs Director) now pick a character who actually holds it, rather than whichever character happened to come first.
+
+Corporation Assets now asks for the "Read character corporation roles" permission. It needs it to tell which of your characters is a Director; if you have not granted it, the page will ask you to.

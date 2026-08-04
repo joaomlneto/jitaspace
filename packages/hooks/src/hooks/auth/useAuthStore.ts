@@ -25,9 +25,11 @@ export interface CharacterSsoSession {
   allianceId?: number;
   corporationRoles: CharactersCharacterIdRolesGetRolesEnum[];
   /**
-   * Epoch ms at which `corporationRoles` goes stale. `undefined` means the
-   * roles have never been read — which is NOT the same as "this character holds
-   * no roles"; `useAccessToken` treats the two differently.
+   * Epoch ms at which `corporationRoles` goes stale. `undefined` means the roles
+   * have never been read — either the token lacks the scope, or no read has
+   * succeeded yet — so they are retried on the next sweep. `useAccessToken`
+   * enforces `corporationRoles` as-is, so until a read lands the character
+   * authorises nothing that requires a role.
    */
   corporationRolesExpireOn?: number;
   /** Epoch ms at which `corporationId` / `allianceId` go stale. */
@@ -79,11 +81,11 @@ const hasExpired = (expiresOn: number | undefined, now: number) =>
   expiresOn === undefined || expiresOn <= now;
 
 /**
- * Next expiry stamp for a cached read. The stamp doubles as the "this has been
- * read at least once" marker — `useAccessToken` distinguishes roles it has
- * never seen from roles it knows to be empty — so a failure before any
- * successful read leaves it unset rather than passing an empty default off as
- * fact. Such a read is retried by the next sweep anyway.
+ * Next expiry stamp for a cached read. A failure that has no earlier success to
+ * fall back on leaves the stamp unset, so the next sweep retries immediately
+ * instead of caching a default nobody has confirmed for a whole hour — which,
+ * for roles, is the difference between retrying and locking a Director out of
+ * every corporation endpoint until the TTL elapses.
  */
 const nextExpiry = (
   now: number,

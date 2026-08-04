@@ -49,8 +49,22 @@ jest.mock("@jitaspace/eve-icons", () => ({
   AttentionIcon: () => null,
 }));
 
+// Rendered as a passthrough so the page's content is testable, but the scopes
+// it demands are recorded: they are load-bearing, not decoration (see the
+// requires-both-scopes test below).
+const mockScopeGuardScopes = jest.fn<(scopes?: string[]) => void>();
+
 jest.mock("~/components/ScopeGuard", () => ({
-  ScopeGuard: ({ children }: { children: ReactNode }) => <>{children}</>,
+  ScopeGuard: ({
+    children,
+    requiredScopes,
+  }: {
+    children: ReactNode;
+    requiredScopes?: string[];
+  }) => {
+    mockScopeGuardScopes(requiredScopes);
+    return <>{children}</>;
+  },
 }));
 
 const SAMPLE_ASSETS = {
@@ -128,6 +142,20 @@ describe("Corporation Assets Page", () => {
   it("passes the corporation ID to useCorporationAssets", () => {
     renderPage();
     expect(mockUseCorporationAssets).toHaveBeenCalledWith(987654321);
+  });
+
+  it("requires the corporation-roles scope as well as corporation assets", () => {
+    // useCorporationAssets asks useAccessToken for the Director role, which is
+    // only matchable against roles read from ESI — and reading them needs this
+    // scope. Drop it and a user who never granted it clears the guard, gets no
+    // token, and is told "Token not available" with no way to act on it.
+    renderPage();
+    expect(mockScopeGuardScopes).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        "esi-assets.read_corporation_assets.v1",
+        "esi-characters.read_corporation_roles.v1",
+      ]),
+    );
   });
 
   it("shows total asset count", () => {

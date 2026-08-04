@@ -15,47 +15,22 @@ const TOKEN_UNAVAILABLE = {
 };
 
 /**
- * Pick the character to authorise a role-gated request with.
- *
- * A character's roles are only *known* once they have been read from ESI, which
- * needs the corporation-roles scope; `corporationRolesExpireOn` is the marker
- * that such a read succeeded. Characters whose known roles fall short are
- * excluded, but one with unknown roles is not: we cannot prove it lacks the
- * role, and excluding it would leave a user who never granted that scope with
- * no token at all for every role-gated endpoint. Known holders are tried first,
- * so a Director wins over an unknown sibling in the same corporation, and ESI
- * still enforces the roles server-side on the fallback.
- */
-const pickCharacter = (
-  candidates: CharacterSsoSession[],
-  requiredRoles: CharactersCharacterIdRolesGetRolesEnum[],
-): CharacterSsoSession | null => {
-  if (requiredRoles.length === 0) return candidates[0] ?? null;
-
-  const rolesAreKnown = (character: CharacterSsoSession) =>
-    character.corporationRolesExpireOn !== undefined;
-
-  return (
-    candidates.find(
-      (character) =>
-        rolesAreKnown(character) &&
-        requiredRoles.every((role) => character.corporationRoles.includes(role)),
-    ) ??
-    candidates.find((character) => !rolesAreKnown(character)) ??
-    null
-  );
-};
-
-/**
  * Pick a logged-in character whose token can authorise an ESI request.
  *
  * `characterId`, `corporationId` and `allianceId` narrow *which* character is
  * eligible: corporation- and alliance-scoped ESI routes are still authenticated
  * with a character token, so the caller has to end up with a character that
  * actually belongs to the corporation/alliance being queried. Every character
- * that clears those filters is equally able to authorise the request, so the
- * first one wins — except when `roles` is given, where a character known to
- * hold them is preferred (see `pickCharacter`).
+ * that clears the filters is equally able to authorise the request, so the
+ * first one wins.
+ *
+ * `roles` is enforced the same way as `scopes`: a character is only eligible if
+ * `corporationRoles` — read from ESI by useAuthStore — actually contains every
+ * required role. Roles that have never been read are an empty list, so such a
+ * character is excluded rather than tried on spec. That means a caller passing
+ * `roles` must ALSO make the corporation-roles scope a requirement of the page
+ * (its ScopeGuard), otherwise a user who never granted it gets no token here
+ * and no way to find out why.
  */
 export const useAccessToken = (options: {
   characterId?: number;
@@ -80,19 +55,20 @@ export const useAccessToken = (options: {
           (allianceId == undefined || character.allianceId == allianceId) &&
           (scopes ?? []).every((requiredScope) =>
             character.accessTokenPayload.scp.includes(requiredScope),
+          ) &&
+          (roles ?? []).every((requiredRole) =>
+            character.corporationRoles.includes(requiredRole),
           ),
       ),
     ),
   );
 
-  const character = pickCharacter(characters, roles ?? []);
-
   // Check if character is logged in
-  if (!character) return TOKEN_UNAVAILABLE;
+  if (!characters[0]) return TOKEN_UNAVAILABLE;
 
   return {
-    character,
-    accessToken: character.accessToken,
-    authHeaders: { Authorization: `Bearer ${character.accessToken}` },
+    character: characters[0],
+    accessToken: characters[0].accessToken,
+    authHeaders: { Authorization: `Bearer ${characters[0].accessToken}` },
   };
 };
