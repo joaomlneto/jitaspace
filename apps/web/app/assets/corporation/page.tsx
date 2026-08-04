@@ -116,18 +116,8 @@ export default function Page() {
   const pagination = usePagination({ total: numPages, siblings: 3 });
   const offset = ENTRIES_PER_PAGE * (pagination.active - 1);
 
-  // The corporation-roles scope is required even though this page never reads
-  // roles itself: useCorporationAssets asks for the Director role, and that is
-  // only enforceable against roles useAuthStore has actually read from ESI.
-  // Without the scope there are no roles to match, so the request would be left
-  // without a token — this way the user is asked to grant it instead.
   return (
-    <ScopeGuard
-      requiredScopes={[
-        "esi-assets.read_corporation_assets.v1",
-        "esi-characters.read_corporation_roles.v1",
-      ]}
-    >
+    <ScopeGuard requiredScopes={["esi-assets.read_corporation_assets.v1"]}>
       <Container size="xl">
         <Stack>
           <Group>

@@ -26,11 +26,12 @@ const TOKEN_UNAVAILABLE = {
  *
  * `roles` is enforced the same way as `scopes`: a character is only eligible if
  * `corporationRoles` — read from ESI by useAuthStore — actually contains every
- * required role. Roles that have never been read are an empty list, so such a
- * character is excluded rather than tried on spec. That means a caller passing
- * `roles` must ALSO make the corporation-roles scope a requirement of the page
- * (its ScopeGuard), otherwise a user who never granted it gets no token here
- * and no way to find out why.
+ * required role. A character whose roles have never been read has an empty
+ * list, so it is excluded rather than tried on spec; reading them needs
+ * `esi-characters.read_corporation_roles.v1`, so a character that never granted
+ * that scope authorises nothing role-gated. That is deliberate: the scope is
+ * not forced on anyone, and a character without it is simply treated as holding
+ * no roles.
  */
 export const useAccessToken = (options: {
   characterId?: number;

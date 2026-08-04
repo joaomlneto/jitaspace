@@ -6,4 +6,4 @@ Fixed corporation and alliance pages still using your old corporation after you 
 
 When you have several characters in the same corporation, pages that need a specific corporation role (such as corporation assets, which needs Director) now pick a character who actually holds it, rather than whichever character happened to come first.
 
-Corporation Assets now asks for the "Read character corporation roles" permission. It needs it to tell which of your characters is a Director; if you have not granted it, the page will ask you to.
+Those pages rely on the "Read character corporation roles" permission to tell which of your characters holds the role. If you have not granted it for a character, that character counts as holding no roles and will not be used for them.

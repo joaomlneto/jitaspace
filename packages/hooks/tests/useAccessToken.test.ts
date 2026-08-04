@@ -229,11 +229,10 @@ describe("useAccessToken — roles", () => {
   });
 
   it("excludes a character whose roles have never been read", () => {
-    // Reading roles needs the corporation-roles scope, which the user may not
-    // have granted — so there is nothing to match `roles` against and the
-    // character is not eligible. Pages that pass `roles` therefore have to make
-    // that scope a ScopeGuard requirement, so the user is asked to grant it
-    // rather than left staring at "Token not available".
+    // Reading roles needs the corporation-roles scope. A character that never
+    // granted it has an empty role list, and an empty list matches no
+    // requirement — the scope is deliberately not forced on anyone, so such a
+    // character just holds no roles as far as this hook is concerned.
     login(
       character({
         characterId: 100,
