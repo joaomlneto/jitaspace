@@ -97,6 +97,8 @@ model MarketGroup {
   // not expose one), so this column is owned by ingestSdeMarketGroups.
   icon                Icon?         @relation(fields: [iconId], references: [iconId])
   iconId              Int?
+  // SDE-only, owned by ingestSdeMarketGroups (ESI exposes no such flag).
+  hasTypes            Boolean?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
@@ -124,19 +126,24 @@ model Category {
 }
 
 model Group {
-  groupId             Int                   @id
-  category            Category              @relation(fields: [categoryId], references: [categoryId])
-  categoryId          Int
-  name                String
-  published           Boolean
-  types               Type[]
+  groupId              Int                   @id
+  category             Category              @relation(fields: [categoryId], references: [categoryId])
+  categoryId           Int
+  name                 String
+  published            Boolean
+  types                Type[]
+  // SDE-only columns, owned by ingestSdeGroups.
+  anchorable           Boolean?
+  anchored             Boolean?
+  fittableNonSingleton Boolean?
+  useBasePrice         Boolean?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt()
-  isDeleted           Boolean               @default(false)
-  DogmaEffectModifier DogmaEffectModifier[] @relation("DogmaEffectModifierGroup")
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt()
+  isDeleted            Boolean               @default(false)
+  DogmaEffectModifier  DogmaEffectModifier[] @relation("DogmaEffectModifierGroup")
 
   @@index([categoryId])
 }
@@ -162,12 +169,22 @@ model Type {
   radius                          Float?
   stations                        Station[]
   volume                          Float?
+  // SDE-only columns, owned by ingestSdeTypes — ESI's /universe/types/ does not
+  // expose any of these, so the ESI type scraper excludes them from its diff.
+  basePrice                       Float?
+  metaLevel                       Int?
+  techLevel                       Int?
+  soundId                         Int?
+  // shipTreeGroups.yaml has no table of its own, so this stays a plain id.
+  shipTreeGroupId                 Int?
   // This Type's Dogma Attributes
   attributes                      TypeAttribute[]
   // This Type's Dogma Effects
   effects                         TypeEffect[]
   // Bloodlines that use this type as a Corvette
   bloodlines                      Bloodline[]                     @relation("BloodlineShipType")
+  // Races that use this type as their starter ship
+  races                           Race[]                          @relation("RaceShipType")
   // Planets that are of this type
   Planet                          Planet[]                        @relation("PlanetType")
   // Stars that are of this type
@@ -246,56 +263,75 @@ model TypeEffect {
 }
 
 model Graphic {
-  graphicId      Int      @id
-  collisionFile  String?
-  graphicFile    String?
-  iconFolder     String?
-  sofDna         String?
-  sofFactionName String?
-  sofHullName    String?
-  sofRaceName    String?
-  types          Type[]
+  graphicId        Int      @id
+  collisionFile    String?
+  graphicFile      String?
+  iconFolder       String?
+  sofDna           String?
+  sofFactionName   String?
+  sofHullName      String?
+  sofRaceName      String?
+  // SDE-only, owned by ingestSdeGraphics. graphicMaterialSets.yaml has no table
+  // of its own, so this stays a plain id.
+  sofMaterialSetId Int?
+  types            Type[]
+  // Regions whose nebula scene is this graphic (mapRegions.yaml `nebulaID`).
+  nebulaRegions    Region[] @relation("RegionNebulaGraphic")
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt()
-  isDeleted      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt()
+  isDeleted        Boolean  @default(false)
 }
 
 model DogmaAttribute {
-  attributeId            Int                   @id
-  defaultValue           Float?
-  description            String?
-  displayName            String?
-  highIsGood             Boolean?
-  iconId                 Int?
-  name                   String?
-  published              Boolean?
-  stackable              Boolean?
-  unitId                 Int?
-  // Only the SDE knows which category an attribute belongs to (ESI's dogma
-  // attribute endpoint does not expose one), so this column is owned by
-  // ingestSdeDogmaAttributes. Kept as a plain id rather than a relation because
-  // DogmaAttributeCategory rows are ingested by a separate job and an attribute
+  attributeId                  Int                   @id
+  defaultValue                 Float?
+  description                  String?
+  displayName                  String?
+  highIsGood                   Boolean?
+  iconId                       Int?
+  name                         String?
+  published                    Boolean?
+  stackable                    Boolean?
+  unitId                       Int?
+  // SDE-only columns, owned by ingestSdeDogmaAttributes.
+  dataType                     Int?
+  displayWhenZero              Boolean?
+  tooltipTitle                 String?
+  tooltipDescription           String?
+  // The attribute's category. A plain id rather than a relation because
+  // DogmaAttributeCategory rows are ingested by a separate job, so an attribute
   // may reference a category that has not landed yet.
-  attributeCategoryId    Int?
-  Icon                   Icon?                 @relation(fields: [iconId], references: [iconId])
-  DogmaUnit              DogmaUnit?            @relation(fields: [unitId], references: [unitId])
+  attributeCategoryId          Int?
+  // These three reference other DogmaAttribute rows. They are plain ids rather
+  // than self-relations: the ingest writes all attributes in one chunked
+  // createMany, so a self-FK could point at a row not yet inserted.
+  maxAttributeId               Int?
+  minAttributeId               Int?
+  chargeRechargeTimeId         Int?
+  Icon                         Icon?                 @relation(fields: [iconId], references: [iconId])
+  DogmaUnit                    DogmaUnit?            @relation(fields: [unitId], references: [unitId])
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @updatedAt()
-  isDeleted              Boolean               @default(false)
-  TypeAttributes         TypeAttribute[]
-  DischargeAttribute     DogmaEffect[]         @relation("DischargeAttribute")
-  DurationAttribute      DogmaEffect[]         @relation("DurationAttribute")
-  FalloffAttribute       DogmaEffect[]         @relation("FalloffAttribute")
-  RangeAttribute         DogmaEffect[]         @relation("RangeAttribute")
-  TrackingSpeedAttribute DogmaEffect[]         @relation("TrackingSpeedAttribute")
-  DogmaEffectsModified   DogmaEffectModifier[] @relation("DogmaEffectsModified")
-  DogmaEffectsModifying  DogmaEffectModifier[] @relation("DogmaEffectsModifying")
+  createdAt                    DateTime              @default(now())
+  updatedAt                    DateTime              @updatedAt()
+  isDeleted                    Boolean               @default(false)
+  TypeAttributes               TypeAttribute[]
+  DischargeAttribute           DogmaEffect[]         @relation("DischargeAttribute")
+  DurationAttribute            DogmaEffect[]         @relation("DurationAttribute")
+  FalloffAttribute             DogmaEffect[]         @relation("FalloffAttribute")
+  RangeAttribute               DogmaEffect[]         @relation("RangeAttribute")
+  TrackingSpeedAttribute       DogmaEffect[]         @relation("TrackingSpeedAttribute")
+  DogmaEffectsModified         DogmaEffectModifier[] @relation("DogmaEffectsModified")
+  DogmaEffectsModifying        DogmaEffectModifier[] @relation("DogmaEffectsModifying")
+  // Back-relations for the SDE-only attribute references on DogmaEffect.
+  ResistanceAttribute          DogmaEffect[]         @relation("ResistanceAttribute")
+  NpcActivationChanceAttribute DogmaEffect[]         @relation("NpcActivationChanceAttribute")
+  FittingUsageChanceAttribute  DogmaEffect[]         @relation("FittingUsageChanceAttribute")
+  NpcUsageChanceAttribute      DogmaEffect[]         @relation("NpcUsageChanceAttribute")
 
   @@index([unitId])
   @@index([iconId])
@@ -354,6 +390,20 @@ model DogmaEffect {
   trackingSpeedAttribute   DogmaAttribute?      @relation("TrackingSpeedAttribute", fields: [trackingSpeedAttributeId], references: [attributeId])
   trackingSpeedAttributeId Int?
 
+  // SDE-only columns, owned by ingestSdeDogmaEffects. DogmaAttribute is ingested
+  // before DogmaEffect, so these are real foreign keys.
+  propulsionChance               Boolean?
+  guid                           String?
+  distribution                   Int?
+  resistanceAttribute            DogmaAttribute? @relation("ResistanceAttribute", fields: [resistanceAttributeId], references: [attributeId])
+  resistanceAttributeId          Int?
+  npcActivationChanceAttribute   DogmaAttribute? @relation("NpcActivationChanceAttribute", fields: [npcActivationChanceAttributeId], references: [attributeId])
+  npcActivationChanceAttributeId Int?
+  fittingUsageChanceAttribute    DogmaAttribute? @relation("FittingUsageChanceAttribute", fields: [fittingUsageChanceAttributeId], references: [attributeId])
+  fittingUsageChanceAttributeId  Int?
+  npcUsageChanceAttribute        DogmaAttribute? @relation("NpcUsageChanceAttribute", fields: [npcUsageChanceAttributeId], references: [attributeId])
+  npcUsageChanceAttributeId      Int?
+
   types                Type[]
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
@@ -372,6 +422,10 @@ model DogmaEffect {
   @@index([iconId])
   @@index([rangeAttributeId])
   @@index([trackingSpeedAttributeId])
+  @@index([resistanceAttributeId])
+  @@index([npcActivationChanceAttributeId])
+  @@index([fittingUsageChanceAttributeId])
+  @@index([npcUsageChanceAttributeId])
 }
 
 model DogmaEffectModifier {
@@ -483,6 +537,9 @@ model Faction {
   stationCount         Int
   // do we need to store this?
   stationSystemCount   Int
+  // SDE-only columns, owned by ingestSdeFactions.
+  flatLogo             String?
+  flatLogoWithName     String?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
@@ -575,6 +632,9 @@ model Station {
   raceId                   Int?
   reprocessingEfficiency   Float
   reprocessingStationsTake Float
+  // SDE-only, owned by ingestSdeStations. The inventory flag reprocessed output
+  // lands in — currently 4 (Hangar) for every station, but CCP ships it per row.
+  reprocessingHangarFlag   Int?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
@@ -613,6 +673,9 @@ model Race {
   description String?
   faction     Faction?    @relation("RaceFaction", fields: [factionId], references: [factionId])
   factionId   Int?
+  // The race's starter ship (races.yaml `shipTypeID`), owned by ingestSdeRaces.
+  shipType    Type?       @relation("RaceShipType", fields: [shipTypeId], references: [typeId])
+  shipTypeId  Int?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
@@ -624,23 +687,30 @@ model Race {
   characters  Character[] @relation("CharacterRace")
 
   @@index([factionId])
+  @@index([shipTypeId])
 }
 
 // done:
 // alliance
 model Region {
-  regionId       Int             @id
-  name           String
-  description    String?
+  regionId        Int             @id
+  name            String
+  description     String?
+  // SDE-only columns, owned by ingestSdeRegions. `nebulaID` in mapRegions.yaml
+  // points at a graphics.yaml entry (the universe nebula scene), not a type.
+  nebulaGraphic   Graphic?        @relation("RegionNebulaGraphic", fields: [nebulaGraphicId], references: [graphicId])
+  nebulaGraphicId Int?
+  wormholeClassId Int?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt()
-  isDeleted      Boolean         @default(false)
-  constellations Constellation[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt()
+  isDeleted       Boolean         @default(false)
+  constellations  Constellation[]
 
   @@index([name])
+  @@index([nebulaGraphicId])
 }
 
 // TODO: Add missing "position" field
@@ -650,6 +720,8 @@ model Constellation {
   regionId        Int
   region          Region?       @relation(fields: [regionId], references: [regionId])
   solarSystems    SolarSystem[]
+  // SDE-only, owned by ingestSdeConstellations.
+  wormholeClassId Int?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
@@ -671,23 +743,24 @@ model SolarSystem {
   star                Star?          @relation("SolarSystemStar")
   starId              Int?
   stargates           Stargate[]     @relation("SolarSystemStargate")
-  // Everything below is SDE-only (ESI's solar system endpoint exposes none of
-  // it) and is owned by ingestSdeSolarSystems. `positionX/Y/Z` are the system's
-  // coordinates in metres, stored as Floats because the values run to ~1e17 and
-  // are only ever used for display.
+  // SDE-only columns, owned by ingestSdeSolarSystems. `positionX/Y/Z` are the
+  // system's coordinates in metres, stored as Floats because the values run to
+  // ~1e17 and are only ever used for display. The `is*` flags are the SDE's
+  // traffic classification; the SDE omits each one when false.
+  wormholeClassId     Int?
+  visualEffect        String?
   luminosity          Float?
   radius              Float?
   positionX           Float?
   positionY           Float?
   positionZ           Float?
-  wormholeClassId     Int?
   factionId           Int?
-  border              Boolean        @default(false)
-  corridor            Boolean        @default(false)
-  fringe              Boolean        @default(false)
-  hub                 Boolean        @default(false)
-  international       Boolean        @default(false)
-  regional            Boolean        @default(false)
+  isBorder            Boolean?
+  isCorridor          Boolean?
+  isFringe            Boolean?
+  isHub               Boolean?
+  isRegional          Boolean?
+  isInternational     Boolean?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
@@ -1528,7 +1601,6 @@ model Skin {
   internalName       String
   allowCcpDevs       Boolean
   isStructureSkin    Boolean?
-  skinDescription    String?
   visibleSerenity    Boolean
   visibleTranquility Boolean
   types              SkinType[]

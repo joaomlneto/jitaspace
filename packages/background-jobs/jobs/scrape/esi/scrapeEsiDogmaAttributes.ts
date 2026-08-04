@@ -5,6 +5,7 @@ import {
   getDogmaAttributesAttributeId,
 } from "@jitaspace/esi-client";
 
+import type { DogmaAttribute } from "../../../db";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
@@ -53,12 +54,24 @@ type DogmaAttributeEntry = Awaited<
   ReturnType<typeof fetchRemoteDogmaAttribute>
 >["entry"];
 
-const excludeDogmaTimestamps = <
-  T extends { updatedAt: unknown; createdAt: unknown },
->(
-  entries: T[],
-) =>
-  entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"]));
+// Besides the timestamps, DogmaAttribute carries SDE-only columns owned by
+// ingestSdeDogmaAttributes. ESI's dogma attribute endpoint exposes none of them,
+// so they must stay out of this diff or every row would look modified each run.
+const excludeDogmaTimestamps = (entries: DogmaAttribute[]) =>
+  entries.map((entry) =>
+    excludeObjectKeys(entry, [
+      "updatedAt",
+      "createdAt",
+      "dataType",
+      "displayWhenZero",
+      "tooltipTitle",
+      "tooltipDescription",
+      "attributeCategoryId",
+      "maxAttributeId",
+      "minAttributeId",
+      "chargeRechargeTimeId",
+    ]),
+  );
 
 const updateDogmaAttribute = (entry: DogmaAttributeEntry) =>
   prisma.dogmaAttribute.update({

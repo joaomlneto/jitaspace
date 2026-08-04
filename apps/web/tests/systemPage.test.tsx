@@ -223,12 +223,12 @@ describe("System page", () => {
       positionZ: 3,
       wormholeClassId: null,
       factionId: 500001,
-      hub: true,
-      border: true,
-      fringe: false,
-      corridor: false,
-      international: true,
-      regional: false,
+      isHub: true,
+      isBorder: true,
+      isFringe: false,
+      isCorridor: false,
+      isInternational: true,
+      isRegional: false,
     });
 
     expect(mockUseSolarSystem).toHaveBeenCalledWith(SYSTEM_ID);
@@ -333,12 +333,12 @@ describe("System page", () => {
       positionZ: 3,
       wormholeClassId: 3,
       factionId: null,
-      hub: false,
-      border: false,
-      fringe: false,
-      corridor: false,
-      international: false,
-      regional: false,
+      isHub: false,
+      isBorder: false,
+      isFringe: false,
+      isCorridor: false,
+      isInternational: false,
+      isRegional: false,
     });
 
     expect(screen.getByText("W-Space")).toBeInTheDocument();

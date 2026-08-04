@@ -36,17 +36,20 @@ jest.mock("@jitaspace/ui", () => ({
   ),
 }));
 
-// The data table echoes the orders it receives + its sort direction so we can
-// confirm the page split buy vs sell orders correctly.
+// The data table echoes the orders it receives, its sort direction and whether
+// it was told to show its loading state, so we can confirm the page split buy vs
+// sell orders correctly and reserved the tables' height while they load.
 jest.mock("~/components/Market", () => ({
   MarketOrdersDataTable: ({
     orders,
     sortPriceDescending,
+    isLoading,
   }: {
     orders?: { order_id: number }[];
     sortPriceDescending?: boolean;
+    isLoading?: boolean;
   }) => (
-    <div data-testid="orders-table">
+    <div data-testid="orders-table" data-loading={String(isLoading ?? false)}>
       {`orders:${orders?.length ?? 0} desc:${String(sortPriceDescending)}`}
     </div>
   ),
@@ -78,7 +81,10 @@ describe("Market page (client)", () => {
   beforeEach(() => {
     mockPathname = "/market/34";
     mockUseTypeMarketOrders.mockReset();
-    mockUseTypeMarketOrders.mockReturnValue({ data: ORDERS_BY_REGION });
+    mockUseTypeMarketOrders.mockReturnValue({
+      data: ORDERS_BY_REGION,
+      isLoading: false,
+    });
   });
 
   it("renders the type header and splits regional orders into sell + buy tables", () => {
@@ -99,9 +105,23 @@ describe("Market page (client)", () => {
     expect(screen.getByText("orders:2 desc:true")).toBeInTheDocument();
   });
 
+  it("puts both order tables in their loading state while orders are still arriving", () => {
+    mockUseTypeMarketOrders.mockReturnValue({ data: {}, isLoading: true });
+
+    renderPage();
+
+    // Both tables must reserve their height up front — the buy table sits below
+    // the sell table, so a sell table that grows on arrival pushes it down.
+    const tables = screen.getAllByTestId("orders-table");
+    expect(tables).toHaveLength(2);
+    for (const table of tables) {
+      expect(table).toHaveAttribute("data-loading", "true");
+    }
+  });
+
   it("renders only the header shell when the path has no numeric typeId", () => {
     mockPathname = "/market";
-    mockUseTypeMarketOrders.mockReturnValue({ data: {} });
+    mockUseTypeMarketOrders.mockReturnValue({ data: {}, isLoading: false });
 
     renderPage();
 

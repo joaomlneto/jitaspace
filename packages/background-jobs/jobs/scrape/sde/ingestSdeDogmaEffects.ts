@@ -53,6 +53,19 @@ export const ingestSdeDogmaEffects = defineJob<
         trackingSpeedAttributeId: optionalNumber(
           record.trackingSpeedAttributeID,
         ),
+        propulsionChance: optionalBoolean(record.propulsionChance),
+        guid: plainString(record.guid),
+        distribution: optionalNumber(record.distribution),
+        resistanceAttributeId: optionalNumber(record.resistanceAttributeID),
+        npcActivationChanceAttributeId: optionalNumber(
+          record.npcActivationChanceAttributeID,
+        ),
+        fittingUsageChanceAttributeId: optionalNumber(
+          record.fittingUsageChanceAttributeID,
+        ),
+        npcUsageChanceAttributeId: optionalNumber(
+          record.npcUsageChanceAttributeID,
+        ),
         isDeleted: false,
       }),
     });

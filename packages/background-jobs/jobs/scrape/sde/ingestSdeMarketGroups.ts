@@ -5,6 +5,7 @@ import {
   enString,
   ingestSdeTable,
   loadSdeFiles,
+  optionalBoolean,
   optionalNumber,
 } from "../../../helpers";
 
@@ -42,6 +43,7 @@ export const ingestSdeMarketGroups = defineJob<
           description: enString(record.description) ?? "",
           parentMarketGroupId: optionalNumber(record.parentGroupID),
           iconId: iconId != null && iconIds.has(iconId) ? iconId : null,
+          hasTypes: optionalBoolean(record.hasTypes),
           isDeleted: false,
         };
       },

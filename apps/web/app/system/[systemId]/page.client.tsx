@@ -92,12 +92,12 @@ export interface SolarSystemSdeInfo {
   positionZ: number | null;
   wormholeClassId: number | null;
   factionId: number | null;
-  border: boolean;
-  corridor: boolean;
-  fringe: boolean;
-  hub: boolean;
-  international: boolean;
-  regional: boolean;
+  isBorder: boolean | null;
+  isCorridor: boolean | null;
+  isFringe: boolean | null;
+  isHub: boolean | null;
+  isRegional: boolean | null;
+  isInternational: boolean | null;
 }
 
 export interface PageProps {
@@ -495,12 +495,15 @@ function SystemInfoSection({
 
         {sde && (
           <Group gap="xs" mt="lg">
-            <FlagChip label="Trade Hub" active={sde.hub} />
-            <FlagChip label="Border" active={sde.border} />
-            <FlagChip label="Fringe" active={sde.fringe} />
-            <FlagChip label="Corridor" active={sde.corridor} />
-            <FlagChip label="International" active={sde.international} />
-            <FlagChip label="Regional" active={sde.regional} />
+            <FlagChip label="Trade Hub" active={sde.isHub ?? false} />
+            <FlagChip label="Border" active={sde.isBorder ?? false} />
+            <FlagChip label="Fringe" active={sde.isFringe ?? false} />
+            <FlagChip label="Corridor" active={sde.isCorridor ?? false} />
+            <FlagChip
+              label="International"
+              active={sde.isInternational ?? false}
+            />
+            <FlagChip label="Regional" active={sde.isRegional ?? false} />
           </Group>
         )}
       </Paper>

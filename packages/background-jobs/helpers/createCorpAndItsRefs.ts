@@ -778,6 +778,9 @@ const fetchFactionsFromEsi = () =>
         solarSystemId: faction.solar_system_id ?? null,
         stationCount: faction.station_count,
         stationSystemCount: faction.station_system_count,
+        // SDE-only; ingestSdeFactions fills these in.
+        flatLogo: null,
+        flatLogoWithName: null,
         isDeleted: false,
       })),
     );
@@ -791,6 +794,8 @@ const fetchRacesFromEsi = () =>
         name: race.name,
         description: race.description,
         factionId: race.alliance_id,
+        // SDE-only; ingestSdeRaces fills this in.
+        shipTypeId: null,
         isDeleted: false,
       })),
     );
@@ -812,6 +817,8 @@ const fetchStationsFromEsi = (stationIds: number[]) =>
             raceId: station.race_id ?? null,
             reprocessingEfficiency: station.reprocessing_efficiency,
             reprocessingStationsTake: station.reprocessing_stations_take,
+            // SDE-only; ingestSdeStations fills this in.
+            reprocessingHangarFlag: null,
             isDeleted: false,
           }))
           .catch((err) => {
@@ -827,6 +834,7 @@ const fetchStationsFromEsi = (stationIds: number[]) =>
               raceId: null,
               reprocessingEfficiency: -1,
               reprocessingStationsTake: -1,
+              reprocessingHangarFlag: null,
               isDeleted: true,
             };
           }),

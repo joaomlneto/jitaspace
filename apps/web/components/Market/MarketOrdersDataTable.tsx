@@ -13,10 +13,21 @@ import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 interface MarketOrdersDataTableProps {
   orders: RegionalMarketOrder[];
   sortPriceDescending: boolean;
+  /**
+   * While loading, and only for as long as `orders` is still empty, the table
+   * renders a full page of skeleton rows instead of collapsing to nothing. That
+   * keeps it at its final height from the first paint, so the orders arriving
+   * later don't push the rest of the page down.
+   */
+  isLoading?: boolean;
 }
 
 export const MarketOrdersDataTable = memo(
-  ({ orders, sortPriceDescending }: MarketOrdersDataTableProps) => {
+  ({
+    orders,
+    sortPriceDescending,
+    isLoading = false,
+  }: MarketOrdersDataTableProps) => {
     const columns = useMemo<MRT_ColumnDef<RegionalMarketOrder>[]>(
       () => [
         {
@@ -145,6 +156,7 @@ export const MarketOrdersDataTable = memo(
       positionPagination: "top",
       enableFacetedValues: true,
       data: orders,
+      state: { isLoading },
       initialState: {
         density: "xs",
         pagination: {

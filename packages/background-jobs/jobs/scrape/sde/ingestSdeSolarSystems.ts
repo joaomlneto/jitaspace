@@ -42,21 +42,22 @@ export const ingestSdeSolarSystems = defineJob<
         securityClass: plainString(record.securityClass),
         securityStatus: new Decimal(optionalNumber(record.securityStatus) ?? 0),
         starId: optionalNumber(record.starID),
+        wormholeClassId: optionalNumber(record.wormholeClassID),
+        visualEffect: plainString(record.visualEffect),
         luminosity: optionalNumber(record.luminosity),
         radius: optionalNumber(record.radius),
         positionX: nestedNumber(record.position, "x"),
         positionY: nestedNumber(record.position, "y"),
         positionZ: nestedNumber(record.position, "z"),
-        wormholeClassId: optionalNumber(record.wormholeClassID),
         factionId: optionalNumber(record.factionID),
-        // The SDE omits these flags entirely when false, so they are booleans
-        // (not nullable) and default to false rather than null.
-        border: requiredBoolean(record.border),
-        corridor: requiredBoolean(record.corridor),
-        fringe: requiredBoolean(record.fringe),
-        hub: requiredBoolean(record.hub),
-        international: requiredBoolean(record.international),
-        regional: requiredBoolean(record.regional),
+        // The SDE omits each traffic flag when it is false, so an absent key
+        // means false rather than unknown.
+        isBorder: requiredBoolean(record.border),
+        isCorridor: requiredBoolean(record.corridor),
+        isFringe: requiredBoolean(record.fringe),
+        isHub: requiredBoolean(record.hub),
+        isRegional: requiredBoolean(record.regional),
+        isInternational: requiredBoolean(record.international),
         isDeleted: false,
       }),
     });
