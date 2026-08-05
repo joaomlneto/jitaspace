@@ -13,9 +13,30 @@ jest.mock("@jitaspace/hooks", () => ({
   useMultipleCharacterFittings: () => mockUseMultipleCharacterFittings(),
 }));
 
+// Renders one button per option so tests can actually pick a value: the real
+// component is a Mantine Select, and without a way to fire onChange the filter
+// predicates never run.
 jest.mock("@jitaspace/eve-components", () => ({
-  EveEntitySelect: ({ label }: { label?: string }) => (
-    <div data-testid={`select:${label}`} />
+  EveEntitySelect: ({
+    label,
+    entityIds,
+    onChange,
+  }: {
+    label?: string;
+    entityIds?: { id: number }[];
+    onChange?: (value: string | null) => void;
+  }) => (
+    <div data-testid={`select:${label}`}>
+      {(entityIds ?? []).map(({ id }) => (
+        <button
+          key={id}
+          data-testid={`option:${label}:${id}`}
+          onClick={() => onChange?.(String(id))}
+        >
+          {id}
+        </button>
+      ))}
+    </div>
   ),
 }));
 
@@ -115,6 +136,35 @@ describe("Fittings page", () => {
 
     // Both characters' fittings render even though they share a fitting_id.
     expect(screen.getAllByTestId("saved-fit-card")).toHaveLength(2);
+  });
+
+  it("narrows to one character's fittings when that character is picked", () => {
+    renderPage();
+    expect(screen.getAllByTestId("saved-fit-card")).toHaveLength(2);
+
+    fireEvent.click(screen.getByTestId("option:Filter by character:90000002"));
+
+    expect(screen.getAllByTestId("saved-fit-card")).toHaveLength(1);
+  });
+
+  it("offers one character option per character that owns a fitting", () => {
+    renderPage();
+
+    expect(
+      screen.getByTestId("option:Filter by character:90000001"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("option:Filter by character:90000002"),
+    ).toBeInTheDocument();
+  });
+
+  it("narrows by ship type independently of character", () => {
+    renderPage();
+
+    // 597 belongs only to the second character's fitting.
+    fireEvent.click(screen.getByTestId("option:Filter by ship type:597"));
+
+    expect(screen.getAllByTestId("saved-fit-card")).toHaveLength(1);
   });
 
   it("renders a character filter alongside the ship type filter", () => {
