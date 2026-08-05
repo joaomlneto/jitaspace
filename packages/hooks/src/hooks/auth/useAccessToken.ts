@@ -24,13 +24,21 @@ const TOKEN_UNAVAILABLE = {
  * that clears the filters is equally able to authorise the request, so the
  * first one wins.
  *
- * `roles` is accepted but not yet enforced: CharacterSsoSession.corporationRoles
- * is initialised empty and never populated (useAuthStore still has to fetch and
- * refresh them), so filtering on it would leave every role-gated endpoint with
- * no token at all.
- * Call sites still declare the roles they need, so the check can be switched on
- * here in one place once roles are actually fetched. ESI enforces them
- * server-side in the meantime.
+ * `roles` lists the roles that are ACCEPTED, not ones that must all be held: a
+ * character is eligible if `corporationRoles` — read from ESI by useAuthStore —
+ * contains at least one of them. That mirrors ESI's own `x-required-roles`,
+ * which is an any-of list; of its 34 role-gated operations, five accept either
+ * of two roles (corporation wallets take Accountant OR Junior_Accountant, and
+ * Junior_Accountant is the lesser of the two, so demanding both would lock out
+ * essentially everyone). An empty or omitted list means "no role needed" and
+ * matches every character.
+ *
+ * A character whose roles have never been read has an empty list, so it matches
+ * nothing and is excluded rather than tried on spec. Reading them needs
+ * `esi-characters.read_corporation_roles.v1`, so a character that never granted
+ * that scope authorises nothing role-gated. That is deliberate: the scope is
+ * not forced on anyone, and a character without it is simply treated as holding
+ * no roles.
  */
 export const useAccessToken = (options: {
   characterId?: number;
@@ -43,7 +51,8 @@ export const useAccessToken = (options: {
   accessToken: string | null;
   authHeaders: Record<string, string>;
 } => {
-  const { characterId, corporationId, allianceId, scopes } = options;
+  const { characterId, corporationId, allianceId, scopes, roles } = options;
+  const acceptedRoles = roles ?? [];
 
   const characters = useAuthStore(
     useShallow((state) =>
@@ -55,7 +64,14 @@ export const useAccessToken = (options: {
           (allianceId == undefined || character.allianceId == allianceId) &&
           (scopes ?? []).every((requiredScope) =>
             character.accessTokenPayload.scp.includes(requiredScope),
-          ),
+          ) &&
+          // Any-of, unlike `scopes` above: no roles listed means no role is
+          // needed, so the empty case has to short-circuit rather than fall
+          // through to `some`, which would be false and match nobody.
+          (acceptedRoles.length === 0 ||
+            acceptedRoles.some((acceptedRole) =>
+              character.corporationRoles.includes(acceptedRole),
+            )),
       ),
     ),
   );

@@ -15,6 +15,7 @@ jest.mock("@jitaspace/auth-utils", () => ({
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
   postCharactersAffiliation: jest.fn(),
+  getCharactersCharacterIdRoles: jest.fn(),
 }));
 
 const { useAuthStore } =
@@ -170,11 +171,68 @@ describe("useAccessToken — alliance filter", () => {
 });
 
 describe("useAccessToken — roles", () => {
-  it("does not yet exclude characters lacking the required roles", () => {
-    // corporationRoles is initialised empty and never populated, so enforcing
-    // `roles` here would leave every role-gated endpoint (corporation assets
-    // asks for Director) with no token at all. This pins that deliberate gap:
-    // turning roles into a filter means populating corporationRoles first.
+  // `roles` lists the roles that are ACCEPTED — holding any one of them is
+  // enough. No match means no token. The store only fills `corporationRoles` in
+  // once it has read them from ESI, and `corporationRolesExpireOn` marks when
+  // that happened.
+  const rolesReadAt = Date.now() + 60 * 60 * 1000;
+
+  it("picks the character that holds the accepted role", () => {
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: ["Accountant"],
+        corporationRolesExpireOn: rolesReadAt,
+        scopes: [CORP_ASSETS_SCOPE],
+      }),
+      character({
+        characterId: 101,
+        corporationId: 1000,
+        corporationRoles: ["Director"],
+        corporationRolesExpireOn: rolesReadAt,
+        scopes: [CORP_ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useAccessToken({
+        corporationId: 1000,
+        scopes: [CORP_ASSETS_SCOPE],
+        roles: ["Director"],
+      }),
+    );
+
+    expect(result.current.character?.characterId).toBe(101);
+  });
+
+  it("excludes a character whose roles fall short", () => {
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: ["Accountant"],
+        corporationRolesExpireOn: rolesReadAt,
+        scopes: [CORP_ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useAccessToken({
+        corporationId: 1000,
+        scopes: [CORP_ASSETS_SCOPE],
+        roles: ["Director"],
+      }),
+    );
+
+    expect(result.current.accessToken).toBeNull();
+  });
+
+  it("excludes a character whose roles have never been read", () => {
+    // Reading roles needs the corporation-roles scope. A character that never
+    // granted it has an empty role list, and an empty list matches no
+    // requirement — the scope is deliberately not forced on anyone, so such a
+    // character just holds no roles as far as this hook is concerned.
     login(
       character({
         characterId: 100,
@@ -192,6 +250,101 @@ describe("useAccessToken — roles", () => {
       }),
     );
 
+    expect(result.current.accessToken).toBeNull();
+  });
+
+  it("skips a character with unread roles in favour of a confirmed holder", () => {
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: [],
+        scopes: [CORP_ASSETS_SCOPE],
+      }),
+      character({
+        characterId: 101,
+        corporationId: 1000,
+        corporationRoles: ["Director"],
+        corporationRolesExpireOn: rolesReadAt,
+        scopes: [CORP_ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useAccessToken({
+        corporationId: 1000,
+        scopes: [CORP_ASSETS_SCOPE],
+        roles: ["Director"],
+      }),
+    );
+
+    expect(result.current.character?.characterId).toBe(101);
+  });
+
+  it("accepts a character holding any one of the listed roles", () => {
+    // `roles` is an any-of list, mirroring ESI's x-required-roles: corporation
+    // wallets accept Accountant OR Junior_Accountant, and Junior_Accountant is
+    // the lesser of the two, so demanding both would lock out nearly everyone.
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: ["Junior_Accountant"],
+        corporationRolesExpireOn: rolesReadAt,
+        scopes: [CORP_ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useAccessToken({
+        corporationId: 1000,
+        scopes: [CORP_ASSETS_SCOPE],
+        roles: ["Accountant", "Junior_Accountant"],
+      }),
+    );
+
     expect(result.current.accessToken).toBe("token-100");
+  });
+
+  it("excludes a character holding none of the listed roles", () => {
+    login(
+      character({
+        characterId: 100,
+        corporationId: 1000,
+        corporationRoles: ["Trader"],
+        corporationRolesExpireOn: rolesReadAt,
+        scopes: [CORP_ASSETS_SCOPE],
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useAccessToken({
+        corporationId: 1000,
+        scopes: [CORP_ASSETS_SCOPE],
+        roles: ["Accountant", "Junior_Accountant"],
+      }),
+    );
+
+    expect(result.current.accessToken).toBeNull();
+  });
+
+  it("keeps the first match when no roles are required", () => {
+    // Every other call site passes no roles; an empty requirement must stay
+    // vacuously true rather than start demanding that roles have been read.
+    login(
+      character({ characterId: 100, corporationId: 1000 }),
+      character({
+        characterId: 101,
+        corporationId: 1000,
+        corporationRoles: ["Director"],
+        corporationRolesExpireOn: rolesReadAt,
+      }),
+    );
+
+    const { result } = renderHook(() =>
+      useAccessToken({ corporationId: 1000 }),
+    );
+
+    expect(result.current.character?.characterId).toBe(100);
   });
 });
