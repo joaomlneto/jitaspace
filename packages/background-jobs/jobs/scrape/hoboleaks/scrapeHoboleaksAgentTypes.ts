@@ -1,5 +1,6 @@
 import pLimit from "p-limit";
 
+import type { BatchStepResult } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import { excludeObjectKeys, updateTable } from "../../../utils";
@@ -8,8 +9,13 @@ export interface ScrapeAgentTypesEventPayload {
   data: Record<string, never>;
 }
 
+// `defineJob`'s `Result` falls back to its `unknown` default as soon as the
+// payload is given explicitly — TypeScript won't infer the rest of a type
+// argument list. Naming it keeps the handler's return value checked and usable
+// by callers (the tests read `result.stats`).
 export const scrapeHoboleaksAgentTypes = defineJob<
-  ScrapeAgentTypesEventPayload["data"]
+  ScrapeAgentTypesEventPayload["data"],
+  BatchStepResult<"agentTypeChanges">
 >({
   id: "scrape-hoboleaks-agent-types",
   name: "Scrape Agent Types",
