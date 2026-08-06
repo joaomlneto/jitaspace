@@ -4,8 +4,8 @@
 ---
 
 Ingest every remaining EVE Online SDE file. 78 of the 79 files the SDE ships are
-now persisted (the 80th, `_sde.yaml`, is build metadata rather than entity data),
-up from 58.
+now persisted, up from 58 — the 79th, `_sde.yaml`, is build metadata rather than
+entity data.
 
 **`@jitaspace/db`** — 33 new models across six families. Cross-entity ids are
 plain `Int` columns rather than relations, matching
@@ -35,11 +35,23 @@ model. Requires a schema push.
 - **SKINR** — 13 models for the SKIN designer: components, categories, rarities,
   point values, slots, slot categories/names/configurations, tier thresholds.
 
+`Type.shipTreeGroupId` and `Graphic.sofMaterialSetId` also become real foreign
+keys at the new `ShipTreeGroup` / `GraphicMaterialSet` tables, so both are usable
+from `include:`. `SkinMaterial.materialSetId` deliberately stays a plain id: the
+column is required, so a dangling upstream reference would fail the whole
+skinMaterials ingest and cascade into `Skin`.
+
 **`@jitaspace/background-jobs`** — 18 new `ingest-sde-*` jobs, added to
-`SDE_INGEST_JOB_IDS` in foreign-key order: ship-tree groups before SKINR tier
-thresholds, missions before epic arcs, campaigns before objectives, and SKINR
-categories/rarities before components and point values. Optional foreign keys are
-guarded against their target file the way `ingestSdeTypes` guards `graphicID`.
+`SDE_INGEST_JOB_IDS` in foreign-key order: ship-tree elements/groups and graphic
+material sets first (types and graphics foreign-key them), then missions before
+epic arcs, campaigns before objectives, and SKINR categories/rarities before
+components and point values. Optional foreign keys are guarded against their
+target file the way `ingestSdeTypes` guards `graphicID`.
+
+`loadSdeFile` now memoizes parsed files per process, not just the extraction.
+Several jobs legitimately read the same file — `ingest-sde-epic-arcs` needs
+missions.yaml (54 MB) purely to build a set of ids `ingest-sde-missions` has
+already parsed — and each of those was re-parsing it.
 
 Note that these files are ingested but not yet tracked in the change-history
 database — `Collection` rows and the historical diffs are produced by the

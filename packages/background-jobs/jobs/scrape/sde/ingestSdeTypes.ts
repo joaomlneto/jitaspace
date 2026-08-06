@@ -28,6 +28,7 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
       "graphics.yaml",
       "icons.yaml",
       "marketGroups.yaml",
+      "shipTreeGroups.yaml",
     ]);
     // The SDE has dangling type references (e.g. ~85 type graphicIDs are absent
     // from graphics.yaml), so drop any optional FK ref that isn't really there.
@@ -35,6 +36,9 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
     const iconIds = new Set(Object.keys(files["icons.yaml"]).map(Number));
     const marketGroupIds = new Set(
       Object.keys(files["marketGroups.yaml"]).map(Number),
+    );
+    const shipTreeGroupIds = new Set(
+      Object.keys(files["shipTreeGroups.yaml"]).map(Number),
     );
     const present = (ids: Set<number>, value: number | null) =>
       value != null && ids.has(value) ? value : null;
@@ -63,13 +67,15 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
           marketGroupIds,
           optionalNumber(record.marketGroupID),
         ),
-        // SDE-only columns. `shipTreeGroupID` points at shipTreeGroups.yaml,
-        // which has no table, so it is stored as a plain id.
+        // SDE-only columns.
         basePrice: optionalNumber(record.basePrice),
         metaLevel: optionalNumber(record.metaLevel),
         techLevel: optionalNumber(record.techLevel),
         soundId: optionalNumber(record.soundID),
-        shipTreeGroupId: optionalNumber(record.shipTreeGroupID),
+        shipTreeGroupId: present(
+          shipTreeGroupIds,
+          optionalNumber(record.shipTreeGroupID),
+        ),
         isDeleted: false,
       }),
     });

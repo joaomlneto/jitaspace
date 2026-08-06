@@ -175,7 +175,7 @@ model Type {
   metaLevel                       Int?
   techLevel                       Int?
   soundId                         Int?
-  // shipTreeGroups.yaml has no table of its own, so this stays a plain id.
+  shipTreeGroup                   ShipTreeGroup?                  @relation(fields: [shipTreeGroupId], references: [shipTreeGroupId])
   shipTreeGroupId                 Int?
   // This Type's Dogma Attributes
   attributes                      TypeAttribute[]
@@ -263,7 +263,7 @@ model TypeEffect {
 }
 
 model Graphic {
-  graphicId        Int      @id
+  graphicId        Int                 @id
   collisionFile    String?
   graphicFile      String?
   iconFolder       String?
@@ -271,18 +271,18 @@ model Graphic {
   sofFactionName   String?
   sofHullName      String?
   sofRaceName      String?
-  // SDE-only, owned by ingestSdeGraphics. graphicMaterialSets.yaml has no table
-  // of its own, so this stays a plain id.
+  // SDE-only, owned by ingestSdeGraphics.
+  sofMaterialSet   GraphicMaterialSet? @relation(fields: [sofMaterialSetId], references: [materialSetId])
   sofMaterialSetId Int?
   types            Type[]
   // Regions whose nebula scene is this graphic (mapRegions.yaml `nebulaID`).
-  nebulaRegions    Region[] @relation("RegionNebulaGraphic")
+  nebulaRegions    Region[]            @relation("RegionNebulaGraphic")
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt()
-  isDeleted        Boolean  @default(false)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt()
+  isDeleted        Boolean             @default(false)
 }
 
 model DogmaAttribute {
@@ -1568,6 +1568,10 @@ model Mastery {
 model SkinMaterial {
   skinMaterialId Int      @id
   displayName    String?
+  /// Points at GraphicMaterialSet.materialSetId, but deliberately NOT a declared
+  /// relation: the column is required, so a dangling upstream reference would
+  /// fail the whole skinMaterials ingest — and skipping the row would then break
+  /// Skin.skinMaterialId, which foreign-keys it.
   materialSetId  Int
   skins          Skin[]
   createdAt      DateTime @default(now())
@@ -2124,40 +2128,42 @@ model StationOperationStationType {
 /// `courierMission` and `missionRewards` sub-objects are flattened into
 /// prefixed columns, as MetaGroup does for `color`.
 model Mission {
-  missionId                      Int                    @id
-  name                           String
+  missionId                            Int                    @id
+  name                                 String
   /// factions.yaml id of the mission's faction.
-  factionId                      Int?
+  factionId                            Int?
   /// npcCorporations.yaml id of the offering corporation.
-  corporationId                  Int?
+  corporationId                        Int?
   /// agentTypes.yaml id.
-  agentTypeId                    Int?
-  expirationTime                 Int?
-  hasStandingRewards             Boolean?
+  agentTypeId                          Int?
+  expirationTime                       Int?
+  hasStandingRewards                   Boolean?
   /// types.yaml id of the gift handed over when the mission is offered.
-  initialAgentGiftTypeId         Int?
-  initialAgentGiftQuantity       Int?
+  initialAgentGiftTypeId               Int?
+  initialAgentGiftQuantity             Int?
   // killMission.*
-  killDungeonId                  Int?
-  killObjectiveTypeId            Int?
-  killObjectiveQuantity          Int?
-  killDropItemInMissionContainer Boolean?
+  killDungeonId                        Int?
+  killObjectiveTypeId                  Int?
+  killObjectiveQuantity                Int?
+  /// Despite the name, `killMission.dropItemInMissionContainer` is a types.yaml
+  /// id (the item dropped in the mission container), never a boolean.
+  killDropItemInMissionContainerTypeId Int?
   // courierMission.*
-  courierObjectiveTypeId         Int?
-  courierObjectiveQuantity       Int?
-  courierObjectiveSingleton      Boolean?
+  courierObjectiveTypeId               Int?
+  courierObjectiveQuantity             Int?
+  courierObjectiveSingleton            Boolean?
   // missionRewards.*
-  rewardTypeId                   Int?
-  rewardQuantity                 Int?
-  bonusRewardTypeId              Int?
-  bonusRewardQuantity            Int?
-  bonusTimeInterval              Int?
-  messages                       MissionMessage[]
-  extraStandings                 MissionExtraStanding[]
-  epicArcMissions                EpicArcMission[]
-  createdAt                      DateTime               @default(now())
-  updatedAt                      DateTime               @updatedAt()
-  isDeleted                      Boolean                @default(false)
+  rewardTypeId                         Int?
+  rewardQuantity                       Int?
+  bonusRewardTypeId                    Int?
+  bonusRewardQuantity                  Int?
+  bonusTimeInterval                    Int?
+  messages                             MissionMessage[]
+  extraStandings                       MissionExtraStanding[]
+  epicArcMissions                      EpicArcMission[]
+  createdAt                            DateTime               @default(now())
+  updatedAt                            DateTime               @updatedAt()
+  isDeleted                            Boolean                @default(false)
 
   @@index([factionId])
   @@index([corporationId])
@@ -2176,7 +2182,6 @@ model MissionMessage {
   isDeleted Boolean  @default(false)
 
   @@id([missionId, key])
-  @@index([missionId])
 }
 
 /// Extra standing gained with a third-party faction (missions.yaml
@@ -2191,7 +2196,6 @@ model MissionExtraStanding {
   isDeleted Boolean  @default(false)
 
   @@id([missionId, factionId])
-  @@index([missionId])
 }
 
 /// An epic arc — a branching chain of missions (epicArcs.yaml).
@@ -2216,7 +2220,7 @@ model EpicArcMission {
   epicArcId     Int
   epicArc       EpicArc              @relation(fields: [epicArcId], references: [epicArcId])
   missionId     Int
-  mission       Mission?             @relation(fields: [missionId], references: [missionId])
+  mission       Mission              @relation(fields: [missionId], references: [missionId])
   /// npcCharacters.yaml id of the agent offering this step.
   agentId       Int?
   failMissionId Int?
@@ -2226,7 +2230,6 @@ model EpicArcMission {
   isDeleted     Boolean              @default(false)
 
   @@id([epicArcId, missionId])
-  @@index([epicArcId])
   @@index([missionId])
 }
 
@@ -2242,7 +2245,6 @@ model EpicArcMissionNext {
   isDeleted      Boolean        @default(false)
 
   @@id([epicArcId, missionId, nextMissionId])
-  @@index([epicArcId, missionId])
 }
 
 // ---------------------------------------------------------------------------
@@ -2286,7 +2288,6 @@ model ShipTreeFactionElement {
   isDeleted         Boolean         @default(false)
 
   @@id([factionId, slot])
-  @@index([factionId])
 }
 
 /// A ship-tree group such as Corvette or Cruiser (shipTreeGroups.yaml). This is
@@ -2302,6 +2303,7 @@ model ShipTreeGroup {
   elements        ShipTreeGroupElement[]
   preReqSkills    ShipTreeGroupPreReqSkill[]
   tierThresholds  SkinrTierThreshold[]
+  types           Type[]
   createdAt       DateTime                   @default(now())
   updatedAt       DateTime                   @updatedAt()
   isDeleted       Boolean                    @default(false)
@@ -2318,7 +2320,6 @@ model ShipTreeGroupElement {
   isDeleted         Boolean       @default(false)
 
   @@id([shipTreeGroupId, slot])
-  @@index([shipTreeGroupId])
 }
 
 /// A skill prerequisite for a ship-tree group, per faction
@@ -2335,7 +2336,6 @@ model ShipTreeGroupPreReqSkill {
   isDeleted       Boolean       @default(false)
 
   @@id([shipTreeGroupId, factionId, skillTypeId])
-  @@index([shipTreeGroupId])
 }
 
 /// The ship-tree elements shown for a specific type (typeElements.yaml).
@@ -2348,7 +2348,6 @@ model TypeElement {
   isDeleted         Boolean  @default(false)
 
   @@id([typeId, slot])
-  @@index([typeId])
 }
 
 // ---------------------------------------------------------------------------
@@ -2360,7 +2359,7 @@ model TypeElement {
 /// and `SkinMaterial.materialSetId` point at. The four RGBA colour objects are
 /// flattened into prefixed columns, as MetaGroup does for `color`.
 model GraphicMaterialSet {
-  materialSetId   Int      @id
+  materialSetId   Int       @id
   description     String?
   sofFactionName  String?
   sofRaceHint     String?
@@ -2388,9 +2387,10 @@ model GraphicMaterialSet {
   colorWindowG    Float?
   colorWindowB    Float?
   colorWindowA    Float?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt()
-  isDeleted       Boolean  @default(false)
+  graphics        Graphic[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt()
+  isDeleted       Boolean   @default(false)
 }
 
 // ---------------------------------------------------------------------------
@@ -2429,7 +2429,6 @@ model MilitaryCampaignAnnotation {
   isDeleted          Boolean          @default(false)
 
   @@id([militaryCampaignId, key])
-  @@index([militaryCampaignId])
 }
 
 /// One objective within a campaign (militaryCampaignObjectives.yaml). The
@@ -2458,7 +2457,9 @@ model MilitaryCampaignObjective {
   lpIssuerCorporationId           Int?
   standingGainPercentPerInterval  Float?
   standingProgressInterval        Int?
-  standingIssuerCorporationId     Int?
+  /// The standing reward's issuer is a FACTION, not a corporation: CCP ships
+  /// `rewards.standing.issuer.factionID` (isk/lp use `issuer.corporationID`).
+  standingIssuerFactionId         Int?
   // annotations.*
   requiredEnlistmentWithFactionId Int?
   restrictionTooltip              String?
@@ -2485,7 +2486,6 @@ model MilitaryCampaignObjectiveTag {
   isDeleted                   Boolean                   @default(false)
 
   @@id([militaryCampaignObjectiveId, tag])
-  @@index([militaryCampaignObjectiveId])
 }
 
 /// A parameter of an objective's contribution method
@@ -2500,7 +2500,6 @@ model MilitaryCampaignObjectiveParameter {
   isDeleted                   Boolean                                   @default(false)
 
   @@id([militaryCampaignObjectiveId, paramKey])
-  @@index([militaryCampaignObjectiveId])
 }
 
 /// One matcher value for a contribution-method parameter
@@ -2520,7 +2519,6 @@ model MilitaryCampaignObjectiveParameterValue {
   isDeleted                   Boolean                            @default(false)
 
   @@id([militaryCampaignObjectiveId, paramKey, matcherIndex, valueIndex])
-  @@index([militaryCampaignObjectiveId, paramKey])
 }
 
 // ---------------------------------------------------------------------------
@@ -2569,7 +2567,6 @@ model SkinrComponentPointValue {
   isDeleted                Boolean                @default(false)
 
   @@id([skinrComponentCategoryId, skinrComponentRarityId])
-  @@index([skinrComponentCategoryId])
   @@index([skinrComponentRarityId])
 }
 
@@ -2613,7 +2610,6 @@ model SkinrComponentType {
   isDeleted          Boolean        @default(false)
 
   @@id([skinrComponentId, typeId])
-  @@index([skinrComponentId])
 }
 
 /// A SKINR slot category (skinrSlotCategories.yaml).
@@ -2661,7 +2657,6 @@ model SkinrSlotAllowedCategory {
   isDeleted                Boolean   @default(false)
 
   @@id([skinrSlotId, skinrComponentCategoryId])
-  @@index([skinrSlotId])
 }
 
 /// A named set of slots offered to a group of hulls
@@ -2690,7 +2685,6 @@ model SkinrSlotConfigurationSlot {
   isDeleted                Boolean                @default(false)
 
   @@id([skinrSlotConfigurationId, skinrSlotId])
-  @@index([skinrSlotConfigurationId])
   @@index([skinrSlotId])
 }
 
@@ -2704,7 +2698,6 @@ model SkinrSlotConfigurationShip {
   isDeleted                Boolean                @default(false)
 
   @@id([skinrSlotConfigurationId, typeId])
-  @@index([skinrSlotConfigurationId])
 }
 
 /// Points needed to reach a SKIN tier, per ship-tree group
@@ -2720,5 +2713,4 @@ model SkinrTierThreshold {
   isDeleted       Boolean       @default(false)
 
   @@id([shipTreeGroupId, tier])
-  @@index([shipTreeGroupId])
 }

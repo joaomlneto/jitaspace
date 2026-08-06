@@ -6,18 +6,16 @@ import {
   ingestSdeCompositeTable,
   ingestSdeTable,
   loadSdeFiles,
-  optionalBoolean,
-  optionalNumber,
   plainString,
-  requiredNumber,
 } from "../../../helpers";
+import { elementEntries, preReqSkillEntries } from "./shipTreeTransforms";
 
 export interface IngestSdeShipTreeEventPayload {
   data: Record<string, never>;
 }
 
 interface ElementsRecord {
-  elements?: Record<string, number>;
+  elements?: Record<string, unknown>;
 }
 
 interface PreReqSkillsRecord {
@@ -29,7 +27,8 @@ interface PreReqSkillsRecord {
 
 /**
  * shipTreeElements.yaml — the attribute rows (Armor, Shield, …) the in-game ship
- * tree shows for a hull. Leaf table with no children.
+ * tree shows for a hull. Leaf table with no children; every `elements` map in the
+ * sibling files is guarded against it.
  */
 export const ingestSdeShipTreeElements = defineJob<
   IngestSdeShipTreeEventPayload["data"]
@@ -75,8 +74,14 @@ export const ingestSdeShipTreeFactions = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["shipTreeFactions.yaml"]);
+    const files = await loadSdeFiles([
+      "shipTreeFactions.yaml",
+      "shipTreeElements.yaml",
+    ]);
     const data = files["shipTreeFactions.yaml"];
+    const elementIds = new Set(
+      Object.keys(files["shipTreeElements.yaml"]).map(Number),
+    );
 
     const shipTreeFactions = await ingestSdeTable({
       filename: "shipTreeFactions.yaml",
@@ -94,15 +99,11 @@ export const ingestSdeShipTreeFactions = defineJob<
     const elements: Prisma.ShipTreeFactionElementCreateManyInput[] = [];
     for (const [key, value] of Object.entries(data)) {
       const factionId = Number(key);
-      for (const [slot, elementId] of Object.entries(
-        (value as ElementsRecord).elements ?? {},
+      for (const entry of elementEntries(
+        (value as ElementsRecord).elements,
+        elementIds,
       )) {
-        elements.push({
-          factionId,
-          slot: Number(slot),
-          shipTreeElementId: requiredNumber(elementId),
-          isDeleted: false,
-        });
+        elements.push({ factionId, ...entry, isDeleted: false });
       }
     }
 
@@ -122,9 +123,9 @@ export const ingestSdeShipTreeFactions = defineJob<
 });
 
 /**
- * shipTreeGroups.yaml — the ship-tree group `Type.shipTreeGroupId` points at,
- * plus its ordered `elements` map and the per-faction `preReqSkills` tree
- * (`preReqSkills.<factionID>.skills.<typeID>` → level/display).
+ * shipTreeGroups.yaml — the ship-tree group `Type.shipTreeGroupId` foreign-keys,
+ * so this runs before ingest-sde-types. Also captures its ordered `elements` map
+ * and the per-faction `preReqSkills` tree.
  */
 export const ingestSdeShipTreeGroups = defineJob<
   IngestSdeShipTreeEventPayload["data"]
@@ -138,8 +139,14 @@ export const ingestSdeShipTreeGroups = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["shipTreeGroups.yaml"]);
+    const files = await loadSdeFiles([
+      "shipTreeGroups.yaml",
+      "shipTreeElements.yaml",
+    ]);
     const data = files["shipTreeGroups.yaml"];
+    const elementIds = new Set(
+      Object.keys(files["shipTreeElements.yaml"]).map(Number),
+    );
 
     const shipTreeGroups = await ingestSdeTable({
       filename: "shipTreeGroups.yaml",
@@ -162,29 +169,16 @@ export const ingestSdeShipTreeGroups = defineJob<
     const preReqSkills: Prisma.ShipTreeGroupPreReqSkillCreateManyInput[] = [];
     for (const [key, value] of Object.entries(data)) {
       const shipTreeGroupId = Number(key);
-      for (const [slot, elementId] of Object.entries(
-        (value as ElementsRecord).elements ?? {},
+      for (const entry of elementEntries(
+        (value as ElementsRecord).elements,
+        elementIds,
       )) {
-        elements.push({
-          shipTreeGroupId,
-          slot: Number(slot),
-          shipTreeElementId: requiredNumber(elementId),
-          isDeleted: false,
-        });
+        elements.push({ shipTreeGroupId, ...entry, isDeleted: false });
       }
-      for (const [factionKey, faction] of Object.entries(
-        (value as PreReqSkillsRecord).preReqSkills ?? {},
+      for (const entry of preReqSkillEntries(
+        (value as PreReqSkillsRecord).preReqSkills,
       )) {
-        for (const [skillKey, skill] of Object.entries(faction.skills ?? {})) {
-          preReqSkills.push({
-            shipTreeGroupId,
-            factionId: Number(factionKey),
-            skillTypeId: Number(skillKey),
-            level: optionalNumber(skill.level),
-            display: optionalBoolean(skill.display),
-            isDeleted: false,
-          });
-        }
+        preReqSkills.push({ shipTreeGroupId, ...entry, isDeleted: false });
       }
     }
 
@@ -231,21 +225,23 @@ export const ingestSdeTypeElements = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["typeElements.yaml"]);
+    const files = await loadSdeFiles([
+      "typeElements.yaml",
+      "shipTreeElements.yaml",
+    ]);
     const data = files["typeElements.yaml"];
+    const elementIds = new Set(
+      Object.keys(files["shipTreeElements.yaml"]).map(Number),
+    );
 
     const rows: Prisma.TypeElementCreateManyInput[] = [];
     for (const [key, value] of Object.entries(data)) {
       const typeId = Number(key);
-      for (const [slot, elementId] of Object.entries(
-        (value as ElementsRecord).elements ?? {},
+      for (const entry of elementEntries(
+        (value as ElementsRecord).elements,
+        elementIds,
       )) {
-        rows.push({
-          typeId,
-          slot: Number(slot),
-          shipTreeElementId: requiredNumber(elementId),
-          isDeleted: false,
-        });
+        rows.push({ typeId, ...entry, isDeleted: false });
       }
     }
 

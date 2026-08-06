@@ -35,27 +35,54 @@ function getExtractedSdeRoot(): Promise<string> {
 }
 
 /**
+ * Parsed files, memoized per process.
+ *
+ * `getExtractedSdeRoot` caches the *extraction*, not the parse, so without this
+ * every `loadSdeFile`/`loadSdeFiles` call re-parsed the YAML from disk. That is
+ * expensive for the large files and several jobs legitimately need the same file:
+ * `ingest-sde-epic-arcs` reads the 54 MB missions.yaml purely to build a Set of
+ * ids that `ingest-sde-missions` has already parsed, and the ship-tree and SKINR
+ * jobs each re-read their guard files.
+ *
+ * Held for the process lifetime, like the extraction: the `ingest-sde-all`
+ * pipeline runs every job in one process, and Trigger.dev task processes are
+ * ephemeral. Peak memory is unchanged in the worst case (the largest file was
+ * already resident during its own job) and strictly lower across the pipeline,
+ * since re-parsing built a second copy before the first was collected.
+ */
+const parsedFiles = new Map<string, SdeRecord>();
+
+/**
  * Parse a single SDE file (applying its `sdeInputFiles` transformations, e.g.
  * injecting the id for `addId` files). Returns the records as a map keyed by id.
+ *
+ * The result is memoized per process and shared between callers, so treat it as
+ * read-only — mutating it would corrupt every later reader.
  */
 export async function loadSdeFile(
   filename: keyof typeof sdeInputFiles,
 ): Promise<SdeRecord> {
-  return loadFile(filename, await getExtractedSdeRoot());
+  const cached = parsedFiles.get(filename);
+  if (cached) return cached;
+  const parsed = loadFile(filename, await getExtractedSdeRoot());
+  parsedFiles.set(filename, parsed);
+  return parsed;
 }
 
 /**
  * Parse several SDE files from a single download + extraction, keyed by filename.
  * Use when a job needs cross-file data (e.g. celestial names resolved from the
  * universe hierarchy).
+ *
+ * Shares {@link loadSdeFile}'s per-process parse cache, so the returned records
+ * are read-only.
  */
 export async function loadSdeFiles<F extends keyof typeof sdeInputFiles>(
   filenames: readonly F[],
 ): Promise<Record<F, SdeRecord>> {
-  const sdeRoot = await getExtractedSdeRoot();
   const result = {} as Record<F, SdeRecord>;
   for (const filename of filenames) {
-    result[filename] = loadFile(filename, sdeRoot);
+    result[filename] = await loadSdeFile(filename);
   }
   return result;
 }

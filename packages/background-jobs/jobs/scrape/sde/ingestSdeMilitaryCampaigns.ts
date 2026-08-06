@@ -1,15 +1,18 @@
 import type { Prisma } from "../../../db";
-import type { ContributionParameter } from "./militaryCampaignParameters";
+import type { ContributionParameter } from "./militaryCampaignTransforms";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
-  enString,
   ingestSdeCompositeTable,
   loadSdeFiles,
-  optionalNumber,
   plainString,
 } from "../../../helpers";
-import { flattenContributionParameters } from "./militaryCampaignParameters";
+import {
+  annotationValue,
+  flattenContributionParameters,
+  toCampaignRow,
+  toObjectiveRow,
+} from "./militaryCampaignTransforms";
 
 export interface IngestSdeMilitaryCampaignsEventPayload {
   data: Record<string, never>;
@@ -19,65 +22,10 @@ export interface IngestSdeMilitaryCampaignsEventPayload {
  * Both military-campaign files are keyed by UUID, so these jobs build rows by
  * hand and use ingestSdeCompositeTable — ingestSdeTable coerces the map key with
  * `Number()` and only supports integer primary keys.
+ *
+ * Every field-level transform lives in ./militaryCampaignTransforms so it can be
+ * unit-tested without mocking p-limit and the env.
  */
-
-/** Annotation values are either a plain string or a localized object. */
-const annotationValue = (value: unknown): string | null =>
-  plainString(value) ?? enString(value) ?? null;
-
-/** Build the flat MilitaryCampaignObjective row for one SDE record. */
-function toObjectiveRow(
-  militaryCampaignObjectiveId: string,
-  militaryCampaignId: string,
-  record: Record<string, unknown>,
-): Prisma.MilitaryCampaignObjectiveCreateManyInput {
-  const issuer = (record.issuer ?? {}) as Record<string, unknown>;
-  const rewards = (record.rewards ?? {}) as Record<string, unknown>;
-  const reward = (key: string) =>
-    (rewards[key] ?? {}) as Record<string, unknown>;
-  const issuerOf = (r: Record<string, unknown>) =>
-    optionalNumber(((r.issuer ?? {}) as Record<string, unknown>).corporationID);
-  const isk = reward("isk");
-  const lp = reward("lp");
-  const standing = reward("standing");
-  const annotations = (record.annotations ?? {}) as Record<string, unknown>;
-  const method = (record.contributionMethodConfiguration ?? {}) as Record<
-    string,
-    unknown
-  >;
-
-  return {
-    militaryCampaignObjectiveId,
-    title: enString(record.title) ?? "",
-    subtitle: enString(record.subtitle),
-    militaryCampaignId,
-    careerPath: plainString(record.careerPath),
-    targetProgress: optionalNumber(record.targetProgress),
-    maxProgressPerParticipant: optionalNumber(record.maxProgressPerParticipant),
-    presentingCharacterId: optionalNumber(record.presentingCharacterID),
-    issuerCorporationId: optionalNumber(issuer.corporationID),
-    iskAmountPerInterval: optionalNumber(isk.amountPerInterval),
-    iskProgressInterval: optionalNumber(isk.progressInterval),
-    iskIssuerCorporationId: issuerOf(isk),
-    lpAmountPerInterval: optionalNumber(lp.amountPerInterval),
-    lpProgressInterval: optionalNumber(lp.progressInterval),
-    lpIssuerCorporationId: issuerOf(lp),
-    standingGainPercentPerInterval: optionalNumber(
-      standing.gainPercentPerInterval,
-    ),
-    standingProgressInterval: optionalNumber(standing.progressInterval),
-    standingIssuerCorporationId: issuerOf(standing),
-    requiredEnlistmentWithFactionId: optionalNumber(
-      annotations.requiredEnlistmentWithFactionID,
-    ),
-    restrictionTooltip: enString(annotations.restrictionTooltip),
-    warning1: enString(annotations.warning1),
-    warning2: enString(annotations.warning2),
-    contributionMethodName: plainString(method.name),
-    isDeleted: false,
-  };
-}
-
 export const ingestSdeMilitaryCampaigns = defineJob<
   IngestSdeMilitaryCampaignsEventPayload["data"]
 >({
@@ -97,15 +45,7 @@ export const ingestSdeMilitaryCampaigns = defineJob<
     const annotations: Prisma.MilitaryCampaignAnnotationCreateManyInput[] = [];
     for (const [militaryCampaignId, value] of Object.entries(data)) {
       const record = value as Record<string, unknown>;
-      const issuer = (record.issuer ?? {}) as Record<string, unknown>;
-      campaigns.push({
-        militaryCampaignId,
-        title: enString(record.title) ?? "",
-        subtitle: enString(record.subtitle),
-        targetProgress: optionalNumber(record.targetProgress),
-        issuerFactionId: optionalNumber(issuer.factionID),
-        isDeleted: false,
-      });
+      campaigns.push(toCampaignRow(militaryCampaignId, record));
       for (const [key, raw] of Object.entries(
         (record.annotations ?? {}) as Record<string, unknown>,
       )) {

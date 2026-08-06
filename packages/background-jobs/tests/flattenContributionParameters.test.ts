@@ -2,7 +2,7 @@ import { describe, expect, it } from "@jest/globals";
 
 // Imported from the standalone pure module, which pulls in no runtime deps — so
 // unlike the other job tests this needs no p-limit / env mocks.
-import { flattenContributionParameters } from "../jobs/scrape/sde/militaryCampaignParameters";
+import { flattenContributionParameters } from "../jobs/scrape/sde/militaryCampaignTransforms";
 
 const OBJECTIVE = "017e24a3-4495-4c2b-8551-b451099dbc55";
 

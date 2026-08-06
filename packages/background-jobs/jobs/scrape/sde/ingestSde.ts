@@ -15,6 +15,12 @@ import { defineJob } from "../../../core";
  * the set of `ingest-sde-*` jobs (minus this orchestrator).
  */
 export const SDE_INGEST_JOB_IDS: string[] = [
+  // Ship-tree elements/groups and graphic material sets come FIRST: they are the
+  // targets of Type.shipTreeGroupId and Graphic.sofMaterialSetId, both real
+  // foreign keys, so they must exist before types/graphics are written.
+  "ingest-sde-ship-tree-elements",
+  "ingest-sde-ship-tree-groups",
+  "ingest-sde-graphic-material-sets",
   // Reference lookups (no or already-satisfied dependencies).
   "ingest-sde-graphics",
   "ingest-sde-icons",
@@ -68,12 +74,10 @@ export const SDE_INGEST_JOB_IDS: string[] = [
   "ingest-sde-planet-schematics",
   // Agents in space.
   "ingest-sde-agents-in-space",
-  // Ship tree. shipTreeGroups must precede skinr-tier-thresholds, which FKs it.
-  "ingest-sde-ship-tree-elements",
+  // Remaining ship-tree tables. Elements/groups/material sets already ran at the
+  // top of this list; these two only need shipTreeElements, which has too.
   "ingest-sde-ship-tree-factions",
-  "ingest-sde-ship-tree-groups",
   "ingest-sde-type-elements",
-  "ingest-sde-graphic-material-sets",
   // Missions and epic arcs. EpicArcMission FKs Mission, so missions come first.
   "ingest-sde-missions",
   "ingest-sde-epic-arcs",

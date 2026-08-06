@@ -16,12 +16,6 @@ export interface IngestSdeSkinrEventPayload {
   data: Record<string, never>;
 }
 
-const job = {
-  trigger: { type: "event" } as const,
-  singleton: true,
-  maxDurationSeconds: 1800,
-};
-
 /**
  * SKINR — the in-game SKIN designer. Nine small reference files; the order in
  * SDE_INGEST_JOB_IDS matters because point values and components FK at the
@@ -33,7 +27,9 @@ const job = {
 export const ingestSdeSkinrComponentCategories = defineJob<
   IngestSdeSkinrEventPayload["data"]
 >({
-  ...job,
+  trigger: { type: "event" },
+  singleton: true,
+  maxDurationSeconds: 1800,
   id: "ingest-sde-skinr-component-categories",
   name: "Ingest SDE SKINR Component Categories",
   description:
@@ -62,7 +58,9 @@ export const ingestSdeSkinrComponentCategories = defineJob<
 export const ingestSdeSkinrComponentRarities = defineJob<
   IngestSdeSkinrEventPayload["data"]
 >({
-  ...job,
+  trigger: { type: "event" },
+  singleton: true,
+  maxDurationSeconds: 1800,
   id: "ingest-sde-skinr-component-rarities",
   name: "Ingest SDE SKINR Component Rarities",
   description:
@@ -94,7 +92,9 @@ export const ingestSdeSkinrComponentRarities = defineJob<
 export const ingestSdeSkinrComponentPointValues = defineJob<
   IngestSdeSkinrEventPayload["data"]
 >({
-  ...job,
+  trigger: { type: "event" },
+  singleton: true,
+  maxDurationSeconds: 1800,
   id: "ingest-sde-skinr-component-point-values",
   name: "Ingest SDE SKINR Component Point Values",
   description:
@@ -156,7 +156,9 @@ export const ingestSdeSkinrComponentPointValues = defineJob<
 export const ingestSdeSkinrComponents = defineJob<
   IngestSdeSkinrEventPayload["data"]
 >({
-  ...job,
+  trigger: { type: "event" },
+  singleton: true,
+  maxDurationSeconds: 1800,
   id: "ingest-sde-skinr-components",
   name: "Ingest SDE SKINR Components",
   description:
@@ -242,7 +244,9 @@ export const ingestSdeSkinrComponents = defineJob<
 export const ingestSdeSkinrSlotCategories = defineJob<
   IngestSdeSkinrEventPayload["data"]
 >({
-  ...job,
+  trigger: { type: "event" },
+  singleton: true,
+  maxDurationSeconds: 1800,
   id: "ingest-sde-skinr-slot-categories",
   name: "Ingest SDE SKINR Slot Categories",
   description:
@@ -270,7 +274,9 @@ export const ingestSdeSkinrSlotCategories = defineJob<
 export const ingestSdeSkinrSlotNames = defineJob<
   IngestSdeSkinrEventPayload["data"]
 >({
-  ...job,
+  trigger: { type: "event" },
+  singleton: true,
+  maxDurationSeconds: 1800,
   id: "ingest-sde-skinr-slot-names",
   name: "Ingest SDE SKINR Slot Names",
   description:
@@ -298,7 +304,9 @@ export const ingestSdeSkinrSlotNames = defineJob<
 export const ingestSdeSkinrSlots = defineJob<
   IngestSdeSkinrEventPayload["data"]
 >({
-  ...job,
+  trigger: { type: "event" },
+  singleton: true,
+  maxDurationSeconds: 1800,
   id: "ingest-sde-skinr-slots",
   name: "Ingest SDE SKINR Slots",
   description:
@@ -370,7 +378,9 @@ export const ingestSdeSkinrSlots = defineJob<
 export const ingestSdeSkinrSlotConfigurations = defineJob<
   IngestSdeSkinrEventPayload["data"]
 >({
-  ...job,
+  trigger: { type: "event" },
+  singleton: true,
+  maxDurationSeconds: 1800,
   id: "ingest-sde-skinr-slot-configurations",
   name: "Ingest SDE SKINR Slot Configurations",
   description:
@@ -456,7 +466,9 @@ export const ingestSdeSkinrSlotConfigurations = defineJob<
 export const ingestSdeSkinrTierThresholds = defineJob<
   IngestSdeSkinrEventPayload["data"]
 >({
-  ...job,
+  trigger: { type: "event" },
+  singleton: true,
+  maxDurationSeconds: 1800,
   id: "ingest-sde-skinr-tier-thresholds",
   name: "Ingest SDE SKINR Tier Thresholds",
   description:
