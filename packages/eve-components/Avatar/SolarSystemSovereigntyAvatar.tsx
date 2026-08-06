@@ -3,7 +3,11 @@
 import type { AvatarProps } from "@mantine/core";
 import { memo, useMemo } from "react";
 
-import { useSolarSystem, useSolarSystemSovereignty } from "@jitaspace/hooks";
+import {
+  useSolarSystem,
+  useSolarSystemSovereignty,
+  useStar,
+} from "@jitaspace/hooks";
 import {
   AllianceAvatar,
   CorporationAvatar,
@@ -26,6 +30,9 @@ export const SolarSystemSovereigntyAvatar = memo(
     );
     const { data } = useSolarSystem(normalizedSolarSystemId);
     const sov = useSolarSystemSovereignty(normalizedSolarSystemId);
+    // `StarAvatar` is presentational and takes the star's *type* id, so resolve
+    // the system's star before falling back to it below.
+    const { data: star } = useStar(data?.data.star_id ?? 0);
 
     // if sov has an alliance, show an alliance avatar
     if (sov?.alliance_id) {
@@ -45,7 +52,7 @@ export const SolarSystemSovereigntyAvatar = memo(
     }
 
     // if not, show a star avatar
-    return <StarAvatar starId={data?.data.star_id} {...otherProps} />;
+    return <StarAvatar typeId={star?.data.type_id} {...otherProps} />;
   },
 );
 SolarSystemSovereigntyAvatar.displayName = "SolarSystemSovereigntyAvatar";

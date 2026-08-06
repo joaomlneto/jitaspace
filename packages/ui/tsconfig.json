@@ -1,13 +1,9 @@
 {
   "extends": "@jitaspace/tsconfig/base.json",
   "compilerOptions": {
-    "jsx": "react",
+    "jsx": "react-jsx",
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
-  "include": [
-    "."
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["."],
+  "exclude": ["node_modules", "coverage"]
 }

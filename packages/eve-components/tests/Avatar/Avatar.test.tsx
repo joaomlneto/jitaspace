@@ -40,6 +40,7 @@ const useEsiName = jest.fn();
 const useMarketGroup = jest.fn();
 const useSolarSystem = jest.fn();
 const useSolarSystemSovereignty = jest.fn();
+const useStar = jest.fn();
 
 jest.mock("@jitaspace/hooks", () => ({
   useEsiName: (...args: unknown[]) => useEsiName(...args),
@@ -47,6 +48,7 @@ jest.mock("@jitaspace/hooks", () => ({
   useSolarSystem: (...args: unknown[]) => useSolarSystem(...args),
   useSolarSystemSovereignty: (...args: unknown[]) =>
     useSolarSystemSovereignty(...args),
+  useStar: (...args: unknown[]) => useStar(...args),
 }));
 
 // swr/immutable backs TypeAvatar's image-variation lookup.
@@ -90,6 +92,7 @@ beforeEach(() => {
     corporation_id: 98000001,
     faction_id: 500001,
   });
+  useStar.mockReturnValue({ data: { data: { type_id: 6 } } });
   useSWRImmutable.mockReturnValue({ data: ["icon"] });
 });
 
@@ -521,12 +524,16 @@ describe("SolarSystemSovereigntyAvatar", () => {
   it("falls back to the star avatar when there is no sovereignty", () => {
     useSolarSystemSovereignty.mockReturnValue(undefined);
     useSolarSystem.mockReturnValue({ data: { data: { star_id: 40000007 } } });
+    useStar.mockReturnValue({ data: { data: { type_id: 45041 } } });
     const { container } = renderWithMantine(
       <SolarSystemSovereigntyAvatar solarSystemId={30000142} />,
     );
-    // StarAvatar -> TypeAvatar receives star_id via starId, which TypeAvatar
-    // ignores (no typeId), so it renders the fallback placeholder, not an img.
-    expect(container).not.toBeEmptyDOMElement();
+    // The system's star_id is resolved to the star's *type* id, which is what
+    // the presentational StarAvatar -> TypeAvatar renders an image for.
+    expect(useStar).toHaveBeenCalledWith(40000007);
+    expect(container.querySelector("img")?.getAttribute("src")).toContain(
+      "45041",
+    );
   });
 
   it("accepts a string solarSystemId", () => {

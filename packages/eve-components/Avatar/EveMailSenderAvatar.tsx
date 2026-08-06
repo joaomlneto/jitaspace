@@ -7,13 +7,9 @@ import { Avatar, Skeleton } from "@mantine/core";
 import { GroupListIcon } from "@jitaspace/eve-icons";
 import { getAvatarSize } from "@jitaspace/utils";
 
+import type { MailingList } from "../types";
 import { sizes } from "./Avatar.styles";
 import { EveEntityAvatar } from "./index";
-
-export interface MailingList {
-  mailing_list_id: number;
-  name: string;
-}
 
 export type EveMailSenderAvatarProps = Omit<AvatarProps, "src" | "style"> & {
   from?: number;

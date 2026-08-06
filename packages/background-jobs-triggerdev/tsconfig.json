@@ -2,6 +2,11 @@
   "extends": "@jitaspace/tsconfig/base.json",
   "compilerOptions": {
     "lib": ["es2022", "dom", "dom.iterable"],
+    // Mirrors `@jitaspace/background-jobs`: this adapter type-checks that
+    // package's sources through its cross-package imports, and one of them
+    // (`chat.ts`) pulls in `@jitaspace/chat`'s `index.tsx` entrypoint. Without
+    // `jsx` set, that module fails to resolve here too.
+    "jsx": "react-jsx",
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
   "include": ["."],
