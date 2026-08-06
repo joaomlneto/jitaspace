@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from "@jest/globals";
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 
 // @swc/jest does not hoist jest.mock above imports, so the hook and the store
 // it pulls in are required lazily below. The generated ESI client is replaced
@@ -37,6 +37,37 @@ describe("useAuthStoreHasHydrated", () => {
     });
 
     expect(result.current).toBe(true);
+  });
+
+  it("catches rehydration that lands before the effect subscribes", async () => {
+    // The state initializer and the effect do not run in the same tick. If
+    // rehydration completes in between, onFinishHydration never fires for this
+    // subscriber, so without a re-check inside the effect the hook would report
+    // "not hydrated" forever and its consumers would show a loading state that
+    // never resolves.
+    const { useAuthStore: store } =
+      require("../src/hooks/auth/useAuthStore") as typeof import("../src/hooks/auth/useAuthStore");
+
+    let hydrated = false;
+    const hasHydrated = jest
+      .spyOn(store.persist, "hasHydrated")
+      .mockImplementation(() => hydrated);
+    const onFinishHydration = jest
+      .spyOn(store.persist, "onFinishHydration")
+      .mockImplementation(() => () => undefined);
+
+    // False when the initializer reads it, true by the time the effect runs.
+    hydrated = false;
+    const { result } = renderHook(() => {
+      const value = useAuthStoreHasHydrated();
+      hydrated = true;
+      return value;
+    });
+
+    await waitFor(() => expect(result.current).toBe(true));
+
+    hasHydrated.mockRestore();
+    onFinishHydration.mockRestore();
   });
 
   it("unsubscribes on unmount", () => {
