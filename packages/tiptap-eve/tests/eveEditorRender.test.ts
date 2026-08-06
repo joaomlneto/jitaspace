@@ -77,6 +77,17 @@ describe("eveEditorExtensions render round-trip", () => {
     });
   });
 
+  it("keeps a bookmarkFolder: link as an anchor", () => {
+    // Unregistered schemes are dropped by the Link extension: before
+    // `bookmarkfolder` joined EveLink's protocol list, a real mail's
+    // <a href="bookmarkFolder:7102471"> lost its mark and rendered as bare text.
+    const html = renderToHtml(
+      '<a href="bookmarkFolder:7102471">MC Deputy Training</a>',
+    );
+    expect(html).toContain('href="bookmarkFolder:7102471"');
+    expect(html).toContain("MC Deputy Training");
+  });
+
   it("clamps an oversized font-size to the maximum", () => {
     const html = renderToHtml('<font size="9999">huge</font>');
     expect(html).toContain("huge");
