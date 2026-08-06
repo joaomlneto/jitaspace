@@ -8,7 +8,7 @@ import type { ESIScope } from "@jitaspace/esi-metadata";
 
 import type { CharacterSsoSession } from "../src/hooks/auth/useAuthStore";
 
-// Wiring tests for the two hooks built on defineMultiEsiQuery. They assert that
+// Wiring tests for two of the generated hooks built on defineMultiEsiQuery. They assert that
 // each one hands the generated client the arguments the single-subject hooks
 // would — which is what keeps their query keys, and therefore their cache
 // entries, identical.
@@ -40,9 +40,9 @@ jest.mock("@jitaspace/esi-client", () => ({
 const { useAuthStore } =
   require("../src/hooks/auth/useAuthStore") as typeof import("../src/hooks/auth/useAuthStore");
 const { useMultipleCharacterFittings } =
-  require("../src/hooks/fittings/useMultipleCharacterFittings") as typeof import("../src/hooks/fittings/useMultipleCharacterFittings");
+  require("../src/generated/multi/useMultipleCharacterFittings") as typeof import("../src/generated/multi/useMultipleCharacterFittings");
 const { useMultipleCorporationAssets } =
-  require("../src/hooks/assets/useMultipleCorporationAssets") as typeof import("../src/hooks/assets/useMultipleCorporationAssets");
+  require("../src/generated/multi/useMultipleCorporationAssets") as typeof import("../src/generated/multi/useMultipleCorporationAssets");
 
 const FITTINGS_SCOPE: ESIScope = "esi-fittings.read_fittings.v1";
 const CORP_ASSETS_SCOPE: ESIScope = "esi-assets.read_corporation_assets.v1";
