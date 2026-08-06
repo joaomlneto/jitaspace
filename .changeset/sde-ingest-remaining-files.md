@@ -48,10 +48,14 @@ epic arcs, campaigns before objectives, and SKINR categories/rarities before
 components and point values. Optional foreign keys are guarded against their
 target file the way `ingestSdeTypes` guards `graphicID`.
 
-`loadSdeFile` now memoizes parsed files per process, not just the extraction.
-Several jobs legitimately read the same file — `ingest-sde-epic-arcs` needs
-missions.yaml (54 MB) purely to build a set of ids `ingest-sde-missions` has
-already parsed — and each of those was re-parsing it.
+New `loadSdeFileIds` / `loadSdeFileKeys` helpers cache the _key projection_ of an
+SDE file rather than its records, for the many jobs that load a file only to build
+a foreign-key guard set. Across the files this affects that takes the pipeline from
+25 parses to 11 — `types.yaml` (148 MB) goes from 8 to 2 — while retaining only a
+Set of ids per file. `loadSdeFile` itself stays uncached: caching records was tried
+and measured worse, lifting the retained floor from ~0 MB to ~1.5 GB and peak from
+~1.8 GB to ~2.3 GB, because parsing one file at a time is what lets V8 collect each
+before the next.
 
 Note that these files are ingested but not yet tracked in the change-history
 database — `Collection` rows and the historical diffs are produced by the

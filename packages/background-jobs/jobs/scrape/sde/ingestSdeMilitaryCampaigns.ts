@@ -4,6 +4,7 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
   ingestSdeCompositeTable,
+  loadSdeFileKeys,
   loadSdeFiles,
   plainString,
 } from "../../../helpers";
@@ -106,12 +107,11 @@ export const ingestSdeMilitaryCampaignObjectives = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "militaryCampaignObjectives.yaml",
-      "militaryCampaigns.yaml",
-    ]);
+    const files = await loadSdeFiles(["militaryCampaignObjectives.yaml"]);
     const data = files["militaryCampaignObjectives.yaml"];
-    const campaignIds = new Set(Object.keys(files["militaryCampaigns.yaml"]));
+    // UUID-keyed, so the raw string keys — and only the keys, so the campaign
+    // records are not held alive for this job's duration.
+    const campaignIds = await loadSdeFileKeys("militaryCampaigns.yaml");
 
     const objectives: Prisma.MilitaryCampaignObjectiveCreateManyInput[] = [];
     const tags: Prisma.MilitaryCampaignObjectiveTagCreateManyInput[] = [];

@@ -3,6 +3,7 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
   ingestSdeCompositeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalBoolean,
   requiredNumber,
@@ -36,14 +37,8 @@ export const ingestSdeSkinLicenses = defineJob<
   maxDurationSeconds: 3600,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "skinLicenses.yaml",
-      "skins.yaml",
-      "skinMaterials.yaml",
-    ]);
-    const skinMaterialIds = new Set(
-      Object.keys(files["skinMaterials.yaml"]).map(Number),
-    );
+    const files = await loadSdeFiles(["skinLicenses.yaml", "skins.yaml"]);
+    const skinMaterialIds = await loadSdeFileIds("skinMaterials.yaml");
     // Mirror the skins job's filter: only skins with a present material survive.
     const validSkinIds = new Set(
       Object.entries(files["skins.yaml"])

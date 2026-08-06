@@ -3,6 +3,7 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
   ingestSdeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalNumber,
   plainString,
@@ -24,16 +25,11 @@ export const ingestSdeGraphics = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "graphics.yaml",
-      "graphicMaterialSets.yaml",
-    ]);
+    const files = await loadSdeFiles(["graphics.yaml"]);
     // `sofMaterialSetID` is a real FK now, so drop any id that isn't there —
     // the same guard ingestSdeTypes applies to its optional refs.
-    const materialSetIds = new Set(
-      Object.keys(files["graphicMaterialSets.yaml"]).map(Number),
-    );
-    const present = (ids: Set<number>, value: number | null) =>
+    const materialSetIds = await loadSdeFileIds("graphicMaterialSets.yaml");
+    const present = (ids: ReadonlySet<number>, value: number | null) =>
       value != null && ids.has(value) ? value : null;
 
     const graphics = await ingestSdeTable({

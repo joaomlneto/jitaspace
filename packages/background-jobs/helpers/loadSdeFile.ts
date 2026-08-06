@@ -35,54 +35,77 @@ function getExtractedSdeRoot(): Promise<string> {
 }
 
 /**
- * Parsed files, memoized per process.
- *
- * `getExtractedSdeRoot` caches the *extraction*, not the parse, so without this
- * every `loadSdeFile`/`loadSdeFiles` call re-parsed the YAML from disk. That is
- * expensive for the large files and several jobs legitimately need the same file:
- * `ingest-sde-epic-arcs` reads the 54 MB missions.yaml purely to build a Set of
- * ids that `ingest-sde-missions` has already parsed, and the ship-tree and SKINR
- * jobs each re-read their guard files.
- *
- * Held for the process lifetime, like the extraction: the `ingest-sde-all`
- * pipeline runs every job in one process, and Trigger.dev task processes are
- * ephemeral. Peak memory is unchanged in the worst case (the largest file was
- * already resident during its own job) and strictly lower across the pipeline,
- * since re-parsing built a second copy before the first was collected.
- */
-const parsedFiles = new Map<string, SdeRecord>();
-
-/**
  * Parse a single SDE file (applying its `sdeInputFiles` transformations, e.g.
  * injecting the id for `addId` files). Returns the records as a map keyed by id.
  *
- * The result is memoized per process and shared between callers, so treat it as
- * read-only — mutating it would corrupt every later reader.
+ * Deliberately NOT memoized. Caching parsed records was tried and reverted: it
+ * lifted the retained floor across the pipeline from ~0 MB to ~1.5 GB and raised
+ * peak from ~1.8 GB to ~2.3 GB, because every cross-job reader of a big file
+ * wants a projection, not the records — 7 of the 8 jobs that load types.yaml
+ * (148 MB) need only its ids, and mapMoons.yaml (213 MB) is retained solely so
+ * `moonNames` can derive a name map. Parsing one file at a time lets V8 collect
+ * each before the next, which is what keeps `ingest-sde-all` inside its 4 GB
+ * machine. Use {@link loadSdeFileIds} / {@link loadSdeFileKeys} for guard sets —
+ * those cache the small projection instead.
  */
 export async function loadSdeFile(
   filename: keyof typeof sdeInputFiles,
 ): Promise<SdeRecord> {
-  const cached = parsedFiles.get(filename);
+  return loadFile(filename, await getExtractedSdeRoot());
+}
+
+/**
+ * Cached key projections. These hold a Set of ids per file — kilobytes — and drop
+ * the parsed records, so a second job needing only a guard set never keeps the
+ * source file resident.
+ */
+const idSets = new Map<string, Set<number>>();
+const keySets = new Map<string, Set<string>>();
+
+/**
+ * The numeric ids present in an SDE file, for FK guards.
+ *
+ * Parses the file, takes its keys, and lets the records go. Memoized per process,
+ * so the ~7 jobs that guard against types.yaml pay one parse between them instead
+ * of one each — and none of them retains the 148 MB of records.
+ */
+export async function loadSdeFileIds(
+  filename: keyof typeof sdeInputFiles,
+): Promise<ReadonlySet<number>> {
+  const cached = idSets.get(filename);
   if (cached) return cached;
-  const parsed = loadFile(filename, await getExtractedSdeRoot());
-  parsedFiles.set(filename, parsed);
-  return parsed;
+  const ids = new Set(Object.keys(await loadSdeFile(filename)).map(Number));
+  idSets.set(filename, ids);
+  return ids;
+}
+
+/**
+ * The raw (string) keys of an SDE file, for the UUID-keyed files whose ids are
+ * not numeric. Same caching contract as {@link loadSdeFileIds}.
+ */
+export async function loadSdeFileKeys(
+  filename: keyof typeof sdeInputFiles,
+): Promise<ReadonlySet<string>> {
+  const cached = keySets.get(filename);
+  if (cached) return cached;
+  const keys = new Set(Object.keys(await loadSdeFile(filename)));
+  keySets.set(filename, keys);
+  return keys;
 }
 
 /**
  * Parse several SDE files from a single download + extraction, keyed by filename.
- * Use when a job needs cross-file data (e.g. celestial names resolved from the
- * universe hierarchy).
- *
- * Shares {@link loadSdeFile}'s per-process parse cache, so the returned records
- * are read-only.
+ * Use when a job needs cross-file *records* (e.g. celestial names resolved from
+ * the universe hierarchy). For a file you only need ids from, prefer
+ * {@link loadSdeFileIds} — it does not keep the records alive.
  */
 export async function loadSdeFiles<F extends keyof typeof sdeInputFiles>(
   filenames: readonly F[],
 ): Promise<Record<F, SdeRecord>> {
+  const sdeRoot = await getExtractedSdeRoot();
   const result = {} as Record<F, SdeRecord>;
   for (const filename of filenames) {
-    result[filename] = await loadSdeFile(filename);
+    result[filename] = loadFile(filename, sdeRoot);
   }
   return result;
 }

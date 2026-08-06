@@ -5,6 +5,7 @@ import {
   enString,
   ingestSdeCompositeTable,
   ingestSdeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalNumber,
 } from "../../../helpers";
@@ -41,9 +42,9 @@ export const ingestSdeEpicArcs = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["epicArcs.yaml", "missions.yaml"]);
+    const files = await loadSdeFiles(["epicArcs.yaml"]);
     const data = files["epicArcs.yaml"];
-    const missionIds = new Set(Object.keys(files["missions.yaml"]).map(Number));
+    const missionIds = await loadSdeFileIds("missions.yaml");
 
     const epicArcs = await ingestSdeTable({
       filename: "epicArcs.yaml",

@@ -5,6 +5,7 @@ import {
   enString,
   ingestSdeCompositeTable,
   ingestSdeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalBoolean,
   optionalNumber,
@@ -101,18 +102,10 @@ export const ingestSdeSkinrComponentPointValues = defineJob<
     "Download the SDE and ingest skinrComponentPointValues.yaml into the SkinrComponentPointValue table.",
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "skinrComponentPointValues.yaml",
-      "skinrComponentCategories.yaml",
-      "skinrComponentRarities.yaml",
-    ]);
+    const files = await loadSdeFiles(["skinrComponentPointValues.yaml"]);
     const data = files["skinrComponentPointValues.yaml"];
-    const categoryIds = new Set(
-      Object.keys(files["skinrComponentCategories.yaml"]).map(Number),
-    );
-    const rarityIds = new Set(
-      Object.keys(files["skinrComponentRarities.yaml"]).map(Number),
-    );
+    const categoryIds = await loadSdeFileIds("skinrComponentCategories.yaml");
+    const rarityIds = await loadSdeFileIds("skinrComponentRarities.yaml");
 
     const rows: Prisma.SkinrComponentPointValueCreateManyInput[] = [];
     for (const [categoryKey, value] of Object.entries(data)) {
@@ -165,18 +158,10 @@ export const ingestSdeSkinrComponents = defineJob<
     "Download the SDE and ingest skinrComponents.yaml into the SkinrComponent and SkinrComponentType tables.",
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "skinrComponents.yaml",
-      "skinrComponentCategories.yaml",
-      "skinrComponentRarities.yaml",
-    ]);
+    const files = await loadSdeFiles(["skinrComponents.yaml"]);
     const data = files["skinrComponents.yaml"];
-    const categoryIds = new Set(
-      Object.keys(files["skinrComponentCategories.yaml"]).map(Number),
-    );
-    const rarityIds = new Set(
-      Object.keys(files["skinrComponentRarities.yaml"]).map(Number),
-    );
+    const categoryIds = await loadSdeFileIds("skinrComponentCategories.yaml");
+    const rarityIds = await loadSdeFileIds("skinrComponentRarities.yaml");
 
     const components: Prisma.SkinrComponentCreateManyInput[] = [];
     const componentTypes: Prisma.SkinrComponentTypeCreateManyInput[] = [];
@@ -313,14 +298,9 @@ export const ingestSdeSkinrSlots = defineJob<
     "Download the SDE and ingest skinrSlots.yaml into the SkinrSlot and SkinrSlotAllowedCategory tables.",
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "skinrSlots.yaml",
-      "skinrSlotCategories.yaml",
-    ]);
+    const files = await loadSdeFiles(["skinrSlots.yaml"]);
     const data = files["skinrSlots.yaml"];
-    const categoryIds = new Set(
-      Object.keys(files["skinrSlotCategories.yaml"]).map(Number),
-    );
+    const categoryIds = await loadSdeFileIds("skinrSlotCategories.yaml");
 
     const skinrSlots = await ingestSdeTable({
       filename: "skinrSlots.yaml",
@@ -475,14 +455,9 @@ export const ingestSdeSkinrTierThresholds = defineJob<
     "Download the SDE and ingest skinrTierThresholds.yaml into the SkinrTierThreshold table.",
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "skinrTierThresholds.yaml",
-      "shipTreeGroups.yaml",
-    ]);
+    const files = await loadSdeFiles(["skinrTierThresholds.yaml"]);
     const data = files["skinrTierThresholds.yaml"];
-    const groupIds = new Set(
-      Object.keys(files["shipTreeGroups.yaml"]).map(Number),
-    );
+    const groupIds = await loadSdeFileIds("shipTreeGroups.yaml");
 
     const rows: Prisma.SkinrTierThresholdCreateManyInput[] = [];
     for (const [key, value] of Object.entries(data)) {

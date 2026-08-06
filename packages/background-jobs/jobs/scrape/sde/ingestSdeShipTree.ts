@@ -5,6 +5,7 @@ import {
   enString,
   ingestSdeCompositeTable,
   ingestSdeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   plainString,
 } from "../../../helpers";
@@ -74,14 +75,9 @@ export const ingestSdeShipTreeFactions = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "shipTreeFactions.yaml",
-      "shipTreeElements.yaml",
-    ]);
+    const files = await loadSdeFiles(["shipTreeFactions.yaml"]);
     const data = files["shipTreeFactions.yaml"];
-    const elementIds = new Set(
-      Object.keys(files["shipTreeElements.yaml"]).map(Number),
-    );
+    const elementIds = await loadSdeFileIds("shipTreeElements.yaml");
 
     const shipTreeFactions = await ingestSdeTable({
       filename: "shipTreeFactions.yaml",
@@ -139,14 +135,9 @@ export const ingestSdeShipTreeGroups = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "shipTreeGroups.yaml",
-      "shipTreeElements.yaml",
-    ]);
+    const files = await loadSdeFiles(["shipTreeGroups.yaml"]);
     const data = files["shipTreeGroups.yaml"];
-    const elementIds = new Set(
-      Object.keys(files["shipTreeElements.yaml"]).map(Number),
-    );
+    const elementIds = await loadSdeFileIds("shipTreeElements.yaml");
 
     const shipTreeGroups = await ingestSdeTable({
       filename: "shipTreeGroups.yaml",
@@ -225,14 +216,9 @@ export const ingestSdeTypeElements = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "typeElements.yaml",
-      "shipTreeElements.yaml",
-    ]);
+    const files = await loadSdeFiles(["typeElements.yaml"]);
     const data = files["typeElements.yaml"];
-    const elementIds = new Set(
-      Object.keys(files["shipTreeElements.yaml"]).map(Number),
-    );
+    const elementIds = await loadSdeFileIds("shipTreeElements.yaml");
 
     const rows: Prisma.TypeElementCreateManyInput[] = [];
     for (const [key, value] of Object.entries(data)) {

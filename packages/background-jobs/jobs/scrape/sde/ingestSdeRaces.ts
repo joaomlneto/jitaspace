@@ -4,6 +4,7 @@ import { prisma } from "../../../db";
 import {
   enString,
   ingestSdeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalNumber,
 } from "../../../helpers";
@@ -21,10 +22,10 @@ export const ingestSdeRaces = defineJob<IngestSdeRacesEventPayload["data"]>({
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["races.yaml", "types.yaml"]);
+    const files = await loadSdeFiles(["races.yaml"]);
     // `shipTypeID` is the race's starter ship. Guard it against types.yaml the
     // way ingestSdeTypes guards its own optional FKs.
-    const typeIds = new Set(Object.keys(files["types.yaml"]).map(Number));
+    const typeIds = await loadSdeFileIds("types.yaml");
 
     // `factionId` is not set here — it is sourced from ESI, so the diff leaves
     // it untouched (races.yaml has no factionID anyway).
