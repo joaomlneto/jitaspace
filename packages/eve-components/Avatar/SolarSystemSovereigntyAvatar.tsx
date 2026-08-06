@@ -3,12 +3,16 @@
 import type { AvatarProps } from "@mantine/core";
 import { memo, useMemo } from "react";
 
-import { useSolarSystem, useSolarSystemSovereignty } from "@jitaspace/hooks";
+import {
+  useSolarSystem,
+  useSolarSystemSovereignty,
+  useStar,
+} from "@jitaspace/hooks";
 import {
   AllianceAvatar,
   CorporationAvatar,
   FactionAvatar,
-  StarAvatar,
+  SolarSystemStarAvatar,
 } from "@jitaspace/ui";
 
 export type SolarSystemSovereigntyAvatarProps = Omit<AvatarProps, "src"> & {
@@ -27,6 +31,17 @@ export const SolarSystemSovereigntyAvatar = memo(
     const { data } = useSolarSystem(normalizedSolarSystemId);
     const sov = useSolarSystemSovereignty(normalizedSolarSystemId);
 
+    // ESI's `star_id` is a star entity id, but the star avatar renders the
+    // star's *type*, so the star has to be resolved to get its type id.
+    // Passing an undefined id leaves the query disabled, which skips the
+    // request while the system is still loading and whenever sovereignty wins
+    // below and the star is never rendered.
+    const sovereigntyOwnerId =
+      sov?.alliance_id ?? sov?.corporation_id ?? sov?.faction_id;
+    const { data: star } = useStar(
+      sovereigntyOwnerId ? undefined : data?.data.star_id,
+    );
+
     // if sov has an alliance, show an alliance avatar
     if (sov?.alliance_id) {
       return <AllianceAvatar allianceId={sov.alliance_id} {...otherProps} />;
@@ -44,8 +59,10 @@ export const SolarSystemSovereigntyAvatar = memo(
       return <FactionAvatar factionId={sov.faction_id} {...otherProps} />;
     }
 
-    // if not, show a star avatar
-    return <StarAvatar starId={data?.data.star_id} {...otherProps} />;
+    // if not, show the avatar for the system's star
+    return (
+      <SolarSystemStarAvatar typeId={star?.data.type_id} {...otherProps} />
+    );
   },
 );
 SolarSystemSovereigntyAvatar.displayName = "SolarSystemSovereigntyAvatar";

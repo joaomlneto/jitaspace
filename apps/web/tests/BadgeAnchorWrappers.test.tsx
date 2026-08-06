@@ -83,22 +83,22 @@ jest.mock("@jitaspace/ui", () => ({
   ),
 }));
 
-// Anchors that moved to @jitaspace/eve-components are stubbed there so the
-// wrappers (which import them from that package) pick up these stubs.
+// The anchors below delegate to components living in @jitaspace/eve-components;
+// stub them here so the wrappers importing them from that package pick these up.
 jest.mock("@jitaspace/eve-components", () => ({
-  CalendarEventOwnerAnchor: ({
-    ownerId,
-    ownerType,
+  EveEntityAnchor: ({
+    entityId,
+    category,
     children,
   }: {
-    ownerId?: number;
-    ownerType?: string;
+    entityId?: string | number | null;
+    category?: string;
     children?: ReactNode;
   }) => (
     <a
-      data-testid="ui-event-owner-anchor"
-      data-owner-id={ownerId ?? ""}
-      data-owner-type={ownerType ?? ""}
+      data-testid="ui-eve-entity-anchor"
+      data-entity-id={entityId ?? ""}
+      data-category={category ?? ""}
     >
       {children}
     </a>
@@ -465,21 +465,42 @@ describe("WarDefenderTickerBadge (wrapper)", () => {
 // =============================================================================
 // Anchors
 // =============================================================================
-describe("CalendarEventOwnerAnchor (wrapper)", () => {
-  it("passes owner id and type from the hook to the UI anchor", () => {
+describe("CalendarEventOwnerAnchor", () => {
+  it("links the event owner through EveEntityAnchor", () => {
     mockUseCalendarEvent.mockReturnValue({
       data: { data: { owner_id: 91541581, owner_type: "character" } },
     });
     const { CalendarEventOwnerAnchor } = anchors();
 
     renderWithMantine(
-      <CalendarEventOwnerAnchor characterId={123} eventId={456} />,
+      <CalendarEventOwnerAnchor characterId={123} eventId={456}>
+        Owner
+      </CalendarEventOwnerAnchor>,
     );
 
     expect(mockUseCalendarEvent).toHaveBeenCalledWith(123, 456);
-    const anchor = screen.getByTestId("ui-event-owner-anchor");
-    expect(anchor).toHaveAttribute("data-owner-id", "91541581");
-    expect(anchor).toHaveAttribute("data-owner-type", "character");
+    const anchor = screen.getByTestId("ui-eve-entity-anchor");
+    expect(anchor).toHaveAttribute("data-entity-id", "91541581");
+    expect(anchor).toHaveAttribute("data-category", "character");
+  });
+
+  it("renders bare children for the eve_server owner type", () => {
+    // CCP itself owns the event; there is no entity page to link to.
+    mockUseCalendarEvent.mockReturnValue({
+      data: { data: { owner_id: 1, owner_type: "eve_server" } },
+    });
+    const { CalendarEventOwnerAnchor } = anchors();
+
+    renderWithMantine(
+      <CalendarEventOwnerAnchor characterId={123} eventId={456}>
+        EVE System
+      </CalendarEventOwnerAnchor>,
+    );
+
+    expect(screen.getByText("EVE System")).toBeInTheDocument();
+    expect(
+      screen.queryByTestId("ui-eve-entity-anchor"),
+    ).not.toBeInTheDocument();
   });
 
   it("renders with empty owner data when the hook has no data", () => {
@@ -488,9 +509,9 @@ describe("CalendarEventOwnerAnchor (wrapper)", () => {
 
     renderWithMantine(<CalendarEventOwnerAnchor />);
 
-    const anchor = screen.getByTestId("ui-event-owner-anchor");
-    expect(anchor).toHaveAttribute("data-owner-id", "");
-    expect(anchor).toHaveAttribute("data-owner-type", "");
+    const anchor = screen.getByTestId("ui-eve-entity-anchor");
+    expect(anchor).toHaveAttribute("data-entity-id", "");
+    expect(anchor).toHaveAttribute("data-category", "");
   });
 });
 
