@@ -26,10 +26,16 @@ export const useAuthStoreHasHydrated = (): boolean => {
     () => typeof window !== "undefined" && useAuthStore.persist.hasHydrated(),
   );
 
-  useEffect(
-    () => useAuthStore.persist.onFinishHydration(() => setHasHydrated(true)),
-    [],
-  );
+  useEffect(() => {
+    // Re-check before subscribing: rehydration can finish between the state
+    // initializer running and this effect, in which case onFinishHydration
+    // never fires and the hook would stay false forever.
+    if (useAuthStore.persist.hasHydrated()) {
+      setHasHydrated(true);
+      return;
+    }
+    return useAuthStore.persist.onFinishHydration(() => setHasHydrated(true));
+  }, []);
 
   return hasHydrated;
 };

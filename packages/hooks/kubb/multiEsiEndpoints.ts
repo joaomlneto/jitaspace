@@ -86,7 +86,8 @@ export interface MultiEsiEndpoint {
  * from.
  *
  * A non-array 200 response is not skipped — it selects the value primitive,
- * which returns one entry per subject instead of a flattened list.
+ * which returns one entry per subject instead of a flattened list. So does an
+ * array of scalars, which cannot carry a per-item tag.
  */
 export function describeEndpoint(
   route: string,
@@ -111,7 +112,15 @@ export function describeEndpoint(
     | undefined;
   const schema = deref(content?.["application/json"]?.schema, document);
   if (schema?.type == undefined) return null;
-  const single = schema.type !== "array";
+  // An array of scalars cannot take the list path: tagging spreads each item
+  // (`{ ...item, subjectId }`), and spreading a number yields `{ subjectId }` —
+  // every value would be replaced by its own tag. Those keep the whole array
+  // as one subject's value instead.
+  const itemsAreObjects =
+    schema.type === "array" &&
+    deref(schema.items as Record<string, unknown> | undefined, document)
+      ?.type === "object";
+  const single = !itemsAreObjects;
 
   const queryParameters = (operation.parameters ?? []).filter(
     (parameter) => parameter.in === "query",
@@ -127,6 +136,12 @@ export function describeEndpoint(
     return null;
   }
   const queryParams = queryParameters.map((parameter) => parameter.name);
+  // Cursor pagination (after/before/limit) is not the `page` + `x-pages` scheme
+  // esiPagedQueryOptions walks, so these would silently return only the server's
+  // first page under a name that promises every subject's whole collection.
+  if (queryParams.includes("after") || queryParams.includes("before")) {
+    return null;
+  }
 
   const kind = SUBJECT_PARAMS[subjectParam];
   if (!kind) return null;
@@ -198,8 +213,11 @@ ${config.join("\n")}
 `;
   }
 
+  // `undefined`, not `{}`: the generated key builder appends `params` when it
+  // is truthy, and `{}` is, so passing it would put these on a different cache
+  // entry than the single-subject hook for the same endpoint.
   const optionsArgs = hasQueryParams
-    ? "subjectId, {}, authHeaders"
+    ? "subjectId, undefined, authHeaders"
     : "subjectId, authHeaders";
 
   return `"use client";

@@ -111,6 +111,7 @@
       "persistent": true
     },
     "test": {
+      "dependsOn": ["kubb:generate"],
       "outputs": ["coverage/**"]
     },
     "test:watch": {

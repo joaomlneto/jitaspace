@@ -8,10 +8,25 @@ import { describeEndpoint, renderEndpoint } from "../kubb/multiEsiEndpoints";
 // this, so it is worth pinning independently of running kubb.
 
 const ARRAY_RESPONSE = {
-  "200": { content: { "application/json": { schema: { type: "array" } } } },
+  "200": {
+    content: {
+      "application/json": {
+        schema: { type: "array", items: { type: "object" } },
+      },
+    },
+  },
 };
 const OBJECT_RESPONSE = {
   "200": { content: { "application/json": { schema: { type: "object" } } } },
+};
+const SCALAR_ARRAY_RESPONSE = {
+  "200": {
+    content: {
+      "application/json": {
+        schema: { type: "array", items: { type: "integer" } },
+      },
+    },
+  },
 };
 
 const operation = (overrides: Partial<EsiOperation> = {}): EsiOperation => ({
@@ -21,8 +36,11 @@ const operation = (overrides: Partial<EsiOperation> = {}): EsiOperation => ({
   ...overrides,
 });
 
-const describeAt = (route: string, overrides: Partial<EsiOperation> = {}) =>
-  describeEndpoint(route, operation(overrides), {});
+const describeAt = (
+  route: string,
+  overrides: Partial<EsiOperation> = {},
+  document: Record<string, unknown> = {},
+) => describeEndpoint(route, operation(overrides), document);
 
 describe("describeEndpoint — what is included", () => {
   it("derives kind, scope and names from a character route", () => {
@@ -67,6 +85,51 @@ describe("describeEndpoint — what is included", () => {
       paginated: true,
       hasQueryParams: true,
     });
+  });
+
+  it("follows $ref schemas, which is how the real spec declares them", () => {
+    // The response and its items are both refs in swagger.json, so the
+    // array-of-objects vs array-of-scalars decision depends on resolving them.
+    const document = {
+      components: {
+        schemas: {
+          FittingList: {
+            type: "array",
+            items: { $ref: "#/components/schemas/Fitting" },
+          },
+          Fitting: { type: "object" },
+          ImplantList: {
+            type: "array",
+            items: { $ref: "#/components/schemas/TypeId" },
+          },
+          TypeId: { type: "integer" },
+        },
+      },
+    };
+    const refResponse = (name: string) => ({
+      "200": {
+        content: {
+          "application/json": {
+            schema: { $ref: `#/components/schemas/${name}` },
+          },
+        },
+      },
+    });
+
+    expect(
+      describeAt(
+        "/characters/{character_id}/fittings",
+        { responses: refResponse("FittingList") },
+        document,
+      )?.single,
+    ).toBe(false);
+    expect(
+      describeAt(
+        "/characters/{character_id}/implants",
+        { responses: refResponse("ImplantList") },
+        document,
+      )?.single,
+    ).toBe(true);
   });
 
   it("handles alliance routes", () => {
@@ -116,6 +179,20 @@ describe("describeEndpoint — what is skipped", () => {
     ).not.toBeNull();
   });
 
+  it("skips cursor-paginated routes", () => {
+    // after/before/limit is not the page + x-pages scheme esiPagedQueryOptions
+    // walks, so these would silently return only the server's first page.
+    expect(
+      describeAt("/corporations/{corporation_id}/projects", {
+        parameters: [
+          { name: "after", in: "query" },
+          { name: "before", in: "query" },
+          { name: "limit", in: "query" },
+        ],
+      }),
+    ).toBeNull();
+  });
+
   it("skips operations with no declared response schema", () => {
     expect(
       describeAt("/characters/{character_id}/fittings", { responses: {} }),
@@ -136,10 +213,31 @@ describe("describeEndpoint — single-value endpoints", () => {
     });
   });
 
-  it("marks an array response as not single", () => {
+  it("marks an array of objects as not single", () => {
     expect(describeAt("/characters/{character_id}/fittings")?.single).toBe(
       false,
     );
+  });
+
+  it("treats an array of scalars as single", () => {
+    // The list primitive tags items by spreading them, and spreading a number
+    // yields only the tag — every implant id would be replaced by { subjectId }.
+    const endpoint = describeAt("/characters/{character_id}/implants", {
+      responses: SCALAR_ARRAY_RESPONSE,
+    });
+
+    expect(endpoint?.single).toBe(true);
+  });
+
+  it("emits the value primitive for an array of scalars", () => {
+    const source = renderEndpoint(
+      describeAt("/characters/{character_id}/implants", {
+        operationId: "GetCharactersCharacterIdImplants",
+        responses: SCALAR_ARRAY_RESPONSE,
+      })!,
+    );
+
+    expect(source).toContain("defineMultiEsiValueQuery({");
   });
 });
 
@@ -165,7 +263,11 @@ describe("renderEndpoint", () => {
       })!,
     );
 
-    expect(source).toContain("QueryOptions(subjectId, {}, authHeaders)");
+    // `undefined`, not `{}`: the generated key builder appends params when
+    // truthy, so `{}` would land on a different cache entry than the
+    // single-subject hook for the same endpoint.
+    expect(source).toContain("QueryOptions(subjectId, undefined, authHeaders)");
+    expect(source).not.toContain("{}, authHeaders");
   });
 
   it("uses the paged options and threads the signal when paginated", () => {

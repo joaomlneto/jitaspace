@@ -92,6 +92,44 @@ describe("esiPagedQueryOptions", () => {
     expect(seen).toEqual([signal, signal, signal]);
   });
 
+  it("floors a fractional x-pages instead of throwing", async () => {
+    // new Array(2.5) is a RangeError, which would fail the whole query rather
+    // than degrade on a malformed header.
+    const fetchPage = jest.fn((p: number) => Promise.resolve(page([p], "2.5")));
+
+    const result = await runQueryFn(fetchPage);
+
+    expect(fetchPage).toHaveBeenCalledTimes(2);
+    expect(result.data).toEqual([1, 2]);
+  });
+
+  it("caps the total pages fetched for one subject", async () => {
+    const fetchPage = jest.fn((p: number) => Promise.resolve(page([p], "500")));
+
+    const result = await runQueryFn(fetchPage);
+
+    // The pool bounds concurrency, not volume; without a ceiling this is 500
+    // requests for one subject, times every subject in the fan-out.
+    expect(fetchPage).toHaveBeenCalledTimes(100);
+    expect(result.data).toHaveLength(100);
+  });
+
+  it("stops issuing pages once one fails", async () => {
+    let issued = 0;
+    const fetchPage = jest.fn((p: number) => {
+      issued += 1;
+      if (p === 2) return Promise.reject(new Error("boom"));
+      return Promise.resolve(page([p], "50"));
+    });
+
+    const options = esiPagedQueryOptions({ queryKey: ["test"], fetchPage });
+    await expect(options.queryFn()).rejects.toThrow("boom");
+
+    // The workers already in flight finish, but no new pages are started —
+    // without the guard this walks all 49 remaining pages.
+    expect(issued).toBeLessThanOrEqual(6);
+  });
+
   it("treats a missing x-pages header as a single page", async () => {
     const fetchPage = jest.fn(() => Promise.resolve(page([7])));
 
