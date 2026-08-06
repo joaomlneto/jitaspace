@@ -58,39 +58,56 @@ export async function loadSdeFile(
  * Cached key projections. These hold a Set of ids per file — kilobytes — and drop
  * the parsed records, so a second job needing only a guard set never keeps the
  * source file resident.
+ *
+ * The *promise* is cached, not the resolved Set, matching `getExtractedSdeRoot`
+ * above: concurrent callers for the same file then share one parse instead of
+ * racing to do it twice. A failed parse clears the entry so a later call retries.
  */
-const idSets = new Map<string, Set<number>>();
-const keySets = new Map<string, Set<string>>();
+const idSets = new Map<string, Promise<ReadonlySet<number>>>();
+const keySets = new Map<string, Promise<ReadonlySet<string>>>();
 
 /**
  * The numeric ids present in an SDE file, for FK guards.
  *
- * Parses the file, takes its keys, and lets the records go. Memoized per process,
- * so the ~7 jobs that guard against types.yaml pay one parse between them instead
- * of one each — and none of them retains the 148 MB of records.
+ * Parses the file, takes its keys, and lets the records go — nothing closes over
+ * them once the Set is built, so the parse is collectable immediately. Memoized
+ * per process, so the seven jobs that guard against types.yaml share one parse
+ * instead of one each, and none of them retains the 148 MB of records.
  */
-export async function loadSdeFileIds(
+export function loadSdeFileIds(
   filename: keyof typeof sdeInputFiles,
 ): Promise<ReadonlySet<number>> {
-  const cached = idSets.get(filename);
-  if (cached) return cached;
-  const ids = new Set(Object.keys(await loadSdeFile(filename)).map(Number));
-  idSets.set(filename, ids);
-  return ids;
+  let cached = idSets.get(filename);
+  if (!cached) {
+    cached = loadSdeFile(filename)
+      .then((records) => new Set(Object.keys(records).map(Number)))
+      .catch((error: unknown) => {
+        idSets.delete(filename);
+        throw error;
+      });
+    idSets.set(filename, cached);
+  }
+  return cached;
 }
 
 /**
  * The raw (string) keys of an SDE file, for the UUID-keyed files whose ids are
  * not numeric. Same caching contract as {@link loadSdeFileIds}.
  */
-export async function loadSdeFileKeys(
+export function loadSdeFileKeys(
   filename: keyof typeof sdeInputFiles,
 ): Promise<ReadonlySet<string>> {
-  const cached = keySets.get(filename);
-  if (cached) return cached;
-  const keys = new Set(Object.keys(await loadSdeFile(filename)));
-  keySets.set(filename, keys);
-  return keys;
+  let cached = keySets.get(filename);
+  if (!cached) {
+    cached = loadSdeFile(filename)
+      .then((records) => new Set(Object.keys(records)))
+      .catch((error: unknown) => {
+        keySets.delete(filename);
+        throw error;
+      });
+    keySets.set(filename, cached);
+  }
+  return cached;
 }
 
 /**
