@@ -95,14 +95,51 @@ describe("describeEndpoint — what is skipped", () => {
     ).toBeNull();
   });
 
-  it("skips operations that do not return an array", () => {
-    // defineMultiEsiQuery returns one flat tagged list; a single object has
-    // nothing to contribute to it.
+  it("skips routes with a required query parameter", () => {
+    // A subject fan-out has nowhere to take a caller-supplied argument from:
+    // searching across every character still needs the search term.
     expect(
-      describeAt("/characters/{character_id}/location", {
-        responses: OBJECT_RESPONSE,
+      describeAt("/characters/{character_id}/search", {
+        parameters: [
+          { name: "categories", in: "query", required: true },
+          { name: "search", in: "query", required: true },
+        ],
       }),
     ).toBeNull();
+  });
+
+  it("does not treat page as a caller-supplied argument", () => {
+    expect(
+      describeAt("/corporations/{corporation_id}/assets", {
+        parameters: [{ name: "page", in: "query", required: true }],
+      }),
+    ).not.toBeNull();
+  });
+
+  it("skips operations with no declared response schema", () => {
+    expect(
+      describeAt("/characters/{character_id}/fittings", { responses: {} }),
+    ).toBeNull();
+  });
+});
+
+describe("describeEndpoint — single-value endpoints", () => {
+  it("marks a non-array response as single rather than skipping it", () => {
+    const endpoint = describeAt("/characters/{character_id}/location", {
+      responses: OBJECT_RESPONSE,
+    });
+
+    expect(endpoint).toMatchObject({
+      hookName: "useMultipleCharacterLocation",
+      single: true,
+      paginated: false,
+    });
+  });
+
+  it("marks an array response as not single", () => {
+    expect(describeAt("/characters/{character_id}/fittings")?.single).toBe(
+      false,
+    );
   });
 });
 
@@ -146,6 +183,22 @@ describe("renderEndpoint", () => {
     );
     expect(source).toContain("{ page }, authHeaders, { signal }");
     expect(source).toContain('roles: ["Director"]');
+  });
+
+  it("uses the value primitive for a single-value endpoint", () => {
+    const source = renderEndpoint(
+      describeAt("/characters/{character_id}/location", {
+        operationId: "GetCharactersCharacterIdLocation",
+        responses: OBJECT_RESPONSE,
+      })!,
+    );
+
+    expect(source).toContain("defineMultiEsiValueQuery({");
+    expect(source).toContain(
+      'import { defineMultiEsiValueQuery } from "../../hooks/multi"',
+    );
+    // One entry per subject, so there is no list to flatten or paginate.
+    expect(source).not.toContain("esiPagedQueryOptions");
   });
 
   it("emits every accepted role, since they are an any-of list", () => {

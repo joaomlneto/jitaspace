@@ -24,7 +24,7 @@ const SUBJECT_PARAMS: Record<string, SubjectKind> = {
 export interface EsiOperation {
   operationId?: string;
   security?: Record<string, string[]>[];
-  parameters?: { name?: string; in?: string }[];
+  parameters?: { name?: string; in?: string; required?: boolean }[];
   responses?: Record<string, unknown>;
   "x-required-roles"?: string[];
 }
@@ -59,6 +59,11 @@ export interface MultiEsiEndpoint {
   scopes: string[];
   roles: string[];
   paginated: boolean;
+  /**
+   * The 200 response is a single object or scalar rather than a list, so the
+   * hook returns one entry per subject instead of a flattened list.
+   */
+  single: boolean;
   /** The endpoint takes query parameters, so the generated options need a slot for them. */
   hasQueryParams: boolean;
   /** camelCased operationId, which is the base kubb names its exports from. */
@@ -69,10 +74,15 @@ export interface MultiEsiEndpoint {
  * Decide whether an operation can be fanned out over subjects, and describe it
  * if so.
  *
- * Skipped: anything with a second path parameter (it identifies one resource
- * *within* a subject, so "every subject" does not apply), and anything whose
- * 200 response is not an array — `defineMultiEsiQuery` returns one flat tagged
- * list, which a single object or scalar cannot contribute to.
+ * Skipped: anything with a second path parameter, since it identifies one
+ * resource *within* a subject and "every subject" does not describe it.
+ *
+ * Also skipped: anything with a required query parameter, which is an argument
+ * the caller would have to supply and a subject fan-out has nowhere to take
+ * from.
+ *
+ * A non-array 200 response is not skipped — it selects the value primitive,
+ * which returns one entry per subject instead of a flattened list.
  */
 export function describeEndpoint(
   route: string,
@@ -96,11 +106,23 @@ export function describeEndpoint(
     | Record<string, { schema?: Record<string, unknown> }>
     | undefined;
   const schema = deref(content?.["application/json"]?.schema, document);
-  if (schema?.type !== "array") return null;
+  if (schema?.type == undefined) return null;
+  const single = schema.type !== "array";
 
-  const queryParams = (operation.parameters ?? [])
-    .filter((parameter) => parameter.in === "query")
-    .map((parameter) => parameter.name);
+  const queryParameters = (operation.parameters ?? []).filter(
+    (parameter) => parameter.in === "query",
+  );
+  // A required query parameter is an argument the caller has to supply, and a
+  // "run this for every subject" hook has nowhere to take one from — a search
+  // across all characters still needs the search term.
+  if (
+    queryParameters.some(
+      (parameter) => parameter.required && parameter.name !== "page",
+    )
+  ) {
+    return null;
+  }
+  const queryParams = queryParameters.map((parameter) => parameter.name);
 
   const kind = SUBJECT_PARAMS[subjectParam];
   if (!kind) return null;
@@ -123,6 +145,7 @@ export function describeEndpoint(
     scopes: Object.values(operation.security[0] ?? {}).flat(),
     roles: operation["x-required-roles"] ?? [],
     paginated: queryParams.includes("page"),
+    single,
     hasQueryParams: queryParams.length > 0,
     operationName: camel(operation.operationId),
   };
@@ -136,9 +159,12 @@ export function renderEndpoint(endpoint: MultiEsiEndpoint): string {
     scopes,
     roles,
     paginated,
+    single,
     hasQueryParams,
     operationName,
   } = endpoint;
+  // A single-value endpoint never paginates, so the two are mutually exclusive.
+  const factory = single ? "defineMultiEsiValueQuery" : "defineMultiEsiQuery";
 
   const config = [
     `  kind: "${kind}",`,
@@ -178,9 +204,9 @@ ${config.join("\n")}
 
 import { ${operationName}QueryOptions } from "@jitaspace/esi-client";
 
-import { defineMultiEsiQuery } from "../../hooks/multi";
+import { ${factory} } from "../../hooks/multi";
 
-export const ${hookName} = defineMultiEsiQuery({
+export const ${hookName} = ${factory}({
 ${config.join("\n")}
   query: (subjectId, authHeaders) =>
     ${operationName}QueryOptions(${optionsArgs}),
