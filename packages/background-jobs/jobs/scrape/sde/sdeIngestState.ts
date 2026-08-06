@@ -21,10 +21,9 @@ export interface SdeIngestState {
 }
 
 /**
- * Pull `{ buildNumber, releaseDate }` out of a parsed `_sde.yaml`, which nests
- * them under an `sde` key. Throws rather than guessing: the build number is the
- * ingest's identity, and recording a wrong one would make `watch-sde` skip a
- * real update.
+ * Pull the build number out of a parsed `_sde.yaml`, which nests it under an
+ * `sde` key. Throws rather than guessing: the build number is the ingest's
+ * identity, and recording a wrong one would make `watch-sde` skip a real update.
  */
 export function sdeBuildFromMetadata(metadata: SdeRecord): {
   buildNumber: number;
@@ -33,7 +32,7 @@ export function sdeBuildFromMetadata(metadata: SdeRecord): {
   const buildNumber = sde?.buildNumber;
 
   if (typeof buildNumber !== "number" || !Number.isFinite(buildNumber)) {
-    throw new Error("_sde.yaml carries no usable sde.buildNumber");
+    throw new TypeError("_sde.yaml carries no usable sde.buildNumber");
   }
 
   return { buildNumber };
