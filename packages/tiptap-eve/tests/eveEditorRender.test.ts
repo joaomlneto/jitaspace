@@ -42,6 +42,41 @@ describe("eveEditorExtensions render round-trip", () => {
     expect(stripWs(html)).toContain("color:rgb(255,0,0)");
   });
 
+  describe("EVE ARGB colors", () => {
+    it("decodes a #AARRGGBB color instead of letting CSS read it as #RRGGBBAA", () => {
+      // From the real PLEX description. EVE means opaque #3399cc; CSS reads the
+      // raw value as rgba(255, 51, 153, 0.8) — hot pink.
+      const html = renderToHtml('<font color="#ff3399cc">TIP</font>');
+      expect(html).toContain("TIP");
+      expect(stripWs(html)).toContain("color:rgb(51,153,204)");
+      expect(stripWs(html)).not.toContain("rgba(255,51,153");
+    });
+
+    it("lets EVE's default body-text white inherit the theme color", () => {
+      // #bfffffff is EVE's standard description/mail text color. Pinned to white
+      // it is invisible on the light theme, so no `color` declaration is emitted.
+      const html = renderToHtml('<font color="#bfffffff">body text</font>');
+      expect(html).toContain("body text");
+      expect(html).not.toContain("color: rgb(255, 255, 255)");
+      expect(html).not.toContain("#bfffffff;");
+    });
+
+    it("still round-trips white through the color attribute for mail composition", () => {
+      // htmlToEveMail reads the original EVE string off the `color` attribute, so
+      // suppressing the CSS declaration must not make composed mail lossy.
+      const html = renderToHtml('<font color="0xbfffffff">body text</font>');
+      expect(html).toContain('color="0xbfffffff"');
+    });
+
+    it("keeps rendering a non-white color alongside a suppressed white one", () => {
+      const html = renderToHtml(
+        '<font color="#bfffffff">plain</font><font color="0x0ff0000">danger</font>',
+      );
+      expect(stripWs(html)).toContain("color:rgb(255,0,0)");
+      expect(html).toContain("plain");
+    });
+  });
+
   it("clamps an oversized font-size to the maximum", () => {
     const html = renderToHtml('<font size="9999">huge</font>');
     expect(html).toContain("huge");
