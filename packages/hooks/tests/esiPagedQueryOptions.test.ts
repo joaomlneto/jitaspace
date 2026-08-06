@@ -103,13 +103,21 @@ describe("esiPagedQueryOptions", () => {
     expect(result.data).toEqual([1, 2]);
   });
 
-  it("caps the total pages fetched for one subject", async () => {
+  it("refuses rather than truncating when a subject exceeds the page ceiling", async () => {
     const fetchPage = jest.fn((p: number) => Promise.resolve(page([p], "500")));
+
+    // Returning the first 100 pages would look like a complete collection —
+    // the same silent-partial failure the cursor-paginated endpoints are
+    // skipped for. Only page 1 is fetched, so nothing is spent discovering it.
+    await expect(runQueryFn(fetchPage)).rejects.toThrow(/above the 100-page/);
+    expect(fetchPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("fetches right up to the ceiling", async () => {
+    const fetchPage = jest.fn((p: number) => Promise.resolve(page([p], "100")));
 
     const result = await runQueryFn(fetchPage);
 
-    // The pool bounds concurrency, not volume; without a ceiling this is 500
-    // requests for one subject, times every subject in the fan-out.
     expect(fetchPage).toHaveBeenCalledTimes(100);
     expect(result.data).toHaveLength(100);
   });

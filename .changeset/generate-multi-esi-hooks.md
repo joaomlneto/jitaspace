@@ -19,3 +19,5 @@ Two categories of authenticated subject-scoped route are still not generated:
 The generator is a Kubb plugin, run by `pnpm kubb:generate` alongside the existing client generation. It lives in this package rather than `@jitaspace/esi-client` because the emitted hooks import `defineMultiEsiQuery` from here, and esi-client cannot depend on this package without a workspace cycle.
 
 `useMultipleCharacterFittings` and `useMultipleCorporationAssets` are no longer hand-written — they are generated, byte-for-byte equivalent, and still covered by the same tests.
+
+Paginated fan-outs refuse rather than truncate: a subject reporting more than 100 pages throws instead of returning the first 100, since a partial collection that looks complete is the same failure the cursor-paginated routes are skipped for. Errors are attributed per subject, so the failure names the corporation it belongs to and the other subjects still return their data.

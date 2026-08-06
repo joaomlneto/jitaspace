@@ -26,8 +26,15 @@ const MAX_CONCURRENT_PAGE_REQUESTS = 5;
  *
  * The pool bounds how many requests are in flight, not how many are made in
  * total: an `x-pages` of 500 is still 500 requests for one subject, times every
- * subject in the fan-out. Collections that deep are pathological rather than
- * expected, so stop and report instead of hammering the API.
+ * subject in the fan-out.
+ *
+ * Exceeding it throws rather than returning the first {@link MAX_PAGES} pages.
+ * Truncating would hand back a partial collection that looks complete, which is
+ * the same failure the cursor-paginated endpoints are skipped for — and it is
+ * reachable, not theoretical: corporation assets page at 1000 items, so this is
+ * roughly 100k items and large null-sec corporations clear it. The multi-subject
+ * hooks attribute errors per subject, so the failure names the corporation it
+ * belongs to and the other subjects still return their data.
  */
 const MAX_PAGES = 100;
 
@@ -110,7 +117,12 @@ export function esiPagedQueryOptions<TItem>(config: {
       // Floor before it reaches `new Array(...)`, which throws a RangeError on a
       // fractional length — a malformed header would otherwise fail the query
       // rather than degrade.
-      const pageCount = Math.min(Math.floor(reported), MAX_PAGES);
+      const pageCount = Math.floor(reported);
+      if (pageCount > MAX_PAGES) {
+        throw new Error(
+          `ESI reported ${pageCount} pages for a single subject, above the ${MAX_PAGES}-page ceiling. Refusing rather than returning a partial collection that would look complete.`,
+        );
+      }
 
       const remaining = await fetchInPool(pageCount - 1, (index) =>
         fetchPage(index + 2, signal),
