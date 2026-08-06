@@ -3,8 +3,11 @@
 // Next.js normally injects these into `next-env.d.ts` for the consuming app,
 // but this standalone library is type-checked on its own, so the bundler's
 // static-image imports (e.g. `import icon from "./rhea.png"`) would otherwise
-// resolve to an `error`/`any` type. Declaring them here as `StaticImageData`
-// (the shape Next's `<Image src>` accepts) keeps those imports precisely typed.
+// fail to resolve. Declaring them here as `StaticImageData` (the shape Next's
+// `<Image src>` accepts) keeps those imports precisely typed.
+//
+// Kept in sync with `packages/ui/images.d.ts`, which does the same for the
+// component library.
 
 interface StaticImageData {
   src: string;
@@ -31,6 +34,11 @@ declare module "*.jpg" {
 }
 
 declare module "*.jpeg" {
+  const content: StaticImageData;
+  export default content;
+}
+
+declare module "*.svg" {
   const content: StaticImageData;
   export default content;
 }

@@ -1,11 +1,14 @@
 // Ambient declarations for static image imports.
 //
-// This package imports no images itself, but it consumes `@jitaspace/ui` and
-// `@jitaspace/eve-icons` as TypeScript source, so their static-image imports
-// (e.g. `import icon from "./rhea.png"`) are resolved by *this* program. A
-// dependency's own `images.d.ts` is not pulled along by the import graph, so
-// the declarations have to be repeated here — the same reason `@jitaspace/ui`
-// carries a copy. `StaticImageData` is the shape Next's `<Image src>` accepts.
+// Next.js normally injects these into `next-env.d.ts` for the consuming app,
+// but this standalone library is type-checked on its own, so the bundler's
+// static-image imports (e.g. `import icon from "./icon.png"`) would otherwise
+// fail to resolve. Declaring them here as `StaticImageData` (the shape Next's
+// `<Image src>` accepts) keeps those imports precisely typed.
+//
+// This also covers `@jitaspace/eve-icons`, whose `.tsx` sources are pulled into
+// this package's program (it ships raw TypeScript), and which imports a `.png`
+// per icon. Kept in sync with `packages/ui/images.d.ts`.
 
 interface StaticImageData {
   src: string;
@@ -32,6 +35,11 @@ declare module "*.jpg" {
 }
 
 declare module "*.jpeg" {
+  const content: StaticImageData;
+  export default content;
+}
+
+declare module "*.svg" {
   const content: StaticImageData;
   export default content;
 }

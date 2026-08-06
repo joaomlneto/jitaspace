@@ -12,7 +12,7 @@
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "test": "jest",
-    "type-check": "tsc --jsx react-jsx --noEmit",
+    "type-check": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
