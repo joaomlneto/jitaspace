@@ -1,6 +1,6 @@
 ---
 "@jitaspace/sde-utils": minor
-"@jitaspace/background-jobs": patch
+"@jitaspace/background-jobs": minor
 "@jitaspace/cli": patch
 ---
 
@@ -21,5 +21,15 @@ Adds `latestSdeBuild`, `sdeZipBuild` and `sdeFolderBuild`; removes
 `SDE_CHECKSUM_URL` and `latestSdeLastModified`. `ensureSdePresentAndExtracted`
 takes an options object (`onLog`, `onDownloadProgress`, `onExtractProgress`) in
 place of its positional `onLog` callback, and the CLI now delegates to it rather
-than keeping a second copy of the same logic. `watch-sde` polls the build number
-too, under a new `sde:build-number-ingested` Redis key.
+than keeping a second copy of the same logic.
+
+`watch-sde` compares the published build number against the build recorded under
+the `sde:ingest` Redis key. `ingest-sde-all` claims that key when it starts and
+stamps it complete only after every step has succeeded, so the marker now means
+"this build is really loaded" rather than "a trigger was sent": an ingest that
+dies partway is retried once its claim goes stale, while an in-flight one still
+suppresses a duplicate queued run. The build number comes from the archive's own
+`_sde.yaml`, read through the extract the ingests already share.
+
+The key replaces the previous `sde:last-modified-ingested`, so the first poll
+after deploying runs one ingest — idempotent — and then settles.
