@@ -6,11 +6,13 @@ import type {
 } from "@jitaspace/esi-client";
 import {
   getCorporationsCorporationIdContacts,
+  getCorporationsCorporationIdContactsInfiniteQueryKey,
   useGetCorporationsCorporationIdContactsInfinite,
   useGetCorporationsCorporationIdContactsLabels,
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { esiInfiniteQueryKey } from "../utils/esiInfiniteQueryKey";
 import { esiInfiniteQueryNextPageParam } from "../utils/esiInfiniteQueryNextPageParam";
 import { useEsiContacts } from "../utils/useEsiContacts";
 
@@ -31,6 +33,11 @@ export function useCorporationContacts(corporationId: number) {
     { ...authHeaders },
     {
       query: {
+        // Keep this entry distinct from the single-page query for the
+        // same endpoint; see esiInfiniteQueryKey.
+        queryKey: esiInfiniteQueryKey(
+          getCorporationsCorporationIdContactsInfiniteQueryKey(corporationId),
+        ),
         enabled: !!corporationId && accessToken !== null,
         refetchOnWindowFocus: false,
       },

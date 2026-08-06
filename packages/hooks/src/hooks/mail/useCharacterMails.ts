@@ -4,11 +4,12 @@ import { useMemo } from "react";
 
 import {
   getCharactersCharacterIdMail,
-  getCharactersCharacterIdMailQueryKey,
+  getCharactersCharacterIdMailInfiniteQueryKey,
   useGetCharactersCharacterIdMailInfinite,
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { esiInfiniteQueryKey } from "../utils/esiInfiniteQueryKey";
 
 export function useCharacterMails(characterId?: number, labels: number[] = []) {
   const { accessToken, authHeaders } = useAccessToken({
@@ -16,12 +17,17 @@ export function useCharacterMails(characterId?: number, labels: number[] = []) {
     scopes: ["esi-mail.read_mail.v1"],
   });
 
+  // Built from the *infinite* key function, not the single-page one: this is
+  // an infinite query, and its entry holds InfiniteData rather than a flat
+  // ResponseConfig. See esiInfiniteQueryKey.
   const queryKey = useMemo(
     () =>
-      getCharactersCharacterIdMailQueryKey(characterId ?? 0, {
-        // @ts-expect-error generated code parses this wrong as url param
-        labels: labels.join(","),
-      }),
+      esiInfiniteQueryKey(
+        getCharactersCharacterIdMailInfiniteQueryKey(characterId ?? 0, {
+          // @ts-expect-error generated code parses this wrong as url param
+          labels: labels.join(","),
+        }),
+      ),
     [characterId, labels, accessToken],
   );
 
