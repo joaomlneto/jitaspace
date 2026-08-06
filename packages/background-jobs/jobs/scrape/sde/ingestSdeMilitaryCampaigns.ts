@@ -1,4 +1,5 @@
 import type { Prisma } from "../../../db";
+import type { ContributionParameter } from "./militaryCampaignParameters";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
@@ -8,6 +9,7 @@ import {
   optionalNumber,
   plainString,
 } from "../../../helpers";
+import { flattenContributionParameters } from "./militaryCampaignParameters";
 
 export interface IngestSdeMilitaryCampaignsEventPayload {
   data: Record<string, never>;
@@ -22,6 +24,59 @@ export interface IngestSdeMilitaryCampaignsEventPayload {
 /** Annotation values are either a plain string or a localized object. */
 const annotationValue = (value: unknown): string | null =>
   plainString(value) ?? enString(value) ?? null;
+
+/** Build the flat MilitaryCampaignObjective row for one SDE record. */
+function toObjectiveRow(
+  militaryCampaignObjectiveId: string,
+  militaryCampaignId: string,
+  record: Record<string, unknown>,
+): Prisma.MilitaryCampaignObjectiveCreateManyInput {
+  const issuer = (record.issuer ?? {}) as Record<string, unknown>;
+  const rewards = (record.rewards ?? {}) as Record<string, unknown>;
+  const reward = (key: string) =>
+    (rewards[key] ?? {}) as Record<string, unknown>;
+  const issuerOf = (r: Record<string, unknown>) =>
+    optionalNumber(((r.issuer ?? {}) as Record<string, unknown>).corporationID);
+  const isk = reward("isk");
+  const lp = reward("lp");
+  const standing = reward("standing");
+  const annotations = (record.annotations ?? {}) as Record<string, unknown>;
+  const method = (record.contributionMethodConfiguration ?? {}) as Record<
+    string,
+    unknown
+  >;
+
+  return {
+    militaryCampaignObjectiveId,
+    title: enString(record.title) ?? "",
+    subtitle: enString(record.subtitle),
+    militaryCampaignId,
+    careerPath: plainString(record.careerPath),
+    targetProgress: optionalNumber(record.targetProgress),
+    maxProgressPerParticipant: optionalNumber(record.maxProgressPerParticipant),
+    presentingCharacterId: optionalNumber(record.presentingCharacterID),
+    issuerCorporationId: optionalNumber(issuer.corporationID),
+    iskAmountPerInterval: optionalNumber(isk.amountPerInterval),
+    iskProgressInterval: optionalNumber(isk.progressInterval),
+    iskIssuerCorporationId: issuerOf(isk),
+    lpAmountPerInterval: optionalNumber(lp.amountPerInterval),
+    lpProgressInterval: optionalNumber(lp.progressInterval),
+    lpIssuerCorporationId: issuerOf(lp),
+    standingGainPercentPerInterval: optionalNumber(
+      standing.gainPercentPerInterval,
+    ),
+    standingProgressInterval: optionalNumber(standing.progressInterval),
+    standingIssuerCorporationId: issuerOf(standing),
+    requiredEnlistmentWithFactionId: optionalNumber(
+      annotations.requiredEnlistmentWithFactionID,
+    ),
+    restrictionTooltip: enString(annotations.restrictionTooltip),
+    warning1: enString(annotations.warning1),
+    warning2: enString(annotations.warning2),
+    contributionMethodName: plainString(method.name),
+    isDeleted: false,
+  };
+}
 
 export const ingestSdeMilitaryCampaigns = defineJob<
   IngestSdeMilitaryCampaignsEventPayload["data"]
@@ -130,55 +185,9 @@ export const ingestSdeMilitaryCampaignObjectives = defineJob<
       const militaryCampaignId = plainString(record.campaignID) ?? "";
       if (!campaignIds.has(militaryCampaignId)) continue;
 
-      const issuer = (record.issuer ?? {}) as Record<string, unknown>;
-      const rewards = (record.rewards ?? {}) as Record<string, unknown>;
-      const reward = (key: string) =>
-        (rewards[key] ?? {}) as Record<string, unknown>;
-      const issuerOf = (r: Record<string, unknown>) =>
-        optionalNumber(
-          ((r.issuer ?? {}) as Record<string, unknown>).corporationID,
-        );
-      const isk = reward("isk");
-      const lp = reward("lp");
-      const standing = reward("standing");
-      const annotations = (record.annotations ?? {}) as Record<string, unknown>;
-      const method = (record.contributionMethodConfiguration ?? {}) as Record<
-        string,
-        unknown
-      >;
-
-      objectives.push({
-        militaryCampaignObjectiveId,
-        title: enString(record.title) ?? "",
-        subtitle: enString(record.subtitle),
-        militaryCampaignId,
-        careerPath: plainString(record.careerPath),
-        targetProgress: optionalNumber(record.targetProgress),
-        maxProgressPerParticipant: optionalNumber(
-          record.maxProgressPerParticipant,
-        ),
-        presentingCharacterId: optionalNumber(record.presentingCharacterID),
-        issuerCorporationId: optionalNumber(issuer.corporationID),
-        iskAmountPerInterval: optionalNumber(isk.amountPerInterval),
-        iskProgressInterval: optionalNumber(isk.progressInterval),
-        iskIssuerCorporationId: issuerOf(isk),
-        lpAmountPerInterval: optionalNumber(lp.amountPerInterval),
-        lpProgressInterval: optionalNumber(lp.progressInterval),
-        lpIssuerCorporationId: issuerOf(lp),
-        standingGainPercentPerInterval: optionalNumber(
-          standing.gainPercentPerInterval,
-        ),
-        standingProgressInterval: optionalNumber(standing.progressInterval),
-        standingIssuerCorporationId: issuerOf(standing),
-        requiredEnlistmentWithFactionId: optionalNumber(
-          annotations.requiredEnlistmentWithFactionID,
-        ),
-        restrictionTooltip: enString(annotations.restrictionTooltip),
-        warning1: enString(annotations.warning1),
-        warning2: enString(annotations.warning2),
-        contributionMethodName: plainString(method.name),
-        isDeleted: false,
-      });
+      objectives.push(
+        toObjectiveRow(militaryCampaignObjectiveId, militaryCampaignId, record),
+      );
 
       for (const tag of (record.contentTags ?? []) as string[]) {
         tags.push({
@@ -188,49 +197,16 @@ export const ingestSdeMilitaryCampaignObjectives = defineJob<
         });
       }
 
-      const params = (method.parameters ?? []) as {
-        key?: string;
-        matcher?: { values?: { valueType?: string; values?: string[] }[] };
-      }[];
-      for (const param of params) {
-        const paramKey = param.key;
-        if (paramKey == null) continue;
-        parameters.push({
-          militaryCampaignObjectiveId,
-          paramKey,
-          isDeleted: false,
-        });
-        for (const [matcherIndex, matcher] of (
-          param.matcher?.values ?? []
-        ).entries()) {
-          const valueType = matcher.valueType ?? "";
-          const values = matcher.values ?? [];
-          if (values.length === 0) {
-            // A matcher can name a valueType with no values (e.g. "corporation").
-            parameterValues.push({
-              militaryCampaignObjectiveId,
-              paramKey,
-              matcherIndex,
-              valueIndex: 0,
-              valueType,
-              value: null,
-              isDeleted: false,
-            });
-            continue;
-          }
-          for (const [valueIndex, matcherValue] of values.entries()) {
-            parameterValues.push({
-              militaryCampaignObjectiveId,
-              paramKey,
-              matcherIndex,
-              valueIndex,
-              valueType,
-              value: String(matcherValue),
-              isDeleted: false,
-            });
-          }
-        }
-      }
+      const method = (record.contributionMethodConfiguration ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const flattened = flattenContributionParameters(
+        militaryCampaignObjectiveId,
+        (method.parameters ?? []) as ContributionParameter[],
+      );
+      parameters.push(...flattened.parameters);
+      parameterValues.push(...flattened.parameterValues);
     }
 
     const scopeIds = objectives.map((o) => o.militaryCampaignObjectiveId);
