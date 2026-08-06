@@ -193,6 +193,16 @@ describe("describeEndpoint — what is skipped", () => {
     ).toBeNull();
   });
 
+  it("skips operations with no operationId", () => {
+    // The generated export names are derived from it, so there is nothing to
+    // import without one.
+    expect(
+      describeAt("/characters/{character_id}/fittings", {
+        operationId: undefined,
+      }),
+    ).toBeNull();
+  });
+
   it("skips operations with no declared response schema", () => {
     expect(
       describeAt("/characters/{character_id}/fittings", { responses: {} }),

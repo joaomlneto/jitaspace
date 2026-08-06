@@ -100,8 +100,11 @@ export function describeEndpoint(
   const pathParams = [...route.matchAll(/\{(\w+)\}/g)].flatMap(
     ([, name]) => name ?? [],
   );
-  const subjectParam = pathParams.find((name) => name in SUBJECT_PARAMS);
-  if (!subjectParam) return null;
+  const subject = Object.entries(SUBJECT_PARAMS).find(([param]) =>
+    pathParams.includes(param),
+  );
+  if (!subject) return null;
+  const [subjectParam, kind] = subject;
   if (pathParams.some((name) => name !== subjectParam)) return null;
 
   const responses = operation.responses as
@@ -143,8 +146,6 @@ export function describeEndpoint(
     return null;
   }
 
-  const kind = SUBJECT_PARAMS[subjectParam];
-  if (!kind) return null;
   // Drop the leading collection segment and every path parameter; what is left
   // names the resource. /corporations/{corporation_id}/orders/history reads as
   // useMultipleCorporationOrdersHistory.
@@ -161,7 +162,7 @@ export function describeEndpoint(
     hookName,
     fileName: `${hookName}.ts`,
     kind,
-    scopes: Object.values(operation.security[0] ?? {}).flat(),
+    scopes: operation.security.flatMap((entry) => Object.values(entry).flat()),
     roles: operation["x-required-roles"] ?? [],
     paginated: queryParams.includes("page"),
     single,
