@@ -30,7 +30,13 @@ export const SolarSystemSovereigntyAvatar = memo(
     );
     const { data } = useSolarSystem(normalizedSolarSystemId);
     const sov = useSolarSystemSovereignty(normalizedSolarSystemId);
-    const { data: star } = useStar(data?.data.star_id ?? 0);
+    // Only the no-sovereignty fallback needs the star, so skip the fetch on the
+    // alliance / corporation / faction branches.
+    const needsStar =
+      !sov?.alliance_id && !sov?.corporation_id && !sov?.faction_id;
+    const { data: star } = useStar(data?.data.star_id ?? 0, undefined, {
+      query: { enabled: needsStar },
+    });
 
     // if sov has an alliance, show an alliance avatar
     if (sov?.alliance_id) {

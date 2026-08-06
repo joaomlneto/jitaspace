@@ -32,7 +32,7 @@ export interface SolarSystemMapProps {
   stargates: BodyInput[];
   /** Height of the map. Defaults to 460. */
   height?: number | string;
-  /** Initial layout mode. Defaults to "realistic". */
+  /** Initial layout mode. Defaults to "compressed" (readable at a glance). */
   defaultMode?: LayoutMode;
   /**
    * Renders the label shown while hovering a body. Receives the body's kind
@@ -90,7 +90,7 @@ export function SolarSystemMap({
   stations,
   stargates,
   height = 460,
-  defaultMode = "realistic",
+  defaultMode = "compressed",
   renderLabel,
   showLegend = true,
   autoRotate = false,

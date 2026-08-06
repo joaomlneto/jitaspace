@@ -10,7 +10,9 @@
  * a single uniform scale (the "realistic" mode) is geometrically exact but
  * leaves most bodies very small; two readable "overview" modes (compressed,
  * rings) remap the radial distance for legibility while keeping each body's real
- * angular position. Sizes stay proportional to the real radius in every mode.
+ * angular position. In realistic mode body sizes are strictly proportional to
+ * the real radius; the overview modes size planets proportionally too (clamped to
+ * a legible minimum) and draw moons/stations at fixed icon sizes.
  */
 
 export type Vec3 = [number, number, number];
@@ -210,9 +212,18 @@ export interface PlacedStargate {
   size: number;
 }
 
+/** A station with no parent planet, placed standalone at the top level. */
+export interface PlacedStation {
+  id: number;
+  position: Vec3;
+  size: number;
+}
+
 export interface SystemLayout {
   star: PlacedStar;
   planets: PlacedPlanet[];
+  /** Stations with no parent planet (planet-less systems), placed standalone. */
+  stations: PlacedStation[];
   stargates: PlacedStargate[];
   /** Largest display radius in the scene (for framing the camera). */
   extent: number;
@@ -220,20 +231,28 @@ export interface SystemLayout {
   flat: boolean;
 }
 
-/** Assign each station to its nearest planet. */
-function groupStationsByPlanet(
+/**
+ * Split stations into those attached to their nearest planet and "orphans" that
+ * have no planet to attach to (systems with no planets at all — e.g. Zarzakh).
+ * Orphans are placed at the top level rather than dropped.
+ */
+function partitionStations(
   stations: BodyInput[],
   planets: PlanetInput[],
-): Map<number, BodyInput[]> {
+): { byPlanet: Map<number, BodyInput[]>; orphans: BodyInput[] } {
   const byPlanet = new Map<number, BodyInput[]>();
+  const orphans: BodyInput[] = [];
   for (const station of stations) {
     const planetId = nearestPlanetId(station.position, planets);
-    if (planetId === undefined) continue;
+    if (planetId === undefined) {
+      orphans.push(station);
+      continue;
+    }
     const list = byPlanet.get(planetId) ?? [];
     list.push(station);
     byPlanet.set(planetId, list);
   }
-  return byPlanet;
+  return { byPlanet, orphans };
 }
 
 /** Even fan direction, used when a satellite sits exactly on the planet. */
@@ -329,10 +348,16 @@ function layoutRealistic(
       ? (STAR_SWALLOW_FRACTION * minPlanetDist * posScale) / star.radius
       : Infinity;
   const sizeScale = Math.min(SIZE_EXAGGERATION * posScale, swallowCap);
+  // Strictly proportional to the real radius (so relative sizes stay faithful,
+  // even when sub-pixel); only a missing/zero radius falls back to MIN_GEOMETRY
+  // to avoid a degenerate zero-size mesh.
   const sizeOf = (radius: number | undefined) =>
-    Math.max(MIN_GEOMETRY, (radius ?? 0) * sizeScale);
+    radius && radius > 0 ? radius * sizeScale : MIN_GEOMETRY;
 
-  const stationsByPlanet = groupStationsByPlanet(stations, planets);
+  const { byPlanet: stationsByPlanet, orphans } = partitionStations(
+    stations,
+    planets,
+  );
 
   const placedPlanets: PlacedPlanet[] = planets.map((planet, index) => {
     const position = scaleVec(planet.position, posScale);
@@ -366,15 +391,23 @@ function layoutRealistic(
     size: STARGATE_ICON,
   }));
 
+  const placedStations: PlacedStation[] = orphans.map((s) => ({
+    id: s.id,
+    position: scaleVec(s.position, posScale),
+    size: STATION_ICON,
+  }));
+
   const extent = Math.max(
     REALISTIC_EXTENT,
     ...placedPlanets.map((p) => p.orbitRadius),
     ...placedStargates.map((g) => length(g.position)),
+    ...placedStations.map((s) => length(s.position)),
   );
 
   return {
     star: { id: star.id, size: sizeOf(star.radius) },
     planets: placedPlanets,
+    stations: placedStations,
     stargates: placedStargates,
     extent,
     flat: false,
@@ -408,7 +441,10 @@ function layoutOverview(
   const planetSizeOf = (radius: number) =>
     Math.max(OVERVIEW_MIN_PLANET_SIZE, radius * planetSizeScale);
 
-  const stationsByPlanet = groupStationsByPlanet(stations, planets);
+  const { byPlanet: stationsByPlanet, orphans } = partitionStations(
+    stations,
+    planets,
+  );
 
   // Rank planets by real distance (for "rings" mode).
   const planetRank = new Map<number, number>();
@@ -465,6 +501,21 @@ function layoutOverview(
     };
   });
 
+  // Orphan stations (planet-less systems) sit on the inner ring at their real
+  // angle, so they stay visible instead of being dropped.
+  const placedStations: PlacedStation[] = orphans.map((s) => {
+    const angle = Math.atan2(s.position[2], s.position[0]);
+    return {
+      id: s.id,
+      position: [
+        Math.cos(angle) * DISPLAY_INNER,
+        0,
+        Math.sin(angle) * DISPLAY_INNER,
+      ],
+      size: STATION_ICON,
+    };
+  });
+
   const extent = Math.max(
     DISPLAY_INNER,
     ...placedPlanets.map((p) => p.orbitRadius),
@@ -474,6 +525,7 @@ function layoutOverview(
   return {
     star: { id: star.id, size: OVERVIEW_STAR_SIZE },
     planets: placedPlanets,
+    stations: placedStations,
     stargates: placedStargates,
     extent,
     flat: true,

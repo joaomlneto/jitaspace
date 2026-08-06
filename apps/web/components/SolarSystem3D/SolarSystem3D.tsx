@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Center, Loader } from "@mantine/core";
+import { Center, Loader, Text } from "@mantine/core";
 import { useQueries, useQuery } from "@tanstack/react-query";
 
 import type {
@@ -74,8 +75,15 @@ export function SolarSystem3D({
   solarSystemId,
   height = 460,
 }: Readonly<SolarSystem3DProps>) {
-  const { data: solarSystem } = useSolarSystem(solarSystemId);
+  const { data: solarSystem, isError: systemError } =
+    useSolarSystem(solarSystemId);
   const data = solarSystem?.data;
+
+  // Kick off the WebGL/three.js chunk download on mount so it overlaps the SDE
+  // queries below instead of only starting after they all resolve.
+  useEffect(() => {
+    void import("@jitaspace/solar-system-map");
+  }, []);
 
   const starId = data?.star_id;
   const planetEntries = data?.planets ?? [];
@@ -150,14 +158,28 @@ export function SolarSystem3D({
     })
     .filter((s): s is BodyInput => s !== undefined);
 
+  // The star query is disabled when the system has no star_id (e.g. some abyssal
+  // systems), so `settled` must NOT block on it — it stays not-loading and the
+  // map renders with a fixed-size star. Failed per-body queries resolve to
+  // not-loading too, so a partial failure degrades to a partial map rather than
+  // hanging.
   const settled =
     !!data &&
-    starId !== undefined &&
     !starQuery.isLoading &&
     planetQueries.every((q) => !q.isLoading) &&
     moonQueries.every((q) => !q.isLoading) &&
     stationQueries.every((q) => !q.isLoading) &&
     stargateQueries.every((q) => !q.isLoading);
+
+  if (systemError) {
+    return (
+      <Center h={height}>
+        <Text size="sm" c="dimmed">
+          System map is unavailable right now.
+        </Text>
+      </Center>
+    );
+  }
 
   if (!settled) {
     return (

@@ -1,8 +1,8 @@
 import type { Config } from "jest";
 
 const config: Config = {
-  testEnvironment: "node",
-  testMatch: ["<rootDir>/tests/**/*.test.ts"],
+  testEnvironment: "jsdom",
+  testMatch: ["<rootDir>/tests/**/*.test.ts", "<rootDir>/tests/**/*.test.tsx"],
   transform: {
     "^.+\\.tsx?$": [
       "@swc/jest",
@@ -11,6 +11,12 @@ const config: Config = {
           target: "es2022",
           parser: {
             syntax: "typescript",
+            tsx: true,
+          },
+          transform: {
+            react: {
+              runtime: "automatic",
+            },
           },
         },
         module: {
@@ -19,8 +25,13 @@ const config: Config = {
       },
     ],
   },
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   collectCoverage: true,
-  collectCoverageFrom: ["layout.ts"],
+  // SolarSystemScene.tsx mounts the WebGL <Canvas> (React Three Fiber) and needs
+  // a GPU context, so it can't run under jsdom — it is coverage-excluded in
+  // sonar-project.properties instead. layout.ts and the thin SolarSystemMap
+  // wrapper (Scene mocked away) are the testable surface.
+  collectCoverageFrom: ["layout.ts", "SolarSystemMap.tsx"],
   coverageDirectory: "coverage",
   coverageReporters: ["lcov", "text"],
   clearMocks: true,

@@ -18,15 +18,15 @@ Every body is placed from its real SDE coordinates and sized from its real
 its orbital radius and a moon orbits ~1/46,000 of the system's width from its
 planet), so the map offers three modes via a built-in selector:
 
-- **`realistic`** (default) — every body at its true 3D position (one uniform
-  scale) and sized from its real radius. Geometrically faithful, so the system
-  is mostly empty space: the star and inner planets sit near the centre and you
-  zoom in to inspect them. Sizes are enlarged by a shared factor for visibility
-  (capped so the star doesn't engulf the inner planets), keeping them strictly
-  proportional to the real radii.
-- **`compressed`** — keeps each body's real angle but log-compresses the radial
-  distance so the whole system is legible at a glance; moons/stations are
-  clustered around their planet.
+- **`compressed`** (default) — keeps each body's real angle but log-compresses
+  the radial distance so the whole system is legible at a glance; moons/stations
+  are clustered around their planet.
+- **`realistic`** — every body at its true 3D position (one uniform scale) and
+  sized from its real radius. Geometrically faithful, so the system is mostly
+  empty space: the star and inner planets sit near the centre and you zoom in to
+  inspect them. Sizes are enlarged by a shared factor for visibility (capped so
+  the star doesn't engulf the inner planets), keeping them strictly proportional
+  to the real radii.
 - **`rings`** — planets on evenly-spaced rings (ranked by real distance) at their
   real angles.
 
@@ -71,10 +71,11 @@ const SolarSystemMap = dynamic(
 | `stations`    | `{ id, position }[]`                     | —             | Stations with real position (assigned to their nearest planet).              |
 | `stargates`   | `{ id, position }[]`                     | —             | Stargates with real position.                                                |
 | `height`      | `number \| string`                       | `460`         | Map height.                                                                  |
-| `defaultMode` | `"realistic" \| "compressed" \| "rings"` | `"realistic"` | Initial layout mode.                                                         |
+| `defaultMode` | `"realistic" \| "compressed" \| "rings"` | `"compressed"` | Initial layout mode.                                                        |
 | `renderLabel` | `({ kind, id }) => ReactNode`            | —             | Renders the hover label; resolve names here. `kind` includes `"star"`.       |
 | `showLegend`  | `boolean`                                | `true`        | Show the colour legend.                                                      |
 | `autoRotate`  | `boolean`                                | `false`       | Slowly auto-rotate the camera (pauses while hovering).                       |
+| `style`       | `CSSProperties`                          | —             | Extra styles merged into the map's container element.                        |
 
 Positions and radii are the raw system-relative SDE values (metres, star at the
 origin). In `realistic` mode the star, planets and moons are drawn at their

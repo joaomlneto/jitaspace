@@ -153,6 +153,30 @@ describe("layoutSystem — realistic", () => {
     expect(m12).toBeGreaterThan(m11); // 3e5 > 2e5
   });
 
+  it("keeps sub-pixel moon sizes proportional (no MIN_GEOMETRY clamp)", () => {
+    // A far-out planet makes sizeScale tiny, so both moons are sub-pixel. They
+    // must stay proportional to radius, not both clamp to the same floor.
+    const planets: PlanetInput[] = [
+      {
+        id: 1,
+        position: vec(5e12, 0, 0),
+        radius: 6e7,
+        moons: [
+          { id: 11, position: vec(5e12 + 1e8, 0, 0), radius: 1e5 },
+          { id: 12, position: vec(5e12, 0, 3e8), radius: 3e5 }, // 3x radius
+        ],
+      },
+    ];
+    const sats =
+      layoutSystem({ id: 99, radius: 5e8 }, planets, [], [], "realistic")
+        .planets[0]?.satellites ?? [];
+    const m11 = sats.find((s) => s.id === 11)?.size ?? 0;
+    const m12 = sats.find((s) => s.id === 12)?.size ?? 0;
+    expect(m11).toBeGreaterThan(0);
+    // 3x radius -> ~3x size (would be 1:1 if both clamped to MIN_GEOMETRY)
+    expect(m12 / m11).toBeCloseTo(3, 1);
+  });
+
   it("caps the star so it stays inside the innermost orbit", () => {
     const layout = layoutSystem(STAR, JITA_PLANETS, [], [], "realistic");
     const innerOrbit = Math.min(...layout.planets.map((p) => len(p.position)));
@@ -160,7 +184,7 @@ describe("layoutSystem — realistic", () => {
     expect(layout.star.size).toBeLessThan(innerOrbit);
   });
 
-  it("does not cap when the star has no radius (and floors tiny bodies)", () => {
+  it("does not cap when the star has no radius (floors only a missing radius)", () => {
     const planets: PlanetInput[] = [
       {
         id: 1,
@@ -273,8 +297,11 @@ describe("layoutSystem — overview", () => {
     const moon = layoutSystem(STAR, planets, [], [], "compressed").planets[0]
       ?.satellites[0];
     expect(moon?.id).toBe(11);
-    expect(Number.isFinite(moon?.position[0] ?? NaN)).toBe(true);
-    expect(len(moon?.position)).toBeGreaterThan(0);
+    // fanDirection(0, 1) is +x, so a single on-planet moon sits on the +x band
+    // (not NaN, and pushed off the planet centre onto the x/z plane).
+    expect(moon?.position[0] ?? 0).toBeGreaterThan(0);
+    expect(moon?.position[1]).toBe(0);
+    expect(moon?.position[2]).toBeCloseTo(0);
   });
 
   it("places stargates at the same angle but a larger radius in 'rings'", () => {
@@ -346,16 +373,17 @@ describe("layoutSystem — modes differ", () => {
 });
 
 describe("degenerate inputs", () => {
-  it("drops stations that have no planet to attach to (overview)", () => {
-    const layout = layoutSystem(
-      STAR,
-      [],
-      [{ id: 60, position: vec(1e9, 0, 0) }],
-      [],
-      "compressed",
-    );
-    expect(layout.planets).toHaveLength(0);
-    expect(layout.extent).toBeGreaterThan(0);
+  it("places orphan stations (no planet) at the top level, not dropped", () => {
+    const station = { id: 60, position: vec(1e9, 0, 0) };
+    const overview = layoutSystem(STAR, [], [station], [], "compressed");
+    expect(overview.planets).toHaveLength(0);
+    expect(overview.stations.map((s) => s.id)).toEqual([60]);
+    expect(overview.extent).toBeGreaterThan(0);
+
+    const realistic = layoutSystem(STAR, [], [station], [], "realistic");
+    expect(realistic.stations.map((s) => s.id)).toEqual([60]);
+    // realistic keeps the station's real (scaled) position on the +x axis
+    expect(realistic.stations[0]?.position[0] ?? 0).toBeGreaterThan(0);
   });
 
   it("handles an empty system without crashing (realistic)", () => {

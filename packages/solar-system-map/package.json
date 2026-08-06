@@ -47,6 +47,8 @@
     "@jitaspace/tsconfig": "workspace:*",
     "@swc/core": "^1.15.40",
     "@swc/jest": "^0.2.39",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
     "@types/react": "^19.1.6",

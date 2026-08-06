@@ -15,6 +15,7 @@ import type {
   PlacedSatellite,
   PlacedStar,
   PlacedStargate,
+  PlacedStation,
   PlanetInput,
   StarInput,
   Vec3,
@@ -289,6 +290,44 @@ function StargateMarker({
   );
 }
 
+/** A standalone station (one with no parent planet, e.g. in Zarzakh). */
+function StationMarker({
+  station,
+  hover,
+  setHover,
+  onFocus,
+}: Readonly<{
+  station: PlacedStation;
+  hover: HoverTarget | null;
+  setHover: (hover: HoverTarget | null) => void;
+  onFocus: FocusHandler;
+}>) {
+  const isHovered = hover?.kind === "station" && hover.id === station.id;
+  return (
+    <mesh
+      position={station.position}
+      scale={isHovered ? 1.7 : 1}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHover({ kind: "station", id: station.id, ...pointerXY(e) });
+      }}
+      onPointerOut={() => setHover(null)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onFocus(e, station.size);
+      }}
+    >
+      <boxGeometry args={[station.size, station.size, station.size]} />
+      <meshStandardMaterial
+        color={STATION_COLOR}
+        emissive={STATION_COLOR}
+        emissiveIntensity={isHovered ? 0.6 : 0.4}
+        roughness={0.85}
+      />
+    </mesh>
+  );
+}
+
 export default function SolarSystemScene({
   star,
   planets,
@@ -334,6 +373,15 @@ export default function SolarSystemScene({
           key={planet.id}
           planet={planet}
           flat={layout.flat}
+          hover={hover}
+          setHover={setHover}
+          onFocus={handleFocus}
+        />
+      ))}
+      {layout.stations.map((station) => (
+        <StationMarker
+          key={station.id}
+          station={station}
           hover={hover}
           setHover={setHover}
           onFocus={handleFocus}
