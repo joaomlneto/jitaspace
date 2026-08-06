@@ -15,6 +15,12 @@ import { defineJob } from "../../../core";
  * the set of `ingest-sde-*` jobs (minus this orchestrator).
  */
 export const SDE_INGEST_JOB_IDS: string[] = [
+  // Ship-tree elements/groups and graphic material sets come FIRST: they are the
+  // targets of Type.shipTreeGroupId and Graphic.sofMaterialSetId, both real
+  // foreign keys, so they must exist before types/graphics are written.
+  "ingest-sde-ship-tree-elements",
+  "ingest-sde-ship-tree-groups",
+  "ingest-sde-graphic-material-sets",
   // Reference lookups (no or already-satisfied dependencies).
   "ingest-sde-graphics",
   "ingest-sde-icons",
@@ -68,6 +74,27 @@ export const SDE_INGEST_JOB_IDS: string[] = [
   "ingest-sde-planet-schematics",
   // Agents in space.
   "ingest-sde-agents-in-space",
+  // Remaining ship-tree tables. Elements/groups/material sets already ran at the
+  // top of this list; these two only need shipTreeElements, which has too.
+  "ingest-sde-ship-tree-factions",
+  "ingest-sde-type-elements",
+  // Missions and epic arcs. EpicArcMission FKs Mission, so missions come first.
+  "ingest-sde-missions",
+  "ingest-sde-epic-arcs",
+  // Military campaigns. Objectives FK the campaign.
+  "ingest-sde-military-campaigns",
+  "ingest-sde-military-campaign-objectives",
+  // SKINR. Categories/rarities before point values and components; slots before
+  // slot configurations; ship-tree groups (above) before tier thresholds.
+  "ingest-sde-skinr-component-categories",
+  "ingest-sde-skinr-component-rarities",
+  "ingest-sde-skinr-component-point-values",
+  "ingest-sde-skinr-components",
+  "ingest-sde-skinr-slot-categories",
+  "ingest-sde-skinr-slot-names",
+  "ingest-sde-skinr-slots",
+  "ingest-sde-skinr-slot-configurations",
+  "ingest-sde-skinr-tier-thresholds",
   // Misc reference data (no cross-entity foreign keys).
   "ingest-sde-corporation-activities",
   "ingest-sde-mercenary-tactical-operations",
