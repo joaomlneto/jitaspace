@@ -262,6 +262,41 @@ describe("Anchor components", () => {
       );
       expect(hrefOf("Owner")).toBe("/character/42");
     });
+
+    // Each resolvable owner_type ESI can report has to reach useEsiName as the
+    // matching category, or the anchor builds the wrong route.
+    it.each<[string, string]>([
+      ["alliance", "/alliance/42"],
+      ["corporation", "/corporation/42"],
+      ["faction", "/faction/42"],
+    ])("maps the %s owner type to its entity category", (ownerType, href) => {
+      renderWithMantine(
+        <CalendarEventOwnerAnchor ownerId={42} ownerType={ownerType}>
+          Owner
+        </CalendarEventOwnerAnchor>,
+      );
+      expect(hrefOf("Owner")).toBe(href);
+    });
+
+    // An owner_type outside the resolvable set must not be passed through as a
+    // category hint. The mock echoes any hint it receives, so a forwarded one
+    // would miss every case in EveEntityAnchor's switch and yield "#"; falling
+    // back to the mock's default category proves the hint was dropped.
+    it("drops an unrecognised owner type rather than forwarding it", () => {
+      renderWithMantine(
+        <CalendarEventOwnerAnchor ownerId={42} ownerType="moon_colony">
+          Owner
+        </CalendarEventOwnerAnchor>,
+      );
+      expect(hrefOf("Owner")).toBe("/character/42");
+    });
+
+    it("still resolves an owner when no owner type is given", () => {
+      renderWithMantine(
+        <CalendarEventOwnerAnchor ownerId={42}>Owner</CalendarEventOwnerAnchor>,
+      );
+      expect(hrefOf("Owner")).toBe("/character/42");
+    });
   });
 
   describe("EveMailSenderAnchor", () => {

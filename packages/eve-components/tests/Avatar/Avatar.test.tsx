@@ -536,6 +536,19 @@ describe("SolarSystemSovereigntyAvatar", () => {
     );
   });
 
+  it("looks up star 0 when the system reports no star", () => {
+    useSolarSystemSovereignty.mockReturnValue(undefined);
+    useSolarSystem.mockReturnValue({ data: { data: {} } });
+    useStar.mockReturnValue({ data: undefined });
+    const { container } = renderWithMantine(
+      <SolarSystemSovereigntyAvatar solarSystemId={30000142} />,
+    );
+    // useStar is a hook, so it cannot be skipped when star_id is missing; it is
+    // called with the sentinel 0 and the avatar falls back to the placeholder.
+    expect(useStar).toHaveBeenCalledWith(0);
+    expect(container.querySelector("img")).toBeNull();
+  });
+
   it("accepts a string solarSystemId", () => {
     useSolarSystemSovereignty.mockReturnValue({ alliance_id: 99000999 });
     const { container } = renderWithMantine(
