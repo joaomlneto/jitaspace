@@ -38,6 +38,10 @@ const pascal = (value: string) =>
 
 const camel = (value: string) => value.charAt(0).toLowerCase() + value.slice(1);
 
+/** Render a string list as TypeScript source, e.g. `"a", "b"`. */
+const quoteAll = (values: readonly string[]) =>
+  values.map((value) => JSON.stringify(value)).join(", ");
+
 /** Resolve a `$ref` against the document, one level deep is enough for ESI. */
 function deref(
   schema: Record<string, unknown> | undefined,
@@ -168,10 +172,8 @@ export function renderEndpoint(endpoint: MultiEsiEndpoint): string {
 
   const config = [
     `  kind: "${kind}",`,
-    `  scopes: [${scopes.map((scope) => `"${scope}"`).join(", ")}],`,
-    roles.length
-      ? `  roles: [${roles.map((r) => `"${r}"`).join(", ")}],`
-      : null,
+    `  scopes: [${quoteAll(scopes)}],`,
+    roles.length ? `  roles: [${quoteAll(roles)}],` : null,
   ].filter(Boolean);
 
   if (paginated) {

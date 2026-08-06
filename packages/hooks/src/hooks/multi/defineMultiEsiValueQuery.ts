@@ -55,15 +55,14 @@ export interface MultiEsiValueQueryResult<
  * });
  * ```
  */
-export function defineMultiEsiValueQuery<TValue>(config: {
-  kind: MultiEsiQueryConfig["kind"];
-  scopes?: MultiEsiQueryConfig["scopes"];
-  roles?: MultiEsiQueryConfig["roles"];
-  query: (
-    subjectId: number,
-    authHeaders: Record<string, string>,
-  ) => EsiQuerySource<TValue>;
-}) {
+export function defineMultiEsiValueQuery<TValue>(
+  config: MultiEsiQueryConfig & {
+    query: (
+      subjectId: number,
+      authHeaders: Record<string, string>,
+    ) => EsiQuerySource<TValue>;
+  },
+) {
   const { kind, scopes, roles, query } = config;
   const subjectConfig: MultiEsiQueryConfig = { kind, scopes, roles };
 

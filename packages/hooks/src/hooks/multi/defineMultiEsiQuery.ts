@@ -50,15 +50,14 @@ export interface MultiEsiQueryResult<TItem> extends MultiEsiQueryEnvelope {
  * });
  * ```
  */
-export function defineMultiEsiQuery<TItem>(config: {
-  kind: MultiEsiQueryConfig["kind"];
-  scopes?: MultiEsiQueryConfig["scopes"];
-  roles?: MultiEsiQueryConfig["roles"];
-  query: (
-    subjectId: number,
-    authHeaders: Record<string, string>,
-  ) => EsiQuerySource<TItem[]>;
-}) {
+export function defineMultiEsiQuery<TItem>(
+  config: MultiEsiQueryConfig & {
+    query: (
+      subjectId: number,
+      authHeaders: Record<string, string>,
+    ) => EsiQuerySource<TItem[]>;
+  },
+) {
   const { kind, scopes, roles, query } = config;
   const subjectConfig: MultiEsiQueryConfig = { kind, scopes, roles };
 
