@@ -103,6 +103,9 @@ export const SDE_INGEST_JOB_IDS: string[] = [
   "ingest-sde-skinr-tier-thresholds",
   // Misc reference data (no cross-entity foreign keys).
   "ingest-sde-corporation-activities",
+  // Only writes SDE-owned columns onto Corporation rows the ESI scrapers have
+  // already created, so it must follow them — never creates a corporation.
+  "ingest-sde-npc-corporations",
   "ingest-sde-mercenary-tactical-operations",
   "ingest-sde-freelance-job-schemas",
   "ingest-sde-dungeons",

@@ -3,5 +3,6 @@ export * from "./ingestSdeCompositeTable";
 export * from "./ingestSdeTable";
 export * from "./loadSdeFile";
 export * from "./sdeFields";
+export * from "./sdeOwnedColumns";
 export * from "./mergeEntriesIntoCharactersTable";
 export * from "./mergeEntriesIntoCorporationsTable";
