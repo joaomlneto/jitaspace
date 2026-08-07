@@ -1,4 +1,10 @@
 import { defineJob } from "../../../core";
+import { loadSdeFile } from "../../../helpers/loadSdeFile";
+import {
+  recordSdeIngestCompleted,
+  recordSdeIngestStarted,
+  sdeBuildFromMetadata,
+} from "./sdeIngestState";
 
 /**
  * Every `ingest-sde-*` job id, in foreign-key dependency order:
@@ -146,6 +152,14 @@ export const ingestSde = defineJob<IngestSdeEventPayload["data"]>({
   // future SDE grows it further.
   machine: "medium-2x",
   handler: async (ctx) => {
+    // Claim the marker before any table is touched, so `watch-sde` stops
+    // re-triggering while this run is in flight. Reading `_sde.yaml` also warms
+    // the per-process extract every ingest below reuses, so this is the same
+    // single download, not an extra one.
+    const build = sdeBuildFromMetadata(await loadSdeFile("_sde.yaml"));
+    await recordSdeIngestStarted(build);
+    ctx.logger.info(`ingest-sde-all: SDE build ${build.buildNumber}`);
+
     // Run every ingest in THIS process (not as child tasks) so the SDE archive
     // is downloaded only once. The lazy import breaks the module cycle (the
     // registry is built from the jobs array, which includes this job) and is
@@ -156,6 +170,10 @@ export const ingestSde = defineJob<IngestSdeEventPayload["data"]>({
       ctx.logger.info(`ingest-sde-all: ${jobId}`);
       results[jobId] = await registry.get(jobId).handler(ctx);
     }
-    return { results };
+
+    // Only now is the database actually on this build. A failure above leaves
+    // the claim un-completed, which `watch-sde` retries once it goes stale.
+    await recordSdeIngestCompleted(build.buildNumber);
+    return { results, buildNumber: build.buildNumber };
   },
 });
