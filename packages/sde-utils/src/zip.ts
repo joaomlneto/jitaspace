@@ -11,6 +11,11 @@ export const mkdir = (dirPath: string) => {
 
 /**
  * Compute an MD5 checksum over all file entries in a ZIP archive.
+ *
+ * This fingerprints archive *contents* — use it to spot a truncated or corrupt
+ * copy. To tell whether a copy is the current SDE, compare build numbers via
+ * `sdeZipBuild`/`sdeFolderBuild` instead.
+ *
  * @param onProgress Optional callback: (entriesProcessed, totalEntries)
  */
 export async function sdeZipChecksum(
@@ -20,9 +25,8 @@ export async function sdeZipChecksum(
   const zip = new StreamZip.async({ file: filePath });
   const entries = await zip.entries();
   const total = await zip.entriesCount;
-  // MD5 is required here: EVE Online's official SDE checksum endpoint publishes
-  // an MD5 digest, so we must use the same algorithm to verify downloads. This
-  // is integrity-checking, not cryptographic security. NOSONAR
+  // MD5 is a content fingerprint for integrity checking here, never a security
+  // boundary — nothing trusts it against a tampered archive. NOSONAR
   const checksum = crypto.createHash("md5"); // NOSONAR
 
   let processed = 0;

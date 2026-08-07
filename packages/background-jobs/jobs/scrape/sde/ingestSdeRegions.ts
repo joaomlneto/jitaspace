@@ -4,6 +4,7 @@ import { prisma } from "../../../db";
 import {
   enString,
   ingestSdeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalNumber,
 } from "../../../helpers";
@@ -23,13 +24,11 @@ export const ingestSdeRegions = defineJob<IngestSdeRegionsEventPayload["data"]>(
     maxDurationSeconds: 1800,
     handler: async () => {
       const start = performance.now();
-      const files = await loadSdeFiles(["mapRegions.yaml", "graphics.yaml"]);
+      const files = await loadSdeFiles(["mapRegions.yaml"]);
       // `nebulaID` is a graphics.yaml id (the universe nebula scene). Every id
       // resolves today, but guard it the way ingestSdeTypes guards graphicID so
       // a future dangling reference can't break the FK.
-      const graphicIds = new Set(
-        Object.keys(files["graphics.yaml"]).map(Number),
-      );
+      const graphicIds = await loadSdeFileIds("graphics.yaml");
 
       const regions = await ingestSdeTable({
         filename: "mapRegions.yaml",
