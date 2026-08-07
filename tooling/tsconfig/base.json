@@ -26,6 +26,7 @@
     "build",
     "dist",
     ".next",
-    ".expo"
+    ".expo",
+    "coverage"
   ]
 }

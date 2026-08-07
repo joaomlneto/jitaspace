@@ -4,12 +4,8 @@ import type { TextProps } from "@mantine/core";
 import { memo } from "react";
 import { Text } from "@mantine/core";
 
+import type { MailingList } from "../types";
 import { EveEntityName } from "./index";
-
-export interface MailingList {
-  mailing_list_id: number;
-  name: string;
-}
 
 export type EveMailSenderNameProps = TextProps & {
   from?: number;

@@ -23,13 +23,14 @@ jest.mock("@mantine/core", () => ({
   Loader: () => null,
 }));
 
-const mockConsumeLoginResult = jest.fn();
+const mockConsumeLoginResult =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
 jest.mock("../app/login/complete/actions", () => ({
   consumeLoginResult: () => mockConsumeLoginResult(),
 }));
 
-const mockAddCharacter = jest.fn();
-const mockRehydrate = jest.fn();
+const mockAddCharacter = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockRehydrate = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 let mockSelectedCharacter: number | undefined;
 jest.mock("@jitaspace/hooks", () => ({
   useAuthStore: {

@@ -8,8 +8,9 @@ import { render, screen } from "@testing-library/react";
 // ---------------------------------------------------------------------------
 // Shared hook mocks
 // ---------------------------------------------------------------------------
-const mockUseKillmail = jest.fn<() => { data?: unknown }>();
-const mockUseAllSolarSystemKills = jest.fn<() => { data?: unknown }>();
+const mockUseKillmail = jest.fn<(...args: unknown[]) => { data?: unknown }>();
+const mockUseAllSolarSystemKills =
+  jest.fn<(...args: unknown[]) => { data?: unknown }>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useKillmail: (...args: unknown[]) => mockUseKillmail(...args),

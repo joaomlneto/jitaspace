@@ -5,19 +5,19 @@ import type { ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
-const mockUseSelectedCharacter = jest.fn();
+const mockUseSelectedCharacter = jest.fn<(...args: unknown[]) => unknown>();
 const mockUseCorporationAssets = jest.fn<
-  () => {
+  (...args: unknown[]) => {
     assets: Record<number, object>;
     isLoading: boolean;
     errorMessage?: string;
   }
 >();
 const mockUseEsiNameLookup = jest.fn<
-  () => Record<string, { value?: { name: string } } | undefined>
+  (...args: unknown[]) => Record<string, { value?: { name: string } } | undefined>
 >();
 const mockUseMarketPrices = jest.fn<
-  () => { data: Record<number, { adjusted_price?: number }> }
+  (...args: unknown[]) => { data: Record<number, { adjusted_price?: number }> }
 >();
 
 jest.mock("@jitaspace/hooks", () => ({

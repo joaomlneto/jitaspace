@@ -29,12 +29,12 @@ jest.mock("~/app/lp-store/[corporationId]/page.client", () => ({ default: () => 
 jest.mock("next/cache", () => ({ cacheLife: jest.fn() }));
 
 // Prisma mock — methods are replaced per describe block
-const mockRaceFindUnique = jest.fn();
-const mockBloodlineFindUnique = jest.fn();
-const mockFactionFindUnique = jest.fn();
-const mockDogmaAttributeFindUnique = jest.fn();
-const mockDogmaEffectFindUnique = jest.fn();
-const mockCorporationFindUnique = jest.fn();
+const mockRaceFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockBloodlineFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockFactionFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockDogmaAttributeFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockDogmaEffectFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockCorporationFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
@@ -186,7 +186,9 @@ describe("faction/[factionId] generateMetadata", () => {
 // ---------------------------------------------------------------------------
 
 describe("kill/[killId] generateMetadata", () => {
-  beforeEach(() => jest.resetModules());
+  beforeEach(() => {
+    jest.resetModules();
+  });
 
   it("returns killmail title for valid id", async () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
@@ -216,7 +218,9 @@ describe("kill/[killId] generateMetadata", () => {
 // ---------------------------------------------------------------------------
 
 describe("war/[warId] generateMetadata", () => {
-  beforeEach(() => jest.resetModules());
+  beforeEach(() => {
+    jest.resetModules();
+  });
 
   it("returns war title for valid id", async () => {
     const { generateMetadata } = await import("~/app/war/[warId]/page");

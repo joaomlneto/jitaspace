@@ -5,12 +5,19 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
-const mockUseAuthenticatedCharacterIds = jest.fn<() => number[]>();
-const mockUseAuthStore = jest.fn();
+const mockUseAuthenticatedCharacterIds =
+  jest.fn<(...args: unknown[]) => number[]>();
+// The store is only ever read through a selector, so name the slice of state
+// the tests feed it rather than leaving the selector's argument `unknown`.
+interface AuthStoreState {
+  characters: Record<number, { allianceId?: number; corporationId?: number }>;
+}
+const mockUseAuthStore =
+  jest.fn<(selector: (state: AuthStoreState) => unknown) => unknown>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useAuthenticatedCharacterIds: () => mockUseAuthenticatedCharacterIds(),
-  useAuthStore: (selector: (state: unknown) => unknown) =>
+  useAuthStore: (selector: (state: AuthStoreState) => unknown) =>
     mockUseAuthStore(selector),
 }));
 

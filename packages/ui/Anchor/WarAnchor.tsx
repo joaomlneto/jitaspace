@@ -9,7 +9,7 @@ import { Anchor } from "@mantine/core";
 
 export type WarAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     warId: number;
   };
 

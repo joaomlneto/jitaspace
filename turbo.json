@@ -113,7 +113,10 @@
       "persistent": true
     },
     "type-check": {
-      "dependsOn": ["^topo", "kubb:generate"],
+      // `db:generate` for the same reason `build` depends on it: the Prisma
+      // client is generated, gitignored, and its types are what `@jitaspace/db`
+      // and everything downstream is checked against.
+      "dependsOn": ["^topo", "db:generate", "^db:generate", "kubb:generate"],
       "inputs": ["**/*.ts", "**/*.tsx", "package.json", "tsconfig.json"],
       "outputs": ["node_modules/.cache/tsbuildinfo.json"]
     },

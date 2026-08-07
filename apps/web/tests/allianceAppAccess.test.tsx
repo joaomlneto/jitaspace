@@ -1,3 +1,5 @@
+import { describe, expect, it } from "@jest/globals";
+
 import { getEnabledApps } from "~/components/Menu/appAccess";
 import { allianceApps } from "~/config/apps";
 

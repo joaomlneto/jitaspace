@@ -11,7 +11,7 @@ import userEvent from "@testing-library/user-event";
 // AFTER these are registered (jest.mock is not auto-hoisted in this project).
 // ---------------------------------------------------------------------------
 
-const mockUseCharacterMailLabels = jest.fn();
+const mockUseCharacterMailLabels = jest.fn<(...args: unknown[]) => unknown>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useCharacterMailLabels: (...args: unknown[]) =>
@@ -23,8 +23,8 @@ jest.mock("@jitaspace/utils", () => ({
   isSpecialLabelId: (id?: number) => id !== undefined && id <= 8,
 }));
 
-const mockOpenConfirmModal = jest.fn();
-const mockShowNotification = jest.fn();
+const mockOpenConfirmModal = jest.fn<(...args: unknown[]) => unknown>();
+const mockShowNotification = jest.fn<(...args: unknown[]) => unknown>();
 
 jest.mock("@mantine/modals", () => ({
   openConfirmModal: (...args: unknown[]) => mockOpenConfirmModal(...args),
@@ -59,7 +59,7 @@ jest.mock("~/components/Text", () => ({
 // Fixtures / helpers
 // ---------------------------------------------------------------------------
 
-const deleteLabel = jest.fn<() => Promise<{ success: boolean; error?: string }>>(
+const deleteLabel = jest.fn<(...args: unknown[]) => Promise<{ success: boolean; error?: string }>>(
   () => Promise.resolve({ success: true }),
 );
 
