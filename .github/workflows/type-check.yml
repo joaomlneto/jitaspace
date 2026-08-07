@@ -7,6 +7,11 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
+# This job only reads the repository — it checks out the code and runs `tsc`.
+# Narrowing the token here rather than inheriting the repository default.
+permissions:
+  contents: read
+
 jobs:
   type-check:
     runs-on: ubuntu-latest
