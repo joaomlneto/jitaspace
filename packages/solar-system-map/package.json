@@ -32,19 +32,19 @@
     "test:watch": "jest --config ./jest.config.ts --watch",
     "type-check": "tsc --noEmit"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
-    "three": "^0.184.0"
-  },
-  "peerDependencies": {
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@swc/core": "^1.15.40",
     "@swc/jest": "^0.2.39",
     "@testing-library/jest-dom": "^6.9.1",
@@ -60,6 +60,7 @@
     "prettier": "^3.8.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
+    "three": "^0.184.0",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
