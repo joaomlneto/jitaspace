@@ -4,11 +4,6 @@
     "lib": ["es2022", "dom", "dom.iterable"],
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
-  "include": [
-    "."
-  ],
-  "exclude": [
-    "node_modules",
-    "coverage"
-  ]
+  "include": ["."],
+  "exclude": ["node_modules", "build", "dist", "coverage"]
 }
