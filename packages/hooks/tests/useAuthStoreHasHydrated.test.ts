@@ -49,10 +49,10 @@ describe("useAuthStoreHasHydrated", () => {
       require("../src/hooks/auth/useAuthStore") as typeof import("../src/hooks/auth/useAuthStore");
 
     let hydrated = false;
-    const hasHydrated = jest
-      .spyOn(store.persist, "hasHydrated")
-      .mockImplementation(() => hydrated);
-    const onFinishHydration = jest
+    // Restored by restoreMocks in jest.config, so a failure mid-test cannot
+    // leak these spies into the rest of the file.
+    jest.spyOn(store.persist, "hasHydrated").mockImplementation(() => hydrated);
+    jest
       .spyOn(store.persist, "onFinishHydration")
       .mockImplementation(() => () => undefined);
 
@@ -65,9 +65,6 @@ describe("useAuthStoreHasHydrated", () => {
     });
 
     await waitFor(() => expect(result.current).toBe(true));
-
-    hasHydrated.mockRestore();
-    onFinishHydration.mockRestore();
   });
 
   it("unsubscribes on unmount", () => {
