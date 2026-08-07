@@ -17,6 +17,11 @@ export function useCharacterMails(characterId?: number, labels: number[] = []) {
     scopes: ["esi-mail.read_mail.v1"],
   });
 
+  // Depend on the joined string rather than the array: `labels` defaults to a
+  // fresh [] on every call, so an array dependency busts this memo every render
+  // no matter what the caller passes.
+  const labelKey = labels.join(",");
+
   // Built from the *infinite* key function, not the single-page one: this is
   // an infinite query, and its entry holds InfiniteData rather than a flat
   // ResponseConfig. See esiInfiniteQueryKey.
@@ -25,10 +30,10 @@ export function useCharacterMails(characterId?: number, labels: number[] = []) {
       esiInfiniteQueryKey(
         getCharactersCharacterIdMailInfiniteQueryKey(characterId ?? 0, {
           // @ts-expect-error generated code parses this wrong as url param
-          labels: labels.join(","),
+          labels: labelKey,
         }),
       ),
-    [characterId, labels, accessToken],
+    [characterId, labelKey],
   );
 
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =
