@@ -1,20 +1,12 @@
 {
   "extends": "@jitaspace/tsconfig/base.json",
-  "include": [
-    "."
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "coverage"
-  ],
+  "include": ["."],
+  "exclude": ["node_modules", "build", "dist", "coverage"],
   "compilerOptions": {
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
     "baseUrl": ".",
     "paths": {
-      "~/*": [
-        "./*"
-      ]
+      "~/*": ["./*"]
     }
   }
 }
