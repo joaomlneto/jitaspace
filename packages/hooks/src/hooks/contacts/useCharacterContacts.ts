@@ -33,11 +33,6 @@ export function useCharacterContacts(characterId: number) {
     { ...authHeaders },
     {
       query: {
-        // Keep this entry distinct from the single-page query for the
-        // same endpoint; see esiInfiniteQueryKey.
-        queryKey: esiInfiniteQueryKey(
-          getCharactersCharacterIdContactsInfiniteQueryKey(characterId),
-        ),
         enabled: !!characterId && accessToken !== null,
         refetchOnWindowFocus: false,
       },
@@ -51,6 +46,11 @@ export function useCharacterContacts(characterId: number) {
       { ...authHeaders },
       {
         query: {
+          // Keep this entry distinct from the single-page query for the
+          // same endpoint; see esiInfiniteQueryKey.
+          queryKey: esiInfiniteQueryKey(
+            getCharactersCharacterIdContactsInfiniteQueryKey(characterId),
+          ),
           enabled: accessToken !== null,
           initialPageParam: 1,
           queryFn: ({ pageParam }) =>

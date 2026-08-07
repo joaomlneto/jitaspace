@@ -33,11 +33,6 @@ export function useCorporationContacts(corporationId: number) {
     { ...authHeaders },
     {
       query: {
-        // Keep this entry distinct from the single-page query for the
-        // same endpoint; see esiInfiniteQueryKey.
-        queryKey: esiInfiniteQueryKey(
-          getCorporationsCorporationIdContactsInfiniteQueryKey(corporationId),
-        ),
         enabled: !!corporationId && accessToken !== null,
         refetchOnWindowFocus: false,
       },
@@ -50,6 +45,11 @@ export function useCorporationContacts(corporationId: number) {
     { ...authHeaders },
     {
       query: {
+        // Keep this entry distinct from the single-page query for the
+        // same endpoint; see esiInfiniteQueryKey.
+        queryKey: esiInfiniteQueryKey(
+          getCorporationsCorporationIdContactsInfiniteQueryKey(corporationId),
+        ),
         enabled: !!corporationId && accessToken !== null,
         initialPageParam: 1,
         queryFn: ({ pageParam }) =>

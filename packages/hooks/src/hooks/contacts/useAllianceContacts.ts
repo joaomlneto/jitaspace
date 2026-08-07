@@ -33,11 +33,6 @@ export function useAllianceContacts(allianceId: number) {
     { ...authHeaders },
     {
       query: {
-        // Keep this entry distinct from the single-page query for the
-        // same endpoint; see esiInfiniteQueryKey.
-        queryKey: esiInfiniteQueryKey(
-          getAlliancesAllianceIdContactsInfiniteQueryKey(allianceId),
-        ),
         enabled: !!allianceId && accessToken !== null,
         refetchOnWindowFocus: false,
       },
@@ -50,6 +45,11 @@ export function useAllianceContacts(allianceId: number) {
     { ...authHeaders },
     {
       query: {
+        // Keep this entry distinct from the single-page query for the
+        // same endpoint; see esiInfiniteQueryKey.
+        queryKey: esiInfiniteQueryKey(
+          getAlliancesAllianceIdContactsInfiniteQueryKey(allianceId),
+        ),
         enabled: accessToken !== null,
         initialPageParam: 1,
         queryFn: ({ pageParam }) =>
