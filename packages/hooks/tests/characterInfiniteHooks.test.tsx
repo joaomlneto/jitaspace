@@ -40,7 +40,12 @@ jest.mock("@jitaspace/esi-client", () => ({
     "calendar",
     id,
   ],
-  getCharactersCharacterIdMailInfiniteQueryKey: (id: unknown) => ["mail", id],
+  // Mail's key carries the label filter, so the mock has to keep the params it
+  // is handed — otherwise two label selections would look like one entry.
+  getCharactersCharacterIdMailInfiniteQueryKey: (
+    id: unknown,
+    params: unknown,
+  ) => ["mail", id, params],
   useGetCharactersCharacterIdAssetsInfinite: (...a: unknown[]) =>
     mockAssetsInfinite(...a),
   useGetCharactersCharacterIdContactsInfinite: (...a: unknown[]) =>
@@ -66,6 +71,8 @@ const { useCharacterCalendar } =
   require("../src/hooks/calendar/useCharacterCalendar") as typeof import("../src/hooks/calendar/useCharacterCalendar");
 const { useCharacterMails } =
   require("../src/hooks/mail/useCharacterMails") as typeof import("../src/hooks/mail/useCharacterMails");
+const { INFINITE_QUERY_KEY_MARKER } =
+  require("../src/hooks/utils/esiInfiniteQueryKey") as typeof import("../src/hooks/utils/esiInfiniteQueryKey");
 
 const CHARACTER_ID = 90000001;
 const AUTH = { Authorization: "Bearer token" };
@@ -128,10 +135,86 @@ const fiftyEvents = Array.from({ length: 50 }, (_, i) => ({
 }));
 
 beforeEach(() => {
+  // clearMocks clears calls but not implementations, so reset every mock here
+  // rather than leaving a test that forgets to stub one inheriting the
+  // previous test's behaviour.
+  for (const mock of [
+    mockGetAssets,
+    mockGetContacts,
+    mockGetMail,
+    mockAssetsInfinite,
+    mockContactsInfinite,
+    mockCalendarInfinite,
+    mockMailInfinite,
+  ]) {
+    mock.mockReset();
+  }
   mockUseAccessToken
     .mockReset()
     .mockReturnValue({ accessToken: "token", authHeaders: AUTH });
   mockContactsLabels.mockReset().mockReturnValue({ data: undefined });
+});
+
+describe("each hook keys its own cache entry", () => {
+  // The failure mode is silent — an InfiniteData entry landing on the
+  // single-page one — and a misplaced override survived here once already, so
+  // assert per hook that the key names its own endpoint and carries the marker.
+  it.each([
+    {
+      name: "assets",
+      mock: mockAssetsInfinite,
+      render: () => useCharacterAssets(CHARACTER_ID),
+      endpoint: "assets",
+    },
+    {
+      name: "contacts",
+      mock: mockContactsInfinite,
+      render: () => useCharacterContacts(CHARACTER_ID),
+      endpoint: "contacts",
+    },
+    {
+      name: "calendar",
+      mock: mockCalendarInfinite,
+      render: () => useCharacterCalendar(CHARACTER_ID),
+      endpoint: "calendar",
+    },
+    {
+      name: "mail",
+      mock: mockMailInfinite,
+      render: () => useCharacterMails(CHARACTER_ID),
+      endpoint: "mail",
+    },
+  ] as {
+    name: string;
+    mock: jest.Mock;
+    render: () => unknown;
+    endpoint: string;
+  }[])("$name", ({ mock, render, endpoint }) => {
+    driveInfinite(mock, infiniteResult([], false));
+
+    renderHook(render);
+
+    const options = mock.mock.calls[0]?.at(-1) as {
+      query?: { queryKey?: unknown[] };
+    };
+    const queryKey = options.query?.queryKey ?? [];
+    // Built from this endpoint's own infinite key function...
+    expect(queryKey.slice(0, 2)).toEqual([endpoint, CHARACTER_ID]);
+    // ...and marked, so it cannot share the single-page entry.
+    expect(queryKey.at(-1)).toBe(INFINITE_QUERY_KEY_MARKER);
+  });
+
+  it("keeps mail's label dimension inside the marked key", () => {
+    driveInfinite(mockMailInfinite, infiniteResult([], false));
+
+    renderHook(() => useCharacterMails(CHARACTER_ID, [3, 4]));
+
+    // Two label selections must not share an entry.
+    const options = mockMailInfinite.mock.calls[0]?.at(-1) as {
+      query?: { queryKey?: unknown[] };
+    };
+    expect(options.query?.queryKey).toContainEqual({ labels: "3,4" });
+  });
 });
 
 describe("useCharacterAssets", () => {
@@ -307,7 +390,41 @@ describe("useCharacterCalendar", () => {
   });
 });
 
+describe("useCharacterCalendar (continued)", () => {
+  it("returns no events before any page has loaded", () => {
+    mockCalendarInfinite.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+      refetch: jest.fn(),
+    });
+
+    const { result } = renderHook(() => useCharacterCalendar(CHARACTER_ID));
+
+    expect(result.current.events).toEqual([]);
+    expect(result.current.isLoading).toBe(true);
+  });
+});
+
 describe("useCharacterMails", () => {
+  it("returns no messages before any page has loaded", () => {
+    mockMailInfinite.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      hasNextPage: false,
+      fetchNextPage: jest.fn(),
+      refetch: jest.fn(),
+    });
+
+    const { result } = renderHook(() => useCharacterMails(CHARACTER_ID));
+
+    expect(result.current.messages).toEqual([]);
+    expect(result.current.isLoading).toBe(true);
+  });
+
   it("flattens messages, passes the label filter, and pages by last mail id", () => {
     const { result: query, nextPageParam } = driveInfinite(
       mockMailInfinite,
