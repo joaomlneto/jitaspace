@@ -35,7 +35,7 @@ export default function Page() {
   // Every logged-in character that granted the fittings scope, not just the
   // selected one. Each fitting carries the character it belongs to as
   // `subjectId`.
-  const { data: fittings } = useMultipleCharacterFittings();
+  const { data: fittings, errors } = useMultipleCharacterFittings();
 
   const shipTypeIds = useMemo(
     () => [...new Set(fittings.map((fitting) => fitting.ship_type_id))],
@@ -110,6 +110,15 @@ export default function Page() {
             </Text>
           )}
           <Title order={4}>Saved Fittings</Title>
+          {errors.length > 0 && (
+            // Without this a character whose token failed is simply missing
+            // from a list that claims to show everyone's, with nothing to
+            // distinguish "no fittings" from "could not be loaded".
+            <Text c="dimmed" size="sm">
+              Could not load fittings for {errors.length}{" "}
+              {errors.length === 1 ? "character" : "characters"}.
+            </Text>
+          )}
           <Group>
             <EveEntitySelect
               size="xs"

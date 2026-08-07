@@ -99,7 +99,10 @@ describe("Fittings page", () => {
     mockUseSelectedCharacter.mockReset().mockReturnValue(CHARACTER);
     mockUseMultipleCharacterFittings
       .mockReset()
-      .mockReturnValue({ data: [FITTING, OTHER_CHARACTER_FITTING] });
+      .mockReturnValue({
+        data: [FITTING, OTHER_CHARACTER_FITTING],
+        errors: [],
+      });
   });
 
   it("captures current_ship_fitting_viewed and opens the modal", () => {
@@ -165,6 +168,43 @@ describe("Fittings page", () => {
     fireEvent.click(screen.getByTestId("option:Filter by ship type:597"));
 
     expect(screen.getAllByTestId("saved-fit-card")).toHaveLength(1);
+  });
+
+  it("says how many characters failed rather than silently omitting them", () => {
+    // A failed token drops that character's fittings from a list that claims to
+    // show everyone's, so the absence has to be visible.
+    mockUseMultipleCharacterFittings.mockReturnValue({
+      data: [FITTING],
+      errors: [{ subjectId: 90000002, error: new Error("boom") }],
+    });
+
+    renderPage();
+
+    expect(
+      screen.getByText(/could not load fittings for 1 character\./i),
+    ).toBeInTheDocument();
+  });
+
+  it("pluralises when several characters failed", () => {
+    mockUseMultipleCharacterFittings.mockReturnValue({
+      data: [],
+      errors: [
+        { subjectId: 90000001, error: new Error("boom") },
+        { subjectId: 90000002, error: new Error("boom") },
+      ],
+    });
+
+    renderPage();
+
+    expect(
+      screen.getByText(/could not load fittings for 2 characters\./i),
+    ).toBeInTheDocument();
+  });
+
+  it("says nothing when every character loaded", () => {
+    renderPage();
+
+    expect(screen.queryByText(/could not load fittings/i)).toBeNull();
   });
 
   it("renders a character filter alongside the ship type filter", () => {
