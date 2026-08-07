@@ -1,63 +1,54 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
-import fetch from "node-fetch";
-import {
-  latestSdeLastModified,
-  SDE_CHECKSUM_URL,
-  SDE_DOWNLOAD_URL,
-} from "@jitaspace/sde-utils";
+import type { SingleBar } from "cli-progress";
+
+import { ensureSdePresentAndExtracted as coreEnsureSdePresentAndExtracted } from "@jitaspace/sde-utils";
 
 import { getWorkingDirectory } from "../lib/cli.js";
 import { globalProgress } from "../lib/progress.js";
-import { downloadFile } from "./download.js";
-import { mkdir, sdeZipChecksum, unzipSde } from "./fs.js";
 
-export { latestSdeLastModified };
-
-const LOCAL_SDE_FILENAME = "sde.zip";
-
+/**
+ * Download + extract the SDE into the CLI working directory, wiring the shared
+ * implementation's progress hooks up to the CLI's progress bars.
+ */
 export async function ensureSdePresentAndExtracted() {
-  const checksumResponse = await fetch(SDE_CHECKSUM_URL);
-  const latestChecksum = (await checksumResponse.text()).trim();
+  let download: SingleBar | undefined;
+  let extract: SingleBar | undefined;
 
-  const sdeRootPath = path.resolve(getWorkingDirectory(), "sde");
-  console.log("sde root path: ", sdeRootPath);
-  if (fs.existsSync(sdeRootPath)) {
-    globalProgress.log("SDE folder present. Checking checksum...\n");
+  const finish = (progress: SingleBar | undefined) => {
+    if (!progress) return;
+    progress.stop();
+    globalProgress.remove(progress);
     globalProgress.update();
+  };
 
-    // FIXME: temporarily skipping folder checksum verification
-    globalProgress.log("SDE folder is up to date! No action needed.\n");
-    return;
+  try {
+    await coreEnsureSdePresentAndExtracted(getWorkingDirectory(), {
+      onLog: (message) => {
+        globalProgress.log(message);
+        globalProgress.update();
+      },
+      onDownloadProgress: (bytesReceived, total) => {
+        download ??= globalProgress.create(
+          total,
+          0,
+          { title: "Downloading SDE" },
+          { hideCursor: true, emptyOnZero: true },
+        );
+        download.update(bytesReceived);
+        globalProgress.update();
+      },
+      onExtractProgress: (current, total) => {
+        // The download bar has served its purpose once extraction starts.
+        finish(download);
+        download = undefined;
+        extract ??= globalProgress.create(total, 0, {
+          title: "Extracting SDE",
+        });
+        extract.update(current);
+        globalProgress.update();
+      },
+    });
+  } finally {
+    finish(download);
+    finish(extract);
   }
-
-  const localSdePath = path.resolve(getWorkingDirectory(), LOCAL_SDE_FILENAME);
-  if (fs.existsSync(localSdePath)) {
-    globalProgress.log("SDE archive present. Checking checksum...\n");
-
-    const currentChecksum = await sdeZipChecksum(localSdePath);
-
-    if (latestChecksum === currentChecksum) {
-      globalProgress.log("SDE archive is up to date!\n");
-    } else {
-      globalProgress.log("SDE archive is outdated. Downloading new one...\n");
-      await downloadFile(
-        SDE_DOWNLOAD_URL,
-        getWorkingDirectory(),
-        LOCAL_SDE_FILENAME,
-      );
-    }
-  } else {
-    await downloadFile(
-      SDE_DOWNLOAD_URL,
-      getWorkingDirectory(),
-      LOCAL_SDE_FILENAME,
-    );
-  }
-
-  mkdir(path.resolve(getWorkingDirectory(), "sde"));
-  await unzipSde(
-    path.resolve(getWorkingDirectory(), "sde.zip"),
-    path.resolve(getWorkingDirectory(), "sde"),
-  );
 }

@@ -179,6 +179,9 @@ describe("renderEveHref", () => {
         "shipSkinListing",
         "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
       ],
+      // A shared bookmark folder has no web equivalent — it only exists inside
+      // the client, so the href stays intact for the alert click handler.
+      ["bookmarkFolder", "bookmarkFolder:7102471"],
     ])("passes %s hrefs through unchanged", (_name, href) => {
       expect(renderEveHref(href)).toBe(href);
     });
@@ -240,6 +243,7 @@ describe("EveLink protocol configuration", () => {
     "opportunity",
     "careerprogramnode",
     "fleet",
+    "bookmarkfolder",
   ];
 
   const EVE_PROTOCOL_SAMPLES: [string, string][] = [
@@ -262,6 +266,7 @@ describe("EveLink protocol configuration", () => {
     ["opportunity", "opportunity:epic_arcs:40"],
     ["careerProgramNode", "careerProgramNode:7:410:None"],
     ["fleet", "fleet:1021212278338"],
+    ["bookmarkFolder", "bookmarkFolder:7102471"],
   ];
 
   it.each(EVE_PROTOCOL_SAMPLES)(
@@ -312,8 +317,10 @@ describe("EveLink registered protocols are linkifyjs-safe (regression)", () => {
   const registered = EveLink.options.protocols as string[];
 
   it("registers at least the known EVE schemes", () => {
-    expect(registered).toEqual(expect.arrayContaining(["showinfo", "fleet"]));
-    expect(registered.length).toBeGreaterThanOrEqual(13);
+    expect(registered).toEqual(
+      expect.arrayContaining(["showinfo", "fleet", "bookmarkfolder"]),
+    );
+    expect(registered.length).toBeGreaterThanOrEqual(14);
   });
 
   it("registers every scheme in all-lowercase form", () => {

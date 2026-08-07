@@ -3,6 +3,7 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
   ingestSdeCompositeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalBoolean,
   plainString,
@@ -39,15 +40,9 @@ export const ingestSdeSkins = defineJob<IngestSdeSkinsEventPayload["data"]>({
   maxDurationSeconds: 3600,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "skins.yaml",
-      "skinMaterials.yaml",
-      "types.yaml",
-    ]);
-    const typeIds = new Set(Object.keys(files["types.yaml"]).map(Number));
-    const skinMaterialIds = new Set(
-      Object.keys(files["skinMaterials.yaml"]).map(Number),
-    );
+    const files = await loadSdeFiles(["skins.yaml"]);
+    const typeIds = await loadSdeFileIds("types.yaml");
+    const skinMaterialIds = await loadSdeFileIds("skinMaterials.yaml");
 
     const skinRows: Prisma.SkinCreateManyInput[] = [];
     const skinTypeRows: Prisma.SkinTypeCreateManyInput[] = [];

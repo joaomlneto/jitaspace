@@ -5,6 +5,7 @@ import {
   enString,
   ingestSdeCompositeTable,
   ingestSdeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   requiredNumber,
 } from "../../../helpers";
@@ -43,9 +44,9 @@ export const ingestSdeCertificates = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["certificates.yaml", "types.yaml"]);
+    const files = await loadSdeFiles(["certificates.yaml"]);
     const data = files["certificates.yaml"];
-    const typeIds = new Set(Object.keys(files["types.yaml"]).map(Number));
+    const typeIds = await loadSdeFileIds("types.yaml");
 
     // FK order: Certificate first, then its skill / recommendation children.
     const certificates = await ingestSdeTable({

@@ -1,4 +1,4 @@
-import { fromEveColor } from "../Extensions/EveFont";
+import { fromEveColor, isEveDefaultTextColor } from "../Extensions/EveFont";
 
 describe("fromEveColor", () => {
   describe("9-character EVE color format (0x0RRGGBB)", () => {
@@ -36,8 +36,24 @@ describe("fromEveColor", () => {
       ["6-char hex", "#ff0000", "#ff0000"],
       ["3-char shorthand hex", "#abc", "#abc"],
       ["6-char hex (aabbcc)", "#aabbcc", "#aabbcc"],
-      ["8-char hex with alpha", "#aabbccdd", "#aabbccdd"],
     ])("passes through %s", (_name, input, expected) => {
+      expect(fromEveColor(input)).toBe(expected);
+    });
+  });
+
+  describe("#-prefixed EVE color format (#AARRGGBB)", () => {
+    // EVE uses the same alpha-FIRST byte order for the `#` notation found in
+    // type descriptions and character bios as it does for `0x` in mail. CSS
+    // reads 8 hex digits as #RRGGBBAA, so handing these through unchanged
+    // scrambles the hue: #ff3399cc (opaque EVE blue #3399cc, from the real PLEX
+    // description) rendered as 80%-opacity hot pink.
+    it.each([
+      ["opaque EVE blue (PLEX description)", "#ff3399cc", "#3399cc"],
+      ["EVE default body text white", "#bfffffff", "#ffffff"],
+      ["opaque red", "#ffff0000", "#ff0000"],
+      ["semi-transparent black", "#80000000", "#000000"],
+      ["uppercase hex digits", "#FFAABBCC", "#AABBCC"],
+    ])("decodes %s", (_name, input, expected) => {
       expect(fromEveColor(input)).toBe(expected);
     });
   });
@@ -77,8 +93,49 @@ describe("fromEveColor", () => {
       ["hex with too many digits", "#0123456789"],
       ["hex with non-hex char", "#gggggg"],
       ["9-char without 0x prefix", "abcdefghi"],
+      // 4/5/7-digit hex is either ambiguous against EVE's ARGB order or not
+      // valid CSS at all — the browser drops the declaration, which surfaces as
+      // a rendering bug rather than a safe fallback.
+      ["4-digit hex", "#abcd"],
+      ["5-digit hex", "#abcde"],
+      ["7-digit hex", "#abcdef0"],
     ])("returns an empty string for %s", (_name, input) => {
       expect(fromEveColor(input)).toBe("");
+    });
+  });
+
+  describe("isEveDefaultTextColor", () => {
+    // EVE authors its palette for the client's near-black UI, so a near-white
+    // <font color> means "normal body text", not "paint this white". Callers
+    // drop it so the text inherits the theme foreground and stays readable on
+    // the light theme, where literal white is invisible.
+    it.each([
+      ["pure white", "#ffffff"],
+      ["3-digit white", "#fff"],
+      ["off-white above the threshold", "#f2f0f0"],
+      ["exactly at the threshold", "#e0e0e0"],
+      ["uppercase white", "#FFFFFF"],
+    ])("treats %s as default text", (_name, input) => {
+      expect(isEveDefaultTextColor(input)).toBe(true);
+    });
+
+    it.each([
+      ["EVE blue", "#3399cc"],
+      ["red", "#ff0000"],
+      ["black", "#000000"],
+      ["just below the threshold on one channel", "#ffdfff"],
+      ["mid grey", "#888888"],
+      ["an empty string", ""],
+    ])("leaves %s alone", (_name, input) => {
+      expect(isEveDefaultTextColor(input)).toBe(false);
+    });
+
+    it("suppresses the color declaration for EVE's #bfffffff body text", () => {
+      // The full path the bug report followed: #bfffffff decodes to white, which
+      // must NOT reach an inline `color:` declaration.
+      const color = fromEveColor("#bfffffff");
+      expect(color).toBe("#ffffff");
+      expect(isEveDefaultTextColor(color)).toBe(true);
     });
   });
 
