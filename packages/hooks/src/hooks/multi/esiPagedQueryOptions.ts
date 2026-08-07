@@ -38,6 +38,22 @@ const MAX_CONCURRENT_PAGE_REQUESTS = 5;
  */
 const MAX_PAGES = 100;
 
+/**
+ * Thrown when a subject reports more pages than {@link MAX_PAGES}.
+ *
+ * Distinguishable so the query can decline to retry it: the refusal is computed
+ * from the first page's headers, so retrying re-fetches page 1 and reaches the
+ * same conclusion — spending the error budget the ceiling exists to protect.
+ */
+export class EsiPageCeilingError extends Error {
+  constructor(pageCount: number) {
+    super(
+      `ESI reported ${pageCount} pages for a single subject, above the ${MAX_PAGES}-page ceiling. Refusing rather than returning a partial collection that would look complete.`,
+    );
+    this.name = "EsiPageCeilingError";
+  }
+}
+
 async function fetchInPool<TResult>(
   count: number,
   fetchOne: (index: number) => Promise<TResult>,
@@ -104,6 +120,12 @@ export function esiPagedQueryOptions<TItem>(config: {
   return {
     queryKey: [...queryKey, ALL_PAGES_QUERY_KEY_MARKER],
     enabled,
+    // The ceiling refusal is deterministic — it is decided from page 1's
+    // headers — so retrying it just re-fetches page 1 to fail the same way,
+    // three more times by React Query's default. Everything else keeps the
+    // app's normal retry behaviour.
+    retry: (failureCount: number, error: Error) =>
+      !(error instanceof EsiPageCeilingError) && failureCount < 3,
     // The signal is threaded into every page so an unmount or refetch cancels
     // the whole fan-out rather than leaving pages in flight against ESI.
     queryFn: async ({ signal }: { signal?: AbortSignal } = {}): Promise<
@@ -118,11 +140,7 @@ export function esiPagedQueryOptions<TItem>(config: {
       // fractional length — a malformed header would otherwise fail the query
       // rather than degrade.
       const pageCount = Math.floor(reported);
-      if (pageCount > MAX_PAGES) {
-        throw new Error(
-          `ESI reported ${pageCount} pages for a single subject, above the ${MAX_PAGES}-page ceiling. Refusing rather than returning a partial collection that would look complete.`,
-        );
-      }
+      if (pageCount > MAX_PAGES) throw new EsiPageCeilingError(pageCount);
 
       const remaining = await fetchInPool(pageCount - 1, (index) =>
         fetchPage(index + 2, signal),

@@ -2,7 +2,10 @@ import { describe, expect, it, jest } from "@jest/globals";
 
 import type { ResponseConfig } from "@jitaspace/esi-client";
 
-import { esiPagedQueryOptions } from "../src/hooks/multi/esiPagedQueryOptions";
+import {
+  EsiPageCeilingError,
+  esiPagedQueryOptions,
+} from "../src/hooks/multi/esiPagedQueryOptions";
 
 const page = (data: number[], xPages?: string): ResponseConfig<number[]> =>
   ({
@@ -109,8 +112,22 @@ describe("esiPagedQueryOptions", () => {
     // Returning the first 100 pages would look like a complete collection —
     // the same silent-partial failure the cursor-paginated endpoints are
     // skipped for. Only page 1 is fetched, so nothing is spent discovering it.
-    await expect(runQueryFn(fetchPage)).rejects.toThrow(/above the 100-page/);
+    await expect(runQueryFn(fetchPage)).rejects.toThrow(EsiPageCeilingError);
     expect(fetchPage).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not retry the ceiling refusal", () => {
+    const options = esiPagedQueryOptions({
+      queryKey: ["test"],
+      fetchPage: () => Promise.resolve(page([], "500")),
+    });
+
+    // Deterministic from page 1's headers, so React Query's default of three
+    // retries would just re-fetch page 1 to fail the same way each time.
+    expect(options.retry(0, new EsiPageCeilingError(500))).toBe(false);
+    // Everything else keeps the normal retry behaviour.
+    expect(options.retry(0, new Error("network"))).toBe(true);
+    expect(options.retry(3, new Error("network"))).toBe(false);
   });
 
   it("fetches right up to the ceiling", async () => {

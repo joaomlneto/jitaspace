@@ -162,6 +162,13 @@ export function describeEndpoint(
     hookName,
     fileName: `${hookName}.ts`,
     kind,
+    // OpenAPI security requirement objects are OR-alternatives, and the scopes
+    // within one are AND. Flattening them all therefore ANDs the alternatives,
+    // which useEsiSubjects enforces with `scopes.every(...)`. That is safe only
+    // because ESI declares exactly one requirement object with exactly one scope
+    // on every authenticated GET — verified against the spec. If it ever offers
+    // an alternative, this must pick one rather than demand both, or characters
+    // holding a valid alternative would be silently excluded.
     scopes: operation.security.flatMap((entry) => Object.values(entry).flat()),
     roles: operation["x-required-roles"] ?? [],
     paginated: queryParams.includes("page"),
