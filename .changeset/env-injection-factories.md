@@ -2,7 +2,7 @@
 "@jitaspace/db": minor
 "@jitaspace/kv": minor
 "@jitaspace/chat": minor
-"@jitaspace/eve-scrape": patch
+"@jitaspace/background-jobs": patch
 "@jitaspace/web": patch
 ---
 
@@ -17,4 +17,4 @@ instead of singletons:
 - `@jitaspace/chat` — `createChat({ discordBotToken?, discordUpdatesChannelId? })`
 
 Apps build the instance from their own validated env in a thin local shim.
-`eve-scrape` and `web` have been updated accordingly.
+`background-jobs` and `web` have been updated accordingly.

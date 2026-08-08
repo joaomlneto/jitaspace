@@ -70,7 +70,18 @@ async function processTypeBatch(
         })
         .then((entries) =>
           entries.map((entry) =>
-            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            // basePrice/metaLevel/techLevel/soundId/shipTreeGroupId are owned by
+            // ingestSdeTypes — ESI does not expose them, so they must not take
+            // part in this diff or every row would look modified on every run.
+            excludeObjectKeys(entry, [
+              "updatedAt",
+              "createdAt",
+              "basePrice",
+              "metaLevel",
+              "techLevel",
+              "soundId",
+              "shipTreeGroupId",
+            ]),
           ),
         ),
     fetchRemoteEntries: async () =>

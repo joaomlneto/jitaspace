@@ -29,7 +29,7 @@
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "prepublishOnly": "pnpm build",
-    "type-check": "tsc --jsx react-jsx --noEmit",
+    "type-check": "tsc --noEmit",
     "test": "jest"
   },
   "dependencies": {},

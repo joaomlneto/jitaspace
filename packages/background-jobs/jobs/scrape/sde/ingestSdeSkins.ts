@@ -2,8 +2,8 @@ import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
-  enString,
   ingestSdeCompositeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalBoolean,
   plainString,
@@ -20,7 +20,6 @@ interface SkinRecord {
   types?: number[];
   allowCCPDevs?: boolean;
   isStructureSkin?: boolean;
-  skinDescription?: unknown;
   visibleSerenity?: boolean;
   visibleTranquility?: boolean;
 }
@@ -41,15 +40,9 @@ export const ingestSdeSkins = defineJob<IngestSdeSkinsEventPayload["data"]>({
   maxDurationSeconds: 3600,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "skins.yaml",
-      "skinMaterials.yaml",
-      "types.yaml",
-    ]);
-    const typeIds = new Set(Object.keys(files["types.yaml"]).map(Number));
-    const skinMaterialIds = new Set(
-      Object.keys(files["skinMaterials.yaml"]).map(Number),
-    );
+    const files = await loadSdeFiles(["skins.yaml"]);
+    const typeIds = await loadSdeFileIds("types.yaml");
+    const skinMaterialIds = await loadSdeFileIds("skinMaterials.yaml");
 
     const skinRows: Prisma.SkinCreateManyInput[] = [];
     const skinTypeRows: Prisma.SkinTypeCreateManyInput[] = [];
@@ -63,7 +56,6 @@ export const ingestSdeSkins = defineJob<IngestSdeSkinsEventPayload["data"]>({
         internalName: plainString(record.internalName) ?? "",
         allowCcpDevs: requiredBoolean(record.allowCCPDevs),
         isStructureSkin: optionalBoolean(record.isStructureSkin),
-        skinDescription: enString(record.skinDescription),
         visibleSerenity: requiredBoolean(record.visibleSerenity),
         visibleTranquility: requiredBoolean(record.visibleTranquility),
         isDeleted: false,

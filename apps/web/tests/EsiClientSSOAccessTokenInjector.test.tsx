@@ -12,12 +12,13 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 // ---------------------------------------------------------------------------
 // EsiClientSSOAccessTokenInjector renders its children and, on mount, (a)
-// rehydrates the persisted auth store and (b) schedules a timer that refreshes
-// any character whose access token is within ~40s of expiry. The server action
-// reports a discriminated outcome: "refreshed" -> store it; "requires-reauth"
-// (EVE will not renew the refresh token) -> flag the session as expired (keep
-// the character); "error" -> log and keep retrying. We mock the auth store and
-// the action so we can drive every branch with fake timers.
+// rehydrates the persisted auth store, (b) schedules a timer that refreshes any
+// character whose access token is within ~40s of expiry, and (c) sweeps for
+// stale character data (affiliation, corporation roles) on its own interval.
+// The server action reports a discriminated outcome: "refreshed" -> store it;
+// "requires-reauth" (EVE will not renew the refresh token) -> flag the session
+// as expired (keep the character); "error" -> log and keep retrying. We mock the
+// auth store and the action so we can drive every branch with fake timers.
 // ---------------------------------------------------------------------------
 
 type RefreshOutcome =
@@ -33,6 +34,7 @@ const mockMarkSessionExpired = jest.fn<(characterId: number) => void>();
 const mockRehydrate = jest.fn<() => Promise<void>>();
 const mockRefreshCharacterToken =
   jest.fn<(token: string) => Promise<RefreshOutcome>>();
+const mockRefreshStaleCharacterData = jest.fn<() => Promise<void>>();
 
 interface Character {
   characterId: number;
@@ -44,17 +46,21 @@ interface Character {
 let storeState: {
   addCharacter: typeof mockAddCharacter;
   markCharacterSessionExpired: typeof mockMarkSessionExpired;
+  refreshStaleCharacterData: typeof mockRefreshStaleCharacterData;
   characters: Record<string, Character>;
 } = {
   addCharacter: mockAddCharacter,
   markCharacterSessionExpired: mockMarkSessionExpired,
+  refreshStaleCharacterData: mockRefreshStaleCharacterData,
   characters: {},
 };
 
 const useAuthStore = (() => storeState) as unknown as {
   (): typeof storeState;
+  getState: () => typeof storeState;
   persist: { rehydrate: () => Promise<void> };
 };
+useAuthStore.getState = () => storeState;
 useAuthStore.persist = { rehydrate: () => mockRehydrate() };
 
 jest.mock("@jitaspace/hooks", () => ({
@@ -100,9 +106,11 @@ describe("EsiClientSSOAccessTokenInjector", () => {
       accessToken: "NEW_AT",
       refreshTokenData: "NEW_RT",
     });
+    mockRefreshStaleCharacterData.mockReset().mockResolvedValue(undefined);
     storeState = {
       addCharacter: mockAddCharacter,
       markCharacterSessionExpired: mockMarkSessionExpired,
+      refreshStaleCharacterData: mockRefreshStaleCharacterData,
       characters: {},
     };
   });
@@ -121,6 +129,21 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     expect(mockRehydrate).toHaveBeenCalledTimes(1);
   });
 
+  it("sweeps for stale affiliation/roles once rehydrated, then on an interval", async () => {
+    // A session restored from localStorage can sit for a long time before its
+    // access token nears expiry — long enough for a character to have changed
+    // corporation. The sweep has to run off rehydration (not before it, when
+    // the store is still empty) and keep running on its own cadence.
+    renderInjector();
+
+    await waitFor(() =>
+      expect(mockRefreshStaleCharacterData).toHaveBeenCalledTimes(1),
+    );
+
+    jest.advanceTimersByTime(5 * 60_000);
+    expect(mockRefreshStaleCharacterData).toHaveBeenCalledTimes(2);
+  });
+
   it("refreshes only the near-expiry character, leaving far-future ones alone", async () => {
     // The timer is scheduled ~30s before the *soonest* expiry and, when it
     // fires, the clock (faked) has advanced to that point. So the near-expiry
@@ -129,6 +152,7 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     storeState = {
       addCharacter: mockAddCharacter,
       markCharacterSessionExpired: mockMarkSessionExpired,
+      refreshStaleCharacterData: mockRefreshStaleCharacterData,
       characters: {
         soon: nearExpiry(1, "RT_EXPIRING"),
         later: {
@@ -165,6 +189,7 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     storeState = {
       addCharacter: mockAddCharacter,
       markCharacterSessionExpired: mockMarkSessionExpired,
+      refreshStaleCharacterData: mockRefreshStaleCharacterData,
       characters: { "42": nearExpiry(42, "RT_OLD") },
     };
     renderInjector();
@@ -189,6 +214,7 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     storeState = {
       addCharacter: mockAddCharacter,
       markCharacterSessionExpired: mockMarkSessionExpired,
+      refreshStaleCharacterData: mockRefreshStaleCharacterData,
       characters: { "7": nearExpiry(7, "RT_TRANSIENT") },
     };
     renderInjector();
@@ -209,6 +235,7 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     storeState = {
       addCharacter: mockAddCharacter,
       markCharacterSessionExpired: mockMarkSessionExpired,
+      refreshStaleCharacterData: mockRefreshStaleCharacterData,
       characters: { "1": nearExpiry(1, "RT_BAD") },
     };
     renderInjector();
@@ -228,6 +255,7 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     storeState = {
       addCharacter: mockAddCharacter,
       markCharacterSessionExpired: mockMarkSessionExpired,
+      refreshStaleCharacterData: mockRefreshStaleCharacterData,
       characters: { "5": expiredSession(5, "RT_DEAD") },
     };
     renderInjector();
@@ -243,6 +271,7 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     storeState = {
       addCharacter: mockAddCharacter,
       markCharacterSessionExpired: mockMarkSessionExpired,
+      refreshStaleCharacterData: mockRefreshStaleCharacterData,
       characters: {
         dead: expiredSession(5, "RT_DEAD"),
         live: nearExpiry(6, "RT_LIVE"),
@@ -271,6 +300,7 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     storeState = {
       addCharacter: mockAddCharacter,
       markCharacterSessionExpired: mockMarkSessionExpired,
+      refreshStaleCharacterData: mockRefreshStaleCharacterData,
       characters: { "9": nearExpiry(9, "RT_RETRY") },
     };
     renderInjector();
@@ -304,6 +334,7 @@ describe("EsiClientSSOAccessTokenInjector", () => {
     storeState = {
       addCharacter: mockAddCharacter,
       markCharacterSessionExpired: mockMarkSessionExpired,
+      refreshStaleCharacterData: mockRefreshStaleCharacterData,
       characters: { "3": nearExpiry(3, "RT_SLOW") },
     };
     renderInjector();

@@ -4,6 +4,7 @@ import { prisma } from "../../../db";
 import {
   enString,
   ingestSdeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalNumber,
   requiredBoolean,
@@ -23,20 +24,14 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
   maxDurationSeconds: 3600,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "types.yaml",
-      "graphics.yaml",
-      "icons.yaml",
-      "marketGroups.yaml",
-    ]);
+    const files = await loadSdeFiles(["types.yaml"]);
     // The SDE has dangling type references (e.g. ~85 type graphicIDs are absent
     // from graphics.yaml), so drop any optional FK ref that isn't really there.
-    const graphicIds = new Set(Object.keys(files["graphics.yaml"]).map(Number));
-    const iconIds = new Set(Object.keys(files["icons.yaml"]).map(Number));
-    const marketGroupIds = new Set(
-      Object.keys(files["marketGroups.yaml"]).map(Number),
-    );
-    const present = (ids: Set<number>, value: number | null) =>
+    const graphicIds = await loadSdeFileIds("graphics.yaml");
+    const iconIds = await loadSdeFileIds("icons.yaml");
+    const marketGroupIds = await loadSdeFileIds("marketGroups.yaml");
+    const shipTreeGroupIds = await loadSdeFileIds("shipTreeGroups.yaml");
+    const present = (ids: ReadonlySet<number>, value: number | null) =>
       value != null && ids.has(value) ? value : null;
 
     // `packagedVolume` is intentionally not set here — it is sourced from ESI,
@@ -62,6 +57,15 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
         marketGroupId: present(
           marketGroupIds,
           optionalNumber(record.marketGroupID),
+        ),
+        // SDE-only columns.
+        basePrice: optionalNumber(record.basePrice),
+        metaLevel: optionalNumber(record.metaLevel),
+        techLevel: optionalNumber(record.techLevel),
+        soundId: optionalNumber(record.soundID),
+        shipTreeGroupId: present(
+          shipTreeGroupIds,
+          optionalNumber(record.shipTreeGroupID),
         ),
         isDeleted: false,
       }),

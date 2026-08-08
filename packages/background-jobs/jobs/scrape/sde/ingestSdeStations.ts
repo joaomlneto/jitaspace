@@ -92,6 +92,7 @@ export const ingestSdeStations = defineJob<
           reprocessingStationsTake: requiredNumber(
             record.reprocessingStationsTake,
           ),
+          reprocessingHangarFlag: optionalNumber(record.reprocessingHangarFlag),
           isDeleted: false,
         };
       },

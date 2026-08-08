@@ -25,7 +25,8 @@ const mockGetHTML = jest.fn(
     ' and <a href="fleet:1021212278338" target="_blank" rel="noopener noreferrer nofollow">Mining Fleet</a>' +
     ' and <a href="helpPointer:neocom.airCareerProgram">Help</a>' +
     ' and <a href="shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951">Skin</a>' +
-    ' and <a href="fitting:33470:31047;1:31011;1::">Stratios Fit</a></p>',
+    ' and <a href="fitting:33470:31047;1:31011;1::">Stratios Fit</a>' +
+    ' and <a href="bookmarkFolder:7102471">MC Deputy Training</a></p>',
 );
 
 jest.mock("@jitaspace/tiptap-eve", () => ({
@@ -180,6 +181,32 @@ describe("MailMessageViewer", () => {
       await user.click(screen.getByRole("link", { name: "Skin" }));
       expect(alertSpy).toHaveBeenCalledTimes(1);
       alertSpy.mockRestore();
+    });
+  });
+
+  describe("bookmarkFolder links", () => {
+    // A shared bookmark folder only exists inside the client, so the link is
+    // rendered (rather than stripped, which is what happened before the scheme
+    // was registered) but resolves to an explanatory alert instead of a route.
+    it("shows an alert when a bookmark folder link is clicked", async () => {
+      const user = userEvent.setup();
+      const alertSpy = jest
+        .spyOn(window, "alert")
+        .mockImplementation(() => undefined);
+      render(<MailMessageViewer content="" />);
+      await user.click(screen.getByRole("link", { name: "MC Deputy Training" }));
+      expect(alertSpy).toHaveBeenCalledWith(
+        expect.stringContaining("EVE Online client"),
+      );
+      alertSpy.mockRestore();
+    });
+
+    it("renders bookmark folder links with the internal link color", () => {
+      render(<MailMessageViewer content="" />);
+      const bookmarkLink = screen.getByRole("link", {
+        name: "MC Deputy Training",
+      });
+      expect(bookmarkLink).toHaveStyle("color: #d98d00");
     });
   });
 
