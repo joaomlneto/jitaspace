@@ -34,7 +34,15 @@ export const updateTable = async <
     recordsBefore: dbEntries,
     recordsAfter: esiEntries,
     getId: idAccessor,
-    recordsAreEqual,
+    // `recordsAreEqual` is constrained to record-like types so it can walk the
+    // row's keys. Rows are only known to be `object` here — and interfaces have
+    // no implicit index signature — so widen at the boundary rather than
+    // forcing every caller's row type to carry one.
+    recordsAreEqual: (a, b) =>
+      recordsAreEqual(
+        a as Record<string, unknown>,
+        b as Record<string, unknown>,
+      ),
   });
 
   await batchCreate(diffs.created);

@@ -37,6 +37,9 @@ export const CalendarEventAttendanceSelect = memo(
     const handleRespond = useCallback(
       async (response: CalendarEventAttendanceResponse) => {
         if (!characterId || !eventId) return;
+        // ESI accepts accepted/declined/tentative only: `not_responded` is the
+        // initial state of an invitation, not an answer you can send back.
+        if (response === "not_responded") return;
         await putCharactersCharacterIdCalendarEventId(
           characterId,
           eventId,

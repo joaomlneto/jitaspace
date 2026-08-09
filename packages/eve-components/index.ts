@@ -8,3 +8,4 @@ export * from "./MultiSelect";
 export * from "./Select";
 export * from "./Text";
 export * from "./Timeline";
+export * from "./types";
