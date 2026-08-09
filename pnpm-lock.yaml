@@ -1545,6 +1545,12 @@ importers:
       '@jitaspace/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
+      '@kubb/cli':
+        specifier: ^4.38.0
+        version: 4.38.0(@kubb/fabric-core@0.14.0)(@kubb/react-fabric@0.14.0)(typescript@5.9.3)
+      '@kubb/core':
+        specifier: ^4.38.0
+        version: 4.38.0(@kubb/fabric-core@0.14.0)(@kubb/react-fabric@0.14.0)
       '@swc/core':
         specifier: ^1.15.40
         version: 1.15.40
@@ -6743,6 +6749,11 @@ packages:
     resolution: {integrity: sha512-lGe34o6EHj9y3Kts9R4ZYs/Gr+6N7MCaMlIFA3F1R2O5/m7K06AxfSeO5530PEERE6/WyEg3lsuyw4GHlPZHog==}
     engines: {node: ^4.5.0 || >= 5.9}
 
+  baseline-browser-mapping@2.10.13:
+    resolution: {integrity: sha512-BL2sTuHOdy0YT1lYieUxTw/QMtPBC3pmlJC6xk8BBYVv6vcw3SGdKemQ+Xsx9ik2F/lYDO9tqsFQH1r9PFuHKw==}
+    engines: {node: '>=6.0.0'}
+    hasBin: true
+
   baseline-browser-mapping@2.11.1:
     resolution: {integrity: sha512-HYXq73DDpCtNzOmrFsm9eSwCvWCql0RzqjpDzXN9EadiLJ4DNat0nsZ/Bzmy+Ud12mb4/zKDY0cQ805ZzN+i0A==}
     engines: {node: '>=6.0.0'}
@@ -6921,6 +6932,9 @@ packages:
   camelcase@6.3.0:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
+
+  caniuse-lite@1.0.30001784:
+    resolution: {integrity: sha512-WU346nBTklUV9YfUl60fqRbU5ZqyXlqvo1SgigE1OAXK5bFL8LL9q1K7aap3N739l4BvNqnkm3YrGHiY9sfUQw==}
 
   caniuse-lite@1.0.30001806:
     resolution: {integrity: sha512-72Cuvd95zbSYPKq6Fhg8eDJRlzgWDf7/mtoZv6Qe/DYNCEBdNxoA3+rZAU2ZhGCpZlns3EssFavaZomckT5Uuw==}
@@ -10777,9 +10791,6 @@ packages:
   remeda@2.33.4:
     resolution: {integrity: sha512-ygHswjlc/opg2VrtiYvUOPLjxjtdKvjGz1/plDhkG66hjNjFr1xmfrs2ClNFo/E6TyUFiwYNh53bKV26oBoMGQ==}
 
-  remeda@2.33.6:
-    resolution: {integrity: sha512-tazDGH7s75kUPGBKLvhgBEHMgW+TdDFhjUAMdQj57IoWz6HsGa5D2RX5yDUz6IIqiRRvZiaEHzCzWdTeixc/Kg==}
-
   remeda@2.39.0:
     resolution: {integrity: sha512-3Ki8dU1o3OVu4dwIQ2Pj+yiuP7OnEbmWAGmJ3yDRqopily5jsj8NWzPvbS89H85d6UdONKEcUnrfuHY6jN9vyw==}
     engines: {node: '>=18.0.0'}
@@ -12641,7 +12652,7 @@ snapshots:
       outdent: 0.5.0
       prettier: 2.8.8
       resolve-from: 5.0.0
-      semver: 7.7.4
+      semver: 7.8.4
 
   '@changesets/assemble-release-plan@6.0.10':
     dependencies:
@@ -12650,7 +12661,7 @@ snapshots:
       '@changesets/should-skip-package': 0.1.2
       '@changesets/types': 6.1.0
       '@manypkg/get-packages': 1.1.3
-      semver: 7.7.4
+      semver: 7.8.4
 
   '@changesets/changelog-git@0.2.1':
     dependencies:
@@ -12707,7 +12718,7 @@ snapshots:
       '@changesets/types': 6.1.0
       '@manypkg/get-packages': 1.1.3
       picocolors: 1.1.1
-      semver: 7.7.4
+      semver: 7.8.4
 
   '@changesets/get-release-plan@4.0.16':
     dependencies:
@@ -14052,7 +14063,7 @@ snapshots:
     dependencies:
       '@clack/prompts': 1.5.1
       p-limit: 7.3.0
-      remeda: 2.33.6
+      remeda: 2.39.0
       typescript: 5.9.3
 
   '@kubb/oas@4.38.0(@kubb/fabric-core@0.14.0)(@kubb/react-fabric@0.14.0)':
@@ -14146,7 +14157,7 @@ snapshots:
     dependencies:
       '@kubb/fabric-core': 0.14.0
       react-devtools-core: 6.1.5
-      remeda: 2.33.6
+      remeda: 2.39.0
       ws: 8.18.0
     transitivePeerDependencies:
       - bufferutil
@@ -17366,6 +17377,8 @@ snapshots:
 
   base64id@2.0.0: {}
 
+  baseline-browser-mapping@2.10.13: {}
+
   baseline-browser-mapping@2.11.1: {}
 
   bcrypt-pbkdf@1.0.2:
@@ -17437,8 +17450,8 @@ snapshots:
 
   browserslist@4.28.2:
     dependencies:
-      baseline-browser-mapping: 2.11.1
-      caniuse-lite: 1.0.30001806
+      baseline-browser-mapping: 2.10.13
+      caniuse-lite: 1.0.30001784
       electron-to-chromium: 1.5.330
       node-releases: 2.0.36
       update-browserslist-db: 1.2.3(browserslist@4.28.2)
@@ -17630,6 +17643,8 @@ snapshots:
   camelcase@5.3.1: {}
 
   camelcase@6.3.0: {}
+
+  caniuse-lite@1.0.30001784: {}
 
   caniuse-lite@1.0.30001806: {}
 
@@ -21666,7 +21681,7 @@ snapshots:
       ky: 1.7.2
       registry-auth-token: 5.0.2
       registry-url: 6.0.1
-      semver: 7.7.4
+      semver: 7.8.4
 
   package-manager-detector@0.2.0: {}
 
@@ -22378,8 +22393,6 @@ snapshots:
 
   remeda@2.33.4: {}
 
-  remeda@2.33.6: {}
-
   remeda@2.39.0: {}
 
   remend@1.2.1: {}
@@ -22569,7 +22582,7 @@ snapshots:
 
   sembear@0.7.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.4
 
   semver@6.3.1: {}
 

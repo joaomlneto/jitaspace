@@ -40,11 +40,10 @@ const mockHoboleaksResponse = (agentTypes: Record<number, string>) => {
 // The record the job derives from that payload — no createdAt/updatedAt.
 const remoteRecord = { agentTypeId: 1, name: "BasicAgent", isDeleted: false };
 
-// `defineJob` is only given its Payload type argument, so its `Result` generic
-// falls back to `unknown` and the handler is typed `Promise<unknown>`. Assert
-// the shape the handler actually returns so the assertions below type-check.
 const runJob = async () =>
-  // The handler ignores its context, so an empty one is enough.
+  // The handler ignores its context, so an empty one is enough. `defineJob`
+  // falls back to `unknown` for its result when only the payload type argument
+  // is supplied, so name the shape the handler actually returns.
   (await scrapeHoboleaksAgentTypes.handler({} as never)) as {
     stats: { agentTypeChanges: CrudStatistics };
   };

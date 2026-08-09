@@ -12,8 +12,6 @@ const mockUseAuthStoreHasHydrated = jest.fn();
 
 jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: () => mockUseSelectedCharacter(),
-}));
-jest.mock("~/hooks/useAuthStoreHasHydrated", () => ({
   useAuthStoreHasHydrated: () => mockUseAuthStoreHasHydrated(),
 }));
 jest.mock("~/components/ScopeGuard/RequestPermissionsBanner", () => ({

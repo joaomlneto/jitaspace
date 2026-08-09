@@ -10,26 +10,26 @@ import userEvent from "@testing-library/user-event";
 // on the editor context, ESI lookups and the EsiSearchSelect UI component.
 // ---------------------------------------------------------------------------
 
-const mockChainRun = jest.fn();
+const mockChainRun = jest.fn<(...args: unknown[]) => unknown>();
 const mockSetLinkChain = {
   focus: () => mockSetLinkChain,
   extendMarkRange: () => mockSetLinkChain,
-  setLink: jest.fn(() => mockSetLinkChain),
-  unsetLink: jest.fn(() => mockSetLinkChain),
+  setLink: jest.fn((..._args: unknown[]) => mockSetLinkChain),
+  unsetLink: jest.fn((..._args: unknown[]) => mockSetLinkChain),
   run: mockChainRun,
 };
 
 const mockEditor = {
-  isActive: jest.fn(() => false),
-  getAttributes: jest.fn(() => ({ href: "" })),
-  chain: jest.fn(() => mockSetLinkChain),
+  isActive: jest.fn((..._args: unknown[]) => false),
+  getAttributes: jest.fn((..._args: unknown[]) => ({ href: "" })),
+  chain: jest.fn((..._args: unknown[]) => mockSetLinkChain),
 };
 
 jest.mock("@mantine/tiptap", () => ({
   useRichTextEditorContext: () => ({ editor: mockEditor, unstyled: false }),
 }));
 
-const mockGetUniverseStation = jest.fn(() =>
+const mockGetUniverseStation = jest.fn((..._args: unknown[]) =>
   Promise.resolve({ data: { type_id: 52678 } }),
 );
 

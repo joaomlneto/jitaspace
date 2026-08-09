@@ -16,7 +16,7 @@
 
 import "@testing-library/jest-dom/jest-globals";
 
-import { describe, it } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 import { renderHook } from "@testing-library/react";
 import { create } from "zustand";
 import { useShallow } from "zustand/shallow";

@@ -12,8 +12,8 @@ import userEvent from "@testing-library/user-event";
 // modal is lazy-require()d inside each test AFTER the mocks are registered.
 // ---------------------------------------------------------------------------
 
-const mockUseSelectedCharacter = jest.fn();
-const mockUseAccessToken = jest.fn();
+const mockUseSelectedCharacter = jest.fn<(...args: unknown[]) => unknown>();
+const mockUseAccessToken = jest.fn<(...args: unknown[]) => unknown>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: (...args: unknown[]) =>
@@ -22,7 +22,9 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 const mockPostLabel =
-  jest.fn<() => Promise<{ status: number; data?: unknown }>>();
+  jest.fn<
+    (...args: unknown[]) => Promise<{ status: number; data?: unknown }>
+  >();
 
 jest.mock("@jitaspace/esi-client", () => ({
   postCharactersCharacterIdMailLabels: (...args: unknown[]) =>
@@ -52,7 +54,7 @@ jest.mock("~/components/EveMail", () => ({
   ),
 }));
 
-const mockShowNotification = jest.fn();
+const mockShowNotification = jest.fn<(...args: unknown[]) => unknown>();
 jest.mock("@mantine/notifications", () => ({
   showNotification: (...args: unknown[]) => mockShowNotification(...args),
 }));

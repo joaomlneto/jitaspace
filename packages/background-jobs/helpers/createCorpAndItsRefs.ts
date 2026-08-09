@@ -26,12 +26,12 @@ import type {
   Alliance,
   Bloodline,
   Character,
-  Corporation,
   Faction,
   Race,
   Station,
   War,
 } from "../db";
+import type { EsiCorporationRow } from "./mergeEntriesIntoCorporationsTable";
 import { CharacterGender, prisma } from "../db";
 
 const limit = pLimit(1);
@@ -60,7 +60,7 @@ export const createCorpAndItsRefRecords = async ({
   missingBloodlineIds?: Set<number>;
   characters?: Omit<Character, "updatedAt" | "createdAt">[];
   missingCharacterIds?: Set<number>;
-  corporations?: Omit<Corporation, "updatedAt" | "createdAt">[];
+  corporations?: EsiCorporationRow[];
   missingCorporationIds?: Set<number>;
   factions?: Omit<Faction, "updatedAt" | "createdAt">[];
   missingFactionIds?: Set<number>;
@@ -708,7 +708,7 @@ const fetchCharactersFromEsi = (
 
 const fetchCorporationsFromEsi = (
   corporationIds: number[],
-): Promise<Omit<Corporation, "updatedAt" | "createdAt">[]> =>
+): Promise<EsiCorporationRow[]> =>
   Promise.all(
     corporationIds.map((corporationId) =>
       limit(async () =>

@@ -175,6 +175,11 @@ model Type {
   metaLevel                       Int?
   techLevel                       Int?
   soundId                         Int?
+  /// The base type a variant derives from (types.yaml `variationParentTypeID`) —
+  /// e.g. a T2 or faction module points at its T1 hull. A plain id rather than a
+  /// self-relation: the ingest writes every type in one chunked createMany, so a
+  /// self-FK could reference a row not yet inserted.
+  variationParentTypeId           Int?
   shipTreeGroup                   ShipTreeGroup?                  @relation(fields: [shipTreeGroupId], references: [shipTreeGroupId])
   shipTreeGroupId                 Int?
   // This Type's Dogma Attributes
@@ -516,18 +521,18 @@ model Alliance {
 }
 
 model Faction {
-  factionId            Int                @id
+  factionId            Int                 @id
   name                 String
   description          String
   isUnique             Boolean
-  militiaCorporation   Corporation?       @relation("FactionMilitiaCorporation", fields: [militiaCorporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
+  militiaCorporation   Corporation?        @relation("FactionMilitiaCorporation", fields: [militiaCorporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
   militiaCorporationId Int?
   alliances            Alliance[]
-  corporations         Corporation[]      @relation("CorporationFaction")
-  factionCorporation   Corporation?       @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
+  corporations         Corporation[]       @relation("CorporationFaction")
+  factionCorporation   Corporation?        @relation("FactionCorporation", fields: [corporationId], references: [corporationId], onUpdate: NoAction, onDelete: NoAction)
   corporationId        Int?
   sizeFactor           Float
-  solarSystem          SolarSystem?       @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  solarSystem          SolarSystem?        @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId        Int?
   // do we need to store this?
   stationCount         Int
@@ -536,16 +541,17 @@ model Faction {
   // SDE-only columns, owned by ingestSdeFactions.
   flatLogo             String?
   flatLogoWithName     String?
+  memberRaces          FactionMemberRace[]
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt()
-  isDeleted            Boolean            @default(false)
-  Character            Character[]        @relation("CharacterFaction")
-  races                Race[]             @relation("RaceFaction")
-  killmailVictims      KillmailVictim[]   @relation("KillmailVictimFaction")
-  killmailAttackers    KillmailAttacker[] @relation("KillmailAttackerFaction")
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt()
+  isDeleted            Boolean             @default(false)
+  Character            Character[]         @relation("CharacterFaction")
+  races                Race[]              @relation("RaceFaction")
+  killmailVictims      KillmailVictim[]    @relation("KillmailVictimFaction")
+  killmailAttackers    KillmailAttacker[]  @relation("KillmailAttackerFaction")
   contrabandTypes      ContrabandType[]
 
   @@index([corporationId])
@@ -554,44 +560,66 @@ model Faction {
 }
 
 model Corporation {
-  corporationId       Int                 @id
-  alliance            Alliance?           @relation("CorporationAlliance", fields: [allianceId], references: [allianceId], onUpdate: NoAction, onDelete: NoAction)
-  allianceId          Int?
+  corporationId              Int                          @id
+  alliance                   Alliance?                    @relation("CorporationAlliance", fields: [allianceId], references: [allianceId], onUpdate: NoAction, onDelete: NoAction)
+  allianceId                 Int?
   // This cannot be null, but is a workaround for inserting mutually referencing entries
-  ceo                 Character?          @relation("corporationCeo", fields: [ceoId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
-  ceoId               Int?
+  ceo                        Character?                   @relation("corporationCeo", fields: [ceoId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
+  ceoId                      Int?
   // This cannot be null, but is a workaround for inserting mutually referencing entries
-  creator             Character?          @relation("corporationCreator", fields: [creatorId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
-  creatorId           Int?
-  dateFounded         DateTime?
-  description         String?
+  creator                    Character?                   @relation("corporationCreator", fields: [creatorId], references: [characterId], onUpdate: NoAction, onDelete: NoAction)
+  creatorId                  Int?
+  dateFounded                DateTime?
+  description                String?
   // This cannot be null, but is a workaround for inserting mutually referencing entries
-  faction             Faction?            @relation("CorporationFaction", fields: [factionId], references: [factionId])
-  factionId           Int?
+  faction                    Faction?                     @relation("CorporationFaction", fields: [factionId], references: [factionId])
+  factionId                  Int?
   // This cannot be null, but is a workaround for inserting mutually referencing entries
-  homeStation         Station?            @relation("CorporationHomeStation", fields: [homeStationId], references: [stationId], onDelete: NoAction, onUpdate: NoAction)
-  homeStationId       Int?
-  memberCount         Int
-  name                String
-  shares              BigInt?
-  taxRate             Float
-  ticker              String
-  url                 String?
-  warEligible         Boolean?
+  homeStation                Station?                     @relation("CorporationHomeStation", fields: [homeStationId], references: [stationId], onDelete: NoAction, onUpdate: NoAction)
+  homeStationId              Int?
+  memberCount                Int
+  name                       String
+  shares                     BigInt?
+  taxRate                    Float
+  ticker                     String
+  url                        String?
+  warEligible                Boolean?
+  // SDE-only columns for NPC corporations, owned by ingestSdeNpcCorporations.
+  // ceoID / taxRate / tickerName are deliberately NOT taken from the SDE — ESI
+  // already owns ceoId / taxRate / ticker for every corporation, player or NPC.
+  extent                     String?
+  memberLimit                Int?
+  minSecurity                Float?
+  minimumJoinStanding        Float?
+  initialPrice               Float?
+  hasPlayerPersonnelManager  Boolean?
+  sendCharTerminationMessage Boolean?
+  mainActivityId             Int?
+  secondaryActivityId        Int?
+  enemyId                    Int?
+  friendId                   Int?
+  allowedRaces               NpcCorporationAllowedRace[]
+  lpOfferTables              NpcCorporationLpOfferTable[]
+  npcDivisions               NpcCorporationDivisionSlot[]
+  investors                  NpcCorporationInvestor[]     @relation("NpcCorporationInvestorCorp")
+  investedIn                 NpcCorporationInvestor[]     @relation("NpcCorporationInvestorHolder")
+  trades                     NpcCorporationTrade[]
+  exchangeRates              NpcCorporationExchangeRate[] @relation("NpcCorporationExchangeRateCorp")
+  exchangeRatesTo            NpcCorporationExchangeRate[] @relation("NpcCorporationExchangeRateOther")
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt()
-  isDeleted           Boolean             @default(false)
-  executorAlliance    Alliance[]          @relation("AllianceExecutor")
-  createdAlliances    Alliance[]          @relation("AllianceCreator")
-  ownedStations       Station[]           @relation("StationOwner")
-  bloodlines          Bloodline[]         @relation("BloodlineCorporation")
-  CorporationFactions Faction[]           @relation("FactionCorporation")
-  MilitiaFaction      Faction[]           @relation("FactionMilitiaCorporation")
-  Character           Character[]         @relation("CharacterCorporation")
-  LoyaltyStoreOffer   LoyaltyStoreOffer[] @relation("CorporationLoyaltyStoreOffers")
+  createdAt                  DateTime                     @default(now())
+  updatedAt                  DateTime                     @updatedAt()
+  isDeleted                  Boolean                      @default(false)
+  executorAlliance           Alliance[]                   @relation("AllianceExecutor")
+  createdAlliances           Alliance[]                   @relation("AllianceCreator")
+  ownedStations              Station[]                    @relation("StationOwner")
+  bloodlines                 Bloodline[]                  @relation("BloodlineCorporation")
+  CorporationFactions        Faction[]                    @relation("FactionCorporation")
+  MilitiaFaction             Faction[]                    @relation("FactionMilitiaCorporation")
+  Character                  Character[]                  @relation("CharacterCorporation")
+  LoyaltyStoreOffer          LoyaltyStoreOffer[]          @relation("CorporationLoyaltyStoreOffers")
 
   warsAggressor       War[]                            @relation("WarAggressorCorporation")
   warsDefender        War[]                            @relation("WarDefenderCorporation")
@@ -730,31 +758,38 @@ model Constellation {
 
 // TODO add position,
 model SolarSystem {
-  solarSystemId       Int            @id
-  name                String
-  stations            Station[]
-  constellation       Constellation  @relation(fields: [constellationId], references: [constellationId])
-  constellationId     Int
-  securityClass       String?
-  securityStatus      Decimal
-  star                Star?          @relation("SolarSystemStar")
-  starId              Int?
-  stargates           Stargate[]     @relation("SolarSystemStargate")
+  solarSystemId              Int                                   @id
+  name                       String
+  stations                   Station[]
+  constellation              Constellation                         @relation(fields: [constellationId], references: [constellationId])
+  constellationId            Int
+  securityClass              String?
+  securityStatus             Decimal
+  star                       Star?                                 @relation("SolarSystemStar")
+  starId                     Int?
+  stargates                  Stargate[]                            @relation("SolarSystemStargate")
   // SDE-only columns, owned by ingestSdeSolarSystems.
-  wormholeClassId     Int?
-  visualEffect        String?
-  isRegional          Boolean?
-  isInternational     Boolean?
+  wormholeClassId            Int?
+  visualEffect               String?
+  isRegional                 Boolean?
+  isInternational            Boolean?
+  /// The system's position on the 2D star map (mapSolarSystems.yaml `position2D`).
+  /// Float, not BigInt: CCP ships values beyond 2^53 (e.g. 69851821507953890), so
+  /// the YAML parse has already rounded them to a double before we see them.
+  position2dX                Float?
+  position2dY                Float?
+  disallowedAnchorCategories SolarSystemDisallowedAnchorCategory[]
+  disallowedAnchorGroups     SolarSystemDisallowedAnchorGroup[]
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt()
-  isDeleted           Boolean        @default(false)
-  solarSystemFactions Faction[]      @relation("FactionSolarSystem")
-  Planet              Planet[]       @relation("PlanetSolarSystem")
-  AgentInSpace        AgentInSpace[] @relation("AgentInSpaceSolarSystem")
-  Killmail            Killmail[]     @relation("KillmailSolarSystem")
+  createdAt                  DateTime                              @default(now())
+  updatedAt                  DateTime                              @updatedAt()
+  isDeleted                  Boolean                               @default(false)
+  solarSystemFactions        Faction[]                             @relation("FactionSolarSystem")
+  Planet                     Planet[]                              @relation("PlanetSolarSystem")
+  AgentInSpace               AgentInSpace[]                        @relation("AgentInSpaceSolarSystem")
+  Killmail                   Killmail[]                            @relation("KillmailSolarSystem")
 
   @@index([constellationId])
 }
@@ -810,6 +845,12 @@ model Planet {
   solarSystemId Int
   type          Type           @relation("PlanetType", fields: [typeId], references: [typeId])
   typeId        Int
+  // SDE-only render attributes (mapPlanets.yaml `attributes`), owned by
+  // ingestSdePlanets. `population` is a flag, not a count.
+  heightMap1    Int?
+  heightMap2    Int?
+  shaderPreset  Int?
+  population    Boolean?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
@@ -825,17 +866,21 @@ model Planet {
 
 // TODO: Add missing "position" field
 model Moon {
-  moonId    Int        @id
-  name      String
-  planet    Planet     @relation("PlanetMoons", fields: [planetId], references: [planetId])
-  planetId  Int
+  moonId       Int        @id
+  name         String
+  planet       Planet     @relation("PlanetMoons", fields: [planetId], references: [planetId])
+  planetId     Int
+  // SDE-only render attributes (mapMoons.yaml `attributes`), owned by ingestSdeMoons.
+  heightMap1   Int?
+  heightMap2   Int?
+  shaderPreset Int?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt()
-  isDeleted Boolean    @default(false)
-  Killmail  Killmail[] @relation("KillmailMoon")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt()
+  isDeleted    Boolean    @default(false)
+  Killmail     Killmail[] @relation("KillmailMoon")
 
   @@index([planetId])
 }
@@ -1149,6 +1194,13 @@ model Agent {
   level           Int
   station         Station                @relation("AgentStation", fields: [stationId], references: [stationId])
   stationId       Int
+  // SDE-only npcCharacters.yaml fields, owned by scrapeSdeAgents. `startDate` is
+  // shipped without a timezone ("2003-03-12 20:04:00") and read as UTC.
+  isCeo           Boolean?
+  startDate       DateTime?
+  careerId        Int?
+  schoolId        Int?
+  specialityId    Int?
   agentsInSpace   AgentInSpace[]         @relation("AgentInSpace")
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
@@ -2713,4 +2765,139 @@ model SkinrTierThreshold {
   isDeleted       Boolean       @default(false)
 
   @@id([shipTreeGroupId, tier])
+}
+
+// ---------------------------------------------------------------------------
+// NPC corporation detail (npcCorporations.yaml)
+//
+// The file is 283 NPC corporations out of a Corporation table that also holds
+// every player corporation, so ingestSdeNpcCorporations scopes its diff to ids
+// that already exist — Corporation.memberCount and .name are required and the
+// SDE does not supply memberCount, so it must never create a row.
+// ---------------------------------------------------------------------------
+
+/// A race allowed to join an NPC corporation (`allowedMemberRaces`).
+model NpcCorporationAllowedRace {
+  corporationId Int
+  corporation   Corporation @relation(fields: [corporationId], references: [corporationId])
+  raceId        Int
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
+
+  @@id([corporationId, raceId])
+}
+
+/// An LP offer table an NPC corporation draws from (`lpOfferTables`).
+model NpcCorporationLpOfferTable {
+  corporationId  Int
+  corporation    Corporation @relation(fields: [corporationId], references: [corporationId])
+  lpOfferTableId Int
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt()
+  isDeleted      Boolean     @default(false)
+
+  @@id([corporationId, lpOfferTableId])
+}
+
+/// A division staffed at an NPC corporation (`divisions`), keyed by the
+/// npcCorporationDivisions.yaml id.
+model NpcCorporationDivisionSlot {
+  corporationId            Int
+  corporation              Corporation @relation(fields: [corporationId], references: [corporationId])
+  npcCorporationDivisionId Int
+  divisionNumber           Int?
+  /// npcCharacters.yaml id of the division leader.
+  leaderId                 Int?
+  size                     Int?
+  createdAt                DateTime    @default(now())
+  updatedAt                DateTime    @updatedAt()
+  isDeleted                Boolean     @default(false)
+
+  @@id([corporationId, npcCorporationDivisionId])
+}
+
+/// Shares one NPC corporation holds in another (`investors`).
+model NpcCorporationInvestor {
+  corporationId         Int
+  corporation           Corporation @relation("NpcCorporationInvestorCorp", fields: [corporationId], references: [corporationId])
+  investorCorporationId Int
+  investor              Corporation @relation("NpcCorporationInvestorHolder", fields: [investorCorporationId], references: [corporationId])
+  shares                Int
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt()
+  isDeleted             Boolean     @default(false)
+
+  @@id([corporationId, investorCorporationId])
+  @@index([investorCorporationId])
+}
+
+/// An NPC corporation's trade weighting for a type (`corporationTrades`).
+model NpcCorporationTrade {
+  corporationId Int
+  corporation   Corporation @relation(fields: [corporationId], references: [corporationId])
+  typeId        Int
+  value         Float
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
+
+  @@id([corporationId, typeId])
+}
+
+/// An NPC corporation's exchange rate against another (`exchangeRates`).
+model NpcCorporationExchangeRate {
+  corporationId      Int
+  corporation        Corporation @relation("NpcCorporationExchangeRateCorp", fields: [corporationId], references: [corporationId])
+  otherCorporationId Int
+  other              Corporation @relation("NpcCorporationExchangeRateOther", fields: [otherCorporationId], references: [corporationId])
+  rate               Float
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt()
+  isDeleted          Boolean     @default(false)
+
+  @@id([corporationId, otherCorporationId])
+  @@index([otherCorporationId])
+}
+
+// ---------------------------------------------------------------------------
+// Remaining relational arrays (factions.yaml, mapSolarSystems.yaml)
+// ---------------------------------------------------------------------------
+
+/// A race that belongs to a faction (factions.yaml `memberRaces`).
+model FactionMemberRace {
+  factionId Int
+  faction   Faction  @relation(fields: [factionId], references: [factionId])
+  raceId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  isDeleted Boolean  @default(false)
+
+  @@id([factionId, raceId])
+}
+
+/// A category that may not be anchored in a system
+/// (mapSolarSystems.yaml `disallowedAnchorCategories`).
+model SolarSystemDisallowedAnchorCategory {
+  solarSystemId Int
+  solarSystem   SolarSystem @relation(fields: [solarSystemId], references: [solarSystemId])
+  categoryId    Int
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
+
+  @@id([solarSystemId, categoryId])
+}
+
+/// A group that may not be anchored in a system
+/// (mapSolarSystems.yaml `disallowedAnchorGroups`).
+model SolarSystemDisallowedAnchorGroup {
+  solarSystemId Int
+  solarSystem   SolarSystem @relation(fields: [solarSystemId], references: [solarSystemId])
+  groupId       Int
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt()
+  isDeleted     Boolean     @default(false)
+
+  @@id([solarSystemId, groupId])
 }

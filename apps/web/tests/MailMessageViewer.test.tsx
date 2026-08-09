@@ -231,7 +231,7 @@ describe("MailMessageViewer", () => {
       render(<MailMessageViewer content="" />);
       await user.click(screen.getByRole("link", { name: "Stratios Fit" }));
       const call = openModal.mock.calls[0]?.[0] as {
-        children: React.ReactElement;
+        children: React.ReactElement<{ dna: string }>;
       };
       expect(call.children.props.dna).toBe("33470:31047;1:31011;1::");
     });
