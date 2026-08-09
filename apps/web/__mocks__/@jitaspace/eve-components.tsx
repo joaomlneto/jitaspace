@@ -28,7 +28,6 @@ const childrenStub =
     );
 
 // --- Anchors (render children) ---
-export const CalendarEventOwnerAnchor = childrenStub();
 export const CharacterAnchor = childrenStub();
 export const ConstellationAnchor = childrenStub();
 export const EveEntityAnchor = childrenStub();
