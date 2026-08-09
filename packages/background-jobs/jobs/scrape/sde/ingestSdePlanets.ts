@@ -4,9 +4,12 @@ import { prisma } from "../../../db";
 import {
   ingestSdeTable,
   loadSdeFiles,
+  optionalBoolean,
+  optionalNumber,
   planetNames,
   requiredNumber,
   solarSystemNames,
+  subRecord,
 } from "../../../helpers";
 
 export interface IngestSdePlanetsEventPayload {
@@ -38,13 +41,20 @@ export const ingestSdePlanets = defineJob<IngestSdePlanetsEventPayload["data"]>(
         records: files["mapPlanets.yaml"],
         idField: "planetId",
         delegate: prisma.planet,
-        toRow: (record, id): Prisma.PlanetCreateManyInput => ({
-          planetId: id,
-          name: names.get(id) ?? "",
-          solarSystemId: requiredNumber(record.solarSystemID),
-          typeId: requiredNumber(record.typeID),
-          isDeleted: false,
-        }),
+        toRow: (record, id): Prisma.PlanetCreateManyInput => {
+          const attributes = subRecord(record.attributes);
+          return {
+            planetId: id,
+            name: names.get(id) ?? "",
+            solarSystemId: requiredNumber(record.solarSystemID),
+            typeId: requiredNumber(record.typeID),
+            heightMap1: optionalNumber(attributes.heightMap1),
+            heightMap2: optionalNumber(attributes.heightMap2),
+            shaderPreset: optionalNumber(attributes.shaderPreset),
+            population: optionalBoolean(attributes.population),
+            isDeleted: false,
+          };
+        },
       });
       return { stats: { planets }, elapsed: performance.now() - start };
     },

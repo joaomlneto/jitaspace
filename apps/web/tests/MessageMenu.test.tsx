@@ -11,8 +11,8 @@ import userEvent from "@testing-library/user-event";
 // AFTER these are registered (jest.mock is not auto-hoisted in this project).
 // ---------------------------------------------------------------------------
 
-const mockUseAccessToken = jest.fn();
-const mockUseCharacterMailLabels = jest.fn();
+const mockUseAccessToken = jest.fn<(...args: unknown[]) => unknown>();
+const mockUseCharacterMailLabels = jest.fn<(...args: unknown[]) => unknown>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useAccessToken: (...args: unknown[]) => mockUseAccessToken(...args),
@@ -20,8 +20,10 @@ jest.mock("@jitaspace/hooks", () => ({
     mockUseCharacterMailLabels(...args),
 }));
 
-const mockPutMail = jest.fn<() => Promise<unknown>>(() => Promise.resolve({}));
-const mockDeleteMail = jest.fn<() => Promise<unknown>>(() =>
+const mockPutMail = jest.fn<(...args: unknown[]) => Promise<unknown>>(() =>
+  Promise.resolve({}),
+);
+const mockDeleteMail = jest.fn<(...args: unknown[]) => Promise<unknown>>(() =>
   Promise.resolve({}),
 );
 
@@ -37,8 +39,8 @@ jest.mock("@jitaspace/utils", () => ({
   isSpecialLabelId: (id?: number) => id !== undefined && id <= 8,
 }));
 
-const mockOpenConfirmModal = jest.fn();
-const mockShowNotification = jest.fn();
+const mockOpenConfirmModal = jest.fn<(...args: unknown[]) => unknown>();
+const mockShowNotification = jest.fn<(...args: unknown[]) => unknown>();
 
 jest.mock("@mantine/modals", () => ({
   openConfirmModal: (...args: unknown[]) => mockOpenConfirmModal(...args),
@@ -131,7 +133,7 @@ describe("MessageMenu", () => {
 
   it("adds a label and calls the ESI update + mutate when an 'Add' item is clicked", async () => {
     const user = userEvent.setup();
-    const mutate = jest.fn();
+    const mutate = jest.fn<(...args: unknown[]) => unknown>();
     const data = [{ mail_id: 100, labels: [16] }];
     renderMenu({}, { mutate, data });
     await user.click(screen.getByRole("button"));
@@ -193,7 +195,7 @@ describe("MessageMenu", () => {
 
   it("calls the delete ESI endpoint when the delete modal is confirmed", async () => {
     const user = userEvent.setup();
-    const mutate = jest.fn();
+    const mutate = jest.fn<(...args: unknown[]) => unknown>();
     const data = [{ mail_id: 100 }];
     renderMenu({}, { mutate, data });
     await user.click(screen.getByRole("button"));

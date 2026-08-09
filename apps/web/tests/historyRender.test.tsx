@@ -11,9 +11,15 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 // ── mocks ────────────────────────────────────────────────────────────────────
 
-const mockUseQuery = jest.fn();
+// Only the two fields the tests drive off are named; everything else the
+// component passes to `useQuery` is irrelevant here.
+interface MockQueryOptions {
+  queryKey?: unknown[];
+  queryFn?: () => unknown;
+}
+const mockUseQuery = jest.fn<(opts: MockQueryOptions) => unknown>();
 jest.mock("@tanstack/react-query", () => ({
-  useQuery: (opts: unknown) => mockUseQuery(opts),
+  useQuery: (opts: MockQueryOptions) => mockUseQuery(opts),
 }));
 
 // The history index page embeds the recharts-backed activity BarChart; stub it

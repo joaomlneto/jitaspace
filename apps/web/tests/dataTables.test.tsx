@@ -18,9 +18,10 @@ function stringifyCellValue(value: unknown): string {
 // ---------------------------------------------------------------------------
 // Hooks used by CompareTable
 // ---------------------------------------------------------------------------
-const mockUseTypes = jest.fn<() => { data: Record<number, unknown> }>();
+const mockUseTypes =
+  jest.fn<(...args: unknown[]) => { data: Record<number, unknown> }>();
 const mockUseDogmaAttributes =
-  jest.fn<() => { data: Record<number, unknown> }>();
+  jest.fn<(...args: unknown[]) => { data: Record<number, unknown> }>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useTypes: (...args: unknown[]) => mockUseTypes(...args),

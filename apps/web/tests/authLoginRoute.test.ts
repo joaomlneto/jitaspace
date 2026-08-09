@@ -4,7 +4,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-const mockCreateLoginFlow = jest.fn();
+const mockCreateLoginFlow = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("@jitaspace/auth", () => ({
   createLoginFlow: (...args: unknown[]) => mockCreateLoginFlow(...args),

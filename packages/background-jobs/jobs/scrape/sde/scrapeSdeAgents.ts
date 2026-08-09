@@ -8,7 +8,9 @@ import { prisma } from "../../../db";
 import {
   loadSdeFile,
   mergeEsiEntriesIntoCharactersTable,
+  optionalBoolean,
   optionalNumber,
+  optionalSdeDate,
   requiredNumber,
 } from "../../../helpers";
 import { isResearchAgent } from "../../../helpers/agents.ts";
@@ -106,6 +108,13 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
               isLocator: Boolean(record.agent?.isLocator ?? false),
               level,
               stationId: requiredNumber(record.locationID),
+              // SDE-only fields the archive omits on a minority of NPC
+              // characters, so each lands as null rather than undefined.
+              isCeo: optionalBoolean(record.ceo),
+              startDate: optionalSdeDate(record.startDate),
+              careerId: optionalNumber(record.careerID),
+              schoolId: optionalNumber(record.schoolID),
+              specialityId: optionalNumber(record.specialityID),
               isDeleted: false,
             };
           }),

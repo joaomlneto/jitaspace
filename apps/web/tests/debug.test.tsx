@@ -22,7 +22,9 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("next/server", () => ({
-  connection: jest.fn().mockResolvedValue(undefined),
+  connection: jest
+    .fn<(...args: unknown[]) => Promise<unknown>>()
+    .mockResolvedValue(undefined),
 }));
 
 const { env } = require("~/env") as { env: { NODE_ENV: string } };

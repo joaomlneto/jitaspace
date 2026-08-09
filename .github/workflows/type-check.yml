@@ -1,0 +1,40 @@
+name: Type Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+# This job only reads the repository — it checks out the code and runs `tsc`.
+# Narrowing the token here rather than inheriting the repository default.
+permissions:
+  contents: read
+
+jobs:
+  type-check:
+    runs-on: ubuntu-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      # apps/web validates its env vars at import time; CI has no real secrets.
+      SKIP_ENV_VALIDATION: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+        with:
+          version: 11.3.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.15.0
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # No explicit codegen step: the Prisma client and the Kubb API clients are
+      # generated and gitignored, and the turbo `type-check` task depends on
+      # both, so it produces them itself on a clean checkout.
+      - name: Type-check
+        run: pnpm type-check

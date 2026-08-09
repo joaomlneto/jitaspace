@@ -12,6 +12,12 @@ export interface SdeNpcCharacterRecord {
     isLocator?: unknown;
   };
   skills?: { typeID?: unknown }[];
+  // Present on only a minority of NPC characters.
+  ceo?: unknown;
+  startDate?: unknown;
+  careerID?: unknown;
+  schoolID?: unknown;
+  specialityID?: unknown;
 }
 
 /** Agent type 4 is the research agent that offers datacore research. */

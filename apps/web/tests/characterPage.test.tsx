@@ -35,7 +35,7 @@ jest.mock("~/lib/db", () => ({
 // page.tsx imports getCharactersDetail for generateMetadata; page.client
 // imports useGetCharactersCharacterIdCorporationhistory for the timeline.
 jest.mock("@jitaspace/esi-client", () => ({
-  getCharactersDetail: jest.fn().mockResolvedValue({ data: { name: "Test" } }),
+  getCharactersDetail: jest.fn<(...args: unknown[]) => Promise<unknown>>().mockResolvedValue({ data: { name: "Test" } }),
   useGetCharactersCharacterIdCorporationhistory: (...args: unknown[]) =>
     mockUseCorporationHistory(...args),
 }));

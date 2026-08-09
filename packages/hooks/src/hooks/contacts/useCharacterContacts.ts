@@ -8,11 +8,13 @@ import type {
 } from "@jitaspace/esi-client";
 import {
   getCharactersCharacterIdContacts,
+  getCharactersCharacterIdContactsInfiniteQueryKey,
   useGetCharactersCharacterIdContactsInfinite,
   useGetCharactersCharacterIdContactsLabels,
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { esiInfiniteQueryKey } from "../utils/esiInfiniteQueryKey";
 
 export type CharacterContact =
   GetCharactersCharacterIdContactsQueryResponse[number];
@@ -44,6 +46,11 @@ export function useCharacterContacts(characterId: number) {
       { ...authHeaders },
       {
         query: {
+          // Keep this entry distinct from the single-page query for the
+          // same endpoint; see esiInfiniteQueryKey.
+          queryKey: esiInfiniteQueryKey(
+            getCharactersCharacterIdContactsInfiniteQueryKey(characterId),
+          ),
           enabled: accessToken !== null,
           initialPageParam: 1,
           queryFn: ({ pageParam }) =>

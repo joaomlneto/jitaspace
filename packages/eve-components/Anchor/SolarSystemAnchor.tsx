@@ -8,7 +8,7 @@ import { EveEntityAnchor } from "./EveEntityAnchor";
 
 export type SolarSystemAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     solarSystemId?: number | string;
   };
 

@@ -9,6 +9,7 @@ import {
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_TYPE_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeTypesEventPayload {
@@ -76,11 +77,7 @@ async function processTypeBatch(
             excludeObjectKeys(entry, [
               "updatedAt",
               "createdAt",
-              "basePrice",
-              "metaLevel",
-              "techLevel",
-              "soundId",
-              "shipTreeGroupId",
+              ...SDE_OWNED_TYPE_COLUMNS,
             ]),
           ),
         ),

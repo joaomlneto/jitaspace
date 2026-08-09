@@ -4,9 +4,11 @@ import { prisma } from "../../../db";
 import {
   ingestSdeTable,
   loadSdeFiles,
+  optionalNumber,
   planetNames,
   requiredNumber,
   solarSystemNames,
+  subRecord,
 } from "../../../helpers";
 
 export interface IngestSdeMoonsEventPayload {
@@ -42,10 +44,14 @@ export const ingestSdeMoons = defineJob<IngestSdeMoonsEventPayload["data"]>({
         // A moon orbits its planet, so orbitID is the parent planetId.
         const planetId = requiredNumber(record.orbitID);
         const planet = planetNameById.get(planetId) ?? "";
+        const attributes = subRecord(record.attributes);
         return {
           moonId: id,
           name: `${planet} - Moon ${requiredNumber(record.orbitIndex)}`,
           planetId,
+          heightMap1: optionalNumber(attributes.heightMap1),
+          heightMap2: optionalNumber(attributes.heightMap2),
+          shaderPreset: optionalNumber(attributes.shaderPreset),
           isDeleted: false,
         };
       },

@@ -1,4 +1,3 @@
-export * from "./CalendarEventOwnerAnchor";
 export * from "./CharacterAnchor";
 export * from "./ConstellationAnchor";
 export * from "./EveEntityAnchor";

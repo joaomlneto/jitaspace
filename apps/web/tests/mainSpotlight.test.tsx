@@ -7,9 +7,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 const mockRouterPush = jest.fn<(url: string) => Promise<boolean>>();
 const mockUseEsiSearch =
-  jest.fn<() => { data?: { data: Record<string, number[]> } }>();
+  jest.fn<(...args: unknown[]) => { data?: { data: Record<string, number[]> } }>();
 const mockUseEsiNameLookup = jest.fn<
-  () => Record<
+  (...args: unknown[]) => Record<
     string,
     | {
         status: string;

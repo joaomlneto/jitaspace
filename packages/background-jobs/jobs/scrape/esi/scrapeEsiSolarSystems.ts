@@ -9,10 +9,15 @@ import {
   getUniverseSystemsSystemId,
 } from "@jitaspace/esi-client";
 
-import type { SolarSystem } from "../../../db";
+import type { Moon, Planet, SolarSystem } from "../../../db";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { Prisma, prisma } from "../../../db";
+import {
+  SDE_OWNED_MOON_COLUMNS,
+  SDE_OWNED_PLANET_COLUMNS,
+  SDE_OWNED_SOLAR_SYSTEM_COLUMNS,
+} from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeSolarSystemsEventPayload {
@@ -39,18 +44,33 @@ const stripTimestamps = <T extends { createdAt: unknown; updatedAt: unknown }>(
 ) =>
   entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"]));
 
-// SolarSystem additionally carries SDE-only columns (owned by
-// ingestSdeSolarSystems). ESI's /universe/systems/ exposes none of them, so they
-// must be stripped too or every row would diff as modified on every run.
+// SolarSystem, Planet and Moon additionally carry SDE-only columns (owned by
+// the matching ingest jobs). ESI exposes none of them, so they must be stripped
+// too or every row would diff as modified on every run.
 const stripSolarSystemSdeColumns = (entries: SolarSystem[]) =>
   entries.map((entry) =>
     excludeObjectKeys(entry, [
       "updatedAt",
       "createdAt",
-      "wormholeClassId",
-      "visualEffect",
-      "isRegional",
-      "isInternational",
+      ...SDE_OWNED_SOLAR_SYSTEM_COLUMNS,
+    ]),
+  );
+
+const stripPlanetSdeColumns = (entries: Planet[]) =>
+  entries.map((entry) =>
+    excludeObjectKeys(entry, [
+      "updatedAt",
+      "createdAt",
+      ...SDE_OWNED_PLANET_COLUMNS,
+    ]),
+  );
+
+const stripMoonSdeColumns = (entries: Moon[]) =>
+  entries.map((entry) =>
+    excludeObjectKeys(entry, [
+      "updatedAt",
+      "createdAt",
+      ...SDE_OWNED_MOON_COLUMNS,
     ]),
   );
 
@@ -351,7 +371,7 @@ export const scrapeEsiSolarSystems = defineJob<
                     },
                   },
                 })
-                .then(stripTimestamps),
+                .then(stripPlanetSdeColumns),
             fetchRemoteEntries: async () =>
               Promise.all(
                 thisBatchPlanetIds.map((planetId) =>
@@ -465,7 +485,7 @@ export const scrapeEsiSolarSystems = defineJob<
                     },
                   },
                 })
-                .then(stripTimestamps),
+                .then(stripMoonSdeColumns),
             fetchRemoteEntries: async () =>
               Promise.all(
                 thisBatchMoonIds.map((moonId) =>
