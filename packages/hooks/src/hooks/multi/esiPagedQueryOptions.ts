@@ -1,15 +1,6 @@
 import type { ResponseConfig } from "@jitaspace/esi-client";
 
-/**
- * Marker appended to the generated query key so the "every page" query cannot
- * collide with the generated single-page one.
- *
- * Both produce `ResponseConfig<TItem[]>`, so a shared key would be silent wrong
- * data rather than a type error: whichever query mounts first populates the
- * entry and the other reads it as its own. They are genuinely different
- * resources, so they get different keys.
- */
-export const ALL_PAGES_QUERY_KEY_MARKER = "all-pages";
+import { ESI_QUERY_KEY_MARKER, markEsiQueryKey } from "../utils/esiQueryKeys";
 
 /**
  * How many page requests may be in flight at once, per query.
@@ -104,8 +95,8 @@ async function fetchInPool<TResult>(
  * other ESI response so callers cannot tell a paginated endpoint from a
  * single-page one.
  *
- * Pass the endpoint's generated query key; the returned options append
- * {@link ALL_PAGES_QUERY_KEY_MARKER} to it.
+ * Pass the endpoint's generated query key; the returned options append the
+ * all-pages marker from {@link ESI_QUERY_KEY_MARKER} to it.
  */
 export function esiPagedQueryOptions<TItem>(config: {
   queryKey: readonly unknown[];
@@ -118,7 +109,7 @@ export function esiPagedQueryOptions<TItem>(config: {
   const { queryKey, fetchPage, enabled } = config;
 
   return {
-    queryKey: [...queryKey, ALL_PAGES_QUERY_KEY_MARKER],
+    queryKey: markEsiQueryKey(queryKey, ESI_QUERY_KEY_MARKER.allPages),
     enabled,
     // The ceiling refusal is deterministic — it is decided from page 1's
     // headers — so retrying it just re-fetches page 1 to fail the same way,

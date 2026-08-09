@@ -71,8 +71,8 @@ const { useCharacterCalendar } =
   require("../src/hooks/calendar/useCharacterCalendar") as typeof import("../src/hooks/calendar/useCharacterCalendar");
 const { useCharacterMails } =
   require("../src/hooks/mail/useCharacterMails") as typeof import("../src/hooks/mail/useCharacterMails");
-const { INFINITE_QUERY_KEY_MARKER } =
-  require("../src/hooks/utils/esiInfiniteQueryKey") as typeof import("../src/hooks/utils/esiInfiniteQueryKey");
+const { ESI_QUERY_KEY_MARKER } =
+  require("../src/hooks/utils/esiQueryKeys") as typeof import("../src/hooks/utils/esiQueryKeys");
 
 const CHARACTER_ID = 90000001;
 const AUTH = { Authorization: "Bearer token" };
@@ -201,7 +201,7 @@ describe("each hook keys its own cache entry", () => {
     // Built from this endpoint's own infinite key function...
     expect(queryKey.slice(0, 2)).toEqual([endpoint, CHARACTER_ID]);
     // ...and marked, so it cannot share the single-page entry.
-    expect(queryKey.at(-1)).toBe(INFINITE_QUERY_KEY_MARKER);
+    expect(queryKey.at(-1)).toBe(ESI_QUERY_KEY_MARKER.infinite);
   });
 
   it("keeps mail's label dimension inside the marked key", () => {
