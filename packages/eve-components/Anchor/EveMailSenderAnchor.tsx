@@ -11,7 +11,7 @@ import { EveEntityAnchor } from "./EveEntityAnchor";
 
 export type EveMailSenderNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     from?: number;
     mailingLists?: MailingList[];
   };

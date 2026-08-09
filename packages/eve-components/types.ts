@@ -1,11 +1,10 @@
 /**
- * A character's mailing list, as returned by ESI's
- * `GET /characters/{character_id}/mail/lists/`.
+ * A mail sender that is a mailing list rather than a character or corporation.
  *
- * The `EveMailSender*` trio (anchor, avatar and name) each take the character's
- * mailing lists to tell a mailing-list sender apart from a character or
- * corporation id. Declared once here because those three live in different
- * barrels, and a copy per barrel makes the package's root `export *` ambiguous.
+ * Declared here rather than alongside any one component because the sender
+ * anchor, avatar and name components all accept it: three identical local
+ * copies made `MailingList` ambiguous across the barrel re-exports in
+ * `index.ts`.
  */
 export interface MailingList {
   mailing_list_id: number;

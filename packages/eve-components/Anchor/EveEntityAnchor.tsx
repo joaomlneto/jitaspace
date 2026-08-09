@@ -10,7 +10,7 @@ import { EveEntityAnchorDisplay } from "@jitaspace/ui";
 
 export type EveEntityAnchorProps = Omit<AnchorProps, "component" | "href"> &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     entityId?: string | number | null;
     category?: ResolvableEntityCategory;
   };

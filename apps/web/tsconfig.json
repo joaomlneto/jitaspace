@@ -20,8 +20,10 @@
   "include": [".", ".next/types/**/*.ts"],
   "exclude": [
     "node_modules",
-    "cypress",
+    "build",
+    "dist",
     "coverage",
+    "cypress",
     "**/*.cy.tsx",
     "**/*.cy.ts"
   ]

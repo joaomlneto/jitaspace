@@ -10,7 +10,7 @@ import { useCalendarEvent } from "@jitaspace/hooks";
 
 export type CalendarEventOwnerAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     characterId?: number;
     eventId?: number;
   };

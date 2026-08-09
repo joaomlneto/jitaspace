@@ -9,7 +9,7 @@ import { EveEntityAnchor } from "./EveEntityAnchor";
 
 export type FactionNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     factionId?: string | number | null;
   };
 

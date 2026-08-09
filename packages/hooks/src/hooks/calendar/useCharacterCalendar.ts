@@ -1,9 +1,12 @@
 "use client";
 
-import { useGetCharactersCharacterIdCalendarInfinite } from "@jitaspace/esi-client";
+import {
+  getCharactersCharacterIdCalendarInfiniteQueryKey,
+  useGetCharactersCharacterIdCalendarInfinite,
+} from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
-
+import { esiInfiniteQueryKey } from "../utils/esiInfiniteQueryKey";
 
 export const useCharacterCalendar = (characterId?: number) => {
   const { accessToken, authHeaders } = useAccessToken({
@@ -18,6 +21,11 @@ export const useCharacterCalendar = (characterId?: number) => {
       { ...authHeaders },
       {
         query: {
+          // Keep this entry distinct from the single-page query for the
+          // same endpoint; see esiInfiniteQueryKey.
+          queryKey: esiInfiniteQueryKey(
+            getCharactersCharacterIdCalendarInfiniteQueryKey(characterId ?? 0),
+          ),
           enabled: characterId !== undefined && accessToken !== null,
           getNextPageParam: (lastPage) => {
             if (lastPage.data.length != 50) return undefined;

@@ -4,11 +4,12 @@ import { useMemo } from "react";
 
 import {
   getCharactersCharacterIdMail,
-  getCharactersCharacterIdMailQueryKey,
+  getCharactersCharacterIdMailInfiniteQueryKey,
   useGetCharactersCharacterIdMailInfinite,
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { esiInfiniteQueryKey } from "../utils/esiInfiniteQueryKey";
 
 export function useCharacterMails(characterId?: number, labels: number[] = []) {
   const { accessToken, authHeaders } = useAccessToken({
@@ -16,13 +17,23 @@ export function useCharacterMails(characterId?: number, labels: number[] = []) {
     scopes: ["esi-mail.read_mail.v1"],
   });
 
+  // Depend on the joined string rather than the array: `labels` defaults to a
+  // fresh [] on every call, so an array dependency busts this memo every render
+  // no matter what the caller passes.
+  const labelKey = labels.join(",");
+
+  // Built from the *infinite* key function, not the single-page one: this is
+  // an infinite query, and its entry holds InfiniteData rather than a flat
+  // ResponseConfig. See esiInfiniteQueryKey.
   const queryKey = useMemo(
     () =>
-      getCharactersCharacterIdMailQueryKey(characterId ?? 0, {
-        // @ts-expect-error generated code parses this wrong as url param
-        labels: labels.join(","),
-      }),
-    [characterId, labels, accessToken],
+      esiInfiniteQueryKey(
+        getCharactersCharacterIdMailInfiniteQueryKey(characterId ?? 0, {
+          // @ts-expect-error generated code parses this wrong as url param
+          labels: labelKey,
+        }),
+      ),
+    [characterId, labelKey],
   );
 
   const { data, isLoading, error, fetchNextPage, hasNextPage, refetch } =

@@ -17,7 +17,7 @@ const mockUseConstellation = jest.fn();
 const mockUseGroup = jest.fn();
 const mockUseCategory = jest.fn();
 const mockUseType = jest.fn();
-const mockUseMarketGroup = jest.fn();
+const mockUseMarketGroup = jest.fn<(id: number) => unknown>();
 const mockUseCharacterMailLabels = jest.fn();
 const mockUseAccessToken = jest.fn();
 const mockUseCalendarEvent = jest.fn();
@@ -30,7 +30,7 @@ jest.mock("@jitaspace/hooks", () => ({
   useGroup: (...args: unknown[]) => mockUseGroup(...args),
   useCategory: (...args: unknown[]) => mockUseCategory(...args),
   useType: (...args: unknown[]) => mockUseType(...args),
-  useMarketGroup: (...args: unknown[]) => mockUseMarketGroup(...args),
+  useMarketGroup: (id: number) => mockUseMarketGroup(id),
   useCharacterMailLabels: (...args: unknown[]) =>
     mockUseCharacterMailLabels(...args),
   useAccessToken: (...args: unknown[]) => mockUseAccessToken(...args),

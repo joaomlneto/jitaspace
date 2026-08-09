@@ -93,7 +93,13 @@ export const RouteTable = memo(({ route }: RouteTableProps) => {
             <Table.Td align="right">{index == 0 ? "Start" : index}</Table.Td>
             <Table.Td>
               <Group>
-                <SolarSystemSecurityStatusBadge solarSystemId={node.id} />
+                <SolarSystemSecurityStatusBadge
+                  // Route nodes carry string ids when they come from the URL
+                  // waypoints; the badge looks the system up by numeric id.
+                  solarSystemId={
+                    typeof node.id === "string" ? Number(node.id) : node.id
+                  }
+                />
                 <SolarSystemAnchor
                   inherit
                   solarSystemId={node.id}

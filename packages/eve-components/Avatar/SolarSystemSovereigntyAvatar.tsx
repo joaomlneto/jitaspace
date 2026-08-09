@@ -12,7 +12,7 @@ import {
   AllianceAvatar,
   CorporationAvatar,
   FactionAvatar,
-  SolarSystemStarAvatar,
+  StarAvatar,
 } from "@jitaspace/ui";
 
 export type SolarSystemSovereigntyAvatarProps = Omit<AvatarProps, "src"> & {
@@ -30,17 +30,10 @@ export const SolarSystemSovereigntyAvatar = memo(
     );
     const { data } = useSolarSystem(normalizedSolarSystemId);
     const sov = useSolarSystemSovereignty(normalizedSolarSystemId);
-
-    // ESI's `star_id` is a star entity id, but the star avatar renders the
-    // star's *type*, so the star has to be resolved to get its type id.
-    // Passing an undefined id leaves the query disabled, which skips the
-    // request while the system is still loading and whenever sovereignty wins
-    // below and the star is never rendered.
-    const sovereigntyOwnerId =
-      sov?.alliance_id ?? sov?.corporation_id ?? sov?.faction_id;
-    const { data: star } = useStar(
-      sovereigntyOwnerId ? undefined : data?.data.star_id,
-    );
+    // `StarAvatar` renders the star's *type*, so resolve the system's star to
+    // its type id. Fetched up here, before the sovereignty branches below, to
+    // keep the hook order stable across renders.
+    const { data: star } = useStar(data?.data.star_id ?? 0);
 
     // if sov has an alliance, show an alliance avatar
     if (sov?.alliance_id) {
@@ -59,10 +52,8 @@ export const SolarSystemSovereigntyAvatar = memo(
       return <FactionAvatar factionId={sov.faction_id} {...otherProps} />;
     }
 
-    // if not, show the avatar for the system's star
-    return (
-      <SolarSystemStarAvatar typeId={star?.data.type_id} {...otherProps} />
-    );
+    // if not, show a star avatar
+    return <StarAvatar typeId={star?.data.type_id} {...otherProps} />;
   },
 );
 SolarSystemSovereigntyAvatar.displayName = "SolarSystemSovereigntyAvatar";

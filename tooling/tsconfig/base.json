@@ -4,9 +4,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "target": "ES2023",
-    "lib": [
-      "ES2023"
-    ],
+    "lib": ["ES2023"],
     "allowJs": true,
     "resolveJsonModule": true,
     "moduleDetection": "force",
@@ -20,12 +18,16 @@
     "moduleResolution": "Bundler",
     "noEmit": true,
     "allowImportingTsExtensions": true
-  },
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist",
-    ".next",
-    ".expo"
-  ]
+  }
+  // NOTE: there is deliberately no `exclude` here, and adding one is a trap.
+  // A child config's `exclude` REPLACES this one rather than extending it, and
+  // relative paths in an inherited `exclude` resolve against *this* file's
+  // directory — so an entry here becomes `tooling/tsconfig/dist` for every
+  // consumer and protects nothing. Worse, declaring one overrides TypeScript's
+  // built-in default, which does correctly exclude each package's own
+  // `node_modules`. Every package therefore spells out its own:
+  //   "exclude": ["node_modules", "build", "dist", "coverage"]
+  // Note that these are anchored to the package root, so `build` means
+  // `<package>/build` and leaves nested route segments like
+  // `apps/web/app/history/build/` alone.
 }

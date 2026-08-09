@@ -5,7 +5,7 @@ import type { WarRoomData } from "~/components/Wars/WarRoom/types";
 // data.ts reads wars from the DB-backed prisma client; stub it so we can drive
 // the pure enrichment/aggregation with fixed rows. next/cache is stubbed globally
 // (moduleNameMapper) so the "use cache" directive is inert here.
-const mockFindMany = jest.fn<() => Promise<unknown[]>>();
+const mockFindMany = jest.fn<(...args: unknown[]) => Promise<unknown[]>>();
 jest.mock("~/lib/db", () => ({
   prisma: { war: { findMany: (...args: unknown[]) => mockFindMany(...args) } },
 }));
@@ -150,6 +150,19 @@ function load(): Promise<WarRoomData> {
   return getWarRoomData();
 }
 
+// Look wars up by id without losing their type: `Object.fromEntries` widens the
+// value back to `unknown`-ish, and under `noUncheckedIndexedAccess` every lookup
+// is `T | undefined`. Failing loudly on a missing id beats asserting non-null on
+// each of the assertions below.
+function indexByWarId(wars: WarRoomData["wars"]) {
+  const byId = new Map(wars.map((war) => [war.warId, war]));
+  return (warId: number) => {
+    const war = byId.get(warId);
+    if (!war) throw new Error(`war ${warId} missing from result`);
+    return war;
+  };
+}
+
 describe("getWarRoomData", () => {
   beforeEach(() => {
     mockFindMany.mockReset();
@@ -158,43 +171,39 @@ describe("getWarRoomData", () => {
 
   it("derives lifecycle status for every war", async () => {
     const { wars } = await load();
-    const byId = Object.fromEntries(
-      wars.map((w: { warId: number }) => [w.warId, w]),
-    );
-    expect(byId[1].status).toBe("active");
-    expect(byId[3].status).toBe("pending"); // no start date
-    expect(byId[4].status).toBe("pending"); // future start date
-    expect(byId[5].status).toBe("retracting"); // retracted in the past
-    expect(byId[6].status).toBe("active");
+    const war = indexByWarId(wars);
+    expect(war(1).status).toBe("active");
+    expect(war(3).status).toBe("pending"); // no start date
+    expect(war(4).status).toBe("pending"); // future start date
+    expect(war(5).status).toBe("retracting"); // retracted in the past
+    expect(war(6).status).toBe("active");
   });
 
   it("enriches totals, ISK share, age and allies", async () => {
     const { wars } = await load();
-    const byId = Object.fromEntries(
-      wars.map((w: { warId: number }) => [w.warId, w]),
-    );
+    const war = indexByWarId(wars);
 
     // war 1: 140B destroyed, aggressor share 100/140
-    expect(byId[1].totalIskDestroyed).toBe(140e9);
-    expect(byId[1].totalShipsKilled).toBe(140);
-    expect(byId[1].aggressorIskShare).toBeCloseTo(100 / 140, 5);
-    expect(byId[1].ageDays).toBeGreaterThan(9);
-    expect(byId[1].allianceAllies).toEqual([3001]);
-    expect(byId[1].corporationAllies).toEqual([3002]);
-    expect(byId[1].aggressorAllianceId).toBe(1001);
-    expect(byId[1].aggressorCorporationId).toBeUndefined();
+    expect(war(1).totalIskDestroyed).toBe(140e9);
+    expect(war(1).totalShipsKilled).toBe(140);
+    expect(war(1).aggressorIskShare).toBeCloseTo(100 / 140, 5);
+    expect(war(1).ageDays).toBeGreaterThan(9);
+    expect(war(1).allianceAllies).toEqual([3001]);
+    expect(war(1).corporationAllies).toEqual([3002]);
+    expect(war(1).aggressorAllianceId).toBe(1001);
+    expect(war(1).aggressorCorporationId).toBeUndefined();
 
     // starting war: no age, no combat share
-    expect(byId[3].ageDays).toBe(0);
-    expect(byId[3].aggressorIskShare).toBeNull();
+    expect(war(3).ageDays).toBe(0);
+    expect(war(3).aggressorIskShare).toBeNull();
 
     // dates are serialised to ISO strings
-    expect(typeof byId[1].declaredDate).toBe("string");
+    expect(typeof war(1).declaredDate).toBe("string");
   });
 
   it("sorts wars by total ISK destroyed and drops hotspots", async () => {
     const data = await load();
-    expect(data.wars[0].warId).toBe(1); // 140B is the largest
+    expect(data.wars[0]?.warId).toBe(1); // 140B is the largest
     expect("hotspots" in data).toBe(false);
   });
 
