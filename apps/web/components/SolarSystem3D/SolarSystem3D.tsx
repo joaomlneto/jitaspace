@@ -278,6 +278,14 @@ export function SolarSystem3D({
 
   return (
     <div style={{ height }}>
+      {/*
+        `describeContents` is left on (its default): the hidden text alternative
+        makes the map readable to assistive tech. It resolves every body through
+        `renderLabel`, which for moons means an eager ESI name fetch per moon on
+        open — planets/stations/gates dedupe against the page's listings, moons
+        don't. That request cost is a deliberate a11y-over-requests trade; pass
+        `describeContents={false}` to fall back to the page's own body lists.
+      */}
       <SolarSystemMap
         star={star}
         planets={planets}

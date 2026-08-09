@@ -356,6 +356,11 @@ function layoutRealistic(
   // to avoid a degenerate zero-size mesh.
   const sizeOf = (radius: number | undefined) =>
     radius && radius > 0 ? radius * sizeScale : MIN_GEOMETRY;
+  // Stations and stargates have no real radius, so in realistic mode scale their
+  // fixed icons down with the rest of the system (floored at MIN_GEOMETRY).
+  // Otherwise the overview-sized icons dwarf the strictly-proportional, often
+  // sub-pixel real planets, and the "faithful" mode reads as anything but.
+  const iconSizeOf = (base: number) => Math.max(MIN_GEOMETRY, base * sizeScale);
 
   const { byPlanet: stationsByPlanet, orphans } = partitionStations(
     stations,
@@ -375,7 +380,7 @@ function layoutRealistic(
         id: s.id,
         kind: "station" as const,
         position: scaleVec(subtract(s.position, planet.position), posScale),
-        size: STATION_ICON,
+        size: iconSizeOf(STATION_ICON),
       })),
     ];
     return {
@@ -391,13 +396,13 @@ function layoutRealistic(
   const placedStargates: PlacedStargate[] = stargates.map((gate) => ({
     id: gate.id,
     position: scaleVec(gate.position, posScale),
-    size: STARGATE_ICON,
+    size: iconSizeOf(STARGATE_ICON),
   }));
 
   const placedStations: PlacedStation[] = orphans.map((s) => ({
     id: s.id,
     position: scaleVec(s.position, posScale),
-    size: STATION_ICON,
+    size: iconSizeOf(STATION_ICON),
   }));
 
   // `posScale` normalises the farthest planet/stargate/station to exactly

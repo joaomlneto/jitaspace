@@ -168,6 +168,70 @@ export function SolarSystemMap({
     [stations, planets],
   );
 
+  // The text alternative depends only on the bodies and labels, never on hover,
+  // so memoise the element — a per-hover re-render of the map then skips
+  // reconciling this whole (potentially large) subtree.
+  const contents = useMemo(
+    () =>
+      describeContents ? (
+        <ul aria-label="Solar system contents" style={visuallyHiddenStyle}>
+          <BodyEntry kind="star" id={star.id} renderLabel={renderLabel} />
+
+          {planets.map((planet) => {
+            const satellites: { kind: HoverKind; id: number }[] = [
+              ...planet.moons.map((moon) => ({
+                kind: "moon" as const,
+                id: moon.id,
+              })),
+              ...(stationGroups.byPlanet.get(planet.id) ?? []).map(
+                (station) => ({ kind: "station" as const, id: station.id }),
+              ),
+            ];
+            return (
+              <BodyEntry
+                key={planet.id}
+                kind="planet"
+                id={planet.id}
+                renderLabel={renderLabel}
+              >
+                {satellites.length > 0 && (
+                  <ul>
+                    {satellites.map((satellite) => (
+                      <BodyEntry
+                        key={`${satellite.kind}-${satellite.id}`}
+                        kind={satellite.kind}
+                        id={satellite.id}
+                        renderLabel={renderLabel}
+                      />
+                    ))}
+                  </ul>
+                )}
+              </BodyEntry>
+            );
+          })}
+
+          {stationGroups.orphans.map((station) => (
+            <BodyEntry
+              key={station.id}
+              kind="station"
+              id={station.id}
+              renderLabel={renderLabel}
+            />
+          ))}
+
+          {stargates.map((gate) => (
+            <BodyEntry
+              key={gate.id}
+              kind="stargate"
+              id={gate.id}
+              renderLabel={renderLabel}
+            />
+          ))}
+        </ul>
+      ) : null,
+    [describeContents, star, planets, stationGroups, stargates, renderLabel],
+  );
+
   return (
     <section
       aria-label="Solar system map"
@@ -285,68 +349,11 @@ export function SolarSystemMap({
       </div>
 
       {/*
-        Text alternative for the canvas: the same bodies, as real semantic DOM.
-        The nesting mirrors the system — a planet's moons and stations sit in a
-        list inside that planet's entry — and the whole thing is visually
-        hidden rather than removed, so it costs no pixels but is fully
-        available to screen readers.
+        Text alternative for the canvas: the same bodies, as real semantic DOM,
+        nested to mirror the system and visually hidden rather than removed.
+        Memoised above so a hover doesn't re-render this whole subtree.
       */}
-      {describeContents && (
-        <ul aria-label="Solar system contents" style={visuallyHiddenStyle}>
-          <BodyEntry kind="star" id={star.id} renderLabel={renderLabel} />
-
-          {planets.map((planet) => {
-            const satellites: { kind: HoverKind; id: number }[] = [
-              ...planet.moons.map((moon) => ({
-                kind: "moon" as const,
-                id: moon.id,
-              })),
-              ...(stationGroups.byPlanet.get(planet.id) ?? []).map(
-                (station) => ({ kind: "station" as const, id: station.id }),
-              ),
-            ];
-            return (
-              <BodyEntry
-                key={planet.id}
-                kind="planet"
-                id={planet.id}
-                renderLabel={renderLabel}
-              >
-                {satellites.length > 0 && (
-                  <ul>
-                    {satellites.map((satellite) => (
-                      <BodyEntry
-                        key={`${satellite.kind}-${satellite.id}`}
-                        kind={satellite.kind}
-                        id={satellite.id}
-                        renderLabel={renderLabel}
-                      />
-                    ))}
-                  </ul>
-                )}
-              </BodyEntry>
-            );
-          })}
-
-          {stationGroups.orphans.map((station) => (
-            <BodyEntry
-              key={station.id}
-              kind="station"
-              id={station.id}
-              renderLabel={renderLabel}
-            />
-          ))}
-
-          {stargates.map((gate) => (
-            <BodyEntry
-              key={gate.id}
-              kind="stargate"
-              id={gate.id}
-              renderLabel={renderLabel}
-            />
-          ))}
-        </ul>
-      )}
+      {contents}
     </section>
   );
 }

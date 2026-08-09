@@ -62,6 +62,12 @@ const SolarSystemMap = dynamic(
 );
 ```
 
+> **Note:** the package entry carries `"use client"`, so importing anything from
+> `@jitaspace/solar-system-map` — including the pure `layoutSystem` maths from
+> `layout.ts` — marks the importing module as client code. A React Server
+> Component that only wants the layout functions can't reach them through the
+> barrel today; a server-safe `./layout` subpath export can be added if needed.
+
 ## Props
 
 | Prop               | Type                                     | Default        | Description                                                                        |

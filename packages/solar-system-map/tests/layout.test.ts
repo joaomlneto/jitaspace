@@ -227,6 +227,26 @@ describe("layoutSystem — realistic", () => {
     expect(placed[1]?.size ?? 0).toBeGreaterThan(0);
   });
 
+  it("keeps realistic-mode station/stargate icons below the real bodies", () => {
+    const planets: PlanetInput[] = [
+      { id: 1, position: vec(40e9, 0, 0), radius: 6e6, moons: [] },
+    ];
+    const stations = [{ id: 60, position: vec(41e9, 1e9, 0) }];
+    const stargates = [{ id: 50, position: vec(0, 0, -4000e9) }];
+    const layout = layoutSystem(STAR, planets, stations, stargates, "realistic");
+    const planetSize = layout.planets[0]?.size ?? 0;
+    const station = layout.planets[0]?.satellites.find(
+      (s) => s.kind === "station",
+    );
+    const gate = layout.stargates[0];
+    // the fixed icons must no longer outrank the strictly-proportional planet…
+    expect(station?.size ?? Infinity).toBeLessThanOrEqual(planetSize);
+    expect(gate?.size ?? Infinity).toBeLessThanOrEqual(planetSize);
+    // …while staying a real, non-zero size
+    expect(station?.size ?? 0).toBeGreaterThan(0);
+    expect(gate?.size ?? 0).toBeGreaterThan(0);
+  });
+
   it("assigns stations to their nearest planet at real positions", () => {
     const stations = [
       { id: 60, position: vec(41e9, 1e9, 0) }, // nearest planet 1
