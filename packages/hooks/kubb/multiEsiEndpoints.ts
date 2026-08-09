@@ -29,6 +29,31 @@ export interface EsiOperation {
   "x-required-roles"?: string[];
 }
 
+/**
+ * Query parameters known not to affect whether a response is the whole
+ * collection.
+ *
+ * Anything else causes the endpoint to be skipped, because an unrecognised
+ * parameter may be a cursor — and a `useMultipleXXX` that quietly returns the
+ * first page under a name promising every subject's whole collection is worse
+ * than one that does not exist.
+ *
+ * The spec cannot be relied on to say which those are: `x-pagination: cursor`
+ * marks only five operations, while ESI also pages the calendar by
+ * `from_event`, mail by `last_mail_id` and wallet transactions by `from_id`
+ * without declaring any of them. Defaulting to skip means a newly added
+ * parameter makes a hook disappear — noticeable — rather than silently
+ * truncate.
+ */
+const COMPLETENESS_SAFE_QUERY_PARAMS = new Set([
+  // Walked in full by esiPagedQueryOptions.
+  "page",
+  // Filters, not paging. Their defaults are the ones the single-subject hooks
+  // already use, and neither hides part of the collection that default selects.
+  "include_completed",
+  "labels",
+]);
+
 const pascal = (value: string) =>
   value
     .split(/[-_\s]+/)
@@ -139,10 +164,13 @@ export function describeEndpoint(
     return null;
   }
   const queryParams = queryParameters.map((parameter) => parameter.name);
-  // Cursor pagination (after/before/limit) is not the `page` + `x-pages` scheme
-  // esiPagedQueryOptions walks, so these would silently return only the server's
-  // first page under a name that promises every subject's whole collection.
-  if (queryParams.includes("after") || queryParams.includes("before")) {
+  // Anything not vouched for as completeness-safe — every cursor scheme,
+  // declared in the spec or not — is skipped rather than half-fetched.
+  if (
+    queryParams.some(
+      (name) => name == undefined || !COMPLETENESS_SAFE_QUERY_PARAMS.has(name),
+    )
+  ) {
     return null;
   }
 
