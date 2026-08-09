@@ -84,6 +84,7 @@ packages/
   esi-metadata/ eve-data/    # ESI scopes/ID ranges; static EVE datasets
   hooks/                     # React Query hooks over ESI / third-party APIs
   ui/ eve-icons/ tiptap-eve/ # Mantine component lib; icons; EVE-HTML Tiptap extension
+  solar-system-map/          # publishable R3F 3D solar-system map (presentational)
   datatable/ datatable-mantine/ datatable-tanstack/  # engine-agnostic table contract + adapters
   chat/                      # Discord-backed in-app chat
   background-jobs/           # Platform-agnostic EVE-data background job logic (source of truth)

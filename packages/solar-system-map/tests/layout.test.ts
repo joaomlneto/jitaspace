@@ -215,6 +215,18 @@ describe("layoutSystem — realistic", () => {
     expect(layout.extent).toBeGreaterThanOrEqual(len(gate?.position) - 1e-6);
   });
 
+  it("survives a non-finite planet radius in overview mode (no NaN sizes)", () => {
+    const planets: PlanetInput[] = [
+      { id: 1, position: vec(40e9, 0, 0), radius: 6e6, moons: [] },
+      { id: 2, position: vec(80e9, 0, 0), radius: NaN, moons: [] }, // SDE gave null
+    ];
+    const placed = layoutSystem(STAR, planets, [], [], "compressed").planets;
+    // one NaN radius must neither collapse the others nor size any body as NaN
+    placed.forEach((p) => expect(Number.isFinite(p.size)).toBe(true));
+    expect(placed[0]?.size ?? 0).toBeGreaterThan(0);
+    expect(placed[1]?.size ?? 0).toBeGreaterThan(0);
+  });
+
   it("assigns stations to their nearest planet at real positions", () => {
     const stations = [
       { id: 60, position: vec(41e9, 1e9, 0) }, // nearest planet 1

@@ -435,13 +435,19 @@ function layoutOverview(
   const minDistance = distances.length ? Math.min(...distances) : 1;
   const maxDistance = distances.length ? Math.max(...distances) : 1;
 
-  const maxPlanetRadius = planets.length
-    ? Math.max(...planets.map((p) => p.radius))
-    : 1;
+  // Radii are typed `number`, but a null in the SDE payload arrives as NaN at
+  // runtime. Guard it: one NaN would poison Math.max (→ NaN scale, collapsing
+  // every planet to the minimum) and NaN*scale would size that body as NaN.
+  const planetRadii = planets
+    .map((p) => p.radius)
+    .filter((r) => Number.isFinite(r) && r > 0);
+  const maxPlanetRadius = planetRadii.length ? Math.max(...planetRadii) : 1;
   const planetSizeScale =
     maxPlanetRadius > 0 ? OVERVIEW_MAX_PLANET_SIZE / maxPlanetRadius : 0;
   const planetSizeOf = (radius: number) =>
-    Math.max(OVERVIEW_MIN_PLANET_SIZE, radius * planetSizeScale);
+    Number.isFinite(radius) && radius > 0
+      ? Math.max(OVERVIEW_MIN_PLANET_SIZE, radius * planetSizeScale)
+      : OVERVIEW_MIN_PLANET_SIZE;
 
   const { byPlanet: stationsByPlanet, orphans } = partitionStations(
     stations,
