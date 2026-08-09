@@ -134,19 +134,24 @@ export function SolarSystem3D({
     [planetEntries],
   );
 
-  // SDE celestials are immutable, so these never go stale. Without it the
-  // app-wide QueryClient defaults (staleTime 0 + refetchOnWindowFocus) re-fire
-  // the whole fan-out — ~60 requests for a system like Jita — every time the
-  // user tabs back to the page.
+  // SDE celestials are immutable, so these never go stale (staleTime: Infinity);
+  // without it the app-wide QueryClient defaults (staleTime 0 +
+  // refetchOnWindowFocus) re-fire the whole fan-out — ~60 requests for a system
+  // like Jita — every time the user tabs back. `retry: 1` keeps the all-or-
+  // nothing loading gate below in check: `settled` waits on every query, so a
+  // single flaky request would otherwise hold the whole map behind the default
+  // 3-retry backoff (~7s) rather than ~2s.
   const starQuery = useQuery({
     ...getStarByIdQueryOptions(starId ?? NO_STAR_ID),
     enabled: starId !== undefined,
     staleTime: Infinity,
+    retry: 1,
   });
   const { bodies: planetBodies, isLoading: planetsLoading } = useQueries({
     queries: planetEntries.map((planet) => ({
       ...getPlanetByIdQueryOptions(planet.planet_id),
       staleTime: Infinity,
+      retry: 1,
     })),
     combine: combineSdeQueries,
   });
@@ -154,6 +159,7 @@ export function SolarSystem3D({
     queries: moonIds.map((id) => ({
       ...getMoonByIdQueryOptions(id),
       staleTime: Infinity,
+      retry: 1,
     })),
     combine: combineSdeQueries,
   });
@@ -161,6 +167,7 @@ export function SolarSystem3D({
     queries: stationIds.map((id) => ({
       ...getStationByIdQueryOptions(id),
       staleTime: Infinity,
+      retry: 1,
     })),
     combine: combineSdeQueries,
   });
@@ -168,6 +175,7 @@ export function SolarSystem3D({
     queries: stargateIds.map((id) => ({
       ...getStargateByIdQueryOptions(id),
       staleTime: Infinity,
+      retry: 1,
     })),
     combine: combineSdeQueries,
   });

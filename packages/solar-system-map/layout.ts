@@ -400,12 +400,11 @@ function layoutRealistic(
     size: STATION_ICON,
   }));
 
-  const extent = Math.max(
-    REALISTIC_EXTENT,
-    ...placedPlanets.map((p) => p.orbitRadius),
-    ...placedStargates.map((g) => length(g.position)),
-    ...placedStations.map((s) => length(s.position)),
-  );
+  // `posScale` normalises the farthest planet/stargate/station to exactly
+  // REALISTIC_EXTENT and everything else lands nearer, so the realistic extent
+  // is always that constant — no need to re-derive it from the placed bodies.
+  // (The overview modes below remap distance, so they still compute their own.)
+  const extent = REALISTIC_EXTENT;
 
   return {
     star: { id: star.id, size: sizeOf(star.radius) },

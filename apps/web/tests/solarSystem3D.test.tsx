@@ -15,8 +15,12 @@ let mockDynamicLoading: (() => ReactNode) | undefined;
 
 // Every query-options object the adapter hands to react-query, so the shared
 // `staleTime` wiring can be asserted on.
-const mockSeenQueries: { _kind: string; _id: number; staleTime?: number }[] =
-  [];
+const mockSeenQueries: {
+  _kind: string;
+  _id: number;
+  staleTime?: number;
+  retry?: number;
+}[] = [];
 
 // Query ids the stub should report as still in-flight, so a test can drive the
 // `settled` gate's isLoading path (a body query pending after the system query
@@ -96,7 +100,12 @@ jest.mock("@tanstack/react-query", () => {
   };
   // React Query exposes `data: undefined` for a disabled/unresolved query, and
   // `data: { data: body }` (the axios envelope) once it resolves.
-  const result = (q: { _kind: string; _id: number; staleTime?: number }) => {
+  const result = (q: {
+    _kind: string;
+    _id: number;
+    staleTime?: number;
+    retry?: number;
+  }) => {
     mockSeenQueries.push(q);
     const body = BODIES[q._kind]?.[q._id];
     return {
@@ -233,7 +242,7 @@ describe("SolarSystem3D adapter", () => {
     expect(screen.queryByText(/unavailable/i)).not.toBeInTheDocument();
   });
 
-  it("marks every SDE celestial lookup as never going stale", () => {
+  it("marks every SDE lookup immutable and low-retry", () => {
     mockUseSolarSystem.mockReturnValue({
       data: { data: SYSTEM },
       isError: false,
@@ -245,8 +254,10 @@ describe("SolarSystem3D adapter", () => {
     expect([...new Set(mockSeenQueries.map((q) => q._kind))].sort()).toEqual(
       [...HOVER_KINDS].sort(),
     );
-    // SDE data is immutable, so nothing here may refetch on window focus
+    // SDE data is immutable, so nothing here may refetch on window focus…
     expect(mockSeenQueries.filter((q) => q.staleTime !== Infinity)).toEqual([]);
+    // …and one flaky request must not hold the loader through the default 3 retries
+    expect(mockSeenQueries.filter((q) => q.retry !== 1)).toEqual([]);
   });
 
   it("does not resolve a star name when the system has no star", () => {

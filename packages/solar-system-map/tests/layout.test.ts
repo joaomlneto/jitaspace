@@ -210,7 +210,9 @@ describe("layoutSystem — realistic", () => {
     const gate = layout.stargates[0];
     expect(gate?.position[0]).toBeCloseTo(0);
     expect(gate?.position[2] ?? 0).toBeLessThan(0); // -z axis preserved
-    expect(layout.extent).toBeGreaterThanOrEqual(len(gate?.position));
+    // extent is the constant realistic span; the farthest body (this gate) lands
+    // on it up to float rounding, so allow a hair of tolerance on the bound.
+    expect(layout.extent).toBeGreaterThanOrEqual(len(gate?.position) - 1e-6);
   });
 
   it("assigns stations to their nearest planet at real positions", () => {
