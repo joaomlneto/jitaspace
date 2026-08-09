@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   Badge,
@@ -20,25 +20,28 @@ import { usePagination } from "@mantine/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,
+  EveEntitySelect,
   TypeAnchor,
   TypeName,
 } from "@jitaspace/eve-components";
 import { AssetsIcon, AttentionIcon } from "@jitaspace/eve-icons";
 import {
-  useCorporationAssets,
   useEsiNameLookup,
   useMarketPrices,
-  useSelectedCharacter,
+  useMultipleCorporationAssets,
 } from "@jitaspace/hooks";
 import { TypeAvatar } from "@jitaspace/ui";
 
 import { ScopeGuard } from "~/components/ScopeGuard";
 
 export default function Page() {
-  const character = useSelectedCharacter();
-  const { assets, isLoading, errorMessage } = useCorporationAssets(
-    character?.corporationId,
-  );
+  // Every corporation a logged-in character can read assets for. A corporation
+  // where nobody holds Director is simply not a subject, so it costs no request
+  // and raises no error — previously that showed as "Token not available".
+  const { data: allAssets, isPending, errors } = useMultipleCorporationAssets();
+  const [selectedCorporationId, setSelectedCorporationId] = useState<
+    string | null
+  >(null);
   const filterForm = useForm<{ location_id: number | null; name: string }>({
     initialValues: {
       location_id: null,
@@ -46,6 +49,22 @@ export default function Page() {
     },
   });
   const { data: marketPrices } = useMarketPrices();
+
+  const corporationIds = useMemo(
+    () => [...new Set(allAssets.map((asset) => asset.subjectId))],
+    [allAssets],
+  );
+
+  const assets = useMemo(() => {
+    const owned =
+      selectedCorporationId === null
+        ? allAssets
+        : allAssets.filter(
+            (asset) =>
+              asset.subjectId === Number.parseInt(selectedCorporationId, 10),
+          );
+    return Object.fromEntries(owned.map((asset) => [asset.item_id, asset]));
+  }, [allAssets, selectedCorporationId]);
 
   const assetEntries = useMemo(
     () =>
@@ -120,21 +139,48 @@ export default function Page() {
     <ScopeGuard requiredScopes={["esi-assets.read_corporation_assets.v1"]}>
       <Container size="xl">
         <Stack>
-          <Group>
-            <AssetsIcon width={48} />
-            <Title order={1}>Corporation Assets</Title>
-            {isLoading && <Loader />}
+          <Group justify="space-between" wrap="nowrap">
+            <Group>
+              <AssetsIcon width={48} />
+              <Title order={1}>Corporation Assets</Title>
+              {isPending && <Loader />}
+            </Group>
+            {/* Most players have characters in a single corporation, so the
+                filter would be an empty choice — only offer it when it is a
+                real one. */}
+            {corporationIds.length > 1 && (
+              <EveEntitySelect
+                size="xs"
+                label="Filter by corporation"
+                entityIds={corporationIds.map((id) => ({ id }))}
+                searchable
+                allowDeselect
+                clearable
+                value={selectedCorporationId}
+                onChange={setSelectedCorporationId}
+              />
+            )}
           </Group>
-          {errorMessage && (
+          {errors.length > 0 && (
             <Alert
               icon={<AttentionIcon width={32} />}
-              title="Error!"
+              title="Some assets could not be loaded"
               color="red"
             >
-              {errorMessage}
+              {errors.length}{" "}
+              {errors.length === 1 ? "corporation" : "corporations"} could not
+              be read. The totals below cover the rest.
             </Alert>
           )}
-          {!errorMessage && (
+          {corporationIds.length === 0 && !isPending && (
+            // Not an error: reading corporation assets needs the Director role,
+            // and most members do not have it.
+            <Alert icon={<AttentionIcon width={32} />} color="gray">
+              None of your characters can read corporation assets. This needs
+              the Director role in the corporation.
+            </Alert>
+          )}
+          {corporationIds.length > 0 && (
             <>
               <Text size="sm" c="dimmed">
                 {filtersEnabled
