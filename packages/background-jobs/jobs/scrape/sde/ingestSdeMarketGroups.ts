@@ -4,7 +4,9 @@ import { prisma } from "../../../db";
 import {
   enString,
   ingestSdeTable,
+  loadSdeFileIds,
   loadSdeFiles,
+  optionalBoolean,
   optionalNumber,
 } from "../../../helpers";
 
@@ -24,10 +26,10 @@ export const ingestSdeMarketGroups = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["marketGroups.yaml", "icons.yaml"]);
+    const files = await loadSdeFiles(["marketGroups.yaml"]);
     // Like types.yaml, market group iconIDs can point at icons that aren't in
     // icons.yaml — drop those rather than violating the foreign key.
-    const iconIds = new Set(Object.keys(files["icons.yaml"]).map(Number));
+    const iconIds = await loadSdeFileIds("icons.yaml");
 
     const marketGroups = await ingestSdeTable({
       filename: "marketGroups.yaml",
@@ -42,6 +44,7 @@ export const ingestSdeMarketGroups = defineJob<
           description: enString(record.description) ?? "",
           parentMarketGroupId: optionalNumber(record.parentGroupID),
           iconId: iconId != null && iconIds.has(iconId) ? iconId : null,
+          hasTypes: optionalBoolean(record.hasTypes),
           isDeleted: false,
         };
       },

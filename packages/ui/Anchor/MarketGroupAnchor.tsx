@@ -8,7 +8,7 @@ import { Anchor } from "@mantine/core";
 
 export type MarketGroupNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     marketGroupId?: string | number;
   };
 

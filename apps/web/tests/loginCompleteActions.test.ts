@@ -3,8 +3,11 @@
  */
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-const mockCookieStore = { get: jest.fn(), delete: jest.fn() };
-const mockReadLoginResult = jest.fn();
+const mockCookieStore = {
+  get: jest.fn<(name: string) => { value: string } | undefined>(),
+  delete: jest.fn<(name: string) => void>(),
+};
+const mockReadLoginResult = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("next/headers", () => ({
   cookies: () => Promise.resolve(mockCookieStore),

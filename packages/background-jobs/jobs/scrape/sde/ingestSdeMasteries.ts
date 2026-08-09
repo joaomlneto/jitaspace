@@ -1,7 +1,11 @@
 import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { ingestSdeCompositeTable, loadSdeFiles } from "../../../helpers";
+import {
+  ingestSdeCompositeTable,
+  loadSdeFileIds,
+  loadSdeFiles,
+} from "../../../helpers";
 
 export interface IngestSdeMasteriesEventPayload {
   data: Record<string, never>;
@@ -27,15 +31,9 @@ export const ingestSdeMasteries = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "masteries.yaml",
-      "types.yaml",
-      "certificates.yaml",
-    ]);
-    const typeIds = new Set(Object.keys(files["types.yaml"]).map(Number));
-    const certificateIds = new Set(
-      Object.keys(files["certificates.yaml"]).map(Number),
-    );
+    const files = await loadSdeFiles(["masteries.yaml"]);
+    const typeIds = await loadSdeFileIds("types.yaml");
+    const certificateIds = await loadSdeFileIds("certificates.yaml");
 
     const rows: Prisma.MasteryCreateManyInput[] = [];
     for (const [key, value] of Object.entries(files["masteries.yaml"])) {

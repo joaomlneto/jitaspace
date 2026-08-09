@@ -3,6 +3,7 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
   ingestSdeCompositeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   requiredNumber,
 } from "../../../helpers";
@@ -37,13 +38,9 @@ export const ingestSdeContrabandTypes = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "contrabandTypes.yaml",
-      "types.yaml",
-      "factions.yaml",
-    ]);
-    const typeIds = new Set(Object.keys(files["types.yaml"]).map(Number));
-    const factionIds = new Set(Object.keys(files["factions.yaml"]).map(Number));
+    const files = await loadSdeFiles(["contrabandTypes.yaml"]);
+    const typeIds = await loadSdeFileIds("types.yaml");
+    const factionIds = await loadSdeFileIds("factions.yaml");
 
     const rows: Prisma.ContrabandTypeCreateManyInput[] = [];
     for (const [key, value] of Object.entries(files["contrabandTypes.yaml"])) {

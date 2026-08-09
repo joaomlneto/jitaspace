@@ -118,5 +118,6 @@ export const EveLink = Link.configure({
     "opportunity",
     "careerprogramnode",
     "fleet",
+    "bookmarkfolder",
   ],
 });

@@ -9,6 +9,7 @@ import {
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_TYPE_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeTypesEventPayload {
@@ -70,7 +71,14 @@ async function processTypeBatch(
         })
         .then((entries) =>
           entries.map((entry) =>
-            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            // basePrice/metaLevel/techLevel/soundId/shipTreeGroupId are owned by
+            // ingestSdeTypes — ESI does not expose them, so they must not take
+            // part in this diff or every row would look modified on every run.
+            excludeObjectKeys(entry, [
+              "updatedAt",
+              "createdAt",
+              ...SDE_OWNED_TYPE_COLUMNS,
+            ]),
           ),
         ),
     fetchRemoteEntries: async () =>

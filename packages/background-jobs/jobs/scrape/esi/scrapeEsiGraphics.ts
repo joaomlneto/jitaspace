@@ -58,7 +58,13 @@ export const scrapeEsiGraphics = defineJob<ScrapeGraphicsEventPayload["data"]>({
           })
           .then((entries) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              // sofMaterialSetId is owned by ingestSdeGraphics (ESI has no
+              // equivalent), so it stays out of this diff.
+              excludeObjectKeys(entry, [
+                "updatedAt",
+                "createdAt",
+                "sofMaterialSetId",
+              ]),
             ),
           ),
       fetchRemoteEntries: async () =>

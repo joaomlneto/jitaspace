@@ -37,6 +37,11 @@ export const StationLinkControl = forwardRef<
   const [stationId, setStationId] = useInputState("");
   const [opened, { open, close }] = useDisclosure(false);
 
+  // `EsiSearchSelect` holds its value as a string; the avatar takes a numeric
+  // station id, and has nothing to show before one is picked.
+  const selectedStationId =
+    stationId === "" ? undefined : Number.parseInt(stationId, 10);
+
   const handleOpen = () => {
     open();
     const linkData = editor?.getAttributes("link");
@@ -117,7 +122,9 @@ export const StationLinkControl = forwardRef<
             onKeyDown={handleInputKeydown}
             unstyled={unstyled}
             comboboxProps={{ withinPortal: false }}
-            leftSection={<StationAvatar size={24} stationId={stationId} />}
+            leftSection={
+              <StationAvatar size={24} stationId={selectedStationId} />
+            }
           />
 
           <Button

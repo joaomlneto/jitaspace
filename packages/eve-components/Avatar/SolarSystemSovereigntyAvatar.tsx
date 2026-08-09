@@ -30,8 +30,10 @@ export const SolarSystemSovereigntyAvatar = memo(
     );
     const { data } = useSolarSystem(normalizedSolarSystemId);
     const sov = useSolarSystemSovereignty(normalizedSolarSystemId);
-    // Only the no-sovereignty fallback needs the star, so skip the fetch on the
-    // alliance / corporation / faction branches.
+    // `StarAvatar` renders the star's *type*, so resolve the system's star to
+    // its type id. Only the no-sovereignty fallback actually needs it, so gate
+    // the fetch on that branch (the hook still runs every render, so hook order
+    // stays stable).
     const needsStar =
       !sov?.alliance_id && !sov?.corporation_id && !sov?.faction_id;
     const { data: star } = useStar(data?.data.star_id ?? 0, undefined, {

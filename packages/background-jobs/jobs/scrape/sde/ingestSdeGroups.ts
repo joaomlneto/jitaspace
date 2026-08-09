@@ -4,6 +4,7 @@ import { prisma } from "../../../db";
 import {
   enString,
   ingestSdeTable,
+  optionalBoolean,
   requiredBoolean,
   requiredNumber,
 } from "../../../helpers";
@@ -30,6 +31,10 @@ export const ingestSdeGroups = defineJob<IngestSdeGroupsEventPayload["data"]>({
         categoryId: requiredNumber(record.categoryID),
         name: enString(record.name) ?? "",
         published: requiredBoolean(record.published),
+        anchorable: optionalBoolean(record.anchorable),
+        anchored: optionalBoolean(record.anchored),
+        fittableNonSingleton: optionalBoolean(record.fittableNonSingleton),
+        useBasePrice: optionalBoolean(record.useBasePrice),
         isDeleted: false,
       }),
     });

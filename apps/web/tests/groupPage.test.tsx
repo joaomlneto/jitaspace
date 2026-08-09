@@ -13,8 +13,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 // next/navigation, the UI anchors/avatars and the breadcrumbs component.
 // ---------------------------------------------------------------------------
 
-const mockFindUniqueOrThrow = jest.fn();
-const mockNotFound = jest.fn(() => {
+const mockFindUniqueOrThrow = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockNotFound = jest.fn((..._args: unknown[]) => {
   throw new Error("NEXT_NOT_FOUND");
 });
 

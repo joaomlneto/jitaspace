@@ -61,6 +61,7 @@ const REFRESH_WINDOW_MS = 40_000; // lead + allowance for clock drift
 const MIN_DELAY_MS = 1_000; // never schedule the next check sooner than this
 const RETRY_DELAY_MS = 30_000; // bounded backoff after any refresh attempt
 const IDLE_DELAY_MS = 5 * 60_000; // nothing refreshable: just re-check later
+const STALE_DATA_SWEEP_MS = 5 * 60_000; // how often to look for stale ESI data
 
 export const EsiClientSSOAccessTokenInjector = ({
   children,
@@ -76,8 +77,33 @@ export const EsiClientSSOAccessTokenInjector = ({
   // in a ref so it survives this effect's re-runs.
   const inFlightRefreshes = useRef<Set<number>>(new Set());
 
+  // Rehydrates the persisted session, then keeps each character's affiliation
+  // and corporation roles fresh. Both are re-read by addCharacter on every
+  // token refresh, but a session restored from localStorage can sit for a long
+  // time before its access token nears expiry — long enough for a character to
+  // have changed corporation, or lost the roles that gate corporation
+  // endpoints. The sweep reads the store imperatively and no-ops when nothing
+  // is stale, so it neither depends on `characters` nor re-arms on its own
+  // writes.
   useEffect(() => {
-    void useAuthStore.persist.rehydrate();
+    // Torn down before rehydration settles: skip the first sweep entirely,
+    // rather than arming an interval the cleanup has already run past.
+    const teardown = new AbortController();
+    let timer: ReturnType<typeof setInterval> | undefined;
+    const sweep = () =>
+      void useAuthStore.getState().refreshStaleCharacterData();
+
+    void (async () => {
+      await useAuthStore.persist.rehydrate();
+      if (teardown.signal.aborted) return;
+      sweep();
+      timer = setInterval(sweep, STALE_DATA_SWEEP_MS);
+    })();
+
+    return () => {
+      teardown.abort();
+      clearInterval(timer);
+    };
   }, []);
 
   // Refreshes tokens that expired or are close to expiring. The check

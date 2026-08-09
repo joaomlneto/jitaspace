@@ -5,6 +5,7 @@ import { getUniverseMoonsMoonId } from "@jitaspace/esi-client";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_MOON_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeMoonsEventPayload {
@@ -53,8 +54,7 @@ export const scrapeEsiMoons = defineJob<ScrapeMoonsEventPayload["data"]>({
     const batchSize = ctx.payload.batchSize ?? 1000;
     const moonIds = ctx.payload.moons ?? [];
 
-    if (moonIds.length == 0)
-      throw new NonRetriableError("Invalid moonIds");
+    if (moonIds.length == 0) throw new NonRetriableError("Invalid moonIds");
 
     // Split IDs in batches
     const batches = await ctx.run("Fetch Solar System IDs", () => {
@@ -88,8 +88,15 @@ export const scrapeEsiMoons = defineJob<ScrapeMoonsEventPayload["data"]>({
                   },
                 },
               });
+              // The mapMoons.yaml `attributes` columns are owned by
+              // ingestSdeMoons; ESI does not expose them, so they must stay out
+              // of this diff or every row would look modified on every run.
               return entries.map((entry) =>
-                excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+                excludeObjectKeys(entry, [
+                  "updatedAt",
+                  "createdAt",
+                  ...SDE_OWNED_MOON_COLUMNS,
+                ]),
               );
             },
             fetchRemoteEntries: async () =>

@@ -5,7 +5,7 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
 const mockUseSolarSystem =
-  jest.fn<() => { data?: { data: { name?: string } } }>();
+  jest.fn<(...args: unknown[]) => { data?: { data: { name?: string } } }>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useSolarSystem: (...args: unknown[]) => mockUseSolarSystem(...args),
