@@ -81,17 +81,26 @@ async function getSolarSystemSdeInfo(
   }
 }
 
-export default async function Page({
+/**
+ * The database read lives here rather than in `Page` so it happens *inside* the
+ * Suspense boundary. Awaiting it in `Page` would put uncached data outside the
+ * boundary, which blocks the whole route from prerendering.
+ */
+async function PageContent({
   params,
-}: {
-  params: Promise<{ systemId: string }>;
-}) {
+}: Readonly<{ params: Promise<{ systemId: string }> }>) {
   const { systemId } = await params;
   const sde = await getSolarSystemSdeInfo(Number(systemId));
 
+  return <PageClient sde={sde} />;
+}
+
+export default function Page({
+  params,
+}: Readonly<{ params: Promise<{ systemId: string }> }>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <PageClient sde={sde} />
+      <PageContent params={params} />
     </Suspense>
   );
 }

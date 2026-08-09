@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import {
   afterEach,
   beforeEach,
@@ -29,7 +30,11 @@ const mockUseGetIncursions = jest.fn();
 // system/[systemId]/page.tsx imports prisma for generateMetadata
 jest.mock("~/lib/db", () => ({
   prisma: {
-    solarSystem: { findUnique: jest.fn<(...args: unknown[]) => Promise<unknown>>().mockResolvedValue(null) },
+    solarSystem: {
+      findUnique: jest
+        .fn<(...args: unknown[]) => Promise<unknown>>()
+        .mockResolvedValue(null),
+    },
   },
 }));
 
@@ -367,14 +372,19 @@ describe("System page", () => {
   });
 
   it("renders the server wrapper (page.tsx) inside a Suspense boundary", async () => {
-    // page.tsx is an async server component: it awaits `params`, reads the SDE
-    // columns from Prisma (mocked to null here) and passes them to the client
-    // page. Await it to get the element tree, then render that.
+    // page.tsx returns <Suspense><PageContent/></Suspense>, where PageContent is
+    // the async server component that reads Prisma (mocked to null here). The
+    // read must sit inside the boundary or the route can't prerender, so resolve
+    // that child the way the server would and render its output.
     const WrapperPage = require("~/app/system/[systemId]/page").default;
-    const ui = await WrapperPage({
+    const tree = WrapperPage({
       params: Promise.resolve({ systemId: String(SYSTEM_ID) }),
     });
-    render(<MantineProvider>{ui}</MantineProvider>);
+    expect(tree.type).toBe(Suspense);
+
+    const child = tree.props.children;
+    const resolved = await child.type(child.props);
+    render(<MantineProvider>{resolved}</MantineProvider>);
 
     expect(screen.getByText("Stations")).toBeInTheDocument();
   });

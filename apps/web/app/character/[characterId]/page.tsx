@@ -105,20 +105,31 @@ async function getCharacterAgentData(
   }
 }
 
-export default async function Page({
+/**
+ * The database read lives here rather than in `Page` so it happens *inside* the
+ * Suspense boundary. Awaiting it in `Page` would put uncached data outside the
+ * boundary, which blocks the whole route from prerendering.
+ */
+async function PageContent({
   params,
-}: {
-  params: Promise<{ characterId: string }>;
-}) {
+}: Readonly<{ params: Promise<{ characterId: string }> }>) {
   const { characterId } = await params;
   const agent = await getCharacterAgentData(Number(characterId));
 
   return (
+    <PageClient
+      agentData={agent}
+      agentDivisionName={agent?.divisionName ?? null}
+    />
+  );
+}
+
+export default function Page({
+  params,
+}: Readonly<{ params: Promise<{ characterId: string }> }>) {
+  return (
     <Suspense fallback={<PageSkeleton />}>
-      <PageClient
-        agentData={agent}
-        agentDivisionName={agent?.divisionName ?? null}
-      />
+      <PageContent params={params} />
     </Suspense>
   );
 }

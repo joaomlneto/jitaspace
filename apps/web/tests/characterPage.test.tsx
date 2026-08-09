@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import {
   afterEach,
   beforeEach,
@@ -35,7 +36,9 @@ jest.mock("~/lib/db", () => ({
 // page.tsx imports getCharactersDetail for generateMetadata; page.client
 // imports useGetCharactersCharacterIdCorporationhistory for the timeline.
 jest.mock("@jitaspace/esi-client", () => ({
-  getCharactersDetail: jest.fn<(...args: unknown[]) => Promise<unknown>>().mockResolvedValue({ data: { name: "Test" } }),
+  getCharactersDetail: jest
+    .fn<(...args: unknown[]) => Promise<unknown>>()
+    .mockResolvedValue({ data: { name: "Test" } }),
   useGetCharactersCharacterIdCorporationhistory: (...args: unknown[]) =>
     mockUseCorporationHistory(...args),
 }));
@@ -415,13 +418,19 @@ describe("Character page", () => {
     mockUseSelectedCharacter.mockReturnValue(undefined);
     mockUseCharacter.mockReturnValue({ data: undefined });
 
-    // page.tsx is an async server component: it awaits `params`, looks up the
-    // agent division in Prisma (mocked to null here) and passes it down.
+    // page.tsx returns <Suspense><PageContent/></Suspense>, where PageContent is
+    // the async server component that looks up the agent in Prisma (mocked to
+    // null here). The read must sit inside the boundary or the route can't
+    // prerender, so resolve that child the way the server would.
     const WrapperPage = require("~/app/character/[characterId]/page").default;
-    const ui = await WrapperPage({
+    const tree = WrapperPage({
       params: Promise.resolve({ characterId: String(CHARACTER_ID) }),
     });
-    render(<MantineProvider>{ui}</MantineProvider>);
+    expect(tree.type).toBe(Suspense);
+
+    const child = tree.props.children;
+    const resolved = await child.type(child.props);
+    render(<MantineProvider>{resolved}</MantineProvider>);
 
     expect(screen.getByText("Details")).toBeInTheDocument();
   });
