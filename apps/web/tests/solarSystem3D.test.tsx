@@ -18,6 +18,11 @@ let mockDynamicLoading: (() => ReactNode) | undefined;
 const mockSeenQueries: { _kind: string; _id: number; staleTime?: number }[] =
   [];
 
+// Query ids the stub should report as still in-flight, so a test can drive the
+// `settled` gate's isLoading path (a body query pending after the system query
+// has already resolved), not just the unresolved-system path.
+const mockLoadingIds = new Set<number>();
+
 // The map pulls in three.js/WebGL; the adapter loads it via next/dynamic and
 // also prefetches it on mount. Stub both so no GPU/ESM code runs under jsdom,
 // and surface the props the adapter computed as data-attributes to assert on.
@@ -96,7 +101,7 @@ jest.mock("@tanstack/react-query", () => {
     const body = BODIES[q._kind]?.[q._id];
     return {
       data: body === undefined ? undefined : { data: body },
-      isLoading: false,
+      isLoading: mockLoadingIds.has(q._id),
     };
   };
   return {
@@ -150,6 +155,7 @@ describe("SolarSystem3D adapter", () => {
   beforeEach(() => {
     mockUseSolarSystem.mockReset();
     mockSeenQueries.length = 0;
+    mockLoadingIds.clear();
   });
 
   it("maps resolved SDE bodies into map props, dropping position-less ones", () => {
@@ -206,6 +212,23 @@ describe("SolarSystem3D adapter", () => {
     renderAdapter();
 
     // neither the map nor the error — the loader is showing
+    expect(screen.queryByTestId("ssm")).not.toBeInTheDocument();
+    expect(screen.queryByText(/unavailable/i)).not.toBeInTheDocument();
+  });
+
+  it("stays loading while a celestial query is still in flight", () => {
+    mockUseSolarSystem.mockReturnValue({
+      data: { data: SYSTEM },
+      isError: false,
+    });
+    // the system query resolved, but one planet's SDE lookup has not yet
+    mockLoadingIds.add(40000010);
+
+    renderAdapter();
+
+    // `settled` must block on the body fan-out, not only the system query —
+    // the disabled star query stays not-loading, so it is the pending planet
+    // holding the loader here.
     expect(screen.queryByTestId("ssm")).not.toBeInTheDocument();
     expect(screen.queryByText(/unavailable/i)).not.toBeInTheDocument();
   });
