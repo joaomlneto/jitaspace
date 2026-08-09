@@ -235,8 +235,11 @@ export interface SystemLayout {
  * Split stations into those attached to their nearest planet and "orphans" that
  * have no planet to attach to (systems with no planets at all — e.g. Zarzakh).
  * Orphans are placed at the top level rather than dropped.
+ *
+ * Exported so the map's text alternative can describe the same hierarchy the
+ * scene draws, rather than re-deriving it and risking drift.
  */
-function partitionStations(
+export function partitionStations(
   stations: BodyInput[],
   planets: PlanetInput[],
 ): { byPlanet: Map<number, BodyInput[]>; orphans: BodyInput[] } {

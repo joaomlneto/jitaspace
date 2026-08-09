@@ -64,18 +64,19 @@ const SolarSystemMap = dynamic(
 
 ## Props
 
-| Prop          | Type                                     | Default       | Description                                                                  |
-| ------------- | ---------------------------------------- | ------------- | ---------------------------------------------------------------------------- |
-| `star`        | `{ id, radius }`                         | —             | The system's star, with its real radius (metres).                            |
-| `planets`     | `{ id, position, radius, moons }[]`      | —             | Planets with real position + radius; `moons` are `{ id, position, radius }`. |
-| `stations`    | `{ id, position }[]`                     | —             | Stations with real position (assigned to their nearest planet).              |
-| `stargates`   | `{ id, position }[]`                     | —             | Stargates with real position.                                                |
-| `height`      | `number \| string`                       | `460`         | Map height.                                                                  |
-| `defaultMode` | `"realistic" \| "compressed" \| "rings"` | `"compressed"` | Initial layout mode.                                                        |
-| `renderLabel` | `({ kind, id }) => ReactNode`            | —             | Renders the hover label; resolve names here. `kind` includes `"star"`.       |
-| `showLegend`  | `boolean`                                | `true`        | Show the colour legend.                                                      |
-| `autoRotate`  | `boolean`                                | `false`       | Slowly auto-rotate the camera (pauses while hovering).                       |
-| `style`       | `CSSProperties`                          | —             | Extra styles merged into the map's container element.                        |
+| Prop               | Type                                     | Default        | Description                                                                        |
+| ------------------ | ---------------------------------------- | -------------- | ---------------------------------------------------------------------------------- |
+| `star`             | `{ id, radius }`                         | —              | The system's star, with its real radius (metres).                                  |
+| `planets`          | `{ id, position, radius, moons }[]`      | —              | Planets with real position + radius; `moons` are `{ id, position, radius }`.       |
+| `stations`         | `{ id, position }[]`                     | —              | Stations with real position (assigned to their nearest planet).                    |
+| `stargates`        | `{ id, position }[]`                     | —              | Stargates with real position.                                                      |
+| `height`           | `number \| string`                       | `460`          | Map height.                                                                        |
+| `defaultMode`      | `"realistic" \| "compressed" \| "rings"` | `"compressed"` | Initial layout mode.                                                               |
+| `renderLabel`      | `({ kind, id }) => ReactNode`            | —              | Resolves a body's name, for both the hover label and the text alternative.         |
+| `showLegend`       | `boolean`                                | `true`         | Show the colour legend.                                                            |
+| `autoRotate`       | `boolean`                                | `false`        | Slowly auto-rotate the camera (pauses while hovering).                             |
+| `describeContents` | `boolean`                                | `true`         | Render the visually-hidden text alternative (see [Accessibility](#accessibility)). |
+| `style`            | `CSSProperties`                          | —              | Extra styles merged into the map's container element.                              |
 
 Positions and radii are the raw system-relative SDE values (metres, star at the
 origin). In `realistic` mode the star, planets and moons are drawn at their
@@ -83,3 +84,25 @@ exact positions and at sizes proportional to their real radius (enlarged for
 visibility); stations and stargates have no radius and render as fixed icons.
 Because moons orbit so close to their planet, at system scale they sit
 essentially on (or inside) the planet — zoom in to separate them.
+
+## Accessibility
+
+A `<canvas>` is opaque to assistive technology, so alongside it the map renders
+a **text alternative**: a nested, visually-hidden list of every body it draws —
+the star, each planet with its own moons and stations, any station with no
+planet to attach to, and the stargates. Names come from `renderLabel`, the same
+callback the hover label uses, so pass one to get real names rather than the
+`Planet 40000010` fallback.
+
+It is hidden with the usual clip technique (a 1x1 clipped box) rather than
+`display: none` or `hidden`, which would drop it from the accessibility tree
+too. It costs no pixels, is read-only, and can be turned off with
+`describeContents={false}` — do that only when the host page already lists the
+same bodies accessibly, since otherwise the map has nothing to say to a screen
+reader.
+
+The map itself also exposes a named `region` landmark and a labelled `group` of
+layout-mode buttons. The 3D bodies are still **pointer-only** to interact with:
+hovering for a name and clicking to focus the camera have no keyboard
+equivalent yet, and the overlay hint describing those gestures is
+`aria-hidden`.

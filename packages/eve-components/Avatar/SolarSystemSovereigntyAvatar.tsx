@@ -32,12 +32,15 @@ export const SolarSystemSovereigntyAvatar = memo(
     const sov = useSolarSystemSovereignty(normalizedSolarSystemId);
     // `StarAvatar` renders the star's *type*, so resolve the system's star to
     // its type id. Only the no-sovereignty fallback actually needs it, so gate
-    // the fetch on that branch (the hook still runs every render, so hook order
-    // stays stable).
+    // the fetch on that branch. The star id has to be guarded here too: passing
+    // `enabled` overrides the generated hook's own id guard, so without it the
+    // first render (before the solar-system query resolves) would fire a request
+    // for a star we don't know yet.
     const needsStar =
       !sov?.alliance_id && !sov?.corporation_id && !sov?.faction_id;
-    const { data: star } = useStar(data?.data.star_id ?? 0, undefined, {
-      query: { enabled: needsStar },
+    const starId = data?.data.star_id;
+    const { data: star } = useStar(starId, undefined, {
+      query: { enabled: needsStar && starId !== undefined },
     });
 
     // if sov has an alliance, show an alliance avatar

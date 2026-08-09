@@ -1,11 +1,22 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import type { SolarSystemMapProps } from "@jitaspace/solar-system-map";
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
+import type { SolarSystemMapProps } from "@jitaspace/solar-system-map";
+
 const mockUseSolarSystem = jest.fn();
+
+// The module-scope `loading` fallback next/dynamic is configured with, captured
+// so the height it renders at can be asserted on.
+let mockDynamicLoading: (() => ReactNode) | undefined;
+
+// Every query-options object the adapter hands to react-query, so the shared
+// `staleTime` wiring can be asserted on.
+const mockSeenQueries: { _kind: string; _id: number; staleTime?: number }[] =
+  [];
 
 // The map pulls in three.js/WebGL; the adapter loads it via next/dynamic and
 // also prefetches it on mount. Stub both so no GPU/ESM code runs under jsdom,
@@ -14,23 +25,31 @@ const HOVER_KINDS = ["star", "planet", "moon", "station", "stargate"] as const;
 
 jest.mock("next/dynamic", () => ({
   __esModule: true,
-  default: () => (props: SolarSystemMapProps) => (
-    <div
-      data-testid="ssm"
-      data-star-id={String(props.star.id)}
-      data-star-radius={String(props.star.radius)}
-      data-planets={String(props.planets.length)}
-      data-planet0-moons={String(props.planets[0]?.moons.length ?? -1)}
-      data-stations={String(props.stations.length)}
-      data-stargates={String(props.stargates.length)}
-    >
-      {HOVER_KINDS.map((kind) => (
-        <span key={kind} data-testid={`label-${kind}`}>
-          {props.renderLabel?.({ kind, id: 1 })}
-        </span>
-      ))}
-    </div>
-  ),
+  default: (_loader: unknown, options?: { loading?: () => ReactNode }) => {
+    mockDynamicLoading = options?.loading;
+    return (props: SolarSystemMapProps) => (
+      <div
+        data-testid="ssm"
+        data-star-id={String(props.star.id)}
+        data-star-radius={String(props.star.radius)}
+        data-planets={String(props.planets.length)}
+        data-planet0-moons={String(props.planets[0]?.moons.length ?? -1)}
+        data-stations={String(props.stations.length)}
+        data-stargates={String(props.stargates.length)}
+        data-height={String(props.height)}
+      >
+        {HOVER_KINDS.map((kind) => (
+          <span key={kind} data-testid={`label-${kind}`}>
+            {/* the star's real id matters — an absent star is passed a sentinel */}
+            {props.renderLabel?.({
+              kind,
+              id: kind === "star" ? props.star.id : 1,
+            })}
+          </span>
+        ))}
+      </div>
+    );
+  },
 }));
 
 jest.mock("@jitaspace/solar-system-map", () => ({
@@ -72,7 +91,8 @@ jest.mock("@tanstack/react-query", () => {
   };
   // React Query exposes `data: undefined` for a disabled/unresolved query, and
   // `data: { data: body }` (the axios envelope) once it resolves.
-  const result = (q: { _kind: string; _id: number }) => {
+  const result = (q: { _kind: string; _id: number; staleTime?: number }) => {
+    mockSeenQueries.push(q);
     const body = BODIES[q._kind]?.[q._id];
     return {
       data: body === undefined ? undefined : { data: body },
@@ -81,8 +101,16 @@ jest.mock("@tanstack/react-query", () => {
   };
   return {
     useQuery: (opts: { _kind: string; _id: number }) => result(opts),
-    useQueries: ({ queries }: { queries: { _kind: string; _id: number }[] }) =>
-      queries.map(result),
+    useQueries: ({
+      queries,
+      combine,
+    }: {
+      queries: { _kind: string; _id: number }[];
+      combine?: (results: ReturnType<typeof result>[]) => unknown;
+    }) => {
+      const results = queries.map(result);
+      return combine ? combine(results) : results;
+    },
   };
 });
 
@@ -110,10 +138,10 @@ const SYSTEM = {
   stargates: [50000001],
 };
 
-function renderAdapter() {
+function renderAdapter(height?: number | string) {
   return render(
     <MantineProvider>
-      <SolarSystem3D solarSystemId={30000001} />
+      <SolarSystem3D solarSystemId={30000001} height={height} />
     </MantineProvider>,
   );
 }
@@ -121,6 +149,7 @@ function renderAdapter() {
 describe("SolarSystem3D adapter", () => {
   beforeEach(() => {
     mockUseSolarSystem.mockReset();
+    mockSeenQueries.length = 0;
   });
 
   it("maps resolved SDE bodies into map props, dropping position-less ones", () => {
@@ -179,5 +208,60 @@ describe("SolarSystem3D adapter", () => {
     // neither the map nor the error — the loader is showing
     expect(screen.queryByTestId("ssm")).not.toBeInTheDocument();
     expect(screen.queryByText(/unavailable/i)).not.toBeInTheDocument();
+  });
+
+  it("marks every SDE celestial lookup as never going stale", () => {
+    mockUseSolarSystem.mockReturnValue({
+      data: { data: SYSTEM },
+      isError: false,
+    });
+
+    renderAdapter();
+
+    // the whole fan-out is covered — star, planets, moons, stations, stargates
+    expect([...new Set(mockSeenQueries.map((q) => q._kind))].sort()).toEqual(
+      [...HOVER_KINDS].sort(),
+    );
+    // SDE data is immutable, so nothing here may refetch on window focus
+    expect(mockSeenQueries.filter((q) => q.staleTime !== Infinity)).toEqual([]);
+  });
+
+  it("does not resolve a star name when the system has no star", () => {
+    mockUseSolarSystem.mockReturnValue({
+      data: { data: { ...SYSTEM, star_id: undefined } },
+      isError: false,
+    });
+
+    renderAdapter();
+
+    const map = screen.getByTestId("ssm");
+    // the map's `star` prop is required, so an absent star gets a sentinel id…
+    expect(map).toHaveAttribute("data-star-id", "0");
+    expect(map).toHaveAttribute("data-star-radius", "0");
+    // …which must not be looked up as if it were a real star
+    const label = screen.getByTestId("label-star");
+    expect(label).toHaveTextContent("Star");
+    expect(label).not.toHaveTextContent("star-name");
+  });
+
+  it("keeps the loading fallbacks at the caller's height", () => {
+    mockUseSolarSystem.mockReturnValue({
+      data: { data: SYSTEM },
+      isError: false,
+    });
+
+    renderAdapter(900);
+
+    // the settled map sits in a wrapper carrying the caller's height and fills it
+    expect(screen.getByTestId("ssm").parentElement).toHaveStyle({
+      height: "900px",
+    });
+    expect(screen.getByTestId("ssm")).toHaveAttribute("data-height", "100%");
+
+    // so does next/dynamic's chunk-loading fallback, which cannot see the prop
+    const fallback = render(
+      <MantineProvider>{mockDynamicLoading?.()}</MantineProvider>,
+    );
+    expect(fallback.container.innerHTML).toContain("height: 100%");
   });
 });
