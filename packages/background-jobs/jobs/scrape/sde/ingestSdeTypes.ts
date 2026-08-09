@@ -63,6 +63,7 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
         metaLevel: optionalNumber(record.metaLevel),
         techLevel: optionalNumber(record.techLevel),
         soundId: optionalNumber(record.soundID),
+        variationParentTypeId: optionalNumber(record.variationParentTypeID),
         shipTreeGroupId: present(
           shipTreeGroupIds,
           optionalNumber(record.shipTreeGroupID),

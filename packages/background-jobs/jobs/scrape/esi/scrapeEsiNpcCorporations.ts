@@ -8,6 +8,7 @@ import {
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_CORPORATION_COLUMNS } from "../../../helpers";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
@@ -176,7 +177,11 @@ export const scrapeEsiNpcCorporations = defineJob<
           })
           .then((entries) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              excludeObjectKeys(entry, [
+                "updatedAt",
+                "createdAt",
+                ...SDE_OWNED_CORPORATION_COLUMNS,
+              ]),
             ),
           ),
       fetchRemoteEntries: () =>

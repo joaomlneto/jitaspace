@@ -41,6 +41,7 @@ export * from "./ingestSdeMilitaryCampaigns";
 export * from "./ingestSdeMissions";
 export * from "./ingestSdeMoons";
 export * from "./ingestSdeNpcCorporationDivisions";
+export * from "./ingestSdeNpcCorporations";
 export * from "./ingestSdePlanetResources";
 export * from "./ingestSdePlanets";
 export * from "./ingestSdePlanetSchematics";

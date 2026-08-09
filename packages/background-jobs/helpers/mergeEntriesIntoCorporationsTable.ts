@@ -7,12 +7,22 @@ import type { Corporation } from "../db";
 import { MAX_DB_PARALLELISM } from "../config";
 import { prisma } from "../db";
 import { excludeObjectKeys, updateTable } from "../utils";
+import { SDE_OWNED_CORPORATION_COLUMNS } from "./sdeOwnedColumns";
+
+/**
+ * A Corporation row as ESI knows it — no timestamps, and none of the SDE-owned
+ * columns, which `ingestSdeNpcCorporations` writes and ESI cannot supply.
+ */
+export type EsiCorporationRow = Omit<
+  Corporation,
+  "updatedAt" | "createdAt" | (typeof SDE_OWNED_CORPORATION_COLUMNS)[number]
+>;
 
 export const convertEsiCorporationToDomain = (
   corporation: GetCorporationsCorporationIdQueryResponse & {
     corporationId: number;
   },
-): Omit<Corporation, "updatedAt" | "createdAt"> => ({
+): EsiCorporationRow => ({
   corporationId: corporation.corporationId,
   allianceId: corporation.alliance_id ?? null,
   ceoId: corporation.ceo_id,
@@ -45,7 +55,7 @@ export const mergeEsiEntriesIntoCorporationsTable = (
   );
 
 export const mergeEntriesIntoCorporationsTable = (
-  corporations: Omit<Corporation, "updatedAt" | "createdAt">[],
+  corporations: EsiCorporationRow[],
   limit = pLimit(MAX_DB_PARALLELISM),
 ) =>
   updateTable({
@@ -60,7 +70,11 @@ export const mergeEntriesIntoCorporationsTable = (
         })
         .then((entries) =>
           entries.map((entry) =>
-            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            excludeObjectKeys(entry, [
+              "updatedAt",
+              "createdAt",
+              ...SDE_OWNED_CORPORATION_COLUMNS,
+            ]),
           ),
         ),
     fetchRemoteEntries: () => Promise.resolve(corporations),

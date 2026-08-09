@@ -3,6 +3,7 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
   enString,
+  ingestSdeCompositeTable,
   ingestSdeTable,
   loadSdeFiles,
   plainString,
@@ -82,6 +83,30 @@ export const ingestSdeFactions = defineJob<
         isDeleted: false,
       }),
     });
-    return { stats: { factions }, elapsed: performance.now() - start };
+    const memberRaces: Prisma.FactionMemberRaceCreateManyInput[] = [];
+    for (const [key, value] of Object.entries(files["factions.yaml"])) {
+      const factionId = Number(key);
+      const races = ((value as Record<string, unknown>).memberRaces ??
+        []) as number[];
+      for (const raceId of races) {
+        memberRaces.push({
+          factionId,
+          raceId: Number(raceId),
+          isDeleted: false,
+        });
+      }
+    }
+    const factionMemberRaces = await ingestSdeCompositeTable({
+      delegate: prisma.factionMemberRace,
+      rows: memberRaces,
+      keyFields: ["factionId", "raceId"],
+      scopeField: "factionId",
+      scopeIds: Object.keys(files["factions.yaml"]).map(Number),
+    });
+
+    return {
+      stats: { factions, factionMemberRaces },
+      elapsed: performance.now() - start,
+    };
   },
 });

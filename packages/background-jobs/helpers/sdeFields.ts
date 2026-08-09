@@ -39,3 +39,24 @@ export const requiredBoolean: (value: unknown) => boolean = Boolean;
 export function optionalBoolean(value: unknown): boolean | null {
   return value == null ? null : Boolean(value);
 }
+
+/**
+ * A fixed-key sub-object of an SDE record (`attributes`, `position2D`, …),
+ * flattened into prefixed columns by the caller. An absent or non-object value
+ * reads as empty, so every field inside it comes back as null.
+ */
+export function subRecord(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+/**
+ * An optional SDE timestamp — `"2003-03-27 13:27:00"`, with no timezone. EVE
+ * records these in UTC, so anchor them there rather than the runner's local zone.
+ */
+export function optionalSdeDate(value: unknown): Date | null {
+  if (typeof value !== "string" || value === "") return null;
+  const parsed = new Date(`${value.replace(" ", "T")}Z`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
