@@ -27,8 +27,8 @@ const run = (overrides: Partial<TriggerApiRun> = {}): TriggerApiRun => ({
 describe("jobNameFromId", () => {
   it("title-cases and applies acronyms", () => {
     expect(jobNameFromId("scrape-esi-alliances")).toBe("Scrape ESI Alliances");
-    expect(jobNameFromId("scrape-sde-npc-corporation-divisions")).toBe(
-      "Scrape SDE NPC Corporation Divisions",
+    expect(jobNameFromId("ingest-sde-npc-corporation-divisions")).toBe(
+      "Ingest SDE NPC Corporation Divisions",
     );
     expect(jobNameFromId("backfill-evekill-character-ids")).toBe(
       "Backfill Evekill Character IDs",

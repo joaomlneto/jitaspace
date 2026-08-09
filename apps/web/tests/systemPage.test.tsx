@@ -23,7 +23,6 @@ const mockUseAllSolarSystemJumps = jest.fn();
 const mockUseAllSolarSystemKills = jest.fn();
 const mockUseStar = jest.fn();
 const mockUseStargate = jest.fn();
-const mockUseGetSolarSystemById = jest.fn();
 const mockUseGetFwSystems = jest.fn();
 const mockUseGetIncursions = jest.fn();
 
@@ -55,11 +54,6 @@ jest.mock("@jitaspace/hooks", () => ({
 jest.mock("@jitaspace/esi-client", () => ({
   useGetFwSystems: () => mockUseGetFwSystems(),
   useGetIncursions: () => mockUseGetIncursions(),
-}));
-
-jest.mock("@jitaspace/sde-client", () => ({
-  useGetSolarSystemById: (...args: unknown[]) =>
-    mockUseGetSolarSystemById(...args),
 }));
 
 // Only the handful of @jitaspace/ui exports the page actually uses. The pure
@@ -113,11 +107,17 @@ jest.mock("next/link", () => ({
   }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
-function renderPage() {
+// The SDE half of a system is resolved on the server (page.tsx reads Prisma) and
+// handed to the client page as a plain prop, so tests pass it in directly.
+type SdeProp = Parameters<
+  typeof import("~/app/system/[systemId]/page.client").default
+>[0]["sde"];
+
+function renderPage(sde: SdeProp = null) {
   const Page = require("~/app/system/[systemId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page />
+      <Page sde={sde} />
     </MantineProvider>,
   );
 }
@@ -129,11 +129,14 @@ describe("System page", () => {
     mockUseSolarSystem.mockReset().mockReturnValue({ data: undefined });
     mockUseSolarSystemCostIndices.mockReset().mockReturnValue({ data: {} });
     mockUseSolarSystemSovereignty.mockReset().mockReturnValue(undefined);
-    mockUseAllSolarSystemJumps.mockReset().mockReturnValue({ data: { data: [] } });
-    mockUseAllSolarSystemKills.mockReset().mockReturnValue({ data: { data: [] } });
+    mockUseAllSolarSystemJumps
+      .mockReset()
+      .mockReturnValue({ data: { data: [] } });
+    mockUseAllSolarSystemKills
+      .mockReset()
+      .mockReturnValue({ data: { data: [] } });
     mockUseStar.mockReset().mockReturnValue({ data: undefined });
     mockUseStargate.mockReset().mockReturnValue({ data: undefined });
-    mockUseGetSolarSystemById.mockReset().mockReturnValue({ data: undefined });
     mockUseGetFwSystems.mockReset().mockReturnValue({ data: { data: [] } });
     mockUseGetIncursions.mockReset().mockReturnValue({ data: { data: [] } });
   });
@@ -160,23 +163,6 @@ describe("System page", () => {
         },
       },
     });
-    mockUseGetSolarSystemById.mockReturnValue({
-      data: {
-        data: {
-          luminosity: 1.692,
-          radius: 1234567,
-          position: { x: 1, y: 2, z: 3 },
-          hub: true,
-          border: true,
-          fringe: false,
-          corridor: false,
-          international: true,
-          regional: false,
-          factionID: 500001,
-          wormholeClassID: null,
-        },
-      },
-    });
     mockUseStar.mockReturnValue({
       data: { data: { spectral_class: "F1 V", temperature: 7305 } },
     });
@@ -199,7 +185,12 @@ describe("System page", () => {
     mockUseAllSolarSystemKills.mockReturnValue({
       data: {
         data: [
-          { system_id: SYSTEM_ID, ship_kills: 65, pod_kills: 62, npc_kills: 43 },
+          {
+            system_id: SYSTEM_ID,
+            ship_kills: 65,
+            pod_kills: 62,
+            npc_kills: 43,
+          },
         ],
       },
     });
@@ -235,10 +226,21 @@ describe("System page", () => {
       },
     });
 
-    renderPage();
+    renderPage({
+      luminosity: 1.692,
+      radius: 1234567,
+      wormholeClassId: null,
+      position: { x: 1, y: 2, z: 3 },
+      factionId: 500001,
+      isHub: true,
+      isBorder: true,
+      isFringe: false,
+      isCorridor: false,
+      isInternational: true,
+      isRegional: false,
+    });
 
     expect(mockUseSolarSystem).toHaveBeenCalledWith(SYSTEM_ID);
-    expect(mockUseGetSolarSystemById).toHaveBeenCalledWith(SYSTEM_ID);
 
     // Header widgets
     expect(screen.getByTestId("set-autopilot")).toBeInTheDocument();
@@ -278,7 +280,9 @@ describe("System page", () => {
     expect(screen.getByText("Sovereignty")).toBeInTheDocument();
     expect(screen.getByText("Faction Warfare")).toBeInTheDocument();
     expect(screen.getByText("Incursion")).toBeInTheDocument();
-    expect(screen.getByText(/1,000 \/ 3,000 victory points/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/1,000 \/ 3,000 victory points/),
+    ).toBeInTheDocument();
     expect(screen.getByText(/50% influence/)).toBeInTheDocument();
 
     // Industry indices (cost_index rendered as a percentage, underscores spaced)
@@ -316,7 +320,9 @@ describe("System page", () => {
     // Headers and empty-state copy still render
     expect(screen.getByText("Celestials")).toBeInTheDocument();
     expect(screen.getByText("Activity · Last Hour")).toBeInTheDocument();
-    expect(screen.getByText("No NPC stations in this system.")).toBeInTheDocument();
+    expect(
+      screen.getByText("No NPC stations in this system."),
+    ).toBeInTheDocument();
     expect(screen.getByText(/No stargates/)).toBeInTheDocument();
   });
 
@@ -332,22 +338,19 @@ describe("System page", () => {
         },
       },
     });
-    mockUseGetSolarSystemById.mockReturnValue({
-      data: {
-        data: {
-          position: { x: 1, y: 2, z: 3 },
-          hub: false,
-          border: false,
-          fringe: false,
-          corridor: false,
-          international: false,
-          regional: false,
-          wormholeClassID: 3,
-        },
-      },
+    renderPage({
+      luminosity: null,
+      radius: null,
+      wormholeClassId: 3,
+      position: { x: 1, y: 2, z: 3 },
+      factionId: null,
+      isHub: false,
+      isBorder: false,
+      isFringe: false,
+      isCorridor: false,
+      isInternational: false,
+      isRegional: false,
     });
-
-    renderPage();
 
     expect(screen.getByText("W-Space")).toBeInTheDocument();
     expect(screen.getByText("Wormhole Class")).toBeInTheDocument();
@@ -363,13 +366,15 @@ describe("System page", () => {
     expect(screen.queryByText("Celestials")).not.toBeInTheDocument();
   });
 
-  it("renders the server wrapper (page.tsx) inside a Suspense boundary", () => {
+  it("renders the server wrapper (page.tsx) inside a Suspense boundary", async () => {
+    // page.tsx is an async server component: it awaits `params`, reads the SDE
+    // columns from Prisma (mocked to null here) and passes them to the client
+    // page. Await it to get the element tree, then render that.
     const WrapperPage = require("~/app/system/[systemId]/page").default;
-    render(
-      <MantineProvider>
-        <WrapperPage />
-      </MantineProvider>,
-    );
+    const ui = await WrapperPage({
+      params: Promise.resolve({ systemId: String(SYSTEM_ID) }),
+    });
+    render(<MantineProvider>{ui}</MantineProvider>);
 
     expect(screen.getByText("Stations")).toBeInTheDocument();
   });

@@ -4,7 +4,7 @@ import { render } from "@testing-library/react";
 jest.mock("@mantine/core", () => ({ Loader: () => null }));
 
 // Mock each client component so rendering the server page wrappers doesn't pull
-// in React Query / Mantine / sde-client.
+// in React Query / Mantine / the Prisma-backed history actions.
 jest.mock("~/app/history/type/[typeId]/page.client", () => ({
   default: () => null,
 }));
@@ -73,9 +73,7 @@ describe("history page metadata + wrappers", () => {
         params: Promise<Record<string, string>>;
       }>;
       // Renders the Suspense wrapper (fallback shows while the async child loads).
-      expect(() =>
-        render(<Page params={rp(c.params)} />),
-      ).not.toThrow();
+      expect(() => render(<Page params={rp(c.params)} />)).not.toThrow();
     });
   }
 });

@@ -307,6 +307,10 @@ model DogmaAttribute {
   maxAttributeId               Int?
   minAttributeId               Int?
   chargeRechargeTimeId         Int?
+  // The attribute's grouping on the type page. SDE-only: ESI's dogma attribute
+  // endpoint exposes no category.
+  attributeCategory            DogmaAttributeCategory? @relation(fields: [attributeCategoryId], references: [attributeCategoryId])
+  attributeCategoryId          Int?
   Icon                         Icon?                 @relation(fields: [iconId], references: [iconId])
   DogmaUnit                    DogmaUnit?            @relation(fields: [unitId], references: [unitId])
   /**
@@ -331,12 +335,14 @@ model DogmaAttribute {
 
   @@index([unitId])
   @@index([iconId])
+  @@index([attributeCategoryId])
 }
 
 model DogmaAttributeCategory {
   attributeCategoryId Int      @id
   name                String
   description         String?
+  attributes          DogmaAttribute[]
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
@@ -529,6 +535,8 @@ model Faction {
   sizeFactor           Float
   solarSystem          SolarSystem?       @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId        Int?
+  // Systems held by this faction (inverse of SolarSystem.factionId).
+  heldSolarSystems     SolarSystem[]      @relation("SolarSystemFaction")
   // do we need to store this?
   stationCount         Int
   // do we need to store this?
@@ -745,6 +753,20 @@ model SolarSystem {
   visualEffect        String?
   isRegional          Boolean?
   isInternational     Boolean?
+  isHub               Boolean?
+  isBorder            Boolean?
+  isFringe            Boolean?
+  isCorridor          Boolean?
+  luminosity          Float?
+  radius              Float?
+  positionX           Float?
+  positionY           Float?
+  positionZ           Float?
+  // The faction that holds the system. Distinct from `solarSystemFactions`
+  // below, which is the inverse of Faction.solarSystemId (a faction's home
+  // system).
+  faction             Faction?       @relation("SolarSystemFaction", fields: [factionId], references: [factionId])
+  factionId           Int?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
@@ -757,6 +779,7 @@ model SolarSystem {
   Killmail            Killmail[]     @relation("KillmailSolarSystem")
 
   @@index([constellationId])
+  @@index([factionId])
 }
 
 model Star {

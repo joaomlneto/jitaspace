@@ -1,7 +1,14 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { cleanup, render, screen } from "@testing-library/react";
 
@@ -9,11 +16,21 @@ const CHARACTER_ID = 30000142;
 
 const mockUseCharacter = jest.fn();
 const mockUseSelectedCharacter = jest.fn();
-const mockUseGetNpcCorporationDivisionById = jest.fn();
 const mockUseAuthenticatedCharacter = jest.fn();
 const mockUseCharacterSkills = jest.fn();
 const mockUseCharacterWalletBalance = jest.fn();
 const mockUseCorporationHistory = jest.fn();
+
+// page.tsx reads the agent's division from Prisma; stub it so the test never
+// loads the real client (which is not resolvable under Jest).
+jest.mock("~/lib/db", () => ({
+  prisma: {
+    agent: { findUnique: jest.fn((_args?: unknown) => Promise.resolve(null)) },
+    researchAgentSkills: {
+      findMany: jest.fn((_args?: unknown) => Promise.resolve([])),
+    },
+  },
+}));
 
 // page.tsx imports getCharactersDetail for generateMetadata; page.client
 // imports useGetCharactersCharacterIdCorporationhistory for the timeline.
@@ -45,11 +62,6 @@ jest.mock(
       mockUseCharacterWalletBalance(...args),
   }),
 );
-
-jest.mock("@jitaspace/sde-client", () => ({
-  useGetNpcCorporationDivisionById: (...args: unknown[]) =>
-    mockUseGetNpcCorporationDivisionById(...args),
-}));
 
 jest.mock("@jitaspace/tiptap-eve", () => ({
   sanitizeFormattedEveString: (s: string) => `sanitized:${s}`,
@@ -96,11 +108,20 @@ jest.mock("next/link", () => ({
   }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
-function renderPage() {
+// The SDE half of a character (its agent record and division name) is resolved
+// on the server in page.tsx and passed in as plain props; page.client feeds
+// `agentData` into useCharacter alongside the ESI half.
+function renderPage(props?: {
+  agentDivisionName?: string | null;
+  agentData?: unknown;
+}) {
   const Page = require("~/app/character/[characterId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page />
+      <Page
+        agentDivisionName={props?.agentDivisionName ?? "Distribution"}
+        agentData={props?.agentData ?? null}
+      />
     </MantineProvider>,
   );
 }
@@ -109,16 +130,12 @@ describe("Character page", () => {
   beforeEach(() => {
     mockUseCharacter.mockReset();
     mockUseSelectedCharacter.mockReset();
-    mockUseGetNpcCorporationDivisionById.mockReset();
     mockUseAuthenticatedCharacter.mockReset();
     mockUseCharacterSkills.mockReset();
     mockUseCharacterWalletBalance.mockReset();
     mockUseCorporationHistory.mockReset();
 
     // Sensible defaults — individual tests override as needed.
-    mockUseGetNpcCorporationDivisionById.mockReturnValue({
-      data: { data: { name: { en: "Distribution" } } },
-    });
     mockUseAuthenticatedCharacter.mockReturnValue(null);
     mockUseCharacterSkills.mockReturnValue({ hasToken: false });
     mockUseCharacterWalletBalance.mockReturnValue({ isAllowed: false });
@@ -175,7 +192,11 @@ describe("Character page", () => {
             start_date: "2008-01-01T00:00:00Z",
             is_deleted: true,
           },
-          { corporation_id: 3000, record_id: 1, start_date: "2005-01-01T00:00:00Z" },
+          {
+            corporation_id: 3000,
+            record_id: 1,
+            start_date: "2005-01-01T00:00:00Z",
+          },
         ],
       },
       isLoading: false,
@@ -183,11 +204,7 @@ describe("Character page", () => {
 
     const { container } = renderPage();
 
-    expect(mockUseCharacter).toHaveBeenCalledWith(CHARACTER_ID);
-    // agent division hook called with the division id, query enabled
-    expect(mockUseGetNpcCorporationDivisionById).toHaveBeenCalledWith(22, {
-      query: { enabled: true },
-    });
+    expect(mockUseCharacter).toHaveBeenCalledWith(CHARACTER_ID, null);
 
     // Info window renders because a character is selected
     expect(screen.getAllByTestId("info-window").length).toBeGreaterThanOrEqual(
@@ -392,23 +409,19 @@ describe("Character page", () => {
     expect(
       screen.queryByText("No employment history available."),
     ).not.toBeInTheDocument();
-
-    // agent division hook disabled
-    expect(mockUseGetNpcCorporationDivisionById).toHaveBeenCalledWith(0, {
-      query: { enabled: false },
-    });
   });
 
-  it("renders the server wrapper (page.tsx) inside a Suspense boundary", () => {
+  it("renders the server wrapper (page.tsx) inside a Suspense boundary", async () => {
     mockUseSelectedCharacter.mockReturnValue(undefined);
     mockUseCharacter.mockReturnValue({ data: undefined });
 
+    // page.tsx is an async server component: it awaits `params`, looks up the
+    // agent division in Prisma (mocked to null here) and passes it down.
     const WrapperPage = require("~/app/character/[characterId]/page").default;
-    render(
-      <MantineProvider>
-        <WrapperPage />
-      </MantineProvider>,
-    );
+    const ui = await WrapperPage({
+      params: Promise.resolve({ characterId: String(CHARACTER_ID) }),
+    });
+    render(<MantineProvider>{ui}</MantineProvider>);
 
     expect(screen.getByText("Details")).toBeInTheDocument();
   });

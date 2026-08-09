@@ -2,12 +2,13 @@
 
 import type { DatabaseStatusResponse } from "~/lib/databaseStatus";
 import type { TriggerApiRun, TriggerStatusResponse } from "~/lib/triggerStatus";
-import { prisma } from "~/lib/db";
 import { env } from "~/env";
 import {
   buildDatabaseStatusResponse,
   DATABASE_STATUS_STALE_MINUTES,
 } from "~/lib/databaseStatus";
+import { prisma } from "~/lib/db";
+import { redis } from "~/lib/kv";
 import {
   buildTriggerStatusResponse,
   TRIGGER_STATUS_WINDOW_HOURS,
@@ -193,4 +194,25 @@ export async function getDatabaseStatus(): Promise<DatabaseStatusResponse> {
     };
   }
   return databaseCache.payload;
+}
+
+// ---------------------------------------------------------------------------
+// SDE ingest freshness
+//
+// The `watch-sde` background job HEADs CCP's SDE archive hourly and, when the
+// `Last-Modified` changes, triggers `ingest-sde-all` and records the value it
+// ingested under this Redis key. Reading it back tells the status page which
+// SDE release our database currently holds, which the page compares against
+// CCP's latest to flag staleness.
+// ---------------------------------------------------------------------------
+
+/** Must match LAST_SEEN_KEY in `@jitaspace/background-jobs` watchSde. */
+const SDE_LAST_INGESTED_KEY = "sde:last-modified-ingested";
+
+export async function getSdeIngestedAt(): Promise<string | null> {
+  try {
+    return await redis.get(SDE_LAST_INGESTED_KEY);
+  } catch {
+    return null;
+  }
 }

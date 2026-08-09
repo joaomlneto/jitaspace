@@ -1,9 +1,9 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
+import type { SolarSystemSdeInfo } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
-
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -29,10 +29,69 @@ export async function generateMetadata({
   }
 }
 
-export default function Page() {
+/**
+ * Read the SDE columns of a system from our database. Returns null for an
+ * unknown id or a database hiccup — the page renders fine without this half,
+ * exactly as it did while the data came from a client-side SDE request.
+ */
+async function getSolarSystemSdeInfo(
+  systemId: number,
+): Promise<SolarSystemSdeInfo | null> {
+  if (!Number.isSafeInteger(systemId) || systemId <= 0) return null;
+  try {
+    const system = await prisma.solarSystem.findUnique({
+      select: {
+        luminosity: true,
+        radius: true,
+        wormholeClassId: true,
+        positionX: true,
+        positionY: true,
+        positionZ: true,
+        factionId: true,
+        isHub: true,
+        isBorder: true,
+        isFringe: true,
+        isCorridor: true,
+        isInternational: true,
+        isRegional: true,
+      },
+      where: { solarSystemId: systemId },
+    });
+    if (!system) return null;
+
+    const { positionX, positionY, positionZ } = system;
+    return {
+      luminosity: system.luminosity,
+      radius: system.radius,
+      wormholeClassId: system.wormholeClassId,
+      position:
+        positionX != null && positionY != null && positionZ != null
+          ? { x: positionX, y: positionY, z: positionZ }
+          : null,
+      factionId: system.factionId,
+      isHub: system.isHub ?? false,
+      isBorder: system.isBorder ?? false,
+      isFringe: system.isFringe ?? false,
+      isCorridor: system.isCorridor ?? false,
+      isInternational: system.isInternational ?? false,
+      isRegional: system.isRegional ?? false,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ systemId: string }>;
+}) {
+  const { systemId } = await params;
+  const sde = await getSolarSystemSdeInfo(Number(systemId));
+
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <PageClient />
+      <PageClient sde={sde} />
     </Suspense>
   );
 }

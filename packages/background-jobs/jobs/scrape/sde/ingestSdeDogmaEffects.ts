@@ -27,7 +27,7 @@ export const ingestSdeDogmaEffects = defineJob<
     const start = performance.now();
     // dogmaEffects.yaml is a `noTransform` file: the id is the map key. `name` is
     // a plain string; `description`/`displayName` are localized. The per-effect
-    // `modifierInfo` array is handled by scrape-sde-dogma-effect-modifiers.
+    // `modifierInfo` array is handled by ingest-sde-dogma-effect-modifiers.
     const dogmaEffects = await ingestSdeTable({
       filename: "dogmaEffects.yaml",
       idField: "effectId",

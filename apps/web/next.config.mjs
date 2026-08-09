@@ -108,7 +108,6 @@ const config = {
     "@jitaspace/eve-icons",
     "@jitaspace/hooks",
     "@jitaspace/kv",
-    "@jitaspace/sde-client",
     "@jitaspace/sde-utils",
     "@jitaspace/tiptap-eve",
     "@jitaspace/ui",

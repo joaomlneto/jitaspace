@@ -9,7 +9,6 @@ import { render, screen } from "@testing-library/react";
 // The status page pulls hooks from three different generated/client packages:
 //   - @jitaspace/esi-client  (getRateLimitBuildDate, useGetMetaCompatibilityDates, useGetMetaStatus)
 //   - @jitaspace/hooks       (useServerStatus)
-//   - @jitaspace/sde-client  (useGetVersion)
 // Each is mocked independently so every conditional section renders.
 // ---------------------------------------------------------------------------
 
@@ -17,7 +16,6 @@ const mockGetRateLimitBuildDate = jest.fn<() => string | undefined>();
 const mockUseGetMetaCompatibilityDates = jest.fn();
 const mockUseGetMetaStatus = jest.fn();
 const mockUseServerStatus = jest.fn();
-const mockUseGetVersion = jest.fn();
 
 jest.mock("@jitaspace/esi-client", () => ({
   getRateLimitBuildDate: () => mockGetRateLimitBuildDate(),
@@ -27,10 +25,6 @@ jest.mock("@jitaspace/esi-client", () => ({
 
 jest.mock("@jitaspace/hooks", () => ({
   useServerStatus: () => mockUseServerStatus(),
-}));
-
-jest.mock("@jitaspace/sde-client", () => ({
-  useGetVersion: () => mockUseGetVersion(),
 }));
 
 jest.mock("@jitaspace/ui", () => ({
@@ -79,6 +73,8 @@ jest.mock("next/link", () => ({
 function renderPage(props?: {
   vercelStatusData?: unknown;
   sdeLastModifiedData?: unknown;
+  /** Last-Modified of the SDE release ingested into our DB (from Redis). */
+  sdeIngestedAt?: string | null;
 }) {
   const StatusPage = require("~/app/status/page.client").default;
   return render(
@@ -86,6 +82,7 @@ function renderPage(props?: {
       <StatusPage
         vercelStatusData={props?.vercelStatusData ?? null}
         sdeLastModifiedData={props?.sdeLastModifiedData ?? null}
+        sdeIngestedAt={props?.sdeIngestedAt ?? null}
       />
     </MantineProvider>,
   );
@@ -97,7 +94,6 @@ describe("Status Page", () => {
     mockUseGetMetaCompatibilityDates.mockReset();
     mockUseGetMetaStatus.mockReset();
     mockUseServerStatus.mockReset();
-    mockUseGetVersion.mockReset();
     mockModifiedDate = "2025-05-01T00:00:00Z";
   });
 
@@ -131,13 +127,11 @@ describe("Status Page", () => {
         },
       },
     });
-    mockUseGetVersion.mockReturnValue({
-      data: { data: { generationDate: "2025-05-29T00:00:00Z" } },
-    });
-
     renderPage({
       vercelStatusData: { status: { description: "Vercel Operational" } },
       sdeLastModifiedData: { releaseDate: "2025-05-27T00:00:00Z" },
+      // Ingested after CCP's release -> up-to-date branch
+      sdeIngestedAt: "2025-05-29T00:00:00Z",
     });
 
     expect(screen.getByText("Server Status")).toBeInTheDocument();
@@ -196,14 +190,11 @@ describe("Status Page", () => {
         },
       },
     });
-    // SDE API older than SDE last modified -> outdated SDE branch
-    mockUseGetVersion.mockReturnValue({
-      data: { data: { generationDate: "2025-05-01T00:00:00Z" } },
-    });
-
     renderPage({
       vercelStatusData: { status: { description: "Degraded" } },
       sdeLastModifiedData: { releaseDate: "2025-05-27T00:00:00Z" },
+      // Ingested before CCP's release -> outdated SDE branch
+      sdeIngestedAt: "2025-05-01T00:00:00Z",
     });
 
     expect(screen.getByText("2025-01-01")).toBeInTheDocument();
@@ -218,7 +209,6 @@ describe("Status Page", () => {
     mockUseGetMetaCompatibilityDates.mockReturnValue({});
     mockUseGetMetaStatus.mockReturnValue({});
     mockUseServerStatus.mockReturnValue({});
-    mockUseGetVersion.mockReturnValue({});
 
     renderPage();
 
@@ -238,7 +228,6 @@ describe("Status Page", () => {
     });
     mockUseGetMetaStatus.mockReturnValue({ data: { data: { routes: [] } } });
     mockUseServerStatus.mockReturnValue({});
-    mockUseGetVersion.mockReturnValue({});
 
     renderPage();
 
