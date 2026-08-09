@@ -21,6 +21,20 @@ const mockUseAllianceContactsLabels = jest.fn();
 
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
+  // The hooks build an explicit, marker-suffixed query key; the exact value does
+  // not matter here, only that each endpoint gets a distinct one.
+  getCorporationsCorporationIdAssetsInfiniteQueryKey: (id: unknown) => [
+    "corporation-assets",
+    id,
+  ],
+  getCorporationsCorporationIdContactsInfiniteQueryKey: (id: unknown) => [
+    "corporation-contacts",
+    id,
+  ],
+  getAlliancesAllianceIdContactsInfiniteQueryKey: (id: unknown) => [
+    "alliance-contacts",
+    id,
+  ],
   getCorporationsCorporationIdAssets: jest.fn(),
   useGetCorporationsCorporationIdAssetsInfinite: (...args: unknown[]) =>
     mockUseCorporationAssetsInfinite(...args),
