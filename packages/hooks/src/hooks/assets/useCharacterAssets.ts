@@ -10,7 +10,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
-import { esiInfiniteQueryKey } from "../utils/esiInfiniteQueryKey";
+import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
 
 export type CharacterAsset =
   GetCharactersCharacterIdAssetsQueryResponse[number];

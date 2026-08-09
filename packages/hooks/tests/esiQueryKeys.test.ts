@@ -18,9 +18,9 @@ import {
 } from "@jitaspace/esi-client";
 
 import {
+  ESI_QUERY_KEY_MARKER,
   esiInfiniteQueryKey,
-  INFINITE_QUERY_KEY_MARKER,
-} from "../src/hooks/utils/esiInfiniteQueryKey";
+} from "../src/hooks/utils/esiQueryKeys";
 
 // Asserted against the real generated key functions, because the whole point is
 // the relationship between the infinite keys and the single-page ones.
@@ -71,7 +71,7 @@ describe("esiInfiniteQueryKey", () => {
     expect(esiInfiniteQueryKey(["a", "b"])).toEqual([
       "a",
       "b",
-      INFINITE_QUERY_KEY_MARKER,
+      ESI_QUERY_KEY_MARKER.infinite,
     ]);
   });
 
