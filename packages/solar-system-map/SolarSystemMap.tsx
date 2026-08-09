@@ -169,8 +169,7 @@ export function SolarSystemMap({
   );
 
   return (
-    <div
-      role="region"
+    <section
       aria-label="Solar system map"
       style={{
         position: "relative",
@@ -200,8 +199,7 @@ export function SolarSystemMap({
       )}
 
       {/* Layout-mode selector */}
-      <div
-        role="group"
+      <fieldset
         aria-label="Layout mode"
         style={{
           position: "absolute",
@@ -210,6 +208,8 @@ export function SolarSystemMap({
           zIndex: 3,
           display: "flex",
           gap: 2,
+          margin: 0,
+          minInlineSize: 0,
           padding: 2,
           borderRadius: 5,
           background: "rgba(8, 12, 20, 0.82)",
@@ -240,7 +240,7 @@ export function SolarSystemMap({
             </button>
           );
         })}
-      </div>
+      </fieldset>
 
       {showLegend && (
         <div
@@ -347,6 +347,6 @@ export function SolarSystemMap({
           ))}
         </ul>
       )}
-    </div>
+    </section>
   );
 }
