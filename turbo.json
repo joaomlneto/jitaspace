@@ -96,6 +96,11 @@
     "//#clean": {
       "cache": false
     },
+    "@jitaspace/hooks#kubb:generate": {
+      "dependsOn": ["^build"],
+      "outputs": ["src/generated/**"],
+      "cache": false
+    },
     "kubb:generate": {
       "dependsOn": ["^build", "^db:generate"],
       "inputs": ["kubb.config.ts", "swagger.json"],
@@ -106,6 +111,7 @@
       "persistent": true
     },
     "test": {
+      "dependsOn": ["kubb:generate"],
       "outputs": ["coverage/**"]
     },
     "test:watch": {
