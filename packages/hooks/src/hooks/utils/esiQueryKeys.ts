@@ -15,9 +15,14 @@
  * - `infinite` — react-query `InfiniteData`, paged on demand
  * - `all-pages` — the whole collection resolved by one query
  *
- * Note the last two do *not* share an entry, so a component using both the
+ * The last two do *not* share an entry, so a component using both the
  * single-subject infinite hook and the multi-subject hook for the same endpoint
- * fetches that collection twice.
+ * fetches that collection twice. That is deliberate rather than an oversight,
+ * and converging them would be a regression: an infinite query re-renders as
+ * each page lands, which is what lets the assets table appear after page one
+ * and fill in — `esiPagedQueryOptions` resolves only once every page is in, so
+ * the same screen would stay blank until the last one. If a page needs both
+ * shapes, pick one rather than mounting both.
  */
 export const ESI_QUERY_KEY_MARKER = {
   infinite: "infinite",
