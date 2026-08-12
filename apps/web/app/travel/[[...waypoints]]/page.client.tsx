@@ -17,8 +17,8 @@ import { useListState } from "@mantine/hooks";
 import createGraph from "ngraph.graph";
 import path from "ngraph.path";
 import {
+  createParser,
   createSerializer,
-  parseAsInteger,
   parseAsStringLiteral,
   throttle,
   useQueryStates,
@@ -67,11 +67,33 @@ const PRESET_PENALTIES: Record<
   insecure: { nullSec: 0, lowSec: 0, highSec: 100 },
 };
 
+/** Slider bounds — the penalties are only ever meant to come from these. */
+const PENALTY_MIN = 0;
+const PENALTY_MAX = 500;
+
+/**
+ * Clamped to the slider's range rather than a bare `parseAsInteger`, which
+ * accepts any integer including negatives. A negative penalty makes the
+ * pathfinder's edge weight `1 + penalty` negative, and NBA* then returns a
+ * wildly wrong route instead of erroring — `?nullSec=-1` turned a 49-hop route
+ * into 323 hops. Clamping also keeps the rendered label from disagreeing with
+ * the slider thumb, which can only ever produce a value in range.
+ */
+const parseAsPenalty = createParser({
+  parse: (value) => {
+    const parsed = parseInt(value);
+    return Number.isNaN(parsed)
+      ? null
+      : Math.min(PENALTY_MAX, Math.max(PENALTY_MIN, parsed));
+  },
+  serialize: String,
+}).withDefault(0);
+
 const travelControlParsers = {
   pref: parseAsStringLiteral(ROUTE_PREFERENCES).withDefault("shortest"),
-  nullSec: parseAsInteger.withDefault(0),
-  lowSec: parseAsInteger.withDefault(0),
-  highSec: parseAsInteger.withDefault(0),
+  nullSec: parseAsPenalty,
+  lowSec: parseAsPenalty,
+  highSec: parseAsPenalty,
 };
 
 // The penalty sliders fire onChange continuously while dragging, so throttle the
@@ -250,8 +272,8 @@ export default function TravelPage({
               </Text>
               <Slider
                 value={nullSec}
-                min={0}
-                max={500}
+                min={PENALTY_MIN}
+                max={PENALTY_MAX}
                 onChange={(value) => void setControls({ nullSec: value })}
               />
             </div>
@@ -261,8 +283,8 @@ export default function TravelPage({
               </Text>
               <Slider
                 value={lowSec}
-                min={0}
-                max={500}
+                min={PENALTY_MIN}
+                max={PENALTY_MAX}
                 onChange={(value) => void setControls({ lowSec: value })}
               />
             </div>
@@ -272,8 +294,8 @@ export default function TravelPage({
               </Text>
               <Slider
                 value={highSec}
-                min={0}
-                max={500}
+                min={PENALTY_MIN}
+                max={PENALTY_MAX}
                 onChange={(value) => void setControls({ highSec: value })}
               />
             </div>

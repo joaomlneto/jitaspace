@@ -197,6 +197,12 @@ export default function HistoryIndexClient({
   const data = initialIndex;
 
   const collections = data.collections ?? ["types"];
+  // Deliberately NOT intersected with `collections`, unlike EntityHistory: that
+  // component gates its chip group on `seenCollections.length > 1`, so a
+  // `?…collections=` naming something it lacks can filter everything out with no
+  // chip left to untick. This page always renders its chips, so a mismatched
+  // param just shows them all unticked and the user can recover — there is no
+  // unrecoverable state to guard against here.
   const active = selected ?? collections;
   const changedBuildCount = data.builds.filter((b) => b.changeCount > 0).length;
 

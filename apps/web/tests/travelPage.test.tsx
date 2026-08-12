@@ -223,6 +223,36 @@ describe("Travel Page route preference URL sync", () => {
     expect(mockPush).toHaveBeenLastCalledWith("/travel/Delta");
   });
 
+  // A negative penalty makes the pathfinder's `1 + penalty` edge weight
+  // negative, and NBA* silently returns a wildly wrong route rather than
+  // erroring. Only reachable by hand-editing, so clamp at the parser.
+  it("clamps a negative penalty from a hand-edited URL to the slider minimum", () => {
+    renderPage(["30000001", "30000004"], {
+      searchParams: "?pref=custom&nullSec=-500",
+    });
+
+    expect(screen.getByText("Null Sec Penalty (0)")).toBeInTheDocument();
+  });
+
+  it("clamps an over-large penalty to the slider maximum", () => {
+    renderPage(["30000001", "30000004"], {
+      searchParams: "?pref=custom&lowSec=9999",
+    });
+
+    expect(screen.getByText("Low Sec Penalty (500)")).toBeInTheDocument();
+  });
+
+  // The clamped value is what gets carried forward, not the raw URL text.
+  it("carries the clamped penalty across a waypoint change", () => {
+    renderPage([], { searchParams: "?pref=custom&nullSec=-5" });
+
+    fireEvent.click(screen.getAllByText("Delta")[0]!);
+
+    const pushed = mockPush.mock.calls.at(-1)![0] as string;
+    expect(pushed).not.toContain("-5");
+    expect(pushed).toBe("/travel/Delta?pref=custom");
+  });
+
   it("ignores out-of-range preference values in a hand-edited URL", () => {
     renderPage(["30000001", "30000004"], { searchParams: "?pref=bogus" });
 
