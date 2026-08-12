@@ -4,7 +4,7 @@ This file is a concise, actionable guide for automated coding agents (or humans)
 
 Big picture
 
-- Monorepo (Turborepo) containing two apps (apps/web, apps/cli) and many internal packages under `packages/` (db, auth, esi-client, esi-metadata, ui, utils, etc.). Background jobs run on Trigger.dev (the `background-jobs-triggerdev` adapter over the platform-agnostic `background-jobs` package); there is no `apps/worker`. See `CLAUDE.md` for a short overview.
+- Monorepo (Turborepo) containing two apps (apps/web, apps/cli) and many internal packages under `packages/` (db, db-history, auth, esi-client, esi-metadata, ui, eve-components, utils, etc. — `ui` is presentational only; the data-aware EVE components live in `eve-components`). Background jobs run on Trigger.dev (the `background-jobs-triggerdev` adapter over the platform-agnostic `background-jobs` package); there is no `apps/worker`. See `CLAUDE.md` for a short overview.
 - The web app (`apps/web`) is a Next.js 16 app that imports many local packages via `@jitaspace/*`. Local packages are consumed directly in source (see `apps/web/next.config.mjs` → `transpilePackages`).
 - Data layer: Prisma (packages/db) with a large schema at `packages/db/prisma/schema.prisma`. Database client is generated into the package (run `pnpm db:generate`).
 - API clients: generated with Kubb from OpenAPI specs (see `packages/esi-client/kubb.config.ts` and `packages/*-client/*/swagger.json`). Generated code lives under each client package (e.g. `packages/esi-client/src/generated`). Do NOT edit generated files.
@@ -69,7 +69,10 @@ pnpm build
 ```zsh
 pnpm test           # turbo test across workspaces
 pnpm test:watch     # watch mode
-# E2E: apps/web has cypress scripts; root package.json exposes helpers `cypress:run`/`cypress:open` that cd into apps/web
+# Cypress: apps/web has cypress scripts; root package.json exposes `cypress:run`/`cypress:open` that cd into apps/web.
+# NOT E2E coverage — the specs under apps/web/cypress/e2e/ are still the stock Cypress
+# example suite and target example.cypress.io, so CI's Cypress job gates only that the
+# build succeeds and the server boots.
 ```
 
 - Lint & format:
