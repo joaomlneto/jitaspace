@@ -89,6 +89,7 @@ packages/
   ui/                        # Presentational Mantine components (dependency-light: no hooks/data fetching)
   eve-components/            # Data-aware EVE components (names, avatars, anchors, selects)
   eve-icons/ tiptap-eve/     # EVE icon set; EVE-HTML Tiptap extension
+  solar-system-map/          # publishable R3F 3D solar-system map (presentational)
   datatable/ datatable-mantine/ datatable-tanstack/  # engine-agnostic table contract + adapters
   chat/                      # Discord-backed in-app chat
   background-jobs/           # Platform-agnostic EVE-data background job logic (source of truth)
