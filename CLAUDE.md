@@ -39,13 +39,15 @@ pnpm clean:workspaces # clean workspace build output via turbo
 
 ### Running a single test
 
-Tests live in `apps/web` and run via Jest behind `pnpm with-env` (loads root `.env`). From `apps/web`:
+Jest suites live in 16 workspaces — `apps/web` plus most `packages/*` (`hooks`, `ui`, `eve-components`, `background-jobs`, `auth`, `auth-utils`, `utils`, `tiptap-eve`, …). `apps/web` runs Jest behind `pnpm with-env` (loads root `.env`); packages run Jest directly. From the workspace that owns the test:
 
 ```bash
 pnpm test path/to/file.test.ts          # a single file
 pnpm test -- -t "test name substring"   # by test name
 pnpm test:watch                          # interactive watch
 ```
+
+Packages that touch the validated env need `SKIP_ENV_VALIDATION=1` (several set it in their own `jest.config.ts`).
 
 ## Critical: code generation before build
 
@@ -78,12 +80,15 @@ apps/
 packages/
   auth/ auth-utils/          # EVE Online SSO (OAuth2 PKCE + state), token seal/refresh
   db/                        # Prisma 7 client + PostgreSQL schema
+  db-history/                # Separate Prisma client for the EVE build-history DB (/history)
   kv/                        # Redis client + Bull job queues
   esi-client/ sde-client/    # Kubb-generated EVE API clients (ESI, self-hosted SDE)
   evekill-client/ evetycoon-client/ fuzzworks-market-client/  # more generated clients
   esi-metadata/ eve-data/    # ESI scopes/ID ranges; static EVE datasets
   hooks/                     # React Query hooks over ESI / third-party APIs
-  ui/ eve-icons/ tiptap-eve/ # Mantine component lib; icons; EVE-HTML Tiptap extension
+  ui/                        # Presentational Mantine components (dependency-light: no hooks/data fetching)
+  eve-components/            # Data-aware EVE components (names, avatars, anchors, selects)
+  eve-icons/ tiptap-eve/     # EVE icon set; EVE-HTML Tiptap extension
   solar-system-map/          # publishable R3F 3D solar-system map (presentational)
   datatable/ datatable-mantine/ datatable-tanstack/  # engine-agnostic table contract + adapters
   chat/                      # Discord-backed in-app chat
@@ -101,14 +106,14 @@ tooling/
 
 - **Runtime/Lang:** Node.js ≥24.15.0, TypeScript ~5.9
 - **Monorepo:** Turborepo ~2.9 + pnpm 11
-- **Frontend:** Next.js 16 (App Router), React 19, Mantine 8, Zustand
+- **Frontend:** Next.js 16 (App Router), React 19, Mantine 9, Zustand
 - **Data fetching:** TanStack React Query 5
 - **DB / cache:** PostgreSQL + Prisma 7; Redis + Bull
 - **Auth:** Custom EVE Online SSO OAuth2 flow (authorization code + PKCE)
 - **Background jobs:** Trigger.dev — platform-agnostic logic in `@jitaspace/background-jobs`, run by the `background-jobs-triggerdev` adapter
-- **API codegen:** Kubb 3 (OpenAPI → TypeScript)
+- **API codegen:** Kubb 4 (OpenAPI → TypeScript). Keep `@kubb/*` at `>=4.38.0` — 4.37.x had codegen bugs (object-array collapse, `#`-prefixed keys).
 - **Rich text:** Tiptap + EVE HTML extensions
-- **Testing:** Jest 30 (unit), Cypress 15 (E2E)
+- **Testing:** Jest 30 (unit). Cypress 15 is installed but the specs under `apps/web/cypress/e2e/` are still the stock Cypress example suite (they hit `example.cypress.io`, not this app) — treat the CI "Cypress" job as a build-and-boot smoke check, not E2E coverage.
 - **Monitoring:** Sentry + Umami
 
 ## Key Conventions
@@ -124,8 +129,6 @@ tooling/
 
 ## Changesets
 
-Non-trivial changes need a changeset in `.changeset/` (skip private packages, i.e. `"private": true`):
-
 ```markdown
 ---
 "@jitaspace/package-name": patch | minor | major
@@ -134,18 +137,29 @@ Non-trivial changes need a changeset in `.changeset/` (skip private packages, i.
 Description of the change.
 ```
 
-- patch = bug fix/internal; minor = new feature/export; major = breaking.
-- **`@jitaspace/web` changesets must be end-user-readable** ("Fixed mail search not returning results"), not implementation detail. All other packages use developer-facing descriptions.
-- If a dependency change produces a visible web-app effect, also add `"@jitaspace/web": patch` with a user-facing note.
+patch = bug fix/internal; minor = new feature/export; major = breaking.
+
+**When a changeset is required:**
+
+- **Publishable packages — always.** Only four workspaces are publishable (`auth-utils`, `db`, `esi-metadata`, `tiptap-eve`); every other workspace is `"private": true`. A change to one of these needs a changeset with a developer-facing description.
+- **`@jitaspace/web` — always for user-visible changes.** `web` is private and never published, but its changesets are the release-notes queue — the large majority of pending changesets are `web` — so they **must be end-user-readable** ("Fixed mail search not returning results"), not implementation detail. If a change elsewhere produces a visible web-app effect, add `"@jitaspace/web": patch` with a user-facing note.
+- **Other private packages — optional.** Internal-only fixes routinely ship without one (e.g. PRs #651 and #652 in `background-jobs`). Add one when the change is worth recording for other developers. The changeset-bot's "No Changeset found" warning on such a PR is expected and can be ignored.
+
+> Note: there is no release workflow — `changeset version`/`publish` are never run in CI, so changesets accumulate as a changelog rather than driving version bumps.
 
 ## CI
 
-Two GitHub Actions run on push/PR (both set `SKIP_ENV_VALIDATION=1`):
+Three GitHub Actions run on push/PR (all set `SKIP_ENV_VALIDATION=1`):
 
-- **`cypress.yml`:** spins up CockroachDB + Redis → push DB schema → `pnpm build` → start web → Cypress E2E (parallel).
+- **`type-check.yml`:** `pnpm install --frozen-lockfile` → `pnpm type-check`. A hard gate — the repo is expected to be **green**, so a type error fails the PR. No explicit codegen step: the turbo `type-check` task depends on the Prisma and Kubb generators, so a clean checkout produces them itself.
+- **`cypress.yml`:** spins up CockroachDB + Redis → push DB schema → `pnpm build` → start web → run Cypress (parallel). Since the specs are the stock examples, this effectively gates only "the build succeeds and the server boots".
 - **`sonarcloud.yml`:** `pnpm install --frozen-lockfile` → `pnpm test` (coverage) → SonarQube scan. New code must keep coverage above the quality gate.
 
+**No workflow runs `pnpm lint`.** ESLint's only automatic gate is the local `.githooks/pre-commit` hook, which is bypassable with `--no-verify` and dormant in git worktrees — so run `pnpm lint` yourself before pushing. (`manypkg check` runs as part of it, and it fails on a dependency declared at different versions across workspaces.)
+
 Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm lint` → `pnpm type-check` → `pnpm test`.
+
+> After merging `main`, re-run `pnpm db:generate` before trusting a type-check: a schema change plus a stale client makes valid columns look missing and cascades into unrelated errors. If a fresh worktree reports errors inside a `dist/` or `prisma/generated/` path, that is a stale `tsbuildinfo` or an unbuilt package, not repo state — clear `node_modules/.cache` and rebuild.
 
 ## Where to look first
 

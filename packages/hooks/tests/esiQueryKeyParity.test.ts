@@ -6,10 +6,8 @@ import {
   getCorporationsCorporationIdAssetsQueryKey,
 } from "@jitaspace/esi-client";
 
-import {
-  ALL_PAGES_QUERY_KEY_MARKER,
-  esiPagedQueryOptions,
-} from "../src/hooks/multi/esiPagedQueryOptions";
+import { esiPagedQueryOptions } from "../src/hooks/multi/esiPagedQueryOptions";
+import { ESI_QUERY_KEY_MARKER } from "../src/hooks/utils/esiQueryKeys";
 
 // These assert against the REAL generated key functions rather than mocks,
 // because the thing worth pinning is the relationship between the multi-subject
@@ -58,7 +56,7 @@ describe("paginated multi queries do NOT collide with the single-page entry", ()
   });
 
   it("extends the generated key with the all-pages marker", () => {
-    expect(pagedKey).toEqual([...generatedKey, ALL_PAGES_QUERY_KEY_MARKER]);
+    expect(pagedKey).toEqual([...generatedKey, ESI_QUERY_KEY_MARKER.allPages]);
   });
 
   it("still varies per subject", () => {

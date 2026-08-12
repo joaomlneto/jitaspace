@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import { withSentryConfig } from "@sentry/nextjs";
+import { withBotId } from "botid/next/config";
 import { createJiti } from "jiti";
 
 const jiti = createJiti(import.meta.url);
@@ -122,12 +123,9 @@ const config = {
   ],
 
   /** Avoid bundling server-only worker dependencies */
-  serverExternalPackages: [
-    "bull",
-    "@chat-adapter/discord",
-    "discord.js",
-    "@discordjs/ws",
-  ],
+  // The discord.js entries left with @jitaspace/chat: apps/web no longer depends
+  // on it, so listing them would claim a bundling relationship that cannot exist.
+  serverExternalPackages: ["bull"],
 
   /** We already do typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: !!process.env.CI },
@@ -268,40 +266,45 @@ function getModifiedDate() {
   return new Date().toISOString();
 }
 
-export default withSentryConfig(config, {
-  // For all available options, see:
-  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+// `withBotId` injects the rewrites that proxy BotID's challenge script through
+// our own origin, so ad-blockers and third-party script blockers can't defeat
+// it. It wraps the Sentry-wrapped config (outermost) so its rewrites survive.
+export default withBotId(
+  withSentryConfig(config, {
+    // For all available options, see:
+    // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: "jitaspace",
+    org: "jitaspace",
 
-  project: "jitaspace",
+    project: "jitaspace",
 
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
+    // Only print logs for uploading source maps in CI
+    silent: !process.env.CI,
 
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+    // For all available options, see:
+    // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: false,
+    // Upload a larger set of source maps for prettier stack traces (increases build time)
+    widenClientFileUpload: false,
 
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
-  tunnelRoute: "/monitoring",
+    // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+    // This can increase your server load as well as your hosting bill.
+    // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+    // side errors will fail.
+    tunnelRoute: "/monitoring",
 
-  webpack: {
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
+    webpack: {
+      // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+      // See the following for more information:
+      // https://docs.sentry.io/product/crons/
+      // https://vercel.com/docs/cron-jobs
+      automaticVercelMonitors: true,
 
-    // Tree-shaking options for reducing bundle size
-    treeshake: {
-      // Automatically tree-shake Sentry logger statements to reduce bundle size
-      removeDebugLogging: true,
+      // Tree-shaking options for reducing bundle size
+      treeshake: {
+        // Automatically tree-shake Sentry logger statements to reduce bundle size
+        removeDebugLogging: true,
+      },
     },
-  },
-});
+  }),
+);

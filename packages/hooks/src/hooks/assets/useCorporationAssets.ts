@@ -13,7 +13,7 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
-import { esiInfiniteQueryKey } from "../utils/esiInfiniteQueryKey";
+import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
 import { useEagerlyFetchAllPages } from "../utils/useEagerlyFetchAllPages";
 
 export const useCorporationAssets = (corporationId?: number) => {
