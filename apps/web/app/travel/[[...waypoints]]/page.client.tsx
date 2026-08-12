@@ -81,7 +81,7 @@ const PENALTY_MAX = 500;
  */
 const parseAsPenalty = createParser({
   parse: (value) => {
-    const parsed = parseInt(value);
+    const parsed = Number.parseInt(value);
     return Number.isNaN(parsed)
       ? null
       : Math.min(PENALTY_MAX, Math.max(PENALTY_MIN, parsed));
