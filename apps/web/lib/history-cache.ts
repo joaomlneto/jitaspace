@@ -130,6 +130,14 @@ export async function getCachedEntityTimeline(
   entityId: number,
 ): Promise<EntityTimeline | null> {
   "use cache";
+  // Load-bearing beyond freshness: `getEntityTimeline` is the one history reader
+  // left WITHOUT a `checkBotId()` guard, so that `/type/*` can stay out of the
+  // BotID protect list (see instrumentation-client.ts — a protect entry gates
+  // every Server Action on those pages, including the app-wide token refresh).
+  // What makes leaving it open acceptable is that entries here EXPIRE, so an
+  // automated caller's cache footprint has a bounded ceiling. Moving this to
+  // `cacheLife("max")` would remove that ceiling and invalidate the trade —
+  // guard the action, or accept unbounded growth from unauthenticated callers.
   cacheLife("days");
 
   if (!Number.isInteger(entityId)) return null;

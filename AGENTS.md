@@ -4,7 +4,7 @@ This file is a concise, actionable guide for automated coding agents (or humans)
 
 Big picture
 
-- Monorepo (Turborepo) containing two apps (apps/web, apps/cli) and many internal packages under `packages/` (db, auth, esi-client, esi-metadata, ui, utils, etc.). Background jobs run on Trigger.dev (the `background-jobs-triggerdev` adapter over the platform-agnostic `background-jobs` package); there is no `apps/worker`. See `CLAUDE.md` for a short overview.
+- Monorepo (Turborepo) containing two apps (apps/web, apps/cli) and many internal packages under `packages/` (db, db-history, auth, esi-client, esi-metadata, ui, eve-components, utils, etc. — `ui` is presentational only; the data-aware EVE components live in `eve-components`). Background jobs run on Trigger.dev (the `background-jobs-triggerdev` adapter over the platform-agnostic `background-jobs` package); there is no `apps/worker`. See `CLAUDE.md` for a short overview.
 - The web app (`apps/web`) is a Next.js 16 app that imports many local packages via `@jitaspace/*`. Local packages are consumed directly in source (see `apps/web/next.config.mjs` → `transpilePackages`).
 - Data layer: Prisma (packages/db) with a large schema at `packages/db/prisma/schema.prisma`. Database client is generated into the package (run `pnpm db:generate`).
 - API clients: generated with Kubb from OpenAPI specs (see `packages/esi-client/kubb.config.ts` and `packages/*-client/*/swagger.json`). Generated code lives under each client package (e.g. `packages/esi-client/src/generated`). Do NOT edit generated files.
@@ -15,6 +15,7 @@ Essential conventions (project-specific)
 - Package imports use the internal scope `@jitaspace/*` and `workspace:*` version specifiers in package.json. Respect this when adding new packages.
 - pnpm only: root `preinstall` enforces `only-allow pnpm`. Use pnpm (root package.json sets `packageManager: pnpm@...`).
 - Generated artifacts are authoritative: `prisma` client, `kubb`-generated API clients. The repo's build depends on these being present.
+- **Stale ESLint cache after codegen.** `pnpm lint` runs ESLint with `--cache`, and that cache keys on each linted file's own contents — not on the generated types it imports. So linting _before_ the Prisma/kubb clients exist caches a pile of `no-unsafe-*` / "type that could not be resolved" errors against source files that then never change, and every later lint replays them: your fix is correct and the cache silently disagrees. `db:generate`, `db:push` and `kubb:generate` clear it for you, but `build`/`dev`/`test`/`type-check` also regenerate (via their turbo task deps) and do **not**, nor do the per-package `postinstall` hooks. If lint reports errors you cannot reproduce — especially `prisma.*` member accesses — run `pnpm clean:eslint-cache` and re-lint. Use that script rather than the `rm` inside it: its globs abort under zsh (`no matches found`) and delete nothing.
 - `apps/web/next.config.mjs` config patterns:
   - `transpilePackages` lists local packages that are imported directly without a build step.
   - `serverExternalPackages` contains server-only packages to avoid bundling into the client (e.g. `bull`).
@@ -69,7 +70,10 @@ pnpm build
 ```zsh
 pnpm test           # turbo test across workspaces
 pnpm test:watch     # watch mode
-# E2E: apps/web has cypress scripts; root package.json exposes helpers `cypress:run`/`cypress:open` that cd into apps/web
+# Cypress: apps/web has cypress scripts; root package.json exposes `cypress:run`/`cypress:open` that cd into apps/web.
+# NOT E2E coverage — the specs under apps/web/cypress/e2e/ are still the stock Cypress
+# example suite and target example.cypress.io, so CI's Cypress job gates only that the
+# build succeeds and the server boots.
 ```
 
 - Lint & format:

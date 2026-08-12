@@ -18,6 +18,12 @@ import {
   Text,
   Title,
 } from "@mantine/core";
+import {
+  parseAsArrayOf,
+  parseAsBoolean,
+  parseAsString,
+  useQueryStates,
+} from "nuqs";
 
 import type { HistoryIndex } from "~/lib/history";
 import { collectionMeta, entityTypeMeta } from "~/lib/history";
@@ -161,8 +167,18 @@ export default function HistoryIndexClient({
   const [entityId, setEntityId] = useState<number | string>("");
   const [entityType, setEntityType] = useState("type");
   // Collections currently checked; null ⇒ all (until the user unchecks one).
-  const [selected, setSelected] = useState<string[] | null>(null);
-  const [showUnchanged, setShowUnchanged] = useState(false);
+  // `selected` has no .withDefault() on purpose: nuqs returns null for an
+  // absent param, which is exactly the "all" sentinel this filter already used.
+  const [{ selected, showUnchanged }, setFilters] = useQueryStates(
+    {
+      selected: parseAsArrayOf(parseAsString),
+      showUnchanged: parseAsBoolean.withDefault(false),
+    },
+    {
+      urlKeys: { selected: "collections", showUnchanged: "unchanged" },
+      history: "replace",
+    },
+  );
 
   // The index is server-rendered (day-cached) and passed in as a prop; a null
   // prop means no history exists yet or the read failed.
@@ -181,6 +197,12 @@ export default function HistoryIndexClient({
   const data = initialIndex;
 
   const collections = data.collections ?? ["types"];
+  // Deliberately NOT intersected with `collections`, unlike EntityHistory: that
+  // component gates its chip group on `seenCollections.length > 1`, so a
+  // `?…collections=` naming something it lacks can filter everything out with no
+  // chip left to untick. This page always renders its chips, so a mismatched
+  // param just shows them all unticked and the user can recover — there is no
+  // unrecoverable state to guard against here.
   const active = selected ?? collections;
   const changedBuildCount = data.builds.filter((b) => b.changeCount > 0).length;
 
@@ -230,7 +252,11 @@ export default function HistoryIndexClient({
             <Text size="xs" c="dimmed">
               Tracking:
             </Text>
-            <Chip.Group multiple value={active} onChange={setSelected}>
+            <Chip.Group
+              multiple
+              value={active}
+              onChange={(value) => void setFilters({ selected: value })}
+            >
               <Group gap={6}>
                 {collections.map((c) => (
                   <Chip
@@ -289,7 +315,9 @@ export default function HistoryIndexClient({
               size="xs"
               label="Show builds without changes"
               checked={showUnchanged}
-              onChange={(e) => setShowUnchanged(e.currentTarget.checked)}
+              onChange={(e) =>
+                void setFilters({ showUnchanged: e.currentTarget.checked })
+              }
             />
           </Group>
           {builds.length === 0 && (

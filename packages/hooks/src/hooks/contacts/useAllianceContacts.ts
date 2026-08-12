@@ -12,8 +12,8 @@ import {
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
-import { esiInfiniteQueryKey } from "../utils/esiInfiniteQueryKey";
 import { esiInfiniteQueryNextPageParam } from "../utils/esiInfiniteQueryNextPageParam";
+import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
 import { useEsiContacts } from "../utils/useEsiContacts";
 
 export type AllianceContact =

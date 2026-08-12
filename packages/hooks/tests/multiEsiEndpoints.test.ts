@@ -179,18 +179,41 @@ describe("describeEndpoint — what is skipped", () => {
     ).not.toBeNull();
   });
 
-  it("skips cursor-paginated routes", () => {
-    // after/before/limit is not the page + x-pages scheme esiPagedQueryOptions
-    // walks, so these would silently return only the server's first page.
+  it.each([
+    { name: "after/before/limit", params: ["after", "before", "limit"] },
+    // ESI pages these three without declaring it in the spec, so a denylist of
+    // known cursor names would have missed them.
+    { name: "from_event (calendar)", params: ["from_event"] },
+    { name: "last_mail_id (mail)", params: ["labels", "last_mail_id"] },
+    { name: "from_id (wallet transactions)", params: ["from_id"] },
+    { name: "an unrecognised future parameter", params: ["something_new"] },
+  ])("skips routes paged by $name", ({ params }) => {
+    // Only `page` is walked in full. Anything unvouched-for is assumed to be a
+    // cursor, because returning the first page under a name that promises the
+    // whole collection is worse than not existing.
     expect(
-      describeAt("/corporations/{corporation_id}/projects", {
-        parameters: [
-          { name: "after", in: "query" },
-          { name: "before", in: "query" },
-          { name: "limit", in: "query" },
-        ],
+      describeAt("/characters/{character_id}/thing", {
+        parameters: params.map((name) => ({ name, in: "query" })),
       }),
     ).toBeNull();
+  });
+
+  it("keeps routes whose only query params are known filters", () => {
+    // include_completed is a filter, not paging: the default is the one the
+    // single-subject hook already uses.
+    expect(
+      describeAt("/characters/{character_id}/industry/jobs", {
+        parameters: [{ name: "include_completed", in: "query" }],
+      }),
+    ).not.toBeNull();
+    expect(
+      describeAt("/corporations/{corporation_id}/industry/jobs", {
+        parameters: [
+          { name: "include_completed", in: "query" },
+          { name: "page", in: "query" },
+        ],
+      }),
+    ).not.toBeNull();
   });
 
   it("skips operations with no operationId", () => {
@@ -268,8 +291,8 @@ describe("renderEndpoint", () => {
 
   it("leaves a slot for query params when the endpoint takes them", () => {
     const source = renderEndpoint(
-      describeAt("/characters/{character_id}/blueprints", {
-        parameters: [{ name: "something", in: "query" }],
+      describeAt("/characters/{character_id}/industry/jobs", {
+        parameters: [{ name: "include_completed", in: "query" }],
       })!,
     );
 

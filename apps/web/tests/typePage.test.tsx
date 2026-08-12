@@ -1,18 +1,18 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 // ---------------------------------------------------------------------------
 // next/navigation — the page client receives props directly; mock defensively.
 // ---------------------------------------------------------------------------
-const mockUseSearchParams = jest.fn(() => new URLSearchParams());
 jest.mock("next/navigation", () => ({
   useParams: () => ({ typeId: "30" }),
   useRouter: () => ({}),
   usePathname: () => "/",
-  useSearchParams: () => mockUseSearchParams(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -148,12 +148,17 @@ function getPage(): React.ComponentType<TypePageProps> {
   return require("~/app/type/[typeId]/page.client").default;
 }
 
-function renderPage(props: TypePageProps = {}) {
+function renderPage(
+  props: TypePageProps = {},
+  adapter: { searchParams?: string; onUrlUpdate?: OnUrlUpdateFunction } = {},
+) {
   const TypePage = getPage();
   return render(
     <MantineProvider>
       <TypePage typeId={30} dogmaMeta={DEFAULT_DOGMA_META} {...props} />
     </MantineProvider>,
+    // The active tab is nuqs-backed; hasMemory lets tab clicks round-trip.
+    { wrapper: withNuqsTestingAdapter({ hasMemory: true, ...adapter }) },
   );
 }
 
@@ -169,7 +174,6 @@ describe("Type page (client)", () => {
     mockUseFuzzworkTypeMarketStats.mockReset();
     mockUseGetUniverseGroupsGroupId.mockReset();
     mockUseQuery.mockReset();
-    mockUseSearchParams.mockReset();
 
     // Defaults exercised by the "full data" path.
     mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
@@ -192,8 +196,6 @@ describe("Type page (client)", () => {
     // The type image-variations query — no variations (falls back to icon).
     mockUseQuery.mockReturnValue({ data: [] });
 
-    // No ?tab= query param by default; deep-link tests override this.
-    mockUseSearchParams.mockReturnValue(new URLSearchParams());
   });
 
   it("renders the hero and overview tab with full data", () => {
@@ -268,8 +270,7 @@ describe("Type page (client)", () => {
   });
 
   it("opens the tab named by the ?tab= query parameter on first render", () => {
-    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=market"));
-    renderPage();
+    renderPage({}, { searchParams: "?tab=market" });
 
     // The Market panel is active without any click, so its content is shown.
     // (keepMounted is false, so only the active panel renders.)
@@ -280,9 +281,31 @@ describe("Type page (client)", () => {
     );
   });
 
+  // The bug this migration fixes: clicking a tab used to leave the URL stale,
+  // so you could not link someone to the tab you were looking at.
+  it("writes the active tab to the URL when a tab is clicked", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    renderPage({}, { onUrlUpdate });
+
+    clickTab(/Market/);
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe("?tab=market");
+  });
+
+  // clearOnDefault: returning to Overview should drop the param entirely.
+  it("removes the tab param when returning to the default tab", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    renderPage({}, { searchParams: "?tab=market", onUrlUpdate });
+
+    clickTab(/Overview/);
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe("");
+  });
+
   it("falls back to the Overview tab for an unknown ?tab= value", () => {
-    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=bogus"));
-    renderPage();
+    renderPage({}, { searchParams: "?tab=bogus" });
 
     // Overview content is shown and remains the selected tab.
     expect(screen.getByText("Identity & Classification")).toBeInTheDocument();
@@ -391,12 +414,7 @@ describe("Type page (client)", () => {
   });
 
   it("shows the loading state when typeId is falsy", () => {
-    const TypePage = getPage();
-    render(
-      <MantineProvider>
-        <TypePage typeId={0} dogmaMeta={DEFAULT_DOGMA_META} />
-      </MantineProvider>,
-    );
+    renderPage({ typeId: 0 });
     expect(screen.getByText("Loading type information...")).toBeInTheDocument();
   });
 });

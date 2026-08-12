@@ -32,8 +32,11 @@ import {
 import { useServerStatus } from "@jitaspace/hooks";
 import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
-import type { SdeIngestState } from "./actions";
-import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
+import type {
+  SdeIngestState,
+  SdeLastModifiedResponse,
+  VercelStatusResponse,
+} from "./types";
 import { env } from "~/env";
 import { DatabaseDashboard } from "../../components/Status/DatabaseDashboard";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";

@@ -14,6 +14,8 @@ jest.mock("~/env", () => ({ env: {} }));
 
 const actions =
   require("~/app/status/actions") as typeof import("~/app/status/actions");
+const { SDE_INGEST_KEY } =
+  require("~/app/status/types") as typeof import("~/app/status/types");
 
 beforeEach(() => {
   redisGet.mockReset();
@@ -33,7 +35,7 @@ describe("SDE_INGEST_KEY", () => {
       "utf8",
     );
     const match = /const SDE_INGEST_KEY = "([^"]+)"/.exec(source);
-    expect(match?.[1]).toBe(actions.SDE_INGEST_KEY);
+    expect(match?.[1]).toBe(SDE_INGEST_KEY);
   });
 });
 
