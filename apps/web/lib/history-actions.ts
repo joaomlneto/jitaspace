@@ -1,5 +1,7 @@
 "use server";
 
+import { checkBotId } from "botid/server";
+
 import { historyDb } from "@jitaspace/db-history";
 
 import type {
@@ -33,6 +35,25 @@ import {
  * "Not found" resolves to `null` so callers can render an empty state.
  */
 
+/**
+ * Vercel BotID gate for these actions.
+ *
+ * They are unauthenticated and expensive — each call can run heavy range SQL
+ * against the history database and mint a permanent `"use cache"` entry — so an
+ * automated caller could drive both database load and unbounded cache growth.
+ * BotID classifies the session from headers its client script attaches, so the
+ * invoking page route must be listed in `initBotId()` in
+ * `instrumentation-client.ts`; if it is not, the headers are missing and this
+ * fails closed. Local development always classifies as human.
+ *
+ * Callers treat `null` as "not found" and render an empty state, so refusing a
+ * bot here degrades to an empty view rather than an error page.
+ */
+const isBot = async (): Promise<boolean> => {
+  const { isBot } = await checkBotId();
+  return isBot;
+};
+
 const ymd = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
 const opKey = (op: "added" | "modified" | "removed") =>
@@ -63,6 +84,7 @@ const isBuildNumberInScope = async (build: number): Promise<boolean> => {
 export async function getBuildChanges(
   build: number,
 ): Promise<BuildChanges | null> {
+  if (await isBot()) return null;
   if (!Number.isInteger(build)) return null;
 
   const b = await historyDb.build.findUnique({ where: { buildNumber: build } });
@@ -108,6 +130,7 @@ export async function getBuildRangeChanges(
   from: number,
   to: number,
 ): Promise<BuildRangeChanges | null> {
+  if (await isBot()) return null;
   return getCachedBuildRangeChanges(from, to);
 }
 
@@ -118,6 +141,12 @@ export async function getBuildRangeChanges(
  * entityType+entityId) so the standalone history pages and the embedded History
  * tabs share one cache entry per entity rather than re-querying on every view.
  */
+// Deliberately NOT behind `isBot()`. <EntityHistory> is embedded in the type
+// page's History tab, so guarding this would force `/type/*` into the BotID
+// protect list — which intercepts every Server Action on the app's busiest route
+// family, including the root layout's EVE token refresh (see
+// `instrumentation-client.ts`). This is also the cheapest of the six readers and
+// only `cacheLife("days")`, so it expires rather than accumulating.
 export async function getEntityTimeline(
   entityType: string,
   entityId: number,
@@ -127,6 +156,11 @@ export async function getEntityTimeline(
 
 /** The ResourceIndex — file + localization-string change counts per build. */
 export async function getResourceIndex(): Promise<ResourceIndex> {
+  // Non-nullable return, so a refused caller gets an empty index — which the
+  // build page renders as an empty state, same as the `null` cases above.
+  if (await isBot())
+    return { generatedAt: new Date().toISOString(), languages: [], builds: [] };
+
   const strFilter = { name: { startsWith: "strings:" } };
   const [fileAgg, strColls, strAgg, builds, diffs] = await Promise.all([
     historyDb.fileChange.groupBy({ by: ["diffId", "op"], _count: true }),
@@ -149,7 +183,12 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
   const langOf = new Map(
     strColls.map((c) => [c.id, c.name.replace("strings:", "")]),
   );
-  const languages = strColls.map((c) => c.name.replace("strings:", "")).sort();
+  // Explicit collator: a bare `.sort()` compares UTF-16 code units, which is
+  // only incidentally right for ASCII language codes and silently wrong the
+  // moment a non-ASCII tag appears.
+  const languages = strColls
+    .map((c) => c.name.replace("strings:", ""))
+    .sort((a, b) => a.localeCompare(b));
   const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
 
   const perBuild = new Map<
@@ -173,8 +212,12 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
     const toBuild = toBuildOf.get(g.diffId);
     if (!lang || toBuild === undefined) continue;
     const a = ensure(toBuild);
-    (a.strings[lang] ??= { added: 0, changed: 0, removed: 0 })[opKey(g.op)] +=
-      g._count;
+    let counts = a.strings[lang];
+    if (!counts) {
+      counts = { added: 0, changed: 0, removed: 0 };
+      a.strings[lang] = counts;
+    }
+    counts[opKey(g.op)] += g._count;
   }
 
   const out: ResourceIndex["builds"] = [];
@@ -198,6 +241,7 @@ export async function getResourceIndex(): Promise<ResourceIndex> {
 
 /** Per-build raw-file diff (added / changed / removed paths). */
 export async function getFileDiff(build: number): Promise<FileDiff | null> {
+  if (await isBot()) return null;
   if (!(await isBuildNumberInScope(build))) return null;
 
   const rows = await historyDb.fileChange.findMany({
@@ -218,6 +262,7 @@ export async function getStringChanges(
   build: number,
   lang: string,
 ): Promise<StringChange[] | null> {
+  if (await isBot()) return null;
   if (!(await isBuildNumberInScope(build))) return null;
 
   const rows = await historyDb.change.findMany({
