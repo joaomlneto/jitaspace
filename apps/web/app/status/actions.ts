@@ -8,7 +8,6 @@ import {
   DATABASE_STATUS_STALE_MINUTES,
 } from "~/lib/databaseStatus";
 import { prisma } from "~/lib/db";
-import { redis } from "~/lib/kv";
 import {
   buildTriggerStatusResponse,
   TRIGGER_STATUS_WINDOW_HOURS,
@@ -199,19 +198,56 @@ export async function getDatabaseStatus(): Promise<DatabaseStatusResponse> {
 // ---------------------------------------------------------------------------
 // SDE ingest freshness
 //
-// The `watch-sde` background job HEADs CCP's SDE archive hourly and, when the
-// `Last-Modified` changes, triggers `ingest-sde-all` and records the value it
-// ingested under this Redis key. Reading it back tells the status page which
-// SDE release our database currently holds, which the page compares against
-// CCP's latest to flag staleness.
+// `watch-sde` polls CCP's static-data archive hourly and, on a new build,
+// triggers `ingest-sde-all`. That pipeline records which build it is loading
+// under a Redis marker. Reading it back tells the status page which SDE build
+// our database holds, which the page compares against CCP's latest.
 // ---------------------------------------------------------------------------
 
-/** Must match LAST_SEEN_KEY in `@jitaspace/background-jobs` watchSde. */
-const SDE_LAST_INGESTED_KEY = "sde:last-modified-ingested";
+/**
+ * Must match SDE_INGEST_KEY in `@jitaspace/background-jobs`'
+ * `jobs/scrape/sde/sdeIngestState.ts`. It is duplicated rather than imported
+ * because that package pulls in Bull and the Trigger.dev SDK, which have no
+ * place in the web bundle; `statusSdeIngestState.test.ts` asserts the two stay
+ * in step so the marker can't drift out from under this page again.
+ */
+export const SDE_INGEST_KEY = "sde:ingest";
 
-export async function getSdeIngestedAt(): Promise<string | null> {
+/** The subset of the background job's ingest marker this page renders. */
+export interface SdeIngestState {
+  buildNumber: number;
+  /** ISO timestamp of when the ingest finished; null while one is in flight. */
+  completedAt: string | null;
+}
+
+/**
+ * The SDE build our database holds. Null when nothing has been ingested yet, the
+ * marker is unreadable, or Redis is unreachable — the status page renders a dash
+ * for all three rather than failing.
+ */
+export async function getSdeIngestState(): Promise<SdeIngestState | null> {
   try {
-    return await redis.get(SDE_LAST_INGESTED_KEY);
+    // Dynamic import: ~/lib/kv connects to Redis at module load time via
+    // top-level await, so it must not be statically imported at the module
+    // level or Next.js will attempt the connection during build-time config
+    // collection.
+    const { redis } = await import("~/lib/kv");
+    const raw = await redis.get(SDE_INGEST_KEY);
+    if (raw === null) return null;
+
+    const { buildNumber, completedAt } = JSON.parse(raw) as Record<
+      string,
+      unknown
+    >;
+    if (typeof buildNumber !== "number") return null;
+
+    return {
+      buildNumber,
+      completedAt:
+        typeof completedAt === "number"
+          ? new Date(completedAt).toISOString()
+          : null,
+    };
   } catch {
     return null;
   }

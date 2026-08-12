@@ -28,11 +28,13 @@ const dogmaEffectModifier = {
 
 jest.mock("../db", () => ({ prisma: { dogmaEffectModifier } }));
 
-const loadSdeFiles = jest.fn();
+const loadSdeFile = jest.fn();
+const loadSdeFileIds = jest.fn();
 
 jest.mock("../helpers/loadSdeFile", () => ({
-  loadSdeFile: jest.fn(),
-  loadSdeFiles: (...args: unknown[]) => loadSdeFiles(...args),
+  loadSdeFile: (...args: unknown[]) => loadSdeFile(...args),
+  loadSdeFiles: jest.fn(),
+  loadSdeFileIds: (...args: unknown[]) => loadSdeFileIds(...args),
 }));
 
 let ingestSdeDogmaEffectModifiers: typeof IngestSdeDogmaEffectModifiers;
@@ -44,11 +46,16 @@ beforeAll(async () => {
 
 /** A minimal SDE with one known attribute, group and effect to reference. */
 const mockSde = (modifierInfo: unknown) => {
-  loadSdeFiles.mockResolvedValue({
-    "dogmaEffects.yaml": { 100: { modifierInfo }, 200: {} },
-    "dogmaAttributes.yaml": { 50: {} },
-    "groups.yaml": { 60: {} },
+  loadSdeFile.mockResolvedValue({
+    100: { modifierInfo },
+    200: {},
   } as never);
+  // Guard sets arrive as id projections, not parsed records.
+  loadSdeFileIds.mockImplementation((filename: unknown) =>
+    Promise.resolve(
+      filename === "dogmaAttributes.yaml" ? new Set([50]) : new Set([60]),
+    ),
+  );
 };
 
 const runJob = () =>
@@ -137,14 +144,22 @@ describe("ingestSdeDogmaEffectModifiers", () => {
     expect(createdRows()[0]).toMatchObject({ skillTypeId: 3300 });
   });
 
-  it("falls back to an empty func when the SDE omits it", async () => {
-    // `func` is the one non-null column on the table, so a modifier missing it
-    // must still produce a row rather than a Prisma null-constraint failure.
-    mockSde([{ modifiedAttributeID: 50 }]);
+  it("drops a modifier with no func, keeping its neighbours' indexes", async () => {
+    // `func` is what a modifier does; without one there is nothing to apply, so
+    // the entry is skipped rather than stored as a placeholder. Indexes are
+    // assigned before the filter, so the surviving rows keep their positions.
+    mockSde([
+      { func: "ItemModifier", modifiedAttributeID: 50 },
+      { modifiedAttributeID: 50 },
+      { func: "EffectStopper", effectID: 200 },
+    ]);
 
     await runJob();
 
-    expect(createdRows()[0]).toMatchObject({ func: "" });
+    expect(createdRows()).toMatchObject([
+      { modifierIndex: 0, func: "ItemModifier" },
+      { modifierIndex: 2, func: "EffectStopper" },
+    ]);
   });
 
   it("emits no rows for an effect without modifierInfo", async () => {

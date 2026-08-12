@@ -2,7 +2,7 @@ import { Suspense } from "react";
 
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
-import { getSdeIngestedAt } from "./actions";
+import { getSdeIngestState } from "./actions";
 import StatusPageClient from "./page.client";
 
 export const metadata = {
@@ -33,13 +33,13 @@ async function getSdeLastModified() {
 async function StatusPageContent() {
   const vercelStatusData = await getVercelStatus().catch(() => null);
   const sdeLastModifiedData = await getSdeLastModified().catch(() => null);
-  const sdeIngestedAt = await getSdeIngestedAt().catch(() => null);
+  const sdeIngestState = await getSdeIngestState().catch(() => null);
 
   return (
     <StatusPageClient
       vercelStatusData={vercelStatusData}
       sdeLastModifiedData={sdeLastModifiedData}
-      sdeIngestedAt={sdeIngestedAt}
+      sdeIngestState={sdeIngestState}
     />
   );
 }

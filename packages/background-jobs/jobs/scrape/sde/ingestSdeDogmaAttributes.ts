@@ -4,7 +4,7 @@ import { prisma } from "../../../db";
 import {
   enString,
   ingestSdeTable,
-  loadSdeFiles,
+  loadSdeFileIds,
   optionalBoolean,
   optionalNumber,
   plainString,
@@ -26,19 +26,12 @@ export const ingestSdeDogmaAttributes = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles([
-      "dogmaAttributes.yaml",
-      "dogmaAttributeCategories.yaml",
-    ]);
-    const categoryIds = new Set(
-      Object.keys(files["dogmaAttributeCategories.yaml"]).map(Number),
-    );
+    const categoryIds = await loadSdeFileIds("dogmaAttributeCategories.yaml");
 
     // dogmaAttributes.yaml is a `noTransform` file: the id is the map key, not a
     // field on the record. `name`/`description` are plain strings (not localized).
     const dogmaAttributes = await ingestSdeTable({
       filename: "dogmaAttributes.yaml",
-      records: files["dogmaAttributes.yaml"],
       idField: "attributeId",
       delegate: prisma.dogmaAttribute,
       toRow: (record, id): Prisma.DogmaAttributeCreateManyInput => ({

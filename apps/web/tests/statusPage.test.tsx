@@ -73,8 +73,8 @@ jest.mock("next/link", () => ({
 function renderPage(props?: {
   vercelStatusData?: unknown;
   sdeLastModifiedData?: unknown;
-  /** Last-Modified of the SDE release ingested into our DB (from Redis). */
-  sdeIngestedAt?: string | null;
+  /** The SDE build our database holds, from the ingest marker in Redis. */
+  sdeIngestState?: { buildNumber: number; completedAt: string | null } | null;
 }) {
   const StatusPage = require("~/app/status/page.client").default;
   return render(
@@ -82,7 +82,7 @@ function renderPage(props?: {
       <StatusPage
         vercelStatusData={props?.vercelStatusData ?? null}
         sdeLastModifiedData={props?.sdeLastModifiedData ?? null}
-        sdeIngestedAt={props?.sdeIngestedAt ?? null}
+        sdeIngestState={props?.sdeIngestState ?? null}
       />
     </MantineProvider>,
   );
@@ -129,9 +129,15 @@ describe("Status Page", () => {
     });
     renderPage({
       vercelStatusData: { status: { description: "Vercel Operational" } },
-      sdeLastModifiedData: { releaseDate: "2025-05-27T00:00:00Z" },
-      // Ingested after CCP's release -> up-to-date branch
-      sdeIngestedAt: "2025-05-29T00:00:00Z",
+      sdeLastModifiedData: {
+        releaseDate: "2025-05-27T00:00:00Z",
+        buildNumber: 3383521,
+      },
+      // Holding CCP's latest build -> up-to-date branch.
+      sdeIngestState: {
+        buildNumber: 3383521,
+        completedAt: "2025-05-29T00:00:00Z",
+      },
     });
 
     expect(screen.getByText("Server Status")).toBeInTheDocument();
@@ -192,9 +198,15 @@ describe("Status Page", () => {
     });
     renderPage({
       vercelStatusData: { status: { description: "Degraded" } },
-      sdeLastModifiedData: { releaseDate: "2025-05-27T00:00:00Z" },
-      // Ingested before CCP's release -> outdated SDE branch
-      sdeIngestedAt: "2025-05-01T00:00:00Z",
+      sdeLastModifiedData: {
+        releaseDate: "2025-05-27T00:00:00Z",
+        buildNumber: 3383521,
+      },
+      // Holding an older build than CCP's latest -> outdated branch.
+      sdeIngestState: {
+        buildNumber: 3383000,
+        completedAt: "2025-05-01T00:00:00Z",
+      },
     });
 
     expect(screen.getByText("2025-01-01")).toBeInTheDocument();

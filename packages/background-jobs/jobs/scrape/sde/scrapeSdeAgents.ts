@@ -38,6 +38,10 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
   name: "Scrape Agents",
   trigger: { type: "event" },
   concurrencyLimit: 1,
+  // This job now downloads and extracts the SDE archive on top of its per-agent
+  // ESI fan-out, so it gets the same ceiling as the `ingest-sde-*` jobs rather
+  // than the default.
+  maxDurationSeconds: 1800,
   handler: async () => {
     const stepStartTime = performance.now();
     const limit = pLimit(20);

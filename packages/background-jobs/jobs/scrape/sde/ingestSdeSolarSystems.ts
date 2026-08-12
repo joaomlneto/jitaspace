@@ -7,7 +7,8 @@ import {
   enString,
   ingestSdeCompositeTable,
   ingestSdeTable,
-  loadSdeFiles,
+  loadSdeFile,
+  loadSdeFileIds,
   optionalBoolean,
   optionalNumber,
   plainString,
@@ -31,11 +32,11 @@ export const ingestSdeSolarSystems = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["mapSolarSystems.yaml", "factions.yaml"]);
-    const data = files["mapSolarSystems.yaml"];
+    const data = await loadSdeFile("mapSolarSystems.yaml");
     // `factionID` is an optional FK; guard it against factions.yaml so a system
     // referencing a faction the SDE dropped lands as null instead of failing.
-    const factionIds = new Set(Object.keys(files["factions.yaml"]).map(Number));
+    // `loadSdeFileIds` keeps only the id projection, not the parsed records.
+    const factionIds = await loadSdeFileIds("factions.yaml");
 
     // `securityStatus` is a Decimal column; build it as a Decimal so the diff
     // compares like-for-like against the value Prisma returns from the DB.

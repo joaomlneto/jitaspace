@@ -32,6 +32,7 @@ import {
 import { useServerStatus } from "@jitaspace/hooks";
 import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
+import type { SdeIngestState } from "./actions";
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
 import { env } from "~/env";
 import { DatabaseDashboard } from "../../components/Status/DatabaseDashboard";
@@ -43,17 +44,17 @@ export interface PageProps {
   vercelStatusData: VercelStatusResponse | null;
   sdeLastModifiedData: SdeLastModifiedResponse | null;
   /**
-   * `Last-Modified` of the SDE release currently ingested into our database,
-   * recorded by the `watch-sde` background job. Null when nothing has been
-   * ingested yet or Redis is unreachable.
+   * The SDE build currently ingested into our database, recorded by the
+   * `ingest-sde-all` pipeline. Null when nothing has been ingested yet or Redis
+   * is unreachable.
    */
-  sdeIngestedAt: string | null;
+  sdeIngestState: SdeIngestState | null;
 }
 
 export default function StatusPage({
   vercelStatusData,
   sdeLastModifiedData,
-  sdeIngestedAt,
+  sdeIngestState,
 }: Readonly<PageProps>) {
   const { data: tqStatus } = useServerStatus();
 
@@ -82,10 +83,24 @@ export default function StatusPage({
     [sdeLastModifiedData],
   );
 
+  // Read off plain values before memoizing: the React Compiler can't match an
+  // optional-chained expression in a dependency array against what it infers.
+  const sdeIngestedAt = sdeIngestState?.completedAt ?? null;
+  const ourSdeBuild = sdeIngestState?.buildNumber;
+  const latestSdeBuild = sdeLastModifiedData?.buildNumber;
+
   const sdeIngestedDate: Date | null = useMemo(
     () => (sdeIngestedAt ? new Date(sdeIngestedAt) : null),
     [sdeIngestedAt],
   );
+
+  // Freshness is a build-number comparison, not a date one: the marker records
+  // which CCP build we loaded, and CCP's `releaseDate` is when that build was
+  // published — always earlier than when we finished ingesting it.
+  const sdeIsCurrent: boolean | null = useMemo(() => {
+    if (ourSdeBuild === undefined || latestSdeBuild === undefined) return null;
+    return ourSdeBuild >= latestSdeBuild;
+  }, [ourSdeBuild, latestSdeBuild]);
 
   const buildDate = useMemo(() => getRateLimitBuildDate(), []);
 
@@ -165,20 +180,27 @@ export default function StatusPage({
                     SDE Ingested On
                   </Text>
                   <Group gap="xs">
-                    {!sdeIngestedDate && <Text size="sm">—</Text>}
+                    {!sdeIngestedDate && (
+                      <Text size="sm">
+                        {sdeIngestState ? "In progress…" : "—"}
+                      </Text>
+                    )}
                     {sdeIngestedDate && (
                       <DateHoverCard date={sdeIngestedDate}>
                         <FormattedDateText date={sdeIngestedDate} size="sm" />
                       </DateHoverCard>
                     )}
-                    {sdeIngestedDate &&
-                      sdeLastModifiedDate &&
-                      (sdeIngestedDate >= sdeLastModifiedDate ? (
-                        <Tooltip label="Our SDE data is up to date!">
+                    {sdeIsCurrent !== null &&
+                      (sdeIsCurrent ? (
+                        <Tooltip
+                          label={`Our SDE data is up to date (build ${ourSdeBuild})`}
+                        >
                           <IconCircleCheck color="green" size={14} />
                         </Tooltip>
                       ) : (
-                        <Tooltip label="Our SDE data is outdated!">
+                        <Tooltip
+                          label={`Our SDE data is outdated (build ${ourSdeBuild}, latest ${latestSdeBuild})`}
+                        >
                           <IconCircleX color="red" size={14} />
                         </Tooltip>
                       ))}

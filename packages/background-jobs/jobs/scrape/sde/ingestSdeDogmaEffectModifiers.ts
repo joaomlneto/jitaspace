@@ -3,7 +3,8 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
   ingestSdeCompositeTable,
-  loadSdeFiles,
+  loadSdeFile,
+  loadSdeFileIds,
   optionalNumber,
   plainString,
 } from "../../../helpers";
@@ -53,56 +54,62 @@ export const ingestSdeDogmaEffectModifiers = defineJob<
   handler: async () => {
     const start = performance.now();
 
-    const files = await loadSdeFiles([
-      "dogmaEffects.yaml",
-      "dogmaAttributes.yaml",
-      "groups.yaml",
+    const dogmaEffects = await loadSdeFile("dogmaEffects.yaml");
+    // Guard sets go through `loadSdeFileIds`, which keeps only the id projection
+    // and shares one parse per file across every job in the pipeline.
+    const [knownAttributeIds, knownGroupIds] = await Promise.all([
+      loadSdeFileIds("dogmaAttributes.yaml"),
+      loadSdeFileIds("groups.yaml"),
     ]);
-    const knownEffectIds = new Set(
-      Object.keys(files["dogmaEffects.yaml"]).map(Number),
-    );
-    const knownAttributeIds = new Set(
-      Object.keys(files["dogmaAttributes.yaml"]).map(Number),
-    );
-    const knownGroupIds = new Set(
-      Object.keys(files["groups.yaml"]).map(Number),
-    );
-    const present = (ids: Set<number>, value: number | null) =>
+    const knownEffectIds = new Set(Object.keys(dogmaEffects).map(Number));
+    const present = (ids: ReadonlySet<number>, value: number | null) =>
       value != null && ids.has(value) ? value : null;
 
-    const entries = Object.entries(files["dogmaEffects.yaml"]).map(
-      ([key, record]) => ({
-        effectId: Number(key),
-        modifiers: ((record as { modifierInfo?: unknown }).modifierInfo ??
-          []) as ModifierRecord[],
-      }),
-    );
+    const entries = Object.entries(dogmaEffects).map(([key, record]) => ({
+      effectId: Number(key),
+      modifiers: ((record as { modifierInfo?: unknown }).modifierInfo ??
+        []) as ModifierRecord[],
+    }));
     const effectIds = entries.map((entry) => entry.effectId);
 
     const rows: Prisma.DogmaEffectModifierCreateManyInput[] = entries.flatMap(
       ({ effectId, modifiers }) =>
-        modifiers.map((modifier, modifierIndex) => ({
-          effectId,
-          modifierIndex,
-          domain: plainString(modifier.domain),
-          targetEffectId: present(
-            knownEffectIds,
-            optionalNumber(modifier.effectID),
-          ),
-          func: plainString(modifier.func) ?? "",
-          modifiedAttributeId: present(
-            knownAttributeIds,
-            optionalNumber(modifier.modifiedAttributeID),
-          ),
-          modifyingAttributeId: present(
-            knownAttributeIds,
-            optionalNumber(modifier.modifyingAttributeID),
-          ),
-          operator: optionalNumber(modifier.operation),
-          groupId: present(knownGroupIds, optionalNumber(modifier.groupID)),
-          skillTypeId: optionalNumber(modifier.skillTypeID),
-          isDeleted: false,
-        })),
+        modifiers
+          // `func` is what a modifier *does*; without one there is nothing to
+          // apply, so drop the entry rather than store a placeholder every
+          // reader would have to special-case. Indexes are assigned before the
+          // filter, so the surviving rows keep their positional identity.
+          .map((modifier, modifierIndex) => ({
+            modifier,
+            modifierIndex,
+            func: plainString(modifier.func),
+          }))
+          .filter(
+            (entry): entry is typeof entry & { func: string } =>
+              entry.func !== null,
+          )
+          .map(({ modifier, modifierIndex, func }) => ({
+            effectId,
+            modifierIndex,
+            domain: plainString(modifier.domain),
+            targetEffectId: present(
+              knownEffectIds,
+              optionalNumber(modifier.effectID),
+            ),
+            func,
+            modifiedAttributeId: present(
+              knownAttributeIds,
+              optionalNumber(modifier.modifiedAttributeID),
+            ),
+            modifyingAttributeId: present(
+              knownAttributeIds,
+              optionalNumber(modifier.modifyingAttributeID),
+            ),
+            operator: optionalNumber(modifier.operation),
+            groupId: present(knownGroupIds, optionalNumber(modifier.groupID)),
+            skillTypeId: optionalNumber(modifier.skillTypeID),
+            isDeleted: false,
+          })),
     );
 
     const dogmaEffectModifiers = await ingestSdeCompositeTable({
