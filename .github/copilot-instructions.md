@@ -4,7 +4,7 @@
 
 Turborepo monorepo for an EVE Online companion web application. Two apps (`apps/web`, `apps/cli`) and 20+ shared packages under `packages/`. The main product is `apps/web`, a Next.js 16 app deployed to Vercel. Background jobs run on Trigger.dev (the `background-jobs-triggerdev` adapter); there is no `apps/worker`.
 
-**Tech stack:** Node.js >=24.15.0 · TypeScript 5.9 · Next.js 16 · React 19 · Mantine 8 · TanStack Query 5 · Prisma 7 + PostgreSQL · EVE Online SSO (OAuth2 + PKCE) · Trigger.dev · Turborepo 2 · pnpm 11.3.0
+**Tech stack:** Node.js >=24.15.0 · TypeScript 5.9 · Next.js 16 · React 19 · Mantine 9 · TanStack Query 5 · Prisma 7 + PostgreSQL · EVE Online SSO (OAuth2 + PKCE) · Trigger.dev · Turborepo 2 · pnpm 11.3.0
 
 ---
 
@@ -51,7 +51,7 @@ Turbo's `build` task declares these as dependencies, but always run them explici
 SKIP_ENV_VALIDATION=1 pnpm build   # Build all packages and apps via Turbo
 ```
 
-`build` outputs to `.next/**` (web) and `dist/**` (packages). The web app sets `typescript.ignoreBuildErrors: true` in CI (`apps/web/next.config.mjs`) so TypeScript errors do not fail the Next.js build in CI, but they still fail `pnpm type-check`.
+`build` outputs to `.next/**` (web) and `dist/**` (packages). The web app sets `typescript.ignoreBuildErrors: true` in CI (`apps/web/next.config.mjs`) so TypeScript errors do not fail the Next.js _build_ — the dedicated `type-check.yml` workflow catches them instead, and it is a hard gate: the repo is expected to be green.
 
 ---
 
@@ -77,12 +77,19 @@ pnpm test                          # Jest unit tests across workspaces (generate
 
 ## Continuous Integration
 
-Two GitHub Actions workflows run on every push:
+Three GitHub Actions workflows run on every push:
+
+**Type Check** (`.github/workflows/type-check.yml`):
+
+- Sequence: `pnpm install --frozen-lockfile` → `pnpm type-check`
+- A hard gate — a type error fails the PR. No explicit codegen step: the turbo `type-check` task depends on the Prisma and Kubb generators, so a clean checkout produces them itself.
+- Uses `SKIP_ENV_VALIDATION=1`
 
 **Cypress Tests** (`.github/workflows/cypress.yml`):
 
 - Requires CockroachDB (v24.3.7) and Redis services
-- Sequence: `pnpm install` → push DB schema (`cd packages/db && pnpm exec prisma db push`) → `pnpm build` → start web server → Cypress E2E (parallel, 2 containers)
+- Sequence: `pnpm install` → push DB schema (`cd packages/db && pnpm exec prisma db push`) → `pnpm build` → start web server → run Cypress (parallel, 2 containers)
+- NOT end-to-end coverage: the specs under `apps/web/cypress/e2e/` are still the stock Cypress example suite and target `example.cypress.io`, so this job effectively gates "the build succeeds and the server boots".
 - Uses `SKIP_ENV_VALIDATION=1`
 
 **SonarCloud** (`.github/workflows/sonarcloud.yml`):
@@ -141,4 +148,4 @@ When a new `@jitaspace/*` package exports TypeScript source and needs to be impo
 
 ---
 
-Trust these instructions. Only search the codebase if the information here appears incomplete or incorrect.
+Prefer these instructions over re-deriving the basics, but verify before relying on any specific claim: version numbers, CI gates and "currently broken" statements drift as the repo changes, and this file is not always updated in the same PR. `CLAUDE.md` is the most actively maintained of the three agent docs — if they disagree, believe it, and fix this one.

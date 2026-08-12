@@ -10,6 +10,20 @@ overrides:
   "prosemirror-state": "1.4.4"
   "prosemirror-transform": "1.12.0"
   "prosemirror-view": "1.41.8"
+  # Load-bearing, and not for the reason it looks like. next declares
+  # optionalDependencies.sharp "^0.34.5", which is incompatible with apps/web's
+  # "^0.35.3" — so under nodeLinker: hoisted pnpm HOISTS NEXT'S 0.34.5 to the root
+  # and nests apps/web's 0.35.3 under apps/web/node_modules. next resolves the root
+  # copy, i.e. the vulnerable one, and bumping apps/web alone does not protect the
+  # image pipeline. Measured by deleting this override and reinstalling:
+  #   ./node_modules/sharp            -> 0.34.5   (what next loads)
+  #   ./apps/web/node_modules/sharp   -> 0.35.3
+  # With it: one copy at 0.35.3, zero sharp@0.34 entries in the lockfile.
+  # Covers GHSA-f88m-g3jw-g9cj (libvips memory safety).
+  # Caret, not an exact pin: an override replaces the importer's own specifier
+  # outright, so pinning here would freeze the patch level this exists to raise
+  # and a later manifest bump would install nothing.
+  "sharp": "^0.35.3"
 nodeLinker: hoisted
 publicHoistPattern:
   - '*prisma*'
@@ -30,7 +44,6 @@ allowBuilds:
   cypress: true
   es5-ext: true
   esbuild: true
-  lzma-native: true
   msgpackr-extract: true
   prisma: true
   protobufjs: true
