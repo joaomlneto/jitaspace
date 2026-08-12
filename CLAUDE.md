@@ -141,23 +141,24 @@ patch = bug fix/internal; minor = new feature/export; major = breaking.
 **When a changeset is required:**
 
 - **Publishable packages — always.** Only four workspaces are publishable (`auth-utils`, `db`, `esi-metadata`, `tiptap-eve`); every other workspace is `"private": true`. A change to one of these needs a changeset with a developer-facing description.
-- **`@jitaspace/web` — always for user-visible changes.** `web` is private and never published, but its changesets are the release-notes queue (82 of the ~104 pending changesets are `web`), so they **must be end-user-readable** ("Fixed mail search not returning results"), not implementation detail. If a change elsewhere produces a visible web-app effect, add `"@jitaspace/web": patch` with a user-facing note.
+- **`@jitaspace/web` — always for user-visible changes.** `web` is private and never published, but its changesets are the release-notes queue — the large majority of pending changesets are `web` — so they **must be end-user-readable** ("Fixed mail search not returning results"), not implementation detail. If a change elsewhere produces a visible web-app effect, add `"@jitaspace/web": patch` with a user-facing note.
 - **Other private packages — optional.** Internal-only fixes routinely ship without one (e.g. PRs #651 and #652 in `background-jobs`). Add one when the change is worth recording for other developers. The changeset-bot's "No Changeset found" warning on such a PR is expected and can be ignored.
 
 > Note: there is no release workflow — `changeset version`/`publish` are never run in CI, so changesets accumulate as a changelog rather than driving version bumps.
 
 ## CI
 
-Two GitHub Actions run on push/PR (both set `SKIP_ENV_VALIDATION=1`):
+Three GitHub Actions run on push/PR (all set `SKIP_ENV_VALIDATION=1`):
 
+- **`type-check.yml`:** `pnpm install --frozen-lockfile` → `pnpm type-check`. A hard gate — the repo is expected to be **green**, so a type error fails the PR. No explicit codegen step: the turbo `type-check` task depends on the Prisma and Kubb generators, so a clean checkout produces them itself.
 - **`cypress.yml`:** spins up CockroachDB + Redis → push DB schema → `pnpm build` → start web → run Cypress (parallel). Since the specs are the stock examples, this effectively gates only "the build succeeds and the server boots".
 - **`sonarcloud.yml`:** `pnpm install --frozen-lockfile` → `pnpm test` (coverage) → SonarQube scan. New code must keep coverage above the quality gate.
 
-**Neither workflow runs `pnpm lint` or `pnpm type-check`.** Combined with `typescript.ignoreBuildErrors` being on in CI (see Key Conventions), a PR with TypeScript or ESLint errors can go green and merge. The only automatic lint gate is the local `.githooks/pre-commit` hook (lint only, no type-check), which is bypassable with `--no-verify` and dormant in git worktrees. **Always run `pnpm lint` and `pnpm type-check` yourself before pushing** — nothing downstream will catch it for you.
+**No workflow runs `pnpm lint`.** ESLint's only automatic gate is the local `.githooks/pre-commit` hook, which is bypassable with `--no-verify` and dormant in git worktrees — so run `pnpm lint` yourself before pushing. (`manypkg check` runs as part of it, and it fails on a dependency declared at different versions across workspaces.)
 
 Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm lint` → `pnpm type-check` → `pnpm test`.
 
-> `pnpm type-check` is currently red repo-wide from pre-existing errors (e.g. `eve-icons` compiling `.tsx` without a `jsx` option). Verify your change per-package and diff against the baseline rather than expecting a clean tree.
+> After merging `main`, re-run `pnpm db:generate` before trusting a type-check: a schema change plus a stale client makes valid columns look missing and cascades into unrelated errors. If a fresh worktree reports errors inside a `dist/` or `prisma/generated/` path, that is a stale `tsbuildinfo` or an unbuilt package, not repo state — clear `node_modules/.cache` and rebuild.
 
 ## Where to look first
 

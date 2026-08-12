@@ -13,7 +13,10 @@ overrides:
   # next declares optionalDependencies.sharp "^0.34.5"; without this override pnpm
   # keeps a nested vulnerable copy that Next's image pipeline resolves in preference
   # to apps/web's own. Covers GHSA-f88m-g3jw-g9cj (libvips memory safety).
-  "sharp": "0.35.3"
+  # Caret, not an exact pin: an override replaces the importer's own specifier
+  # outright, so pinning here would freeze the patch level this exists to raise
+  # and a later manifest bump would install nothing.
+  "sharp": "^0.35.3"
 nodeLinker: hoisted
 publicHoistPattern:
   - '*prisma*'
@@ -34,7 +37,6 @@ allowBuilds:
   cypress: true
   es5-ext: true
   esbuild: true
-  lzma-native: true
   msgpackr-extract: true
   prisma: true
   protobufjs: true

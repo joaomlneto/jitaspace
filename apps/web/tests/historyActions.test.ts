@@ -57,6 +57,10 @@ let mockFileAgg: {
   op: "added" | "modified" | "removed";
   _count: number;
 }[] = [];
+// fileChange.findMany fixture (getFileDiff's per-build raw-file paths). Empty by
+// default: getFileDiff returns null on no rows, so tests asserting a refusal
+// must seed this, or they would pass with the guard removed.
+let mockFileRows: { path: string; op: "added" | "modified" | "removed" }[] = [];
 // $queryRaw fixture: one aggregated (entity, collection) row per changed entity
 // for the build-range reader (op at the earliest + latest build in the range).
 let mockRangeRows: {
@@ -107,15 +111,27 @@ jest.mock("@jitaspace/db-history", () => ({
         );
       },
     },
-    collection: { findMany: () => Promise.resolve(mockCollections) },
+    collection: {
+      findMany: () => {
+        mockDbCalls++;
+        return Promise.resolve(mockCollections);
+      },
+    },
     change: {
-      groupBy: () => Promise.resolve(mockGrouped),
-      findMany: () => Promise.resolve(mockChangeRows),
+      groupBy: () => {
+        mockDbCalls++;
+        return Promise.resolve(mockGrouped);
+      },
+      findMany: () => {
+        mockDbCalls++;
+        return Promise.resolve(mockChangeRows);
+      },
     },
     entity: {
       // getCachedHistoryIndex counts entities per kind via groupBy; derive the
       // grouped shape from the flat mockEntities fixture.
       groupBy: () => {
+        mockDbCalls++;
         const counts = new Map<string, number>();
         for (const e of mockEntities)
           counts.set(e.kind, (counts.get(e.kind) ?? 0) + 1);
@@ -124,7 +140,12 @@ jest.mock("@jitaspace/db-history", () => ({
         );
       },
     },
-    buildDiff: { findMany: () => Promise.resolve(mockDiffs) },
+    buildDiff: {
+      findMany: () => {
+        mockDbCalls++;
+        return Promise.resolve(mockDiffs);
+      },
+    },
     fileChange: {
       groupBy: () => {
         mockDbCalls++;
@@ -132,7 +153,7 @@ jest.mock("@jitaspace/db-history", () => ({
       },
       findMany: () => {
         mockDbCalls++;
-        return Promise.resolve([]);
+        return Promise.resolve(mockFileRows);
       },
     },
     // The build-range reader aggregates in one raw SQL query.
@@ -603,11 +624,37 @@ describe("getResourceIndex", () => {
 
     const index = await getResourceIndex();
 
-    expect(index.languages).toEqual(["de", "en"]); // localeCompare-sorted
+    expect(index.languages).toEqual(["de", "en"]);
     expect(index.builds[0]?.strings).toEqual({
       en: { added: 2, changed: 0, removed: 1 },
       de: { added: 0, changed: 4, removed: 0 },
     });
+  });
+
+  it("orders languages by collation, not UTF-16 code units", async () => {
+    // Real EVE tags are lowercase ASCII, where a bare `.sort()` and
+    // `localeCompare` agree — so this seeds a mixed-case pair, the only shape
+    // that tells them apart: code units put "EN" (0x45) before "de" (0x64),
+    // collation compares the base letters and yields d before e. Without this,
+    // reverting to `.sort()` would leave the suite green.
+    mockBuilds = [
+      {
+        buildNumber: 700000,
+        releasedAt: new Date("2024-06-01"),
+        server: "tranquility",
+      },
+    ];
+    mockDiffs = [{ id: 10, toBuild: 700000 }];
+    mockFileAgg = [];
+    mockCollections = [
+      { id: 1, name: "strings:EN" },
+      { id: 2, name: "strings:de" },
+    ];
+    mockGrouped = [];
+
+    const index = await getResourceIndex();
+
+    expect(index.languages).toEqual(["de", "EN"]);
   });
 });
 
@@ -727,33 +774,61 @@ describe("BotID gate", () => {
     server: "tranquility" as const,
   });
 
-  // These actions are unauthenticated and expensive — each call can run heavy
-  // range SQL and mint a permanent `"use cache"` entry — so every one of them
+  // The five guarded readers are unauthenticated and expensive — heavy range
+  // SQL, and getBuildRangeChanges mints a `cacheLife("max")` entry — so each
   // opens with `checkBotId()`. Local development always classifies as human, so
   // without the stub above this branch would never execute.
-  beforeEach(() => {
-    mockIsBot = true;
-    mockDbCalls = 0;
-    // Fixtures a human caller would successfully read, to prove the refusal is
-    // the bot verdict rather than missing data.
+  //
+  // `getEntityTimeline` is intentionally absent: it is unguarded so that
+  // `/type/*` can stay out of the BotID protect list (see
+  // instrumentation-client.ts). The last test here pins that.
+  //
+  // Every fixture below is seeded so a HUMAN caller gets a non-null result.
+  // Without that, `getFileDiff`/`getStringChanges` return null on zero rows and
+  // the refusal assertions would pass with the guards deleted.
+  const seedReadableFixtures = () => {
     mockBuildUnique = null;
     mockBuilds = [tqBuild(700000, "2024-06-01"), tqBuild(700003, "2024-06-04")];
     mockCollections = [{ id: 1, name: "strings:en" }];
     mockDiffs = [{ id: 10, toBuild: 700003 }];
     mockFileAgg = [{ diffId: 10, op: "added", _count: 1 }];
+    mockFileRows = [{ path: "res/ui/icon.png", op: "added" }];
+    mockChangeRows = [
+      {
+        op: "added",
+        data: { to: "Tritanium" },
+        diffId: 10,
+        collection: { name: "strings:en" },
+        entity: { kind: "type", eveId: 34 },
+      },
+    ];
     mockRangeRows = [];
+  };
+
+  beforeEach(() => {
+    mockIsBot = true;
+    mockDbCalls = 0;
+    seedReadableFixtures();
   });
 
   afterEach(() => {
     mockIsBot = false;
   });
 
-  it("refuses the nullable readers", async () => {
+  it("refuses the four nullable guarded readers", async () => {
     expect(await getBuildChanges(700003)).toBeNull();
     expect(await getBuildRangeChanges(700000, 700003)).toBeNull();
-    expect(await getEntityTimeline("type", 587)).toBeNull();
     expect(await getFileDiff(700003)).toBeNull();
     expect(await getStringChanges(700003, "en")).toBeNull();
+  });
+
+  it("serves those same four to a human, so the refusal is the verdict and not the fixtures", async () => {
+    mockIsBot = false;
+
+    expect(await getBuildChanges(700003)).not.toBeNull();
+    expect(await getBuildRangeChanges(700000, 700003)).not.toBeNull();
+    expect(await getFileDiff(700003)).not.toBeNull();
+    expect(await getStringChanges(700003, "en")).not.toBeNull();
   });
 
   it("refuses getResourceIndex with an empty index rather than null", async () => {
@@ -763,30 +838,35 @@ describe("BotID gate", () => {
     expect(index.builds).toEqual([]);
     expect(index.languages).toEqual([]);
     expect(typeof index.generatedAt).toBe("string");
+
+    mockIsBot = false;
+    const forHuman = await getResourceIndex();
+    expect(forHuman.builds.length).toBeGreaterThan(0);
   });
 
   it("refuses before touching the history database", async () => {
     await Promise.all([
       getBuildChanges(700003),
       getBuildRangeChanges(700000, 700003),
-      getEntityTimeline("type", 587),
       getFileDiff(700003),
       getStringChanges(700003, "en"),
       getResourceIndex(),
     ]);
-    // The whole point of the guard: a bot costs us nothing.
+    // The whole point of the guard: a bot costs us nothing. Every stubbed
+    // historyDb method increments this counter, so a query on any path trips it.
     expect(mockDbCalls).toBe(0);
+
+    // ...and a human does reach the database, so the counter is wired up.
+    mockIsBot = false;
+    await getBuildChanges(700003);
+    expect(mockDbCalls).toBeGreaterThan(0);
   });
 
-  it("serves the same calls normally once the caller is classified human", async () => {
-    mockIsBot = false;
-
-    const range = await getBuildRangeChanges(700000, 700003);
-    expect(range).not.toBeNull();
-    expect(range?.fromDate).toBe("2024-06-01");
-
-    const index = await getResourceIndex();
-    expect(index.builds.length).toBeGreaterThan(0);
+  it("leaves getEntityTimeline unguarded so /type/* need not be protected", async () => {
+    // Guarding this would drag the busiest route family into the protect list,
+    // which intercepts every Server Action fired from those pages — including
+    // the root layout's EVE token refresh.
+    expect(await getEntityTimeline("type", 587)).not.toBeNull();
     expect(mockDbCalls).toBeGreaterThan(0);
   });
 });

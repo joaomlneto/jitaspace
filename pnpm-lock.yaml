@@ -11,7 +11,7 @@ overrides:
   prosemirror-state: 1.4.4
   prosemirror-transform: 1.12.0
   prosemirror-view: 1.41.8
-  sharp: 0.35.3
+  sharp: ^0.35.3
 
 importers:
 
@@ -357,7 +357,7 @@ importers:
         specifier: ^3.8.1
         version: 3.8.1(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react-is@19.2.8)(react@19.2.6)(redux@5.0.1)
       sharp:
-        specifier: 0.35.3
+        specifier: ^0.35.3
         version: 0.35.3(@types/node@24.12.4)
       superjson:
         specifier: 2.2.6

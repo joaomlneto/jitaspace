@@ -5,30 +5,38 @@ import posthog from "posthog-js";
 import { env } from "~/env";
 
 /**
- * Vercel BotID — invisible bot protection for the `/history` server actions.
+ * Vercel BotID — invisible bot protection for the expensive `/history` server
+ * actions ({@link ~/lib/history-actions}). They are unauthenticated, run heavy
+ * range SQL against the build-history database, and `getBuildRangeChanges`
+ * mints a `cacheLife("max")` entry that effectively never expires — the app's
+ * most attractive target for automated abuse. The matching `checkBotId()`
+ * guards live in `lib/history-actions.ts`.
  *
- * Those actions ({@link ~/lib/history-actions}) are unauthenticated and each
- * call can run heavy range SQL against the build-history database and mint a
- * permanent `"use cache"` entry, so they are the app's most attractive target
- * for automated abuse. The corresponding `checkBotId()` guards live in
- * `lib/history-actions.ts`.
+ * BotID matches on request PATH + METHOD, not on which action is invoked, and
+ * Server Actions POST to the *page* they are invoked from. So an entry here
+ * intercepts EVERY Server Action fired from a matching page, not just the
+ * guarded ones — each one waits on `getChallenge()` before its POST goes out.
+ * Keep this list as narrow as the guarded actions allow.
  *
- * Server Actions POST to the *page* they are invoked from, so the paths below
- * are page routes, not action names. This list MUST cover every page that
- * invokes a guarded action: BotID only attaches its headers to requests
- * matching these entries, and `checkBotId()` fails closed (reports a bot) when
- * the headers are absent. Current invocation sites:
- *   - `/history/build/*`, `/history/compare/*` and the entity pages under
- *     `/history/*` (EntityHistory, _resource-sections, compare page.client)
- *   - `/type/*` — the type page embeds <EntityHistory> in its History tab
- * The `/history` index is server-rendered via `getCachedHistoryIndex`, not a
- * client-invoked action, so it needs no entry.
+ * That is why `/type/*` is deliberately NOT listed even though the type page
+ * embeds <EntityHistory>: it is the busiest route family in the app, and the
+ * root layout mounts <EsiClientSSOAccessTokenInjector>, whose EVE token-refresh
+ * action would otherwise be gated behind a challenge fetch on every type page.
+ * The reader that <EntityHistory> calls, `getEntityTimeline`, is consequently
+ * left unguarded — it is the cheapest of the six and only `cacheLife("days")`,
+ * so it expires on its own rather than accumulating.
+ *
+ * Residual, accepted: Server Actions invoked from `/history/*` pages (including
+ * that same token refresh) still wait on a challenge. Those are low-traffic
+ * pages. The way to remove this class of coupling entirely is to move the
+ * readers behind `/api/history/*` route handlers and protect those paths, so
+ * BotID intercepts only the reader fetches.
+ *
+ * The `/history` index needs no entry: it is server-rendered via
+ * `getCachedHistoryIndex`, not a client-invoked action.
  */
 initBotId({
-  protect: [
-    { path: "/history/*", method: "POST" },
-    { path: "/type/*", method: "POST" },
-  ],
+  protect: [{ path: "/history/*", method: "POST" }],
 });
 
 Sentry.init({

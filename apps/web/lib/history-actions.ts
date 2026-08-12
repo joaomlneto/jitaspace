@@ -141,11 +141,16 @@ export async function getBuildRangeChanges(
  * entityType+entityId) so the standalone history pages and the embedded History
  * tabs share one cache entry per entity rather than re-querying on every view.
  */
+// Deliberately NOT behind `isBot()`. <EntityHistory> is embedded in the type
+// page's History tab, so guarding this would force `/type/*` into the BotID
+// protect list — which intercepts every Server Action on the app's busiest route
+// family, including the root layout's EVE token refresh (see
+// `instrumentation-client.ts`). This is also the cheapest of the six readers and
+// only `cacheLife("days")`, so it expires rather than accumulating.
 export async function getEntityTimeline(
   entityType: string,
   entityId: number,
 ): Promise<EntityTimeline | null> {
-  if (await isBot()) return null;
   return getCachedEntityTimeline(entityType, entityId);
 }
 
