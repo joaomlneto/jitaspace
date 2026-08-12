@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import {
   Anchor,
   Badge,
@@ -31,6 +30,7 @@ import {
   IconListDetails,
 } from "@tabler/icons-react";
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
@@ -71,7 +71,7 @@ import {
   MarketGroupName,
 } from "~/components/Text";
 import { EntityHistory } from "../../history/EntityHistory";
-import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab } from "./tabs";
+import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
 export interface PageProps {
   typeId: number;
@@ -261,11 +261,16 @@ export default function TypePage({
   typeDescription,
 }: Readonly<PageProps>) {
   const character = useSelectedCharacter();
-  // Deep-link support: `/type/{typeId}/{tab}` redirects here with `?tab=` set,
-  // selecting the initial tab. Unknown values fall back to the default tab.
-  const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab");
-  const initialTab = isTypePageTab(tabParam) ? tabParam : DEFAULT_TYPE_PAGE_TAB;
+  // Deep-link support: `/type/{typeId}/{tab}` redirects here with `?tab=` set.
+  // The param was previously read once into <Tabs defaultValue>, so switching
+  // tabs never updated the URL and you couldn't link to the tab you were on.
+  // parseAsStringLiteral rejects unknown values, falling back to the default.
+  const [activeTab, setActiveTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(TYPE_PAGE_TABS)
+      .withDefault(DEFAULT_TYPE_PAGE_TAB)
+      .withOptions({ history: "replace" }),
+  );
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();
   const [regionId] = useState(THE_FORGE_REGION_ID);
@@ -618,7 +623,14 @@ export default function TypePage({
           </Group>
         </Paper>
 
-        <Tabs defaultValue={initialTab} variant="outline" keepMounted={false}>
+        <Tabs
+          value={activeTab}
+          onChange={(value) => {
+            if (isTypePageTab(value)) void setActiveTab(value);
+          }}
+          variant="outline"
+          keepMounted={false}
+        >
           <Tabs.List>
             <Tabs.Tab
               value="overview"

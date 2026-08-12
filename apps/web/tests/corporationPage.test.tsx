@@ -1,9 +1,10 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 let corporationId = "98000001";
 
@@ -32,35 +33,62 @@ jest.mock("~/components/ActionIcon", () => ({
 }));
 
 jest.mock("~/components/Timeline", () => ({
-  CorporationAllianceHistoryTimeline: () => <div>Alliance History Timeline</div>,
+  CorporationAllianceHistoryTimeline: () => (
+    <div>Alliance History Timeline</div>
+  ),
 }));
 
 jest.mock("~/components/EveMail", () => ({
-  MailMessageViewer: ({ content }: { content?: string }) => <div>{content}</div>,
+  MailMessageViewer: ({ content }: { content?: string }) => (
+    <div>{content}</div>
+  ),
 }));
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ href, children }: { href?: string | object; children?: ReactNode }) => (
-    <a href={typeof href === "string" ? href : ""}>{children}</a>
-  ),
+  default: ({
+    href,
+    children,
+  }: {
+    href?: string | object;
+    children?: ReactNode;
+  }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
-function renderPage() {
+function renderPage(searchParams = "") {
   const Page = require("~/app/corporation/[corporationId]/page.client").default;
   return render(
     <MantineProvider>
       <Page />
     </MantineProvider>,
+    // The description/history tab is nuqs-backed.
+    { wrapper: withNuqsTestingAdapter({ hasMemory: true, searchParams }) },
   );
 }
 
-describe("corporation page", () => {
-  afterEach(() => {
-    jest.clearAllMocks();
-    corporationId = "98000001";
-  });
+// File scope so it applies to every describe here regardless of declaration
+// order — the tab-sync block below runs before the main one.
+afterEach(() => {
+  jest.clearAllMocks();
+  corporationId = "98000001";
+});
 
+describe("corporation page tab URL sync", () => {
+  it("opens the Alliance History tab from ?tab=history", () => {
+    mockUseCorporation.mockReturnValue({
+      data: { data: { ticker: "TEST", description: "desc" } },
+    });
+    mockUseSelectedCharacter.mockReturnValue(null);
+
+    renderPage("?tab=history");
+
+    expect(
+      screen.getByRole("tab", { name: /Alliance History/ }),
+    ).toHaveAttribute("aria-selected", "true");
+  });
+});
+
+describe("corporation page", () => {
   it("renders all sections with rich corporation data", () => {
     mockUseSelectedCharacter.mockReturnValue({ characterId: 12345 });
     mockUseCorporation.mockReturnValue({
