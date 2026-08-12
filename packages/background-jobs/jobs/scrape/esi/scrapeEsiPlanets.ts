@@ -5,6 +5,7 @@ import { getUniversePlanetsPlanetId } from "@jitaspace/esi-client";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_PLANET_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapePlanetsEventPayload {
@@ -46,7 +47,14 @@ const updatePlanetsBatch = (
         })
         .then((entries) =>
           entries.map((entry) =>
-            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            // The mapPlanets.yaml `attributes` columns are owned by
+            // ingestSdePlanets; ESI does not expose them, so they must stay out
+            // of this diff or every row would look modified on every run.
+            excludeObjectKeys(entry, [
+              "updatedAt",
+              "createdAt",
+              ...SDE_OWNED_PLANET_COLUMNS,
+            ]),
           ),
         ),
     fetchRemoteEntries: () =>
@@ -100,8 +108,7 @@ export const scrapeEsiPlanets = defineJob<ScrapePlanetsEventPayload["data"]>({
     const batchSize = ctx.payload.batchSize ?? 1000;
     const planetIds: number[] = ctx.payload.planetIds ?? [];
 
-    if (planetIds.length == 0)
-      throw new NonRetriableError("Invalid planetIds");
+    if (planetIds.length == 0) throw new NonRetriableError("Invalid planetIds");
 
     // Split IDs in batches
     const batches = await ctx.run("Fetch Solar System IDs", () => {

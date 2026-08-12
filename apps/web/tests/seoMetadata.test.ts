@@ -17,9 +17,12 @@ jest.mock("~/app/alliance/[allianceId]/page.client", () => ({
 // ESI-client mocks
 // ---------------------------------------------------------------------------
 
-const mockGetCharactersDetail = jest.fn();
-const mockGetCorporationsCorporationId = jest.fn();
-const mockGetAlliancesAllianceId = jest.fn();
+const mockGetCharactersDetail =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockGetCorporationsCorporationId =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockGetAlliancesAllianceId =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("@jitaspace/esi-client", () => ({
   getCharactersDetail: (...a: unknown[]) => mockGetCharactersDetail(...a),

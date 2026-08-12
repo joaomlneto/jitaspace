@@ -45,7 +45,7 @@ export default function Page() {
     }
   }, [typeId]);
 
-  const { data } = useTypeMarketOrders(typeId);
+  const { data, isLoading } = useTypeMarketOrders(typeId);
 
   const mergedRegionalOrders = useMemo(() => {
     return Object.values(data).flat();
@@ -84,11 +84,13 @@ export default function Page() {
                 <MarketOrdersDataTable
                   orders={sellOrders}
                   sortPriceDescending={false}
+                  isLoading={isLoading}
                 />
                 <Title order={3}>Buy Orders</Title>
                 <MarketOrdersDataTable
                   orders={buyOrders}
                   sortPriceDescending={true}
+                  isLoading={isLoading}
                 />
               </Stack>
             )}

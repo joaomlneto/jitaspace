@@ -10,7 +10,10 @@ import {
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { mergeEsiEntriesIntoCharactersTable } from "../../../helpers";
+import {
+  mergeEsiEntriesIntoCharactersTable,
+  optionalSdeDate,
+} from "../../../helpers";
 import { isResearchAgent } from "../../../helpers/agents.ts";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
@@ -108,6 +111,10 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
                 `Agent ${npcCharacter.characterID} is missing required SDE fields (agentTypeID/divisionID/level)`,
               );
             }
+            // The generated type marks these required, but the SDE omits them on
+            // a small minority of NPC characters — read through a Partial view so
+            // a missing field lands as null instead of undefined.
+            const optional: Partial<typeof npcCharacter> = npcCharacter;
             return {
               characterId: npcCharacter.characterID,
               agentTypeId: agentTypeID,
@@ -115,6 +122,11 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
               isLocator: npcCharacter.agent.isLocator ?? false,
               level,
               stationId: npcCharacter.locationID,
+              isCeo: optional.ceo ?? null,
+              startDate: optionalSdeDate(optional.startDate),
+              careerId: optional.careerID ?? null,
+              schoolId: optional.schoolID ?? null,
+              specialityId: optional.specialityID ?? null,
               isDeleted: false,
             };
           }),

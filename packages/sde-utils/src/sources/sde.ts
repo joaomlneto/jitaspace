@@ -11,9 +11,12 @@ export interface SdeSourceFile {
 }
 
 // Builder helpers to cut repetition in sdeInputFiles
-const addId = (idAttributeName: string): SdeSourceFile => ({
+const addId = (
+  idAttributeName: string,
+  idAttributeType: SdeSourceFile["idAttributeType"] = "number",
+): SdeSourceFile => ({
   idAttributeName,
-  idAttributeType: "number",
+  idAttributeType,
   transformations: [addIdToItem],
 });
 
@@ -50,8 +53,12 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "dogmaUnits.yaml": addId("unitID"),
   "dungeons.yaml": addId("dungeonID"),
   "dynamicItemAttributes.yaml": addId("dynamicItemAttributeID"),
+  "epicArcs.yaml": addId("epicArcID"),
   "factions.yaml": addId("factionID"),
   "freelanceJobSchemas.yaml": addId("freelanceJobSchemaGroupID"),
+  // Keyed by the id `skinMaterials.materialSetID` / `graphics.sofMaterialSetID`
+  // point at, so it keeps CCP's `materialSetID` name rather than the filename.
+  "graphicMaterialSets.yaml": addId("materialSetID"),
   "graphics.yaml": addId("graphicID"),
   "groups.yaml": addId("groupID"),
   "icons.yaml": addId("iconID"),
@@ -69,6 +76,13 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "masteries.yaml": addId("typeID"),
   "mercenaryTacticalOperations.yaml": addId("mercenaryTacticalOperationID"),
   "metaGroups.yaml": addId("metaGroupID"),
+  // The military-campaign files are keyed by UUID, not by an integer id.
+  "militaryCampaignObjectives.yaml": addId(
+    "militaryCampaignObjectiveID",
+    "string",
+  ),
+  "militaryCampaigns.yaml": addId("militaryCampaignID", "string"),
+  "missions.yaml": addId("missionID"),
   "npcCharacters.yaml": addId("characterID"),
   "npcCorporationDivisions.yaml": addId("npcCorporationDivisionID"),
   "npcCorporations.yaml": addId("corporationID"),
@@ -76,8 +90,25 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "planetResources.yaml": addId("planetID"),
   "planetSchematics.yaml": addId("planetSchematicID"),
   "races.yaml": addId("raceID"),
+  "shipTreeElements.yaml": addId("shipTreeElementID"),
+  // Keyed by faction, not by a ship-tree id of its own.
+  "shipTreeFactions.yaml": addId("factionID"),
+  "shipTreeGroups.yaml": addId("shipTreeGroupID"),
   "skinLicenses.yaml": noTransform("licenseTypeID"),
   "skinMaterials.yaml": noTransform("skinMaterialID"),
+  "skinrComponentCategories.yaml": addId("skinrComponentCategoryID"),
+  // A bare `rarity -> points` map per component category, so the id stays the
+  // map key: injecting it would sit alongside the numeric rarity keys.
+  "skinrComponentPointValues.yaml": noTransform("skinrComponentCategoryID"),
+  "skinrComponentRarities.yaml": addId("skinrComponentRarityID"),
+  "skinrComponents.yaml": addId("skinrComponentID"),
+  "skinrSlotCategories.yaml": addId("skinrSlotCategoryID"),
+  "skinrSlotConfigurations.yaml": addId("skinrSlotConfigurationID"),
+  "skinrSlotNames.yaml": addId("skinrSlotNameID"),
+  "skinrSlots.yaml": addId("skinrSlotID"),
+  // A bare `tier -> points` map per ship-tree group — same reason as
+  // skinrComponentPointValues.
+  "skinrTierThresholds.yaml": noTransform("shipTreeGroupID"),
   "skins.yaml": addId("skinID"),
   "sovereigntyUpgrades.yaml": addId("typeID"),
   "stationOperations.yaml": addId("stationOperationID"),
@@ -85,6 +116,7 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "translationLanguages.yaml": noTransform("translationLanguageID", "string"),
   "typeBonus.yaml": addId("typeID"),
   "typeDogma.yaml": addId("typeID"),
+  "typeElements.yaml": addId("typeID"),
   "typeLists.yaml": addId("typeListID"),
   "typeMaterials.yaml": addId("typeID"),
   "types.yaml": addId("typeID"),

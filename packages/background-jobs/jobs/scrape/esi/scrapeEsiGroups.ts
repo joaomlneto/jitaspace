@@ -28,8 +28,17 @@ interface GroupEntry {
   isDeleted: boolean;
 }
 
+// The four flag columns are owned by ingestSdeGroups (ESI's group endpoint has
+// no equivalent), so they are excluded from the local-vs-remote diff.
 const excludeGroupTimestamps = (entry: Group) =>
-  excludeObjectKeys(entry, ["updatedAt", "createdAt"]);
+  excludeObjectKeys(entry, [
+    "updatedAt",
+    "createdAt",
+    "anchorable",
+    "anchored",
+    "fittableNonSingleton",
+    "useBasePrice",
+  ]);
 
 const fetchRemoteGroup = (limit: Limit, groupId: number) =>
   limit(() =>

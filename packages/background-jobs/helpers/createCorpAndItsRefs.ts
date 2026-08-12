@@ -26,12 +26,12 @@ import type {
   Alliance,
   Bloodline,
   Character,
-  Corporation,
   Faction,
   Race,
   Station,
   War,
 } from "../db";
+import type { EsiCorporationRow } from "./mergeEntriesIntoCorporationsTable";
 import { CharacterGender, prisma } from "../db";
 
 const limit = pLimit(1);
@@ -60,7 +60,7 @@ export const createCorpAndItsRefRecords = async ({
   missingBloodlineIds?: Set<number>;
   characters?: Omit<Character, "updatedAt" | "createdAt">[];
   missingCharacterIds?: Set<number>;
-  corporations?: Omit<Corporation, "updatedAt" | "createdAt">[];
+  corporations?: EsiCorporationRow[];
   missingCorporationIds?: Set<number>;
   factions?: Omit<Faction, "updatedAt" | "createdAt">[];
   missingFactionIds?: Set<number>;
@@ -708,7 +708,7 @@ const fetchCharactersFromEsi = (
 
 const fetchCorporationsFromEsi = (
   corporationIds: number[],
-): Promise<Omit<Corporation, "updatedAt" | "createdAt">[]> =>
+): Promise<EsiCorporationRow[]> =>
   Promise.all(
     corporationIds.map((corporationId) =>
       limit(async () =>
@@ -778,6 +778,9 @@ const fetchFactionsFromEsi = () =>
         solarSystemId: faction.solar_system_id ?? null,
         stationCount: faction.station_count,
         stationSystemCount: faction.station_system_count,
+        // SDE-only; ingestSdeFactions fills these in.
+        flatLogo: null,
+        flatLogoWithName: null,
         isDeleted: false,
       })),
     );
@@ -791,6 +794,8 @@ const fetchRacesFromEsi = () =>
         name: race.name,
         description: race.description,
         factionId: race.alliance_id,
+        // SDE-only; ingestSdeRaces fills this in.
+        shipTypeId: null,
         isDeleted: false,
       })),
     );
@@ -812,6 +817,8 @@ const fetchStationsFromEsi = (stationIds: number[]) =>
             raceId: station.race_id ?? null,
             reprocessingEfficiency: station.reprocessing_efficiency,
             reprocessingStationsTake: station.reprocessing_stations_take,
+            // SDE-only; ingestSdeStations fills this in.
+            reprocessingHangarFlag: null,
             isDeleted: false,
           }))
           .catch((err) => {
@@ -827,6 +834,7 @@ const fetchStationsFromEsi = (stationIds: number[]) =>
               raceId: null,
               reprocessingEfficiency: -1,
               reprocessingStationsTake: -1,
+              reprocessingHangarFlag: null,
               isDeleted: true,
             };
           }),

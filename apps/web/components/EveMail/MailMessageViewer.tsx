@@ -43,7 +43,12 @@ export function MailMessageViewer({
     if (href.startsWith("joinChannel:") || href.startsWith("fleet:")) {
       return channelLinkColor;
     }
-    if (href.startsWith("fitting:")) return internalLinkColor;
+    // bookmarkFolder: has no web route — it is an in-game object reference like
+    // fitting:, so it takes the internal color rather than the external one the
+    // pass-through fallback would otherwise give it.
+    if (href.startsWith("fitting:") || href.startsWith("bookmarkFolder:")) {
+      return internalLinkColor;
+    }
     if (translatedHref.startsWith("/")) return internalLinkColor;
     return externalLinkColor;
   };
@@ -111,6 +116,11 @@ export function MailMessageViewer({
       e.preventDefault();
       globalThis.alert(
         "This is a fleet invite link. Open it in the EVE Online client to join the fleet.",
+      );
+    } else if (href?.startsWith("bookmarkFolder:")) {
+      e.preventDefault();
+      globalThis.alert(
+        "This is a shared bookmark folder. Open it in the EVE Online client to view the bookmarks.",
       );
     }
   };

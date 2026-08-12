@@ -42,6 +42,14 @@ export const ingestSdeDogmaAttributes = defineJob<
         published: optionalBoolean(record.published),
         unitId: optionalNumber(record.unitID),
         iconId: optionalNumber(record.iconID),
+        dataType: optionalNumber(record.dataType),
+        displayWhenZero: optionalBoolean(record.displayWhenZero),
+        tooltipTitle: enString(record.tooltipTitle),
+        tooltipDescription: enString(record.tooltipDescription),
+        // Plain ids, not self-relations — see the schema comment.
+        maxAttributeId: optionalNumber(record.maxAttributeID),
+        minAttributeId: optionalNumber(record.minAttributeID),
+        chargeRechargeTimeId: optionalNumber(record.chargeRechargeTimeID),
         isDeleted: false,
       }),
     });

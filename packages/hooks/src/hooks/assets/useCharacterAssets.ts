@@ -5,10 +5,12 @@ import { useEffect, useMemo } from "react";
 import type { GetCharactersCharacterIdAssetsQueryResponse } from "@jitaspace/esi-client";
 import {
   getCharactersCharacterIdAssets,
+  getCharactersCharacterIdAssetsInfiniteQueryKey,
   useGetCharactersCharacterIdAssetsInfinite,
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
 
 export type CharacterAsset =
   GetCharactersCharacterIdAssetsQueryResponse[number];
@@ -26,6 +28,11 @@ export const useCharacterAssets = (characterId?: number) => {
       { ...authHeaders },
       {
         query: {
+          // Keep this entry distinct from the single-page query for the
+          // same endpoint; see esiInfiniteQueryKey.
+          queryKey: esiInfiniteQueryKey(
+            getCharactersCharacterIdAssetsInfiniteQueryKey(characterId ?? 0),
+          ),
           enabled: characterId !== undefined && accessToken !== null,
           initialPageParam: 1,
           queryFn: ({ pageParam }) =>

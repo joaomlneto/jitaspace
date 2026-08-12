@@ -11,7 +11,7 @@ export type EveEntityAnchorDisplayProps = Omit<
   "component" | "href"
 > &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     /** The already-resolved destination URL. */
     href: string;
   };

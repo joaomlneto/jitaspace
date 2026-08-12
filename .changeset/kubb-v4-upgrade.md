@@ -1,6 +1,6 @@
 ---
 "@jitaspace/web": patch
-"@jitaspace/eve-scrape": patch
+"@jitaspace/background-jobs": patch
 ---
 
 Upgrade the Kubb API-client generator from v3 to v4 (`4.38.0`) across all five generated client packages (esi-client, sde-client, evekill-client, evetycoon-client, fuzzworks-market-client). The generated public API is preserved: `enumTypeSuffix: ""` keeps the existing `…Enum` type names (v4 defaults to a `Key` suffix), and the custom ESI client now exports the `Client` type that v4-generated code imports. The obsolete `@kubb/react` dependency was dropped (v4 plugins use `@kubb/react-fabric` internally).

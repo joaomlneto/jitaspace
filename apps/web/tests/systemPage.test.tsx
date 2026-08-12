@@ -14,7 +14,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 
 const SYSTEM_ID = 30000142;
 
-const mockUseParams = jest.fn<() => Record<string, string>>();
+const mockUseParams = jest.fn<(...args: unknown[]) => Record<string, string>>();
 const mockUseSelectedCharacter = jest.fn();
 const mockUseSolarSystem = jest.fn();
 const mockUseSolarSystemCostIndices = jest.fn();
@@ -30,7 +30,7 @@ const mockUseGetIncursions = jest.fn();
 // system/[systemId]/page.tsx imports prisma for generateMetadata
 jest.mock("~/lib/db", () => ({
   prisma: {
-    solarSystem: { findUnique: jest.fn().mockResolvedValue(null) },
+    solarSystem: { findUnique: jest.fn<(...args: unknown[]) => Promise<unknown>>().mockResolvedValue(null) },
   },
 }));
 

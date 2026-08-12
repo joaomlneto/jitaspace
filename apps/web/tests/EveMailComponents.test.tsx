@@ -10,10 +10,10 @@ import userEvent from "@testing-library/user-event";
 // Mocks
 // ---------------------------------------------------------------------------
 
-const mockUseAccessToken = jest.fn();
-const mockUseCharacterMailLabels = jest.fn();
-const mockUseCharacterMail = jest.fn();
-const mockUseCharacterMailingLists = jest.fn();
+const mockUseAccessToken = jest.fn<(...args: unknown[]) => unknown>();
+const mockUseCharacterMailLabels = jest.fn<(...args: unknown[]) => unknown>();
+const mockUseCharacterMail = jest.fn<(...args: unknown[]) => unknown>();
+const mockUseCharacterMailingLists = jest.fn<(...args: unknown[]) => unknown>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useAccessToken: (...args: unknown[]) => mockUseAccessToken(...args),
@@ -24,8 +24,12 @@ jest.mock("@jitaspace/hooks", () => ({
     mockUseCharacterMailingLists(...args),
 }));
 
-const mockPutMail = jest.fn(() => Promise.resolve({}));
-const mockDeleteMail = jest.fn(() => Promise.resolve({}));
+const mockPutMail = jest.fn<(...args: unknown[]) => Promise<unknown>>(() =>
+  Promise.resolve({}),
+);
+const mockDeleteMail = jest.fn<(...args: unknown[]) => Promise<unknown>>(() =>
+  Promise.resolve({}),
+);
 
 jest.mock("@jitaspace/esi-client", () => ({
   putCharactersCharacterIdMailMailId: (...args: unknown[]) =>
@@ -34,9 +38,9 @@ jest.mock("@jitaspace/esi-client", () => ({
     mockDeleteMail(...args),
 }));
 
-const mockOpenConfirmModal = jest.fn();
-const mockOpenContextModal = jest.fn();
-const mockShowNotification = jest.fn();
+const mockOpenConfirmModal = jest.fn<(...args: unknown[]) => unknown>();
+const mockOpenContextModal = jest.fn<(...args: unknown[]) => unknown>();
+const mockShowNotification = jest.fn<(...args: unknown[]) => unknown>();
 
 jest.mock("@mantine/modals", () => ({
   openConfirmModal: (...args: unknown[]) => mockOpenConfirmModal(...args),
@@ -132,7 +136,9 @@ const LABELS_HOOK_VALUE = {
       ],
     },
   },
-  deleteLabel: jest.fn(() => Promise.resolve({ success: true })),
+  deleteLabel: jest.fn((..._args: unknown[]) =>
+    Promise.resolve({ success: true }),
+  ),
 };
 
 function withProvider(node: ReactNode) {
@@ -198,7 +204,7 @@ describe("MessageMenu", () => {
 
   it("adds a label and calls the ESI update + mutate when an 'Add' item is clicked", async () => {
     const user = userEvent.setup();
-    const mutate = jest.fn();
+    const mutate = jest.fn<(...args: unknown[]) => unknown>();
     const data = [{ mail_id: 100, labels: [16] }];
     renderMenu({}, { mutate, data });
     await user.click(screen.getByRole("button"));
@@ -263,7 +269,7 @@ describe("MessageMenu", () => {
 
   it("calls the delete ESI endpoint when the delete modal is confirmed", async () => {
     const user = userEvent.setup();
-    const mutate = jest.fn();
+    const mutate = jest.fn<(...args: unknown[]) => unknown>();
     const data = [{ mail_id: 100 }];
     renderMenu({}, { mutate, data });
     await user.click(screen.getByRole("button"));

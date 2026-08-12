@@ -3,6 +3,7 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
   ingestSdeCompositeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   optionalNumber,
   requiredNumber,
@@ -38,7 +39,7 @@ const isActivity = (name: string): name is ActivityType =>
 /** Map the `{ typeID, … }` entries whose type is real, dropping dangling refs. */
 function guardedRows<T extends { typeID: number }, R>(
   items: T[] | undefined,
-  typeIds: Set<number>,
+  typeIds: ReadonlySet<number>,
   toRow: (item: T) => R,
 ): R[] {
   return (items ?? []).filter((item) => typeIds.has(item.typeID)).map(toRow);
@@ -56,8 +57,8 @@ export const ingestSdeBlueprints = defineJob<
   maxDurationSeconds: 3600,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["blueprints.yaml", "types.yaml"]);
-    const typeIds = new Set(Object.keys(files["types.yaml"]).map(Number));
+    const files = await loadSdeFiles(["blueprints.yaml"]);
+    const typeIds = await loadSdeFileIds("types.yaml");
 
     const blueprints: Prisma.BlueprintCreateManyInput[] = [];
     const activities: Prisma.BlueprintActivityCreateManyInput[] = [];

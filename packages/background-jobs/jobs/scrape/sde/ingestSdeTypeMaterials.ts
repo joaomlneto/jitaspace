@@ -3,6 +3,7 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
   ingestSdeCompositeTable,
+  loadSdeFileIds,
   loadSdeFiles,
   requiredNumber,
 } from "../../../helpers";
@@ -32,8 +33,8 @@ export const ingestSdeTypeMaterials = defineJob<
   maxDurationSeconds: 3600,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["typeMaterials.yaml", "types.yaml"]);
-    const typeIds = new Set(Object.keys(files["types.yaml"]).map(Number));
+    const files = await loadSdeFiles(["typeMaterials.yaml"]);
+    const typeIds = await loadSdeFileIds("types.yaml");
 
     const materials: Prisma.TypeMaterialCreateManyInput[] = [];
     for (const [key, value] of Object.entries(files["typeMaterials.yaml"])) {

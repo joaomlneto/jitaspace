@@ -7,7 +7,7 @@ import { Anchor } from "@mantine/core";
 
 export type OpenInformationWindowAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     onOpen?: () => void;
     disabled?: boolean;
   };

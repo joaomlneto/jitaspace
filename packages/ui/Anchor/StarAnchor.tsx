@@ -8,7 +8,7 @@ import { Anchor } from "@mantine/core";
 
 export type StarNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     starId: string | number;
   };
 
