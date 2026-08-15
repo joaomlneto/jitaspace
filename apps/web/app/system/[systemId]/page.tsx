@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cacheLife } from "next/cache";
 
 import type { SolarSystemSdeInfo } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
@@ -33,10 +34,16 @@ export async function generateMetadata({
  * Read the SDE columns of a system from our database. Returns null for an
  * unknown id or a database hiccup — the page renders fine without this half,
  * exactly as it did while the data came from a client-side SDE request.
+ *
+ * Cached for days, like the type page's dogma metadata: these columns only
+ * change when a new SDE release is ingested.
  */
 async function getSolarSystemSdeInfo(
   systemId: number,
 ): Promise<SolarSystemSdeInfo | null> {
+  "use cache";
+  cacheLife("days");
+
   if (!Number.isSafeInteger(systemId) || systemId <= 0) return null;
   try {
     const system = await prisma.solarSystem.findUnique({
@@ -83,8 +90,7 @@ async function getSolarSystemSdeInfo(
 
 /**
  * The database read lives here rather than in `Page` so it happens *inside* the
- * Suspense boundary. Awaiting it in `Page` would put uncached data outside the
- * boundary, which blocks the whole route from prerendering.
+ * Suspense boundary, alongside `params`.
  */
 async function PageContent({
   params,

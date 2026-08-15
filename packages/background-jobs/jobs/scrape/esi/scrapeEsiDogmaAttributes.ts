@@ -9,6 +9,7 @@ import type { DogmaAttribute } from "../../../db";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeDogmaAttributesEventPayload {
@@ -62,13 +63,7 @@ const excludeDogmaTimestamps = (entries: DogmaAttribute[]) =>
     excludeObjectKeys(entry, [
       "updatedAt",
       "createdAt",
-      "dataType",
-      "displayWhenZero",
-      "tooltipTitle",
-      "tooltipDescription",
-      "maxAttributeId",
-      "minAttributeId",
-      "chargeRechargeTimeId",
+      ...SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS,
     ]),
   );
 

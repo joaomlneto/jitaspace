@@ -76,13 +76,15 @@ const contentSecurityPolicy = [
   // to default-src 'self', which blocks the blob worker.
   "worker-src 'self' blob:",
   // Browser-side data fetches (client-side React Query / SWR hooks): the EVE
-  // data plane — ESI, self-hosted SDE, EVE-Kill / EVE Tycoon / Fuzzwork market,
-  // and the zKillboard killmail API (kill page + Travel panel) — plus
+  // data plane — ESI, EVE-Kill / EVE Tycoon / Fuzzwork market, and the
+  // zKillboard killmail API (kill page + Travel panel) — plus
   // images.evetech.net, which is also fetched as JSON to choose an image variant
   // and so needs connect-src in addition to img-src. Then Google Analytics
   // (incl. regional `*.google-analytics.com` collectors) and the same-origin
-  // Sentry/Umami proxies.
-  "connect-src 'self' https://esi.evetech.net https://sde.jita.space https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://gateway.umami.is https://www.google.com /monitoring /analytics /ingest",
+  // Sentry/Umami proxies. Static EVE reference data is no longer fetched from
+  // the self-hosted SDE service: it is resolved from our own database, on the
+  // server or through same-origin server actions, both covered by 'self'.
+  "connect-src 'self' https://esi.evetech.net https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://gateway.umami.is https://www.google.com /monitoring /analytics /ingest",
   "frame-ancestors 'none'",
   // Sentry Security (CSP) endpoint derived from the browser DSN — see the note
   // above on why this is NOT the `/monitoring` tunnel. TODO: `report-uri` is

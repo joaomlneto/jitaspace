@@ -48,8 +48,30 @@ export const SDE_OWNED_SOLAR_SYSTEM_COLUMNS = [
   "visualEffect",
   "isRegional",
   "isInternational",
+  "isHub",
+  "isBorder",
+  "isFringe",
+  "isCorridor",
+  "luminosity",
+  "radius",
+  "positionX",
+  "positionY",
+  "positionZ",
   "position2dX",
   "position2dY",
+  "factionId",
+] as const;
+
+/** Written by `ingestSdeDogmaAttributes`. */
+export const SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS = [
+  "dataType",
+  "displayWhenZero",
+  "tooltipTitle",
+  "tooltipDescription",
+  "maxAttributeId",
+  "minAttributeId",
+  "chargeRechargeTimeId",
+  "attributeCategoryId",
 ] as const;
 
 /** Written by `ingestSdeTypes`. */
