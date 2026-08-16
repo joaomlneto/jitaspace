@@ -1,7 +1,5 @@
 /**
- * Route prefixes crawlers are asked to stay out of: pages that only render
- * anything once a character is logged in (a crawler sees an empty shell), plus
- * the debug tooling.
+ * Route prefixes crawlers are asked to stay out of.
  *
  * `robots.ts` publishes these as `Disallow` rules and `sitemap.ts` filters them
  * out of the sitemap. The two must agree: a URL that is advertised in the
@@ -9,6 +7,13 @@
  * reports as an error, and it costs the whole sitemap credibility.
  *
  * Matching is by prefix — `/assets` also covers `/assets/character`.
+ *
+ * Most entries are here because the page renders nothing until a character is
+ * logged in, so a crawler only ever sees an empty shell. Two are not:
+ * `/travel` and `/ship-scanner` are anonymous, server-rendered, cacheable pages
+ * that would rank on their own. They predate this list and are kept blocked to
+ * preserve the existing robots.txt exactly; unblocking them is a deliberate SEO
+ * decision, not a cleanup.
  */
 export const CRAWLER_DISALLOWED_PATHS = [
   "/assets",
@@ -20,8 +25,10 @@ export const CRAWLER_DISALLOWED_PATHS = [
   "/mail",
   "/notifications",
   "/settings",
+  // Anonymous and indexable — blocked only for backwards compatibility.
   "/ship-scanner",
   "/skills",
+  // Anonymous and indexable — blocked only for backwards compatibility.
   "/travel",
   "/wallet",
 ] as const;

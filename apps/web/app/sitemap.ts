@@ -57,8 +57,13 @@ interface EntitySource {
  * Listing either spends crawl budget without earning impressions, and dilutes
  * the families that do rank.
  *
- * Order is fixed: sitemap pagination slices this list, so reordering reshuffles
- * which URLs land in which `/sitemap/{n}.xml`.
+ * Order must be totally deterministic, because pagination slices this list and
+ * `/sitemap/0.xml` and `/sitemap/1.xml` are separate requests that each rebuild
+ * it — potentially on different instances, from different cache snapshots. Two
+ * things guarantee that: this array's order, and the `orderBy` on every query.
+ * Without the latter the database is free to return rows in any order, so the
+ * two pages could overlap on some URLs and omit others entirely. Do not drop
+ * either.
  */
 const ENTITY_SOURCES: EntitySource[] = [
   {
@@ -68,6 +73,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.type.findMany({
           where: { isDeleted: false },
           select: { typeId: true },
+          orderBy: { typeId: "asc" },
         })
       ).map((row) => row.typeId),
   },
@@ -78,6 +84,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.category.findMany({
           where: { isDeleted: false },
           select: { categoryId: true },
+          orderBy: { categoryId: "asc" },
         })
       ).map((row) => row.categoryId),
   },
@@ -88,6 +95,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.group.findMany({
           where: { isDeleted: false },
           select: { groupId: true },
+          orderBy: { groupId: "asc" },
         })
       ).map((row) => row.groupId),
   },
@@ -98,6 +106,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.region.findMany({
           where: { isDeleted: false },
           select: { regionId: true },
+          orderBy: { regionId: "asc" },
         })
       ).map((row) => row.regionId),
   },
@@ -108,6 +117,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.constellation.findMany({
           where: { isDeleted: false },
           select: { constellationId: true },
+          orderBy: { constellationId: "asc" },
         })
       ).map((row) => row.constellationId),
   },
@@ -118,6 +128,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.solarSystem.findMany({
           where: { isDeleted: false },
           select: { solarSystemId: true },
+          orderBy: { solarSystemId: "asc" },
         })
       ).map((row) => row.solarSystemId),
   },
@@ -128,6 +139,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.station.findMany({
           where: { isDeleted: false },
           select: { stationId: true },
+          orderBy: { stationId: "asc" },
         })
       ).map((row) => row.stationId),
   },
@@ -138,6 +150,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.faction.findMany({
           where: { isDeleted: false },
           select: { factionId: true },
+          orderBy: { factionId: "asc" },
         })
       ).map((row) => row.factionId),
   },
@@ -148,6 +161,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.race.findMany({
           where: { isDeleted: false },
           select: { raceId: true },
+          orderBy: { raceId: "asc" },
         })
       ).map((row) => row.raceId),
   },
@@ -158,6 +172,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.bloodline.findMany({
           where: { isDeleted: false },
           select: { bloodlineId: true },
+          orderBy: { bloodlineId: "asc" },
         })
       ).map((row) => row.bloodlineId),
   },
@@ -168,6 +183,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.dogmaAttribute.findMany({
           where: { isDeleted: false },
           select: { attributeId: true },
+          orderBy: { attributeId: "asc" },
         })
       ).map((row) => row.attributeId),
   },
@@ -178,6 +194,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.dogmaEffect.findMany({
           where: { isDeleted: false },
           select: { effectId: true },
+          orderBy: { effectId: "asc" },
         })
       ).map((row) => row.effectId),
   },
@@ -190,6 +207,7 @@ const ENTITY_SOURCES: EntitySource[] = [
         await prisma.loyaltyStoreOffer.groupBy({
           by: ["corporationId"],
           where: { isDeleted: false },
+          orderBy: { corporationId: "asc" },
         })
       ).map((row) => row.corporationId),
   },
@@ -231,11 +249,14 @@ async function getStaticRoutes(): Promise<string[]> {
   if (cachedStaticRoutes) return cachedStaticRoutes;
   try {
     cachedStaticRoutes = await collectStaticRoutes();
+    return cachedStaticRoutes;
   } catch (error: unknown) {
+    // Deliberately not memoized: caching the empty fallback would drop the
+    // homepage from this instance's sitemap for the rest of its life over one
+    // transient read.
     console.error("Failed to collect static routes for sitemap.", error);
-    cachedStaticRoutes = [];
+    return [];
   }
-  return cachedStaticRoutes;
 }
 
 /**
@@ -276,7 +297,12 @@ async function getAllUrls(): Promise<string[]> {
     ...families.flatMap((family) => family.urls),
   ];
 
-  if (families.every((family) => family.ok)) {
+  // An empty static-route list means the `app/` walk failed — the real tree
+  // always yields at least `/` — so it counts as degraded alongside a failed
+  // family query.
+  const healthy =
+    staticRoutes.length > 0 && families.every((family) => family.ok);
+  if (healthy) {
     cachedUrls = { urls, expiresAt: Date.now() + URL_CACHE_TTL_MS };
   }
   return urls;

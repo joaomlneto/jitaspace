@@ -96,21 +96,32 @@ const idField: Record<keyof typeof rows, string> = {
   dogmaEffect: "effectId",
 };
 
-const findManyMocks = {} as Record<
-  keyof typeof rows,
-  jest.Mock<() => Promise<unknown[]>>
->;
-const mockGroupBy = jest.fn<() => Promise<unknown[]>>();
+// The stubs forward their arguments so the suite can assert the `where` and
+// `orderBy` clauses — without that, deleting either from all 13 sources is a
+// mutation no test can see.
+type QueryMock = jest.Mock<(args?: unknown) => Promise<unknown[]>>;
+
+const findManyMocks = {} as Record<keyof typeof rows, QueryMock>;
+const mockGroupBy = jest.fn<(args?: unknown) => Promise<unknown[]>>();
 
 const prismaStub: Record<string, unknown> = {
-  loyaltyStoreOffer: { groupBy: () => mockGroupBy() },
+  loyaltyStoreOffer: { groupBy: (args?: unknown) => mockGroupBy(args) },
 };
 for (const model of Object.keys(rows) as (keyof typeof rows)[]) {
-  const fn = jest.fn<() => Promise<unknown[]>>();
+  const fn: QueryMock = jest.fn<(args?: unknown) => Promise<unknown[]>>();
   findManyMocks[model] = fn;
-  prismaStub[model] = { findMany: () => fn() };
+  prismaStub[model] = { findMany: (args?: unknown) => fn(args) };
 }
 jest.mock("~/lib/db", () => ({ prisma: prismaStub }));
+
+/** The single argument object a stubbed query was called with. */
+function queryArgs(mock: {
+  mock: { calls: (unknown[] | undefined)[] };
+}): Record<string, unknown> {
+  const call = mock.mock.calls[0];
+  if (!call) throw new Error("query was never called");
+  return (call[0] ?? {}) as Record<string, unknown>;
+}
 
 interface SitemapModule {
   default: (props: { id: Promise<string> }) => Promise<MetadataRoute.Sitemap>;
@@ -120,6 +131,17 @@ interface SitemapModule {
 
 function load(): SitemapModule {
   return require("~/app/sitemap") as SitemapModule;
+}
+
+interface RobotsModule {
+  default: () => Promise<{
+    rules: { disallow?: string[] };
+    sitemap?: string[];
+  }>;
+}
+
+function loadRobots(): RobotsModule {
+  return require("~/app/robots") as RobotsModule;
 }
 
 /** Every `<loc>` the sitemap would emit, across all of its pages. */
@@ -176,16 +198,42 @@ describe("sitemap", () => {
     expect(locs).not.toContain("https://www.jita.space/assets/character");
   });
 
-  it("agrees with the robots.txt disallow list", async () => {
+  it("advertises nothing that the robots.txt it ships alongside disallows", async () => {
+    // Cross-checks the sitemap against what `robots.ts` actually emits, not
+    // against the shared constant — otherwise a hardcoded array sneaking back
+    // into robots.ts would leave both sides passing while production serves a
+    // sitemap/robots contradiction.
     const locs = await allLocs(load());
+    const { rules } = await loadRobots().default();
+    const disallow = rules.disallow ?? [];
+
+    expect(disallow.length).toBeGreaterThan(0);
+    expect([...disallow].sort()).toEqual([...CRAWLER_DISALLOWED_PATHS].sort());
 
     const contradictions = locs.filter((loc) => {
       const path = new URL(loc).pathname;
-      return CRAWLER_DISALLOWED_PATHS.some(
+      return disallow.some(
         (prefix) => path === prefix || path.startsWith(`${prefix}/`),
       );
     });
     expect(contradictions).toEqual([]);
+  });
+
+  it("filters soft-deleted rows and orders every family deterministically", async () => {
+    await allLocs(load());
+
+    for (const model of Object.keys(rows) as (keyof typeof rows)[]) {
+      const args = queryArgs(findManyMocks[model]);
+      expect(args.where).toEqual({ isDeleted: false });
+      // Without an explicit order the database may return rows in any order,
+      // which lets the two sitemap pages overlap and drop URLs.
+      expect(args.orderBy).toEqual({ [idField[model]]: "asc" });
+    }
+
+    const groupArgs = queryArgs(mockGroupBy);
+    expect(groupArgs.where).toEqual({ isDeleted: false });
+    expect(groupArgs.by).toEqual(["corporationId"]);
+    expect(groupArgs.orderBy).toEqual({ corporationId: "asc" });
   });
 
   it("never emits a dynamic segment as a literal route", async () => {
@@ -270,11 +318,24 @@ describe("sitemap", () => {
     const pages = await mod.generateSitemaps();
     expect(pages).toEqual([{ id: 0 }, { id: 1 }]);
 
+    // 5 crawlable static routes + 60,000 types + 12 single-row families.
+    const TOTAL = 5 + 60_000 + 12;
     const first = await mod.default({ id: Promise.resolve("0") });
-    expect(first).toHaveLength(50_000);
+    const second = await mod.default({ id: Promise.resolve("1") });
 
-    const locs = await allLocs(mod);
-    expect(new Set(locs).size).toBe(locs.length);
+    // Conservation: every URL lands on exactly one page, none invented.
+    expect(first).toHaveLength(50_000);
+    expect(second).toHaveLength(TOTAL - 50_000);
+
+    const locs = [...first, ...second].map((entry) => entry.url);
+    expect(locs).toHaveLength(TOTAL);
+    expect(new Set(locs).size).toBe(TOTAL);
+
+    // The page boundary is pinned, so a reordering of the assembled list — the
+    // failure the per-query `orderBy` exists to prevent — cannot slip through
+    // on length checks alone.
+    expect(first.at(-1)?.url).toBe("https://www.jita.space/type/49995");
+    expect(second[0]?.url).toBe("https://www.jita.space/type/49996");
     expect(locs).toContain("https://www.jita.space/type/60000");
   });
 
