@@ -54,7 +54,11 @@ export function FooterWithLinks() {
           </Anchor>
           .
         </Text>
-        <a href="https://www.eveonline.com/partners" target="_blank">
+        <a
+          href="https://www.eveonline.com/partners"
+          target="_blank"
+          rel="noreferrer"
+        >
           <PartnerBadge height={24} />
         </a>
         <Group className={classes.links}>

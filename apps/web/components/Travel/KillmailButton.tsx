@@ -182,3 +182,5 @@ export const KillmailButton = memo(
     );
   },
 );
+
+KillmailButton.displayName = "KillmailButton";
