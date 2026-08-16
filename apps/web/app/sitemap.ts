@@ -12,10 +12,22 @@ const LAST_MODIFIED = env.NEXT_PUBLIC_MODIFIED_DATE
   ? new Date(env.NEXT_PUBLIC_MODIFIED_DATE)
   : new Date();
 
+/**
+ * `url` without its trailing slashes.
+ *
+ * Written as a scan rather than a `/\/+$/` replace: that pattern backtracks
+ * super-linearly on a run of slashes.
+ */
+function stripTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") end -= 1;
+  return url.slice(0, end);
+}
+
 // The sitemap protocol requires every <loc> to be a fully-qualified URL —
 // relative paths are silently discarded by crawlers. Trailing slashes on the
 // configured origin would double up against the leading slash of each route.
-const SITE_URL = CONFIG.SITE_URL.replace(/\/+$/, "");
+const SITE_URL = stripTrailingSlashes(CONFIG.SITE_URL);
 
 const APP_DIR = join(process.cwd(), "app");
 

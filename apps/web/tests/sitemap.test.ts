@@ -300,8 +300,10 @@ describe("sitemap", () => {
     errorSpy.mockRestore();
   });
 
-  it("normalizes a trailing slash on the configured origin", async () => {
-    mockEnv.NEXT_PUBLIC_SITE_URL = "https://www.jita.space/";
+  it("normalizes trailing slashes on the configured origin", async () => {
+    // A run of slashes, not just one — the stripping is a linear scan and this
+    // is the input shape that made the previous regex backtrack.
+    mockEnv.NEXT_PUBLIC_SITE_URL = "https://www.jita.space///";
 
     const locs = await allLocs(load());
 
