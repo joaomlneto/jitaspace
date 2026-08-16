@@ -29,7 +29,8 @@ pnpm lint:fix       # auto-fix lint issues
 pnpm type-check     # tsc --noEmit across all workspaces
 pnpm format         # Prettier (also sorts imports)
 pnpm db:generate    # generate Prisma client from packages/db/prisma/schema.prisma
-pnpm db:push        # push Prisma schema to DB (also runs db:generate)
+pnpm db:diff        # read-only: show what db:push WOULD change (run this first)
+pnpm db:push        # apply the Prisma schema to the DB (also runs db:generate)
 pnpm kubb:generate  # generate API clients from OpenAPI specs
 pnpm cypress:run    # run web E2E tests headlessly
 pnpm cypress:open   # open Cypress runner
@@ -66,6 +67,36 @@ If you see import errors for `@jitaspace/db` or `@jitaspace/esi-client`, these h
 
 - Prisma client → edit `packages/db/prisma/schema.prisma`, then `pnpm db:generate`
 - API clients → edit the package's `swagger.json` / `kubb.config.ts`, then `pnpm kubb:generate`
+
+## Applying schema changes to the database
+
+**Deploying does not apply the schema.** `apps/web/vercel.json` runs `db:generate` (Prisma client codegen — required to compile) but **not** `db:push`. Applying a schema change to production is a separate, deliberate step you take by hand:
+
+```bash
+pnpm db:diff        # read-only — review the pending change first
+pnpm db:push        # apply it
+```
+
+**Both commands hit whatever `DATABASE_URL` points at, and the root `.env` points at production CockroachDB.** Check the datasource line each one prints before you let a push proceed. `db:diff` is `prisma migrate diff --from-config-datasource --to-schema` — read-only, never writes; add `pnpm --filter @jitaspace/db db:diff:sql` for SQL rather than the summary. There is no `prisma/migrations` directory (`packages/db/prisma.config.ts` declares a path for one, but it has never existed), so `db push` is the only mechanism — and Prisma's own docs recommend against it in production. Treat every push as a manual, reviewed operation.
+
+**Why the deploy no longer pushes.** It used to, and it broke 18 production deploys between 2026-08-05 and 2026-08-09. `db push` reconciles the database to _whatever `schema.prisma` sits on the commit being deployed_, so a PR branched **before** a schema-adding PR proposes **dropping** the newer tables. PR #691 — a type-check fix that never touched the schema — proposed dropping 33 populated tables (38,823 rows). Prisma refused and the build went red; the red build was the safety net. Two failure modes to recognise if you ever see them again:
+
+- **`Use the --accept-data-loss flag …`** — `schema.prisma` on this commit is _behind_ the database. Rebase onto the commit that added the missing models. **Never add that flag to a build or run it unattended** — it drops the listed tables with no migration history to recover from. Dropping something on purpose is the one legitimate use, and it belongs in a deliberate expand/contract sequence: add the new shape and push, ship code that stops using the old one, then remove it from the schema and push again in a reviewed window. Never drop a column the currently-deployed code still selects.
+- **`this schema change is disallowed because table "X" is locked …`** — CockroachDB v26.1+ creates tables with `schema_locked = true` by default, so a push that creates a table and then indexes it can fail _on the table it just created_, leaving the database **half-migrated** (the table exists, its index does not). Recover with the unlock the error's own `DETAIL:` line prints, then re-push and re-lock:
+
+  ```sql
+  ALTER TABLE "X" SET (schema_locked = false);
+  -- re-run pnpm db:push, then:
+  ALTER TABLE "X" SET (schema_locked = true);
+  ```
+
+**Push before you merge — the consequence of forgetting is inconsistent, and mostly quiet.** `cacheComponents` resolves every argument-free `"use cache"` read during the build prerender, so a schema change that lands on `main` unapplied hits those reads with a database error. What happens next depends on where the `catch` sits relative to the cache boundary, and both shapes exist in this repo:
+
+- **`catch` inside the same function as `"use cache"` → silent.** The catch runs normally, `notFound()` wins, and the route is **prerendered as a 404 with a green build**. This is the majority: `regions`, `categories`, `agents`, `skills`, `ship-scanner`, `dogma/attributes`, `dogma/effects`, `lp-store`, `lp-store/all` — all bare `catch {}` with no Sentry capture, so nothing reports it.
+- **`catch` outside the cache scope → loud.** Where `"use cache"` sits in a `data.ts` helper and the page catches around the call, the throw is not contained and the export dies. Only `active-wars` and `travel` are this shape; verified by building against an unreachable database, which exits on `app/active-wars/data.ts:153` despite the guard at `page.tsx:16-20`.
+- **Tables no route reads → no signal at all.** The incident's own `NpcCorporation*` tables are written only by `packages/background-jobs`; that drift class gives a green build, a green site, and a Trigger.dev job failing where nobody is looking.
+
+Reads behind `connection()` (e.g. `app/history/page.tsx:24`) or behind `await params` inside a `<Suspense>` boundary are request-time and unaffected either way.
 
 ## Environment variables & `SKIP_ENV_VALIDATION`
 

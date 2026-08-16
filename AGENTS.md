@@ -40,9 +40,14 @@ pnpm install
 
 ```zsh
 pnpm db:generate
-# or if you need to push schema to DB and generate
-pnpm db:push
+# Applying the schema to the DB is a separate, manual step — deploys do NOT do it.
+pnpm db:diff   # read-only: review what would change
+pnpm db:push   # apply it — BEFORE merging the PR that changes the schema
 ```
+
+> Deploys run `db:generate` only. `db:push` reconciles the database down to the schema on the commit being deployed, so running it from a build makes any PR branched before a schema-adding PR propose **dropping** the newer tables — that broke 18 production deploys in 2026-08. Never pass `--accept-data-loss` to get past it, and note that `db:push` hits whatever `DATABASE_URL` names — in the root `.env` that is production.
+>
+> Forgetting to push is mostly **silent**: under `cacheComponents` a page that catches its own database error prerenders as a 404 with a green build. See CLAUDE.md → "Applying schema changes to the database" for which routes are loud, which are quiet, and the CockroachDB `schema_locked` recovery.
 
 - Regenerate API clients (Kubb) used by many packages. Example (root):
 

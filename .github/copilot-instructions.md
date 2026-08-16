@@ -43,6 +43,15 @@ Turbo's `build` task declares these as dependencies, but always run them explici
 - `packages/db/` (Prisma client) — edit `packages/db/prisma/schema.prisma`, then run `pnpm db:generate`
 - `packages/esi-client/src/generated/**` and other `packages/*-client/src/generated/**` — edit the `swagger.json` or `kubb.config.ts`, then run `pnpm kubb:generate`
 
+**Applying the schema to the database is a separate, manual step.** `pnpm db:generate` only writes the Prisma client; it does not touch the database. Deploys (`apps/web/vercel.json`) run `db:generate` and **not** `db:push` — `db push` reconciles the database down to the schema on the deployed commit, so running it from a build makes any PR branched before a schema-adding PR propose dropping the newer tables. That broke 18 production deploys in 2026-08. To apply a schema change:
+
+```bash
+pnpm db:diff          # read-only — review the pending change
+pnpm db:push          # apply it, then merge
+```
+
+Never pass `--accept-data-loss`. See CLAUDE.md → "Applying schema changes to the database" for the CockroachDB `schema_locked` recovery procedure.
+
 ---
 
 ## Build
