@@ -84,7 +84,7 @@ packages/
   db/                        # Prisma 7 client + PostgreSQL schema
   db-history/                # Separate Prisma client for the EVE build-history DB (/history)
   kv/                        # Redis client + Bull job queues
-  esi-client/ sde-client/    # Kubb-generated EVE API clients (ESI, self-hosted SDE)
+  esi-client/                # Kubb-generated ESI API client
   evekill-client/ evetycoon-client/ fuzzworks-market-client/  # more generated clients
   esi-metadata/ eve-data/    # ESI scopes/ID ranges; static EVE datasets
   hooks/                     # React Query hooks over ESI / third-party APIs

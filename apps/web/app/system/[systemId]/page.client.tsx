@@ -30,7 +30,7 @@ import {
   IconSwords,
 } from "@tabler/icons-react";
 
-import type { SolarSystem } from "@jitaspace/sde-client";
+import { useGetFwSystems, useGetIncursions } from "@jitaspace/esi-client";
 import {
   AllianceName,
   CorporationName,
@@ -40,7 +40,6 @@ import {
   StationAnchor,
   StationName,
 } from "@jitaspace/eve-components";
-import { useGetFwSystems, useGetIncursions } from "@jitaspace/esi-client";
 import {
   useAllSolarSystemJumps,
   useAllSolarSystemKills,
@@ -51,7 +50,6 @@ import {
   useStar,
   useStargate,
 } from "@jitaspace/hooks";
-import { useGetSolarSystemById } from "@jitaspace/sde-client";
 import {
   FactionAvatar,
   formatSecurityStatus,
@@ -61,6 +59,7 @@ import {
   securityStatusColor,
 } from "@jitaspace/ui";
 
+import type { SolarSystemSdeInfo } from "./types";
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
 import {
   PlanetAvatar,
@@ -253,7 +252,8 @@ function StargateConnection({ stargateId }: Readonly<{ stargateId: number }>) {
 
 /** Resolve the sovereignty holder to the right named entity. */
 function SovereigntyLabel({ sov }: Readonly<{ sov: SovereigntyEntry }>) {
-  if (sov.alliance_id) return <AllianceName span allianceId={sov.alliance_id} />;
+  if (sov.alliance_id)
+    return <AllianceName span allianceId={sov.alliance_id} />;
   if (sov.corporation_id)
     return <CorporationName span corporationId={sov.corporation_id} />;
   if (sov.faction_id) return <FactionName span factionId={sov.faction_id} />;
@@ -407,7 +407,7 @@ function SystemInfoSection({
   securityStatus?: number;
   securityClass?: string;
   star?: { data: { spectral_class?: string; temperature?: number } };
-  sde?: SolarSystem;
+  sde?: SolarSystemSdeInfo | null;
 }>) {
   return (
     <section>
@@ -419,20 +419,20 @@ function SystemInfoSection({
             value={securityStatus?.toFixed(2) ?? "—"}
           />
           <InfoItem label="Security Class" value={securityClass ?? "—"} />
-          <InfoItem label="Star Type" value={star?.data.spectral_class ?? "—"} />
+          <InfoItem
+            label="Star Type"
+            value={star?.data.spectral_class ?? "—"}
+          />
           <InfoItem
             label="Temperature"
             value={withUnit(star?.data.temperature, "K")}
           />
-          <InfoItem
-            label="Luminosity"
-            value={formatNumber(sde?.luminosity)}
-          />
+          <InfoItem label="Luminosity" value={formatNumber(sde?.luminosity)} />
           <InfoItem label="Radius" value={withUnit(sde?.radius, "m")} />
-          {sde?.wormholeClassID != null && (
+          {sde?.wormholeClassId != null && (
             <InfoItem
               label="Wormhole Class"
-              value={String(sde.wormholeClassID)}
+              value={String(sde.wormholeClassId)}
             />
           )}
           <InfoItem
@@ -441,9 +441,7 @@ function SystemInfoSection({
               <Position3DText
                 size="xs"
                 position={
-                  sde?.position.x != null &&
-                  sde.position.y != null &&
-                  sde.position.z != null
+                  sde?.position
                     ? [sde.position.x, sde.position.y, sde.position.z]
                     : undefined
                 }
@@ -452,15 +450,15 @@ function SystemInfoSection({
           />
         </SimpleGrid>
 
-        {sde?.factionID != null && (
+        {sde?.factionId != null && (
           <Group gap="sm" mt="lg">
-            <FactionAvatar factionId={sde.factionID} size={28} radius={999} />
+            <FactionAvatar factionId={sde.factionId} size={28} radius={999} />
             <div>
               <Text size="xs" c="dimmed" className={classes.statLabel}>
                 Faction
               </Text>
               <Text size="sm" fw={500}>
-                <FactionName span factionId={sde.factionID} />
+                <FactionName span factionId={sde.factionId} />
               </Text>
             </div>
           </Group>
@@ -468,12 +466,12 @@ function SystemInfoSection({
 
         {sde && (
           <Group gap="xs" mt="lg">
-            <FlagChip label="Trade Hub" active={sde.hub} />
-            <FlagChip label="Border" active={sde.border} />
-            <FlagChip label="Fringe" active={sde.fringe} />
-            <FlagChip label="Corridor" active={sde.corridor} />
-            <FlagChip label="International" active={sde.international} />
-            <FlagChip label="Regional" active={sde.regional} />
+            <FlagChip label="Trade Hub" active={sde.isHub} />
+            <FlagChip label="Border" active={sde.isBorder} />
+            <FlagChip label="Fringe" active={sde.isFringe} />
+            <FlagChip label="Corridor" active={sde.isCorridor} />
+            <FlagChip label="International" active={sde.isInternational} />
+            <FlagChip label="Regional" active={sde.isRegional} />
           </Group>
         )}
       </Paper>
@@ -482,8 +480,14 @@ function SystemInfoSection({
 }
 
 const EXTERNAL_TOOLS = [
-  { label: "DOTLAN", href: (id: number) => `https://evemaps.dotlan.net/system/${id}` },
-  { label: "zKillboard", href: (id: number) => `https://zkillboard.com/system/${id}` },
+  {
+    label: "DOTLAN",
+    href: (id: number) => `https://evemaps.dotlan.net/system/${id}`,
+  },
+  {
+    label: "zKillboard",
+    href: (id: number) => `https://zkillboard.com/system/${id}`,
+  },
   { label: "Eveeye", href: (id: number) => `https://eveeye.com/?s=${id}` },
   {
     label: "Adam4EVE",
@@ -491,7 +495,9 @@ const EXTERNAL_TOOLS = [
   },
 ];
 
-export default function Page() {
+export default function Page({
+  sde,
+}: Readonly<{ sde: SolarSystemSdeInfo | null }>) {
   const params = useParams();
   const rawSystemId = params.systemId;
   const systemId = Number(
@@ -500,10 +506,11 @@ export default function Page() {
 
   const character = useSelectedCharacter();
   const { data: solarSystem } = useSolarSystem(systemId);
-  const { data: sdeSolarSystem } = useGetSolarSystemById(systemId);
   const starId = solarSystem?.data.star_id;
   const { data: star } = useStar(starId ?? 0);
-  const sov = useSolarSystemSovereignty(systemId) as SovereigntyEntry | undefined;
+  const sov = useSolarSystemSovereignty(systemId) as
+    | SovereigntyEntry
+    | undefined;
   const { data: costIndices } = useSolarSystemCostIndices();
   const { data: allJumps } = useAllSolarSystemJumps();
   const { data: allKills } = useAllSolarSystemKills();
@@ -515,7 +522,6 @@ export default function Page() {
   }
 
   const data = solarSystem?.data;
-  const sde = sdeSolarSystem?.data;
 
   const securityStatus = data?.security_status;
   const secColor =
@@ -536,7 +542,9 @@ export default function Page() {
   const stargates = data?.stargates ?? [];
   const stations = data?.stations ?? [];
 
-  const jumps = allJumps?.data.find((j) => j.system_id === systemId)?.ship_jumps;
+  const jumps = allJumps?.data.find(
+    (j) => j.system_id === systemId,
+  )?.ship_jumps;
   const kills = allKills?.data.find((k) => k.system_id === systemId);
   const incursion = incursions?.data.find(
     (i) =>
@@ -624,8 +632,8 @@ export default function Page() {
 
               {data ? (
                 <Text size="sm" c="dimmed">
-                  {planetCount} planets · {moonCount} moons · {beltCount} belts ·{" "}
-                  {stations.length} stations · {stargates.length} gates
+                  {planetCount} planets · {moonCount} moons · {beltCount} belts
+                  · {stations.length} stations · {stargates.length} gates
                 </Text>
               ) : (
                 <Skeleton height={14} width={280} />

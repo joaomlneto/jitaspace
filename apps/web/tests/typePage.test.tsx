@@ -38,29 +38,10 @@ jest.mock("@jitaspace/esi-client", () => ({
     mockUseGetUniverseGroupsGroupId(...args),
 }));
 
-// SDE client query-option builders: encode the requested id so the mocked
-// useQueries can hand back matching data.
-jest.mock("@jitaspace/sde-client", () => ({
-  getDogmaAttributeByIdQueryOptions: (attributeId: number) => ({
-    queryKey: ["dogmaAttribute", attributeId],
-    __attributeId: attributeId,
-  }),
-  getDogmaAttributeCategoryByIdQueryOptions: (categoryId: number) => ({
-    queryKey: ["dogmaAttributeCategory", categoryId],
-    __categoryId: categoryId,
-  }),
-  getDogmaUnitByIdQueryOptions: (unitId: number) => ({
-    queryKey: ["dogmaUnit", unitId],
-    __unitId: unitId,
-  }),
-}));
-
-// useQueries: attribute queries -> a category id, category queries -> a name,
-// unit queries -> a display symbol. useQuery: the type image-variations fetch.
-const mockUseQueries = jest.fn();
+// The SDE dogma metadata is resolved on the server and passed in as
+// `dogmaMeta`; only the type image-variations query remains client-side.
 const mockUseQuery = jest.fn();
 jest.mock("@tanstack/react-query", () => ({
-  useQueries: (...args: unknown[]) => mockUseQueries(...args),
   useQuery: (...args: unknown[]) => mockUseQuery(...args),
 }));
 
@@ -141,17 +122,25 @@ const FULL_TYPE_DATA = {
   ],
 };
 
-interface QueryStub {
-  __attributeId?: number;
-  __categoryId?: number;
-  __unitId?: number;
+interface DogmaMetaStub {
+  attributes: Record<number, { categoryId?: number; unitId?: number }>;
+  unitSymbols: Record<number, string>;
+  categoryNames: Record<number, string>;
 }
 
 interface TypePageProps {
   typeId?: number;
   typeName?: string;
   typeDescription?: string;
+  dogmaMeta?: DogmaMetaStub;
 }
+
+/** Attributes 4 and 161 sit in category 7 ("Armor"); 999 is uncategorized. */
+const DEFAULT_DOGMA_META: DogmaMetaStub = {
+  attributes: { 4: { categoryId: 7 }, 161: { categoryId: 7 }, 999: {} },
+  unitSymbols: {},
+  categoryNames: { 7: "Armor" },
+};
 
 // Require the page lazily so the jest.mock(...) factories above are active
 // before the module (and its transitively-mocked deps) are evaluated.
@@ -166,7 +155,7 @@ function renderPage(
   const TypePage = getPage();
   return render(
     <MantineProvider>
-      <TypePage typeId={30} {...props} />
+      <TypePage typeId={30} dogmaMeta={DEFAULT_DOGMA_META} {...props} />
     </MantineProvider>,
     // The active tab is nuqs-backed; hasMemory lets tab clicks round-trip.
     { wrapper: withNuqsTestingAdapter({ hasMemory: true, ...adapter }) },
@@ -184,7 +173,6 @@ describe("Type page (client)", () => {
     mockUseMarketPrices.mockReset();
     mockUseFuzzworkTypeMarketStats.mockReset();
     mockUseGetUniverseGroupsGroupId.mockReset();
-    mockUseQueries.mockReset();
     mockUseQuery.mockReset();
 
     // Defaults exercised by the "full data" path.
@@ -208,21 +196,6 @@ describe("Type page (client)", () => {
     // The type image-variations query — no variations (falls back to icon).
     mockUseQuery.mockReturnValue({ data: [] });
 
-    // Attribute queries -> a category id (4 and 161 -> 7, 999 -> undefined).
-    // Category queries -> a name. Unit queries -> a display symbol.
-    mockUseQueries.mockImplementation((arg: unknown) => {
-      const { queries } = arg as { queries: QueryStub[] };
-      return queries.map((q) => {
-        if (q.__attributeId !== undefined) {
-          const attributeCategoryID = q.__attributeId === 999 ? undefined : 7;
-          return { data: { data: { attributeCategoryID } } };
-        }
-        if (q.__categoryId !== undefined) {
-          return { data: { data: { name: "Armor" } } };
-        }
-        return { data: { data: { displayName: { en: "" } } } };
-      });
-    });
   });
 
   it("renders the hero and overview tab with full data", () => {
@@ -366,27 +339,17 @@ describe("Type page (client)", () => {
         },
       },
     });
-    mockUseQueries.mockImplementation((arg: unknown) => {
-      const { queries } = arg as { queries: QueryStub[] };
-      return queries.map((q) => {
-        if (q.__attributeId !== undefined) {
-          if (q.__attributeId === 999)
-            return { data: { data: { attributeCategoryID: undefined } } };
-          return {
-            data: {
-              data: { attributeCategoryID: q.__attributeId === 4 ? 9 : 3 },
-            },
-          };
-        }
-        if (q.__categoryId !== undefined) {
-          const name = q.__categoryId === 9 ? "Required Skills" : "Fitting";
-          return { data: { data: { name } } };
-        }
-        return { data: { data: { displayName: { en: "" } } } };
-      });
+    renderPage({
+      dogmaMeta: {
+        attributes: {
+          4: { categoryId: 9 },
+          50: { categoryId: 3 },
+          999: {},
+        },
+        unitSymbols: {},
+        categoryNames: { 3: "Fitting", 9: "Required Skills" },
+      },
     });
-
-    renderPage();
     clickTab(/Attributes/);
 
     const fitting = screen.getByText("Fitting"); // category 3
@@ -404,21 +367,14 @@ describe("Type page (client)", () => {
   });
 
   it("falls back to a generated category label when the name is missing", () => {
-    mockUseQueries.mockImplementation((arg: unknown) => {
-      const { queries } = arg as { queries: QueryStub[] };
-      return queries.map((q) => {
-        if (q.__attributeId !== undefined) {
-          const attributeCategoryID = q.__attributeId === 999 ? undefined : 7;
-          return { data: { data: { attributeCategoryID } } };
-        }
-        if (q.__categoryId !== undefined) {
-          return { data: undefined };
-        }
-        return { data: { data: { displayName: { en: "" } } } };
-      });
+    renderPage({
+      dogmaMeta: {
+        attributes: { 4: { categoryId: 7 }, 161: { categoryId: 7 }, 999: {} },
+        unitSymbols: {},
+        // No name for category 7 -> the page generates "Category 7".
+        categoryNames: {},
+      },
     });
-
-    renderPage();
     clickTab(/Attributes/);
     expect(screen.getByText("Category 7")).toBeInTheDocument();
   });
@@ -437,7 +393,6 @@ describe("Type page (client)", () => {
     mockUseMarketPrices.mockReturnValue({ data: {} });
     mockUseFuzzworkTypeMarketStats.mockReturnValue({ data: null });
     mockUseGetUniverseGroupsGroupId.mockReturnValue({ data: undefined });
-    mockUseQueries.mockReturnValue([]);
 
     renderPage({ typeName: "Fallback Name", typeDescription: undefined });
 

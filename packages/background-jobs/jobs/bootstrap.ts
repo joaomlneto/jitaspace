@@ -19,12 +19,8 @@ export const bootstrapDatabase = defineJob<
     // waitForEvent pair per child). A child failure now propagates and fails
     // bootstrap at that step, instead of silently timing out after 1-3h.
     await ctx.invoke("scrape-hoboleaks-agent-types", {});
-    await ctx.invoke("scrape-sde-dogma-attribute-categories", {});
     await ctx.invoke("scrape-hoboleaks-dogma-effect-categories", {});
     await ctx.invoke("scrape-hoboleaks-dogma-units", {});
-    await ctx.invoke("scrape-sde-station-services", {});
-    await ctx.invoke("scrape-sde-npc-corporation-divisions", {});
-    await ctx.invoke("scrape-sde-icons", {});
     await ctx.invoke("scrape-esi-graphics", {});
     await ctx.invoke("scrape-esi-market-groups", {});
     await ctx.invoke("scrape-esi-dogma-attributes", {});
@@ -36,7 +32,6 @@ export const bootstrapDatabase = defineJob<
     await ctx.invoke("scrape-esi-constellations", {});
     await ctx.invoke("scrape-esi-solar-systems", {});
     await ctx.invoke("scrape-esi-factions", {});
-    await ctx.invoke("scrape-sde-races", {});
     await ctx.invoke("scrape-esi-races", {});
     await ctx.invoke("scrape-esi-bloodlines", {});
     await ctx.invoke("scrape-esi-ancestries", {});
@@ -50,6 +45,14 @@ export const bootstrapDatabase = defineJob<
     // and ESI never clobber each other) and also add the tables the scrapers
     // don't cover (celestials, blueprints, certificates, skins, metaGroups,
     // contraband, the planetary / dogma reference tables, etc.).
+    //
+    // This loop is also the sole populator of the SDE reference tables that
+    // used to be seeded before the ESI scrapers above (Icon, Race,
+    // StationService, NpcCorporationDivision, DogmaAttributeCategory). The ESI
+    // scrapers guard their optional SDE-owned FKs against rows that don't exist
+    // yet — e.g. scrape-esi-types leaves `iconId` null on a fresh database —
+    // and the ingest jobs then set those columns authoritatively, in FK order,
+    // within this same bootstrap run.
     for (const jobId of SDE_INGEST_JOB_IDS) {
       await ctx.invoke(jobId, {});
     }

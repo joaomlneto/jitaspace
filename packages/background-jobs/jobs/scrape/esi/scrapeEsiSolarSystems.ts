@@ -74,6 +74,25 @@ const stripMoonSdeColumns = (entries: Moon[]) =>
     ]),
   );
 
+/**
+ * Each row as ESI knows it: the model minus the timestamps and the SDE-owned
+ * columns. Annotating the builders below with these makes the compiler enforce
+ * the split — a new column on one of these models is an error here until it is
+ * either supplied from ESI or listed in `sdeOwnedColumns.ts`, rather than
+ * silently making every row diff as modified. Same guard `EsiCorporationRow`
+ * gives Corporation.
+ */
+type EsiRow<T, SdeOwned extends keyof T> = Omit<
+  T,
+  "updatedAt" | "createdAt" | SdeOwned
+>;
+type EsiSolarSystemRow = EsiRow<
+  SolarSystem,
+  (typeof SDE_OWNED_SOLAR_SYSTEM_COLUMNS)[number]
+>;
+type EsiPlanetRow = EsiRow<Planet, (typeof SDE_OWNED_PLANET_COLUMNS)[number]>;
+type EsiMoonRow = EsiRow<Moon, (typeof SDE_OWNED_MOON_COLUMNS)[number]>;
+
 const fetchSolarSystem = (limit: Limit, solarSystemId: number) =>
   limit(async () =>
     getUniverseSystemsSystemId(solarSystemId).then((res) => res.data),
@@ -83,28 +102,32 @@ const fetchSolarSystemRow = (limit: Limit, solarSystemId: number) =>
   limit(async () =>
     getUniverseSystemsSystemId(solarSystemId)
       .then((res) => res.data)
-      .then((solarSystem) => ({
-        solarSystemId: solarSystem.system_id,
-        constellationId: solarSystem.constellation_id,
-        name: solarSystem.name,
-        securityClass: solarSystem.security_class ?? null,
-        securityStatus: new Prisma.Decimal(solarSystem.security_status),
-        starId: solarSystem.star_id ?? null,
-        isDeleted: false,
-      })),
+      .then(
+        (solarSystem): EsiSolarSystemRow => ({
+          solarSystemId: solarSystem.system_id,
+          constellationId: solarSystem.constellation_id,
+          name: solarSystem.name,
+          securityClass: solarSystem.security_class ?? null,
+          securityStatus: new Prisma.Decimal(solarSystem.security_status),
+          starId: solarSystem.star_id ?? null,
+          isDeleted: false,
+        }),
+      ),
   );
 
 const fetchPlanetRow = (limit: Limit, planetId: number) =>
   limit(async () =>
     getUniversePlanetsPlanetId(planetId)
       .then((res) => res.data)
-      .then((planet) => ({
-        solarSystemId: planet.system_id,
-        planetId: planet.planet_id,
-        name: planet.name,
-        typeId: planet.type_id,
-        isDeleted: false,
-      })),
+      .then(
+        (planet): EsiPlanetRow => ({
+          solarSystemId: planet.system_id,
+          planetId: planet.planet_id,
+          name: planet.name,
+          typeId: planet.type_id,
+          isDeleted: false,
+        }),
+      ),
   );
 
 const fetchMoonRow = (
@@ -115,7 +138,7 @@ const fetchMoonRow = (
   limit(async () =>
     getUniverseMoonsMoonId(moonId)
       .then((res) => res.data)
-      .then((moon) => {
+      .then((moon): EsiMoonRow => {
         const planetId = moonPlanetIndex[moon.moon_id];
         if (planetId === undefined) {
           throw new Error(`No planetId indexed for moon ${moon.moon_id}`);

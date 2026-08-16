@@ -18,7 +18,6 @@
   "dependencies": {
     "@jitaspace/eve-icons": "workspace:*",
     "@jitaspace/hooks": "workspace:*",
-    "@jitaspace/sde-client": "workspace:*",
     "@jitaspace/ui": "workspace:*",
     "@jitaspace/utils": "workspace:*",
     "@mantine/core": "9.3.0",

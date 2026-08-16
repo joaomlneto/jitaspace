@@ -49,20 +49,18 @@ jest.mock("~/lib/history-cache", () => ({
 }));
 jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
 
-// Every `getXByIdQueryOptions(id)` returns a valid query-options object whose
-// queryKey the mocked useQuery resolves to a generic name.
+// The breadcrumb labels resolve names through server actions that read Prisma;
+// stub each `resolveXLabel` so the real client is never loaded. They're only
+// passed as a queryFn to the (mocked) useQuery anyway.
 jest.mock(
-  "@jitaspace/sde-client",
+  "~/app/history/actions",
   () =>
     new Proxy(
       {},
       {
         get: (_t, prop) =>
           typeof prop === "string"
-            ? (id: number) => ({
-                queryKey: [prop, id],
-                queryFn: () => Promise.resolve({ data: { name: "Rifter" } }),
-              })
+            ? () => Promise.resolve({ name: "Rifter", parentId: null })
             : undefined,
       },
     ),

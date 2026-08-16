@@ -5,9 +5,11 @@ import { notFound } from "next/navigation";
 import { HttpStatusCode } from "axios";
 
 import type { PageProps } from "./page.client";
+import type { TypeDogmaMeta } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import TypePage from "./page.client";
+import { emptyTypeDogmaMeta } from "./types";
 
 function stripHtml(s: string): string {
   let out = "";
@@ -51,6 +53,86 @@ async function getTypeData(typeId: number): Promise<PageProps> {
     typeName: type.name,
     typeDescription: type.description,
   };
+}
+
+/** Trimmed text, or undefined when absent or blank. */
+function nonEmpty(value: string | null | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed === undefined || trimmed === "" ? undefined : trimmed;
+}
+
+/**
+ * Resolve the SDE presentation metadata for a type's dogma attributes in one
+ * query: the attribute rows of this type, each with its unit and category. The
+ * client page previously discovered these in three cascading round trips.
+ *
+ * Attributes ESI reports but we have no row for simply stay absent from the map,
+ * which is the same thing the old per-attribute 404 produced.
+ *
+ * A failure throws rather than degrading here: the caller catches it, so a
+ * database blip is never what gets written into the day-long cache entry.
+ */
+async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
+  "use cache";
+  cacheLife("days");
+
+  const rows = await prisma.typeAttribute.findMany({
+    select: {
+      attributeId: true,
+      attribute: {
+        select: {
+          displayName: true,
+          name: true,
+          iconId: true,
+          unitId: true,
+          attributeCategoryId: true,
+          DogmaUnit: { select: { displayName: true, name: true } },
+          attributeCategory: { select: { name: true } },
+        },
+      },
+    },
+    where: { typeId },
+  });
+
+  const attributes: TypeDogmaMeta["attributes"] = {};
+  const unitSymbols: TypeDogmaMeta["unitSymbols"] = {};
+  const categoryNames: TypeDogmaMeta["categoryNames"] = {};
+
+  for (const { attributeId, attribute } of rows) {
+    attributes[attributeId] = {
+      displayName: nonEmpty(attribute.displayName),
+      name: attribute.name ?? undefined,
+      iconId: attribute.iconId ?? undefined,
+      unitId: attribute.unitId ?? undefined,
+      categoryId: attribute.attributeCategoryId ?? undefined,
+    };
+
+    if (attribute.unitId != null) {
+      const symbol =
+        nonEmpty(attribute.DogmaUnit?.displayName) ??
+        nonEmpty(attribute.DogmaUnit?.name);
+      if (symbol) unitSymbols[attribute.unitId] = symbol;
+    }
+
+    if (attribute.attributeCategoryId != null && attribute.attributeCategory) {
+      categoryNames[attribute.attributeCategoryId] =
+        attribute.attributeCategory.name;
+    }
+  }
+
+  return { attributes, unitSymbols, categoryNames };
+}
+
+/**
+ * The page renders fine without this half, so a database failure degrades to
+ * empty metadata instead of erroring the route.
+ */
+async function getTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
+  try {
+    return await readTypeDogmaMeta(typeId);
+  } catch {
+    return emptyTypeDogmaMeta;
+  }
 }
 
 export async function generateMetadata({
@@ -104,7 +186,8 @@ async function PageContent({
   } catch {
     notFound();
   }
-  return <TypePage {...props} />;
+  const dogmaMeta = await getTypeDogmaMeta(typeId);
+  return <TypePage {...props} dogmaMeta={dogmaMeta} />;
 }
 
 export default function Page({
