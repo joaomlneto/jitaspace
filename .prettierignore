@@ -1,0 +1,17 @@
+# Checked-in OpenAPI specs. These are code-generation INPUTS: turbo.json
+# declares `swagger.json` in the `kubb:generate` task's `inputs`, so
+# reformatting them rewrites ~5,000 lines of whitespace and invalidates the
+# Kubb cache for every generated client. Fetched verbatim by each package's
+# `download-schema` script — keep them byte-identical to upstream.
+**/swagger.json
+
+# Generated client code (kubb output) and Prisma client.
+**/src/generated/
+packages/db/prisma/generated/
+
+# Build output and caches not already covered by .gitignore.
+**/.next/
+**/dist/
+**/coverage/
+**/.turbo/
+pnpm-lock.yaml
