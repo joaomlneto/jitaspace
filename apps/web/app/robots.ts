@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 
+import { CRAWLER_DISALLOWED_PATHS } from "~/config/seo.ts";
 import { getSitemapUrls } from "./sitemap";
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
@@ -9,21 +10,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: [
-        "/assets",
-        "/calendar",
-        "/contacts",
-        "/debug",
-        "/fittings",
-        "/login",
-        "/mail",
-        "/notifications",
-        "/settings",
-        "/ship-scanner",
-        "/skills",
-        "/travel",
-        "/wallet",
-      ],
+      disallow: [...CRAWLER_DISALLOWED_PATHS],
     },
     sitemap: sitemapUrls,
   };
