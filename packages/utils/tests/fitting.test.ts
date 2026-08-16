@@ -144,9 +144,7 @@ describe("toEFTFitString", () => {
       cargoHold: [],
     };
     const result = toEFTFitString(fit);
-    const highLines = result
-      .split("\n")
-      .filter((line) => line === "Blaster");
+    const highLines = result.split("\n").filter((line) => line === "Blaster");
     expect(highLines).toHaveLength(3);
   });
 

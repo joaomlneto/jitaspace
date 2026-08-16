@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -31,7 +31,9 @@ jest.mock("~/components/Text", () => ({
   BloodlineName: ({ bloodlineId }: { bloodlineId: number }) => (
     <span>{`Bloodline ${bloodlineId}`}</span>
   ),
-  RaceName: ({ raceId }: { raceId?: number }) => <span>{`Race ${raceId}`}</span>,
+  RaceName: ({ raceId }: { raceId?: number }) => (
+    <span>{`Race ${raceId}`}</span>
+  ),
 }));
 
 jest.mock("~/components/EveMail", () => ({

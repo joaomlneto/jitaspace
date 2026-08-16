@@ -29,14 +29,14 @@ import { CharacterAvatar, ISKAmount, SkillLevelBar } from "@jitaspace/ui";
 
 ## Component Categories
 
-| Category      | Examples                                              |
-| ------------- | ---------------------------------------------------- |
+| Category      | Examples                                                 |
+| ------------- | -------------------------------------------------------- |
 | Identity      | `CharacterAvatar`, `CorporationAvatar`, `AllianceAvatar` |
-| Items         | `TypeAvatar`, `CategoryName`, `MarketGroupName`       |
-| Display twins | `EveEntityNameDisplay`, `EveEntityAnchorDisplay`     |
-| Skills        | `SkillLevelBar`                                       |
-| Text          | `DateText`, `DurationText`, `ISKAmount`               |
-| Inputs        | `Select`, `MultiSelect`                               |
+| Items         | `TypeAvatar`, `CategoryName`, `MarketGroupName`          |
+| Display twins | `EveEntityNameDisplay`, `EveEntityAnchorDisplay`         |
+| Skills        | `SkillLevelBar`                                          |
+| Text          | `DateText`, `DurationText`, `ISKAmount`                  |
+| Inputs        | `Select`, `MultiSelect`                                  |
 
 ## Dependencies
 

@@ -4,12 +4,13 @@ import convert from "@openapi-contrib/json-schema-to-openapi-schema";
 import { camelCase, capitalCase, pascalCase } from "change-case";
 import { js2schema } from "js2schema";
 
+import { loadFile } from "@jitaspace/sde-utils";
+
 import { SDE_PATH } from "../commands/generate.js";
 import { collections } from "../config/collections.js";
 import { getWorkingDirectory, TITLE_WIDTH } from "../lib/cli.js";
 import { globalProgress } from "../lib/progress.js";
 import { getHoboleaksFile } from "../sources/hoboleaks.js";
-import { loadFile } from "@jitaspace/sde-utils";
 import { mkdir } from "./fs.js";
 
 export function sdeCamelCase(str: string) {

@@ -1,11 +1,10 @@
+import type { RichTextEditorControlProps } from "@mantine/tiptap";
 import type React from "react";
 import { forwardRef } from "react";
-import type {RichTextEditorControlProps} from "@mantine/tiptap";
 
 import { Control } from "./Control";
 
-export interface RichTextEditorControlBaseProps
-  extends RichTextEditorControlProps {
+export interface RichTextEditorControlBaseProps extends RichTextEditorControlProps {
   icon: React.FC<{ size: number | string }>;
 }
 

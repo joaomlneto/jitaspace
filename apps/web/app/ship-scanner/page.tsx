@@ -1,10 +1,9 @@
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
-import { prisma } from "~/lib/db";
-
-import ShipScannerPage from "./page.client";
 import type { PageProps } from "./page.client";
+import { prisma } from "~/lib/db";
+import ShipScannerPage from "./page.client";
 
 const SHIP_CATEGORY_ID = 6;
 

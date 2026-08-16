@@ -16,19 +16,19 @@ const characters = await prisma.character.findMany();
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm db:generate` | Generate the Prisma client from schema |
-| `pnpm db:push` | Push schema changes to the database |
-| `pnpm db:migrate:dev` | Create and apply a new migration |
-| `pnpm db:migrate:deploy` | Apply pending migrations in production |
-| `pnpm db:migrate:reset` | Reset the database and re-apply all migrations |
-| `pnpm db:studio` | Open Prisma Studio |
+| Command                  | Description                                    |
+| ------------------------ | ---------------------------------------------- |
+| `pnpm db:generate`       | Generate the Prisma client from schema         |
+| `pnpm db:push`           | Push schema changes to the database            |
+| `pnpm db:migrate:dev`    | Create and apply a new migration               |
+| `pnpm db:migrate:deploy` | Apply pending migrations in production         |
+| `pnpm db:migrate:reset`  | Reset the database and re-apply all migrations |
+| `pnpm db:studio`         | Open Prisma Studio                             |
 
 ## Environment Variables
 
-| Variable | Description |
-|---|---|
+| Variable       | Description                  |
+| -------------- | ---------------------------- |
 | `DATABASE_URL` | PostgreSQL connection string |
 
 ## Schema

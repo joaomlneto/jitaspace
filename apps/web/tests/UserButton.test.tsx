@@ -42,7 +42,9 @@ jest.mock("@mantine/modals", () => ({
   modals: { openConfirmModal: jest.fn() },
   openContextModal: (args: unknown) => mockOpenContextModal(args),
 }));
-jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: jest.fn() }),
+}));
 
 jest.mock("@mantine/core", () => {
   const React = require("react") as typeof import("react");

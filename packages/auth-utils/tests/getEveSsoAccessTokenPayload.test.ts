@@ -1,7 +1,9 @@
 import { getEveSsoAccessTokenPayload } from "../utils/getEveSsoAccessTokenPayload";
 
 function makeJwt(payload: object): string {
-  const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64");
+  const header = Buffer.from(
+    JSON.stringify({ alg: "RS256", typ: "JWT" }),
+  ).toString("base64");
   const body = Buffer.from(JSON.stringify(payload)).toString("base64");
   return `${header}.${body}.fakesignature`;
 }

@@ -9,8 +9,8 @@ import {
 } from "@jitaspace/hooks";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
-import { WalletTable } from "~/components/Wallet";
 import { ScopeGuard } from "~/components/ScopeGuard";
+import { WalletTable } from "~/components/Wallet";
 
 export default function Page() {
   const character = useSelectedCharacter();

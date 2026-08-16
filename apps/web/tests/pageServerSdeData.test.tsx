@@ -69,7 +69,9 @@ async function runRoute(
 ): Promise<Record<string, unknown>> {
   const Page = (
     require(modulePath) as {
-      default: (p: { params: Promise<Record<string, string>> }) => ReactElement<{
+      default: (p: {
+        params: Promise<Record<string, string>>;
+      }) => ReactElement<{
         children: ReactElement;
       }>;
     }

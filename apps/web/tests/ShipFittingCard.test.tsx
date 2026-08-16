@@ -16,26 +16,23 @@ import type { ShipFittingCardProps } from "~/components/Fitting/ShipFittingCard/
 // in @jitaspace/ui clipboard/avatar internals.
 // ---------------------------------------------------------------------------
 
-jest.mock(
-  "~/components/Fitting/ShipFittingCard/ShipFittingCardHeader",
-  () => {
-    const React = require("react");
-    return {
-      ShipFittingCardHeader: ({
-        shipName,
-        shipTypeId,
-      }: {
-        shipName?: string;
-        shipTypeId?: number;
-      }) =>
-        React.createElement(
-          "div",
-          { "data-testid": "fitting-header" },
-          `header:${shipName ?? "none"}:${shipTypeId ?? "none"}`,
-        ),
-    };
-  },
-);
+jest.mock("~/components/Fitting/ShipFittingCard/ShipFittingCardHeader", () => {
+  const React = require("react");
+  return {
+    ShipFittingCardHeader: ({
+      shipName,
+      shipTypeId,
+    }: {
+      shipName?: string;
+      shipTypeId?: number;
+    }) =>
+      React.createElement(
+        "div",
+        { "data-testid": "fitting-header" },
+        `header:${shipName ?? "none"}:${shipTypeId ?? "none"}`,
+      ),
+  };
+});
 
 jest.mock(
   "~/components/Fitting/ShipFittingCard/ShipFittingCardModulesSection",
@@ -58,7 +55,11 @@ jest.mock(
   },
 );
 
-function renderCard(props: Partial<ShipFittingCardProps> & { items: ShipFittingCardProps["items"] }) {
+function renderCard(
+  props: Partial<ShipFittingCardProps> & {
+    items: ShipFittingCardProps["items"];
+  },
+) {
   const {
     ShipFittingCard,
   } = require("~/components/Fitting/ShipFittingCard/ShipFittingCard");
@@ -136,7 +137,9 @@ describe("ShipFittingCard", () => {
       name: "Hidden",
       shipTypeId: 587,
       hideHeader: true,
-      items: [{ flag: "HiSlot0", typeId: 100, quantity: 1 }] as ShipFittingCardProps["items"],
+      items: [
+        { flag: "HiSlot0", typeId: 100, quantity: 1 },
+      ] as ShipFittingCardProps["items"],
     });
     expect(screen.queryByTestId("fitting-header")).not.toBeInTheDocument();
     // modules still render

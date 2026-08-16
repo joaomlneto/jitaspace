@@ -9,38 +9,36 @@ import tseslint from "typescript-eslint";
 /**
  * All packages that leverage t3-env should use this rule
  */
-export const restrictEnvAccess = defineConfig(
-  {
-    files: ["**/*.js", "**/*.ts", "**/*.tsx"],
-    // Scoped to THIS config object, not a standalone `{ ignores }` entry: a
-    // config whose only key is `ignores` is a GLOBAL ignore in flat config, so
-    // the previous form removed every env.ts from all linting rather than just
-    // exempting it from the two process.env rules below. env.ts is the one file
-    // that legitimately reads process.env — and the one that most needs
-    // turbo/no-undeclared-env-vars.
-    ignores: ["**/env.ts"],
-    rules: {
-      "no-restricted-properties": [
-        "error",
-        {
-          object: "process",
-          property: "env",
-          message:
-            "Use `import { env } from '~/env'` instead to ensure validated types.",
-        },
-      ],
-      "no-restricted-imports": [
-        "error",
-        {
-          name: "process",
-          importNames: ["env"],
-          message:
-            "Use `import { env } from '~/env'` instead to ensure validated types.",
-        },
-      ],
-    },
+export const restrictEnvAccess = defineConfig({
+  files: ["**/*.js", "**/*.ts", "**/*.tsx"],
+  // Scoped to THIS config object, not a standalone `{ ignores }` entry: a
+  // config whose only key is `ignores` is a GLOBAL ignore in flat config, so
+  // the previous form removed every env.ts from all linting rather than just
+  // exempting it from the two process.env rules below. env.ts is the one file
+  // that legitimately reads process.env — and the one that most needs
+  // turbo/no-undeclared-env-vars.
+  ignores: ["**/env.ts"],
+  rules: {
+    "no-restricted-properties": [
+      "error",
+      {
+        object: "process",
+        property: "env",
+        message:
+          "Use `import { env } from '~/env'` instead to ensure validated types.",
+      },
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        name: "process",
+        importNames: ["env"],
+        message:
+          "Use `import { env } from '~/env'` instead to ensure validated types.",
+      },
+    ],
   },
-);
+});
 
 export const baseConfig = defineConfig(
   // Ignore files not tracked by VCS and any config files

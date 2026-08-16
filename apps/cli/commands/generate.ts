@@ -1,11 +1,12 @@
-import { createCommand } from "@commander-js/extra-typings";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { createCommand } from "@commander-js/extra-typings";
+
+import { loadFile } from "@jitaspace/sde-utils";
 
 import { collections } from "../config/collections.js";
 import { getWorkingDirectory, TITLE_WIDTH } from "../lib/cli.js";
 import { globalProgress } from "../lib/progress.js";
-import { loadFile } from "@jitaspace/sde-utils";
 import { generateCollectionFiles } from "../utils/collections.js";
 import { mkdir } from "../utils/fs";
 import { ensureSdePresentAndExtracted } from "../utils/sde.js";
@@ -131,14 +132,18 @@ export default createCommand("generate")
 
     // Sort the paths alphabetically
     const sortedPaths = {};
-    const sortedKeys = Object.keys(schema.paths).sort((a, b) => a.localeCompare(b));
+    const sortedKeys = Object.keys(schema.paths).sort((a, b) =>
+      a.localeCompare(b),
+    );
     // @ts-expect-error
     sortedKeys.forEach((key) => (sortedPaths[key] = schema.paths[key]));
     schema.paths = sortedPaths;
 
     // Sort the schemas alphabetically
     const sortedSchemas = {};
-    const sortedSchemaKeys = Object.keys(schema.components.schemas).sort((a, b) => a.localeCompare(b));
+    const sortedSchemaKeys = Object.keys(schema.components.schemas).sort(
+      (a, b) => a.localeCompare(b),
+    );
     sortedSchemaKeys.forEach(
       // @ts-expect-error
       (key) => (sortedSchemas[key] = schema.components.schemas[key]),
@@ -146,9 +151,11 @@ export default createCommand("generate")
     schema.components.schemas = sortedSchemas;
 
     // Sort the tags alphabetically, removing duplicates
-    schema.tags = [...new Set(schema.tags.map((tag) => tag.name).sort((a, b) => a.localeCompare(b)))].map(
-      (name) => ({ name }),
-    );
+    schema.tags = [
+      ...new Set(
+        schema.tags.map((tag) => tag.name).sort((a, b) => a.localeCompare(b)),
+      ),
+    ].map((name) => ({ name }));
 
     // write the schema file
     await fs.promises.writeFile(

@@ -46,11 +46,7 @@ jest.mock("~/components/ScopeGuard", () => ({
   AppCheckboxCard: ({ app }: { app: { name: string } }) => (
     <div data-testid="app-checkbox-card">{`app-${app.name}`}</div>
   ),
-  AppScopeSetCheckboxCard: ({
-    scopeSet,
-  }: {
-    scopeSet: { reason: string };
-  }) => (
+  AppScopeSetCheckboxCard: ({ scopeSet }: { scopeSet: { reason: string } }) => (
     <div data-testid="app-scope-set-card">{`scopeset-${scopeSet.reason}`}</div>
   ),
   ScopesTable: ({ scopes }: { scopes: string[] }) => (

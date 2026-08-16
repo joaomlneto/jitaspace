@@ -20,21 +20,21 @@ Requires a runtime with global `fetch` and `Buffer` (Node.js 18+, or an equivale
 
 Small helpers around the [EVE Online SSO OAuth2 flow](https://docs.esi.evetech.net/docs/sso/).
 
-| Export | Description |
-|---|---|
-| `exchangeEveSsoToken` | Exchange an authorization code (with PKCE `code_verifier`) for access/refresh tokens |
-| `refreshEveSsoToken` | Refresh an access token using a refresh token |
-| `getEveSsoAccessTokenPayload` | Decode an EVE SSO access token's JWT payload (typed, including `scp: ESIScope[]`) — no signature check |
-| `verifyEveSsoAccessToken` | Cryptographically verify an access token against EVE's JWKS (signature + `iss`/`aud`/`exp`); server-only, uses `jose` |
-| `tokenRefreshDataSchema` | Zod schema validating token-refresh response data |
+| Export                        | Description                                                                                                           |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `exchangeEveSsoToken`         | Exchange an authorization code (with PKCE `code_verifier`) for access/refresh tokens                                  |
+| `refreshEveSsoToken`          | Refresh an access token using a refresh token                                                                         |
+| `getEveSsoAccessTokenPayload` | Decode an EVE SSO access token's JWT payload (typed, including `scp: ESIScope[]`) — no signature check                |
+| `verifyEveSsoAccessToken`     | Cryptographically verify an access token against EVE's JWKS (signature + `iss`/`aud`/`exp`); server-only, uses `jose` |
+| `tokenRefreshDataSchema`      | Zod schema validating token-refresh response data                                                                     |
 
 ## Usage
 
 ```ts
 import {
   exchangeEveSsoToken,
-  refreshEveSsoToken,
   getEveSsoAccessTokenPayload,
+  refreshEveSsoToken,
 } from "@jitaspace/auth-utils";
 
 // Exchange an authorization code received on the SSO callback

@@ -2,7 +2,15 @@
 
 import type { KeyboardEvent } from "react";
 import { memo, useMemo, useState } from "react";
-import { Badge, Box, Divider, Group, Paper, Text, ThemeIcon } from "@mantine/core";
+import {
+  Badge,
+  Box,
+  Divider,
+  Group,
+  Paper,
+  Text,
+  ThemeIcon,
+} from "@mantine/core";
 import { IconChevronRight, IconMapPin } from "@tabler/icons-react";
 
 import type { CharacterAsset } from "@jitaspace/hooks";
@@ -94,7 +102,12 @@ const AssetNode = memo(function AssetNode({
               </Text>
             )}
             {asset.is_blueprint_copy && (
-              <Badge size="xs" variant="light" color="blue" style={{ flexShrink: 0 }}>
+              <Badge
+                size="xs"
+                variant="light"
+                color="blue"
+                style={{ flexShrink: 0 }}
+              >
                 BPC
               </Badge>
             )}
@@ -106,12 +119,21 @@ const AssetNode = memo(function AssetNode({
           </Group>
         </Box>
         {value > 0 && (
-          <ISKAmount amount={value} size="xs" c="dimmed" style={{ flexShrink: 0 }} />
+          <ISKAmount
+            amount={value}
+            size="xs"
+            c="dimmed"
+            style={{ flexShrink: 0 }}
+          />
         )}
       </Group>
       {hasChildren && open && (
         <Box className={classes.nested}>
-          <AssetItemList items={children} tree={tree} getTypeName={getTypeName} />
+          <AssetItemList
+            items={children}
+            tree={tree}
+            getTypeName={getTypeName}
+          />
         </Box>
       )}
     </>
@@ -218,7 +240,12 @@ export const AssetLocationPanel = memo(function AssetLocationPanel({
           </Box>
         </Group>
         {location.value > 0 && (
-          <ISKAmount amount={location.value} fw={600} size="sm" style={{ flexShrink: 0 }} />
+          <ISKAmount
+            amount={location.value}
+            fw={600}
+            size="sm"
+            style={{ flexShrink: 0 }}
+          />
         )}
       </Group>
       {open && (

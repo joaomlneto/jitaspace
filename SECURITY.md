@@ -18,4 +18,4 @@ currently being supported with security updates.
 
 Use the channels detailed in the [About page](https://www.jita.space/about) to report vulnerabilities (Email preferred).
 
-In case a vulnerability is accepted, I *may* be able to reward you with some PLEX. 😄
+In case a vulnerability is accepted, I _may_ be able to reward you with some PLEX. 😄

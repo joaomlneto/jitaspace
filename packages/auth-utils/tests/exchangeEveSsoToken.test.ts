@@ -48,13 +48,11 @@ describe("exchangeEveSsoToken", () => {
 
   it("throws when the token endpoint responds with a non-OK status", async () => {
     jest.spyOn(console, "error").mockImplementation(() => undefined);
-    global.fetch = jest
-      .fn()
-      .mockResolvedValue({
-        ok: false,
-        status: 400,
-        statusText: "Bad Request",
-      });
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      statusText: "Bad Request",
+    });
 
     await expect(exchangeEveSsoToken(params)).rejects.toThrow(
       "error exchanging authorization code",
