@@ -32,57 +32,70 @@ export async function generateMetadata({
 
 /**
  * Read the SDE columns of a system from our database. Returns null for an
- * unknown id or a database hiccup — the page renders fine without this half,
- * exactly as it did while the data came from a client-side SDE request.
+ * unknown id.
  *
  * Cached for days, like the type page's dogma metadata: these columns only
- * change when a new SDE release is ingested.
+ * change when a new SDE release is ingested. A failure throws rather than
+ * degrading here, so a database blip is never what gets written into the
+ * day-long cache entry — the caller catches it instead.
  */
-async function getSolarSystemSdeInfo(
+async function readSolarSystemSdeInfo(
   systemId: number,
 ): Promise<SolarSystemSdeInfo | null> {
   "use cache";
   cacheLife("days");
 
   if (!Number.isSafeInteger(systemId) || systemId <= 0) return null;
-  try {
-    const system = await prisma.solarSystem.findUnique({
-      select: {
-        luminosity: true,
-        radius: true,
-        wormholeClassId: true,
-        positionX: true,
-        positionY: true,
-        positionZ: true,
-        factionId: true,
-        isHub: true,
-        isBorder: true,
-        isFringe: true,
-        isCorridor: true,
-        isInternational: true,
-        isRegional: true,
-      },
-      where: { solarSystemId: systemId },
-    });
-    if (!system) return null;
 
-    const { positionX, positionY, positionZ } = system;
-    return {
-      luminosity: system.luminosity,
-      radius: system.radius,
-      wormholeClassId: system.wormholeClassId,
-      position:
-        positionX != null && positionY != null && positionZ != null
-          ? { x: positionX, y: positionY, z: positionZ }
-          : null,
-      factionId: system.factionId,
-      isHub: system.isHub ?? false,
-      isBorder: system.isBorder ?? false,
-      isFringe: system.isFringe ?? false,
-      isCorridor: system.isCorridor ?? false,
-      isInternational: system.isInternational ?? false,
-      isRegional: system.isRegional ?? false,
-    };
+  const system = await prisma.solarSystem.findUnique({
+    select: {
+      luminosity: true,
+      radius: true,
+      wormholeClassId: true,
+      positionX: true,
+      positionY: true,
+      positionZ: true,
+      factionId: true,
+      isHub: true,
+      isBorder: true,
+      isFringe: true,
+      isCorridor: true,
+      isInternational: true,
+      isRegional: true,
+    },
+    where: { solarSystemId: systemId },
+  });
+  if (!system) return null;
+
+  const { positionX, positionY, positionZ } = system;
+  return {
+    luminosity: system.luminosity,
+    radius: system.radius,
+    wormholeClassId: system.wormholeClassId,
+    position:
+      positionX != null && positionY != null && positionZ != null
+        ? { x: positionX, y: positionY, z: positionZ }
+        : null,
+    factionId: system.factionId,
+    isHub: system.isHub ?? false,
+    isBorder: system.isBorder ?? false,
+    isFringe: system.isFringe ?? false,
+    isCorridor: system.isCorridor ?? false,
+    isInternational: system.isInternational ?? false,
+    isRegional: system.isRegional ?? false,
+  };
+}
+
+/**
+ * The page renders fine without this half, exactly as it did while the data
+ * came from a client-side SDE request, so a database failure degrades to null
+ * instead of erroring the route.
+ */
+async function getSolarSystemSdeInfo(
+  systemId: number,
+): Promise<SolarSystemSdeInfo | null> {
+  try {
+    return await readSolarSystemSdeInfo(systemId);
   } catch {
     return null;
   }

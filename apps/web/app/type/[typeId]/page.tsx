@@ -68,60 +68,68 @@ function nonEmpty(value: string | null | undefined): string | undefined {
  *
  * Attributes ESI reports but we have no row for simply stay absent from the map,
  * which is the same thing the old per-attribute 404 produced.
+ *
+ * A failure throws rather than degrading here: the caller catches it, so a
+ * database blip is never what gets written into the day-long cache entry.
  */
-async function getTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
+async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
   "use cache";
   cacheLife("days");
 
-  try {
-    const rows = await prisma.typeAttribute.findMany({
-      select: {
-        attributeId: true,
-        attribute: {
-          select: {
-            displayName: true,
-            name: true,
-            iconId: true,
-            unitId: true,
-            attributeCategoryId: true,
-            DogmaUnit: { select: { displayName: true, name: true } },
-            attributeCategory: { select: { name: true } },
-          },
+  const rows = await prisma.typeAttribute.findMany({
+    select: {
+      attributeId: true,
+      attribute: {
+        select: {
+          displayName: true,
+          name: true,
+          iconId: true,
+          unitId: true,
+          attributeCategoryId: true,
+          DogmaUnit: { select: { displayName: true, name: true } },
+          attributeCategory: { select: { name: true } },
         },
       },
-      where: { typeId },
-    });
+    },
+    where: { typeId },
+  });
 
-    const attributes: TypeDogmaMeta["attributes"] = {};
-    const unitSymbols: TypeDogmaMeta["unitSymbols"] = {};
-    const categoryNames: TypeDogmaMeta["categoryNames"] = {};
+  const attributes: TypeDogmaMeta["attributes"] = {};
+  const unitSymbols: TypeDogmaMeta["unitSymbols"] = {};
+  const categoryNames: TypeDogmaMeta["categoryNames"] = {};
 
-    for (const { attributeId, attribute } of rows) {
-      attributes[attributeId] = {
-        displayName: nonEmpty(attribute.displayName),
-        name: attribute.name ?? undefined,
-        iconId: attribute.iconId ?? undefined,
-        unitId: attribute.unitId ?? undefined,
-        categoryId: attribute.attributeCategoryId ?? undefined,
-      };
+  for (const { attributeId, attribute } of rows) {
+    attributes[attributeId] = {
+      displayName: nonEmpty(attribute.displayName),
+      name: attribute.name ?? undefined,
+      iconId: attribute.iconId ?? undefined,
+      unitId: attribute.unitId ?? undefined,
+      categoryId: attribute.attributeCategoryId ?? undefined,
+    };
 
-      if (attribute.unitId != null) {
-        const symbol =
-          nonEmpty(attribute.DogmaUnit?.displayName) ??
-          nonEmpty(attribute.DogmaUnit?.name);
-        if (symbol) unitSymbols[attribute.unitId] = symbol;
-      }
-
-      if (
-        attribute.attributeCategoryId != null &&
-        attribute.attributeCategory
-      ) {
-        categoryNames[attribute.attributeCategoryId] =
-          attribute.attributeCategory.name;
-      }
+    if (attribute.unitId != null) {
+      const symbol =
+        nonEmpty(attribute.DogmaUnit?.displayName) ??
+        nonEmpty(attribute.DogmaUnit?.name);
+      if (symbol) unitSymbols[attribute.unitId] = symbol;
     }
 
-    return { attributes, unitSymbols, categoryNames };
+    if (attribute.attributeCategoryId != null && attribute.attributeCategory) {
+      categoryNames[attribute.attributeCategoryId] =
+        attribute.attributeCategory.name;
+    }
+  }
+
+  return { attributes, unitSymbols, categoryNames };
+}
+
+/**
+ * The page renders fine without this half, so a database failure degrades to
+ * empty metadata instead of erroring the route.
+ */
+async function getTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
+  try {
+    return await readTypeDogmaMeta(typeId);
   } catch {
     return emptyTypeDogmaMeta;
   }
