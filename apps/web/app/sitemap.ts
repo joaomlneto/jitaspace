@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { MetadataRoute } from "next";
+import type { Dirent } from "node:fs";
 
 import { CONFIG } from "~/config/constants.ts";
 import { isCrawlable } from "~/config/seo.ts";
@@ -231,36 +232,50 @@ const ENTITY_SOURCES: EntitySource[] = [
 let cachedStaticRoutes: string[] | null = null;
 let cachedUrls: { urls: string[]; expiresAt: number } | null = null;
 
+const hasPageFile = (entries: Dirent[]) =>
+  entries.some((entry) => entry.isFile() && isPageFile(entry.name));
+
+/** Directories the walk descends into: real path segments only. */
+const isTraversable = (entry: Dirent) =>
+  entry.isDirectory() &&
+  !entry.name.startsWith(".") &&
+  entry.name !== "node_modules" &&
+  !isDynamicSegment(entry.name);
+
+/**
+ * Whether `dir` holds an optional catch-all with a page file.
+ *
+ * Such a segment matches zero segments, so it also answers its parent path:
+ * `app/travel/[[...waypoints]]/page.tsx` serves `/travel`, and nothing else in
+ * the tree registers that route. Every other dynamic segment needs an id, which
+ * comes from ENTITY_SOURCES instead.
+ */
+async function servesParentPath(
+  dir: string,
+  entries: Dirent[],
+): Promise<boolean> {
+  for (const entry of entries) {
+    if (!entry.isDirectory() || !isOptionalCatchAll(entry.name)) continue;
+    const nested = await readdir(join(dir, entry.name), {
+      withFileTypes: true,
+    });
+    if (hasPageFile(nested)) return true;
+  }
+  return false;
+}
+
 async function collectStaticRoutes(): Promise<string[]> {
   const routes = new Set<string>();
 
   async function walk(dir: string, segments: string[]) {
     const entries = await readdir(dir, { withFileTypes: true });
     const routePath = segments.length === 0 ? "/" : `/${segments.join("/")}`;
-    if (entries.some((entry) => entry.isFile() && isPageFile(entry.name))) {
+
+    if (hasPageFile(entries) || (await servesParentPath(dir, entries))) {
       routes.add(routePath);
     }
 
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      if (entry.name.startsWith(".")) continue;
-      if (entry.name === "node_modules") continue;
-      if (isDynamicSegment(entry.name)) {
-        // An optional catch-all matches zero segments, so it also answers its
-        // parent path: `app/travel/[[...waypoints]]/page.tsx` serves `/travel`,
-        // and nothing else in the tree would register that route. Every other
-        // dynamic segment needs an id, which comes from ENTITY_SOURCES instead.
-        if (isOptionalCatchAll(entry.name)) {
-          const nested = await readdir(join(dir, entry.name), {
-            withFileTypes: true,
-          });
-          if (nested.some((e) => e.isFile() && isPageFile(e.name))) {
-            routes.add(routePath);
-          }
-        }
-        continue;
-      }
-
+    for (const entry of entries.filter(isTraversable)) {
       const nextSegments =
         isRouteGroup(entry.name) || isParallelSegment(entry.name)
           ? segments
