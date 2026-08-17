@@ -8,12 +8,11 @@
  *
  * Matching is by prefix — `/assets` also covers `/assets/character`.
  *
- * Most entries are here because the page renders nothing until a character is
- * logged in, so a crawler only ever sees an empty shell. Two are not:
- * `/travel` and `/ship-scanner` are anonymous, server-rendered, cacheable pages
- * that would rank on their own. They predate this list and are kept blocked to
- * preserve the existing robots.txt exactly; unblocking them is a deliberate SEO
- * decision, not a cleanup.
+ * Every entry is here for the same reason: the page renders nothing until a
+ * character is logged in, so a crawler only ever sees an empty shell. Anything
+ * that renders for an anonymous visitor does not belong here — `/travel` and
+ * `/ship-scanner` used to be listed despite being fully anonymous, cacheable,
+ * server-rendered pages, which kept them out of search for no benefit.
  */
 export const CRAWLER_DISALLOWED_PATHS = [
   "/assets",
@@ -25,11 +24,7 @@ export const CRAWLER_DISALLOWED_PATHS = [
   "/mail",
   "/notifications",
   "/settings",
-  // Anonymous and indexable — blocked only for backwards compatibility.
-  "/ship-scanner",
   "/skills",
-  // Anonymous and indexable — blocked only for backwards compatibility.
-  "/travel",
   "/wallet",
 ] as const;
 

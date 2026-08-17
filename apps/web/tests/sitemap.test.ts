@@ -30,6 +30,11 @@ const APP_TREE: Tree = {
   assets: { character: { "page.tsx": FILE } },
   // Dynamic segments never become static routes.
   type: { "[typeId]": { "page.tsx": FILE } },
+  // An optional catch-all matches zero segments, so `/travel` is a real route
+  // even though `travel/` holds no page file of its own.
+  travel: { "[[...waypoints]]": { "page.tsx": FILE } },
+  // A required catch-all does NOT serve its parent — `/docs` is not a route.
+  docs: { "[...slug]": { "page.tsx": FILE } },
   // Directories without a page file are traversed but contribute nothing.
   components: { "helper.ts": FILE },
 };
@@ -191,6 +196,15 @@ describe("sitemap", () => {
     expect(locs).toContain("https://www.jita.space/preview");
   });
 
+  it("registers the parent of an optional catch-all, but not of a required one", async () => {
+    const locs = await allLocs(load());
+
+    // `[[...waypoints]]` matches zero segments, so /travel is a real page.
+    expect(locs).toContain("https://www.jita.space/travel");
+    // `[...slug]` requires at least one segment, so /docs is not.
+    expect(locs).not.toContain("https://www.jita.space/docs");
+  });
+
   it("omits routes robots.txt disallows, including nested ones", async () => {
     const locs = await allLocs(load());
 
@@ -320,8 +334,9 @@ describe("sitemap", () => {
     const pages = await mod.generateSitemaps();
     expect(pages).toEqual([{ id: 0 }, { id: 1 }]);
 
-    // 5 crawlable static routes + 60,000 types + 12 single-row families.
-    const TOTAL = 5 + 60_000 + 12;
+    // 6 crawlable static routes (incl. the optional catch-all's parent)
+    // + 60,000 types + 12 single-row families.
+    const TOTAL = 6 + 60_000 + 12;
     const first = await mod.default({ id: Promise.resolve("0") });
     const second = await mod.default({ id: Promise.resolve("1") });
 
@@ -336,8 +351,8 @@ describe("sitemap", () => {
     // The page boundary is pinned, so a reordering of the assembled list — the
     // failure the per-query `orderBy` exists to prevent — cannot slip through
     // on length checks alone.
-    expect(first.at(-1)?.url).toBe("https://www.jita.space/type/49995");
-    expect(second[0]?.url).toBe("https://www.jita.space/type/49996");
+    expect(first.at(-1)?.url).toBe("https://www.jita.space/type/49994");
+    expect(second[0]?.url).toBe("https://www.jita.space/type/49995");
     expect(locs).toContain("https://www.jita.space/type/60000");
   });
 

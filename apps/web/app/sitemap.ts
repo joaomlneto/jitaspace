@@ -44,6 +44,9 @@ const isDynamicSegment = (name: string) => name.includes("[");
 const isRouteGroup = (name: string) =>
   name.startsWith("(") && name.endsWith(")");
 const isParallelSegment = (name: string) => name.startsWith("@");
+/** `[[...waypoints]]` — matches zero segments, so it also serves its parent. */
+const isOptionalCatchAll = (name: string) =>
+  name.startsWith("[[...") && name.endsWith("]]");
 
 /** A family of database-backed URLs, e.g. every `/system/{solarSystemId}`. */
 interface EntitySource {
@@ -233,8 +236,8 @@ async function collectStaticRoutes(): Promise<string[]> {
 
   async function walk(dir: string, segments: string[]) {
     const entries = await readdir(dir, { withFileTypes: true });
+    const routePath = segments.length === 0 ? "/" : `/${segments.join("/")}`;
     if (entries.some((entry) => entry.isFile() && isPageFile(entry.name))) {
-      const routePath = segments.length === 0 ? "/" : `/${segments.join("/")}`;
       routes.add(routePath);
     }
 
@@ -242,7 +245,21 @@ async function collectStaticRoutes(): Promise<string[]> {
       if (!entry.isDirectory()) continue;
       if (entry.name.startsWith(".")) continue;
       if (entry.name === "node_modules") continue;
-      if (isDynamicSegment(entry.name)) continue;
+      if (isDynamicSegment(entry.name)) {
+        // An optional catch-all matches zero segments, so it also answers its
+        // parent path: `app/travel/[[...waypoints]]/page.tsx` serves `/travel`,
+        // and nothing else in the tree would register that route. Every other
+        // dynamic segment needs an id, which comes from ENTITY_SOURCES instead.
+        if (isOptionalCatchAll(entry.name)) {
+          const nested = await readdir(join(dir, entry.name), {
+            withFileTypes: true,
+          });
+          if (nested.some((e) => e.isFile() && isPageFile(e.name))) {
+            routes.add(routePath);
+          }
+        }
+        continue;
+      }
 
       const nextSegments =
         isRouteGroup(entry.name) || isParallelSegment(entry.name)
