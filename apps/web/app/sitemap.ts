@@ -44,8 +44,14 @@ const URL_CACHE_TTL_MS = 60 * 60 * 1000;
 // An allow-list, not a `page.` prefix test: `page.client.tsx` and
 // `page.module.css` are not routes, and treating them as one would invent
 // routes for any directory that holds only a client component.
-const PAGE_FILES = ["page.tsx", "page.ts", "page.jsx", "page.js", "page.mdx"];
-const isPageFile = (name: string) => PAGE_FILES.includes(name);
+const PAGE_FILES = new Set([
+  "page.tsx",
+  "page.ts",
+  "page.jsx",
+  "page.js",
+  "page.mdx",
+]);
+const isPageFile = (name: string) => PAGE_FILES.has(name);
 const isDynamicSegment = (name: string) => name.includes("[");
 const isRouteGroup = (name: string) =>
   name.startsWith("(") && name.endsWith(")");
