@@ -16,8 +16,10 @@ const LAST_MODIFIED = env.NEXT_PUBLIC_MODIFIED_DATE
 /**
  * `url` without its trailing slashes.
  *
- * Written as a scan rather than a `/\/+$/` replace: that pattern backtracks
- * super-linearly on a run of slashes.
+ * Written as a scan rather than a `/\/+$/` replace only because that pattern is
+ * super-linear in general — on a run of slashes *away* from the end (`"///a"`)
+ * it retries at every position. A trailing run, which is all this function is
+ * ever handed, is the cheap case. The scan sidesteps the rule entirely.
  */
 function stripTrailingSlashes(url: string): string {
   let end = url.length;
@@ -39,8 +41,11 @@ const APP_DIR = join(process.cwd(), "app");
  */
 const URL_CACHE_TTL_MS = 60 * 60 * 1000;
 
-const isPageFile = (name: string) =>
-  name === "page" || name.startsWith("page.");
+// An allow-list, not a `page.` prefix test: `page.client.tsx` and
+// `page.module.css` are not routes, and treating them as one would invent
+// routes for any directory that holds only a client component.
+const PAGE_FILES = ["page.tsx", "page.ts", "page.jsx", "page.js", "page.mdx"];
+const isPageFile = (name: string) => PAGE_FILES.includes(name);
 const isDynamicSegment = (name: string) => name.includes("[");
 const isRouteGroup = (name: string) =>
   name.startsWith("(") && name.endsWith(")");
@@ -69,9 +74,17 @@ interface EntitySource {
  *   hold because someone logged in or a killmail referenced them.
  * - **Map minutiae** — planets, moons and stars, ~90k rows between them whose
  *   pages are a name and a handful of numbers.
+ * - **Dogma attributes and effects** — ~8k pages that each render every type
+ *   carrying the attribute. `/dogma/attribute/4` (mass) is 29.8 MB and takes
+ *   over a minute; the response exceeds the 2 MB `"use cache"` entry limit, so
+ *   its `cacheLife("days")` silently never stores and every hit is a full-table
+ *   join. Several also blow past Google's 15 MB fetch cap. Nothing links to
+ *   them today — `/dogma/attributes` renders its list on the client — so the
+ *   sitemap would be the crawler's way in. Restore these once the pages cap
+ *   their type list.
  *
- * Listing either spends crawl budget without earning impressions, and dilutes
- * the families that do rank.
+ * Listing any of them spends crawl budget without earning impressions, and
+ * dilutes the families that do rank.
  *
  * Order must be totally deterministic, because pagination slices this list and
  * `/sitemap/0.xml` and `/sitemap/1.xml` are separate requests that each rebuild
@@ -87,7 +100,12 @@ const ENTITY_SOURCES: EntitySource[] = [
     ids: async () =>
       (
         await prisma.type.findMany({
-          where: { isDeleted: false },
+          // typeId 0 exists in the table but `/type/0` renders the not-found UI:
+          // the page coerces the segment with `Number()` and treats the falsy 0
+          // as missing. Because that `notFound()` throws inside a <Suspense>
+          // boundary the response is still HTTP 200, so advertising it would
+          // hand crawlers a soft 404 — the very thing `isDeleted` filters out.
+          where: { isDeleted: false, typeId: { gt: 0 } },
           select: { typeId: true },
           orderBy: { typeId: "asc" },
         })
@@ -191,28 +209,6 @@ const ENTITY_SOURCES: EntitySource[] = [
           orderBy: { bloodlineId: "asc" },
         })
       ).map((row) => row.bloodlineId),
-  },
-  {
-    path: "/dogma/attribute",
-    ids: async () =>
-      (
-        await prisma.dogmaAttribute.findMany({
-          where: { isDeleted: false },
-          select: { attributeId: true },
-          orderBy: { attributeId: "asc" },
-        })
-      ).map((row) => row.attributeId),
-  },
-  {
-    path: "/dogma/effect",
-    ids: async () =>
-      (
-        await prisma.dogmaEffect.findMany({
-          where: { isDeleted: false },
-          select: { effectId: true },
-          orderBy: { effectId: "asc" },
-        })
-      ).map((row) => row.effectId),
   },
   {
     // One page per NPC corporation that actually sells something, rather than
@@ -323,23 +319,26 @@ async function getAllUrls(): Promise<string[]> {
           const ids = await source.ids();
           return {
             ok: true,
-            urls: ids.map((id) => `${SITE_URL}${source.path}/${id}`),
+            paths: ids.map((id) => `${source.path}/${id}`),
           };
         } catch (error: unknown) {
           console.error(
             `Failed to collect sitemap ids for ${source.path}.`,
             error,
           );
-          return { ok: false, urls: [] as string[] };
+          return { ok: false, paths: [] as string[] };
         }
       }),
     ),
   ]);
 
-  const urls = [
-    ...staticRoutes.filter(isCrawlable).map((route) => `${SITE_URL}${route}`),
-    ...families.flatMap((family) => family.urls),
-  ];
+  // `isCrawlable` gates entity families as well as static routes. No family
+  // sits under a disallowed prefix today, but the whole point of the shared
+  // list is that a sitemap URL can never contradict robots.txt — enforcing that
+  // in one place beats relying on nobody ever adding one that does.
+  const urls = [...staticRoutes, ...families.flatMap((family) => family.paths)]
+    .filter(isCrawlable)
+    .map((path) => `${SITE_URL}${path}`);
 
   // An empty static-route list means the `app/` walk failed — the real tree
   // always yields at least `/` — so it counts as degraded alongside a failed

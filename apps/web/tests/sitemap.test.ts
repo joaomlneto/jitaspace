@@ -82,8 +82,6 @@ const rows = {
   faction: [500001],
   race: [1],
   bloodline: [1],
-  dogmaAttribute: [9],
-  dogmaEffect: [11],
 };
 
 const idField: Record<keyof typeof rows, string> = {
@@ -97,8 +95,6 @@ const idField: Record<keyof typeof rows, string> = {
   faction: "factionId",
   race: "raceId",
   bloodline: "bloodlineId",
-  dogmaAttribute: "attributeId",
-  dogmaEffect: "effectId",
 };
 
 // The stubs forward their arguments so the suite can assert the `where` and
@@ -238,7 +234,13 @@ describe("sitemap", () => {
 
     for (const model of Object.keys(rows) as (keyof typeof rows)[]) {
       const args = queryArgs(findManyMocks[model]);
-      expect(args.where).toEqual({ isDeleted: false });
+      // `/type` additionally excludes typeId 0, whose page renders the
+      // not-found UI behind an HTTP 200 — a soft 404 if advertised.
+      expect(args.where).toEqual(
+        model === "type"
+          ? { isDeleted: false, typeId: { gt: 0 } }
+          : { isDeleted: false },
+      );
       // Without an explicit order the database may return rows in any order,
       // which lets the two sitemap pages overlap and drop URLs.
       expect(args.orderBy).toEqual({ [idField[model]]: "asc" });
@@ -274,8 +276,6 @@ describe("sitemap", () => {
         "https://www.jita.space/faction/500001",
         "https://www.jita.space/race/1",
         "https://www.jita.space/bloodline/1",
-        "https://www.jita.space/dogma/attribute/9",
-        "https://www.jita.space/dogma/effect/11",
         "https://www.jita.space/lp-store/1000035",
       ]),
     );
@@ -315,8 +315,8 @@ describe("sitemap", () => {
   });
 
   it("normalizes trailing slashes on the configured origin", async () => {
-    // A run of slashes, not just one — the stripping is a linear scan and this
-    // is the input shape that made the previous regex backtrack.
+    // A run of slashes, not just one: stripping only the last would leave a
+    // doubled separator on every URL.
     mockEnv.NEXT_PUBLIC_SITE_URL = "https://www.jita.space///";
 
     const locs = await allLocs(load());
@@ -335,8 +335,8 @@ describe("sitemap", () => {
     expect(pages).toEqual([{ id: 0 }, { id: 1 }]);
 
     // 6 crawlable static routes (incl. the optional catch-all's parent)
-    // + 60,000 types + 12 single-row families.
-    const TOTAL = 6 + 60_000 + 12;
+    // + 60,000 types + 10 single-row families.
+    const TOTAL = 6 + 60_000 + 10;
     const first = await mod.default({ id: Promise.resolve("0") });
     const second = await mod.default({ id: Promise.resolve("1") });
 
