@@ -41,7 +41,7 @@
     "dev": "pnpm with-env concurrently -c \"auto\" --names \"Studio,Watch\" \"pnpm:db:studio\" \"pnpm:db:generate:watch\"",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
-    "prepublishOnly": "pnpm build",
+    "prepack": "pnpm build",
     "type-check": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },

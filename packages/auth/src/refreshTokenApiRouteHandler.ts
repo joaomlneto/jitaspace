@@ -83,8 +83,11 @@ export const refreshTokenApiRouteHandler = async (
   });
 
   // Verify the refreshed token's signature against EVE's JWKS (and the
-  // iss/aud/exp claims) before trusting its payload.
-  const payload = await verifyEveSsoAccessToken(access_token).catch(() => null);
+  // iss/aud/exp claims) before trusting its payload. `clientId` binds it to
+  // this application — without it any EVE app's token would verify.
+  const payload = await verifyEveSsoAccessToken(access_token, {
+    clientId: eveClientId,
+  }).catch(() => null);
 
   if (!payload)
     return Response.json(
