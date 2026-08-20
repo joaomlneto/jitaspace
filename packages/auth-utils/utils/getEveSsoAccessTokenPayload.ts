@@ -9,7 +9,8 @@ export interface EveSsoAccessTokenPayload {
   tenant: string;
   tier: string;
   region: string;
-  aud: string;
+  /** EVE issues an array — the client id the token was minted for, plus "EVE Online". */
+  aud: string | string[];
   name: string;
   owner: string;
   exp: number;
