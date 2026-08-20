@@ -1,3 +1,9 @@
+/**
+ * @jest-environment node
+ *
+ * Node rather than jsdom: none of this touches the DOM, and the sitemap-index
+ * route handler returns a `Response`, which jsdom does not provide.
+ */
 import { join, relative, sep } from "node:path";
 import type { MetadataRoute } from "next";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
@@ -10,6 +16,10 @@ import { CRAWLER_DISALLOWED_PATHS } from "~/config/seo.ts";
 // the trailing-slash case re-resolve it after `jest.resetModules()`.
 const mockEnv: Record<string, string | undefined> = {};
 jest.mock("~/env", () => ({ env: mockEnv }));
+
+// The index route calls `connection()` to stay request-time; in jest there is
+// no request scope, so it resolves to a no-op.
+jest.mock("next/server", () => ({ connection: () => Promise.resolve() }));
 
 // A fake `app/` tree — walking the real one would make these assertions move
 // every time a route is added.
@@ -135,14 +145,22 @@ function load(): SitemapModule {
 }
 
 interface RobotsModule {
-  default: () => Promise<{
+  default: () => {
     rules: { disallow?: string[] };
-    sitemap?: string[];
-  }>;
+    sitemap?: string | string[];
+  };
 }
 
 function loadRobots(): RobotsModule {
   return require("~/app/robots") as RobotsModule;
+}
+
+interface SitemapIndexModule {
+  GET: () => Promise<Response>;
+}
+
+function loadSitemapIndex(): SitemapIndexModule {
+  return require("~/app/sitemap-index.xml/route") as SitemapIndexModule;
 }
 
 /** Every `<loc>` the sitemap would emit, across all of its pages. */
@@ -214,7 +232,7 @@ describe("sitemap", () => {
     // into robots.ts would leave both sides passing while production serves a
     // sitemap/robots contradiction.
     const locs = await allLocs(load());
-    const { rules } = await loadRobots().default();
+    const { rules } = loadRobots().default();
     const disallow = rules.disallow ?? [];
 
     expect(disallow.length).toBeGreaterThan(0);
@@ -227,6 +245,39 @@ describe("sitemap", () => {
       );
     });
     expect(contradictions).toEqual([]);
+  });
+
+  it("advertises the index in robots.txt, and the index lists every page", async () => {
+    // robots.txt names only the index; the index expands to the numbered pages.
+    // Both derive from ./sitemap.ts, so this pins the chain end to end.
+    const xml = await (await loadSitemapIndex().GET()).text();
+    const indexed = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    const { sitemap: advertised } = loadRobots().default();
+    const pages = await load().generateSitemaps();
+
+    expect(advertised).toBe("https://www.jita.space/sitemap.xml");
+    expect(indexed).toEqual(await load().getSitemapUrls());
+    expect(indexed).toHaveLength(pages.length);
+    expect(xml).toContain("<sitemapindex");
+    expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
+  });
+
+  it("paginates the index the same way the sitemap itself paginates", async () => {
+    const many = Array.from({ length: 60_000 }, (_, i) => ({ typeId: i + 1 }));
+    findManyMocks.type.mockResolvedValue(many);
+
+    const xml = await (await loadSitemapIndex().GET()).text();
+    const indexed = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+
+    expect(indexed).toEqual([
+      "https://www.jita.space/sitemap/0.xml",
+      "https://www.jita.space/sitemap/1.xml",
+    ]);
+  });
+
+  it("serves the index as XML", async () => {
+    const res = await loadSitemapIndex().GET();
+    expect(res.headers.get("content-type")).toContain("application/xml");
   });
 
   it("filters soft-deleted rows and orders every family deterministically", async () => {

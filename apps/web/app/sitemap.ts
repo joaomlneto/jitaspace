@@ -9,7 +9,7 @@ import { env } from "~/env";
 import { prisma } from "~/lib/db";
 
 const MAX_URLS_PER_SITEMAP = 50000;
-const LAST_MODIFIED = env.NEXT_PUBLIC_MODIFIED_DATE
+export const LAST_MODIFIED = env.NEXT_PUBLIC_MODIFIED_DATE
   ? new Date(env.NEXT_PUBLIC_MODIFIED_DATE)
   : new Date();
 
@@ -369,6 +369,13 @@ async function getSitemapCount(): Promise<number> {
   return Math.max(1, Math.ceil(urls.length / MAX_URLS_PER_SITEMAP));
 }
 
+/**
+ * The sitemap index — the conventional path crawlers probe unprompted, and the
+ * single entry robots.txt advertises. Serving it is `./sitemap.xml/route.ts`.
+ */
+export const SITEMAP_INDEX_URL = `${SITE_URL}/sitemap.xml`;
+
+/** Every `/sitemap/{n}.xml` page, i.e. the contents of the index. */
 export async function getSitemapUrls(): Promise<string[]> {
   const count = await getSitemapCount();
   return Array.from(
