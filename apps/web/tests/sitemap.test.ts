@@ -248,20 +248,14 @@ describe("sitemap", () => {
   });
 
   it("advertises the index in robots.txt, and the index lists every page", async () => {
-    // robots.txt names the index plus page 0 (see the note in app/robots.ts);
-    // the index expands to the numbered pages. Both derive from ./sitemap.ts,
-    // so this pins the chain end to end. Order matters: the index must come
-    // first, and page 0 is pinned rather than incidental so that removing it
-    // later is a deliberate edit here, not a silent drift.
+    // robots.txt names only the index; the index expands to the numbered pages.
+    // Both derive from ./sitemap.ts, so this pins the chain end to end.
     const xml = await (await loadSitemapIndex().GET()).text();
     const indexed = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
     const { sitemap: advertised } = loadRobots().default();
     const pages = await load().generateSitemaps();
 
-    expect(advertised).toEqual([
-      "https://www.jita.space/sitemap.xml",
-      "https://www.jita.space/sitemap/0.xml",
-    ]);
+    expect(advertised).toBe("https://www.jita.space/sitemap.xml");
     expect(indexed).toEqual(await load().getSitemapUrls());
     expect(indexed).toHaveLength(pages.length);
     expect(xml).toContain("<sitemapindex");
