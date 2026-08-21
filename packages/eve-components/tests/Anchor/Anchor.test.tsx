@@ -65,8 +65,6 @@ describe("Anchor components", () => {
       "CorporationAnchor",
       <CorporationAnchor corporationId={98}>Corp</CorporationAnchor>,
       "Corp",
-      // The source builds "/corporation/98/" but next/link normalizes away the
-      // trailing slash; assert the actually-rendered href.
       "/corporation/98",
     ],
     [
