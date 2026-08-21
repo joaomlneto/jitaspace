@@ -1,3 +1,4 @@
+import { utf8ToBase64 } from "./base64";
 import { eveSsoTokenErrorFromResponse } from "./EveSsoTokenError";
 
 export const TOKEN_ENDPOINT = "https://login.eveonline.com/v2/oauth/token";
@@ -26,8 +27,7 @@ export const exchangeEveSsoToken = async (params: {
   const { eveClientId, eveClientSecret, code, codeVerifier } = params;
 
   // Base64 encode the client ID and secret for the Basic auth header
-  const headerString = `${eveClientId}:${eveClientSecret}`;
-  const authHeader = Buffer.from(headerString, "utf-8").toString("base64");
+  const authHeader = utf8ToBase64(`${eveClientId}:${eveClientSecret}`);
 
   const response = await fetch(TOKEN_ENDPOINT, {
     method: "POST",

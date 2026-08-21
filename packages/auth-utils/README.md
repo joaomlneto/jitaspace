@@ -14,7 +14,9 @@ npm install @jitaspace/auth-utils
 pnpm add @jitaspace/auth-utils
 ```
 
-Requires a runtime with global `fetch` and `Buffer` (Node.js 18+, or an equivalent modern runtime). No framework dependency — usable from any server, route handler, or worker.
+Requires only web-standard globals — `fetch`, `atob`/`btoa` and `TextEncoder`/`TextDecoder` — so it runs unmodified on Node.js 18+, in browsers, on Deno, and on edge runtimes such as Cloudflare Workers. No Node `Buffer`, and no framework dependency.
+
+`verifyEveSsoAccessToken` is the one server-only export: it reaches for `jose`, which needs Web Crypto and a network call to EVE's JWKS. Everything else, including `getEveSsoAccessTokenPayload`, is safe to run client-side.
 
 ## Overview
 

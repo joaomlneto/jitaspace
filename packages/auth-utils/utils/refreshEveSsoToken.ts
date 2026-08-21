@@ -1,3 +1,4 @@
+import { utf8ToBase64 } from "./base64";
 import { eveSsoTokenErrorFromResponse } from "./EveSsoTokenError";
 
 export const REFRESH_TOKEN_ENDPOINT =
@@ -25,9 +26,7 @@ export const refreshEveSsoToken = async (params: {
   const { eveClientId, eveClientSecret, refreshToken, scopes } = params;
 
   // Base64 encode the client ID and secret
-  const headerString = `${eveClientId}:${eveClientSecret}`;
-  const buff = Buffer.from(headerString, "utf-8");
-  const authHeader = buff.toString("base64");
+  const authHeader = utf8ToBase64(`${eveClientId}:${eveClientSecret}`);
 
   const body = new URLSearchParams({
     grant_type: "refresh_token",
