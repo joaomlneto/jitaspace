@@ -27,6 +27,22 @@ const optionalNumber = (value: unknown): number | null =>
   value == null ? null : Number(value);
 
 /**
+ * An optional SDE integer destined for a `BigInt` column.
+ *
+ * Emitting a `bigint` rather than a `number` is load-bearing twice over: an
+ * ISK-denominated progress figure overflows int4 (the ingest died on
+ * `Value out of range for the type: integer out of range for type int4`), and
+ * `recordsAreEqual` — which decides create/update/equal — compares `typeof`
+ * first, so a `number` against the `bigint` Prisma reads back would mark every
+ * row modified on every run.
+ */
+const optionalBigInt = (value: unknown): bigint | null => {
+  if (value == null) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? BigInt(Math.round(number)) : null;
+};
+
+/**
  * Render one `annotations` entry as text.
  *
  * Annotation values are a plain string, a localized object, or — for
@@ -135,20 +151,20 @@ export function toObjectiveRow(
     subtitle: enString(record.subtitle),
     militaryCampaignId,
     careerPath: plainString(record.careerPath),
-    targetProgress: optionalNumber(record.targetProgress),
-    maxProgressPerParticipant: optionalNumber(record.maxProgressPerParticipant),
+    targetProgress: optionalBigInt(record.targetProgress),
+    maxProgressPerParticipant: optionalBigInt(record.maxProgressPerParticipant),
     presentingCharacterId: optionalNumber(record.presentingCharacterID),
     issuerCorporationId: optionalNumber(obj(record.issuer).corporationID),
     iskAmountPerInterval: optionalNumber(isk.amountPerInterval),
-    iskProgressInterval: optionalNumber(isk.progressInterval),
+    iskProgressInterval: optionalBigInt(isk.progressInterval),
     iskIssuerCorporationId: issuerCorporationOf(isk),
     lpAmountPerInterval: optionalNumber(lp.amountPerInterval),
-    lpProgressInterval: optionalNumber(lp.progressInterval),
+    lpProgressInterval: optionalBigInt(lp.progressInterval),
     lpIssuerCorporationId: issuerCorporationOf(lp),
     standingGainPercentPerInterval: optionalNumber(
       standing.gainPercentPerInterval,
     ),
-    standingProgressInterval: optionalNumber(standing.progressInterval),
+    standingProgressInterval: optionalBigInt(standing.progressInterval),
     standingIssuerFactionId: optionalNumber(obj(standing.issuer).factionID),
     requiredEnlistmentWithFactionId: optionalNumber(
       annotations.requiredEnlistmentWithFactionID,
@@ -170,7 +186,7 @@ export function toCampaignRow(
     militaryCampaignId,
     title: enString(record.title) ?? "",
     subtitle: enString(record.subtitle),
-    targetProgress: optionalNumber(record.targetProgress),
+    targetProgress: optionalBigInt(record.targetProgress),
     issuerFactionId: optionalNumber(obj(record.issuer).factionID),
     isDeleted: false,
   };
