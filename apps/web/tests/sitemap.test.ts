@@ -337,6 +337,30 @@ describe("sitemap", () => {
     expect(extra.staticRoutesFailed).toBe(true);
   });
 
+  it("reports again when the degradation worsens, without waiting out the window", async () => {
+    // Progressive degradation is the realistic shape — pool exhaustion takes
+    // the slowest queries first. A blanket time window would leave the alert
+    // saying "1 of 11" while the whole database is down.
+    findManyMocks.region.mockRejectedValue(new Error("ECONNREFUSED"));
+    const mod = load();
+    await mod.default({ id: Promise.resolve("0") });
+    expect(mockCaptureException).toHaveBeenCalledTimes(1);
+
+    // Everything else drops moments later, well inside the throttle window.
+    for (const model of Object.keys(rows) as (keyof typeof rows)[]) {
+      findManyMocks[model].mockRejectedValue(new Error("ECONNREFUSED"));
+    }
+    mockGroupBy.mockRejectedValue(new Error("ECONNREFUSED"));
+    await mod.default({ id: Promise.resolve("0") });
+
+    expect(mockCaptureException).toHaveBeenCalledTimes(2);
+    const second = mockCaptureException.mock.calls[1];
+    if (!second) throw new Error("no second capture");
+    expect((second[0] as Error).message).toContain(
+      "11 of 11 entity families unavailable",
+    );
+  });
+
   it("throttles repeat reports so an outage cannot flood Sentry", async () => {
     findManyMocks.region.mockRejectedValue(new Error("ECONNREFUSED"));
 

@@ -246,6 +246,7 @@ const DEGRADED_REPORT_INTERVAL_MS = 60 * 1000;
 
 let cachedStaticRoutes: string[] | null = null;
 let lastDegradedReportAt = 0;
+let lastDegradedSignature = "";
 let cachedUrls: { urls: string[]; expiresAt: number } | null = null;
 
 const hasPageFile = (entries: Dirent[]) =>
@@ -320,15 +321,6 @@ async function getStaticRoutes(): Promise<string[]> {
 }
 
 /**
- * Every URL the sitemap advertises, absolute and in a stable order.
- *
- * A family whose query fails contributes nothing rather than taking the whole
- * sitemap down with it — a database blip should cost us one section, not the
- * crawler's entire view of the site. That degraded list is deliberately *not*
- * cached: serving a truncated sitemap for the next hour because of one refused
- * connection tells crawlers those URLs are gone.
- */
-/**
  * Report a degraded assembly to Sentry — once, for the whole assembly.
  *
  * This exists because every failure mode in this file is quiet by design: a
@@ -340,6 +332,13 @@ async function getStaticRoutes(): Promise<string[]> {
  * One event per assembly, not one per family: during a database outage all
  * eleven fail together, and eleven fragments of the same incident are harder
  * to read than one that names them.
+ *
+ * The throttle is keyed on *what* degraded, not just the clock. A steady-state
+ * outage still reports once a minute, but an escalation — `/region` alone, then
+ * thirty seconds later the whole pool — reports the moment the shape changes.
+ * A blanket window would leave the alert understating that incident by an order
+ * of magnitude until it rolled, and progressive degradation is the realistic
+ * case: connection-pool exhaustion takes the slowest queries first.
  */
 function reportDegraded(detail: {
   failedFamilies: string[];
@@ -347,8 +346,15 @@ function reportDegraded(detail: {
   urlCount: number;
 }): void {
   const now = Date.now();
-  if (now - lastDegradedReportAt < DEGRADED_REPORT_INTERVAL_MS) return;
+  const signature = `${detail.staticRoutesFailed}:${detail.failedFamilies.join(",")}`;
+  if (
+    signature === lastDegradedSignature &&
+    now - lastDegradedReportAt < DEGRADED_REPORT_INTERVAL_MS
+  ) {
+    return;
+  }
   lastDegradedReportAt = now;
+  lastDegradedSignature = signature;
 
   const causes: string[] = [];
   if (detail.failedFamilies.length > 0) {
@@ -370,6 +376,15 @@ function reportDegraded(detail: {
   });
 }
 
+/**
+ * Every URL the sitemap advertises, absolute and in a stable order.
+ *
+ * A family whose query fails contributes nothing rather than taking the whole
+ * sitemap down with it — a database blip should cost us one section, not the
+ * crawler's entire view of the site. That degraded list is deliberately *not*
+ * cached: serving a truncated sitemap for the next hour because of one refused
+ * connection tells crawlers those URLs are gone.
+ */
 async function getAllUrls(): Promise<string[]> {
   if (cachedUrls && cachedUrls.expiresAt > Date.now()) return cachedUrls.urls;
 
