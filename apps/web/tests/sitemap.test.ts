@@ -63,7 +63,7 @@ function resolveDir(dir: string): Tree {
   return node;
 }
 
-const mockReaddir = jest.fn((dir: unknown) => {
+const readdirImpl = (dir: unknown) => {
   const entries = Object.entries(resolveDir(String(dir)));
   return Promise.resolve(
     entries.map(([name, child]) => ({
@@ -72,7 +72,8 @@ const mockReaddir = jest.fn((dir: unknown) => {
       isDirectory: () => child !== FILE,
     })),
   );
-});
+};
+const mockReaddir = jest.fn(readdirImpl);
 jest.mock("node:fs/promises", () => ({
   // The `withFileTypes` option is implied by the fake entries below, so the
   // mock only ever needs the directory.
@@ -124,6 +125,24 @@ for (const model of Object.keys(rows) as (keyof typeof rows)[]) {
   prismaStub[model] = { findMany: (args?: unknown) => fn(args) };
 }
 jest.mock("~/lib/db", () => ({ prisma: prismaStub }));
+
+// Sentry is stubbed so the degraded-path reporting can be asserted directly;
+// the real client would need an initialised hub and would swallow the call.
+const mockCaptureException =
+  jest.fn<(error: unknown, context?: unknown) => void>();
+jest.mock("@sentry/nextjs", () => ({
+  captureException: (error: unknown, context?: unknown) =>
+    mockCaptureException(error, context),
+}));
+
+/** The `(error, context)` pair of the single capture that fired. */
+function soleCapture(): { message: string; extra: Record<string, unknown> } {
+  expect(mockCaptureException).toHaveBeenCalledTimes(1);
+  const call = mockCaptureException.mock.calls[0];
+  if (!call) throw new Error("no capture");
+  const [error, context] = call as [Error, { extra: Record<string, unknown> }];
+  return { message: error.message, extra: context.extra };
+}
 
 /** The single argument object a stubbed query was called with. */
 function queryArgs(mock: {
@@ -179,7 +198,10 @@ describe("sitemap", () => {
     jest.resetModules();
     mockEnv.NEXT_PUBLIC_SITE_URL = "https://www.jita.space";
     mockEnv.NEXT_PUBLIC_MODIFIED_DATE = "2026-01-01T00:00:00.000Z";
-    mockReaddir.mockClear();
+    // Reset rather than clear: a test that makes readdir reject would otherwise
+    // leave that rejection in place for every test after it.
+    mockReaddir.mockReset();
+    mockReaddir.mockImplementation(readdirImpl);
     for (const model of Object.keys(rows) as (keyof typeof rows)[]) {
       findManyMocks[model].mockReset();
       findManyMocks[model].mockResolvedValue(
@@ -188,6 +210,7 @@ describe("sitemap", () => {
     }
     mockGroupBy.mockReset();
     mockGroupBy.mockResolvedValue([{ corporationId: 1000035 }]);
+    mockCaptureException.mockReset();
   });
 
   it("emits only absolute URLs", async () => {
@@ -278,6 +301,77 @@ describe("sitemap", () => {
   it("serves the index as XML", async () => {
     const res = await loadSitemapIndex().GET();
     expect(res.headers.get("content-type")).toContain("application/xml");
+  });
+
+  it("reports a degraded assembly to Sentry once, naming the families that failed", async () => {
+    findManyMocks.region.mockRejectedValue(new Error("ECONNREFUSED"));
+    findManyMocks.station.mockRejectedValue(new Error("ECONNREFUSED"));
+
+    const mod = load();
+    await mod.default({ id: Promise.resolve("0") });
+
+    // One event for the assembly, not one per failed family — during an outage
+    // every family fails together and N fragments bury the incident.
+    const { message, extra } = soleCapture();
+    expect(message).toContain("Sitemap degraded");
+    expect(message).toContain("2 of 11 entity families unavailable");
+    expect(extra.failedFamilies).toEqual(["/region", "/station"]);
+    expect(extra.staticRoutesFailed).toBe(false);
+  });
+
+  it("does not report when every family resolves", async () => {
+    const mod = load();
+    await mod.default({ id: Promise.resolve("0") });
+
+    expect(mockCaptureException).not.toHaveBeenCalled();
+  });
+
+  it("reports a failed static-route walk, which yields no URLs at all", async () => {
+    mockReaddir.mockRejectedValue(new Error("EACCES"));
+
+    const mod = load();
+    await mod.default({ id: Promise.resolve("0") });
+
+    const { message, extra } = soleCapture();
+    expect(message).toContain("static route walk failed");
+    expect(extra.staticRoutesFailed).toBe(true);
+  });
+
+  it("reports again when the degradation worsens, without waiting out the window", async () => {
+    // Progressive degradation is the realistic shape — pool exhaustion takes
+    // the slowest queries first. A blanket time window would leave the alert
+    // saying "1 of 11" while the whole database is down.
+    findManyMocks.region.mockRejectedValue(new Error("ECONNREFUSED"));
+    const mod = load();
+    await mod.default({ id: Promise.resolve("0") });
+    expect(mockCaptureException).toHaveBeenCalledTimes(1);
+
+    // Everything else drops moments later, well inside the throttle window.
+    for (const model of Object.keys(rows) as (keyof typeof rows)[]) {
+      findManyMocks[model].mockRejectedValue(new Error("ECONNREFUSED"));
+    }
+    mockGroupBy.mockRejectedValue(new Error("ECONNREFUSED"));
+    await mod.default({ id: Promise.resolve("0") });
+
+    expect(mockCaptureException).toHaveBeenCalledTimes(2);
+    const second = mockCaptureException.mock.calls[1];
+    if (!second) throw new Error("no second capture");
+    expect((second[0] as Error).message).toContain(
+      "11 of 11 entity families unavailable",
+    );
+  });
+
+  it("throttles repeat reports so an outage cannot flood Sentry", async () => {
+    findManyMocks.region.mockRejectedValue(new Error("ECONNREFUSED"));
+
+    // A degraded assembly is never cached, so each request rebuilds it. Without
+    // the throttle every crawler hit would raise its own event.
+    const mod = load();
+    for (let i = 0; i < 5; i++) {
+      await mod.default({ id: Promise.resolve("0") });
+    }
+
+    expect(mockCaptureException).toHaveBeenCalledTimes(1);
   });
 
   it("filters soft-deleted rows and orders every family deterministically", async () => {

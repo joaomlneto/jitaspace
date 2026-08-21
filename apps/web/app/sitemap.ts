@@ -2,6 +2,7 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { MetadataRoute } from "next";
 import type { Dirent } from "node:fs";
+import * as Sentry from "@sentry/nextjs";
 
 import { CONFIG } from "~/config/constants.ts";
 import { isCrawlable } from "~/config/seo.ts";
@@ -231,7 +232,21 @@ const ENTITY_SOURCES: EntitySource[] = [
   },
 ];
 
+/**
+ * Minimum gap between degraded-sitemap reports from one instance.
+ *
+ * A degraded assembly is deliberately never cached, so during a database
+ * outage every crawler request re-runs every family. Reporting once per
+ * assembly already collapses eleven events into one, but that one would still
+ * fire on every request — and a crawler hammering a broken sitemap is exactly
+ * when Sentry needs to stay readable. One report a minute is enough to raise
+ * an alert and keep it raised.
+ */
+const DEGRADED_REPORT_INTERVAL_MS = 60 * 1000;
+
 let cachedStaticRoutes: string[] | null = null;
+let lastDegradedReportAt = 0;
+let lastDegradedSignature = "";
 let cachedUrls: { urls: string[]; expiresAt: number } | null = null;
 
 const hasPageFile = (entries: Dirent[]) =>
@@ -306,6 +321,62 @@ async function getStaticRoutes(): Promise<string[]> {
 }
 
 /**
+ * Report a degraded assembly to Sentry — once, for the whole assembly.
+ *
+ * This exists because every failure mode in this file is quiet by design: a
+ * family that throws contributes nothing, the sitemap still returns 200 with
+ * valid XML, and the build stays green. That is the right behaviour for
+ * crawlers and the reason the sitemap sat broken in production for six months
+ * without anyone noticing. `console.error` alone did not close that loop.
+ *
+ * One event per assembly, not one per family: during a database outage all
+ * eleven fail together, and eleven fragments of the same incident are harder
+ * to read than one that names them.
+ *
+ * The throttle is keyed on *what* degraded, not just the clock. A steady-state
+ * outage still reports once a minute, but an escalation — `/region` alone, then
+ * thirty seconds later the whole pool — reports the moment the shape changes.
+ * A blanket window would leave the alert understating that incident by an order
+ * of magnitude until it rolled, and progressive degradation is the realistic
+ * case: connection-pool exhaustion takes the slowest queries first.
+ */
+function reportDegraded(detail: {
+  failedFamilies: string[];
+  staticRoutesFailed: boolean;
+  urlCount: number;
+}): void {
+  const now = Date.now();
+  const signature = `${detail.staticRoutesFailed}:${detail.failedFamilies.join(",")}`;
+  if (
+    signature === lastDegradedSignature &&
+    now - lastDegradedReportAt < DEGRADED_REPORT_INTERVAL_MS
+  ) {
+    return;
+  }
+  lastDegradedReportAt = now;
+  lastDegradedSignature = signature;
+
+  const causes: string[] = [];
+  if (detail.failedFamilies.length > 0) {
+    causes.push(
+      `${detail.failedFamilies.length} of ${ENTITY_SOURCES.length} entity families unavailable`,
+    );
+  }
+  if (detail.staticRoutesFailed) causes.push("static route walk failed");
+
+  Sentry.captureException(new Error(`Sitemap degraded: ${causes.join("; ")}`), {
+    level: "error",
+    tags: { area: "sitemap" },
+    extra: {
+      failedFamilies: detail.failedFamilies,
+      staticRoutesFailed: detail.staticRoutesFailed,
+      urlsServed: detail.urlCount,
+      totalFamilies: ENTITY_SOURCES.length,
+    },
+  });
+}
+
+/**
  * Every URL the sitemap advertises, absolute and in a stable order.
  *
  * A family whose query fails contributes nothing rather than taking the whole
@@ -325,6 +396,7 @@ async function getAllUrls(): Promise<string[]> {
           const ids = await source.ids();
           return {
             ok: true,
+            path: source.path,
             paths: ids.map((id) => `${source.path}/${id}`),
           };
         } catch (error: unknown) {
@@ -332,7 +404,7 @@ async function getAllUrls(): Promise<string[]> {
             `Failed to collect sitemap ids for ${source.path}.`,
             error,
           );
-          return { ok: false, paths: [] as string[] };
+          return { ok: false, path: source.path, paths: [] as string[] };
         }
       }),
     ),
@@ -349,10 +421,20 @@ async function getAllUrls(): Promise<string[]> {
   // An empty static-route list means the `app/` walk failed — the real tree
   // always yields at least `/` — so it counts as degraded alongside a failed
   // family query.
-  const healthy =
-    staticRoutes.length > 0 && families.every((family) => family.ok);
+  const staticRoutesFailed = staticRoutes.length === 0;
+  const failedFamilies = families
+    .filter((family) => !family.ok)
+    .map((family) => family.path);
+  const healthy = !staticRoutesFailed && failedFamilies.length === 0;
+
   if (healthy) {
     cachedUrls = { urls, expiresAt: Date.now() + URL_CACHE_TTL_MS };
+  } else {
+    reportDegraded({
+      failedFamilies,
+      staticRoutesFailed,
+      urlCount: urls.length,
+    });
   }
   return urls;
 }
