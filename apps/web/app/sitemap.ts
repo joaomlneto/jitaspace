@@ -375,6 +375,15 @@ async function getSitemapCount(): Promise<number> {
  */
 export const SITEMAP_INDEX_URL = `${SITE_URL}/sitemap.xml`;
 
+/**
+ * Page 0, which exists unconditionally: `getSitemapCount()` floors at 1, and
+ * `sitemap()` returns `[]` past the end of the list rather than throwing. So
+ * this URL serves valid XML whatever the database is doing, and — unlike the
+ * rest of the pages — it is a constant, so robots.txt can name it without a
+ * query. See the note in ./robots.ts for why it is named there at all.
+ */
+export const FIRST_SITEMAP_PAGE_URL = `${SITE_URL}/sitemap/0.xml`;
+
 /** Every `/sitemap/{n}.xml` page, i.e. the contents of the index. */
 export async function getSitemapUrls(): Promise<string[]> {
   const count = await getSitemapCount();
