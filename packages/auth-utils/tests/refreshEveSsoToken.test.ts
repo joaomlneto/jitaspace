@@ -99,33 +99,66 @@ describe("refreshEveSsoToken", () => {
     expect(bodies[1]?.has("scope")).toBe(false);
   });
 
-  it("throws 'error refreshing access token' when response is not ok", async () => {
-    jest.spyOn(console, "error").mockImplementation(() => undefined);
+  const failWith = (status: number, body: string) => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
-      status: 401,
-      statusText: "Unauthorized",
+      status,
+      statusText: "",
+      text: jest.fn().mockResolvedValue(body),
     });
+  };
 
-    await expect(refreshEveSsoToken(params)).rejects.toThrow(
-      "error refreshing access token",
+  // The distinction this whole error type exists for: a revoked refresh token
+  // is terminal, a 5xx is worth retrying, and the caller can only tell them
+  // apart if the RFC 6749 payload survives.
+  it("flags invalid_grant as requiring re-authentication", async () => {
+    failWith(
+      400,
+      JSON.stringify({
+        error: "invalid_grant",
+        error_description: "The refresh token is expired or revoked",
+      }),
     );
+
+    await expect(refreshEveSsoToken(params)).rejects.toMatchObject({
+      name: "EveSsoTokenError",
+      status: 400,
+      error: "invalid_grant",
+      requiresReauthentication: true,
+    });
   });
 
-  it("calls console.error when the token endpoint responds with a non-OK status", async () => {
+  it("does not flag a server error as requiring re-authentication", async () => {
+    failWith(500, JSON.stringify({ error: "server_error" }));
+
+    await expect(refreshEveSsoToken(params)).rejects.toMatchObject({
+      status: 500,
+      error: "server_error",
+      requiresReauthentication: false,
+    });
+  });
+
+  // EVE 5xx responses and CDN edge errors return HTML. Parsing that with a bare
+  // response.json() would replace a clean auth error with a SyntaxError.
+  it("survives a non-JSON body and keeps it on the error", async () => {
+    failWith(502, "<html><body>Bad Gateway</body></html>");
+
+    const error = await refreshEveSsoToken(params).catch((e: unknown) => e);
+    expect(error).toMatchObject({
+      name: "EveSsoTokenError",
+      status: 502,
+      body: "<html><body>Bad Gateway</body></html>",
+    });
+    expect((error as { error?: string }).error).toBeUndefined();
+  });
+
+  it("does not log the client secret when the refresh fails", async () => {
     const consoleSpy = jest
       .spyOn(console, "error")
       .mockImplementation(() => undefined);
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: false,
-      status: 500,
-      statusText: "Internal Server Error",
-    });
+    failWith(401, "");
 
-    await expect(refreshEveSsoToken(params)).rejects.toThrow();
-    expect(consoleSpy).toHaveBeenCalledTimes(1);
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ message: "Error refreshing EVE SSO token" }),
-    );
+    await expect(refreshEveSsoToken(params)).rejects.toBeDefined();
+    expect(consoleSpy).not.toHaveBeenCalled();
   });
 });

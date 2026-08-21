@@ -1,6 +1,10 @@
+import { utf8ToBase64 } from "./base64";
+import { eveSsoTokenErrorFromResponse } from "./EveSsoTokenError";
+
 export const TOKEN_ENDPOINT = "https://login.eveonline.com/v2/oauth/token";
 
-interface SsoTokenSuccessResult {
+/** A successful `authorization_code` exchange, as EVE returns it. */
+export interface SsoTokenSuccessResult {
   access_token: string;
   expires_in: number;
   refresh_token: string;
@@ -23,8 +27,7 @@ export const exchangeEveSsoToken = async (params: {
   const { eveClientId, eveClientSecret, code, codeVerifier } = params;
 
   // Base64 encode the client ID and secret for the Basic auth header
-  const headerString = `${eveClientId}:${eveClientSecret}`;
-  const authHeader = Buffer.from(headerString, "utf-8").toString("base64");
+  const authHeader = utf8ToBase64(`${eveClientId}:${eveClientSecret}`);
 
   const response = await fetch(TOKEN_ENDPOINT, {
     method: "POST",
@@ -41,12 +44,10 @@ export const exchangeEveSsoToken = async (params: {
   });
 
   if (!response.ok) {
-    console.error({
-      message: "Error exchanging EVE SSO authorization code",
-      status: response.status,
-      statusText: response.statusText,
-    });
-    throw new Error("error exchanging authorization code");
+    throw await eveSsoTokenErrorFromResponse(
+      response,
+      "Error exchanging EVE SSO authorization code",
+    );
   }
 
   return (await response.json()) as SsoTokenSuccessResult;
