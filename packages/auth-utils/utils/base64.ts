@@ -47,7 +47,7 @@ export function utf8ToBase64(input: string): string {
  *    the bytes as UTF-8, matching `Buffer`'s default.
  */
 export function base64UrlToUtf8(input: string): string {
-  const base64 = input.replace(/-/g, "+").replace(/_/g, "/");
+  const base64 = input.replaceAll("-", "+").replaceAll("_", "/");
   const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
   const binary = atob(padded);
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
