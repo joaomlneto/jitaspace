@@ -1,6 +1,6 @@
 {
   "name": "@jitaspace/auth-utils",
-  "description": "Framework-agnostic EVE Online SSO token utilities and Zod schemas — exchange, refresh, and decode ESI access tokens",
+  "description": "Framework-agnostic EVE Online SSO token utilities — exchange, refresh, verify, and decode ESI access tokens",
   "version": "0.2.0",
   "type": "module",
   "main": "./index.ts",
@@ -46,8 +46,7 @@
   },
   "dependencies": {
     "@jitaspace/esi-metadata": "workspace:*",
-    "jose": "^6.2.3",
-    "zod": "^3.25.76"
+    "jose": "^6.2.3"
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",

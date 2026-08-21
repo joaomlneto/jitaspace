@@ -1,6 +1,9 @@
+import { eveSsoTokenErrorFromResponse } from "./EveSsoTokenError";
+
 export const TOKEN_ENDPOINT = "https://login.eveonline.com/v2/oauth/token";
 
-interface SsoTokenSuccessResult {
+/** A successful `authorization_code` exchange, as EVE returns it. */
+export interface SsoTokenSuccessResult {
   access_token: string;
   expires_in: number;
   refresh_token: string;
@@ -41,12 +44,10 @@ export const exchangeEveSsoToken = async (params: {
   });
 
   if (!response.ok) {
-    console.error({
-      message: "Error exchanging EVE SSO authorization code",
-      status: response.status,
-      statusText: response.statusText,
-    });
-    throw new Error("error exchanging authorization code");
+    throw await eveSsoTokenErrorFromResponse(
+      response,
+      "Error exchanging EVE SSO authorization code",
+    );
   }
 
   return (await response.json()) as SsoTokenSuccessResult;

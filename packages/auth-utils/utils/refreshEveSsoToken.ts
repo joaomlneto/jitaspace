@@ -1,7 +1,10 @@
+import { eveSsoTokenErrorFromResponse } from "./EveSsoTokenError";
+
 export const REFRESH_TOKEN_ENDPOINT =
   "https://login.eveonline.com/v2/oauth/token";
 
-interface SsoRefreshTokenSuccessResult {
+/** A successful `refresh_token` grant, as EVE returns it. */
+export interface SsoRefreshTokenSuccessResult {
   access_token: string;
   expires_in: number;
   refresh_token: string;
@@ -46,12 +49,10 @@ export const refreshEveSsoToken = async (params: {
   });
 
   if (!refreshedTokensResponse.ok) {
-    console.error({
-      message: "Error refreshing EVE SSO token",
-      status: refreshedTokensResponse.status,
-      statusText: refreshedTokensResponse.statusText,
-    });
-    throw new Error("error refreshing access token");
+    throw await eveSsoTokenErrorFromResponse(
+      refreshedTokensResponse,
+      "Error refreshing EVE SSO access token",
+    );
   }
 
   const refreshResult =
