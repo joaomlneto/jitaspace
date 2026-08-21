@@ -1,10 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { SolarSystemName, TypeName } from "@jitaspace/eve-components";
+import {
+  SolarSystemAnchor,
+  SolarSystemName,
+  TypeAnchor,
+  TypeName,
+} from "@jitaspace/eve-components";
 import { usePlanet } from "@jitaspace/hooks";
 import { Position3DText, TypeAvatar } from "@jitaspace/ui";
 
@@ -38,16 +42,16 @@ export default function Page() {
               solarSystemId={planet?.data.system_id}
               size="sm"
             />
-            <Anchor component={Link} href={`/system/${planet?.data.system_id}`}>
+            <SolarSystemAnchor solarSystemId={planet?.data.system_id}>
               <SolarSystemName span solarSystemId={planet?.data.system_id} />
-            </Anchor>
+            </SolarSystemAnchor>
           </Group>
         </Group>
         <Group justify="space-between">
           <Text>Planet Type</Text>
-          <Anchor component={Link} href={`/type/${planet?.data.type_id}`}>
+          <TypeAnchor typeId={planet?.data.type_id}>
             <TypeName span typeId={planet?.data.type_id} />
-          </Anchor>
+          </TypeAnchor>
         </Group>
         <Group justify="space-between">
           <Text>Position</Text>
