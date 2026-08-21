@@ -32,6 +32,22 @@ export function requiredBigInt(value: unknown): bigint {
   return BigInt(Number.isFinite(n) ? Math.round(n) : 0);
 }
 
+/**
+ * An optional SDE field for a `BigInt` column — null when absent or non-finite.
+ *
+ * Reach for this over {@link optionalNumber} whenever a column counts a
+ * quantity rather than identifying a row: ids fit int4, but ISK-denominated
+ * figures (military-campaign progress, for one) run past it. Emitting `bigint`
+ * and not `number` is also what keeps the ingest diff honest — `recordsAreEqual`
+ * compares `typeof` before value, so a `number` held against the `bigint` Prisma
+ * reads back would mark every row modified on every run.
+ */
+export function optionalBigInt(value: unknown): bigint | null {
+  if (value == null) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? BigInt(Math.round(n)) : null;
+}
+
 /** A required boolean SDE field. */
 export const requiredBoolean: (value: unknown) => boolean = Boolean;
 

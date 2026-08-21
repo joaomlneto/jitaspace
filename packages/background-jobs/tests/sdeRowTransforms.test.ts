@@ -1,7 +1,8 @@
 import { describe, expect, it } from "@jest/globals";
 
-// All four modules are runtime-dependency-free (type-only Prisma imports), so
-// unlike the other job tests these need no p-limit / env mocks.
+// All four modules are runtime-dependency-free (type-only Prisma imports, plus
+// sdeFields, which imports nothing), so unlike the other job tests these need
+// no p-limit / env mocks.
 import {
   rgba,
   toGraphicMaterialSetRow,

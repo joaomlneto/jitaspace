@@ -1,46 +1,22 @@
 import type { Prisma } from "../../../db";
+// Reached directly rather than through `../../../helpers`: the field coercions
+// live in a module of their own with no imports at all, while the barrel pulls
+// in p-limit and the zod-checked env, which Jest cannot load without mocks.
+import {
+  enString,
+  optionalBigInt,
+  optionalNumber,
+  plainString,
+} from "../../../helpers/sdeFields";
 
 /**
  * Pure transforms for militaryCampaigns.yaml and militaryCampaignObjectives.yaml.
  *
- * Kept in its own module with a type-only `Prisma` import so it pulls in no
- * runtime dependencies: the ingest job's own module reaches p-limit and the
- * zod-checked env through `../../../helpers`, which Jest cannot load without
- * mocks. Everything that inspects the SDE's shape lives here so it is directly
- * unit-testable — the field-level bugs this module now guards against were
- * invisible to a "rows created, second run equal" check.
+ * Kept in its own module so it stays free of runtime dependencies and is
+ * directly unit-testable: everything that inspects these two files' shape lives
+ * here, and the field-level bugs it now guards against were invisible to a
+ * "rows created, second run equal" check.
  */
-
-/** The English text of a localized SDE field, or null. */
-function enString(value: unknown): string | null {
-  if (typeof value === "object" && value !== null) {
-    const en = (value as { en?: unknown }).en;
-    if (typeof en === "string") return en;
-  }
-  return null;
-}
-
-const plainString = (value: unknown): string | null =>
-  typeof value === "string" ? value : null;
-
-const optionalNumber = (value: unknown): number | null =>
-  value == null ? null : Number(value);
-
-/**
- * An optional SDE integer destined for a `BigInt` column.
- *
- * Emitting a `bigint` rather than a `number` is load-bearing twice over: an
- * ISK-denominated progress figure overflows int4 (the ingest died on
- * `Value out of range for the type: integer out of range for type int4`), and
- * `recordsAreEqual` — which decides create/update/equal — compares `typeof`
- * first, so a `number` against the `bigint` Prisma reads back would mark every
- * row modified on every run.
- */
-const optionalBigInt = (value: unknown): bigint | null => {
-  if (value == null) return null;
-  const number = Number(value);
-  return Number.isFinite(number) ? BigInt(Math.round(number)) : null;
-};
 
 /**
  * Render one `annotations` entry as text.
