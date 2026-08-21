@@ -144,47 +144,58 @@ const config = {
     ],
   },
 
-  rewrites: async () => [
-    {
-      // Umami's tracker sends events to `<data-host-url>/api/send`, which
-      // defaults to the cloud collection gateway. The layout sets
-      // `data-host-url="/analytics"` so the beacon is same-origin (kept off
-      // `connect-src`'s third-party list and invisible to ad blockers that
-      // block `*.umami.is`); this rewrite forwards it to the gateway. Must
-      // come BEFORE the catch-all below — that one targets the script host,
-      // which does not serve `/api/send`.
-      source: "/analytics/api/send",
-      destination: "https://gateway.umami.is/api/send", // Umami event gateway
-    },
-    {
-      // Must target `cloud.umami.is` (the canonical script host), NOT
-      // `analytics.umami.is` — the latter 301-redirects to `cloud.umami.is`,
-      // and Next.js forwards that redirect to the browser, which then loads a
-      // cross-origin script that `script-src 'self'` rejects (a CSP violation
-      // even though the proxied URL is same-origin). See JITASPACE-3T.
-      source: "/analytics/:match*",
-      destination: "https://cloud.umami.is/:match*", // Proxy to Umami script
-    },
-    {
-      source: "/ingest/static/:path*",
-      destination: "https://eu-assets.i.posthog.com/static/:path*",
-    },
-    {
-      source: "/ingest/array/:path*",
-      destination: "https://eu-assets.i.posthog.com/array/:path*",
-    },
-    {
-      source: "/ingest/:path*",
-      destination: "https://eu.i.posthog.com/:path*",
-    },
-    {
-      // Serve a single static shell for every /market/<typeId> URL instead of
-      // rendering (and ISR-caching) one page per type id. The browser keeps the
-      // pretty /market/<typeId> URL; the client reads the id from the path.
-      source: "/market/:typeId",
-      destination: "/market",
-    },
-  ],
+  rewrites: async () => ({
+    // `beforeFiles`, because Next reserves `/sitemap.xml` for the
+    // `app/sitemap.ts` metadata convention. With `generateSitemaps()` the real
+    // pages live at `/sitemap/{n}.xml` and that reserved route only 404s, but
+    // it still wins against an `afterFiles` rewrite — and a route handler at
+    // `app/sitemap.xml/` fails the build outright with "Conflicting route and
+    // metadata". This hands the conventional path to the index handler.
+    beforeFiles: [
+      { source: "/sitemap.xml", destination: "/sitemap-index.xml" },
+    ],
+    afterFiles: [
+      {
+        // Umami's tracker sends events to `<data-host-url>/api/send`, which
+        // defaults to the cloud collection gateway. The layout sets
+        // `data-host-url="/analytics"` so the beacon is same-origin (kept off
+        // `connect-src`'s third-party list and invisible to ad blockers that
+        // block `*.umami.is`); this rewrite forwards it to the gateway. Must
+        // come BEFORE the catch-all below — that one targets the script host,
+        // which does not serve `/api/send`.
+        source: "/analytics/api/send",
+        destination: "https://gateway.umami.is/api/send", // Umami event gateway
+      },
+      {
+        // Must target `cloud.umami.is` (the canonical script host), NOT
+        // `analytics.umami.is` — the latter 301-redirects to `cloud.umami.is`,
+        // and Next.js forwards that redirect to the browser, which then loads a
+        // cross-origin script that `script-src 'self'` rejects (a CSP violation
+        // even though the proxied URL is same-origin). See JITASPACE-3T.
+        source: "/analytics/:match*",
+        destination: "https://cloud.umami.is/:match*", // Proxy to Umami script
+      },
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://eu-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/array/:path*",
+        destination: "https://eu-assets.i.posthog.com/array/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://eu.i.posthog.com/:path*",
+      },
+      {
+        // Serve a single static shell for every /market/<typeId> URL instead of
+        // rendering (and ISR-caching) one page per type id. The browser keeps the
+        // pretty /market/<typeId> URL; the client reads the id from the path.
+        source: "/market/:typeId",
+        destination: "/market",
+      },
+    ],
+  }),
   skipTrailingSlashRedirect: true,
 
   redirects: async () => [
