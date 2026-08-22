@@ -1,3 +1,9 @@
+/* eslint-disable react-hooks/preserve-manual-memoization -- Every memo in
+ * this file derives from optionally-chained reads (`esiCharacter.data?.…`,
+ * `agentData?.…`). The React Compiler check cannot match a hand-written
+ * dependency list against what it would infer through optional chaining, so
+ * it flags these as divergent. They are correct as written; the suppression
+ * can be dropped once this package adopts the compiler. */
 "use client";
 
 import { useMemo } from "react";

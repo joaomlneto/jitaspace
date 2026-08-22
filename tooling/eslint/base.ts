@@ -42,7 +42,7 @@ export const restrictEnvAccess = defineConfig({
 
 export const baseConfig = defineConfig(
   // Ignore files not tracked by VCS and any config files
-  includeIgnoreFile(path.join(import.meta?.dirname, "../../.gitignore")),
+  includeIgnoreFile(path.join(import.meta.dirname, "../../.gitignore")),
   // `includeIgnoreFile` only reads the root .gitignore; generated client code
   // (kubb output) is excluded via *package-level* .gitignore files, so ignore
   // it explicitly here to keep generated sources out of lint.

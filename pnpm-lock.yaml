@@ -2031,9 +2031,15 @@ importers:
         specifier: ^3.8.3
         version: 3.8.3
     devDependencies:
+      '@jitaspace/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint
       '@jitaspace/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      eslint:
+        specifier: ^9.39.4
+        version: 9.39.4(jiti@2.7.0)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

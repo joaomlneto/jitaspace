@@ -87,7 +87,7 @@ export async function generateCollectionFiles(
   fs.writeFileSync(outPath, JSON.stringify(data));
 
   const idAttributeType = Object.keys(data).every(
-    (key) => key.match(/^\d+$/) != null,
+    (key) => /^\d+$/.exec(key) != null,
   )
     ? "number"
     : "string";

@@ -10,14 +10,18 @@
   "scripts": {
     "clean": "rm -rf .turbo node_modules",
     "format": "prettier --check \"**/*.{mjs,ts,md,json}\"",
-    "typecheck": "tsc --noEmit"
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "prettier": "^3.8.3"
   },
   "devDependencies": {
+    "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
+    "eslint": "^9.39.4",
     "typescript": "^5.9.3"
   },
   "prettier": "@jitaspace/prettier-config"

@@ -34,7 +34,7 @@ export const reactConfig = defineConfig(
       "react/prop-types": "off",
     },
   },
-  reactHooks.configs.flat["recommended-latest"]!,
+  reactHooks.configs.flat["recommended-latest"],
   // Must come last within this preset: consumers spread `reactConfig` after
   // `baseConfig`, so React relaxations placed in base.ts would be overridden by
   // `recommended` above.
@@ -54,6 +54,10 @@ export const reactConfig = defineConfig(
       "react/jsx-key": "off",
       // Mock and fixture components are anonymous by design.
       "react/display-name": "off",
+      // renderHook harnesses call hooks from a plain `render()` callback, which
+      // the rule reads as a non-component function. The hooks are exercised
+      // inside a real React render; the harness just does not look like one.
+      "react-hooks/rules-of-hooks": "off",
     },
   },
 );

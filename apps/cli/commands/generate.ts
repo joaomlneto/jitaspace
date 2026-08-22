@@ -67,7 +67,7 @@ export default createCommand("generate")
     // add metadata paths
     const sdeRoot = path.resolve(getWorkingDirectory(), SDE_PATH);
     const sdeMetadataFile = loadFile("_sde.yaml", sdeRoot);
-    const sde = sdeMetadataFile["sde"] as {
+    const sde = sdeMetadataFile.sde as {
       buildNumber: number;
       releaseDate: string;
       schemaChangeLog: string;
