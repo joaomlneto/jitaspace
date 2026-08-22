@@ -261,6 +261,67 @@ const countBatchFailure = async (
   return failures;
 };
 
+/**
+ * Count this failure and, once a batch has failed too often, skip past it.
+ *
+ * The cursor only advances on success, so a batch that can never be processed
+ * used to block the feed permanently: `retries: 0` means no retry, and every
+ * later run re-fetched the same sequences and failed the same way. Counting
+ * attempts lets a transient failure be retried while an unprocessable batch is
+ * given up on, so the feed keeps moving either way.
+ *
+ * Returns whether the batch was abandoned.
+ */
+const quarantineExhaustedBatch = async (
+  ctx: JobContext,
+  redis: Awaited<ReturnType<typeof getRedis>>,
+  startCursor: bigint | null,
+  cursor: bigint | null,
+  message: string,
+): Promise<boolean> => {
+  if (startCursor === null || cursor === null || cursor <= startCursor) {
+    return false;
+  }
+
+  const failures = await countBatchFailure(redis, startCursor);
+  if (failures < MAX_BATCH_FAILURES) return false;
+
+  await recordSkippedRange(
+    redis,
+    startCursor,
+    cursor,
+    `failed ${failures} times: ${message}`,
+  );
+  await redis.set(R2Z2_CURSOR_KEY, cursor.toString());
+  await redis.del(R2Z2_BATCH_FAILURE_KEY);
+  ctx.logger.error(
+    "Quarantined an unprocessable R2Z2 batch and advanced the cursor.",
+    {
+      range: formatRange(startCursor, cursor),
+      attempts: failures,
+      error: message,
+    },
+  );
+  return true;
+};
+
+/** Load the stored cursor, seeding it at the feed head on the very first run. */
+const loadCursor = async (
+  ctx: JobContext,
+  redis: Awaited<ReturnType<typeof getRedis>>,
+  latestSequenceValue: string,
+): Promise<bigint> => {
+  const stored = await ctx.run("Load R2Z2 cursor", async () =>
+    redis.get(R2Z2_CURSOR_KEY),
+  );
+  if (stored) return BigInt(stored);
+
+  await ctx.run("Initialize R2Z2 cursor", async () => {
+    await redis.set(R2Z2_CURSOR_KEY, latestSequenceValue);
+  });
+  return BigInt(latestSequenceValue);
+};
+
 interface KillmailRows {
   killmailRows: Prisma.KillmailCreateManyInput[];
   victimRows: Prisma.KillmailVictimCreateManyInput[];
@@ -376,25 +437,8 @@ const buildKillmailRows = (packages: R2Z2Package[]): KillmailRows => {
   };
 };
 
-/**
- * Drop references the database cannot satisfy, so the insert cannot trip a
- * foreign key.
- *
- * `createCorpAndItsRefRecords` resolves the entities it is able to create on
- * demand, but Type, SolarSystem and Moon are written only by the SDE ingest. A
- * killmail that names something the SDE has not delivered yet — a module first
- * seen on patch day, most likely — would otherwise fail the whole batch on a
- * constraint, which is exactly the failure the cursor used to wedge on.
- *
- * A missing *required* reference (solar system, victim ship, item type) means
- * the killmail cannot be stored at all, so it is dropped and reported. Missing
- * *optional* ones (moon, attacker ship, attacker weapon) are nulled instead —
- * ESI leaves those out routinely, so a null is a shape the readers already
- * expect, and keeping the kill beats discarding it over an unknown weapon.
- */
-const dropUnresolvableReferences = async (
-  rows: KillmailRows,
-): Promise<{ rows: KillmailRows; droppedKillmailIds: string[] }> => {
+/** Every SDE-owned id a batch references, grouped by the table that owns it. */
+const collectReferencedIds = (rows: KillmailRows) => {
   const typeIds = new Set<number>();
   const solarSystemIds = new Set<number>();
   const moonIds = new Set<number>();
@@ -410,7 +454,16 @@ const dropUnresolvableReferences = async (
     if (attacker.weaponTypeId != null) typeIds.add(attacker.weaponTypeId);
   }
 
-  const [knownTypes, knownSolarSystems, knownMoons] = await Promise.all([
+  return { typeIds, solarSystemIds, moonIds };
+};
+
+/** Which of those ids the database actually holds. */
+const findKnownIds = async ({
+  typeIds,
+  solarSystemIds,
+  moonIds,
+}: ReturnType<typeof collectReferencedIds>) => {
+  const [types, solarSystems, moons] = await Promise.all([
     typeIds.size > 0
       ? prisma.type.findMany({
           select: { typeId: true },
@@ -431,30 +484,75 @@ const dropUnresolvableReferences = async (
       : [],
   ]);
 
-  const knownTypeIds = new Set(knownTypes.map((type) => type.typeId));
-  const knownSolarSystemIds = new Set(
-    knownSolarSystems.map((system) => system.solarSystemId),
-  );
-  const knownMoonIds = new Set(knownMoons.map((moon) => moon.moonId));
+  return {
+    knownTypeIds: new Set(types.map((type) => type.typeId)),
+    knownSolarSystemIds: new Set(
+      solarSystems.map((system) => system.solarSystemId),
+    ),
+    knownMoonIds: new Set(moons.map((moon) => moon.moonId)),
+  };
+};
 
-  // Key on the string form: `killmailId` is typed `bigint | number`, and 1n and
-  // 1 are different Set members.
-  const dropped = new Set<string>();
+/**
+ * Killmails naming a required row the database lacks, so they cannot be stored
+ * at all.
+ *
+ * Keyed on the string form: `killmailId` is typed `bigint | number`, and 1n and
+ * 1 are different Set members.
+ */
+const findUnstorableKillmailIds = (
+  rows: KillmailRows,
+  knownTypeIds: ReadonlySet<number>,
+  knownSolarSystemIds: ReadonlySet<number>,
+) => {
+  const unstorable = new Set<string>();
+
   for (const killmail of rows.killmailRows) {
     if (!knownSolarSystemIds.has(killmail.solarSystemId)) {
-      dropped.add(killmail.killmailId.toString());
+      unstorable.add(killmail.killmailId.toString());
     }
   }
   for (const victim of rows.victimRows) {
     if (!knownTypeIds.has(victim.shipTypeId)) {
-      dropped.add(victim.killmailId.toString());
+      unstorable.add(victim.killmailId.toString());
     }
   }
   for (const item of rows.itemRows) {
     if (!knownTypeIds.has(item.typeId)) {
-      dropped.add(item.killmailId.toString());
+      unstorable.add(item.killmailId.toString());
     }
   }
+
+  return unstorable;
+};
+
+/**
+ * Drop references the database cannot satisfy, so the insert cannot trip a
+ * foreign key.
+ *
+ * `createCorpAndItsRefRecords` resolves the entities it is able to create on
+ * demand, but Type, SolarSystem and Moon are written only by the SDE ingest. A
+ * killmail that names something the SDE has not delivered yet — a module first
+ * seen on patch day, most likely — would otherwise fail the whole batch on a
+ * constraint, which is exactly the failure the cursor used to wedge on.
+ *
+ * A missing *required* reference (solar system, victim ship, item type) means
+ * the killmail cannot be stored at all, so it is dropped and reported. Missing
+ * *optional* ones (moon, attacker ship, attacker weapon) are nulled instead —
+ * ESI leaves those out routinely, so a null is a shape the readers already
+ * expect, and keeping the kill beats discarding it over an unknown weapon.
+ */
+const dropUnresolvableReferences = async (
+  rows: KillmailRows,
+): Promise<{ rows: KillmailRows; droppedKillmailIds: string[] }> => {
+  const { knownTypeIds, knownSolarSystemIds, knownMoonIds } =
+    await findKnownIds(collectReferencedIds(rows));
+
+  const dropped = findUnstorableKillmailIds(
+    rows,
+    knownTypeIds,
+    knownSolarSystemIds,
+  );
 
   const kept = <T extends { killmailId: bigint | number }>(list: T[]) =>
     list.filter((row) => !dropped.has(row.killmailId.toString()));
@@ -631,24 +729,7 @@ export const scrapeZkillboardRecentKills =
 
         latestSequence = BigInt(latestSequenceValue as string);
 
-        let nextSequenceValue: string | null = await ctx.run(
-          "Load R2Z2 cursor",
-          async () => {
-            const stored = await redis.get(R2Z2_CURSOR_KEY);
-            if (!stored) return null;
-            return stored;
-          },
-        );
-
-        if (nextSequenceValue === null) {
-          const initialCursor = latestSequenceValue as string;
-          nextSequenceValue = initialCursor;
-          await ctx.run("Initialize R2Z2 cursor", async () => {
-            await redis.set(R2Z2_CURSOR_KEY, initialCursor);
-          });
-        }
-
-        cursor = BigInt(nextSequenceValue);
+        cursor = await loadCursor(ctx, redis, latestSequenceValue as string);
         startCursor = cursor;
 
         const collected = await collectKillmailPackages(
@@ -787,35 +868,13 @@ export const scrapeZkillboardRecentKills =
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
 
-        // The cursor only advances on success, so a batch that can never be
-        // processed used to block the feed permanently: `retries: 0` means no
-        // retry, and every later run re-fetched the same sequences and failed
-        // the same way. Count attempts per batch instead — a transient failure
-        // is retried on the next run, and a batch that keeps failing is skipped
-        // (and recorded) so the feed keeps moving.
-        let quarantined = false;
-        if (startCursor !== null && cursor !== null && cursor > startCursor) {
-          const failures = await countBatchFailure(redis, startCursor);
-          if (failures >= MAX_BATCH_FAILURES) {
-            await recordSkippedRange(
-              redis,
-              startCursor,
-              cursor,
-              `failed ${failures} times: ${message}`,
-            );
-            await redis.set(R2Z2_CURSOR_KEY, cursor.toString());
-            await redis.del(R2Z2_BATCH_FAILURE_KEY);
-            quarantined = true;
-            ctx.logger.error(
-              "Quarantined an unprocessable R2Z2 batch and advanced the cursor.",
-              {
-                range: formatRange(startCursor, cursor),
-                attempts: failures,
-                error: message,
-              },
-            );
-          }
-        }
+        const quarantined = await quarantineExhaustedBatch(
+          ctx,
+          redis,
+          startCursor,
+          cursor,
+          message,
+        );
 
         await postUpdateCard({
           status: "failed",
