@@ -39,9 +39,11 @@
     "@tiptap/starter-kit": "^3.26.0",
     "date-fns": "^4.3.0",
     "embla-carousel-react": "8.6.0",
+    "humanize-duration": "^3.33.2",
     "next": "16.2.11",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "swr": "^2.4.1"
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",
