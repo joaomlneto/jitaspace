@@ -6,10 +6,12 @@ import type {
   BuildRangeChanges,
   EntityTimeline,
   HistoryIndex,
+  LatestChangedBuild,
 } from "~/lib/history";
 import {
   HISTORY_MIN_RELEASE_DATE,
   isBuildInHistoryScope,
+  latestChangedBuild,
   netOp,
 } from "~/lib/history";
 
@@ -115,6 +117,19 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
     builds: buildsOut,
     entityCountsByType,
   };
+}
+
+/**
+ * The newest build with recorded changes — the "latest patch notes" the home
+ * page banner links to. `null` when nothing has been recorded yet.
+ *
+ * Deliberately NOT its own `"use cache"` entry: it folds the already-cached
+ * {@link getCachedHistoryIndex}, so the home page and `/history` share a single
+ * day-cached read of the history DB rather than each minting one. Only the small
+ * derived summary crosses to the client.
+ */
+export async function getLatestChangedBuild(): Promise<LatestChangedBuild | null> {
+  return latestChangedBuild(await getCachedHistoryIndex());
 }
 
 /**
