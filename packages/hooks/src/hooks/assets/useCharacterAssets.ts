@@ -114,6 +114,16 @@ export const useCharacterAssets = (characterId?: number) => {
     locations,
     error,
     isLoading,
+    /**
+     * Whether pages are still outstanding.
+     *
+     * `isLoading` only covers the *first* page: react-query settles the query
+     * once page one lands, and the eager effect above then walks the rest with
+     * `fetchNextPage`, which reports through `isFetchingNextPage` instead. A
+     * consumer that needs the whole collection — rather than whatever has
+     * arrived so far — has to wait on this too.
+     */
+    hasNextPage,
     mutate: refetch,
   };
 };
