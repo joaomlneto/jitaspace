@@ -2,11 +2,20 @@ name: Cypress Tests
 
 on:
   push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
+
+# This job checks out the repo, builds it and runs Cypress. It needs no write
+# access; the default token is otherwise handed to a third-party action below.
+permissions:
+  contents: read
 
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # Runs tests in parallel with matrix strategy https://docs.cypress.io/guides/guides/parallelization
     # https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
     # Also see warning here https://github.com/cypress-io/github-action#parallel
@@ -40,11 +49,11 @@ jobs:
             -p 8080:8080 \
             cockroachdb/cockroach:v24.3.7 \
             start-single-node --insecure --store=type=mem,size=0.5
-          until curl -sf http://localhost:8080/health?ready=1; do sleep 1; done
+          timeout 120 bash -c 'until curl -sf http://localhost:8080/health?ready=1; do sleep 1; done'
           docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS jitaspace;"
       - name: Checkout
         uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
         with:
           version: 11.3.0
       - name: Setup Node.js
@@ -52,14 +61,23 @@ jobs:
         with:
           node-version: 24.15.0
           cache: pnpm
-      - name: Install dependencies
-        run: pnpm install
+      # Restored BEFORE install: cypress's postinstall downloads the binary, so
+      # a cache restored afterwards never saved the fetch it exists to avoid.
+      # Keyed on the lockfile, which carries the resolved version — the previous
+      # key hashed apps/web/package.json, whose caret range does not change when
+      # a `pnpm update` resolves a new cypress.
       - name: Cache Cypress binary
         id: cypress-cache
         uses: actions/cache@v5
         with:
           path: ~/.cache/Cypress
-          key: cypress-${{ runner.os }}-${{ hashFiles('apps/web/package.json') }}
+          key: cypress-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          # Skip the postinstall download; the step below handles it, and on a
+          # cache hit no download is needed at all.
+          CYPRESS_INSTALL_BINARY: "0"
       - name: Install Cypress binary
         if: steps.cypress-cache.outputs.cache-hit != 'true'
         run: pnpm exec cypress install
@@ -79,10 +97,14 @@ jobs:
           # Starts web server for E2E tests - the web package exposes `start` which runs Next.js
           start: pnpm start
           wait-on: "http://localhost:3000" # Waits for above
-          # Records to Cypress Cloud
+          # Recording requires CYPRESS_RECORD_KEY, and --parallel requires
+          # --record. Secrets are not exposed to pull_request runs from forks, so
+          # hardcoding these fails the job before a single spec executes. Gate
+          # both on the key actually being present; without it the suite still
+          # runs, just unrecorded and unsplit.
           # https://docs.cypress.io/guides/cloud/projects#Set-up-a-project-to-record
-          record: true
-          parallel: true # Runs test in parallel using settings above
+          record: ${{ secrets.CYPRESS_RECORD_KEY != '' }}
+          parallel: ${{ secrets.CYPRESS_RECORD_KEY != '' }}
         env:
           # If you enable recording/parallelization set CYPRESS_RECORD_KEY in repo secrets
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}

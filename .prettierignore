@@ -5,9 +5,12 @@
 # `download-schema` script — keep them byte-identical to upstream.
 **/swagger.json
 
-# Generated client code (kubb output) and Prisma client.
+# Generated code: kubb clients, Prisma clients, and the ESI build metadata kubb
+# writes. Prettier only reads the ROOT .gitignore, so the per-package .gitignore
+# files that already exclude these do not reach it.
 **/src/generated/
-packages/db/prisma/generated/
+**/prisma/generated/
+packages/esi-client/src/build-data.json
 
 # Build output and caches not already covered by .gitignore.
 **/.next/

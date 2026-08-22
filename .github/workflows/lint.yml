@@ -1,4 +1,4 @@
-name: Type Check
+name: Lint
 
 on:
   push:
@@ -7,13 +7,12 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
-# This job only reads the repository — it checks out the code and runs `tsc`.
-# Narrowing the token here rather than inheriting the repository default.
+# Reads the repository and runs ESLint. No write access required.
 permissions:
   contents: read
 
 jobs:
-  type-check:
+  lint:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -34,11 +33,11 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      # No explicit codegen step: the Prisma client and the Kubb API clients are
-      # generated and gitignored, and the turbo `type-check` task declares
-      # db:generate/^db:generate and kubb:generate/^kubb:generate, so it produces
-      # both itself on a clean checkout. (Before `^kubb:generate` was added, only
-      # a package's OWN kubb task was ordered and this held by accident, via the
-      # postinstall hooks in the generated-client packages.)
-      - name: Type-check
-        run: pnpm type-check
+      # The turbo `lint` task depends on the Prisma and Kubb generators, so a
+      # clean checkout produces them itself. `pnpm lint` also runs
+      # `manypkg check`, which fails on a dependency declared at different
+      # versions across workspaces.
+      - name: Lint
+        run: pnpm lint
+      - name: Check formatting
+        run: pnpm format:check
