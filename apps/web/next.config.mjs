@@ -194,6 +194,17 @@ const config = {
         source: "/market/:typeId",
         destination: "/market",
       },
+      {
+        // Market groups have no page of their own, but `MarketGroupAnchor`
+        // links to /market-group/<id> — from every type page and from the
+        // market breadcrumbs — so without this every one of those links is a
+        // 404. Serve the market browser instead. Its path parser only matches
+        // /market/<typeId> (page.client.tsx:38), so the id is simply ignored
+        // and the default view renders. Swap this for a real route if market
+        // groups ever get a page of their own.
+        source: "/market-group/:marketGroupId",
+        destination: "/market",
+      },
     ],
   }),
   skipTrailingSlashRedirect: true,

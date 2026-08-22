@@ -237,6 +237,33 @@ describe("Anchor components", () => {
       expect(node).toBeInTheDocument();
       expect(node.closest("a")).toBeNull();
     });
+
+    // A `null` id reaches these from nullable database columns. The guard used
+    // to test `=== undefined` only, so null fell through and rendered
+    // "/category/null".
+    it.each([
+      [
+        "CategoryAnchor",
+        <CategoryAnchor categoryId={null}>Null Category</CategoryAnchor>,
+        "Null Category",
+      ],
+      [
+        "GroupAnchor",
+        <GroupAnchor groupId={null}>Null Group</GroupAnchor>,
+        "Null Group",
+      ],
+      [
+        "MarketGroupAnchor",
+        <MarketGroupAnchor marketGroupId={null}>Null Market</MarketGroupAnchor>,
+        "Null Market",
+      ],
+    ])("%s renders bare children when the id is null", (_name, node, label) => {
+      renderWithMantine(node);
+      const el = screen.getByText(label);
+      expect(el).toBeInTheDocument();
+      expect(el.closest("a")).toBeNull();
+      expect(document.body.innerHTML).not.toContain("/null");
+    });
   });
 
   describe("EveMailSenderAnchor", () => {
