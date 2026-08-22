@@ -138,7 +138,7 @@ describe("home page corporations", () => {
     expect(screen.queryByText("Alliance 100")).not.toBeInTheDocument();
   });
 
-  it("renders the server-injected patch-notes banner slot", () => {
+  it("renders the server-injected news carousel slot", () => {
     mockUseAuthenticatedCharacterIds.mockReturnValue([]);
     mockUseAuthStore.mockImplementation((selector) =>
       selector({ characters: {} }),
@@ -147,11 +147,11 @@ describe("home page corporations", () => {
     const Page = require("~/app/page.client").default;
     render(
       <MantineProvider>
-        <Page banner={<div>Patch notes banner</div>} />
+        <Page newsCarousel={<div>News carousel slot</div>} />
       </MantineProvider>,
     );
 
-    expect(screen.getByText("Patch notes banner")).toBeInTheDocument();
+    expect(screen.getByText("News carousel slot")).toBeInTheDocument();
   });
 
   it("lists unique alliances for authenticated characters", () => {

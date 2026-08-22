@@ -22,16 +22,18 @@ const toolSections = [
 
 export interface HomePageProps {
   /**
-   * Server-rendered latest-patch-notes banner, injected by `app/page.tsx`.
+   * The news carousel, injected by `app/page.tsx` so it can include the latest
+   * patch notes.
    *
-   * Taken as a slot rather than rendered here because it reads the history
-   * database: this is a Client Component, so that read has to happen in the
-   * Server Component above it.
+   * Taken as a slot rather than rendered here because that card reads the
+   * history database: this is a Client Component, so the read has to happen in
+   * the Server Component above it. Falls back to the plain curated carousel,
+   * which is what the tests and any other caller get.
    */
-  banner?: ReactNode;
+  newsCarousel?: ReactNode;
 }
 
-export default function HomePage({ banner }: Readonly<HomePageProps>) {
+export default function HomePage({ newsCarousel }: Readonly<HomePageProps>) {
   const authenticatedCharacterIds = useAuthenticatedCharacterIds();
   const authenticatedCorporationIds = useAuthStore(
     useShallow((state) => {
@@ -61,8 +63,7 @@ export default function HomePage({ banner }: Readonly<HomePageProps>) {
   return (
     <Container size="xl" py="md">
       <Stack gap={48}>
-        <NewsCarousel />
-        {banner}
+        {newsCarousel ?? <NewsCarousel />}
         {env.NODE_ENV === "development" && <DevelopmentModeAlert />}
 
         <section>

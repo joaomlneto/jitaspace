@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 
 import type { LatestChangedBuild } from "~/lib/history";
-import { LatestPatchNotesBanner } from "~/components/PatchNotes";
+import { NewsCarouselPlaceholder } from "~/components/News";
+import { PatchNotesNewsCarousel } from "~/components/PatchNotes";
 import { getLatestChangedBuild } from "~/lib/history-cache";
 import HomePage from "./page.client";
 
@@ -14,8 +15,8 @@ export const metadata: Metadata = {
 };
 
 /**
- * Latest EVE static-data diff, read on the server and handed to the client
- * banner.
+ * The news carousel, with the latest EVE static-data diff read on the server and
+ * appended as a generated card.
  *
  * `connection()` marks the read as request-time — the same opt-out `/history`
  * uses. Without it the day-cached `getLatestChangedBuild` would be resolved
@@ -23,23 +24,26 @@ export const metadata: Metadata = {
  * CI ⇒ ECONNREFUSED) and, because the `catch` below sits outside the `"use cache"`
  * scope, would fail the build rather than degrade.
  */
-async function LatestPatchNotes() {
+async function NewsCarouselWithPatchNotes() {
   await connection();
   let latest: LatestChangedBuild | null = null;
   try {
     latest = await getLatestChangedBuild();
   } catch {
-    latest = null; // history DB unreachable ⇒ render nothing, don't crash the page
+    latest = null; // history DB unreachable ⇒ just the curated cards, no crash
   }
-  return <LatestPatchNotesBanner latest={latest} />;
+  return <PatchNotesNewsCarousel latest={latest} />;
 }
 
 export default function Page() {
   return (
     <HomePage
-      banner={
-        <Suspense fallback={null}>
-          <LatestPatchNotes />
+      newsCarousel={
+        // The placeholder is the carousel's own height reservation, so the
+        // static shell holds the space open and the streamed-in carousel drops
+        // into it rather than pushing the page down.
+        <Suspense fallback={<NewsCarouselPlaceholder />}>
+          <NewsCarouselWithPatchNotes />
         </Suspense>
       }
     />
