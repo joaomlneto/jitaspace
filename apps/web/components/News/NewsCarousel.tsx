@@ -24,16 +24,30 @@ export interface NewsCarouselProps extends UseDismissedNewsOptions {
 }
 
 /**
+ * Space below the carousel, held constant rather than sized to the number of
+ * cards.
+ *
+ * It has to clear the indicators, which sit outside the carousel at
+ * `bottom: -1.75rem` and only appear when there is more than one card. Sizing it
+ * to that would make the page's layout depend on how many cards a given visitor
+ * has dismissed — which isn't knowable until after mount, so every dismissal
+ * would be a layout shift. Reserving the taller value always costs a single card
+ * some extra breathing room and buys a stable page.
+ */
+const CAROUSEL_MARGIN_BOTTOM = 48;
+
+/**
  * Height reserved for the carousel before it can render.
  *
  * The cards' visibility depends on localStorage and the wall clock, neither of
  * which is readable during render, so the space is held open rather than left
  * to pop in — otherwise the carousel appearing pushes the whole home page down
  * (a layout shift / CLS). Doubles as the Suspense fallback for a server-fetched
- * carousel, which has the same problem for the same reason.
+ * carousel, which has the same problem for the same reason — and must therefore
+ * reserve the carousel's exact box, margin included.
  */
 export function NewsCarouselPlaceholder() {
-  return <Box aria-hidden h={NEWS_BANNER_HEIGHT} mb="xl" />;
+  return <Box aria-hidden h={NEWS_BANNER_HEIGHT} mb={CAROUSEL_MARGIN_BOTTOM} />;
 }
 
 /** Flashy, image-forward banner cards in a horizontally-scrollable carousel. */
@@ -74,7 +88,7 @@ export function NewsCarousel({
       emblaOptions={{ align: "start", containScroll: "trimSnaps" }}
       classNames={{ controls: classes.controls }}
       styles={{ indicators: { bottom: "-1.75rem" } }}
-      mb={multiple ? 48 : "xl"}
+      mb={CAROUSEL_MARGIN_BOTTOM}
     >
       {slides.map(({ item, onDismiss }) => (
         <Carousel.Slide key={item.id}>
