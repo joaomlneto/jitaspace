@@ -12,8 +12,25 @@ const R2Z2_BASE_URL = "https://r2z2.zkillboard.com/ephemeral";
 const R2Z2_SEQUENCE_URL = `${R2Z2_BASE_URL}/sequence.json`;
 const R2Z2_CURSOR_KEY = "zkillboard:r2z2:next-sequence";
 const R2Z2_RATE_LIMIT_UNTIL_KEY = "zkillboard:r2z2:rate-limit-until";
+/** `"<startCursor>:<count>"` — consecutive failed attempts at the same batch. */
+const R2Z2_BATCH_FAILURE_KEY = "zkillboard:r2z2:batch-failures";
+/** Ranges the job gave up on, newest first, so nothing vanishes unrecorded. */
+const R2Z2_SKIPPED_RANGES_KEY = "zkillboard:r2z2:skipped-ranges";
 const USER_AGENT = "www.jita.space - Joao Neto - joao@jita.space";
 const MAX_KILLMAILS_PER_RUN = 100;
+/**
+ * How many sequences in an unbroken run may 404 before we conclude the feed has
+ * expired past us rather than that we hit an ordinary hole.
+ */
+const MAX_CONSECUTIVE_MISSING_SEQUENCES = 25;
+/**
+ * How many times one batch may fail before it is skipped. Transient failures (a
+ * database blip) get retried; a genuinely unprocessable batch is quarantined
+ * instead of blocking the cursor forever.
+ */
+const MAX_BATCH_FAILURES = 3;
+/** Cap on the skipped-range list so it cannot grow without bound. */
+const MAX_SKIPPED_RANGES_KEPT = 200;
 const RATE_LIMIT_FALLBACK_SLEEP_SECONDS = 60;
 const RATE_LIMIT_MIN_INTERVAL_MS = 50;
 let lastRequestAt = 0;
@@ -194,6 +211,56 @@ const formatLag = (latest: bigint | null, cursor: bigint | null) => {
   return (latest > cursor ? latest - cursor : 0n).toString();
 };
 
+/**
+ * Note a range the job moved past without ingesting.
+ *
+ * Skipping is always a last resort — the feed aged out from under us, or a
+ * batch failed often enough to be quarantined — but it has to be recoverable
+ * and visible rather than silent, so every skip lands in a capped Redis list
+ * that a backfill can replay from.
+ */
+const recordSkippedRange = async (
+  redis: Awaited<ReturnType<typeof getRedis>>,
+  from: bigint,
+  toExclusive: bigint,
+  reason: string,
+) => {
+  if (toExclusive <= from) return;
+  await redis.lPush(
+    R2Z2_SKIPPED_RANGES_KEY,
+    JSON.stringify({
+      from: from.toString(),
+      to: (toExclusive - 1n).toString(),
+      count: (toExclusive - from).toString(),
+      reason,
+    }),
+  );
+  await redis.lTrim(R2Z2_SKIPPED_RANGES_KEY, 0, MAX_SKIPPED_RANGES_KEPT - 1);
+};
+
+/**
+ * Record a failed attempt at the batch starting at `startCursor` and return how
+ * many consecutive attempts that batch has now cost.
+ *
+ * The count is keyed on the batch's own start sequence, so moving on resets it:
+ * three unrelated failures at three different cursors are three first attempts,
+ * not one batch about to be quarantined.
+ */
+const countBatchFailure = async (
+  redis: Awaited<ReturnType<typeof getRedis>>,
+  startCursor: bigint,
+): Promise<number> => {
+  const stored = await redis.get(R2Z2_BATCH_FAILURE_KEY);
+  const [storedCursor, storedCount] = stored?.split(":") ?? [];
+  const previous =
+    storedCursor === startCursor.toString()
+      ? Number.parseInt(storedCount ?? "0", 10)
+      : 0;
+  const failures = (Number.isFinite(previous) ? previous : 0) + 1;
+  await redis.set(R2Z2_BATCH_FAILURE_KEY, `${startCursor}:${failures}`);
+  return failures;
+};
+
 interface KillmailRows {
   killmailRows: Prisma.KillmailCreateManyInput[];
   victimRows: Prisma.KillmailVictimCreateManyInput[];
@@ -309,20 +376,132 @@ const buildKillmailRows = (packages: R2Z2Package[]): KillmailRows => {
   };
 };
 
+/**
+ * Drop references the database cannot satisfy, so the insert cannot trip a
+ * foreign key.
+ *
+ * `createCorpAndItsRefRecords` resolves the entities it is able to create on
+ * demand, but Type, SolarSystem and Moon are written only by the SDE ingest. A
+ * killmail that names something the SDE has not delivered yet — a module first
+ * seen on patch day, most likely — would otherwise fail the whole batch on a
+ * constraint, which is exactly the failure the cursor used to wedge on.
+ *
+ * A missing *required* reference (solar system, victim ship, item type) means
+ * the killmail cannot be stored at all, so it is dropped and reported. Missing
+ * *optional* ones (moon, attacker ship, attacker weapon) are nulled instead —
+ * ESI leaves those out routinely, so a null is a shape the readers already
+ * expect, and keeping the kill beats discarding it over an unknown weapon.
+ */
+const dropUnresolvableReferences = async (
+  rows: KillmailRows,
+): Promise<{ rows: KillmailRows; droppedKillmailIds: string[] }> => {
+  const typeIds = new Set<number>();
+  const solarSystemIds = new Set<number>();
+  const moonIds = new Set<number>();
+
+  for (const killmail of rows.killmailRows) {
+    solarSystemIds.add(killmail.solarSystemId);
+    if (killmail.moonId != null) moonIds.add(killmail.moonId);
+  }
+  for (const victim of rows.victimRows) typeIds.add(victim.shipTypeId);
+  for (const item of rows.itemRows) typeIds.add(item.typeId);
+  for (const attacker of rows.attackerRows) {
+    if (attacker.shipTypeId != null) typeIds.add(attacker.shipTypeId);
+    if (attacker.weaponTypeId != null) typeIds.add(attacker.weaponTypeId);
+  }
+
+  const [knownTypes, knownSolarSystems, knownMoons] = await Promise.all([
+    typeIds.size > 0
+      ? prisma.type.findMany({
+          select: { typeId: true },
+          where: { typeId: { in: [...typeIds] } },
+        })
+      : [],
+    solarSystemIds.size > 0
+      ? prisma.solarSystem.findMany({
+          select: { solarSystemId: true },
+          where: { solarSystemId: { in: [...solarSystemIds] } },
+        })
+      : [],
+    moonIds.size > 0
+      ? prisma.moon.findMany({
+          select: { moonId: true },
+          where: { moonId: { in: [...moonIds] } },
+        })
+      : [],
+  ]);
+
+  const knownTypeIds = new Set(knownTypes.map((type) => type.typeId));
+  const knownSolarSystemIds = new Set(
+    knownSolarSystems.map((system) => system.solarSystemId),
+  );
+  const knownMoonIds = new Set(knownMoons.map((moon) => moon.moonId));
+
+  // Key on the string form: `killmailId` is typed `bigint | number`, and 1n and
+  // 1 are different Set members.
+  const dropped = new Set<string>();
+  for (const killmail of rows.killmailRows) {
+    if (!knownSolarSystemIds.has(killmail.solarSystemId)) {
+      dropped.add(killmail.killmailId.toString());
+    }
+  }
+  for (const victim of rows.victimRows) {
+    if (!knownTypeIds.has(victim.shipTypeId)) {
+      dropped.add(victim.killmailId.toString());
+    }
+  }
+  for (const item of rows.itemRows) {
+    if (!knownTypeIds.has(item.typeId)) {
+      dropped.add(item.killmailId.toString());
+    }
+  }
+
+  const kept = <T extends { killmailId: bigint | number }>(list: T[]) =>
+    list.filter((row) => !dropped.has(row.killmailId.toString()));
+
+  const knownTypeOrNull = (typeId: number | null | undefined) =>
+    typeId != null && knownTypeIds.has(typeId) ? typeId : null;
+
+  return {
+    rows: {
+      ...rows,
+      killmailRows: kept(rows.killmailRows).map((killmail) => ({
+        ...killmail,
+        moonId:
+          killmail.moonId != null && knownMoonIds.has(killmail.moonId)
+            ? killmail.moonId
+            : null,
+      })),
+      victimRows: kept(rows.victimRows),
+      attackerRows: kept(rows.attackerRows).map((attacker) => ({
+        ...attacker,
+        shipTypeId: knownTypeOrNull(attacker.shipTypeId),
+        weaponTypeId: knownTypeOrNull(attacker.weaponTypeId),
+      })),
+      itemRows: kept(rows.itemRows),
+    },
+    droppedKillmailIds: [...dropped],
+  };
+};
+
 /** Poll R2Z2 from `startCursor`, returning the packages and the advanced cursor / throttle time. */
 const collectKillmailPackages = async (
   ctx: JobContext,
-  redis: Awaited<ReturnType<typeof getRedis>>,
   startCursor: bigint,
   latestSequence: bigint,
 ): Promise<{
   packages: R2Z2Package[];
   cursor: bigint;
   rateLimitUntilMs: number | null;
+  missingSequences: number;
+  expiredFrom: bigint | null;
 }> => {
   const packages: R2Z2Package[] = [];
   let cursor = startCursor;
   let rateLimitUntilMs: number | null = null;
+  let consecutiveMisses = 0;
+  let missingSequences = 0;
+  let expiredFrom: bigint | null = null;
 
   for (let i = 0; i < MAX_KILLMAILS_PER_RUN; i++) {
     const response = await fetchJson(`${R2Z2_BASE_URL}/${cursor}.json`);
@@ -343,13 +522,27 @@ const collectKillmailPackages = async (
     }
 
     if (response.status === 404) {
-      // If we're behind and hit a 404 immediately, re-prime to latest.
-      if (packages.length === 0 && cursor < latestSequence) {
+      // Nothing published at or beyond this sequence yet: we have caught up.
+      // Leave the cursor here so the next run picks the entry up once it lands.
+      if (cursor >= latestSequence) break;
+
+      // We are behind and this particular sequence is gone. R2Z2 is ephemeral,
+      // so isolated holes are normal — step over one rather than abandoning
+      // every killmail after it. Only an unbroken run of misses means the feed
+      // has aged past the cursor, which is the sole case worth fast-forwarding.
+      consecutiveMisses += 1;
+      missingSequences += 1;
+      if (consecutiveMisses >= MAX_CONSECUTIVE_MISSING_SEQUENCES) {
+        expiredFrom = cursor - BigInt(consecutiveMisses) + 1n;
         cursor = latestSequence;
-        await redis.set(R2Z2_CURSOR_KEY, cursor.toString());
+        break;
       }
-      break;
+
+      cursor += 1n;
+      continue;
     }
+
+    consecutiveMisses = 0;
 
     const payload = response.data as Partial<R2Z2Package> | null;
     if (!payload?.esi || !payload.zkb) {
@@ -364,7 +557,7 @@ const collectKillmailPackages = async (
     cursor += 1n;
   }
 
-  return { packages, cursor, rateLimitUntilMs };
+  return { packages, cursor, rateLimitUntilMs, missingSequences, expiredFrom };
 };
 
 export type ScrapeRecentKillsEventPayload = Record<string, never>;
@@ -460,7 +653,6 @@ export const scrapeZkillboardRecentKills =
 
         const collected = await collectKillmailPackages(
           ctx,
-          redis,
           cursor,
           latestSequence,
         );
@@ -468,7 +660,25 @@ export const scrapeZkillboardRecentKills =
         cursor = collected.cursor;
         rateLimitUntilMs = collected.rateLimitUntilMs;
 
+        if (collected.expiredFrom !== null) {
+          await recordSkippedRange(
+            redis,
+            collected.expiredFrom,
+            latestSequence,
+            "expired from the R2Z2 feed",
+          );
+          ctx.logger.warn("R2Z2 aged past the cursor; fast-forwarded.", {
+            from: collected.expiredFrom.toString(),
+            to: latestSequence.toString(),
+          });
+        }
+
         if (killmailPackages.length === 0) {
+          // Nothing to insert, but the cursor may still have moved — past holes
+          // we stepped over, or forward to `latestSequence` because the feed
+          // aged out. Persist it, or the next run re-walks the same 404s.
+          await redis.set(R2Z2_CURSOR_KEY, cursor.toString());
+
           await postUpdateCard({
             status: "idle",
             summary: "No new killmails processed this run.",
@@ -488,17 +698,14 @@ export const scrapeZkillboardRecentKills =
           };
         }
 
+        const built = buildKillmailRows(killmailPackages);
         const {
-          killmailRows,
-          victimRows,
-          attackerRows,
-          itemRows,
           missingAllianceIds,
           missingCharacterIds,
           missingCorporationIds,
           missingFactionIds,
           missingWarIds,
-        } = buildKillmailRows(killmailPackages);
+        } = built;
 
         await ctx.run("Ensure related entities exist", async () => {
           await createCorpAndItsRefRecords({
@@ -510,33 +717,54 @@ export const scrapeZkillboardRecentKills =
           });
         });
 
+        const { rows: resolved, droppedKillmailIds } = await ctx.run(
+          "Drop unresolvable references",
+          async () => dropUnresolvableReferences(built),
+        );
+        const { killmailRows, victimRows, attackerRows, itemRows } = resolved;
+
+        if (droppedKillmailIds.length > 0) {
+          ctx.logger.warn(
+            "Skipped killmails referencing rows the SDE has not delivered yet.",
+            { killmailIds: droppedKillmailIds },
+          );
+        }
+
         await ctx.run("Insert killmail records", async () => {
-          await prisma.killmail.createMany({
-            data: killmailRows,
-            skipDuplicates: true,
-          });
-
-          await prisma.killmailVictim.createMany({
-            data: victimRows,
-            skipDuplicates: true,
-          });
-
-          await prisma.killmailAttacker.createMany({
-            data: attackerRows,
-            skipDuplicates: true,
-          });
-
-          await prisma.killmailVictimItems.createMany({
-            data: itemRows,
-            skipDuplicates: true,
-          });
+          // One transaction: a failure part-way through used to leave Killmail
+          // rows committed with no victim, attackers or items, and those orphans
+          // then looked complete to `skipDuplicates` on the next attempt.
+          await prisma.$transaction([
+            prisma.killmail.createMany({
+              data: killmailRows,
+              skipDuplicates: true,
+            }),
+            prisma.killmailVictim.createMany({
+              data: victimRows,
+              skipDuplicates: true,
+            }),
+            prisma.killmailAttacker.createMany({
+              data: attackerRows,
+              skipDuplicates: true,
+            }),
+            prisma.killmailVictimItems.createMany({
+              data: itemRows,
+              skipDuplicates: true,
+            }),
+          ]);
         });
 
         await redis.set(R2Z2_CURSOR_KEY, cursor.toString());
+        await redis.del(R2Z2_BATCH_FAILURE_KEY);
+
+        const droppedNote =
+          droppedKillmailIds.length > 0
+            ? ` Skipped ${droppedKillmailIds.length} referencing unknown SDE rows.`
+            : "";
 
         await postUpdateCard({
           status: "success",
-          summary: `Processed ${killmailRows.length} killmails.`,
+          summary: `Processed ${killmailRows.length} killmails.${droppedNote}`,
           processed: killmailRows.length,
           range: formatRange(startCursor, cursor),
           lag: formatLag(latestSequence, cursor),
@@ -558,9 +786,42 @@ export const scrapeZkillboardRecentKills =
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+
+        // The cursor only advances on success, so a batch that can never be
+        // processed used to block the feed permanently: `retries: 0` means no
+        // retry, and every later run re-fetched the same sequences and failed
+        // the same way. Count attempts per batch instead — a transient failure
+        // is retried on the next run, and a batch that keeps failing is skipped
+        // (and recorded) so the feed keeps moving.
+        let quarantined = false;
+        if (startCursor !== null && cursor !== null && cursor > startCursor) {
+          const failures = await countBatchFailure(redis, startCursor);
+          if (failures >= MAX_BATCH_FAILURES) {
+            await recordSkippedRange(
+              redis,
+              startCursor,
+              cursor,
+              `failed ${failures} times: ${message}`,
+            );
+            await redis.set(R2Z2_CURSOR_KEY, cursor.toString());
+            await redis.del(R2Z2_BATCH_FAILURE_KEY);
+            quarantined = true;
+            ctx.logger.error(
+              "Quarantined an unprocessable R2Z2 batch and advanced the cursor.",
+              {
+                range: formatRange(startCursor, cursor),
+                attempts: failures,
+                error: message,
+              },
+            );
+          }
+        }
+
         await postUpdateCard({
           status: "failed",
-          summary: `Error: ${message}`,
+          summary: quarantined
+            ? `Error: ${message} — gave up on ${formatRange(startCursor, cursor)} after ${MAX_BATCH_FAILURES} attempts and advanced the cursor.`
+            : `Error: ${message}`,
           range: formatRange(startCursor, cursor),
           lag: formatLag(latestSequence, cursor),
           latestSequence,
