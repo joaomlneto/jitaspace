@@ -1,6 +1,6 @@
 {
   "buildCommand": "(cd ../.. && pnpm db:generate && pnpm db:push) && pnpm dlx turbo run build --filter=@jitaspace/web",
-  "installCommand": "pnpm --filter !mobile install --package-import-method=copy",
+  "installCommand": "pnpm install --package-import-method=copy",
   "env": {
     "ENABLE_EXPERIMENTAL_COREPACK": "1"
   }
