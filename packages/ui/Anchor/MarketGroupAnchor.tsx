@@ -9,14 +9,12 @@ import { Anchor } from "@mantine/core";
 export type MarketGroupNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
-    marketGroupId?: string | number | null;
+    marketGroupId?: string | number;
   };
 
 export const MarketGroupAnchor = memo(
   ({ marketGroupId, children, ...otherProps }: MarketGroupNameAnchorProps) => {
-    // Nullish, not just undefined: nullable database columns surface as
-    // `null`, which would otherwise render "/market-group/null".
-    if (marketGroupId === null || marketGroupId === undefined) {
+    if (marketGroupId === undefined) {
       return children;
     }
 

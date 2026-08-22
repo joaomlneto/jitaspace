@@ -9,14 +9,12 @@ import { Anchor } from "@mantine/core";
 export type CategoryNameAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
   Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
-    categoryId?: string | number | null;
+    categoryId?: string | number;
   };
 
 export const CategoryAnchor = memo(
   ({ categoryId, children, ...otherProps }: CategoryNameAnchorProps) => {
-    // Nullish, not just undefined: nullable database columns surface as
-    // `null`, which would otherwise render "/category/null".
-    if (categoryId === null || categoryId === undefined) {
+    if (categoryId === undefined) {
       return children;
     }
 
