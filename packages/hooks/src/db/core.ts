@@ -6,6 +6,7 @@ import { parseLoadSubsetOptions } from "@tanstack/query-db-collection";
 import { QueryClient } from "@tanstack/react-query";
 
 import type { GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
+import { subscribeToAcceptLanguage } from "@jitaspace/esi-client";
 
 export type ResolvableEntityCategory =
   | GetCharactersCharacterIdSearchQueryParamsCategoriesEnum
@@ -19,6 +20,15 @@ export const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 60 * 24,
     },
   },
+});
+
+// This client is owned by the package rather than the app, so it sits outside
+// the provider tree the app invalidates on a language change — and with a
+// 24-hour staleTime, a switch would otherwise leave collections serving the
+// previous language's names for a full day. Subscribing to the ESI client's own
+// config keeps the invalidation with the cache that needs it.
+subscribeToAcceptLanguage(() => {
+  void queryClient.invalidateQueries();
 });
 
 export function createQueryCollection<
