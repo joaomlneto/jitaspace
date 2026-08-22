@@ -13,17 +13,22 @@ import { jitaApps } from "~/config/apps";
 
 // Where each ESI search category resolves to. Kept as a lookup table so the
 // click handler stays a single push instead of a large switch.
-const CATEGORY_ROUTE_PREFIX: Partial<Record<EsiSearchCategory, string>> = {
-  alliance: "/alliance/",
-  agent: "/character/",
-  character: "/character/",
-  corporation: "/corporation/",
-  faction: "/faction/",
-  solar_system: "/solar_system/",
-  station: "/station/",
-  structure: "/structure/",
-  inventory_type: "/type/",
-};
+export const CATEGORY_ROUTE_PREFIX: Partial<Record<EsiSearchCategory, string>> =
+  {
+    alliance: "/alliance/",
+    agent: "/character/",
+    character: "/character/",
+    corporation: "/corporation/",
+    faction: "/faction/",
+    // NB: the route is /system/, not /solar_system/ — the ESI category name and
+    // the app's path differ. Keep this in step with the switch in
+    // packages/eve-components/Anchor/EveEntityAnchor.tsx, which owns the same
+    // category-to-path mapping for entity links.
+    solar_system: "/system/",
+    station: "/station/",
+    structure: "/structure/",
+    inventory_type: "/type/",
+  };
 
 export interface SearchActionGroups {
   /** Every action matching the query, flat. */
