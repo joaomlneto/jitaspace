@@ -1,13 +1,28 @@
 import { HttpStatusCode } from "axios";
 import z from "zod";
 
+import type { SsoRefreshTokenSuccessResult } from "@jitaspace/auth-utils";
 import {
+  EveSsoTokenError,
   refreshEveSsoToken,
-  tokenRefreshDataSchema,
   verifyEveSsoAccessToken,
 } from "@jitaspace/auth-utils";
 
 import { sealDataWithAuthSecret, unsealDataWithAuthSecret } from "../utils";
+
+/**
+ * The sealed payload this handler exchanges with its client.
+ *
+ * Not an EVE SSO concept: it is this application's own cookie shape, produced
+ * by {@link sealDataWithAuthSecret} (camelCase, whereas EVE's token responses
+ * are snake_case). It lives here rather than in the framework-agnostic
+ * `@jitaspace/auth-utils` because nothing outside this handler produces or
+ * consumes it.
+ */
+export const tokenRefreshDataSchema = z.object({
+  accessTokenExpiration: z.number(),
+  refreshToken: z.string(),
+});
 
 // How much time (in ms) before token expires we're willing to refresh it
 // This is to prevent refreshing tokens that are too new
@@ -74,13 +89,29 @@ export const refreshTokenApiRouteHandler = async (
     );
   }
 
-  // Attempt to refresh token
-  const { access_token, refresh_token } = await refreshEveSsoToken({
-    eveClientId,
-    eveClientSecret,
-    refreshToken,
-    scopes,
-  });
+  // Attempt to refresh token. An `invalid_grant` means EVE has permanently
+  // rejected this refresh token (application revoked, password changed), so it
+  // maps onto the same 410 the age check above uses — the caller must prompt a
+  // re-authentication. Every other failure propagates as a thrown error so the
+  // caller keeps treating it as transient and retries.
+  let refreshed: SsoRefreshTokenSuccessResult;
+  try {
+    refreshed = await refreshEveSsoToken({
+      eveClientId,
+      eveClientSecret,
+      refreshToken,
+      scopes,
+    });
+  } catch (error) {
+    if (error instanceof EveSsoTokenError && error.requiresReauthentication) {
+      return Response.json(
+        { error: "EVE rejected the refresh token. Must reauthenticate." },
+        { status: HttpStatusCode.Gone },
+      );
+    }
+    throw error;
+  }
+  const { access_token, refresh_token } = refreshed;
 
   // Verify the refreshed token's signature against EVE's JWKS (and the
   // iss/aud/exp claims) before trusting its payload. `clientId` binds it to

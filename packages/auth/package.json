@@ -18,7 +18,8 @@
     "@jitaspace/auth-utils": "workspace:*",
     "@jitaspace/esi-metadata": "workspace:*",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",
