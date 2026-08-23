@@ -305,6 +305,44 @@ const quarantineExhaustedBatch = async (
   return true;
 };
 
+type LatestSequence =
+  | { rateLimited: false; sequence: bigint; raw: string }
+  | { rateLimited: true; retryAfterSeconds: number | null };
+
+/**
+ * Read the head of the feed, separating "we are throttled" — which the caller
+ * backs off from quietly — from "the feed is broken", which is a real failure.
+ */
+const fetchLatestSequence = async (
+  ctx: JobContext,
+): Promise<LatestSequence> => {
+  const value = await ctx.run("Fetch latest R2Z2 sequence", async () => {
+    const payload = await fetchJson(R2Z2_SEQUENCE_URL);
+    if (payload.status === 429) return payload;
+    if (payload.status === 404 || !payload.data) {
+      throw new Error("R2Z2 sequence.json not available");
+    }
+    return parseSequenceId(payload.data);
+  });
+
+  if (!value) {
+    throw new Error("Invalid latest sequence value from R2Z2.");
+  }
+
+  // The step above returns the raw payload only on a 429, so an object here
+  // means throttled and nothing else.
+  if (typeof value === "object") {
+    return {
+      rateLimited: true,
+      retryAfterSeconds:
+        (value as { retryAfterSeconds?: number | null }).retryAfterSeconds ??
+        null,
+    };
+  }
+
+  return { rateLimited: false, sequence: BigInt(value), raw: value };
+};
+
 /** Load the stored cursor, seeding it at the feed head on the very first run. */
 const loadCursor = async (
   ctx: JobContext,
@@ -676,34 +714,13 @@ export const scrapeZkillboardRecentKills =
       let rateLimitUntilMs: number | null = null;
 
       try {
-        const latestSequenceValue = await ctx.run(
-          "Fetch latest R2Z2 sequence",
-          async () => {
-            const sequencePayload = await fetchJson(R2Z2_SEQUENCE_URL);
-            if (sequencePayload.status === 429) {
-              return sequencePayload;
-            }
-            if (sequencePayload.status === 404 || !sequencePayload.data) {
-              throw new Error("R2Z2 sequence.json not available");
-            }
-            return parseSequenceId(sequencePayload.data);
-          },
-        );
+        const latest = await fetchLatestSequence(ctx);
 
-        if (!latestSequenceValue) {
-          throw new Error("Invalid latest sequence value from R2Z2.");
-        }
-
-        if (
-          typeof latestSequenceValue === "object" &&
-          (latestSequenceValue as { status?: number }).status === 429
-        ) {
-          const retryAfterSeconds = (
-            latestSequenceValue as { retryAfterSeconds?: number | null }
-          ).retryAfterSeconds;
+        if (latest.rateLimited) {
           rateLimitUntilMs =
             Date.now() +
-            (retryAfterSeconds ?? RATE_LIMIT_FALLBACK_SLEEP_SECONDS) * 1000;
+            (latest.retryAfterSeconds ?? RATE_LIMIT_FALLBACK_SLEEP_SECONDS) *
+              1000;
           await postUpdateCard({
             status: "rate_limited",
             summary: "Rate limited while fetching sequence.json.",
@@ -712,7 +729,7 @@ export const scrapeZkillboardRecentKills =
           return {
             processed: 0,
             rateLimited: true,
-            retryAfterSeconds: retryAfterSeconds ?? null,
+            retryAfterSeconds: latest.retryAfterSeconds,
           };
           /*
         const sleepFor = toSleepDuration(retryAfterSeconds);
@@ -727,9 +744,9 @@ export const scrapeZkillboardRecentKills =
         });*/
         }
 
-        latestSequence = BigInt(latestSequenceValue as string);
+        latestSequence = latest.sequence;
 
-        cursor = await loadCursor(ctx, redis, latestSequenceValue as string);
+        cursor = await loadCursor(ctx, redis, latest.raw);
         startCursor = cursor;
 
         const collected = await collectKillmailPackages(
