@@ -10,8 +10,7 @@ import {
 import { useClipboard } from "@mantine/hooks";
 import { IconClipboard, IconClipboardCheck } from "@tabler/icons-react";
 
-import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
-import { TypeAvatar } from "@jitaspace/ui";
+import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/eve-components";
 
 interface ShipFittingCardHeaderProps {
   fitString?: string;
