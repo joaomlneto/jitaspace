@@ -14,23 +14,24 @@ export type TooltipActionIconProps = ActionIconProps & {
 };
 
 /**
- * An icon-only ActionIcon that stays explainable while it is disabled.
+ * An icon-only ActionIcon that stays explainable while it is unavailable.
  *
  * Two things a bare `<Tooltip><ActionIcon /></Tooltip>` does not handle:
  *
  * - The button's only child is an icon, so without `aria-label` it has no
  *   accessible name at all.
- * - A disabled button receives no mouse events — the browser retargets them to
- *   an ancestor — so a tooltip attached to the button never opens, in exactly
- *   the state that most needs explaining, since these buttons disable
- *   themselves whenever no handler is passed. The wrapper is the live target.
+ * - A natively `disabled` button is removed from the tab order and receives no
+ *   mouse events — the browser retargets them to an ancestor — so its tooltip
+ *   never opens, in exactly the state that most needs explaining, since these
+ *   buttons go unavailable whenever no handler is passed.
  *
- * The wrapper is also focusable while disabled, and the tooltip opts into focus
- * and touch events (Mantine's default is `{ hover: true, focus: false, touch:
- * false }`). Without both, only pointer users would ever see the explanation:
- * a disabled button is not itself focusable. That adds a tab stop for a
- * disabled control, which is the deliberate trade — a keyboard user can reach
- * the reason the control is dead.
+ * So unavailability is expressed with `aria-disabled` plus Mantine's
+ * `data-disabled` (which applies the disabled styling without the native
+ * attribute) rather than with `disabled`, and the click handler is dropped.
+ * The button stays focusable and hoverable, so a screen reader announces the
+ * name, the dimmed state and the tooltip together, and the tooltip opts into
+ * focus and touch events — Mantine's default is `{ hover: true, focus: false,
+ * touch: false }` — so pointer users are not the only ones who see it.
  */
 export const TooltipActionIcon = memo(
   ({
@@ -48,22 +49,18 @@ export const TooltipActionIcon = memo(
         label={label}
         events={{ hover: true, focus: true, touch: true }}
       >
-        {/* Focusable only while disabled: when enabled the button itself takes
-            focus and the focus event reaches this wrapper anyway. */}
-        <span
-          style={{ display: "inline-flex" }}
-          tabIndex={isDisabled ? 0 : undefined}
+        <ActionIcon
+          aria-label={label}
+          radius="xl"
+          {...actionIconProps}
+          // `false` would still render as the string "false" and read as
+          // disabled, so drop the attributes entirely when the button works.
+          data-disabled={isDisabled || undefined}
+          aria-disabled={isDisabled || undefined}
+          onClick={isDisabled ? undefined : onActivate}
         >
-          <ActionIcon
-            aria-label={label}
-            radius="xl"
-            {...actionIconProps}
-            disabled={isDisabled}
-            onClick={onActivate}
-          >
-            {children}
-          </ActionIcon>
-        </span>
+          {children}
+        </ActionIcon>
       </Tooltip>
     );
   },

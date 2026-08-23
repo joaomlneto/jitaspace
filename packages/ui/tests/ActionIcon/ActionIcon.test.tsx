@@ -52,52 +52,63 @@ const icons: [
 
 // Regression: these are icon-only buttons, so without an aria-label they had no
 // accessible name at all — getByRole("button", { name }) could not find them.
-// And a disabled button receives no mouse events (the browser retargets them to
-// an ancestor), so a tooltip attached to the button never opened in exactly the
-// state that most needs explaining.
+// And they were natively `disabled`, which drops the button out of the tab order
+// and stops it receiving mouse events (the browser retargets those to an
+// ancestor), so the tooltip never opened in exactly the state that most needs
+// explaining. Unavailability is now `aria-disabled` + `data-disabled`.
+const expectUnavailable = (button: HTMLElement) => {
+  expect(button).toHaveAttribute("aria-disabled", "true");
+  expect(button).toHaveAttribute("data-disabled", "true");
+};
 describe("ActionIcon accessibility", () => {
   it.each(icons)("%s exposes an accessible name", (_label, build, name) => {
     renderWithMantine(build({}));
     expect(screen.getByRole("button", { name })).toBeInTheDocument();
   });
 
-  it.each(icons)("%s keeps its name while disabled", (_label, build, name) => {
-    renderWithMantine(build({ disabled: true }));
-    const button = screen.getByRole("button", { name });
-    expect(button).toBeDisabled();
-  });
-
-  it("wraps the button so a tooltip still has a live target when disabled", () => {
-    // The disabled button receives no mouse events of its own; the wrapper
-    // does, which is what keeps the tooltip reachable by pointer.
-    renderWithMantine(<SetAutopilotDestinationActionIcon disabled />);
-    const button = screen.getByRole("button");
-    expect(button).toBeDisabled();
-    expect(button.parentElement?.tagName).toBe("SPAN");
-  });
+  it.each(icons)(
+    "%s keeps its name while unavailable",
+    (_label, build, name) => {
+      renderWithMantine(build({ disabled: true }));
+      expectUnavailable(screen.getByRole("button", { name }));
+    },
+  );
 
   it.each(icons)(
-    "%s can be reached by keyboard while disabled, and describes itself",
+    "%s is announced and described on focus while unavailable",
     async (_label, build, name) => {
       renderWithMantine(build({ disabled: true }));
-      // A disabled button is not focusable, so tab lands on the wrapper — the
-      // only reason a keyboard user can find out why the control is dead.
+      // The whole point of not using the native attribute: the button keeps
+      // its place in the tab order, so it announces its own name and dimmed
+      // state alongside the tooltip rather than leaving a bare description.
       await userEvent.tab();
-      const wrapper = screen.getByRole("button").parentElement;
-      expect(document.activeElement).toBe(wrapper);
+      const button = screen.getByRole("button", { name });
+      expect(document.activeElement).toBe(button);
+      expectUnavailable(button);
       // Mantine's Tooltip defaults to `focus: false`; opting in is what makes
       // the description appear for anyone not using a mouse.
-      expect(wrapper).toHaveAttribute("aria-describedby");
+      expect(button).toHaveAttribute("aria-describedby");
       expect(screen.getByText(name)).toBeInTheDocument();
     },
   );
 
-  it("does not add a tab stop when the button is usable", async () => {
+  it("marks nothing disabled while the button is usable", () => {
     renderWithMantine(<SetAutopilotDestinationActionIcon onSet={jest.fn()} />);
     const button = screen.getByRole("button");
-    expect(button.parentElement).not.toHaveAttribute("tabindex");
-    await userEvent.tab();
-    expect(document.activeElement).toBe(button);
+    // `false` would render as the string "false" and read as disabled.
+    expect(button).not.toHaveAttribute("aria-disabled");
+    expect(button).not.toHaveAttribute("data-disabled");
+  });
+
+  it("does not run the handler while unavailable", async () => {
+    const onSet = jest.fn();
+    renderWithMantine(
+      <SetAutopilotDestinationActionIcon onSet={onSet} disabled />,
+    );
+    const button = screen.getByRole("button");
+    await userEvent.click(button);
+    await userEvent.type(button, "{Enter}");
+    expect(onSet).not.toHaveBeenCalled();
   });
 
   it("lets callers set ActionIcon props", () => {
@@ -143,16 +154,16 @@ describe("OpenInformationWindowActionIcon", () => {
     expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
-  it("is disabled when no onOpen handler is provided", () => {
+  it("is unavailable when no onOpen handler is provided", () => {
     renderWithMantine(<OpenInformationWindowActionIcon />);
-    expect(getButton()).toBeDisabled();
+    expectUnavailable(getButton());
   });
 
-  it("is disabled when the disabled prop is set, even with a handler", () => {
+  it("is unavailable when the disabled prop is set, even with a handler", () => {
     renderWithMantine(
       <OpenInformationWindowActionIcon onOpen={jest.fn()} disabled />,
     );
-    expect(getButton()).toBeDisabled();
+    expectUnavailable(getButton());
   });
 });
 
@@ -170,16 +181,16 @@ describe("OpenMarketWindowActionIcon", () => {
     expect(onOpen).toHaveBeenCalledTimes(1);
   });
 
-  it("is disabled when no handler is provided", () => {
+  it("is unavailable when no handler is provided", () => {
     renderWithMantine(<OpenMarketWindowActionIcon />);
-    expect(getButton()).toBeDisabled();
+    expectUnavailable(getButton());
   });
 
-  it("is disabled when the disabled prop is set", () => {
+  it("is unavailable when the disabled prop is set", () => {
     renderWithMantine(
       <OpenMarketWindowActionIcon onOpen={jest.fn()} disabled />,
     );
-    expect(getButton()).toBeDisabled();
+    expectUnavailable(getButton());
   });
 
   it("keeps its light variant unless the caller asks otherwise", () => {
@@ -206,15 +217,15 @@ describe("SetAutopilotDestinationActionIcon", () => {
     expect(onSet).toHaveBeenCalledTimes(1);
   });
 
-  it("is disabled when no onSet handler is provided", () => {
+  it("is unavailable when no onSet handler is provided", () => {
     renderWithMantine(<SetAutopilotDestinationActionIcon />);
-    expect(getButton()).toBeDisabled();
+    expectUnavailable(getButton());
   });
 
-  it("is disabled when the disabled prop is set, even with a handler", () => {
+  it("is unavailable when the disabled prop is set, even with a handler", () => {
     renderWithMantine(
       <SetAutopilotDestinationActionIcon onSet={jest.fn()} disabled />,
     );
-    expect(getButton()).toBeDisabled();
+    expectUnavailable(getButton());
   });
 });

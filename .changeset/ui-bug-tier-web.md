@@ -10,4 +10,4 @@ Fixed the colour swatch in the mail-label editor showing up blank instead of its
 
 Fixed the character, corporation and alliance menus showing a stranger's portrait next to their external links; they now show a generic avatar.
 
-The "open information window", "open market window" and "set autopilot destination" buttons are now announced properly by screen readers, and their tooltips explain them while they are disabled — by mouse, by keyboard and by touch.
+The "open information window", "open market window" and "set autopilot destination" buttons are now announced properly by screen readers, and their tooltips explain them while they are unavailable — by mouse, by keyboard and by touch.
