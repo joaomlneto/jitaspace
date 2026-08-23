@@ -1,38 +1,50 @@
 "use client";
 
 import type { ColorInputProps } from "@mantine/core";
-import { memo, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { ActionIcon, ColorInput } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 
 import { getRandomArrayEntry } from "@jitaspace/utils";
 
-const mailLabelColors = {
-  "#0000fe": "#0000fe",
-  "#006634": "#006634",
-  "#0099ff": "#0099ff",
-  "#00ff33": "#00ff33",
-  "#01ffff": "#01ffff",
-  "#349800": "#349800",
-  "#660066": "#660066",
-  "#666666": "#666666",
-  "#999999": "#999999",
-  "#99ffff": "#99ffff",
-  "#9a0000": "#9a0000",
-  "#ccff9a": "#ccff9a",
-  "#e6e6e6": "#e6e6e6",
-  "#fe0000": "#fe0000",
-  "#ff6600": "#ff6600",
-  "#ffff01": "#ffff01",
-  "#ffffcd": "#ffffcd",
-  "#ffffff": "#ffffff",
-} as const;
+/** The colours EVE Online offers for mail labels, in the client's own order. */
+const DEFAULT_MAIL_LABEL_COLOR = "#0000fe";
+const MAIL_LABEL_COLORS = [
+  DEFAULT_MAIL_LABEL_COLOR,
+  "#006634",
+  "#0099ff",
+  "#00ff33",
+  "#01ffff",
+  "#349800",
+  "#660066",
+  "#666666",
+  "#999999",
+  "#99ffff",
+  "#9a0000",
+  "#ccff9a",
+  "#e6e6e6",
+  "#fe0000",
+  "#ff6600",
+  "#ffff01",
+  "#ffffcd",
+  "#ffffff",
+];
 
 export const MailLabelColorSelect = memo(
   ({ ...otherProps }: ColorInputProps) => {
-    const colors = Object.keys(mailLabelColors);
-    const getRandomColor = () => getRandomArrayEntry(colors);
-    const [value, setValue] = useState(otherProps.value ?? getRandomColor());
+    // Deterministic on first render: picking the random seed here would make
+    // the server and client markup disagree and break hydration. The seed is
+    // applied on mount instead, in the effect below.
+    const [value, setValue] = useState(DEFAULT_MAIL_LABEL_COLOR);
+    const seeded = useRef(false);
+
+    useEffect(() => {
+      if (seeded.current) return;
+      seeded.current = true;
+      // A controlled caller supplies its own colour; don't override it.
+      if (otherProps.value !== undefined) return;
+      setValue(getRandomArrayEntry(MAIL_LABEL_COLORS));
+    }, [otherProps.value]);
 
     return (
       <ColorInput
@@ -40,11 +52,12 @@ export const MailLabelColorSelect = memo(
         disallowInput
         withPicker={false}
         swatchesPerRow={6}
-        swatches={colors}
+        swatches={MAIL_LABEL_COLORS}
         rightSection={
           <ActionIcon
+            aria-label="Pick a random colour"
             onClick={() => {
-              const color = getRandomColor();
+              const color = getRandomArrayEntry(MAIL_LABEL_COLORS);
               otherProps.onChange?.(color);
               setValue(color);
             }}
