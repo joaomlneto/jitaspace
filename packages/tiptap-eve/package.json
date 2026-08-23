@@ -55,6 +55,7 @@
     "@tiptap/starter-kit": "^3.26.0"
   },
   "peerDependencies": {
+    "@tiptap/pm": "^3.26.0",
     "react": "^19.2.6"
   },
   "devDependencies": {
@@ -63,6 +64,7 @@
     "@jitaspace/tsconfig": "workspace:*",
     "@swc/core": "^1.15.40",
     "@swc/jest": "^0.2.39",
+    "@tiptap/pm": "^3.26.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
     "@types/react": "^19.1.6",

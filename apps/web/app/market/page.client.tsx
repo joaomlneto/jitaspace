@@ -5,10 +5,9 @@ import { usePathname } from "next/navigation";
 import { Container, Group, Stack, Title } from "@mantine/core";
 import posthog from "posthog-js";
 
-import { TypeName } from "@jitaspace/eve-components";
+import { TypeAvatar, TypeName } from "@jitaspace/eve-components";
 import { MarketIcon } from "@jitaspace/eve-icons";
 import { useTypeMarketOrders } from "@jitaspace/hooks";
-import { TypeAvatar } from "@jitaspace/ui";
 
 import { MarketOrdersDataTable } from "~/components/Market";
 
