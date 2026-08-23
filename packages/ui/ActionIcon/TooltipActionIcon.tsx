@@ -53,10 +53,11 @@ export const TooltipActionIcon = memo(
           aria-label={label}
           radius="xl"
           {...actionIconProps}
-          // `false` would still render as the string "false" and read as
-          // disabled, so drop the attributes entirely when the button works.
-          data-disabled={isDisabled || undefined}
-          aria-disabled={isDisabled || undefined}
+          // Explicitly `undefined` rather than `false`: a `false` here renders
+          // as the string "false", which reads as disabled. (`??` cannot do
+          // this — `false ?? undefined` is `false`.)
+          data-disabled={isDisabled ? true : undefined}
+          aria-disabled={isDisabled ? true : undefined}
           onClick={isDisabled ? undefined : onActivate}
         >
           {children}
