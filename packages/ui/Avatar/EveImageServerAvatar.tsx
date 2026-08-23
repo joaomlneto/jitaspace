@@ -68,7 +68,9 @@ export const EveImageServerAvatar = memo(
     }
 
     const path =
-      id && category && variation ? `${category}/${id}/${variation}` : undefined;
+      id && category && variation
+        ? `${category}/${id}/${variation}`
+        : undefined;
 
     return (
       <Avatar
