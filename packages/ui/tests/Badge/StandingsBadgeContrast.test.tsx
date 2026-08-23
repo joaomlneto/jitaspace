@@ -65,6 +65,19 @@ describe("standings tier contrast", () => {
     expect(contrast(WHITE, background)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
   });
 
+  // The ratios the component's own doc comment quotes. Pinned so the two can
+  // not drift apart — the first draft of that comment carried a hand-written
+  // figure for the dark blue tier that was a whole point off.
+  it.each<[string, string, string, number]>([
+    ["dark blue", WHITE, DARK_BLUE, 16.1],
+    ["light blue", WHITE, LIGHT_BLUE, 7.3],
+    ["grey", BLACK, GREY, 5.3],
+    ["orange", WHITE, ORANGE, 6.1],
+    ["red", WHITE, RED, 10.9],
+  ])("the %s tier measures its documented ratio", (_n, text, bg, ratio) => {
+    expect(contrast(text, bg)).toBeCloseTo(ratio, 1);
+  });
+
   it("keeps black on the grey tier, where it is the better of the two", () => {
     expect(contrast(BLACK, GREY)).toBeGreaterThanOrEqual(AA_NORMAL_TEXT);
     expect(contrast(BLACK, GREY)).toBeGreaterThan(contrast(WHITE, GREY));

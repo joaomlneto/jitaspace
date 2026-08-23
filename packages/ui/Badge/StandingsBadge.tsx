@@ -24,8 +24,8 @@ export const StandingsBadge = memo(
      * SolarSystemSecurityStatusBadge already does.
      *
      * Ratios against WCAG AA's 4.5:1 for normal text, asserted in the tests:
-     *   #051468 / white 17.2:1   #224fb7 / white 7.3:1
-     *   #808080 / black  5.3:1   (white would be 4.0:1 — black is the better pick)
+     *   #051468 / white 16.1:1   #224fb7 / white 7.3:1
+     *   #808080 / black  5.3:1   (white would be 3.9:1 — black is the better pick)
      *   #b53209 / white  6.1:1   #800007 / white 10.9:1
      */
     const tiers = {
