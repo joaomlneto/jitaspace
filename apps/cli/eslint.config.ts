@@ -22,11 +22,21 @@ export default defineConfig(
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unsafe-return": "off",
+    },
+  },
+  {
+    // The only non-null assertions in this package are five
+    // `querySelector(...)!` reads against scraped everef HTML, where the
+    // alternative is a null check per element that adds nothing over the
+    // existing failure mode. Scoped to this file rather than the package, so
+    // an assertion anywhere else in the CLI is still an error.
+    files: ["utils/everef.ts"],
+    rules: {
+      "@typescript-eslint/no-non-null-assertion": "off",
     },
   },
 );
