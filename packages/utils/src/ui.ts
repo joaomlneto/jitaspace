@@ -5,12 +5,23 @@
 const REM_IN_PX = 16;
 
 /**
+ * A positive CSS length with an optional unit.
+ *
+ * Written to backtrack linearly: the two number alternatives start with
+ * different characters, the optional fraction needs a literal `.` so `\d+`
+ * cannot re-split a digit run, and surrounding whitespace is trimmed off by the
+ * caller rather than matched with `\s*` (two adjacent `\s*` around the optional
+ * unit is the other way this pattern goes polynomial).
+ */
+const CSS_LENGTH = /^(\d+(?:\.\d+)?|\.\d+)(px|rem|em)?$/;
+
+/**
  * Read a CSS length Mantine accepts as a `size` prop (`"64"`, `"64px"`,
  * `"1rem"`) as a pixel number. Returns undefined for anything that is not a
  * positive length.
  */
 function parseCssLength(value: string): number | undefined {
-  const match = /^\s*(\d*\.?\d+)\s*(px|rem|em)?\s*$/.exec(value);
+  const match = CSS_LENGTH.exec(value.trim());
   if (!match) return undefined;
 
   const amount = Number(match[1]);

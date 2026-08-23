@@ -51,12 +51,20 @@ describe("getAvatarSize", () => {
     expect(getAvatarSize({ size, sizes })).toBe(expected);
   });
 
-  it.each([["-5px"], ["0"], ["0rem"], ["auto"], ["100%"], ["10vw"]])(
-    "returns 1024 for the unreadable length %p",
-    (size) => {
-      expect(getAvatarSize({ size, sizes })).toBe(1024);
-    },
-  );
+  it.each([
+    ["-5px"],
+    ["0"],
+    ["0rem"],
+    ["auto"],
+    ["100%"],
+    ["10vw"],
+    // CSS has no space between the number and its unit; the tightened pattern
+    // no longer accepts one.
+    ["48 px"],
+    ["1..5rem"],
+  ])("returns 1024 for the unreadable length %p", (size) => {
+    expect(getAvatarSize({ size, sizes })).toBe(1024);
+  });
 
   it("treats the falsy numeric size 0 as 'no size' and uses the md fallback", () => {
     // 0 is falsy, so the `!size` guard fires before the pixel reading
