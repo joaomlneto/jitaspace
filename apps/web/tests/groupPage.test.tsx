@@ -1,8 +1,8 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { Suspense } from "react";
 import type { ReactNode } from "react";
+import { Suspense } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen, waitFor } from "@testing-library/react";
 
@@ -13,7 +13,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 // next/navigation, the UI anchors/avatars and the breadcrumbs component.
 // ---------------------------------------------------------------------------
 
-const mockFindUniqueOrThrow = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockFindUniqueOrThrow =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockNotFound = jest.fn((..._args: unknown[]) => {
   throw new Error("NEXT_NOT_FOUND");
 });
@@ -21,8 +22,7 @@ const mockNotFound = jest.fn((..._args: unknown[]) => {
 jest.mock("~/lib/db", () => ({
   prisma: {
     group: {
-      findUniqueOrThrow: (...args: unknown[]) =>
-        mockFindUniqueOrThrow(...args),
+      findUniqueOrThrow: (...args: unknown[]) => mockFindUniqueOrThrow(...args),
     },
   },
 }));
@@ -36,7 +36,7 @@ jest.mock("next/navigation", () => ({
   notFound: () => mockNotFound(),
 }));
 
-jest.mock("@jitaspace/ui", () => ({
+jest.mock("@jitaspace/eve-components", () => ({
   TypeAvatar: ({ typeId }: { typeId: number }) => (
     <span>{`TypeAvatar ${typeId}`}</span>
   ),

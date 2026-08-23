@@ -7,10 +7,11 @@ import {
   SolarSystemAnchor,
   SolarSystemName,
   TypeAnchor,
+  TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { usePlanet } from "@jitaspace/hooks";
-import { Position3DText, TypeAvatar } from "@jitaspace/ui";
+import { Position3DText } from "@jitaspace/ui";
 
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 

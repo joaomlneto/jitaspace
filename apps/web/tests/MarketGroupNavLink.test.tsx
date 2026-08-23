@@ -9,7 +9,6 @@ jest.mock("@jitaspace/ui", () => ({
   EveIconAvatar: ({ iconId }: { iconId: number | null }) => (
     <span>{`icon:${iconId}`}</span>
   ),
-  TypeAvatar: () => <span>type-avatar</span>,
 }));
 
 const marketGroups = {

@@ -3,11 +3,15 @@
 import { useMemo } from "react";
 import { Badge, Box, Center, Group, Paper, Stack, Text } from "@mantine/core";
 
-import { EveEntityName, TypeAnchor } from "@jitaspace/eve-components";
-import { ISKAmount, TypeAvatar } from "@jitaspace/ui";
+import {
+  EveEntityName,
+  TypeAnchor,
+  TypeAvatar,
+} from "@jitaspace/eve-components";
+import { ISKAmount } from "@jitaspace/ui";
 
-import type { TypeNameGetter } from "./AssetTreeView";
 import type { AssetTree } from "./assetTree";
+import type { TypeNameGetter } from "./AssetTreeView";
 import classes from "./AssetTreeView.module.css";
 
 const MAX_RESULTS = 250;

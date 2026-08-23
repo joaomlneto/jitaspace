@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -13,12 +13,18 @@ const mockUseCorporationAssets = jest.fn<
     errorMessage?: string;
   }
 >();
-const mockUseEsiNameLookup = jest.fn<
-  (...args: unknown[]) => Record<string, { value?: { name: string } } | undefined>
->();
-const mockUseMarketPrices = jest.fn<
-  (...args: unknown[]) => { data: Record<number, { adjusted_price?: number }> }
->();
+const mockUseEsiNameLookup =
+  jest.fn<
+    (
+      ...args: unknown[]
+    ) => Record<string, { value?: { name: string } } | undefined>
+  >();
+const mockUseMarketPrices =
+  jest.fn<
+    (...args: unknown[]) => {
+      data: Record<number, { adjusted_price?: number }>;
+    }
+  >();
 
 jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: () => mockUseSelectedCharacter(),
@@ -29,7 +35,6 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
-  TypeAvatar: () => null,
   TypeAnchor: ({ children }: { children: ReactNode }) => (
     <span>{children}</span>
   ),
