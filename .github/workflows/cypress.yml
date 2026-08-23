@@ -11,6 +11,19 @@ jobs:
     # https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
     # Also see warning here https://github.com/cypress-io/github-action#parallel
     services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: jitaspace
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jitaspace"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       redis:
         image: redis:alpine
         ports:
@@ -25,23 +38,13 @@ jobs:
       TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Turborepo caching
       # Skip runtime env validation in Next.js during CI runs where secrets are not available
       SKIP_ENV_VALIDATION: "1"
-      DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/jitaspace?sslmode=disable"
       REDIS_URL: "redis://localhost:6379"
     strategy:
       fail-fast: false # https://github.com/cypress-io/github-action/issues/48
       matrix:
         containers: [1, 2] # Uses 2 parallel instances
     steps:
-      - name: Start CockroachDB
-        run: |
-          docker run -d \
-            --name cockroachdb \
-            -p 26257:26257 \
-            -p 8080:8080 \
-            cockroachdb/cockroach:v24.3.7 \
-            start-single-node --insecure --store=type=mem,size=0.5
-          until curl -sf http://localhost:8080/health?ready=1; do sleep 1; done
-          docker exec cockroachdb cockroach sql --insecure -e "CREATE DATABASE IF NOT EXISTS jitaspace;"
       - name: Checkout
         uses: actions/checkout@v6
       - uses: pnpm/action-setup@v6

@@ -242,7 +242,8 @@ export async function getCachedEntityTimeline(
  * the range — which {@link netOp} folds to a net op. Out-of-scope intermediate
  * builds (Singularity / the pre-2012 baseline) are filtered in SQL, mirroring
  * {@link isBuildInHistoryScope}; `::text` sidesteps enum-literal handling and the
- * id is coerced because CockroachDB returns INT8 as a string.
+ * id is coerced defensively, since a raw query's integer width depends on the
+ * driver rather than on the Prisma model.
  *
  * Returns `null` for invalid input (a missing or out-of-scope endpoint, or
  * `from >= to`); an empty `changes` list means nothing changed between them.

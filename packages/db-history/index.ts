@@ -3,7 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { env } from "./env";
 import { PrismaClient } from "./prisma/generated/client";
 
-// Standalone change-history client (the CockroachDB `history` database), kept
+// Standalone change-history client (the PostgreSQL `history` database), kept
 // separate from the app's @jitaspace/db. Construction never connects, so this is
 // safe to import at module load (e.g. during `next build`); a missing
 // HISTORY_DATABASE_URL only surfaces when a query actually runs.

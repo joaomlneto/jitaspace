@@ -15,7 +15,7 @@ jobs:
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       SKIP_ENV_VALIDATION: "1"
       # Dummy DATABASE_URL so prisma generate (postinstall) succeeds
-      DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/jitaspace?sslmode=disable"
     steps:
       - name: Checkout
         uses: actions/checkout@v6

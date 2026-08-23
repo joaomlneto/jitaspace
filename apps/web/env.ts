@@ -19,7 +19,7 @@ const server = z.object({
   REDIS_URL: z.string(),
 
   /**
-   * Change-history database (the eve-builds CockroachDB, `history` schema),
+   * Change-history database (the eve-builds PostgreSQL, `history` schema),
    * read by @jitaspace/db-history. Optional so the rest of the app builds
    * without it; the /history pages need it set to return data.
    */

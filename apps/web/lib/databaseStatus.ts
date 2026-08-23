@@ -2,8 +2,8 @@
  * Types and pure aggregation logic for the database status server function
  * (`app/status/actions.ts`) and the status-page dashboard.
  *
- * The counts are CockroachDB's estimated row counts (read from the latest
- * table statistics via `SHOW TABLES`' `estimated_row_count`), not exact
+ * The counts are PostgreSQL's estimated row counts (read from
+ * `pg_stat_user_tables.n_live_tup` and `pg_class.reltuples`), not exact
  * `count(*)` results — see `getDatabaseStatus` for why. This module only
  * shapes/aggregates the rows; the actual query lives in the server function.
  *
@@ -14,8 +14,8 @@
 /**
  * How long a database snapshot is cached server-side (and effectively how
  * stale the dashboard may be). The request asked for "stale for a few
- * minutes"; CockroachDB's statistics themselves only refresh periodically, so
- * a shorter window would not buy fresher numbers anyway.
+ * minutes"; PostgreSQL's own statistics only refresh periodically, so a
+ * shorter window would not buy fresher numbers anyway.
  */
 export const DATABASE_STATUS_STALE_MINUTES = 5;
 
@@ -24,7 +24,7 @@ export interface DatabaseTableStat {
   name: string;
   /** Human-friendly label derived from the table name. */
   label: string;
-  /** Estimated number of rows, from CockroachDB table statistics. */
+  /** Estimated number of rows, from PostgreSQL table statistics. */
   rowCount: number;
 }
 

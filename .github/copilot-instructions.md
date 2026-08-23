@@ -50,7 +50,7 @@ pnpm db:diff          # read-only — review the pending change
 pnpm db:push          # apply it, then merge
 ```
 
-Never pass `--accept-data-loss`. See CLAUDE.md → "Applying schema changes to the database" for the CockroachDB `schema_locked` recovery procedure.
+Never pass `--accept-data-loss`. See CLAUDE.md → "Applying schema changes to the database" for what a failed push does and does not leave behind.
 
 ---
 
@@ -96,7 +96,7 @@ Three GitHub Actions workflows run on every push:
 
 **Cypress Tests** (`.github/workflows/cypress.yml`):
 
-- Requires CockroachDB (v24.3.7) and Redis services
+- Requires PostgreSQL (17) and Redis services
 - Sequence: `pnpm install` → push DB schema (`cd packages/db && pnpm exec prisma db push`) → `pnpm build` → start web server → run Cypress (parallel, 2 containers)
 - NOT end-to-end coverage: the specs under `apps/web/cypress/e2e/` are still the stock Cypress example suite and target `example.cypress.io`, so this job effectively gates "the build succeeds and the server boots".
 - Uses `SKIP_ENV_VALIDATION=1`

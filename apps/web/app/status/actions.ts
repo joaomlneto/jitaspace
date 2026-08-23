@@ -126,10 +126,10 @@ const DATABASE_CACHE_TTL_MS = DATABASE_STATUS_STALE_MINUTES * 60 * 1000;
 /** A row-count estimate for one base table. */
 interface TableRowStatistic {
   table_name: string;
-  // The pg adapter returns CockroachDB INT8 as a string to avoid precision
-  // loss; bigint/number are tolerated too, and a table with no statistics yet
-  // reports 0 (null is tolerated defensively). `Number(... ?? 0)` normalizes
-  // all of these.
+  // Postgres reports these counters as BIGINT, which the pg adapter surfaces as
+  // a string (or bigint) to avoid precision loss; number is tolerated too, and
+  // a table with no statistics yet reports 0 (null is tolerated defensively).
+  // `Number(... ?? 0)` normalizes all of these.
   estimated_row_count: string | number | bigint | null;
 }
 
@@ -142,30 +142,38 @@ const computeDatabaseStatus = async (): Promise<DatabaseStatusResponse> => {
   const fetchedAt = new Date();
 
   try {
-    // CockroachDB exposes cheap, pre-computed row-count estimates from the
-    // latest automatic table statistics. We deliberately use these instead of
-    // a `SELECT count(*)` per table: an exact count would full-scan every
-    // table (some with millions of rows) on the production cluster on every
-    // cache miss. The estimates are refreshed automatically and are plenty for
-    // a status dashboard (this is what CockroachDB's own DB Console shows).
+    // Postgres keeps cheap, pre-computed row-count estimates in the catalog. We
+    // deliberately use those instead of a `SELECT count(*)` per table: an exact
+    // count would full-scan every table (some with millions of rows) on every
+    // cache miss. The estimates are maintained automatically and are plenty for
+    // a status dashboard (this is what psql's `\dt+` and most admin UIs show).
     //
-    // We read them via `SHOW TABLES`, whose `estimated_row_count` column comes
-    // from those same statistics. We deliberately do NOT query
-    // `crdb_internal.table_row_statistics` directly: as of CockroachDB v26 (and
-    // on CockroachDB Cloud Basic/Standard) direct access to `crdb_internal` and
-    // `system` is restricted for non-admin roles and fails with error 42501
-    // ("Access to crdb_internal and system is restricted") unless the unsafe
-    // `allow_unsafe_internals` session var is set. `SHOW` statements are
-    // explicitly exempt from that gate, so they keep working in production.
+    // Two sources, because neither alone is reliable:
+    //   • `pg_stat_user_tables.n_live_tup` — maintained incrementally by the
+    //     statistics collector on every write, so it tracks bulk loads that
+    //     have not been ANALYZEd yet. Reset to 0 by `pg_stat_reset()` and on an
+    //     unclean shutdown.
+    //   • `pg_class.reltuples` — written by ANALYZE/VACUUM, so it survives a
+    //     stats reset, but is `-1` on a table that has never been analyzed
+    //     (Postgres 14+; it was 0 before).
+    // `GREATEST(..., 0)` folds both together and clamps the `-1` sentinel away,
+    // so a table reports 0 only when both sources genuinely have nothing.
     //
-    // `SHOW TABLES` (no `FROM`) scopes to the connection's current database. We
-    // wrap it as a table expression (`[SHOW TABLES]`) so we can keep only base
-    // tables in the public schema (dropping views/sequences); `estimated_row_count`
-    // is 0 for tables whose statistics have not been computed yet.
+    // Both catalogs are world-readable, unlike CockroachDB's `crdb_internal`,
+    // so this needs no elevated grants. `relkind = 'r'` keeps ordinary base
+    // tables only, dropping views, sequences and indexes.
     const rows = await prisma.$queryRaw<TableRowStatistic[]>`
-      SELECT table_name, estimated_row_count
-      FROM [SHOW TABLES]
-      WHERE type = 'table' AND schema_name = 'public'
+      SELECT
+        c.relname AS table_name,
+        GREATEST(
+          COALESCE(s.n_live_tup, 0),
+          COALESCE(c.reltuples, 0)::bigint,
+          0
+        ) AS estimated_row_count
+      FROM pg_class c
+      JOIN pg_namespace n ON n.oid = c.relnamespace
+      LEFT JOIN pg_stat_user_tables s ON s.relid = c.oid
+      WHERE c.relkind = 'r' AND n.nspname = 'public'
     `;
 
     return buildDatabaseStatusResponse({

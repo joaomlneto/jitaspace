@@ -15,6 +15,6 @@ export default defineConfig({
   datasource: {
     url:
       process.env.HISTORY_DATABASE_URL ??
-      "postgresql://placeholder@localhost:26257/history?sslmode=disable",
+      "postgresql://placeholder@localhost:5432/history?sslmode=disable",
   },
 });

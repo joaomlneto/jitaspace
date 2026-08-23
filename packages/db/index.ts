@@ -3,7 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./prisma/generated/client";
 
 export interface CreatePrismaClientOptions {
-  /** PostgreSQL/CockroachDB connection string. */
+  /** PostgreSQL connection string. */
   connectionString: string;
   /** Log every query (handy in development). Defaults to `false`. */
   logQueries?: boolean;

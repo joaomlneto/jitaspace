@@ -4,8 +4,8 @@ import type { CrudStatistics } from "../types";
 import type { SoftDeleteDelegate } from "./ingestSdeTable";
 import { excludeObjectKeys, updateTable } from "../utils";
 
-// CockroachDB/Postgres cap bind parameters per statement (Postgres wire limit:
-// 65535). The composite soft-delete builds an `OR` of N composite keys, spending
+// Postgres caps bind parameters per statement (wire-protocol limit: 65535).
+// The composite soft-delete builds an `OR` of N composite keys, spending
 // `keyFields.length` params per row — and Prisma does NOT split an `OR` across
 // statements the way it transparently chunks `createMany` / `IN (...)`. So cap
 // each soft-delete `OR` well under the limit (30000 / a 2-column key = 15000
