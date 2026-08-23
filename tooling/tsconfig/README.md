@@ -4,11 +4,11 @@ Shared TypeScript configuration presets for the JitaSpace monorepo.
 
 ## Presets
 
-| File | Use for |
-|---|---|
-| `base.json` | All TypeScript packages (strict, bundler module resolution) |
-| `internal-package.json` | Packages that emit declaration files (extends `base`) |
-| `nextjs.json` | Next.js applications (extends `base`) |
+| File                    | Use for                                                     |
+| ----------------------- | ----------------------------------------------------------- |
+| `base.json`             | All TypeScript packages (strict, bundler module resolution) |
+| `internal-package.json` | Packages that emit declaration files (extends `base`)       |
+| `nextjs.json`           | Next.js applications (extends `base`)                       |
 
 ## Usage
 

@@ -134,7 +134,10 @@ describe("EsiKillmailFittingCard", () => {
 
     render(
       <MantineProvider>
-        <EsiKillmailFittingCard killmailId={137867814} killmailHash="deadbeef" />
+        <EsiKillmailFittingCard
+          killmailId={137867814}
+          killmailHash="deadbeef"
+        />
       </MantineProvider>,
     );
 

@@ -16,13 +16,13 @@ const characters = await prisma.character.findMany();
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm db:generate` | Generate the Prisma client from schema |
-| `pnpm db:diff` | Read-only: show what `db:push` would change |
-| `pnpm db:diff:sql` | The same diff as SQL rather than a summary |
-| `pnpm db:push` | Apply schema changes to the database |
-| `pnpm db:studio` | Open Prisma Studio |
+| Command            | Description                                 |
+| ------------------ | ------------------------------------------- |
+| `pnpm db:generate` | Generate the Prisma client from schema      |
+| `pnpm db:diff`     | Read-only: show what `db:push` would change |
+| `pnpm db:diff:sql` | The same diff as SQL rather than a summary  |
+| `pnpm db:push`     | Apply schema changes to the database        |
+| `pnpm db:studio`   | Open Prisma Studio                          |
 
 `db:push` is the only way the schema is ever applied — nothing does it automatically, and deploys do not. Run `db:diff` first and check which database it reports before pushing.
 
@@ -30,8 +30,8 @@ There is no `prisma/migrations` directory, so the `db:migrate:*` scripts (`dev`,
 
 ## Environment Variables
 
-| Variable | Description |
-|---|---|
+| Variable       | Description                  |
+| -------------- | ---------------------------- |
 | `DATABASE_URL` | PostgreSQL connection string |
 
 ## Schema

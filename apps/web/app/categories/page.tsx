@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 import {
   Container,
   Group,
@@ -9,16 +9,16 @@ import {
   Title,
 } from "@mantine/core";
 
+import { ItemsIcon } from "@jitaspace/eve-icons";
+import { CategoryAnchor } from "@jitaspace/ui";
+
+import { prisma } from "~/lib/db";
+
 export const metadata = {
   title: "Item Categories",
   description:
     "Browse all EVE Online item categories — ships, modules, ammunition, structures, and more.",
 };
-
-import { prisma } from "~/lib/db";
-import { ItemsIcon } from "@jitaspace/eve-icons";
-import { CategoryAnchor } from "@jitaspace/ui";
-
 
 interface PageProps {
   categories: { categoryId: number; name: string }[];

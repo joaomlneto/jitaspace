@@ -4,7 +4,7 @@ export default defineConfig({
   projectId: "hs7x8r",
 
   e2e: {
-    setupNodeEvents(on, config) {
+    setupNodeEvents(_on, _config) {
       // implement node event listeners here
     },
   },

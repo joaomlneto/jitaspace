@@ -1,10 +1,9 @@
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
-import { prisma } from "~/lib/db";
-
-import SkillsPage from "./page.client";
 import type { SkillsPageProps } from "./page.client";
+import { prisma } from "~/lib/db";
+import SkillsPage from "./page.client";
 
 const SKILLS_CATEGORY_ID = 16;
 

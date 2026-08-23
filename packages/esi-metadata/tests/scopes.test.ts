@@ -63,7 +63,9 @@ describe("scopeDescriptions", () => {
 
 describe("getScopeDescription", () => {
   it("returns the curated description for a described scope", () => {
-    expect(getScopeDescription("esi-skills.read_skills.v1")).toContain("skills");
+    expect(getScopeDescription("esi-skills.read_skills.v1")).toContain(
+      "skills",
+    );
   });
 
   it("falls back to the scope string for an undescribed scope", () => {

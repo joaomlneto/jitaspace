@@ -41,7 +41,15 @@ const scopesDir = resolve(scriptDir, "../src/scopes");
 const DEFAULT_SPEC = resolve(scriptDir, "../../esi-client/swagger.json");
 const REGEN = "pnpm --filter @jitaspace/esi-metadata kubb:generate";
 
-const HTTP_METHODS = ["get", "post", "put", "delete", "patch", "head", "options"];
+const HTTP_METHODS = [
+  "get",
+  "post",
+  "put",
+  "delete",
+  "patch",
+  "head",
+  "options",
+];
 
 const header = (): string =>
   `// This file is auto-generated from the EVE Online ESI OpenAPI spec.\n` +

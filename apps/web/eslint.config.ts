@@ -11,12 +11,7 @@ export default defineConfig(
     // type-aware parser can't resolve them). The scaffolded example specs
     // (`1-getting-started`, `2-advanced-examples`) are vendor boilerplate.
     // None of these are app source, so keep them out of the app lint.
-    ignores: [
-      ".next/**",
-      "cypress/**",
-      "**/*.cy.ts",
-      "**/*.cy.tsx",
-    ],
+    ignores: [".next/**", "cypress/**", "**/*.cy.ts", "**/*.cy.tsx"],
   },
   baseConfig,
   reactConfig,

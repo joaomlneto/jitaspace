@@ -69,6 +69,7 @@ SKIP_ENV_VALIDATION=1 pnpm build   # Build all packages and apps via Turbo
 ```bash
 pnpm lint                          # ESLint (flat config) + manypkg workspace checks
 pnpm lint:fix                      # Auto-fix linting issues
+pnpm format:check                  # Prettier in check mode — what lint.yml runs
 pnpm format                        # Prettier (also sorts imports)
 pnpm type-check                    # tsc --noEmit across all workspaces
 pnpm test                          # Jest unit tests across workspaces (generates coverage)
@@ -86,7 +87,7 @@ pnpm test                          # Jest unit tests across workspaces (generate
 
 ## Continuous Integration
 
-Three GitHub Actions workflows run on every push:
+Four GitHub Actions workflows run on pushes to `main` and on pull requests:
 
 **Type Check** (`.github/workflows/type-check.yml`):
 
@@ -105,7 +106,7 @@ Three GitHub Actions workflows run on every push:
 
 - Runs on `main` pushes and all PRs
 - Sequence: `pnpm install --frozen-lockfile` → `pnpm test` (produces coverage) → SonarQube scan
-- Uses `SKIP_ENV_VALIDATION=1` and a dummy `DATABASE_URL` for Prisma codegen in postinstall
+- Uses `SKIP_ENV_VALIDATION=1` and a dummy `DATABASE_URL` for the codegen that runs in postinstall hooks
 
 ---
 
@@ -113,14 +114,14 @@ Three GitHub Actions workflows run on every push:
 
 | Purpose                    | Path                                                                     |
 | -------------------------- | ------------------------------------------------------------------------ |
-| Root scripts & pnpm config | `package.json`, `pnpm-workspace.yaml`, `.npmrc`                          |
+| Root scripts & pnpm config | `package.json`, `pnpm-workspace.yaml` (there is no `.npmrc`)             |
 | Turbo pipeline config      | `turbo.json`                                                             |
 | Web app entry & routes     | `apps/web/app/`                                                          |
 | Web app config             | `apps/web/next.config.mjs`, `apps/web/env.ts`                            |
 | DB schema                  | `packages/db/prisma/schema.prisma`                                       |
 | ESI API client generation  | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json` |
 | Auth config                | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)        |
-| Shared ESLint rules        | `tooling/eslint/src/base.ts`                                             |
+| Shared ESLint rules        | `tooling/eslint/base.ts`                                                 |
 | Shared Prettier config     | `tooling/prettier/index.mjs`                                             |
 | Shared TypeScript config   | `tooling/tsconfig/base.json`                                             |
 | Jest config (web)          | `apps/web/jest.config.ts`                                                |
@@ -152,7 +153,7 @@ When a new `@jitaspace/*` package exports TypeScript source and needs to be impo
 - **Missing generated files:** If you see import errors for `@jitaspace/db` or `@jitaspace/esi-client`, run `pnpm db:generate` and/or `pnpm kubb:generate` first.
 - **Env validation crash:** Build or dev server crashes with env errors → set `SKIP_ENV_VALIDATION=1`.
 - **Wrong package manager:** Any `npm install` or `yarn` command will fail with a preinstall error — use pnpm only.
-- **Prisma postinstall:** The `packages/db` package runs `prisma generate` on `postinstall`. CI sets a dummy `DATABASE_URL` so this succeeds without a real database.
+- **Prisma client generation:** `packages/db` has **no** `postinstall` hook — the Prisma client is produced by the turbo `db:generate` edges that `build`, `lint` and `type-check` declare. `packages/db-history` and the generated-client packages (`esi-client`, `evekill-client`, `evetycoon-client`, `fuzzworks-market-client`, `hooks`) do run codegen on `postinstall`. CI sets a dummy `DATABASE_URL` so those succeed without a real database. After `pnpm install --ignore-scripts`, run `pnpm db:generate` and `pnpm kubb:generate` explicitly.
 - **`apps/web` lint command:** Uses `--flag unstable_native_nodejs_ts_config` for native ESM TypeScript config support.
 
 ---

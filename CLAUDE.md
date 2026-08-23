@@ -28,14 +28,19 @@ pnpm lint           # ESLint (flat config) + manypkg workspace checks
 pnpm lint:fix       # auto-fix lint issues
 pnpm type-check     # tsc --noEmit across all workspaces
 pnpm format         # Prettier (also sorts imports)
+pnpm format:check   # Prettier in check mode — what lint.yml runs
 pnpm db:generate    # generate Prisma client from packages/db/prisma/schema.prisma
 pnpm db:diff        # read-only: show what db:push WOULD change (run this first)
 pnpm db:push        # apply the Prisma schema to the DB (also runs db:generate)
 pnpm kubb:generate  # generate API clients from OpenAPI specs
 pnpm cypress:run    # run web E2E tests headlessly
 pnpm cypress:open   # open Cypress runner
-pnpm clean          # remove all node_modules
-pnpm clean:workspaces # clean workspace build output via turbo
+pnpm clean          # remove all node_modules, from the root down
+pnpm clean:workspaces # `turbo clean` — runs each workspace's own clean script.
+                      # NOTE: 27 of those delete the workspace's node_modules as
+                      # well as its build output, so this uninstalls dependencies
+                      # too; it is not a build-output-only clean. Re-run
+                      # `pnpm install` afterwards.
 ```
 
 ### Running a single test
@@ -61,7 +66,7 @@ pnpm kubb:generate   # OpenAPI → TypeScript clients in packages/*-client/src/g
 
 If you see import errors for `@jitaspace/db` or `@jitaspace/esi-client`, these haven't run yet.
 
-**If you linted before generating, the ESLint cache will keep failing you.** `pnpm lint` uses `--cache`, which keys on each linted file's contents rather than on the generated types it imports — so errors cached before codegen (typically `no-unsafe-*` on `prisma.*`) replay forever even after you regenerate, and the fix looks like it did nothing. The three codegen scripts above clear the cache; `build`/`dev`/`test`/`type-check` and the per-package `postinstall` hooks regenerate without clearing. Recover with `pnpm clean:eslint-cache` (use the script — the `rm` inside it aborts under zsh on unmatched globs).
+**If a stale ESLint cache is failing you.** `pnpm lint` uses `--cache`, which keys on each linted file's contents rather than on the generated types it imports, so errors cached before codegen (typically `no-unsafe-*` on `prisma.*`) can replay after you regenerate and the fix looks like it did nothing. The turbo `lint` task now declares the same `db:generate`/`kubb:generate` edges as `build` and `type-check`, so `pnpm lint` can no longer run ahead of the generators — but a cache written by an older checkout, or by invoking `eslint` directly in a package, still can. Recover with `pnpm clean:eslint-cache` (use the script — the `rm` inside it aborts under zsh on unmatched globs).
 
 **Never edit generated files directly.** Instead edit the source and regenerate:
 
@@ -181,27 +186,28 @@ patch = bug fix/internal; minor = new feature/export; major = breaking.
 
 ## CI
 
-Three GitHub Actions run on push/PR (all set `SKIP_ENV_VALIDATION=1`):
+Four GitHub Actions run on pushes to `main` and on pull requests (all set `SKIP_ENV_VALIDATION=1`):
 
 - **`type-check.yml`:** `pnpm install --frozen-lockfile` → `pnpm type-check`. A hard gate — the repo is expected to be **green**, so a type error fails the PR. No explicit codegen step: the turbo `type-check` task depends on the Prisma and Kubb generators, so a clean checkout produces them itself.
-- **`cypress.yml`:** spins up CockroachDB + Redis → push DB schema → `pnpm build` → start web → run Cypress (parallel). Since the specs are the stock examples, this effectively gates only "the build succeeds and the server boots".
+- **`lint.yml`:** `pnpm install --frozen-lockfile` → `pnpm lint` → `pnpm format:check`. `pnpm lint` also runs `manypkg check`, which fails on a dependency declared at different versions across workspaces.
+- **`cypress.yml`:** spins up CockroachDB + Redis → push DB schema → `pnpm build` → start web → run Cypress. Since the specs are the stock examples, this effectively gates only "the build succeeds and the server boots". Recording and `--parallel` are enabled only when `CYPRESS_RECORD_KEY` is present, so fork PRs run the suite unrecorded instead of failing.
 - **`sonarcloud.yml`:** `pnpm install --frozen-lockfile` → `pnpm test` (coverage) → SonarQube scan. New code must keep coverage above the quality gate.
 
-**No workflow runs `pnpm lint`.** ESLint's only automatic gate is the local `.githooks/pre-commit` hook, which is bypassable with `--no-verify` and dormant in git worktrees — so run `pnpm lint` yourself before pushing. (`manypkg check` runs as part of it, and it fails on a dependency declared at different versions across workspaces.)
+`.githooks/pre-commit` also runs `pnpm lint` locally. It is bypassable with `--no-verify`, and it is only installed once the root `prepare` script has run — so a failed `pnpm install` leaves a checkout with no local lint gate. `lint.yml` is the backstop.
 
-Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm lint` → `pnpm type-check` → `pnpm test`.
+Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm lint` → `pnpm format:check` → `pnpm type-check` → `pnpm test`.
 
 > After merging `main`, re-run `pnpm db:generate` before trusting a type-check: a schema change plus a stale client makes valid columns look missing and cascades into unrelated errors. If a fresh worktree reports errors inside a `dist/` or `prisma/generated/` path, that is a stale `tsbuildinfo` or an unbuilt package, not repo state — clear `node_modules/.cache` and rebuild.
 
 ## Where to look first
 
-| Area              | Path                                                                                     |
-| ----------------- | ---------------------------------------------------------------------------------------- |
-| Turbo pipeline    | `turbo.json`                                                                             |
-| Web config / env  | `apps/web/next.config.mjs`, `apps/web/env.ts`                                            |
-| Web routes        | `apps/web/app/`                                                                          |
-| DB schema         | `packages/db/prisma/schema.prisma`                                                       |
-| ESI client gen    | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json`                 |
-| Auth              | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)                        |
-| Shared tooling    | `tooling/eslint/src/base.ts`, `tooling/prettier/index.mjs`, `tooling/tsconfig/base.json` |
-| Test config (web) | `apps/web/jest.config.ts`, `apps/web/cypress.config.ts`                                  |
+| Area              | Path                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| Turbo pipeline    | `turbo.json`                                                                         |
+| Web config / env  | `apps/web/next.config.mjs`, `apps/web/env.ts`                                        |
+| Web routes        | `apps/web/app/`                                                                      |
+| DB schema         | `packages/db/prisma/schema.prisma`                                                   |
+| ESI client gen    | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json`             |
+| Auth              | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)                    |
+| Shared tooling    | `tooling/eslint/base.ts`, `tooling/prettier/index.mjs`, `tooling/tsconfig/base.json` |
+| Test config (web) | `apps/web/jest.config.ts`, `apps/web/cypress.config.ts`                              |

@@ -5,7 +5,7 @@ import { ensureSdePresentAndExtracted } from "../utils/sde.js";
 
 export default createCommand("download-only")
   .description("Retrieve the latest SDE archive and extracts it")
-  .action(async (options) => {
+  .action(async (_options) => {
     await ensureSdePresentAndExtracted();
 
     globalProgress.stop();

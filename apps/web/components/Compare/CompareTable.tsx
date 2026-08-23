@@ -143,3 +143,5 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
     </>
   );
 });
+
+CompareTable.displayName = "CompareTable";

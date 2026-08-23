@@ -46,6 +46,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@tiptap/core": "^3.26.0",
     "@tiptap/extension-hard-break": "^3.26.0",
     "@tiptap/extension-link": "^3.26.0",
     "@tiptap/extension-text-style": "^3.26.0",
@@ -70,6 +71,7 @@
     "eslint": "^9.39.4",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
+    "linkifyjs": "^4.3.3",
     "prettier": "^3.8.3",
     "react": "^19.2.6",
     "tsup": "^8.5.1",

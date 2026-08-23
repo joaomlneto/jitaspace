@@ -1,10 +1,9 @@
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
-import { prisma } from "~/lib/db";
-
-import LPStorePage from "./page.client";
 import type { LPStorePageProps } from "./page.client";
+import { prisma } from "~/lib/db";
+import LPStorePage from "./page.client";
 
 export const metadata = {
   title: "LP Store",
