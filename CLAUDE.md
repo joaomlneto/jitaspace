@@ -35,8 +35,12 @@ pnpm db:push        # apply the Prisma schema to the DB (also runs db:generate)
 pnpm kubb:generate  # generate API clients from OpenAPI specs
 pnpm cypress:run    # run web E2E tests headlessly
 pnpm cypress:open   # open Cypress runner
-pnpm clean          # remove all node_modules
-pnpm clean:workspaces # clean workspace build output via turbo
+pnpm clean          # remove all node_modules, from the root down
+pnpm clean:workspaces # `turbo clean` — runs each workspace's own clean script.
+                      # NOTE: 27 of those delete the workspace's node_modules as
+                      # well as its build output, so this uninstalls dependencies
+                      # too; it is not a build-output-only clean. Re-run
+                      # `pnpm install` afterwards.
 ```
 
 ### Running a single test
