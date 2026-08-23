@@ -6,6 +6,7 @@ import type { CharactersCharacterIdRolesGetRolesEnum } from "@jitaspace/esi-clie
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
 import type { CharacterSsoSession } from "./useAuthStore";
+import { characterHasAcceptedRole } from "./characterHasAcceptedRole";
 import { useAuthStore } from "./useAuthStore";
 
 const TOKEN_UNAVAILABLE = {
@@ -14,6 +15,20 @@ const TOKEN_UNAVAILABLE = {
   authHeaders: {},
 };
 
+/**
+ * Pick a logged-in character whose token can authorise an ESI request.
+ *
+ * `characterId`, `corporationId` and `allianceId` narrow *which* character is
+ * eligible: corporation- and alliance-scoped ESI routes are still authenticated
+ * with a character token, so the caller has to end up with a character that
+ * actually belongs to the corporation/alliance being queried. Every character
+ * that clears the filters is equally able to authorise the request, so the
+ * first one wins.
+ *
+ * `roles` lists the roles that are ACCEPTED, not ones that must all be held —
+ * see {@link characterHasAcceptedRole}, which useEsiSubjects shares so the two
+ * cannot drift.
+ */
 export const useAccessToken = (options: {
   characterId?: number;
   corporationId?: number;
@@ -25,17 +40,24 @@ export const useAccessToken = (options: {
   accessToken: string | null;
   authHeaders: Record<string, string>;
 } => {
-  const { characterId, scopes } = options;
-  // TODO: Filter by corporationId, allianceId, roles
+  const { characterId, corporationId, allianceId, scopes, roles } = options;
 
   const characters = useAuthStore(
     useShallow((state) =>
       Object.values(state.characters).filter(
         (character) =>
+          // An expired session's token cannot authorise anything, so it must
+          // not be picked ahead of a live character that also matches.
+          !character.sessionExpired &&
           (characterId == undefined || character.characterId == characterId) &&
+          (corporationId == undefined ||
+            character.corporationId == corporationId) &&
+          (allianceId == undefined || character.allianceId == allianceId) &&
           (scopes ?? []).every((requiredScope) =>
             character.accessTokenPayload.scp.includes(requiredScope),
-          ),
+          ) &&
+          // Any-of, unlike `scopes` above.
+          characterHasAcceptedRole(character, roles),
       ),
     ),
   );

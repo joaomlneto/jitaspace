@@ -1,31 +1,21 @@
 import pLimit from "p-limit";
 
 import { getCharactersDetail } from "@jitaspace/esi-client";
-import {
-  getAgentInSpaceById,
-  getAllAgentInSpaceIds,
-  getAllNpcCharacterIds,
-  getNpcCharacterById,
-} from "@jitaspace/sde-client";
 
+import type { SdeNpcCharacterRecord } from "../../../helpers/agents.ts";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { mergeEsiEntriesIntoCharactersTable } from "../../../helpers";
+import {
+  loadSdeFile,
+  mergeEsiEntriesIntoCharactersTable,
+  optionalBoolean,
+  optionalNumber,
+  optionalSdeDate,
+  requiredNumber,
+} from "../../../helpers";
 import { isResearchAgent } from "../../../helpers/agents.ts";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
-
-const fetchAgentInSpace = (characterId: number) =>
-  getAgentInSpaceById(characterId)
-    .then((res) => res.data)
-    .then((agent) => ({
-      characterId: agent.characterID,
-      dungeonId: agent.dungeonID,
-      solarSystemId: agent.solarSystemID,
-      spawnPointId: agent.spawnPointID,
-      typeId: agent.typeID,
-      isDeleted: false,
-    }));
 
 export interface ScrapeAgentsEventPayload {
   data: {
@@ -33,20 +23,39 @@ export interface ScrapeAgentsEventPayload {
   };
 }
 
+/**
+ * Agent metadata comes from the SDE archive (`npcCharacters.yaml`), but the
+ * Character rows it hangs off come from ESI — so unlike the pure `ingest-sde-*`
+ * jobs this one is a hybrid and keeps its `scrape-` id. It also has to run after
+ * the ESI scrapers rather than inside the FK-ordered SDE ingest loop, because
+ * `Agent` references Character and Station, both ESI-owned.
+ *
+ * AgentInSpace is deliberately not written here — `ingest-sde-agents-in-space`
+ * owns that table from `agentsInSpace.yaml`.
+ */
 export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
   id: "scrape-sde-agents",
   name: "Scrape Agents",
   trigger: { type: "event" },
   concurrencyLimit: 1,
+  // This job now downloads and extracts the SDE archive on top of its per-agent
+  // ESI fan-out, so it gets the same ceiling as the `ingest-sde-*` jobs rather
+  // than the default.
+  maxDurationSeconds: 1800,
   handler: async () => {
     const stepStartTime = performance.now();
     const limit = pLimit(20);
 
-    // Get all NPC Character IDs in SDE
-    const agentCharacterIds = await getAllNpcCharacterIds().then(
-      (res) => res.data,
-    );
-    agentCharacterIds.sort((a, b) => a - b);
+    // `npcCharacters.yaml` is an `addId` file, but the map key is the id we need
+    // and matches the SDE-API id list this job used to page through.
+    const npcCharacterRecords = await loadSdeFile("npcCharacters.yaml");
+    const npcCharacters = Object.entries(npcCharacterRecords)
+      .map(([key, record]) => ({
+        characterId: Number(key),
+        record: record as SdeNpcCharacterRecord,
+      }))
+      .sort((a, b) => a.characterId - b.characterId);
+    const agentCharacterIds = npcCharacters.map((entry) => entry.characterId);
 
     await createCorpAndItsRefRecords({
       missingCharacterIds: new Set(agentCharacterIds),
@@ -63,22 +72,8 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
       ),
     );
 
-    // get IDs of agents in space
-    const agentsInSpaceCharacterIds = await getAllAgentInSpaceIds().then(
-      (res) => res.data,
-    );
-    agentsInSpaceCharacterIds.sort((a, b) => a - b);
-
     const characterChanges =
       await mergeEsiEntriesIntoCharactersTable(characters);
-
-    const npcCharacters = await Promise.all(
-      agentCharacterIds.map((characterId) =>
-        limit(async () =>
-          getNpcCharacterById(characterId).then((res) => res.data),
-        ),
-      ),
-    );
 
     const agentChanges = await updateTable({
       fetchLocalEntries: async () =>
@@ -97,24 +92,33 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
           ),
       fetchRemoteEntries: () =>
         Promise.resolve(
-          npcCharacters.map((npcCharacter) => {
-            const { agentTypeID, divisionID, level } = npcCharacter.agent;
+          npcCharacters.map(({ characterId, record }) => {
+            const agentTypeId = optionalNumber(record.agent?.agentTypeID);
+            const agentDivisionId = optionalNumber(record.agent?.divisionID);
+            const level = optionalNumber(record.agent?.level);
             if (
-              agentTypeID === undefined ||
-              divisionID === undefined ||
-              level === undefined
+              agentTypeId === null ||
+              agentDivisionId === null ||
+              level === null
             ) {
               throw new Error(
-                `Agent ${npcCharacter.characterID} is missing required SDE fields (agentTypeID/divisionID/level)`,
+                `Agent ${characterId} is missing required SDE fields (agentTypeID/divisionID/level)`,
               );
             }
             return {
-              characterId: npcCharacter.characterID,
-              agentTypeId: agentTypeID,
-              agentDivisionId: divisionID,
-              isLocator: npcCharacter.agent.isLocator ?? false,
+              characterId,
+              agentTypeId,
+              agentDivisionId,
+              isLocator: Boolean(record.agent?.isLocator ?? false),
               level,
-              stationId: npcCharacter.locationID,
+              stationId: requiredNumber(record.locationID),
+              // SDE-only fields the archive omits on a minority of NPC
+              // characters, so each lands as null rather than undefined.
+              isCeo: optionalBoolean(record.ceo),
+              startDate: optionalSdeDate(record.startDate),
+              careerId: optionalNumber(record.careerID),
+              schoolId: optionalNumber(record.schoolID),
+              specialityId: optionalNumber(record.specialityID),
               isDeleted: false,
             };
           }),
@@ -150,11 +154,12 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
       idAccessor: (e) => e.characterId,
     });
 
-    const researchAgentCharacters = npcCharacters.filter(isResearchAgent);
-    const researchAgentCharacterIds = researchAgentCharacters.map(
-      (npcCharacter) => npcCharacter.characterID,
+    const researchAgentCharacters = npcCharacters.filter((entry) =>
+      isResearchAgent(entry.record),
     );
-    researchAgentCharacterIds.sort((a, b) => a - b);
+    const researchAgentCharacterIds = researchAgentCharacters.map(
+      (entry) => entry.characterId,
+    );
 
     const researchAgentsChanges = await updateTable({
       fetchLocalEntries: async () =>
@@ -173,8 +178,8 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
           ),
       fetchRemoteEntries: () =>
         Promise.resolve(
-          researchAgentCharacters.map((agent) => ({
-            characterId: agent.characterID,
+          researchAgentCharacters.map(({ characterId }) => ({
+            characterId,
             isDeleted: false,
           })),
         ),
@@ -226,10 +231,10 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
           ),
       fetchRemoteEntries: () =>
         Promise.resolve(
-          researchAgentCharacters.flatMap((agent) =>
-            agent.skills.flatMap((typeId) => ({
-              characterId: agent.characterID,
-              typeId: typeId.typeID,
+          researchAgentCharacters.flatMap(({ characterId, record }) =>
+            (record.skills ?? []).map((skill) => ({
+              characterId,
+              typeId: requiredNumber(skill.typeID),
               isDeleted: false,
             })),
           ),
@@ -270,62 +275,9 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
       idAccessor: (e) => `${e.characterId}:${e.typeId}`,
     });
 
-    const agentsInSpaceChanges = await updateTable({
-      fetchLocalEntries: async () =>
-        prisma.agentInSpace
-          .findMany({
-            where: {
-              characterId: {
-                in: agentsInSpaceCharacterIds,
-              },
-            },
-          })
-          .then((entries) =>
-            entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
-            ),
-          ),
-      fetchRemoteEntries: async () =>
-        Promise.all(
-          agentsInSpaceCharacterIds.map((characterId) =>
-            limit(() => fetchAgentInSpace(characterId)),
-          ),
-        ),
-      batchCreate: (entries) =>
-        limit(() =>
-          prisma.agentInSpace.createMany({
-            data: entries,
-          }),
-        ),
-      batchDelete: (entries) =>
-        prisma.agentInSpace.updateMany({
-          data: {
-            isDeleted: true,
-          },
-          where: {
-            characterId: {
-              in: entries.map((entry) => entry.characterId),
-            },
-          },
-        }),
-      batchUpdate: (entries) =>
-        Promise.all(
-          entries.map((entry) =>
-            limit(async () =>
-              prisma.agentInSpace.update({
-                data: entry,
-                where: { characterId: entry.characterId },
-              }),
-            ),
-          ),
-        ),
-      idAccessor: (e) => e.characterId,
-    });
-
     return {
       stats: {
         agentChanges,
-        agentsInSpaceChanges,
         characterChanges,
         researchAgentsChanges,
         researchAgentSkillChanges,

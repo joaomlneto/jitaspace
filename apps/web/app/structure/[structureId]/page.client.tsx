@@ -1,13 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import {
   EveEntityName,
+  SolarSystemAnchor,
   SolarSystemName,
   StructureName,
+  TypeAnchor,
   TypeName,
 } from "@jitaspace/eve-components";
 import { useSelectedCharacter, useStructure } from "@jitaspace/hooks";
@@ -53,22 +54,21 @@ export default function Page() {
                 solarSystemId={structure?.data.solar_system_id}
                 size="sm"
               />
-              <Anchor
-                component={Link}
-                href={`/system/${structure?.data.solar_system_id}`}
+              <SolarSystemAnchor
+                solarSystemId={structure?.data.solar_system_id}
               >
                 <SolarSystemName
                   span
                   solarSystemId={structure?.data.solar_system_id}
                 />
-              </Anchor>
+              </SolarSystemAnchor>
             </Group>
           </Group>
           <Group justify="space-between">
             <Text>Structure Type</Text>
-            <Anchor component={Link} href={`/type/${structure?.data.type_id}`}>
+            <TypeAnchor typeId={structure?.data.type_id}>
               <TypeName span typeId={structure?.data.type_id} />
-            </Anchor>
+            </TypeAnchor>
           </Group>
           <Group justify="space-between">
             <Text>Owner</Text>

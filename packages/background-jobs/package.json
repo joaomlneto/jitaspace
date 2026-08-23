@@ -12,7 +12,7 @@
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
     "test": "jest",
-    "type-check": "tsc --jsx react-jsx --noEmit",
+    "type-check": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
@@ -21,7 +21,6 @@
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/evekill-client": "workspace:*",
     "@jitaspace/kv": "workspace:*",
-    "@jitaspace/sde-client": "workspace:*",
     "@jitaspace/sde-utils": "workspace:*",
     "axios": "^1.16.1",
     "bull": "^4.16.5",
@@ -29,7 +28,6 @@
     "p-limit": "^7.3.0",
     "tar-stream": "^3.2.0",
     "unbzip2-stream": "^1.4.3",
-    "untar-to-memory": "^2.0.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

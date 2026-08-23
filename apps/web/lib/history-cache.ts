@@ -6,10 +6,12 @@ import type {
   BuildRangeChanges,
   EntityTimeline,
   HistoryIndex,
+  LatestChangedBuild,
 } from "~/lib/history";
 import {
   HISTORY_MIN_RELEASE_DATE,
   isBuildInHistoryScope,
+  latestChangedBuild,
   netOp,
 } from "~/lib/history";
 
@@ -118,6 +120,19 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
 }
 
 /**
+ * The newest build with recorded changes — the "latest patch notes" the home
+ * page banner links to. `null` when nothing has been recorded yet.
+ *
+ * Deliberately NOT its own `"use cache"` entry: it folds the already-cached
+ * {@link getCachedHistoryIndex}, so the home page and `/history` share a single
+ * day-cached read of the history DB rather than each minting one. Only the small
+ * derived summary crosses to the client.
+ */
+export async function getLatestChangedBuild(): Promise<LatestChangedBuild | null> {
+  return latestChangedBuild(await getCachedHistoryIndex());
+}
+
+/**
  * Cached per-entity {@link EntityTimeline} for any kind ("type", "skin", …).
  *
  * Cached per `(entityType, entityId)` — `"use cache"` keys on the arguments — so
@@ -130,6 +145,14 @@ export async function getCachedEntityTimeline(
   entityId: number,
 ): Promise<EntityTimeline | null> {
   "use cache";
+  // Load-bearing beyond freshness: `getEntityTimeline` is the one history reader
+  // left WITHOUT a `checkBotId()` guard, so that `/type/*` can stay out of the
+  // BotID protect list (see instrumentation-client.ts — a protect entry gates
+  // every Server Action on those pages, including the app-wide token refresh).
+  // What makes leaving it open acceptable is that entries here EXPIRE, so an
+  // automated caller's cache footprint has a bounded ceiling. Moving this to
+  // `cacheLife("max")` would remove that ceiling and invalidate the trade —
+  // guard the action, or accept unbounded growth from unauthenticated callers.
   cacheLife("days");
 
   if (!Number.isInteger(entityId)) return null;

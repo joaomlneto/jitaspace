@@ -1,7 +1,9 @@
 import { beforeAll, describe, expect, it, jest } from "@jest/globals";
 
-import type { Corporation } from "../db";
-import type { mergeEntriesIntoCorporationsTable as MergeEntriesIntoCorporationsTable } from "../helpers/mergeEntriesIntoCorporationsTable";
+import type {
+  EsiCorporationRow,
+  mergeEntriesIntoCorporationsTable as MergeEntriesIntoCorporationsTable,
+} from "../helpers/mergeEntriesIntoCorporationsTable";
 
 // The helper pulls in p-limit (ESM), the zod-checked env (via ../db -> ../env),
 // and a real Prisma client. Stub them so the test exercises only the
@@ -31,7 +33,7 @@ beforeAll(async () => {
 
 // A corporation record as produced by convertEsiCorporationToDomain: it has no
 // createdAt/updatedAt.
-const remoteRecord: Omit<Corporation, "updatedAt" | "createdAt"> = {
+const remoteRecord: EsiCorporationRow = {
   corporationId: 1000,
   allianceId: null,
   ceoId: 2000,

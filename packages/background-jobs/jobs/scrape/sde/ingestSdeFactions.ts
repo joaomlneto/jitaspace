@@ -3,8 +3,10 @@ import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
   enString,
+  ingestSdeCompositeTable,
   ingestSdeTable,
   loadSdeFiles,
+  plainString,
   requiredBoolean,
   requiredNumber,
 } from "../../../helpers";
@@ -76,9 +78,35 @@ export const ingestSdeFactions = defineJob<
         sizeFactor: requiredNumber(record.sizeFactor),
         stationCount: counts.get(id)?.stations ?? 0,
         stationSystemCount: counts.get(id)?.systems.size ?? 0,
+        flatLogo: plainString(record.flatLogo),
+        flatLogoWithName: plainString(record.flatLogoWithName),
         isDeleted: false,
       }),
     });
-    return { stats: { factions }, elapsed: performance.now() - start };
+    const memberRaces: Prisma.FactionMemberRaceCreateManyInput[] = [];
+    for (const [key, value] of Object.entries(files["factions.yaml"])) {
+      const factionId = Number(key);
+      const races = ((value as Record<string, unknown>).memberRaces ??
+        []) as number[];
+      for (const raceId of races) {
+        memberRaces.push({
+          factionId,
+          raceId: Number(raceId),
+          isDeleted: false,
+        });
+      }
+    }
+    const factionMemberRaces = await ingestSdeCompositeTable({
+      delegate: prisma.factionMemberRace,
+      rows: memberRaces,
+      keyFields: ["factionId", "raceId"],
+      scopeField: "factionId",
+      scopeIds: Object.keys(files["factions.yaml"]).map(Number),
+    });
+
+    return {
+      stats: { factions, factionMemberRaces },
+      elapsed: performance.now() - start,
+    };
   },
 });

@@ -5,10 +5,12 @@ import { useEffect, useMemo } from "react";
 import type { GetCharactersCharacterIdAssetsQueryResponse } from "@jitaspace/esi-client";
 import {
   getCharactersCharacterIdAssets,
+  getCharactersCharacterIdAssetsInfiniteQueryKey,
   useGetCharactersCharacterIdAssetsInfinite,
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
 
 export type CharacterAsset =
   GetCharactersCharacterIdAssetsQueryResponse[number];
@@ -26,6 +28,11 @@ export const useCharacterAssets = (characterId?: number) => {
       { ...authHeaders },
       {
         query: {
+          // Keep this entry distinct from the single-page query for the
+          // same endpoint; see esiInfiniteQueryKey.
+          queryKey: esiInfiniteQueryKey(
+            getCharactersCharacterIdAssetsInfiniteQueryKey(characterId ?? 0),
+          ),
           enabled: characterId !== undefined && accessToken !== null,
           initialPageParam: 1,
           queryFn: ({ pageParam }) =>
@@ -107,6 +114,16 @@ export const useCharacterAssets = (characterId?: number) => {
     locations,
     error,
     isLoading,
+    /**
+     * Whether pages are still outstanding.
+     *
+     * `isLoading` only covers the *first* page: react-query settles the query
+     * once page one lands, and the eager effect above then walks the rest with
+     * `fetchNextPage`, which reports through `isFetchingNextPage` instead. A
+     * consumer that needs the whole collection — rather than whatever has
+     * arrived so far — has to wait on this too.
+     */
+    hasNextPage,
     mutate: refetch,
   };
 };

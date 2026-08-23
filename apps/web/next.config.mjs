@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import { withSentryConfig } from "@sentry/nextjs";
+import { withBotId } from "botid/next/config";
 import { createJiti } from "jiti";
 
 const jiti = createJiti(import.meta.url);
@@ -42,7 +43,7 @@ const jiti = createJiti(import.meta.url);
  * Origins allow-listed below are the ones the app legitimately talks to from the
  * browser:
  *   - img:     EVE image CDNs (`images.evetech.net`, `web.ccpgamescdn.com`) and
- *              the item-icon host (`iec.jita.space`).
+ *              the item-icon host (`icons.jita.space`).
  *   - script:  Google Tag Manager.
  *   - worker:  `blob:` for Sentry Session Replay's compression Web Worker.
  *   - connect: data the client-side hooks (React Query / SWR) fetch directly —
@@ -62,7 +63,7 @@ const contentSecurityPolicy = [
   // 'none'` shuts off legacy plugin embedding vectors.
   "base-uri 'self'",
   "object-src 'none'",
-  "img-src 'self' https://images.evetech.net https://web.ccpgamescdn.com https://iec.jita.space https://www.googletagmanager.com data:",
+  "img-src 'self' https://images.evetech.net https://web.ccpgamescdn.com https://icons.jita.space https://www.googletagmanager.com data:",
   // FUTURE WORK: `'unsafe-inline'` is unavoidable here until we emit a
   // per-request nonce (Next.js injects inline bootstrap scripts; GTM is loaded
   // from googletagmanager.com). Removing it is the goal of the nonce migration
@@ -75,13 +76,15 @@ const contentSecurityPolicy = [
   // to default-src 'self', which blocks the blob worker.
   "worker-src 'self' blob:",
   // Browser-side data fetches (client-side React Query / SWR hooks): the EVE
-  // data plane — ESI, self-hosted SDE, EVE-Kill / EVE Tycoon / Fuzzwork market,
-  // and the zKillboard killmail API (kill page + Travel panel) — plus
+  // data plane — ESI, EVE-Kill / EVE Tycoon / Fuzzwork market, and the
+  // zKillboard killmail API (kill page + Travel panel) — plus
   // images.evetech.net, which is also fetched as JSON to choose an image variant
   // and so needs connect-src in addition to img-src. Then Google Analytics
   // (incl. regional `*.google-analytics.com` collectors) and the same-origin
-  // Sentry/Umami proxies.
-  "connect-src 'self' https://esi.evetech.net https://sde.jita.space https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://gateway.umami.is https://www.google.com /monitoring /analytics /ingest",
+  // Sentry/Umami proxies. Static EVE reference data is no longer fetched from
+  // the self-hosted SDE service: it is resolved from our own database, on the
+  // server or through same-origin server actions, both covered by 'self'.
+  "connect-src 'self' https://esi.evetech.net https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://gateway.umami.is https://www.google.com /monitoring /analytics /ingest",
   "frame-ancestors 'none'",
   // Sentry Security (CSP) endpoint derived from the browser DSN — see the note
   // above on why this is NOT the `/monitoring` tunnel. TODO: `report-uri` is
@@ -108,7 +111,6 @@ const config = {
     "@jitaspace/eve-icons",
     "@jitaspace/hooks",
     "@jitaspace/kv",
-    "@jitaspace/sde-client",
     "@jitaspace/sde-utils",
     "@jitaspace/tiptap-eve",
     "@jitaspace/ui",
@@ -121,12 +123,9 @@ const config = {
   ],
 
   /** Avoid bundling server-only worker dependencies */
-  serverExternalPackages: [
-    "bull",
-    "@chat-adapter/discord",
-    "discord.js",
-    "@discordjs/ws",
-  ],
+  // The discord.js entries left with @jitaspace/chat: apps/web no longer depends
+  // on it, so listing them would claim a bundling relationship that cannot exist.
+  serverExternalPackages: ["bull"],
 
   /** We already do typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: !!process.env.CI },
@@ -145,50 +144,82 @@ const config = {
     ],
   },
 
-  rewrites: async () => [
-    {
-      // Umami's tracker sends events to `<data-host-url>/api/send`, which
-      // defaults to the cloud collection gateway. The layout sets
-      // `data-host-url="/analytics"` so the beacon is same-origin (kept off
-      // `connect-src`'s third-party list and invisible to ad blockers that
-      // block `*.umami.is`); this rewrite forwards it to the gateway. Must
-      // come BEFORE the catch-all below — that one targets the script host,
-      // which does not serve `/api/send`.
-      source: "/analytics/api/send",
-      destination: "https://gateway.umami.is/api/send", // Umami event gateway
-    },
-    {
-      // Must target `cloud.umami.is` (the canonical script host), NOT
-      // `analytics.umami.is` — the latter 301-redirects to `cloud.umami.is`,
-      // and Next.js forwards that redirect to the browser, which then loads a
-      // cross-origin script that `script-src 'self'` rejects (a CSP violation
-      // even though the proxied URL is same-origin). See JITASPACE-3T.
-      source: "/analytics/:match*",
-      destination: "https://cloud.umami.is/:match*", // Proxy to Umami script
-    },
-    {
-      source: "/ingest/static/:path*",
-      destination: "https://eu-assets.i.posthog.com/static/:path*",
-    },
-    {
-      source: "/ingest/array/:path*",
-      destination: "https://eu-assets.i.posthog.com/array/:path*",
-    },
-    {
-      source: "/ingest/:path*",
-      destination: "https://eu.i.posthog.com/:path*",
-    },
-    {
-      // Serve a single static shell for every /market/<typeId> URL instead of
-      // rendering (and ISR-caching) one page per type id. The browser keeps the
-      // pretty /market/<typeId> URL; the client reads the id from the path.
-      source: "/market/:typeId",
-      destination: "/market",
-    },
-  ],
+  rewrites: async () => ({
+    // `beforeFiles`, because Next reserves `/sitemap.xml` for the
+    // `app/sitemap.ts` metadata convention. With `generateSitemaps()` the real
+    // pages live at `/sitemap/{n}.xml` and that reserved route only 404s, but
+    // it still wins against an `afterFiles` rewrite — and a route handler at
+    // `app/sitemap.xml/` fails the build outright with "Conflicting route and
+    // metadata". This hands the conventional path to the index handler.
+    beforeFiles: [
+      { source: "/sitemap.xml", destination: "/sitemap-index.xml" },
+    ],
+    afterFiles: [
+      {
+        // Umami's tracker sends events to `<data-host-url>/api/send`, which
+        // defaults to the cloud collection gateway. The layout sets
+        // `data-host-url="/analytics"` so the beacon is same-origin (kept off
+        // `connect-src`'s third-party list and invisible to ad blockers that
+        // block `*.umami.is`); this rewrite forwards it to the gateway. Must
+        // come BEFORE the catch-all below — that one targets the script host,
+        // which does not serve `/api/send`.
+        source: "/analytics/api/send",
+        destination: "https://gateway.umami.is/api/send", // Umami event gateway
+      },
+      {
+        // Must target `cloud.umami.is` (the canonical script host), NOT
+        // `analytics.umami.is` — the latter 301-redirects to `cloud.umami.is`,
+        // and Next.js forwards that redirect to the browser, which then loads a
+        // cross-origin script that `script-src 'self'` rejects (a CSP violation
+        // even though the proxied URL is same-origin). See JITASPACE-3T.
+        source: "/analytics/:match*",
+        destination: "https://cloud.umami.is/:match*", // Proxy to Umami script
+      },
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://eu-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/array/:path*",
+        destination: "https://eu-assets.i.posthog.com/array/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://eu.i.posthog.com/:path*",
+      },
+      {
+        // Serve a single static shell for every /market/<typeId> URL instead of
+        // rendering (and ISR-caching) one page per type id. The browser keeps the
+        // pretty /market/<typeId> URL; the client reads the id from the path.
+        source: "/market/:typeId",
+        destination: "/market",
+      },
+      {
+        // Market groups have no page of their own, but `MarketGroupAnchor`
+        // links to /market-group/<id> — from every type page and from the
+        // market breadcrumbs — so without this every one of those links is a
+        // 404. Serve the market browser instead. Its path parser only matches
+        // /market/<typeId> (page.client.tsx:38), so the id is simply ignored
+        // and the default view renders. Swap this for a real route if market
+        // groups ever get a page of their own.
+        source: "/market-group/:marketGroupId",
+        destination: "/market",
+      },
+    ],
+  }),
   skipTrailingSlashRedirect: true,
 
   redirects: async () => [
+    {
+      // /wallet/character and /wallet/corporation were separate pages; /wallet
+      // now shows every readable character and corporation wallet in one table.
+      // A redirect rather than a deletion because these are user-visible URLs
+      // that have been in the nav and may be bookmarked. Permanent: the old
+      // pages are gone for good.
+      source: "/wallet/:section(character|corporation)",
+      destination: "/wallet",
+      permanent: true,
+    },
     {
       // Deep-link to a specific tab on a type page: /type/<id>/<tab> sends the
       // browser to the canonical /type/<id>?tab=<tab>, which selects that tab.
@@ -267,40 +298,45 @@ function getModifiedDate() {
   return new Date().toISOString();
 }
 
-export default withSentryConfig(config, {
-  // For all available options, see:
-  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+// `withBotId` injects the rewrites that proxy BotID's challenge script through
+// our own origin, so ad-blockers and third-party script blockers can't defeat
+// it. It wraps the Sentry-wrapped config (outermost) so its rewrites survive.
+export default withBotId(
+  withSentryConfig(config, {
+    // For all available options, see:
+    // https://www.npmjs.com/package/@sentry/webpack-plugin#options
 
-  org: "jitaspace",
+    org: "jitaspace",
 
-  project: "jitaspace",
+    project: "jitaspace",
 
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
+    // Only print logs for uploading source maps in CI
+    silent: !process.env.CI,
 
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+    // For all available options, see:
+    // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: false,
+    // Upload a larger set of source maps for prettier stack traces (increases build time)
+    widenClientFileUpload: false,
 
-  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
-  // This can increase your server load as well as your hosting bill.
-  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
-  // side errors will fail.
-  tunnelRoute: "/monitoring",
+    // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+    // This can increase your server load as well as your hosting bill.
+    // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+    // side errors will fail.
+    tunnelRoute: "/monitoring",
 
-  webpack: {
-    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
-    // See the following for more information:
-    // https://docs.sentry.io/product/crons/
-    // https://vercel.com/docs/cron-jobs
-    automaticVercelMonitors: true,
+    webpack: {
+      // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+      // See the following for more information:
+      // https://docs.sentry.io/product/crons/
+      // https://vercel.com/docs/cron-jobs
+      automaticVercelMonitors: true,
 
-    // Tree-shaking options for reducing bundle size
-    treeshake: {
-      // Automatically tree-shake Sentry logger statements to reduce bundle size
-      removeDebugLogging: true,
+      // Tree-shaking options for reducing bundle size
+      treeshake: {
+        // Automatically tree-shake Sentry logger statements to reduce bundle size
+        removeDebugLogging: true,
+      },
     },
-  },
-});
+  }),
+);

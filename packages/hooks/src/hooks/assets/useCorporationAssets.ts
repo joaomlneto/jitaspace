@@ -8,10 +8,12 @@ import type {
 } from "@jitaspace/esi-client";
 import {
   getCorporationsCorporationIdAssets,
+  getCorporationsCorporationIdAssetsInfiniteQueryKey,
   useGetCorporationsCorporationIdAssetsInfinite,
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
+import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
 import { useEagerlyFetchAllPages } from "../utils/useEagerlyFetchAllPages";
 
 export const useCorporationAssets = (corporationId?: number) => {
@@ -28,6 +30,13 @@ export const useCorporationAssets = (corporationId?: number) => {
       { ...authHeaders },
       {
         query: {
+          // Keep this entry distinct from the single-page query for the
+          // same endpoint; see esiInfiniteQueryKey.
+          queryKey: esiInfiniteQueryKey(
+            getCorporationsCorporationIdAssetsInfiniteQueryKey(
+              corporationId ?? 0,
+            ),
+          ),
           enabled: corporationId !== undefined && accessToken !== null,
           initialPageParam: 1,
           queryFn: ({ pageParam }) =>

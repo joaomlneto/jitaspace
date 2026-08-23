@@ -8,8 +8,7 @@ These components resolve EVE data (entity names, categories, market groups,
 alliance info, …) by calling `@jitaspace/hooks` and render it using the
 presentational primitives in [`@jitaspace/ui`](../ui). They were split out of
 `@jitaspace/ui` so that the UI library can stay free of the ESI / data-client
-dependency graph (`@jitaspace/hooks`, `@jitaspace/esi-client`,
-`@jitaspace/sde-client`, …).
+dependency graph (`@jitaspace/hooks`, `@jitaspace/esi-client`, …).
 
 ## Split-component pattern
 
@@ -34,6 +33,5 @@ the ESI coupling up one layer.
 
 - `@jitaspace/ui` — presentational components + display twins
 - `@jitaspace/hooks` — ESI / TanStack Query data hooks
-- `@jitaspace/sde-client` — SDE lookups (e.g. icon resolution)
 - `@jitaspace/eve-icons`, `@jitaspace/utils`
 - `@mantine/core` + `@mantine/hooks`

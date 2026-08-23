@@ -5,11 +5,10 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-jest.mock("@jitaspace/eve-components", () => ({
-  MarketGroupAvatar: () => <span>market-group-avatar</span>,
-}));
-
 jest.mock("@jitaspace/ui", () => ({
+  EveIconAvatar: ({ iconId }: { iconId: number | null }) => (
+    <span>{`icon:${iconId}`}</span>
+  ),
   TypeAvatar: () => <span>type-avatar</span>,
 }));
 
@@ -19,12 +18,14 @@ const marketGroups = {
     parentMarketGroupId: null,
     childrenMarketGroupIds: [2],
     types: [{ typeId: 587, name: "Rifter" }],
+    iconId: 1443,
   },
   2: {
     name: "Frigates",
     parentMarketGroupId: 1,
     childrenMarketGroupIds: [],
     types: [{ typeId: 588, name: "Reaper" }],
+    iconId: null,
   },
 };
 
@@ -49,6 +50,14 @@ describe("MarketGroupNavLink", () => {
       <MarketGroupNavLink marketGroups={marketGroups} marketGroupId={1} />,
     );
     expect(screen.getByText("Ships")).toBeInTheDocument();
+  });
+
+  it("renders the icon bundled with the group instead of resolving one", () => {
+    const MarketGroupNavLink = load();
+    withProvider(
+      <MarketGroupNavLink marketGroups={marketGroups} marketGroupId={1} />,
+    );
+    expect(screen.getByText("icon:1443")).toBeInTheDocument();
   });
 
   it("renders nothing for an unknown market group id", () => {

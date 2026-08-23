@@ -63,7 +63,13 @@
     },
     "build": {
       "dependsOn": ["^build", "db:generate", "^db:generate", "kubb:generate"],
-      "inputs": ["**/*.ts", "**/*.tsx", "package.json", "tsconfig.json"],
+      // No `inputs` override: Turbo's default hashes every git-tracked file in
+      // the package, which is what a build actually depends on. The previous
+      // narrowing to ts/tsx/package.json/tsconfig.json silently excluded CSS
+      // modules, `public/`, and next.config.mjs (the CSP, security headers and
+      // redirects) — so a commit touching only those produced an identical hash,
+      // hit the remote cache, and restored a `.next` that predated the change.
+      // Vercel builds through this task, so that shipped to production.
       "outputs": [
         ".next/**",
         "!.next/cache/**",
@@ -78,14 +84,8 @@
     },
     "lint": {
       "dependsOn": ["^topo"],
-      "inputs": [
-        "**/*.ts",
-        "**/*.tsx",
-        "package.json",
-        "tsconfig.json",
-        ".eslintrc*",
-        "eslint.config.*"
-      ],
+      // Unnarrowed for the same reason: ESLint also covers .mjs/.cjs sources
+      // (e.g. apps/web/scripts/*.mjs), which the previous list excluded.
       "outputs": ["node_modules/.cache/.eslintcache"]
     },
     "lint:fix": {},
@@ -94,6 +94,11 @@
       "cache": false
     },
     "//#clean": {
+      "cache": false
+    },
+    "@jitaspace/hooks#kubb:generate": {
+      "dependsOn": ["^build"],
+      "outputs": ["src/generated/**"],
       "cache": false
     },
     "kubb:generate": {
@@ -106,6 +111,7 @@
       "persistent": true
     },
     "test": {
+      "dependsOn": ["kubb:generate"],
       "outputs": ["coverage/**"]
     },
     "test:watch": {
@@ -113,8 +119,13 @@
       "persistent": true
     },
     "type-check": {
-      "dependsOn": ["^topo", "kubb:generate"],
-      "inputs": ["**/*.ts", "**/*.tsx", "package.json", "tsconfig.json"],
+      // `db:generate` for the same reason `build` depends on it: the Prisma
+      // client is generated, gitignored, and its types are what `@jitaspace/db`
+      // and everything downstream is checked against.
+      "dependsOn": ["^topo", "db:generate", "^db:generate", "kubb:generate"],
+      // Also unnarrowed: the base tsconfig sets `checkJs` and apps/web includes
+      // ".", so .mjs/.cjs files are in the program — a type error in
+      // next.config.mjs would otherwise be masked by a cache hit.
       "outputs": ["node_modules/.cache/tsbuildinfo.json"]
     },
     "deploy": {

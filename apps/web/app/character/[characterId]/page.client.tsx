@@ -28,6 +28,7 @@ import {
 } from "@tabler/icons-react";
 import { format, formatDistanceStrict } from "date-fns";
 
+import type { CharacterAgentData } from "@jitaspace/hooks";
 import { useGetCharactersCharacterIdCorporationhistory } from "@jitaspace/esi-client";
 import {
   AllianceName,
@@ -49,16 +50,18 @@ import {
   useSelectedCharacter,
 } from "@jitaspace/hooks";
 import { useCharacterWalletBalance } from "@jitaspace/hooks/src/hooks/character/useCharacterWalletBalance";
-import { useGetNpcCorporationDivisionById } from "@jitaspace/sde-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
+  BloodlineAnchor,
   CharacterAvatar,
+  CorporationAnchor,
   CorporationAvatar,
   DateHoverCard,
   FactionAvatar,
   FormattedDateText,
   ISKAmount,
+  RaceAnchor,
   TypeAvatar,
 } from "@jitaspace/ui";
 
@@ -175,16 +178,17 @@ function CharacterEmploymentHistory({
           }
           title={
             <Group gap="xs">
-              <Anchor
-                component={Link}
-                href={`/corporation/${entry.corporation_id}`}
+              {/* A historical timeline is not a navigation surface. */}
+              <CorporationAnchor
+                corporationId={entry.corporation_id}
+                prefetch={false}
               >
                 <CorporationName
                   span
                   corporationId={entry.corporation_id}
                   fw={500}
                 />
-              </Anchor>
+              </CorporationAnchor>
               {entry.isCurrent && (
                 <Badge size="xs" color="teal" variant="light">
                   Current
@@ -220,7 +224,13 @@ function CharacterEmploymentHistory({
   );
 }
 
-export default function Page() {
+export default function Page({
+  agentData,
+  agentDivisionName,
+}: Readonly<{
+  agentData: CharacterAgentData | null;
+  agentDivisionName: string | null;
+}>) {
   const params = useParams();
   const rawCharacterId = params.characterId;
   const characterId = Number(
@@ -228,7 +238,7 @@ export default function Page() {
   );
 
   const selectedCharacter = useSelectedCharacter();
-  const { data: character } = useCharacter(characterId);
+  const { data: character } = useCharacter(characterId, agentData);
 
   // Authenticated enrichment — only resolves when the viewer has a live token
   // for this exact character (i.e. viewing one of their own characters).
@@ -237,11 +247,6 @@ export default function Page() {
     useCharacterWalletBalance(characterId);
   const { data: skills, hasToken: canReadSkills } =
     useCharacterSkills(characterId);
-
-  const { data: agentDivision } = useGetNpcCorporationDivisionById(
-    character?.type === "agent" ? character.agentDivisionId : 0,
-    { query: { enabled: character?.type === "agent" } },
-  );
 
   if (!Number.isFinite(characterId)) {
     return null;
@@ -469,20 +474,14 @@ export default function Page() {
                     </InfoRow>
                   )}
                   <InfoRow label="Race">
-                    <Anchor
-                      component={Link}
-                      href={`/race/${character?.raceId}`}
-                    >
+                    <RaceAnchor raceId={character?.raceId}>
                       <RaceName span raceId={character?.raceId} />
-                    </Anchor>
+                    </RaceAnchor>
                   </InfoRow>
                   <InfoRow label="Bloodline">
-                    <Anchor
-                      component={Link}
-                      href={`/bloodline/${character?.bloodlineId}`}
-                    >
+                    <BloodlineAnchor bloodlineId={character?.bloodlineId}>
                       <BloodlineName bloodlineId={character?.bloodlineId} />
-                    </Anchor>
+                    </BloodlineAnchor>
                   </InfoRow>
                   {character?.factionId && (
                     <InfoRow label="Faction">
@@ -505,7 +504,7 @@ export default function Page() {
                   </SectionTitle>
                   <Stack gap="sm">
                     <InfoRow label="Division">
-                      <Text span>{agentDivision?.data.name.en ?? "—"}</Text>
+                      <Text span>{agentDivisionName ?? "—"}</Text>
                     </InfoRow>
                     <InfoRow label="Agent Type">
                       <Text span>{character.agentTypeId}</Text>

@@ -41,7 +41,12 @@ export const scrapeEsiRaces = defineJob<ScrapeRacesEventPayload["data"]>({
           })
           .then((entries) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              // shipTypeId is owned by ingestSdeRaces.
+              excludeObjectKeys(entry, [
+                "updatedAt",
+                "createdAt",
+                "shipTypeId",
+              ]),
             ),
           ),
       fetchRemoteEntries: () =>

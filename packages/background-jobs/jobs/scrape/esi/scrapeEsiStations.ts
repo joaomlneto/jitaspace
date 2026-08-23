@@ -84,19 +84,29 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
 
           const thisBatchStations = await fetchStations(thisBatchStationIds);
 
+          // reprocessingHangarFlag is owned by ingestSdeStations (ESI's station
+          // endpoint has no equivalent), so it stays out of this diff.
           const stripTimestamps = <
-            T extends { updatedAt: unknown; createdAt: unknown },
+            T extends {
+              updatedAt: unknown;
+              createdAt: unknown;
+              reprocessingHangarFlag: unknown;
+            },
           >(
             entries: T[],
           ) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              excludeObjectKeys(entry, [
+                "updatedAt",
+                "createdAt",
+                "reprocessingHangarFlag",
+              ]),
             );
 
           const updateOneStation = (
             entry: Omit<
               Awaited<ReturnType<typeof prisma.station.findMany>>[number],
-              "createdAt" | "updatedAt"
+              "createdAt" | "updatedAt" | "reprocessingHangarFlag"
             >,
           ) =>
             limit(() =>

@@ -119,6 +119,43 @@ describe("sdeInputFiles registry", () => {
       "string",
     );
   });
+
+  it("keys the ship-tree/SKINR files by the id the rest of the SDE references", () => {
+    // shipTreeFactions is keyed by faction, shipTreeGroups by the id
+    // types.yaml's `shipTreeGroupID` points at, and typeElements by type.
+    expect(sdeInputFiles["shipTreeFactions.yaml"]!.idAttributeName).toBe(
+      "factionID",
+    );
+    expect(sdeInputFiles["shipTreeGroups.yaml"]!.idAttributeName).toBe(
+      "shipTreeGroupID",
+    );
+    expect(sdeInputFiles["typeElements.yaml"]!.idAttributeName).toBe("typeID");
+    // graphicMaterialSets is keyed by skinMaterials' `materialSetID`.
+    expect(sdeInputFiles["graphicMaterialSets.yaml"]!.idAttributeName).toBe(
+      "materialSetID",
+    );
+  });
+
+  it("registers the UUID-keyed military campaign files as string ids", () => {
+    for (const filename of [
+      "militaryCampaigns.yaml",
+      "militaryCampaignObjectives.yaml",
+    ]) {
+      expect(sdeInputFiles[filename]!.idAttributeType).toBe("string");
+      expect(sdeInputFiles[filename]!.transformations).toContain(addIdToItem);
+    }
+  });
+
+  it("leaves the bare numeric-map files untransformed", () => {
+    // Their records are `rarity -> points` / `tier -> points` maps, so an
+    // injected id would sit alongside the numeric keys.
+    expect(
+      sdeInputFiles["skinrComponentPointValues.yaml"]!.transformations,
+    ).toHaveLength(0);
+    expect(
+      sdeInputFiles["skinrTierThresholds.yaml"]!.transformations,
+    ).toHaveLength(0);
+  });
 });
 
 describe("loadFile", () => {
@@ -156,6 +193,37 @@ describe("loadFile", () => {
       Record<string, unknown>
     >;
     expect(result[681]).toEqual({ maxProductionLimit: 200 });
+  });
+
+  it("injects the UUID key as a string id for military campaigns", () => {
+    fs.writeFileSync(
+      path.join(sdeRoot, "militaryCampaigns.yaml"),
+      [
+        "1dbb3b8d-5363-4cb3-858d-538cd1e12c32:",
+        "  targetProgress: 30",
+        "",
+      ].join("\n"),
+    );
+    const result = loadFile("militaryCampaigns.yaml", sdeRoot) as Record<
+      string,
+      Record<string, unknown>
+    >;
+    expect(result["1dbb3b8d-5363-4cb3-858d-538cd1e12c32"]).toEqual({
+      targetProgress: 30,
+      militaryCampaignID: "1dbb3b8d-5363-4cb3-858d-538cd1e12c32",
+    });
+  });
+
+  it("keeps a bare tier->points map free of an injected id", () => {
+    fs.writeFileSync(
+      path.join(sdeRoot, "skinrTierThresholds.yaml"),
+      ["4:", "  1: 125", "  2: 175", ""].join("\n"),
+    );
+    const result = loadFile("skinrTierThresholds.yaml", sdeRoot) as Record<
+      number,
+      Record<string, unknown>
+    >;
+    expect(result[4]).toEqual({ 1: 125, 2: 175 });
   });
 
   it("throws for a filename not present in the registry", () => {

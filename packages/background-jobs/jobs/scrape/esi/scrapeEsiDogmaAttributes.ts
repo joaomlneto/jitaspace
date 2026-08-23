@@ -5,9 +5,11 @@ import {
   getDogmaAttributesAttributeId,
 } from "@jitaspace/esi-client";
 
+import type { DogmaAttribute } from "../../../db";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeDogmaAttributesEventPayload {
@@ -17,6 +19,19 @@ export interface ScrapeDogmaAttributesEventPayload {
 }
 
 type StatsKey = "dogmaAttributes";
+
+/**
+ * A DogmaAttribute row as ESI knows it: the model minus the timestamps and the
+ * SDE-owned columns. Annotating the builder below with it makes the compiler
+ * enforce the split — a new column on the model is an error here until it is
+ * either supplied from ESI or listed in `sdeOwnedColumns.ts`, rather than
+ * silently making every row diff as modified. Same guard `EsiCorporationRow`
+ * gives Corporation.
+ */
+type EsiDogmaAttributeRow = Omit<
+  DogmaAttribute,
+  "updatedAt" | "createdAt" | (typeof SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS)[number]
+>;
 
 const fetchRemoteDogmaAttribute = (attributeId: number, iconIds: number[]) =>
   getDogmaAttributesAttributeId(attributeId)
@@ -28,37 +43,40 @@ const fetchRemoteDogmaAttribute = (attributeId: number, iconIds: number[]) =>
       if (missingIcon) {
         console.warn("Dogma Attribute is missing icon entry", dogmaAttribute);
       }
-      return {
-        missingIcon,
-        entry: {
-          attributeId: dogmaAttribute.attribute_id,
-          name: dogmaAttribute.name ?? null,
-          published: dogmaAttribute.published ?? null,
-          description: dogmaAttribute.description ?? null,
-          defaultValue: dogmaAttribute.default_value ?? null,
-          displayName: dogmaAttribute.display_name ?? null,
-          highIsGood: dogmaAttribute.high_is_good ?? null,
-          iconId:
-            dogmaAttribute.icon_id && iconIds.includes(dogmaAttribute.icon_id)
-              ? dogmaAttribute.icon_id
-              : null,
-          stackable: dogmaAttribute.stackable ?? null,
-          unitId: dogmaAttribute.unit_id ?? null,
-          isDeleted: false,
-        },
+      const entry: EsiDogmaAttributeRow = {
+        attributeId: dogmaAttribute.attribute_id,
+        name: dogmaAttribute.name ?? null,
+        published: dogmaAttribute.published ?? null,
+        description: dogmaAttribute.description ?? null,
+        defaultValue: dogmaAttribute.default_value ?? null,
+        displayName: dogmaAttribute.display_name ?? null,
+        highIsGood: dogmaAttribute.high_is_good ?? null,
+        iconId:
+          dogmaAttribute.icon_id && iconIds.includes(dogmaAttribute.icon_id)
+            ? dogmaAttribute.icon_id
+            : null,
+        stackable: dogmaAttribute.stackable ?? null,
+        unitId: dogmaAttribute.unit_id ?? null,
+        isDeleted: false,
       };
+      return { missingIcon, entry };
     });
 
 type DogmaAttributeEntry = Awaited<
   ReturnType<typeof fetchRemoteDogmaAttribute>
 >["entry"];
 
-const excludeDogmaTimestamps = <
-  T extends { updatedAt: unknown; createdAt: unknown },
->(
-  entries: T[],
-) =>
-  entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"]));
+// Besides the timestamps, DogmaAttribute carries SDE-only columns owned by
+// ingestSdeDogmaAttributes. ESI's dogma attribute endpoint exposes none of them,
+// so they must stay out of this diff or every row would look modified each run.
+const excludeDogmaTimestamps = (entries: DogmaAttribute[]) =>
+  entries.map((entry) =>
+    excludeObjectKeys(entry, [
+      "updatedAt",
+      "createdAt",
+      ...SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS,
+    ]),
+  );
 
 const updateDogmaAttribute = (entry: DogmaAttributeEntry) =>
   prisma.dogmaAttribute.update({

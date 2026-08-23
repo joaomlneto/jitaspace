@@ -1,17 +1,19 @@
 "use server";
 
+import type { SdeIngestState } from "./types";
 import type { DatabaseStatusResponse } from "~/lib/databaseStatus";
 import type { TriggerApiRun, TriggerStatusResponse } from "~/lib/triggerStatus";
-import { prisma } from "~/lib/db";
 import { env } from "~/env";
 import {
   buildDatabaseStatusResponse,
   DATABASE_STATUS_STALE_MINUTES,
 } from "~/lib/databaseStatus";
+import { prisma } from "~/lib/db";
 import {
   buildTriggerStatusResponse,
   TRIGGER_STATUS_WINDOW_HOURS,
 } from "~/lib/triggerStatus";
+import { SDE_INGEST_KEY } from "./types";
 
 const CACHE_TTL_MS = 30 * 1000;
 const ERROR_CACHE_TTL_MS = 15 * 1000;
@@ -193,4 +195,46 @@ export async function getDatabaseStatus(): Promise<DatabaseStatusResponse> {
     };
   }
   return databaseCache.payload;
+}
+
+// ---------------------------------------------------------------------------
+// SDE ingest freshness
+//
+// `watch-sde` polls CCP's static-data archive hourly and, on a new build,
+// triggers `ingest-sde-all`. That pipeline records which build it is loading
+// under a Redis marker. Reading it back tells the status page which SDE build
+// our database holds, which the page compares against CCP's latest.
+// ---------------------------------------------------------------------------
+
+/**
+ * The SDE build our database holds. Null when nothing has been ingested yet, the
+ * marker is unreadable, or Redis is unreachable — the status page renders a dash
+ * for all three rather than failing.
+ */
+export async function getSdeIngestState(): Promise<SdeIngestState | null> {
+  try {
+    // Dynamic import: ~/lib/kv connects to Redis at module load time via
+    // top-level await, so it must not be statically imported at the module
+    // level or Next.js will attempt the connection during build-time config
+    // collection.
+    const { redis } = await import("~/lib/kv");
+    const raw = await redis.get(SDE_INGEST_KEY);
+    if (raw === null) return null;
+
+    const { buildNumber, completedAt } = JSON.parse(raw) as Record<
+      string,
+      unknown
+    >;
+    if (typeof buildNumber !== "number") return null;
+
+    return {
+      buildNumber,
+      completedAt:
+        typeof completedAt === "number"
+          ? new Date(completedAt).toISOString()
+          : null,
+    };
+  } catch {
+    return null;
+  }
 }

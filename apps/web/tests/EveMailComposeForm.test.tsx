@@ -15,8 +15,8 @@ import userEvent from "@testing-library/user-event";
 // lazy-require()d inside each test AFTER the mocks are registered.
 // ---------------------------------------------------------------------------
 
-const mockUseSelectedCharacter = jest.fn();
-const mockUseAccessToken = jest.fn();
+const mockUseSelectedCharacter = jest.fn<(...args: unknown[]) => unknown>();
+const mockUseAccessToken = jest.fn<(...args: unknown[]) => unknown>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useSelectedCharacter: (...args: unknown[]) =>
@@ -25,7 +25,9 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 const mockPostMail =
-  jest.fn<() => Promise<{ status: number; data?: unknown }>>();
+  jest.fn<
+    (...args: unknown[]) => Promise<{ status: number; data?: unknown }>
+  >();
 
 jest.mock("@jitaspace/esi-client", () => ({
   postCharactersCharacterIdMail: (...args: unknown[]) => mockPostMail(...args),
@@ -71,12 +73,12 @@ jest.mock("~/components/EveMail/Editor/MailMessageEditor", () => ({
   ),
 }));
 
-const mockOpenConfirmModal = jest.fn();
+const mockOpenConfirmModal = jest.fn<(...args: unknown[]) => unknown>();
 jest.mock("@mantine/modals", () => ({
   openConfirmModal: (...args: unknown[]) => mockOpenConfirmModal(...args),
 }));
 
-const mockShowNotification = jest.fn();
+const mockShowNotification = jest.fn<(...args: unknown[]) => unknown>();
 jest.mock("@mantine/notifications", () => ({
   showNotification: (...args: unknown[]) => mockShowNotification(...args),
 }));
@@ -124,7 +126,7 @@ describe("EveMailComposeForm", () => {
 
   it("sends the mail via ESI and calls onSend on success", async () => {
     const user = userEvent.setup();
-    const onSend = jest.fn();
+    const onSend = jest.fn<(...args: unknown[]) => unknown>();
     renderForm(onSend);
 
     await user.type(screen.getByLabelText("Subject"), "Greetings");

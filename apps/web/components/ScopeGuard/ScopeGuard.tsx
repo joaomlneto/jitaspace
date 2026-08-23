@@ -3,10 +3,11 @@
 import type { PropsWithChildren, ReactElement } from "react";
 import { useMemo } from "react";
 
-import type {ESIScope} from "@jitaspace/esi-metadata";
-import { useSelectedCharacter } from "@jitaspace/hooks";
-
-import { useAuthStoreHasHydrated } from "~/hooks/useAuthStoreHasHydrated";
+import type { ESIScope } from "@jitaspace/esi-metadata";
+import {
+  useAuthStoreHasHydrated,
+  useSelectedCharacter,
+} from "@jitaspace/hooks";
 
 import { RequestPermissionsBanner } from "./RequestPermissionsBanner";
 

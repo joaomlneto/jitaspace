@@ -4,6 +4,7 @@ import { prisma } from "../../../db";
 import {
   enString,
   ingestSdeTable,
+  loadSdeFileIds,
   optionalBoolean,
   optionalNumber,
   plainString,
@@ -25,6 +26,8 @@ export const ingestSdeDogmaAttributes = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
+    const categoryIds = await loadSdeFileIds("dogmaAttributeCategories.yaml");
+
     // dogmaAttributes.yaml is a `noTransform` file: the id is the map key, not a
     // field on the record. `name`/`description` are plain strings (not localized).
     const dogmaAttributes = await ingestSdeTable({
@@ -42,6 +45,22 @@ export const ingestSdeDogmaAttributes = defineJob<
         published: optionalBoolean(record.published),
         unitId: optionalNumber(record.unitID),
         iconId: optionalNumber(record.iconID),
+        dataType: optionalNumber(record.dataType),
+        displayWhenZero: optionalBoolean(record.displayWhenZero),
+        tooltipTitle: enString(record.tooltipTitle),
+        tooltipDescription: enString(record.tooltipDescription),
+        // Plain ids, not self-relations — see the schema comment.
+        maxAttributeId: optionalNumber(record.maxAttributeID),
+        minAttributeId: optionalNumber(record.minAttributeID),
+        chargeRechargeTimeId: optionalNumber(record.chargeRechargeTimeID),
+        // Guarded against dogmaAttributeCategories.yaml (ingested just before
+        // this job) so a dangling category lands as null.
+        attributeCategoryId: (() => {
+          const categoryId = optionalNumber(record.categoryID);
+          return categoryId != null && categoryIds.has(categoryId)
+            ? categoryId
+            : null;
+        })(),
         isDeleted: false,
       }),
     });

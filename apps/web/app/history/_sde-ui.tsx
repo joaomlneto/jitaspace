@@ -6,34 +6,18 @@ import Link from "next/link";
 import { Anchor, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
-import { getTypeByIdQueryOptions } from "@jitaspace/sde-client";
+import { resolveTypeLabel } from "./actions";
 
 /**
  * Local stand-ins for the `@jitaspace/ui` name/anchor components that were
  * removed with the hooks refactor (commit f5e47407). The history UI resolves
  * most names itself and passes `name=`, so these mostly just render that text;
- * `TypeName` fetches from the (surviving) SDE client. The `*Anchor` components
+ * `TypeName` falls back to resolving the name from our database via a server
+ * action when no `name` is supplied. The `*Anchor` components
  * link each resolved name to that entity's detail page (`/type/…`,
  * `/dogma/attribute/…`, …); the market group is the lone exception, with no
  * dedicated page yet, so it stays inline text.
  */
-
-function sdeLabel(data: unknown): string | undefined {
-  const d = data as
-    | {
-        name?: string | { en?: string };
-        displayName?: { en?: string };
-        nameID?: { en?: string };
-      }
-    | undefined;
-  if (!d) return undefined;
-  const display = d.displayName?.en?.trim();
-  if (display) return display;
-  if (typeof d.name === "string") return d.name.trim() || undefined;
-  const localized = d.name?.en?.trim();
-  if (localized) return localized;
-  return d.nameID?.en?.trim() ?? undefined;
-}
 
 // ── names (rendered from a resolved `name`, or a dimmed placeholder) ──────────
 type NameProps = { name?: string } & TextProps;
@@ -59,15 +43,14 @@ export function TypeName({
   ...p
 }: { typeId?: number; name?: string } & TextProps) {
   const q = useQuery({
-    ...getTypeByIdQueryOptions(typeId ?? 0),
+    queryKey: ["history", "sde", "type", typeId],
+    queryFn: () => resolveTypeLabel(typeId ?? 0),
     staleTime: Infinity,
     retry: false,
     enabled: !name && !!typeId,
   });
   const label =
-    name ??
-    sdeLabel((q.data as { data?: unknown } | undefined)?.data) ??
-    (q.isPending && typeId ? "…" : `#${typeId ?? "?"}`);
+    name ?? q.data?.name ?? (q.isPending && typeId ? "…" : `#${typeId ?? "?"}`);
   return <Text {...p}>{label}</Text>;
 }
 

@@ -4,8 +4,9 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
-const mockCompleteLoginFlow = jest.fn();
-const mockSealLoginResult = jest.fn();
+const mockCompleteLoginFlow =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockSealLoginResult = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("@jitaspace/auth", () => ({
   completeLoginFlow: (...args: unknown[]) => mockCompleteLoginFlow(...args),
@@ -26,7 +27,9 @@ jest.mock("~/env", () => ({
 }));
 
 const mockCapture = jest.fn();
-const mockShutdown = jest.fn(() => Promise.resolve(undefined));
+const mockShutdown = jest.fn((..._args: unknown[]) =>
+  Promise.resolve(undefined),
+);
 const mockGetPostHogClient = jest.fn();
 jest.mock("~/lib/posthog-server", () => ({
   getPostHogClient: () => mockGetPostHogClient(),

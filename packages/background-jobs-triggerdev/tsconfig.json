@@ -2,8 +2,9 @@
   "extends": "@jitaspace/tsconfig/base.json",
   "compilerOptions": {
     "lib": ["es2022", "dom", "dom.iterable"],
+    "jsx": "react-jsx",
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
   "include": ["."],
-  "exclude": ["node_modules", ".trigger"]
+  "exclude": ["node_modules", "build", "dist", "coverage", ".trigger"]
 }

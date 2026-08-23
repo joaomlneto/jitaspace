@@ -15,15 +15,15 @@ import userEvent from "@testing-library/user-event";
 const mockChain = {
   focus: () => mockChain,
   extendMarkRange: () => mockChain,
-  setLink: jest.fn(() => mockChain),
-  unsetLink: jest.fn(() => mockChain),
+  setLink: jest.fn((..._args: unknown[]) => mockChain),
+  unsetLink: jest.fn((..._args: unknown[]) => mockChain),
   run: jest.fn(),
 };
 
 const mockEditor = {
-  isActive: jest.fn(() => false),
-  getAttributes: jest.fn(() => ({ href: "" })),
-  chain: jest.fn(() => mockChain),
+  isActive: jest.fn((..._args: unknown[]) => false),
+  getAttributes: jest.fn((..._args: unknown[]) => ({ href: "" })),
+  chain: jest.fn((..._args: unknown[]) => mockChain),
 };
 
 jest.mock("@mantine/tiptap", () => ({

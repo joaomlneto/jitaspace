@@ -6,12 +6,14 @@ import type {
 } from "@jitaspace/esi-client";
 import {
   getAlliancesAllianceIdContacts,
+  getAlliancesAllianceIdContactsInfiniteQueryKey,
   useGetAlliancesAllianceIdContactsInfinite,
   useGetAlliancesAllianceIdContactsLabels,
 } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 import { esiInfiniteQueryNextPageParam } from "../utils/esiInfiniteQueryNextPageParam";
+import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
 import { useEsiContacts } from "../utils/useEsiContacts";
 
 export type AllianceContact =
@@ -43,6 +45,11 @@ export function useAllianceContacts(allianceId: number) {
     { ...authHeaders },
     {
       query: {
+        // Keep this entry distinct from the single-page query for the
+        // same endpoint; see esiInfiniteQueryKey.
+        queryKey: esiInfiniteQueryKey(
+          getAlliancesAllianceIdContactsInfiniteQueryKey(allianceId),
+        ),
         enabled: accessToken !== null,
         initialPageParam: 1,
         queryFn: ({ pageParam }) =>

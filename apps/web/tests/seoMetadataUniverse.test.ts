@@ -18,12 +18,12 @@ jest.mock("@mantine/core", () => ({ Loader: () => null }));
 // Prisma mock
 // ---------------------------------------------------------------------------
 
-const mockRegionFindUnique = jest.fn();
-const mockConstellationFindUnique = jest.fn();
-const mockSolarSystemFindUnique = jest.fn();
-const mockStarFindUnique = jest.fn();
-const mockPlanetFindUnique = jest.fn();
-const mockStationFindUnique = jest.fn();
+const mockRegionFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockConstellationFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockSolarSystemFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockStarFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockPlanetFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockStationFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {

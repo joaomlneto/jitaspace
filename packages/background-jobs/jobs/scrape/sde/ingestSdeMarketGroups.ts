@@ -1,7 +1,14 @@
 import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { enString, ingestSdeTable, optionalNumber } from "../../../helpers";
+import {
+  enString,
+  ingestSdeTable,
+  loadSdeFileIds,
+  loadSdeFiles,
+  optionalBoolean,
+  optionalNumber,
+} from "../../../helpers";
 
 export interface IngestSdeMarketGroupsEventPayload {
   data: Record<string, never>;
@@ -19,17 +26,28 @@ export const ingestSdeMarketGroups = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
+    const files = await loadSdeFiles(["marketGroups.yaml"]);
+    // Like types.yaml, market group iconIDs can point at icons that aren't in
+    // icons.yaml — drop those rather than violating the foreign key.
+    const iconIds = await loadSdeFileIds("icons.yaml");
+
     const marketGroups = await ingestSdeTable({
       filename: "marketGroups.yaml",
+      records: files["marketGroups.yaml"],
       idField: "marketGroupId",
       delegate: prisma.marketGroup,
-      toRow: (record, id): Prisma.MarketGroupCreateManyInput => ({
-        marketGroupId: id,
-        name: enString(record.name) ?? "",
-        description: enString(record.description) ?? "",
-        parentMarketGroupId: optionalNumber(record.parentGroupID),
-        isDeleted: false,
-      }),
+      toRow: (record, id): Prisma.MarketGroupCreateManyInput => {
+        const iconId = optionalNumber(record.iconID);
+        return {
+          marketGroupId: id,
+          name: enString(record.name) ?? "",
+          description: enString(record.description) ?? "",
+          parentMarketGroupId: optionalNumber(record.parentGroupID),
+          iconId: iconId != null && iconIds.has(iconId) ? iconId : null,
+          hasTypes: optionalBoolean(record.hasTypes),
+          isDeleted: false,
+        };
+      },
     });
     return { stats: { marketGroups }, elapsed: performance.now() - start };
   },

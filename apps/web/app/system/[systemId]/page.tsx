@@ -1,9 +1,10 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
 
+import type { SolarSystemSdeInfo } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
-
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -29,10 +30,96 @@ export async function generateMetadata({
   }
 }
 
-export default function Page() {
+/**
+ * Read the SDE columns of a system from our database. Returns null for an
+ * unknown id.
+ *
+ * Cached for days, like the type page's dogma metadata: these columns only
+ * change when a new SDE release is ingested. A failure throws rather than
+ * degrading here, so a database blip is never what gets written into the
+ * day-long cache entry — the caller catches it instead.
+ */
+async function readSolarSystemSdeInfo(
+  systemId: number,
+): Promise<SolarSystemSdeInfo | null> {
+  "use cache";
+  cacheLife("days");
+
+  if (!Number.isSafeInteger(systemId) || systemId <= 0) return null;
+
+  const system = await prisma.solarSystem.findUnique({
+    select: {
+      luminosity: true,
+      radius: true,
+      wormholeClassId: true,
+      positionX: true,
+      positionY: true,
+      positionZ: true,
+      factionId: true,
+      isHub: true,
+      isBorder: true,
+      isFringe: true,
+      isCorridor: true,
+      isInternational: true,
+      isRegional: true,
+    },
+    where: { solarSystemId: systemId },
+  });
+  if (!system) return null;
+
+  const { positionX, positionY, positionZ } = system;
+  return {
+    luminosity: system.luminosity,
+    radius: system.radius,
+    wormholeClassId: system.wormholeClassId,
+    position:
+      positionX != null && positionY != null && positionZ != null
+        ? { x: positionX, y: positionY, z: positionZ }
+        : null,
+    factionId: system.factionId,
+    isHub: system.isHub ?? false,
+    isBorder: system.isBorder ?? false,
+    isFringe: system.isFringe ?? false,
+    isCorridor: system.isCorridor ?? false,
+    isInternational: system.isInternational ?? false,
+    isRegional: system.isRegional ?? false,
+  };
+}
+
+/**
+ * The page renders fine without this half, exactly as it did while the data
+ * came from a client-side SDE request, so a database failure degrades to null
+ * instead of erroring the route.
+ */
+async function getSolarSystemSdeInfo(
+  systemId: number,
+): Promise<SolarSystemSdeInfo | null> {
+  try {
+    return await readSolarSystemSdeInfo(systemId);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The database read lives here rather than in `Page` so it happens *inside* the
+ * Suspense boundary, alongside `params`.
+ */
+async function PageContent({
+  params,
+}: Readonly<{ params: Promise<{ systemId: string }> }>) {
+  const { systemId } = await params;
+  const sde = await getSolarSystemSdeInfo(Number(systemId));
+
+  return <PageClient sde={sde} />;
+}
+
+export default function Page({
+  params,
+}: Readonly<{ params: Promise<{ systemId: string }> }>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <PageClient />
+      <PageContent params={params} />
     </Suspense>
   );
 }

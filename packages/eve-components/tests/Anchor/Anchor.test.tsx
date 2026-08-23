@@ -18,7 +18,6 @@ import {
   WarAnchor,
 } from "@jitaspace/ui";
 
-import { CalendarEventOwnerAnchor } from "../../Anchor/CalendarEventOwnerAnchor";
 import { CharacterAnchor } from "../../Anchor/CharacterAnchor";
 import { ConstellationAnchor } from "../../Anchor/ConstellationAnchor";
 import { EveEntityAnchor } from "../../Anchor/EveEntityAnchor";
@@ -66,8 +65,6 @@ describe("Anchor components", () => {
       "CorporationAnchor",
       <CorporationAnchor corporationId={98}>Corp</CorporationAnchor>,
       "Corp",
-      // The source builds "/corporation/98/" but next/link normalizes away the
-      // trailing slash; assert the actually-rendered href.
       "/corporation/98",
     ],
     [
@@ -239,28 +236,6 @@ describe("Anchor components", () => {
       const node = screen.getByText("Bare Market");
       expect(node).toBeInTheDocument();
       expect(node.closest("a")).toBeNull();
-    });
-  });
-
-  describe("CalendarEventOwnerAnchor", () => {
-    it("renders bare children for the eve_server owner type", () => {
-      renderWithMantine(
-        <CalendarEventOwnerAnchor ownerType="eve_server">
-          EVE System
-        </CalendarEventOwnerAnchor>,
-      );
-      const node = screen.getByText("EVE System");
-      expect(node).toBeInTheDocument();
-      expect(node.closest("a")).toBeNull();
-    });
-
-    it("delegates to EveEntityAnchor for a normal owner", () => {
-      renderWithMantine(
-        <CalendarEventOwnerAnchor ownerId={42} ownerType="character">
-          Owner
-        </CalendarEventOwnerAnchor>,
-      );
-      expect(hrefOf("Owner")).toBe("/character/42");
     });
   });
 

@@ -2,25 +2,20 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import {
-  Anchor,
-  Button,
-  Container,
-  Group,
-  Stack,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
 import {
   EveEntityAnchor,
   EveEntityName,
+  SolarSystemAnchor,
   SolarSystemName,
   StationName,
+  TypeAnchor,
   TypeName,
 } from "@jitaspace/eve-components";
 import { useSelectedCharacter, useStation } from "@jitaspace/hooks";
+import { RaceAnchor } from "@jitaspace/ui";
 
 import { SetAutopilotDestinationActionIcon } from "~/components/ActionIcon";
 import { StationAvatar } from "~/components/Avatar";
@@ -75,25 +70,22 @@ export default function Page() {
               solarSystemId={station?.data.system_id}
               size="sm"
             />
-            <Anchor
-              component={Link}
-              href={`/system/${station?.data.system_id}`}
-            >
+            <SolarSystemAnchor solarSystemId={station?.data.system_id}>
               <SolarSystemName span solarSystemId={station?.data.system_id} />
-            </Anchor>
+            </SolarSystemAnchor>
           </Group>
         </Group>
         <Group justify="space-between">
           <Text>Station Type</Text>
-          <Anchor component={Link} href={`/type/${station?.data.type_id}`}>
+          <TypeAnchor typeId={station?.data.type_id}>
             <TypeName span typeId={station?.data.type_id} />
-          </Anchor>
+          </TypeAnchor>
         </Group>
         <Group justify="space-between">
           <Text>Race</Text>
-          <Anchor component={Link} href={`/race/${station?.data.race_id}`}>
+          <RaceAnchor raceId={station?.data.race_id}>
             <RaceName span raceId={station?.data.race_id} />
-          </Anchor>
+          </RaceAnchor>
         </Group>
         <Group justify="space-between">
           <Text>Owner</Text>

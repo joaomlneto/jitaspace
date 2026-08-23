@@ -5,12 +5,19 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
-const mockUseAuthenticatedCharacterIds = jest.fn<() => number[]>();
-const mockUseAuthStore = jest.fn();
+const mockUseAuthenticatedCharacterIds =
+  jest.fn<(...args: unknown[]) => number[]>();
+// The store is only ever read through a selector, so name the slice of state
+// the tests feed it rather than leaving the selector's argument `unknown`.
+interface AuthStoreState {
+  characters: Record<number, { allianceId?: number; corporationId?: number }>;
+}
+const mockUseAuthStore =
+  jest.fn<(selector: (state: AuthStoreState) => unknown) => unknown>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useAuthenticatedCharacterIds: () => mockUseAuthenticatedCharacterIds(),
-  useAuthStore: (selector: (state: unknown) => unknown) =>
+  useAuthStore: (selector: (state: AuthStoreState) => unknown) =>
     mockUseAuthStore(selector),
 }));
 
@@ -93,7 +100,7 @@ describe("home page corporations", () => {
       }),
     );
 
-    const Page = require("~/app/page").default;
+    const Page = require("~/app/page.client").default;
     render(
       <MantineProvider>
         <Page />
@@ -118,7 +125,7 @@ describe("home page corporations", () => {
       }),
     );
 
-    const Page = require("~/app/page").default;
+    const Page = require("~/app/page.client").default;
     render(
       <MantineProvider>
         <Page />
@@ -129,6 +136,22 @@ describe("home page corporations", () => {
     expect(screen.queryByText("Corporation 100")).not.toBeInTheDocument();
     expect(screen.queryByText("Alliances")).not.toBeInTheDocument();
     expect(screen.queryByText("Alliance 100")).not.toBeInTheDocument();
+  });
+
+  it("renders the server-injected news carousel slot", () => {
+    mockUseAuthenticatedCharacterIds.mockReturnValue([]);
+    mockUseAuthStore.mockImplementation((selector) =>
+      selector({ characters: {} }),
+    );
+
+    const Page = require("~/app/page.client").default;
+    render(
+      <MantineProvider>
+        <Page newsCarousel={<div>News carousel slot</div>} />
+      </MantineProvider>,
+    );
+
+    expect(screen.getByText("News carousel slot")).toBeInTheDocument();
   });
 
   it("lists unique alliances for authenticated characters", () => {
@@ -144,7 +167,7 @@ describe("home page corporations", () => {
       }),
     );
 
-    const Page = require("~/app/page").default;
+    const Page = require("~/app/page.client").default;
     render(
       <MantineProvider>
         <Page />

@@ -24,14 +24,15 @@
     "lint:fix": "pnpm lint --fix",
     "prepublishOnly": "pnpm build",
     "test": "jest",
-    "type-check": "tsc --jsx react-jsx --noEmit"
+    "type-check": "tsc --noEmit",
+    "kubb:generate": "kubb generate",
+    "postinstall": "pnpm kubb:generate"
   },
   "dependencies": {
     "@jitaspace/auth-utils": "workspace:*",
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/esi-metadata": "workspace:*",
     "@jitaspace/fuzzworks-market-client": "workspace:*",
-    "@jitaspace/sde-client": "workspace:*",
     "@react-hook/cache": "^1.1.1",
     "@tanstack/db": "^0.6.7",
     "@tanstack/query-db-collection": "^1.0.38",
@@ -49,6 +50,8 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
+    "@kubb/cli": "^4.38.0",
+    "@kubb/core": "^4.38.0",
     "@swc/core": "^1.15.40",
     "@swc/jest": "^0.2.39",
     "@testing-library/jest-dom": "^6.9.1",

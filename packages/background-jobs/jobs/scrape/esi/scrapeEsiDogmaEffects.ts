@@ -66,7 +66,19 @@ const updateDogmaEffectsBatch = (
         })
         .then((entries) =>
           entries.map((entry) =>
-            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            // Owned by ingestSdeDogmaEffects — ESI's dogma effect endpoint
+            // exposes none of these, so they stay out of this diff.
+            excludeObjectKeys(entry, [
+              "updatedAt",
+              "createdAt",
+              "propulsionChance",
+              "guid",
+              "distribution",
+              "resistanceAttributeId",
+              "npcActivationChanceAttributeId",
+              "fittingUsageChanceAttributeId",
+              "npcUsageChanceAttributeId",
+            ]),
           ),
         ),
     fetchRemoteEntries: async () =>

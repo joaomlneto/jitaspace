@@ -16,6 +16,7 @@ export * from "./location";
 export * from "./loyalty";
 export * from "./mail";
 export * from "./market";
+export * from "./multi";
 export * from "./skills";
 export * from "./sovereignty";
 export * from "./universe";
@@ -23,6 +24,7 @@ export * from "./wallet";
 export * from "./wars";
 
 export * from "./useCorporation";
+export * from "./useEsiAcceptLanguage";
 export * from "./useEsiClientStatistics";
 export * from "./useEsiName";
 export * from "./useEsiSearch";

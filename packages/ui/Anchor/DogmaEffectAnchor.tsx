@@ -8,7 +8,7 @@ import { Anchor } from "@mantine/core";
 
 export type DogmaEffectAnchorProps = AnchorProps &
   Omit<LinkProps, "href"> &
-  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size"> & {
+  Omit<React.HTMLProps<HTMLAnchorElement>, "ref" | "size" | "style"> & {
     effectId: string | number;
   };
 

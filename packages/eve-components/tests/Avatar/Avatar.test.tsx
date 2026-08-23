@@ -26,9 +26,7 @@ import {
 } from "@jitaspace/ui";
 
 import { EveEntityAvatar } from "../../Avatar/EveEntityAvatar";
-import { EveIconAvatar } from "../../Avatar/EveIconAvatar";
 import { EveMailSenderAvatar } from "../../Avatar/EveMailSenderAvatar";
-import { MarketGroupAvatar } from "../../Avatar/MarketGroupAvatar";
 import { SolarSystemSovereigntyAvatar } from "../../Avatar/SolarSystemSovereigntyAvatar";
 
 // ---------------------------------------------------------------------------
@@ -38,22 +36,16 @@ import { SolarSystemSovereigntyAvatar } from "../../Avatar/SolarSystemSovereignt
 // ---------------------------------------------------------------------------
 
 const useEsiName = jest.fn();
-const useMarketGroup = jest.fn();
 const useSolarSystem = jest.fn();
 const useSolarSystemSovereignty = jest.fn();
+const useStar = jest.fn();
 
 jest.mock("@jitaspace/hooks", () => ({
   useEsiName: (...args: unknown[]) => useEsiName(...args),
-  useMarketGroup: (...args: unknown[]) => useMarketGroup(...args),
   useSolarSystem: (...args: unknown[]) => useSolarSystem(...args),
   useSolarSystemSovereignty: (...args: unknown[]) =>
     useSolarSystemSovereignty(...args),
-}));
-
-const useGetIconById = jest.fn();
-
-jest.mock("@jitaspace/sde-client", () => ({
-  useGetIconById: (...args: unknown[]) => useGetIconById(...args),
+  useStar: (...args: unknown[]) => useStar(...args),
 }));
 
 // swr/immutable backs TypeAvatar's image-variation lookup.
@@ -90,16 +82,12 @@ beforeEach(() => {
     loading: false,
     error: undefined,
   });
-  useMarketGroup.mockReturnValue({ iconID: 25 });
   useSolarSystem.mockReturnValue({ data: { data: { star_id: 40000001 } } });
+  useStar.mockReturnValue({ data: { data: { type_id: 6 } } });
   useSolarSystemSovereignty.mockReturnValue({
     alliance_id: 99000001,
     corporation_id: 98000001,
     faction_id: 500001,
-  });
-  useGetIconById.mockReturnValue({
-    data: { data: { iconFile: "res:/ui/texture/icons/7_64_15.png" } },
-    isPending: false,
   });
   useSWRImmutable.mockReturnValue({ data: ["icon"] });
 });
@@ -117,7 +105,6 @@ describe("Avatar components render", () => {
     ["CharacterAvatar", <CharacterAvatar characterId={90000001} />],
     ["CorporationAvatar", <CorporationAvatar corporationId={98000001} />],
     ["EveEntityAvatar", <EveEntityAvatar entityId={90000001} />],
-    ["EveIconAvatar", <EveIconAvatar iconId={25} />],
     ["EveIconAvatarPlaceholder", <EveIconAvatarPlaceholder />],
     [
       "EveImageServerAvatar",
@@ -129,7 +116,6 @@ describe("Avatar components render", () => {
     ],
     ["EveMailSenderAvatar", <EveMailSenderAvatar from={90000001} />],
     ["FactionAvatar", <FactionAvatar factionId={500001} />],
-    ["MarketGroupAvatar", <MarketGroupAvatar marketGroupId={4} />],
     ["PlanetAvatar", <PlanetAvatar typeId={11} />],
     ["RaceAvatar", <RaceAvatar factionId="500001" />],
     [
@@ -342,66 +328,6 @@ describe("EveEntityAvatar", () => {
 });
 
 // ---------------------------------------------------------------------------
-// EveIconAvatar + placeholder.
-// ---------------------------------------------------------------------------
-
-describe("EveIconAvatar", () => {
-  it("renders the resolved icon image", () => {
-    const { container } = renderWithMantine(<EveIconAvatar iconId={25} />);
-    const img = container.querySelector("img");
-    expect(img?.getAttribute("src")).toContain(
-      "https://iec.jita.space/items/7_64_15.png",
-    );
-  });
-
-  it("wraps in a visible skeleton while the icon query is pending", () => {
-    useGetIconById.mockReturnValue({ data: undefined, isPending: true });
-    const { container } = renderWithMantine(<EveIconAvatar iconId={25} />);
-    expect(
-      container.querySelector(".mantine-Skeleton-root"),
-    ).toBeInTheDocument();
-  });
-
-  it("defaults a null iconId to 0 when querying the icon", () => {
-    renderWithMantine(<EveIconAvatar iconId={null} />);
-    expect(useGetIconById).toHaveBeenCalledWith(0);
-  });
-});
-
-describe("EveIconAvatarPlaceholder", () => {
-  it("renders the default placeholder image", () => {
-    const { container } = renderWithMantine(<EveIconAvatarPlaceholder />);
-    expect(container.querySelector("img")?.getAttribute("src")).toContain(
-      "https://iec.jita.space/items/7_64_15.png",
-    );
-  });
-});
-
-// ---------------------------------------------------------------------------
-// MarketGroupAvatar reads iconID from the market group hook.
-// ---------------------------------------------------------------------------
-
-describe("MarketGroupAvatar", () => {
-  it("forwards the market group iconID to EveIconAvatar", () => {
-    const { container } = renderWithMantine(
-      <MarketGroupAvatar marketGroupId={4} />,
-    );
-    expect(container.querySelector("img")).toBeInTheDocument();
-    expect(useMarketGroup).toHaveBeenCalledWith(4);
-  });
-
-  it("defaults the iconID to 0 when the group is unknown", () => {
-    // useMarketGroup always returns an object (it spreads optional ESI/SDE data
-    // into a fresh object); an unknown group yields one with no `iconID`.
-    useMarketGroup.mockReturnValue({});
-    const { container } = renderWithMantine(
-      <MarketGroupAvatar marketGroupId={999} />,
-    );
-    expect(container).not.toBeEmptyDOMElement();
-  });
-});
-
-// ---------------------------------------------------------------------------
 // Type-derived avatars (Planet/SolarSystemStar/Star/Stargate/Station/Structure).
 // ---------------------------------------------------------------------------
 
@@ -569,12 +495,16 @@ describe("SolarSystemSovereigntyAvatar", () => {
   it("falls back to the star avatar when there is no sovereignty", () => {
     useSolarSystemSovereignty.mockReturnValue(undefined);
     useSolarSystem.mockReturnValue({ data: { data: { star_id: 40000007 } } });
+    useStar.mockReturnValue({ data: { data: { type_id: 45041 } } });
     const { container } = renderWithMantine(
       <SolarSystemSovereigntyAvatar solarSystemId={30000142} />,
     );
-    // StarAvatar -> TypeAvatar receives star_id via starId, which TypeAvatar
-    // ignores (no typeId), so it renders the fallback placeholder, not an img.
-    expect(container).not.toBeEmptyDOMElement();
+    // The system's star id is resolved to its type, which is what the avatar
+    // renders: `StarAvatar` takes a type id, not a star id.
+    expect(useStar).toHaveBeenCalledWith(40000007);
+    expect(container.querySelector("img")?.getAttribute("src")).toContain(
+      "/types/45041/render",
+    );
   });
 
   it("accepts a string solarSystemId", () => {

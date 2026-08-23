@@ -1,5 +1,7 @@
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
+import { base64UrlToUtf8 } from "./base64";
+
 export interface EveSsoAccessTokenPayload {
   scp: ESIScope[];
   jti: string;
@@ -9,7 +11,8 @@ export interface EveSsoAccessTokenPayload {
   tenant: string;
   tier: string;
   region: string;
-  aud: string;
+  /** EVE issues an array — the client id the token was minted for, plus "EVE Online". */
+  aud: string | string[];
   name: string;
   owner: string;
   exp: number;
@@ -26,9 +29,18 @@ export function getEveSsoAccessTokenPayload(
   if (!tokenPayload) {
     return null;
   }
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const decoded: EveSsoAccessTokenPayload = JSON.parse(
-    Buffer.from(tokenPayload, "base64").toString(),
-  );
-  return decoded;
+
+  // Honour the `| null` return contract for *every* malformed input, not just a
+  // missing segment. Decoding can fail two ways — `atob` rejects a segment that
+  // is not valid base64, and `JSON.parse` rejects a payload that is not JSON —
+  // and the token here is untrusted input, so neither should escape as a throw.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const decoded: EveSsoAccessTokenPayload = JSON.parse(
+      base64UrlToUtf8(tokenPayload),
+    );
+    return decoded;
+  } catch {
+    return null;
+  }
 }

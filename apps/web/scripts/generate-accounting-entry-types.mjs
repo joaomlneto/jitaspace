@@ -29,6 +29,7 @@ const outFile = join(
   "accountingEntryTypes.ts",
 );
 
+/** @param {string} url */
 async function fetchText(url) {
   const response = await fetch(url);
   if (!response.ok) {
@@ -43,6 +44,7 @@ async function fetchText(url) {
  * One member wraps its value in parentheses to fit a lint comment, which puts
  * the number on the following line — hence the second alternative.
  */
+/** @param {string} python */
 function parseRefTypeIds(python) {
   const ids = new Map();
   const enumMember =
@@ -72,6 +74,7 @@ const refTypeIds = parseRefTypeIds(refTypePython);
  * literally "placeholder". Journal rows already show ESI's resolved
  * description, so drop these rather than surfacing the raw string.
  */
+/** @param {string | undefined} description */
 function usableDescription(description) {
   if (!description) return undefined;
   if (description.includes("{")) return undefined;
@@ -105,6 +108,7 @@ if (unmapped.length > 0) {
   console.warn(`No accounting entry type for: ${unmapped.join(", ")}`);
 }
 
+/** @param {unknown} value */
 const quote = (value) => JSON.stringify(value);
 
 const body = entries
