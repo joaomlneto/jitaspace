@@ -34,6 +34,16 @@ describe("sanitizeReturnTo", () => {
     expect(sanitizeReturnTo("/" + BACKSLASH + "/evil.com")).toBe("/");
   });
 
+  it("rejects dot segments that normalise to a protocol-relative path", () => {
+    // Resolved against the base these stay same-origin, so the origin check
+    // above passes — but they walk back past the root to `//evil.com`, which a
+    // browser reading the value as a redirect target sends to https://evil.com.
+    expect(sanitizeReturnTo("/..//evil.com")).toBe("/");
+    expect(sanitizeReturnTo("/../..//evil.com")).toBe("/");
+    expect(sanitizeReturnTo("/a/../..//evil.com")).toBe("/");
+    expect(sanitizeReturnTo("/.//evil.com")).toBe("/");
+  });
+
   it("rejects values containing control characters browsers would strip", () => {
     expect(sanitizeReturnTo("/" + TAB + "evil.com")).toBe("/");
     expect(sanitizeReturnTo("/" + NEWLINE + "evil.com")).toBe("/");

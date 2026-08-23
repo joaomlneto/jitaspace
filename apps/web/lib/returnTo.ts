@@ -21,6 +21,12 @@ export function sanitizeReturnTo(value: string | null | undefined): string {
     // Control characters (tab, newline, etc.) are stripped by browsers before
     // the URL is parsed, so they could smuggle a payload past the origin check.
     if ([...value].some((char) => char.charCodeAt(0) < 0x20)) return "/";
+    // Dot segments are resolved AFTER the origin check, and they can walk the
+    // path back past the root: `/..//evil.com` stays same-origin against the
+    // base (so the check above passes) but normalises to the protocol-relative
+    // `//evil.com`, which a browser then resolves to `https://evil.com`. Reject
+    // any result that could be read as an authority rather than a path.
+    if (url.pathname.startsWith("//")) return "/";
     return url.pathname + url.search + url.hash;
   } catch {
     return "/";
