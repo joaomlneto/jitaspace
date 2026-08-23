@@ -213,6 +213,16 @@ const config = {
 
   redirects: async () => [
     {
+      // /wallet/character and /wallet/corporation were separate pages; /wallet
+      // now shows every readable character and corporation wallet in one table.
+      // A redirect rather than a deletion because these are user-visible URLs
+      // that have been in the nav and may be bookmarked. Permanent: the old
+      // pages are gone for good.
+      source: "/wallet/:section(character|corporation)",
+      destination: "/wallet",
+      permanent: true,
+    },
+    {
       // Deep-link to a specific tab on a type page: /type/<id>/<tab> sends the
       // browser to the canonical /type/<id>?tab=<tab>, which selects that tab.
       // Unrecognised tab names are harmless — the page falls back to Overview.
