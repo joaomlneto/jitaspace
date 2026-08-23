@@ -47,10 +47,17 @@ async function fetchText(url) {
 /** @param {string} python */
 function parseRefTypeIds(python) {
   const ids = new Map();
-  const enumMember =
-    /^ {4}([a-z_0-9]+) = (?:(\d+)|\((?:[^)]*?\s)?(\d+)\s*\))/gm;
-  for (const [, name, value, wrappedValue] of python.matchAll(enumMember)) {
-    ids.set(name, Number(value ?? wrappedValue));
+  // The parenthesised alternative captures the whole group rather than digging
+  // the number out inline: `[^)]*` cannot match the closing paren, so there is
+  // exactly one way to match it and the scan stays linear. Interleaving lazy
+  // `[^)]*?\s` with `(\d+)\s*\)` gave the engine many ways to split the same
+  // text, which backtracks super-linearly on a group that never closes.
+  const enumMember = /^ {4}([a-z_0-9]+) = (?:(\d+)|\(([^)]*)\))/gm;
+  for (const [, name, value, wrapped] of python.matchAll(enumMember)) {
+    // Inside the parens the number is last, after an optional lint comment.
+    const wrappedValue = wrapped?.match(/(?:^|\s)(\d+)\s*$/)?.[1];
+    const resolved = value ?? wrappedValue;
+    if (resolved !== undefined) ids.set(name, Number(resolved));
   }
   for (const [, name, value] of python.matchAll(
     /^\s+"([a-z_0-9]+)": (\d+),/gm,
