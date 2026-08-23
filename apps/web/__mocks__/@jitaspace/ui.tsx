@@ -65,6 +65,9 @@ export const EveIconAvatar = () =>
 export const TypeAnchor = ({ children }: { children?: React.ReactNode }) =>
   React.createElement("span", { "data-testid": "type-anchor" }, children);
 
+// The TypeAvatar split left a presentational twin in @jitaspace/ui (the smart
+// one lives in @jitaspace/eve-components and has its own stub). It is the only
+// name both real packages export, so both stubs must cover it.
 export const TypeAvatar = () =>
   React.createElement("span", { "data-testid": "type-avatar" });
 

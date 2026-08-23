@@ -14,6 +14,7 @@ import {
   SolarSystemName,
   SolarSystemSovereigntyAvatar,
   TypeAnchor,
+  TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { useKillmail } from "@jitaspace/hooks";
@@ -23,7 +24,6 @@ import {
   CharacterAvatar,
   CorporationAnchor,
   CorporationAvatar,
-  TypeAvatar,
 } from "@jitaspace/ui";
 
 import { EsiKillmailFittingCard } from "~/components/Fitting";
