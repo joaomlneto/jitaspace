@@ -62,6 +62,12 @@ export interface LatestChangedBuild {
   build: number;
   date: string | null;
   changeCount: number;
+  /**
+   * Generated one-sentence description of the build, when one exists. Absent
+   * until the `summarize-builds` job has written one, so every consumer needs a
+   * fallback.
+   */
+  summary?: string;
 }
 
 /**

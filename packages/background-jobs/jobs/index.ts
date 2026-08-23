@@ -122,6 +122,7 @@ import {
   updateWars,
   watchSde,
 } from "./scrape";
+import { summarizeBuilds } from "./summarize";
 import { testPing } from "./test";
 
 /**
@@ -248,6 +249,7 @@ export const jobs: JobDefinition[] = [
   scrapeHoboleaksDogmaUnits,
   scrapeSdeAgents,
   scrapeZkillboardRecentKills,
+  summarizeBuilds,
   testPing,
   updateWars,
   watchSde,
@@ -257,5 +259,6 @@ export const jobs: JobDefinition[] = [
 export const registry = createJobRegistry(jobs);
 
 export * from "./scrape";
+export * from "./summarize";
 export * from "./test";
 export * from "./bootstrap";

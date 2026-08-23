@@ -10,6 +10,13 @@ const server = z.object({
   REDIS_URL: z.string(),
   DISCORD_BOT_TOKEN: z.string().optional(),
   DISCORD_UPDATES_CHANNEL_ID: z.string().optional(),
+  /** Standalone change-history database, read by the build summarizer. */
+  HISTORY_DATABASE_URL: z.string().url().optional(),
+  /**
+   * Optional: without it the build summarizer no-ops and the site falls back to
+   * its static wording, so the job is safe to deploy before the key is set.
+   */
+  ANTHROPIC_API_KEY: z.string().optional(),
 });
 
 /**
@@ -28,6 +35,8 @@ const processEnv = {
   REDIS_URL: process.env.REDIS_URL,
   DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
   DISCORD_UPDATES_CHANNEL_ID: process.env.DISCORD_UPDATES_CHANNEL_ID,
+  HISTORY_DATABASE_URL: process.env.HISTORY_DATABASE_URL,
+  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
 };
 
 // Don't touch the part below

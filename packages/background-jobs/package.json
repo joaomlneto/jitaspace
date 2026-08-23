@@ -16,8 +16,10 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
     "@jitaspace/chat": "workspace:*",
     "@jitaspace/db": "workspace:*",
+    "@jitaspace/db-history": "workspace:*",
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/evekill-client": "workspace:*",
     "@jitaspace/kv": "workspace:*",

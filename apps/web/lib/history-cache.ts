@@ -8,6 +8,7 @@ import type {
   HistoryIndex,
   LatestChangedBuild,
 } from "~/lib/history";
+import { prisma } from "~/lib/db";
 import {
   HISTORY_MIN_RELEASE_DATE,
   isBuildInHistoryScope,
@@ -129,7 +130,37 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
  * derived summary crosses to the client.
  */
 export async function getLatestChangedBuild(): Promise<LatestChangedBuild | null> {
-  return latestChangedBuild(await getCachedHistoryIndex());
+  const latest = latestChangedBuild(await getCachedHistoryIndex());
+  if (!latest) return null;
+  const summary = await getCachedBuildSummary(latest.build);
+  return summary ? { ...latest, summary } : latest;
+}
+
+/**
+ * The generated one-sentence description of a build, or `null` if the
+ * `summarize-builds` job has not written one yet.
+ *
+ * Cached per build for a day rather than forever: the row is immutable in
+ * practice, but a summary can be regenerated (a prompt change, or a bad one
+ * corrected by hand) and a `cacheLife("max")` entry would pin the old text
+ * indefinitely. Reads our own database, not the history one.
+ */
+export async function getCachedBuildSummary(
+  build: number,
+): Promise<string | null> {
+  "use cache";
+  cacheLife("days");
+
+  if (!Number.isInteger(build)) return null;
+  try {
+    const row = await prisma.buildSummary.findUnique({
+      where: { buildNumber: build },
+      select: { summary: true },
+    });
+    return row?.summary.trim() ?? null;
+  } catch {
+    return null; // decorative — never fail a page over a missing sentence
+  }
 }
 
 /**
