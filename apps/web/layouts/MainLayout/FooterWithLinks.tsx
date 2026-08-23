@@ -37,6 +37,11 @@ export function FooterWithLinks() {
       key={link.label}
       component={Link}
       href={link.link}
+      // The footer renders on every page, so prefetching these would fetch
+      // /about, /support and /status on every single page view — four PPR
+      // segment requests each. Almost nobody navigates here, so the prefetch
+      // was pure waste (~400k requests/day in production).
+      prefetch={false}
       size="xs"
       c="dimmed"
     >

@@ -1,17 +1,21 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
 import {
   CorporationName,
+  TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { useBloodline } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import { CorporationAvatar } from "@jitaspace/ui";
+import {
+  CorporationAnchor,
+  CorporationAvatar,
+  RaceAnchor,
+} from "@jitaspace/ui";
 
 import { RaceAvatar } from "~/components/Avatar";
 import { MailMessageViewer } from "~/components/EveMail";
@@ -51,21 +55,18 @@ export default function Page() {
           <Text>Corporation</Text>
           <Group wrap="nowrap">
             <CorporationAvatar corporationId={bloodline?.corporation_id} />
-            <Anchor
-              component={Link}
-              href={`/corporation/${bloodline?.corporation_id}`}
-            >
+            <CorporationAnchor corporationId={bloodline?.corporation_id}>
               <CorporationName corporationId={bloodline?.corporation_id} />
-            </Anchor>
+            </CorporationAnchor>
           </Group>
         </Group>
         <Group justify="space-between">
           <Text>Race</Text>
           <Group wrap="nowrap">
             <RaceAvatar raceId={bloodline?.race_id} />
-            <Anchor component={Link} href={`/race/${bloodline?.race_id}`}>
+            <RaceAnchor raceId={bloodline?.race_id}>
               <RaceName raceId={bloodline?.race_id} />
-            </Anchor>
+            </RaceAnchor>
           </Group>
         </Group>
         <Group justify="space-between">
@@ -75,9 +76,9 @@ export default function Page() {
               typeId={bloodline?.ship_type_id ?? undefined}
               radius="xl"
             />
-            <Anchor component={Link} href={`/type/${bloodline?.ship_type_id}`}>
+            <TypeAnchor typeId={bloodline?.ship_type_id ?? undefined}>
               <TypeName typeId={bloodline?.ship_type_id ?? undefined} />
-            </Anchor>
+            </TypeAnchor>
           </Group>
         </Group>
         {bloodline &&

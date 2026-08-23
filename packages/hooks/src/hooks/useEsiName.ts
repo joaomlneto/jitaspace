@@ -28,6 +28,8 @@ import {
   stationRanges,
 } from "@jitaspace/esi-metadata";
 
+import { useEsiAcceptLanguage } from "./useEsiAcceptLanguage";
+
 interface EsiNameCacheValue {
   name: string;
   category:
@@ -144,16 +146,43 @@ const resolveNameOfKnownCategory = async (
 //     category?: GetCharactersCharacterIdSearchCategoriesItem | undefined;
 // }]>
 
+interface EsiNameCacheArgs {
+  category?: ResolvableEntityCategory;
+  /**
+   * The entity id to resolve. Carried in the arguments rather than parsed back
+   * out of the cache key, because the key is language-scoped (see
+   * {@link esiNameCacheKey}) and the id is not the whole of it.
+   */
+  entityId: string;
+}
+
+/**
+ * Cache key for one entity's name in one language.
+ *
+ * ESI returns localised names for types, regions, solar systems and factions,
+ * so the same id resolves to different strings under different
+ * `Accept-Language` values. Scoping the key by language means a language switch
+ * resolves afresh instead of serving the previous language's string, and
+ * switching back reuses what was already fetched rather than refetching it.
+ *
+ * NUL separates the two halves so no language tag can collide with an id.
+ */
+const esiNameCacheKey = (entityId: string, language: string | undefined) =>
+  `${language ?? ""}\u0000${entityId}`;
+
 // Creates a fetch cache w/ a max of 10000 entries for JSON requests
 const fetchCache = createCache(
-  async (id, options: { category?: ResolvableEntityCategory }) => {
+  async (
+    _key,
+    { category: requestedCategory, entityId: id }: EsiNameCacheArgs,
+  ) => {
     if (id.length === 0) throw new Error("No ID provided");
     let name: string | undefined;
 
     // let's figure out the category first
     const category: ResolvableEntityCategory =
       // is the category provided?
-      options.category ??
+      requestedCategory ??
       // can we infer it from the id?
       inferCategoryFromId(typeof id === "string" ? Number(id) : id) ??
       // otherwise, we need to resolve it to get the name
@@ -181,22 +210,25 @@ export function useEsiName(
   loading: boolean;
   error?: string;
 } {
-  let idCacheKey: string;
+  let entityId: string;
   if (id === undefined) {
-    idCacheKey = "";
+    entityId = "";
   } else if (typeof id === "string") {
-    idCacheKey = id;
+    entityId = id;
   } else {
-    idCacheKey = id.toString();
+    entityId = id.toString();
   }
 
-  const [{ status, value, error }, fetchName] = useCache(
-    fetchCache,
-    idCacheKey,
-    {
-      category,
-    },
-  );
+  const language = useEsiAcceptLanguage();
+  // A language change moves this to a different cache entry, which `useCache`
+  // reports as `idle` — so the effect below resolves the name afresh instead of
+  // leaving the previous language's string on screen.
+  const cacheKey = esiNameCacheKey(entityId, language);
+
+  const [{ status, value, error }, fetchName] = useCache(fetchCache, cacheKey, {
+    category,
+    entityId,
+  });
 
   useEffect(() => {
     if (status === "idle") {
@@ -232,12 +264,18 @@ export function useEsiNamePrefetch(
     category?: ResolvableEntityCategory;
   }[],
 ) {
+  const language = useEsiAcceptLanguage();
+
   useEffect(() => {
     entries.forEach((entry) => {
-      if (entry.id)
-        void fetchCache.load(entry.id.toString(), { category: entry.category });
+      if (!entry.id) return;
+      const entityId = entry.id.toString();
+      void fetchCache.load(esiNameCacheKey(entityId, language), {
+        category: entry.category,
+        entityId,
+      });
     });
-  }, [entries]);
+  }, [entries, language]);
 }
 
 function makeCacheUpdater(
@@ -258,7 +296,20 @@ export function useEsiNames(
     category?: ResolvableEntityCategory;
   }[],
 ): Record<string, CacheState<EsiNameCacheValue, Error> | undefined> {
-  const keys = useMemo(() => names.map((name) => name.id.toString()), [names]);
+  const language = useEsiAcceptLanguage();
+  // Two identifiers per entry: the language-scoped `cacheKey` this hook reads
+  // and subscribes with, and the plain `entityId` the returned record is keyed
+  // by — callers index it as `names[id.toString()]`, so the language must not
+  // leak into the public shape.
+  const entries = useMemo(
+    () =>
+      names.map((name) => {
+        const entityId = name.id.toString();
+        return { entityId, cacheKey: esiNameCacheKey(entityId, language) };
+      }),
+    [names, language],
+  );
+
   const [current, setCurrent] = useState<
     Record<string, CacheState<EsiNameCacheValue, Error> | undefined>
   >(() => {
@@ -266,7 +317,9 @@ export function useEsiNames(
       string,
       CacheState<EsiNameCacheValue, Error> | undefined
     > = {};
-    keys.forEach((key) => (initial[key] = fetchCache.read(key)));
+    entries.forEach(({ entityId, cacheKey }) => {
+      initial[entityId] = fetchCache.read(cacheKey);
+    });
     return initial;
   });
 
@@ -277,26 +330,26 @@ export function useEsiNames(
       (v: CacheState<EsiNameCacheValue, Error> | undefined) => void
     >();
 
-    keys.forEach((key) => {
+    entries.forEach(({ entityId, cacheKey }) => {
       const callback = (
         value: CacheState<EsiNameCacheValue, Error> | undefined,
       ) => {
         if (didUnsubscribe) return;
         if (value === undefined) return;
-        setCurrent(makeCacheUpdater(key, value));
+        setCurrent(makeCacheUpdater(entityId, value));
       };
-      callbacks.set(key, callback);
-      fetchCache.subscribe(key, callback);
-      callback(fetchCache.read(key));
+      callbacks.set(cacheKey, callback);
+      fetchCache.subscribe(cacheKey, callback);
+      callback(fetchCache.read(cacheKey));
     });
 
     return () => {
       didUnsubscribe = true;
-      callbacks.forEach((callback, key) => {
-        fetchCache.unsubscribe(key, callback);
+      callbacks.forEach((callback, cacheKey) => {
+        fetchCache.unsubscribe(cacheKey, callback);
       });
     };
-  }, [keys]);
+  }, [entries]);
 
   return current;
 }

@@ -17,6 +17,7 @@ import { format } from "date-fns";
 
 import {
   AllianceName,
+  CharacterAnchor,
   CharacterName,
   CorporationName,
   FactionName,
@@ -29,6 +30,7 @@ import {
 import {
   AllianceAvatar,
   CharacterAvatar,
+  CorporationAnchor,
   CorporationAvatar,
   FactionAvatar,
 } from "@jitaspace/ui";
@@ -109,12 +111,9 @@ export default function Page() {
                 characterId={alliance?.data.creator_id}
                 size="sm"
               />
-              <Anchor
-                component={Link}
-                href={`/character/${alliance?.data.creator_id}`}
-              >
+              <CharacterAnchor characterId={alliance?.data.creator_id}>
                 <CharacterName span characterId={alliance?.data.creator_id} />
-              </Anchor>
+              </CharacterAnchor>
             </Group>
           </Group>
           <Group justify="space-between">
@@ -124,15 +123,14 @@ export default function Page() {
                 corporationId={alliance?.data.creator_corporation_id}
                 size="sm"
               />
-              <Anchor
-                component={Link}
-                href={`/corporation/${alliance?.data.creator_corporation_id}`}
+              <CorporationAnchor
+                corporationId={alliance?.data.creator_corporation_id}
               >
                 <CorporationName
                   span
                   corporationId={alliance?.data.creator_corporation_id}
                 />
-              </Anchor>
+              </CorporationAnchor>
             </Group>
           </Group>
           {alliance?.data.executor_corporation_id && (
@@ -186,9 +184,11 @@ export default function Page() {
           {allianceCorporations?.data.map((corporationId) => (
             <Group wrap="nowrap" key={corporationId}>
               <CorporationAvatar corporationId={corporationId} size="sm" />
-              <Anchor component={Link} href={`/corporation/${corporationId}`}>
+              {/* One link per member corporation, unpaginated — the largest
+                  prefetch fan-out on the site. */}
+              <CorporationAnchor corporationId={corporationId} prefetch={false}>
                 <CorporationName span corporationId={corporationId} />
-              </Anchor>
+              </CorporationAnchor>
               <Group gap="xs">
                 {alliance?.data.creator_corporation_id === corporationId && (
                   <Badge size="xs">Creator</Badge>

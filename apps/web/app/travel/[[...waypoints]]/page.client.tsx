@@ -219,18 +219,33 @@ export default function TravelPage({
                   (_, i) => (i === index ? value : (waypoints[i] ?? "")),
                 );
                 waypointHandlers.setState(nextWaypoints);
+                // Only sync the URL once every slot resolves to a system.
+                // Filling the second select first leaves slot 0 empty, which
+                // used to serialize as an empty path segment ("/travel//Delta").
+                // Next 308-redirects that away and parseInitialWaypoints drops
+                // the blank, so the chosen system lands in slot 0 — silently
+                // becoming the other end of the route. No placeholder segment
+                // can hold the position either ("_" already decodes to a space
+                // in system names), and a route needs both ends before it means
+                // anything, so leave the URL alone until the pair is complete.
+                // The state update above still lands, so the form shows the
+                // selection immediately.
+                const names = nextWaypoints.map(
+                  (systemId) => solarSystems[systemId]?.name,
+                );
+                if (names.some((name) => name === undefined)) return;
                 // Carry the control params across the navigation (see
                 // serializeTravelUrl). Serialize the raw URL state, NOT the
                 // derived `penalties` — for a preset the penalties are implied,
                 // and emitting them here would put back the redundant params
                 // that PRESET_PENALTIES exists to keep out of the URL.
                 router.push(
-                  serializeTravelUrl(
-                    `/travel/${nextWaypoints
-                      .map((systemId) => solarSystems[systemId]?.name ?? "")
-                      .join("/")}`,
-                    { pref: routePreference, nullSec, lowSec, highSec },
-                  ),
+                  serializeTravelUrl(`/travel/${names.join("/")}`, {
+                    pref: routePreference,
+                    nullSec,
+                    lowSec,
+                    highSec,
+                  }),
                 );
               }}
               key={index}

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "@jest/globals";
 
-// All four modules are runtime-dependency-free (type-only Prisma imports), so
-// unlike the other job tests these need no p-limit / env mocks.
+// All four modules are runtime-dependency-free (type-only Prisma imports, plus
+// sdeFields, which imports nothing), so unlike the other job tests these need
+// no p-limit / env mocks.
 import {
   rgba,
   toGraphicMaterialSetRow,
@@ -162,6 +163,44 @@ describe("toObjectiveRow", () => {
     });
   });
 
+  it("carries progress figures as BigInt, past the int4 ceiling", () => {
+    // Regression: progress is counted in the unit the contribution method
+    // reports, and the ISK-denominated objectives ship targets far beyond
+    // 2^31-1 — as `Int` columns those killed the ingest with "integer out of
+    // range for type int4". They must be `bigint` and not `number`, too:
+    // `recordsAreEqual` compares typeof before value, so a number diffed
+    // against the bigint Prisma reads back would re-update every row forever.
+    const row = toObjectiveRow("obj-5", "camp-1", {
+      title: en("Destroy enemy ships"),
+      targetProgress: 500_000_000_000,
+      maxProgressPerParticipant: 10_000_000_000,
+      rewards: {
+        isk: { progressInterval: 5_000_000_000 },
+        lp: { progressInterval: 2_500_000_000 },
+        standing: { progressInterval: 100_000_000_000 },
+      },
+    });
+    expect(row).toMatchObject({
+      targetProgress: 500_000_000_000n,
+      maxProgressPerParticipant: 10_000_000_000n,
+      iskProgressInterval: 5_000_000_000n,
+      lpProgressInterval: 2_500_000_000n,
+      standingProgressInterval: 100_000_000_000n,
+    });
+  });
+
+  it("leaves an absent progress figure null rather than 0n", () => {
+    // 0n and null mean different things — "no cap" is not "a cap of zero".
+    const row = toObjectiveRow("obj-6", "camp-1", { title: en("x") });
+    expect(row).toMatchObject({
+      targetProgress: null,
+      maxProgressPerParticipant: null,
+      iskProgressInterval: null,
+      lpProgressInterval: null,
+      standingProgressInterval: null,
+    });
+  });
+
   it("carries the contribution method name and the campaign link", () => {
     const row = toObjectiveRow("obj-4", "camp-9", {
       title: en("x"),
@@ -184,9 +223,23 @@ describe("toCampaignRow", () => {
       militaryCampaignId: "camp-1",
       title: "The Blessed Exchange",
       subtitle: "Bring honour",
-      targetProgress: 30,
+      targetProgress: 30n,
       issuerFactionId: 500003,
     });
+  });
+
+  it("carries a campaign target past the int4 ceiling", () => {
+    const row = toCampaignRow("camp-2", {
+      title: en("Break the Blockade"),
+      targetProgress: 4_000_000_000,
+    });
+    expect(row.targetProgress).toBe(4_000_000_000n);
+  });
+
+  it("leaves an absent campaign target null", () => {
+    expect(
+      toCampaignRow("camp-3", { title: en("x") }).targetProgress,
+    ).toBeNull();
   });
 });
 
