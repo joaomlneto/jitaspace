@@ -22,12 +22,12 @@ export const StandingsBadge = memo(
         color: theme.black,
         backgroundColor: "#808080",
       },
+      // No `color` override on these two: both are dark enough that the
+      // badge's default light text clears WCAG AA, where black did not.
       orange: {
-        color: theme.black,
         backgroundColor: "#b53209",
       },
       red: {
-        color: theme.black,
         backgroundColor: "#800007",
       },
     };

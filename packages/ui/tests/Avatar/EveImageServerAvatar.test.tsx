@@ -78,6 +78,55 @@ describe("EveImageServerAvatar image resolution", () => {
     });
   });
 
+  // Regression: with no id this substituted entity id 1 and rendered a real,
+  // unrelated portrait — and interpolated the missing id into the alt text.
+  describe("without an id", () => {
+    it("renders no image at all, leaving Mantine's placeholder", () => {
+      const { container } = renderWithMantine(<CharacterAvatar size={20} />);
+      expect(container.querySelector("img")).toBeNull();
+    });
+
+    it("does not fall back to entity id 1", () => {
+      const { container } = renderWithMantine(<CharacterAvatar size={20} />);
+      expect(container.innerHTML).not.toContain("images.evetech.net");
+      expect(container.innerHTML).not.toContain("/characters/1/");
+    });
+
+    it.each<[string, ReactElement]>([
+      ["CharacterAvatar", <CharacterAvatar size={20} />],
+      [
+        "EveImageServerAvatar",
+        <EveImageServerAvatar category="corporations" variation="logo" />,
+      ],
+    ])(
+      "never emits alt text containing 'undefined' (%s)",
+      (_label, element) => {
+        const { container } = renderWithMantine(element);
+        for (const el of Array.from(container.querySelectorAll("[alt]"))) {
+          expect(el.getAttribute("alt")).not.toContain("undefined");
+        }
+      },
+    );
+  });
+
+  it("still describes the image when there is an id", () => {
+    const { container } = renderWithMantine(
+      <CharacterAvatar characterId={90000001} size="md" />,
+    );
+    expect(container.querySelector("img")?.getAttribute("alt")).toBe(
+      "characters 90000001 portrait",
+    );
+  });
+
+  it("lets a caller override the alt text", () => {
+    const { container } = renderWithMantine(
+      <CharacterAvatar characterId={90000001} alt="Some Pilot" />,
+    );
+    expect(container.querySelector("img")?.getAttribute("alt")).toBe(
+      "Some Pilot",
+    );
+  });
+
   it("never asks for more than the server's 1024 maximum", () => {
     const { container } = renderWithMantine(
       <EveImageServerAvatar

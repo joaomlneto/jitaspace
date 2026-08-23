@@ -20,6 +20,7 @@ export const EveImageServerAvatar = memo(
     id,
     variation,
     size,
+    alt,
     imageProps,
     ...avatarProps
   }: EveImageServerAvatarProps) => {
@@ -50,32 +51,26 @@ export const EveImageServerAvatar = memo(
       };
     };
 
-    if (
-      category &&
-      !id &&
-      ["alliances", "corporations", "characters"].includes(category)
-    ) {
-      const path = `${category}/1/${category == "characters" ? "portrait" : "logo"}`;
-      return (
-        <Avatar
-          src={urlFor(path, 1)}
-          imageProps={imagePropsFor(path)}
-          size={size}
-          alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
-          {...avatarProps}
-        />
-      );
-    }
-
+    /**
+     * Without an id there is no image to address. Leaving `src` undefined lets
+     * Mantine draw its own placeholder, which is what the id-less call sites
+     * actually want — they use these avatars as decorative glyphs beside menu
+     * items. Substituting entity id 1, as this used to, showed a real and
+     * unrelated portrait there.
+     */
     const path =
-      id && category && variation ? `${category}/${id}/${variation}` : undefined;
+      id && category && variation
+        ? `${category}/${id}/${variation}`
+        : undefined;
 
     return (
       <Avatar
         src={path ? urlFor(path, 1) : undefined}
         imageProps={path ? imagePropsFor(path) : imageProps}
         size={size}
-        alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
+        // Only describe an image that is actually being shown. Interpolating a
+        // missing id produced alt text reading "characters undefined portrait".
+        alt={alt ?? (path ? `${category} ${id} ${variation}` : undefined)}
         {...avatarProps}
       />
     );

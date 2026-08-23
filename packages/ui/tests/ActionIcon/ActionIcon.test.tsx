@@ -28,6 +28,79 @@ const renderWithMantine = (ui: React.ReactElement) =>
 
 const getButton = () => screen.getByRole("button");
 
+// Regression: these are icon-only buttons, so without an aria-label they had no
+// accessible name at all — getByRole("button", { name }) could not find them.
+// And a disabled ActionIcon gets pointer-events: none, so a tooltip attached to
+// the button never opened in exactly the state that most needs explaining.
+describe("ActionIcon accessibility", () => {
+  it.each<
+    [string, (props: { disabled?: boolean }) => React.ReactElement, string]
+  >([
+    [
+      "OpenInformationWindowActionIcon",
+      (p) => <OpenInformationWindowActionIcon onOpen={jest.fn()} {...p} />,
+      "Open information window in the EVE client.",
+    ],
+    [
+      "OpenMarketWindowActionIcon",
+      (p) => <OpenMarketWindowActionIcon onOpen={jest.fn()} {...p} />,
+      "Open market window in the EVE client.",
+    ],
+    [
+      "SetAutopilotDestinationActionIcon",
+      (p) => <SetAutopilotDestinationActionIcon onSet={jest.fn()} {...p} />,
+      "Set autopilot destination",
+    ],
+  ])("%s exposes an accessible name", (_label, build, name) => {
+    renderWithMantine(build({}));
+    expect(screen.getByRole("button", { name })).toBeInTheDocument();
+  });
+
+  it.each<
+    [string, (props: { disabled?: boolean }) => React.ReactElement, string]
+  >([
+    [
+      "OpenInformationWindowActionIcon",
+      (p) => <OpenInformationWindowActionIcon onOpen={jest.fn()} {...p} />,
+      "Open information window in the EVE client.",
+    ],
+    [
+      "OpenMarketWindowActionIcon",
+      (p) => <OpenMarketWindowActionIcon onOpen={jest.fn()} {...p} />,
+      "Open market window in the EVE client.",
+    ],
+    [
+      "SetAutopilotDestinationActionIcon",
+      (p) => <SetAutopilotDestinationActionIcon onSet={jest.fn()} {...p} />,
+      "Set autopilot destination",
+    ],
+  ])("%s keeps its name while disabled", (_label, build, name) => {
+    renderWithMantine(build({ disabled: true }));
+    const button = screen.getByRole("button", { name });
+    expect(button).toBeDisabled();
+  });
+
+  it("wraps the button so a tooltip still has a live target when disabled", () => {
+    // The button itself has pointer-events: none while disabled; the wrapper
+    // does not, which is what keeps the tooltip reachable.
+    renderWithMantine(<SetAutopilotDestinationActionIcon disabled />);
+    const button = screen.getByRole("button");
+    expect(button).toBeDisabled();
+    expect(button.parentElement?.tagName).toBe("SPAN");
+  });
+
+  it("lets callers set ActionIcon props", () => {
+    renderWithMantine(
+      <SetAutopilotDestinationActionIcon
+        onSet={jest.fn()}
+        size="xl"
+        data-testid="autopilot"
+      />,
+    );
+    expect(screen.getByTestId("autopilot")).toBeInTheDocument();
+  });
+});
+
 describe("OpenInformationWindowActionIcon", () => {
   it("renders an enabled button when an onOpen handler is supplied", () => {
     renderWithMantine(<OpenInformationWindowActionIcon onOpen={jest.fn()} />);
