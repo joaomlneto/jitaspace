@@ -89,22 +89,24 @@ export const useCharacter = (
     [characterId],
   );
 
+  const birthday = esiCharacter.data?.data.birthday;
   const characterBirthdayDate = useMemo(
-    // Deps read through optional chaining, which the React Compiler check
-    // cannot match against a hand-written list. Correct as written.
-    // eslint-disable-next-line react-hooks/preserve-manual-memoization
-    () =>
-      esiCharacter.data?.data.birthday
-        ? new Date(esiCharacter.data.data.birthday)
-        : null,
-    [esiCharacter.data?.data.birthday],
+    () => (birthday ? new Date(birthday) : null),
+    [birthday],
   );
+
+  // Hoisted out of the memo dependency list below: the React Compiler check
+  // cannot match a hand-written dep on an optionally-chained expression against
+  // what it infers, but a plain identifier matches exactly. Same value, no
+  // suppression needed.
+  const inSpace = agentData?.inSpace;
 
   const researchAgentData:
     | (ResearchAgent & { isResearchAgent: true })
     | { isResearchAgent: false } = useMemo(
-    // Deps read through optional chaining, which the React Compiler check
-    // cannot match against a hand-written list. Correct as written.
+    // Not hoistable like the other two: reading `agentData?.researchSkills`
+    // into a local widens it to `number[] | undefined` and loses the narrowing
+    // that the `agentData?.isResearchAgent` check gives inside the callback.
     // eslint-disable-next-line react-hooks/preserve-manual-memoization
     () =>
       agentData?.isResearchAgent
@@ -121,14 +123,8 @@ export const useCharacter = (
     | {
         isInSpace: false;
       } = useMemo(
-    // Deps read through optional chaining, which the React Compiler check
-    // cannot match against a hand-written list. Correct as written.
-    // eslint-disable-next-line react-hooks/preserve-manual-memoization
-    () =>
-      agentData?.inSpace
-        ? { isInSpace: true, ...agentData.inSpace }
-        : { isInSpace: false },
-    [agentData?.inSpace],
+    () => (inSpace ? { isInSpace: true, ...inSpace } : { isInSpace: false }),
+    [inSpace],
   );
 
   const mergedAgentData:
