@@ -36,7 +36,7 @@ jest.mock("next/navigation", () => ({
   notFound: () => mockNotFound(),
 }));
 
-jest.mock("@jitaspace/ui", () => ({
+jest.mock("@jitaspace/eve-components", () => ({
   TypeAvatar: ({ typeId }: { typeId: number }) => (
     <span>{`TypeAvatar ${typeId}`}</span>
   ),

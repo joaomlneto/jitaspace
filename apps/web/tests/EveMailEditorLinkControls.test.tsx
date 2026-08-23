@@ -31,6 +31,7 @@ jest.mock("@mantine/tiptap", () => ({
 }));
 
 jest.mock("@jitaspace/eve-components", () => ({
+  TypeAvatar: () => <span>avatar</span>,
   EsiSearchSelect: (props: {
     placeholder?: string;
     value?: string;
@@ -62,7 +63,6 @@ jest.mock("@jitaspace/ui", () => ({
   CharacterAvatar: avatar,
   AllianceAvatar: avatar,
   CorporationAvatar: avatar,
-  TypeAvatar: avatar,
 }));
 
 const withProvider = (node: React.ReactNode) =>

@@ -24,7 +24,6 @@ jest.mock("@jitaspace/ui", () => ({
   TypeAnchor: ({ children }: { children?: React.ReactNode }) => (
     <span>{children}</span>
   ),
-  TypeAvatar: () => <span data-testid="type-avatar" />,
 }));
 
 jest.mock("~/components/EveMail", () => ({
