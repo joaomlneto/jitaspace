@@ -28,9 +28,12 @@ export const reactConfig = defineConfig(
     // rules fall back to their most conservative behaviour.
     settings: { react: { version: "detect" } },
     rules: {
-      // Prop types are expressed in TypeScript. Leaving this on produces a
-      // violation for every typed prop in the repo and catches nothing that
-      // tsc does not already reject.
+      // Prop types are expressed in TypeScript, so this rule reports only
+      // false positives here. Measured by re-enabling it: 81 violations across
+      // 13 files in apps/web, and 72 of those are `row`, `cell` and
+      // `renderedCellValue` — the destructured arguments of mantine-react-table
+      // `Cell:` render callbacks, which are not React components at all and are
+      // typed by MRT_ColumnDef<T>'s generics. tsc validates every one of them.
       "react/prop-types": "off",
     },
   },
