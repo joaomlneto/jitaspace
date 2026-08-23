@@ -46,9 +46,6 @@
     "eslint": "^9.39.4",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
-    "postcss": "^8.5.15",
-    "postcss-preset-mantine": "^1.18.0",
-    "postcss-simple-vars": "^7.0.1",
     "prettier": "^3.8.3",
     "typescript": "^5.9.3"
   },
