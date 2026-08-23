@@ -35,7 +35,7 @@ const shortcuts: MetadataRoute.Manifest["shortcuts"] = [
   {
     name: "Wallet",
     description: "View your wallet balance and transactions",
-    url: `/wallet/character${SHORTCUT_SOURCE}`,
+    url: `/wallet${SHORTCUT_SOURCE}`,
   },
   {
     name: "Assets",
