@@ -76,9 +76,10 @@ pnpm build
 pnpm test           # turbo test across workspaces
 pnpm test:watch     # watch mode
 # Cypress: apps/web has cypress scripts; root package.json exposes `cypress:run`/`cypress:open` that cd into apps/web.
-# NOT E2E coverage — the specs under apps/web/cypress/e2e/ are still the stock Cypress
-# example suite and target example.cypress.io, so CI's Cypress job gates only that the
-# build succeeds and the server boots.
+# NOT feature coverage — apps/web/cypress/e2e/smoke.cy.ts is a four-assertion smoke
+# suite (homepage not 5xx, /about server-renders, manifest served, unknown route 404s),
+# so CI's Cypress job gates that the build succeeds, the server boots and real routes
+# respond. Nothing exercises application behaviour.
 ```
 
 - Lint & format:
