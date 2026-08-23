@@ -28,65 +28,76 @@ const renderWithMantine = (ui: React.ReactElement) =>
 
 const getButton = () => screen.getByRole("button");
 
+const icons: [
+  string,
+  (props: { disabled?: boolean }) => React.ReactElement,
+  string,
+][] = [
+  [
+    "OpenInformationWindowActionIcon",
+    (p) => <OpenInformationWindowActionIcon onOpen={jest.fn()} {...p} />,
+    "Open information window in the EVE client.",
+  ],
+  [
+    "OpenMarketWindowActionIcon",
+    (p) => <OpenMarketWindowActionIcon onOpen={jest.fn()} {...p} />,
+    "Open market window in the EVE client.",
+  ],
+  [
+    "SetAutopilotDestinationActionIcon",
+    (p) => <SetAutopilotDestinationActionIcon onSet={jest.fn()} {...p} />,
+    "Set autopilot destination",
+  ],
+];
+
 // Regression: these are icon-only buttons, so without an aria-label they had no
 // accessible name at all — getByRole("button", { name }) could not find them.
-// And a disabled ActionIcon gets pointer-events: none, so a tooltip attached to
-// the button never opened in exactly the state that most needs explaining.
+// And a disabled button receives no mouse events (the browser retargets them to
+// an ancestor), so a tooltip attached to the button never opened in exactly the
+// state that most needs explaining.
 describe("ActionIcon accessibility", () => {
-  it.each<
-    [string, (props: { disabled?: boolean }) => React.ReactElement, string]
-  >([
-    [
-      "OpenInformationWindowActionIcon",
-      (p) => <OpenInformationWindowActionIcon onOpen={jest.fn()} {...p} />,
-      "Open information window in the EVE client.",
-    ],
-    [
-      "OpenMarketWindowActionIcon",
-      (p) => <OpenMarketWindowActionIcon onOpen={jest.fn()} {...p} />,
-      "Open market window in the EVE client.",
-    ],
-    [
-      "SetAutopilotDestinationActionIcon",
-      (p) => <SetAutopilotDestinationActionIcon onSet={jest.fn()} {...p} />,
-      "Set autopilot destination",
-    ],
-  ])("%s exposes an accessible name", (_label, build, name) => {
+  it.each(icons)("%s exposes an accessible name", (_label, build, name) => {
     renderWithMantine(build({}));
     expect(screen.getByRole("button", { name })).toBeInTheDocument();
   });
 
-  it.each<
-    [string, (props: { disabled?: boolean }) => React.ReactElement, string]
-  >([
-    [
-      "OpenInformationWindowActionIcon",
-      (p) => <OpenInformationWindowActionIcon onOpen={jest.fn()} {...p} />,
-      "Open information window in the EVE client.",
-    ],
-    [
-      "OpenMarketWindowActionIcon",
-      (p) => <OpenMarketWindowActionIcon onOpen={jest.fn()} {...p} />,
-      "Open market window in the EVE client.",
-    ],
-    [
-      "SetAutopilotDestinationActionIcon",
-      (p) => <SetAutopilotDestinationActionIcon onSet={jest.fn()} {...p} />,
-      "Set autopilot destination",
-    ],
-  ])("%s keeps its name while disabled", (_label, build, name) => {
+  it.each(icons)("%s keeps its name while disabled", (_label, build, name) => {
     renderWithMantine(build({ disabled: true }));
     const button = screen.getByRole("button", { name });
     expect(button).toBeDisabled();
   });
 
   it("wraps the button so a tooltip still has a live target when disabled", () => {
-    // The button itself has pointer-events: none while disabled; the wrapper
-    // does not, which is what keeps the tooltip reachable.
+    // The disabled button receives no mouse events of its own; the wrapper
+    // does, which is what keeps the tooltip reachable by pointer.
     renderWithMantine(<SetAutopilotDestinationActionIcon disabled />);
     const button = screen.getByRole("button");
     expect(button).toBeDisabled();
     expect(button.parentElement?.tagName).toBe("SPAN");
+  });
+
+  it.each(icons)(
+    "%s can be reached by keyboard while disabled, and describes itself",
+    async (_label, build, name) => {
+      renderWithMantine(build({ disabled: true }));
+      // A disabled button is not focusable, so tab lands on the wrapper — the
+      // only reason a keyboard user can find out why the control is dead.
+      await userEvent.tab();
+      const wrapper = screen.getByRole("button").parentElement;
+      expect(document.activeElement).toBe(wrapper);
+      // Mantine's Tooltip defaults to `focus: false`; opting in is what makes
+      // the description appear for anyone not using a mouse.
+      expect(wrapper).toHaveAttribute("aria-describedby");
+      expect(screen.getByText(name)).toBeInTheDocument();
+    },
+  );
+
+  it("does not add a tab stop when the button is usable", async () => {
+    renderWithMantine(<SetAutopilotDestinationActionIcon onSet={jest.fn()} />);
+    const button = screen.getByRole("button");
+    expect(button.parentElement).not.toHaveAttribute("tabindex");
+    await userEvent.tab();
+    expect(document.activeElement).toBe(button);
   });
 
   it("lets callers set ActionIcon props", () => {
@@ -97,7 +108,25 @@ describe("ActionIcon accessibility", () => {
         data-testid="autopilot"
       />,
     );
-    expect(screen.getByTestId("autopilot")).toBeInTheDocument();
+    const button = screen.getByTestId("autopilot");
+    // `size` has to reach the ActionIcon itself, not just be accepted by the
+    // prop type — Mantine renders it as `data-size` plus an `--ai-size` var.
+    expect(button).toHaveAttribute("data-size", "xl");
+    expect(button.getAttribute("style")).toContain("--ai-size");
+  });
+
+  it("lets callers override a default that the wrapper sets", () => {
+    renderWithMantine(
+      <SetAutopilotDestinationActionIcon
+        onSet={jest.fn()}
+        radius="xs"
+        data-testid="autopilot"
+      />,
+    );
+    // The shared wrapper passes radius="xl" before spreading caller props.
+    expect(screen.getByTestId("autopilot").getAttribute("style")).toContain(
+      "--ai-radius: var(--mantine-radius-xs)",
+    );
   });
 });
 
@@ -151,6 +180,16 @@ describe("OpenMarketWindowActionIcon", () => {
       <OpenMarketWindowActionIcon onOpen={jest.fn()} disabled />,
     );
     expect(getButton()).toBeDisabled();
+  });
+
+  it("keeps its light variant unless the caller asks otherwise", () => {
+    renderWithMantine(
+      <OpenMarketWindowActionIcon onOpen={jest.fn()} data-testid="market" />,
+    );
+    expect(screen.getByTestId("market")).toHaveAttribute(
+      "data-variant",
+      "light",
+    );
   });
 });
 

@@ -92,21 +92,24 @@ describe("EveImageServerAvatar image resolution", () => {
       expect(container.innerHTML).not.toContain("/characters/1/");
     });
 
+    // Mantine draws the placeholder as `<span title={alt}>`, not as an
+    // `<img alt>`, so a description of an image that is not being shown
+    // surfaces on the title. Assert on the element that actually exists.
     it.each<[string, ReactElement]>([
       ["CharacterAvatar", <CharacterAvatar size={20} />],
       [
         "EveImageServerAvatar",
         <EveImageServerAvatar category="corporations" variation="logo" />,
       ],
-    ])(
-      "never emits alt text containing 'undefined' (%s)",
-      (_label, element) => {
-        const { container } = renderWithMantine(element);
-        for (const el of Array.from(container.querySelectorAll("[alt]"))) {
-          expect(el.getAttribute("alt")).not.toContain("undefined");
-        }
-      },
-    );
+    ])("describes nothing rather than a missing id (%s)", (_label, element) => {
+      const { container } = renderWithMantine(element);
+      const placeholder = container.querySelector(
+        ".mantine-Avatar-placeholder",
+      );
+      expect(placeholder).not.toBeNull();
+      expect(placeholder).not.toHaveAttribute("title");
+      expect(container.innerHTML).not.toContain("undefined");
+    });
   });
 
   it("still describes the image when there is an id", () => {

@@ -192,9 +192,12 @@ describe("EveImageServerAvatar", () => {
     const { container } = renderWithMantine(
       <EveImageServerAvatar category="characters" variation="portrait" />,
     );
-    for (const el of Array.from(container.querySelectorAll("[alt]"))) {
-      expect(el.getAttribute("alt")).not.toContain("undefined");
-    }
+    // With no `src`, Mantine renders `<span title={alt}>` rather than an
+    // `<img alt>` — so the description surfaces on the title, not on an alt.
+    const placeholder = container.querySelector(".mantine-Avatar-placeholder");
+    expect(placeholder).not.toBeNull();
+    expect(placeholder).not.toHaveAttribute("title");
+    expect(container.innerHTML).not.toContain("undefined");
   });
 });
 

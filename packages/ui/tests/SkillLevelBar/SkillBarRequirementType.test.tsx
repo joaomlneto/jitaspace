@@ -27,7 +27,11 @@ describe("SkillBar requirementType", () => {
     ["missingStrong", "rgb(236, 101, 95)"],
   ])("paints required-but-untrained levels for %p", (requirementType, rgb) => {
     const { container } = renderWithMantine(
-      <SkillBar activeLevel={1} requiredLevel={5} requirementType={requirementType} />,
+      <SkillBar
+        activeLevel={1}
+        requiredLevel={5}
+        requirementType={requirementType}
+      />,
     );
     // Level 1 is trained; levels 2-5 are required and untrained.
     const required = levelSquares(container).slice(1);
@@ -40,9 +44,17 @@ describe("SkillBar requirementType", () => {
   it("gives every square some visible treatment", () => {
     // Nothing should render as an invisible 8x8 box: each square is either
     // filled or outlined.
-    for (const requirementType of ["queued", "missing", "missingStrong"] as const) {
+    for (const requirementType of [
+      "queued",
+      "missing",
+      "missingStrong",
+    ] as const) {
       const { container } = renderWithMantine(
-        <SkillBar activeLevel={2} requiredLevel={4} requirementType={requirementType} />,
+        <SkillBar
+          activeLevel={2}
+          requiredLevel={4}
+          requirementType={requirementType}
+        />,
       );
       for (const square of levelSquares(container)) {
         const visible =
