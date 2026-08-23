@@ -32,7 +32,16 @@ export const BUILD_LAST_MODIFIED: Date = parseDate(
   env.NEXT_PUBLIC_MODIFIED_DATE,
 );
 
-function parseDate(value: Date | string | number | null | undefined): Date {
+/**
+ * Anything that can stand in for a timestamp here, including "not recorded".
+ *
+ * Wide on purpose: callers pass a Prisma `DateTime` (a `Date`), an ISO string
+ * from an env var or an API, or `null` from a nullable column — and the point
+ * of this module is that all of them normalize the same way.
+ */
+export type LastModifiedInput = Date | string | number | null | undefined;
+
+function parseDate(value: LastModifiedInput): Date {
   if (value === null || value === undefined) return new Date();
   const parsed = value instanceof Date ? value : new Date(value);
   // `new Date("nonsense")` yields an Invalid Date, whose getTime() is NaN and
@@ -48,9 +57,7 @@ function parseDate(value: Date | string | number | null | undefined): Date {
  * Prisma's `@updatedAt`, but a `groupBy` `_max` over an empty group yields
  * null, and older rows predate the column on some tables.
  */
-export function lastModifiedOf(
-  value: Date | string | number | null | undefined,
-): Date {
+export function lastModifiedOf(value: LastModifiedInput): Date {
   if (value === null || value === undefined) return BUILD_LAST_MODIFIED;
   const parsed = value instanceof Date ? value : new Date(value);
   return Number.isNaN(parsed.getTime()) ? BUILD_LAST_MODIFIED : parsed;
@@ -63,9 +70,7 @@ export function lastModifiedOf(
  * An empty input is the build date, not the epoch: "nothing here has a date"
  * means "as old as the deployment", never 1970.
  */
-export function latestLastModified(
-  values: Iterable<Date | string | number | null | undefined>,
-): Date {
+export function latestLastModified(values: Iterable<LastModifiedInput>): Date {
   let newest: Date | undefined;
   for (const value of values) {
     if (value === null || value === undefined) continue;
