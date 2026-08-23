@@ -88,9 +88,23 @@ export function latestChangedBuild(
   return latest;
 }
 
+/**
+ * Display names for the entities a view lists, keyed `entityType` → `entityId` →
+ * name. Resolved on the server (see `~/lib/history-names`) and shipped with the
+ * changes, so the client never has to look a name up itself. A missing entry
+ * simply means no name is known; the id is always rendered regardless.
+ */
+export const EntityNames = z.record(
+  z.string(),
+  z.record(z.coerce.number(), z.string()),
+);
+export type EntityNames = z.infer<typeof EntityNames>;
+
 export const BuildChanges = z.object({
   build: z.number(),
   date: z.string().nullable(),
+  /** Server-resolved names for the entities below. Absent in older payloads. */
+  names: EntityNames.optional(),
   changes: z.array(
     z.intersection(
       z.object({
@@ -117,6 +131,8 @@ export const BuildRangeChanges = z.object({
   to: z.number(),
   fromDate: z.string().nullable(),
   toDate: z.string().nullable(),
+  /** Server-resolved names for the entities below. Absent in older payloads. */
+  names: EntityNames.optional(),
   changes: BuildChanges.shape.changes,
 });
 export type BuildRangeChanges = z.infer<typeof BuildRangeChanges>;
