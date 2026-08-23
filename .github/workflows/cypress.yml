@@ -32,10 +32,23 @@ jobs:
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }} # Turborepo caching
       TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Turborepo caching
-      # Skip runtime env validation in Next.js during CI runs where secrets are not available
+      # Skips validation on the SERVER only. `SKIP_ENV_VALIDATION` is not a
+      # NEXT_PUBLIC_ variable, so Next never inlines it into the client bundle:
+      # in the browser it reads as undefined and apps/web/env.ts runs the client
+      # schema regardless. A build without the required NEXT_PUBLIC_* values
+      # therefore produces a bundle that throws "Invalid environment variables"
+      # on module evaluation of every page. That went unnoticed because the old
+      # example specs never loaded the app; the smoke suite hit it immediately.
       SKIP_ENV_VALIDATION: "1"
       DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
       REDIS_URL: "redis://localhost:6379"
+      # Placeholders that satisfy the client schema so the built bundle is
+      # loadable. DISCORD_INVITE_LINK must parse as a URL; the other two are
+      # required only because `next build` sets NODE_ENV=production, which the
+      # schema branches on. None of them are real credentials.
+      NEXT_PUBLIC_DISCORD_INVITE_LINK: "https://discord.gg/ci-placeholder"
+      NEXT_PUBLIC_UMAMI_WEBSITE_ID: "ci-placeholder"
+      NEXT_PUBLIC_GOOGLE_TAG_ID: "ci-placeholder"
     strategy:
       fail-fast: false # https://github.com/cypress-io/github-action/issues/48
       matrix:
