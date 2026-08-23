@@ -13,7 +13,10 @@ jest.mock("@jitaspace/hooks/src/hooks/skills", () => ({
 
 // EVE icon components are decorative; stub them so the ring labels render
 // without pulling in real icon assets.
-jest.mock("@jitaspace/eve-icons", () => new Proxy({}, { get: () => () => null }));
+jest.mock(
+  "@jitaspace/eve-icons",
+  () => new Proxy({}, { get: () => () => null }),
+);
 
 function renderComponent() {
   const {

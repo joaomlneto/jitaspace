@@ -21,11 +21,11 @@ fetched by the client like any other static asset. It is laid out along the two
 axes it is queried by — never both at once — so each question is a single file
 fetch, no scan, no join:
 
-| Question | File | Route |
-| --- | --- | --- |
-| What did this build change? | `history/build/{build}.json` | `/history/build/[build]` |
-| How has this entity changed? | `history/{entityType}/{id}.json` | `/history/{entityType}/[id]` |
-| What builds & entities exist? | `history/index.json` | `/history` |
+| Question                      | File                             | Route                        |
+| ----------------------------- | -------------------------------- | ---------------------------- |
+| What did this build change?   | `history/build/{build}.json`     | `/history/build/[build]`     |
+| How has this entity changed?  | `history/{entityType}/{id}.json` | `/history/{entityType}/[id]` |
+| What builds & entities exist? | `history/index.json`             | `/history`                   |
 
 `{entityType}` is `type`, `skin`, or `skinMaterial`; e.g. `history/type/587.json`,
 `history/skin/12747.json`. The index lists `entityTypes` and `entityIdsByType`.

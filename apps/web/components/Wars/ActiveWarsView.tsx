@@ -4,10 +4,10 @@ import { Container, Group, Stack, Title } from "@mantine/core";
 
 import { WarsIcon } from "@jitaspace/eve-icons";
 
-import { usePreferencesStore } from "~/lib/preferences";
 import type { WarRoomData, WarRoomWar } from "./WarRoom";
-import { WarRoom } from "./WarRoom";
 import type { War } from "./WarsTable";
+import { usePreferencesStore } from "~/lib/preferences";
+import { WarRoom } from "./WarRoom";
 import { WarsTable } from "./WarsTable";
 
 function toTableWar(war: WarRoomWar): War {

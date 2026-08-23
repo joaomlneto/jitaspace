@@ -1,11 +1,11 @@
 import {
-  toRomanNumeral,
-  formatStarName,
-  formatPlanetName,
-  formatMoonName,
   formatAsteroidBeltName,
-  formatStationName,
+  formatMoonName,
+  formatPlanetName,
   formatStargateName,
+  formatStarName,
+  formatStationName,
+  toRomanNumeral,
 } from "../src/sde";
 
 describe("toRomanNumeral", () => {
@@ -151,9 +151,9 @@ describe("formatPlanetName", () => {
   });
 
   it("formats with orbitName and celestialIndex roman numeral", () => {
-    expect(
-      formatPlanetName({ celestialIndex: 3, orbitName: "Jita" }),
-    ).toBe("Jita III");
+    expect(formatPlanetName({ celestialIndex: 3, orbitName: "Jita" })).toBe(
+      "Jita III",
+    );
   });
 
   it("returns just the roman numeral when orbitName is absent", () => {
@@ -177,9 +177,9 @@ describe("formatMoonName", () => {
   });
 
   it("formats with orbitName and orbitIndex", () => {
-    expect(
-      formatMoonName({ orbitIndex: 2, orbitName: "Jita IV" }),
-    ).toBe("Jita IV - Moon 2");
+    expect(formatMoonName({ orbitIndex: 2, orbitName: "Jita IV" })).toBe(
+      "Jita IV - Moon 2",
+    );
   });
 
   it("returns orbitIndex as string when no orbitName", () => {
@@ -224,9 +224,9 @@ describe("formatStationName", () => {
   });
 
   it("returns just corporationName when orbitName is absent", () => {
-    expect(
-      formatStationName({ corporationName: "Caldari Navy" }),
-    ).toBe("Caldari Navy");
+    expect(formatStationName({ corporationName: "Caldari Navy" })).toBe(
+      "Caldari Navy",
+    );
   });
 
   it("returns empty string when both orbitName and corporationName are absent", () => {

@@ -12,7 +12,6 @@
     "ENABLE_EXPERIMENTAL_COREPACK",
     "EVE_CLIENT_ID",
     "EVE_CLIENT_SECRET",
-    "EXPO_ROUTER_APP_ROOT",
     "HISTORY_DATABASE_SCHEMA",
     "HISTORY_DATABASE_URL",
     "LOGTAIL_SOURCE_TOKEN",
@@ -20,7 +19,19 @@
     "NEXTAUTH_URL",
     "NEXT_PUBLIC_DISCORD_INVITE_LINK",
     "NEXT_PUBLIC_GOOGLE_TAG_ID",
+    // The PostHog pair and NEXT_PUBLIC_SITE_URL are read by apps/web/env.ts and
+    // inlined into the client bundle at build time. Turbo defaults to
+    // `envMode: "strict"`, which REMOVES undeclared vars from the task process —
+    // not just from the hash. Locally `with-env` re-injects them from the root
+    // .env after turbo has filtered, but on Vercel there is no .env file, so
+    // they arrived undefined and `posthog.init` silently never ran. Declaring
+    // them here restores them to the build and puts them in the cache key, so
+    // rotating a token invalidates the build instead of restoring a .next with
+    // the old value baked in.
+    "NEXT_PUBLIC_POSTHOG_HOST",
+    "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN",
     "NEXT_PUBLIC_SENTRY_DSN",
+    "NEXT_PUBLIC_SITE_URL",
     "NEXT_PUBLIC_UMAMI_WEBSITE_ID",
     "REDIS_URL",
     "SENTRY_AUTH_TOKEN",
@@ -38,6 +49,10 @@
     "VERCEL",
     "VERCEL_URL",
     "TRIGGER_VERSION",
+    // Set by Next.js itself to identify the runtime ("nodejs" | "edge"), not
+    // supplied by us — pass it through rather than hashing it. Surfaced by
+    // turbo/no-undeclared-env-vars once env.ts came back under lint.
+    "NEXT_RUNTIME",
     "npm_lifecycle_event"
   ],
   "tasks": {
@@ -70,20 +85,28 @@
       // redirects) — so a commit touching only those produced an identical hash,
       // hit the remote cache, and restored a `.next` that predated the change.
       // Vercel builds through this task, so that shipped to production.
-      "outputs": [
-        ".next/**",
-        "!.next/cache/**",
-        "next-env.d.ts",
-        ".expo/**",
-        "dist/**"
-      ]
+      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts", "dist/**"]
     },
     "format": {
-      "outputs": ["node_modules/.cache/.prettiercache"],
+      // No `outputs`: no format script passes --cache/--cache-location, so the
+      // previously declared .prettiercache was never written. Declaring an
+      // output that never materialises makes a cache hit restore nothing while
+      // still skipping the script.
       "outputLogs": "new-only"
     },
     "lint": {
-      "dependsOn": ["^topo"],
+      // Same codegen edges as `build` and `type-check`: tooling/eslint/base.ts
+      // sets `projectService: true`, so linting is fully type-aware and reads
+      // the same generated Prisma client and Kubb clients they do. Without
+      // these, a clean checkout lints against missing types and reports
+      // `no-unsafe-*` on every `prisma.*` call.
+      "dependsOn": [
+        "^topo",
+        "db:generate",
+        "^db:generate",
+        "kubb:generate",
+        "^kubb:generate"
+      ],
       // Unnarrowed for the same reason: ESLint also covers .mjs/.cjs sources
       // (e.g. apps/web/scripts/*.mjs), which the previous list excluded.
       "outputs": ["node_modules/.cache/.eslintcache"]
@@ -93,8 +116,23 @@
     "clean": {
       "cache": false
     },
-    "//#clean": {
-      "cache": false
+    // Not a kubb task at all: the script is `tsx scripts/generate-scopes.ts`,
+    // and this package has neither a kubb.config.ts nor a swagger.json. Under
+    // the shared task's `inputs` no file matched, so the hash was constant and
+    // the task was a permanent cache hit — bumping the pinned ESI spec left the
+    // scope tables stale while reporting success. Declare what it actually
+    // reads, including the sibling package's spec via $TURBO_ROOT$.
+    "@jitaspace/esi-metadata#kubb:generate": {
+      "dependsOn": ["^build", "^db:generate"],
+      "inputs": [
+        "scripts/generate-scopes.ts",
+        "src/scopes/descriptions.ts",
+        "$TURBO_ROOT$/packages/esi-client/swagger.json"
+      ],
+      "outputs": [
+        "src/scopes/scopes.generated.ts",
+        "src/scopes/endpoints.generated.ts"
+      ]
     },
     "@jitaspace/hooks#kubb:generate": {
       "dependsOn": ["^build"],
@@ -103,7 +141,9 @@
     },
     "kubb:generate": {
       "dependsOn": ["^build", "^db:generate"],
-      "inputs": ["kubb.config.ts", "swagger.json"],
+      // `src/buildscript.js` produces the declared `src/build-data.json`
+      // output, so a change to it must invalidate the task.
+      "inputs": ["kubb.config.ts", "swagger.json", "src/buildscript.js"],
       "outputs": ["src/generated/**", "src/build-data.json"]
     },
     "db:studio": {
@@ -111,7 +151,7 @@
       "persistent": true
     },
     "test": {
-      "dependsOn": ["kubb:generate"],
+      "dependsOn": ["kubb:generate", "^kubb:generate"],
       "outputs": ["coverage/**"]
     },
     "test:watch": {
@@ -122,7 +162,13 @@
       // `db:generate` for the same reason `build` depends on it: the Prisma
       // client is generated, gitignored, and its types are what `@jitaspace/db`
       // and everything downstream is checked against.
-      "dependsOn": ["^topo", "db:generate", "^db:generate", "kubb:generate"],
+      "dependsOn": [
+        "^topo",
+        "db:generate",
+        "^db:generate",
+        "kubb:generate",
+        "^kubb:generate"
+      ],
       // Also unnarrowed: the base tsconfig sets `checkJs` and apps/web includes
       // ".", so .mjs/.cjs files are in the program — a type error in
       // next.config.mjs would otherwise be masked by a cache hit.

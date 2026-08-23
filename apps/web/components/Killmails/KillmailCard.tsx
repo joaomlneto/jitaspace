@@ -145,6 +145,7 @@ export const KillmailCard = memo(
             <a
               href={`https://eve-kill.com/kill/${data.data.killmail_id}`}
               target="_blank"
+              rel="noreferrer"
             >
               <Text size="xs">EVE-Kill</Text>
             </a>
@@ -154,6 +155,7 @@ export const KillmailCard = memo(
             <a
               href={`https://zkillboard.com/kill/${data.data.killmail_id}`}
               target="_blank"
+              rel="noreferrer"
             >
               <Text size="xs">zKillboard</Text>
             </a>

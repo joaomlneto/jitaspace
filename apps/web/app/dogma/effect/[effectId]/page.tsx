@@ -101,8 +101,7 @@ export async function generateMetadata({
       where: { effectId },
     });
     if (!effect) return {};
-    const title =
-      [effect.displayName, effect.name].find(Boolean) ?? undefined;
+    const title = [effect.displayName, effect.name].find(Boolean) ?? undefined;
     const description = effect.description?.slice(0, 200) ?? undefined;
     return { title, description };
   } catch {

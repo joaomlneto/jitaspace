@@ -23,7 +23,7 @@ import { TypeIcon, CharacterIcon, CorporationIcon } from "@jitaspace/eve-icons";
 
 ## Exports
 
-| Export | Description |
-|---|---|
+| Export          | Description                                                                            |
+| --------------- | -------------------------------------------------------------------------------------- |
 | Icon components | One component per EVE entity type (type, character, corporation, alliance, faction, …) |
-| Icon context | React context for configuring default icon sizes and fallbacks |
+| Icon context    | React context for configuring default icon sizes and fallbacks                         |
