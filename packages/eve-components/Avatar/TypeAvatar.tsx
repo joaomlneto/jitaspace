@@ -36,6 +36,11 @@ export const TypeAvatar = memo(
         ? `https://images.evetech.net/types/${typeId}`
         : null,
       fetchTypeVariations,
+      // A non-2xx from the variations endpoint is a permanent answer about that
+      // type id, not a transient failure. SWR retries errors forever by default
+      // (errorRetryCount is unset), so without this every avatar holding an
+      // unknown type id would schedule an endless background retry chain.
+      { shouldRetryOnError: false },
     );
 
     return (

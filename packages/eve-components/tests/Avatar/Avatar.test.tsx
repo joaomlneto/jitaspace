@@ -378,6 +378,80 @@ describe("TypeAvatar", () => {
       "/types/587/icon",
     );
   });
+
+  it("skips the lookup entirely when a variation is pinned", () => {
+    useSWRImmutable.mockReturnValue({ data: undefined });
+    renderWithMantine(<TypeAvatar typeId={587} variation="icon" />);
+    // A null swr key is how the lookup is disabled.
+    expect(useSWRImmutable.mock.calls[0]?.[0]).toBeNull();
+  });
+
+  it("does not retry the lookup on error", () => {
+    // A non-2xx from the variations endpoint is a permanent answer about that
+    // type id. SWR retries errors forever by default (errorRetryCount is
+    // unset), so an unknown type id would otherwise schedule an endless
+    // background retry chain.
+    useSWRImmutable.mockReturnValue({ data: undefined });
+    renderWithMantine(<TypeAvatar typeId={587} />);
+    expect(useSWRImmutable.mock.calls[0]?.[2]).toMatchObject({
+      shouldRetryOnError: false,
+    });
+  });
+
+  describe("the variations fetcher", () => {
+    // The fetcher is passed to swr as the second argument; grab it from the
+    // mock so it can be exercised directly against a stubbed global.fetch.
+    const getFetcher = () => {
+      useSWRImmutable.mockReturnValue({ data: undefined });
+      renderWithMantine(<TypeAvatar typeId={587} />);
+      return useSWRImmutable.mock.calls[0]?.[1] as (
+        url: string,
+      ) => Promise<string[]>;
+    };
+
+    const withFetch = async (
+      response: { ok: boolean; status: number; json: () => Promise<unknown> },
+      run: (fetcher: (url: string) => Promise<string[]>) => Promise<void>,
+    ) => {
+      const previous = global.fetch;
+      global.fetch = jest.fn(() =>
+        Promise.resolve(response),
+      ) as unknown as typeof global.fetch;
+      try {
+        await run(getFetcher());
+      } finally {
+        global.fetch = previous;
+      }
+    };
+
+    it("returns the variation list on success", async () => {
+      await withFetch(
+        { ok: true, status: 200, json: () => Promise.resolve(["icon", "bp"]) },
+        async (fetcher) => {
+          await expect(
+            fetcher("https://images.evetech.net/types/587"),
+          ).resolves.toEqual(["icon", "bp"]);
+        },
+      );
+    });
+
+    it("throws on a non-2xx instead of parsing the error body", async () => {
+      // The image server answers an unknown type id with a 404 carrying a JSON
+      // body, which would otherwise parse as a successful (non-array) result.
+      await withFetch(
+        {
+          ok: false,
+          status: 404,
+          json: () => Promise.resolve({ error: "not found" }),
+        },
+        async (fetcher) => {
+          await expect(
+            fetcher("https://images.evetech.net/types/1"),
+          ).rejects.toThrow("404");
+        },
+      );
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
