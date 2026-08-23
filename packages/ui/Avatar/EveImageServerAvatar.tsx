@@ -20,6 +20,7 @@ export const EveImageServerAvatar = memo(
     id,
     variation,
     size,
+    alt,
     imageProps,
     ...avatarProps
   }: EveImageServerAvatarProps) => {
@@ -39,45 +40,38 @@ export const EveImageServerAvatar = memo(
     const urlFor = (path: string, scale: number) =>
       `https://images.evetech.net/${path}?size=${esiImageSizeClamp(avatarSize * scale)}`;
 
-    const imagePropsFor = (path: string) => {
-      const oneX = urlFor(path, 1);
-      const twoX = urlFor(path, 2);
-      return {
-        // Both candidates collapse to one URL once the clamp floors at 32 or
-        // caps at 1024; there is nothing for the browser to choose between.
-        ...(oneX === twoX ? {} : { srcSet: `${oneX} 1x, ${twoX} 2x` }),
-        ...imageProps,
-      };
-    };
-
-    if (
-      category &&
-      !id &&
-      ["alliances", "corporations", "characters"].includes(category)
-    ) {
-      const path = `${category}/1/${category == "characters" ? "portrait" : "logo"}`;
-      return (
-        <Avatar
-          src={urlFor(path, 1)}
-          imageProps={imagePropsFor(path)}
-          size={size}
-          alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
-          {...avatarProps}
-        />
-      );
-    }
-
+    /**
+     * Without an id there is no image to address. Leaving `src` undefined lets
+     * Mantine draw its own placeholder, which is what the id-less call sites
+     * actually want — they use these avatars as decorative glyphs beside menu
+     * items. Substituting entity id 1, as this used to, showed a real and
+     * unrelated portrait there.
+     */
     const path =
       id && category && variation
         ? `${category}/${id}/${variation}`
         : undefined;
 
+    const [src, retina] = path
+      ? [urlFor(path, 1), urlFor(path, 2)]
+      : [undefined, undefined];
+
     return (
       <Avatar
-        src={path ? urlFor(path, 1) : undefined}
-        imageProps={path ? imagePropsFor(path) : imageProps}
+        src={src}
+        imageProps={{
+          // Both candidates collapse to one URL once the clamp floors at 32 or
+          // caps at 1024; there is then nothing for the browser to choose
+          // between, so offer no srcSet at all.
+          ...(retina && retina !== src
+            ? { srcSet: `${src} 1x, ${retina} 2x` }
+            : {}),
+          ...imageProps,
+        }}
         size={size}
-        alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
+        // Only describe an image that is actually being shown. Interpolating a
+        // missing id produced alt text reading "characters undefined portrait".
+        alt={alt ?? (path ? `${category} ${id} ${variation}` : undefined)}
         {...avatarProps}
       />
     );
