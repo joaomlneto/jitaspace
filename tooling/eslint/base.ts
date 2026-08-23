@@ -54,7 +54,13 @@ export const baseConfig = defineConfig(
   // `includeIgnoreFile` only reads the root .gitignore; generated client code
   // (kubb output) is excluded via *package-level* .gitignore files, so ignore
   // it explicitly here to keep generated sources out of lint.
-  { ignores: ["**/eslint.config.*", "**/src/generated/**"] },
+  {
+    ignores: [
+      "**/eslint.config.*",
+      "**/src/generated/**",
+      "**/prisma/generated/**",
+    ],
+  },
   {
     files: ["**/*.js", "**/*.cjs", "**/*.mjs", "**/*.ts", "**/*.tsx"],
     plugins: {
