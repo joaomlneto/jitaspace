@@ -4,10 +4,14 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { CorporationName, TypeName } from "@jitaspace/eve-components";
+import {
+  CorporationName,
+  TypeAvatar,
+  TypeName,
+} from "@jitaspace/eve-components";
 import { useBloodline } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import { CorporationAvatar, TypeAvatar } from "@jitaspace/ui";
+import { CorporationAvatar } from "@jitaspace/ui";
 
 import { RaceAvatar } from "~/components/Avatar";
 import { MailMessageViewer } from "~/components/EveMail";

@@ -20,7 +20,6 @@ import {
   StargateAvatar,
   StationAvatar,
   StructureAvatar,
-  TypeAvatar,
   WarAggressorAvatar,
   WarDefenderAvatar,
 } from "@jitaspace/ui";
@@ -28,6 +27,7 @@ import {
 import { EveEntityAvatar } from "../../Avatar/EveEntityAvatar";
 import { EveMailSenderAvatar } from "../../Avatar/EveMailSenderAvatar";
 import { SolarSystemSovereigntyAvatar } from "../../Avatar/SolarSystemSovereigntyAvatar";
+import { TypeAvatar } from "../../Avatar/TypeAvatar";
 
 // ---------------------------------------------------------------------------
 // Mock every external data source the Avatar components reach for. Each mock is

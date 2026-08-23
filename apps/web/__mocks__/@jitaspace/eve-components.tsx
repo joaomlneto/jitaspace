@@ -39,6 +39,8 @@ export const SolarSystemAnchor = childrenStub();
 export const StargateDestinationAnchor = childrenStub();
 export const StationAnchor = childrenStub();
 export const TypeAnchor = childrenStub("type-anchor");
+export const TypeAvatar = () =>
+  React.createElement("span", { "data-testid": "type-avatar" });
 export const WarAggressorAnchor = childrenStub();
 export const WarDefenderAnchor = childrenStub();
 

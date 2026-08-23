@@ -41,9 +41,6 @@ export const EveIconAvatar = () =>
 export const TypeAnchor = ({ children }: { children?: React.ReactNode }) =>
   React.createElement("span", { "data-testid": "type-anchor" }, children);
 
-export const TypeAvatar = () =>
-  React.createElement("span", { "data-testid": "type-avatar" });
-
 export const TypeName = ({
   typeId,
   span: _span,
