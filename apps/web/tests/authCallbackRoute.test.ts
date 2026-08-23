@@ -82,6 +82,32 @@ describe("GET /api/auth/callback/eveonline", () => {
     expect(mockCompleteLoginFlow).not.toHaveBeenCalled();
   });
 
+  it("ignores a forged x-forwarded-host on the provider-error path", async () => {
+    // This branch runs before any cookie or state check, so an attacker-chosen
+    // host here would be an unauthenticated open redirect.
+    jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const req = new NextRequest(
+      "https://evil.example/api/auth/callback/eveonline?error=access_denied",
+      {
+        headers: {
+          "x-forwarded-host": "evil.example",
+          "x-forwarded-proto": "https",
+        },
+      },
+    );
+
+    const res = await loadGET()(req);
+
+    expect(res.headers.get("location")).toBe(
+      "https://www.jita.space/?auth_error=access_denied",
+    );
+    const cleared = res.headers
+      .getSetCookie()
+      .find((c) => c.startsWith("__Host-eve.oauth.flow="));
+    expect(cleared).toContain("Max-Age=0");
+    expect(mockCompleteLoginFlow).not.toHaveBeenCalled();
+  });
+
   it("on success seals the result and redirects to /login/complete", async () => {
     mockCompleteLoginFlow.mockResolvedValue({
       accessToken: "AT",

@@ -39,6 +39,25 @@ const server = z.object({
   TRIGGER_API_URL: z.string().url().optional(),
   CRON_SECRET: z.string().min(16),
 
+  /**
+   * Extra origins this deployment may legitimately be reached on, beyond the
+   * canonical NEXT_PUBLIC_SITE_URL (whose www/apex sibling is derived) and the
+   * Vercel URLs below. Comma-separated and scheme-qualified, e.g.
+   * "https://staging.jita.space,http://192.168.1.10:3000". Consumed only by
+   * lib/serverAuth.ts as the OAuth redirect-origin allow-list.
+   */
+  AUTH_TRUSTED_ORIGINS: z.string().optional(),
+
+  /**
+   * Vercel system env vars, injected at runtime on every deployment and absent
+   * everywhere else. They carry bare hostnames (no scheme) and are how a
+   * preview deployment — whose hostname is not knowable at build time — learns
+   * its own origin. See lib/serverAuth.ts.
+   */
+  VERCEL_URL: z.string().optional(),
+  VERCEL_BRANCH_URL: z.string().optional(),
+  VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
+
   SKIP_BUILD_STATIC_GENERATION: z.string(),
 });
 
@@ -92,6 +111,10 @@ const processEnv = {
   TRIGGER_SECRET_KEY: process.env.TRIGGER_SECRET_KEY,
   TRIGGER_API_URL: process.env.TRIGGER_API_URL,
   CRON_SECRET: process.env.CRON_SECRET,
+  AUTH_TRUSTED_ORIGINS: process.env.AUTH_TRUSTED_ORIGINS,
+  VERCEL_URL: process.env.VERCEL_URL,
+  VERCEL_BRANCH_URL: process.env.VERCEL_BRANCH_URL,
+  VERCEL_PROJECT_PRODUCTION_URL: process.env.VERCEL_PROJECT_PRODUCTION_URL,
   SKIP_BUILD_STATIC_GENERATION: process.env.SKIP_BUILD_STATIC_GENERATION,
   NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
   NEXT_PUBLIC_GOOGLE_TAG_ID: process.env.NEXT_PUBLIC_GOOGLE_TAG_ID,

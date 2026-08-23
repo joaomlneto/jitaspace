@@ -72,6 +72,48 @@ describe("GET /api/auth/login", () => {
     expect(cookie).toContain("Max-Age=900");
   });
 
+  it("ignores a forged x-forwarded-host when building redirect_uri", async () => {
+    // The whole point of the allow-list: a request-supplied host is only ever a
+    // lookup key, so an unrecognised one falls back to the canonical origin
+    // instead of becoming the OAuth redirect_uri.
+    jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const GET = loadGET();
+    const req = new NextRequest("https://evil.example/api/auth/login", {
+      headers: {
+        "x-forwarded-host": "evil.example",
+        "x-forwarded-proto": "https",
+      },
+    });
+
+    await GET(req);
+
+    expect(mockCreateLoginFlow).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        redirectUri: "https://www.jita.space/api/auth/callback/eveonline",
+      }),
+    );
+  });
+
+  it("keeps the __Host- flow cookie when x-forwarded-proto claims http", async () => {
+    // `secure` is derived from the resolved origin, never from the header, so a
+    // spoofed proto cannot downgrade the OAuth cookie.
+    const GET = loadGET();
+    const req = new NextRequest("https://jita.space/api/auth/login", {
+      headers: {
+        "x-forwarded-host": "jita.space",
+        "x-forwarded-proto": "http",
+      },
+    });
+
+    const res = await GET(req);
+
+    const cookie = res.headers
+      .getSetCookie()
+      .find((c) => c.startsWith("__Host-eve.oauth.flow="));
+    expect(cookie).toContain("__Host-eve.oauth.flow=SEALED-FLOW");
+    expect(cookie).toContain("Secure");
+  });
+
   it("defaults returnTo to / and rejects open-redirect targets", async () => {
     const GET = loadGET();
     const req = new NextRequest(

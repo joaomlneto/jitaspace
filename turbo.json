@@ -36,6 +36,9 @@
     "NODE_ENV",
     "CI",
     "VERCEL",
+    "AUTH_TRUSTED_ORIGINS",
+    "VERCEL_BRANCH_URL",
+    "VERCEL_PROJECT_PRODUCTION_URL",
     "VERCEL_URL",
     "TRIGGER_VERSION",
     "npm_lifecycle_event"
