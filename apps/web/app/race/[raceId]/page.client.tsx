@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Anchor, Container, Group, Stack, Text, Title } from "@mantine/core";
+import { Container, Group, Stack, Text, Title } from "@mantine/core";
 
-import { FactionName } from "@jitaspace/eve-components";
+import { FactionAnchor, FactionName } from "@jitaspace/eve-components";
 import { useRace } from "@jitaspace/hooks";
 import { FactionAvatar } from "@jitaspace/ui";
 
@@ -36,9 +35,9 @@ export default function Page() {
           <Text>Faction</Text>
           <Group>
             <FactionAvatar factionId={race?.alliance_id} radius={16} />
-            <Anchor component={Link} href={`/faction/${race?.alliance_id}`}>
+            <FactionAnchor factionId={race?.alliance_id}>
               <FactionName span factionId={race?.alliance_id} />
-            </Anchor>
+            </FactionAnchor>
           </Group>
         </Group>
       </Stack>

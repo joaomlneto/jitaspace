@@ -99,6 +99,12 @@ describe("completeLoginFlow", () => {
     expect(exchangeEveSsoToken).toHaveBeenCalledWith(
       expect.objectContaining({ eveClientId, eveClientSecret }),
     );
+    // Without `clientId` the verification would accept a token minted for any
+    // other EVE application, so the pass-through must not regress.
+    expect(verifyEveSsoAccessToken).toHaveBeenCalledWith(
+      "AT",
+      expect.objectContaining({ clientId: eveClientId }),
+    );
   });
 
   it("throws when the flow cookie is missing", async () => {

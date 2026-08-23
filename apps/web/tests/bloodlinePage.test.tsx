@@ -21,8 +21,6 @@ jest.mock("@jitaspace/tiptap-eve", () => ({
   sanitizeFormattedEveString: (s: string) => `sanitized:${s}`,
 }));
 
-jest.mock("@jitaspace/ui", () => new Proxy({}, { get: () => () => null }));
-
 jest.mock("~/components/Avatar", () => ({
   RaceAvatar: () => null,
 }));

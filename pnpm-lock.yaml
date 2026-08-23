@@ -514,9 +514,6 @@ importers:
       jose:
         specifier: ^6.2.3
         version: 6.2.3
-      zod:
-        specifier: ^3.25.76
-        version: 3.25.76
     devDependencies:
       '@jest/globals':
         specifier: ^30.4.1

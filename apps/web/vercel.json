@@ -1,5 +1,5 @@
 {
-  "buildCommand": "(cd ../.. && pnpm db:generate && pnpm db:push) && pnpm dlx turbo run build --filter=@jitaspace/web",
+  "buildCommand": "(cd ../.. && pnpm db:generate) && pnpm dlx turbo run build --filter=@jitaspace/web",
   "installCommand": "pnpm install --package-import-method=copy",
   "env": {
     "ENABLE_EXPERIMENTAL_COREPACK": "1"

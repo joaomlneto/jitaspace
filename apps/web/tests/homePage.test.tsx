@@ -100,7 +100,7 @@ describe("home page corporations", () => {
       }),
     );
 
-    const Page = require("~/app/page").default;
+    const Page = require("~/app/page.client").default;
     render(
       <MantineProvider>
         <Page />
@@ -125,7 +125,7 @@ describe("home page corporations", () => {
       }),
     );
 
-    const Page = require("~/app/page").default;
+    const Page = require("~/app/page.client").default;
     render(
       <MantineProvider>
         <Page />
@@ -136,6 +136,22 @@ describe("home page corporations", () => {
     expect(screen.queryByText("Corporation 100")).not.toBeInTheDocument();
     expect(screen.queryByText("Alliances")).not.toBeInTheDocument();
     expect(screen.queryByText("Alliance 100")).not.toBeInTheDocument();
+  });
+
+  it("renders the server-injected news carousel slot", () => {
+    mockUseAuthenticatedCharacterIds.mockReturnValue([]);
+    mockUseAuthStore.mockImplementation((selector) =>
+      selector({ characters: {} }),
+    );
+
+    const Page = require("~/app/page.client").default;
+    render(
+      <MantineProvider>
+        <Page newsCarousel={<div>News carousel slot</div>} />
+      </MantineProvider>,
+    );
+
+    expect(screen.getByText("News carousel slot")).toBeInTheDocument();
   });
 
   it("lists unique alliances for authenticated characters", () => {
@@ -151,7 +167,7 @@ describe("home page corporations", () => {
       }),
     );
 
-    const Page = require("~/app/page").default;
+    const Page = require("~/app/page.client").default;
     render(
       <MantineProvider>
         <Page />

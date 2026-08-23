@@ -173,7 +173,8 @@ pnpm type-check       # TypeScript across all packages
 pnpm format           # Prettier
 
 pnpm db:generate      # Regenerate Prisma client
-pnpm db:push          # Push schema + regenerate client
+pnpm db:diff          # Read-only: show what db:push would change
+pnpm db:push          # Push schema + regenerate client (manual — deploys don't do this)
 pnpm kubb:generate    # Regenerate all API clients
 
 pnpm cypress:run      # Run E2E tests headlessly
@@ -186,7 +187,9 @@ pnpm clean:workspaces # Clean all workspace build output
 
 ## Deployment
 
-Click **Deploy with Vercel** at the top of this README — it will fork the repo, prompt for all required environment variables, and deploy. You'll need a PostgreSQL database and Redis instance ready beforehand (e.g. [Neon](https://neon.tech/) + [Upstash](https://upstash.com/), [Railway](https://railway.app/), or self-hosted). After the first deploy, run `pnpm db:push` against your database to apply the schema.
+Click **Deploy with Vercel** at the top of this README — it will fork the repo, prompt for all required environment variables, and deploy. You'll need a PostgreSQL database and Redis instance ready beforehand (e.g. [Neon](https://neon.tech/) + [Upstash](https://upstash.com/), [Railway](https://railway.app/), or self-hosted).
+
+Run `pnpm db:push` against your database **before the first deploy**. The build does not apply the schema, and several pages read the database while prerendering — against an empty database the build either fails or bakes 404s into those routes.
 
 For manual setup: set `apps/web` as the Vercel root directory. Turborepo remote caching is supported out of the box. Background jobs run separately on Trigger.dev, deployed via its GitHub integration.
 

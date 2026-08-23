@@ -1,30 +1,17 @@
 import type { MetadataRoute } from "next";
 
-import { getSitemapUrls } from "./sitemap";
+import { CRAWLER_DISALLOWED_PATHS } from "~/config/seo.ts";
+import { SITEMAP_INDEX_URL } from "./sitemap";
 
-export default async function robots(): Promise<MetadataRoute.Robots> {
-  const sitemapUrls = await getSitemapUrls();
-
+export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: [
-        "/assets",
-        "/calendar",
-        "/contacts",
-        "/debug",
-        "/fittings",
-        "/login",
-        "/mail",
-        "/notifications",
-        "/settings",
-        "/ship-scanner",
-        "/skills",
-        "/travel",
-        "/wallet",
-      ],
+      disallow: [...CRAWLER_DISALLOWED_PATHS],
     },
-    sitemap: sitemapUrls,
+    // One entry, not the enumerated pages: the index at /sitemap.xml expands to
+    // every /sitemap/{n}.xml, so a new page needs no change here.
+    sitemap: SITEMAP_INDEX_URL,
   };
 }

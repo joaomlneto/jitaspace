@@ -71,7 +71,7 @@ describe("race page", () => {
     expect(hrefs).toContain("/faction/500001");
   });
 
-  it("renders static label and faction link when race data is undefined", () => {
+  it("renders the faction row unlinked when race data is undefined", () => {
     mockUseRace.mockReturnValue({ data: undefined });
 
     const Page = require("~/app/race/[raceId]/page.client").default;
@@ -81,13 +81,21 @@ describe("race page", () => {
       </MantineProvider>,
     );
 
+    // The row itself must survive, so the layout does not shift once the
+    // faction id arrives.
     expect(screen.getByText("Race 1")).toBeInTheDocument();
     expect(screen.getByText("Faction")).toBeInTheDocument();
-    // faction link still rendered, pointing at undefined id
-    const hrefs = screen
-      .getAllByRole("link")
-      .map((a) => a.getAttribute("href"));
-    expect(hrefs).toContain("/faction/undefined");
+
+    // ...but no link may be emitted while the id is unknown. Interpolating
+    // `undefined` into the href produced /faction/undefined, which next/link
+    // then eagerly prefetched — ~100k requests/day in production across
+    // /race, /bloodline, /type and /system.
+    expect(screen.queryAllByRole("link")).toHaveLength(0);
+    const hrefs = Array.from(document.querySelectorAll("a")).map((a) =>
+      a.getAttribute("href"),
+    );
+    expect(hrefs.some((href) => href?.includes("undefined"))).toBe(false);
+
     expect(
       screen.queryByText("Founded by exiles of the Amarr Empire."),
     ).not.toBeInTheDocument();

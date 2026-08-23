@@ -1,4 +1,5 @@
 export * from "./AllianceAnchor";
+export * from "./BloodlineAnchor";
 export * from "./CategoryAnchor";
 export * from "./CorporationAnchor";
 export * from "./DogmaAttributeAnchor";
@@ -7,5 +8,6 @@ export * from "./EveEntityAnchorDisplay";
 export * from "./GroupAnchor";
 export * from "./MarketGroupAnchor";
 export * from "./OpenInformationWindowAnchor";
+export * from "./RaceAnchor";
 export * from "./StarAnchor";
 export * from "./WarAnchor";

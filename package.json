@@ -16,6 +16,7 @@
     "cypress:run": "(cd apps/web && NODE_ENV=test pnpm with-env cypress run)",
     "db:generate": "turbo db:generate; rc=$?; pnpm clean:eslint-cache; exit $rc",
     "db:push": "turbo db:push db:generate; rc=$?; pnpm clean:eslint-cache; exit $rc",
+    "db:diff": "pnpm --filter @jitaspace/db db:diff",
     "dev": "turbo dev --parallel",
     "format": "prettier --write \"**/*.{js,cjs,mjs,ts,tsx,md,json}\"",
     "format:check": "prettier --check \"**/*.{js,cjs,mjs,ts,tsx,md,json}\"",

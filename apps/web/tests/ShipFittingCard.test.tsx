@@ -156,4 +156,74 @@ describe("ShipFittingCard", () => {
     expect(screen.getByTestId("fitting-header")).toBeInTheDocument();
     expect(screen.queryByTestId("modules-section")).not.toBeInTheDocument();
   });
+
+  // -------------------------------------------------------------------------
+  // isLoading: the module list arrives after the header does, so an `items`
+  // that is still empty used to render nothing at all — indistinguishable from
+  // a ship that genuinely carries no modules. The skeleton stands in for the
+  // sections until the fit resolves; it lives *inside* the hideModules gate,
+  // so a card that hides modules stays silent while loading.
+  // -------------------------------------------------------------------------
+
+  it("renders the modules skeleton instead of the sections while isLoading", () => {
+    renderCard({
+      name: "Loading",
+      shipTypeId: 587,
+      isLoading: true,
+      // Non-empty on purpose: loading wins over whatever items are already in.
+      items: FULL_ITEMS,
+    });
+    expect(screen.getByTestId("fitting-modules-skeleton")).toBeInTheDocument();
+    expect(screen.queryByTestId("modules-section")).not.toBeInTheDocument();
+    // The header is unaffected — it only needs the ship, not the modules.
+    expect(screen.getByTestId("fitting-header")).toHaveTextContent(
+      "header:Loading:587",
+    );
+  });
+
+  it("renders the modules skeleton while isLoading even with no items yet", () => {
+    renderCard({
+      name: "Loading",
+      shipTypeId: 587,
+      isLoading: true,
+      items: [],
+    });
+    expect(screen.getByTestId("fitting-modules-skeleton")).toBeInTheDocument();
+  });
+
+  it("renders neither the skeleton nor the sections when isLoading and hideModules are both set", () => {
+    renderCard({
+      name: "NoModules",
+      shipTypeId: 587,
+      isLoading: true,
+      hideModules: true,
+      items: FULL_ITEMS,
+    });
+    expect(
+      screen.queryByTestId("fitting-modules-skeleton"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("modules-section")).not.toBeInTheDocument();
+    expect(screen.getByTestId("fitting-header")).toBeInTheDocument();
+  });
+
+  it("renders no skeleton by default, so a resolved empty fitting still reads as empty", () => {
+    renderCard({ name: "Empty", shipTypeId: 587, items: [] });
+    expect(
+      screen.queryByTestId("fitting-modules-skeleton"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("modules-section")).not.toBeInTheDocument();
+  });
+
+  it("renders the sections rather than the skeleton once isLoading is false", () => {
+    renderCard({
+      name: "Loaded",
+      shipTypeId: 587,
+      isLoading: false,
+      items: FULL_ITEMS,
+    });
+    expect(
+      screen.queryByTestId("fitting-modules-skeleton"),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("modules-section")).toHaveLength(10);
+  });
 });

@@ -1,30 +1,22 @@
 import type { Prisma } from "../../../db";
+// Reached directly rather than through `../../../helpers`: the field coercions
+// live in a module of their own with no imports at all, while the barrel pulls
+// in p-limit and the zod-checked env, which Jest cannot load without mocks.
+import {
+  enString,
+  optionalBigInt,
+  optionalNumber,
+  plainString,
+} from "../../../helpers/sdeFields";
 
 /**
  * Pure transforms for militaryCampaigns.yaml and militaryCampaignObjectives.yaml.
  *
- * Kept in its own module with a type-only `Prisma` import so it pulls in no
- * runtime dependencies: the ingest job's own module reaches p-limit and the
- * zod-checked env through `../../../helpers`, which Jest cannot load without
- * mocks. Everything that inspects the SDE's shape lives here so it is directly
- * unit-testable — the field-level bugs this module now guards against were
- * invisible to a "rows created, second run equal" check.
+ * Kept in its own module so it stays free of runtime dependencies and is
+ * directly unit-testable: everything that inspects these two files' shape lives
+ * here, and the field-level bugs it now guards against were invisible to a
+ * "rows created, second run equal" check.
  */
-
-/** The English text of a localized SDE field, or null. */
-function enString(value: unknown): string | null {
-  if (typeof value === "object" && value !== null) {
-    const en = (value as { en?: unknown }).en;
-    if (typeof en === "string") return en;
-  }
-  return null;
-}
-
-const plainString = (value: unknown): string | null =>
-  typeof value === "string" ? value : null;
-
-const optionalNumber = (value: unknown): number | null =>
-  value == null ? null : Number(value);
 
 /**
  * Render one `annotations` entry as text.
@@ -135,20 +127,20 @@ export function toObjectiveRow(
     subtitle: enString(record.subtitle),
     militaryCampaignId,
     careerPath: plainString(record.careerPath),
-    targetProgress: optionalNumber(record.targetProgress),
-    maxProgressPerParticipant: optionalNumber(record.maxProgressPerParticipant),
+    targetProgress: optionalBigInt(record.targetProgress),
+    maxProgressPerParticipant: optionalBigInt(record.maxProgressPerParticipant),
     presentingCharacterId: optionalNumber(record.presentingCharacterID),
     issuerCorporationId: optionalNumber(obj(record.issuer).corporationID),
     iskAmountPerInterval: optionalNumber(isk.amountPerInterval),
-    iskProgressInterval: optionalNumber(isk.progressInterval),
+    iskProgressInterval: optionalBigInt(isk.progressInterval),
     iskIssuerCorporationId: issuerCorporationOf(isk),
     lpAmountPerInterval: optionalNumber(lp.amountPerInterval),
-    lpProgressInterval: optionalNumber(lp.progressInterval),
+    lpProgressInterval: optionalBigInt(lp.progressInterval),
     lpIssuerCorporationId: issuerCorporationOf(lp),
     standingGainPercentPerInterval: optionalNumber(
       standing.gainPercentPerInterval,
     ),
-    standingProgressInterval: optionalNumber(standing.progressInterval),
+    standingProgressInterval: optionalBigInt(standing.progressInterval),
     standingIssuerFactionId: optionalNumber(obj(standing.issuer).factionID),
     requiredEnlistmentWithFactionId: optionalNumber(
       annotations.requiredEnlistmentWithFactionID,
@@ -170,7 +162,7 @@ export function toCampaignRow(
     militaryCampaignId,
     title: enString(record.title) ?? "",
     subtitle: enString(record.subtitle),
-    targetProgress: optionalNumber(record.targetProgress),
+    targetProgress: optionalBigInt(record.targetProgress),
     issuerFactionId: optionalNumber(obj(record.issuer).factionID),
     isDeleted: false,
   };

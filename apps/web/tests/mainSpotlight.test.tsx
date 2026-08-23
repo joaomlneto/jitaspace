@@ -361,7 +361,9 @@ describe("MainSpotlight", () => {
       });
       renderSpotlight();
       fireEvent.click(screen.getByTestId("action-entity/30000142"));
-      expect(mockRouterPush).toHaveBeenCalledWith("/solar_system/30000142");
+      // The route is /system/, not /solar_system/ — this assertion used to
+      // pin the ESI category name and so kept a 404 in place.
+      expect(mockRouterPush).toHaveBeenCalledWith("/system/30000142");
     });
 
     it("navigates to the station page when a station result is clicked", () => {
