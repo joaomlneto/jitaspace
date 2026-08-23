@@ -6,9 +6,12 @@
     // and `outDir` were removed: base sets `noEmit: true` and nothing here
     // turned it off, so every one of them was inert — `tsc` wrote nothing, and
     // the dist bundle is produced by the esbuild call in the `build` script.
-    // The rest of the previous list (strict, skipLibCheck, esModuleInterop,
-    // isolatedModules, resolveJsonModule, incremental, allowJs, checkJs,
-    // noUncheckedIndexedAccess) merely restated base verbatim.
+    // Of the rest, nine restated base.json verbatim (strict, skipLibCheck,
+    // esModuleInterop, isolatedModules, resolveJsonModule, incremental,
+    // allowJs, checkJs, noUncheckedIndexedAccess). Two were not in base but
+    // were still no-ops here: `jsx: "preserve"` — this package has no .tsx
+    // file — and `forceConsistentCasingInFileNames`, which TypeScript 5
+    // already defaults to true.
     //
     // These three do differ from base, deliberately: this package runs under
     // ts-node/ESM rather than through a bundler.
