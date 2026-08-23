@@ -99,8 +99,8 @@ Four GitHub Actions workflows run on pushes to `main` and on pull requests:
 
 - Requires CockroachDB (v24.3.7) and Redis services
 - Sequence: `pnpm install` → push DB schema (`cd packages/db && pnpm exec prisma db push`) → `pnpm build` → start web server → run Cypress (parallel, 2 containers)
-- NOT end-to-end coverage: the specs under `apps/web/cypress/e2e/` are still the stock Cypress example suite and target `example.cypress.io`, so this job effectively gates "the build succeeds and the server boots".
-- Uses `SKIP_ENV_VALIDATION=1`
+- NOT feature coverage: `apps/web/cypress/e2e/smoke.cy.ts` is a four-assertion smoke suite whose checks are request-level — the homepage does not 5xx, `/about` server-renders, the PWA manifest is served, and an unknown route 404s. The job gates that the build succeeds, the server boots and real routes respond.
+- Uses `SKIP_ENV_VALIDATION=1`, plus placeholder `NEXT_PUBLIC_*` values. `SKIP_ENV_VALIDATION` is not a `NEXT_PUBLIC_` variable, so Next never inlines it into the client bundle and `env.ts` always runs the client schema in the browser — without those placeholders the build produces a bundle that throws on load.
 
 **SonarCloud** (`.github/workflows/sonarcloud.yml`):
 
