@@ -14,9 +14,13 @@ import { render, screen } from "@testing-library/react";
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ children, href }: { children?: React.ReactNode; href?: string }) => (
-    <a href={typeof href === "string" ? href : "#"}>{children}</a>
-  ),
+  default: ({
+    children,
+    href,
+  }: {
+    children?: React.ReactNode;
+    href?: string;
+  }) => <a href={typeof href === "string" ? href : "#"}>{children}</a>,
 }));
 
 jest.mock("@jitaspace/eve-icons", () => ({
@@ -35,6 +39,11 @@ jest.mock("~/components/LPStore", () => ({
   }) => (
     <div data-testid="lp-table">
       {`corps:${corporations.length} offers:${offers.length} types:${types.length}`}
+      {/* Serialized so the test can assert the table receives DECODED objects,
+          not the positional tuples the payload actually carries. */}
+      <span data-testid="lp-table-first-offer">
+        {JSON.stringify(offers[0] ?? null)}
+      </span>
     </div>
   ),
 }));
@@ -49,18 +58,22 @@ const TYPES = [
   { typeId: 34, name: "Tritanium" },
 ];
 
-const OFFERS = [
-  {
-    offerId: 1,
-    corporationId: 1000035,
-    typeId: 2929,
-    quantity: 1,
-    akCost: null,
-    lpCost: 1500,
-    iskCost: 5_000_000,
-    requiredItems: [{ typeId: 34, quantity: 10 }],
-  },
-];
+// Positionally encoded, matching what page.tsx now ships — see
+// ~/app/lp-store/all/encoding. Order: offerId, corporationId, typeId,
+// quantity, akCost, lpCost, iskCost, requiredItems.
+const OFFERS = [[1, 1000035, 2929, 1, null, 1500, 5_000_000, [[34, 10]]]];
+
+/** What the table must receive once the page has decoded the payload. */
+const DECODED_FIRST_OFFER = {
+  offerId: 1,
+  corporationId: 1000035,
+  typeId: 2929,
+  quantity: 1,
+  akCost: null,
+  lpCost: 1500,
+  iskCost: 5_000_000,
+  requiredItems: [{ typeId: 34, quantity: 10 }],
+};
 
 function renderPage(props: Record<string, unknown> = {}) {
   const Page = require("~/app/lp-store/all/page.client").default;
@@ -95,6 +108,19 @@ describe("LP Store all-offers page (client)", () => {
     expect(screen.getByTestId("lp-table")).toHaveTextContent(
       "corps:2 offers:1 types:2",
     );
+  });
+
+  it("decodes the positional payload before handing it to the table", () => {
+    renderPage();
+
+    // The wire format is tuples — 75% of this page's payload used to be
+    // repeated JSON key names — but the table's contract is unchanged, so the
+    // decode has to happen here.
+    const forwarded: unknown = JSON.parse(
+      screen.getByTestId("lp-table-first-offer").textContent,
+    );
+    expect(forwarded).toEqual(DECODED_FIRST_OFFER);
+    expect(Array.isArray(forwarded)).toBe(false);
   });
 
   it("renders with empty data sets", () => {
