@@ -1,24 +1,20 @@
 {
   "extends": "@jitaspace/tsconfig/base.json",
-  "exclude": ["node_modules", "build", "dist", "coverage"],
+  "exclude": ["node_modules", "build", "dist", "coverage", "out"],
   "compilerOptions": {
+    // Only genuine overrides of base.json remain. `declaration`, `sourceMap`
+    // and `outDir` were removed: base sets `noEmit: true` and nothing here
+    // turned it off, so every one of them was inert — `tsc` wrote nothing, and
+    // the dist bundle is produced by the esbuild call in the `build` script.
+    // The rest of the previous list (strict, skipLibCheck, esModuleInterop,
+    // isolatedModules, resolveJsonModule, incremental, allowJs, checkJs,
+    // noUncheckedIndexedAccess) merely restated base verbatim.
+    //
+    // These three do differ from base, deliberately: this package runs under
+    // ts-node/ESM rather than through a bundler.
     "lib": ["esnext"],
-    "allowJs": true,
-    "checkJs": true,
-    "declaration": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true,
-    "sourceMap": true,
     "module": "ESNext",
     "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "noUncheckedIndexedAccess": true,
-    "outDir": "./dist",
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
   "ts-node": {
