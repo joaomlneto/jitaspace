@@ -59,8 +59,12 @@ function parseRefTypeIds(python) {
     const resolved = value ?? wrappedValue;
     if (resolved !== undefined) ids.set(name, Number(resolved));
   }
+  // `[ \t]+` rather than `\s+`: `\s` matches newlines, so under /m a run of
+  // blank lines contains many `^` positions and each one re-walks the whole
+  // run before failing — quadratic. Horizontal whitespace cannot cross a line,
+  // so there is one start per line and the scan stays linear.
   for (const [, name, value] of python.matchAll(
-    /^\s+"([a-z_0-9]+)": (\d+),/gm,
+    /^[ \t]+"([a-z_0-9]+)": (\d+),/gm,
   )) {
     ids.set(name, Number(value));
   }
