@@ -15,7 +15,6 @@
     "generate": "mkdir -p out && ts-node index.ts generate",
     "lint": "eslint --flag unstable_native_nodejs_ts_config",
     "lint:fix": "pnpm lint --fix",
-    "prepublish": "tsc",
     "type-check": "tsc --noEmit",
     "validate": "ts-node index.ts validate"
   },
