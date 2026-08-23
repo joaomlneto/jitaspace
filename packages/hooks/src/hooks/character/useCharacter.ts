@@ -1,9 +1,3 @@
-/* eslint-disable react-hooks/preserve-manual-memoization -- Every memo in
- * this file derives from optionally-chained reads (`esiCharacter.data?.…`,
- * `agentData?.…`). The React Compiler check cannot match a hand-written
- * dependency list against what it would infer through optional chaining, so
- * it flags these as divergent. They are correct as written; the suppression
- * can be dropped once this package adopts the compiler. */
 "use client";
 
 import { useMemo } from "react";
@@ -96,6 +90,9 @@ export const useCharacter = (
   );
 
   const characterBirthdayDate = useMemo(
+    // Deps read through optional chaining, which the React Compiler check
+    // cannot match against a hand-written list. Correct as written.
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
     () =>
       esiCharacter.data?.data.birthday
         ? new Date(esiCharacter.data.data.birthday)
@@ -106,6 +103,9 @@ export const useCharacter = (
   const researchAgentData:
     | (ResearchAgent & { isResearchAgent: true })
     | { isResearchAgent: false } = useMemo(
+    // Deps read through optional chaining, which the React Compiler check
+    // cannot match against a hand-written list. Correct as written.
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
     () =>
       agentData?.isResearchAgent
         ? {
@@ -121,6 +121,9 @@ export const useCharacter = (
     | {
         isInSpace: false;
       } = useMemo(
+    // Deps read through optional chaining, which the React Compiler check
+    // cannot match against a hand-written list. Correct as written.
+    // eslint-disable-next-line react-hooks/preserve-manual-memoization
     () =>
       agentData?.inSpace
         ? { isInSpace: true, ...agentData.inSpace }
