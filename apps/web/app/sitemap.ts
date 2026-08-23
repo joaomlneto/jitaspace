@@ -6,13 +6,14 @@ import * as Sentry from "@sentry/nextjs";
 
 import { CONFIG } from "~/config/constants.ts";
 import { isCrawlable } from "~/config/seo.ts";
-import { env } from "~/env";
 import { prisma } from "~/lib/db";
+import {
+  BUILD_LAST_MODIFIED,
+  lastModifiedOf,
+  latestLastModified,
+} from "~/lib/lastModified";
 
 const MAX_URLS_PER_SITEMAP = 50000;
-export const LAST_MODIFIED = env.NEXT_PUBLIC_MODIFIED_DATE
-  ? new Date(env.NEXT_PUBLIC_MODIFIED_DATE)
-  : new Date();
 
 /**
  * `url` without its trailing slashes.
@@ -61,12 +62,24 @@ const isParallelSegment = (name: string) => name.startsWith("@");
 const isOptionalCatchAll = (name: string) =>
   name.startsWith("[[...") && name.endsWith("]]");
 
+/** One advertised URL and the date its content last changed. */
+interface SitemapEntry {
+  url: string;
+  lastModified: Date;
+}
+
 /** A family of database-backed URLs, e.g. every `/system/{solarSystemId}`. */
 interface EntitySource {
   /** Route prefix the ids hang off — `/system` yields `/system/30000142`. */
   path: string;
-  /** Resolves the ids to emit. A rejection degrades to an empty family. */
-  ids: () => Promise<number[]>;
+  /**
+   * Resolves the rows to emit. A rejection degrades to an empty family.
+   *
+   * Each row carries its own `updatedAt` so the sitemap can report a real
+   * per-URL `<lastmod>`. Selecting it costs one extra column on a query that
+   * already returns every row, and the assembled list is cached for an hour.
+   */
+  rows: () => Promise<{ id: number; updatedAt: Date | null }[]>;
 }
 
 /**
@@ -104,7 +117,7 @@ interface EntitySource {
 const ENTITY_SOURCES: EntitySource[] = [
   {
     path: "/type",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.type.findMany({
           // typeId 0 exists in the table but `/type/0` renders the not-found UI:
@@ -113,122 +126,127 @@ const ENTITY_SOURCES: EntitySource[] = [
           // boundary the response is still HTTP 200, so advertising it would
           // hand crawlers a soft 404 — the very thing `isDeleted` filters out.
           where: { isDeleted: false, typeId: { gt: 0 } },
-          select: { typeId: true },
+          select: { typeId: true, updatedAt: true },
           orderBy: { typeId: "asc" },
         })
-      ).map((row) => row.typeId),
+      ).map((row) => ({ id: row.typeId, updatedAt: row.updatedAt })),
   },
   {
     path: "/category",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.category.findMany({
           where: { isDeleted: false },
-          select: { categoryId: true },
+          select: { categoryId: true, updatedAt: true },
           orderBy: { categoryId: "asc" },
         })
-      ).map((row) => row.categoryId),
+      ).map((row) => ({ id: row.categoryId, updatedAt: row.updatedAt })),
   },
   {
     path: "/group",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.group.findMany({
           where: { isDeleted: false },
-          select: { groupId: true },
+          select: { groupId: true, updatedAt: true },
           orderBy: { groupId: "asc" },
         })
-      ).map((row) => row.groupId),
+      ).map((row) => ({ id: row.groupId, updatedAt: row.updatedAt })),
   },
   {
     path: "/region",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.region.findMany({
           where: { isDeleted: false },
-          select: { regionId: true },
+          select: { regionId: true, updatedAt: true },
           orderBy: { regionId: "asc" },
         })
-      ).map((row) => row.regionId),
+      ).map((row) => ({ id: row.regionId, updatedAt: row.updatedAt })),
   },
   {
     path: "/constellation",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.constellation.findMany({
           where: { isDeleted: false },
-          select: { constellationId: true },
+          select: { constellationId: true, updatedAt: true },
           orderBy: { constellationId: "asc" },
         })
-      ).map((row) => row.constellationId),
+      ).map((row) => ({ id: row.constellationId, updatedAt: row.updatedAt })),
   },
   {
     path: "/system",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.solarSystem.findMany({
           where: { isDeleted: false },
-          select: { solarSystemId: true },
+          select: { solarSystemId: true, updatedAt: true },
           orderBy: { solarSystemId: "asc" },
         })
-      ).map((row) => row.solarSystemId),
+      ).map((row) => ({ id: row.solarSystemId, updatedAt: row.updatedAt })),
   },
   {
     path: "/station",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.station.findMany({
           where: { isDeleted: false },
-          select: { stationId: true },
+          select: { stationId: true, updatedAt: true },
           orderBy: { stationId: "asc" },
         })
-      ).map((row) => row.stationId),
+      ).map((row) => ({ id: row.stationId, updatedAt: row.updatedAt })),
   },
   {
     path: "/faction",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.faction.findMany({
           where: { isDeleted: false },
-          select: { factionId: true },
+          select: { factionId: true, updatedAt: true },
           orderBy: { factionId: "asc" },
         })
-      ).map((row) => row.factionId),
+      ).map((row) => ({ id: row.factionId, updatedAt: row.updatedAt })),
   },
   {
     path: "/race",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.race.findMany({
           where: { isDeleted: false },
-          select: { raceId: true },
+          select: { raceId: true, updatedAt: true },
           orderBy: { raceId: "asc" },
         })
-      ).map((row) => row.raceId),
+      ).map((row) => ({ id: row.raceId, updatedAt: row.updatedAt })),
   },
   {
     path: "/bloodline",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.bloodline.findMany({
           where: { isDeleted: false },
-          select: { bloodlineId: true },
+          select: { bloodlineId: true, updatedAt: true },
           orderBy: { bloodlineId: "asc" },
         })
-      ).map((row) => row.bloodlineId),
+      ).map((row) => ({ id: row.bloodlineId, updatedAt: row.updatedAt })),
   },
   {
     // One page per NPC corporation that actually sells something, rather than
     // per corporation — a corp with no offers renders an empty store.
     path: "/lp-store",
-    ids: async () =>
+    rows: async () =>
       (
         await prisma.loyaltyStoreOffer.groupBy({
           by: ["corporationId"],
           where: { isDeleted: false },
+          // A store page is as fresh as its most recently changed offer.
+          _max: { updatedAt: true },
           orderBy: { corporationId: "asc" },
         })
-      ).map((row) => row.corporationId),
+      ).map((row) => ({
+        id: row.corporationId,
+        updatedAt: row._max.updatedAt,
+      })),
   },
 ];
 
@@ -247,7 +265,7 @@ const DEGRADED_REPORT_INTERVAL_MS = 60 * 1000;
 let cachedStaticRoutes: string[] | null = null;
 let lastDegradedReportAt = 0;
 let lastDegradedSignature = "";
-let cachedUrls: { urls: string[]; expiresAt: number } | null = null;
+let cachedEntries: { entries: SitemapEntry[]; expiresAt: number } | null = null;
 
 const hasPageFile = (entries: Dirent[]) =>
   entries.some((entry) => entry.isFile() && isPageFile(entry.name));
@@ -385,26 +403,35 @@ function reportDegraded(detail: {
  * cached: serving a truncated sitemap for the next hour because of one refused
  * connection tells crawlers those URLs are gone.
  */
-async function getAllUrls(): Promise<string[]> {
-  if (cachedUrls && cachedUrls.expiresAt > Date.now()) return cachedUrls.urls;
+async function getAllEntries(): Promise<SitemapEntry[]> {
+  if (cachedEntries && cachedEntries.expiresAt > Date.now()) {
+    return cachedEntries.entries;
+  }
 
   const [staticRoutes, families] = await Promise.all([
     getStaticRoutes(),
     Promise.all(
       ENTITY_SOURCES.map(async (source) => {
         try {
-          const ids = await source.ids();
+          const rows = await source.rows();
           return {
             ok: true,
             path: source.path,
-            paths: ids.map((id) => `${source.path}/${id}`),
+            entries: rows.map((row) => ({
+              path: `${source.path}/${row.id}`,
+              lastModified: lastModifiedOf(row.updatedAt),
+            })),
           };
         } catch (error: unknown) {
           console.error(
             `Failed to collect sitemap ids for ${source.path}.`,
             error,
           );
-          return { ok: false, path: source.path, paths: [] as string[] };
+          return {
+            ok: false,
+            path: source.path,
+            entries: [] as { path: string; lastModified: Date }[],
+          };
         }
       }),
     ),
@@ -414,9 +441,23 @@ async function getAllUrls(): Promise<string[]> {
   // sits under a disallowed prefix today, but the whole point of the shared
   // list is that a sitemap URL can never contradict robots.txt — enforcing that
   // in one place beats relying on nobody ever adding one that does.
-  const urls = [...staticRoutes, ...families.flatMap((family) => family.paths)]
-    .filter(isCrawlable)
-    .map((path) => `${SITE_URL}${path}`);
+  // Static routes are rendered from the source tree, so they change when the
+  // code changes — the commit date is the honest answer for them. Only
+  // database-backed families get a row-level date.
+  const staticEntries = staticRoutes.map((path) => ({
+    path,
+    lastModified: BUILD_LAST_MODIFIED,
+  }));
+
+  const entries = [
+    ...staticEntries,
+    ...families.flatMap((family) => family.entries),
+  ]
+    .filter((entry) => isCrawlable(entry.path))
+    .map((entry) => ({
+      url: `${SITE_URL}${entry.path}`,
+      lastModified: entry.lastModified,
+    }));
 
   // An empty static-route list means the `app/` walk failed — the real tree
   // always yields at least `/` — so it counts as degraded alongside a failed
@@ -428,15 +469,15 @@ async function getAllUrls(): Promise<string[]> {
   const healthy = !staticRoutesFailed && failedFamilies.length === 0;
 
   if (healthy) {
-    cachedUrls = { urls, expiresAt: Date.now() + URL_CACHE_TTL_MS };
+    cachedEntries = { entries, expiresAt: Date.now() + URL_CACHE_TTL_MS };
   } else {
     reportDegraded({
       failedFamilies,
       staticRoutesFailed,
-      urlCount: urls.length,
+      urlCount: entries.length,
     });
   }
-  return urls;
+  return entries;
 }
 
 function normalizeId(rawId: string): number {
@@ -447,8 +488,8 @@ function normalizeId(rawId: string): number {
 
 /** Number of `/sitemap/{n}.xml` pages needed, never fewer than one. */
 async function getSitemapCount(): Promise<number> {
-  const urls = await getAllUrls();
-  return Math.max(1, Math.ceil(urls.length / MAX_URLS_PER_SITEMAP));
+  const entries = await getAllEntries();
+  return Math.max(1, Math.ceil(entries.length / MAX_URLS_PER_SITEMAP));
 }
 
 /**
@@ -457,13 +498,32 @@ async function getSitemapCount(): Promise<number> {
  */
 export const SITEMAP_INDEX_URL = `${SITE_URL}/sitemap.xml`;
 
-/** Every `/sitemap/{n}.xml` page, i.e. the contents of the index. */
+/**
+ * Every `/sitemap/{n}.xml` page, each dated by the newest URL it contains.
+ *
+ * The index needs a `<lastmod>` per page, and the honest one is the freshest
+ * entry on that page — not the deploy date, which would tell a crawler that
+ * every page changed on every deploy and defeat the point of the per-URL dates
+ * below it.
+ */
+export async function getSitemapPages(): Promise<SitemapEntry[]> {
+  const entries = await getAllEntries();
+  const count = Math.max(1, Math.ceil(entries.length / MAX_URLS_PER_SITEMAP));
+  return Array.from({ length: count }, (_, index) => {
+    const page = entries.slice(
+      index * MAX_URLS_PER_SITEMAP,
+      (index + 1) * MAX_URLS_PER_SITEMAP,
+    );
+    return {
+      url: `${SITE_URL}/sitemap/${index}.xml`,
+      lastModified: latestLastModified(page.map((entry) => entry.lastModified)),
+    };
+  });
+}
+
+/** Just the page URLs — what robots.txt advertises. */
 export async function getSitemapUrls(): Promise<string[]> {
-  const count = await getSitemapCount();
-  return Array.from(
-    { length: count },
-    (_, index) => `${SITE_URL}/sitemap/${index}.xml`,
-  );
+  return (await getSitemapPages()).map((page) => page.url);
 }
 
 export async function generateSitemaps(): Promise<{ id: number }[]> {
@@ -475,12 +535,10 @@ export default async function sitemap(props: {
   id: Promise<string>;
 }): Promise<MetadataRoute.Sitemap> {
   const pageId = normalizeId(await props.id);
-  const urls = await getAllUrls();
+  const entries = await getAllEntries();
 
   const start = pageId * MAX_URLS_PER_SITEMAP;
-  if (start >= urls.length) return [];
+  if (start >= entries.length) return [];
 
-  return urls
-    .slice(start, start + MAX_URLS_PER_SITEMAP)
-    .map((url) => ({ url, lastModified: LAST_MODIFIED }));
+  return entries.slice(start, start + MAX_URLS_PER_SITEMAP);
 }
