@@ -54,6 +54,25 @@ describe("LoginWithEveOnlineButton", () => {
     expect(screen.getByRole("button")).not.toHaveAttribute("width");
   });
 
+  it("keeps the hover background when the caller supplies its own style", () => {
+    // Regression: otherProps was spread after `style`, so a caller-supplied
+    // style replaced the whole computed object and silently killed the hover.
+    renderWithMantine(<LoginWithEveOnlineButton style={{ width: "100%" }} />);
+    const button = screen.getByRole("button");
+
+    expect(button.style.width).toBe("100%");
+    fireEvent.mouseEnter(button);
+    expect(button.style.backgroundColor).not.toBe("");
+    expect(button.style.display).toBe("block");
+  });
+
+  it("carries Mantine's focus-ring class so keyboard users get an affordance", () => {
+    renderWithMantine(<LoginWithEveOnlineButton className="custom" />);
+    const button = screen.getByRole("button");
+    expect(button).toHaveClass("mantine-focus-auto");
+    expect(button).toHaveClass("custom");
+  });
+
   it("forwards onClick", () => {
     const onClick = jest.fn();
     renderWithMantine(<LoginWithEveOnlineButton onClick={onClick} />);

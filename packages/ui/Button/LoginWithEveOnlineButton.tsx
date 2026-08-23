@@ -24,6 +24,8 @@ export const LoginWithEveOnlineButton = memo(
     size,
     width: widthProp,
     onClick,
+    style,
+    className,
     ...otherProps
   }: LoginWithEveOnlineButtonProps) => {
     const theme = useMantineTheme();
@@ -49,13 +51,23 @@ export const LoginWithEveOnlineButton = memo(
       <UnstyledButton
         ref={ref}
         onClick={onClick}
-        style={{
-          display: "block",
-          padding: theme.spacing.xs,
-          color: colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
-          backgroundColor: hovered ? hoverBackground : undefined,
-        }}
         {...otherProps}
+        // UnstyledButton has no focus ring of its own; this is Mantine's own
+        // utility class for one, so keyboard users get the affordance that
+        // `hovered` only gives to pointers.
+        className={["mantine-focus-auto", className].filter(Boolean).join(" ")}
+        // An array style is merged in order by Mantine, so a caller's `style`
+        // overrides individual properties instead of replacing the whole
+        // object — which would silently drop the hover background again.
+        style={[
+          {
+            display: "block",
+            padding: theme.spacing.xs,
+            color: colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
+            backgroundColor: hovered ? hoverBackground : undefined,
+          },
+          style,
+        ]}
       >
         <Image
           src={url}

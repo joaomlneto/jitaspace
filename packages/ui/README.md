@@ -7,8 +7,9 @@ Shared React UI component library for JitaSpace, built on [Mantine](https://mant
 Provides presentational React components used across the JitaSpace web app, built
 on top of Mantine. These components are **dependency-light**: they render
 already-resolved data passed in via props and do not fetch from ESI themselves,
-so the package depends only on `@jitaspace/eve-icons` and `@jitaspace/utils`
-(plus Mantine, `date-fns` and the icon set).
+Its runtime dependencies are Mantine (`core`, `hooks`, `modals`), `next` for
+`next/link` and `next/image`, `date-fns` and `humanize-duration` for formatting,
+the two icon sets, and `@jitaspace/utils`.
 
 > Data-aware ("smart") EVE components that resolve entity ids by calling ESI
 > hooks — e.g. `CharacterName`, `TypeAnchor`, `EveEntityAvatar`, `AllianceCard` —
@@ -44,4 +45,6 @@ import { CharacterAvatar, ISKAmount, SkillLevelBar } from "@jitaspace/ui";
 - `@jitaspace/eve-icons` — Game icons
 - `@jitaspace/utils` — Shared helpers
 - `@tabler/icons-react` — General-purpose icons
+- `next` — `next/link` for anchors and breadcrumbs, `next/image` for the login button and standing indicator
+- `@mantine/modals` — the calendar attendance select's confirmation modal
 - `date-fns` / `humanize-duration` — Date and duration formatting

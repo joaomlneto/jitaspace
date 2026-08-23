@@ -49,6 +49,35 @@ describe("EveImageServerAvatar image resolution", () => {
     expect(requestedSize(container)).toBe(expected);
   });
 
+  // A HiDPI screen needs more device pixels than the CSS size. srcSet lets the
+  // browser pick by its own devicePixelRatio and fetch exactly one candidate.
+  describe("HiDPI candidates", () => {
+    const srcSetOf = (container: HTMLElement) =>
+      container.querySelector("img")?.getAttribute("srcset");
+
+    it.each<[number, string, string]>([
+      [20, "32", "64"],
+      [64, "64", "128"],
+      [128, "128", "256"],
+    ])("offers a 2x candidate for size=%p", (size, oneX, twoX) => {
+      const { container } = renderWithMantine(
+        <CharacterAvatar characterId={90000001} size={size} />,
+      );
+      expect(requestedSize(container)).toBe(oneX);
+      const srcSet = srcSetOf(container);
+      expect(srcSet).toContain(`size=${oneX} 1x`);
+      expect(srcSet).toContain(`size=${twoX} 2x`);
+    });
+
+    it("omits srcSet when both candidates clamp to the same size", () => {
+      // 4096 and 8192 both cap at the server's 1024 maximum.
+      const { container } = renderWithMantine(
+        <CharacterAvatar characterId={90000001} size={4096} />,
+      );
+      expect(srcSetOf(container)).toBeNull();
+    });
+  });
+
   it("never asks for more than the server's 1024 maximum", () => {
     const { container } = renderWithMantine(
       <EveImageServerAvatar

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColorInputProps } from "@mantine/core";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { ActionIcon, ColorInput } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 
@@ -32,19 +32,21 @@ const MAIL_LABEL_COLORS = [
 
 export const MailLabelColorSelect = memo(
   ({ ...otherProps }: ColorInputProps) => {
+    const controlledValue = otherProps.value;
     // Deterministic on first render: picking the random seed here would make
     // the server and client markup disagree and break hydration. The seed is
     // applied on mount instead, in the effect below.
     const [value, setValue] = useState(DEFAULT_MAIL_LABEL_COLOR);
-    const seeded = useRef(false);
 
+    // Runs exactly once, on mount. A controlled caller supplies its own colour,
+    // so only an uncontrolled one gets seeded — and the value it started from is
+    // deterministic, which is what keeps the server and client markup in step.
     useEffect(() => {
-      if (seeded.current) return;
-      seeded.current = true;
-      // A controlled caller supplies its own colour; don't override it.
-      if (otherProps.value !== undefined) return;
-      setValue(getRandomArrayEntry(MAIL_LABEL_COLORS));
-    }, [otherProps.value]);
+      if (controlledValue === undefined) {
+        setValue(getRandomArrayEntry(MAIL_LABEL_COLORS));
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps -- mount-only seed
+    }, []);
 
     return (
       <ColorInput

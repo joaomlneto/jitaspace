@@ -1694,9 +1694,6 @@ importers:
       '@tiptap/extension-underline':
         specifier: ^3.26.0
         version: 3.26.0(@tiptap/core@3.26.0(@tiptap/pm@3.26.0))
-      '@tiptap/pm':
-        specifier: ^3.26.0
-        version: 3.26.0
       '@tiptap/react':
         specifier: ^3.26.0
         version: 3.26.0(@floating-ui/dom@1.7.6)(@tiptap/core@3.26.0(@tiptap/pm@3.26.0))(@tiptap/pm@3.26.0)(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -1719,6 +1716,9 @@ importers:
       '@swc/jest':
         specifier: ^0.2.39
         version: 0.2.39(@swc/core@1.15.40)
+      '@tiptap/pm':
+        specifier: ^3.26.0
+        version: 3.26.0
       '@types/jest':
         specifier: ^30.0.0
         version: 30.0.0

@@ -5,7 +5,9 @@
 const REM_IN_PX = 16;
 
 /**
- * A positive CSS length with an optional unit.
+ * A CSS length with an optional unit. Units are matched case-insensitively
+ * because CSS units are; the sign is captured so a non-positive length can be
+ * told apart from an unreadable one.
  *
  * Written to backtrack linearly: the two number alternatives start with
  * different characters, the optional fraction needs a literal `.` so `\d+`
@@ -13,21 +15,27 @@ const REM_IN_PX = 16;
  * caller rather than matched with `\s*` (two adjacent `\s*` around the optional
  * unit is the other way this pattern goes polynomial).
  */
-const CSS_LENGTH = /^(\d+(?:\.\d+)?|\.\d+)(px|rem|em)?$/;
+const CSS_LENGTH = /^(-?(?:\d+(?:\.\d+)?|\.\d+))(px|rem|em)?$/i;
 
 /**
  * Read a CSS length Mantine accepts as a `size` prop (`"64"`, `"64px"`,
- * `"1rem"`) as a pixel number. Returns undefined for anything that is not a
- * positive length.
+ * `"1rem"`) as a pixel number. Returns undefined only when the value is not a
+ * length at all — a readable but non-positive length comes back as its own
+ * value so the caller can treat it like `size={0}`.
+ *
+ * `em` is approximated as `rem`. It is really relative to the element's own
+ * font size, which is not knowable here; the approximation is right whenever
+ * the font size is inherited from the root, and is far closer than the
+ * unreadable-value fallback.
  */
 function parseCssLength(value: string): number | undefined {
   const match = CSS_LENGTH.exec(value.trim());
   if (!match) return undefined;
 
   const amount = Number(match[1]);
-  if (!Number.isFinite(amount) || amount <= 0) return undefined;
+  if (!Number.isFinite(amount)) return undefined;
 
-  const unit = match[2];
+  const unit = match[2]?.toLowerCase();
   return unit === "rem" || unit === "em" ? amount * REM_IN_PX : amount;
 }
 
@@ -61,8 +69,14 @@ export function getAvatarSize<
     return sizes[size] ?? 1024;
   }
 
-  // Whatever is left is either a CSS length or something we cannot read.
-  // Falling back to the largest size is deliberate: over-fetching an image
-  // beats rendering a large avatar from a thumbnail.
-  return parseCssLength(size) ?? 1024;
+  const length = parseCssLength(size);
+
+  // Not a length at all. Falling back to the largest size is deliberate:
+  // over-fetching an image beats rendering a large avatar from a thumbnail.
+  if (length === undefined) return 1024;
+
+  // A length we could read but cannot draw, e.g. "0" or "-5px". Mantine treats
+  // `size="0"` and `size={0}` alike, so this must match the numeric branch
+  // rather than falling through to the 1024 over-fetch.
+  return length > 0 ? length : defaultSize;
 }
