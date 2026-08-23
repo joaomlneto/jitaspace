@@ -14,7 +14,6 @@ import {
 
 import { FolderIcon } from "@jitaspace/eve-icons";
 
-
 export interface PageProps {
   database: {
     name: string;
@@ -62,7 +61,24 @@ export default function Page({ database, queues, vars }: Readonly<PageProps>) {
                       <Text size="xs">{key}</Text>
                     </div>
                     <div>
-                      <Text size="xs">{value}</Text>
+                      {/*
+                        Values arrive already redacted from page.tsx — secrets
+                        are reduced to a length plus a SHA-256 fingerprint
+                        there, before they can enter the RSC payload. Rendered
+                        monospace so those fingerprints line up for comparison,
+                        and broken mid-word so a masked connection string does
+                        not overflow the row. The `?? "not set"` is only a
+                        type-level fallback: the prop type still allows
+                        `undefined`, but the server always sends a string.
+                      */}
+                      <Text
+                        size="xs"
+                        ff="monospace"
+                        ta="right"
+                        style={{ wordBreak: "break-all" }}
+                      >
+                        {value ?? "not set"}
+                      </Text>
                     </div>
                   </Group>
                 ))}
