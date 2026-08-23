@@ -19,15 +19,15 @@
     "NEXTAUTH_URL",
     "NEXT_PUBLIC_DISCORD_INVITE_LINK",
     "NEXT_PUBLIC_GOOGLE_TAG_ID",
-    // The PostHog pair and NEXT_PUBLIC_SITE_URL are read by apps/web/env.ts and
-    // inlined into the client bundle at build time. Turbo defaults to
-    // `envMode: "strict"`, which REMOVES undeclared vars from the task process —
-    // not just from the hash. Locally `with-env` re-injects them from the root
-    // .env after turbo has filtered, but on Vercel there is no .env file, so
-    // they arrived undefined and `posthog.init` silently never ran. Declaring
-    // them here restores them to the build and puts them in the cache key, so
-    // rotating a token invalidates the build instead of restoring a .next with
-    // the old value baked in.
+    // Read by apps/web/env.ts and inlined into the client bundle at build time.
+    // Listed here for the same reason as the NEXT_PUBLIC_* entries around them:
+    // to keep the set explicit and greppable. They are NOT load-bearing for the
+    // web build. Turbo detects apps/web as `nextjs` and framework inference
+    // already adds every NEXT_PUBLIC_* var to that package's task env and hash,
+    // whether or not it is declared — confirmed with
+    // `turbo run build --filter=@jitaspace/web --dry-run=json`, where an
+    // undeclared NEXT_PUBLIC_ probe still appears under `inferred`. So
+    // `envMode: "strict"` never stripped these from the Vercel build.
     "NEXT_PUBLIC_POSTHOG_HOST",
     "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN",
     "NEXT_PUBLIC_SENTRY_DSN",
