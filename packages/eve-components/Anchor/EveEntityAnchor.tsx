@@ -22,7 +22,17 @@ export const EveEntityAnchor = memo(
     children,
     ...props
   }: EveEntityAnchorProps) => {
-    const { category } = useEsiName(entityId ?? undefined, categoryHint);
+    const { category: resolvedCategory } = useEsiName(
+      entityId ?? undefined,
+      categoryHint,
+    );
+
+    // `useEsiName` reports the category off the *resolved* cache entry, so it
+    // stays undefined until the name lookup lands. Callers like `TypeAnchor`
+    // and `CharacterAnchor` already know the category statically, and the
+    // destination follows from the id alone — so prefer the hint and emit a
+    // real href on first render instead of parking the link on "#".
+    const category = categoryHint ?? resolvedCategory;
 
     const url = useMemo(() => {
       if (!entityId || !category) return "#";

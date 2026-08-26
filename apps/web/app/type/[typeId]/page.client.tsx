@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import {
   Anchor,
   Badge,
@@ -30,7 +29,8 @@ import {
   IconInfoCircle,
   IconListDetails,
 } from "@tabler/icons-react";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { parseAsStringLiteral, useQueryState } from "nuqs";
 
 import { useGetUniverseGroupsGroupId } from "@jitaspace/esi-client";
 import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
@@ -40,11 +40,6 @@ import {
   useSelectedCharacter,
   useType,
 } from "@jitaspace/hooks";
-import {
-  getDogmaAttributeByIdQueryOptions,
-  getDogmaAttributeCategoryByIdQueryOptions,
-  getDogmaUnitByIdQueryOptions,
-} from "@jitaspace/sde-client";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   CategoryAnchor,
@@ -57,6 +52,7 @@ import {
   MarketGroupAnchor,
 } from "@jitaspace/ui";
 
+import type { TypeDogmaAttributeMeta, TypeDogmaMeta } from "./types";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
   TypeInventoryBreadcrumbs,
@@ -71,7 +67,7 @@ import {
   MarketGroupName,
 } from "~/components/Text";
 import { EntityHistory } from "../../history/EntityHistory";
-import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab } from "./tabs";
+import { DEFAULT_TYPE_PAGE_TAB, isTypePageTab, TYPE_PAGE_TABS } from "./tabs";
 
 export interface PageProps {
   typeId: number;
@@ -259,13 +255,19 @@ export default function TypePage({
   typeId,
   typeName,
   typeDescription,
-}: Readonly<PageProps>) {
+  dogmaMeta,
+}: Readonly<PageProps & { dogmaMeta: TypeDogmaMeta }>) {
   const character = useSelectedCharacter();
-  // Deep-link support: `/type/{typeId}/{tab}` redirects here with `?tab=` set,
-  // selecting the initial tab. Unknown values fall back to the default tab.
-  const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab");
-  const initialTab = isTypePageTab(tabParam) ? tabParam : DEFAULT_TYPE_PAGE_TAB;
+  // Deep-link support: `/type/{typeId}/{tab}` redirects here with `?tab=` set.
+  // The param was previously read once into <Tabs defaultValue>, so switching
+  // tabs never updated the URL and you couldn't link to the tab you were on.
+  // parseAsStringLiteral rejects unknown values, falling back to the default.
+  const [activeTab, setActiveTab] = useQueryState(
+    "tab",
+    parseAsStringLiteral(TYPE_PAGE_TABS)
+      .withDefault(DEFAULT_TYPE_PAGE_TAB)
+      .withOptions({ history: "replace" }),
+  );
   const { data: type } = useType(typeId);
   const { data: marketPrices } = useMarketPrices();
   const [regionId] = useState(THE_FORGE_REGION_ID);
@@ -317,44 +319,16 @@ export default function TypePage({
     [typeData?.dogma_attributes],
   );
 
-  const dogmaAttributeQueries = useQueries({
-    queries: sortedDogmaAttributes.map((attribute) =>
-      getDogmaAttributeByIdQueryOptions(attribute.attribute_id),
-    ),
-  });
-
-  // Per-attribute SDE metadata (display name, icon, unit, category), keyed by id.
+  // Per-attribute SDE metadata (display name, icon, unit, category), keyed by
+  // id. Resolved on the server from our database and passed in as `dogmaMeta`.
   const attributeMetaById = useMemo(() => {
-    const metaById = new Map<
-      number,
-      {
-        displayName?: string;
-        name?: string;
-        iconId?: number;
-        unitId?: number;
-        categoryId?: number;
-      }
-    >();
-
-    sortedDogmaAttributes.forEach((attribute, index) => {
-      const data = dogmaAttributeQueries[index]?.data?.data;
-      if (data) {
-        // The generated SDE type marks `displayName` as required, but the API
-        // omits it for some internal attributes, so guard against undefined.
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        const displayName = data.displayName?.en?.trim();
-        metaById.set(attribute.attribute_id, {
-          displayName,
-          name: data.name,
-          iconId: data.iconID || undefined,
-          unitId: data.unitID || undefined,
-          categoryId: data.attributeCategoryID,
-        });
-      }
-    });
-
+    const metaById = new Map<number, TypeDogmaAttributeMeta>();
+    for (const attribute of sortedDogmaAttributes) {
+      const meta = dogmaMeta.attributes[attribute.attribute_id];
+      if (meta) metaById.set(attribute.attribute_id, meta);
+    }
     return metaById;
-  }, [dogmaAttributeQueries, sortedDogmaAttributes]);
+  }, [dogmaMeta.attributes, sortedDogmaAttributes]);
 
   // Resolve unit symbols once per unique unit id used by this type.
   const unitIds = useMemo(() => {
@@ -365,20 +339,13 @@ export default function TypePage({
     return Array.from(ids).sort((a, b) => a - b);
   }, [attributeMetaById]);
 
-  const unitQueries = useQueries({
-    queries: unitIds.map((unitId) => getDogmaUnitByIdQueryOptions(unitId)),
-  });
-
   const unitById = useMemo(() => {
     const units = new Map<number, UnitInfo>();
-    unitIds.forEach((unitId, index) => {
-      const data = unitQueries[index]?.data?.data;
-      // `displayName` is typed as required but may be absent on some units.
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      units.set(unitId, { unitId, symbol: data?.displayName?.en });
-    });
+    for (const unitId of unitIds) {
+      units.set(unitId, { unitId, symbol: dogmaMeta.unitSymbols[unitId] });
+    }
     return units;
-  }, [unitIds, unitQueries]);
+  }, [unitIds, dogmaMeta.unitSymbols]);
 
   const dogmaAttributeCategoryIds = useMemo(() => {
     const categoryIds = new Set<number>();
@@ -388,23 +355,14 @@ export default function TypePage({
     return Array.from(categoryIds).sort((a, b) => a - b);
   }, [attributeMetaById]);
 
-  const dogmaAttributeCategoryQueries = useQueries({
-    queries: dogmaAttributeCategoryIds.map((categoryId) =>
-      getDogmaAttributeCategoryByIdQueryOptions(categoryId),
-    ),
-  });
-
   const dogmaAttributeCategoryNamesById = useMemo(() => {
     const categoryNamesById = new Map<number, string>();
-    dogmaAttributeCategoryIds.forEach((categoryId, index) => {
-      const categoryName =
-        dogmaAttributeCategoryQueries[index]?.data?.data.name;
-      if (categoryName) {
-        categoryNamesById.set(categoryId, categoryName);
-      }
-    });
+    for (const categoryId of dogmaAttributeCategoryIds) {
+      const categoryName = dogmaMeta.categoryNames[categoryId];
+      if (categoryName) categoryNamesById.set(categoryId, categoryName);
+    }
     return categoryNamesById;
-  }, [dogmaAttributeCategoryIds, dogmaAttributeCategoryQueries]);
+  }, [dogmaAttributeCategoryIds, dogmaMeta.categoryNames]);
 
   const categorizedDogmaAttributes = useMemo(() => {
     const grouped = new Map<
@@ -618,7 +576,14 @@ export default function TypePage({
           </Group>
         </Paper>
 
-        <Tabs defaultValue={initialTab} variant="outline" keepMounted={false}>
+        <Tabs
+          value={activeTab}
+          onChange={(value) => {
+            if (isTypePageTab(value)) void setActiveTab(value);
+          }}
+          variant="outline"
+          keepMounted={false}
+        >
           <Tabs.List>
             <Tabs.Tab
               value="overview"

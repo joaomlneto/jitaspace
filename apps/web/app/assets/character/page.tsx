@@ -18,15 +18,14 @@ import {
 } from "@mantine/core";
 import { IconSearch, IconX } from "@tabler/icons-react";
 
-import { CharacterName } from "@jitaspace/eve-components";
+import { EveEntitySelect } from "@jitaspace/eve-components";
 import { AssetsIcon } from "@jitaspace/eve-icons";
 import {
-  useCharacterAssets,
   useEsiNameLookup,
   useMarketPrices,
-  useSelectedCharacter,
+  useMultipleCharacterAssets,
 } from "@jitaspace/hooks";
-import { CharacterAvatar, ISKAmount } from "@jitaspace/ui";
+import { ISKAmount } from "@jitaspace/ui";
 
 import { AssetSearchResults } from "~/components/Assets/AssetSearchResults";
 import { buildAssetTree } from "~/components/Assets/assetTree";
@@ -45,13 +44,36 @@ function Stat({ label, value }: Readonly<{ label: string; value: ReactNode }>) {
 }
 
 export default function Page() {
-  const character = useSelectedCharacter();
-  const { assets, isLoading } = useCharacterAssets(character?.characterId);
+  // Every logged-in character that granted the assets scope, not just the
+  // selected one. Each asset carries its owner as `subjectId`.
+  const { data: allAssets, isPending, errors } = useMultipleCharacterAssets();
   const { data: marketPrices } = useMarketPrices();
 
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
+    null,
+  );
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
   const isSearching = deferredQuery.trim().length > 0;
+
+  const characterIds = useMemo(
+    () => [...new Set(allAssets.map((asset) => asset.subjectId))],
+    [allAssets],
+  );
+
+  // buildAssetTree keys on item_id and roots on location_id, and EVE item ids
+  // are globally unique — so merging several characters is safe, and a station
+  // holding two characters' items becomes one location rather than two.
+  const assets = useMemo(() => {
+    const owned =
+      selectedCharacterId === null
+        ? allAssets
+        : allAssets.filter(
+            (asset) =>
+              asset.subjectId === Number.parseInt(selectedCharacterId, 10),
+          );
+    return Object.fromEntries(owned.map((asset) => [asset.item_id, asset]));
+  }, [allAssets, selectedCharacterId]);
 
   // Resolve every distinct type name once, in a single batched lookup.
   const typeIds = useMemo(
@@ -88,30 +110,36 @@ export default function Page() {
             <Group gap="md" wrap="nowrap">
               <AssetsIcon width={48} />
               <Title order={1}>Assets</Title>
-              {(isLoading || unresolvedNames > 0) && <Loader size="sm" />}
+              {(isPending || unresolvedNames > 0) && <Loader size="sm" />}
             </Group>
-            {character && (
-              <Group gap="xs" wrap="nowrap">
-                <CharacterAvatar
-                  characterId={character.characterId}
-                  size="sm"
-                  radius="xl"
-                />
-                <CharacterName
-                  characterId={character.characterId}
-                  fw={500}
-                  size="sm"
-                  visibleFrom="xs"
-                />
-              </Group>
-            )}
+            <EveEntitySelect
+              size="xs"
+              label="Filter by character"
+              entityIds={characterIds.map((id) => ({ id }))}
+              searchable
+              allowDeselect
+              clearable
+              value={selectedCharacterId}
+              onChange={setSelectedCharacterId}
+            />
           </Group>
+
+          {errors.length > 0 && (
+            // A failed token drops that character's assets from a total that
+            // claims to cover everyone, so the absence has to be visible.
+            <Text c="dimmed" size="sm">
+              Could not load assets for {errors.length}{" "}
+              {errors.length === 1 ? "character" : "characters"}.
+            </Text>
+          )}
 
           <Paper withBorder radius="md" p="md">
             <SimpleGrid cols={3} spacing="md">
               <Stat
                 label="Value"
-                value={<ISKAmount amount={tree.totalValue} fw={700} size="lg" />}
+                value={
+                  <ISKAmount amount={tree.totalValue} fw={700} size="lg" />
+                }
               />
               <Stat
                 label="Items"
@@ -151,7 +179,7 @@ export default function Page() {
             }
           />
 
-          {isEmpty && isLoading && (
+          {isEmpty && isPending && (
             <Center mih={200}>
               <Group gap="xs">
                 <Loader size="sm" />
@@ -160,11 +188,16 @@ export default function Page() {
             </Center>
           )}
 
-          {isEmpty && !isLoading && (
+          {isEmpty && !isPending && (
             <Center mih={200}>
               <Stack align="center" gap={4}>
                 <AssetsIcon width={40} />
-                <Text c="dimmed">No assets found for this character.</Text>
+                {/* The filter only offers characters that own assets, so a
+                    filtered view is never empty — this is always the
+                    nothing-anywhere case. */}
+                <Text c="dimmed">
+                  No assets found for any of your characters.
+                </Text>
               </Stack>
             </Center>
           )}

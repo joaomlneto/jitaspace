@@ -23,12 +23,11 @@ const mockUseEsiNameLookup =
       ...args: unknown[]
     ) => Record<string, { value?: { name: string } } | undefined>
   >();
-const mockUseMarketPrices =
-  jest.fn<
-    (...args: unknown[]) => {
-      data: Record<number, { adjusted_price?: number }>;
-    }
-  >();
+const mockUseMarketPrices = jest.fn<
+  (...args: unknown[]) => {
+    data: Record<number, { adjusted_price?: number }>;
+  }
+>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useMultipleCorporationAssets: () => mockUseMultipleCorporationAssets(),

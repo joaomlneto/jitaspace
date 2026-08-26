@@ -137,12 +137,13 @@ export async function completeLoginFlow(params: {
   });
 
   // Verify the token's signature against EVE's published JWKS (and the
-  // iss/aud/exp claims) before trusting anything it contains.
-  const payload = await verifyEveSsoAccessToken(tokens.access_token).catch(
-    () => {
-      throw new OAuthFlowError("Access token failed verification.");
-    },
-  );
+  // iss/aud/exp claims) before trusting anything it contains. `clientId` binds
+  // it to this application — without it any EVE app's token would verify.
+  const payload = await verifyEveSsoAccessToken(tokens.access_token, {
+    clientId: eveClientId,
+  }).catch(() => {
+    throw new OAuthFlowError("Access token failed verification.");
+  });
 
   // Same sealed shape `refreshTokenApiRouteHandler` / `tokenRefreshDataSchema`
   // expect, so the existing refresh path can consume it unchanged.

@@ -33,7 +33,6 @@
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/esi-metadata": "workspace:*",
     "@jitaspace/fuzzworks-market-client": "workspace:*",
-    "@jitaspace/sde-client": "workspace:*",
     "@react-hook/cache": "^1.1.1",
     "@tanstack/db": "^0.6.7",
     "@tanstack/query-db-collection": "^1.0.38",

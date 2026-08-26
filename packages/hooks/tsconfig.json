@@ -1,5 +1,5 @@
 {
-  "extends": "@jitaspace/tsconfig/internal-package.json",
+  "extends": "@jitaspace/tsconfig/base.json",
   "include": ["."],
   "exclude": ["node_modules", "build", "dist", "coverage"],
   "compilerOptions": {

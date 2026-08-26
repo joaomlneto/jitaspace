@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
   Alert,
@@ -14,6 +13,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
+import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 
 import { collectionMeta } from "~/lib/history";
 import { getBuildChanges, getResourceIndex } from "~/lib/history-actions";
@@ -34,7 +34,11 @@ export default function BuildHistoryClient({
     staleTime: Infinity,
   });
   // Collections currently checked; null ⇒ all (until the user unchecks one).
-  const [selected, setSelected] = useState<string[] | null>(null);
+  // No .withDefault(): an absent param is null, matching the "all" sentinel.
+  const [selected, setSelected] = useQueryState(
+    "collections",
+    parseAsArrayOf(parseAsString).withOptions({ history: "replace" }),
+  );
 
   if (isLoading || resLoading) return <Loader />;
 
@@ -80,7 +84,11 @@ export default function BuildHistoryClient({
                 : ""}
             </Text>
             {data && (
-              <Chip.Group multiple value={active} onChange={setSelected}>
+              <Chip.Group
+                multiple
+                value={active}
+                onChange={(value) => void setSelected(value)}
+              >
                 <Group gap={6}>
                   {seenCollections.map((c) => (
                     <Chip

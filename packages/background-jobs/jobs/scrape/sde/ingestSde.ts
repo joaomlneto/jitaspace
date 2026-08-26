@@ -38,6 +38,9 @@ export const SDE_INGEST_JOB_IDS: string[] = [
   "ingest-sde-dogma-units",
   "ingest-sde-dogma-attributes",
   "ingest-sde-dogma-effects",
+  // Derived from dogmaEffects.yaml's nested modifierInfo; its optional FKs point
+  // at DogmaEffect / DogmaAttribute / Group, all ingested above.
+  "ingest-sde-dogma-effect-modifiers",
   "ingest-sde-agent-types",
   "ingest-sde-station-services",
   "ingest-sde-npc-corporation-divisions",

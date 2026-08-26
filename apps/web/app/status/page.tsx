@@ -1,12 +1,14 @@
 import { Suspense } from "react";
 
-import { PageSkeleton } from "~/components/PageSkeleton";
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
+import { PageSkeleton } from "~/components/PageSkeleton";
+import { getSdeIngestState } from "./actions";
 import StatusPageClient from "./page.client";
 
 export const metadata = {
   title: "Server Status",
-  description: "EVE Online Tranquility server status and JitaSpace service health.",
+  description:
+    "EVE Online Tranquility server status and JitaSpace service health.",
 };
 
 async function getVercelStatus() {
@@ -31,11 +33,13 @@ async function getSdeLastModified() {
 async function StatusPageContent() {
   const vercelStatusData = await getVercelStatus().catch(() => null);
   const sdeLastModifiedData = await getSdeLastModified().catch(() => null);
+  const sdeIngestState = await getSdeIngestState().catch(() => null);
 
   return (
     <StatusPageClient
       vercelStatusData={vercelStatusData}
       sdeLastModifiedData={sdeLastModifiedData}
+      sdeIngestState={sdeIngestState}
     />
   );
 }

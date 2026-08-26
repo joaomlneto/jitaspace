@@ -4,7 +4,7 @@
 
 Turborepo monorepo for an EVE Online companion web application. Two apps (`apps/web`, `apps/cli`) and 20+ shared packages under `packages/`. The main product is `apps/web`, a Next.js 16 app deployed to Vercel. Background jobs run on Trigger.dev (the `background-jobs-triggerdev` adapter); there is no `apps/worker`.
 
-**Tech stack:** Node.js >=24.15.0 · TypeScript 5.9 · Next.js 16 · React 19 · Mantine 8 · TanStack Query 5 · Prisma 7 + PostgreSQL · EVE Online SSO (OAuth2 + PKCE) · Trigger.dev · Turborepo 2 · pnpm 11.3.0
+**Tech stack:** Node.js >=24.15.0 · TypeScript 5.9 · Next.js 16 · React 19 · Mantine 9 · TanStack Query 5 · Prisma 7 + PostgreSQL · EVE Online SSO (OAuth2 + PKCE) · Trigger.dev · Turborepo 2 · pnpm 11.3.0
 
 ---
 
@@ -43,6 +43,15 @@ Turbo's `build` task declares these as dependencies, but always run them explici
 - `packages/db/` (Prisma client) — edit `packages/db/prisma/schema.prisma`, then run `pnpm db:generate`
 - `packages/esi-client/src/generated/**` and other `packages/*-client/src/generated/**` — edit the `swagger.json` or `kubb.config.ts`, then run `pnpm kubb:generate`
 
+**Applying the schema to the database is a separate, manual step.** `pnpm db:generate` only writes the Prisma client; it does not touch the database. Deploys (`apps/web/vercel.json`) run `db:generate` and **not** `db:push` — `db push` reconciles the database down to the schema on the deployed commit, so running it from a build makes any PR branched before a schema-adding PR propose dropping the newer tables. That broke 18 production deploys in 2026-08. To apply a schema change:
+
+```bash
+pnpm db:diff          # read-only — review the pending change
+pnpm db:push          # apply it, then merge
+```
+
+Never pass `--accept-data-loss`. See CLAUDE.md → "Applying schema changes to the database" for the CockroachDB `schema_locked` recovery procedure.
+
 ---
 
 ## Build
@@ -51,7 +60,7 @@ Turbo's `build` task declares these as dependencies, but always run them explici
 SKIP_ENV_VALIDATION=1 pnpm build   # Build all packages and apps via Turbo
 ```
 
-`build` outputs to `.next/**` (web) and `dist/**` (packages). The web app sets `typescript.ignoreBuildErrors: true` in CI (`apps/web/next.config.mjs`) so TypeScript errors do not fail the Next.js build in CI, but they still fail `pnpm type-check`.
+`build` outputs to `.next/**` (web) and `dist/**` (packages). The web app sets `typescript.ignoreBuildErrors: true` in CI (`apps/web/next.config.mjs`) so TypeScript errors do not fail the Next.js _build_ — the dedicated `type-check.yml` workflow catches them instead, and it is a hard gate: the repo is expected to be green.
 
 ---
 
@@ -60,6 +69,7 @@ SKIP_ENV_VALIDATION=1 pnpm build   # Build all packages and apps via Turbo
 ```bash
 pnpm lint                          # ESLint (flat config) + manypkg workspace checks
 pnpm lint:fix                      # Auto-fix linting issues
+pnpm format:check                  # Prettier in check mode — what lint.yml runs
 pnpm format                        # Prettier (also sorts imports)
 pnpm type-check                    # tsc --noEmit across all workspaces
 pnpm test                          # Jest unit tests across workspaces (generates coverage)
@@ -77,19 +87,26 @@ pnpm test                          # Jest unit tests across workspaces (generate
 
 ## Continuous Integration
 
-Two GitHub Actions workflows run on every push:
+Four GitHub Actions workflows run on pushes to `main` and on pull requests:
+
+**Type Check** (`.github/workflows/type-check.yml`):
+
+- Sequence: `pnpm install --frozen-lockfile` → `pnpm type-check`
+- A hard gate — a type error fails the PR. No explicit codegen step: the turbo `type-check` task depends on the Prisma and Kubb generators, so a clean checkout produces them itself.
+- Uses `SKIP_ENV_VALIDATION=1`
 
 **Cypress Tests** (`.github/workflows/cypress.yml`):
 
 - Requires CockroachDB (v24.3.7) and Redis services
-- Sequence: `pnpm install` → push DB schema (`cd packages/db && pnpm exec prisma db push`) → `pnpm build` → start web server → Cypress E2E (parallel, 2 containers)
-- Uses `SKIP_ENV_VALIDATION=1`
+- Sequence: `pnpm install` → push DB schema (`cd packages/db && pnpm exec prisma db push`) → `pnpm build` → start web server → run Cypress (parallel, 2 containers)
+- NOT feature coverage: `apps/web/cypress/e2e/smoke.cy.ts` is a four-assertion smoke suite whose checks are request-level — the homepage does not 5xx, `/about` server-renders, the PWA manifest is served, and an unknown route 404s. The job gates that the build succeeds, the server boots and real routes respond.
+- Uses `SKIP_ENV_VALIDATION=1`, plus placeholder `NEXT_PUBLIC_*` values. `SKIP_ENV_VALIDATION` is not a `NEXT_PUBLIC_` variable, so Next never inlines it into the client bundle and `env.ts` always runs the client schema in the browser — without those placeholders the build produces a bundle that throws on load.
 
 **SonarCloud** (`.github/workflows/sonarcloud.yml`):
 
 - Runs on `main` pushes and all PRs
 - Sequence: `pnpm install --frozen-lockfile` → `pnpm test` (produces coverage) → SonarQube scan
-- Uses `SKIP_ENV_VALIDATION=1` and a dummy `DATABASE_URL` for Prisma codegen in postinstall
+- Uses `SKIP_ENV_VALIDATION=1` and a dummy `DATABASE_URL` for the codegen that runs in postinstall hooks
 
 ---
 
@@ -97,14 +114,14 @@ Two GitHub Actions workflows run on every push:
 
 | Purpose                    | Path                                                                     |
 | -------------------------- | ------------------------------------------------------------------------ |
-| Root scripts & pnpm config | `package.json`, `pnpm-workspace.yaml`, `.npmrc`                          |
+| Root scripts & pnpm config | `package.json`, `pnpm-workspace.yaml` (there is no `.npmrc`)             |
 | Turbo pipeline config      | `turbo.json`                                                             |
 | Web app entry & routes     | `apps/web/app/`                                                          |
 | Web app config             | `apps/web/next.config.mjs`, `apps/web/env.ts`                            |
 | DB schema                  | `packages/db/prisma/schema.prisma`                                       |
 | ESI API client generation  | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json` |
 | Auth config                | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)        |
-| Shared ESLint rules        | `tooling/eslint/src/base.ts`                                             |
+| Shared ESLint rules        | `tooling/eslint/base.ts`                                                 |
 | Shared Prettier config     | `tooling/prettier/index.mjs`                                             |
 | Shared TypeScript config   | `tooling/tsconfig/base.json`                                             |
 | Jest config (web)          | `apps/web/jest.config.ts`                                                |
@@ -136,9 +153,9 @@ When a new `@jitaspace/*` package exports TypeScript source and needs to be impo
 - **Missing generated files:** If you see import errors for `@jitaspace/db` or `@jitaspace/esi-client`, run `pnpm db:generate` and/or `pnpm kubb:generate` first.
 - **Env validation crash:** Build or dev server crashes with env errors → set `SKIP_ENV_VALIDATION=1`.
 - **Wrong package manager:** Any `npm install` or `yarn` command will fail with a preinstall error — use pnpm only.
-- **Prisma postinstall:** The `packages/db` package runs `prisma generate` on `postinstall`. CI sets a dummy `DATABASE_URL` so this succeeds without a real database.
+- **Prisma client generation:** `packages/db` has **no** `postinstall` hook — the Prisma client is produced by the turbo `db:generate` edges that `build`, `lint` and `type-check` declare. `packages/db-history` and the generated-client packages (`esi-client`, `evekill-client`, `evetycoon-client`, `fuzzworks-market-client`, `hooks`) do run codegen on `postinstall`. CI sets a dummy `DATABASE_URL` so those succeed without a real database. After `pnpm install --ignore-scripts`, run `pnpm db:generate` and `pnpm kubb:generate` explicitly.
 - **`apps/web` lint command:** Uses `--flag unstable_native_nodejs_ts_config` for native ESM TypeScript config support.
 
 ---
 
-Trust these instructions. Only search the codebase if the information here appears incomplete or incorrect.
+Prefer these instructions over re-deriving the basics, but verify before relying on any specific claim: version numbers, CI gates and "currently broken" statements drift as the repo changes, and this file is not always updated in the same PR. `CLAUDE.md` is the most actively maintained of the three agent docs — if they disagree, believe it, and fix this one.

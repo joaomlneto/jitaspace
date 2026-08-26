@@ -18,15 +18,15 @@
   "dependencies": {
     "@jitaspace/eve-icons": "workspace:*",
     "@jitaspace/hooks": "workspace:*",
-    "@jitaspace/sde-client": "workspace:*",
     "@jitaspace/ui": "workspace:*",
     "@jitaspace/utils": "workspace:*",
     "@mantine/core": "9.3.0",
     "@mantine/hooks": "9.3.0",
     "date-fns": "^4.3.0",
-    "next": "16.2.6",
+    "next": "16.2.11",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "swr": "^2.4.1"
   },
   "devDependencies": {
     "@jest/globals": "^30.4.1",

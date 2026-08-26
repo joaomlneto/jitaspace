@@ -27,18 +27,37 @@ const childrenStub =
       children,
     );
 
+// Entity anchors render a real <a> so tests can assert the destination. The
+// href is omitted while the id is nullish, mirroring the real components —
+// emitting `/type/undefined` is precisely the bug these stubs must not hide.
+const anchorStub =
+  (path: string, idProp: string, testid?: string) =>
+  ({ children, ...props }: AnyProps) => {
+    const id = props[idProp] as string | number | null | undefined;
+    return React.createElement(
+      "a",
+      {
+        ...(testid ? { "data-testid": testid } : null),
+        ...(id === null || id === undefined ? null : { href: `${path}/${id}` }),
+      },
+      children,
+    );
+  };
+
 // --- Anchors (render children) ---
-export const CharacterAnchor = childrenStub();
+export const CharacterAnchor = anchorStub("/character", "characterId");
 export const ConstellationAnchor = childrenStub();
 export const EveEntityAnchor = childrenStub();
 export const EveEntityNameAnchor = childrenStub();
 export const EveMailSenderAnchor = childrenStub();
-export const FactionAnchor = childrenStub();
+export const FactionAnchor = anchorStub("/faction", "factionId");
 export const RegionAnchor = childrenStub();
-export const SolarSystemAnchor = childrenStub();
+export const SolarSystemAnchor = anchorStub("/system", "solarSystemId");
 export const StargateDestinationAnchor = childrenStub();
 export const StationAnchor = childrenStub();
-export const TypeAnchor = childrenStub("type-anchor");
+export const TypeAnchor = anchorStub("/type", "typeId", "type-anchor");
+export const TypeAvatar = () =>
+  React.createElement("span", { "data-testid": "type-avatar" });
 export const WarAggressorAnchor = childrenStub();
 export const WarDefenderAnchor = childrenStub();
 
@@ -73,7 +92,6 @@ export const WarDefenderName = () => null;
 // --- Avatars / cards / selects / breadcrumbs / timeline (render nothing) ---
 export const EveEntityAvatar = () => null;
 export const EveMailSenderAvatar = () => null;
-export const MarketGroupAvatar = () => null;
 export const SolarSystemSovereigntyAvatar = () => null;
 export const CalendarEventAttendeesAvatarGroup = () => null;
 export const SolarSystemBreadcrumbs = () => null;

@@ -5,11 +5,12 @@
  * - GET /collection/{id} — returns a single item from the collection
  * Pagination is not supported, as the collections are expected to be small and static.
  */
-import { OpenAPIV3 } from "openapi-types";
+import type { OpenAPIV3 } from "openapi-types";
 
-import { fixObjectIndices, sdeInputFiles } from "@jitaspace/sde-utils";
+import type { sdeInputFiles } from "@jitaspace/sde-utils";
+import { fixObjectIndices } from "@jitaspace/sde-utils";
 
-export type SdeCollection = {
+export interface SdeCollection {
   datasource: (
     | {
         type: "sde";
@@ -33,7 +34,7 @@ export type SdeCollection = {
     patchSchema?: (item: OpenAPIV3.Document) => OpenAPIV3.Document;
   };
   tags: string[];
-};
+}
 
 export const collections: Record<string, SdeCollection> = {
   /* temporarily (hopefully) removed by accident…
@@ -935,7 +936,7 @@ export const collections: Record<string, SdeCollection> = {
       type: "sde",
       name: "types.yaml",
       transformations: [
-        (data, { idAttributeName }) => {
+        (data, { idAttributeName: _idAttributeName }) => {
           // compute variations for each type
           const variations: Record<number, number[]> = {};
           Object.values(data)
@@ -943,9 +944,8 @@ export const collections: Record<string, SdeCollection> = {
             .filter((entry) => entry.variationParentTypeID !== undefined)
             .forEach((entry) => {
               // @ts-ignore
-              const parentTypeId = entry.variationParentTypeID;
-              if (variations[parentTypeId] == undefined)
-                variations[parentTypeId] = [parentTypeId];
+              const parentTypeId: number = entry.variationParentTypeID;
+              variations[parentTypeId] ??= [parentTypeId];
               // @ts-ignore
               variations[parentTypeId].push(entry.typeID);
             });

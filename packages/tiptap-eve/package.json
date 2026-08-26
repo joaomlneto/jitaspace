@@ -15,6 +15,19 @@
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/index.js"
+        },
+        "require": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/index.cjs"
+        }
+      },
+      "./package.json": "./package.json"
+    },
     "access": "public"
   },
   "files": [
@@ -27,12 +40,13 @@
     "clean": "rm -rf .turbo node_modules dist",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
-    "prepublishOnly": "pnpm build",
+    "prepack": "pnpm build",
     "test": "jest --config ./jest.config.ts --runInBand",
     "test:watch": "jest --config ./jest.config.ts --watch",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@tiptap/core": "^3.26.0",
     "@tiptap/extension-hard-break": "^3.26.0",
     "@tiptap/extension-link": "^3.26.0",
     "@tiptap/extension-text-style": "^3.26.0",
@@ -41,6 +55,7 @@
     "@tiptap/starter-kit": "^3.26.0"
   },
   "peerDependencies": {
+    "@tiptap/pm": "^3.26.0",
     "react": "^19.2.6"
   },
   "devDependencies": {
@@ -49,12 +64,14 @@
     "@jitaspace/tsconfig": "workspace:*",
     "@swc/core": "^1.15.40",
     "@swc/jest": "^0.2.39",
+    "@tiptap/pm": "^3.26.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.12.4",
     "@types/react": "^19.1.6",
     "eslint": "^9.39.4",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
+    "linkifyjs": "^4.3.3",
     "prettier": "^3.8.3",
     "react": "^19.2.6",
     "tsup": "^8.5.1",

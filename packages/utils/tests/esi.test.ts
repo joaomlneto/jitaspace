@@ -1,4 +1,4 @@
-import { isSpecialLabelId, humanLabelName } from "../src/esi";
+import { humanLabelName, isSpecialLabelId } from "../src/esi";
 
 describe("isSpecialLabelId", () => {
   it("returns truthy for label_id 1 (Inbox)", () => {

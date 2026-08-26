@@ -24,7 +24,12 @@ const AMARR = 60008494;
 const asset = (
   a: Pick<
     CharacterAsset,
-    "item_id" | "type_id" | "quantity" | "location_id" | "location_flag" | "location_type"
+    | "item_id"
+    | "type_id"
+    | "quantity"
+    | "location_id"
+    | "location_flag"
+    | "location_type"
   > &
     Partial<CharacterAsset>,
 ): CharacterAsset => ({ is_singleton: false, ...a });
@@ -34,12 +39,57 @@ const asset = (
 const SHIP = 1001;
 const CONTAINER = 1003;
 const fixture: Record<string, CharacterAsset> = {
-  1001: asset({ item_id: SHIP, type_id: 641, quantity: 1, location_id: JITA, location_flag: "Hangar", location_type: "station", is_singleton: true }),
-  2001: asset({ item_id: 2001, type_id: 3001, quantity: 1, location_id: SHIP, location_flag: "HiSlot0", location_type: "item", is_singleton: true }),
-  2002: asset({ item_id: 2002, type_id: 222, quantity: 5000, location_id: SHIP, location_flag: "Cargo", location_type: "item" }),
-  1002: asset({ item_id: 1002, type_id: 34, quantity: 1_000_000, location_id: JITA, location_flag: "Hangar", location_type: "station" }),
-  1003: asset({ item_id: CONTAINER, type_id: 3465, quantity: 1, location_id: AMARR, location_flag: "Hangar", location_type: "station", is_singleton: true }),
-  2003: asset({ item_id: 2003, type_id: 34, quantity: 50, location_id: CONTAINER, location_flag: "Unlocked", location_type: "item" }),
+  1001: asset({
+    item_id: SHIP,
+    type_id: 641,
+    quantity: 1,
+    location_id: JITA,
+    location_flag: "Hangar",
+    location_type: "station",
+    is_singleton: true,
+  }),
+  2001: asset({
+    item_id: 2001,
+    type_id: 3001,
+    quantity: 1,
+    location_id: SHIP,
+    location_flag: "HiSlot0",
+    location_type: "item",
+    is_singleton: true,
+  }),
+  2002: asset({
+    item_id: 2002,
+    type_id: 222,
+    quantity: 5000,
+    location_id: SHIP,
+    location_flag: "Cargo",
+    location_type: "item",
+  }),
+  1002: asset({
+    item_id: 1002,
+    type_id: 34,
+    quantity: 1_000_000,
+    location_id: JITA,
+    location_flag: "Hangar",
+    location_type: "station",
+  }),
+  1003: asset({
+    item_id: CONTAINER,
+    type_id: 3465,
+    quantity: 1,
+    location_id: AMARR,
+    location_flag: "Hangar",
+    location_type: "station",
+    is_singleton: true,
+  }),
+  2003: asset({
+    item_id: 2003,
+    type_id: 34,
+    quantity: 50,
+    location_id: CONTAINER,
+    location_flag: "Unlocked",
+    location_type: "item",
+  }),
 };
 
 const prices = {
@@ -60,9 +110,21 @@ describe("buildAssetTree", () => {
   });
 
   it("nests items under their parent container/ship", () => {
-    expect(tree.childrenByParent.get(JITA)?.map((a) => a.item_id).sort()).toEqual([1001, 1002]);
-    expect(tree.childrenByParent.get(SHIP)?.map((a) => a.item_id).sort()).toEqual([2001, 2002]);
-    expect(tree.childrenByParent.get(CONTAINER)?.map((a) => a.item_id)).toEqual([2003]);
+    expect(
+      tree.childrenByParent
+        .get(JITA)
+        ?.map((a) => a.item_id)
+        .sort(),
+    ).toEqual([1001, 1002]);
+    expect(
+      tree.childrenByParent
+        .get(SHIP)
+        ?.map((a) => a.item_id)
+        .sort(),
+    ).toEqual([2001, 2002]);
+    expect(tree.childrenByParent.get(CONTAINER)?.map((a) => a.item_id)).toEqual(
+      [2003],
+    );
   });
 
   it("rolls up subtree value to include contents", () => {
@@ -93,7 +155,16 @@ describe("buildAssetTree", () => {
 
   it("treats missing market prices as zero value", () => {
     const tree = buildAssetTree(
-      { 1: asset({ item_id: 1, type_id: 9, quantity: 3, location_id: JITA, location_flag: "Hangar", location_type: "station" }) },
+      {
+        1: asset({
+          item_id: 1,
+          type_id: 9,
+          quantity: 3,
+          location_id: JITA,
+          location_flag: "Hangar",
+          location_type: "station",
+        }),
+      },
       {},
     );
     expect(tree.totalValue).toBe(0);
@@ -118,7 +189,10 @@ describe("assetSection", () => {
   });
 
   it("maps bays and holds to friendly names", () => {
-    expect(assetSection("Cargo")).toMatchObject({ key: "cargo", label: "Cargo Hold" });
+    expect(assetSection("Cargo")).toMatchObject({
+      key: "cargo",
+      label: "Cargo Hold",
+    });
     expect(assetSection("DroneBay").label).toBe("Drone Bay");
     expect(assetSection("FighterTube0").label).toBe("Fighter Bay");
     expect(assetSection("SpecializedOreHold").label).toBe("Ore Hold");
@@ -159,9 +233,30 @@ describe("groupBySection", () => {
 
   it("orders sections like a ship fit and sorts items by value", () => {
     const items = [
-      asset({ item_id: 1, type_id: 1, quantity: 1, location_id: SHIP, location_flag: "Cargo", location_type: "item" }),
-      asset({ item_id: 2, type_id: 2, quantity: 1, location_id: SHIP, location_flag: "HiSlot0", location_type: "item" }),
-      asset({ item_id: 3, type_id: 3, quantity: 1, location_id: SHIP, location_flag: "HiSlot1", location_type: "item" }),
+      asset({
+        item_id: 1,
+        type_id: 1,
+        quantity: 1,
+        location_id: SHIP,
+        location_flag: "Cargo",
+        location_type: "item",
+      }),
+      asset({
+        item_id: 2,
+        type_id: 2,
+        quantity: 1,
+        location_id: SHIP,
+        location_flag: "HiSlot0",
+        location_type: "item",
+      }),
+      asset({
+        item_id: 3,
+        type_id: 3,
+        quantity: 1,
+        location_id: SHIP,
+        location_flag: "HiSlot1",
+        location_type: "item",
+      }),
     ];
     const groups = groupBySection(items, valueOf);
     expect(groups.map((g) => g.key)).toEqual(["hi", "cargo"]);
@@ -172,8 +267,22 @@ describe("groupBySection", () => {
 
   it("flattens a single generic hangar group", () => {
     const items = [
-      asset({ item_id: 1, type_id: 1, quantity: 1, location_id: JITA, location_flag: "Hangar", location_type: "station" }),
-      asset({ item_id: 2, type_id: 2, quantity: 1, location_id: JITA, location_flag: "Hangar", location_type: "station" }),
+      asset({
+        item_id: 1,
+        type_id: 1,
+        quantity: 1,
+        location_id: JITA,
+        location_flag: "Hangar",
+        location_type: "station",
+      }),
+      asset({
+        item_id: 2,
+        type_id: 2,
+        quantity: 1,
+        location_id: JITA,
+        location_flag: "Hangar",
+        location_type: "station",
+      }),
     ];
     expect(isFlatSectioning(groupBySection(items, valueOf))).toBe(true);
     expect(isFlatSectioning([])).toBe(true);

@@ -4,17 +4,18 @@ Shared ESLint flat-config presets for the JitaSpace monorepo.
 
 ## Presets
 
-| Import | Use for |
-|---|---|
-| `@jitaspace/eslint-config/base` | Node.js packages and tooling |
-| `@jitaspace/eslint-config/react` | React component libraries |
-| `@jitaspace/eslint-config/nextjs` | Next.js applications |
+| Import                            | Use for                      |
+| --------------------------------- | ---------------------------- |
+| `@jitaspace/eslint-config/base`   | Node.js packages and tooling |
+| `@jitaspace/eslint-config/react`  | React component libraries    |
+| `@jitaspace/eslint-config/nextjs` | Next.js applications         |
 
 ## Usage
 
 ```ts
 // eslint.config.ts
 import baseConfig from "@jitaspace/eslint-config/base";
+
 export default [...baseConfig];
 ```
 

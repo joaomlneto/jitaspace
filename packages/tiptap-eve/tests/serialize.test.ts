@@ -59,9 +59,7 @@ describe("htmlToEveMail", () => {
 
   describe("underline", () => {
     it("preserves <u> tags", () => {
-      expect(htmlToEveMail("<p><u>underline</u></p>")).toBe(
-        "<u>underline</u>",
-      );
+      expect(htmlToEveMail("<p><u>underline</u></p>")).toBe("<u>underline</u>");
     });
   });
 
@@ -74,9 +72,7 @@ describe("htmlToEveMail", () => {
   describe("links", () => {
     it("converts <a href='showinfo:...'> to <url=...>", () => {
       expect(
-        htmlToEveMail(
-          '<p><a href="showinfo:1377//93345033">Joao Neto</a></p>',
-        ),
+        htmlToEveMail('<p><a href="showinfo:1377//93345033">Joao Neto</a></p>'),
       ).toBe("<url=showinfo:1377//93345033>Joao Neto</url>");
     });
 
@@ -88,9 +84,7 @@ describe("htmlToEveMail", () => {
 
     it("converts killReport links to <url=...>", () => {
       expect(
-        htmlToEveMail(
-          '<p><a href="killReport:13807613:abc123">Kill</a></p>',
-        ),
+        htmlToEveMail('<p><a href="killReport:13807613:abc123">Kill</a></p>'),
       ).toBe("<url=killReport:13807613:abc123>Kill</url>");
     });
 

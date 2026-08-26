@@ -28,24 +28,32 @@ pnpm lint           # ESLint (flat config) + manypkg workspace checks
 pnpm lint:fix       # auto-fix lint issues
 pnpm type-check     # tsc --noEmit across all workspaces
 pnpm format         # Prettier (also sorts imports)
+pnpm format:check   # Prettier in check mode — what lint.yml runs
 pnpm db:generate    # generate Prisma client from packages/db/prisma/schema.prisma
-pnpm db:push        # push Prisma schema to DB (also runs db:generate)
+pnpm db:diff        # read-only: show what db:push WOULD change (run this first)
+pnpm db:push        # apply the Prisma schema to the DB (also runs db:generate)
 pnpm kubb:generate  # generate API clients from OpenAPI specs
 pnpm cypress:run    # run web E2E tests headlessly
 pnpm cypress:open   # open Cypress runner
-pnpm clean          # remove all node_modules
-pnpm clean:workspaces # clean workspace build output via turbo
+pnpm clean          # remove all node_modules, from the root down
+pnpm clean:workspaces # `turbo clean` — runs each workspace's own clean script.
+                      # NOTE: 27 of those delete the workspace's node_modules as
+                      # well as its build output, so this uninstalls dependencies
+                      # too; it is not a build-output-only clean. Re-run
+                      # `pnpm install` afterwards.
 ```
 
 ### Running a single test
 
-Tests live in `apps/web` and run via Jest behind `pnpm with-env` (loads root `.env`). From `apps/web`:
+Jest suites live in 16 workspaces — `apps/web` plus most `packages/*` (`hooks`, `ui`, `eve-components`, `background-jobs`, `auth`, `auth-utils`, `utils`, `tiptap-eve`, …). `apps/web` runs Jest behind `pnpm with-env` (loads root `.env`); packages run Jest directly. From the workspace that owns the test:
 
 ```bash
 pnpm test path/to/file.test.ts          # a single file
 pnpm test -- -t "test name substring"   # by test name
 pnpm test:watch                          # interactive watch
 ```
+
+Packages that touch the validated env need `SKIP_ENV_VALIDATION=1` (several set it in their own `jest.config.ts`).
 
 ## Critical: code generation before build
 
@@ -58,10 +66,42 @@ pnpm kubb:generate   # OpenAPI → TypeScript clients in packages/*-client/src/g
 
 If you see import errors for `@jitaspace/db` or `@jitaspace/esi-client`, these haven't run yet.
 
+**If a stale ESLint cache is failing you.** `pnpm lint` uses `--cache`, which keys on each linted file's contents rather than on the generated types it imports, so errors cached before codegen (typically `no-unsafe-*` on `prisma.*`) can replay after you regenerate and the fix looks like it did nothing. The turbo `lint` task now declares the same `db:generate`/`kubb:generate` edges as `build` and `type-check`, so `pnpm lint` can no longer run ahead of the generators — but a cache written by an older checkout, or by invoking `eslint` directly in a package, still can. Recover with `pnpm clean:eslint-cache` (use the script — the `rm` inside it aborts under zsh on unmatched globs).
+
 **Never edit generated files directly.** Instead edit the source and regenerate:
 
 - Prisma client → edit `packages/db/prisma/schema.prisma`, then `pnpm db:generate`
 - API clients → edit the package's `swagger.json` / `kubb.config.ts`, then `pnpm kubb:generate`
+
+## Applying schema changes to the database
+
+**Deploying does not apply the schema.** `apps/web/vercel.json` runs `db:generate` (Prisma client codegen — required to compile) but **not** `db:push`. Applying a schema change to production is a separate, deliberate step you take by hand:
+
+```bash
+pnpm db:diff        # read-only — review the pending change first
+pnpm db:push        # apply it
+```
+
+**Both commands hit whatever `DATABASE_URL` points at, and the root `.env` points at production CockroachDB.** Check the datasource line each one prints before you let a push proceed. `db:diff` is `prisma migrate diff --from-config-datasource --to-schema` — read-only, never writes; add `pnpm --filter @jitaspace/db db:diff:sql` for SQL rather than the summary. There is no `prisma/migrations` directory (`packages/db/prisma.config.ts` declares a path for one, but it has never existed), so `db push` is the only mechanism — and Prisma's own docs recommend against it in production. Treat every push as a manual, reviewed operation.
+
+**Why the deploy no longer pushes.** It used to, and it broke 18 production deploys between 2026-08-05 and 2026-08-09. `db push` reconciles the database to _whatever `schema.prisma` sits on the commit being deployed_, so a PR branched **before** a schema-adding PR proposes **dropping** the newer tables. PR #691 — a type-check fix that never touched the schema — proposed dropping 33 populated tables (38,823 rows). Prisma refused and the build went red; the red build was the safety net. Two failure modes to recognise if you ever see them again:
+
+- **`Use the --accept-data-loss flag …`** — `schema.prisma` on this commit is _behind_ the database. Rebase onto the commit that added the missing models. **Never add that flag to a build or run it unattended** — it drops the listed tables with no migration history to recover from. Dropping something on purpose is the one legitimate use, and it belongs in a deliberate expand/contract sequence: add the new shape and push, ship code that stops using the old one, then remove it from the schema and push again in a reviewed window. Never drop a column the currently-deployed code still selects.
+- **`this schema change is disallowed because table "X" is locked …`** — CockroachDB v26.1+ creates tables with `schema_locked = true` by default, so a push that creates a table and then indexes it can fail _on the table it just created_, leaving the database **half-migrated** (the table exists, its index does not). Recover with the unlock the error's own `DETAIL:` line prints, then re-push and re-lock:
+
+  ```sql
+  ALTER TABLE "X" SET (schema_locked = false);
+  -- re-run pnpm db:push, then:
+  ALTER TABLE "X" SET (schema_locked = true);
+  ```
+
+**Push before you merge — the consequence of forgetting is inconsistent, and mostly quiet.** `cacheComponents` resolves every argument-free `"use cache"` read during the build prerender, so a schema change that lands on `main` unapplied hits those reads with a database error. What happens next depends on where the `catch` sits relative to the cache boundary, and both shapes exist in this repo:
+
+- **`catch` inside the same function as `"use cache"` → silent.** The catch runs normally, `notFound()` wins, and the route is **prerendered as a 404 with a green build**. This is the majority: `regions`, `categories`, `agents`, `skills`, `ship-scanner`, `dogma/attributes`, `dogma/effects`, `lp-store`, `lp-store/all` — all bare `catch {}` with no Sentry capture, so nothing reports it.
+- **`catch` outside the cache scope → loud.** Where `"use cache"` sits in a `data.ts` helper and the page catches around the call, the throw is not contained and the export dies. Only `active-wars` and `travel` are this shape; verified by building against an unreachable database, which exits on `app/active-wars/data.ts:153` despite the guard at `page.tsx:16-20`.
+- **Tables no route reads → no signal at all.** The incident's own `NpcCorporation*` tables are written only by `packages/background-jobs`; that drift class gives a green build, a green site, and a Trigger.dev job failing where nobody is looking.
+
+Reads behind `connection()` (e.g. `app/history/page.tsx:24`) or behind `await params` inside a `<Suspense>` boundary are request-time and unaffected either way.
 
 ## Environment variables & `SKIP_ENV_VALIDATION`
 
@@ -78,12 +118,15 @@ apps/
 packages/
   auth/ auth-utils/          # EVE Online SSO (OAuth2 PKCE + state), token seal/refresh
   db/                        # Prisma 7 client + PostgreSQL schema
+  db-history/                # Separate Prisma client for the EVE build-history DB (/history)
   kv/                        # Redis client + Bull job queues
-  esi-client/ sde-client/    # Kubb-generated EVE API clients (ESI, self-hosted SDE)
+  esi-client/                # Kubb-generated ESI API client
   evekill-client/ evetycoon-client/ fuzzworks-market-client/  # more generated clients
   esi-metadata/ eve-data/    # ESI scopes/ID ranges; static EVE datasets
   hooks/                     # React Query hooks over ESI / third-party APIs
-  ui/ eve-icons/ tiptap-eve/ # Mantine component lib; icons; EVE-HTML Tiptap extension
+  ui/                        # Presentational Mantine components (dependency-light: no hooks/data fetching)
+  eve-components/            # Data-aware EVE components (names, avatars, anchors, selects)
+  eve-icons/ tiptap-eve/     # EVE icon set; EVE-HTML Tiptap extension
   datatable/ datatable-mantine/ datatable-tanstack/  # engine-agnostic table contract + adapters
   chat/                      # Discord-backed in-app chat
   background-jobs/           # Platform-agnostic EVE-data background job logic (source of truth)
@@ -100,14 +143,14 @@ tooling/
 
 - **Runtime/Lang:** Node.js ≥24.15.0, TypeScript ~5.9
 - **Monorepo:** Turborepo ~2.9 + pnpm 11
-- **Frontend:** Next.js 16 (App Router), React 19, Mantine 8, Zustand
+- **Frontend:** Next.js 16 (App Router), React 19, Mantine 9, Zustand
 - **Data fetching:** TanStack React Query 5
 - **DB / cache:** PostgreSQL + Prisma 7; Redis + Bull
 - **Auth:** Custom EVE Online SSO OAuth2 flow (authorization code + PKCE)
 - **Background jobs:** Trigger.dev — platform-agnostic logic in `@jitaspace/background-jobs`, run by the `background-jobs-triggerdev` adapter
-- **API codegen:** Kubb 3 (OpenAPI → TypeScript)
+- **API codegen:** Kubb 4 (OpenAPI → TypeScript). Keep `@kubb/*` at `>=4.38.0` — 4.37.x had codegen bugs (object-array collapse, `#`-prefixed keys).
 - **Rich text:** Tiptap + EVE HTML extensions
-- **Testing:** Jest 30 (unit), Cypress 15 (E2E)
+- **Testing:** Jest 30 (unit). Cypress 15 runs a small smoke suite (`apps/web/cypress/e2e/smoke.cy.ts`) whose assertions are request-level: the homepage does not 5xx, `/about` server-renders, the PWA manifest is served, and an unknown route 404s. It gates "this deploy came up and serves real routes", not feature behaviour — there is still no meaningful E2E coverage.
 - **Monitoring:** Sentry + Umami
 
 ## Key Conventions
@@ -123,8 +166,6 @@ tooling/
 
 ## Changesets
 
-Non-trivial changes need a changeset in `.changeset/` (skip private packages, i.e. `"private": true`):
-
 ```markdown
 ---
 "@jitaspace/package-name": patch | minor | major
@@ -133,28 +174,40 @@ Non-trivial changes need a changeset in `.changeset/` (skip private packages, i.
 Description of the change.
 ```
 
-- patch = bug fix/internal; minor = new feature/export; major = breaking.
-- **`@jitaspace/web` changesets must be end-user-readable** ("Fixed mail search not returning results"), not implementation detail. All other packages use developer-facing descriptions.
-- If a dependency change produces a visible web-app effect, also add `"@jitaspace/web": patch` with a user-facing note.
+patch = bug fix/internal; minor = new feature/export; major = breaking.
+
+**When a changeset is required:**
+
+- **Publishable packages — always.** Only four workspaces are publishable (`auth-utils`, `db`, `esi-metadata`, `tiptap-eve`); every other workspace is `"private": true`. A change to one of these needs a changeset with a developer-facing description.
+- **`@jitaspace/web` — always for user-visible changes.** `web` is private and never published, but its changesets are the release-notes queue — the large majority of pending changesets are `web` — so they **must be end-user-readable** ("Fixed mail search not returning results"), not implementation detail. If a change elsewhere produces a visible web-app effect, add `"@jitaspace/web": patch` with a user-facing note.
+- **Other private packages — optional.** Internal-only fixes routinely ship without one (e.g. PRs #651 and #652 in `background-jobs`). Add one when the change is worth recording for other developers. The changeset-bot's "No Changeset found" warning on such a PR is expected and can be ignored.
+
+> Note: there is no release workflow — `changeset version`/`publish` are never run in CI, so changesets accumulate as a changelog rather than driving version bumps.
 
 ## CI
 
-Two GitHub Actions run on push/PR (both set `SKIP_ENV_VALIDATION=1`):
+Four GitHub Actions run on pushes to `main` and on pull requests (all set `SKIP_ENV_VALIDATION=1`):
 
-- **`cypress.yml`:** spins up CockroachDB + Redis → push DB schema → `pnpm build` → start web → Cypress E2E (parallel).
+- **`type-check.yml`:** `pnpm install --frozen-lockfile` → `pnpm type-check`. A hard gate — the repo is expected to be **green**, so a type error fails the PR. No explicit codegen step: the turbo `type-check` task depends on the Prisma and Kubb generators, so a clean checkout produces them itself.
+- **`lint.yml`:** `pnpm install --frozen-lockfile` → `pnpm lint` → `pnpm format:check`. `pnpm lint` also runs `manypkg check`, which fails on a dependency declared at different versions across workspaces.
+- **`cypress.yml`:** spins up CockroachDB + Redis → push DB schema → `pnpm build` → start web → run the smoke suite. It gates that the build succeeds, the server boots, and four real routes respond. Recording and `--parallel` are enabled only when `CYPRESS_RECORD_KEY` is present, so fork PRs run the suite unrecorded instead of failing. The job also supplies placeholder `NEXT_PUBLIC_*` values: `SKIP_ENV_VALIDATION` is never inlined into the client bundle, so `env.ts` always validates in the browser and a build without them produces a bundle that throws on load.
 - **`sonarcloud.yml`:** `pnpm install --frozen-lockfile` → `pnpm test` (coverage) → SonarQube scan. New code must keep coverage above the quality gate.
 
-Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm lint` → `pnpm type-check` → `pnpm test`.
+`.githooks/pre-commit` also runs `pnpm lint` locally. It is bypassable with `--no-verify`, and it is only installed once the root `prepare` script has run — so a failed `pnpm install` leaves a checkout with no local lint gate. `lint.yml` is the backstop.
+
+Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm lint` → `pnpm format:check` → `pnpm type-check` → `pnpm test`.
+
+> After merging `main`, re-run `pnpm db:generate` before trusting a type-check: a schema change plus a stale client makes valid columns look missing and cascades into unrelated errors. If a fresh worktree reports errors inside a `dist/` or `prisma/generated/` path, that is a stale `tsbuildinfo` or an unbuilt package, not repo state — clear `node_modules/.cache` and rebuild.
 
 ## Where to look first
 
-| Area              | Path                                                                                     |
-| ----------------- | ---------------------------------------------------------------------------------------- |
-| Turbo pipeline    | `turbo.json`                                                                             |
-| Web config / env  | `apps/web/next.config.mjs`, `apps/web/env.ts`                                            |
-| Web routes        | `apps/web/app/`                                                                          |
-| DB schema         | `packages/db/prisma/schema.prisma`                                                       |
-| ESI client gen    | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json`                 |
-| Auth              | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)                        |
-| Shared tooling    | `tooling/eslint/src/base.ts`, `tooling/prettier/index.mjs`, `tooling/tsconfig/base.json` |
-| Test config (web) | `apps/web/jest.config.ts`, `apps/web/cypress.config.ts`                                  |
+| Area              | Path                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------ |
+| Turbo pipeline    | `turbo.json`                                                                         |
+| Web config / env  | `apps/web/next.config.mjs`, `apps/web/env.ts`                                        |
+| Web routes        | `apps/web/app/`                                                                      |
+| DB schema         | `packages/db/prisma/schema.prisma`                                                   |
+| ESI client gen    | `packages/esi-client/kubb.config.ts`, `packages/esi-client/swagger.json`             |
+| Auth              | `packages/auth/index.ts` (SSO flow in `packages/auth/src/oauth/`)                    |
+| Shared tooling    | `tooling/eslint/base.ts`, `tooling/prettier/index.mjs`, `tooling/tsconfig/base.json` |
+| Test config (web) | `apps/web/jest.config.ts`, `apps/web/cypress.config.ts`                              |

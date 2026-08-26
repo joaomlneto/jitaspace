@@ -12,11 +12,7 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 jest.mock("~/components/Avatar", () => ({
-  SolarSystemStarAvatar: ({
-    solarSystemId,
-  }: {
-    solarSystemId?: number;
-  }) => (
+  SolarSystemStarAvatar: ({ solarSystemId }: { solarSystemId?: number }) => (
     <span data-testid="star-avatar">{`star-${solarSystemId ?? "none"}`}</span>
   ),
 }));
@@ -45,7 +41,9 @@ describe("SolarSystemButton", () => {
 
   it("renders the star avatar with the given solar system id", () => {
     renderButton(30000142);
-    expect(screen.getByTestId("star-avatar")).toHaveTextContent("star-30000142");
+    expect(screen.getByTestId("star-avatar")).toHaveTextContent(
+      "star-30000142",
+    );
   });
 
   it("renders the solar system name from the hook data", () => {

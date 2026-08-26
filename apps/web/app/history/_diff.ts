@@ -67,22 +67,6 @@ export function summarize(v: unknown): string {
  * dogma attributes use `name` (string) + localized `displayName`; groups and
  * market groups use a localized `name`; races use a localized `nameID`.
  */
-export function sdeLabel(data: unknown): string | undefined {
-  const d = data as
-    | {
-        name?: string | { en?: string };
-        displayName?: { en?: string };
-        nameID?: { en?: string };
-      }
-    | undefined;
-  if (!d) return undefined;
-  const display = d.displayName?.en?.trim();
-  if (display) return display;
-  if (typeof d.name === "string") return d.name.trim() || undefined;
-  const localizedName = d.name?.en?.trim();
-  if (localizedName) return localizedName;
-  return d.nameID?.en?.trim() ?? undefined;
-}
 
 export interface SubRow {
   key: string;

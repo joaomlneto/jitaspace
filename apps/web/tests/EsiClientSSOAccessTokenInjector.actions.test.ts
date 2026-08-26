@@ -23,11 +23,12 @@ jest.mock("@jitaspace/auth", () => ({
   refreshTokenApiRouteHandler: jest.fn(),
 }));
 
-const { refreshTokenApiRouteHandler: mockHandler } = require("@jitaspace/auth") as {
-  refreshTokenApiRouteHandler: jest.MockedFunction<
-    (request: Request) => Promise<Response>
-  >;
-};
+const { refreshTokenApiRouteHandler: mockHandler } =
+  require("@jitaspace/auth") as {
+    refreshTokenApiRouteHandler: jest.MockedFunction<
+      (request: Request) => Promise<Response>
+    >;
+  };
 
 const { refreshCharacterToken } =
   require("~/components/EsiClientSSOAccessTokenInjector.actions") as typeof import("~/components/EsiClientSSOAccessTokenInjector.actions");
@@ -57,7 +58,9 @@ describe("refreshCharacterToken", () => {
   });
 
   it("maps 410 Gone to 'requires-reauth' (refresh token too old)", async () => {
-    respondWith(410, { error: "Access token is too old. Must reauthenticate." });
+    respondWith(410, {
+      error: "Access token is too old. Must reauthenticate.",
+    });
 
     await expect(refreshCharacterToken("sealed")).resolves.toEqual({
       status: "requires-reauth",
@@ -65,7 +68,9 @@ describe("refreshCharacterToken", () => {
   });
 
   it("maps a non-410 error response to a transient 'error' outcome", async () => {
-    respondWith(500, { error: "EVE_CLIENT_ID or EVE_CLIENT_SECRET is undefined" });
+    respondWith(500, {
+      error: "EVE_CLIENT_ID or EVE_CLIENT_SECRET is undefined",
+    });
 
     await expect(refreshCharacterToken("sealed")).resolves.toEqual({
       status: "error",

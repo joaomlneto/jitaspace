@@ -98,3 +98,5 @@ export const MobileHeaderDrawer = memo(
     );
   },
 );
+
+MobileHeaderDrawer.displayName = "MobileHeaderDrawer";

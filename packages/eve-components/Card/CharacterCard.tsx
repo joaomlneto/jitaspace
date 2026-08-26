@@ -33,15 +33,9 @@ export const CharacterCard = memo(({ characterId }: CharacterCardProps) => {
           </CharacterAnchor>
           {data !== undefined && (
             <Group gap="xs">
-              <CorporationAvatar
-                size="xs"
-                corporationId={data.corporationId}
-              />
+              <CorporationAvatar size="xs" corporationId={data.corporationId} />
               <CorporationAnchor corporationId={data.corporationId}>
-                <CorporationName
-                  size="xs"
-                  corporationId={data.corporationId}
-                />
+                <CorporationName size="xs" corporationId={data.corporationId} />
               </CorporationAnchor>
             </Group>
           )}

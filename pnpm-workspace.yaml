@@ -10,27 +10,45 @@ overrides:
   "prosemirror-state": "1.4.4"
   "prosemirror-transform": "1.12.0"
   "prosemirror-view": "1.41.8"
+  # Load-bearing, and not for the reason it looks like. next declares
+  # optionalDependencies.sharp "^0.34.5", which is incompatible with apps/web's
+  # "^0.35.3" — so under nodeLinker: hoisted pnpm HOISTS NEXT'S 0.34.5 to the root
+  # and nests apps/web's 0.35.3 under apps/web/node_modules. next resolves the root
+  # copy, i.e. the vulnerable one, and bumping apps/web alone does not protect the
+  # image pipeline. Measured by deleting this override and reinstalling:
+  #   ./node_modules/sharp            -> 0.34.5   (what next loads)
+  #   ./apps/web/node_modules/sharp   -> 0.35.3
+  # With it: one copy at 0.35.3, zero sharp@0.34 entries in the lockfile.
+  # Covers GHSA-f88m-g3jw-g9cj (libvips memory safety).
+  # Caret, not an exact pin: an override replaces the importer's own specifier
+  # outright, so pinning here would freeze the patch level this exists to raise
+  # and a later manifest bump would install nothing.
+  "sharp": "^0.35.3"
 nodeLinker: hoisted
 publicHoistPattern:
-  - '*prisma*'
+  - "*prisma*"
+# Kept false for one known, reviewed mismatch: mantine-react-table's latest
+# release (2.0.0-beta.9) still peers @mantine/* ^7.9 while this repo is on
+# Mantine 9, and no published version supports 9. It is used in two components
+# (Contacts and the Mantine datatable adapter) and works in practice. The other
+# three violations pnpm reported are fixed rather than silenced: commander is
+# aligned with @commander-js/extra-typings, and the abandoned react-html-parser
+# (peering React <=16 against React 19) was unused and removed.
+# Re-check with `pnpm peers check` — it should report only the Mantine trio.
 strictPeerDependencies: false
 enablePrePostScripts: true
 allowBuilds:
-  '@depot/cli': false
-  '@kubb/cli': true
-  '@prisma/client': true
-  '@prisma/engines': true
-  '@sentry/cli': true
-  '@sveltejs/kit': true
-  '@swc/core': true
-  '@vercel/speed-insights': true
-  aws-sdk: true
+  "@depot/cli": false
+  "@kubb/cli": true
+  "@prisma/client": true
+  "@prisma/engines": true
+  "@sentry/cli": true
+  "@swc/core": true
+  "@vercel/speed-insights": true
   core-js: false
-  core-js-pure: true
   cypress: true
   es5-ext: true
   esbuild: true
-  lzma-native: true
   msgpackr-extract: true
   prisma: true
   protobufjs: true

@@ -14,7 +14,6 @@ import {
 
 import { FolderIcon } from "@jitaspace/eve-icons";
 
-
 export interface PageProps {
   database: {
     name: string;

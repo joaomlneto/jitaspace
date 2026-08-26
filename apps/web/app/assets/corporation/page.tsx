@@ -22,6 +22,7 @@ import {
   EveEntityName,
   EveEntitySelect,
   TypeAnchor,
+  TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { AssetsIcon, AttentionIcon } from "@jitaspace/eve-icons";
@@ -30,7 +31,6 @@ import {
   useMarketPrices,
   useMultipleCorporationAssets,
 } from "@jitaspace/hooks";
-import { TypeAvatar } from "@jitaspace/ui";
 
 import { ScopeGuard } from "~/components/ScopeGuard";
 

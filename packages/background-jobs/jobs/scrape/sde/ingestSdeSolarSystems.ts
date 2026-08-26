@@ -7,7 +7,8 @@ import {
   enString,
   ingestSdeCompositeTable,
   ingestSdeTable,
-  loadSdeFiles,
+  loadSdeFile,
+  loadSdeFileIds,
   optionalBoolean,
   optionalNumber,
   plainString,
@@ -31,8 +32,11 @@ export const ingestSdeSolarSystems = defineJob<
   maxDurationSeconds: 1800,
   handler: async () => {
     const start = performance.now();
-    const files = await loadSdeFiles(["mapSolarSystems.yaml"]);
-    const data = files["mapSolarSystems.yaml"];
+    const data = await loadSdeFile("mapSolarSystems.yaml");
+    // `factionID` is an optional FK; guard it against factions.yaml so a system
+    // referencing a faction the SDE dropped lands as null instead of failing.
+    // `loadSdeFileIds` keeps only the id projection, not the parsed records.
+    const factionIds = await loadSdeFileIds("factions.yaml");
 
     // `securityStatus` is a Decimal column; build it as a Decimal so the diff
     // compares like-for-like against the value Prisma returns from the DB.
@@ -42,6 +46,9 @@ export const ingestSdeSolarSystems = defineJob<
       idField: "solarSystemId",
       delegate: prisma.solarSystem,
       toRow: (record, id): Prisma.SolarSystemCreateManyInput => {
+        // The SDE nests the system's galactic coordinates under `position`;
+        // they are flattened into three columns, as KillmailVictim does.
+        const position = subRecord(record.position);
         const position2d = subRecord(record.position2D);
         return {
           solarSystemId: id,
@@ -56,8 +63,23 @@ export const ingestSdeSolarSystems = defineJob<
           visualEffect: plainString(record.visualEffect),
           isRegional: optionalBoolean(record.regional),
           isInternational: optionalBoolean(record.international),
+          isHub: optionalBoolean(record.hub),
+          isBorder: optionalBoolean(record.border),
+          isFringe: optionalBoolean(record.fringe),
+          isCorridor: optionalBoolean(record.corridor),
+          luminosity: optionalNumber(record.luminosity),
+          radius: optionalNumber(record.radius),
+          positionX: optionalNumber(position.x),
+          positionY: optionalNumber(position.y),
+          positionZ: optionalNumber(position.z),
           position2dX: optionalNumber(position2d.x),
           position2dY: optionalNumber(position2d.y),
+          factionId: (() => {
+            const factionId = optionalNumber(record.factionID);
+            return factionId != null && factionIds.has(factionId)
+              ? factionId
+              : null;
+          })(),
           isDeleted: false,
         };
       },
