@@ -65,7 +65,12 @@ export function FactionName({
   name,
   ...p
 }: { factionId?: number; name?: string } & TextProps) {
-  return <Text {...p}>{name ?? `#${factionId ?? "?"}`}</Text>;
+  // Defensive rather than load-bearing: no caller passes `name` today, so this
+  // always renders `#id` (there is no `resolveFactionLabel` to fall back on,
+  // unlike `TypeName`). Kept blank-safe anyway because `Faction.name` is
+  // written by the same `enString(record.name) ?? ""` ingest as `Type.name`, so
+  // the moment a caller does resolve a name, a blank one can arrive.
+  return <Text {...p}>{firstNonEmpty(name) ?? `#${factionId ?? "?"}`}</Text>;
 }
 
 // ── anchors (link each resolved name to that entity's detail page) ───────────

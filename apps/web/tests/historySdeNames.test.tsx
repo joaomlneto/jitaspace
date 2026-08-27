@@ -19,7 +19,7 @@ jest.mock("@tanstack/react-query", () => ({
 // `_sde-ui` imports the server action, which reaches for Prisma at module load.
 jest.mock("~/lib/db", () => ({ prisma: { type: { findUnique: jest.fn() } } }));
 
-const { TypeName } =
+const { TypeName, FactionName } =
   require("~/app/history/_sde-ui") as typeof import("~/app/history/_sde-ui");
 
 const show = (props: { typeId?: number; name?: string }) =>
@@ -75,5 +75,53 @@ describe("TypeName", () => {
     mockUseQuery.mockReturnValue({ data: undefined, isPending: true });
     show({ typeId: 587 });
     expect(screen.getByText("…")).toBeTruthy();
+  });
+});
+
+describe("FactionName", () => {
+  // No caller passes `name` today, so the `#id` path is the one in use; the
+  // blank cases pin the guard for whenever a resolver is added.
+  it("renders #id when no name is supplied", () => {
+    render(
+      <MantineProvider>
+        <FactionName factionId={500001} />
+      </MantineProvider>,
+    );
+    expect(screen.getByText("#500001")).toBeTruthy();
+  });
+
+  it("renders a supplied name", () => {
+    render(
+      <MantineProvider>
+        <FactionName factionId={500001} name="Caldari State" />
+      </MantineProvider>,
+    );
+    expect(screen.getByText("Caldari State")).toBeTruthy();
+  });
+
+  it("falls back to #id for a blank or whitespace name", () => {
+    render(
+      <MantineProvider>
+        <FactionName factionId={500001} name="" />
+      </MantineProvider>,
+    );
+    expect(screen.getByText("#500001")).toBeTruthy();
+    cleanup();
+
+    render(
+      <MantineProvider>
+        <FactionName factionId={500001} name="   " />
+      </MantineProvider>,
+    );
+    expect(screen.getByText("#500001")).toBeTruthy();
+  });
+
+  it("renders #? when it has neither a name nor an id", () => {
+    render(
+      <MantineProvider>
+        <FactionName />
+      </MantineProvider>,
+    );
+    expect(screen.getByText("#?")).toBeTruthy();
   });
 });
