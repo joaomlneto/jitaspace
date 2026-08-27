@@ -88,46 +88,30 @@ describe("history SDE label actions", () => {
     await expect(c.fn()).resolves.toEqual({ name: null, parentId: null });
   });
 
-  it("type reports a null name when the SDE stored a blank one", async () => {
-    // The ingest writes `enString(record.name) ?? ""`, so a type with no
-    // English name lands in the non-null column as the empty string. Callers
-    // distinguish "no name" by null, and the breadcrumb renders `#id` for it.
-    findUnique.mockResolvedValue({ name: "", groupId: 25 });
-    await expect(actions.resolveTypeLabel(587)).resolves.toEqual({
-      name: null,
-      parentId: 25,
-    });
+  it.each(simpleCases)(
+    "$name reports a null name when the SDE stored a blank one",
+    async (c) => {
+      // Every SDE ingest writes `enString(record.name) ?? ""`, so an entity
+      // with no English name lands in its non-null column as the empty string
+      // rather than as null. Callers signal "no name" with null, and the
+      // breadcrumbs render `#id` for it.
+      for (const blank of ["", "   ", "\n\t "]) {
+        findUnique.mockResolvedValue({ ...c.row, name: blank });
+        await expect(c.fn()).resolves.toEqual({ ...c.expected, name: null });
+      }
+    },
+  );
 
-    findUnique.mockResolvedValue({ name: "   ", groupId: 25 });
-    await expect(actions.resolveTypeLabel(587)).resolves.toEqual({
-      name: null,
-      parentId: 25,
-    });
-  });
-
-  it("faction reports a null name when the SDE stored a blank one", async () => {
-    // `ingestSdeFactions` writes `enString(record.name) ?? ""` just as the type
-    // ingest does, so an unnamed faction is the empty string, not null.
-    findUnique.mockResolvedValue({ name: "" });
-    await expect(actions.resolveFactionLabel(500001)).resolves.toEqual({
-      name: null,
-      parentId: null,
-    });
-
-    findUnique.mockResolvedValue({ name: "   " });
-    await expect(actions.resolveFactionLabel(500001)).resolves.toEqual({
-      name: null,
-      parentId: null,
-    });
-  });
-
-  it("type trims a padded name rather than passing it through", async () => {
-    findUnique.mockResolvedValue({ name: "  Rifter  ", groupId: 25 });
-    await expect(actions.resolveTypeLabel(587)).resolves.toEqual({
-      name: "Rifter",
-      parentId: 25,
-    });
-  });
+  it.each(simpleCases)(
+    "$name trims a padded name rather than passing it through",
+    async (c) => {
+      findUnique.mockResolvedValue({ ...c.row, name: "  Padded  " });
+      await expect(c.fn()).resolves.toEqual({
+        ...c.expected,
+        name: "Padded",
+      });
+    },
+  );
 
   it("market group reports a null parent for a root group", async () => {
     findUnique.mockResolvedValue({ name: "Ships", parentMarketGroupId: null });

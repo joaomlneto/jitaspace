@@ -43,7 +43,7 @@ export async function resolveCategoryLabel(id: number): Promise<HistoryLabel> {
       select: { name: true },
       where: { categoryId: id },
     });
-    return row ? { name: row.name, parentId: null } : nullLabel;
+    return row ? { name: firstNonEmpty(row.name), parentId: null } : nullLabel;
   } catch {
     return nullLabel;
   }
@@ -55,7 +55,9 @@ export async function resolveGroupLabel(id: number): Promise<HistoryLabel> {
       select: { name: true, categoryId: true },
       where: { groupId: id },
     });
-    return row ? { name: row.name, parentId: row.categoryId } : nullLabel;
+    return row
+      ? { name: firstNonEmpty(row.name), parentId: row.categoryId }
+      : nullLabel;
   } catch {
     return nullLabel;
   }
@@ -84,7 +86,7 @@ export async function resolveMarketGroupLabel(
       where: { marketGroupId: id },
     });
     return row
-      ? { name: row.name, parentId: row.parentMarketGroupId }
+      ? { name: firstNonEmpty(row.name), parentId: row.parentMarketGroupId }
       : nullLabel;
   } catch {
     return nullLabel;
@@ -97,7 +99,7 @@ export async function resolveRaceLabel(id: number): Promise<HistoryLabel> {
       select: { name: true },
       where: { raceId: id },
     });
-    return row ? { name: row.name, parentId: null } : nullLabel;
+    return row ? { name: firstNonEmpty(row.name), parentId: null } : nullLabel;
   } catch {
     return nullLabel;
   }
