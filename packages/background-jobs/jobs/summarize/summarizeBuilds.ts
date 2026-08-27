@@ -4,6 +4,7 @@ import type { BuildDigest, CollectionSample } from "./digest";
 import { defineJob } from "../../core";
 import { prisma } from "../../db";
 import { env } from "../../env";
+import { firstNonEmpty } from "../../utils/firstNonEmpty";
 import { SAMPLE_LIMIT } from "./digest";
 import { PROMPT_VERSION, summarizeBuild, SUMMARY_MODEL } from "./summarize";
 
@@ -277,8 +278,8 @@ async function resolveSampleNames(
             select: { displayName: true, name: true },
           })
         )
-          .map((r) => (r.displayName ?? r.name ?? "").trim())
-          .filter(Boolean);
+          .map((r) => firstNonEmpty(r.displayName, r.name))
+          .filter((name): name is string => name !== undefined);
       default:
         return [];
     }
