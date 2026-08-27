@@ -103,6 +103,18 @@ export async function resolveRaceLabel(id: number): Promise<HistoryLabel> {
   }
 }
 
+export async function resolveFactionLabel(id: number): Promise<HistoryLabel> {
+  try {
+    const row = await prisma.faction.findUnique({
+      select: { name: true },
+      where: { factionId: id },
+    });
+    return row ? { name: firstNonEmpty(row.name), parentId: null } : nullLabel;
+  } catch {
+    return nullLabel;
+  }
+}
+
 /**
  * Dogma attributes carry more than a name: the unit that suffixes their values
  * and `highIsGood`, which decides whether an increase renders green or red.

@@ -79,49 +79,64 @@ describe("TypeName", () => {
 });
 
 describe("FactionName", () => {
-  // No caller passes `name` today, so the `#id` path is the one in use; the
-  // blank cases pin the guard for whenever a resolver is added.
-  it("renders #id when no name is supplied", () => {
+  const showFaction = (props: { factionId?: number; name?: string }) =>
     render(
       <MantineProvider>
-        <FactionName factionId={500001} />
+        <FactionName {...props} />
       </MantineProvider>,
     );
-    expect(screen.getByText("#500001")).toBeTruthy();
-  });
 
-  it("renders a supplied name", () => {
-    render(
-      <MantineProvider>
-        <FactionName factionId={500001} name="Caldari State" />
-      </MantineProvider>,
-    );
+  it("renders a resolved name", () => {
+    mockUseQuery.mockReturnValue({
+      data: { name: "Caldari State", parentId: null },
+      isPending: false,
+    });
+    showFaction({ factionId: 500001 });
     expect(screen.getByText("Caldari State")).toBeTruthy();
   });
 
-  it("falls back to #id for a blank or whitespace name", () => {
-    render(
-      <MantineProvider>
-        <FactionName factionId={500001} name="" />
-      </MantineProvider>,
-    );
-    expect(screen.getByText("#500001")).toBeTruthy();
-    cleanup();
-
-    render(
-      <MantineProvider>
-        <FactionName factionId={500001} name="   " />
-      </MantineProvider>,
-    );
+  it("falls back to #id when the resolved name is blank", () => {
+    mockUseQuery.mockReturnValue({
+      data: { name: "", parentId: null },
+      isPending: false,
+    });
+    showFaction({ factionId: 500001 });
     expect(screen.getByText("#500001")).toBeTruthy();
   });
 
+  it("falls back to #id when the resolved name is only whitespace", () => {
+    mockUseQuery.mockReturnValue({
+      data: { name: "   ", parentId: null },
+      isPending: false,
+    });
+    showFaction({ factionId: 500001 });
+    expect(screen.getByText("#500001")).toBeTruthy();
+  });
+
+  it("renders a supplied name without waiting on the query", () => {
+    mockUseQuery.mockReturnValue({ data: undefined, isPending: true });
+    showFaction({ factionId: 500001, name: "Caldari State" });
+    expect(screen.getByText("Caldari State")).toBeTruthy();
+  });
+
+  it("prefers the resolved name over a blank one passed in", () => {
+    mockUseQuery.mockReturnValue({
+      data: { name: "Caldari State", parentId: null },
+      isPending: false,
+    });
+    showFaction({ factionId: 500001, name: "" });
+    expect(screen.getByText("Caldari State")).toBeTruthy();
+  });
+
+  it("shows the pending placeholder before the name arrives", () => {
+    mockUseQuery.mockReturnValue({ data: undefined, isPending: true });
+    showFaction({ factionId: 500001 });
+    expect(screen.getByText("…")).toBeTruthy();
+  });
+
   it("renders #? when it has neither a name nor an id", () => {
-    render(
-      <MantineProvider>
-        <FactionName />
-      </MantineProvider>,
-    );
+    mockUseQuery.mockReturnValue({ data: undefined, isPending: true });
+    showFaction({});
     expect(screen.getByText("#?")).toBeTruthy();
   });
 });

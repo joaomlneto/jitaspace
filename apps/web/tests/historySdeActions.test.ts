@@ -15,6 +15,7 @@ jest.mock("~/lib/db", () => ({
     type: { findUnique: (a?: unknown) => findUnique(a) },
     marketGroup: { findUnique: (a?: unknown) => findUnique(a) },
     race: { findUnique: (a?: unknown) => findUnique(a) },
+    faction: { findUnique: (a?: unknown) => findUnique(a) },
     dogmaAttribute: { findUnique: (a?: unknown) => findUnique(a) },
     dogmaEffect: { findUnique: (a?: unknown) => findUnique(a) },
     dogmaUnit: { findUnique: (a?: unknown) => findUnique(a) },
@@ -60,6 +61,12 @@ const simpleCases = [
     row: { name: "Caldari" },
     expected: { name: "Caldari", parentId: null },
   },
+  {
+    name: "faction",
+    fn: () => actions.resolveFactionLabel(500001),
+    row: { name: "Caldari State" },
+    expected: { name: "Caldari State", parentId: null },
+  },
 ];
 
 describe("history SDE label actions", () => {
@@ -95,6 +102,22 @@ describe("history SDE label actions", () => {
     await expect(actions.resolveTypeLabel(587)).resolves.toEqual({
       name: null,
       parentId: 25,
+    });
+  });
+
+  it("faction reports a null name when the SDE stored a blank one", async () => {
+    // `ingestSdeFactions` writes `enString(record.name) ?? ""` just as the type
+    // ingest does, so an unnamed faction is the empty string, not null.
+    findUnique.mockResolvedValue({ name: "" });
+    await expect(actions.resolveFactionLabel(500001)).resolves.toEqual({
+      name: null,
+      parentId: null,
+    });
+
+    findUnique.mockResolvedValue({ name: "   " });
+    await expect(actions.resolveFactionLabel(500001)).resolves.toEqual({
+      name: null,
+      parentId: null,
     });
   });
 
