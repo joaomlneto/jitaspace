@@ -81,6 +81,31 @@ describe("history SDE label actions", () => {
     await expect(c.fn()).resolves.toEqual({ name: null, parentId: null });
   });
 
+  it("type reports a null name when the SDE stored a blank one", async () => {
+    // The ingest writes `enString(record.name) ?? ""`, so a type with no
+    // English name lands in the non-null column as the empty string. Callers
+    // distinguish "no name" by null, and the breadcrumb renders `#id` for it.
+    findUnique.mockResolvedValue({ name: "", groupId: 25 });
+    await expect(actions.resolveTypeLabel(587)).resolves.toEqual({
+      name: null,
+      parentId: 25,
+    });
+
+    findUnique.mockResolvedValue({ name: "   ", groupId: 25 });
+    await expect(actions.resolveTypeLabel(587)).resolves.toEqual({
+      name: null,
+      parentId: 25,
+    });
+  });
+
+  it("type trims a padded name rather than passing it through", async () => {
+    findUnique.mockResolvedValue({ name: "  Rifter  ", groupId: 25 });
+    await expect(actions.resolveTypeLabel(587)).resolves.toEqual({
+      name: "Rifter",
+      parentId: 25,
+    });
+  });
+
   it("market group reports a null parent for a root group", async () => {
     findUnique.mockResolvedValue({ name: "Ships", parentMarketGroupId: null });
     await expect(actions.resolveMarketGroupLabel(4)).resolves.toEqual({

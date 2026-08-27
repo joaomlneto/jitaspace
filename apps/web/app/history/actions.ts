@@ -67,7 +67,9 @@ export async function resolveTypeLabel(id: number): Promise<HistoryLabel> {
       select: { name: true, groupId: true },
       where: { typeId: id },
     });
-    return row ? { name: row.name, parentId: row.groupId } : nullLabel;
+    return row
+      ? { name: firstNonEmpty(row.name), parentId: row.groupId }
+      : nullLabel;
   } catch {
     return nullLabel;
   }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Anchor, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
+import { firstNonEmpty } from "~/lib/strings";
 import { resolveTypeLabel } from "./actions";
 
 /**
@@ -49,8 +50,13 @@ export function TypeName({
     retry: false,
     enabled: !name && !!typeId,
   });
+  // `firstNonEmpty`, not `??`: a type with no English name is stored as the
+  // empty string (the SDE ingest writes `enString(record.name) ?? ""`), and `??`
+  // would take that blank as a resolved name — rendering an empty, still
+  // clickable anchor instead of the `#id` placeholder below.
   const label =
-    name ?? q.data?.name ?? (q.isPending && typeId ? "…" : `#${typeId ?? "?"}`);
+    firstNonEmpty(name, q.data?.name) ??
+    (q.isPending && typeId ? "…" : `#${typeId ?? "?"}`);
   return <Text {...p}>{label}</Text>;
 }
 
