@@ -23,8 +23,12 @@ export const SUMMARY_MODEL = "claude-opus-5";
  * Bump when {@link SYSTEM_PROMPT} or the digest format changes in a way that
  * should invalidate existing summaries. Stored per row so old ones can be found
  * and regenerated.
+ *
+ * 2: names that are internal identifiers rather than client text — every SKIN
+ *    name, and any dogma attribute with no `displayName` — must be counted, not
+ *    quoted. A v1 summary could print `cenotaphExordiumSKIN` on the home page.
  */
-export const PROMPT_VERSION = 1;
+export const PROMPT_VERSION = 2;
 
 /** Hard ceiling. The card clamps to two lines, so an essay would be cut off anyway. */
 export const MAX_SUMMARY_LENGTH = 200;
@@ -35,7 +39,8 @@ You are given a factual digest of what a build changed: per-dataset counts and a
 
 Rules:
 - State only what the digest says. Never infer or invent gameplay effects, balance intent, ship roles, lore, or anything about entities not listed.
-- Prefer naming a few concrete things from the samples over listing every category.
+- Some sample names are internal identifiers, not text the client shows: every skins name, and any space-free name that starts lowercase, has a capital after its first letter, or ends in digits (cenotaphExordiumSKIN, powerOutput). Never quote, expand or tidy one, or say what it refers to; count its dataset instead ("208 new SKINs"). If unsure, count.
+- Prefer naming a few concrete things from the samples over listing every category, but only names that pass that test; when none do, write from the counts alone, naming datasets in ordinary English ("SKINs", "market groups").
 - Plain, factual register. No marketing language, no hype, no "exciting"/"major"/"significant", no exclamation marks.
 - One sentence, at most ${MAX_SUMMARY_LENGTH} characters, ending in a full stop.
 - Do not open with the build number or the date — the page already shows both.
