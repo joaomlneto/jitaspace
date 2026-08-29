@@ -22,12 +22,17 @@
     // Read by apps/web/env.ts and inlined into the client bundle at build time.
     // Listed here for the same reason as the NEXT_PUBLIC_* entries around them:
     // to keep the set explicit and greppable. They are NOT load-bearing for the
-    // web build. Turbo detects apps/web as `nextjs` and framework inference
-    // already adds every NEXT_PUBLIC_* var to that package's task env and hash,
-    // whether or not it is declared — confirmed with
-    // `turbo run build --filter=@jitaspace/web --dry-run=json`, where an
-    // undeclared NEXT_PUBLIC_ probe still appears under `inferred`. So
-    // `envMode: "strict"` never stripped these from the Vercel build.
+    // web build. Turbo detects apps/web as `nextjs`, and framework inference
+    // supplies every NEXT_PUBLIC_* var to that package's tasks whether or not it
+    // is declared here, so `envMode: "strict"` never stripped these from the
+    // Vercel build.
+    //
+    // Verified by swapping the web `build` script for an env probe and running
+    // it through turbo: an undeclared NEXT_PUBLIC_ZZZ_TEST arrived with its
+    // value, while an undeclared non-prefixed var arrived `undefined` — strict
+    // mode was active and stripping, and the NEXT_PUBLIC_ prefix survived it
+    // anyway. Note a `--dry-run=json` is NOT sufficient to show this: its
+    // `inferred` list describes the task hash, not the process environment.
     "NEXT_PUBLIC_POSTHOG_HOST",
     "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN",
     "NEXT_PUBLIC_SENTRY_DSN",
