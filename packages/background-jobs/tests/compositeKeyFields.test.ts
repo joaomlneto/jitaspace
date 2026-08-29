@@ -53,9 +53,13 @@ function compositeIds(): Map<string, string[]> {
 /** Every `ingestSdeCompositeTable({...})` call, as (model, keyFields). */
 function compositeCalls(): { file: string; model: string; keys: string[] }[] {
   const calls: { file: string; model: string; keys: string[] }[] = [];
-  for (const file of fs.readdirSync(SDE_JOBS_DIR).filter((f) => f.endsWith(".ts"))) {
+  for (const file of fs
+    .readdirSync(SDE_JOBS_DIR)
+    .filter((f) => f.endsWith(".ts"))) {
     const source = fs.readFileSync(path.join(SDE_JOBS_DIR, file), "utf8");
-    for (const call of source.matchAll(/ingestSdeCompositeTable\(\{([\s\S]*?)\n {4}\}\)/g)) {
+    for (const call of source.matchAll(
+      /ingestSdeCompositeTable\(\{([\s\S]*?)\n {4}\}\)/g,
+    )) {
       const body = call[1]!;
       const delegate = /delegate:\s*prisma\.(\w+)/.exec(body);
       const keyFields = /keyFields:\s*\[([\s\S]*?)\]/.exec(body);
