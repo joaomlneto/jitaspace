@@ -1,17 +1,17 @@
-import { notFound } from "next/navigation";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 import { Container, Group, Stack, Title } from "@mantine/core";
+
+import { AgentFinderIcon } from "@jitaspace/eve-icons";
+import { removeUndefinedFields } from "@jitaspace/utils";
+
+import { AgentsTable } from "~/components/Agents";
+import { prisma } from "~/lib/db";
 
 export const metadata = {
   title: "Agents",
   description: "Browse EVE Online NPC agents and their locations.",
 };
-
-import { prisma } from "~/lib/db";
-import { AgentFinderIcon } from "@jitaspace/eve-icons";
-import { removeUndefinedFields } from "@jitaspace/utils";
-
-import { AgentsTable } from "~/components/Agents";
 
 interface PageProps {
   agents: {

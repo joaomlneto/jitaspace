@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -41,9 +41,13 @@ jest.mock("~/components/ScopeGuard", () => ({
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ href, children }: { href?: string | object; children?: ReactNode }) => (
-    <a href={typeof href === "string" ? href : ""}>{children}</a>
-  ),
+  default: ({
+    href,
+    children,
+  }: {
+    href?: string | object;
+    children?: ReactNode;
+  }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
 function renderPage() {

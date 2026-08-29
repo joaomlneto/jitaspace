@@ -37,6 +37,7 @@
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/tsconfig": "workspace:*",
+    "@swc/core": "^1.15.40",
     "@swc/jest": "^0.2.39",
     "@types/bull": "^4.10.4",
     "@types/jest": "^30.0.0",

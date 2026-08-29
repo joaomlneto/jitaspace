@@ -12,7 +12,6 @@ import {
   useMantineTheme,
 } from "@mantine/core";
 
-
 export default function Page() {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();

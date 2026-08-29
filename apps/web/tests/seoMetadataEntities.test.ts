@@ -15,31 +15,46 @@ jest.mock("@mantine/core", () => ({ Loader: () => null }));
 
 // Client component stubs
 jest.mock("~/app/race/[raceId]/page.client", () => ({ default: () => null }));
-jest.mock("~/app/bloodline/[bloodlineId]/page.client", () => ({ default: () => null }));
-jest.mock("~/app/faction/[factionId]/page.client", () => ({ default: () => null }));
+jest.mock("~/app/bloodline/[bloodlineId]/page.client", () => ({
+  default: () => null,
+}));
+jest.mock("~/app/faction/[factionId]/page.client", () => ({
+  default: () => null,
+}));
 jest.mock("~/app/kill/[killId]/page.client", () => ({ default: () => null }));
 jest.mock("~/app/war/[warId]/page.client", () => ({ default: () => null }));
 jest.mock("~/app/dogma/attribute/[attributeId]/page.client", () => ({
   default: () => null,
 }));
-jest.mock("~/app/dogma/effect/[effectId]/page.client", () => ({ default: () => null }));
-jest.mock("~/app/lp-store/[corporationId]/page.client", () => ({ default: () => null }));
+jest.mock("~/app/dogma/effect/[effectId]/page.client", () => ({
+  default: () => null,
+}));
+jest.mock("~/app/lp-store/[corporationId]/page.client", () => ({
+  default: () => null,
+}));
 
 // next/cache — make cacheLife a no-op so "use cache" functions run in tests
 jest.mock("next/cache", () => ({ cacheLife: jest.fn() }));
 
 // Prisma mock — methods are replaced per describe block
 const mockRaceFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockBloodlineFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockFactionFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockDogmaAttributeFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockDogmaEffectFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockCorporationFindUnique = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockBloodlineFindUnique =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockFactionFindUnique =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockDogmaAttributeFindUnique =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockDogmaEffectFindUnique =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockCorporationFindUnique =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
     race: { findUnique: (...a: unknown[]) => mockRaceFindUnique(...a) },
-    bloodline: { findUnique: (...a: unknown[]) => mockBloodlineFindUnique(...a) },
+    bloodline: {
+      findUnique: (...a: unknown[]) => mockBloodlineFindUnique(...a),
+    },
     faction: { findUnique: (...a: unknown[]) => mockFactionFindUnique(...a) },
     dogmaAttribute: {
       findUnique: (...a: unknown[]) => mockDogmaAttributeFindUnique(...a),
@@ -68,7 +83,10 @@ describe("race/[raceId] generateMetadata", () => {
   });
 
   it("returns race name and description", async () => {
-    mockRaceFindUnique.mockResolvedValue({ name: "Caldari", description: "Industrialists." });
+    mockRaceFindUnique.mockResolvedValue({
+      name: "Caldari",
+      description: "Industrialists.",
+    });
     const { generateMetadata } = await import("~/app/race/[raceId]/page");
     const result = await generateMetadata({ params: rp({ raceId: "1" }) });
     expect(result.title).toBe("Caldari");
@@ -89,7 +107,9 @@ describe("race/[raceId] generateMetadata", () => {
 
   it("returns empty for non-numeric id", async () => {
     const { generateMetadata } = await import("~/app/race/[raceId]/page");
-    expect(await generateMetadata({ params: rp({ raceId: "bad" }) })).toEqual({});
+    expect(await generateMetadata({ params: rp({ raceId: "bad" }) })).toEqual(
+      {},
+    );
   });
 
   it("returns empty when Prisma throws", async () => {
@@ -99,7 +119,10 @@ describe("race/[raceId] generateMetadata", () => {
   });
 
   it("truncates long description to 200 chars", async () => {
-    mockRaceFindUnique.mockResolvedValue({ name: "Caldari", description: "x".repeat(300) });
+    mockRaceFindUnique.mockResolvedValue({
+      name: "Caldari",
+      description: "x".repeat(300),
+    });
     const { generateMetadata } = await import("~/app/race/[raceId]/page");
     const result = await generateMetadata({ params: rp({ raceId: "1" }) });
     expect((result.description ?? "").length).toBe(200);
@@ -117,8 +140,12 @@ describe("bloodline/[bloodlineId] generateMetadata", () => {
   });
 
   it("returns bloodline name and description", async () => {
-    mockBloodlineFindUnique.mockResolvedValue({ name: "Deteis", description: "Detail-oriented." });
-    const { generateMetadata } = await import("~/app/bloodline/[bloodlineId]/page");
+    mockBloodlineFindUnique.mockResolvedValue({
+      name: "Deteis",
+      description: "Detail-oriented.",
+    });
+    const { generateMetadata } =
+      await import("~/app/bloodline/[bloodlineId]/page");
     const result = await generateMetadata({ params: rp({ bloodlineId: "1" }) });
     expect(result.title).toBe("Deteis");
     expect(result.description).toBe("Detail-oriented.");
@@ -126,19 +153,28 @@ describe("bloodline/[bloodlineId] generateMetadata", () => {
 
   it("returns empty when bloodline not found", async () => {
     mockBloodlineFindUnique.mockResolvedValue(null);
-    const { generateMetadata } = await import("~/app/bloodline/[bloodlineId]/page");
-    expect(await generateMetadata({ params: rp({ bloodlineId: "999" }) })).toEqual({});
+    const { generateMetadata } =
+      await import("~/app/bloodline/[bloodlineId]/page");
+    expect(
+      await generateMetadata({ params: rp({ bloodlineId: "999" }) }),
+    ).toEqual({});
   });
 
   it("returns empty for invalid id", async () => {
-    const { generateMetadata } = await import("~/app/bloodline/[bloodlineId]/page");
-    expect(await generateMetadata({ params: rp({ bloodlineId: "-1" }) })).toEqual({});
+    const { generateMetadata } =
+      await import("~/app/bloodline/[bloodlineId]/page");
+    expect(
+      await generateMetadata({ params: rp({ bloodlineId: "-1" }) }),
+    ).toEqual({});
   });
 
   it("returns empty when Prisma throws", async () => {
     mockBloodlineFindUnique.mockRejectedValue(new Error("db"));
-    const { generateMetadata } = await import("~/app/bloodline/[bloodlineId]/page");
-    expect(await generateMetadata({ params: rp({ bloodlineId: "1" }) })).toEqual({});
+    const { generateMetadata } =
+      await import("~/app/bloodline/[bloodlineId]/page");
+    expect(
+      await generateMetadata({ params: rp({ bloodlineId: "1" }) }),
+    ).toEqual({});
   });
 });
 
@@ -158,7 +194,9 @@ describe("faction/[factionId] generateMetadata", () => {
       description: "Corporate megastate.",
     });
     const { generateMetadata } = await import("~/app/faction/[factionId]/page");
-    const result = await generateMetadata({ params: rp({ factionId: "500001" }) });
+    const result = await generateMetadata({
+      params: rp({ factionId: "500001" }),
+    });
     expect(result.title).toBe("Caldari State");
     expect(result.description).toBe("Corporate megastate.");
   });
@@ -166,18 +204,24 @@ describe("faction/[factionId] generateMetadata", () => {
   it("returns empty when faction not found", async () => {
     mockFactionFindUnique.mockResolvedValue(null);
     const { generateMetadata } = await import("~/app/faction/[factionId]/page");
-    expect(await generateMetadata({ params: rp({ factionId: "9999" }) })).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ factionId: "9999" }) }),
+    ).toEqual({});
   });
 
   it("returns empty for id = 0", async () => {
     const { generateMetadata } = await import("~/app/faction/[factionId]/page");
-    expect(await generateMetadata({ params: rp({ factionId: "0" }) })).toEqual({});
+    expect(await generateMetadata({ params: rp({ factionId: "0" }) })).toEqual(
+      {},
+    );
   });
 
   it("returns empty when Prisma throws", async () => {
     mockFactionFindUnique.mockRejectedValue(new Error("db"));
     const { generateMetadata } = await import("~/app/faction/[factionId]/page");
-    expect(await generateMetadata({ params: rp({ factionId: "500001" }) })).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ factionId: "500001" }) }),
+    ).toEqual({});
   });
 });
 
@@ -204,12 +248,16 @@ describe("kill/[killId] generateMetadata", () => {
 
   it("returns empty for non-numeric id", async () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
-    expect(await generateMetadata({ params: rp({ killId: "abc" }) })).toEqual({});
+    expect(await generateMetadata({ params: rp({ killId: "abc" }) })).toEqual(
+      {},
+    );
   });
 
   it("returns empty for negative id", async () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
-    expect(await generateMetadata({ params: rp({ killId: "-99" }) })).toEqual({});
+    expect(await generateMetadata({ params: rp({ killId: "-99" }) })).toEqual(
+      {},
+    );
   });
 });
 
@@ -236,7 +284,9 @@ describe("war/[warId] generateMetadata", () => {
 
   it("returns empty for Infinity", async () => {
     const { generateMetadata } = await import("~/app/war/[warId]/page");
-    expect(await generateMetadata({ params: rp({ warId: "Infinity" }) })).toEqual({});
+    expect(
+      await generateMetadata({ params: rp({ warId: "Infinity" }) }),
+    ).toEqual({});
   });
 });
 
@@ -264,7 +314,8 @@ describe("dogma/attribute/[attributeId] generateMetadata", () => {
       DogmaUnit: null,
       TypeAttribute: [],
     });
-    const { generateMetadata } = await import("~/app/dogma/attribute/[attributeId]/page");
+    const { generateMetadata } =
+      await import("~/app/dogma/attribute/[attributeId]/page");
     const result = await generateMetadata({ params: rp({ attributeId: "4" }) });
     expect(result.title).toBe("Mass");
     expect(result.description).toBe("The mass of the object.");
@@ -284,20 +335,27 @@ describe("dogma/attribute/[attributeId] generateMetadata", () => {
       DogmaUnit: null,
       TypeAttribute: [],
     });
-    const { generateMetadata } = await import("~/app/dogma/attribute/[attributeId]/page");
+    const { generateMetadata } =
+      await import("~/app/dogma/attribute/[attributeId]/page");
     const result = await generateMetadata({ params: rp({ attributeId: "4" }) });
     expect(result.title).toBe("mass");
   });
 
   it("returns empty for id = 0", async () => {
-    const { generateMetadata } = await import("~/app/dogma/attribute/[attributeId]/page");
-    expect(await generateMetadata({ params: rp({ attributeId: "0" }) })).toEqual({});
+    const { generateMetadata } =
+      await import("~/app/dogma/attribute/[attributeId]/page");
+    expect(
+      await generateMetadata({ params: rp({ attributeId: "0" }) }),
+    ).toEqual({});
   });
 
   it("returns empty when Prisma throws", async () => {
     mockDogmaAttributeFindUnique.mockRejectedValue(new Error("db"));
-    const { generateMetadata } = await import("~/app/dogma/attribute/[attributeId]/page");
-    expect(await generateMetadata({ params: rp({ attributeId: "4" }) })).toEqual({});
+    const { generateMetadata } =
+      await import("~/app/dogma/attribute/[attributeId]/page");
+    expect(
+      await generateMetadata({ params: rp({ attributeId: "4" }) }),
+    ).toEqual({});
   });
 });
 
@@ -321,21 +379,28 @@ describe("dogma/effect/[effectId] generateMetadata", () => {
       TypeEffect: [],
       groups: [],
     });
-    const { generateMetadata } = await import("~/app/dogma/effect/[effectId]/page");
+    const { generateMetadata } =
+      await import("~/app/dogma/effect/[effectId]/page");
     const result = await generateMetadata({ params: rp({ effectId: "16" }) });
     expect(result.title).toBe("High Power Slot");
     expect(result.description).toBe("Fitted in a high power slot.");
   });
 
   it("returns empty for invalid id", async () => {
-    const { generateMetadata } = await import("~/app/dogma/effect/[effectId]/page");
-    expect(await generateMetadata({ params: rp({ effectId: "abc" }) })).toEqual({});
+    const { generateMetadata } =
+      await import("~/app/dogma/effect/[effectId]/page");
+    expect(await generateMetadata({ params: rp({ effectId: "abc" }) })).toEqual(
+      {},
+    );
   });
 
   it("returns empty when Prisma throws", async () => {
     mockDogmaEffectFindUnique.mockRejectedValue(new Error("db"));
-    const { generateMetadata } = await import("~/app/dogma/effect/[effectId]/page");
-    expect(await generateMetadata({ params: rp({ effectId: "16" }) })).toEqual({});
+    const { generateMetadata } =
+      await import("~/app/dogma/effect/[effectId]/page");
+    expect(await generateMetadata({ params: rp({ effectId: "16" }) })).toEqual(
+      {},
+    );
   });
 });
 
@@ -355,27 +420,39 @@ describe("lp-store/[corporationId] generateMetadata", () => {
       name: "Caldari Navy",
       loyaltyStoreOffers: [],
     });
-    const { generateMetadata } = await import("~/app/lp-store/[corporationId]/page");
-    const result = await generateMetadata({ params: rp({ corporationId: "1000035" }) });
+    const { generateMetadata } =
+      await import("~/app/lp-store/[corporationId]/page");
+    const result = await generateMetadata({
+      params: rp({ corporationId: "1000035" }),
+    });
     expect(result.title).toBe("Caldari Navy LP Store");
     expect(result.description).toContain("Caldari Navy");
   });
 
   it("returns generic title when corporation not found", async () => {
     mockCorporationFindUnique.mockResolvedValue(null);
-    const { generateMetadata } = await import("~/app/lp-store/[corporationId]/page");
-    const result = await generateMetadata({ params: rp({ corporationId: "1000035" }) });
+    const { generateMetadata } =
+      await import("~/app/lp-store/[corporationId]/page");
+    const result = await generateMetadata({
+      params: rp({ corporationId: "1000035" }),
+    });
     expect(result.title).toBe("LP Store");
   });
 
   it("returns empty for id = 0", async () => {
-    const { generateMetadata } = await import("~/app/lp-store/[corporationId]/page");
-    expect(await generateMetadata({ params: rp({ corporationId: "0" }) })).toEqual({});
+    const { generateMetadata } =
+      await import("~/app/lp-store/[corporationId]/page");
+    expect(
+      await generateMetadata({ params: rp({ corporationId: "0" }) }),
+    ).toEqual({});
   });
 
   it("returns empty when Prisma throws", async () => {
     mockCorporationFindUnique.mockRejectedValue(new Error("db"));
-    const { generateMetadata } = await import("~/app/lp-store/[corporationId]/page");
-    expect(await generateMetadata({ params: rp({ corporationId: "1000035" }) })).toEqual({});
+    const { generateMetadata } =
+      await import("~/app/lp-store/[corporationId]/page");
+    expect(
+      await generateMetadata({ params: rp({ corporationId: "1000035" }) }),
+    ).toEqual({});
   });
 });

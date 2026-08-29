@@ -1,12 +1,20 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
-import { Container, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
+import {
+  Container,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+
+import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
-import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 interface PageProps {
   name?: string;
@@ -81,9 +89,7 @@ async function PageContent({
     notFound();
   }
 
-  const sortedGroups = [...groups].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  const sortedGroups = [...groups].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <Container size="md">

@@ -24,7 +24,6 @@ jest.mock("@jitaspace/ui", () => ({
   TypeAnchor: ({ children }: { children?: React.ReactNode }) => (
     <span>{children}</span>
   ),
-  TypeAvatar: () => <span data-testid="type-avatar" />,
 }));
 
 jest.mock("~/components/EveMail", () => ({
@@ -45,7 +44,8 @@ const GROUPS = [
 ];
 
 function renderPage(props: Record<string, unknown> = {}) {
-  const Page = require("~/app/dogma/attribute/[attributeId]/page.client").default;
+  const Page =
+    require("~/app/dogma/attribute/[attributeId]/page.client").default;
   const defaults = {
     attributeId: 9,
     title: "Structure Hitpoints",
