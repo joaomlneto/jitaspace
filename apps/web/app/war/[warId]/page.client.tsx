@@ -151,8 +151,8 @@ export default function Page() {
               <OpenInformationWindowActionIcon
                 characterId={character.characterId}
                 entityId={
-                  war?.data.aggressor.corporation_id ??
-                  war?.data.aggressor.alliance_id
+                  war?.data.defender.corporation_id ??
+                  war?.data.defender.alliance_id
                 }
               />
             )}

@@ -37,7 +37,11 @@ jest.mock("@jitaspace/eve-icons", () => ({
 }));
 
 jest.mock("~/components/ActionIcon", () => ({
-  OpenInformationWindowActionIcon: () => <div data-testid="info-window" />,
+  // Surface entityId: the aggressor and defender blocks are near-identical, so a
+  // mock that drops props cannot tell which side each button actually opens.
+  OpenInformationWindowActionIcon: ({ entityId }: { entityId?: number }) => (
+    <div data-testid="info-window" data-entity-id={entityId} />
+  ),
 }));
 
 jest.mock("~/components/Anchor", () => ({
@@ -148,8 +152,15 @@ describe("War page", () => {
     expect(screen.getByText("Aggressor")).toBeInTheDocument();
     expect(screen.getByText("Defender")).toBeInTheDocument();
 
-    // Info window renders twice (aggressor + defender) because a character is selected
-    expect(screen.getAllByTestId("info-window")).toHaveLength(2);
+    // Info window renders twice (aggressor + defender) because a character is selected.
+    // Regression: the defender block was a copy of the aggressor block with one prop
+    // left unswapped, so both buttons opened the aggressor. The fixture gives the
+    // aggressor a corporation_id and the defender only an alliance_id, which pins the
+    // two apart and exercises both arms of the `??` at the same time.
+    const infoWindows = screen.getAllByTestId("info-window");
+    expect(infoWindows).toHaveLength(2);
+    expect(infoWindows[0]).toHaveAttribute("data-entity-id", "1000035");
+    expect(infoWindows[1]).toHaveAttribute("data-entity-id", "99000002");
 
     // External links
     expect(screen.getByRole("link", { name: /zKillboard/ })).toHaveAttribute(
