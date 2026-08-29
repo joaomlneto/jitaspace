@@ -15,6 +15,7 @@ import {
   latestChangedBuild,
   netOp,
 } from "~/lib/history";
+import { firstNonEmpty } from "~/lib/strings";
 
 /**
  * Day-cached reads of the change-history data.
@@ -157,7 +158,10 @@ export async function getCachedBuildSummary(
       where: { buildNumber: build },
       select: { summary: true },
     });
-    return row?.summary.trim() ?? null;
+    // `firstNonEmpty`, not `.trim() ?? null`: trimming a whitespace-only row
+    // yields "", which is not null, so the build page's `summary ?? <generic>`
+    // would not fire and the page would ship an empty meta description.
+    return firstNonEmpty(row?.summary) ?? null;
   } catch {
     return null; // decorative — never fail a page over a missing sentence
   }

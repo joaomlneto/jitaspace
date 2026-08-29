@@ -6,6 +6,7 @@ import {
   MAX_SUMMARY_LENGTH,
   validateSummary,
 } from "../jobs/summarize/summarize";
+import { lowestBaseline } from "../jobs/summarize/summarizeBuilds";
 
 const digest = (overrides: Partial<BuildDigest> = {}): BuildDigest => ({
   build: 3401877,
@@ -133,5 +134,25 @@ describe("validateSummary", () => {
       MAX_SUMMARY_LENGTH,
     );
     expect(validateSummary("a".repeat(MAX_SUMMARY_LENGTH + 1))).toBeNull();
+  });
+});
+
+describe("lowestBaseline", () => {
+  it("picks the lowest real baseline", () => {
+    expect(
+      lowestBaseline([{ fromBuild: 3389104 }, { fromBuild: 3376632 }]),
+    ).toBe(3376632);
+  });
+
+  it("ignores a genesis diff whichever order it arrives in", () => {
+    // `buildDiff.findMany` has no `orderBy`, so both orders must agree.
+    const rows = [{ fromBuild: null }, { fromBuild: 3389104 }];
+    expect(lowestBaseline(rows)).toBe(3389104);
+    expect(lowestBaseline([...rows].reverse())).toBe(3389104);
+  });
+
+  it("reports a genesis build only when no real baseline exists", () => {
+    expect(lowestBaseline([{ fromBuild: null }])).toBeNull();
+    expect(lowestBaseline([])).toBeNull();
   });
 });

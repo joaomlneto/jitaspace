@@ -2124,7 +2124,6 @@ model DungeonAllowedShip {
   @@id([dungeonId, shipTypeId])
 }
 
-/// An Alpha-clone skill grade (cloneGrades.yaml).
 /// One generated, one-sentence description of what an EVE client build changed.
 ///
 /// Produced by the `summarize-builds` background job from the change history and
@@ -2151,6 +2150,7 @@ model BuildSummary {
   updatedAt     DateTime @updatedAt()
 }
 
+/// An Alpha-clone skill grade (cloneGrades.yaml).
 model CloneGrade {
   cloneGradeId Int               @id
   name         String

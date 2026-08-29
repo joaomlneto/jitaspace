@@ -41,6 +41,18 @@ const MIN_RELEASE_DATE = new Date("2012-03-14T00:00:00.000Z");
  */
 const MAX_PER_RUN = 5;
 
+/**
+ * How many builds a run may look at while trying to fill those slots.
+ *
+ * A build with nothing to describe costs two history queries and no model call,
+ * so it does not spend a slot — otherwise a handful of them at the head of the
+ * queue would consume every run forever and the backlog would never drain
+ * (`todo` is rebuilt newest-first each run from "has no summary row", and only
+ * a successful generation writes one). This bounds the scan those cheap skips
+ * are allowed to do.
+ */
+const MAX_EXAMINED_PER_RUN = 50;
+
 /** Collections whose names are worth sampling — the ones a player would recognise. */
 const SAMPLED_COLLECTIONS = [
   "types",
@@ -86,8 +98,20 @@ export const summarizeBuilds = defineJob<
     // In-scope builds, newest first: a fresh patch is the one people look at.
     const builds = await historyDb.build.findMany({
       where: {
-        server: { not: "singularity" },
-        OR: [{ releasedAt: null }, { releasedAt: { gte: MIN_RELEASE_DATE } }],
+        AND: [
+          // Spelled out rather than `server: { not: "singularity" }`: that
+          // compiles to a bare `<>`, and under SQL's three-valued logic
+          // `NULL <> 'singularity'` is NULL, so every null-server row would be
+          // dropped. A null server is the SDE backfill, which
+          // `isBuildInHistoryScope` deliberately keeps.
+          { OR: [{ server: null }, { server: { not: "singularity" } }] },
+          {
+            OR: [
+              { releasedAt: null },
+              { releasedAt: { gte: MIN_RELEASE_DATE } },
+            ],
+          },
+        ],
       },
       select: { buildNumber: true, releasedAt: true },
       orderBy: { buildNumber: "desc" },
@@ -106,14 +130,22 @@ export const summarizeBuilds = defineJob<
 
     const result: SummarizeBuildsResult = { ...empty, candidates: todo.length };
 
-    for (const build of todo.slice(0, MAX_PER_RUN)) {
+    let attempted = 0;
+    let examined = 0;
+    for (const build of todo) {
+      if (attempted >= MAX_PER_RUN || examined >= MAX_EXAMINED_PER_RUN) break;
+      examined += 1;
       try {
         const digest = await buildDigest(build.buildNumber, build.releasedAt);
-        // Nothing recorded against this build — no sentence to write.
+        // Nothing recorded against this build — no sentence to write. This is
+        // deterministic, so it will be true on every future run too; skip
+        // without spending one of the run's model calls and move on.
         if (digest.counts.length === 0) {
           result.skipped += 1;
           continue;
         }
+
+        attempted += 1;
 
         const summary = await summarizeBuild(digest, { apiKey });
         if (!summary) {
@@ -221,16 +253,31 @@ async function buildDigest(
     build,
     date: releasedAt ? releasedAt.toISOString().slice(0, 10) : null,
     // Multiple diffs can target one build; the lowest baseline is the useful one.
-    fromBuild: diffs.reduce<number | null>(
-      (lowest, d) =>
-        d.fromBuild === null || lowest === null
-          ? lowest
-          : Math.min(lowest, d.fromBuild),
-      diffs[0]?.fromBuild ?? null,
-    ),
+    // Genesis diffs (`fromBuild: null`) are dropped rather than folded: a build
+    // that has both a genesis diff and a real one is mid-timeline, and calling
+    // it "first recorded" would be a claim the digest cannot support. `findMany`
+    // has no `orderBy`, so this must not depend on which row comes back first.
+    fromBuild: lowestBaseline(diffs),
     counts: [...counts.values()],
     samples,
   };
+}
+
+/**
+ * Lowest real baseline among a build's diffs, ignoring genesis (null) ones.
+ *
+ * Exported so the order-independence can be tested: the fold this replaced was
+ * seeded with `diffs[0].fromBuild` and short-circuited once that seed was null,
+ * so an unordered `findMany` returning the genesis row first erased every real
+ * baseline behind it.
+ */
+export function lowestBaseline(
+  diffs: { fromBuild: number | null }[],
+): number | null {
+  const baselines = diffs
+    .map((d) => d.fromBuild)
+    .filter((from): from is number => from !== null);
+  return baselines.length > 0 ? Math.min(...baselines) : null;
 }
 
 /**

@@ -33,6 +33,16 @@ export const PROMPT_VERSION = 2;
 /** Hard ceiling. The card clamps to two lines, so an essay would be cut off anyway. */
 export const MAX_SUMMARY_LENGTH = 200;
 
+/**
+ * Response budget. Far larger than the 200-character sentence needs, because
+ * {@link SUMMARY_MODEL} runs adaptive thinking by default and those tokens come
+ * out of this same allowance — a ceiling sized to the answer alone would be
+ * spent while the model was still reasoning about which sampled names are
+ * internal identifiers, and the sentence would never be emitted. Unused budget
+ * costs nothing; only generated tokens are billed.
+ */
+const MAX_TOKENS = 16_000;
+
 const SYSTEM_PROMPT = `You write one-sentence summaries of EVE Online client patches for a fan site.
 
 You are given a factual digest of what a build changed: per-dataset counts and a sample of real entity names. Write a single sentence describing it, for a player skimming a list of builds.
@@ -74,9 +84,14 @@ export interface SummarizeOptions {
 /**
  * Generates the sentence for one build.
  *
- * Returns `null` rather than throwing when the model declines or returns
- * something unusable — the caller stores nothing and the site falls back to its
- * static wording, which is a fine outcome for a decorative sentence.
+ * Returns `null` when the model declines, is cut short, or returns something
+ * that fails validation — the caller stores nothing and the site falls back to
+ * its static wording, which is a fine outcome for a decorative sentence.
+ *
+ * Transport and API errors are NOT swallowed here: they propagate to the job,
+ * which logs them and counts the build as failed rather than as skipped, so a
+ * broken key or a dead endpoint is visible instead of looking like a run where
+ * the model simply had nothing to say.
  */
 export async function summarizeBuild(
   digest: BuildDigest,
@@ -84,7 +99,7 @@ export async function summarizeBuild(
 ): Promise<string | null> {
   const response = await client.messages.parse({
     model: SUMMARY_MODEL,
-    max_tokens: 2000,
+    max_tokens: MAX_TOKENS,
     system: SYSTEM_PROMPT,
     messages: [{ role: "user", content: formatBuildDigest(digest) }],
     output_config: { format: zodOutputFormat(SummarySchema) },
@@ -92,6 +107,9 @@ export async function summarizeBuild(
 
   // A safety decline is a normal outcome here, not an error to retry.
   if (response.stop_reason === "refusal") return null;
+  // Truncation would leave `parsed_output` absent or half-written; treat it as
+  // unusable rather than letting a clipped sentence reach the page.
+  if (response.stop_reason === "max_tokens") return null;
 
   return validateSummary(response.parsed_output?.summary);
 }
