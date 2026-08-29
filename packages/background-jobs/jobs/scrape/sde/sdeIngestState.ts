@@ -49,15 +49,14 @@ export function sdeBuildFromMetadata(metadata: SdeRecord): {
   // descriptive, not the ingest's identity, so an archive without one still
   // ingests. `js-yaml` reads the unquoted timestamp as a Date, so normalise
   // whatever shape it comes back as to an ISO string.
-  const raw = sde?.releaseDate;
-  const releaseDate =
-    raw instanceof Date
-      ? raw.toISOString()
-      : typeof raw === "string" && raw !== ""
-        ? raw
-        : null;
+  return { buildNumber, releaseDate: normaliseReleaseDate(sde?.releaseDate) };
+}
 
-  return { buildNumber, releaseDate };
+/** `_sde.yaml`'s release date as an ISO string, or null if it has none. */
+function normaliseReleaseDate(raw: unknown): string | null {
+  if (raw instanceof Date) return raw.toISOString();
+  if (typeof raw === "string" && raw !== "") return raw;
+  return null;
 }
 
 /** Narrow a parsed Redis value to a usable state, or null if it's unreadable. */

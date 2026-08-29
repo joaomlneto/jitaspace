@@ -86,9 +86,9 @@ describe("sdeBuildFromMetadata", () => {
       }).releaseDate,
     ).toBe("2026-08-28T11:07:12.000Z");
     // Descriptive, not the ingest's identity: a build without one still ingests.
-    expect(sdeBuildFromMetadata({ sde: { buildNumber: 1 } }).releaseDate).toBe(
-      null,
-    );
+    expect(
+      sdeBuildFromMetadata({ sde: { buildNumber: 1 } }).releaseDate,
+    ).toBeNull();
   });
 });
 

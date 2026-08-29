@@ -61,6 +61,117 @@ const isParameterKind = (name: string): name is ParameterKind =>
   (PARAMETER_KINDS as readonly string[]).includes(name);
 
 /**
+ * The FreelanceJobSchema row for one schema. Extracted from the handler purely
+ * to keep its nesting readable — the SDE nests group -> schema -> parameter ->
+ * kind, and flattening all four levels inline pushed the handler well past what
+ * anyone can hold in their head.
+ */
+function toSchemaRow(
+  freelanceJobSchemaGroupId: number,
+  name: string,
+  schema: FreelanceJobSchemaBody,
+): Prisma.FreelanceJobSchemaCreateManyInput {
+  const maxContributions = subRecord(schema.maxContributionsPerParticipant);
+  const multiplier = subRecord(schema.contributionMultiplier);
+  const maxProgress = subRecord(schema.maxProgressPerContribution);
+  return {
+    freelanceJobSchemaGroupId,
+    name,
+    title: enString(schema.title),
+    description: enString(schema.description),
+    iconId: plainString(schema.iconID),
+    progressDescription: enString(schema.progressDescription),
+    rewardDescription: enString(schema.rewardDescription),
+    targetDescription: enString(schema.targetDescription),
+    maxContributionsTitle: enString(maxContributions.title),
+    maxContributionsDescription: enString(maxContributions.description),
+    maxContributionsUnsetDescription: enString(
+      maxContributions.unsetDescription,
+    ),
+    maxContributionsIconId: plainString(maxContributions.iconID),
+    // Both are labelled descriptors in the SDE, not scalars, and both
+    // appear on the ShipInsurance schema only. The multiplier carries a
+    // default plus min/max bounds; maxProgressPerContribution carries no
+    // number at all, which is why it has labels here and no Float column.
+    contributionMultiplier: optionalNumber(multiplier.defaultValue),
+    contributionMultiplierMin: optionalNumber(multiplier.minValue),
+    contributionMultiplierMax: optionalNumber(multiplier.maxValue),
+    contributionMultiplierTitle: enString(multiplier.title),
+    contributionMultiplierDescription: enString(multiplier.description),
+    contributionMultiplierUnsetDescription: enString(
+      multiplier.unsetDescription,
+    ),
+    contributionMultiplierIconId: plainString(multiplier.iconID),
+    maxProgressTitle: enString(maxProgress.title),
+    maxProgressDescription: enString(maxProgress.description),
+    maxProgressUnsetDescription: enString(maxProgress.unsetDescription),
+    maxProgressIconId: plainString(maxProgress.iconID),
+    isDeleted: false,
+  };
+}
+
+/**
+ * The parameter rows for one schema, plus the accepted value types hanging off
+ * them. A parameter is `{ paramKey: { kind: body } }`, and only the three known
+ * kinds are read — an unrecognised one is skipped rather than failing the run.
+ */
+function toParameterRows(
+  freelanceJobSchemaGroupId: number,
+  name: string,
+  schema: FreelanceJobSchemaBody,
+): {
+  parameters: Prisma.FreelanceJobSchemaParameterCreateManyInput[];
+  valueTypes: Prisma.FreelanceJobSchemaParameterValueTypeCreateManyInput[];
+} {
+  const parameters: Prisma.FreelanceJobSchemaParameterCreateManyInput[] = [];
+  const valueTypes: Prisma.FreelanceJobSchemaParameterValueTypeCreateManyInput[] =
+    [];
+  for (const [paramKey, param] of Object.entries(schema.parameters ?? {})) {
+    for (const [kind, rawBody] of Object.entries(param)) {
+      if (!isParameterKind(kind)) continue;
+      const paramBody = rawBody as FreelanceJobParameterBody;
+      const booleanDefault = optionalBoolean(paramBody.default);
+      parameters.push({
+        freelanceJobSchemaGroupId,
+        name,
+        paramKey,
+        kind,
+        title: enString(paramBody.title),
+        description: enString(paramBody.description),
+        unsetDescription: enString(paramBody.unsetDescription),
+        iconId: plainString(paramBody.iconID),
+        // matcher
+        type: plainString(paramBody.type),
+        maxEntries: optionalNumber(paramBody.maxEntries),
+        optional: optionalBoolean(paramBody.optional),
+        // boolean. `optionTrue`/`optionFalse` are `{ title, description }`
+        // pairs, so the columns carry the option's English title.
+        choiceLabel: enString(paramBody.choiceLabel),
+        optionTrue: enString(subRecord(paramBody.optionTrue).title),
+        optionFalse: enString(subRecord(paramBody.optionFalse).title),
+        defaultValue: booleanDefault === null ? null : String(booleanDefault),
+        // itemDelivery. Both are nested matcher-shaped sub-parameters, so
+        // the columns carry their English titles ("Destination", "Item
+        // Type or Group"); their own acceptedValueTypes have no column.
+        deliveryLocation: enString(subRecord(paramBody.deliveryLocation).title),
+        inventoryType: enString(subRecord(paramBody.inventoryType).title),
+        isDeleted: false,
+      });
+      for (const valueType of paramBody.acceptedValueTypes ?? []) {
+        valueTypes.push({
+          freelanceJobSchemaGroupId,
+          name,
+          paramKey,
+          valueType,
+          isDeleted: false,
+        });
+      }
+    }
+  }
+  return { parameters, valueTypes };
+}
+
+/**
  * freelanceJobSchemas.yaml is keyed by a group id; each group maps job-schema
  * names to their definition (the group id is also injected as a field by the
  * loader, so it is skipped). This feeds FreelanceJobSchema (the descriptive
@@ -102,95 +213,13 @@ export const ingestSdeFreelanceJobSchemas = defineJob<
         // The loader injects the group id as a sibling field; skip it.
         if (name === "freelanceJobSchemaGroupID") continue;
         const schema = body as FreelanceJobSchemaBody;
-        const maxContributions = subRecord(
-          schema.maxContributionsPerParticipant,
-        );
-        const multiplier = subRecord(schema.contributionMultiplier);
-        const maxProgress = subRecord(schema.maxProgressPerContribution);
-        schemas.push({
-          freelanceJobSchemaGroupId,
-          name,
-          title: enString(schema.title),
-          description: enString(schema.description),
-          iconId: plainString(schema.iconID),
-          progressDescription: enString(schema.progressDescription),
-          rewardDescription: enString(schema.rewardDescription),
-          targetDescription: enString(schema.targetDescription),
-          maxContributionsTitle: enString(maxContributions.title),
-          maxContributionsDescription: enString(maxContributions.description),
-          maxContributionsUnsetDescription: enString(
-            maxContributions.unsetDescription,
-          ),
-          maxContributionsIconId: plainString(maxContributions.iconID),
-          // Both are labelled descriptors in the SDE, not scalars, and both
-          // appear on the ShipInsurance schema only. The multiplier carries a
-          // default plus min/max bounds; maxProgressPerContribution carries no
-          // number at all, which is why it has labels here and no Float column.
-          contributionMultiplier: optionalNumber(multiplier.defaultValue),
-          contributionMultiplierMin: optionalNumber(multiplier.minValue),
-          contributionMultiplierMax: optionalNumber(multiplier.maxValue),
-          contributionMultiplierTitle: enString(multiplier.title),
-          contributionMultiplierDescription: enString(multiplier.description),
-          contributionMultiplierUnsetDescription: enString(
-            multiplier.unsetDescription,
-          ),
-          contributionMultiplierIconId: plainString(multiplier.iconID),
-          maxProgressTitle: enString(maxProgress.title),
-          maxProgressDescription: enString(maxProgress.description),
-          maxProgressUnsetDescription: enString(maxProgress.unsetDescription),
-          maxProgressIconId: plainString(maxProgress.iconID),
-          isDeleted: false,
-        });
+        schemas.push(toSchemaRow(freelanceJobSchemaGroupId, name, schema));
         for (const tag of schema.contentTags ?? []) {
           tags.push({ freelanceJobSchemaGroupId, name, tag, isDeleted: false });
         }
-        for (const [paramKey, param] of Object.entries(
-          schema.parameters ?? {},
-        )) {
-          for (const [kind, rawBody] of Object.entries(param)) {
-            if (!isParameterKind(kind)) continue;
-            const paramBody = rawBody as FreelanceJobParameterBody;
-            const booleanDefault = optionalBoolean(paramBody.default);
-            parameters.push({
-              freelanceJobSchemaGroupId,
-              name,
-              paramKey,
-              kind,
-              title: enString(paramBody.title),
-              description: enString(paramBody.description),
-              unsetDescription: enString(paramBody.unsetDescription),
-              iconId: plainString(paramBody.iconID),
-              // matcher
-              type: plainString(paramBody.type),
-              maxEntries: optionalNumber(paramBody.maxEntries),
-              optional: optionalBoolean(paramBody.optional),
-              // boolean. `optionTrue`/`optionFalse` are `{ title, description }`
-              // pairs, so the columns carry the option's English title.
-              choiceLabel: enString(paramBody.choiceLabel),
-              optionTrue: enString(subRecord(paramBody.optionTrue).title),
-              optionFalse: enString(subRecord(paramBody.optionFalse).title),
-              defaultValue:
-                booleanDefault === null ? null : String(booleanDefault),
-              // itemDelivery. Both are nested matcher-shaped sub-parameters, so
-              // the columns carry their English titles ("Destination", "Item
-              // Type or Group"); their own acceptedValueTypes have no column.
-              deliveryLocation: enString(
-                subRecord(paramBody.deliveryLocation).title,
-              ),
-              inventoryType: enString(subRecord(paramBody.inventoryType).title),
-              isDeleted: false,
-            });
-            for (const valueType of paramBody.acceptedValueTypes ?? []) {
-              valueTypes.push({
-                freelanceJobSchemaGroupId,
-                name,
-                paramKey,
-                valueType,
-                isDeleted: false,
-              });
-            }
-          }
-        }
+        const rows = toParameterRows(freelanceJobSchemaGroupId, name, schema);
+        parameters.push(...rows.parameters);
+        valueTypes.push(...rows.valueTypes);
       }
     }
 

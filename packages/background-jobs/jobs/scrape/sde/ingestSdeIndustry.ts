@@ -329,6 +329,39 @@ const isModifierBucket = (name: string): name is ModifierBucket =>
   (MODIFIER_BUCKETS as readonly string[]).includes(name);
 
 /**
+ * The modifier rows for one type. The SDE nests
+ * `type -> activity -> bucket -> [{ dogmaAttributeID, filterID? }]`; an
+ * unrecognised activity or bucket key is skipped rather than failing the run,
+ * so a new one CCP adds lands as missing data instead of a red job.
+ */
+function toModifierRows(
+  typeId: number,
+  value: unknown,
+): Prisma.IndustryModifierSourceCreateManyInput[] {
+  const rows: Prisma.IndustryModifierSourceCreateManyInput[] = [];
+  for (const [activity, byBucket] of Object.entries(subRecord(value))) {
+    if (!isModifierActivity(activity)) continue;
+    for (const [bucket, entries] of Object.entries(subRecord(byBucket))) {
+      if (!isModifierBucket(bucket)) continue;
+      for (const entry of Array.isArray(entries) ? entries : []) {
+        const modifier = subRecord(entry);
+        rows.push({
+          typeId,
+          activity,
+          bucket,
+          dogmaAttributeId: requiredNumber(modifier.dogmaAttributeID),
+          // 0 = no filter: the id is part of the primary key, so it cannot be
+          // null (see the model doc).
+          industryTargetFilterId: optionalNumber(modifier.filterID) ?? 0,
+          isDeleted: false,
+        });
+      }
+    }
+  }
+  return rows;
+}
+
+/**
  * industryModifierSources.yaml — the dogma attributes that move a job's cost,
  * material or time figure, per activity. Records nest
  * `activity -> bucket -> [{ dogmaAttributeID, filterID? }]`; an unknown activity
@@ -349,34 +382,22 @@ export const ingestSdeIndustryModifierSources = defineJob<
     const start = performance.now();
     const data = await loadSdeFile("industryModifierSources.yaml");
 
-    const rows: Prisma.IndustryModifierSourceCreateManyInput[] = [];
-    for (const [key, value] of Object.entries(data)) {
-      const typeId = Number(key);
-      for (const [activity, byBucket] of Object.entries(subRecord(value))) {
-        if (!isModifierActivity(activity)) continue;
-        for (const [bucket, entries] of Object.entries(subRecord(byBucket))) {
-          if (!isModifierBucket(bucket)) continue;
-          for (const entry of Array.isArray(entries) ? entries : []) {
-            const modifier = subRecord(entry);
-            rows.push({
-              typeId,
-              activity,
-              bucket,
-              dogmaAttributeId: requiredNumber(modifier.dogmaAttributeID),
-              // 0 = no filter: the id is part of the primary key, so it cannot
-              // be null (see the model doc).
-              industryTargetFilterId: optionalNumber(modifier.filterID) ?? 0,
-              isDeleted: false,
-            });
-          }
-        }
-      }
-    }
+    const rows = Object.entries(data).flatMap(([key, value]) =>
+      toModifierRows(Number(key), value),
+    );
 
     const industryModifierSources = await ingestSdeCompositeTable({
       delegate: prisma.industryModifierSource,
       rows,
-      keyFields: ["typeId", "activity", "bucket", "dogmaAttributeId"],
+      // Must list every @@id column: the helper builds Prisma's composite
+      // unique input by joining these, so a short list makes `update` throw.
+      keyFields: [
+        "typeId",
+        "activity",
+        "bucket",
+        "dogmaAttributeId",
+        "industryTargetFilterId",
+      ],
       scopeField: "typeId",
       scopeIds: Object.keys(data).map(Number),
     });
