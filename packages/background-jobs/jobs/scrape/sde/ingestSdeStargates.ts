@@ -9,6 +9,7 @@ import {
   optionalNumber,
   requiredNumber,
   solarSystemNames,
+  subRecord,
 } from "../../../helpers";
 
 export interface IngestSdeStargatesEventPayload {
@@ -54,11 +55,17 @@ export const ingestSdeStargates = defineJob<
         const destinationSystem = systemNames.get(
           requiredNumber(destination.solarSystemID),
         );
+        // In-system coordinates, flattened into three columns as
+        // ingestSdeSolarSystems does with the galactic `position`.
+        const position = subRecord(record.position);
         return {
           stargateId: id,
           name: `Stargate (${destinationSystem ?? ""})`,
           solarSystemId: requiredNumber(record.solarSystemID),
           typeId: requiredNumber(record.typeID),
+          positionX: optionalNumber(position.x),
+          positionY: optionalNumber(position.y),
+          positionZ: optionalNumber(position.z),
           isDeleted: false,
         };
       },

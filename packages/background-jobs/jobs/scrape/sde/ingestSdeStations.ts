@@ -11,6 +11,7 @@ import {
   requiredBoolean,
   requiredNumber,
   solarSystemNames,
+  subRecord,
 } from "../../../helpers";
 
 export interface IngestSdeStationsEventPayload {
@@ -72,17 +73,20 @@ export const ingestSdeStations = defineJob<
       // officeRentalCost are left to the ESI station scraper.
       toRow: (record, id): Prisma.StationCreateManyInput => {
         const orbitId = requiredNumber(record.orbitID);
+        const operationId = requiredNumber(record.operationID);
         const orbitName =
           moonNameById.get(orbitId) ??
           planetNameById.get(orbitId) ??
           systemNames.get(requiredNumber(record.solarSystemID)) ??
           "";
         const corp = corpName.get(requiredNumber(record.ownerID)) ?? "";
-        const operation =
-          operationName.get(requiredNumber(record.operationID)) ?? "";
+        const operation = operationName.get(operationId) ?? "";
         const name = requiredBoolean(record.useOperationName)
           ? `${orbitName} - ${corp} ${operation}`
           : `${orbitName} - ${corp}`;
+        // In-system coordinates, flattened into three columns as
+        // ingestSdeSolarSystems does with the galactic `position`.
+        const position = subRecord(record.position);
         return {
           stationId: id,
           name,
@@ -93,6 +97,16 @@ export const ingestSdeStations = defineJob<
             record.reprocessingStationsTake,
           ),
           reprocessingHangarFlag: optionalNumber(record.reprocessingHangarFlag),
+          // Plain ids, not relations. `operationId` and `orbitId` are the two
+          // the name above is derived from, now kept so callers can resolve the
+          // StationOperation and the orbited celestial themselves. Every
+          // operationID resolves in stationOperations.yaml; orbitID is a moon
+          // (3,986), a planet (1,223) or — for Zarzakh alone — a star.
+          operationId,
+          orbitId,
+          positionX: optionalNumber(position.x),
+          positionY: optionalNumber(position.y),
+          positionZ: optionalNumber(position.z),
           isDeleted: false,
         };
       },

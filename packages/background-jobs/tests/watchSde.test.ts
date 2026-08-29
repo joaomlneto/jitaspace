@@ -40,6 +40,7 @@ const ingestState = (
   }: { completed: boolean; startedMsAgo?: number },
 ): SdeIngestState => ({
   buildNumber,
+  releaseDate: null,
   startedAt: Date.now() - startedMsAgo,
   completedAt: completed ? Date.now() - startedMsAgo + 60_000 : null,
 });

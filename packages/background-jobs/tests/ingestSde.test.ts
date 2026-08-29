@@ -1,3 +1,6 @@
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import {
   beforeAll,
   beforeEach,
@@ -12,6 +15,12 @@ import type { SdeRecord } from "@jitaspace/sde-utils";
 import type { ingestSde as IngestSde } from "../jobs/scrape/sde/ingestSde";
 import type * as SdeIngestStateModule from "../jobs/scrape/sde/sdeIngestState";
 
+// A real directory so the drift check runs for real: it holds one file the
+// stubbed registry knows and one it does not, which is the case that matters.
+const sdeExtractDir = fs.mkdtempSync(path.join(os.tmpdir(), "sde-drift-"));
+fs.writeFileSync(path.join(sdeExtractDir, "types.yaml"), "");
+fs.writeFileSync(path.join(sdeExtractDir, "brandNewFile.yaml"), "");
+
 // @swc/jest doesn't hoist jest.mock, so the mocks are declared first and the
 // factories close over them; the job is imported lazily in beforeAll. The two
 // recorder calls are stubbed to observe *when* they fire relative to the
@@ -21,7 +30,16 @@ const recordSdeIngestStarted = jest.fn<(build: unknown) => Promise<void>>();
 const recordSdeIngestCompleted = jest.fn<(build: number) => Promise<void>>();
 const jobHandler = jest.fn<() => Promise<unknown>>();
 
-jest.mock("../helpers/loadSdeFile", () => ({ loadSdeFile }));
+// `ingest-sde-all` reads the registry to diff it against the extracted archive.
+// The real barrel uses `.js` specifiers jest cannot resolve, so stub it — the
+// drift check's own behaviour is asserted below with a controlled registry.
+jest.mock("@jitaspace/sde-utils", () => ({
+  sdeInputFiles: { "types.yaml": {}, "_sde.yaml": {} },
+}));
+jest.mock("../helpers/loadSdeFile", () => ({
+  loadSdeFile,
+  sdeExtractRoot: () => Promise.resolve(sdeExtractDir),
+}));
 jest.mock("../jobs/scrape/sde/sdeIngestState", () => ({
   ...jest.requireActual<typeof SdeIngestStateModule>(
     "../jobs/scrape/sde/sdeIngestState",
@@ -35,9 +53,10 @@ jest.mock("../jobs", () => ({
 
 let ingestSde: typeof IngestSde;
 let SDE_INGEST_JOB_IDS: string[];
+let SDE_POST_ESI_JOB_IDS: string[];
 
 beforeAll(async () => {
-  ({ ingestSde, SDE_INGEST_JOB_IDS } =
+  ({ ingestSde, SDE_INGEST_JOB_IDS, SDE_POST_ESI_JOB_IDS } =
     await import("../jobs/scrape/sde/ingestSde"));
 });
 
@@ -73,8 +92,11 @@ describe("ingest-sde-all", () => {
     await ingestSde.handler(ctx());
 
     expect(loadSdeFile).toHaveBeenCalledWith("_sde.yaml");
+    // The release date rides along with the build number so anything showing
+    // "SDE data as of ..." has a date rather than just an opaque build id.
     expect(recordSdeIngestStarted).toHaveBeenCalledWith({
       buildNumber: BUILD_NUMBER,
+      releaseDate: "2026-07-31T11:29:31Z",
     });
   });
 
@@ -99,8 +121,10 @@ describe("ingest-sde-all", () => {
     // the first moment, and only means "loaded" once the last one succeeded.
     expect(order[0]).toBe("started");
     expect(order.at(-1)).toBe("completed");
+    // The post-ESI hybrids run in the same pass: leaving them out is how
+    // `scrape-sde-agents` went unreachable from a new SDE build.
     expect(order.filter((step) => step === "ingest")).toHaveLength(
-      SDE_INGEST_JOB_IDS.length,
+      SDE_INGEST_JOB_IDS.length + SDE_POST_ESI_JOB_IDS.length,
     );
     expect(recordSdeIngestCompleted).toHaveBeenCalledWith(BUILD_NUMBER);
   });

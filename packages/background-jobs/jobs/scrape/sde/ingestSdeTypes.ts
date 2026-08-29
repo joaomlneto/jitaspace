@@ -6,6 +6,7 @@ import {
   ingestSdeTable,
   loadSdeFileIds,
   loadSdeFiles,
+  optionalBoolean,
   optionalNumber,
   requiredBoolean,
   requiredNumber,
@@ -31,11 +32,18 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
     const iconIds = await loadSdeFileIds("icons.yaml");
     const marketGroupIds = await loadSdeFileIds("marketGroups.yaml");
     const shipTreeGroupIds = await loadSdeFileIds("shipTreeGroups.yaml");
+    // 59 of the 1,376 `factionID` values name a faction absent from
+    // factions.yaml (they are NPC corporation ids), so guard this one too.
+    // `raceID` and `metaGroupID` have no dangling values and need no guard.
+    const factionIds = await loadSdeFileIds("factions.yaml");
     const present = (ids: ReadonlySet<number>, value: number | null) =>
       value != null && ids.has(value) ? value : null;
 
-    // `packagedVolume` is intentionally not set here — it is sourced from ESI,
-    // so the diff leaves it untouched (see ingestSdeTable).
+    // `packagedVolume` is left to ESI even though types.yaml has carried it
+    // since build 3475087 (46,748 of 52,863 types). Two writers for one column
+    // is the situation `SDE_OWNED_TYPE_COLUMNS` exists to prevent, so switching
+    // owners means removing it from the ESI scraper's payload in the same
+    // change — not just setting it here. Until then the SDE value is ignored.
     const types = await ingestSdeTable({
       filename: "types.yaml",
       records: files["types.yaml"],
@@ -68,6 +76,10 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
           shipTreeGroupIds,
           optionalNumber(record.shipTreeGroupID),
         ),
+        raceId: optionalNumber(record.raceID),
+        metaGroupId: optionalNumber(record.metaGroupID),
+        isRepackable: optionalBoolean(record.isRepackable),
+        factionId: present(factionIds, optionalNumber(record.factionID)),
         isDeleted: false,
       }),
     });

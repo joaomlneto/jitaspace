@@ -35,6 +35,17 @@ function getExtractedSdeRoot(): Promise<string> {
 }
 
 /**
+ * The directory the archive is extracted into, downloading it first if this
+ * process has not already. Exposed so a caller can compare what the archive
+ * actually contains against what `sdeInputFiles` knows about — nothing else in
+ * the pipeline ever walks the extract, which is why CCP can add a file and have
+ * it go unnoticed indefinitely.
+ */
+export function sdeExtractRoot(): Promise<string> {
+  return getExtractedSdeRoot();
+}
+
+/**
  * Parse a single SDE file (applying its `sdeInputFiles` transformations, e.g.
  * injecting the id for `addId` files). Returns the records as a map keyed by id.
  *

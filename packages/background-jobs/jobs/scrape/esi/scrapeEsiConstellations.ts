@@ -7,6 +7,7 @@ import {
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_CONSTELLATION_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 const fetchConstellation = (constellationId: number) =>
@@ -55,10 +56,10 @@ export const scrapeEsiConstellations = defineJob<
             entries.map((entry) =>
               // wormholeClassId is owned by ingestSdeConstellations.
               excludeObjectKeys(entry, [
-                "updatedAt",
-                "createdAt",
-                "wormholeClassId",
-              ]),
+              "updatedAt",
+              "createdAt",
+              ...SDE_OWNED_CONSTELLATION_COLUMNS,
+            ]),
             ),
           ),
       fetchRemoteEntries: async () =>

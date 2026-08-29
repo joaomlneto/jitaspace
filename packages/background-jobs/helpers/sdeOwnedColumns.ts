@@ -32,6 +32,13 @@ export const SDE_OWNED_CORPORATION_COLUMNS = [
   "secondaryActivityId",
   "enemyId",
   "friendId",
+  "size",
+  "sizeFactor",
+  "isUnique",
+  "isDeletedByCcp",
+  "solarSystemId",
+  "raceId",
+  "iconId",
 ] as const;
 
 /** Written by `ingestSdePlanets` (the `attributes` sub-object of mapPlanets.yaml). */
@@ -40,6 +47,23 @@ export const SDE_OWNED_PLANET_COLUMNS = [
   "heightMap2",
   "shaderPreset",
   "population",
+  "radius",
+  "positionX",
+  "positionY",
+  "positionZ",
+  "density",
+  "eccentricity",
+  "escapeVelocity",
+  "isTidallyLocked",
+  "massDust",
+  "massGas",
+  "orbitPeriod",
+  "orbitRadius",
+  "pressure",
+  "rotationRate",
+  "surfaceGravity",
+  "temperature",
+  "spectralClass",
 ] as const;
 
 /** Written by `ingestSdeMoons` (the `attributes` sub-object of mapMoons.yaml). */
@@ -47,6 +71,24 @@ export const SDE_OWNED_MOON_COLUMNS = [
   "heightMap1",
   "heightMap2",
   "shaderPreset",
+  "typeId",
+  "radius",
+  "positionX",
+  "positionY",
+  "positionZ",
+  "density",
+  "eccentricity",
+  "escapeVelocity",
+  "isTidallyLocked",
+  "massDust",
+  "massGas",
+  "orbitPeriod",
+  "orbitRadius",
+  "pressure",
+  "rotationRate",
+  "surfaceGravity",
+  "temperature",
+  "spectralClass",
 ] as const;
 
 /** Written by `ingestSdeSolarSystems`. */
@@ -89,4 +131,84 @@ export const SDE_OWNED_TYPE_COLUMNS = [
   "soundId",
   "shipTreeGroupId",
   "variationParentTypeId",
+  "raceId",
+  "metaGroupId",
+  "isRepackable",
+  "factionId",
+] as const;
+
+/** Written by `ingestSdeStations` (npcStations.yaml). */
+export const SDE_OWNED_STATION_COLUMNS = [
+  "operationId",
+  "orbitId",
+  "positionX",
+  "positionY",
+  "positionZ",
+] as const;
+
+/** Written by `ingestSdeStargates` (mapStargates.yaml `position`). */
+export const SDE_OWNED_STARGATE_COLUMNS = [
+  "positionX",
+  "positionY",
+  "positionZ",
+] as const;
+
+/** Written by `ingestSdeBloodlines` (bloodlines.yaml `iconID`). */
+export const SDE_OWNED_BLOODLINE_COLUMNS = ["iconId"] as const;
+
+/** Written by `ingestSdeRaces` (races.yaml `iconID`). */
+export const SDE_OWNED_RACE_COLUMNS = ["iconId"] as const;
+
+/** Written by `ingestSdeFactions` (factions.yaml `iconID` / `shortDescription`). */
+export const SDE_OWNED_FACTION_COLUMNS = [
+  "flatLogo",
+  "flatLogoWithName",
+  "iconId",
+  "shortDescription",
+] as const;
+
+/** Written by `scrapeSdeAgents` from npcCharacters.yaml — ESI does not supply these. */
+export const SDE_OWNED_CHARACTER_COLUMNS = ["ancestryId", "isUnique"] as const;
+
+/** Written by `ingestSdeAncestries` — ESI's ancestry payload has no attributes. */
+export const SDE_OWNED_ANCESTRY_COLUMNS = [
+  "charisma",
+  "intelligence",
+  "memory",
+  "perception",
+  "willpower",
+] as const;
+
+/** Written by `ingestSdeCategories` (categories.yaml `iconID`). */
+export const SDE_OWNED_CATEGORY_COLUMNS = ["iconId"] as const;
+
+/**
+ * Written by `ingestSdeGroups`. The first four were stripped inline at the ESI
+ * scraper before this list existed; `iconId` joined them with groups.yaml.
+ */
+export const SDE_OWNED_GROUP_COLUMNS = [
+  "anchorable",
+  "anchored",
+  "fittableNonSingleton",
+  "useBasePrice",
+  "iconId",
+] as const;
+
+/** Written by `ingestSdeRegions` (mapRegions.yaml). */
+export const SDE_OWNED_REGION_COLUMNS = [
+  "nebulaGraphicId",
+  "wormholeClassId",
+  "positionX",
+  "positionY",
+  "positionZ",
+  "factionId",
+] as const;
+
+/** Written by `ingestSdeConstellations` (mapConstellations.yaml). */
+export const SDE_OWNED_CONSTELLATION_COLUMNS = [
+  "wormholeClassId",
+  "positionX",
+  "positionY",
+  "positionZ",
+  "factionId",
 ] as const;

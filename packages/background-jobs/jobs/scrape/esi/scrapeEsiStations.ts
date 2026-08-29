@@ -6,6 +6,10 @@ import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
+import { SDE_OWNED_STATION_COLUMNS } from "../../../helpers";
+
+/** npcStations.yaml supplies these; ESI's station payload does not. */
+type SdeOwnedStationColumn = (typeof SDE_OWNED_STATION_COLUMNS)[number];
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeStationsEventPayload {
@@ -84,14 +88,15 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
 
           const thisBatchStations = await fetchStations(thisBatchStationIds);
 
-          // reprocessingHangarFlag is owned by ingestSdeStations (ESI's station
-          // endpoint has no equivalent), so it stays out of this diff.
+          // reprocessingHangarFlag and the SDE_OWNED_STATION_COLUMNS set are
+          // owned by ingestSdeStations (ESI's station endpoint has no
+          // equivalent), so they stay out of this diff.
           const stripTimestamps = <
             T extends {
               updatedAt: unknown;
               createdAt: unknown;
               reprocessingHangarFlag: unknown;
-            },
+            } & Record<SdeOwnedStationColumn, unknown>,
           >(
             entries: T[],
           ) =>
@@ -100,13 +105,17 @@ export const scrapeEsiStations = defineJob<ScrapeStationsEventPayload["data"]>({
                 "updatedAt",
                 "createdAt",
                 "reprocessingHangarFlag",
+                ...SDE_OWNED_STATION_COLUMNS,
               ]),
             );
 
           const updateOneStation = (
             entry: Omit<
               Awaited<ReturnType<typeof prisma.station.findMany>>[number],
-              "createdAt" | "updatedAt" | "reprocessingHangarFlag"
+              | "createdAt"
+              | "updatedAt"
+              | "reprocessingHangarFlag"
+              | SdeOwnedStationColumn
             >,
           ) =>
             limit(() =>

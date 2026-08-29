@@ -5,6 +5,7 @@ import { getUniverseBloodlines } from "@jitaspace/esi-client";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
+import { SDE_OWNED_BLOODLINE_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeBloodlinesEventPayload {
@@ -43,7 +44,11 @@ export const scrapeEsiBloodlines = defineJob<
           })
           .then((entries) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              excludeObjectKeys(entry, [
+              "updatedAt",
+              "createdAt",
+              ...SDE_OWNED_BLOODLINE_COLUMNS,
+            ]),
             ),
           ),
       fetchRemoteEntries: () =>

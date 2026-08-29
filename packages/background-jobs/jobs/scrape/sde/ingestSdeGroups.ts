@@ -5,6 +5,7 @@ import {
   enString,
   ingestSdeTable,
   optionalBoolean,
+  optionalNumber,
   requiredBoolean,
   requiredNumber,
 } from "../../../helpers";
@@ -35,6 +36,7 @@ export const ingestSdeGroups = defineJob<IngestSdeGroupsEventPayload["data"]>({
         anchored: optionalBoolean(record.anchored),
         fittableNonSingleton: optionalBoolean(record.fittableNonSingleton),
         useBasePrice: optionalBoolean(record.useBasePrice),
+        iconId: optionalNumber(record.iconID),
         isDeleted: false,
       }),
     });

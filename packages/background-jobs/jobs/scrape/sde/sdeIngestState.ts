@@ -14,6 +14,13 @@ export const SDE_INGEST_STALE_AFTER_MS = 3600 * 1000;
 
 export interface SdeIngestState {
   buildNumber: number;
+  /**
+   * The build's own publication date, straight from `_sde.yaml`
+   * (`"2026-08-28T11:07:12Z"`), or null for a state written before this was
+   * recorded. The build number identifies a build but says nothing about when
+   * CCP shipped it, so anything wanting to show "SDE data as of ..." needs this.
+   */
+  releaseDate: string | null;
   /** Epoch ms when the ingest of `buildNumber` started. */
   startedAt: number;
   /** Epoch ms when it finished; null while in flight — or if that run died. */
@@ -27,15 +34,30 @@ export interface SdeIngestState {
  */
 export function sdeBuildFromMetadata(metadata: SdeRecord): {
   buildNumber: number;
+  releaseDate: string | null;
 } {
-  const sde = metadata.sde as { buildNumber?: unknown } | undefined;
+  const sde = metadata.sde as
+    | { buildNumber?: unknown; releaseDate?: unknown }
+    | undefined;
   const buildNumber = sde?.buildNumber;
 
   if (typeof buildNumber !== "number" || !Number.isFinite(buildNumber)) {
     throw new TypeError("_sde.yaml carries no usable sde.buildNumber");
   }
 
-  return { buildNumber };
+  // Unlike the build number, a missing release date is not fatal: it is
+  // descriptive, not the ingest's identity, so an archive without one still
+  // ingests. `js-yaml` reads the unquoted timestamp as a Date, so normalise
+  // whatever shape it comes back as to an ISO string.
+  const raw = sde?.releaseDate;
+  const releaseDate =
+    raw instanceof Date
+      ? raw.toISOString()
+      : typeof raw === "string" && raw !== ""
+        ? raw
+        : null;
+
+  return { buildNumber, releaseDate };
 }
 
 /** Narrow a parsed Redis value to a usable state, or null if it's unreadable. */
@@ -49,16 +71,17 @@ function parseState(raw: string | null): SdeIngestState | null {
     return null;
   }
 
-  const { buildNumber, startedAt, completedAt } = (value ?? {}) as Record<
-    string,
-    unknown
-  >;
+  const { buildNumber, releaseDate, startedAt, completedAt } = (value ??
+    {}) as Record<string, unknown>;
   if (typeof buildNumber !== "number" || typeof startedAt !== "number") {
     return null;
   }
 
   return {
     buildNumber,
+    // Absent on states written before the field existed, which is why it is
+    // nullable rather than a parse failure.
+    releaseDate: typeof releaseDate === "string" ? releaseDate : null,
     startedAt,
     completedAt: typeof completedAt === "number" ? completedAt : null,
   };
@@ -77,12 +100,14 @@ export async function loadedSdeBuild(): Promise<SdeIngestState | null> {
 /** Claim the marker for `buildNumber`, clearing any previous completion. */
 export async function recordSdeIngestStarted(build: {
   buildNumber: number;
+  releaseDate?: string | null;
 }): Promise<void> {
   const redis = await getRedis();
   await redis.set(
     SDE_INGEST_KEY,
     JSON.stringify({
       buildNumber: build.buildNumber,
+      releaseDate: build.releaseDate ?? null,
       startedAt: Date.now(),
       completedAt: null,
     } satisfies SdeIngestState),

@@ -57,7 +57,10 @@ describe("sdeBuildFromMetadata", () => {
           schemaChangeLog: "https://example.test/changelog",
         }),
       ),
-    ).toEqual({ buildNumber: BUILD_NUMBER });
+    ).toEqual({
+      buildNumber: BUILD_NUMBER,
+      releaseDate: "2026-07-31T11:29:31Z",
+    });
   });
 
   it("throws rather than guessing when the build number is unusable", () => {
@@ -68,6 +71,24 @@ describe("sdeBuildFromMetadata", () => {
     ).toThrow("buildNumber");
     // No `sde` key at all — an empty or unexpected `_sde.yaml`.
     expect(() => sdeBuildFromMetadata({})).toThrow("buildNumber");
+  });
+
+  it("carries the build's release date, and tolerates its absence", () => {
+    expect(
+      sdeBuildFromMetadata({
+        sde: { buildNumber: 3484357, releaseDate: "2026-08-28T11:07:12Z" },
+      }),
+    ).toEqual({ buildNumber: 3484357, releaseDate: "2026-08-28T11:07:12Z" });
+    // js-yaml reads an unquoted timestamp as a Date; normalise it.
+    expect(
+      sdeBuildFromMetadata({
+        sde: { buildNumber: 1, releaseDate: new Date("2026-08-28T11:07:12Z") },
+      }).releaseDate,
+    ).toBe("2026-08-28T11:07:12.000Z");
+    // Descriptive, not the ingest's identity: a build without one still ingests.
+    expect(sdeBuildFromMetadata({ sde: { buildNumber: 1 } }).releaseDate).toBe(
+      null,
+    );
   });
 });
 
@@ -90,6 +111,9 @@ describe("loadedSdeBuild", () => {
 
     await expect(loadedSdeBuild()).resolves.toEqual({
       buildNumber: BUILD_NUMBER,
+      // The stored value predates the field, so it reads back as null rather
+      // than making the whole state unparseable.
+      releaseDate: null,
       startedAt: 1000,
       completedAt: 2000,
     });
@@ -190,6 +214,7 @@ describe("recordSdeIngestCompleted", () => {
 describe("coversSdeBuild", () => {
   const state = (over: Partial<SdeIngestState> = {}): SdeIngestState => ({
     buildNumber: BUILD_NUMBER,
+    releaseDate: null,
     startedAt: Date.now(),
     completedAt: null,
     ...over,

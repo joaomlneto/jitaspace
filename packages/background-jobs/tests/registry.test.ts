@@ -32,12 +32,14 @@ jest.mock("p-limit", () => ({
 let jobs: typeof Jobs;
 let registry: typeof Registry;
 let sdeIngestJobIds: string[];
+let sdePostEsiJobIds: string[];
 
 beforeAll(async () => {
   const mod = await import("../jobs");
   jobs = mod.jobs;
   registry = mod.registry;
   sdeIngestJobIds = mod.SDE_INGEST_JOB_IDS;
+  sdePostEsiJobIds = mod.SDE_POST_ESI_JOB_IDS;
 });
 
 const JOBS_DIR = join(__dirname, "..", "jobs");
@@ -110,6 +112,20 @@ describe("background-jobs registry", () => {
   it("SDE_INGEST_JOB_IDS all resolve to registered jobs", () => {
     const unknown = sdeIngestJobIds.filter((id) => !registry.has(id));
     expect(unknown).toEqual([]);
+  });
+
+  it("SDE_POST_ESI_JOB_IDS all resolve, and none of them is an ingest-sde job", () => {
+    // The post-ESI list exists for SDE jobs that reference ESI-owned tables and
+    // therefore keep a `scrape-` id. An `ingest-sde-*` id appearing here would
+    // mean it runs twice per build (once from each list).
+    expect(sdePostEsiJobIds.length).toBeGreaterThan(0);
+    expect(sdePostEsiJobIds.filter((id) => !registry.has(id))).toEqual([]);
+    expect(
+      sdePostEsiJobIds.filter((id) => id.startsWith("ingest-sde-")),
+    ).toEqual([]);
+    expect(
+      sdePostEsiJobIds.filter((id) => sdeIngestJobIds.includes(id)),
+    ).toEqual([]);
   });
 
   it("SDE_INGEST_JOB_IDS covers exactly the per-file ingest-sde jobs", () => {

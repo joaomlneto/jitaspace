@@ -1,0 +1,7 @@
+---
+"@jitaspace/db": minor
+---
+
+Added models for the 23 files CCP added to the SDE archive in build 3475087 (2026-08-20): `AccountingEntryType`, `NotificationType`, `CorporationRoleGroup`, `CorporationRole` (+ `CorporationRoleGroupMember`), `ExpertSystem` (+ `ExpertSystemSkill`, `ExpertSystemShip`), `FighterAbility` (+ `TypeFighterAbility`), `IndustryActivity`, `IndustryAssemblyLine` (+ `IndustryAssemblyLineGroup`, `IndustryAssemblyLineCategory`, `IndustryAssemblyLineTypeList`), `IndustryInstallationAssemblyLine`, `IndustryModifierSource`, `IndustryTargetFilter` (+ `IndustryTargetFilterGroup`, `IndustryTargetFilterCategory`), `LinkWithShip` (+ `LinkWithShipDbuff`), `MetenoxMoonDrill`, `ProximityTrap` (+ `ProximityTrapDbuff`), `AppliedProximityEffect` (+ `AppliedProximityEffectDbuff`), `SchoolMap`, `School` (+ `SchoolCareerAgent`, `SchoolStartingStation`), `SkillPlan` (+ `SkillPlanSkill`, `SkillPlanMilestone`), `SkinrFactionSlotMaterial`, `StationStandingsRestriction`, `SystemDbuffEmitter` (+ `SystemDbuffEmitterDbuff`) and `SystemWideEffect` (+ `SystemWideEffectDbuff`), with the `IndustryModifierActivity` and `IndustryModifierBucket` enums.
+
+Cross-file references (type, faction, group, category, dogma-attribute and type-list ids) are plain integer columns rather than foreign keys, matching the earlier reference-table batch. `IndustryModifierSource.industryTargetFilterId` uses `0` to mean "no filter" so it can sit inside the primary key, the way `TypeBonusLine` uses `skillTypeId = 0`. Requires a database migration.

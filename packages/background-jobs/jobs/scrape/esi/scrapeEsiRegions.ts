@@ -7,6 +7,7 @@ import {
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_REGION_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeRegionEventPayload {
@@ -52,11 +53,10 @@ export const scrapeEsiRegions = defineJob<ScrapeRegionEventPayload["data"]>({
             entries.map((entry) =>
               // nebulaGraphicId / wormholeClassId are owned by ingestSdeRegions.
               excludeObjectKeys(entry, [
-                "updatedAt",
-                "createdAt",
-                "nebulaGraphicId",
-                "wormholeClassId",
-              ]),
+              "updatedAt",
+              "createdAt",
+              ...SDE_OWNED_REGION_COLUMNS,
+            ]),
             ),
           ),
       fetchRemoteEntries: async () =>

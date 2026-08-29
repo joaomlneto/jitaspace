@@ -33,6 +33,11 @@ model Character {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  npcSkills             NpcCharacterSkill[]
+  /// The third tier of race/bloodline/ancestry (npcCharacters.yaml `ancestryID`).
+  ancestryId            Int?
+  /// Whether the character name is globally unique (npcCharacters.yaml `uniqueName`).
+  isUnique              Boolean?
   createdAt             DateTime                         @default(now())
   updatedAt             DateTime                         @updatedAt()
   isDeleted             Boolean                          @default(false)
@@ -118,6 +123,8 @@ model Category {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// The category's icon (categories.yaml `iconID`).
+  iconId     Int?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt()
   isDeleted  Boolean  @default(false)
@@ -140,6 +147,8 @@ model Group {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// The group's icon (groups.yaml `iconID`).
+  iconId               Int?
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt()
   isDeleted            Boolean               @default(false)
@@ -205,6 +214,18 @@ model Type {
   // When was this record last updated
   updatedAt                       DateTime                        @updatedAt()
   // Was this item deleted
+  /// The race a hull, skill or apparel item belongs to (types.yaml `raceID`).
+  raceId                          Int?
+  /// Tech I/II/III, Storyline, Faction, Officer, Deadspace, Abyssal …
+  /// (types.yaml `metaGroupID`). A plain id: MetaGroup is ingested separately.
+  metaGroupId                     Int?
+  /// Whether an assembled item can be repackaged (types.yaml `isRepackable`).
+  /// CCP only ever serializes this as true, never false.
+  isRepackable                    Boolean?
+  /// The faction a faction/pirate item belongs to (types.yaml `factionID`).
+  /// FK-guarded on ingest: 59 of the 1,376 values name a faction the SDE's own
+  /// factions.yaml does not contain, and those land null.
+  factionId                       Int?
   isDeleted                       Boolean                         @default(false)
   Stargate                        Stargate[]                      @relation("StargateType")
   AgentInSpace                    AgentInSpace[]                  @relation("AgentInSpaceType")
@@ -285,13 +306,14 @@ model Graphic {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  sofLayouts       GraphicSofLayout[]
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt()
   isDeleted        Boolean             @default(false)
 }
 
 model DogmaAttribute {
-  attributeId                  Int                   @id
+  attributeId                  Int                     @id
   defaultValue                 Float?
   description                  String?
   displayName                  String?
@@ -316,27 +338,27 @@ model DogmaAttribute {
   // endpoint exposes no category.
   attributeCategory            DogmaAttributeCategory? @relation(fields: [attributeCategoryId], references: [attributeCategoryId])
   attributeCategoryId          Int?
-  Icon                         Icon?                 @relation(fields: [iconId], references: [iconId])
-  DogmaUnit                    DogmaUnit?            @relation(fields: [unitId], references: [unitId])
+  Icon                         Icon?                   @relation(fields: [iconId], references: [iconId])
+  DogmaUnit                    DogmaUnit?              @relation(fields: [unitId], references: [unitId])
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt                    DateTime              @default(now())
-  updatedAt                    DateTime              @updatedAt()
-  isDeleted                    Boolean               @default(false)
+  createdAt                    DateTime                @default(now())
+  updatedAt                    DateTime                @updatedAt()
+  isDeleted                    Boolean                 @default(false)
   TypeAttributes               TypeAttribute[]
-  DischargeAttribute           DogmaEffect[]         @relation("DischargeAttribute")
-  DurationAttribute            DogmaEffect[]         @relation("DurationAttribute")
-  FalloffAttribute             DogmaEffect[]         @relation("FalloffAttribute")
-  RangeAttribute               DogmaEffect[]         @relation("RangeAttribute")
-  TrackingSpeedAttribute       DogmaEffect[]         @relation("TrackingSpeedAttribute")
-  DogmaEffectsModified         DogmaEffectModifier[] @relation("DogmaEffectsModified")
-  DogmaEffectsModifying        DogmaEffectModifier[] @relation("DogmaEffectsModifying")
+  DischargeAttribute           DogmaEffect[]           @relation("DischargeAttribute")
+  DurationAttribute            DogmaEffect[]           @relation("DurationAttribute")
+  FalloffAttribute             DogmaEffect[]           @relation("FalloffAttribute")
+  RangeAttribute               DogmaEffect[]           @relation("RangeAttribute")
+  TrackingSpeedAttribute       DogmaEffect[]           @relation("TrackingSpeedAttribute")
+  DogmaEffectsModified         DogmaEffectModifier[]   @relation("DogmaEffectsModified")
+  DogmaEffectsModifying        DogmaEffectModifier[]   @relation("DogmaEffectsModifying")
   // Back-relations for the SDE-only attribute references on DogmaEffect.
-  ResistanceAttribute          DogmaEffect[]         @relation("ResistanceAttribute")
-  NpcActivationChanceAttribute DogmaEffect[]         @relation("NpcActivationChanceAttribute")
-  FittingUsageChanceAttribute  DogmaEffect[]         @relation("FittingUsageChanceAttribute")
-  NpcUsageChanceAttribute      DogmaEffect[]         @relation("NpcUsageChanceAttribute")
+  ResistanceAttribute          DogmaEffect[]           @relation("ResistanceAttribute")
+  NpcActivationChanceAttribute DogmaEffect[]           @relation("NpcActivationChanceAttribute")
+  FittingUsageChanceAttribute  DogmaEffect[]           @relation("FittingUsageChanceAttribute")
+  NpcUsageChanceAttribute      DogmaEffect[]           @relation("NpcUsageChanceAttribute")
 
   @@index([unitId])
   @@index([iconId])
@@ -344,16 +366,16 @@ model DogmaAttribute {
 }
 
 model DogmaAttributeCategory {
-  attributeCategoryId Int      @id
+  attributeCategoryId Int              @id
   name                String
   description         String?
   attributes          DogmaAttribute[]
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt()
-  isDeleted           Boolean  @default(false)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt()
+  isDeleted           Boolean          @default(false)
 }
 
 model DogmaEffectCategory {
@@ -541,7 +563,7 @@ model Faction {
   solarSystem          SolarSystem?        @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId        Int?
   // Systems held by this faction (inverse of SolarSystem.factionId).
-  heldSolarSystems     SolarSystem[]      @relation("SolarSystemFaction")
+  heldSolarSystems     SolarSystem[]       @relation("SolarSystemFaction")
   // do we need to store this?
   stationCount         Int
   // do we need to store this?
@@ -553,6 +575,10 @@ model Faction {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// The faction's icon (factions.yaml `iconID`), distinct from the flat logos.
+  iconId               Int?
+  /// One-line tagline, carried for the four empire factions only.
+  shortDescription     String?
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt()
   isDeleted            Boolean             @default(false)
@@ -617,6 +643,17 @@ model Corporation {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// SDE-only columns from npcCorporations.yaml, owned by ingestSdeNpcCorporations.
+  /// Size band (T/S/L/M/H) — distinct from the already-stored `extent`.
+  size                       String?
+  sizeFactor                 Float?
+  /// Whether the corporation name is globally unique (npcCorporations.yaml `uniqueName`).
+  isUnique                   Boolean?
+  /// CCP's own deleted marker — NOT the ingest's `isDeleted` soft-delete flag.
+  isDeletedByCcp             Boolean?
+  solarSystemId              Int?
+  raceId                     Int?
+  iconId                     Int?
   createdAt                  DateTime                     @default(now())
   updatedAt                  DateTime                     @updatedAt()
   isDeleted                  Boolean                      @default(false)
@@ -670,6 +707,16 @@ model Station {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// The station's operation type (npcStations.yaml `operationID`) — already used to
+  /// derive the station name, now stored so callers can resolve StationOperation.
+  operationId              Int?
+  /// The celestial the station orbits: a moon (3,986), a planet (1,223) or,
+  /// once, a star — Zarzakh, which orbits no planet at all.
+  orbitId                  Int?
+  /// In-system coordinates (npcStations.yaml `position`).
+  positionX                Float?
+  positionY                Float?
+  positionZ                Float?
   createdAt                DateTime         @default(now())
   updatedAt                DateTime         @updatedAt()
   isDeleted                Boolean          @default(false)
@@ -700,23 +747,26 @@ model StationService {
 }
 
 model Race {
-  raceId      Int         @id
-  name        String
-  description String?
-  faction     Faction?    @relation("RaceFaction", fields: [factionId], references: [factionId])
-  factionId   Int?
+  raceId         Int         @id
+  name           String
+  description    String?
+  faction        Faction?    @relation("RaceFaction", fields: [factionId], references: [factionId])
+  factionId      Int?
   // The race's starter ship (races.yaml `shipTypeID`), owned by ingestSdeRaces.
-  shipType    Type?       @relation("RaceShipType", fields: [shipTypeId], references: [typeId])
-  shipTypeId  Int?
+  shipType       Type?       @relation("RaceShipType", fields: [shipTypeId], references: [typeId])
+  shipTypeId     Int?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt()
-  isDeleted   Boolean     @default(false)
-  stations    Station[]   @relation("RaceStations")
-  bloodlines  Bloodline[] @relation("BloodlineRace")
-  characters  Character[] @relation("CharacterRace")
+  /// The race's icon (races.yaml `iconID`).
+  iconId         Int?
+  startingSkills RaceSkill[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt()
+  isDeleted      Boolean     @default(false)
+  stations       Station[]   @relation("RaceStations")
+  bloodlines     Bloodline[] @relation("BloodlineRace")
+  characters     Character[] @relation("CharacterRace")
 
   @@index([factionId])
   @@index([shipTypeId])
@@ -736,6 +786,12 @@ model Region {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// Galactic coordinates of the region centre (mapRegions.yaml `position`).
+  positionX       Float?
+  positionY       Float?
+  positionZ       Float?
+  /// The faction holding the region (mapRegions.yaml `factionID`). A plain id.
+  factionId       Int?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt()
   isDeleted       Boolean         @default(false)
@@ -757,6 +813,12 @@ model Constellation {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// Galactic coordinates of the constellation centre (mapConstellations.yaml `position`).
+  positionX       Float?
+  positionY       Float?
+  positionZ       Float?
+  /// The faction holding the constellation (mapConstellations.yaml `factionID`).
+  factionId       Int?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt()
   isDeleted       Boolean       @default(false)
@@ -833,6 +895,9 @@ model Star {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// Total main-sequence lifespan in seconds (mapStars.yaml `statistics.life`);
+  /// the sibling of the already-stored `age`.
+  life          Float?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt()
   isDeleted     Boolean     @default(false)
@@ -851,6 +916,10 @@ model Stargate {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// In-system coordinates (mapStargates.yaml `position`).
+  positionX             Float?
+  positionY             Float?
+  positionZ             Float?
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt()
   isDeleted             Boolean     @default(false)
@@ -863,26 +932,47 @@ model Stargate {
 
 // TODO: Add missing "position" field
 model Planet {
-  planetId      Int            @id
-  name          String
-  solarSystem   SolarSystem    @relation("PlanetSolarSystem", fields: [solarSystemId], references: [solarSystemId])
-  solarSystemId Int
-  type          Type           @relation("PlanetType", fields: [typeId], references: [typeId])
-  typeId        Int
+  planetId        Int            @id
+  name            String
+  solarSystem     SolarSystem    @relation("PlanetSolarSystem", fields: [solarSystemId], references: [solarSystemId])
+  solarSystemId   Int
+  type            Type           @relation("PlanetType", fields: [typeId], references: [typeId])
+  typeId          Int
   // SDE-only render attributes (mapPlanets.yaml `attributes`), owned by
   // ingestSdePlanets. `population` is a flag, not a count.
-  heightMap1    Int?
-  heightMap2    Int?
-  shaderPreset  Int?
-  population    Boolean?
+  heightMap1      Int?
+  heightMap2      Int?
+  shaderPreset    Int?
+  population      Boolean?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt()
-  isDeleted     Boolean        @default(false)
-  moons         Moon[]         @relation("PlanetMoons")
-  asteroidBelts AsteroidBelt[] @relation("PlanetAsteroidBelts")
+  radius          Float?
+  /// In-system coordinates (mapPlanets.yaml `position`).
+  positionX       Float?
+  positionY       Float?
+  positionZ       Float?
+  /// Physical/orbital statistics (mapPlanets.yaml `statistics`).
+  density         Float?
+  eccentricity    Float?
+  escapeVelocity  Float?
+  /// SDE `statistics.locked` — tidally locked to its parent body.
+  isTidallyLocked Boolean?
+  massDust        Float?
+  massGas         Float?
+  orbitPeriod     Float?
+  orbitRadius     Float?
+  pressure        Float?
+  rotationRate    Float?
+  surfaceGravity  Float?
+  temperature     Float?
+  /// Constant "0.0" for every row CCP ships — kept for fidelity, not information.
+  spectralClass   String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt()
+  isDeleted       Boolean        @default(false)
+  moons           Moon[]         @relation("PlanetMoons")
+  asteroidBelts   AsteroidBelt[] @relation("PlanetAsteroidBelts")
 
   @@index([solarSystemId])
   @@index([typeId])
@@ -890,37 +980,84 @@ model Planet {
 
 // TODO: Add missing "position" field
 model Moon {
-  moonId       Int        @id
-  name         String
-  planet       Planet     @relation("PlanetMoons", fields: [planetId], references: [planetId])
-  planetId     Int
+  moonId          Int        @id
+  name            String
+  planet          Planet     @relation("PlanetMoons", fields: [planetId], references: [planetId])
+  planetId        Int
   // SDE-only render attributes (mapMoons.yaml `attributes`), owned by ingestSdeMoons.
-  heightMap1   Int?
-  heightMap2   Int?
-  shaderPreset Int?
+  heightMap1      Int?
+  heightMap2      Int?
+  shaderPreset    Int?
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt()
-  isDeleted    Boolean    @default(false)
-  Killmail     Killmail[] @relation("KillmailMoon")
+  /// The moon's own type (mapMoons.yaml `typeID`).
+  typeId          Int?
+  radius          Float?
+  /// In-system coordinates (mapMoons.yaml `position`).
+  positionX       Float?
+  positionY       Float?
+  positionZ       Float?
+  /// Physical/orbital statistics (mapMoons.yaml `statistics`).
+  density         Float?
+  eccentricity    Float?
+  escapeVelocity  Float?
+  /// SDE `statistics.locked` — tidally locked to its parent body.
+  isTidallyLocked Boolean?
+  massDust        Float?
+  massGas         Float?
+  orbitPeriod     Float?
+  orbitRadius     Float?
+  pressure        Float?
+  rotationRate    Float?
+  surfaceGravity  Float?
+  temperature     Float?
+  /// Constant "0.0" for every row CCP ships — kept for fidelity, not information.
+  spectralClass   String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt()
+  isDeleted       Boolean    @default(false)
+  Killmail        Killmail[] @relation("KillmailMoon")
 
   @@index([planetId])
 }
 
 // TODO: Add missing "position" field
 model AsteroidBelt {
-  asteroidBeltId Int      @id
-  name           String
-  planet         Planet   @relation("PlanetAsteroidBelts", fields: [planetId], references: [planetId])
-  planetId       Int
+  asteroidBeltId  Int      @id
+  name            String
+  planet          Planet   @relation("PlanetAsteroidBelts", fields: [planetId], references: [planetId])
+  planetId        Int
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt()
-  isDeleted      Boolean  @default(false)
+  /// The belt's own type (mapAsteroidBelts.yaml `typeID`).
+  typeId          Int?
+  radius          Float?
+  solarSystemId   Int?
+  celestialIndex  Int?
+  /// In-system coordinates (mapAsteroidBelts.yaml `position`).
+  positionX       Float?
+  positionY       Float?
+  positionZ       Float?
+  /// Physical/orbital statistics (mapAsteroidBelts.yaml `statistics`).
+  density         Float?
+  eccentricity    Float?
+  escapeVelocity  Float?
+  /// SDE `statistics.locked` — tidally locked to its parent body.
+  isTidallyLocked Boolean?
+  massDust        Float?
+  massGas         Float?
+  orbitPeriod     Float?
+  orbitRadius     Float?
+  rotationRate    Float?
+  surfaceGravity  Float?
+  temperature     Float?
+  /// Constant "0.0" for every row CCP ships — kept for fidelity, not information.
+  spectralClass   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt()
+  isDeleted       Boolean  @default(false)
 
   @@index([planetId])
 }
@@ -937,6 +1074,12 @@ model Ancestry {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// Character-creation attribute bonuses (ancestries.yaml), mirroring Bloodline's.
+  charisma         Int?
+  intelligence     Int?
+  memory           Int?
+  perception       Int?
+  willpower        Int?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt()
   isDeleted        Boolean   @default(false)
@@ -965,6 +1108,8 @@ model Bloodline {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// The bloodline's portrait icon (bloodlines.yaml `iconID`).
+  iconId        Int?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt()
   isDeleted     Boolean     @default(false)
@@ -1201,6 +1346,10 @@ model NpcCorporationDivision {
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
+  /// The player-facing division label (npcCorporationDivisions.yaml `displayName`).
+  displayName              String?
+  /// Career-path blurb shown in the New Player Experience.
+  description              String?
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt()
   isDeleted                Boolean  @default(false)
@@ -1769,18 +1918,44 @@ model MercenaryTacticalOperation {
 /// fields and content tags are modelled; the deep `parameters` / contribution
 /// tuning config is not.
 model FreelanceJobSchema {
-  freelanceJobSchemaGroupId Int
-  name                      String
-  title                     String?
-  description               String?
-  iconId                    String?
-  progressDescription       String?
-  rewardDescription         String?
-  targetDescription         String?
-  tags                      FreelanceJobSchemaTag[]
-  createdAt                 DateTime                @default(now())
-  updatedAt                 DateTime                @updatedAt()
-  isDeleted                 Boolean                 @default(false)
+  freelanceJobSchemaGroupId              Int
+  name                                   String
+  title                                  String?
+  description                            String?
+  iconId                                 String?
+  progressDescription                    String?
+  rewardDescription                      String?
+  targetDescription                      String?
+  /// Contribution-tuning limits a job poster can set. Each is a labelled
+  /// descriptor in the SDE — a title/description/icon plus, for some, numeric
+  /// bounds — so each is flattened the same way here.
+  /// `maxContributionsPerParticipant` is on all ten schemas;
+  /// `contributionMultiplier` and `maxProgressPerContribution` only on
+  /// ShipInsurance.
+  maxContributionsTitle                  String?
+  maxContributionsDescription            String?
+  maxContributionsUnsetDescription       String?
+  maxContributionsIconId                 String?
+  /// `contributionMultiplier.defaultValue`, with its `minValue` / `maxValue`
+  /// bounds — the SDE offers a range, not a single figure.
+  contributionMultiplier                 Float?
+  contributionMultiplierMin              Float?
+  contributionMultiplierMax              Float?
+  contributionMultiplierTitle            String?
+  contributionMultiplierDescription      String?
+  contributionMultiplierUnsetDescription String?
+  contributionMultiplierIconId           String?
+  /// `maxProgressPerContribution` carries NO numeric leaf at all — only the
+  /// labels — so there is deliberately no Float column for it.
+  maxProgressTitle                       String?
+  maxProgressDescription                 String?
+  maxProgressUnsetDescription            String?
+  maxProgressIconId                      String?
+  parameters                             FreelanceJobSchemaParameter[]
+  tags                                   FreelanceJobSchemaTag[]
+  createdAt                              DateTime                      @default(now())
+  updatedAt                              DateTime                      @updatedAt()
+  isDeleted                              Boolean                       @default(false)
 
   @@id([freelanceJobSchemaGroupId, name])
 }
@@ -1952,6 +2127,9 @@ model TypeBonusLine {
   bonusText   String?
   importance  Int?
   unitId      Int?
+  /// Whether a misc trait line is an upside or a drawback (typeBonus.yaml
+  /// `miscBonuses[].isPositive`). Only ever set on `misc` lines.
+  isPositive  Boolean?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt()
   isDeleted   Boolean       @default(false)
@@ -1995,6 +2173,9 @@ model DynamicItemAttributeRange {
   attributeId       Int
   min               Float
   max               Float
+  /// Per-mutaplasmid override of the attribute's good/bad polarity
+  /// (dynamicItemAttributes.yaml `attributeIDs.<id>.highIsGood`).
+  highIsGood        Boolean?
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt()
   isDeleted         Boolean              @default(false)
@@ -2935,4 +3116,781 @@ model SolarSystemDisallowedAnchorGroup {
   isDeleted     Boolean     @default(false)
 
   @@id([solarSystemId, groupId])
+}
+
+// ---------------------------------------------------------------------------
+// SDE build 3475087 (2026-08-20) — the 23 files CCP added to the archive
+//
+// Ten of these were client-only data the CLI still reads from hoboleaks; the
+// rest are new or newly-exported gameplay config. Two conventions hold across
+// the whole section, both inherited from the earlier reference-table batch:
+//
+//   * Cross-FILE ids are plain `Int` columns with no Prisma relation — a type,
+//     faction, group, category, dogma-attribute or type-list id is stored as a
+//     number. That keeps the already-huge `Type` and `Faction` models from
+//     growing a dozen more back-relations, and keeps each ingest independent of
+//     the others' order. Relations exist only between models fed by the SAME
+//     file.
+//   * `{ dbuffCollectionId -> value }` maps get one child table per source file
+//     rather than a single polymorphic table. The five sources are all keyed by
+//     `typeId`, so a shared table could not be soft-deleted correctly: the
+//     composite ingest scopes its diff by one field, and a job scoped on
+//     `typeId` would treat another source's rows for the same type as deleted.
+// ---------------------------------------------------------------------------
+
+/// A wallet-journal reference type (accountingEntryTypes.yaml). `internalName`
+/// is the string ESI returns as `ref_type` on the wallet-journal endpoints, so
+/// it — not the numeric id — is the join key for ESI data. The two sets drift in
+/// both directions, so treat a lookup miss as "show the raw string", never an
+/// error.
+model AccountingEntryType {
+  accountingEntryTypeId Int      @id
+  internalName          String
+  /// The label the client shows for the entry type.
+  name                  String
+  /// Client-side template with `{name1}` / `{name2}` / `{arg}` placeholders.
+  journalMessage        String?
+  description           String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt()
+  isDeleted             Boolean  @default(false)
+
+  @@index([internalName])
+}
+
+/// A character/corporation notification type (notificationTypes.yaml).
+/// `internalName` is the string ESI returns in `type` on
+/// `/characters/{id}/notifications/`; the numeric id only matches the client.
+/// `displayName` is absent on exactly one record, and is not unique — several
+/// types share a label — so never key anything on it.
+model NotificationType {
+  notificationTypeId Int      @id
+  internalName       String
+  displayName        String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt()
+  isDeleted          Boolean  @default(false)
+
+  @@index([internalName])
+}
+
+/// A corporation role group (corporationRoleGroups.yaml) — the tab a role is
+/// shown under in the corporation UI. `appliesTo` / `appliesToGrantable` name
+/// the ESI member-roles fields the group's roles are read from.
+model CorporationRoleGroup {
+  corporationRoleGroupId Int      @id
+  name                   String
+  appliesTo              String
+  appliesToGrantable     String
+  isDivisional           Boolean
+  isLocational           Boolean
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt()
+  isDeleted              Boolean  @default(false)
+}
+
+/// A corporation role (corporationRoles.yaml). `shortName` is the internal
+/// identifier (`roleDirector`, `roleAccountant`, …).
+model CorporationRole {
+  corporationRoleId Int                          @id
+  shortName         String
+  name              String
+  description       String
+  groupMemberships  CorporationRoleGroupMember[]
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt()
+  isDeleted         Boolean                      @default(false)
+
+  @@index([shortName])
+}
+
+/// Membership of a role in a role group (corporationRoles.yaml
+/// `roleGroupIDs[]`). Only `corporationRoleGroupId` is cross-file, so it stays a
+/// plain column; the role side comes from this very file and is a real relation.
+model CorporationRoleGroupMember {
+  corporationRoleId      Int
+  role                   CorporationRole @relation(fields: [corporationRoleId], references: [corporationRoleId])
+  corporationRoleGroupId Int
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt()
+  isDeleted              Boolean         @default(false)
+
+  @@id([corporationRoleId, corporationRoleGroupId])
+  @@index([corporationRoleGroupId])
+}
+
+/// An Expert System (expertSystems.yaml) — a rentable package that grants a set
+/// of skills at fixed levels for `durationDays`. Keyed by the item's own type
+/// id, so this is a 1:1 extension of `Type`, not a new entity. `hidden` and
+/// `retired` are independent flags and are the authoritative visibility signal;
+/// `Type.published` disagrees with both. Only ~12 of the rows are live products,
+/// the rest are QA fixtures and expired seasonal promotions.
+model ExpertSystem {
+  typeId       Int                 @id
+  internalName String
+  durationDays Int
+  hidden       Boolean
+  retired      Boolean
+  skills       ExpertSystemSkill[]
+  ships        ExpertSystemShip[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt()
+  isDeleted    Boolean             @default(false)
+}
+
+/// A skill an Expert System grants, and at what level
+/// (expertSystems.yaml `skillsGranted[]`).
+model ExpertSystemSkill {
+  typeId       Int
+  expertSystem ExpertSystem @relation(fields: [typeId], references: [typeId])
+  skillTypeId  Int
+  level        Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt()
+  isDeleted    Boolean      @default(false)
+
+  @@id([typeId, skillTypeId])
+  @@index([skillTypeId])
+}
+
+/// A hull an Expert System advertises as unlocked
+/// (expertSystems.yaml `associatedShipTypes[]`). Absent on the systems that
+/// grant skills but no hulls, so an empty set is normal.
+model ExpertSystemShip {
+  typeId       Int
+  expertSystem ExpertSystem @relation(fields: [typeId], references: [typeId])
+  shipTypeId   Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt()
+  isDeleted    Boolean      @default(false)
+
+  @@id([typeId, shipTypeId])
+  @@index([shipTypeId])
+}
+
+/// A fighter squadron ability (fighterAbilities.yaml) — the dictionary behind
+/// the three ability buttons on a fighter squadron.
+model FighterAbility {
+  fighterAbilityId  Int      @id
+  displayName       String
+  tooltipText       String?
+  /// `itemTargeted` | `pointTargeted` | `untargeted`.
+  targetMode        String
+  iconId            Int
+  turretGraphicId   Int?
+  disallowInHighSec Boolean
+  disallowInLowSec  Boolean
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt()
+  isDeleted         Boolean  @default(false)
+}
+
+/// One ability slot on one fighter hull (fighterAbilitiesByType.yaml). `slot` is
+/// the index parsed from the `abilitySlotN` key: 0 is the always-available
+/// attack, 1 the propulsion/utility ability (the only slot with a cooldown), 2
+/// the limited-ammo heavy attack (the only slot with charges). Fighter hulls do
+/// carry typeDogma — all 94 of them, with the per-ability damage, range and
+/// duration numbers as `fighterAbility*` attributes — but the slot assignment,
+/// the cooldown and the magazine live only here.
+model TypeFighterAbility {
+  typeId           Int
+  slot             Int
+  fighterAbilityId Int
+  cooldownSeconds  Int?
+  chargeCount      Int?
+  rearmTimeSeconds Int?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt()
+  isDeleted        Boolean  @default(false)
+
+  @@id([typeId, slot])
+  @@index([fighterAbilityId])
+}
+
+/// An industry activity (industryActivities.yaml). The same six activities the
+/// `BlueprintActivityType` enum names, as the numeric ids the rest of the
+/// industry files reference. `name`/`description` are plain developer strings,
+/// not localized.
+model IndustryActivity {
+  industryActivityId Int      @id
+  name               String
+  description        String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt()
+  isDeleted          Boolean  @default(false)
+}
+
+/// An industry assembly line (industryAssemblyLines.yaml) — one production slot
+/// class, with the multipliers it applies. The `detailsPer*` children override
+/// the base multipliers for a specific group, category or type list.
+model IndustryAssemblyLine {
+  industryAssemblyLineId Int                            @id
+  name                   String
+  description            String?
+  industryActivityId     Int
+  baseMaterialMultiplier Float
+  baseTimeMultiplier     Float
+  baseCostMultiplier     Float?
+  groupDetails           IndustryAssemblyLineGroup[]
+  categoryDetails        IndustryAssemblyLineCategory[]
+  typeListDetails        IndustryAssemblyLineTypeList[]
+  createdAt              DateTime                       @default(now())
+  updatedAt              DateTime                       @updatedAt()
+  isDeleted              Boolean                        @default(false)
+
+  @@index([industryActivityId])
+}
+
+/// Per-group multiplier override (industryAssemblyLines.yaml `detailsPerGroup[]`).
+model IndustryAssemblyLineGroup {
+  industryAssemblyLineId Int
+  assemblyLine           IndustryAssemblyLine @relation(fields: [industryAssemblyLineId], references: [industryAssemblyLineId])
+  groupId                Int
+  materialMultiplier     Float
+  timeMultiplier         Float
+  costMultiplier         Float?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt()
+  isDeleted              Boolean              @default(false)
+
+  @@id([industryAssemblyLineId, groupId])
+  @@index([groupId])
+}
+
+/// Per-category multiplier override
+/// (industryAssemblyLines.yaml `detailsPerCategory[]`).
+model IndustryAssemblyLineCategory {
+  industryAssemblyLineId Int
+  assemblyLine           IndustryAssemblyLine @relation(fields: [industryAssemblyLineId], references: [industryAssemblyLineId])
+  categoryId             Int
+  materialMultiplier     Float
+  timeMultiplier         Float
+  costMultiplier         Float?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt()
+  isDeleted              Boolean              @default(false)
+
+  @@id([industryAssemblyLineId, categoryId])
+  @@index([categoryId])
+}
+
+/// Per-type-list multiplier override
+/// (industryAssemblyLines.yaml `detailsPerTypeList[]`). `typeListId` points at
+/// `TypeList`, which is ingested from typeLists.yaml.
+model IndustryAssemblyLineTypeList {
+  industryAssemblyLineId Int
+  assemblyLine           IndustryAssemblyLine @relation(fields: [industryAssemblyLineId], references: [industryAssemblyLineId])
+  typeListId             Int
+  materialMultiplier     Float
+  timeMultiplier         Float
+  costMultiplier         Float?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt()
+  isDeleted              Boolean              @default(false)
+
+  @@id([industryAssemblyLineId, typeListId])
+  @@index([typeListId])
+}
+
+/// An assembly line offered by an installation type
+/// (industryInstallationTypes.yaml `assemblyLines[]`). The file carries nothing
+/// but this pairing, so there is no separate installation header table — the set
+/// of installation types is `SELECT DISTINCT typeId`.
+model IndustryInstallationAssemblyLine {
+  typeId                 Int
+  industryAssemblyLineId Int
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt()
+  isDeleted              Boolean  @default(false)
+
+  @@id([typeId, industryAssemblyLineId])
+  @@index([industryAssemblyLineId])
+}
+
+/// Which industry activity a modifier source applies to
+/// (industryModifierSources.yaml). Values are the SDE's own keys verbatim, which
+/// are camelCase here and snake_case in blueprints.yaml — hence a separate enum
+/// from `BlueprintActivityType` rather than a shared one.
+enum IndustryModifierActivity {
+  copying
+  invention
+  manufacturing
+  reaction
+  researchMaterial
+  researchTime
+}
+
+/// Which figure a modifier source moves (industryModifierSources.yaml).
+enum IndustryModifierBucket {
+  cost
+  material
+  time
+}
+
+/// A dogma attribute that modifies an industry job run in/with this type
+/// (industryModifierSources.yaml) — the structure or rig bonus behind a job's
+/// cost, material or time figure. `industryTargetFilterId` narrows the bonus to
+/// a subset of blueprints, and **0 means no filter** (the SDE omits the key):
+/// the sentinel keeps it inside the primary key, the way `TypeBonusLine` uses
+/// `skillTypeId = 0` for role and misc bonuses. It belongs in the key because a
+/// bucket is a list — 54 (type, activity, bucket) buckets already hold several
+/// entries, up to 7 — and the filter is what tells two entries apart. Leaving it
+/// out would let `ingestSdeCompositeTable` dedupe a future collision away
+/// silently, since it drops duplicate keys last-wins before the diff.
+model IndustryModifierSource {
+  typeId                 Int
+  activity               IndustryModifierActivity
+  bucket                 IndustryModifierBucket
+  dogmaAttributeId       Int
+  industryTargetFilterId Int
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt()
+  isDeleted              Boolean                  @default(false)
+
+  @@id([typeId, activity, bucket, dogmaAttributeId, industryTargetFilterId])
+  @@index([dogmaAttributeId])
+}
+
+/// A named set of groups/categories an industry bonus is restricted to
+/// (industryTargetFilters.yaml). Distinct from `TypeList` — the two overlap on
+/// one set by coincidence only.
+model IndustryTargetFilter {
+  industryTargetFilterId Int                            @id
+  name                   String
+  groups                 IndustryTargetFilterGroup[]
+  categories             IndustryTargetFilterCategory[]
+  createdAt              DateTime                       @default(now())
+  updatedAt              DateTime                       @updatedAt()
+  isDeleted              Boolean                        @default(false)
+}
+
+/// A group included in an industry target filter
+/// (industryTargetFilters.yaml `groupIDs[]`).
+model IndustryTargetFilterGroup {
+  industryTargetFilterId Int
+  filter                 IndustryTargetFilter @relation(fields: [industryTargetFilterId], references: [industryTargetFilterId])
+  groupId                Int
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt()
+  isDeleted              Boolean              @default(false)
+
+  @@id([industryTargetFilterId, groupId])
+  @@index([groupId])
+}
+
+/// A category included in an industry target filter
+/// (industryTargetFilters.yaml `categoryIDs[]`).
+model IndustryTargetFilterCategory {
+  industryTargetFilterId Int
+  filter                 IndustryTargetFilter @relation(fields: [industryTargetFilterId], references: [industryTargetFilterId])
+  categoryId             Int
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt()
+  isDeleted              Boolean              @default(false)
+
+  @@id([industryTargetFilterId, categoryId])
+  @@index([categoryId])
+}
+
+/// Ship-linking config (linkWithShip.yaml) — currently the two CONCORD Rogue
+/// Analysis Beacons and the Skyhook Reagent Silo. The row is the thing linked
+/// TO; the ships allowed to link to it are the `TypeList` that
+/// `linkableShipTypeListId` names.
+model LinkWithShip {
+  typeId                       Int                 @id
+  applyPvpFlag                 Boolean
+  canRelink                    Boolean
+  characterEnergyCost          Float?
+  dbuffPostLinkDuration        Int
+  generateCynoInhibitor        Boolean
+  keepDbuffDurationOnLinkBreak Boolean
+  linkDuration                 Int
+  linkEffectGraphicIdOverride  Int
+  linkableShipTypeListId       Int
+  maxLinkRange                 Int
+  omegaOnly                    Boolean
+  solarSystemInterferenceCost  Float?
+  dbuffs                       LinkWithShipDbuff[]
+  createdAt                    DateTime            @default(now())
+  updatedAt                    DateTime            @updatedAt()
+  isDeleted                    Boolean             @default(false)
+}
+
+/// A dbuff the link applies (linkWithShip.yaml `dbuffs`).
+model LinkWithShipDbuff {
+  typeId            Int
+  linkWithShip      LinkWithShip @relation(fields: [typeId], references: [typeId])
+  dbuffCollectionId Int
+  value             Float
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt()
+  isDeleted         Boolean      @default(false)
+
+  @@id([typeId, dbuffCollectionId])
+  @@index([dbuffCollectionId])
+}
+
+/// Metenox Moon Drill mining config (metenoxMoonDrill.yaml). A single row.
+model MetenoxMoonDrill {
+  typeId                   Int      @id
+  miningCycleTime          Int
+  miningEfficiency         Float
+  reagentsConsumedPerCycle Int
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt()
+  isDeleted                Boolean  @default(false)
+}
+
+/// Proximity-trap config for a deployable (proximityTrap.yaml).
+/// `triggerFilterTypeListId` points at `TypeList` — what sets the trap off.
+model ProximityTrap {
+  typeId                  Int                  @id
+  dbuffDuration           Int
+  forceDecloakDuration    Int?
+  resetDelay              Int?
+  showPerimeterLights     Boolean
+  triggerDelay            Int
+  triggerFilterTypeListId Int
+  triggerRange            Int
+  dbuffs                  ProximityTrapDbuff[]
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt()
+  isDeleted               Boolean              @default(false)
+}
+
+/// A dbuff a proximity trap applies (proximityTrap.yaml `dbuffs`).
+model ProximityTrapDbuff {
+  typeId            Int
+  proximityTrap     ProximityTrap @relation(fields: [typeId], references: [typeId])
+  dbuffCollectionId Int
+  value             Float
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt()
+  isDeleted         Boolean       @default(false)
+
+  @@id([typeId, dbuffCollectionId])
+  @@index([dbuffCollectionId])
+}
+
+/// A proximity effect a deployed type projects onto everything in `radius`
+/// after `delaySeconds` (appliedProximityEffects.yaml).
+model AppliedProximityEffect {
+  typeId       Int                           @id
+  delaySeconds Int
+  radius       Int
+  dbuffs       AppliedProximityEffectDbuff[]
+  createdAt    DateTime                      @default(now())
+  updatedAt    DateTime                      @updatedAt()
+  isDeleted    Boolean                       @default(false)
+}
+
+/// A dbuff a proximity effect applies (appliedProximityEffects.yaml `dbuffs`).
+model AppliedProximityEffectDbuff {
+  typeId            Int
+  effect            AppliedProximityEffect @relation(fields: [typeId], references: [typeId])
+  dbuffCollectionId Int
+  value             Float
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt()
+  isDeleted         Boolean                @default(false)
+
+  @@id([typeId, dbuffCollectionId])
+  @@index([dbuffCollectionId])
+}
+
+/// Where a school's new capsuleers start (schoolMap.yaml). Keyed by the file's
+/// own index rather than by school, which is how the SDE ships it; today 12 of
+/// the 23 schools appear, each exactly once.
+model SchoolMap {
+  schoolMapId   Int      @id
+  schoolId      Int
+  solarSystemId Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt()
+  isDeleted     Boolean  @default(false)
+
+  @@index([schoolId])
+}
+
+/// A character-creation school (schools.yaml) — the academy a career path is
+/// taken at, its owning NPC corporation and race.
+model School {
+  schoolId             Int                     @id
+  name                 String
+  title                String?
+  description          String?
+  characterDescription String?
+  careerId             Int
+  corporationId        Int
+  raceId               Int
+  iconId               Int?
+  isStarterSpaceSchool Boolean?
+  careerAgents         SchoolCareerAgent[]
+  startingStations     SchoolStartingStation[]
+  createdAt            DateTime                @default(now())
+  updatedAt            DateTime                @updatedAt()
+  isDeleted            Boolean                 @default(false)
+}
+
+/// A career agent attached to a school (schools.yaml `careerAgents[]`).
+/// `agentId` is an NPC character id.
+model SchoolCareerAgent {
+  schoolId  Int
+  school    School   @relation(fields: [schoolId], references: [schoolId])
+  agentId   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  isDeleted Boolean  @default(false)
+
+  @@id([schoolId, agentId])
+  @@index([agentId])
+}
+
+/// A station a school's graduates can start at
+/// (schools.yaml `startingStations[]`).
+model SchoolStartingStation {
+  schoolId  Int
+  school    School   @relation(fields: [schoolId], references: [schoolId])
+  stationId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  isDeleted Boolean  @default(false)
+
+  @@id([schoolId, stationId])
+  @@index([stationId])
+}
+
+/// A career skill plan (skillPlans.yaml) — the training queue the client
+/// suggests for a career path. `description` is EVE-HTML and can carry
+/// `fitting:` links.
+model SkillPlan {
+  skillPlanId              Int                  @id
+  internalName             String
+  name                     String
+  description              String
+  careerPathId             Int?
+  factionId                Int?
+  npcCorporationDivisionId Int?
+  skills                   SkillPlanSkill[]
+  milestones               SkillPlanMilestone[]
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt()
+  isDeleted                Boolean              @default(false)
+}
+
+/// One step of a skill plan's training queue
+/// (skillPlans.yaml `skillRequirements[]`). A plan trains the same skill several
+/// times at rising levels, so the key is (plan, skill, level) — `sequence` keeps
+/// the queue order without making the key shift when CCP inserts a step.
+model SkillPlanSkill {
+  skillPlanId Int
+  skillPlan   SkillPlan @relation(fields: [skillPlanId], references: [skillPlanId])
+  skillTypeId Int
+  level       Int
+  sequence    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt()
+  isDeleted   Boolean   @default(false)
+
+  @@id([skillPlanId, skillTypeId, level])
+  @@index([skillTypeId])
+}
+
+/// A milestone skill highlighted by a plan (skillPlans.yaml `milestones[]`).
+/// `level` is absent on some milestones.
+model SkillPlanMilestone {
+  skillPlanId Int
+  skillPlan   SkillPlan @relation(fields: [skillPlanId], references: [skillPlanId])
+  typeId      Int
+  level       Int?
+  sequence    Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt()
+  isDeleted   Boolean   @default(false)
+
+  @@id([skillPlanId, typeId])
+  @@index([typeId])
+}
+
+/// The default SKINR material for a slot, per faction
+/// (skinrSlotsToMaterials.yaml — keyed by faction id, not by slot).
+model SkinrFactionSlotMaterial {
+  factionId      Int
+  skinrSlotId    Int
+  skinMaterialId Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt()
+  isDeleted      Boolean  @default(false)
+
+  @@id([factionId, skinrSlotId])
+  @@index([skinrSlotId])
+}
+
+/// The standing a faction's stations demand before granting a service
+/// (stationStandingsRestrictions.yaml). `stationServiceId` points at
+/// `StationService`; a negative threshold denies the service to anyone below it.
+model StationStandingsRestriction {
+  factionId        Int
+  stationServiceId Int
+  minimumStanding  Float
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt()
+  isDeleted        Boolean  @default(false)
+
+  @@id([factionId, stationServiceId])
+  @@index([stationServiceId])
+}
+
+/// A structure that periodically emits dbuffs across a system
+/// (systemDbuffEmitters.yaml).
+model SystemDbuffEmitter {
+  typeId           Int                       @id
+  duration         Int
+  interval         Int
+  excludeProtected Boolean
+  dbuffs           SystemDbuffEmitterDbuff[]
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt()
+  isDeleted        Boolean                   @default(false)
+}
+
+/// A dbuff a system emitter applies (systemDbuffEmitters.yaml `dbuffs`).
+model SystemDbuffEmitterDbuff {
+  typeId            Int
+  emitter           SystemDbuffEmitter @relation(fields: [typeId], references: [typeId])
+  dbuffCollectionId Int
+  value             Float
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt()
+  isDeleted         Boolean            @default(false)
+
+  @@id([typeId, dbuffCollectionId])
+  @@index([dbuffCollectionId])
+}
+
+/// A system-wide effect beacon (systemWideEffects.yaml) — wormhole and
+/// Pochven-style environmental effects, keyed by the beacon's type id.
+/// `eligibleTypeListId` points at `TypeList`: what the effect applies to.
+model SystemWideEffect {
+  typeId             Int                     @id
+  eligibleTypeListId Int?
+  environmentTypeId  Int?
+  dbuffs             SystemWideEffectDbuff[]
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt()
+  isDeleted          Boolean                 @default(false)
+}
+
+/// A dbuff a system-wide effect applies (systemWideEffects.yaml `dbuffs`).
+model SystemWideEffectDbuff {
+  typeId            Int
+  effect            SystemWideEffect @relation(fields: [typeId], references: [typeId])
+  dbuffCollectionId Int
+  value             Float
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt()
+  isDeleted         Boolean          @default(false)
+
+  @@id([typeId, dbuffCollectionId])
+  @@index([dbuffCollectionId])
+}
+
+/// A Space-Object-Factory scene layout applied to a hull graphic
+/// (graphics.yaml `sofLayout[]`). A list, so it needs its own rows.
+model GraphicSofLayout {
+  graphicId Int
+  graphic   Graphic  @relation(fields: [graphicId], references: [graphicId])
+  layout    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  isDeleted Boolean  @default(false)
+
+  @@id([graphicId, layout])
+}
+
+/// A skill a new character of this race starts with (races.yaml `skills`, a bare
+/// `skillTypeID -> level` map).
+model RaceSkill {
+  raceId      Int
+  race        Race     @relation(fields: [raceId], references: [raceId])
+  skillTypeId Int
+  level       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt()
+  isDeleted   Boolean  @default(false)
+
+  @@id([raceId, skillTypeId])
+  @@index([skillTypeId])
+}
+
+/// Which shape a Freelance job parameter takes (freelanceJobSchemas.yaml
+/// `parameters.<key>.<kind>`). Values are the SDE's own keys verbatim.
+enum FreelanceJobParameterKind {
+  matcher
+  boolean
+  itemDelivery
+}
+
+/// One field a player must fill in when posting a Freelance job
+/// (freelanceJobSchemas.yaml `parameters`). The three kinds share most columns;
+/// the ones that do not apply to a kind stay null.
+model FreelanceJobSchemaParameter {
+  freelanceJobSchemaGroupId Int
+  name                      String
+  schema                    FreelanceJobSchema                     @relation(fields: [freelanceJobSchemaGroupId, name], references: [freelanceJobSchemaGroupId, name])
+  paramKey                  String
+  kind                      FreelanceJobParameterKind
+  title                     String?
+  description               String?
+  unsetDescription          String?
+  /// A string icon name here, not a numeric id — same as FreelanceJobSchema.iconId.
+  iconId                    String?
+  type                      String?
+  maxEntries                Int?
+  optional                  Boolean?
+  choiceLabel               String?
+  optionTrue                String?
+  optionFalse               String?
+  defaultValue              String?
+  deliveryLocation          String?
+  inventoryType             String?
+  acceptedValueTypes        FreelanceJobSchemaParameterValueType[]
+  createdAt                 DateTime                               @default(now())
+  updatedAt                 DateTime                               @updatedAt()
+  isDeleted                 Boolean                                @default(false)
+
+  @@id([freelanceJobSchemaGroupId, name, paramKey])
+  @@index([freelanceJobSchemaGroupId, name])
+}
+
+/// A value type a matcher parameter accepts
+/// (freelanceJobSchemas.yaml `parameters.<key>.matcher.acceptedValueTypes[]`).
+model FreelanceJobSchemaParameterValueType {
+  freelanceJobSchemaGroupId Int
+  name                      String
+  paramKey                  String
+  parameter                 FreelanceJobSchemaParameter @relation(fields: [freelanceJobSchemaGroupId, name, paramKey], references: [freelanceJobSchemaGroupId, name, paramKey])
+  valueType                 String
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt()
+  isDeleted                 Boolean                     @default(false)
+
+  @@id([freelanceJobSchemaGroupId, name, paramKey, valueType])
+  @@index([freelanceJobSchemaGroupId, name, paramKey])
+}
+
+/// A skill an NPC character offers (npcCharacters.yaml `skills[]`). Hangs off
+/// Character, not Agent: 174 of the 421 skill-bearing NPC characters are
+/// corporation CEOs with no Agent row, and their skills are real data too. The
+/// older `ResearchAgentSkills` covers only agentTypeID 4 (244 of them).
+model NpcCharacterSkill {
+  characterId Int
+  character   Character @relation(fields: [characterId], references: [characterId])
+  typeId      Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt()
+  isDeleted   Boolean   @default(false)
+
+  @@id([characterId, typeId])
+  @@index([typeId])
 }
