@@ -5,8 +5,8 @@ import type { GetCharactersDetailQueryResponse } from "@jitaspace/esi-client";
 import type { Character } from "../db";
 import { MAX_DB_PARALLELISM } from "../config";
 import { prisma } from "../db";
-import { SDE_OWNED_CHARACTER_COLUMNS } from "./sdeOwnedColumns";
 import { excludeObjectKeys, updateTable } from "../utils";
+import { SDE_OWNED_CHARACTER_COLUMNS } from "./sdeOwnedColumns";
 
 /** `ancestryId` / `isUnique` come from npcCharacters.yaml, never from ESI. */
 type SdeOwnedCharacterColumn = (typeof SDE_OWNED_CHARACTER_COLUMNS)[number];

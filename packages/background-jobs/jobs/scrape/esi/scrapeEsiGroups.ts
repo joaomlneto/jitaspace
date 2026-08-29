@@ -33,10 +33,10 @@ interface GroupEntry {
 // no equivalent), so they are excluded from the local-vs-remote diff.
 const excludeGroupTimestamps = (entry: Group) =>
   excludeObjectKeys(entry, [
-              "updatedAt",
-              "createdAt",
-              ...SDE_OWNED_GROUP_COLUMNS,
-            ]);
+    "updatedAt",
+    "createdAt",
+    ...SDE_OWNED_GROUP_COLUMNS,
+  ]);
 
 const fetchRemoteGroup = (limit: Limit, groupId: number) =>
   limit(() =>

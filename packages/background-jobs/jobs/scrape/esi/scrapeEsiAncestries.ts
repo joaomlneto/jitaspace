@@ -40,10 +40,10 @@ export const scrapeEsiAncestries = defineJob<
           .then((entries) =>
             entries.map((entry) =>
               excludeObjectKeys(entry, [
-              "updatedAt",
-              "createdAt",
-              ...SDE_OWNED_ANCESTRY_COLUMNS,
-            ]),
+                "updatedAt",
+                "createdAt",
+                ...SDE_OWNED_ANCESTRY_COLUMNS,
+              ]),
             ),
           ),
       fetchRemoteEntries: () =>

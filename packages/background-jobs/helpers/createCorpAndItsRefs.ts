@@ -71,9 +71,15 @@ export const createCorpAndItsRefRecords = async ({
 }: {
   alliances?: Omit<Alliance, "updatedAt" | "createdAt">[];
   missingAllianceIds?: Set<number>;
-  bloodlines?: Omit<Bloodline, "updatedAt" | "createdAt" | SdeOwnedBloodlineColumn>[];
+  bloodlines?: Omit<
+    Bloodline,
+    "updatedAt" | "createdAt" | SdeOwnedBloodlineColumn
+  >[];
   missingBloodlineIds?: Set<number>;
-  characters?: Omit<Character, "updatedAt" | "createdAt" | SdeOwnedCharacterColumn>[];
+  characters?: Omit<
+    Character,
+    "updatedAt" | "createdAt" | SdeOwnedCharacterColumn
+  >[];
   missingCharacterIds?: Set<number>;
   corporations?: EsiCorporationRow[];
   missingCorporationIds?: Set<number>;
@@ -680,7 +686,9 @@ const fetchBloodlinesFromEsi = () =>
 
 const fetchCharactersFromEsi = (
   characterIds: number[],
-): Promise<Omit<Character, "updatedAt" | "createdAt" | SdeOwnedCharacterColumn>[]> =>
+): Promise<
+  Omit<Character, "updatedAt" | "createdAt" | SdeOwnedCharacterColumn>[]
+> =>
   Promise.all(
     characterIds.map((characterId) =>
       limit(async () =>

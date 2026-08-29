@@ -4,8 +4,8 @@ import { getUniverseRaces } from "@jitaspace/esi-client";
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { SDE_OWNED_RACE_COLUMNS } from "../../../helpers";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeRacesEventPayload {

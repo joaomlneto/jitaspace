@@ -4,8 +4,8 @@ import { getUniverseFactions } from "@jitaspace/esi-client";
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { SDE_OWNED_FACTION_COLUMNS } from "../../../helpers";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeFactionsEventPayload {
@@ -44,10 +44,10 @@ export const scrapeEsiFactions = defineJob<ScrapeFactionsEventPayload["data"]>({
             entries.map((entry) =>
               // flatLogo / flatLogoWithName are owned by ingestSdeFactions.
               excludeObjectKeys(entry, [
-              "updatedAt",
-              "createdAt",
-              ...SDE_OWNED_FACTION_COLUMNS,
-            ]),
+                "updatedAt",
+                "createdAt",
+                ...SDE_OWNED_FACTION_COLUMNS,
+              ]),
             ),
           ),
       fetchRemoteEntries: () =>

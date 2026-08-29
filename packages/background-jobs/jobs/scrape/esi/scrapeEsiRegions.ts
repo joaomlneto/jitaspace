@@ -53,10 +53,10 @@ export const scrapeEsiRegions = defineJob<ScrapeRegionEventPayload["data"]>({
             entries.map((entry) =>
               // nebulaGraphicId / wormholeClassId are owned by ingestSdeRegions.
               excludeObjectKeys(entry, [
-              "updatedAt",
-              "createdAt",
-              ...SDE_OWNED_REGION_COLUMNS,
-            ]),
+                "updatedAt",
+                "createdAt",
+                ...SDE_OWNED_REGION_COLUMNS,
+              ]),
             ),
           ),
       fetchRemoteEntries: async () =>

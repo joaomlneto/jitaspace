@@ -59,10 +59,10 @@ export const scrapeEsiCategories = defineJob<
           .then((entries) =>
             entries.map((entry) =>
               excludeObjectKeys(entry, [
-              "updatedAt",
-              "createdAt",
-              ...SDE_OWNED_CATEGORY_COLUMNS,
-            ]),
+                "updatedAt",
+                "createdAt",
+                ...SDE_OWNED_CATEGORY_COLUMNS,
+              ]),
             ),
           ),
       fetchRemoteEntries: async () =>

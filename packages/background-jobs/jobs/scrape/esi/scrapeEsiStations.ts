@@ -5,12 +5,12 @@ import { getUniverseStationsStationId } from "@jitaspace/esi-client";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
-import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { SDE_OWNED_STATION_COLUMNS } from "../../../helpers";
+import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
+import { excludeObjectKeys, updateTable } from "../../../utils";
 
 /** npcStations.yaml supplies these; ESI's station payload does not. */
 type SdeOwnedStationColumn = (typeof SDE_OWNED_STATION_COLUMNS)[number];
-import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeStationsEventPayload {
   data: {
