@@ -215,7 +215,7 @@ export const AuthenticatedCharacterCard = ({
               {isAllowedToReadSP && (
                 <Group wrap="nowrap" gap="xs" mt={4}>
                   <TypeAvatar typeId={19430} size={16} />
-                  <Skeleton visible={!balance?.data} width="auto">
+                  <Skeleton visible={!skills?.data} width="auto">
                     <Text size="xs">
                       {skills?.data.total_sp.toLocaleString()} SP
                     </Text>

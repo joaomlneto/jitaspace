@@ -1,8 +1,15 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import type React from "react";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 // ---------------------------------------------------------------------------
 // On the home page each authenticated character is shown as an
@@ -21,6 +28,17 @@ interface CharacterLike {
 }
 
 let character: CharacterLike | null = null;
+// The wallet and skill-point rows are driven by two independent hooks behind two
+// independent permission gates, so the tests need to move them separately.
+// Both hooks spread a React Query result whose `data` is the ESI response
+// envelope, so the payload sits one level down at `.data.data` — which is why
+// the component reads `balance?.data` and `skills?.data.total_sp`.
+let wallet: { data?: { data: number }; isAllowed: boolean } = {
+  isAllowed: false,
+};
+let skills: { data?: { data: { total_sp: number } }; hasToken: boolean } = {
+  hasToken: false,
+};
 const mockOpenContextModal = jest.fn<(args: unknown) => void>();
 const mockOpenConfirmModal =
   jest.fn<(args: { onConfirm?: () => void }) => void>();
@@ -28,7 +46,7 @@ const mockRemoveCharacter = jest.fn<(characterId: number) => void>();
 
 jest.mock("@jitaspace/hooks", () => ({
   useAuthenticatedCharacter: () => character,
-  useCharacterSkills: () => ({ data: undefined, hasToken: false }),
+  useCharacterSkills: () => skills,
   useAuthStore: (
     selector: (state: {
       removeCharacter: typeof mockRemoveCharacter;
@@ -38,7 +56,7 @@ jest.mock("@jitaspace/hooks", () => ({
 jest.mock(
   "@jitaspace/hooks/src/hooks/character/useCharacterWalletBalance",
   () => ({
-    useCharacterWalletBalance: () => ({ data: undefined, isAllowed: false }),
+    useCharacterWalletBalance: () => wallet,
   }),
 );
 jest.mock(
@@ -87,7 +105,13 @@ jest.mock("@mantine/core", () => {
     Button,
     Card,
     Group: frag,
-    Skeleton: frag,
+    // Not a fragment: `visible` is the thing under test, so it has to reach the DOM.
+    Skeleton: (p: { visible?: boolean; children?: React.ReactNode }) =>
+      React.createElement(
+        "div",
+        { "data-testid": "skeleton", "data-visible": String(!!p.visible) },
+        p.children,
+      ),
     Stack: frag,
     Text,
     UnstyledButton: frag,
@@ -106,6 +130,8 @@ describe("AuthenticatedCharacterCard session-expired marking", () => {
     mockOpenConfirmModal.mockReset();
     mockRemoveCharacter.mockReset();
     character = null;
+    wallet = { isAllowed: false };
+    skills = { hasToken: false };
   });
 
   it("flags an expired session and offers re-authentication", () => {
@@ -158,5 +184,80 @@ describe("AuthenticatedCharacterCard session-expired marking", () => {
 
     expect(screen.queryByText("Session expired")).toBeNull();
     expect(screen.queryByText("Sign in again")).toBeNull();
+  });
+});
+
+/**
+ * Regression: the skill-point row was copy-pasted from the wallet-balance row
+ * above it and its Skeleton kept gating on `!balance?.data`. The two rows are
+ * driven by unrelated hooks behind unrelated scopes, so a character who granted
+ * the skills scope but not the wallet scope left the SP row shimmering forever.
+ */
+describe("AuthenticatedCharacterCard wallet and skill-point rows", () => {
+  // This suite owns its own reset: `beforeEach` is per-describe, and the file
+  // has no global auto-cleanup, so without these each test would inherit the
+  // previous one's hook state and its rendered DOM.
+  beforeEach(() => {
+    character = {
+      characterId: 100,
+      corporationId: 98,
+      accessTokenPayload: { name: "Pilot One" },
+    };
+    wallet = { isAllowed: false };
+    skills = { hasToken: false };
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  const renderCard = () => {
+    const AuthenticatedCharacterCard = loadCard();
+    return render(<AuthenticatedCharacterCard characterId={100} />);
+  };
+
+  // Identify each row by what it renders rather than by position, so the
+  // assertions survive another skeleton being added to the card.
+  const spRow = () =>
+    screen
+      .queryAllByTestId("skeleton")
+      .find((el) => el.textContent.includes("SP"));
+  const walletRow = () =>
+    screen
+      .queryAllByTestId("skeleton")
+      .find((el) => !el.textContent.includes("SP"));
+
+  it("resolves the SP row on skills alone, with no wallet access at all", () => {
+    skills = { data: { data: { total_sp: 5_000_000 } }, hasToken: true };
+    renderCard();
+
+    // The bug: this row gated on the wallet, which a character without the
+    // wallet scope never resolves, so it shimmered forever.
+    expect(spRow()).toHaveAttribute("data-visible", "false");
+    expect(walletRow()).toBeUndefined();
+  });
+
+  it("keeps the SP row loading while only the wallet has resolved", () => {
+    skills = { hasToken: true };
+    wallet = { data: { data: 1234 }, isAllowed: true };
+    renderCard();
+
+    // The mirror image: gating on the wallet used to reveal an empty " SP".
+    expect(walletRow()).toHaveAttribute("data-visible", "false");
+    expect(spRow()).toHaveAttribute("data-visible", "true");
+  });
+
+  it("resolves each row on its own hook", () => {
+    skills = { data: { data: { total_sp: 5_000_000 } }, hasToken: true };
+    wallet = { data: { data: 1234 }, isAllowed: true };
+    renderCard();
+
+    expect(walletRow()).toHaveAttribute("data-visible", "false");
+    expect(spRow()).toHaveAttribute("data-visible", "false");
+  });
+
+  it("renders neither row without the scopes", () => {
+    renderCard();
+    expect(screen.queryAllByTestId("skeleton")).toHaveLength(0);
   });
 });
