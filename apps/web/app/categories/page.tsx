@@ -1,5 +1,4 @@
 import { cacheLife } from "next/cache";
-import { notFound } from "next/navigation";
 import {
   Container,
   Group,
@@ -27,20 +26,17 @@ interface PageProps {
 export default async function Page() {
   "use cache";
   cacheLife("days");
-  let categories: PageProps["categories"] = [];
-  try {
-    categories = await prisma.category.findMany({
-      select: {
-        categoryId: true,
-        name: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
-  } catch {
-    notFound();
-  }
+  // Deliberately uncaught: a catch inside this `"use cache"` scope would cache
+  // the failure as a day-long 404 (e60062ec). Throwing keeps the last good entry.
+  const categories: PageProps["categories"] = await prisma.category.findMany({
+    select: {
+      categoryId: true,
+      name: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
   return (
     <Container size="md">
       <Stack>

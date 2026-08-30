@@ -1,5 +1,4 @@
 import { cacheLife } from "next/cache";
-import { notFound } from "next/navigation";
 
 import type { LPStoreAllPageProps } from "./page.client";
 import { prisma } from "~/lib/db";
@@ -15,17 +14,16 @@ export const metadata = {
 export default async function Page() {
   "use cache";
   cacheLife("days");
-  let corporations: LPStoreAllPageProps["corporations"] = [];
-  let types: LPStoreAllPageProps["types"] = [];
-  let offers: LPStoreAllPageProps["offers"] = [];
-  try {
-    const corporationIds = (
-      await prisma.loyaltyStoreOffer.groupBy({
-        by: ["corporationId"],
-      })
-    ).map(({ corporationId }) => corporationId);
+  // Deliberately uncaught: a catch inside this `"use cache"` scope would cache
+  // the failure as a day-long 404 (e60062ec). Throwing keeps the last good entry.
+  const corporationIds = (
+    await prisma.loyaltyStoreOffer.groupBy({
+      by: ["corporationId"],
+    })
+  ).map(({ corporationId }) => corporationId);
 
-    corporations = await prisma.corporation.findMany({
+  const corporations: LPStoreAllPageProps["corporations"] =
+    await prisma.corporation.findMany({
       select: {
         corporationId: true,
         name: true,
@@ -35,28 +33,29 @@ export default async function Page() {
       },
     });
 
-    const offersWithoutRequiredItems = await prisma.loyaltyStoreOffer.findMany({
-      select: {
-        offerId: true,
-        corporationId: true,
-        typeId: true,
-        quantity: true,
-        akCost: true,
-        lpCost: true,
-        iskCost: true,
-      },
-    });
+  const offersWithoutRequiredItems = await prisma.loyaltyStoreOffer.findMany({
+    select: {
+      offerId: true,
+      corporationId: true,
+      typeId: true,
+      quantity: true,
+      akCost: true,
+      lpCost: true,
+      iskCost: true,
+    },
+  });
 
-    const requiredItems = await prisma.loyaltyStoreOfferRequiredItem.findMany({
-      select: {
-        typeId: true,
-        quantity: true,
-        offerId: true,
-        corporationId: true,
-      },
-    });
+  const requiredItems = await prisma.loyaltyStoreOfferRequiredItem.findMany({
+    select: {
+      typeId: true,
+      quantity: true,
+      offerId: true,
+      corporationId: true,
+    },
+  });
 
-    offers = offersWithoutRequiredItems.map((offer) => ({
+  const offers: LPStoreAllPageProps["offers"] = offersWithoutRequiredItems.map(
+    (offer) => ({
       ...offer,
       requiredItems: requiredItems.filter(
         (item) =>
@@ -65,27 +64,25 @@ export default async function Page() {
       ),
       iskCost: Number(offer.iskCost),
       lpCost: Number(offer.lpCost),
-    }));
+    }),
+  );
 
-    const typeIds = collectLpStoreOfferTypeIds(
-      offersWithoutRequiredItems,
-      requiredItems,
-    );
+  const typeIds = collectLpStoreOfferTypeIds(
+    offersWithoutRequiredItems,
+    requiredItems,
+  );
 
-    types = await prisma.type.findMany({
-      select: {
-        typeId: true,
-        name: true,
+  const types: LPStoreAllPageProps["types"] = await prisma.type.findMany({
+    select: {
+      typeId: true,
+      name: true,
+    },
+    where: {
+      typeId: {
+        in: typeIds,
       },
-      where: {
-        typeId: {
-          in: typeIds,
-        },
-      },
-    });
-  } catch {
-    notFound();
-  }
+    },
+  });
   return (
     <LPStoreAllPage corporations={corporations} offers={offers} types={types} />
   );

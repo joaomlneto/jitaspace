@@ -1,6 +1,5 @@
 import React from "react";
 import { cacheLife } from "next/cache";
-import { notFound } from "next/navigation";
 import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 
 import { RegionAnchor } from "@jitaspace/eve-components";
@@ -21,20 +20,17 @@ interface PageProps {
 export default async function Page() {
   "use cache";
   cacheLife("days");
-  let regions: PageProps["regions"] = [];
-  try {
-    regions = await prisma.region.findMany({
-      select: {
-        regionId: true,
-        name: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
-  } catch {
-    notFound();
-  }
+  // Deliberately uncaught: a catch inside this `"use cache"` scope would cache
+  // the failure as a day-long 404 (e60062ec). Throwing keeps the last good entry.
+  const regions: PageProps["regions"] = await prisma.region.findMany({
+    select: {
+      regionId: true,
+      name: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
   const galaxies: {
     name: string;
     filter: (region: { regionId: number; name: string }) => boolean;

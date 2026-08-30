@@ -1,5 +1,4 @@
 import { cacheLife } from "next/cache";
-import { notFound } from "next/navigation";
 
 import type { PageProps } from "./page.client";
 import { prisma } from "~/lib/db";
@@ -14,40 +13,35 @@ export const metadata = {
 export default async function Page() {
   "use cache";
   cacheLife("days");
-  let attributes: PageProps["attributes"] = {};
-  try {
-    const map: PageProps["attributes"] = {};
+  // Deliberately uncaught: a catch inside this `"use cache"` scope would cache
+  // the failure as a day-long 404 (e60062ec). Throwing keeps the last good entry.
+  const attributes: PageProps["attributes"] = {};
 
-    const results = await prisma.dogmaAttribute.findMany({
-      select: {
-        attributeId: true,
-        name: true,
-        displayName: true,
-      },
-    });
-    results.forEach(
-      (attribute) =>
-        (map[attribute.attributeId] = {
-          ...attribute,
-          numTypeIds: 0,
-        }),
-    );
+  const results = await prisma.dogmaAttribute.findMany({
+    select: {
+      attributeId: true,
+      name: true,
+      displayName: true,
+    },
+  });
+  results.forEach(
+    (attribute) =>
+      (attributes[attribute.attributeId] = {
+        ...attribute,
+        numTypeIds: 0,
+      }),
+  );
 
-    const count = await prisma.typeAttribute.groupBy({
-      by: "attributeId",
-      _count: {
-        attributeId: true,
-      },
-    });
-    count.forEach((entry) => {
-      const attribute = map[entry.attributeId];
-      if (attribute) attribute.numTypeIds = entry._count.attributeId;
-    });
-
-    attributes = map;
-  } catch {
-    notFound();
-  }
+  const count = await prisma.typeAttribute.groupBy({
+    by: "attributeId",
+    _count: {
+      attributeId: true,
+    },
+  });
+  count.forEach((entry) => {
+    const attribute = attributes[entry.attributeId];
+    if (attribute) attribute.numTypeIds = entry._count.attributeId;
+  });
 
   return <DogmaAttributesPage attributes={attributes} />;
 }

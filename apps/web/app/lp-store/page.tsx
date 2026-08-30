@@ -1,5 +1,4 @@
 import { cacheLife } from "next/cache";
-import { notFound } from "next/navigation";
 
 import type { LPStorePageProps } from "./page.client";
 import { prisma } from "~/lib/db";
@@ -14,15 +13,16 @@ export const metadata = {
 export default async function Page() {
   "use cache";
   cacheLife("days");
-  let corporations: LPStorePageProps["corporations"] = [];
-  try {
-    const corporationIds = (
-      await prisma.loyaltyStoreOffer.groupBy({
-        by: ["corporationId"],
-      })
-    ).map(({ corporationId }) => corporationId);
+  // Deliberately uncaught: a catch inside this `"use cache"` scope would cache
+  // the failure as a day-long 404 (e60062ec). Throwing keeps the last good entry.
+  const corporationIds = (
+    await prisma.loyaltyStoreOffer.groupBy({
+      by: ["corporationId"],
+    })
+  ).map(({ corporationId }) => corporationId);
 
-    corporations = await prisma.corporation.findMany({
+  const corporations: LPStorePageProps["corporations"] =
+    await prisma.corporation.findMany({
       select: {
         corporationId: true,
         name: true,
@@ -31,9 +31,6 @@ export default async function Page() {
         corporationId: { in: corporationIds },
       },
     });
-  } catch {
-    notFound();
-  }
 
   const sortedCorporations = [...corporations].sort((a, b) =>
     a.name.localeCompare(b.name),
