@@ -70,10 +70,13 @@ export const CorporationCard = memo(
     const homepageUrl = isValidHttpUrl(corporationData?.url)
       ? corporationData?.url
       : undefined;
+    // ESI reports tax rates as percentages (10.0 means 10%) since
+    // compatibility date 2026-08-18; it previously sent a 0-1 fraction.
+    // Guard the value, not just its container: like every other field on this
+    // card, a payload missing it should read "N/A" rather than throw.
+    const taxRates = corporationData?.tax_rates;
     const taxRate =
-      corporationData?.tax_rate == null
-        ? null
-        : `${(corporationData.tax_rate * 100).toFixed(1)}%`;
+      typeof taxRates?.isk === "number" ? `${taxRates.isk.toFixed(1)}%` : null;
 
     let warEligibleLabel = "N/A";
     if (corporationData?.war_eligible === true) {
@@ -194,6 +197,11 @@ export const CorporationCard = memo(
                 </Text>
                 <Skeleton visible={!corporationData} width="auto">
                   <Text size="xs">
+                    {/* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition --
+                        ESI marks shares required as of compatibility date
+                        2026-08-18, but this card renders whatever payload it is
+                        given and falls back to "N/A" per field; without the
+                        optional chain a partial response throws instead. */}
                     {corporationData?.shares?.toLocaleString() ?? "N/A"}
                   </Text>
                 </Skeleton>

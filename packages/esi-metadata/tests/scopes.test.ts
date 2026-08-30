@@ -1,6 +1,15 @@
 import { getScopeDescription, scopeDescriptions, scopes } from "../src/scopes";
 
-const SCOPE_PATTERN = /^esi-[a-z_]+\.[a-z_]+\.v\d+$/;
+// ESI names scopes in two conventions. The original is
+// `esi-{domain}.{action}.v{N}` (e.g. esi-skills.read_skills.v1). Compatibility
+// date 2026-08-18 introduced a second, `esi.{domain}.{subject}:{action}` (e.g.
+// esi.cosmetic.char:read, used by the SKINR and military-campaigns endpoints).
+// Both are live, so a scope is well-formed if it matches either.
+const LEGACY_SCOPE_PATTERN = /^esi-[a-z_]+\.[a-z_]+\.v\d+$/;
+const MODERN_SCOPE_PATTERN = /^esi\.[a-z_]+\.[a-z_]+:[a-z_]+$/;
+const SCOPE_PATTERN = new RegExp(
+  `${LEGACY_SCOPE_PATTERN.source}|${MODERN_SCOPE_PATTERN.source}`,
+);
 
 describe("scopes array", () => {
   it("is non-empty", () => {
@@ -12,7 +21,7 @@ describe("scopes array", () => {
     expect(unique.size).toBe(scopes.length);
   });
 
-  it("every scope matches the pattern esi-{domain}.{action}.v{N}", () => {
+  it("every scope matches one of the two ESI scope naming patterns", () => {
     for (const scope of scopes) {
       expect(scope).toMatch(SCOPE_PATTERN);
     }
