@@ -27,7 +27,8 @@ pnpm test:watch     # Jest watch mode
 pnpm lint           # ESLint (flat config) + manypkg workspace checks
 pnpm lint:fix       # auto-fix lint issues
 pnpm type-check     # tsc --noEmit across all workspaces
-pnpm format         # Prettier (also sorts imports)
+pnpm format         # Prettier in check mode — reports drift, writes nothing
+pnpm format:write   # Prettier — rewrite files in place (also sorts imports)
 pnpm db:generate    # generate Prisma client from packages/db/prisma/schema.prisma
 pnpm db:push        # push Prisma schema to DB (also runs db:generate)
 pnpm kubb:generate  # generate API clients from OpenAPI specs
@@ -60,7 +61,7 @@ pnpm kubb:generate   # OpenAPI → TypeScript clients in packages/*-client/src/g
 
 If you see import errors for `@jitaspace/db` or `@jitaspace/esi-client`, these haven't run yet.
 
-**If you linted before generating, the ESLint cache will keep failing you.** `pnpm lint` uses `--cache`, which keys on each linted file's contents rather than on the generated types it imports — so errors cached before codegen (typically `no-unsafe-*` on `prisma.*`) replay forever even after you regenerate, and the fix looks like it did nothing. The three codegen scripts above clear the cache; `build`/`dev`/`test`/`type-check` and the per-package `postinstall` hooks regenerate without clearing. Recover with `pnpm clean:eslint-cache` (use the script — the `rm` inside it aborts under zsh on unmatched globs).
+**If you linted before generating, the ESLint cache will keep failing you.** `pnpm lint` uses `--cache`, which keys on each linted file's contents rather than on the generated types it imports — so errors cached before codegen (typically `no-unsafe-*` on `prisma.*`) replay forever even after you regenerate, and the fix looks like it did nothing. The three codegen scripts above clear the cache; `build`/`dev`/`test`/`type-check` and the per-package `postinstall` hooks regenerate without clearing. Recover with `pnpm clean:eslint-cache` (use the script — the `rm` inside it aborts under zsh on unmatched globs). This is a local-only trap: `lint.yml` starts from a cold cache and regenerates first, so a lint failure that reproduces only on your machine is almost always this.
 
 **Never edit generated files directly.** Instead edit the source and regenerate:
 
@@ -150,15 +151,16 @@ patch = bug fix/internal; minor = new feature/export; major = breaking.
 
 ## CI
 
-Three GitHub Actions run on push/PR (all set `SKIP_ENV_VALIDATION=1`):
+Four GitHub Actions run on push/PR (all set `SKIP_ENV_VALIDATION=1`):
 
 - **`type-check.yml`:** `pnpm install --frozen-lockfile` → `pnpm type-check`. A hard gate — the repo is expected to be **green**, so a type error fails the PR. No explicit codegen step: the turbo `type-check` task depends on the Prisma and Kubb generators, so a clean checkout produces them itself.
+- **`lint.yml`:** two jobs. `ESLint` runs `pnpm install --frozen-lockfile` → `pnpm db:generate` → `pnpm lint`; `Prettier (changed files)` checks formatting on **only the files the PR touches**. Two things worth knowing. (1) The explicit `db:generate` is load-bearing, and is the opposite of what `type-check.yml` above needs: the turbo `lint` task declares no codegen dependency, and `packages/db` is the one generating package with no `postinstall`, so a clean checkout otherwise lints against a missing Prisma client and drowns in `no-unsafe-*`. (2) The formatting half is diff-scoped because a backlog of unformatted files pre-dates it — so it will not fail on drift you did not touch, but it _will_ fail on a file you edited for an unrelated one-line reason.
 - **`cypress.yml`:** spins up CockroachDB + Redis → push DB schema → `pnpm build` → start web → run Cypress (parallel). Since the specs are the stock examples, this effectively gates only "the build succeeds and the server boots".
 - **`sonarcloud.yml`:** `pnpm install --frozen-lockfile` → `pnpm test` (coverage) → SonarQube scan. New code must keep coverage above the quality gate.
 
-**No workflow runs `pnpm lint`.** ESLint's only automatic gate is the local `.githooks/pre-commit` hook, which is bypassable with `--no-verify` and dormant in git worktrees — so run `pnpm lint` yourself before pushing. (`manypkg check` runs as part of it, and it fails on a dependency declared at different versions across workspaces.)
+**`pnpm lint` is a CI gate.** An ESLint error, or a `manypkg check` failure (a dependency declared at different versions across workspaces), fails the PR. The local `.githooks/pre-commit` hook still runs it first, but the hook is bypassable with `--no-verify`, dormant in git worktrees, and runs **only** ESLint — never Prettier. So a commit the hook waved through can still come back red on formatting.
 
-Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm lint` → `pnpm type-check` → `pnpm test`.
+Local equivalent before pushing: `pnpm db:generate` → `SKIP_ENV_VALIDATION=1 pnpm build` → `pnpm lint` → `pnpm format` → `pnpm type-check` → `pnpm test`. (`pnpm format` only reports; `pnpm format:write` fixes, but rewrites every matching file in the repo — to fix just your own, run `pnpm exec prettier --write` on the paths the CI step names.)
 
 > After merging `main`, re-run `pnpm db:generate` before trusting a type-check: a schema change plus a stale client makes valid columns look missing and cascades into unrelated errors. If a fresh worktree reports errors inside a `dist/` or `prisma/generated/` path, that is a stale `tsbuildinfo` or an unbuilt package, not repo state — clear `node_modules/.cache` and rebuild.
 

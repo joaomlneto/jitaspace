@@ -1,0 +1,238 @@
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+# Both jobs only read the repository — one runs ESLint, the other runs Prettier
+# over `git diff`. Neither calls the GitHub API. Narrowing the token here rather
+# than inheriting the repository default.
+permissions:
+  contents: read
+
+# Three pushes in a row to a PR should not keep three runs alive; only the
+# newest commit's result can be merged. Pushes to `main` are NOT cancelled —
+# every commit on the default branch keeps its own recorded result.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  eslint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      # apps/web validates its env vars at import time; CI has no real secrets.
+      SKIP_ENV_VALIDATION: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+        with:
+          version: 11.3.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.15.0
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # This step is not ceremony, and it is the one thing to preserve if this
+      # workflow is ever rewritten. Unlike `type-check`, the turbo `lint` task
+      # declares only `dependsOn: ["^topo"]` — no codegen — and `packages/db` is
+      # the one generating package with no `postinstall` hook, so installing
+      # never produces its Prisma client. Without this, ESLint's type-aware
+      # rules resolve `@jitaspace/db` to an error type and the run drowns in
+      # spurious `no-unsafe-*` errors. `prisma generate` needs no DATABASE_URL:
+      # neither schema declares a datasource `url`. The Kubb clients need no
+      # step — six packages already generate them on `postinstall`.
+      - name: Generate Prisma client
+        run: pnpm db:generate
+      # `pnpm lint` is `turbo lint --continue -- --cache ... && manypkg check`.
+      # The repo is at 0 ESLint errors today, so this is a hard gate from day
+      # one. `manypkg check` additionally fails on a dependency declared at
+      # different versions across workspaces.
+      - name: Lint
+        run: pnpm lint
+
+  format:
+    name: Prettier (changed files)
+    runs-on: ubuntu-latest
+    # Only `pull_request` carries a base to diff against. A push to `main` has
+    # none — `github.event.before` is the zero SHA for a new branch and is
+    # unreachable after a force-push, and a squash-merge push contains exactly
+    # what the PR already gated. A repo-wide check on `main` is separately off
+    # the table while the pre-existing drift described below remains.
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # Full history rather than the default depth of 1.
+          #
+          # On `pull_request`, actions/checkout checks out the ephemeral merge
+          # commit `refs/pull/N/merge`: parent 1 is the base branch tip, parent
+          # 2 is the PR head. At depth 1 the runner has that single commit and
+          # nothing else — both parents are absent, so `git rev-parse HEAD^1`,
+          # `git merge-base` and `git diff` all fail with "bad object".
+          # sonarcloud.yml already sets 0, and the clone is cheap next to the
+          # install.
+          fetch-depth: 0
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+        with:
+          version: 11.3.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.15.0
+          cache: pnpm
+      # Prettier needs only the root binary and `@jitaspace/prettier-config`
+      # (a plain index.mjs workspace package with no build step), so the six
+      # codegen postinstall hooks are dead weight here. `--frozen-lockfile`
+      # still pins the Prettier version. If this ever fails to find the
+      # binary, drop `--ignore-scripts`; nothing else in the job depends on it.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Prettier check on changed files
+        env:
+          # Passed through the environment rather than interpolated into the
+          # script body, so the shell never parses a GitHub-supplied value.
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          TMP="${RUNNER_TEMP:-/tmp}"
+
+          # ── 1. Pick the base commit ──────────────────────────────────────
+          #
+          # HEAD is the `refs/pull/N/merge` commit, so its first parent is the
+          # exact base branch tip this PR was merged against. That beats the
+          # webhook payload's `base.sha`: if `main` advances while the run is
+          # queued, GitHub rebuilds the merge ref against the newer tip, and
+          # diffing the newer merge commit against the older `base.sha` would
+          # blame this author for every file another PR landed in between.
+          #
+          # `HEAD^2` resolves only on a merge commit, so it doubles as the test
+          # for "am I on the merge ref?" — if a future edit sets `ref:` to the
+          # PR head, or the PR is unmergeable and no merge ref exists, fall
+          # back to the payload value.
+          BASE="$PR_BASE_SHA"
+          if git rev-parse --verify --quiet 'HEAD^2' >/dev/null; then
+            BASE="$(git rev-parse 'HEAD^1')"
+          fi
+
+          # Diff from the merge base — i.e. three-dot `git diff BASE...HEAD`,
+          # spelled out so a missing common ancestor reports itself here rather
+          # than as a confusing diff. Three-dot is load-bearing on the fallback
+          # path: diffing a raw PR head two-dot against a base that has moved on
+          # renders the base's own commits as reversions and blames this PR for
+          # files it never touched.
+          MERGE_BASE="$(git merge-base "$BASE" HEAD)"
+          echo "Base:       $BASE"
+          echo "Merge base: $MERGE_BASE"
+          echo "Head:       $(git rev-parse HEAD)"
+          echo
+
+          # ── 2. Collect the changed paths ─────────────────────────────────
+          #
+          # --diff-filter=ACMR — Added, Copied, Modified, Renamed.
+          #   D (deleted) is excluded deliberately: `prettier --check` on a path
+          #   that no longer exists is not a no-op but a hard failure ("[error]
+          #   No files matching the pattern were found", exit 2), so any PR that
+          #   deletes a .ts file would fail the gate for no reason. T (type
+          #   change) is excluded for the same reason. Renames are safe — with
+          #   rename detection on, `--name-only` prints only the destination.
+          #
+          # -z NUL-delimits, and every stage downstream stays NUL-delimited, so
+          #   a path containing a space is never split into two paths that then
+          #   trip the exit-2 failure above.
+          git diff -z --name-only --diff-filter=ACMR "$MERGE_BASE" HEAD > "$TMP/changed-all.z"
+
+          # Filter to the extensions `pnpm format:write` actually rewrites. This
+          # list is deliberately identical to the root format scripts' glob: a
+          # gate that flags a file the project's own fix command will not write
+          # is a gate the author cannot satisfy. Widening one means widening the
+          # other in the same commit.
+          #
+          # grep exits 1 when nothing matches, which `set -e` would treat as
+          # fatal, so swallow the status and judge by the file instead.
+          grep -zE '\.(js|cjs|mjs|ts|tsx|md|json)$' < "$TMP/changed-all.z" > "$TMP/changed.z" || true
+
+          # ── 3. Guard the empty change set ────────────────────────────────
+          #
+          # A PR touching only a .png or the lockfile leaves this empty, and an
+          # unguarded `prettier --check $FILES` is actively wrong either way:
+          # quoted, Prettier reads the empty string as "everything under cwd"
+          # and fails on all the pre-existing drift; unquoted it gets no
+          # arguments and exits 0 — a silent pass. Both verified.
+          if [ ! -s "$TMP/changed.z" ]; then
+            echo "No Prettier-checkable files changed in this PR — nothing to do."
+            exit 0
+          fi
+          COUNT="$(tr -dc '\0' < "$TMP/changed.z" | wc -c | tr -d ' ')"
+          echo "Checking $COUNT changed file(s):"
+          tr '\0' '\n' < "$TMP/changed.z" | sed 's/^/  /'
+          echo
+
+          # ── 4. Run Prettier ──────────────────────────────────────────────
+          #
+          # --ignore-path .gitignore mirrors the root scripts, so generated
+          # output stays excluded. --ignore-unknown decouples the grep filter
+          # from Prettier's parser table: a path that slips through without a
+          # parser is skipped rather than failing the job with exit 2. xargs -0
+          # keeps NUL delimiting and -r suppresses the run on empty input.
+          set +e
+          xargs -0 -r -- pnpm exec prettier --check --ignore-path .gitignore --ignore-unknown \
+            < "$TMP/changed.z" 2>&1 | tee "$TMP/prettier.log"
+          STATUS="${PIPESTATUS[0]}"
+          set -e
+          if [ "$STATUS" -eq 0 ]; then
+            echo
+            echo "All $COUNT changed file(s) are Prettier-clean."
+            exit 0
+          fi
+
+          # ── 5. Explain the failure ───────────────────────────────────────
+          #
+          # Prettier lists offenders as "[warn] <path>"; drop its trailing
+          # "[warn] Code style issues found ..." summary line. printf %q quotes
+          # each path so the suggested command survives spaces.
+          grep -E '^\[warn\] ' "$TMP/prettier.log" \
+            | grep -vE '^\[warn\] Code style issues' \
+            | sed 's/^\[warn\] //' > "$TMP/offenders.txt" || true
+
+          FIX_CMD="pnpm exec prettier --write --ignore-path .gitignore"
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            FIX_CMD="$FIX_CMD $(printf '%q' "$f")"
+          done < "$TMP/offenders.txt"
+
+          echo
+          echo "Fix by running this from the repository root, then committing:"
+          echo
+          echo "    $FIX_CMD"
+          echo
+          echo "The drift may not be yours: this repository still carries a backlog of"
+          echo "unformatted files that pre-dates this check, so a file can be flagged"
+          echo "because you edited one line in a file that was already unformatted. If"
+          echo "the fix produces a diff much larger than your change, that is expected."
+          echo
+          echo "Prefer the command above over 'pnpm format:write', which rewrites every"
+          echo "matching file in the repository and would bury your change."
+
+          echo "::error title=Prettier::Files changed by this PR are not formatted. See this step's log for the exact fix command."
+          exit 1
+# ---------------------------------------------------------------------------
+# Ratchet plan
+#
+# The `format` job is scoped to changed files only because a backlog of
+# unformatted files pre-dates it and many long-lived branches are open against
+# `main`; a repo-wide gate or a big-bang `pnpm format:write` sweep would
+# conflict with all of them. Once that backlog is cleared, replace the diff
+# logic with a plain `pnpm format`, drop `fetch-depth: 0`, and re-enable the job
+# on pushes to `main`.
+# ---------------------------------------------------------------------------

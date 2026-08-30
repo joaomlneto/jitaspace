@@ -170,7 +170,8 @@ pnpm test             # Run all tests (Jest)
 pnpm lint             # ESLint + manypkg checks
 pnpm lint:fix         # Auto-fix linting issues
 pnpm type-check       # TypeScript across all packages
-pnpm format           # Prettier
+pnpm format           # Prettier — check only (what CI runs)
+pnpm format:write     # Prettier — format files in place
 
 pnpm db:generate      # Regenerate Prisma client
 pnpm db:push          # Push schema + regenerate client
@@ -196,7 +197,7 @@ For manual setup: set `apps/web` as the Vercel root directory. Turborepo remote 
 
 1. Fork and create a branch
 2. Make your changes — internal packages import as `@jitaspace/*` with `workspace:*`
-3. Run `pnpm lint && pnpm type-check && pnpm test`
+3. Run `pnpm lint && pnpm format && pnpm type-check && pnpm test` — CI checks all of these on your PR
 4. For package version bumps, run `pnpm changeset`
 
 Questions or ideas? Join the [Discord](https://discord.gg/fvcFu7j4dx).

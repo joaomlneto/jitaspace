@@ -76,13 +76,22 @@ pnpm test:watch     # watch mode
 # build succeeds and the server boots.
 ```
 
-- Lint & format:
+- Lint & format (both are CI gates — `.github/workflows/lint.yml`):
 
 ```zsh
-pnpm lint
+pnpm lint         # ESLint + manypkg
 pnpm lint:fix
-pnpm format
+pnpm format       # Prettier, check only — reports drift, writes nothing
+pnpm format:write # Prettier, rewrites every matching file in the repo
 ```
+
+CI runs `pnpm db:generate` before `pnpm lint`, and that step is required, not
+ceremony: the turbo `lint` task declares no codegen dependency and
+`packages/db` has no `postinstall`, so linting a clean checkout types against
+a missing Prisma client and reports a wall of spurious `no-unsafe-*` errors.
+The Prettier gate is scoped to the files a PR changes. `.githooks/pre-commit`
+runs `pnpm lint` only — it never runs Prettier — so passing it does not
+predict a green CI run.
 
 Integration points & gotchas
 

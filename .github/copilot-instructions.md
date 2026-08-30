@@ -60,7 +60,8 @@ SKIP_ENV_VALIDATION=1 pnpm build   # Build all packages and apps via Turbo
 ```bash
 pnpm lint                          # ESLint (flat config) + manypkg workspace checks
 pnpm lint:fix                      # Auto-fix linting issues
-pnpm format                        # Prettier (also sorts imports)
+pnpm format                        # Prettier in check mode — what CI runs
+pnpm format:write                  # Prettier — rewrite files in place (also sorts imports)
 pnpm type-check                    # tsc --noEmit across all workspaces
 pnpm test                          # Jest unit tests across workspaces (generates coverage)
 ```
@@ -70,19 +71,28 @@ pnpm test                          # Jest unit tests across workspaces (generate
 1. `pnpm db:generate`
 2. `SKIP_ENV_VALIDATION=1 pnpm build`
 3. `pnpm lint`
-4. `pnpm type-check`
-5. `pnpm test`
+4. `pnpm format`
+5. `pnpm type-check`
+6. `pnpm test`
 
 ---
 
 ## Continuous Integration
 
-Three GitHub Actions workflows run on every push:
+Four GitHub Actions workflows run on every push:
 
 **Type Check** (`.github/workflows/type-check.yml`):
 
 - Sequence: `pnpm install --frozen-lockfile` → `pnpm type-check`
 - A hard gate — a type error fails the PR. No explicit codegen step: the turbo `type-check` task depends on the Prisma and Kubb generators, so a clean checkout produces them itself.
+- Uses `SKIP_ENV_VALIDATION=1`
+
+**Lint** (`.github/workflows/lint.yml`):
+
+- Two jobs. `ESLint`: `pnpm install --frozen-lockfile` → `pnpm db:generate` → `pnpm lint`. `Prettier (changed files)`: `prettier --check` over only the files the PR changes.
+- The explicit `pnpm db:generate` is required. Unlike `build` and `type-check`, the turbo `lint` task declares no codegen dependency, and `packages/db` has no `postinstall` — so on a clean checkout ESLint resolves `@jitaspace/db` to an error type and reports a wall of spurious `no-unsafe-*` errors.
+- The Prettier job is diff-scoped, so it does not gate pre-existing formatting drift elsewhere in the repo. It runs on `pull_request` only — a push has no base to diff against.
+- A hard gate — an ESLint error, a `manypkg check` version mismatch, or one unformatted changed file fails the PR.
 - Uses `SKIP_ENV_VALIDATION=1`
 
 **Cypress Tests** (`.github/workflows/cypress.yml`):
@@ -143,8 +153,9 @@ When a new `@jitaspace/*` package exports TypeScript source and needs to be impo
 - **Missing generated files:** If you see import errors for `@jitaspace/db` or `@jitaspace/esi-client`, run `pnpm db:generate` and/or `pnpm kubb:generate` first.
 - **Env validation crash:** Build or dev server crashes with env errors → set `SKIP_ENV_VALIDATION=1`.
 - **Wrong package manager:** Any `npm install` or `yarn` command will fail with a preinstall error — use pnpm only.
-- **Prisma postinstall:** The `packages/db` package runs `prisma generate` on `postinstall`. CI sets a dummy `DATABASE_URL` so this succeeds without a real database.
+- **Prisma client on a clean checkout:** `packages/db` has **no** `postinstall` — installing does not produce its client. `build` and `type-check` get it from their turbo task dependencies; anything else needing `@jitaspace/db` types (notably `lint`) must run `pnpm db:generate` first. Generating needs no `DATABASE_URL`: the schema declares no datasource `url`.
 - **`apps/web` lint command:** Uses `--flag unstable_native_nodejs_ts_config` for native ESM TypeScript config support.
+- **Pre-commit hook is not CI:** `.githooks/pre-commit` runs `pnpm lint` and nothing else. It never runs Prettier, `--no-verify` skips it, and it is dormant in git worktrees — so passing it does not predict that `lint.yml` will pass.
 
 ---
 
