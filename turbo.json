@@ -19,24 +19,13 @@
     "NEXTAUTH_URL",
     "NEXT_PUBLIC_DISCORD_INVITE_LINK",
     "NEXT_PUBLIC_GOOGLE_TAG_ID",
-    // Read by apps/web/env.ts and inlined into the client bundle at build time.
-    // Listed here for the same reason as the NEXT_PUBLIC_* entries around them:
-    // to keep the set explicit and greppable. They are NOT load-bearing for the
-    // web build. Turbo detects apps/web as `nextjs`, and framework inference
-    // supplies every NEXT_PUBLIC_* var to that package's tasks whether or not it
-    // is declared here, so `envMode: "strict"` never stripped these from the
-    // Vercel build.
-    //
-    // Verified by swapping the web `build` script for an env probe and running
-    // it through turbo: an undeclared NEXT_PUBLIC_ZZZ_TEST arrived with its
-    // value, while an undeclared non-prefixed var arrived `undefined` — strict
-    // mode was active and stripping, and the NEXT_PUBLIC_ prefix survived it
-    // anyway. Note a `--dry-run=json` is NOT sufficient to show this: its
-    // `inferred` list describes the task hash, not the process environment.
-    "NEXT_PUBLIC_POSTHOG_HOST",
-    "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN",
+    // A NEXT_PUBLIC_* var read only by apps/web does NOT belong here: turbo
+    // infers that package as `nextjs` and already supplies and hashes the whole
+    // prefix for it, while a globalEnv entry hashes it into all 29 packages, so
+    // changing it turns over caches that never saw the value. SENTRY_DSN is
+    // listed because packages/background-jobs-triggerdev reads it too, and that
+    // package gets no framework inference.
     "NEXT_PUBLIC_SENTRY_DSN",
-    "NEXT_PUBLIC_SITE_URL",
     "NEXT_PUBLIC_UMAMI_WEBSITE_ID",
     "REDIS_URL",
     "SENTRY_AUTH_TOKEN",
@@ -123,8 +112,8 @@
     },
     // Not a kubb task at all: the script is `tsx scripts/generate-scopes.ts`,
     // and this package has neither a kubb.config.ts nor a swagger.json. Under
-    // the shared task's `inputs` no file matched, so the hash was constant and
-    // the task was a permanent cache hit — bumping the pinned ESI spec left the
+    // the shared task's `inputs` nothing it actually reads matched, so the hash
+    // was constant and the task was a permanent cache hit — bumping the pinned ESI spec left the
     // scope tables stale while reporting success. Declare what it actually
     // reads, including the sibling package's spec via $TURBO_ROOT$.
     "@jitaspace/esi-metadata#kubb:generate": {
