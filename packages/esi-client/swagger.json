@@ -63,7 +63,7 @@
         "required": false,
         "schema": {
           "enum": [
-            "2026-07-17"
+            "2026-08-18"
           ],
           "format": "date",
           "type": "string"
@@ -3815,6 +3815,118 @@
         },
         "type": "array"
       },
+      "CharactersCosmeticsSkinr": {
+        "properties": {
+          "licenses": {
+            "description": "SKINR licenses the character owns",
+            "items": {
+              "$ref": "#/components/schemas/CharactersCosmeticsSkinrItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "licenses"
+        ],
+        "type": "object"
+      },
+      "CharactersCosmeticsSkinrComponents": {
+        "properties": {
+          "licenses": {
+            "description": "SKINR component licenses the character owns",
+            "items": {
+              "$ref": "#/components/schemas/CharactersCosmeticsSkinrComponentsItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "licenses"
+        ],
+        "type": "object"
+      },
+      "CharactersCosmeticsSkinrComponentsItem": {
+        "properties": {
+          "component_id": {
+            "description": "ID of the component (see SDE for details)",
+            "examples": [
+              67890
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "runs": {
+            "description": "Remaining uses of this license",
+            "oneOf": [
+              {
+                "properties": {
+                  "remaining": {
+                    "description": "Runs remaining on license",
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "title": "remaining",
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "unlimited": {
+                    "description": "Whether the license has unlimited uses",
+                    "type": "boolean"
+                  }
+                },
+                "title": "unlimited",
+                "type": "object"
+              }
+            ]
+          },
+          "type": {
+            "description": "Kind of component",
+            "enum": [
+              "nanocoating",
+              "pattern"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "Nanocoating component",
+              "Pattern component"
+            ]
+          }
+        },
+        "required": [
+          "component_id",
+          "type",
+          "runs"
+        ],
+        "type": "object"
+      },
+      "CharactersCosmeticsSkinrItem": {
+        "properties": {
+          "activated": {
+            "description": "Whether this SKINR is activated",
+            "type": "boolean"
+          },
+          "skinr_id": {
+            "description": "SKINR identifier",
+            "type": "string"
+          },
+          "unactivated": {
+            "description": "Number of unactivated copies of this SKINR",
+            "examples": [
+              3
+            ],
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "skinr_id",
+          "activated",
+          "unactivated"
+        ],
+        "type": "object"
+      },
       "CharactersDetail": {
         "properties": {
           "achievement_score": {
@@ -4039,6 +4151,268 @@
         "required": [
           "id",
           "mercenary_den_id"
+        ],
+        "type": "object"
+      },
+      "CharactersMilitaryCampaignsObjectivesListing": {
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "objectives": {
+            "description": "List of military campaign objectives",
+            "items": {
+              "$ref": "#/components/schemas/CharactersMilitaryCampaignsObjectivesParticipationCharacterobjective"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "objectives"
+        ],
+        "type": "object"
+      },
+      "CharactersMilitaryCampaignsObjectivesParticipation": {
+        "properties": {
+          "campaign_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Campaign's ID"
+          },
+          "contributed": {
+            "description": "The character's cumulative contribution",
+            "examples": [
+              10
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Objective's ID"
+          },
+          "is_committed": {
+            "description": "Whether the character is currently committed to the objective",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "last_modified": {
+            "description": "Moment this information was last modified",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "campaign_id",
+          "is_committed",
+          "contributed",
+          "last_modified"
+        ],
+        "type": "object"
+      },
+      "CharactersMilitaryCampaignsObjectivesParticipationCharacterobjective": {
+        "properties": {
+          "campaign_id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Campaign's ID"
+          },
+          "contributed": {
+            "description": "The character's cumulative contribution",
+            "examples": [
+              10
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Objective's ID"
+          },
+          "is_committed": {
+            "description": "Whether the character is currently committed to the objective",
+            "examples": [
+              true
+            ],
+            "type": "boolean"
+          },
+          "last_modified": {
+            "description": "Moment this information was last modified",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "campaign_id",
+          "is_committed",
+          "contributed",
+          "last_modified"
+        ],
+        "type": "object"
+      },
+      "CharactersParagonHubSkinr": {
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "listings": {
+            "description": "Page of SKINR listings the character has posted",
+            "items": {
+              "$ref": "#/components/schemas/CharactersParagonHubSkinrItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "listings"
+        ],
+        "type": "object"
+      },
+      "CharactersParagonHubSkinrItem": {
+        "properties": {
+          "created": {
+            "description": "When the listing was created",
+            "format": "date-time",
+            "type": "string"
+          },
+          "expires": {
+            "description": "When the listing expires",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Unique identifier of the listing"
+          },
+          "last_modified": {
+            "description": "When this listing was last retrieved from the game",
+            "format": "date-time",
+            "type": "string"
+          },
+          "price": {
+            "description": "Asking price of the listing",
+            "oneOf": [
+              {
+                "properties": {
+                  "isk": {
+                    "description": "Price in ISK",
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "title": "isk",
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "plex": {
+                    "description": "Price in PLEX",
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "title": "plex",
+                "type": "object"
+              }
+            ]
+          },
+          "quantity": {
+            "description": "How many licenses remain in this listing",
+            "examples": [
+              3
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "seller_id": {
+            "$ref": "#/components/schemas/CharacterID",
+            "description": "Character that posted the listing"
+          },
+          "skinr_id": {
+            "description": "SKINR license identifier",
+            "type": "string"
+          },
+          "state": {
+            "description": "Lifecycle state of the listing",
+            "enum": [
+              "listed",
+              "sold_out",
+              "expired",
+              "removed"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "The listing is live and has licenses available",
+              "All licenses in the listing have been sold",
+              "The listing reached its expiry time",
+              "The listing was cancelled or invalidated"
+            ]
+          },
+          "target": {
+            "description": "Who the listing is visible to",
+            "oneOf": [
+              {
+                "properties": {
+                  "character_id": {
+                    "$ref": "#/components/schemas/CharacterID",
+                    "description": "Character the listing is visible to"
+                  }
+                },
+                "title": "character_id",
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "corporation_id": {
+                    "$ref": "#/components/schemas/CorporationID",
+                    "description": "Corporation the listing is visible to"
+                  }
+                },
+                "title": "corporation_id",
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "alliance_id": {
+                    "$ref": "#/components/schemas/AllianceID",
+                    "description": "Alliance the listing is visible to"
+                  }
+                },
+                "title": "alliance_id",
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "public": {
+                    "description": "Whether the listing is visible to everyone",
+                    "type": "boolean"
+                  }
+                },
+                "title": "public",
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "last_modified",
+          "seller_id",
+          "skinr_id",
+          "created",
+          "expires",
+          "quantity",
+          "price",
+          "target"
         ],
         "type": "object"
       },
@@ -8340,7 +8714,7 @@
         "properties": {
           "alliance_id": {
             "$ref": "#/components/schemas/AllianceID",
-            "description": "Corporation's alliance ID"
+            "description": "Alliance the corporation is a member of (Player-owned corporation only)"
           },
           "ceo_id": {
             "$ref": "#/components/schemas/CharacterID",
@@ -8359,9 +8733,21 @@
             "description": "Corporation's description",
             "type": "string"
           },
-          "faction_id": {
+          "enlisted_faction_id": {
             "$ref": "#/components/schemas/FactionID",
-            "description": "Corporation's faction ID"
+            "description": "Faction the corporation is enlisted in (Player-owned corporation only)"
+          },
+          "friendly_fire": {
+            "description": "Corporation's friendly fire status",
+            "enum": [
+              "legal",
+              "illegal"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "Friendly fire is legal",
+              "Friendly fire is illegal"
+            ]
           },
           "home_station_id": {
             "$ref": "#/components/schemas/StationID",
@@ -8369,6 +8755,9 @@
           },
           "member_count": {
             "description": "Corporation's member count",
+            "examples": [
+              100
+            ],
             "format": "int64",
             "type": "integer"
           },
@@ -8376,19 +8765,49 @@
             "description": "Corporation's name",
             "type": "string"
           },
+          "palette": {
+            "$ref": "#/components/schemas/CorporationsDetailPalette",
+            "description": "Corporation's palette colors (Player-owned corporation only)"
+          },
           "shares": {
             "description": "Corporation's shares",
+            "examples": [
+              1000
+            ],
             "format": "int64",
             "type": "integer"
           },
-          "tax_rate": {
-            "description": "Corporation's tax rate",
-            "format": "double",
-            "type": "number"
+          "state": {
+            "description": "Corporation's state",
+            "enum": [
+              "active",
+              "closed"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "Corporation is active",
+              "Corporation is closed"
+            ]
+          },
+          "tax_rates": {
+            "$ref": "#/components/schemas/CorporationsDetailTaxrates",
+            "description": "Corporation's tax rates"
           },
           "ticker": {
             "description": "Corporation's short name",
             "type": "string"
+          },
+          "type": {
+            "description": "Corporation's type",
+            "enum": [
+              "player_owned",
+              "npc_owned"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "Corporation is owned by players",
+              "Corporation is owned by NPCs"
+            ]
           },
           "url": {
             "description": "Corporation's URL",
@@ -8400,12 +8819,62 @@
           }
         },
         "required": [
-          "ceo_id",
-          "creator_id",
-          "member_count",
+          "state",
+          "type",
           "name",
-          "tax_rate",
-          "ticker"
+          "ticker",
+          "description",
+          "home_station_id",
+          "member_count",
+          "tax_rates",
+          "shares",
+          "war_eligible",
+          "friendly_fire"
+        ],
+        "type": "object"
+      },
+      "CorporationsDetailPalette": {
+        "properties": {
+          "main_color": {
+            "description": "Main palette color (#rrggbb)",
+            "type": "string"
+          },
+          "secondary_color": {
+            "description": "Secondary palette color (#rrggbb)",
+            "type": "string"
+          },
+          "tertiary_color": {
+            "description": "Tertiary palette color (#rrggbb)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "main_color"
+        ],
+        "type": "object"
+      },
+      "CorporationsDetailTaxrates": {
+        "properties": {
+          "isk": {
+            "description": "ISK tax rate (0.0% - 100.0%)",
+            "examples": [
+              10
+            ],
+            "format": "double",
+            "type": "number"
+          },
+          "loyalty_point": {
+            "description": "Loyalty point tax rate (0.0% - 100.0%)",
+            "examples": [
+              5.6
+            ],
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "isk",
+          "loyalty_point"
         ],
         "type": "object"
       },
@@ -10966,6 +11435,327 @@
         ],
         "type": "object"
       },
+      "CosmeticsSkinr": {
+        "properties": {
+          "creator_id": {
+            "$ref": "#/components/schemas/CharacterID",
+            "description": "SKINR creator character ID"
+          },
+          "id": {
+            "description": "SKINR ID",
+            "type": "string"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/CosmeticsSkinrLayout",
+            "description": "SKINR layout"
+          },
+          "line": {
+            "description": "SKINR line name",
+            "type": "string"
+          },
+          "name": {
+            "description": "SKINR name",
+            "type": "string"
+          },
+          "ship_type_id": {
+            "$ref": "#/components/schemas/TypeID",
+            "description": "ID of the ship hull",
+            "examples": [
+              587
+            ]
+          },
+          "tier": {
+            "$ref": "#/components/schemas/CosmeticsSkinrTier",
+            "description": "SKINR tier"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "creator_id",
+          "ship_type_id",
+          "tier",
+          "layout"
+        ],
+        "type": "object"
+      },
+      "CosmeticsSkinrLayout": {
+        "properties": {
+          "pattern_blend_mode": {
+            "description": "Blend mode to use when compositing patterns",
+            "enum": [
+              "normal",
+              "subtract",
+              "exclusion",
+              "nested",
+              "nested_inverted"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "Normal (overlay) blend mode",
+              "Subtract blend mode",
+              "Exclusion blend mode",
+              "Nested blend mode",
+              "Nested inverted blend mode"
+            ]
+          },
+          "slots": {
+            "description": "Cosmetic slots in the layout",
+            "items": {
+              "$ref": "#/components/schemas/CosmeticsSkinrLayoutslot"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "slots",
+          "pattern_blend_mode"
+        ],
+        "type": "object"
+      },
+      "CosmeticsSkinrLayoutslot": {
+        "properties": {
+          "configuration": {
+            "description": "Configuration of the cosmetic slot",
+            "oneOf": [
+              {
+                "properties": {
+                  "nanocoating": {
+                    "$ref": "#/components/schemas/CosmeticsSkinrSlotnanocoating",
+                    "description": "Nanocoating configuration"
+                  }
+                },
+                "title": "nanocoating",
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "pattern": {
+                    "$ref": "#/components/schemas/CosmeticsSkinrSlotpattern",
+                    "description": "Pattern configuration"
+                  }
+                },
+                "title": "pattern",
+                "type": "object"
+              }
+            ]
+          },
+          "id": {
+            "description": "ID of cosmetic slot (see SDE for details)",
+            "examples": [
+              1
+            ],
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "configuration"
+        ],
+        "type": "object"
+      },
+      "CosmeticsSkinrPatternconfiguration": {
+        "properties": {
+          "mirrored": {
+            "description": "Whether to mirror the UV coordinates",
+            "type": "boolean"
+          },
+          "projection": {
+            "$ref": "#/components/schemas/CosmeticsSkinrPatternprojection",
+            "description": "How the pattern is mapped onto the ship hull"
+          },
+          "transform": {
+            "$ref": "#/components/schemas/CosmeticsSkinrPatterntransform",
+            "description": "Transformation applied to the pattern"
+          }
+        },
+        "required": [
+          "projection",
+          "transform",
+          "mirrored"
+        ],
+        "type": "object"
+      },
+      "CosmeticsSkinrPatternprojection": {
+        "properties": {
+          "slot1": {
+            "description": "Whether the pattern is projected on cosmetic slot 1",
+            "type": "boolean"
+          },
+          "slot2": {
+            "description": "Whether the pattern is projected on cosmetic slot 2",
+            "type": "boolean"
+          },
+          "slot3": {
+            "description": "Whether the pattern is projected on cosmetic slot 3",
+            "type": "boolean"
+          },
+          "slot4": {
+            "description": "Whether the pattern is projected on cosmetic slot 4",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "slot1",
+          "slot2",
+          "slot3",
+          "slot4"
+        ],
+        "type": "object"
+      },
+      "CosmeticsSkinrPatterntransform": {
+        "properties": {
+          "position": {
+            "$ref": "#/components/schemas/CosmeticsSkinrVector3",
+            "description": "Translation applied to the pattern"
+          },
+          "rotation": {
+            "$ref": "#/components/schemas/CosmeticsSkinrVector4",
+            "description": "Rotation applied to the pattern"
+          },
+          "scaling": {
+            "$ref": "#/components/schemas/CosmeticsSkinrVector3",
+            "description": "Scaling applied to the pattern"
+          }
+        },
+        "required": [
+          "position",
+          "rotation",
+          "scaling"
+        ],
+        "type": "object"
+      },
+      "CosmeticsSkinrSlotnanocoating": {
+        "properties": {
+          "id": {
+            "description": "ID of nanocoating component (see SDE for details)",
+            "examples": [
+              67890
+            ],
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "CosmeticsSkinrSlotpattern": {
+        "properties": {
+          "configuration": {
+            "$ref": "#/components/schemas/CosmeticsSkinrPatternconfiguration",
+            "description": "Pattern component configuration"
+          },
+          "id": {
+            "description": "ID of pattern component (see SDE for details)",
+            "examples": [
+              67890
+            ],
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "configuration"
+        ],
+        "type": "object"
+      },
+      "CosmeticsSkinrTier": {
+        "properties": {
+          "level": {
+            "description": "SKINR tier level",
+            "examples": [
+              1
+            ],
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "level"
+        ],
+        "type": "object"
+      },
+      "CosmeticsSkinrVector3": {
+        "properties": {
+          "x": {
+            "description": "X coordinate",
+            "examples": [
+              0
+            ],
+            "format": "double",
+            "type": "number"
+          },
+          "y": {
+            "description": "Y coordinate",
+            "examples": [
+              0
+            ],
+            "format": "double",
+            "type": "number"
+          },
+          "z": {
+            "description": "Z coordinate",
+            "examples": [
+              0
+            ],
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "type": "object"
+      },
+      "CosmeticsSkinrVector4": {
+        "properties": {
+          "w": {
+            "description": "W coordinate",
+            "examples": [
+              1
+            ],
+            "format": "double",
+            "type": "number"
+          },
+          "x": {
+            "description": "X coordinate",
+            "examples": [
+              1
+            ],
+            "format": "double",
+            "type": "number"
+          },
+          "y": {
+            "description": "Y coordinate",
+            "examples": [
+              0
+            ],
+            "format": "double",
+            "type": "number"
+          },
+          "z": {
+            "description": "Z coordinate",
+            "examples": [
+              0
+            ],
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z",
+          "w"
+        ],
+        "type": "object"
+      },
       "Cursor": {
         "properties": {
           "after": {
@@ -11226,7 +12016,7 @@
       "Error": {
         "properties": {
           "details": {
-            "description": "List of individual error details.",
+            "description": "List of individual issues.",
             "items": {
               "$ref": "#/components/schemas/ErrorDetail"
             },
@@ -11235,6 +12025,11 @@
           "error": {
             "description": "Error message.",
             "type": "string"
+          },
+          "status": {
+            "description": "HTTP status code.",
+            "format": "int64",
+            "type": "integer"
           }
         },
         "required": [
@@ -13612,6 +14407,495 @@
         ],
         "type": "object"
       },
+      "MilitaryCampaignsDetail": {
+        "properties": {
+          "finished": {
+            "description": "Moment the campaign transitioned to a non-active state",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Campaign's ID"
+          },
+          "progress": {
+            "description": "Campaign's progress",
+            "examples": [
+              50
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "started": {
+            "description": "Moment the campaign started",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "state": {
+            "description": "Campaign's state",
+            "enum": [
+              "Unspecified",
+              "Active",
+              "Completed",
+              "Expired"
+            ],
+            "examples": [
+              "Active"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "An unspecified state",
+              "The campaign is active and accepting contributions",
+              "The campaign met its target before the end date",
+              "The campaign failed to meet its target before the end date"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "progress"
+        ],
+        "type": "object"
+      },
+      "MilitaryCampaignsDetailCampaign": {
+        "properties": {
+          "finished": {
+            "description": "Moment the campaign transitioned to a non-active state",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Campaign's ID"
+          },
+          "progress": {
+            "description": "Campaign's progress",
+            "examples": [
+              50
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "started": {
+            "description": "Moment the campaign started",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "state": {
+            "description": "Campaign's state",
+            "enum": [
+              "Unspecified",
+              "Active",
+              "Completed",
+              "Expired"
+            ],
+            "examples": [
+              "Active"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "An unspecified state",
+              "The campaign is active and accepting contributions",
+              "The campaign met its target before the end date",
+              "The campaign failed to meet its target before the end date"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "progress"
+        ],
+        "type": "object"
+      },
+      "MilitaryCampaignsListing": {
+        "properties": {
+          "campaigns": {
+            "description": "List of military campaigns",
+            "items": {
+              "$ref": "#/components/schemas/MilitaryCampaignsDetailCampaign"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "campaigns"
+        ],
+        "type": "object"
+      },
+      "MilitaryCampaignsObjectivesDetail": {
+        "properties": {
+          "finished": {
+            "description": "Moment the objective transitioned to a non-active state",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Objective's ID"
+          },
+          "last_modified": {
+            "description": "Objective's last modified",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "participants": {
+            "$ref": "#/components/schemas/MilitaryCampaignsObjectivesDetailParticipants",
+            "description": "Objective's participants"
+          },
+          "progress": {
+            "description": "Objective's progress",
+            "examples": [
+              50
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "started": {
+            "description": "Moment the objective started",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "state": {
+            "description": "Objective's state",
+            "enum": [
+              "Unspecified",
+              "Active",
+              "Completed",
+              "Expired"
+            ],
+            "examples": [
+              "Active"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "An unspecified state",
+              "The campaign is active and accepting contributions",
+              "The campaign met its target before the end date",
+              "The campaign failed to meet its target before the end date"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "progress",
+          "participants",
+          "last_modified"
+        ],
+        "type": "object"
+      },
+      "MilitaryCampaignsObjectivesDetailObjective": {
+        "properties": {
+          "finished": {
+            "description": "Moment the objective transitioned to a non-active state",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Objective's ID"
+          },
+          "last_modified": {
+            "description": "Objective's last modified",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "participants": {
+            "$ref": "#/components/schemas/MilitaryCampaignsObjectivesDetailParticipants",
+            "description": "Objective's participants"
+          },
+          "progress": {
+            "description": "Objective's progress",
+            "examples": [
+              50
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "started": {
+            "description": "Moment the objective started",
+            "examples": [
+              "2025-11-01T00:00:00Z"
+            ],
+            "format": "date-time",
+            "type": "string"
+          },
+          "state": {
+            "description": "Objective's state",
+            "enum": [
+              "Unspecified",
+              "Active",
+              "Completed",
+              "Expired"
+            ],
+            "examples": [
+              "Active"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "An unspecified state",
+              "The campaign is active and accepting contributions",
+              "The campaign met its target before the end date",
+              "The campaign failed to meet its target before the end date"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "progress",
+          "participants",
+          "last_modified"
+        ],
+        "type": "object"
+      },
+      "MilitaryCampaignsObjectivesDetailParticipants": {
+        "properties": {
+          "committed": {
+            "description": "Number of currently committed participants",
+            "examples": [
+              1
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "contributors": {
+            "description": "Number of participants with at least one contribution",
+            "examples": [
+              2
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "Number of participants (including those that resigned)",
+            "examples": [
+              4
+            ],
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "committed",
+          "contributors"
+        ],
+        "type": "object"
+      },
+      "MilitaryCampaignsObjectivesListing": {
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "objectives": {
+            "description": "List of military campaign objectives",
+            "items": {
+              "$ref": "#/components/schemas/MilitaryCampaignsObjectivesDetailObjective"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "objectives"
+        ],
+        "type": "object"
+      },
+      "ParagonHubSkinr": {
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "listings": {
+            "description": "Page of public SKINR listings",
+            "items": {
+              "$ref": "#/components/schemas/ParagonHubSkinrInternalItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "listings"
+        ],
+        "type": "object"
+      },
+      "ParagonHubSkinrAlliances": {
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "listings": {
+            "description": "Page of SKINR listings targeted at the alliance",
+            "items": {
+              "$ref": "#/components/schemas/ParagonHubSkinrInternalItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "listings"
+        ],
+        "type": "object"
+      },
+      "ParagonHubSkinrCharacters": {
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "listings": {
+            "description": "Page of SKINR listings targeted at the character",
+            "items": {
+              "$ref": "#/components/schemas/ParagonHubSkinrInternalItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "listings"
+        ],
+        "type": "object"
+      },
+      "ParagonHubSkinrCorporations": {
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "listings": {
+            "description": "Page of SKINR listings targeted at the corporation",
+            "items": {
+              "$ref": "#/components/schemas/ParagonHubSkinrInternalItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "listings"
+        ],
+        "type": "object"
+      },
+      "ParagonHubSkinrInternalItem": {
+        "properties": {
+          "created": {
+            "description": "When the listing was created",
+            "format": "date-time",
+            "type": "string"
+          },
+          "expires": {
+            "description": "When the listing expires",
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/UUID",
+            "description": "Unique identifier of the listing"
+          },
+          "last_modified": {
+            "description": "When this listing was last retrieved from the game",
+            "format": "date-time",
+            "type": "string"
+          },
+          "price": {
+            "description": "Asking price of the listing",
+            "oneOf": [
+              {
+                "properties": {
+                  "isk": {
+                    "description": "Price in ISK",
+                    "format": "double",
+                    "type": "number"
+                  }
+                },
+                "title": "isk",
+                "type": "object"
+              },
+              {
+                "properties": {
+                  "plex": {
+                    "description": "Price in PLEX",
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "title": "plex",
+                "type": "object"
+              }
+            ]
+          },
+          "quantity": {
+            "description": "How many licenses remain in this listing",
+            "examples": [
+              3
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "seller_id": {
+            "$ref": "#/components/schemas/CharacterID",
+            "description": "Character that posted the listing"
+          },
+          "skinr_id": {
+            "description": "SKINR license identifier",
+            "type": "string"
+          },
+          "state": {
+            "description": "Lifecycle state of the listing",
+            "enum": [
+              "listed",
+              "sold_out",
+              "expired",
+              "removed"
+            ],
+            "type": "string",
+            "x-enum-descriptions": [
+              "The listing is live and has licenses available",
+              "All licenses in the listing have been sold",
+              "The listing reached its expiry time",
+              "The listing was cancelled"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "last_modified",
+          "seller_id",
+          "skinr_id",
+          "created",
+          "expires",
+          "quantity",
+          "price"
+        ],
+        "type": "object"
+      },
       "PlanetID": {
         "examples": [
           40000002
@@ -14091,30 +15375,41 @@
         "type": "integer",
         "x-common-model": "true"
       },
-      "StatusGet": {
+      "Status": {
         "properties": {
           "players": {
-            "description": "Current online player count",
+            "description": "Number of characters currently logged in",
+            "examples": [
+              12345
+            ],
+            "format": "int64",
             "type": "integer"
           },
           "server_version": {
-            "description": "Running version as string",
+            "description": "Build number of the cluster",
+            "examples": [
+              "1132976"
+            ],
             "type": "string"
           },
           "start_time": {
-            "description": "Server start timestamp",
+            "description": "Moment the cluster started accepting connections",
+            "examples": [
+              "2017-01-02T12:34:56Z"
+            ],
             "format": "date-time",
             "type": "string"
           },
           "vip": {
-            "description": "If the server is in VIP mode",
+            "description": "Whether the cluster only accepts VIP logins",
             "type": "boolean"
           }
         },
         "required": [
-          "start_time",
+          "server_version",
           "players",
-          "server_version"
+          "vip",
+          "start_time"
         ],
         "type": "object"
       },
@@ -15770,7 +17065,9 @@
               "esi-ui.write_waypoint.v1": "esi-ui.write_waypoint.v1",
               "esi-universe.read_structures.v1": "esi-universe.read_structures.v1",
               "esi-wallet.read_character_wallet.v1": "esi-wallet.read_character_wallet.v1",
-              "esi-wallet.read_corporation_wallets.v1": "esi-wallet.read_corporation_wallets.v1"
+              "esi-wallet.read_corporation_wallets.v1": "esi-wallet.read_corporation_wallets.v1",
+              "esi.activity.char:read": "esi.activity.char:read",
+              "esi.cosmetic.char:read": "esi.cosmetic.char:read"
             },
             "tokenUrl": "https://login.eveonline.com/v2/oauth/token"
           }
@@ -15789,8 +17086,8 @@
       "url": "https://developers.eveonline.com/license-agreement"
     },
     "termsOfService": "https://support.eveonline.com/hc/en-us/articles/8414770561948-EVE-Online-Terms-of-Service",
-    "title": "EVE Swagger Incineration (ESI) - tranquility",
-    "version": "2026-07-17"
+    "title": "EVE SKINR Ingenuity (ESI) - tranquility",
+    "version": "2026-08-18"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -15853,7 +17150,10 @@
           "Alliance"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/alliances/{alliance_id}": {
@@ -15925,8 +17225,11 @@
           "Alliance"
         ],
         "x-cache-age": 3600,
-        "x-cache-mode": "event-based",
-        "x-compatibility-date": "2020-01-01"
+        "x-cache-mode": "ttl-based",
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/alliances/{alliance_id}/contacts": {
@@ -16021,12 +17324,15 @@
           "Contacts"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "alliance-social",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/alliances/{alliance_id}/contacts/labels": {
@@ -16104,12 +17410,15 @@
           "Contacts"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "alliance-social",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/alliances/{alliance_id}/corporations": {
@@ -16180,7 +17489,10 @@
           "Alliance"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/alliances/{alliance_id}/icons": {
@@ -16330,7 +17642,10 @@
           "Character"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}": {
@@ -16402,8 +17717,11 @@
           "Character"
         ],
         "x-cache-age": 86400,
-        "x-cache-mode": "event-based",
-        "x-compatibility-date": "2026-06-09"
+        "x-cache-mode": "ttl-based",
+        "x-client-cache-ttl": 86400,
+        "x-compatibility-date": "2026-06-09",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 86400
       }
     },
     "/characters/{character_id}/access-lists": {
@@ -16483,12 +17801,14 @@
         ],
         "x-cache-age": 300,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "char-access",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/access-lists/{access_list_id}": {
@@ -16578,12 +17898,14 @@
         ],
         "x-cache-age": 300,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "char-access",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/agents_research": {
@@ -16661,12 +17983,15 @@
           "Character"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-industry",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/assets": {
@@ -16761,12 +18086,15 @@
           "Assets"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-asset",
           "max-tokens": 1800,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/assets/locations": {
@@ -17044,12 +18372,15 @@
           "Skills"
         ],
         "x-cache-age": 120,
+        "x-client-cache-ttl": 120,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-detail",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 120
       }
     },
     "/characters/{character_id}/blueprints": {
@@ -17144,12 +18475,15 @@
           "Character"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-industry",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/calendar": {
@@ -17236,12 +18570,15 @@
           "Calendar"
         ],
         "x-cache-age": 5,
+        "x-client-cache-ttl": 5,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 5
       }
     },
     "/characters/{character_id}/calendar/{event_id}": {
@@ -17329,12 +18666,15 @@
           "Calendar"
         ],
         "x-cache-age": 5,
+        "x-client-cache-ttl": 5,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 5
       },
       "put": {
         "description": "Set your response status to an event",
@@ -17436,12 +18776,15 @@
           "Calendar"
         ],
         "x-cache-age": 5,
+        "x-client-cache-ttl": 5,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 5
       }
     },
     "/characters/{character_id}/calendar/{event_id}/attendees": {
@@ -17529,12 +18872,15 @@
           "Calendar"
         ],
         "x-cache-age": 600,
+        "x-client-cache-ttl": 600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 600
       }
     },
     "/characters/{character_id}/clones": {
@@ -17612,12 +18958,15 @@
           "Clones"
         ],
         "x-cache-age": 120,
+        "x-client-cache-ttl": 120,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-location",
           "max-tokens": 1200,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 120
       }
     },
     "/characters/{character_id}/contacts": {
@@ -17800,12 +19149,15 @@
           "Contacts"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       },
       "post": {
         "description": "Bulk add contacts with same settings",
@@ -18134,12 +19486,15 @@
           "Contacts"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/characters/{character_id}/contracts": {
@@ -18234,12 +19589,15 @@
           "Contracts"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-contract",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/characters/{character_id}/contracts/{contract_id}/bids": {
@@ -18327,12 +19685,15 @@
           "Contracts"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-contract",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/characters/{character_id}/contracts/{contract_id}/items": {
@@ -18420,12 +19781,15 @@
           "Contracts"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-contract",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/corporationhistory": {
@@ -18496,7 +19860,184 @@
           "Character"
         ],
         "x-cache-age": 86400,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 86400,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 86400
+      }
+    },
+    "/characters/{character_id}/cosmetics/skinr": {
+      "get": {
+        "description": "Listing of all SKINR licenses you own",
+        "operationId": "GetCharactersCosmeticsSkinr",
+        "parameters": [
+          {
+            "description": "The ID of the character whose SKINR licenses to return",
+            "in": "path",
+            "name": "character_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CharacterID",
+              "description": "The ID of the character whose SKINR licenses to return"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharactersCosmeticsSkinr"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "esi.cosmetic.char:read"
+            ]
+          }
+        ],
+        "summary": "List a character's owned SKINR licenses",
+        "tags": [
+          "Cosmetics"
+        ],
+        "x-cache-age": 3600,
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2026-08-18",
+        "x-rate-limit": {
+          "group": "char-skinr",
+          "max-tokens": 30,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based"
+      }
+    },
+    "/characters/{character_id}/cosmetics/skinr/components": {
+      "get": {
+        "description": "Listing of all SKINR component licenses you own",
+        "operationId": "GetCharactersCosmeticsSkinrComponents",
+        "parameters": [
+          {
+            "description": "The ID of the character whose SKINR component licenses to return",
+            "in": "path",
+            "name": "character_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CharacterID",
+              "description": "The ID of the character whose SKINR component licenses to return"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharactersCosmeticsSkinrComponents"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "esi.cosmetic.char:read"
+            ]
+          }
+        ],
+        "summary": "List a character's owned SKINR component licenses",
+        "tags": [
+          "Cosmetics"
+        ],
+        "x-cache-age": 3600,
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2026-08-18",
+        "x-rate-limit": {
+          "group": "char-skinr",
+          "max-tokens": 30,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/cspa": {
@@ -18674,12 +20215,15 @@
           "Character"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-location",
           "max-tokens": 1200,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/characters/{character_id}/fittings": {
@@ -18757,12 +20301,15 @@
           "Fittings"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "fitting",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       },
       "post": {
         "description": "Save a new fitting for a character",
@@ -19109,12 +20656,15 @@
           "Fleets"
         ],
         "x-cache-age": 60,
+        "x-client-cache-ttl": 60,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "fleet",
           "max-tokens": 1800,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 60
       }
     },
     "/characters/{character_id}/freelance-jobs": {
@@ -19193,13 +20743,15 @@
           "Freelance Jobs"
         ],
         "x-cache-age": 60,
-        "x-cache-mode": "no-cache",
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
         "x-compatibility-date": "2025-12-16",
         "x-rate-limit": {
           "group": "char-freelance-job",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/freelance-jobs/{job_id}/participation": {
@@ -19288,13 +20840,15 @@
           "Freelance Jobs"
         ],
         "x-cache-age": 60,
-        "x-cache-mode": "no-cache",
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
         "x-compatibility-date": "2025-12-16",
         "x-rate-limit": {
           "group": "char-freelance-job",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/fw/stats": {
@@ -19454,12 +21008,15 @@
           "Clones"
         ],
         "x-cache-age": 120,
+        "x-client-cache-ttl": 120,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-detail",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 120
       }
     },
     "/characters/{character_id}/industry/jobs": {
@@ -19545,12 +21102,15 @@
           "Industry"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-industry",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/characters/{character_id}/killmails/recent": {
@@ -19645,12 +21205,15 @@
           "Killmails"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-killmail",
           "max-tokens": 30,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/characters/{character_id}/location": {
@@ -19728,12 +21291,15 @@
           "Location"
         ],
         "x-cache-age": 5,
+        "x-client-cache-ttl": 5,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-location",
           "max-tokens": 1200,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 5
       }
     },
     "/characters/{character_id}/loyalty/points": {
@@ -19811,12 +21377,15 @@
           "Loyalty"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-wallet",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/mail": {
@@ -19918,12 +21487,15 @@
           "Mail"
         ],
         "x-cache-age": 30,
+        "x-client-cache-ttl": 30,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 30
       },
       "post": {
         "description": "Create and send a new mail",
@@ -20139,12 +21711,15 @@
           "Mail"
         ],
         "x-cache-age": 30,
+        "x-client-cache-ttl": 30,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 30
       },
       "post": {
         "description": "Create a mail label",
@@ -20432,12 +22007,15 @@
           "Mail"
         ],
         "x-cache-age": 120,
+        "x-client-cache-ttl": 120,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 120
       }
     },
     "/characters/{character_id}/mail/{mail_id}": {
@@ -20608,12 +22186,15 @@
           "Mail"
         ],
         "x-cache-age": 30,
+        "x-client-cache-ttl": 30,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 30
       },
       "put": {
         "description": "Update metadata about a mail",
@@ -20801,12 +22382,15 @@
           "Character"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-detail",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/mercenary-tactical-operations": {
@@ -20886,12 +22470,14 @@
         ],
         "x-cache-age": 300,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "char-activity",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/mercenary-tactical-operations/{operation_id}": {
@@ -20981,12 +22567,233 @@
         ],
         "x-cache-age": 300,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "char-activity",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
+      }
+    },
+    "/characters/{character_id}/military-campaigns/objectives": {
+      "get": {
+        "description": "Listing of the military campaign objectives the character has participated in.",
+        "operationId": "GetCharactersMilitaryCampaignsObjectivesListing",
+        "parameters": [
+          {
+            "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+            "explode": false,
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+            "explode": false,
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The amount of records to retrieve per request.",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "description": "The amount of records to retrieve per request.",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The ID of the character",
+            "in": "path",
+            "name": "character_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CharacterID",
+              "description": "The ID of the character"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharactersMilitaryCampaignsObjectivesListing"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "esi.activity.char:read"
+            ]
+          }
+        ],
+        "summary": "List character participation in military campaigns",
+        "tags": [
+          "Military Campaigns"
+        ],
+        "x-cache-age": 60,
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
+        "x-compatibility-date": "2026-08-04",
+        "x-pagination": "cursor",
+        "x-rate-limit": {
+          "group": "char-military-campaign",
+          "max-tokens": 150,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based"
+      }
+    },
+    "/characters/{character_id}/military-campaigns/objectives/{objective_id}": {
+      "get": {
+        "description": "Show your participation in a military campaign objective.",
+        "operationId": "GetCharactersMilitaryCampaignsObjectivesParticipation",
+        "parameters": [
+          {
+            "description": "The ID of the character",
+            "in": "path",
+            "name": "character_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CharacterID",
+              "description": "The ID of the character"
+            }
+          },
+          {
+            "description": "The ID of the objective",
+            "in": "path",
+            "name": "objective_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID",
+              "description": "The ID of the objective"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharactersMilitaryCampaignsObjectivesParticipation"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "esi.activity.char:read"
+            ]
+          }
+        ],
+        "summary": "Get character military campaign objective participation",
+        "tags": [
+          "Military Campaigns"
+        ],
+        "x-cache-age": 60,
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
+        "x-compatibility-date": "2026-08-04",
+        "x-rate-limit": {
+          "group": "char-military-campaign",
+          "max-tokens": 150,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/mining": {
@@ -21081,12 +22888,15 @@
           "Industry"
         ],
         "x-cache-age": 600,
+        "x-client-cache-ttl": 600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-industry",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 600
       }
     },
     "/characters/{character_id}/notifications": {
@@ -21164,12 +22974,15 @@
           "Character"
         ],
         "x-cache-age": 600,
+        "x-client-cache-ttl": 600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-notification",
           "max-tokens": 15,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 600
       }
     },
     "/characters/{character_id}/notifications/contacts": {
@@ -21247,12 +23060,15 @@
           "Character"
         ],
         "x-cache-age": 600,
+        "x-client-cache-ttl": 600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 600
       }
     },
     "/characters/{character_id}/online": {
@@ -21330,12 +23146,15 @@
           "Location"
         ],
         "x-cache-age": 60,
+        "x-client-cache-ttl": 60,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-location",
           "max-tokens": 1200,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 60
       }
     },
     "/characters/{character_id}/orders": {
@@ -21413,7 +23232,10 @@
           "Market"
         ],
         "x-cache-age": 1200,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 1200,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 1200
       }
     },
     "/characters/{character_id}/orders/history": {
@@ -21508,7 +23330,131 @@
           "Market"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
+      }
+    },
+    "/characters/{character_id}/paragon-hub/skinr": {
+      "get": {
+        "description": "List the SKINR listings a character has posted on the Paragon Hub.",
+        "operationId": "GetCharactersParagonHubSkinr",
+        "parameters": [
+          {
+            "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+            "explode": false,
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+            "explode": false,
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The amount of records to retrieve per request.",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "description": "The amount of records to retrieve per request.",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The ID of the character whose listings to return",
+            "in": "path",
+            "name": "character_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CharacterID",
+              "description": "The ID of the character whose listings to return"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharactersParagonHubSkinr"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "esi.cosmetic.char:read"
+            ]
+          }
+        ],
+        "summary": "List a character's Paragon Hub SKINR listings",
+        "tags": [
+          "Paragon Hub"
+        ],
+        "x-cache-mode": "event-based",
+        "x-compatibility-date": "2026-08-18",
+        "x-pagination": "cursor",
+        "x-rate-limit": {
+          "group": "char-paragon-hub",
+          "max-tokens": 150,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based",
+        "x-tombstone-ttl": 604800
       }
     },
     "/characters/{character_id}/planets": {
@@ -21586,12 +23532,15 @@
           "Planetary Interaction"
         ],
         "x-cache-age": 600,
+        "x-client-cache-ttl": 600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-industry",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 600
       }
     },
     "/characters/{character_id}/planets/{planet_id}": {
@@ -21679,12 +23628,15 @@
           "Planetary Interaction"
         ],
         "x-cache-age": 600,
+        "x-client-cache-ttl": 600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-industry",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 600
       }
     },
     "/characters/{character_id}/portrait": {
@@ -21837,12 +23789,15 @@
           "Character"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-detail",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/search": {
@@ -21970,7 +23925,10 @@
           "Search"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/ship": {
@@ -22048,12 +24006,15 @@
           "Location"
         ],
         "x-cache-age": 5,
+        "x-client-cache-ttl": 5,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-location",
           "max-tokens": 1200,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 5
       }
     },
     "/characters/{character_id}/skillqueue": {
@@ -22136,12 +24097,14 @@
         ],
         "x-cache-age": 60,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-detail",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/skills": {
@@ -22221,12 +24184,14 @@
         ],
         "x-cache-age": 60,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-detail",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/standings": {
@@ -22304,12 +24269,15 @@
           "Character"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-social",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/structures/mercenary-dens": {
@@ -22389,12 +24357,14 @@
         ],
         "x-cache-age": 3600,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "char-structure",
           "max-tokens": 30,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/structures/mercenary-dens/{mercenary_den_id}": {
@@ -22484,12 +24454,14 @@
         ],
         "x-cache-age": 3600,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "char-structure",
           "max-tokens": 30,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/characters/{character_id}/titles": {
@@ -22567,12 +24539,15 @@
           "Character"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-detail",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/wallet": {
@@ -22650,12 +24625,15 @@
           "Wallet"
         ],
         "x-cache-age": 120,
+        "x-client-cache-ttl": 120,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-wallet",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 120
       }
     },
     "/characters/{character_id}/wallet/journal": {
@@ -22750,12 +24728,15 @@
           "Wallet"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-wallet",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/characters/{character_id}/wallet/transactions": {
@@ -22842,12 +24823,15 @@
           "Wallet"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "char-wallet",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/contracts/public/bids/{contract_id}": {
@@ -22945,7 +24929,10 @@
           "Contracts"
         ],
         "x-cache-age": 300,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 300,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/contracts/public/items/{contract_id}": {
@@ -23043,7 +25030,10 @@
           "Contracts"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/contracts/public/{region_id}": {
@@ -23132,7 +25122,10 @@
           "Contracts"
         ],
         "x-cache-age": 1800,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 1800,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 1800
       }
     },
     "/corporation/{corporation_id}/mining/extractions": {
@@ -23227,6 +25220,7 @@
           "Industry"
         ],
         "x-cache-age": 1800,
+        "x-client-cache-ttl": 1800,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-industry",
@@ -23235,7 +25229,9 @@
         },
         "x-required-roles": [
           "Station_Manager"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 1800
       }
     },
     "/corporation/{corporation_id}/mining/observers": {
@@ -23330,6 +25326,7 @@
           "Industry"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-industry",
@@ -23338,7 +25335,9 @@
         },
         "x-required-roles": [
           "Accountant"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporation/{corporation_id}/mining/observers/{observer_id}": {
@@ -23443,6 +25442,7 @@
           "Industry"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-industry",
@@ -23451,7 +25451,9 @@
         },
         "x-required-roles": [
           "Accountant"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/npccorps": {
@@ -23584,8 +25586,11 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
-        "x-cache-mode": "event-based",
-        "x-compatibility-date": "2020-01-01"
+        "x-cache-mode": "ttl-based",
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2026-07-21",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/alliancehistory": {
@@ -23656,7 +25661,10 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/assets": {
@@ -23751,6 +25759,7 @@
           "Assets"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-asset",
@@ -23759,7 +25768,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/assets/locations": {
@@ -24060,6 +26071,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-industry",
@@ -24068,7 +26080,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/contacts": {
@@ -24163,12 +26177,15 @@
           "Contacts"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-social",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/corporations/{corporation_id}/contacts/labels": {
@@ -24246,12 +26263,15 @@
           "Contacts"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-social",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/corporations/{corporation_id}/containers/logs": {
@@ -24346,6 +26366,7 @@
           "Corporation"
         ],
         "x-cache-age": 600,
+        "x-client-cache-ttl": 600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-structure",
@@ -24354,7 +26375,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 600
       }
     },
     "/corporations/{corporation_id}/contracts": {
@@ -24449,12 +26472,15 @@
           "Contracts"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-contract",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/corporations/{corporation_id}/contracts/{contract_id}/bids": {
@@ -24559,12 +26585,15 @@
           "Contracts"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-contract",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/contracts/{contract_id}/items": {
@@ -24652,12 +26681,15 @@
           "Contracts"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-contract",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/customs_offices": {
@@ -24752,6 +26784,7 @@
           "Planetary Interaction"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-industry",
@@ -24760,7 +26793,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/divisions": {
@@ -24838,6 +26873,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-wallet",
@@ -24846,7 +26882,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/facilities": {
@@ -24924,6 +26962,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-structure",
@@ -24932,7 +26971,9 @@
         },
         "x-required-roles": [
           "Factory_Manager"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/freelance-jobs": {
@@ -25044,7 +27085,7 @@
         "tags": [
           "Freelance Jobs"
         ],
-        "x-cache-age": 0,
+        "x-cache-mode": "event-based",
         "x-compatibility-date": "2025-12-16",
         "x-pagination": "cursor",
         "x-rate-limit": {
@@ -25054,7 +27095,8 @@
         },
         "x-required-roles": [
           "Project_Manager"
-        ]
+        ],
+        "x-server-cache-mode": "event-based"
       }
     },
     "/corporations/{corporation_id}/freelance-jobs/{job_id}/participants": {
@@ -25176,7 +27218,7 @@
         "tags": [
           "Freelance Jobs"
         ],
-        "x-cache-age": 0,
+        "x-cache-mode": "event-based",
         "x-compatibility-date": "2025-12-16",
         "x-pagination": "cursor",
         "x-rate-limit": {
@@ -25186,7 +27228,8 @@
         },
         "x-required-roles": [
           "Project_Manager"
-        ]
+        ],
+        "x-server-cache-mode": "event-based"
       }
     },
     "/corporations/{corporation_id}/fw/stats": {
@@ -25339,7 +27382,10 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/industry/jobs": {
@@ -25443,6 +27489,7 @@
           "Industry"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-industry",
@@ -25451,7 +27498,9 @@
         },
         "x-required-roles": [
           "Factory_Manager"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/corporations/{corporation_id}/killmails/recent": {
@@ -25546,6 +27595,7 @@
           "Killmails"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-killmail",
@@ -25554,7 +27604,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/corporations/{corporation_id}/medals": {
@@ -25649,12 +27701,15 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-detail",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/medals/issued": {
@@ -25749,6 +27804,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-detail",
@@ -25757,7 +27813,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/members": {
@@ -25835,12 +27893,15 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-member",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/members/limit": {
@@ -25918,6 +27979,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-member",
@@ -25926,7 +27988,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/members/titles": {
@@ -26004,6 +28068,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-member",
@@ -26012,7 +28077,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/membertracking": {
@@ -26090,6 +28157,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-member",
@@ -26098,7 +28166,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/orders": {
@@ -26193,11 +28263,14 @@
           "Market"
         ],
         "x-cache-age": 1200,
+        "x-client-cache-ttl": 1200,
         "x-compatibility-date": "2020-01-01",
         "x-required-roles": [
           "Accountant",
           "Trader"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 1200
       }
     },
     "/corporations/{corporation_id}/orders/history": {
@@ -26292,11 +28365,14 @@
           "Market"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-required-roles": [
           "Accountant",
           "Trader"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/projects": {
@@ -26427,14 +28503,15 @@
         "tags": [
           "Corporation Projects"
         ],
-        "x-cache-age": 0,
+        "x-cache-mode": "event-based",
         "x-compatibility-date": "2025-08-26",
         "x-pagination": "cursor",
         "x-rate-limit": {
           "group": "corp-project",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/corporations/{corporation_id}/projects/{project_id}": {
@@ -26523,13 +28600,15 @@
           "Corporation Projects"
         ],
         "x-cache-age": 60,
-        "x-cache-mode": "no-cache",
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
         "x-compatibility-date": "2025-08-26",
         "x-rate-limit": {
           "group": "corp-project",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/corporations/{corporation_id}/projects/{project_id}/contribution/{character_id}": {
@@ -26628,13 +28707,15 @@
           "Corporation Projects"
         ],
         "x-cache-age": 60,
-        "x-cache-mode": "no-cache",
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
         "x-compatibility-date": "2025-08-26",
         "x-rate-limit": {
           "group": "corp-project",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/corporations/{corporation_id}/projects/{project_id}/contributors": {
@@ -26756,7 +28837,7 @@
         "tags": [
           "Corporation Projects"
         ],
-        "x-cache-age": 0,
+        "x-cache-mode": "event-based",
         "x-compatibility-date": "2025-08-26",
         "x-pagination": "cursor",
         "x-rate-limit": {
@@ -26766,7 +28847,8 @@
         },
         "x-required-roles": [
           "Project_Manager"
-        ]
+        ],
+        "x-server-cache-mode": "event-based"
       }
     },
     "/corporations/{corporation_id}/roles": {
@@ -26844,12 +28926,15 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-member",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/roles/history": {
@@ -26944,6 +29029,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-member",
@@ -26952,7 +29038,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/shareholders": {
@@ -27047,6 +29135,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-detail",
@@ -27055,7 +29144,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/standings": {
@@ -27150,12 +29241,15 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-member",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/starbases": {
@@ -27250,6 +29344,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-structure",
@@ -27258,7 +29353,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/starbases/{starbase_id}": {
@@ -27356,6 +29453,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-structure",
@@ -27364,7 +29462,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/structures": {
@@ -27462,6 +29562,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-structure",
@@ -27470,7 +29571,9 @@
         },
         "x-required-roles": [
           "Station_Manager"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/structures/skyhooks": {
@@ -27550,6 +29653,7 @@
         ],
         "x-cache-age": 3600,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "corp-structure",
@@ -27558,7 +29662,8 @@
         },
         "x-required-roles": [
           "Station_Manager"
-        ]
+        ],
+        "x-server-cache-mode": "event-based"
       }
     },
     "/corporations/{corporation_id}/structures/skyhooks/{skyhook_id}": {
@@ -27648,6 +29753,7 @@
         ],
         "x-cache-age": 3600,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "corp-structure",
@@ -27656,7 +29762,8 @@
         },
         "x-required-roles": [
           "Station_Manager"
-        ]
+        ],
+        "x-server-cache-mode": "event-based"
       }
     },
     "/corporations/{corporation_id}/structures/sovereignty-hubs": {
@@ -27736,12 +29843,14 @@
         ],
         "x-cache-age": 3600,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "corp-structure",
           "max-tokens": 300,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/corporations/{corporation_id}/structures/sovereignty-hubs/{sovereignty_hub_id}": {
@@ -27831,6 +29940,7 @@
         ],
         "x-cache-age": 3600,
         "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "corp-structure",
@@ -27839,7 +29949,8 @@
         },
         "x-required-roles": [
           "Station_Manager"
-        ]
+        ],
+        "x-server-cache-mode": "event-based"
       }
     },
     "/corporations/{corporation_id}/titles": {
@@ -27917,6 +30028,7 @@
           "Corporation"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-detail",
@@ -27925,7 +30037,9 @@
         },
         "x-required-roles": [
           "Director"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/wallets": {
@@ -28003,6 +30117,7 @@
           "Wallet"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-wallet",
@@ -28012,7 +30127,9 @@
         "x-required-roles": [
           "Accountant",
           "Junior_Accountant"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/corporations/{corporation_id}/wallets/{division}/journal": {
@@ -28117,6 +30234,7 @@
           "Wallet"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-wallet",
@@ -28126,7 +30244,9 @@
         "x-required-roles": [
           "Accountant",
           "Junior_Accountant"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/corporations/{corporation_id}/wallets/{division}/transactions": {
@@ -28223,6 +30343,7 @@
           "Wallet"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "corp-wallet",
@@ -28232,7 +30353,90 @@
         "x-required-roles": [
           "Accountant",
           "Junior_Accountant"
-        ]
+        ],
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
+      }
+    },
+    "/cosmetics/skinr/{skinr_id}": {
+      "get": {
+        "description": "All attributes of a SKINR license",
+        "operationId": "GetCosmeticsSkinr",
+        "parameters": [
+          {
+            "description": "SKINR identifier",
+            "in": "path",
+            "name": "skinr_id",
+            "required": true,
+            "schema": {
+              "description": "SKINR identifier",
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CosmeticsSkinr"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get SKINR attributes",
+        "tags": [
+          "Cosmetics"
+        ],
+        "x-cache-age": 31536000,
+        "x-cache-mode": "ttl-based",
+        "x-client-cache-ttl": 31536000,
+        "x-compatibility-date": "2026-08-18",
+        "x-rate-limit": {
+          "group": "skinr",
+          "max-tokens": 12000,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 604800
       }
     },
     "/dogma/attributes": {
@@ -28654,12 +30858,15 @@
           "Fleets"
         ],
         "x-cache-age": 5,
+        "x-client-cache-ttl": 5,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "fleet",
           "max-tokens": 1800,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 5
       },
       "put": {
         "description": "Update settings about a fleet",
@@ -28835,12 +31042,15 @@
           "Fleets"
         ],
         "x-cache-age": 5,
+        "x-client-cache-ttl": 5,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "fleet",
           "max-tokens": 1800,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 5
       },
       "post": {
         "description": "Invite a character into the fleet. If a character has a CSPA charge set it is not possible to invite them to the fleet using ESI",
@@ -29427,12 +31637,15 @@
           "Fleets"
         ],
         "x-cache-age": 5,
+        "x-client-cache-ttl": 5,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "fleet",
           "max-tokens": 1800,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 5
       },
       "post": {
         "description": "Create a new wing in a fleet",
@@ -29900,14 +32113,15 @@
         "tags": [
           "Freelance Jobs"
         ],
-        "x-cache-age": 0,
+        "x-cache-mode": "event-based",
         "x-compatibility-date": "2025-12-16",
         "x-pagination": "cursor",
         "x-rate-limit": {
           "group": "freelance-job",
-          "max-tokens": 900,
+          "max-tokens": 12000,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/freelance-jobs/{job_id}": {
@@ -29979,13 +32193,15 @@
           "Freelance Jobs"
         ],
         "x-cache-age": 60,
-        "x-cache-mode": "no-cache",
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
         "x-compatibility-date": "2025-12-16",
         "x-rate-limit": {
           "group": "freelance-job",
-          "max-tokens": 900,
+          "max-tokens": 12000,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/fw/leaderboards": {
@@ -30311,12 +32527,15 @@
           "Faction Warfare"
         ],
         "x-cache-age": 1800,
+        "x-client-cache-ttl": 1800,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "factional-warfare",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 1800
       }
     },
     "/fw/wars": {
@@ -30444,12 +32663,15 @@
           "Incursions"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "incursion",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/industry/facilities": {
@@ -30511,12 +32733,15 @@
           "Industry"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "industry",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/industry/systems": {
@@ -30578,12 +32803,15 @@
           "Industry"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "industry",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/insurance/prices": {
@@ -30648,12 +32876,15 @@
           "Insurance"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "insurance",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/killmails/{killmail_id}/{killmail_hash}": {
@@ -30734,12 +32965,15 @@
           "Killmails"
         ],
         "x-cache-age": 2592000,
+        "x-client-cache-ttl": 2592000,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "killmail",
           "max-tokens": 3600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 2592000
       }
     },
     "/loyalty/stores/{corporation_id}/offers": {
@@ -31006,7 +33240,10 @@
           "Market"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/markets/structures/{structure_id}": {
@@ -31102,7 +33339,10 @@
           "Market"
         ],
         "x-cache-age": 300,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 300,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/markets/{region_id}/history": {
@@ -31296,12 +33536,15 @@
           "Market"
         ],
         "x-cache-age": 300,
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "market-order",
           "max-tokens": 12000,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/markets/{region_id}/types": {
@@ -31390,7 +33633,10 @@
           "Market"
         ],
         "x-cache-age": 600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 600
       }
     },
     "/meta/changelog": {
@@ -31452,13 +33698,15 @@
           "Meta"
         ],
         "x-cache-age": 600,
-        "x-cache-mode": "not-cached",
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 600,
         "x-compatibility-date": "2025-09-26",
         "x-rate-limit": {
           "group": "meta",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/meta/compatibility-dates": {
@@ -31520,13 +33768,15 @@
           "Meta"
         ],
         "x-cache-age": 600,
-        "x-cache-mode": "not-cached",
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "meta",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/meta/name": {
@@ -31588,13 +33838,15 @@
           "Meta"
         ],
         "x-cache-age": 600,
-        "x-cache-mode": "not-cached",
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 600,
         "x-compatibility-date": "2026-07-17",
         "x-rate-limit": {
           "group": "meta",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
       }
     },
     "/meta/status": {
@@ -31655,13 +33907,836 @@
         "tags": [
           "Meta"
         ],
-        "x-cache-age": 0,
+        "x-cache-mode": "event-based",
         "x-compatibility-date": "2025-11-06",
         "x-rate-limit": {
           "group": "meta",
           "max-tokens": 150,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "event-based"
+      }
+    },
+    "/military-campaigns": {
+      "get": {
+        "description": "Listing of all active military campaigns.",
+        "operationId": "GetMilitaryCampaignsListing",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MilitaryCampaignsListing"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List military campaigns",
+        "tags": [
+          "Military Campaigns"
+        ],
+        "x-cache-age": 60,
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
+        "x-compatibility-date": "2026-08-04",
+        "x-rate-limit": {
+          "group": "military-campaign",
+          "max-tokens": 300,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based"
+      }
+    },
+    "/military-campaigns/{campaign_id}": {
+      "get": {
+        "description": "Get the details of a military campaign.",
+        "operationId": "GetMilitaryCampaignsDetail",
+        "parameters": [
+          {
+            "description": "The ID of the military campaign",
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID",
+              "description": "The ID of the military campaign"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MilitaryCampaignsDetail"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get military campaign details",
+        "tags": [
+          "Military Campaigns"
+        ],
+        "x-cache-age": 60,
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
+        "x-compatibility-date": "2026-08-04",
+        "x-rate-limit": {
+          "group": "military-campaign",
+          "max-tokens": 300,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based"
+      }
+    },
+    "/military-campaigns/{campaign_id}/objectives": {
+      "get": {
+        "description": "Listing of all active, completed or expired objectives of a military campaign.",
+        "operationId": "GetMilitaryCampaignsObjectivesListing",
+        "parameters": [
+          {
+            "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+            "explode": false,
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+            "explode": false,
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The amount of records to retrieve per request.",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "description": "The amount of records to retrieve per request.",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The ID of the military campaign",
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID",
+              "description": "The ID of the military campaign"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MilitaryCampaignsObjectivesListing"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List military campaign objectives",
+        "tags": [
+          "Military Campaigns"
+        ],
+        "x-cache-age": 60,
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
+        "x-compatibility-date": "2026-08-04",
+        "x-pagination": "cursor",
+        "x-rate-limit": {
+          "group": "military-campaign",
+          "max-tokens": 300,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based"
+      }
+    },
+    "/military-campaigns/{campaign_id}/objectives/{objective_id}": {
+      "get": {
+        "description": "Get the details of an objective of a military campaign.",
+        "operationId": "GetMilitaryCampaignsObjectivesDetail",
+        "parameters": [
+          {
+            "description": "The ID of the military campaign",
+            "in": "path",
+            "name": "campaign_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID",
+              "description": "The ID of the military campaign"
+            }
+          },
+          {
+            "description": "The ID of the objective",
+            "in": "path",
+            "name": "objective_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/UUID",
+              "description": "The ID of the objective"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MilitaryCampaignsObjectivesDetail"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Get military campaign objective details",
+        "tags": [
+          "Military Campaigns"
+        ],
+        "x-cache-age": 60,
+        "x-cache-mode": "event-based",
+        "x-client-cache-ttl": 60,
+        "x-compatibility-date": "2026-08-04",
+        "x-rate-limit": {
+          "group": "military-campaign",
+          "max-tokens": 300,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based"
+      }
+    },
+    "/paragon-hub/skinr": {
+      "get": {
+        "description": "Browse the SKINR listings publicly available on the Paragon Hub.",
+        "operationId": "GetParagonHubSkinr",
+        "parameters": [
+          {
+            "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+            "explode": false,
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+            "explode": false,
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The amount of records to retrieve per request.",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "description": "The amount of records to retrieve per request.",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParagonHubSkinr"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "List public Paragon Hub SKINR listings",
+        "tags": [
+          "Paragon Hub"
+        ],
+        "x-cache-mode": "event-based",
+        "x-compatibility-date": "2026-08-18",
+        "x-pagination": "cursor",
+        "x-rate-limit": {
+          "group": "paragon-hub",
+          "max-tokens": 150,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based",
+        "x-tombstone-ttl": 604800
+      }
+    },
+    "/paragon-hub/skinr/alliances/{alliance_id}": {
+      "get": {
+        "description": "Browse the SKINR listings on the Paragon Hub that are visible to the given alliance.",
+        "operationId": "GetParagonHubSkinrAlliances",
+        "parameters": [
+          {
+            "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+            "explode": false,
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+            "explode": false,
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The amount of records to retrieve per request.",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "description": "The amount of records to retrieve per request.",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The ID of the alliance the listings are targeted at",
+            "in": "path",
+            "name": "alliance_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AllianceID",
+              "description": "The ID of the alliance the listings are targeted at"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParagonHubSkinrAlliances"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "esi.cosmetic.char:read"
+            ]
+          }
+        ],
+        "summary": "List Paragon Hub SKINR listings targeted at an alliance",
+        "tags": [
+          "Paragon Hub"
+        ],
+        "x-cache-mode": "event-based",
+        "x-compatibility-date": "2026-08-18",
+        "x-pagination": "cursor",
+        "x-rate-limit": {
+          "group": "char-paragon-hub",
+          "max-tokens": 150,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based",
+        "x-tombstone-ttl": 604800
+      }
+    },
+    "/paragon-hub/skinr/characters/{character_id}": {
+      "get": {
+        "description": "Browse the SKINR listings on the Paragon Hub that are visible to the given character.",
+        "operationId": "GetParagonHubSkinrCharacters",
+        "parameters": [
+          {
+            "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+            "explode": false,
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+            "explode": false,
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The amount of records to retrieve per request.",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "description": "The amount of records to retrieve per request.",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The ID of the character the listings are targeted at",
+            "in": "path",
+            "name": "character_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CharacterID",
+              "description": "The ID of the character the listings are targeted at"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParagonHubSkinrCharacters"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "esi.cosmetic.char:read"
+            ]
+          }
+        ],
+        "summary": "List Paragon Hub SKINR listings targeted at a character",
+        "tags": [
+          "Paragon Hub"
+        ],
+        "x-cache-mode": "event-based",
+        "x-compatibility-date": "2026-08-18",
+        "x-pagination": "cursor",
+        "x-rate-limit": {
+          "group": "char-paragon-hub",
+          "max-tokens": 150,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based",
+        "x-tombstone-ttl": 604800
+      }
+    },
+    "/paragon-hub/skinr/corporations/{corporation_id}": {
+      "get": {
+        "description": "Browse the SKINR listings on the Paragon Hub that are visible to the given corporation.",
+        "operationId": "GetParagonHubSkinrCorporations",
+        "parameters": [
+          {
+            "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+            "explode": false,
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "description": "Return records from after this cursor (mutual exclusive with 'before'). '0' to start from the beginning.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+            "explode": false,
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "description": "Return records from before this cursor (mutual exclusive with 'after'). '0' to start from the end.",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The amount of records to retrieve per request.",
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 10,
+              "description": "The amount of records to retrieve per request.",
+              "format": "int64",
+              "maximum": 100,
+              "minimum": 10,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The ID of the corporation the listings are targeted at",
+            "in": "path",
+            "name": "corporation_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CorporationID",
+              "description": "The ID of the corporation the listings are targeted at"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/AcceptLanguage"
+          },
+          {
+            "$ref": "#/components/parameters/IfNoneMatch"
+          },
+          {
+            "$ref": "#/components/parameters/CompatibilityDate"
+          },
+          {
+            "$ref": "#/components/parameters/Tenant"
+          },
+          {
+            "$ref": "#/components/parameters/IfModifiedSince"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParagonHubSkinrCorporations"
+                }
+              }
+            },
+            "description": "OK",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/CacheControl"
+              },
+              "ETag": {
+                "$ref": "#/components/headers/ETag"
+              },
+              "Last-Modified": {
+                "$ref": "#/components/headers/LastModified"
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "OAuth2": [
+              "esi.cosmetic.char:read"
+            ]
+          }
+        ],
+        "summary": "List Paragon Hub SKINR listings targeted at a corporation",
+        "tags": [
+          "Paragon Hub"
+        ],
+        "x-cache-mode": "event-based",
+        "x-compatibility-date": "2026-08-18",
+        "x-pagination": "cursor",
+        "x-rate-limit": {
+          "group": "char-paragon-hub",
+          "max-tokens": 150,
+          "window-size": "15m"
+        },
+        "x-server-cache-mode": "event-based",
+        "x-tombstone-ttl": 604800
       }
     },
     "/route/{origin_system_id}/{destination_system_id}": {
@@ -31752,13 +34827,14 @@
         "tags": [
           "Routes"
         ],
-        "x-cache-age": 0,
+        "x-cache-mode": "not-cached",
         "x-compatibility-date": "2025-09-30",
         "x-rate-limit": {
           "group": "routes",
           "max-tokens": 3600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "not-cached"
       }
     },
     "/skyhooks/raidable": {
@@ -31821,12 +34897,15 @@
         ],
         "x-cache-age": 300,
         "x-cache-mode": "ttl-based",
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "activity",
           "max-tokens": 30,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 60
       }
     },
     "/sovereignty/campaigns": {
@@ -31888,12 +34967,15 @@
           "Sovereignty"
         ],
         "x-cache-age": 5,
+        "x-client-cache-ttl": 5,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "sovereignty",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 5
       }
     },
     "/sovereignty/systems": {
@@ -31956,17 +35038,20 @@
         ],
         "x-cache-age": 300,
         "x-cache-mode": "ttl-based",
+        "x-client-cache-ttl": 300,
         "x-compatibility-date": "2026-05-19",
         "x-rate-limit": {
           "group": "sovereignty",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 300
       }
     },
     "/status": {
       "get": {
-        "description": "EVE Server status",
+        "description": "Current status of the EVE Online cluster",
         "operationId": "GetStatus",
         "parameters": [
           {
@@ -31990,7 +35075,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/StatusGet"
+                  "$ref": "#/components/schemas/Status"
                 }
               }
             },
@@ -32018,17 +35103,21 @@
             "description": "Error"
           }
         },
-        "summary": "Retrieve the uptime and player counts",
+        "summary": "Get the server's status",
         "tags": [
           "Status"
         ],
         "x-cache-age": 30,
+        "x-cache-mode": "ttl-based",
+        "x-client-cache-ttl": 30,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "status",
           "max-tokens": 600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 30
       }
     },
     "/ui/autopilot/waypoint": {
@@ -33848,7 +36937,10 @@
           "Planetary Interaction"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/universe/stargates/{stargate_id}": {
@@ -34132,7 +37224,10 @@
           "Universe"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/universe/structures/{structure_id}": {
@@ -34211,7 +37306,10 @@
           "Universe"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/universe/system_jumps": {
@@ -34273,7 +37371,10 @@
           "Universe"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/universe/system_kills": {
@@ -34335,7 +37436,10 @@
           "Universe"
         ],
         "x-cache-age": 3600,
-        "x-compatibility-date": "2020-01-01"
+        "x-client-cache-ttl": 3600,
+        "x-compatibility-date": "2020-01-01",
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/universe/systems": {
@@ -34692,12 +37796,15 @@
           "Wars"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "killmail",
           "max-tokens": 3600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/wars/{war_id}": {
@@ -34769,12 +37876,15 @@
           "Wars"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "killmail",
           "max-tokens": 3600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     },
     "/wars/{war_id}/killmails": {
@@ -34863,12 +37973,15 @@
           "Wars"
         ],
         "x-cache-age": 3600,
+        "x-client-cache-ttl": 3600,
         "x-compatibility-date": "2020-01-01",
         "x-rate-limit": {
           "group": "killmail",
           "max-tokens": 3600,
           "window-size": "15m"
-        }
+        },
+        "x-server-cache-mode": "ttl-based",
+        "x-server-cache-ttl": 3600
       }
     }
   },
@@ -34912,6 +38025,9 @@
       "name": "Corporation Projects"
     },
     {
+      "name": "Cosmetics"
+    },
+    {
       "name": "Dogma"
     },
     {
@@ -34952,6 +38068,12 @@
     },
     {
       "name": "Meta"
+    },
+    {
+      "name": "Military Campaigns"
+    },
+    {
+      "name": "Paragon Hub"
     },
     {
       "name": "Planetary Interaction"

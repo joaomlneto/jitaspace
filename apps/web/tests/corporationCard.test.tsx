@@ -79,7 +79,7 @@ describe("CorporationCard", () => {
             '<font size="16"><b>EVE University - EVE\'s premier teaching organization</b></font>',
           member_count: 5716,
           shares: 1000,
-          tax_rate: 0,
+          tax_rates: { isk: 10, loyalty_point: 5.6 },
           ticker: "E-UNI",
           url: "https://www.eveuniversity.org",
           war_eligible: false,
@@ -107,7 +107,7 @@ describe("CorporationCard", () => {
     expect(screen.getByText("Members")).toBeInTheDocument();
     expect(screen.getByText("5,716")).toBeInTheDocument();
     expect(screen.getByText("Tax rate")).toBeInTheDocument();
-    expect(screen.getByText("0.0%")).toBeInTheDocument();
+    expect(screen.getByText("10.0%")).toBeInTheDocument();
     expect(screen.getByText("Shares")).toBeInTheDocument();
     expect(screen.getByText("1,000")).toBeInTheDocument();
     expect(screen.getByText("War eligible")).toBeInTheDocument();
@@ -187,7 +187,7 @@ describe("CorporationCard", () => {
           description: '<font size="16"><b>EVE University</b></font>',
           member_count: 5716,
           shares: 1000,
-          tax_rate: 0,
+          tax_rates: { isk: 10, loyalty_point: 5.6 },
           ticker: "E-UNI",
           url: "https://www.eveuniversity.org",
           war_eligible: false,

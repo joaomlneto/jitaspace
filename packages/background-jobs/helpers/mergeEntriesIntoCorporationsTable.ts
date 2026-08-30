@@ -18,6 +18,17 @@ export type EsiCorporationRow = Omit<
   "updatedAt" | "createdAt" | (typeof SDE_OWNED_CORPORATION_COLUMNS)[number]
 >;
 
+/**
+ * Rescales an ESI corporation tax rate into the fraction this codebase stores.
+ *
+ * Since ESI compatibility date 2026-08-18 the corporation endpoint reports tax
+ * rates as percentages (`10.0` means 10%); before that it sent a 0-1 fraction
+ * under the old `tax_rate` field. `Corporation.taxRate` and every reader of it
+ * are still fractions, so the conversion happens here at the ESI boundary
+ * rather than by migrating the column and every consumer.
+ */
+export const esiTaxRateToFraction = (taxRate: number) => taxRate / 100;
+
 export const convertEsiCorporationToDomain = (
   corporation: GetCorporationsCorporationIdQueryResponse & {
     corporationId: number;
@@ -25,21 +36,21 @@ export const convertEsiCorporationToDomain = (
 ): EsiCorporationRow => ({
   corporationId: corporation.corporationId,
   allianceId: corporation.alliance_id ?? null,
-  ceoId: corporation.ceo_id,
-  creatorId: corporation.creator_id,
+  ceoId: corporation.ceo_id ?? null,
+  creatorId: corporation.creator_id ?? null,
   dateFounded: corporation.date_founded
     ? new Date(corporation.date_founded)
     : null,
-  description: corporation.description ?? null,
-  factionId: corporation.faction_id ?? null,
-  homeStationId: corporation.home_station_id ?? null,
+  description: corporation.description,
+  factionId: corporation.enlisted_faction_id ?? null,
+  homeStationId: corporation.home_station_id,
   memberCount: corporation.member_count,
   name: corporation.name,
   shares: corporation.shares ? BigInt(corporation.shares) : null,
-  taxRate: corporation.tax_rate,
+  taxRate: esiTaxRateToFraction(corporation.tax_rates.isk),
   ticker: corporation.ticker,
   url: corporation.url ?? null,
-  warEligible: corporation.war_eligible ?? null,
+  warEligible: corporation.war_eligible,
   isDeleted: false,
 });
 
