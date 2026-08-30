@@ -1,9 +1,10 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 
 import type { BuildDigest } from "../jobs/summarize/digest";
 import { formatBuildDigest, SAMPLE_LIMIT } from "../jobs/summarize/digest";
 import {
   MAX_SUMMARY_LENGTH,
+  summarizeBuild,
   validateSummary,
 } from "../jobs/summarize/summarize";
 import { lowestBaseline } from "../jobs/summarize/summarizeBuilds";
@@ -154,5 +155,86 @@ describe("lowestBaseline", () => {
   it("reports a genesis build only when no real baseline exists", () => {
     expect(lowestBaseline([{ fromBuild: null }])).toBeNull();
     expect(lowestBaseline([])).toBeNull();
+  });
+});
+
+describe("summarizeBuild", () => {
+  // `client` is an injection seam, so the request can be inspected and every
+  // stop_reason driven without touching the network.
+  const clientReturning = (response: unknown) => {
+    const parse = jest.fn((_params: unknown) => Promise.resolve(response));
+    return { client: { messages: { parse } } as never, parse };
+  };
+
+  const digest: BuildDigest = {
+    build: 3401877,
+    date: "2026-08-19",
+    fromBuild: 3389104,
+    counts: [{ collection: "types", added: 2, modified: 0, removed: 0 }],
+    samples: [],
+  };
+
+  it("returns the model's sentence", async () => {
+    const { client } = clientReturning({
+      stop_reason: "end_turn",
+      parsed_output: { summary: "Adds two ships." },
+    });
+    await expect(
+      summarizeBuild(digest, { apiKey: "unused", client }),
+    ).resolves.toBe("Adds two ships.");
+  });
+
+  it("sends the digest as the user message under the build's own prompt", async () => {
+    const { client, parse } = clientReturning({
+      stop_reason: "end_turn",
+      parsed_output: { summary: "Adds two ships." },
+    });
+    await summarizeBuild(digest, { apiKey: "unused", client });
+
+    const params = parse.mock.calls[0]?.[0] as {
+      max_tokens: number;
+      messages: { content: string }[];
+    };
+    expect(params.messages[0]?.content).toContain("EVE client build 3401877");
+    // Sized for adaptive thinking, not just the 200-character sentence.
+    expect(params.max_tokens).toBeGreaterThanOrEqual(16_000);
+  });
+
+  it("returns null when the model declines", async () => {
+    const { client } = clientReturning({
+      stop_reason: "refusal",
+      parsed_output: { summary: "should be ignored" },
+    });
+    await expect(
+      summarizeBuild(digest, { apiKey: "unused", client }),
+    ).resolves.toBeNull();
+  });
+
+  it("returns null when the response was cut short", async () => {
+    // A clipped sentence must not reach the page.
+    const { client } = clientReturning({
+      stop_reason: "max_tokens",
+      parsed_output: { summary: "Adds two shi" },
+    });
+    await expect(
+      summarizeBuild(digest, { apiKey: "unused", client }),
+    ).resolves.toBeNull();
+  });
+
+  it("returns null when the sentence fails validation", async () => {
+    const { client } = clientReturning({
+      stop_reason: "end_turn",
+      parsed_output: { summary: "a".repeat(MAX_SUMMARY_LENGTH + 1) },
+    });
+    await expect(
+      summarizeBuild(digest, { apiKey: "unused", client }),
+    ).resolves.toBeNull();
+  });
+
+  it("returns null when the response carries no parsed output", async () => {
+    const { client } = clientReturning({ stop_reason: "end_turn" });
+    await expect(
+      summarizeBuild(digest, { apiKey: "unused", client }),
+    ).resolves.toBeNull();
   });
 });
