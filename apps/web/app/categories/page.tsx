@@ -1,5 +1,4 @@
 import { cacheLife } from "next/cache";
-import { notFound } from "next/navigation";
 import {
   Container,
   Group,
@@ -27,20 +26,20 @@ interface PageProps {
 export default async function Page() {
   "use cache";
   cacheLife("days");
-  let categories: PageProps["categories"] = [];
-  try {
-    categories = await prisma.category.findMany({
-      select: {
-        categoryId: true,
-        name: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
-  } catch {
-    notFound();
-  }
+  // Deliberately uncaught. A catch here — inside the `"use cache"` scope —
+  // would make `notFound()` a *successful* render that Next stores and serves
+  // for the whole `cacheLife` window. Throwing writes nothing to the cache, so
+  // the route recovers as soon as the database does. See CLAUDE.md → "Never
+  // catch a database error inside a `"use cache"` scope".
+  const categories: PageProps["categories"] = await prisma.category.findMany({
+    select: {
+      categoryId: true,
+      name: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
   return (
     <Container size="md">
       <Stack>

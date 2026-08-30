@@ -95,13 +95,39 @@ pnpm db:push        # apply it
   ALTER TABLE "X" SET (schema_locked = true);
   ```
 
-**Push before you merge — the consequence of forgetting is inconsistent, and mostly quiet.** `cacheComponents` resolves every argument-free `"use cache"` read during the build prerender, so a schema change that lands on `main` unapplied hits those reads with a database error. What happens next depends on where the `catch` sits relative to the cache boundary, and both shapes exist in this repo:
+**Push before you merge — the consequence of forgetting used to be quiet, and is now loud.** `cacheComponents` resolves every argument-free `"use cache"` read during the build prerender, so a schema change that lands on `main` unapplied hits those reads with a database error. What happens next depends on where the `catch` sits relative to the cache boundary:
 
-- **`catch` inside the same function as `"use cache"` → silent.** The catch runs normally, `notFound()` wins, and the route is **prerendered as a 404 with a green build**. This is the majority: `regions`, `categories`, `agents`, `skills`, `ship-scanner`, `dogma/attributes`, `dogma/effects`, `lp-store`, `lp-store/all` — all bare `catch {}` with no Sentry capture, so nothing reports it.
+- **`catch` inside the same function as `"use cache"` → silent.** The catch runs normally, `notFound()` wins, and the route is **prerendered as a 404 with a green build**. Nine routes had this shape (`regions`, `categories`, `agents`, `skills`, `ship-scanner`, `dogma/attributes`, `dogma/effects`, `lp-store`, `lp-store/all`). **All nine were fixed on 2026-08-30**, so no route in `apps/web` has it today — the shape is described here only so you can recognise and reject it. See **Never catch a database error inside a `"use cache"` scope** below.
 - **`catch` outside the cache scope → loud.** Where `"use cache"` sits in a `data.ts` helper and the page catches around the call, the throw is not contained and the export dies. Only `active-wars` and `travel` are this shape; verified by building against an unreachable database, which exits on `app/active-wars/data.ts:153` despite the guard at `page.tsx:16-20`.
 - **Tables no route reads → no signal at all.** The incident's own `NpcCorporation*` tables are written only by `packages/background-jobs`; that drift class gives a green build, a green site, and a Trigger.dev job failing where nobody is looking.
 
 Reads behind `connection()` (e.g. `app/history/page.tsx:24`) or behind `await params` inside a `<Suspense>` boundary are request-time and unaffected either way.
+
+## Never catch a database error inside a `"use cache"` scope
+
+**A `catch` that swallows a database failure inside a cached scope turns a blip into a cached 404.** `notFound()` is not an error — it is a _successful_ 404 render, so Next.js stores it as a normal ISR entry. With `cacheLife("days")` (`stale 300 / revalidate 86400 / expire 604800`) that 404 is served to everyone for **up to 24 hours after the database recovers**, and nothing reports it.
+
+This is not only a build-time hazard. On 2026-08-29 the production deployment was six days old and healthy when the CockroachDB cluster hit its monthly Request Unit limit and was disabled (`Too many database connections opened: This cluster has reached its Request Unit limit for the month and is now disabled`). Five routes happened to run their daily background revalidation during the outage window (15:08–17:43 UTC) and each latched a 404; the four routes that revalidated outside the window were untouched. Exposure is to **the moment of render**, not to query cost — `/lp-store/all` runs a strict superset of `/lp-store`'s queries and stayed healthy while `/lp-store` 404ed.
+
+The rule:
+
+- **Let the read throw.** At build time this fails the build loudly, which is the desired signal. At request time it produces a transient error instead of a stored 404 — nothing wrong is written to the cache, so the route recovers as soon as the database does.
+- **`notFound()` is still correct for a genuinely absent row**, and is legitimately cached. `app/ship-scanner/page.tsx` is the worked example: it reads with `findUnique` and tests for null, precisely so a missing row (a 404) stays distinguishable from a failed query (a throw). Prefer that over `findUniqueOrThrow`, which collapses the two into one error — that collapse fails the build against an empty database, which is what the CI Cypress job prerenders against.
+- **If a partial failure is genuinely tolerable**, split it: a `readX()` that carries `"use cache"` and throws, plus an uncached caller that catches and degrades. `readTypeDogmaMeta` (`app/type/[typeId]/page.tsx`) and `readSolarSystemSdeInfo` (`app/system/[systemId]/page.tsx`) are the reference implementations — commit `e60062ec` established the split (for a cached _empty value_; the cached-404 variant is the same defect class). Never catch on the cached side of that split.
+- **Don't add a manual `Sentry.captureException`** to these paths. `apps/web/instrumentation.ts` exports `onRequestError = Sentry.captureRequestError`, so an uncaught render error is already reported; a catch is what makes it invisible.
+
+**The dynamic `[param]` routes are a deliberate exception, not an oversight.** `category/[categoryId]`, `group/[groupId]`, `type/[typeId]`, `dogma/effect/[effectId]`, `lp-store/[corporationId]`, `dogma/attribute/[attributeId]` and `active-wars`/`travel` still reach `notFound()` on a failed query. Because that throw happens inside a `<Suspense>` boundary the response is HTTP **200** with the not-found UI and nothing is stored, so it self-heals per request rather than latching. `app/sitemap.ts` is the other sanctioned exception: it degrades to a partial sitemap deliberately and reports it to Sentry (`sitemap.ts:385`). The cost in both cases is a wrong-but-transient response, not a poisoned cache.
+
+**What "throws instead" actually costs, measured against Next 16.2.11.** Don't reason about this from the self-hosted code path — Vercel does not run it:
+
+| cached read throws during revalidation | result                                                                 |
+| -------------------------------------- | ---------------------------------------------------------------------- |
+| `next start` (self-hosted)             | serves the previous entry (`200`, `x-nextjs-cache: HIT`), retries ~30s |
+| Vercel (`NEXT_PRIVATE_MINIMAL_MODE=1`) | origin returns **`500`**                                               |
+
+Next's serve-the-previous-entry recovery (`server/response-cache/index.js:290-307`) is unreachable in minimal mode, because `:193` reads `previousIncrementalCacheEntry = !this.minimal_mode ? … : null`. On Vercel what shields users is the **CDN** serving the last successful ISR version while revalidation fails — a platform guarantee, not a Next one. So on a genuine cache MISS during an outage (a region with no copy, a purge, or past `expire`) the visitor gets an error page, where the old code gave them a rendered — but wrong, and stored — 404. Still the better trade: an error is transient and uncached, whereas `notFound()` is a _success_ Next stores and serves for the full `cacheLife`. But it is a trade, not a free win — and `apps/web` has no `app/error.tsx`, so that error page is Next's unbranded default.
+
+Diagnosing a suspected instance: check `x-nextjs-prerender` / `x-vercel-cache` / `age` on the response, grep the body for `secret place` (the `not-found.tsx` marker), and confirm against Vercel runtime logs — the poisoning revalidation appears as a `cache=STALE` serverless invocation carrying the `prisma:error`. A `notFound()` thrown inside a `<Suspense>` boundary returns **HTTP 200** with the not-found UI, so status code alone does not tell you whether the read succeeded.
 
 ## Environment variables & `SKIP_ENV_VALIDATION`
 

@@ -1,5 +1,4 @@
 import { cacheLife } from "next/cache";
-import { notFound } from "next/navigation";
 import { Container, Group, Stack, Title } from "@mantine/core";
 
 import { AgentFinderIcon } from "@jitaspace/eve-icons";
@@ -31,63 +30,62 @@ interface PageProps {
 export default async function Page() {
   "use cache";
   cacheLife("days");
-  let agents: PageProps["agents"] = [];
-  let agentTypes: PageProps["agentTypes"] = [];
-  let agentDivisions: PageProps["agentDivisions"] = [];
-  try {
-    agents = await prisma.agent
-      .findMany({
-        select: {
-          characterId: true,
-          Character: {
-            select: {
-              name: true,
-              corporation: {
-                select: {
-                  corporationId: true,
-                },
+  // Deliberately uncaught. A catch here — inside the `"use cache"` scope —
+  // would make `notFound()` a *successful* render that Next stores and serves
+  // for the whole `cacheLife` window. Throwing writes nothing to the cache, so
+  // the route recovers as soon as the database does. See CLAUDE.md → "Never
+  // catch a database error inside a `"use cache"` scope".
+  const agents: PageProps["agents"] = await prisma.agent
+    .findMany({
+      select: {
+        characterId: true,
+        Character: {
+          select: {
+            name: true,
+            corporation: {
+              select: {
+                corporationId: true,
               },
             },
           },
-          agentTypeId: true,
-          agentDivisionId: true,
-          isLocator: true,
-          level: true,
-          stationId: true,
         },
-      })
-      .then((agents) =>
-        agents.map((agent) => ({
-          characterId: agent.characterId,
-          name: agent.Character.name,
-          corporationId: agent.Character.corporation.corporationId,
-          agentTypeId: agent.agentTypeId,
-          agentDivisionId: agent.agentDivisionId,
-          isLocator: agent.isLocator,
-          level: agent.level,
-          stationId: agent.stationId,
-        })),
-      );
-
-    agents.forEach((agent) => removeUndefinedFields(agent));
-    agents = agents.sort((a, b) => a.name.localeCompare(b.name));
-
-    agentTypes = await prisma.agentType.findMany({
-      select: {
         agentTypeId: true,
-        name: true,
+        agentDivisionId: true,
+        isLocator: true,
+        level: true,
+        stationId: true,
       },
-    });
+    })
+    .then((agents) =>
+      agents.map((agent) => ({
+        characterId: agent.characterId,
+        name: agent.Character.name,
+        corporationId: agent.Character.corporation.corporationId,
+        agentTypeId: agent.agentTypeId,
+        agentDivisionId: agent.agentDivisionId,
+        isLocator: agent.isLocator,
+        level: agent.level,
+        stationId: agent.stationId,
+      })),
+    );
 
-    agentDivisions = await prisma.npcCorporationDivision.findMany({
+  agents.forEach((agent) => removeUndefinedFields(agent));
+  agents.sort((a, b) => a.name.localeCompare(b.name));
+
+  const agentTypes: PageProps["agentTypes"] = await prisma.agentType.findMany({
+    select: {
+      agentTypeId: true,
+      name: true,
+    },
+  });
+
+  const agentDivisions: PageProps["agentDivisions"] =
+    await prisma.npcCorporationDivision.findMany({
       select: {
         npcCorporationDivisionId: true,
         name: true,
       },
     });
-  } catch {
-    notFound();
-  }
   return (
     <Container size="xl">
       <Stack>
