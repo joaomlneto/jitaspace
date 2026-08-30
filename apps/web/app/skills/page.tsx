@@ -9,8 +9,11 @@ const SKILLS_CATEGORY_ID = 16;
 export default async function Page() {
   "use cache";
   cacheLife("days");
-  // Deliberately uncaught: a catch inside this `"use cache"` scope would cache
-  // the failure as a day-long 404 (e60062ec). Throwing keeps the last good entry.
+  // Deliberately uncaught. A catch here — inside the `"use cache"` scope —
+  // would make `notFound()` a *successful* render that Next stores and serves
+  // for the whole `cacheLife` window. Throwing writes nothing to the cache, so
+  // the route recovers as soon as the database does. See CLAUDE.md → "Never
+  // catch a database error inside a `"use cache"` scope".
   const groups: SkillsPageProps["groups"] = await prisma.group.findMany({
     select: {
       groupId: true,

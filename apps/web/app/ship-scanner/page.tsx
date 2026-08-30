@@ -11,14 +11,20 @@ export default async function Page() {
   "use cache";
   cacheLife("days");
   // Database errors are deliberately uncaught: catching them inside this
-  // `"use cache"` scope would cache the failure as a day-long 404 (e60062ec).
-  // Throwing keeps the last good entry.
+  // `"use cache"` scope would make `notFound()` a *successful* render that Next
+  // stores and serves for the whole `cacheLife` window. Throwing writes nothing
+  // to the cache. See CLAUDE.md → "Never catch a database error inside a
+  // `"use cache"` scope".
   //
   // A genuinely absent ship category is a different thing entirely, and *is* a
   // real 404 — so this reads with `findUnique` and tests for null rather than
   // letting `findUniqueOrThrow` raise an error indistinguishable from an
   // outage. Without that split an empty database fails the build (the CI
   // Cypress job pushes a fresh schema and prerenders against it).
+  //
+  // The `notFound()` below therefore sits inside the cache scope on purpose:
+  // an absent category is a real, stable 404 and *should* be cached. It is the
+  // one thing here that is safe to store.
   const shipGroups = await prisma.category.findUnique({
     select: {
       groups: {

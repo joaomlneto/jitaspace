@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 
 // ---------------------------------------------------------------------------
 // The nine fully-cached list routes each are a `"use cache"` Server Component
@@ -15,9 +15,13 @@ import { render, screen } from "@testing-library/react";
 // on 2026-08-29 when the CockroachDB cluster hit its Request Unit limit.
 //
 // These tests pin the fix: a database error must PROPAGATE out of the cached
-// scope (so Next keeps serving the last good entry and retries) and must never
-// be converted into `notFound()`. The success cases exist to prove the reads
-// still map onto the props the client pages expect.
+// scope — so nothing wrong is written to the cache and the route recovers with
+// the database — and must never be converted into `notFound()`. There is a case
+// per Prisma read, not per route: covering only the first read of each page
+// would let the defect back in through any of the later ones.
+//
+// The success cases exist to prove the reads still map onto the props the client
+// pages expect.
 //
 // /ship-scanner is the one deliberate exception: a genuinely absent ship
 // category IS a real 404, so it reads with `findUnique` and tests for null.
@@ -98,19 +102,37 @@ jest.mock("@jitaspace/eve-icons", () => ({
   MapIcon: () => <span />,
   AgentFinderIcon: () => <span />,
 }));
+// The anchors keep their entity id in a data attribute so the tests can assert
+// where a link points, not merely that a label rendered.
 jest.mock("@jitaspace/ui", () => ({
-  CategoryAnchor: ({ children }: { children?: React.ReactNode }) => (
-    <span>{children}</span>
-  ),
+  CategoryAnchor: ({
+    categoryId,
+    children,
+  }: {
+    categoryId?: number;
+    children?: React.ReactNode;
+  }) => <span data-entity-id={categoryId}>{children}</span>,
 }));
 jest.mock("@jitaspace/eve-components", () => ({
-  RegionAnchor: ({ children }: { children?: React.ReactNode }) => (
-    <span>{children}</span>
-  ),
+  RegionAnchor: ({
+    regionId,
+    children,
+  }: {
+    regionId?: number;
+    children?: React.ReactNode;
+  }) => <span data-entity-id={regionId}>{children}</span>,
 }));
 
+// AgentsTable renders nothing, so capture the props it was handed instead —
+// otherwise the /agents mapping and sort would be asserted by nothing.
+let agentsTableProps: Record<string, unknown> | null = null;
 const probe = () => null;
-jest.mock("~/components/Agents", () => ({ AgentsTable: probe }));
+jest.mock("~/components/Agents", () => ({
+  AgentsTable: (p: Record<string, unknown>) => {
+    agentsTableProps = p;
+    return null;
+  },
+}));
 jest.mock("~/app/skills/page.client", () => ({
   __esModule: true,
   default: probe,
@@ -153,6 +175,7 @@ const BLIP = "Too many database connections opened";
 
 beforeEach(() => {
   notFound.mockClear();
+  agentsTableProps = null;
   categoryFindMany.mockReset().mockResolvedValue([]);
   categoryFindUnique.mockReset().mockResolvedValue({ groups: [] });
   regionFindMany.mockReset().mockResolvedValue([]);
@@ -175,60 +198,135 @@ beforeEach(() => {
 // The regression guard, stated once per route.
 // ---------------------------------------------------------------------------
 
+// EVERY Prisma read on these routes, not just the first one each. A catch
+// reintroduced around any single read must fail this suite — covering only the
+// first read would let the defect back in through the later ones.
 describe("a database failure never becomes a cached 404", () => {
-  const cases: { route: string; module: string; fail: () => void }[] = [
+  const cases: { route: string; read: string; fail: () => void }[] = [
     {
       route: "/categories",
-      module: "~/app/categories/page",
+      read: "category.findMany",
       fail: () => categoryFindMany.mockRejectedValue(new Error(BLIP)),
     },
     {
       route: "/regions",
-      module: "~/app/regions/page",
+      read: "region.findMany",
       fail: () => regionFindMany.mockRejectedValue(new Error(BLIP)),
     },
     {
       route: "/agents",
-      module: "~/app/agents/page",
+      read: "agent.findMany",
       fail: () => agentFindMany.mockRejectedValue(new Error(BLIP)),
     },
     {
+      route: "/agents",
+      read: "agentType.findMany",
+      fail: () => agentTypeFindMany.mockRejectedValue(new Error(BLIP)),
+    },
+    {
+      route: "/agents",
+      read: "npcCorporationDivision.findMany",
+      fail: () =>
+        npcCorporationDivisionFindMany.mockRejectedValue(new Error(BLIP)),
+    },
+    {
       route: "/skills",
-      module: "~/app/skills/page",
+      read: "group.findMany",
       fail: () => groupFindMany.mockRejectedValue(new Error(BLIP)),
     },
     {
       route: "/lp-store",
-      module: "~/app/lp-store/page",
+      read: "loyaltyStoreOffer.groupBy",
+      fail: () => loyaltyStoreOfferGroupBy.mockRejectedValue(new Error(BLIP)),
+    },
+    {
+      route: "/lp-store",
+      read: "corporation.findMany",
+      fail: () => corporationFindMany.mockRejectedValue(new Error(BLIP)),
+    },
+    {
+      route: "/lp-store/all",
+      read: "loyaltyStoreOffer.groupBy",
       fail: () => loyaltyStoreOfferGroupBy.mockRejectedValue(new Error(BLIP)),
     },
     {
       route: "/lp-store/all",
-      module: "~/app/lp-store/all/page",
-      fail: () => loyaltyStoreOfferGroupBy.mockRejectedValue(new Error(BLIP)),
+      read: "corporation.findMany",
+      fail: () => corporationFindMany.mockRejectedValue(new Error(BLIP)),
+    },
+    {
+      route: "/lp-store/all",
+      read: "loyaltyStoreOffer.findMany",
+      fail: () => loyaltyStoreOfferFindMany.mockRejectedValue(new Error(BLIP)),
+    },
+    {
+      route: "/lp-store/all",
+      read: "loyaltyStoreOfferRequiredItem.findMany",
+      fail: () =>
+        loyaltyStoreOfferRequiredItemFindMany.mockRejectedValue(
+          new Error(BLIP),
+        ),
+    },
+    {
+      route: "/lp-store/all",
+      read: "type.findMany",
+      fail: () => typeFindMany.mockRejectedValue(new Error(BLIP)),
     },
     {
       route: "/ship-scanner",
-      module: "~/app/ship-scanner/page",
+      read: "category.findUnique",
       fail: () => categoryFindUnique.mockRejectedValue(new Error(BLIP)),
     },
     {
+      route: "/ship-scanner",
+      read: "type.findMany",
+      fail: () => typeFindMany.mockRejectedValue(new Error(BLIP)),
+    },
+    {
       route: "/dogma/attributes",
-      module: "~/app/dogma/attributes/page",
+      read: "dogmaAttribute.findMany",
       fail: () => dogmaAttributeFindMany.mockRejectedValue(new Error(BLIP)),
     },
     {
+      route: "/dogma/attributes",
+      read: "typeAttribute.groupBy",
+      fail: () => typeAttributeGroupBy.mockRejectedValue(new Error(BLIP)),
+    },
+    {
       route: "/dogma/effects",
-      module: "~/app/dogma/effects/page",
+      read: "dogmaEffect.findMany",
       fail: () => dogmaEffectFindMany.mockRejectedValue(new Error(BLIP)),
+    },
+    {
+      route: "/dogma/effects",
+      read: "typeEffect.groupBy",
+      fail: () => typeEffectGroupBy.mockRejectedValue(new Error(BLIP)),
     },
   ];
 
+  const MODULES: Record<string, string> = {
+    "/categories": "~/app/categories/page",
+    "/regions": "~/app/regions/page",
+    "/agents": "~/app/agents/page",
+    "/skills": "~/app/skills/page",
+    "/lp-store": "~/app/lp-store/page",
+    "/lp-store/all": "~/app/lp-store/all/page",
+    "/ship-scanner": "~/app/ship-scanner/page",
+    "/dogma/attributes": "~/app/dogma/attributes/page",
+    "/dogma/effects": "~/app/dogma/effects/page",
+  };
+
+  it("enumerates every Prisma read on the nine routes", () => {
+    // Guards the guard: if a route gains a read, this count fails and whoever
+    // added it has to decide whether it needs a case here.
+    expect(cases).toHaveLength(19);
+  });
+
   it.each(cases)(
-    "$route propagates the error instead of 404ing",
-    async ({ module, fail }) => {
+    "$route propagates a failure of $read instead of 404ing",
+    async ({ route, fail }) => {
       fail();
-      await expect(runPage(module)).rejects.toThrow(BLIP);
+      await expect(runPage(MODULES[route]!)).rejects.toThrow(BLIP);
       expect(notFound).not.toHaveBeenCalled();
     },
   );
@@ -239,18 +337,25 @@ describe("a database failure never becomes a cached 404", () => {
 // ---------------------------------------------------------------------------
 
 describe("categories route server data", () => {
-  it("renders a link per category, ordered by the query", async () => {
+  it("links each category name to its own id, in query order", async () => {
     categoryFindMany.mockResolvedValue([
       { categoryId: 6, name: "Ship" },
       { categoryId: 7, name: "Module" },
     ]);
-    render(
+    const { container } = render(
       <MantineProvider>
         {await runPage("~/app/categories/page")}
       </MantineProvider>,
     );
-    expect(screen.getByText("Ship")).toBeInTheDocument();
-    expect(screen.getByText("Module")).toBeInTheDocument();
+    expect(
+      [...container.querySelectorAll("[data-entity-id]")].map((a) => [
+        a.getAttribute("data-entity-id"),
+        a.textContent,
+      ]),
+    ).toEqual([
+      ["6", "Ship"],
+      ["7", "Module"],
+    ]);
   });
 });
 
@@ -262,14 +367,37 @@ describe("regions route server data", () => {
       { regionId: 12000001, name: "Abyssal One" },
       { regionId: 9000001, name: "Oddball" },
     ]);
-    render(
+    const { container } = render(
       <MantineProvider>{await runPage("~/app/regions/page")}</MantineProvider>,
     );
-    expect(screen.getByText("New Eden (K-Space)")).toBeInTheDocument();
-    expect(screen.getByText("The Forge")).toBeInTheDocument();
-    expect(screen.getByText("A-R00001")).toBeInTheDocument();
-    expect(screen.getByText("Abyssal One")).toBeInTheDocument();
-    expect(screen.getByText("Oddball")).toBeInTheDocument();
+
+    // Walk the rendered tree in document order and attribute each region to the
+    // galaxy heading above it — asserting the bucketing itself, not merely that
+    // every name appears somewhere on the page.
+    const GALAXIES = new Set([
+      "New Eden (K-Space)",
+      "Anoikis (W-Space)",
+      "Abyssal",
+      "Other",
+    ]);
+    const bucketed: Record<string, string[]> = {};
+    let current = "";
+    for (const el of container.querySelectorAll("h3,[data-entity-id]")) {
+      const text = el.textContent;
+      if (GALAXIES.has(text)) {
+        current = text;
+        bucketed[current] = [];
+      } else if (el.hasAttribute("data-entity-id")) {
+        bucketed[current]?.push(text);
+      }
+    }
+
+    expect(bucketed).toEqual({
+      "New Eden (K-Space)": ["The Forge"],
+      "Anoikis (W-Space)": ["A-R00001"],
+      Abyssal: ["Abyssal One"],
+      Other: ["Oddball"],
+    });
   });
 });
 
@@ -295,13 +423,46 @@ describe("agents route server data", () => {
         stationId: 60000001,
       },
     ]);
+    agentTypeFindMany.mockResolvedValue([{ agentTypeId: 1, name: "Basic" }]);
+    npcCorporationDivisionFindMany.mockResolvedValue([
+      { npcCorporationDivisionId: 2, name: "Security" },
+    ]);
+
     const tree = await runPage("~/app/agents/page");
-    const { container } = render(<MantineProvider>{tree}</MantineProvider>);
-    expect(container).toBeTruthy();
-    // The table stub swallows the props, so assert the mapping via the query.
-    expect(agentFindMany).toHaveBeenCalledTimes(1);
-    expect(agentTypeFindMany).toHaveBeenCalledTimes(1);
-    expect(npcCorporationDivisionFindMany).toHaveBeenCalledTimes(1);
+    render(<MantineProvider>{tree}</MantineProvider>);
+
+    // Aria sorts before Zed even though the query returned Zed first, and the
+    // nested Character relation is flattened onto each row. Both are pinned
+    // here because this is the one non-mechanical rewrite in the change:
+    // `agents = agents.sort(...)` became an in-place `agents.sort(...)`.
+    expect(agentsTableProps?.agents).toEqual([
+      {
+        characterId: 1,
+        name: "Aria",
+        corporationId: 1000001,
+        agentTypeId: 2,
+        agentDivisionId: 1,
+        isLocator: true,
+        level: 1,
+        stationId: 60000001,
+      },
+      {
+        characterId: 2,
+        name: "Zed",
+        corporationId: 1000002,
+        agentTypeId: 1,
+        agentDivisionId: 2,
+        isLocator: false,
+        level: 3,
+        stationId: 60000004,
+      },
+    ]);
+    expect(agentsTableProps?.agentTypes).toEqual([
+      { agentTypeId: 1, name: "Basic" },
+    ]);
+    expect(agentsTableProps?.agentDivisions).toEqual([
+      { npcCorporationDivisionId: 2, name: "Security" },
+    ]);
   });
 });
 
