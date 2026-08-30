@@ -72,10 +72,11 @@ export const CorporationCard = memo(
       : undefined;
     // ESI reports tax rates as percentages (10.0 means 10%) since
     // compatibility date 2026-08-18; it previously sent a 0-1 fraction.
+    // Guard the value, not just its container: like every other field on this
+    // card, a payload missing it should read "N/A" rather than throw.
+    const taxRates = corporationData?.tax_rates;
     const taxRate =
-      corporationData?.tax_rates == null
-        ? null
-        : `${corporationData.tax_rates.isk.toFixed(1)}%`;
+      typeof taxRates?.isk === "number" ? `${taxRates.isk.toFixed(1)}%` : null;
 
     let warEligibleLabel = "N/A";
     if (corporationData?.war_eligible === true) {

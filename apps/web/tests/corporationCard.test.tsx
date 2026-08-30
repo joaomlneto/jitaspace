@@ -155,6 +155,34 @@ describe("CorporationCard", () => {
     expect(screen.getAllByText("N/A").length).toBeGreaterThanOrEqual(4);
   });
 
+  it("shows N/A rather than throwing when tax_rates arrives without isk", () => {
+    // ESI marks tax_rates.isk required, but it dropped the equally-required
+    // ceo_id/creator_id at this very compatibility bump — so the card must
+    // survive a payload whose container is present but whose value is not.
+    mockUseCorporation.mockReturnValue({
+      data: {
+        data: {
+          ticker: "E-UNI",
+          tax_rates: { loyalty_point: 5.6 },
+        },
+      },
+    });
+
+    const {
+      CorporationCard,
+    } = require("../components/Card/CorporationCard/CorporationCard");
+    expect(() =>
+      render(
+        <MantineProvider>
+          <CorporationCard corporationId={98553333} />
+        </MantineProvider>,
+      ),
+    ).not.toThrow();
+
+    expect(screen.getByText("Tax rate")).toBeInTheDocument();
+    expect(screen.queryByText(/%$/)).not.toBeInTheDocument();
+  });
+
   it("renders a header right section when provided", () => {
     mockUseCorporation.mockReturnValue({
       data: {
