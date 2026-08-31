@@ -607,7 +607,9 @@ describe("SolarSystemSovereigntyAvatar", () => {
     useSolarSystemSovereignty.mockReturnValue(undefined);
     useSolarSystem.mockReturnValue({ data: undefined });
     useStar.mockReturnValue({ data: undefined });
-    renderWithMantine(<SolarSystemSovereigntyAvatar solarSystemId={30000142} />);
+    renderWithMantine(
+      <SolarSystemSovereigntyAvatar solarSystemId={30000142} />,
+    );
     expect(useStar).toHaveBeenCalledWith(undefined, undefined, {
       query: { enabled: false },
     });
@@ -618,7 +620,9 @@ describe("SolarSystemSovereigntyAvatar", () => {
   it("keeps the star query disabled while sovereignty is held", () => {
     useSolarSystemSovereignty.mockReturnValue({ alliance_id: 99000123 });
     useSolarSystem.mockReturnValue({ data: { data: { star_id: 40000007 } } });
-    renderWithMantine(<SolarSystemSovereigntyAvatar solarSystemId={30000142} />);
+    renderWithMantine(
+      <SolarSystemSovereigntyAvatar solarSystemId={30000142} />,
+    );
     // sovereignty is held, so the star fetch stays disabled regardless of id
     expect(useStar).toHaveBeenCalledWith(40000007, undefined, {
       query: { enabled: false },

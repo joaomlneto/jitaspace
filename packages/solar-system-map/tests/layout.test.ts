@@ -233,7 +233,13 @@ describe("layoutSystem — realistic", () => {
     ];
     const stations = [{ id: 60, position: vec(41e9, 1e9, 0) }];
     const stargates = [{ id: 50, position: vec(0, 0, -4000e9) }];
-    const layout = layoutSystem(STAR, planets, stations, stargates, "realistic");
+    const layout = layoutSystem(
+      STAR,
+      planets,
+      stations,
+      stargates,
+      "realistic",
+    );
     const planetSize = layout.planets[0]?.size ?? 0;
     const station = layout.planets[0]?.satellites.find(
       (s) => s.kind === "station",
