@@ -39,8 +39,10 @@ export interface PlanetInput {
   id: number;
   /** Real, system-relative position (metres). */
   position: Vec3;
-  /** Real radius (metres). */
-  radius: number;
+  /** Real radius (metres). Optional — not every source provides it (ESI's
+   * universe endpoints, for one, return a planet's position but no radius), in
+   * which case the planet falls back to the minimum size in every mode. */
+  radius?: number;
   /** This planet's moons with their real position and radius. */
   moons: BodyInput[];
 }
@@ -445,12 +447,12 @@ function layoutOverview(
   // every planet to the minimum) and NaN*scale would size that body as NaN.
   const planetRadii = planets
     .map((p) => p.radius)
-    .filter((r) => Number.isFinite(r) && r > 0);
+    .filter((r): r is number => r != null && Number.isFinite(r) && r > 0);
   const maxPlanetRadius = planetRadii.length ? Math.max(...planetRadii) : 1;
   const planetSizeScale =
     maxPlanetRadius > 0 ? OVERVIEW_MAX_PLANET_SIZE / maxPlanetRadius : 0;
-  const planetSizeOf = (radius: number) =>
-    Number.isFinite(radius) && radius > 0
+  const planetSizeOf = (radius: number | undefined) =>
+    radius != null && Number.isFinite(radius) && radius > 0
       ? Math.max(OVERVIEW_MIN_PLANET_SIZE, radius * planetSizeScale)
       : OVERVIEW_MIN_PLANET_SIZE;
 

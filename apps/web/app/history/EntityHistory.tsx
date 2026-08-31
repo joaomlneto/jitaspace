@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState } from "react";
 import Link from "next/link";
 import {
   Alert,
@@ -17,6 +16,7 @@ import {
   Timeline,
 } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
+import { parseAsArrayOf, parseAsString, useQueryStates } from "nuqs";
 
 import type { EntityTimeline, Provenance, TimelineEvent } from "~/lib/history";
 import {
@@ -56,7 +56,17 @@ export function EntityHistory({
     staleTime: Infinity,
   });
   // Collections currently checked; null ⇒ all (until the user unchecks one).
-  const [selected, setSelected] = useState<string[] | null>(null);
+  // No .withDefault() — nuqs returns null when the param is absent, which is
+  // exactly the "all" sentinel this filter already used.
+  //
+  // EntityHistory is embedded in other pages (e.g. the History tab on
+  // /type/[typeId]), so its key is namespaced via urlKeys per the shared-
+  // component convention, rather than claiming a bare `collections`.
+  const [{ selected }, setFilters] = useQueryStates(
+    { selected: parseAsArrayOf(parseAsString) },
+    { urlKeys: { selected: "histCollections" }, history: "replace" },
+  );
+  const setSelected = (value: string[]) => void setFilters({ selected: value });
 
   if (isLoading) return <Loader />;
 
@@ -100,7 +110,20 @@ export function EntityHistory({
   const seenCollections = [
     ...new Set(events.map((e) => e.collection ?? "types")),
   ];
-  const active = selected ?? seenCollections;
+  // The `histCollections` param is shared across entities, so it can name a
+  // collection this one doesn't have. Left alone that filters everything out
+  // AND renders no chip to untick it, stranding the view on "No changes match"
+  // over a non-empty timeline. Intersect to avoid that — but keep the
+  // tri-state intact: null ⇒ all, and a deliberate empty selection stays empty.
+  const selectedHere = selected?.filter((c) => seenCollections.includes(c));
+  let active: string[];
+  if (selected === null || selectedHere === undefined) {
+    active = seenCollections; // no param ⇒ everything
+  } else if (selected.length > 0 && selectedHere.length === 0) {
+    active = seenCollections; // param named only collections this entity lacks
+  } else {
+    active = selectedHere; // includes the user's deliberate "none"
+  }
   const visibleEvents = events.filter((e) =>
     active.includes(e.collection ?? "types"),
   );

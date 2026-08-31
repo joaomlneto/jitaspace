@@ -21,7 +21,6 @@
     "@jitaspace/esi-client": "workspace:*",
     "@jitaspace/evekill-client": "workspace:*",
     "@jitaspace/kv": "workspace:*",
-    "@jitaspace/sde-client": "workspace:*",
     "@jitaspace/sde-utils": "workspace:*",
     "axios": "^1.16.1",
     "bull": "^4.16.5",

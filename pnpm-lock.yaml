@@ -182,9 +182,6 @@ importers:
       '@jitaspace/kv':
         specifier: workspace:*
         version: link:../../packages/kv
-      '@jitaspace/sde-client':
-        specifier: workspace:*
-        version: link:../../packages/sde-client
       '@jitaspace/solar-system-map':
         specifier: workspace:*
         version: link:../../packages/solar-system-map
@@ -572,9 +569,6 @@ importers:
       '@jitaspace/kv':
         specifier: workspace:*
         version: link:../kv
-      '@jitaspace/sde-client':
-        specifier: workspace:*
-        version: link:../sde-client
       '@jitaspace/sde-utils':
         specifier: workspace:*
         version: link:../sde-utils
@@ -1153,9 +1147,6 @@ importers:
       '@jitaspace/hooks':
         specifier: workspace:*
         version: link:../hooks
-      '@jitaspace/sde-client':
-        specifier: workspace:*
-        version: link:../sde-client
       '@jitaspace/ui':
         specifier: workspace:*
         version: link:../ui
@@ -1517,9 +1508,6 @@ importers:
       '@jitaspace/fuzzworks-market-client':
         specifier: workspace:*
         version: link:../fuzzworks-market-client
-      '@jitaspace/sde-client':
-        specifier: workspace:*
-        version: link:../sde-client
       '@react-hook/cache':
         specifier: ^1.1.1
         version: 1.1.1(react@19.2.6)
@@ -1633,67 +1621,6 @@ importers:
       concurrently:
         specifier: ^9.2.1
         version: 9.2.1
-      eslint:
-        specifier: ^9.39.4
-        version: 9.39.4(jiti@2.7.0)
-      prettier:
-        specifier: ^3.8.3
-        version: 3.8.3
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-
-  packages/sde-client:
-    dependencies:
-      '@tanstack/react-query':
-        specifier: ^5.100.14
-        version: 5.100.14(react@19.2.6)
-      axios:
-        specifier: ^1.16.1
-        version: 1.18.0
-      react:
-        specifier: ^19.2.6
-        version: 19.2.6
-      zod:
-        specifier: ^3.25.76
-        version: 3.25.76
-    devDependencies:
-      '@jitaspace/eslint-config':
-        specifier: workspace:*
-        version: link:../../tooling/eslint
-      '@jitaspace/prettier-config':
-        specifier: workspace:*
-        version: link:../../tooling/prettier
-      '@jitaspace/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-      '@kubb/cli':
-        specifier: ^4.38.0
-        version: 4.38.0(@kubb/fabric-core@0.14.0)(@kubb/react-fabric@0.14.0)(typescript@5.9.3)
-      '@kubb/core':
-        specifier: ^4.38.0
-        version: 4.38.0(@kubb/fabric-core@0.14.0)(@kubb/react-fabric@0.14.0)
-      '@kubb/plugin-client':
-        specifier: ^4.38.0
-        version: 4.38.0(@kubb/fabric-core@0.14.0)(@kubb/react-fabric@0.14.0)(axios@1.18.0)
-      '@kubb/plugin-oas':
-        specifier: ^4.38.0
-        version: 4.38.0(@kubb/fabric-core@0.14.0)(@kubb/react-fabric@0.14.0)
-      '@kubb/plugin-react-query':
-        specifier: ^4.38.0
-        version: 4.38.0(@kubb/fabric-core@0.14.0)(@kubb/react-fabric@0.14.0)(axios@1.18.0)
-      '@kubb/plugin-ts':
-        specifier: ^4.38.0
-        version: 4.38.0(@kubb/react-fabric@0.14.0)
-      '@kubb/plugin-zod':
-        specifier: ^4.38.0
-        version: 4.38.0(@kubb/fabric-core@0.14.0)
-      '@types/node':
-        specifier: ^24.12.4
-        version: 24.12.4
-      '@types/react':
-        specifier: 19.2.15
-        version: 19.2.15
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.7.0)

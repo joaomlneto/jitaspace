@@ -27,7 +27,6 @@ import {
 
 import { EveEntityAvatar } from "../../Avatar/EveEntityAvatar";
 import { EveMailSenderAvatar } from "../../Avatar/EveMailSenderAvatar";
-import { MarketGroupAvatar } from "../../Avatar/MarketGroupAvatar";
 import { SolarSystemSovereigntyAvatar } from "../../Avatar/SolarSystemSovereigntyAvatar";
 
 // ---------------------------------------------------------------------------
@@ -37,14 +36,12 @@ import { SolarSystemSovereigntyAvatar } from "../../Avatar/SolarSystemSovereignt
 // ---------------------------------------------------------------------------
 
 const useEsiName = jest.fn();
-const useMarketGroup = jest.fn();
 const useSolarSystem = jest.fn();
 const useSolarSystemSovereignty = jest.fn();
 const useStar = jest.fn();
 
 jest.mock("@jitaspace/hooks", () => ({
   useEsiName: (...args: unknown[]) => useEsiName(...args),
-  useMarketGroup: (...args: unknown[]) => useMarketGroup(...args),
   useSolarSystem: (...args: unknown[]) => useSolarSystem(...args),
   useSolarSystemSovereignty: (...args: unknown[]) =>
     useSolarSystemSovereignty(...args),
@@ -85,7 +82,6 @@ beforeEach(() => {
     loading: false,
     error: undefined,
   });
-  useMarketGroup.mockReturnValue({ iconID: 25 });
   useSolarSystem.mockReturnValue({ data: { data: { star_id: 40000001 } } });
   useStar.mockReturnValue({ data: { data: { type_id: 6 } } });
   useSolarSystemSovereignty.mockReturnValue({
@@ -121,7 +117,6 @@ describe("Avatar components render", () => {
     ],
     ["EveMailSenderAvatar", <EveMailSenderAvatar from={90000001} />],
     ["FactionAvatar", <FactionAvatar factionId={500001} />],
-    ["MarketGroupAvatar", <MarketGroupAvatar marketGroupId={4} />],
     ["PlanetAvatar", <PlanetAvatar typeId={11} />],
     ["RaceAvatar", <RaceAvatar factionId="500001" />],
     [
@@ -329,30 +324,6 @@ describe("EveEntityAvatar", () => {
     const { container } = renderWithMantine(<EveEntityAvatar entityId={77} />);
     // Unhandled categories fall through to a plain Mantine Avatar (no img).
     expect(container.querySelector("img")).not.toBeInTheDocument();
-    expect(container).not.toBeEmptyDOMElement();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// MarketGroupAvatar reads iconID from the market group hook.
-// ---------------------------------------------------------------------------
-
-describe("MarketGroupAvatar", () => {
-  it("forwards the market group iconID to EveIconAvatar", () => {
-    const { container } = renderWithMantine(
-      <MarketGroupAvatar marketGroupId={4} />,
-    );
-    expect(container.querySelector("img")).toBeInTheDocument();
-    expect(useMarketGroup).toHaveBeenCalledWith(4);
-  });
-
-  it("defaults the iconID to 0 when the group is unknown", () => {
-    // useMarketGroup always returns an object (it spreads optional ESI/SDE data
-    // into a fresh object); an unknown group yields one with no `iconID`.
-    useMarketGroup.mockReturnValue({});
-    const { container } = renderWithMantine(
-      <MarketGroupAvatar marketGroupId={999} />,
-    );
     expect(container).not.toBeEmptyDOMElement();
   });
 });

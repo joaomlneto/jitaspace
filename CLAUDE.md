@@ -60,6 +60,8 @@ pnpm kubb:generate   # OpenAPI → TypeScript clients in packages/*-client/src/g
 
 If you see import errors for `@jitaspace/db` or `@jitaspace/esi-client`, these haven't run yet.
 
+**If you linted before generating, the ESLint cache will keep failing you.** `pnpm lint` uses `--cache`, which keys on each linted file's contents rather than on the generated types it imports — so errors cached before codegen (typically `no-unsafe-*` on `prisma.*`) replay forever even after you regenerate, and the fix looks like it did nothing. The three codegen scripts above clear the cache; `build`/`dev`/`test`/`type-check` and the per-package `postinstall` hooks regenerate without clearing. Recover with `pnpm clean:eslint-cache` (use the script — the `rm` inside it aborts under zsh on unmatched globs).
+
 **Never edit generated files directly.** Instead edit the source and regenerate:
 
 - Prisma client → edit `packages/db/prisma/schema.prisma`, then `pnpm db:generate`
@@ -82,7 +84,7 @@ packages/
   db/                        # Prisma 7 client + PostgreSQL schema
   db-history/                # Separate Prisma client for the EVE build-history DB (/history)
   kv/                        # Redis client + Bull job queues
-  esi-client/ sde-client/    # Kubb-generated EVE API clients (ESI, self-hosted SDE)
+  esi-client/                # Kubb-generated ESI API client
   evekill-client/ evetycoon-client/ fuzzworks-market-client/  # more generated clients
   esi-metadata/ eve-data/    # ESI scopes/ID ranges; static EVE datasets
   hooks/                     # React Query hooks over ESI / third-party APIs

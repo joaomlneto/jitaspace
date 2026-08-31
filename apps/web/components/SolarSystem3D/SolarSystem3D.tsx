@@ -12,15 +12,15 @@ import type {
   StarInput,
   Vec3,
 } from "@jitaspace/solar-system-map";
+import {
+  getUniverseMoonsMoonIdQueryOptions,
+  getUniversePlanetsPlanetIdQueryOptions,
+  getUniverseStargatesStargateIdQueryOptions,
+  getUniverseStarsStarIdQueryOptions,
+  getUniverseStationsStationIdQueryOptions,
+} from "@jitaspace/esi-client";
 import { StationName } from "@jitaspace/eve-components";
 import { useSolarSystem } from "@jitaspace/hooks";
-import {
-  getMoonByIdQueryOptions,
-  getPlanetByIdQueryOptions,
-  getStarByIdQueryOptions,
-  getStargateByIdQueryOptions,
-  getStationByIdQueryOptions,
-} from "@jitaspace/sde-client";
 
 import {
   MoonName,
@@ -51,7 +51,7 @@ export interface SolarSystem3DProps {
   height?: number | string;
 }
 
-interface SdePosition {
+interface EsiPosition {
   x?: number;
   y?: number;
   z?: number;
@@ -59,13 +59,13 @@ interface SdePosition {
 
 /**
  * `StarInput.id` is required by the map's public API, so a system with no
- * `star_id` (e.g. some abyssal systems) is handed this sentinel. No real SDE id
+ * `star_id` (e.g. some abyssal systems) is handed this sentinel. No real ESI id
  * is 0, so `renderLabel` uses it to skip the name lookup for a star that does
- * not exist rather than requesting id 0 from the SDE.
+ * not exist rather than requesting id 0 from ESI.
  */
 const NO_STAR_ID = 0;
 
-function toVec(position: SdePosition | undefined): Vec3 {
+function toVec(position: EsiPosition | undefined): Vec3 {
   return [position?.x ?? 0, position?.y ?? 0, position?.z ?? 0];
 }
 
@@ -81,7 +81,7 @@ function renderLabel({ kind, id }: { kind: HoverKind; id: number }) {
 }
 
 /**
- * Projects a `useQueries` fan-out down to the SDE payloads plus a single
+ * Projects a `useQueries` fan-out down to the ESI payloads plus a single
  * loading flag.
  *
  * `useQueries` hands back a brand-new array of brand-new result objects on
@@ -93,7 +93,7 @@ function renderLabel({ kind, id }: { kind: HoverKind; id: number }) {
  * through them, the scene's own `layoutSystem` memo) actually hold. Declared at
  * module scope so the `combine` reference is stable too.
  */
-function combineSdeQueries<TBody>(
+function combineEsiQueries<TBody>(
   results: readonly { data?: { data: TBody }; isLoading: boolean }[],
 ) {
   return {
@@ -104,8 +104,10 @@ function combineSdeQueries<TBody>(
 
 /**
  * Solar-system page adapter around `@jitaspace/solar-system-map`: resolves the
- * system's celestials, fetches their real positions and radii from the SDE, and
- * supplies name-resolving hover labels.
+ * system's celestials, fetches their real positions (and the star's radius)
+ * from ESI's universe endpoints, and supplies name-resolving hover labels.
+ * ESI doesn't expose planet/moon radii, so those bodies fall back to a uniform
+ * size — the map's spatial layout is unaffected.
  */
 export function SolarSystem3D({
   solarSystemId,
@@ -115,7 +117,7 @@ export function SolarSystem3D({
     useSolarSystem(solarSystemId);
   const data = solarSystem?.data;
 
-  // Kick off the WebGL/three.js chunk download on mount so it overlaps the SDE
+  // Kick off the WebGL/three.js chunk download on mount so it overlaps the ESI
   // queries below instead of only starting after they all resolve: next/dynamic
   // only starts loading once <SolarSystemMap> renders, which is gated behind
   // `settled`. Swallow failures — next/dynamic reports them again through its
@@ -134,7 +136,7 @@ export function SolarSystem3D({
     [planetEntries],
   );
 
-  // SDE celestials are immutable, so these never go stale (staleTime: Infinity);
+  // ESI universe data is immutable, so these never go stale (staleTime: Infinity);
   // without it the app-wide QueryClient defaults (staleTime 0 +
   // refetchOnWindowFocus) re-fire the whole fan-out — ~60 requests for a system
   // like Jita — every time the user tabs back. `retry: 1` keeps the all-or-
@@ -142,42 +144,42 @@ export function SolarSystem3D({
   // single flaky request would otherwise hold the whole map behind the default
   // 3-retry backoff (~7s) rather than ~2s.
   const starQuery = useQuery({
-    ...getStarByIdQueryOptions(starId ?? NO_STAR_ID),
+    ...getUniverseStarsStarIdQueryOptions(starId ?? NO_STAR_ID),
     enabled: starId !== undefined,
     staleTime: Infinity,
     retry: 1,
   });
   const { bodies: planetBodies, isLoading: planetsLoading } = useQueries({
     queries: planetEntries.map((planet) => ({
-      ...getPlanetByIdQueryOptions(planet.planet_id),
+      ...getUniversePlanetsPlanetIdQueryOptions(planet.planet_id),
       staleTime: Infinity,
       retry: 1,
     })),
-    combine: combineSdeQueries,
+    combine: combineEsiQueries,
   });
   const { bodies: moonBodies, isLoading: moonsLoading } = useQueries({
     queries: moonIds.map((id) => ({
-      ...getMoonByIdQueryOptions(id),
+      ...getUniverseMoonsMoonIdQueryOptions(id),
       staleTime: Infinity,
       retry: 1,
     })),
-    combine: combineSdeQueries,
+    combine: combineEsiQueries,
   });
   const { bodies: stationBodies, isLoading: stationsLoading } = useQueries({
     queries: stationIds.map((id) => ({
-      ...getStationByIdQueryOptions(id),
+      ...getUniverseStationsStationIdQueryOptions(id),
       staleTime: Infinity,
       retry: 1,
     })),
-    combine: combineSdeQueries,
+    combine: combineEsiQueries,
   });
   const { bodies: stargateBodies, isLoading: stargatesLoading } = useQueries({
     queries: stargateIds.map((id) => ({
-      ...getStargateByIdQueryOptions(id),
+      ...getUniverseStargatesStargateIdQueryOptions(id),
       staleTime: Infinity,
       retry: 1,
     })),
-    combine: combineSdeQueries,
+    combine: combineEsiQueries,
   });
 
   const moonById = useMemo(() => {
@@ -188,7 +190,6 @@ export function SolarSystem3D({
         byId.set(id, {
           id,
           position: toVec(moon.position),
-          radius: moon.radius,
         });
       }
     });
@@ -205,15 +206,14 @@ export function SolarSystem3D({
     () =>
       planetEntries
         .map((planet, index) => {
-          const sde = planetBodies[index];
-          if (!sde?.position) return undefined;
+          const body = planetBodies[index];
+          if (!body?.position) return undefined;
           const moons: BodyInput[] = (planet.moons ?? [])
             .map((id) => moonById.get(id))
             .filter((m): m is BodyInput => m !== undefined);
           return {
             id: planet.planet_id,
-            position: toVec(sde.position),
-            radius: sde.radius,
+            position: toVec(body.position),
             moons,
           };
         })

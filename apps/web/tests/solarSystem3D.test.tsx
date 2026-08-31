@@ -71,26 +71,42 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 // Tag each query-options call so the react-query stub can dispatch to fixtures.
-jest.mock("@jitaspace/sde-client", () => ({
-  getStarByIdQueryOptions: (id: number) => ({ _kind: "star", _id: id }),
-  getPlanetByIdQueryOptions: (id: number) => ({ _kind: "planet", _id: id }),
-  getMoonByIdQueryOptions: (id: number) => ({ _kind: "moon", _id: id }),
-  getStationByIdQueryOptions: (id: number) => ({ _kind: "station", _id: id }),
-  getStargateByIdQueryOptions: (id: number) => ({ _kind: "stargate", _id: id }),
+jest.mock("@jitaspace/esi-client", () => ({
+  getUniverseStarsStarIdQueryOptions: (id: number) => ({
+    _kind: "star",
+    _id: id,
+  }),
+  getUniversePlanetsPlanetIdQueryOptions: (id: number) => ({
+    _kind: "planet",
+    _id: id,
+  }),
+  getUniverseMoonsMoonIdQueryOptions: (id: number) => ({
+    _kind: "moon",
+    _id: id,
+  }),
+  getUniverseStationsStationIdQueryOptions: (id: number) => ({
+    _kind: "station",
+    _id: id,
+  }),
+  getUniverseStargatesStargateIdQueryOptions: (id: number) => ({
+    _kind: "stargate",
+    _id: id,
+  }),
 }));
 
 jest.mock("@tanstack/react-query", () => {
-  // SDE bodies keyed by kind+id. A body without a `position` models an SDE
-  // record that hasn't resolved (or lacks coordinates) and must be dropped.
+  // ESI universe bodies keyed by kind+id. A body without a `position` models a
+  // record that hasn't resolved (or lacks coordinates) and must be dropped. Only
+  // the star carries a radius — ESI's planet/moon endpoints don't expose one.
   const BODIES: Record<string, Record<number, unknown>> = {
     star: { 40000001: { radius: 5e8 } },
     planet: {
-      40000010: { position: { x: 4e10, y: 0, z: 2e10 }, radius: 6e6 },
-      40000020: { radius: 5e7 }, // no position → dropped
+      40000010: { position: { x: 4e10, y: 0, z: 2e10 } },
+      40000020: {}, // no position → dropped
     },
     moon: {
-      40000101: { position: { x: 4e10, y: 0, z: 2e10 }, radius: 2e5 },
-      40000102: { radius: 1e5 }, // no position → dropped
+      40000101: { position: { x: 4e10, y: 0, z: 2e10 } },
+      40000102: {}, // no position → dropped
     },
     station: {
       60000001: { position: { x: 41e9, y: 1e9, z: 20e9 } },
@@ -167,7 +183,7 @@ describe("SolarSystem3D adapter", () => {
     mockLoadingIds.clear();
   });
 
-  it("maps resolved SDE bodies into map props, dropping position-less ones", () => {
+  it("maps resolved ESI bodies into map props, dropping position-less ones", () => {
     mockUseSolarSystem.mockReturnValue({
       data: { data: SYSTEM },
       isError: false,

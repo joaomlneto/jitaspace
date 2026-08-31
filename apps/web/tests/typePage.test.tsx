@@ -1,18 +1,18 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
 // ---------------------------------------------------------------------------
 // next/navigation — the page client receives props directly; mock defensively.
 // ---------------------------------------------------------------------------
-const mockUseSearchParams = jest.fn(() => new URLSearchParams());
 jest.mock("next/navigation", () => ({
   useParams: () => ({ typeId: "30" }),
   useRouter: () => ({}),
   usePathname: () => "/",
-  useSearchParams: () => mockUseSearchParams(),
 }));
 
 // ---------------------------------------------------------------------------
@@ -38,29 +38,10 @@ jest.mock("@jitaspace/esi-client", () => ({
     mockUseGetUniverseGroupsGroupId(...args),
 }));
 
-// SDE client query-option builders: encode the requested id so the mocked
-// useQueries can hand back matching data.
-jest.mock("@jitaspace/sde-client", () => ({
-  getDogmaAttributeByIdQueryOptions: (attributeId: number) => ({
-    queryKey: ["dogmaAttribute", attributeId],
-    __attributeId: attributeId,
-  }),
-  getDogmaAttributeCategoryByIdQueryOptions: (categoryId: number) => ({
-    queryKey: ["dogmaAttributeCategory", categoryId],
-    __categoryId: categoryId,
-  }),
-  getDogmaUnitByIdQueryOptions: (unitId: number) => ({
-    queryKey: ["dogmaUnit", unitId],
-    __unitId: unitId,
-  }),
-}));
-
-// useQueries: attribute queries -> a category id, category queries -> a name,
-// unit queries -> a display symbol. useQuery: the type image-variations fetch.
-const mockUseQueries = jest.fn();
+// The SDE dogma metadata is resolved on the server and passed in as
+// `dogmaMeta`; only the type image-variations query remains client-side.
 const mockUseQuery = jest.fn();
 jest.mock("@tanstack/react-query", () => ({
-  useQueries: (...args: unknown[]) => mockUseQueries(...args),
   useQuery: (...args: unknown[]) => mockUseQuery(...args),
 }));
 
@@ -141,17 +122,25 @@ const FULL_TYPE_DATA = {
   ],
 };
 
-interface QueryStub {
-  __attributeId?: number;
-  __categoryId?: number;
-  __unitId?: number;
+interface DogmaMetaStub {
+  attributes: Record<number, { categoryId?: number; unitId?: number }>;
+  unitSymbols: Record<number, string>;
+  categoryNames: Record<number, string>;
 }
 
 interface TypePageProps {
   typeId?: number;
   typeName?: string;
   typeDescription?: string;
+  dogmaMeta?: DogmaMetaStub;
 }
+
+/** Attributes 4 and 161 sit in category 7 ("Armor"); 999 is uncategorized. */
+const DEFAULT_DOGMA_META: DogmaMetaStub = {
+  attributes: { 4: { categoryId: 7 }, 161: { categoryId: 7 }, 999: {} },
+  unitSymbols: {},
+  categoryNames: { 7: "Armor" },
+};
 
 // Require the page lazily so the jest.mock(...) factories above are active
 // before the module (and its transitively-mocked deps) are evaluated.
@@ -159,12 +148,17 @@ function getPage(): React.ComponentType<TypePageProps> {
   return require("~/app/type/[typeId]/page.client").default;
 }
 
-function renderPage(props: TypePageProps = {}) {
+function renderPage(
+  props: TypePageProps = {},
+  adapter: { searchParams?: string; onUrlUpdate?: OnUrlUpdateFunction } = {},
+) {
   const TypePage = getPage();
   return render(
     <MantineProvider>
-      <TypePage typeId={30} {...props} />
+      <TypePage typeId={30} dogmaMeta={DEFAULT_DOGMA_META} {...props} />
     </MantineProvider>,
+    // The active tab is nuqs-backed; hasMemory lets tab clicks round-trip.
+    { wrapper: withNuqsTestingAdapter({ hasMemory: true, ...adapter }) },
   );
 }
 
@@ -179,9 +173,7 @@ describe("Type page (client)", () => {
     mockUseMarketPrices.mockReset();
     mockUseFuzzworkTypeMarketStats.mockReset();
     mockUseGetUniverseGroupsGroupId.mockReset();
-    mockUseQueries.mockReset();
     mockUseQuery.mockReset();
-    mockUseSearchParams.mockReset();
 
     // Defaults exercised by the "full data" path.
     mockUseSelectedCharacter.mockReturnValue({ characterId: 123 });
@@ -204,24 +196,6 @@ describe("Type page (client)", () => {
     // The type image-variations query — no variations (falls back to icon).
     mockUseQuery.mockReturnValue({ data: [] });
 
-    // No ?tab= query param by default; deep-link tests override this.
-    mockUseSearchParams.mockReturnValue(new URLSearchParams());
-
-    // Attribute queries -> a category id (4 and 161 -> 7, 999 -> undefined).
-    // Category queries -> a name. Unit queries -> a display symbol.
-    mockUseQueries.mockImplementation((arg: unknown) => {
-      const { queries } = arg as { queries: QueryStub[] };
-      return queries.map((q) => {
-        if (q.__attributeId !== undefined) {
-          const attributeCategoryID = q.__attributeId === 999 ? undefined : 7;
-          return { data: { data: { attributeCategoryID } } };
-        }
-        if (q.__categoryId !== undefined) {
-          return { data: { data: { name: "Armor" } } };
-        }
-        return { data: { data: { displayName: { en: "" } } } };
-      });
-    });
   });
 
   it("renders the hero and overview tab with full data", () => {
@@ -296,8 +270,7 @@ describe("Type page (client)", () => {
   });
 
   it("opens the tab named by the ?tab= query parameter on first render", () => {
-    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=market"));
-    renderPage();
+    renderPage({}, { searchParams: "?tab=market" });
 
     // The Market panel is active without any click, so its content is shown.
     // (keepMounted is false, so only the active panel renders.)
@@ -308,9 +281,31 @@ describe("Type page (client)", () => {
     );
   });
 
+  // The bug this migration fixes: clicking a tab used to leave the URL stale,
+  // so you could not link someone to the tab you were looking at.
+  it("writes the active tab to the URL when a tab is clicked", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    renderPage({}, { onUrlUpdate });
+
+    clickTab(/Market/);
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe("?tab=market");
+  });
+
+  // clearOnDefault: returning to Overview should drop the param entirely.
+  it("removes the tab param when returning to the default tab", async () => {
+    const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
+    renderPage({}, { searchParams: "?tab=market", onUrlUpdate });
+
+    clickTab(/Overview/);
+
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalled());
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe("");
+  });
+
   it("falls back to the Overview tab for an unknown ?tab= value", () => {
-    mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=bogus"));
-    renderPage();
+    renderPage({}, { searchParams: "?tab=bogus" });
 
     // Overview content is shown and remains the selected tab.
     expect(screen.getByText("Identity & Classification")).toBeInTheDocument();
@@ -344,27 +339,17 @@ describe("Type page (client)", () => {
         },
       },
     });
-    mockUseQueries.mockImplementation((arg: unknown) => {
-      const { queries } = arg as { queries: QueryStub[] };
-      return queries.map((q) => {
-        if (q.__attributeId !== undefined) {
-          if (q.__attributeId === 999)
-            return { data: { data: { attributeCategoryID: undefined } } };
-          return {
-            data: {
-              data: { attributeCategoryID: q.__attributeId === 4 ? 9 : 3 },
-            },
-          };
-        }
-        if (q.__categoryId !== undefined) {
-          const name = q.__categoryId === 9 ? "Required Skills" : "Fitting";
-          return { data: { data: { name } } };
-        }
-        return { data: { data: { displayName: { en: "" } } } };
-      });
+    renderPage({
+      dogmaMeta: {
+        attributes: {
+          4: { categoryId: 9 },
+          50: { categoryId: 3 },
+          999: {},
+        },
+        unitSymbols: {},
+        categoryNames: { 3: "Fitting", 9: "Required Skills" },
+      },
     });
-
-    renderPage();
     clickTab(/Attributes/);
 
     const fitting = screen.getByText("Fitting"); // category 3
@@ -382,21 +367,14 @@ describe("Type page (client)", () => {
   });
 
   it("falls back to a generated category label when the name is missing", () => {
-    mockUseQueries.mockImplementation((arg: unknown) => {
-      const { queries } = arg as { queries: QueryStub[] };
-      return queries.map((q) => {
-        if (q.__attributeId !== undefined) {
-          const attributeCategoryID = q.__attributeId === 999 ? undefined : 7;
-          return { data: { data: { attributeCategoryID } } };
-        }
-        if (q.__categoryId !== undefined) {
-          return { data: undefined };
-        }
-        return { data: { data: { displayName: { en: "" } } } };
-      });
+    renderPage({
+      dogmaMeta: {
+        attributes: { 4: { categoryId: 7 }, 161: { categoryId: 7 }, 999: {} },
+        unitSymbols: {},
+        // No name for category 7 -> the page generates "Category 7".
+        categoryNames: {},
+      },
     });
-
-    renderPage();
     clickTab(/Attributes/);
     expect(screen.getByText("Category 7")).toBeInTheDocument();
   });
@@ -415,7 +393,6 @@ describe("Type page (client)", () => {
     mockUseMarketPrices.mockReturnValue({ data: {} });
     mockUseFuzzworkTypeMarketStats.mockReturnValue({ data: null });
     mockUseGetUniverseGroupsGroupId.mockReturnValue({ data: undefined });
-    mockUseQueries.mockReturnValue([]);
 
     renderPage({ typeName: "Fallback Name", typeDescription: undefined });
 
@@ -437,12 +414,7 @@ describe("Type page (client)", () => {
   });
 
   it("shows the loading state when typeId is falsy", () => {
-    const TypePage = getPage();
-    render(
-      <MantineProvider>
-        <TypePage typeId={0} />
-      </MantineProvider>,
-    );
+    renderPage({ typeId: 0 });
     expect(screen.getByText("Loading type information...")).toBeInTheDocument();
   });
 });

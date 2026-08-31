@@ -5,18 +5,6 @@ import { Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
 import {
-  getCategoryByIdQueryOptions,
-  getDogmaAttributeByIdQueryOptions,
-  getDogmaEffectByIdQueryOptions,
-  getDogmaUnitByIdQueryOptions,
-  getGroupByIdQueryOptions,
-  getMarketGroupByIdQueryOptions,
-  getRaceByIdQueryOptions,
-  getTypeByIdQueryOptions,
-} from "@jitaspace/sde-client";
-
-import { sdeLabel } from "./_diff";
-import {
   CategoryAnchor,
   CategoryName,
   DogmaAttributeAnchor,
@@ -35,6 +23,16 @@ import {
   TypeAnchor,
   TypeName,
 } from "./_sde-ui";
+import {
+  resolveCategoryLabel,
+  resolveDogmaAttributeLabel,
+  resolveDogmaEffectLabel,
+  resolveDogmaUnitLabel,
+  resolveGroupLabel,
+  resolveMarketGroupLabel,
+  resolveRaceLabel,
+  resolveTypeLabel,
+} from "./actions";
 
 // Entities newer than the published SDE 404 on the name lookup (our history is
 // generated straight from the client, which can be ahead of the SDE release) —
@@ -56,11 +54,12 @@ function renderAttributeContent(
 
 function AttributeLabel({ id }: Readonly<{ id: number }>) {
   const query = useQuery({
-    ...getDogmaAttributeByIdQueryOptions(id),
+    queryKey: ["history", "sde", "dogmaAttribute", id],
+    queryFn: () => resolveDogmaAttributeLabel(id),
     staleTime: Infinity,
     retry: false,
   });
-  const name = sdeLabel(query.data?.data);
+  const name = query.data?.name ?? undefined;
   return (
     <DogmaAttributeAnchor attributeId={id} size="xs">
       {renderAttributeContent(id, name, query.isPending)}
@@ -84,11 +83,12 @@ function renderEffectContent(
 
 function EffectLabel({ id }: Readonly<{ id: number }>) {
   const query = useQuery({
-    ...getDogmaEffectByIdQueryOptions(id),
+    queryKey: ["history", "sde", "dogmaEffect", id],
+    queryFn: () => resolveDogmaEffectLabel(id),
     staleTime: Infinity,
     retry: false,
   });
-  const name = sdeLabel(query.data?.data);
+  const name = query.data?.name ?? undefined;
   return (
     <DogmaEffectAnchor effectId={id} size="xs">
       {renderEffectContent(id, name, query.isPending)}
@@ -109,21 +109,20 @@ export function DogmaValue({
   ...textProps
 }: Readonly<{ attributeId: number; value: number } & TextProps>) {
   const attribute = useQuery({
-    ...getDogmaAttributeByIdQueryOptions(attributeId),
+    queryKey: ["history", "sde", "dogmaAttribute", attributeId],
+    queryFn: () => resolveDogmaAttributeLabel(attributeId),
     staleTime: Infinity,
     retry: false,
   });
-  const unitId = (attribute.data?.data as { unitID?: number } | undefined)
-    ?.unitID;
+  const unitId = attribute.data?.unitId ?? undefined;
   const unit = useQuery({
-    ...getDogmaUnitByIdQueryOptions(unitId ?? 0),
+    queryKey: ["history", "sde", "dogmaUnit", unitId],
+    queryFn: () => resolveDogmaUnitLabel(unitId ?? 0),
     staleTime: Infinity,
     retry: false,
     enabled: unitId !== undefined,
   });
-  const symbol = (
-    unit.data?.data as { displayName?: { en?: string } } | undefined
-  )?.displayName?.en;
+  const symbol = unit.data?.name ?? undefined;
   return (
     <DogmaAttributeValue
       span
@@ -176,12 +175,12 @@ export function AttributeValueChange({
   to: number;
 }>) {
   const query = useQuery({
-    ...getDogmaAttributeByIdQueryOptions(id),
+    queryKey: ["history", "sde", "dogmaAttribute", id],
+    queryFn: () => resolveDogmaAttributeLabel(id),
     staleTime: Infinity,
     retry: false,
   });
-  const highIsGood = (query.data?.data as { highIsGood?: boolean } | undefined)
-    ?.highIsGood;
+  const highIsGood = query.data?.highIsGood ?? undefined;
   const highColor = highIsGood === false ? "red" : "green";
   const lowColor = highIsGood === false ? "green" : "red";
   const fromColor = pickFromColor(from, to, highColor, lowColor);
@@ -227,11 +226,12 @@ function CategoryLabel({
   size = "xs",
 }: Readonly<{ id: number; size?: LabelSize }>) {
   const query = useQuery({
-    ...getCategoryByIdQueryOptions(id),
+    queryKey: ["history", "sde", "category", id],
+    queryFn: () => resolveCategoryLabel(id),
     staleTime: Infinity,
     retry: false,
   });
-  const name = sdeLabel(query.data?.data);
+  const name = query.data?.name ?? undefined;
   return (
     <CategoryAnchor categoryId={id} size={size} c="dimmed">
       {renderCategoryContent(id, size, name, query.isPending)}
@@ -266,17 +266,18 @@ export function GroupLabel({
   dim?: boolean;
 }>) {
   const query = useQuery({
-    ...getGroupByIdQueryOptions(id),
+    queryKey: ["history", "sde", "group", id],
+    queryFn: () => resolveGroupLabel(id),
     staleTime: Infinity,
     retry: false,
   });
-  const data = query.data?.data as { categoryID?: number } | undefined;
-  const name = sdeLabel(query.data?.data);
+  const parentId = query.data?.parentId ?? undefined;
+  const name = query.data?.name ?? undefined;
   return (
     <>
-      {data?.categoryID !== undefined && (
+      {parentId !== undefined && (
         <>
-          <CategoryLabel id={data.categoryID} size={size} />
+          <CategoryLabel id={parentId} size={size} />
           <CrumbSep size={size} />
         </>
       )}
@@ -293,21 +294,27 @@ export function TypeLabel({
   size = "xs",
 }: Readonly<{ id: number; size?: LabelSize }>) {
   const query = useQuery({
-    ...getTypeByIdQueryOptions(id),
+    queryKey: ["history", "sde", "type", id],
+    queryFn: () => resolveTypeLabel(id),
     staleTime: Infinity,
     retry: false,
   });
-  const data = query.data?.data as { groupID?: number } | undefined;
+  const parentId = query.data?.parentId ?? undefined;
   return (
     <>
-      {data?.groupID !== undefined && (
+      {parentId !== undefined && (
         <>
-          <GroupLabel id={data.groupID} size={size} dim />
+          <GroupLabel id={parentId} size={size} dim />
           <CrumbSep size={size} />
         </>
       )}
       <TypeAnchor typeId={id} size={size}>
-        <TypeName span size={size} typeId={id} />
+        <TypeName
+          span
+          size={size}
+          typeId={id}
+          name={query.data?.name ?? undefined}
+        />
       </TypeAnchor>
     </>
   );
@@ -339,17 +346,18 @@ export function MarketGroupLabel({
   dim?: boolean;
 }>) {
   const query = useQuery({
-    ...getMarketGroupByIdQueryOptions(id),
+    queryKey: ["history", "sde", "marketGroup", id],
+    queryFn: () => resolveMarketGroupLabel(id),
     staleTime: Infinity,
     retry: false,
   });
-  const data = query.data?.data as { parentGroupID?: number } | undefined;
-  const name = sdeLabel(query.data?.data);
+  const parentId = query.data?.parentId ?? undefined;
+  const name = query.data?.name ?? undefined;
   return (
     <>
-      {data?.parentGroupID !== undefined && (
+      {parentId !== undefined && (
         <>
-          <MarketGroupLabel id={data.parentGroupID} size={size} dim />
+          <MarketGroupLabel id={parentId} size={size} dim />
           <CrumbSep size={size} />
         </>
       )}
@@ -384,11 +392,12 @@ export function RaceLabel({
   size = "xs",
 }: Readonly<{ id: number; size?: LabelSize }>) {
   const query = useQuery({
-    ...getRaceByIdQueryOptions(id),
+    queryKey: ["history", "sde", "race", id],
+    queryFn: () => resolveRaceLabel(id),
     staleTime: Infinity,
     retry: false,
   });
-  const name = sdeLabel(query.data?.data);
+  const name = query.data?.name ?? undefined;
   return (
     <RaceAnchor raceId={id} size={size}>
       {renderRaceContent(id, size, name, query.isPending)}

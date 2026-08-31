@@ -25,10 +25,6 @@ jest.mock(
   () => new Proxy({}, { get: () => () => null }),
 );
 jest.mock(
-  "@jitaspace/sde-client",
-  () => new Proxy({}, { get: () => () => null }),
-);
-jest.mock(
   "@jitaspace/tiptap-eve",
   () => new Proxy({}, { get: () => () => null }),
 );
@@ -38,6 +34,9 @@ jest.mock(
 );
 jest.mock("mantine-datatable", () => new Proxy({}, { get: () => () => null }));
 jest.mock("~/lib/db", () => ({ prisma: {} }));
+// The status page's server actions read the SDE ingest marker from Redis;
+// `~/lib/kv` connects eagerly at import time (top-level await), so stub it.
+jest.mock("~/lib/kv", () => ({ redis: { get: () => null }, kv: {} }));
 
 jest.mock("next/cache", () => ({
   cacheLife: () => undefined,
@@ -124,8 +123,11 @@ const ROUTES = [
 describe("route loading fallback", () => {
   it.each(ROUTES)(
     "$name route wraps its content in a PageSkeleton fallback",
-    ({ Page }) => {
-      const element = Page({ params: Promise.resolve({}) });
+    async ({ Page }) => {
+      // Some routes are async server components (they await `params` and read
+      // their server-side data before returning the tree), so await the result
+      // before inspecting it — a sync page just resolves to itself.
+      const element = await Page({ params: Promise.resolve({}) });
       expect(element.type).toBe(Suspense);
       expect(element.props.fallback?.type).toBe(PageSkeleton);
     },

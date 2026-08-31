@@ -30,10 +30,13 @@ import {
   useGetMetaStatus,
 } from "@jitaspace/esi-client";
 import { useServerStatus } from "@jitaspace/hooks";
-import { useGetVersion } from "@jitaspace/sde-client";
 import { DateHoverCard, FormattedDateText } from "@jitaspace/ui";
 
-import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
+import type {
+  SdeIngestState,
+  SdeLastModifiedResponse,
+  VercelStatusResponse,
+} from "./types";
 import { env } from "~/env";
 import { DatabaseDashboard } from "../../components/Status/DatabaseDashboard";
 import { EsiRateLimitDashboard } from "../../components/Status/EsiRateLimitDashboard";
@@ -43,14 +46,19 @@ import { TriggerJobsDashboard } from "../../components/Status/TriggerJobsDashboa
 export interface PageProps {
   vercelStatusData: VercelStatusResponse | null;
   sdeLastModifiedData: SdeLastModifiedResponse | null;
+  /**
+   * The SDE build currently ingested into our database, recorded by the
+   * `ingest-sde-all` pipeline. Null when nothing has been ingested yet or Redis
+   * is unreachable.
+   */
+  sdeIngestState: SdeIngestState | null;
 }
 
 export default function StatusPage({
   vercelStatusData,
   sdeLastModifiedData,
+  sdeIngestState,
 }: Readonly<PageProps>) {
-  const { data: sdeVersionData } = useGetVersion();
-
   const { data: tqStatus } = useServerStatus();
 
   const [opened, { open, close }] = useDisclosure(false);
@@ -78,13 +86,24 @@ export default function StatusPage({
     [sdeLastModifiedData],
   );
 
-  const sdeApiLastUpdatedDate: Date | null = useMemo(
-    () =>
-      sdeVersionData?.data.generationDate
-        ? new Date(sdeVersionData.data.generationDate)
-        : null,
-    [sdeVersionData],
+  // Read off plain values before memoizing: the React Compiler can't match an
+  // optional-chained expression in a dependency array against what it infers.
+  const sdeIngestedAt = sdeIngestState?.completedAt ?? null;
+  const ourSdeBuild = sdeIngestState?.buildNumber;
+  const latestSdeBuild = sdeLastModifiedData?.buildNumber;
+
+  const sdeIngestedDate: Date | null = useMemo(
+    () => (sdeIngestedAt ? new Date(sdeIngestedAt) : null),
+    [sdeIngestedAt],
   );
+
+  // Freshness is a build-number comparison, not a date one: the marker records
+  // which CCP build we loaded, and CCP's `releaseDate` is when that build was
+  // published — always earlier than when we finished ingesting it.
+  const sdeIsCurrent: boolean | null = useMemo(() => {
+    if (ourSdeBuild === undefined || latestSdeBuild === undefined) return null;
+    return ourSdeBuild >= latestSdeBuild;
+  }, [ourSdeBuild, latestSdeBuild]);
 
   const buildDate = useMemo(() => getRateLimitBuildDate(), []);
 
@@ -161,25 +180,30 @@ export default function StatusPage({
                 </Group>
                 <Group justify="space-between">
                   <Text size="sm" fw={500}>
-                    SDE API Updated On
+                    SDE Ingested On
                   </Text>
                   <Group gap="xs">
-                    <Anchor href="https://sde.jita.space" size="sm">
-                      {!sdeApiLastUpdatedDate && <Loader size="xs" />}
-                      {sdeApiLastUpdatedDate && (
-                        <DateHoverCard date={sdeApiLastUpdatedDate}>
-                          <FormattedDateText date={sdeApiLastUpdatedDate} />
-                        </DateHoverCard>
-                      )}
-                    </Anchor>
-                    {sdeApiLastUpdatedDate &&
-                      sdeLastModifiedDate &&
-                      (sdeApiLastUpdatedDate >= sdeLastModifiedDate ? (
-                        <Tooltip label="JitaSpace SDE API is up to date!">
+                    {!sdeIngestedDate && (
+                      <Text size="sm">
+                        {sdeIngestState ? "In progress…" : "—"}
+                      </Text>
+                    )}
+                    {sdeIngestedDate && (
+                      <DateHoverCard date={sdeIngestedDate}>
+                        <FormattedDateText date={sdeIngestedDate} size="sm" />
+                      </DateHoverCard>
+                    )}
+                    {sdeIsCurrent !== null &&
+                      (sdeIsCurrent ? (
+                        <Tooltip
+                          label={`Our SDE data is up to date (build ${ourSdeBuild})`}
+                        >
                           <IconCircleCheck color="green" size={14} />
                         </Tooltip>
                       ) : (
-                        <Tooltip label="JitaSpace SDE API is outdated!">
+                        <Tooltip
+                          label={`Our SDE data is outdated (build ${ourSdeBuild}, latest ${latestSdeBuild})`}
+                        >
                           <IconCircleX color="red" size={14} />
                         </Tooltip>
                       ))}

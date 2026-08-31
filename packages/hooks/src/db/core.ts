@@ -6,8 +6,6 @@ import { parseLoadSubsetOptions } from "@tanstack/query-db-collection";
 import { QueryClient } from "@tanstack/react-query";
 
 import type { GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
-import type { NpcCharacter } from "@jitaspace/sde-client";
-import { getNpcCharacterById } from "@jitaspace/sde-client";
 
 export type ResolvableEntityCategory =
   | GetCharactersCharacterIdSearchQueryParamsCategoriesEnum
@@ -42,33 +40,4 @@ export function extractIdFromCtx(
       ? f.field.includes(fieldName)
       : f.field.some((part) => part.toString().includes(fieldName)),
   )?.value as string | number | undefined;
-}
-
-function isNotFoundError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-
-  const maybeAxiosError = error as {
-    status?: number;
-    response?: {
-      status?: number;
-    };
-  };
-
-  return (
-    maybeAxiosError.status === 404 || maybeAxiosError.response?.status === 404
-  );
-}
-
-export async function getNpcCharacterByIdOrUndefined(
-  id: number,
-): Promise<NpcCharacter | undefined> {
-  try {
-    return await getNpcCharacterById(id).then((r) => r.data);
-  } catch (error) {
-    if (isNotFoundError(error)) {
-      return undefined;
-    }
-
-    throw error;
-  }
 }
