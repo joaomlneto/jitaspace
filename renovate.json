@@ -1,35 +1,24 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:base",
-    "group:allNonMajor",
-    "group:recommended"
-  ],
+  "extends": ["config:recommended", "group:allNonMajor", "group:recommended"],
+  "rangeStrategy": "bump",
   "packageRules": [
     {
-      "matchUpdateTypes": [
-        "minor",
-        "patch"
-      ],
+      "description": "Minor and patch updates automerge during the Monday 00:00-07:59 UTC window. The previous \"on monday before 8 day of the month\" was a day-of-month constraint, not a time of day, so it opened only on Mondays falling in the first week and a patch released on the 9th waited weeks.",
+      "matchUpdateTypes": ["minor", "patch"],
       "automerge": true,
-      "schedule": [
-        "on monday before 8 day of the month"
-      ]
+      "schedule": ["* 0-7 * * 1"]
     },
     {
+      "description": "Keep the Kubb packages moving together; 4.37.x had codegen bugs.",
       "groupName": "Kubb",
-      "matchPackagePrefixes": [
-        "@kubb/"
-      ]
+      "matchPackageNames": ["@kubb/**"]
     },
     {
-      "matchPackagePatterns": [
-        "^@jitaspace/"
-      ],
+      "description": "Workspace packages are linked, not published; never update them.",
+      "matchPackageNames": ["@jitaspace/**"],
       "enabled": false
     }
   ],
-  "updateInternalDeps": true,
-  "rangeStrategy": "bump",
-  "automerge": false
+  "updateInternalDeps": true
 }

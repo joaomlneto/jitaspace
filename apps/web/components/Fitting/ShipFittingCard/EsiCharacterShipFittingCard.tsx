@@ -1,10 +1,9 @@
+import type { CardProps } from "@mantine/core";
 import { memo } from "react";
-import type {CardProps} from "@mantine/core";
 
 import { useCharacterFitting } from "@jitaspace/hooks";
 
 import { ShipFittingCard } from "./ShipFittingCard";
-
 
 type EsiCharacterShipFittingCardProps = Omit<CardProps, "children"> & {
   characterId: number;

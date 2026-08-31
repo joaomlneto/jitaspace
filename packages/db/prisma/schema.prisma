@@ -1160,7 +1160,12 @@ model KillmailVictimItems {
    */
   quantityDropped   Int?
   /**
-   * The unique ID of the item, if it was a singleton.
+   * Whether the item was a blueprint copy: 0 = ordinary item, 2 = blueprint copy.
+   *
+   * Despite the name this is not an item ID, and it is not the assets API's
+   * `is_singleton` boolean either — fitted, assembled modules also report 0.
+   * ESI documents no values for it, but across a full day of killmails
+   * (228,676 items) it takes only 0 and 2, and every 2 is a blueprint.
    */
   singleton         BigInt
   /**
@@ -2480,7 +2485,10 @@ model MilitaryCampaign {
   militaryCampaignId String                       @id
   title              String
   subtitle           String?
-  targetProgress     Int?
+  /// BigInt, not Int: progress is counted in whatever unit the objectives
+  /// contribute in, and the ISK-denominated ones run well past int4 (see
+  /// MilitaryCampaignObjective.targetProgress).
+  targetProgress     BigInt?
   /// factions.yaml id of the issuing faction (`issuer.factionID`).
   issuerFactionId    Int?
   annotations        MilitaryCampaignAnnotation[]
@@ -2518,21 +2526,29 @@ model MilitaryCampaignObjective {
   militaryCampaignId              String
   militaryCampaign                MilitaryCampaign                     @relation(fields: [militaryCampaignId], references: [militaryCampaignId])
   careerPath                      String?
-  targetProgress                  Int?
-  maxProgressPerParticipant       Int?
+  /// BigInt, not Int: an objective's progress is counted in the raw unit its
+  /// contribution method reports — number of missions for "CompleteAgentMission",
+  /// but ISK for the value-denominated ones — so the targets run past int4.
+  /// Ingesting them as `Int` failed the job with "integer out of range for
+  /// type int4".
+  targetProgress                  BigInt?
+  maxProgressPerParticipant       BigInt?
   /// npcCharacters.yaml id.
   presentingCharacterId           Int?
   /// npcCorporations.yaml id (`issuer.corporationID`).
   issuerCorporationId             Int?
-  // rewards.isk / rewards.lp / rewards.standing
+  // rewards.isk / rewards.lp / rewards.standing. The `*ProgressInterval`
+  // columns are measured in the same unit as `targetProgress` above ("pay
+  // `amountPerInterval` for every `progressInterval` of progress"), so they
+  // are BigInt for the same reason.
   iskAmountPerInterval            Float?
-  iskProgressInterval             Int?
+  iskProgressInterval             BigInt?
   iskIssuerCorporationId          Int?
   lpAmountPerInterval             Float?
-  lpProgressInterval              Int?
+  lpProgressInterval              BigInt?
   lpIssuerCorporationId           Int?
   standingGainPercentPerInterval  Float?
-  standingProgressInterval        Int?
+  standingProgressInterval        BigInt?
   /// The standing reward's issuer is a FACTION, not a corporation: CCP ships
   /// `rewards.standing.issuer.factionID` (isk/lp use `issuer.corporationID`).
   standingIssuerFactionId         Int?

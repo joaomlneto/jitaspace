@@ -5,8 +5,10 @@ Data-aware ("smart") EVE Online React components for JitaSpace.
 ## Overview
 
 These components resolve EVE data (entity names, categories, market groups,
-alliance info, …) by calling `@jitaspace/hooks` and render it using the
-presentational primitives in [`@jitaspace/ui`](../ui). They were split out of
+alliance info, …) — mostly by calling `@jitaspace/hooks`, and in `TypeAvatar`'s
+case by asking the EVE image server directly over `swr` which image variations a
+type publishes — and render it using the presentational primitives in
+[`@jitaspace/ui`](../ui). They were split out of
 `@jitaspace/ui` so that the UI library can stay free of the ESI / data-client
 dependency graph (`@jitaspace/hooks`, `@jitaspace/esi-client`, …).
 
@@ -35,3 +37,4 @@ the ESI coupling up one layer.
 - `@jitaspace/hooks` — ESI / TanStack Query data hooks
 - `@jitaspace/eve-icons`, `@jitaspace/utils`
 - `@mantine/core` + `@mantine/hooks`
+- `swr` — `TypeAvatar`'s image-variation lookup

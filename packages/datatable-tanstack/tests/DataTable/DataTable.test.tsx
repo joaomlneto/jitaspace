@@ -284,9 +284,7 @@ describe("DataTable — column visibility", () => {
     renderWithMantine(
       <DataTable columns={columns} data={data} withColumnVisibility />,
     );
-    expect(
-      screen.getByRole("button", { name: "Columns" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Columns" })).toBeInTheDocument();
   });
 
   it("opens a menu with a checkbox per column plus a toggle-all", async () => {

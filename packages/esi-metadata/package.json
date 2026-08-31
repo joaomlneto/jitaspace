@@ -15,6 +15,19 @@
     "main": "./dist/index.cjs",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/index.js"
+        },
+        "require": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/index.cjs"
+        }
+      },
+      "./package.json": "./package.json"
+    },
     "access": "public"
   },
   "files": [
@@ -28,7 +41,7 @@
     "clean": "rm -rf .turbo node_modules dist",
     "lint": "eslint --flag unstable_native_nodejs_ts_config .",
     "lint:fix": "pnpm lint --fix",
-    "prepublishOnly": "pnpm build",
+    "prepack": "pnpm build",
     "type-check": "tsc --noEmit",
     "test": "jest"
   },

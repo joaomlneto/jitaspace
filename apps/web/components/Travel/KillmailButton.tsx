@@ -15,6 +15,7 @@ import {
   CharacterName,
   CorporationName,
   FactionName,
+  TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { CombatLogIcon, MercenaryIcon, WarsIcon } from "@jitaspace/eve-icons";
@@ -25,7 +26,6 @@ import {
   DateHoverCard,
   FactionAvatar,
   TimeAgoText,
-  TypeAvatar,
   WarAnchor,
 } from "@jitaspace/ui";
 
@@ -182,3 +182,5 @@ export const KillmailButton = memo(
     );
   },
 );
+
+KillmailButton.displayName = "KillmailButton";

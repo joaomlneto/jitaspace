@@ -12,11 +12,11 @@ import {
   CharacterAvatar,
   CorporationAvatar,
   FactionAvatar,
-  TypeAvatar,
 } from "@jitaspace/ui";
 import { getAvatarSize } from "@jitaspace/utils";
 
 import { sizes } from "./Avatar.styles";
+import { TypeAvatar } from "./TypeAvatar";
 
 export type EveEntityAvatarProps = Omit<AvatarProps, "src"> & {
   entityId?: string | number;

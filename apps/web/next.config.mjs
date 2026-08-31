@@ -8,7 +8,9 @@ const jiti = createJiti(import.meta.url);
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
  * This is especially useful for Docker builds and Linting.
  */
-!process.env.SKIP_ENV_VALIDATION && (await jiti.import("./env"));
+if (!process.env.SKIP_ENV_VALIDATION) {
+  await jiti.import("./env");
+}
 
 /**
  * Content-Security-Policy for the web app.
@@ -145,50 +147,82 @@ const config = {
     ],
   },
 
-  rewrites: async () => [
-    {
-      // Umami's tracker sends events to `<data-host-url>/api/send`, which
-      // defaults to the cloud collection gateway. The layout sets
-      // `data-host-url="/analytics"` so the beacon is same-origin (kept off
-      // `connect-src`'s third-party list and invisible to ad blockers that
-      // block `*.umami.is`); this rewrite forwards it to the gateway. Must
-      // come BEFORE the catch-all below — that one targets the script host,
-      // which does not serve `/api/send`.
-      source: "/analytics/api/send",
-      destination: "https://gateway.umami.is/api/send", // Umami event gateway
-    },
-    {
-      // Must target `cloud.umami.is` (the canonical script host), NOT
-      // `analytics.umami.is` — the latter 301-redirects to `cloud.umami.is`,
-      // and Next.js forwards that redirect to the browser, which then loads a
-      // cross-origin script that `script-src 'self'` rejects (a CSP violation
-      // even though the proxied URL is same-origin). See JITASPACE-3T.
-      source: "/analytics/:match*",
-      destination: "https://cloud.umami.is/:match*", // Proxy to Umami script
-    },
-    {
-      source: "/ingest/static/:path*",
-      destination: "https://eu-assets.i.posthog.com/static/:path*",
-    },
-    {
-      source: "/ingest/array/:path*",
-      destination: "https://eu-assets.i.posthog.com/array/:path*",
-    },
-    {
-      source: "/ingest/:path*",
-      destination: "https://eu.i.posthog.com/:path*",
-    },
-    {
-      // Serve a single static shell for every /market/<typeId> URL instead of
-      // rendering (and ISR-caching) one page per type id. The browser keeps the
-      // pretty /market/<typeId> URL; the client reads the id from the path.
-      source: "/market/:typeId",
-      destination: "/market",
-    },
-  ],
+  rewrites: async () => ({
+    // `beforeFiles`, because Next reserves `/sitemap.xml` for the
+    // `app/sitemap.ts` metadata convention. With `generateSitemaps()` the real
+    // pages live at `/sitemap/{n}.xml` and that reserved route only 404s, but
+    // it still wins against an `afterFiles` rewrite — and a route handler at
+    // `app/sitemap.xml/` fails the build outright with "Conflicting route and
+    // metadata". This hands the conventional path to the index handler.
+    beforeFiles: [
+      { source: "/sitemap.xml", destination: "/sitemap-index.xml" },
+    ],
+    afterFiles: [
+      {
+        // Umami's tracker sends events to `<data-host-url>/api/send`, which
+        // defaults to the cloud collection gateway. The layout sets
+        // `data-host-url="/analytics"` so the beacon is same-origin (kept off
+        // `connect-src`'s third-party list and invisible to ad blockers that
+        // block `*.umami.is`); this rewrite forwards it to the gateway. Must
+        // come BEFORE the catch-all below — that one targets the script host,
+        // which does not serve `/api/send`.
+        source: "/analytics/api/send",
+        destination: "https://gateway.umami.is/api/send", // Umami event gateway
+      },
+      {
+        // Must target `cloud.umami.is` (the canonical script host), NOT
+        // `analytics.umami.is` — the latter 301-redirects to `cloud.umami.is`,
+        // and Next.js forwards that redirect to the browser, which then loads a
+        // cross-origin script that `script-src 'self'` rejects (a CSP violation
+        // even though the proxied URL is same-origin). See JITASPACE-3T.
+        source: "/analytics/:match*",
+        destination: "https://cloud.umami.is/:match*", // Proxy to Umami script
+      },
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://eu-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/array/:path*",
+        destination: "https://eu-assets.i.posthog.com/array/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://eu.i.posthog.com/:path*",
+      },
+      {
+        // Serve a single static shell for every /market/<typeId> URL instead of
+        // rendering (and ISR-caching) one page per type id. The browser keeps the
+        // pretty /market/<typeId> URL; the client reads the id from the path.
+        source: "/market/:typeId",
+        destination: "/market",
+      },
+      {
+        // Market groups have no page of their own, but `MarketGroupAnchor`
+        // links to /market-group/<id> — from every type page and from the
+        // market breadcrumbs — so without this every one of those links is a
+        // 404. Serve the market browser instead. Its path parser only matches
+        // /market/<typeId> (page.client.tsx:38), so the id is simply ignored
+        // and the default view renders. Swap this for a real route if market
+        // groups ever get a page of their own.
+        source: "/market-group/:marketGroupId",
+        destination: "/market",
+      },
+    ],
+  }),
   skipTrailingSlashRedirect: true,
 
   redirects: async () => [
+    {
+      // /wallet/character and /wallet/corporation were separate pages; /wallet
+      // now shows every readable character and corporation wallet in one table.
+      // A redirect rather than a deletion because these are user-visible URLs
+      // that have been in the nav and may be bookmarked. Permanent: the old
+      // pages are gone for good.
+      source: "/wallet/:section(character|corporation)",
+      destination: "/wallet",
+      permanent: true,
+    },
     {
       // Deep-link to a specific tab on a type page: /type/<id>/<tab> sends the
       // browser to the canonical /type/<id>?tab=<tab>, which selects that tab.

@@ -1,14 +1,14 @@
 import {
-  isIdInRanges,
-  characterIdRanges,
-  corporationIdRanges,
   allianceIdRanges,
-  regionIdRanges,
+  characterIdRanges,
   constellationIdRanges,
+  corporationIdRanges,
+  isIdInRanges,
+  npcCharacterIdRanges,
+  regionIdRanges,
   solarSystemRanges,
   stargateRanges,
   stationRanges,
-  npcCharacterIdRanges,
 } from "../src/id_ranges";
 
 describe("isIdInRanges", () => {

@@ -40,11 +40,23 @@ describe("renderEveHref", () => {
 
   describe("showinfo links — named entity types", () => {
     it.each([
-      ["corporations (type 2)", "showinfo:2//98000001", "/corporation/98000001"],
+      [
+        "corporations (type 2)",
+        "showinfo:2//98000001",
+        "/corporation/98000001",
+      ],
       ["regions (type 3)", "showinfo:3//10000002", "/region/10000002"],
-      ["constellations (type 4)", "showinfo:4//20000020", "/constellation/20000020"],
+      [
+        "constellations (type 4)",
+        "showinfo:4//20000020",
+        "/constellation/20000020",
+      ],
       ["solar systems (type 5)", "showinfo:5//30000142", "/system/30000142"],
-      ["alliances (type 16159)", "showinfo:16159//498125261", "/alliance/498125261"],
+      [
+        "alliances (type 16159)",
+        "showinfo:16159//498125261",
+        "/alliance/498125261",
+      ],
     ])("converts %s", (_name, input, expected) => {
       expect(renderEveHref(input)).toBe(expected);
     });
@@ -257,10 +269,7 @@ describe("EveLink protocol configuration", () => {
     ["contract", "contract:0//196428637"],
     ["joinChannel", "joinChannel:-26572540"],
     ["helpPointer", "helpPointer:neocom.airCareerProgram"],
-    [
-      "shipSkinListing",
-      "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951",
-    ],
+    ["shipSkinListing", "shipSkinListing:fe7ec0c3-2d02-4d3b-9cd4-b41221941951"],
     ["fitting", "fitting:33470:31047;1::"],
     ["localsvc", "localsvc:method=OpenFWWindow"],
     ["opportunity", "opportunity:epic_arcs:40"],

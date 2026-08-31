@@ -41,6 +41,7 @@ import {
   StationAnchor,
   StationName,
   TypeAnchor,
+  TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import {
@@ -53,13 +54,15 @@ import { useCharacterWalletBalance } from "@jitaspace/hooks/src/hooks/character/
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,
+  BloodlineAnchor,
   CharacterAvatar,
+  CorporationAnchor,
   CorporationAvatar,
   DateHoverCard,
   FactionAvatar,
   FormattedDateText,
   ISKAmount,
-  TypeAvatar,
+  RaceAnchor,
 } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";
@@ -175,16 +178,17 @@ function CharacterEmploymentHistory({
           }
           title={
             <Group gap="xs">
-              <Anchor
-                component={Link}
-                href={`/corporation/${entry.corporation_id}`}
+              {/* A historical timeline is not a navigation surface. */}
+              <CorporationAnchor
+                corporationId={entry.corporation_id}
+                prefetch={false}
               >
                 <CorporationName
                   span
                   corporationId={entry.corporation_id}
                   fw={500}
                 />
-              </Anchor>
+              </CorporationAnchor>
               {entry.isCurrent && (
                 <Badge size="xs" color="teal" variant="light">
                   Current
@@ -470,20 +474,14 @@ export default function Page({
                     </InfoRow>
                   )}
                   <InfoRow label="Race">
-                    <Anchor
-                      component={Link}
-                      href={`/race/${character?.raceId}`}
-                    >
+                    <RaceAnchor raceId={character?.raceId}>
                       <RaceName span raceId={character?.raceId} />
-                    </Anchor>
+                    </RaceAnchor>
                   </InfoRow>
                   <InfoRow label="Bloodline">
-                    <Anchor
-                      component={Link}
-                      href={`/bloodline/${character?.bloodlineId}`}
-                    >
+                    <BloodlineAnchor bloodlineId={character?.bloodlineId}>
                       <BloodlineName bloodlineId={character?.bloodlineId} />
-                    </Anchor>
+                    </BloodlineAnchor>
                   </InfoRow>
                   {character?.factionId && (
                     <InfoRow label="Faction">

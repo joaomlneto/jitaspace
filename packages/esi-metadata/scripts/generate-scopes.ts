@@ -41,7 +41,15 @@ const scopesDir = resolve(scriptDir, "../src/scopes");
 const DEFAULT_SPEC = resolve(scriptDir, "../../esi-client/swagger.json");
 const REGEN = "pnpm --filter @jitaspace/esi-metadata kubb:generate";
 
-const HTTP_METHODS = ["get", "post", "put", "delete", "patch", "head", "options"];
+const HTTP_METHODS = [
+  "get",
+  "post",
+  "put",
+  "delete",
+  "patch",
+  "head",
+  "options",
+];
 
 const header = (): string =>
   `// This file is auto-generated from the EVE Online ESI OpenAPI spec.\n` +
@@ -136,7 +144,9 @@ async function main(): Promise<void> {
   for (const line of descriptionsSrc.split("\n")) {
     const trimmed = line.trim();
     if (trimmed.startsWith("//")) continue;
-    const scope = /^"(esi-[^"]+)"\s*:/.exec(trimmed)?.[1];
+    // Matches both ESI scope conventions: the legacy `esi-domain.action.vN`
+    // and the `esi.domain.subject:action` form introduced 2026-08-18.
+    const scope = /^"(esi[-.][^"]+)"\s*:/.exec(trimmed)?.[1];
     if (scope) describedKeys.add(scope);
   }
   const missing = scopeList.filter((scope) => !describedKeys.has(scope));

@@ -1,6 +1,5 @@
 import React from "react";
 import { cacheLife } from "next/cache";
-import { notFound } from "next/navigation";
 import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 
 import { RegionAnchor } from "@jitaspace/eve-components";
@@ -21,20 +20,20 @@ interface PageProps {
 export default async function Page() {
   "use cache";
   cacheLife("days");
-  let regions: PageProps["regions"] = [];
-  try {
-    regions = await prisma.region.findMany({
-      select: {
-        regionId: true,
-        name: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
-  } catch {
-    notFound();
-  }
+  // Deliberately uncaught. A catch here — inside the `"use cache"` scope —
+  // would make `notFound()` a *successful* render that Next stores and serves
+  // for the whole `cacheLife` window. Throwing writes nothing to the cache, so
+  // the route recovers as soon as the database does. See CLAUDE.md → "Never
+  // catch a database error inside a `"use cache"` scope".
+  const regions: PageProps["regions"] = await prisma.region.findMany({
+    select: {
+      regionId: true,
+      name: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
   const galaxies: {
     name: string;
     filter: (region: { regionId: number; name: string }) => boolean;

@@ -14,7 +14,9 @@ jest.mock("@jitaspace/esi-client", () => ({
 }));
 
 function renderDashboard(props?: { initialShowAll?: boolean }) {
-  const { EsiStatusDashboard } = require("~/components/Status/EsiStatusDashboard");
+  const {
+    EsiStatusDashboard,
+  } = require("~/components/Status/EsiStatusDashboard");
   return render(
     <MantineProvider>
       <EsiStatusDashboard initialShowAll={props?.initialShowAll} />
@@ -58,7 +60,11 @@ describe("EsiStatusDashboard", () => {
         data: {
           routes: [
             { method: "get", path: "/characters/{id}/", status: "OK" },
-            { method: "post", path: "/markets/structures/", status: "Degraded" },
+            {
+              method: "post",
+              path: "/markets/structures/",
+              status: "Degraded",
+            },
             { method: "get", path: "/wallet/journal/", status: "Down" },
           ],
         },

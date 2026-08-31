@@ -16,7 +16,6 @@ import {
 
 import { AttributesIcon, OtherIcon } from "@jitaspace/eve-icons";
 
-
 export default function Page() {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();

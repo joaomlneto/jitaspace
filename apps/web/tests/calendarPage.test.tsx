@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -35,22 +35,19 @@ jest.mock("@mantine/modals", () => ({
 
 // Child components are mocked: CalendarEventList echoes how many events it got
 // for a given day, EventsCalendar is a leaf marker.
-jest.mock(
-  "~/components/Calendar/CalendarEventList/CalendarEventList",
-  () => ({
-    CalendarEventList: ({
-      characterId,
-      events,
-    }: {
-      characterId?: number;
-      events?: unknown[];
-    }) => (
-      <div data-testid="event-list">
-        {`char:${characterId} count:${events?.length ?? 0}`}
-      </div>
-    ),
-  }),
-);
+jest.mock("~/components/Calendar/CalendarEventList/CalendarEventList", () => ({
+  CalendarEventList: ({
+    characterId,
+    events,
+  }: {
+    characterId?: number;
+    events?: unknown[];
+  }) => (
+    <div data-testid="event-list">
+      {`char:${characterId} count:${events?.length ?? 0}`}
+    </div>
+  ),
+}));
 
 jest.mock("~/components/Calendar/EventsCalendar", () => ({
   __esModule: true,

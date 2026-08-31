@@ -20,38 +20,58 @@ export const EveImageServerAvatar = memo(
     id,
     variation,
     size,
+    alt,
+    imageProps,
     ...avatarProps
   }: EveImageServerAvatarProps) => {
     const avatarSize = getAvatarSize({
       size: size ?? "md",
       sizes,
     });
-    const imageSize = esiImageSizeClamp(avatarSize);
 
-    if (
-      category &&
-      !id &&
-      ["alliances", "corporations", "characters"].includes(category)
-    ) {
-      return (
-        <Avatar
-          src={`https://images.evetech.net/${category}/1/${category == "characters" ? "portrait" : "logo"}?size=${imageSize}`}
-          size={size}
-          alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
-          {...avatarProps}
-        />
-      );
-    }
+    /**
+     * The image server serves powers of two, so ask for the avatar's pixel size
+     * rounded up. A HiDPI screen needs more device pixels than that, which is
+     * what the `2x` candidate below covers: `srcSet` lets the browser pick by
+     * its own devicePixelRatio and fetch exactly one of them. Reading
+     * `devicePixelRatio` in JS instead would either mismatch on hydration or
+     * download the 1x image before upgrading it.
+     */
+    const urlFor = (path: string, scale: number) =>
+      `https://images.evetech.net/${path}?size=${esiImageSizeClamp(avatarSize * scale)}`;
+
+    /**
+     * Without an id there is no image to address. Leaving `src` undefined lets
+     * Mantine draw its own placeholder, which is what the id-less call sites
+     * actually want — they use these avatars as decorative glyphs beside menu
+     * items. Substituting entity id 1, as this used to, showed a real and
+     * unrelated portrait there.
+     */
+    const path =
+      id && category && variation
+        ? `${category}/${id}/${variation}`
+        : undefined;
+
+    const [src, retina] = path
+      ? [urlFor(path, 1), urlFor(path, 2)]
+      : [undefined, undefined];
 
     return (
       <Avatar
-        src={
-          id && category && variation
-            ? `https://images.evetech.net/${category}/${id}/${variation}?size=${imageSize}`
-            : undefined
-        }
+        src={src}
+        imageProps={{
+          // Both candidates collapse to one URL once the clamp floors at 32 or
+          // caps at 1024; there is then nothing for the browser to choose
+          // between, so offer no srcSet at all.
+          ...(retina && retina !== src
+            ? { srcSet: `${src} 1x, ${retina} 2x` }
+            : {}),
+          ...imageProps,
+        }}
         size={size}
-        alt={avatarProps.alt ?? `${category} ${id} ${variation}`}
+        // Only describe an image that is actually being shown. Interpolating a
+        // missing id produced alt text reading "characters undefined portrait".
+        alt={alt ?? (path ? `${category} ${id} ${variation}` : undefined)}
         {...avatarProps}
       />
     );

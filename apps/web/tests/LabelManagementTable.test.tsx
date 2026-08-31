@@ -59,9 +59,9 @@ jest.mock("~/components/Text", () => ({
 // Fixtures / helpers
 // ---------------------------------------------------------------------------
 
-const deleteLabel = jest.fn<(...args: unknown[]) => Promise<{ success: boolean; error?: string }>>(
-  () => Promise.resolve({ success: true }),
-);
+const deleteLabel = jest.fn<
+  (...args: unknown[]) => Promise<{ success: boolean; error?: string }>
+>(() => Promise.resolve({ success: true }));
 
 const LABELS_VALUE = {
   data: {
@@ -154,7 +154,10 @@ describe("LabelManagementTable", () => {
   });
 
   it("renders an empty table body (no Delete buttons) when there are no labels", () => {
-    mockUseCharacterMailLabels.mockReturnValue({ data: { data: {} }, deleteLabel });
+    mockUseCharacterMailLabels.mockReturnValue({
+      data: { data: {} },
+      deleteLabel,
+    });
     const { container } = renderTable();
     expect(
       screen.queryByRole("button", { name: "Delete" }),

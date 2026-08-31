@@ -16,6 +16,6 @@ import { useGetMarketPrices } from "@jitaspace/fuzzworks-market-client";
 
 ## Scripts
 
-| Command | Description |
-|---|---|
+| Command              | Description                             |
+| -------------------- | --------------------------------------- |
 | `pnpm kubb:generate` | Regenerate client from the OpenAPI spec |

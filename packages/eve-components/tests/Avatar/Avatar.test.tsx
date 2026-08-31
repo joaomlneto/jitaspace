@@ -20,7 +20,6 @@ import {
   StargateAvatar,
   StationAvatar,
   StructureAvatar,
-  TypeAvatar,
   WarAggressorAvatar,
   WarDefenderAvatar,
 } from "@jitaspace/ui";
@@ -28,6 +27,7 @@ import {
 import { EveEntityAvatar } from "../../Avatar/EveEntityAvatar";
 import { EveMailSenderAvatar } from "../../Avatar/EveMailSenderAvatar";
 import { SolarSystemSovereigntyAvatar } from "../../Avatar/SolarSystemSovereigntyAvatar";
+import { TypeAvatar } from "../../Avatar/TypeAvatar";
 
 // ---------------------------------------------------------------------------
 // Mock every external data source the Avatar components reach for. Each mock is
@@ -161,14 +161,17 @@ describe("EveImageServerAvatar", () => {
     );
   });
 
-  it("falls back to the placeholder /1/ image when id is missing", () => {
+  it("renders no image when the id is missing", () => {
+    // Previously this substituted entity id 1 and showed a real, unrelated
+    // alliance logo. With no id there is nothing to address, so Mantine's own
+    // placeholder is drawn instead — which is what the id-less call sites
+    // (decorative glyphs beside menu items) actually want.
     const { container } = renderWithMantine(
       <EveImageServerAvatar category="alliances" variation="logo" />,
     );
-    const img = container.querySelector("img");
-    expect(img?.getAttribute("src")).toContain(
-      "https://images.evetech.net/alliances/1/logo",
-    );
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+    expect(container.innerHTML).not.toContain("/alliances/1/");
+    expect(container).not.toBeEmptyDOMElement();
   });
 
   it("renders no src when category/variation are absent", () => {
@@ -178,13 +181,24 @@ describe("EveImageServerAvatar", () => {
     expect(container).not.toBeEmptyDOMElement();
   });
 
-  it("uses the portrait placeholder for the characters category with no id", () => {
+  it("renders no portrait for the characters category with no id", () => {
     const { container } = renderWithMantine(
       <EveImageServerAvatar category="characters" variation="portrait" />,
     );
-    expect(container.querySelector("img")?.getAttribute("src")).toContain(
-      "https://images.evetech.net/characters/1/portrait",
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+    expect(container.innerHTML).not.toContain("/characters/1/");
+  });
+
+  it("never interpolates a missing id into the alt text", () => {
+    const { container } = renderWithMantine(
+      <EveImageServerAvatar category="characters" variation="portrait" />,
     );
+    // With no `src`, Mantine renders `<span title={alt}>` rather than an
+    // `<img alt>` — so the description surfaces on the title, not on an alt.
+    const placeholder = container.querySelector(".mantine-Avatar-placeholder");
+    expect(placeholder).not.toBeNull();
+    expect(placeholder).not.toHaveAttribute("title");
+    expect(container.innerHTML).not.toContain("undefined");
   });
 });
 
@@ -232,13 +246,12 @@ describe("AllianceAvatar / CorporationAvatar / CharacterAvatar / FactionAvatar",
     );
   });
 
-  it("RaceAvatar coerces a null factionId and falls back to the placeholder logo", () => {
-    // factionId ?? "" -> empty (falsy) id, so EveImageServerAvatar takes the
-    // corporations "/1/logo" placeholder branch.
+  it("RaceAvatar renders no image for a null factionId", () => {
+    // factionId ?? "" -> empty (falsy) id, so there is nothing to address and
+    // Mantine's placeholder is drawn rather than corporation 1's logo.
     const { container } = renderWithMantine(<RaceAvatar factionId={null} />);
-    expect(container.querySelector("img")?.getAttribute("src")).toContain(
-      "/corporations/1/logo",
-    );
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+    expect(container.innerHTML).not.toContain("/corporations/1/");
   });
 });
 
@@ -378,6 +391,80 @@ describe("TypeAvatar", () => {
     expect(container.querySelector("img")?.getAttribute("src")).toContain(
       "/types/587/icon",
     );
+  });
+
+  it("skips the lookup entirely when a variation is pinned", () => {
+    useSWRImmutable.mockReturnValue({ data: undefined });
+    renderWithMantine(<TypeAvatar typeId={587} variation="icon" />);
+    // A null swr key is how the lookup is disabled.
+    expect(useSWRImmutable.mock.calls[0]?.[0]).toBeNull();
+  });
+
+  it("does not retry the lookup on error", () => {
+    // A non-2xx from the variations endpoint is a permanent answer about that
+    // type id. SWR retries errors forever by default (errorRetryCount is
+    // unset), so an unknown type id would otherwise schedule an endless
+    // background retry chain.
+    useSWRImmutable.mockReturnValue({ data: undefined });
+    renderWithMantine(<TypeAvatar typeId={587} />);
+    expect(useSWRImmutable.mock.calls[0]?.[2]).toMatchObject({
+      shouldRetryOnError: false,
+    });
+  });
+
+  describe("the variations fetcher", () => {
+    // The fetcher is passed to swr as the second argument; grab it from the
+    // mock so it can be exercised directly against a stubbed global.fetch.
+    const getFetcher = () => {
+      useSWRImmutable.mockReturnValue({ data: undefined });
+      renderWithMantine(<TypeAvatar typeId={587} />);
+      return useSWRImmutable.mock.calls[0]?.[1] as (
+        url: string,
+      ) => Promise<string[]>;
+    };
+
+    const withFetch = async (
+      response: { ok: boolean; status: number; json: () => Promise<unknown> },
+      run: (fetcher: (url: string) => Promise<string[]>) => Promise<void>,
+    ) => {
+      const previous = global.fetch;
+      global.fetch = jest.fn(() =>
+        Promise.resolve(response),
+      ) as unknown as typeof global.fetch;
+      try {
+        await run(getFetcher());
+      } finally {
+        global.fetch = previous;
+      }
+    };
+
+    it("returns the variation list on success", async () => {
+      await withFetch(
+        { ok: true, status: 200, json: () => Promise.resolve(["icon", "bp"]) },
+        async (fetcher) => {
+          await expect(
+            fetcher("https://images.evetech.net/types/587"),
+          ).resolves.toEqual(["icon", "bp"]);
+        },
+      );
+    });
+
+    it("throws on a non-2xx instead of parsing the error body", async () => {
+      // The image server answers an unknown type id with a 404 carrying a JSON
+      // body, which would otherwise parse as a successful (non-array) result.
+      await withFetch(
+        {
+          ok: false,
+          status: 404,
+          json: () => Promise.resolve({ error: "not found" }),
+        },
+        async (fetcher) => {
+          await expect(
+            fetcher("https://images.evetech.net/types/1"),
+          ).rejects.toThrow("404");
+        },
+      );
+    });
   });
 });
 

@@ -33,6 +33,7 @@ import type {
 } from "../db";
 import type { EsiCorporationRow } from "./mergeEntriesIntoCorporationsTable";
 import { CharacterGender, prisma } from "../db";
+import { esiTaxRateToFraction } from "./mergeEntriesIntoCorporationsTable";
 
 const limit = pLimit(1);
 
@@ -717,22 +718,27 @@ const fetchCorporationsFromEsi = (
           .then((corporation) => ({
             corporationId,
             allianceId: corporation.alliance_id ?? null,
-            ceoId: corporation.ceo_id > 1 ? corporation.ceo_id : null,
+            ceoId:
+              corporation.ceo_id != null && corporation.ceo_id > 1
+                ? corporation.ceo_id
+                : null,
             creatorId:
-              corporation.creator_id > 1 ? corporation.creator_id : null,
+              corporation.creator_id != null && corporation.creator_id > 1
+                ? corporation.creator_id
+                : null,
             dateFounded: corporation.date_founded
               ? new Date(corporation.date_founded)
               : null,
-            description: corporation.description ?? null,
-            factionId: corporation.faction_id ?? null,
-            homeStationId: corporation.home_station_id ?? null,
+            description: corporation.description,
+            factionId: corporation.enlisted_faction_id ?? null,
+            homeStationId: corporation.home_station_id,
             memberCount: corporation.member_count,
             name: corporation.name,
             shares: corporation.shares ? BigInt(corporation.shares) : null,
-            taxRate: corporation.tax_rate,
+            taxRate: esiTaxRateToFraction(corporation.tax_rates.isk),
             ticker: corporation.ticker,
             url: corporation.url ?? null,
-            warEligible: corporation.war_eligible ?? null,
+            warEligible: corporation.war_eligible,
             isDeleted: false,
           }))
           .catch((err) => {

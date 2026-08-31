@@ -1,28 +1,33 @@
 "use client";
 
+import type { ActionIconProps } from "@mantine/core";
 import { memo } from "react";
-import { ActionIcon, Tooltip } from "@mantine/core";
 
 import { MarketIcon } from "@jitaspace/eve-icons";
 
-export interface OpenMarketWindowActionIconProps {
+import { TooltipActionIcon } from "./TooltipActionIcon";
+
+export type OpenMarketWindowActionIconProps = ActionIconProps & {
   onOpen?: () => void;
   disabled?: boolean;
-}
+};
 
 export const OpenMarketWindowActionIcon = memo(
-  ({ onOpen, disabled }: OpenMarketWindowActionIconProps) => {
+  ({
+    onOpen,
+    disabled,
+    ...actionIconProps
+  }: OpenMarketWindowActionIconProps) => {
     return (
-      <Tooltip color="dark" label="Open market window in the EVE client.">
-        <ActionIcon
-          variant="light"
-          disabled={!onOpen || disabled}
-          radius="xl"
-          onClick={onOpen}
-        >
-          <MarketIcon width={20} />
-        </ActionIcon>
-      </Tooltip>
+      <TooltipActionIcon
+        label="Open market window in the EVE client."
+        onActivate={onOpen}
+        disabled={disabled}
+        variant="light"
+        {...actionIconProps}
+      >
+        <MarketIcon width={20} />
+      </TooltipActionIcon>
     );
   },
 );

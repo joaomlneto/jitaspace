@@ -27,14 +27,21 @@ describe("MailLabelColorSwatch", () => {
     });
   });
 
-  it("falls back to the 'primary' color when none is provided", () => {
+  it("falls back to a real colour when none is provided", () => {
     const { container } = renderWithMantine(<MailLabelColorSwatch />);
     const swatch = container.querySelector(".mantine-ColorSwatch-root");
     expect(swatch).toBeInTheDocument();
-    // The non-theme "primary" fallback string is passed through verbatim
-    expect(colorOverlayOf(container)).toHaveStyle({
-      backgroundColor: "primary",
-    });
+
+    // Regression: the fallback used to be a bare "primary", which is neither a
+    // CSS colour keyword nor a Mantine theme key — so the declaration was
+    // dropped and the swatch rendered with no colour at all. Asserted on the
+    // style attribute rather than through toHaveStyle: jsdom discards an
+    // invalid declaration, and jest-dom parses the *expected* value the same
+    // way, so `toHaveStyle({ backgroundColor: "primary" })` compared empty to
+    // empty and passed against the broken component.
+    const style = colorOverlayOf(container)?.getAttribute("style") ?? "";
+    expect(style).toContain("background-color:");
+    expect(style).toContain("var(--mantine-primary-color-filled)");
   });
 
   it("forwards extra ColorSwatch props (size/other)", () => {

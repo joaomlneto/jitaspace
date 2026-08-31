@@ -9,42 +9,60 @@ import tseslint from "typescript-eslint";
 /**
  * All packages that leverage t3-env should use this rule
  */
-export const restrictEnvAccess = defineConfig(
-  { ignores: ["**/env.ts"] },
-  {
-    files: ["**/*.js", "**/*.ts", "**/*.tsx"],
-    rules: {
-      "no-restricted-properties": [
-        "error",
-        {
-          object: "process",
-          property: "env",
-          message:
-            "Use `import { env } from '~/env'` instead to ensure validated types.",
-        },
-      ],
-      "no-restricted-imports": [
-        "error",
-        {
-          name: "process",
-          importNames: ["env"],
-          message:
-            "Use `import { env } from '~/env'` instead to ensure validated types.",
-        },
-      ],
-    },
+export const restrictEnvAccess = defineConfig({
+  files: ["**/*.js", "**/*.cjs", "**/*.mjs", "**/*.ts", "**/*.tsx"],
+  // Scoped to THIS config object, not a standalone `{ ignores }` entry: a
+  // config whose only key is `ignores` is a GLOBAL ignore in flat config, so
+  // the previous form removed every env.ts from all linting rather than just
+  // exempting it from the two process.env rules below. env.ts is the one file
+  // that legitimately reads process.env — and the one that most needs
+  // turbo/no-undeclared-env-vars.
+  ignores: [
+    "**/env.ts",
+    // Build/tooling config and standalone scripts run in plain Node before the
+    // validated env module exists — next.config.mjs literally reads
+    // process.env.SKIP_ENV_VALIDATION to decide whether to import it, and the
+    // Sentry configs initialise before any app module loads.
+    "**/*.config.{js,cjs,mjs,ts}",
+    "**/scripts/**",
+  ],
+  rules: {
+    "no-restricted-properties": [
+      "error",
+      {
+        object: "process",
+        property: "env",
+        message:
+          "Use `import { env } from '~/env'` instead to ensure validated types.",
+      },
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        name: "process",
+        importNames: ["env"],
+        message:
+          "Use `import { env } from '~/env'` instead to ensure validated types.",
+      },
+    ],
   },
-);
+});
 
 export const baseConfig = defineConfig(
   // Ignore files not tracked by VCS and any config files
-  includeIgnoreFile(path.join(import.meta?.dirname, "../../.gitignore")),
+  includeIgnoreFile(path.join(import.meta.dirname, "../../.gitignore")),
   // `includeIgnoreFile` only reads the root .gitignore; generated client code
   // (kubb output) is excluded via *package-level* .gitignore files, so ignore
   // it explicitly here to keep generated sources out of lint.
-  { ignores: ["**/*.config.*", "**/src/generated/**"] },
   {
-    files: ["**/*.js", "**/*.ts", "**/*.tsx"],
+    ignores: [
+      "**/eslint.config.*",
+      "**/src/generated/**",
+      "**/prisma/generated/**",
+    ],
+  },
+  {
+    files: ["**/*.js", "**/*.cjs", "**/*.mjs", "**/*.ts", "**/*.tsx"],
     plugins: {
       import: importPlugin,
       turbo: turboPlugin,
@@ -88,6 +106,29 @@ export const baseConfig = defineConfig(
       },
     },
   },
+  // Build/tooling configuration and standalone scripts. These were previously
+  // excluded from lint wholesale by an `**/*.config.*` ignore — which caught
+  // real executed code, including next.config.mjs (the CSP, security headers
+  // and redirects) and the Sentry init files. They run in plain Node, and Next
+  // requires rewrites/redirects/headers to be `async` even with no await.
+  {
+    files: ["**/*.config.{js,cjs,mjs,ts}", "**/scripts/**/*.{js,cjs,mjs,ts}"],
+    languageOptions: {
+      globals: {
+        Buffer: "readonly",
+        __dirname: "readonly",
+        __filename: "readonly",
+        console: "readonly",
+        exports: "writable",
+        module: "writable",
+        process: "readonly",
+        require: "readonly",
+      },
+    },
+    rules: {
+      "@typescript-eslint/require-await": "off",
+    },
+  },
   // Test files legitimately work with `any` (mocked modules), `require()`
   // (mocks must be registered before the unit under test is imported), and
   // non-null assertions on known-present fixtures. Relax the type-safety rules
@@ -98,6 +139,8 @@ export const baseConfig = defineConfig(
       "**/*.test.tsx",
       "**/tests/**/*.ts",
       "**/tests/**/*.tsx",
+      "**/__mocks__/**/*.ts",
+      "**/__mocks__/**/*.tsx",
     ],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
