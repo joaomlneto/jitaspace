@@ -19,19 +19,17 @@
     "NEXTAUTH_URL",
     "NEXT_PUBLIC_DISCORD_INVITE_LINK",
     "NEXT_PUBLIC_GOOGLE_TAG_ID",
-    // The PostHog pair and NEXT_PUBLIC_SITE_URL are read by apps/web/env.ts and
-    // inlined into the client bundle at build time. Turbo defaults to
-    // `envMode: "strict"`, which REMOVES undeclared vars from the task process —
-    // not just from the hash. Locally `with-env` re-injects them from the root
-    // .env after turbo has filtered, but on Vercel there is no .env file, so
-    // they arrived undefined and `posthog.init` silently never ran. Declaring
-    // them here restores them to the build and puts them in the cache key, so
-    // rotating a token invalidates the build instead of restoring a .next with
-    // the old value baked in.
-    "NEXT_PUBLIC_POSTHOG_HOST",
-    "NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN",
+    // A NEXT_PUBLIC_* var read only by apps/web does NOT belong here: turbo
+    // infers that package as `nextjs` and hashes the whole prefix for it, so a
+    // globalEnv entry only adds the var to the other 25 packages' hashes,
+    // turning over caches that never saw the value. Delivery is not a reason
+    // either way — turbo passes NEXT_* through to every task process under
+    // envMode strict, declared or not. SENTRY_DSN stays for a different
+    // reason: packages/background-jobs-triggerdev reads it (src/trigger/
+    // init.ts:12) and has no `next` dependency, so eslint-plugin-turbo does
+    // not infer it either, and without this entry the
+    // turbo/no-undeclared-env-vars rule fails `pnpm lint`.
     "NEXT_PUBLIC_SENTRY_DSN",
-    "NEXT_PUBLIC_SITE_URL",
     "NEXT_PUBLIC_UMAMI_WEBSITE_ID",
     "REDIS_URL",
     "SENTRY_AUTH_TOKEN",
