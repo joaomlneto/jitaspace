@@ -1,8 +1,5 @@
-import pLimit from "p-limit";
-
-import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
-import { prisma } from "../../../db";
+import { Prisma, prisma } from "../../../db";
 import {
   ingestSdeTable,
   loadSdeFiles,
@@ -67,7 +64,16 @@ export const ingestSdeStargates = defineJob<
     // Pass 2: backfill destinationStargateId now that every stargate row exists, so
     // the self-FK is always satisfiable. Diffed against the current values so
     // re-runs are no-ops and so it coexists with `scrapeEsiStargates` (which also
-    // sets this column); concurrency-bounded individual updates (each is one row).
+    // sets this column).
+    //
+    // Written as chunked bulk UPDATEs rather than concurrent per-row updates.
+    // Stargates are mutually-referencing PAIRS (A's destination is B while B's is
+    // A), and PostgreSQL takes a FOR KEY SHARE lock on the FK-referenced row on
+    // top of the row being written — so two concurrent single-row updates on a
+    // pair each hold what the other needs and PostgreSQL aborts one with
+    // "deadlock detected" (40P01). Pair members are adjacent in SDE order, so any
+    // real concurrency hits this on a cold table. A single statement is one
+    // transaction and cannot deadlock against itself.
     const desired = Object.entries(files["mapStargates.yaml"]).map(
       ([key, record]) => {
         const destination = ((record as Record<string, unknown>).destination ??
@@ -88,17 +94,30 @@ export const ingestSdeStargates = defineJob<
     const toBackfill = desired.filter(
       (entry) => current.get(entry.stargateId) !== entry.destinationStargateId,
     );
-    const limit = pLimit(20);
-    await Promise.all(
-      toBackfill.map((entry) =>
-        limit(() =>
-          prisma.stargate.update({
-            where: { stargateId: entry.stargateId },
-            data: { destinationStargateId: entry.destinationStargateId },
-          }),
-        ),
-      ),
-    );
+    // 2 bind params per row, so 10k rows/statement stays far under PostgreSQL's
+    // 65535-parameter wire limit (same reasoning as `ingestSdeCompositeTable`).
+    const BACKFILL_CHUNK_ROWS = 10_000;
+    // `@updatedAt` is applied by Prisma Client, not the database, so a raw
+    // UPDATE has to set it explicitly to match the per-row update it replaces.
+    const now = new Date();
+    for (
+      let offset = 0;
+      offset < toBackfill.length;
+      offset += BACKFILL_CHUNK_ROWS
+    ) {
+      const chunk = toBackfill.slice(offset, offset + BACKFILL_CHUNK_ROWS);
+      await prisma.$executeRaw`
+        UPDATE "Stargate" AS s
+        SET "destinationStargateId" = v."destinationStargateId",
+            "updatedAt" = ${now}
+        FROM (VALUES ${Prisma.join(
+          chunk.map(
+            (entry) =>
+              Prisma.sql`(${entry.stargateId}::int, ${entry.destinationStargateId}::int)`,
+          ),
+        )}) AS v("stargateId", "destinationStargateId")
+        WHERE s."stargateId" = v."stargateId"`;
+    }
 
     return {
       stats: { stargates, destinationsBackfilled: toBackfill.length },

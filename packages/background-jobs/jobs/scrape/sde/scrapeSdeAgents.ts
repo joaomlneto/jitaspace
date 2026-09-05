@@ -26,9 +26,18 @@ export interface ScrapeAgentsEventPayload {
 /**
  * Agent metadata comes from the SDE archive (`npcCharacters.yaml`), but the
  * Character rows it hangs off come from ESI — so unlike the pure `ingest-sde-*`
- * jobs this one is a hybrid and keeps its `scrape-` id. It also has to run after
- * the ESI scrapers rather than inside the FK-ordered SDE ingest loop, because
- * `Agent` references Character and Station, both ESI-owned.
+ * jobs this one is a hybrid and keeps its `scrape-` id.
+ *
+ * `Agent` references Character and Station, so ordering is load-bearing.
+ * Characters this job needs are created by its own `createCorpAndItsRefRecords`
+ * call below, but `Agent.stationId` is a non-nullable FK into Station and
+ * nothing before the SDE ingest loop fills the NPC station set — bootstrap does
+ * not invoke `scrape-esi-stations`, so until `ingest-sde-stations` runs the
+ * table holds only the handful of corporation home stations and writing agents
+ * fails with P2003. `bootstrap-database` therefore sequences this job INTO the
+ * FK-ordered SDE loop, after `ingest-sde-stations` and before
+ * `ingest-sde-agents-in-space`; that still puts it after every ESI scraper,
+ * since the whole loop runs after them.
  *
  * AgentInSpace is deliberately not written here — `ingest-sde-agents-in-space`
  * owns that table from `agentsInSpace.yaml`.
