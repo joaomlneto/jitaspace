@@ -89,6 +89,7 @@ beforeEach(() => {
     corporation_id: 98000001,
     faction_id: 500001,
   });
+  useStar.mockReturnValue({ data: { data: { type_id: 3802 } } });
   useSWRImmutable.mockReturnValue({ data: ["icon"] });
 });
 
@@ -587,11 +588,45 @@ describe("SolarSystemSovereigntyAvatar", () => {
       <SolarSystemSovereigntyAvatar solarSystemId={30000142} />,
     );
     // The system's star id is resolved to its type, which is what the avatar
-    // renders: `StarAvatar` takes a type id, not a star id.
-    expect(useStar).toHaveBeenCalledWith(40000007);
+    // renders: `StarAvatar` takes a type id, not a star id. With no sovereignty
+    // holder the fetch is enabled (it is gated off on the sov branches).
+    expect(useStar).toHaveBeenCalledWith(40000007, undefined, {
+      query: { enabled: true },
+    });
     expect(container.querySelector("img")?.getAttribute("src")).toContain(
       "/types/45041/render",
     );
+  });
+
+  // Regression: the caller-supplied `enabled` is spread *after* the generated
+  // hook's own `enabled: !!star_id` guard, so it overwrites it. The star id has
+  // to be guarded here as well — otherwise the first render (solar system not
+  // resolved, sovereignty not resolved) fired a guaranteed-404 request for the
+  // placeholder star id 0.
+  it("does not request a star before the solar system query resolves", () => {
+    useSolarSystemSovereignty.mockReturnValue(undefined);
+    useSolarSystem.mockReturnValue({ data: undefined });
+    useStar.mockReturnValue({ data: undefined });
+    renderWithMantine(
+      <SolarSystemSovereigntyAvatar solarSystemId={30000142} />,
+    );
+    expect(useStar).toHaveBeenCalledWith(undefined, undefined, {
+      query: { enabled: false },
+    });
+    // and never with the bogus placeholder id
+    expect(useStar.mock.calls.map((call) => call[0])).not.toContain(0);
+  });
+
+  it("keeps the star query disabled while sovereignty is held", () => {
+    useSolarSystemSovereignty.mockReturnValue({ alliance_id: 99000123 });
+    useSolarSystem.mockReturnValue({ data: { data: { star_id: 40000007 } } });
+    renderWithMantine(
+      <SolarSystemSovereigntyAvatar solarSystemId={30000142} />,
+    );
+    // sovereignty is held, so the star fetch stays disabled regardless of id
+    expect(useStar).toHaveBeenCalledWith(40000007, undefined, {
+      query: { enabled: false },
+    });
   });
 
   it("accepts a string solarSystemId", () => {
