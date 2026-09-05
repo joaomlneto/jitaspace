@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 
 interface TaggedAsset {
   item_id: number;
@@ -175,7 +175,7 @@ describe("Corporation Assets Page", () => {
     );
     mockUseEsiNameLookup.mockReturnValue({
       "34": { value: { name: "Tritanium" } },
-      "36": { value: { name: "Mexallon" } },
+      "36": { value: { name: "Zydrine" } },
       "37": { value: { name: "Isogen" } },
     });
     mockUseMarketPrices.mockReturnValue({ data: {} });
@@ -202,6 +202,38 @@ describe("Corporation Assets Page", () => {
     renderPage();
     // 2002 has location_type=item, so 3 rows should render
     expect(screen.getAllByRole("row")).toHaveLength(4); // 1 header + 3 data rows
+  });
+
+  it("always renders the Location column", () => {
+    // Both the header and the cells used to be conditioned on a location
+    // filter — one that had no control anywhere on the page and so could
+    // never be set. Nothing hides the column now.
+    renderPage();
+
+    expect(
+      screen.getByRole("columnheader", { name: "Location" }),
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("columnheader")).toHaveLength(4);
+
+    const [, ...dataRows] = screen.getAllByRole("row");
+    expect(dataRows).toHaveLength(3);
+    for (const row of dataRows) {
+      expect(within(row).getAllByRole("cell")).toHaveLength(4);
+    }
+  });
+
+  it("orders rows by resolved type name, not by type id", () => {
+    // Isogen (37), Tritanium (34), Zydrine (36). The names are chosen so this
+    // order matches no comparator over the underlying fields — not arrival
+    // order, and not item_id, type_id or quantity in either direction — so it
+    // fails if the sort is dropped, reversed, or reads anything but the
+    // resolved name.
+    renderPage();
+
+    const rendered = screen
+      .getAllByTestId("type-name")
+      .map((element) => element.textContent);
+    expect(rendered).toEqual(["type-37", "type-34", "type-36"]);
   });
 
   it("names how many corporations could not be read, and keeps the rest", () => {

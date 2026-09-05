@@ -14,7 +14,6 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
 import { usePagination } from "@mantine/hooks";
 
 import {
@@ -53,12 +52,6 @@ export default function Page() {
   const [pickedCorporationId, setPickedCorporationId] = useState<string | null>(
     null,
   );
-  const filterForm = useForm<{ location_id: number | null; name: string }>({
-    initialValues: {
-      location_id: null,
-      name: "",
-    },
-  });
   const { data: marketPrices } = useMarketPrices();
 
   // A pick is only honoured while the corporation it names is still readable.
@@ -96,18 +89,10 @@ export default function Page() {
     [names],
   );
 
-  const filtersEnabled =
-    filterForm.values.location_id !== null || filterForm.values.name !== "";
-
   const entries = useMemo(
     () =>
       Object.values(assets)
         .filter((asset) => asset.location_type !== "item")
-        .filter(
-          (asset) =>
-            filterForm.values.location_id === null ||
-            asset.location_id === filterForm.values.location_id,
-        )
         .map((asset) => {
           const adjustedPrice = marketPrices[asset.type_id]?.adjusted_price;
           return {
@@ -116,23 +101,10 @@ export default function Page() {
             ...asset,
           };
         })
-        .filter(
-          (asset) =>
-            filterForm.values.name === "" ||
-            asset.typeName
-              ?.toLowerCase()
-              .includes(filterForm.values.name.toLowerCase()),
-        )
         .sort((a, b) =>
           (a.typeName ?? "").trim().localeCompare((b.typeName ?? "").trim()),
         ),
-    [
-      assets,
-      filterForm.values.location_id,
-      filterForm.values.name,
-      getNameFromCache,
-      marketPrices,
-    ],
+    [assets, getNameFromCache, marketPrices],
   );
 
   const _totalPrice = useMemo(
@@ -203,11 +175,7 @@ export default function Page() {
           {corporationIds.length > 0 && (
             <>
               <Text size="sm" c="dimmed">
-                {filtersEnabled
-                  ? `Showing ${entries.length}/${
-                      Object.keys(assets).length
-                    } assets`
-                  : `${Object.keys(assets).length} assets`}
+                {`${Object.keys(assets).length} assets`}
               </Text>
               {numUndefinedNames > 0 && (
                 <Text c="red" size="sm">
@@ -231,9 +199,7 @@ export default function Page() {
                     <th>Item ID</th>
                     <th>Qty</th>
                     <th>Type</th>
-                    {filterForm.values.location_id === null && (
-                      <th>Location</th>
-                    )}
+                    <th>Location</th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -265,15 +231,13 @@ export default function Page() {
                             </Group>
                           </Group>
                         </Table.Td>
-                        {filterForm.values.location_id === null && (
-                          <Table.Td>
-                            <Group gap="xs">
-                              <EveEntityAnchor entityId={asset.location_id}>
-                                <EveEntityName entityId={asset.location_id} />
-                              </EveEntityAnchor>
-                            </Group>
-                          </Table.Td>
-                        )}
+                        <Table.Td>
+                          <Group gap="xs">
+                            <EveEntityAnchor entityId={asset.location_id}>
+                              <EveEntityName entityId={asset.location_id} />
+                            </EveEntityAnchor>
+                          </Group>
+                        </Table.Td>
                       </Table.Tr>
                     ))}
                 </Table.Tbody>
