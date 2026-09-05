@@ -179,6 +179,31 @@ export function displayRadius(
   return DISPLAY_INNER + t * (DISPLAY_OUTER - DISPLAY_INNER);
 }
 
+/** Extra room left around the scene when framing it horizontally. */
+const FRAME_MARGIN = 1.08;
+
+/**
+ * Smallest camera-to-origin distance at which a scene of half-extent `extent`
+ * still fits *horizontally* in a perspective frustum of vertical field of view
+ * `fov` (degrees) at `aspect` (canvas width / height).
+ *
+ * three.js's `fov` is the vertical field of view, so a distance chosen to fit the
+ * scene top-to-bottom leaves it clipped left and right on any canvas narrower than
+ * it is tall — a phone, or the map in a sidebar. The overview layouts are a disc in
+ * the XZ plane whose full width faces the camera unforeshortened, so the whole
+ * `extent` has to fit across. Returns 0 when the inputs aren't usable numbers, so
+ * callers fall back to their own framing.
+ */
+export function horizontalFitDistance(
+  extent: number,
+  aspect: number,
+  fov: number,
+): number {
+  if (!Number.isFinite(aspect) || aspect <= 0) return 0;
+  if (!Number.isFinite(extent) || !Number.isFinite(fov)) return 0;
+  return (extent * FRAME_MARGIN) / (Math.tan((fov * Math.PI) / 360) * aspect);
+}
+
 /**
  * Camera distance that nicely frames a body of the given display `size` when it
  * is selected: proportional to the body so big bodies are viewed from farther
@@ -372,6 +397,17 @@ function layoutRealistic(
   const sizeOf = (radius: number | undefined, marker: number) =>
     radius && radius > 0 ? radius * sizeScale : marker;
 
+  // The swallow cap lives inside `sizeScale`, which a marker-sized body bypasses.
+  // The star is the only marker big enough for that to matter, so apply the same
+  // bound to it directly: a star we have no radius for must still not grow past a
+  // fraction of the innermost orbit and geometrically enclose the inner planets
+  // (an opaque mesh that also wins every raycast, so they would be neither
+  // visible nor clickable).
+  const starMarker = Math.min(
+    OVERVIEW_STAR_SIZE,
+    STAR_SWALLOW_FRACTION * minPlanetDist * posScale,
+  );
+
   // Stations and stargates never carry a radius, so there is nothing to size them
   // proportionally *to*. Express their fixed icons relative to whatever the
   // planets in this scene actually ended up at, so they read as markers beside
@@ -436,7 +472,7 @@ function layoutRealistic(
   const extent = REALISTIC_EXTENT;
 
   return {
-    star: { id: star.id, size: sizeOf(star.radius, OVERVIEW_STAR_SIZE) },
+    star: { id: star.id, size: sizeOf(star.radius, starMarker) },
     planets: placedPlanets,
     stations: placedStations,
     stargates: placedStargates,

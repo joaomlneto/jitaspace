@@ -51,7 +51,10 @@ import { SolarSystemMap } from "@jitaspace/solar-system-map";
 />;
 ```
 
-The component renders a WebGL `<canvas>` and cannot be server-rendered. In
+The component renders a WebGL `<canvas>` and cannot be server-rendered. If the
+browser can't give it a WebGL context at all — hardware acceleration turned off,
+a blocklisted GPU, a VM with no GL — it says so in place of the canvas instead of
+leaving a blank panel, and the text alternative below still lists every body. In
 Next.js, load it lazily:
 
 ```tsx

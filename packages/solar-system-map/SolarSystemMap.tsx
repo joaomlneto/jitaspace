@@ -81,6 +81,20 @@ const overlayTextStyle: CSSProperties = {
   letterSpacing: "0.02em",
 };
 
+/** Shown in place of the canvas when the browser can't give us a WebGL context. */
+const unsupportedStyle: CSSProperties = {
+  position: "absolute",
+  inset: 0,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  textAlign: "center",
+  padding: "0 24px",
+  color: "rgba(219, 230, 240, 0.72)",
+  fontSize: 13,
+  lineHeight: 1.5,
+};
+
 /**
  * Takes the element out of the visual flow without taking it out of the
  * accessibility tree. `display: none`, `visibility: hidden` and the `hidden`
@@ -146,6 +160,23 @@ function BodyEntry({
   );
 }
 
+/**
+ * Whether this browser can give us a WebGL context at all — hardware acceleration
+ * turned off, a blocklisted GPU, or a VM with no GL all make it fail. React Three
+ * Fiber builds its renderer inside an async call it does not await, so a failure
+ * there surfaces only as an unhandled rejection: no error boundary sees it and the
+ * canvas simply stays blank forever. Probing up front lets us say so instead.
+ */
+function hasWebGL(): boolean {
+  if (typeof document === "undefined") return true; // never rendered server-side
+  try {
+    const probe = document.createElement("canvas");
+    return Boolean(probe.getContext("webgl2") ?? probe.getContext("webgl"));
+  } catch {
+    return false;
+  }
+}
+
 export function SolarSystemMap({
   star,
   planets,
@@ -161,6 +192,9 @@ export function SolarSystemMap({
 }: Readonly<SolarSystemMapProps>) {
   const [hover, setHover] = useState<HoverTarget | null>(null);
   const [mode, setMode] = useState<LayoutMode>(defaultMode);
+  // Probed once, during the first render, so the canvas is never mounted at all
+  // on a device that cannot draw it.
+  const [webglSupported] = useState(hasWebGL);
   // Group stations exactly the way the scene does, so the text alternative
   // describes the same hierarchy a sighted user sees.
   const stationGroups = useMemo(
@@ -245,16 +279,23 @@ export function SolarSystemMap({
         ...style,
       }}
     >
-      <SolarSystemScene
-        star={star}
-        planets={planets}
-        stations={stations}
-        stargates={stargates}
-        mode={mode}
-        autoRotate={autoRotate}
-        hover={hover}
-        setHover={setHover}
-      />
+      {webglSupported ? (
+        <SolarSystemScene
+          star={star}
+          planets={planets}
+          stations={stations}
+          stargates={stargates}
+          mode={mode}
+          autoRotate={autoRotate}
+          hover={hover}
+          setHover={setHover}
+        />
+      ) : (
+        <div style={unsupportedStyle} role="status">
+          This map needs WebGL, which this browser or device isn&apos;t
+          providing. Check that hardware acceleration is enabled.
+        </div>
+      )}
 
       {hover && (
         <div style={{ ...labelStyle, left: hover.x + 14, top: hover.y }}>

@@ -272,3 +272,42 @@ describe("SolarSystemMap text alternative", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("SolarSystemMap without WebGL", () => {
+  it("says so instead of mounting a canvas that can never draw", () => {
+    // R3F builds its renderer in an async call it doesn't await, so a failed
+    // context creation surfaces as an unhandled rejection that no error boundary
+    // sees — the canvas would just sit blank forever with no signal at all.
+    const spy = jest
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockReturnValue(null);
+    try {
+      render(<SolarSystemMap {...system} />);
+
+      expect(screen.queryByTestId("scene")).not.toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(/needs WebGL/i);
+      // the text alternative still lists every body, so the data is not lost
+      expect(contentsList()).toBeInTheDocument();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("treats a throwing getContext as unsupported too", () => {
+    // Privacy-hardened browsers and some canvas-fingerprinting blockers throw
+    // here rather than returning null.
+    const spy = jest
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockImplementation(() => {
+        throw new Error("blocked");
+      });
+    try {
+      render(<SolarSystemMap {...system} />);
+
+      expect(screen.queryByTestId("scene")).not.toBeInTheDocument();
+      expect(screen.getByRole("status")).toHaveTextContent(/needs WebGL/i);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});

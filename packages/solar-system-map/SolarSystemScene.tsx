@@ -2,7 +2,7 @@
 
 import type { ThreeEvent } from "@react-three/fiber";
 import type { ComponentRef } from "react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { OrbitControls, Stars } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -22,6 +22,7 @@ import type {
 } from "./layout";
 import {
   focusDistance,
+  horizontalFitDistance,
   layoutSystem,
   MOON_COLOR,
   STAR_COLOR,
@@ -101,6 +102,46 @@ function CameraFocus({
       onArrived();
     }
   });
+  return null;
+}
+
+/**
+ * Pulls the camera back far enough that the scene also fits *across* the canvas.
+ *
+ * The `camera` prop below sizes the initial distance from the scene extent alone,
+ * and three.js's `fov` is vertical — so on a canvas narrower than it is tall (a
+ * phone, or the map in a sidebar) the outer planets and the stargate ring start
+ * outside the frustum and the user has to zoom out to discover them. R3F applies
+ * the `camera` prop exactly once, so this runs on mount and again whenever a mode
+ * switch changes the extent. It only ever moves the camera further out, so it
+ * can't undo a zoom the user chose.
+ */
+function FrameScene({
+  extent,
+  controlsRef,
+}: Readonly<{
+  extent: number;
+  controlsRef: { current: OrbitControlsRef | null };
+}>) {
+  const camera = useThree((state) => state.camera);
+  const width = useThree((state) => state.size.width);
+  const height = useThree((state) => state.size.height);
+  const framedFor = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (framedFor.current === extent) return;
+    if (!(camera instanceof THREE.PerspectiveCamera)) return;
+    framedFor.current = extent;
+
+    const needed = horizontalFitDistance(extent, width / height, camera.fov);
+    const current = camera.position.length();
+    if (needed <= current || current === 0) return;
+
+    camera.position.multiplyScalar(needed / current);
+    camera.updateProjectionMatrix();
+    controlsRef.current?.update();
+  }, [camera, width, height, extent, controlsRef]);
+
   return null;
 }
 
@@ -411,6 +452,7 @@ export default function SolarSystemScene({
         controlsRef={controlsRef}
         onArrived={clearFocus}
       />
+      <FrameScene extent={layout.extent} controlsRef={controlsRef} />
     </Canvas>
   );
 }

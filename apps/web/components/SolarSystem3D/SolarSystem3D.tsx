@@ -245,9 +245,9 @@ export function SolarSystem3D({
 
   // The star query is disabled when the system has no star_id (e.g. some abyssal
   // systems), so `settled` must NOT block on it — it stays not-loading and the
-  // map still renders. The resulting radius of 0 draws the star at the overview
-  // modes' constant size, but collapses to the package's minimum geometry (1e-4,
-  // i.e. effectively invisible) in realistic mode. Failed per-body queries
+  // map still renders. The resulting radius of 0 draws the star at a marker size
+  // in every mode: the overview constant, and in realistic mode that same
+  // constant capped to stay inside the innermost orbit. Failed per-body queries
   // resolve to not-loading too, so a partial failure degrades to a partial map
   // rather than hanging.
   const settled =

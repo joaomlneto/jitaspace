@@ -2,6 +2,7 @@ import type { PlanetInput, StarInput, Vec3 } from "../layout";
 import {
   displayRadius,
   focusDistance,
+  horizontalFitDistance,
   layoutSystem,
   nearestPlanetId,
   PLANET_COLORS,
@@ -202,6 +203,30 @@ describe("layoutSystem — realistic", () => {
     );
     expect(layout.star.size).toBeGreaterThan(0); // floored, not zero
     expect(layout.planets[0]?.satellites[0]?.size ?? 0).toBeGreaterThan(0);
+  });
+
+  it("keeps a radius-less star inside the innermost orbit too", () => {
+    // The swallow cap is applied through `sizeScale`, which a marker-sized body
+    // skips, so the marker needs the same bound applied directly. Without it a
+    // star the adapter couldn't fetch a radius for is drawn at the full overview
+    // size and geometrically encloses the inner planets — an opaque mesh that
+    // also wins every raycast, so they go invisible *and* unclickable.
+    const planets: PlanetInput[] = [
+      { id: 1, position: vec(40e9, 0, 0), moons: [] },
+      { id: 2, position: vec(0, 0, -890e9), moons: [] },
+    ];
+    const layout = layoutSystem(
+      { id: 0, radius: 0 },
+      planets,
+      [],
+      [{ id: 50, position: vec(0, 0, -4000e9) }],
+      "realistic",
+    );
+    const innerOrbit = Math.min(
+      ...layout.planets.map((p) => Math.hypot(...p.position)),
+    );
+    expect(layout.star.size).toBeGreaterThan(0);
+    expect(layout.star.size).toBeLessThan(innerOrbit);
   });
 
   it("places stargates at their real scaled position", () => {
@@ -466,5 +491,46 @@ describe("degenerate inputs", () => {
     expect(layout.stargates).toHaveLength(0);
     expect(Number.isFinite(layout.star.size)).toBe(true);
     expect(layout.extent).toBeGreaterThan(0);
+  });
+});
+
+describe("horizontalFitDistance", () => {
+  const FOV = 50; // the scene's camera
+
+  it("needs more distance the narrower the canvas gets", () => {
+    const wide = horizontalFitDistance(24.64, 16 / 9, FOV);
+    const square = horizontalFitDistance(24.64, 1, FOV);
+    const phone = horizontalFitDistance(24.64, 330 / 460, FOV);
+    expect(wide).toBeLessThan(square);
+    expect(square).toBeLessThan(phone);
+  });
+
+  it("exceeds the scene's own framing exactly when the canvas is too narrow", () => {
+    // What the scene does: camDistance = extent * 1.9 + 6, camera at
+    // [0, camDistance * 0.6, camDistance], so |position| = camDistance * 1.1662.
+    const extent = 24.64;
+    const camDistance = extent * 1.9 + 6;
+    const positioned = Math.hypot(camDistance * 0.6, camDistance);
+
+    // a desktop canvas already frames it — nothing to correct
+    expect(horizontalFitDistance(extent, 16 / 9, FOV)).toBeLessThan(positioned);
+    // a 330x460 phone canvas does not, so the camera has to move back
+    expect(horizontalFitDistance(extent, 330 / 460, FOV)).toBeGreaterThan(
+      positioned,
+    );
+  });
+
+  it("scales linearly with the extent", () => {
+    const one = horizontalFitDistance(10, 0.8, FOV);
+    const two = horizontalFitDistance(20, 0.8, FOV);
+    expect(two / one).toBeCloseTo(2, 10);
+  });
+
+  it("returns 0 for an unusable aspect or extent rather than Infinity/NaN", () => {
+    expect(horizontalFitDistance(26, 0, FOV)).toBe(0);
+    expect(horizontalFitDistance(26, -1, FOV)).toBe(0);
+    expect(horizontalFitDistance(26, NaN, FOV)).toBe(0);
+    expect(horizontalFitDistance(26, Infinity, FOV)).toBe(0);
+    expect(horizontalFitDistance(Infinity, 1, FOV)).toBe(0);
   });
 });
