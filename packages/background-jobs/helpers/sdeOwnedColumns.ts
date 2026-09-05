@@ -212,3 +212,33 @@ export const SDE_OWNED_CONSTELLATION_COLUMNS = [
   "positionZ",
   "factionId",
 ] as const;
+
+/**
+ * Written by `ingestSdeAsteroidBelts` (mapAsteroidBelts.yaml). ESI's solar-system
+ * scrape creates belts from `/universe/asteroid_belts/{id}`, which carries none
+ * of the geometry or statistics the archive does.
+ */
+export const SDE_OWNED_ASTEROID_BELT_COLUMNS = [
+  "typeId",
+  "radius",
+  "solarSystemId",
+  "celestialIndex",
+  "positionX",
+  "positionY",
+  "positionZ",
+  "density",
+  "eccentricity",
+  "escapeVelocity",
+  "isTidallyLocked",
+  "massDust",
+  "massGas",
+  "orbitPeriod",
+  "orbitRadius",
+  "rotationRate",
+  "surfaceGravity",
+  "temperature",
+  "spectralClass",
+] as const;
+
+/** Written by `ingestSdeStars` (mapStars.yaml `statistics.life`). */
+export const SDE_OWNED_STAR_COLUMNS = ["life"] as const;
