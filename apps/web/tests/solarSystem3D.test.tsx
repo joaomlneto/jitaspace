@@ -46,6 +46,12 @@ jest.mock("next/dynamic", () => ({
         data-stations={String(props.stations.length)}
         data-stargates={String(props.stargates.length)}
         data-height={String(props.height)}
+        // carrying the ESI x/y/z through to each body's `position` is the whole
+        // job of this adapter, so surface them rather than only the counts
+        data-planet0-pos={JSON.stringify(props.planets[0]?.position)}
+        data-moon0-pos={JSON.stringify(props.planets[0]?.moons[0]?.position)}
+        data-station0-pos={JSON.stringify(props.stations[0]?.position)}
+        data-stargate0-pos={JSON.stringify(props.stargates[0]?.position)}
       >
         {HOVER_KINDS.map((kind) => (
           <span key={kind} data-testid={`label-${kind}`}>
@@ -201,6 +207,32 @@ describe("SolarSystem3D adapter", () => {
     // station 60000002 has no position → dropped
     expect(map).toHaveAttribute("data-stations", "1");
     expect(map).toHaveAttribute("data-stargates", "1");
+  });
+
+  it("carries each body's ESI coordinates through to its map position", () => {
+    mockUseSolarSystem.mockReturnValue({
+      data: { data: SYSTEM },
+      isError: false,
+    });
+
+    renderAdapter();
+
+    // x/y/z in that order, straight from the ESI fixtures above — a mirrored
+    // axis or a misaligned index would still type-check and still be a Vec3
+    const map = screen.getByTestId("ssm");
+    expect(map).toHaveAttribute(
+      "data-planet0-pos",
+      "[40000000000,0,20000000000]",
+    );
+    expect(map).toHaveAttribute(
+      "data-moon0-pos",
+      "[40000000000,0,20000000000]",
+    );
+    expect(map).toHaveAttribute(
+      "data-station0-pos",
+      "[41000000000,1000000000,20000000000]",
+    );
+    expect(map).toHaveAttribute("data-stargate0-pos", "[0,0,-4000000000000]");
   });
 
   it("routes each hover kind to its matching name component", () => {

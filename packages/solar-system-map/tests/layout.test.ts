@@ -253,6 +253,40 @@ describe("layoutSystem — realistic", () => {
     expect(gate?.size ?? 0).toBeGreaterThan(0);
   });
 
+  it("draws visible bodies when no planet/moon radius is supplied", () => {
+    // The shape @jitaspace/web actually produces: ESI's universe endpoints give
+    // planets and moons a position but no radius, so only the star has one. A
+    // strictly-proportional size with an absolute floor made every one of these
+    // 1e-4 in a 26-unit scene — sub-pixel at maximum zoom, and (since the mesh is
+    // the raycast target) impossible to hover or click. Guard the whole scene, not
+    // just one body: every mesh must be a workable fraction of the scene extent.
+    const planets: PlanetInput[] = [
+      {
+        id: 1,
+        position: vec(40e9, 0, 0),
+        moons: [{ id: 11, position: vec(40e9 + 2e8, 0, 0) }],
+      },
+      { id: 2, position: vec(-890e9, 0, 0), moons: [] },
+    ];
+    const layout = layoutSystem(
+      STAR,
+      planets,
+      [{ id: 60, position: vec(41e9, 1e9, 0) }],
+      [{ id: 50, position: vec(0, 0, -4000e9) }],
+      "realistic",
+    );
+    const sizes = [
+      layout.star.size,
+      ...layout.planets.map((p) => p.size),
+      ...layout.planets.flatMap((p) => p.satellites.map((s) => s.size)),
+      ...layout.stargates.map((g) => g.size),
+    ];
+    expect(sizes).toHaveLength(6);
+    // 1/1000th of the extent is still only ~0.2px at the default framing, so this
+    // floor is deliberately loose — it catches the collapse, not a design choice.
+    sizes.forEach((size) => expect(size).toBeGreaterThan(layout.extent / 1000));
+  });
+
   it("assigns stations to their nearest planet at real positions", () => {
     const stations = [
       { id: 60, position: vec(41e9, 1e9, 0) }, // nearest planet 1

@@ -7,26 +7,25 @@ and hover labels. Clicking a body smoothly centres the camera on it and frames
 it by size — handy for diving into the otherwise-tiny inner system.
 
 It is **presentational** — you pass in each body's real, system-relative
-position and `radius` (the metres-scale values from the SDE) and, optionally, a
+position in metres, its real `radius` where you have one, and, optionally, a
 `renderLabel` callback to resolve names. It has no data-fetching or UI-framework
 dependencies of its own.
 
 ## Layout modes
 
-Every body is placed from its real SDE coordinates and sized from its real
-`radius`. EVE systems span an enormous range, though (a planet is ~1/20,000 of
-its orbital radius and a moon orbits ~1/46,000 of the system's width from its
-planet), so the map offers three modes via a built-in selector:
+Every body is placed from its real coordinates, and sized from its real `radius`
+where one is supplied. EVE systems span an enormous range, though (a planet is
+~1/20,000 of its orbital radius and a moon orbits ~1/46,000 of the system's width
+from its planet), so the map offers three modes via a built-in selector:
 
 - **`compressed`** (default) — keeps each body's real angle but log-compresses
   the radial distance so the whole system is legible at a glance; moons/stations
   are clustered around their planet.
-- **`realistic`** — every body at its true 3D position (one uniform scale) and
-  sized from its real radius. Geometrically faithful, so the system is mostly
-  empty space: the star and inner planets sit near the centre and you zoom in to
-  inspect them. Sizes are enlarged by a shared factor for visibility (capped so
-  the star doesn't engulf the inner planets), keeping them strictly proportional
-  to the real radii.
+- **`realistic`** — every body at its true 3D position, on one uniform scale.
+  Geometrically faithful, so the system is mostly empty space: the star and inner
+  planets sit near the centre and you zoom in to inspect them. Bodies with a real
+  radius are sized strictly proportionally to it, enlarged by a shared factor for
+  visibility and capped so the star doesn't engulf the inner planets.
 - **`rings`** — planets on evenly-spaced rings (ranked by real distance) at their
   real angles.
 
@@ -70,26 +69,36 @@ const SolarSystemMap = dynamic(
 
 ## Props
 
-| Prop               | Type                                     | Default        | Description                                                                        |
-| ------------------ | ---------------------------------------- | -------------- | ---------------------------------------------------------------------------------- |
-| `star`             | `{ id, radius }`                         | —              | The system's star, with its real radius (metres).                                  |
-| `planets`          | `{ id, position, radius, moons }[]`      | —              | Planets with real position + radius; `moons` are `{ id, position, radius }`.       |
-| `stations`         | `{ id, position }[]`                     | —              | Stations with real position (assigned to their nearest planet).                    |
-| `stargates`        | `{ id, position }[]`                     | —              | Stargates with real position.                                                      |
-| `height`           | `number \| string`                       | `460`          | Map height.                                                                        |
-| `defaultMode`      | `"realistic" \| "compressed" \| "rings"` | `"compressed"` | Initial layout mode.                                                               |
-| `renderLabel`      | `({ kind, id }) => ReactNode`            | —              | Resolves a body's name, for both the hover label and the text alternative.         |
-| `showLegend`       | `boolean`                                | `true`         | Show the colour legend.                                                            |
-| `autoRotate`       | `boolean`                                | `false`        | Slowly auto-rotate the camera (pauses while hovering).                             |
-| `describeContents` | `boolean`                                | `true`         | Render the visually-hidden text alternative (see [Accessibility](#accessibility)). |
-| `style`            | `CSSProperties`                          | —              | Extra styles merged into the map's container element.                              |
+| Prop               | Type                                     | Default        | Description                                                                              |
+| ------------------ | ---------------------------------------- | -------------- | ---------------------------------------------------------------------------------------- |
+| `star`             | `{ id, radius }`                         | —              | The system's star, with its real radius (metres).                                        |
+| `planets`          | `{ id, position, radius?, moons }[]`     | —              | Planets with real position and optional radius; `moons` are `{ id, position, radius? }`. |
+| `stations`         | `{ id, position }[]`                     | —              | Stations with real position (assigned to their nearest planet).                          |
+| `stargates`        | `{ id, position }[]`                     | —              | Stargates with real position.                                                            |
+| `height`           | `number \| string`                       | `460`          | Map height.                                                                              |
+| `defaultMode`      | `"realistic" \| "compressed" \| "rings"` | `"compressed"` | Initial layout mode.                                                                     |
+| `renderLabel`      | `({ kind, id }) => ReactNode`            | —              | Resolves a body's name, for both the hover label and the text alternative.               |
+| `showLegend`       | `boolean`                                | `true`         | Show the colour legend.                                                                  |
+| `autoRotate`       | `boolean`                                | `false`        | Slowly auto-rotate the camera (pauses while hovering).                                   |
+| `describeContents` | `boolean`                                | `true`         | Render the visually-hidden text alternative (see [Accessibility](#accessibility)).       |
+| `style`            | `CSSProperties`                          | —              | Extra styles merged into the map's container element.                                    |
 
-Positions and radii are the raw system-relative SDE values (metres, star at the
-origin). In `realistic` mode the star, planets and moons are drawn at their
-exact positions and at sizes proportional to their real radius (enlarged for
-visibility); stations and stargates have no radius and render as fixed icons.
+Positions and radii are raw system-relative values in metres, with the star at
+the origin. In `realistic` mode every body is drawn at its exact position, and a
+body with a real radius is sized strictly proportionally to it (enlarged for
+visibility).
+
+`radius` is optional on planets and moons, because not every data source exposes
+one — ESI's universe endpoints return a planet's position but no radius, which is
+what `@jitaspace/web` feeds the map. A body with no radius has nothing to be
+proportional to, so it is drawn at a fixed marker size instead, in every mode.
+Stations and stargates never carry a radius and are always markers; in
+`realistic` mode their icons are scaled to whatever the planets in that scene
+ended up at, so they stay markers beside the planets rather than dwarfing them.
+
 Because moons orbit so close to their planet, at system scale they sit
-essentially on (or inside) the planet — zoom in to separate them.
+essentially on (or inside) the planet — switch to an overview mode to separate
+them.
 
 ## Accessibility
 

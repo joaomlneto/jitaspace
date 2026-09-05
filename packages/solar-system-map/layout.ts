@@ -10,9 +10,11 @@
  * a single uniform scale (the "realistic" mode) is geometrically exact but
  * leaves most bodies very small; two readable "overview" modes (compressed,
  * rings) remap the radial distance for legibility while keeping each body's real
- * angular position. In realistic mode body sizes are strictly proportional to
- * the real radius; the overview modes size planets proportionally too (clamped to
- * a legible minimum) and draw moons/stations at fixed icon sizes.
+ * angular position. In realistic mode a body with a real radius is sized strictly
+ * proportionally to it; the overview modes size planets proportionally too
+ * (clamped to a legible minimum). Bodies with no radius — stations and stargates
+ * always, planets and moons whenever the caller's data source doesn't expose one
+ * — are drawn at fixed marker sizes in every mode.
  */
 
 export type Vec3 = [number, number, number];
@@ -41,7 +43,8 @@ export interface PlanetInput {
   position: Vec3;
   /** Real radius (metres). Optional — not every source provides it (ESI's
    * universe endpoints, for one, return a planet's position but no radius), in
-   * which case the planet falls back to the minimum size in every mode. */
+   * which case the planet is drawn at a fixed marker size in every mode rather
+   * than proportionally. */
   radius?: number;
   /** This planet's moons with their real position and radius. */
   moons: BodyInput[];
@@ -101,7 +104,9 @@ const STAR_SWALLOW_FRACTION = 0.6;
 /** Smallest geometry we will emit, to avoid degenerate zero-size meshes. */
 const MIN_GEOMETRY = 1e-4;
 
-// Fixed icon sizes for radius-less bodies (stations, stargates).
+// Fixed icon sizes for stations and stargates, which never carry a radius. Used
+// by every mode — see `sizeOf` in layoutRealistic for why realistic mode draws
+// them at the same fixed size rather than scaling them with the system.
 const STATION_ICON = 0.05;
 const STARGATE_ICON = 0.07;
 
@@ -353,16 +358,33 @@ function layoutRealistic(
       ? (STAR_SWALLOW_FRACTION * minPlanetDist * posScale) / star.radius
       : Infinity;
   const sizeScale = Math.min(SIZE_EXAGGERATION * posScale, swallowCap);
-  // Strictly proportional to the real radius (so relative sizes stay faithful,
-  // even when sub-pixel); only a missing/zero radius falls back to MIN_GEOMETRY
-  // to avoid a degenerate zero-size mesh.
-  const sizeOf = (radius: number | undefined) =>
-    radius && radius > 0 ? radius * sizeScale : MIN_GEOMETRY;
-  // Stations and stargates have no real radius, so in realistic mode scale their
-  // fixed icons down with the rest of the system (floored at MIN_GEOMETRY).
-  // Otherwise the overview-sized icons dwarf the strictly-proportional, often
-  // sub-pixel real planets, and the "faithful" mode reads as anything but.
-  const iconSizeOf = (base: number) => Math.max(MIN_GEOMETRY, base * sizeScale);
+  // A body with a real radius is drawn strictly proportional to it, so relative
+  // sizes stay faithful even when the result is sub-pixel.
+  //
+  // A body *without* one has nothing to be proportional to, and gets the overview
+  // modes' fixed marker size instead. That case is the norm, not the exception:
+  // stations and stargates have no radius at all, and ESI's universe endpoints
+  // return a position but no radius for planets and moons. Falling back to
+  // MIN_GEOMETRY would emit an absolute 1e-4 into a scene REALISTIC_EXTENT (26)
+  // units across — sub-pixel at every zoom level, and since the mesh is also the
+  // raycast target, impossible to hover or click. That renders the whole mode as
+  // one lone star on black.
+  const sizeOf = (radius: number | undefined, marker: number) =>
+    radius && radius > 0 ? radius * sizeScale : marker;
+
+  // Stations and stargates never carry a radius, so there is nothing to size them
+  // proportionally *to*. Express their fixed icons relative to whatever the
+  // planets in this scene actually ended up at, so they read as markers beside
+  // the planets either way: sub-planet-sized next to strictly-proportional real
+  // radii, and their familiar overview size when the planets are markers too.
+  const planetSizes = planets.map((p) =>
+    sizeOf(p.radius, OVERVIEW_MIN_PLANET_SIZE),
+  );
+  const iconReference = planetSizes.length
+    ? Math.max(...planetSizes)
+    : OVERVIEW_MIN_PLANET_SIZE;
+  const iconSizeOf = (base: number) =>
+    Math.max(MIN_GEOMETRY, (base / OVERVIEW_MIN_PLANET_SIZE) * iconReference);
 
   const { byPlanet: stationsByPlanet, orphans } = partitionStations(
     stations,
@@ -376,7 +398,7 @@ function layoutRealistic(
         id: m.id,
         kind: "moon" as const,
         position: scaleVec(subtract(m.position, planet.position), posScale),
-        size: sizeOf(m.radius),
+        size: sizeOf(m.radius, OVERVIEW_MOON_SIZE),
       })),
       ...(stationsByPlanet.get(planet.id) ?? []).map((s) => ({
         id: s.id,
@@ -389,7 +411,7 @@ function layoutRealistic(
       id: planet.id,
       position,
       orbitRadius: length(position),
-      size: sizeOf(planet.radius),
+      size: sizeOf(planet.radius, OVERVIEW_MIN_PLANET_SIZE),
       color: planetColor(index),
       satellites,
     };
@@ -414,7 +436,7 @@ function layoutRealistic(
   const extent = REALISTIC_EXTENT;
 
   return {
-    star: { id: star.id, size: sizeOf(star.radius) },
+    star: { id: star.id, size: sizeOf(star.radius, OVERVIEW_STAR_SIZE) },
     planets: placedPlanets,
     stations: placedStations,
     stargates: placedStargates,
