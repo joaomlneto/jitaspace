@@ -12,6 +12,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import {
   eveImage,
   pageMetadata,
+  resolveTypeImage,
   toDescription,
   withArticle,
 } from "~/lib/metadata";
@@ -141,4 +142,64 @@ describe("eveImage", () => {
       expect(new URL(url).host).toBe("images.evetech.net");
     }
   });
+});
+
+describe("resolveTypeImage", () => {
+  /** Stand in for images.evetech.net/types/<id>, which lists what a type has. */
+  function mockImageService(variations: string[] | "unavailable") {
+    global.fetch = jest.fn(() =>
+      variations === "unavailable"
+        ? Promise.resolve({
+            ok: false,
+            status: 404,
+            json: () => Promise.resolve([]),
+          })
+        : Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve(variations),
+          }),
+    ) as unknown as typeof fetch;
+  }
+
+  it("prefers the render, which is what fills the card's artwork frame", async () => {
+    mockImageService(["icon", "render"]);
+    expect(await resolveTypeImage(587)).toBe(
+      "https://images.evetech.net/types/587/render?size=512",
+    );
+  });
+
+  it("falls back to the icon when the type publishes no render", async () => {
+    mockImageService(["icon"]);
+    expect(await resolveTypeImage(34)).toBe(
+      "https://images.evetech.net/types/34/icon?size=512",
+    );
+  });
+
+  it("returns nothing when the type has no artwork at all", async () => {
+    // Guessing a variation would leave an empty frame on the card: the CDN
+    // 404s on one a type does not publish.
+    mockImageService([]);
+    expect(await resolveTypeImage(2)).toBeUndefined();
+  });
+
+  it("returns nothing when the image service is unavailable", async () => {
+    mockImageService("unavailable");
+    expect(await resolveTypeImage(587)).toBeUndefined();
+  });
+
+  it("returns nothing when the request throws", async () => {
+    global.fetch = jest.fn(() => Promise.reject(new Error("network")));
+    expect(await resolveTypeImage(587)).toBeUndefined();
+  });
+
+  it.each([0, -1, 1.5, Number.NaN, null, undefined])(
+    "never asks the service about %p",
+    async (typeId) => {
+      const fetchSpy = jest.fn();
+      global.fetch = fetchSpy as unknown as typeof fetch;
+      expect(await resolveTypeImage(typeId)).toBeUndefined();
+      expect(fetchSpy).not.toHaveBeenCalled();
+    },
+  );
 });
