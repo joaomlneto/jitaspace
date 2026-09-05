@@ -7,6 +7,7 @@ import {
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_CONSTELLATION_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 const fetchConstellation = (constellationId: number) =>
@@ -57,7 +58,7 @@ export const scrapeEsiConstellations = defineJob<
               excludeObjectKeys(entry, [
                 "updatedAt",
                 "createdAt",
-                "wormholeClassId",
+                ...SDE_OWNED_CONSTELLATION_COLUMNS,
               ]),
             ),
           ),

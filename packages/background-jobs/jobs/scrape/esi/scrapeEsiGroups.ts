@@ -9,6 +9,7 @@ import type { Group } from "../../../db";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_GROUP_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeGroupsEventPayload {
@@ -34,10 +35,7 @@ const excludeGroupTimestamps = (entry: Group) =>
   excludeObjectKeys(entry, [
     "updatedAt",
     "createdAt",
-    "anchorable",
-    "anchored",
-    "fittableNonSingleton",
-    "useBasePrice",
+    ...SDE_OWNED_GROUP_COLUMNS,
   ]);
 
 const fetchRemoteGroup = (limit: Limit, groupId: number) =>

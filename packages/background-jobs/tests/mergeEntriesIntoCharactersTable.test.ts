@@ -31,7 +31,10 @@ beforeAll(async () => {
 
 // An ESI-derived record, as produced by convertEsiCharacterToDomain: it has no
 // createdAt/updatedAt.
-const remoteRecord: Omit<Character, "updatedAt" | "createdAt"> = {
+const remoteRecord: Omit<
+  Character,
+  "updatedAt" | "createdAt" | "ancestryId" | "isUnique"
+> = {
   characterId: 1,
   birthday: new Date("2020-01-01"),
   bloodlineId: 1,
