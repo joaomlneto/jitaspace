@@ -31,13 +31,15 @@ export interface ScrapeAgentsEventPayload {
  * `Agent` references Character and Station, so ordering is load-bearing.
  * Characters this job needs are created by its own `createCorpAndItsRefRecords`
  * call below, but `Agent.stationId` is a non-nullable FK into Station and
- * nothing before the SDE ingest loop fills the NPC station set — bootstrap does
- * not invoke `scrape-esi-stations`, so until `ingest-sde-stations` runs the
- * table holds only the handful of corporation home stations and writing agents
- * fails with P2003. `bootstrap-database` therefore sequences this job INTO the
- * FK-ordered SDE loop, after `ingest-sde-stations` and before
- * `ingest-sde-agents-in-space`; that still puts it after every ESI scraper,
- * since the whole loop runs after them.
+ * nothing bootstrap AWAITS fills the NPC station set before the SDE ingest
+ * loop. The full ESI station scrape is reached only as a fire-and-forget
+ * `ctx.send("scrape-esi-stations")` from `scrape-esi-solar-systems`, so whether
+ * it has landed by the time agents are written is a race; lose it and the write
+ * fails with P2003 against the handful of corporation home stations
+ * `createCorpAndItsRefRecords` seeded. `bootstrap-database` therefore sequences
+ * this job INTO the FK-ordered SDE loop, after `ingest-sde-stations` (which it
+ * does await) and before `ingest-sde-agents-in-space`. That still puts it after
+ * every ESI scraper, since the whole loop runs after them.
  *
  * AgentInSpace is deliberately not written here — `ingest-sde-agents-in-space`
  * owns that table from `agentsInSpace.yaml`.

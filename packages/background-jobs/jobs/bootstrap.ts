@@ -55,10 +55,12 @@ export const bootstrapDatabase = defineJob<
     for (const jobId of SDE_INGEST_JOB_IDS) {
       // `scrape-sde-agents` is sequenced INTO this list rather than run with the
       // scrapers above: `Agent.stationId` is a real FK and agents sit in NPC
-      // stations, but only `ingest-sde-stations` (earlier in this list) populates
-      // the full NPC station set — before it, the table holds just the handful of
-      // corporation home stations, so writing agents fails with P2003. It has to
-      // come before `ingest-sde-agents-in-space` in turn, which FKs `Agent`.
+      // stations, but `ingest-sde-stations` (earlier in this list) is the only
+      // thing bootstrap AWAITS that fills the NPC station set. The ESI station
+      // scrape is reached only via a fire-and-forget `ctx.send` from
+      // `scrape-esi-solar-systems`, so racing it leaves just the handful of
+      // corporation home stations and the agent write fails with P2003. It has
+      // to come before `ingest-sde-agents-in-space` in turn, which FKs `Agent`.
       if (jobId === "ingest-sde-agents-in-space") {
         await ctx.invoke("scrape-sde-agents", {});
       }

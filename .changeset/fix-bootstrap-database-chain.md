@@ -17,9 +17,10 @@ deliberately propagates child failures, so either one aborted the whole chain.
   roughly 4x faster (3.8s vs 16s), since two statements replace 14k round-trips.
 - `scrape-sde-agents` failed with an `Agent_stationId_fkey` violation (P2003) on
   a cold database. `Agent.stationId` is a non-nullable FK and agents sit in NPC
-  stations, but bootstrap does not invoke `scrape-esi-stations`, so until
-  `ingest-sde-stations` runs the table holds only the handful of corporation
-  home stations. The job is now sequenced into the FK-ordered SDE ingest loop,
+  stations, but the only thing bootstrap AWAITS that fills the NPC station set
+  is `ingest-sde-stations`; the ESI station scrape is reached solely through a
+  fire-and-forget `ctx.send` from `scrape-esi-solar-systems`, so racing it
+  leaves only the handful of corporation home stations. The job is now sequenced into the FK-ordered SDE ingest loop,
   after `ingest-sde-stations` and before `ingest-sde-agents-in-space` (which FKs
   `Agent`) — still after every ESI scraper, since the loop runs after them.
 
@@ -37,4 +38,5 @@ deliberately propagates child failures, so either one aborted the whole chain.
 The ordering is guarded by a test rather than a comment: it matches a literal id
 inside the loop, which the registry's generic `ctx.invoke` scan cannot see, so
 renaming or dropping that id would otherwise make bootstrap skip the agent
-scrape silently.
+scrape — surfacing much later as a confusing `AgentInSpace` FK violation rather
+than at the step that actually went wrong.

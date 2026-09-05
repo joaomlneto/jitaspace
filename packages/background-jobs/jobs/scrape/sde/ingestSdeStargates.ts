@@ -74,6 +74,13 @@ export const ingestSdeStargates = defineJob<
     // "deadlock detected" (40P01). Pair members are adjacent in SDE order, so any
     // real concurrency hits this on a cold table. A single statement is one
     // transaction and cannot deadlock against itself.
+    //
+    // Trade-off worth knowing: `destinationStargateId` is UNIQUE, and batching
+    // widens the blast radius of a constraint violation from one row to one
+    // chunk — a future SDE that SWAPS two gates' destinations can trip 23505
+    // mid-statement, where per-row writes would have failed only the offending
+    // pair. The diff below only emits rows whose value actually changed, so this
+    // needs an upstream reshuffle to bite, not a routine re-run.
     const desired = Object.entries(files["mapStargates.yaml"]).map(
       ([key, record]) => {
         const destination = ((record as Record<string, unknown>).destination ??
