@@ -11,6 +11,10 @@
  * outright has no id to be scoped by and its row is never even looked at. The
  * prisma stub below therefore applies `where.characterId.in` for real, so
  * re-narrowing any of those fetches makes the stale-row tests fail.
+ *
+ * The handler runs ONCE here, in `beforeAll`, and every test reads what that
+ * run wrote. Cases needing a different archive per run — a corrupt `agent`
+ * block, or the scope query itself — are in `scrapeSdeAgentsAgentFilter.test.ts`.
  */
 import type { scrapeSdeAgents as ScrapeSdeAgents } from "../jobs/scrape/sde/scrapeSdeAgents";
 

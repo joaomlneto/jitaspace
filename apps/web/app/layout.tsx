@@ -31,6 +31,7 @@ import { MainSpotlight } from "~/components/Spotlight";
 import { env } from "~/env";
 import { MainLayout } from "~/layouts";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
+import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "~/lib/og";
 import { DEFAULT_ESI_ACCEPT_LANGUAGE } from "~/lib/preferences";
 import { AppMantineProvider } from "./mantine-provider";
 import { splashScreenLink, splashScreens } from "./splashScreens";
@@ -43,6 +44,18 @@ const APP_DESCRIPTION =
 const SITE_URL = env.NEXT_PUBLIC_SITE_URL ?? "https://www.jita.space";
 const ESI_USER_AGENT = "jitaspace-web/0.1.0 (https://jita.space)";
 const ESI_ACCEPT_LANGUAGE = DEFAULT_ESI_ACCEPT_LANGUAGE;
+
+/**
+ * Fallback card, used for the home page and for the personal, auth-gated routes
+ * that deliberately describe nothing about themselves. Every public page
+ * overrides it with a card describing that specific entity — see
+ * `lib/metadata.ts`.
+ */
+const SITE_CARD = buildOgImageUrl({
+  title: APP_NAME,
+  subtitle: APP_DESCRIPTION,
+  badge: "EVE Online",
+});
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
@@ -65,24 +78,29 @@ export const metadata = {
   openGraph: {
     type: "website",
     siteName: APP_NAME,
+    url: "/",
     title: {
       default: APP_DEFAULT_TITLE,
       template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
-    // No site-wide og:image: shared links render as a clean text preview
-    // (title + description + site icon), which reads better on Discord/WhatsApp.
-    // Per-entity pages still set their own og:image (character/corp portraits).
+    images: [
+      {
+        url: SITE_CARD,
+        width: OG_IMAGE_WIDTH,
+        height: OG_IMAGE_HEIGHT,
+        alt: APP_NAME,
+      },
+    ],
   },
   twitter: {
-    // `summary`, not `summary_large_image`: there's no site-wide image to fill
-    // the large card.
-    card: "summary",
+    card: "summary_large_image",
     title: {
       default: APP_DEFAULT_TITLE,
       template: APP_TITLE_TEMPLATE,
     },
     description: APP_DESCRIPTION,
+    images: [SITE_CARD],
   },
 };
 

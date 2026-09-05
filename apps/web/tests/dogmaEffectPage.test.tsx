@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
@@ -11,7 +12,15 @@ jest.mock("next/navigation", () => ({
   useParams: () => ({ effectId: "30" }),
   useRouter: () => ({}),
   usePathname: () => "/",
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
 }));
+
+// The server page pulls in Prisma and `cacheLife`; the coverage CI job has no
+// generated Prisma client, so stub both out.
+jest.mock("~/lib/db", () => ({ prisma: {} }));
+jest.mock("next/cache", () => ({ cacheLife: () => undefined }));
 
 // ---------------------------------------------------------------------------
 // Hooks
@@ -256,4 +265,31 @@ describe("Dogma effect page (client)", () => {
     });
     expect(screen.getByText("Types")).toBeInTheDocument();
   });
+});
+
+// The server wrapper resolves `params` inside the Suspense boundary, so reach
+// its content component the same way React would rather than rendering the
+// async function as a client component.
+async function resolvePageContent(effectId: string) {
+  const Page = require("~/app/dogma/effect/[effectId]/page").default;
+  const suspenseEl = Page({ params: Promise.resolve({ effectId }) });
+  const contentEl = suspenseEl.props.children as {
+    type: (props: unknown) => Promise<ReactNode>;
+    props: unknown;
+  };
+  return contentEl.type(contentEl.props);
+}
+
+// The guard used to be `Number.isFinite`, which let `/dogma/effect/-1` and
+// `/dogma/effect/016` render a 200 apiece — extra URLs for a page far too heavy
+// to be crawled twice, which is why these are kept out of the sitemap entirely.
+describe("dogma effect page id validation", () => {
+  it.each(["0", "-1", "016", "16.0", "bad", ""])(
+    "404s rather than serving a second URL for %p",
+    async (effectId) => {
+      await expect(resolvePageContent(effectId)).rejects.toThrow(
+        "NEXT_NOT_FOUND",
+      );
+    },
+  );
 });

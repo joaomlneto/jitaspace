@@ -2,14 +2,17 @@ import { cacheLife } from "next/cache";
 
 import type { LPStoreAllPageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import { pageMetadata } from "~/lib/metadata";
 import { collectLpStoreOfferTypeIds } from "./collectTypeIds";
 import LPStoreAllPage from "./page.client";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "All LP Store Offers",
   description:
     "Browse all Loyalty Point store offers from every NPC corporation in EVE Online.",
-};
+  path: "/lp-store/all",
+  badge: "Loyalty Points",
+});
 
 export default async function Page() {
   "use cache";

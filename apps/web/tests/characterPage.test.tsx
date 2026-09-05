@@ -47,6 +47,9 @@ jest.mock("next/navigation", () => ({
   useParams: () => ({ characterId: String(CHARACTER_ID) }),
   useRouter: () => ({}),
   usePathname: () => "/",
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
 }));
 
 jest.mock("@jitaspace/hooks", () => ({
@@ -431,5 +434,30 @@ describe("Character page", () => {
     render(<MantineProvider>{resolved}</MantineProvider>);
 
     expect(screen.getByText("Details")).toBeInTheDocument();
+  });
+
+  it("404s an id that isn't the canonical spelling", async () => {
+    // `/character/030000142` used to serve the same character as
+    // `/character/30000142`, with no canonical tag to tell them apart.
+    const WrapperPage = require("~/app/character/[characterId]/page").default;
+    const tree = WrapperPage({
+      params: Promise.resolve({ characterId: `0${CHARACTER_ID}` }),
+    });
+    const child = tree.props.children;
+
+    await expect(child.type(child.props) as Promise<unknown>).rejects.toThrow(
+      "NEXT_NOT_FOUND",
+    );
+  });
+
+  it("canonicalises onto the parsed id", async () => {
+    const { generateMetadata } =
+      require("~/app/character/[characterId]/page") as typeof import("~/app/character/[characterId]/page");
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ characterId: String(CHARACTER_ID) }),
+    });
+
+    expect(metadata.alternates?.canonical).toBe(`/character/${CHARACTER_ID}`);
   });
 });

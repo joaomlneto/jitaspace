@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { describe, expect, it, jest } from "@jest/globals";
+import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -30,6 +31,33 @@ jest.mock(
       },
     ),
 );
+
+const corporationFindFirstOrThrow =
+  jest.fn<(a?: unknown) => Promise<{ corporationId: number; name: string }>>();
+const loyaltyStoreOfferFindMany =
+  jest.fn<(a?: unknown) => Promise<Record<string, unknown>[]>>();
+const typeFindMany =
+  jest.fn<(a?: unknown) => Promise<Record<string, unknown>[]>>();
+
+jest.mock("~/lib/db", () => ({
+  prisma: {
+    corporation: {
+      findFirstOrThrow: (a?: unknown) => corporationFindFirstOrThrow(a),
+    },
+    loyaltyStoreOffer: {
+      findMany: (a?: unknown) => loyaltyStoreOfferFindMany(a),
+    },
+    type: { findMany: (a?: unknown) => typeFindMany(a) },
+  },
+}));
+
+jest.mock("next/cache", () => ({ cacheLife: () => undefined }));
+
+jest.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
+}));
 
 jest.mock("~/components/LPStore", () => ({
   LoyaltyPointsTable: ({
@@ -115,4 +143,70 @@ describe("LP Store corporation page (client)", () => {
       "corps:1 offers:0 types:0",
     );
   });
+});
+
+// The server wrapper resolves `params` inside the Suspense boundary, so reach
+// its content component the same way React would rather than rendering the
+// async function as a client component.
+async function resolvePageContent(corporationId: string) {
+  const Page = require("~/app/lp-store/[corporationId]/page").default;
+  const suspenseEl = Page({ params: Promise.resolve({ corporationId }) });
+  const contentEl = suspenseEl.props.children as {
+    type: (props: unknown) => Promise<ReactNode>;
+    props: unknown;
+  };
+  return contentEl.type(contentEl.props);
+}
+
+/** The `corporationId` arm of the OR the route looks the store up by. */
+function requestedCorporationId() {
+  const arg = corporationFindFirstOrThrow.mock.calls[0]?.[0] as {
+    where: { OR: [{ corporationId?: number }, unknown] };
+  };
+  return arg.where.OR[0].corporationId;
+}
+
+// This segment is dual-purpose — the sitemap advertises `/lp-store/1000035`
+// while `/lp-store` links `/lp-store/Caldari_Navy` — so unlike the pure-id
+// routes it cannot reject everything non-numeric. What it must reject is a
+// second *spelling* of a real id, which now falls through to the name lookup
+// and 404s there.
+describe("LP Store corporation lookup", () => {
+  beforeEach(() => {
+    corporationFindFirstOrThrow.mockReset();
+    loyaltyStoreOfferFindMany.mockReset().mockResolvedValue([]);
+    typeFindMany.mockReset().mockResolvedValue([]);
+  });
+
+  it("looks the corporation up by id for the canonical spelling", async () => {
+    corporationFindFirstOrThrow.mockResolvedValue(CORPORATION);
+
+    const tree = (await resolvePageContent("1000035")) as { type: unknown };
+
+    expect(requestedCorporationId()).toBe(1000035);
+    expect(tree.type).toBe(
+      require("~/app/lp-store/[corporationId]/page.client").default,
+    );
+  });
+
+  it("still resolves a store linked by underscored corporation name", async () => {
+    corporationFindFirstOrThrow.mockResolvedValue(CORPORATION);
+
+    await resolvePageContent("Caldari_Navy");
+
+    // No numeric arm, so only the name arm can match.
+    expect(requestedCorporationId()).toBeUndefined();
+  });
+
+  it.each(["01000035", "1000035.0", "+1000035"])(
+    "does not resolve %p by id, so the duplicate URL 404s",
+    async (corporationId) => {
+      corporationFindFirstOrThrow.mockRejectedValue(new Error("no rows"));
+
+      await expect(resolvePageContent(corporationId)).rejects.toThrow(
+        "NEXT_NOT_FOUND",
+      );
+      expect(requestedCorporationId()).toBeUndefined();
+    },
+  );
 });

@@ -182,7 +182,11 @@ describe("alliance/[allianceId] generateMetadata", () => {
 
   it("returns name + logo for a valid alliance id", async () => {
     mockGetAlliancesAllianceId.mockResolvedValue({
-      data: { name: "Pandemic Horde" },
+      data: {
+        name: "Pandemic Horde",
+        ticker: "REKTD",
+        date_founded: "2015-05-20T10:00:00Z",
+      },
     });
     const { generateMetadata } =
       await import("~/app/alliance/[allianceId]/page");

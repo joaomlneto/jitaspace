@@ -15,6 +15,8 @@ import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata } from "~/lib/metadata";
+import { parseEntityId, parsePositiveEntityId } from "~/lib/routeParams";
 
 interface PageProps {
   name?: string;
@@ -53,16 +55,18 @@ export async function generateMetadata({
   params: Promise<{ categoryId: string }>;
 }): Promise<Metadata> {
   const { categoryId: categoryIdParam } = await params;
-  const categoryId = Number(categoryIdParam);
-  if (!categoryId) return {};
+  const categoryId = parsePositiveEntityId(categoryIdParam);
+  if (categoryId === null) return {};
   try {
-    const { name } = await getCategoryData(categoryId);
-    return {
+    const { name, groups } = await getCategoryData(categoryId);
+    if (!name) return {};
+    return pageMetadata({
       title: name,
-      description: name
-        ? `Browse EVE Online ${name} items by group.`
-        : undefined,
-    };
+      description: `Browse EVE Online ${name} by group — ${groups.length} groups of items with attributes and market prices.`,
+      path: `/category/${categoryId}`,
+      badge: "Item Category",
+      facts: [{ label: "Groups", value: String(groups.length) }],
+    });
   } catch {
     return {};
   }
@@ -74,8 +78,13 @@ async function PageContent({
   params: Promise<{ categoryId: string }>;
 }>) {
   const { categoryId: categoryIdParam } = await params;
-  const categoryId = Number(categoryIdParam);
-  if (!categoryIdParam || Number.isNaN(categoryId)) {
+  // `parseEntityId`, not the positive variant `generateMetadata` uses: the old
+  // `Number.isNaN` guard here accepted `0` while the metadata's falsy test
+  // rejected it, and `/category/0` is a real non-deleted row this site puts in
+  // its sitemap. Narrowing the page to match the metadata would turn that into
+  // a 404; widening the metadata to match the page is a separate decision.
+  const categoryId = parseEntityId(categoryIdParam);
+  if (categoryId === null) {
     notFound();
   }
 

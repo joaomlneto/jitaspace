@@ -73,6 +73,7 @@ describe("region/[regionId] generateMetadata", () => {
     mockRegionFindUnique.mockResolvedValue({
       name: "The Forge",
       description: "Caldari space.",
+      _count: { constellations: 20 },
     });
     const { generateMetadata } = await import("~/app/region/[regionId]/page");
     const result = await generateMetadata({
@@ -86,6 +87,7 @@ describe("region/[regionId] generateMetadata", () => {
     mockRegionFindUnique.mockResolvedValue({
       name: "The Forge",
       description: null,
+      _count: { constellations: 20 },
     });
     const { generateMetadata } = await import("~/app/region/[regionId]/page");
     const result = await generateMetadata({
@@ -136,7 +138,11 @@ describe("constellation/[constellationId] generateMetadata", () => {
   });
 
   it("returns constellation name", async () => {
-    mockConstellationFindUnique.mockResolvedValue({ name: "Kimotoro" });
+    mockConstellationFindUnique.mockResolvedValue({
+      name: "Kimotoro",
+      region: { name: "The Forge" },
+      _count: { solarSystems: 8 },
+    });
     const { generateMetadata } =
       await import("~/app/constellation/[constellationId]/page");
     const result = await generateMetadata({
@@ -183,7 +189,11 @@ describe("system/[systemId] generateMetadata", () => {
   });
 
   it("returns system name", async () => {
-    mockSolarSystemFindUnique.mockResolvedValue({ name: "Jita" });
+    mockSolarSystemFindUnique.mockResolvedValue({
+      name: "Jita",
+      securityStatus: 0.945,
+      constellation: { name: "Kimotoro", region: { name: "The Forge" } },
+    });
     const { generateMetadata } = await import("~/app/system/[systemId]/page");
     const result = await generateMetadata({
       params: rp({ systemId: "30000142" }),
@@ -226,7 +236,13 @@ describe("star/[starId] generateMetadata", () => {
   });
 
   it("returns star name", async () => {
-    mockStarFindUnique.mockResolvedValue({ name: "Jita - Star" });
+    mockStarFindUnique.mockResolvedValue({
+      name: "Jita - Star",
+      typeId: 45041,
+      spectralClass: "G5 V",
+      temperature: 5300,
+      solarSystem: { name: "Jita" },
+    });
     const { generateMetadata } = await import("~/app/star/[starId]/page");
     const result = await generateMetadata({
       params: rp({ starId: "40009077" }),
@@ -267,7 +283,13 @@ describe("planet/[planetId] generateMetadata", () => {
   });
 
   it("returns planet name", async () => {
-    mockPlanetFindUnique.mockResolvedValue({ name: "Jita IV" });
+    mockPlanetFindUnique.mockResolvedValue({
+      name: "Jita IV",
+      typeId: 11,
+      type: { name: "Planet (Temperate)" },
+      solarSystem: { name: "Jita" },
+      _count: { moons: 4 },
+    });
     const { generateMetadata } = await import("~/app/planet/[planetId]/page");
     const result = await generateMetadata({
       params: rp({ planetId: "40009081" }),

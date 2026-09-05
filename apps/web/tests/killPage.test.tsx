@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -19,6 +20,9 @@ jest.mock("next/navigation", () => ({
   }),
   useRouter: () => ({ push: jest.fn() }),
   usePathname: () => "/",
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
 }));
 
 // ---------------------------------------------------------------------------
@@ -250,4 +254,35 @@ describe("Kill page (client)", () => {
     expect(screen.getByText("Victim")).toBeInTheDocument();
     expect(screen.getByText("Attackers (3)")).toBeInTheDocument();
   });
+});
+
+// ---------------------------------------------------------------------------
+// The server wrapper resolves `params` inside the Suspense boundary and rejects
+// every non-canonical spelling of the id, so `/kill/0587` no longer serves the
+// same killmail as `/kill/587` under a second URL.
+// ---------------------------------------------------------------------------
+async function resolvePageContent(killId: string) {
+  const Page = require("~/app/kill/[killId]/page").default;
+  const suspenseEl = Page({ params: Promise.resolve({ killId }) });
+  const contentEl = suspenseEl.props.children as {
+    type: (props: unknown) => Promise<ReactNode>;
+    props: unknown;
+  };
+  return contentEl.type(contentEl.props);
+}
+
+describe("kill page id validation", () => {
+  it("renders the client page for the canonical spelling of an id", async () => {
+    const tree = (await resolvePageContent("123")) as { type: unknown };
+    expect(tree.type).toBe(require("~/app/kill/[killId]/page.client").default);
+  });
+
+  it.each(["0", "-99", "0123", "123.0", "abc", ""])(
+    "404s rather than serving a second URL for %p",
+    async (killId) => {
+      await expect(resolvePageContent(killId)).rejects.toThrow(
+        "NEXT_NOT_FOUND",
+      );
+    },
+  );
 });

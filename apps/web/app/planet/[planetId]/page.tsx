@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -11,27 +14,64 @@ export async function generateMetadata({
   params: Promise<{ planetId: string }>;
 }): Promise<Metadata> {
   const { planetId } = await params;
-  const id = Number(planetId);
-  if (!Number.isSafeInteger(id) || id <= 0) return {};
+  const id = parsePositiveEntityId(planetId);
+  if (id === null) return {};
   try {
     const planet = await prisma.planet.findUnique({
-      select: { name: true },
+      select: {
+        name: true,
+        typeId: true,
+        type: { select: { name: true } },
+        solarSystem: { select: { name: true } },
+        _count: { select: { moons: true } },
+      },
       where: { planetId: id },
     });
     if (!planet) return {};
-    return {
+
+    const kind = planet.type.name;
+    const system = planet.solarSystem.name;
+
+    const kindPhrase = kind ? ` ${kind}` : " planet";
+    const inSystem = system ? ` in the ${system} solar system` : "";
+
+    return pageMetadata({
       title: planet.name,
-      description: `${planet.name} planet in EVE Online.`,
-    };
+      description: `${planet.name} is a${kindPhrase}${inSystem} of EVE Online.`,
+      path: `/planet/${id}`,
+      badge: "Planet",
+      image: await resolveTypeImage(planet.typeId),
+      facts: [
+        ...(kind ? [{ label: "Type", value: kind }] : []),
+        ...(system ? [{ label: "System", value: system }] : []),
+        ...(planet._count.moons
+          ? [{ label: "Moons", value: String(planet._count.moons) }]
+          : []),
+      ],
+    });
   } catch {
     return {};
   }
 }
 
-export default function Page() {
+async function PageContent({
+  params,
+}: Readonly<{
+  params: Promise<{ planetId: string }>;
+}>) {
+  const { planetId } = await params;
+  if (parsePositiveEntityId(planetId) === null) notFound();
+  return <PageClient />;
+}
+
+export default function Page({
+  params,
+}: Readonly<{
+  params: Promise<{ planetId: string }>;
+}>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <PageClient />
+      <PageContent params={params} />
     </Suspense>
   );
 }

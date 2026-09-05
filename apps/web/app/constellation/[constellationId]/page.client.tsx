@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import {
   Anchor,
   Container,
@@ -12,50 +11,46 @@ import {
   Title,
 } from "@mantine/core";
 
-import {
-  ConstellationName,
-  RegionName,
-  SolarSystemName,
-} from "@jitaspace/eve-components";
+import { RegionName, SolarSystemName } from "@jitaspace/eve-components";
 import { useConstellation } from "@jitaspace/hooks";
 
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 
-export default function Page() {
-  const params = useParams();
-  const rawConstellationId = params.constellationId;
-  const constellationId = Number(
-    typeof rawConstellationId === "string"
-      ? rawConstellationId
-      : rawConstellationId?.[0],
-  );
+/**
+ * The name and the parent region arrive as props: they are read on the server
+ * so they are in the HTML a crawler sees. Fetching them client-side left
+ * `/constellation/20000020` server-rendering ~40 words with nothing
+ * constellation-specific in them. The solar system list still comes from ESI.
+ */
+export default function Page({
+  constellationId,
+  name,
+  regionId,
+  regionName,
+}: Readonly<{
+  constellationId: number;
+  name: string;
+  regionId: number;
+  regionName: string | null;
+}>) {
   const { data: constellation } = useConstellation(constellationId);
-
-  if (!Number.isFinite(constellationId)) {
-    return null;
-  }
 
   return (
     <Container size="sm">
       <Stack>
         <Group gap="xl">
-          <Title order={3}>
-            <ConstellationName span constellationId={constellationId} />
-          </Title>
+          <Title order={3}>{name}</Title>
         </Group>
-        {constellation?.data.region_id && (
-          <Group justify="space-between">
-            <Text>Region</Text>
-            <Group>
-              <Anchor
-                component={Link}
-                href={`/region/${constellation.data.region_id}`}
-              >
-                <RegionName span regionId={constellation.data.region_id} />
-              </Anchor>
-            </Group>
+        <Group justify="space-between">
+          <Text>Region</Text>
+          <Group>
+            <Anchor component={Link} href={`/region/${regionId}`}>
+              {/* The relation is optional, so fall back to resolving the name
+                  client-side if the region row is missing. */}
+              {regionName ?? <RegionName span regionId={regionId} />}
+            </Anchor>
           </Group>
-        )}
+        </Group>
         Solar Systems:
         <List>
           {constellation?.data.systems.map((systemId: number) => (

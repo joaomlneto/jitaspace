@@ -154,11 +154,13 @@ describe("system route server data", () => {
     expect(props.sde).toBeNull();
   });
 
-  it("passes null for a non-numeric id without querying", async () => {
-    const props = await runRoute("~/app/system/[systemId]/page", {
-      systemId: "not-a-number",
-    });
-    expect(props.sde).toBeNull();
+  it("404s an id that isn't the canonical spelling, without querying", async () => {
+    // The route used to render for any `Number()`-coercible id, so
+    // `/system/030000142` served Jita under a second URL. It now rejects the
+    // spelling outright — one system, one indexable URL.
+    await expect(
+      runRoute("~/app/system/[systemId]/page", { systemId: "not-a-number" }),
+    ).rejects.toThrow("NEXT_HTTP_ERROR_FALLBACK;404");
     expect(solarSystemFindUnique).not.toHaveBeenCalled();
   });
 
@@ -259,6 +261,9 @@ describe("type route dogma metadata", () => {
       typeId: 587,
       name: "Rifter",
       description: "A frigate.",
+      // The route also selects the group/category the OpenGraph card labels
+      // the item with; without them `getTypeData` throws and the page 404s.
+      group: { name: "Frigate", category: { name: "Ship" } },
     });
   });
 

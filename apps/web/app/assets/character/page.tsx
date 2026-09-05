@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { useCallback, useDeferredValue, useMemo, useState } from "react";
 import {
   ActionIcon,
@@ -28,20 +27,10 @@ import {
 import { ISKAmount } from "@jitaspace/ui";
 
 import { AssetSearchResults } from "~/components/Assets/AssetSearchResults";
+import { AssetStat } from "~/components/Assets/AssetStat";
 import { buildAssetTree } from "~/components/Assets/assetTree";
 import { CharacterAssetsTree } from "~/components/Assets/AssetTreeView";
 import { ScopeGuard } from "~/components/ScopeGuard";
-
-function Stat({ label, value }: Readonly<{ label: string; value: ReactNode }>) {
-  return (
-    <Stack gap={2}>
-      <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-        {label}
-      </Text>
-      {value}
-    </Stack>
-  );
-}
 
 export default function Page() {
   // Every logged-in character that granted the assets scope, not just the
@@ -135,13 +124,13 @@ export default function Page() {
 
           <Paper withBorder radius="md" p="md">
             <SimpleGrid cols={3} spacing="md">
-              <Stat
+              <AssetStat
                 label="Value"
                 value={
                   <ISKAmount amount={tree.totalValue} fw={700} size="lg" />
                 }
               />
-              <Stat
+              <AssetStat
                 label="Items"
                 value={
                   <Text fw={700} size="lg">
@@ -149,7 +138,7 @@ export default function Page() {
                   </Text>
                 }
               />
-              <Stat
+              <AssetStat
                 label="Locations"
                 value={
                   <Text fw={700} size="lg">

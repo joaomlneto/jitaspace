@@ -6,11 +6,14 @@ import { removeUndefinedFields } from "@jitaspace/utils";
 
 import { AgentsTable } from "~/components/Agents";
 import { prisma } from "~/lib/db";
+import { pageMetadata } from "~/lib/metadata";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Agents",
   description: "Browse EVE Online NPC agents and their locations.",
-};
+  path: "/agents",
+  badge: "Agents",
+});
 
 interface PageProps {
   agents: {

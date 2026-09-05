@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   Badge,
@@ -9,43 +9,74 @@ import {
   Group,
   Loader,
   Pagination,
+  Paper,
+  SimpleGrid,
   Stack,
   Table,
   Text,
   Title,
 } from "@mantine/core";
-import { useForm } from "@mantine/form";
 import { usePagination } from "@mantine/hooks";
 
 import {
   EveEntityAnchor,
   EveEntityName,
+  EveEntitySelect,
   TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { AssetsIcon, AttentionIcon } from "@jitaspace/eve-icons";
 import {
-  useCorporationAssets,
   useEsiNameLookup,
   useMarketPrices,
-  useSelectedCharacter,
+  useMultipleCorporationAssets,
 } from "@jitaspace/hooks";
+import { ISKAmount } from "@jitaspace/ui";
 
+import { AssetStat } from "~/components/Assets/AssetStat";
 import { ScopeGuard } from "~/components/ScopeGuard";
 
 export default function Page() {
-  const character = useSelectedCharacter();
-  const { assets, isLoading, errorMessage } = useCorporationAssets(
-    character?.corporationId,
+  // Every corporation a logged-in character can read assets for. A corporation
+  // where nobody holds Director is simply not a subject, so it costs no request
+  // and raises no error — previously that showed as "Token not available".
+  //
+  // `subjectIds` is the list of corporations that were actually queried, which
+  // is what every permission claim below has to be made against. Deriving it
+  // from the returned rows instead would fold three different situations — no
+  // Director anywhere, a corporation that owns nothing, and a query that failed
+  // — into the same empty list, and answer all three with "you need Director".
+  const {
+    data: allAssets,
+    isPending,
+    errors,
+    subjectIds: corporationIds,
+  } = useMultipleCorporationAssets();
+  const [pickedCorporationId, setPickedCorporationId] = useState<string | null>(
+    null,
   );
-  const filterForm = useForm<{ location_id: number | null; name: string }>({
-    initialValues: {
-      location_id: null,
-      name: "",
-    },
-  });
   const { data: marketPrices } = useMarketPrices();
+
+  // A pick is only honoured while the corporation it names is still readable.
+  // Losing a token mid-session would otherwise leave the filter applied to a
+  // corporation that is no longer offered, hiding every remaining asset.
+  const selectedCorporationId =
+    pickedCorporationId !== null &&
+    corporationIds.includes(Number.parseInt(pickedCorporationId, 10))
+      ? pickedCorporationId
+      : null;
+
+  const assets = useMemo(() => {
+    const owned =
+      selectedCorporationId === null
+        ? allAssets
+        : allAssets.filter(
+            (asset) =>
+              asset.subjectId === Number.parseInt(selectedCorporationId, 10),
+          );
+    return Object.fromEntries(owned.map((asset) => [asset.item_id, asset]));
+  }, [allAssets, selectedCorporationId]);
 
   const assetEntries = useMemo(
     () =>
@@ -62,48 +93,46 @@ export default function Page() {
     [names],
   );
 
-  const filtersEnabled =
-    filterForm.values.location_id !== null || filterForm.values.name !== "";
-
   const entries = useMemo(
     () =>
       Object.values(assets)
         .filter((asset) => asset.location_type !== "item")
-        .filter(
-          (asset) =>
-            filterForm.values.location_id === null ||
-            asset.location_id === filterForm.values.location_id,
-        )
-        .map((asset) => {
-          const adjustedPrice = marketPrices[asset.type_id]?.adjusted_price;
-          return {
-            typeName: getNameFromCache(asset.type_id),
-            price: adjustedPrice ? adjustedPrice * asset.quantity : undefined,
-            ...asset,
-          };
-        })
-        .filter(
-          (asset) =>
-            filterForm.values.name === "" ||
-            asset.typeName
-              ?.toLowerCase()
-              .includes(filterForm.values.name.toLowerCase()),
-        )
+        .map((asset) => ({
+          typeName: getNameFromCache(asset.type_id),
+          ...asset,
+        }))
         .sort((a, b) =>
           (a.typeName ?? "").trim().localeCompare((b.typeName ?? "").trim()),
         ),
-    [
-      assets,
-      filterForm.values.location_id,
-      filterForm.values.name,
-      getNameFromCache,
-      marketPrices,
-    ],
+    [assets, getNameFromCache],
   );
 
-  const _totalPrice = useMemo(
-    () => entries.reduce((acc, { price }) => (price ? acc + price : acc), 0),
-    [entries],
+  // Every asset the corporation holds, including the ones nested inside
+  // containers and ships. `entries` deliberately lists only what sits directly
+  // in a location, so summing over it would silently omit a hangar full of
+  // packaged goods and understate the total.
+  const totalValue = useMemo(
+    () =>
+      Object.values(assets).reduce(
+        (total, asset) =>
+          total +
+          (marketPrices[asset.type_id]?.adjusted_price ?? 0) * asset.quantity,
+        0,
+      ),
+    [assets, marketPrices],
+  );
+
+  // An asset whose location_type is "item" is inside another item, so its
+  // location_id names a container rather than a place; counting those would
+  // report far more locations than the corporation actually occupies.
+  const locationCount = useMemo(
+    () =>
+      new Set(
+        Object.values(assets)
+          .filter((asset) => asset.location_type !== "item")
+          .map((asset) => asset.location_id),
+      ).size,
+    [assets],
   );
 
   const numUndefinedNames = entries.filter(
@@ -114,35 +143,84 @@ export default function Page() {
   const ENTRIES_PER_PAGE = 100;
   const numPages = Math.ceil(entries.length / ENTRIES_PER_PAGE);
   const pagination = usePagination({ total: numPages, siblings: 3 });
-  const offset = ENTRIES_PER_PAGE * (pagination.active - 1);
+  // usePagination clamps inside setPage but never re-derives `active` when
+  // `total` shrinks, so narrowing to a smaller corporation would leave the
+  // index past the end and slice an empty window out of a non-empty table.
+  const activePage = Math.min(pagination.active, Math.max(numPages, 1));
+  const offset = ENTRIES_PER_PAGE * (activePage - 1);
 
   return (
     <ScopeGuard requiredScopes={["esi-assets.read_corporation_assets.v1"]}>
       <Container size="xl">
         <Stack>
-          <Group>
-            <AssetsIcon width={48} />
-            <Title order={1}>Corporation Assets</Title>
-            {isLoading && <Loader />}
+          <Group justify="space-between" wrap="nowrap">
+            <Group>
+              <AssetsIcon width={48} />
+              <Title order={1}>Corporation Assets</Title>
+              {isPending && <Loader />}
+            </Group>
+            {/* Most players have characters in a single corporation, so the
+                filter would be an empty choice — only offer it when it is a
+                real one. */}
+            {corporationIds.length > 1 && (
+              <EveEntitySelect
+                size="xs"
+                label="Filter by corporation"
+                entityIds={corporationIds.map((id) => ({ id }))}
+                searchable
+                allowDeselect
+                clearable
+                value={selectedCorporationId}
+                onChange={setPickedCorporationId}
+              />
+            )}
           </Group>
-          {errorMessage && (
+          {errors.length > 0 && (
             <Alert
               icon={<AttentionIcon width={32} />}
-              title="Error!"
+              title="Some assets could not be loaded"
               color="red"
             >
-              {errorMessage}
+              Could not read assets for {errors.length}{" "}
+              {errors.length === 1 ? "corporation" : "corporations"}.
             </Alert>
           )}
-          {!errorMessage && (
+          {corporationIds.length === 0 && !isPending && (
+            // Not an error, and not a failure: no corporation was queried at
+            // all. Two things produce that, and the message names both, because
+            // only one of them is something the player can act on here.
+            <Alert icon={<AttentionIcon width={32} />} color="gray">
+              None of your characters can read corporation assets. This needs
+              the Director role in the corporation, and the permission to read
+              corporation roles — sign in again to grant it.
+            </Alert>
+          )}
+          {corporationIds.length > 0 && (
             <>
-              <Text size="sm" c="dimmed">
-                {filtersEnabled
-                  ? `Showing ${entries.length}/${
-                      Object.keys(assets).length
-                    } assets`
-                  : `${Object.keys(assets).length} assets`}
-              </Text>
+              <Paper withBorder radius="md" p="md">
+                <SimpleGrid cols={3} spacing="md">
+                  <AssetStat
+                    label="Value"
+                    value={<ISKAmount amount={totalValue} fw={700} size="lg" />}
+                  />
+                  <AssetStat
+                    label="Items"
+                    value={
+                      <Text fw={700} size="lg">
+                        {Object.keys(assets).length.toLocaleString()}
+                      </Text>
+                    }
+                  />
+                  <AssetStat
+                    label="Locations"
+                    value={
+                      <Text fw={700} size="lg">
+                        {locationCount.toLocaleString()}
+                      </Text>
+                    }
+                  />
+                </SimpleGrid>
+              </Paper>
               {numUndefinedNames > 0 && (
                 <Text c="red" size="sm">
                   Failed to resolve names for {numUndefinedNames} items! This
@@ -155,7 +233,7 @@ export default function Page() {
               <Center>
                 <Pagination
                   total={numPages}
-                  value={pagination.active}
+                  value={activePage}
                   onChange={pagination.setPage}
                 />
               </Center>
@@ -165,9 +243,7 @@ export default function Page() {
                     <th>Item ID</th>
                     <th>Qty</th>
                     <th>Type</th>
-                    {filterForm.values.location_id === null && (
-                      <th>Location</th>
-                    )}
+                    <th>Location</th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -199,15 +275,13 @@ export default function Page() {
                             </Group>
                           </Group>
                         </Table.Td>
-                        {filterForm.values.location_id === null && (
-                          <Table.Td>
-                            <Group gap="xs">
-                              <EveEntityAnchor entityId={asset.location_id}>
-                                <EveEntityName entityId={asset.location_id} />
-                              </EveEntityAnchor>
-                            </Group>
-                          </Table.Td>
-                        )}
+                        <Table.Td>
+                          <Group gap="xs">
+                            <EveEntityAnchor entityId={asset.location_id}>
+                              <EveEntityName entityId={asset.location_id} />
+                            </EveEntityAnchor>
+                          </Group>
+                        </Table.Td>
                       </Table.Tr>
                     ))}
                 </Table.Tbody>

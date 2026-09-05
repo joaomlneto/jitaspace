@@ -70,6 +70,9 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
   // The compare page reads the selected builds from the URL.
   useSearchParams: () => new URLSearchParams("from=100&to=200"),
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
 }));
 
 jest.mock("next/link", () => ({
@@ -579,7 +582,7 @@ describe("CompareBuildsClient", () => {
       (await import("~/app/history/compare/[from]/[to]/page")) as unknown as {
         generateMetadata: (a: {
           params: Promise<{ from: string; to: string }>;
-        }) => Promise<{ title: string }>;
+        }) => Promise<{ title?: string; alternates?: { canonical?: string } }>;
         default: (p: {
           params: Promise<{ from: string; to: string }>;
         }) => React.ReactNode;
@@ -588,9 +591,43 @@ describe("CompareBuildsClient", () => {
       params: Promise.resolve({ from: "100", to: "200" }),
     });
     expect(meta.title).toContain("Compare builds 100");
+    expect(meta.alternates?.canonical).toBe("/history/compare/100/200");
     const Page = mod.default;
     expect(() =>
       wrap(<Page params={Promise.resolve({ from: "100", to: "200" })} />),
     ).not.toThrow();
+  });
+
+  // Both segments are build numbers; a re-spelled pair is a duplicate of the
+  // real comparison, and garbage used to render the bare picker at HTTP 200.
+  it("refuses to canonicalise — and 404s — a non-canonical build pair", async () => {
+    const mod =
+      (await import("~/app/history/compare/[from]/[to]/page")) as unknown as {
+        generateMetadata: (a: {
+          params: Promise<{ from: string; to: string }>;
+        }) => Promise<Record<string, unknown>>;
+        default: (p: { params: Promise<{ from: string; to: string }> }) => {
+          props: {
+            children: {
+              type: (p: {
+                params: Promise<{ from: string; to: string }>;
+              }) => Promise<unknown>;
+            };
+          };
+        };
+      };
+    for (const params of [
+      { from: "0100", to: "200" },
+      { from: "100", to: "200.0" },
+      { from: "100", to: "newest" },
+    ]) {
+      expect(
+        await mod.generateMetadata({ params: Promise.resolve(params) }),
+      ).toEqual({});
+      const wrapper = mod.default({ params: Promise.resolve(params) });
+      await expect(
+        wrapper.props.children.type({ params: Promise.resolve(params) }),
+      ).rejects.toThrow("NEXT_NOT_FOUND");
+    }
   });
 });
