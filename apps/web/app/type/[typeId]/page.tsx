@@ -8,6 +8,7 @@ import type { PageProps } from "./page.client";
 import type { TypeDogmaMeta } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import TypePage from "./page.client";
 import { emptyTypeDogmaMeta } from "./types";
 
@@ -148,8 +149,8 @@ export async function generateMetadata({
   params: Promise<{ typeId: string }>;
 }): Promise<Metadata> {
   const { typeId: typeIdParam } = await params;
-  const typeId = Number(typeIdParam);
-  if (!typeId) return {};
+  const typeId = parsePositiveEntityId(typeIdParam);
+  if (typeId === null) return {};
 
   try {
     const { typeName, typeDescription, ogImageUrl } = await getTypeData(typeId);
@@ -159,6 +160,7 @@ export async function generateMetadata({
     return {
       title: typeName ?? undefined,
       description,
+      alternates: { canonical: `/type/${typeId}` },
       openGraph: {
         title: typeName ?? undefined,
         description,
@@ -182,8 +184,8 @@ async function PageContent({
   params: Promise<{ typeId: string }>;
 }>) {
   const { typeId: typeIdParam } = await params;
-  const typeId = Number(typeIdParam);
-  if (!typeId) {
+  const typeId = parsePositiveEntityId(typeIdParam);
+  if (typeId === null) {
     notFound();
   }
 

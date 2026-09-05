@@ -8,6 +8,7 @@ export const metadata = {
   title: "Dogma Effects",
   description:
     "Browse all EVE Online dogma effects applied by ships, modules, and skills.",
+  alternates: { canonical: "/dogma/effects" },
 };
 
 export default async function Page() {

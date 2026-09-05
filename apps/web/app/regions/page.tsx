@@ -11,6 +11,7 @@ export const metadata = {
   title: "Regions",
   description:
     "Browse all regions in the EVE Online universe — New Eden's star clusters, systems, and constellations.",
+  alternates: { canonical: "/regions" },
 };
 
 interface PageProps {

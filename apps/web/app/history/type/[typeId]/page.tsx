@@ -1,6 +1,8 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { Loader } from "@mantine/core";
 
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import TypeHistoryClient from "./page.client";
 
 export async function generateMetadata({
@@ -9,9 +11,12 @@ export async function generateMetadata({
   params: Promise<{ typeId: string }>;
 }>) {
   const { typeId } = await params;
+  const id = parsePositiveEntityId(typeId);
+  if (id === null) return {};
   return {
-    title: `Type ${typeId} — Change History`,
-    description: `How EVE Online type ${typeId} has changed across client builds.`,
+    title: `Type ${id} — Change History`,
+    description: `How EVE Online type ${id} has changed across client builds.`,
+    alternates: { canonical: `/history/type/${id}` },
   };
 }
 
@@ -21,7 +26,9 @@ async function PageContent({
   params: Promise<{ typeId: string }>;
 }>) {
   const { typeId } = await params;
-  return <TypeHistoryClient typeId={Number(typeId)} />;
+  const id = parsePositiveEntityId(typeId);
+  if (id === null) notFound();
+  return <TypeHistoryClient typeId={id} />;
 }
 
 export default function Page({

@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import { Suspense } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
@@ -7,10 +8,17 @@ import { render, screen } from "@testing-library/react";
 const mockUseStar = jest.fn();
 
 jest.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
   useParams: () => ({ starId: "1" }),
   useRouter: () => ({}),
   usePathname: () => "/",
 }));
+
+// star/[starId]/page.tsx imports prisma for generateMetadata; the wrapper tests
+// below never reach a query.
+jest.mock("~/lib/db", () => ({ prisma: {} }));
 
 jest.mock("@jitaspace/hooks", () => ({
   useStar: (starId: number) => mockUseStar(starId),
@@ -95,5 +103,26 @@ describe("star page", () => {
     expect(screen.getByText(/SecBadge/)).toBeInTheDocument();
     // no concrete star name value
     expect(screen.queryByText("Jita - Star")).not.toBeInTheDocument();
+  });
+});
+
+describe("star page server wrapper", () => {
+  // `params` is awaited in the async child, never in `Page` itself, so the
+  // route keeps a synchronous shell that Next can prerender.
+  function runWrapper(starId: string) {
+    const Page = require("~/app/star/[starId]/page").default;
+    const tree = Page({ params: Promise.resolve({ starId }) });
+    expect(tree.type).toBe(Suspense);
+    const child = tree.props.children;
+    return child.type(child.props) as Promise<unknown>;
+  }
+
+  it("renders the client page for a canonical id", async () => {
+    await expect(runWrapper("40009077")).resolves.toBeTruthy();
+  });
+
+  it("404s an id that isn't the canonical spelling", async () => {
+    // `/star/040009077` used to serve the same star as `/star/40009077`.
+    await expect(runWrapper("040009077")).rejects.toThrow("NEXT_NOT_FOUND");
   });
 });

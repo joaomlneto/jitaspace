@@ -9,6 +9,7 @@ export const metadata = {
   title: "Server Status",
   description:
     "EVE Online Tranquility server status and JitaSpace service health.",
+  alternates: { canonical: "/status" },
 };
 
 async function getVercelStatus() {

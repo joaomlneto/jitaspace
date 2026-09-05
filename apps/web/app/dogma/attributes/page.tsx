@@ -8,6 +8,7 @@ export const metadata = {
   title: "Dogma Attributes",
   description:
     "Browse all EVE Online dogma attributes used in ship and module balancing.",
+  alternates: { canonical: "/dogma/attributes" },
 };
 
 export default async function Page() {

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { PageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import DogmaEffectPage from "./page.client";
 
 async function getEffectData(effectId: number): Promise<PageProps> {
@@ -93,8 +94,8 @@ export async function generateMetadata({
   params: Promise<{ effectId: string }>;
 }): Promise<Metadata> {
   const { effectId: raw } = await params;
-  const effectId = Number(raw);
-  if (!Number.isSafeInteger(effectId) || effectId <= 0) return {};
+  const effectId = parsePositiveEntityId(raw);
+  if (effectId === null) return {};
   try {
     const effect = await prisma.dogmaEffect.findUnique({
       select: { name: true, displayName: true, description: true },
@@ -103,7 +104,11 @@ export async function generateMetadata({
     if (!effect) return {};
     const title = [effect.displayName, effect.name].find(Boolean) ?? undefined;
     const description = effect.description?.slice(0, 200) ?? undefined;
-    return { title, description };
+    return {
+      title,
+      description,
+      alternates: { canonical: `/dogma/effect/${effectId}` },
+    };
   } catch {
     return {};
   }
@@ -115,8 +120,8 @@ async function PageContent({
   params: Promise<{ effectId: string }>;
 }>) {
   const { effectId: effectIdParam } = await params;
-  const effectId = Number(effectIdParam);
-  if (!Number.isFinite(effectId)) {
+  const effectId = parsePositiveEntityId(effectIdParam);
+  if (effectId === null) {
     notFound();
   }
 

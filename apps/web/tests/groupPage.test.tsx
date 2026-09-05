@@ -151,6 +151,37 @@ describe("Group Page", () => {
     expect(screen.queryByText(/TypeAvatar/)).not.toBeInTheDocument();
   });
 
+  // The page had no numeric guard, so every alternative spelling of an id
+  // rendered the same document at 200 — Search Console counts those as
+  // "Duplicate without user-selected canonical". `"0"` stays accepted because
+  // it is a real non-deleted row the sitemap advertises.
+  it.each(["0587", "587.0", "+587", "abc", ""])(
+    "404s the non-canonical id %p without querying",
+    async (groupId) => {
+      await expect(resolveServerTree(groupId)).rejects.toThrow(
+        "NEXT_NOT_FOUND",
+      );
+      expect(mockFindUniqueOrThrow).not.toHaveBeenCalled();
+    },
+  );
+
+  it("still serves group 0, which the sitemap advertises", async () => {
+    mockFindUniqueOrThrow.mockResolvedValue({
+      groupId: 0,
+      name: "Group Zero",
+      types: [],
+    });
+
+    await renderPage("0");
+
+    await waitFor(() =>
+      expect(screen.getByText("Group Zero")).toBeInTheDocument(),
+    );
+    expect(mockFindUniqueOrThrow).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { groupId: 0 } }),
+    );
+  });
+
   it("calls notFound() when the group lookup throws", async () => {
     mockFindUniqueOrThrow.mockRejectedValue(new Error("db error"));
 
