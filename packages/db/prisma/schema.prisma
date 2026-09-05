@@ -225,7 +225,23 @@ model Type {
   masteries                       Mastery[]
   skinTypes                       SkinType[]
 
-  @@index([marketGroupId])
+  /// Covering index for the market-tree sidebar, which reads every type that
+  /// belongs to a market group. `name` is in the key on purpose: with a bare
+  /// ([marketGroupId]) index the projection of `name` is not covered, so
+  /// CockroachDB abandons the index and FULL SCANs Type@Type_pkey — 52k rows /
+  /// 18 MiB / ~1400 RUs per execution, almost all of it the `description`
+  /// column being read and thrown away. Covering it drops the same read to
+  /// 19.7k rows / 1.2 MiB. It is also a prefix index on marketGroupId alone, so
+  /// it still serves plain lookups by market group.
+  ///
+  /// The idiomatic CockroachDB form is ([marketGroupId]) STORING (name), which
+  /// keeps `name` out of the key. Don't. Prisma cannot express STORING, and an
+  /// index created out of band does not survive: `prisma db push` — which is
+  /// how this schema reaches every environment, CI included — silently DROPs
+  /// it, and the query regresses to the full scan with nothing to show for it.
+  /// Measured, the two forms are anyway indistinguishable: same plan, same 1.2
+  /// MiB read, 3.00 vs 2.95 MiB of index, identical write cost.
+  @@index([marketGroupId, name])
   @@index([graphicId])
   @@index([groupId])
   @@index([iconId])
