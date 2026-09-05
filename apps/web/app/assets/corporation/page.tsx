@@ -38,10 +38,21 @@ export default function Page() {
   // Every corporation a logged-in character can read assets for. A corporation
   // where nobody holds Director is simply not a subject, so it costs no request
   // and raises no error — previously that showed as "Token not available".
-  const { data: allAssets, isPending, errors } = useMultipleCorporationAssets();
-  const [selectedCorporationId, setSelectedCorporationId] = useState<
-    string | null
-  >(null);
+  //
+  // `subjectIds` is the list of corporations that were actually queried, which
+  // is what every permission claim below has to be made against. Deriving it
+  // from the returned rows instead would fold three different situations — no
+  // Director anywhere, a corporation that owns nothing, and a query that failed
+  // — into the same empty list, and answer all three with "you need Director".
+  const {
+    data: allAssets,
+    isPending,
+    errors,
+    subjectIds: corporationIds,
+  } = useMultipleCorporationAssets();
+  const [pickedCorporationId, setPickedCorporationId] = useState<string | null>(
+    null,
+  );
   const filterForm = useForm<{ location_id: number | null; name: string }>({
     initialValues: {
       location_id: null,
@@ -50,10 +61,14 @@ export default function Page() {
   });
   const { data: marketPrices } = useMarketPrices();
 
-  const corporationIds = useMemo(
-    () => [...new Set(allAssets.map((asset) => asset.subjectId))],
-    [allAssets],
-  );
+  // A pick is only honoured while the corporation it names is still readable.
+  // Losing a token mid-session would otherwise leave the filter applied to a
+  // corporation that is no longer offered, hiding every remaining asset.
+  const selectedCorporationId =
+    pickedCorporationId !== null &&
+    corporationIds.includes(Number.parseInt(pickedCorporationId, 10))
+      ? pickedCorporationId
+      : null;
 
   const assets = useMemo(() => {
     const owned =
@@ -133,7 +148,11 @@ export default function Page() {
   const ENTRIES_PER_PAGE = 100;
   const numPages = Math.ceil(entries.length / ENTRIES_PER_PAGE);
   const pagination = usePagination({ total: numPages, siblings: 3 });
-  const offset = ENTRIES_PER_PAGE * (pagination.active - 1);
+  // usePagination clamps inside setPage but never re-derives `active` when
+  // `total` shrinks, so narrowing to a smaller corporation would leave the
+  // index past the end and slice an empty window out of a non-empty table.
+  const activePage = Math.min(pagination.active, Math.max(numPages, 1));
+  const offset = ENTRIES_PER_PAGE * (activePage - 1);
 
   return (
     <ScopeGuard requiredScopes={["esi-assets.read_corporation_assets.v1"]}>
@@ -157,7 +176,7 @@ export default function Page() {
                 allowDeselect
                 clearable
                 value={selectedCorporationId}
-                onChange={setSelectedCorporationId}
+                onChange={setPickedCorporationId}
               />
             )}
           </Group>
@@ -167,17 +186,18 @@ export default function Page() {
               title="Some assets could not be loaded"
               color="red"
             >
-              {errors.length}{" "}
-              {errors.length === 1 ? "corporation" : "corporations"} could not
-              be read. The totals below cover the rest.
+              Could not read assets for {errors.length}{" "}
+              {errors.length === 1 ? "corporation" : "corporations"}.
             </Alert>
           )}
           {corporationIds.length === 0 && !isPending && (
-            // Not an error: reading corporation assets needs the Director role,
-            // and most members do not have it.
+            // Not an error, and not a failure: no corporation was queried at
+            // all. Two things produce that, and the message names both, because
+            // only one of them is something the player can act on here.
             <Alert icon={<AttentionIcon width={32} />} color="gray">
               None of your characters can read corporation assets. This needs
-              the Director role in the corporation.
+              the Director role in the corporation, and the permission to read
+              corporation roles — sign in again to grant it.
             </Alert>
           )}
           {corporationIds.length > 0 && (
@@ -201,7 +221,7 @@ export default function Page() {
               <Center>
                 <Pagination
                   total={numPages}
-                  value={pagination.active}
+                  value={activePage}
                   onChange={pagination.setPage}
                 />
               </Center>

@@ -13,6 +13,7 @@ interface TaggedAsset {
 const mockUseMultipleCorporationAssets = jest.fn<
   () => {
     data: TaggedAsset[];
+    subjectIds: number[];
     isPending: boolean;
     errors: { subjectId: number; error: Error }[];
   }
@@ -133,6 +134,31 @@ const SAMPLE_ASSETS: TaggedAsset[] = [
   },
 ];
 
+/**
+ * `subjectIds` is the corporations that were queried; `data` is what came back.
+ * They are deliberately separate arguments here, because every case worth
+ * testing is one where they disagree.
+ */
+const envelope = (
+  subjectIds: number[],
+  data: TaggedAsset[],
+  over: Partial<{
+    isPending: boolean;
+    errors: { subjectId: number; error: Error }[];
+  }> = {},
+) => ({
+  data,
+  subjectIds,
+  isPending: false,
+  errors: [],
+  ...over,
+});
+
+const failure = (subjectId: number) => ({
+  subjectId,
+  error: new Error("boom"),
+});
+
 function renderPage() {
   const Page = require("~/app/assets/corporation/page").default;
   return render(
@@ -144,11 +170,9 @@ function renderPage() {
 
 describe("Corporation Assets Page", () => {
   beforeEach(() => {
-    mockUseMultipleCorporationAssets.mockReturnValue({
-      data: SAMPLE_ASSETS,
-      isPending: false,
-      errors: [],
-    });
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope([CORP], SAMPLE_ASSETS),
+    );
     mockUseEsiNameLookup.mockReturnValue({
       "34": { value: { name: "Tritanium" } },
       "36": { value: { name: "Mexallon" } },
@@ -181,15 +205,15 @@ describe("Corporation Assets Page", () => {
   });
 
   it("names how many corporations could not be read, and keeps the rest", () => {
-    mockUseMultipleCorporationAssets.mockReturnValue({
-      data: SAMPLE_ASSETS,
-      isPending: false,
-      errors: [{ subjectId: OTHER_CORP, error: new Error("boom") }],
-    });
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope([CORP, OTHER_CORP], SAMPLE_ASSETS, {
+        errors: [failure(OTHER_CORP)],
+      }),
+    );
     renderPage();
 
     expect(
-      screen.getByText(/1 corporation could not be read/),
+      screen.getByText(/Could not read assets for 1 corporation/),
     ).toBeInTheDocument();
     // The readable corporation's assets still render — previously any error
     // replaced the whole table.
@@ -197,59 +221,158 @@ describe("Corporation Assets Page", () => {
   });
 
   it("pluralises the failure notice", () => {
-    mockUseMultipleCorporationAssets.mockReturnValue({
-      data: SAMPLE_ASSETS,
-      isPending: false,
-      errors: [
-        { subjectId: CORP, error: new Error("boom") },
-        { subjectId: OTHER_CORP, error: new Error("boom") },
-      ],
-    });
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope([CORP, OTHER_CORP], SAMPLE_ASSETS, {
+        errors: [failure(CORP), failure(OTHER_CORP)],
+      }),
+    );
     renderPage();
     expect(
-      screen.getByText(/2 corporations could not be read/),
+      screen.getByText(/Could not read assets for 2 corporations/),
     ).toBeInTheDocument();
   });
 
   it("explains the Director requirement rather than reporting an error", () => {
     // Reading corporation assets needs Director, which most members lack. With
     // roles enforced, such a corporation is simply not a subject — this used to
-    // surface as a red "Token not available".
-    mockUseMultipleCorporationAssets.mockReturnValue({
-      data: [],
-      isPending: false,
-      errors: [],
-    });
+    // surface as a red "Token not available". No subject, so no query ran.
+    mockUseMultipleCorporationAssets.mockReturnValue(envelope([], []));
     renderPage();
 
     expect(screen.getByText(/needs the Director role/)).toBeInTheDocument();
     expect(screen.queryByText(/assets$/)).toBeNull();
   });
 
+  it("shows an empty table, not the Director message, for a corporation that owns nothing", () => {
+    // The query ran and legitimately returned nothing. Deriving the corporation
+    // list from the rows would make this indistinguishable from holding no
+    // role, and tell a Director they are not one.
+    mockUseMultipleCorporationAssets.mockReturnValue(envelope([CORP], []));
+    renderPage();
+
+    expect(screen.queryByText(/needs the Director role/)).toBeNull();
+    expect(screen.getByText("0 assets")).toBeInTheDocument();
+  });
+
+  it("reports only the failure when every readable corporation errors", () => {
+    // Both alerts used to render together: one claiming a readable remainder,
+    // the other claiming nothing was readable at all.
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope([CORP], [], { errors: [failure(CORP)] }),
+    );
+    renderPage();
+
+    expect(
+      screen.getByText(/Could not read assets for 1 corporation/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/needs the Director role/)).toBeNull();
+  });
+
+  it("says nothing about permissions while the first load is still running", () => {
+    // Before the auth store rehydrates there are no subjects yet, so the empty
+    // state has to wait for isPending or it flashes on every page load.
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope([], [], { isPending: true }),
+    );
+    renderPage();
+
+    expect(screen.queryByText(/needs the Director role/)).toBeNull();
+  });
+
+  const OTHER_CORP_ASSET: TaggedAsset = {
+    item_id: 3001,
+    subjectId: OTHER_CORP,
+    type_id: 34,
+    quantity: 7,
+    location_id: 60003760,
+    location_type: "station",
+    is_singleton: false,
+    is_blueprint_copy: false,
+  };
+
   it("lets a corporation be picked when a character can read more than one", () => {
-    mockUseMultipleCorporationAssets.mockReturnValue({
-      data: [
-        ...SAMPLE_ASSETS,
-        {
-          item_id: 3001,
-          subjectId: OTHER_CORP,
-          type_id: 34,
-          quantity: 7,
-          location_id: 60003760,
-          location_type: "station",
-          is_singleton: false,
-          is_blueprint_copy: false,
-        },
-      ],
-      isPending: false,
-      errors: [],
-    });
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope([CORP, OTHER_CORP], [...SAMPLE_ASSETS, OTHER_CORP_ASSET]),
+    );
     renderPage();
     expect(screen.getByText("5 assets")).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId(`option:${OTHER_CORP}`));
 
     expect(screen.getByText("1 assets")).toBeInTheDocument();
+  });
+
+  it("offers a corporation that owns nothing, and shows it as empty", () => {
+    // The options come from the corporations that were queried, so one holding
+    // no assets is still a choice — and picking it says "0", not "5".
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope([CORP, OTHER_CORP], SAMPLE_ASSETS),
+    );
+    renderPage();
+
+    fireEvent.click(screen.getByTestId(`option:${OTHER_CORP}`));
+
+    expect(screen.getByText("0 assets")).toBeInTheDocument();
+  });
+
+  it("ignores a pick for a corporation that is no longer readable", () => {
+    // A token can expire mid-session. Honouring the stale pick would filter
+    // every remaining asset away and leave no control to undo it, because the
+    // select unmounts once only one corporation is left.
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope([CORP, OTHER_CORP], [...SAMPLE_ASSETS, OTHER_CORP_ASSET]),
+    );
+    const { rerender } = renderPage();
+
+    fireEvent.click(screen.getByTestId(`option:${OTHER_CORP}`));
+    expect(screen.getByText("1 assets")).toBeInTheDocument();
+
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope([CORP], SAMPLE_ASSETS),
+    );
+    const Page = require("~/app/assets/corporation/page")
+      .default as () => ReactNode;
+    rerender(
+      <MantineProvider>
+        <Page />
+      </MantineProvider>,
+    );
+
+    expect(screen.getByText("4 assets")).toBeInTheDocument();
+  });
+
+  it("returns to a valid page when narrowing to a smaller corporation", () => {
+    // usePagination clamps in setPage but never re-derives `active` when
+    // `total` shrinks, so an unclamped index slices an empty window out of a
+    // table the header says is not empty.
+    const bulk = (subjectId: number, from: number, count: number) =>
+      Array.from({ length: count }, (_, i) => ({
+        item_id: from + i,
+        subjectId,
+        type_id: 34,
+        quantity: 1,
+        location_id: 60003760,
+        location_type: "station",
+        is_singleton: false,
+        is_blueprint_copy: false,
+      }));
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope(
+        [CORP, OTHER_CORP],
+        [...bulk(CORP, 10000, 150), ...bulk(OTHER_CORP, 20000, 40)],
+      ),
+    );
+    renderPage();
+
+    // 190 assets over two pages; go to the second one.
+    fireEvent.click(screen.getByRole("button", { name: "2" }));
+    expect(screen.getAllByRole("row")).toHaveLength(91); // header + 90
+
+    // OTHER_CORP has 40 assets, so page 2 no longer exists.
+    fireEvent.click(screen.getByTestId(`option:${OTHER_CORP}`));
+
+    expect(screen.getByText("40 assets")).toBeInTheDocument();
+    expect(screen.getAllByRole("row")).toHaveLength(41); // header + 40
   });
 
   it("shows 'assembled' badge for singleton items", () => {
