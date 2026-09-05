@@ -13,7 +13,7 @@ import {
   optionalSdeDate,
   requiredNumber,
 } from "../../../helpers";
-import { isResearchAgent } from "../../../helpers/agents.ts";
+import { hasAgentData, isResearchAgent } from "../../../helpers/agents.ts";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
@@ -26,9 +26,20 @@ export interface ScrapeAgentsEventPayload {
 /**
  * Agent metadata comes from the SDE archive (`npcCharacters.yaml`), but the
  * Character rows it hangs off come from ESI — so unlike the pure `ingest-sde-*`
- * jobs this one is a hybrid and keeps its `scrape-` id. It also has to run after
- * the ESI scrapers rather than inside the FK-ordered SDE ingest loop, because
- * `Agent` references Character and Station, both ESI-owned.
+ * jobs this one is a hybrid and keeps its `scrape-` id.
+ *
+ * `Agent` references Character and Station, so ordering is load-bearing.
+ * Characters this job needs are created by its own `createCorpAndItsRefRecords`
+ * call below, but `Agent.stationId` is a non-nullable FK into Station and
+ * nothing bootstrap AWAITS fills the NPC station set before the SDE ingest
+ * loop. The full ESI station scrape is reached only as a fire-and-forget
+ * `ctx.send("scrape-esi-stations")` from `scrape-esi-solar-systems`, so whether
+ * it has landed by the time agents are written is a race; lose it and the write
+ * fails with P2003 against the handful of corporation home stations
+ * `createCorpAndItsRefRecords` seeded. `bootstrap-database` therefore sequences
+ * this job INTO the FK-ordered SDE loop, after `ingest-sde-stations` (which it
+ * does await) and before `ingest-sde-agents-in-space`. That still puts it after
+ * every ESI scraper, since the whole loop runs after them.
  *
  * AgentInSpace is deliberately not written here — `ingest-sde-agents-in-space`
  * owns that table from `agentsInSpace.yaml`.
@@ -56,6 +67,15 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
       }))
       .sort((a, b) => a.characterId - b.characterId);
     const agentCharacterIds = npcCharacters.map((entry) => entry.characterId);
+    // Not every NPC character is an agent — the SDE omits the whole `agent`
+    // block on the ones that are not, and the required-field guard below reads
+    // a missing container as corrupt data and throws. Drop them here instead.
+    // `agentCharacterIds` deliberately stays the FULL list: it scopes the
+    // soft-delete, so a character that LOSES its agent block still has its
+    // existing row marked deleted rather than being silently orphaned.
+    const agentRecords = npcCharacters.filter(({ record }) =>
+      hasAgentData(record),
+    );
 
     await createCorpAndItsRefRecords({
       missingCharacterIds: new Set(agentCharacterIds),
@@ -92,7 +112,7 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
           ),
       fetchRemoteEntries: () =>
         Promise.resolve(
-          npcCharacters.map(({ characterId, record }) => {
+          agentRecords.map(({ characterId, record }) => {
             const agentTypeId = optionalNumber(record.agent?.agentTypeID);
             const agentDivisionId = optionalNumber(record.agent?.divisionID);
             const level = optionalNumber(record.agent?.level);
