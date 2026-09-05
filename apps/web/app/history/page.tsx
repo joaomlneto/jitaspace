@@ -10,6 +10,7 @@ export const metadata = {
   title: "Type Change History",
   description:
     "Browse how EVE Online item types have changed across client builds over time.",
+  alternates: { canonical: "/history" },
 };
 
 // Server-render the index from the day-cached `getCachedHistoryIndex` and pass it

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
 import type { SolarSystemSdeInfo } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -13,8 +15,8 @@ export async function generateMetadata({
   params: Promise<{ systemId: string }>;
 }): Promise<Metadata> {
   const { systemId } = await params;
-  const id = Number(systemId);
-  if (!Number.isSafeInteger(id) || id <= 0) return {};
+  const id = parsePositiveEntityId(systemId);
+  if (id === null) return {};
   try {
     const system = await prisma.solarSystem.findUnique({
       select: { name: true },
@@ -24,6 +26,7 @@ export async function generateMetadata({
     return {
       title: system.name,
       description: `${system.name} solar system in EVE Online.`,
+      alternates: { canonical: `/system/${id}` },
     };
   } catch {
     return {};
@@ -109,7 +112,9 @@ async function PageContent({
   params,
 }: Readonly<{ params: Promise<{ systemId: string }> }>) {
   const { systemId } = await params;
-  const sde = await getSolarSystemSdeInfo(Number(systemId));
+  const id = parsePositiveEntityId(systemId);
+  if (id === null) notFound();
+  const sde = await getSolarSystemSdeInfo(id);
 
   return <PageClient sde={sde} />;
 }

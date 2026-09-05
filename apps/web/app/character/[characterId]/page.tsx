@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 
 import type { CharacterAgentData } from "@jitaspace/hooks";
 import { getCharactersDetail } from "@jitaspace/esi-client";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -14,14 +16,15 @@ export async function generateMetadata({
   params: Promise<{ characterId: string }>;
 }): Promise<Metadata> {
   const { characterId } = await params;
-  const id = Number(characterId);
-  if (!Number.isSafeInteger(id) || id <= 0) return {};
+  const id = parsePositiveEntityId(characterId);
+  if (id === null) return {};
   try {
     const res = await getCharactersDetail(id);
     const name = res.data.name;
     const portraitUrl = `https://images.evetech.net/characters/${id}/portrait`;
     return {
       title: name,
+      alternates: { canonical: `/character/${id}` },
       openGraph: {
         title: name,
         images: [{ url: portraitUrl, width: 512, height: 512 }],
@@ -51,7 +54,6 @@ const RESEARCH_AGENT_TYPE_ID = 4;
 async function getCharacterAgentData(
   characterId: number,
 ): Promise<(CharacterAgentData & { divisionName: string | null }) | null> {
-  if (!Number.isSafeInteger(characterId) || characterId <= 0) return null;
   try {
     const agent = await prisma.agent.findUnique({
       select: {
@@ -114,7 +116,9 @@ async function PageContent({
   params,
 }: Readonly<{ params: Promise<{ characterId: string }> }>) {
   const { characterId } = await params;
-  const agent = await getCharacterAgentData(Number(characterId));
+  const id = parsePositiveEntityId(characterId);
+  if (id === null) notFound();
+  const agent = await getCharacterAgentData(id);
 
   return (
     <PageClient

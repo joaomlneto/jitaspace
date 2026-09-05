@@ -9,6 +9,7 @@ export const metadata = {
   title: "Compare Builds — Change History",
   description:
     "Compare two EVE Online client builds and see how the static data changed between them.",
+  alternates: { canonical: "/history/compare" },
 };
 
 // The build picker is seeded from the day-cached index. `connection()` marks the

@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
@@ -8,10 +9,17 @@ import { render, screen } from "@testing-library/react";
 const mockUsePlanet = jest.fn();
 
 jest.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
   useParams: () => ({ planetId: "1" }),
   useRouter: () => ({}),
   usePathname: () => "/",
 }));
+
+// planet/[planetId]/page.tsx imports prisma for generateMetadata; the wrapper
+// tests below never reach a query.
+jest.mock("~/lib/db", () => ({ prisma: {} }));
 
 jest.mock("@jitaspace/hooks", () => ({
   usePlanet: (planetId: number) => mockUsePlanet(planetId),
@@ -100,5 +108,26 @@ describe("planet page", () => {
     // badge renders with undefined id (exercises the undefined branch)
     expect(screen.getByText(/SecBadge/)).toBeInTheDocument();
     expect(screen.queryByText("Jita IV")).not.toBeInTheDocument();
+  });
+});
+
+describe("planet page server wrapper", () => {
+  // `params` is awaited in the async child, never in `Page` itself, so the
+  // route keeps a synchronous shell that Next can prerender.
+  function runWrapper(planetId: string) {
+    const Page = require("~/app/planet/[planetId]/page").default;
+    const tree = Page({ params: Promise.resolve({ planetId }) });
+    expect(tree.type).toBe(Suspense);
+    const child = tree.props.children;
+    return child.type(child.props) as Promise<unknown>;
+  }
+
+  it("renders the client page for a canonical id", async () => {
+    await expect(runWrapper("40009081")).resolves.toBeTruthy();
+  });
+
+  it("404s an id that isn't the canonical spelling", async () => {
+    // `/planet/40009081.0` used to serve the same planet as `/planet/40009081`.
+    await expect(runWrapper("40009081.0")).rejects.toThrow("NEXT_NOT_FOUND");
   });
 });

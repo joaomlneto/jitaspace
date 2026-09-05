@@ -8,6 +8,7 @@ export const metadata = {
   title: "LP Store",
   description:
     "Browse EVE Online Loyalty Point store offers — find what you can buy with LP from NPC corporations.",
+  alternates: { canonical: "/lp-store" },
 };
 
 export default async function Page() {

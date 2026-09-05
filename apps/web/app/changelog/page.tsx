@@ -5,6 +5,7 @@ import Markdown from "react-markdown";
 
 export const metadata = {
   title: "Changelog",
+  alternates: { canonical: "/changelog" },
 };
 
 export default function ChangelogPage() {

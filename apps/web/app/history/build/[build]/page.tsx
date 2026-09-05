@@ -1,17 +1,27 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { Loader } from "@mantine/core";
 
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import BuildHistoryClient from "./page.client";
 
+// A build number is `Build.buildNumber Int @id` in the history schema — the
+// same shape as an entity id, so the same parser applies. Before this the
+// segment was coerced with `Number()`, so `/history/build/03383521` and
+// `/history/build/nonsense` both rendered HTTP 200: the first a duplicate of
+// the real build page, the second an empty state — a soft 404.
 export async function generateMetadata({
   params,
 }: Readonly<{
   params: Promise<{ build: string }>;
 }>) {
   const { build } = await params;
+  const buildNumber = parsePositiveEntityId(build);
+  if (buildNumber === null) return {};
   return {
-    title: `Build ${build} — Change History`,
-    description: `Everything that changed in EVE Online client build ${build}.`,
+    title: `Build ${buildNumber} — Change History`,
+    description: `Everything that changed in EVE Online client build ${buildNumber}.`,
+    alternates: { canonical: `/history/build/${buildNumber}` },
   };
 }
 
@@ -21,7 +31,9 @@ async function PageContent({
   params: Promise<{ build: string }>;
 }>) {
   const { build } = await params;
-  return <BuildHistoryClient build={Number(build)} />;
+  const buildNumber = parsePositiveEntityId(build);
+  if (buildNumber === null) notFound();
+  return <BuildHistoryClient build={buildNumber} />;
 }
 
 export default function Page({
