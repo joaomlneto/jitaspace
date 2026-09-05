@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
   Badge,
@@ -20,24 +20,38 @@ import { usePagination } from "@mantine/hooks";
 import {
   EveEntityAnchor,
   EveEntityName,
+  EveEntitySelect,
   TypeAnchor,
   TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { AssetsIcon, AttentionIcon } from "@jitaspace/eve-icons";
 import {
-  useCorporationAssets,
   useEsiNameLookup,
   useMarketPrices,
-  useSelectedCharacter,
+  useMultipleCorporationAssets,
 } from "@jitaspace/hooks";
 
 import { ScopeGuard } from "~/components/ScopeGuard";
 
 export default function Page() {
-  const character = useSelectedCharacter();
-  const { assets, isLoading, errorMessage } = useCorporationAssets(
-    character?.corporationId,
+  // Every corporation a logged-in character can read assets for. A corporation
+  // where nobody holds Director is simply not a subject, so it costs no request
+  // and raises no error — previously that showed as "Token not available".
+  //
+  // `subjectIds` is the list of corporations that were actually queried, which
+  // is what every permission claim below has to be made against. Deriving it
+  // from the returned rows instead would fold three different situations — no
+  // Director anywhere, a corporation that owns nothing, and a query that failed
+  // — into the same empty list, and answer all three with "you need Director".
+  const {
+    data: allAssets,
+    isPending,
+    errors,
+    subjectIds: corporationIds,
+  } = useMultipleCorporationAssets();
+  const [pickedCorporationId, setPickedCorporationId] = useState<string | null>(
+    null,
   );
   const filterForm = useForm<{ location_id: number | null; name: string }>({
     initialValues: {
@@ -46,6 +60,26 @@ export default function Page() {
     },
   });
   const { data: marketPrices } = useMarketPrices();
+
+  // A pick is only honoured while the corporation it names is still readable.
+  // Losing a token mid-session would otherwise leave the filter applied to a
+  // corporation that is no longer offered, hiding every remaining asset.
+  const selectedCorporationId =
+    pickedCorporationId !== null &&
+    corporationIds.includes(Number.parseInt(pickedCorporationId, 10))
+      ? pickedCorporationId
+      : null;
+
+  const assets = useMemo(() => {
+    const owned =
+      selectedCorporationId === null
+        ? allAssets
+        : allAssets.filter(
+            (asset) =>
+              asset.subjectId === Number.parseInt(selectedCorporationId, 10),
+          );
+    return Object.fromEntries(owned.map((asset) => [asset.item_id, asset]));
+  }, [allAssets, selectedCorporationId]);
 
   const assetEntries = useMemo(
     () =>
@@ -114,27 +148,59 @@ export default function Page() {
   const ENTRIES_PER_PAGE = 100;
   const numPages = Math.ceil(entries.length / ENTRIES_PER_PAGE);
   const pagination = usePagination({ total: numPages, siblings: 3 });
-  const offset = ENTRIES_PER_PAGE * (pagination.active - 1);
+  // usePagination clamps inside setPage but never re-derives `active` when
+  // `total` shrinks, so narrowing to a smaller corporation would leave the
+  // index past the end and slice an empty window out of a non-empty table.
+  const activePage = Math.min(pagination.active, Math.max(numPages, 1));
+  const offset = ENTRIES_PER_PAGE * (activePage - 1);
 
   return (
     <ScopeGuard requiredScopes={["esi-assets.read_corporation_assets.v1"]}>
       <Container size="xl">
         <Stack>
-          <Group>
-            <AssetsIcon width={48} />
-            <Title order={1}>Corporation Assets</Title>
-            {isLoading && <Loader />}
+          <Group justify="space-between" wrap="nowrap">
+            <Group>
+              <AssetsIcon width={48} />
+              <Title order={1}>Corporation Assets</Title>
+              {isPending && <Loader />}
+            </Group>
+            {/* Most players have characters in a single corporation, so the
+                filter would be an empty choice — only offer it when it is a
+                real one. */}
+            {corporationIds.length > 1 && (
+              <EveEntitySelect
+                size="xs"
+                label="Filter by corporation"
+                entityIds={corporationIds.map((id) => ({ id }))}
+                searchable
+                allowDeselect
+                clearable
+                value={selectedCorporationId}
+                onChange={setPickedCorporationId}
+              />
+            )}
           </Group>
-          {errorMessage && (
+          {errors.length > 0 && (
             <Alert
               icon={<AttentionIcon width={32} />}
-              title="Error!"
+              title="Some assets could not be loaded"
               color="red"
             >
-              {errorMessage}
+              Could not read assets for {errors.length}{" "}
+              {errors.length === 1 ? "corporation" : "corporations"}.
             </Alert>
           )}
-          {!errorMessage && (
+          {corporationIds.length === 0 && !isPending && (
+            // Not an error, and not a failure: no corporation was queried at
+            // all. Two things produce that, and the message names both, because
+            // only one of them is something the player can act on here.
+            <Alert icon={<AttentionIcon width={32} />} color="gray">
+              None of your characters can read corporation assets. This needs
+              the Director role in the corporation, and the permission to read
+              corporation roles — sign in again to grant it.
+            </Alert>
+          )}
+          {corporationIds.length > 0 && (
             <>
               <Text size="sm" c="dimmed">
                 {filtersEnabled
@@ -155,7 +221,7 @@ export default function Page() {
               <Center>
                 <Pagination
                   total={numPages}
-                  value={pagination.active}
+                  value={activePage}
                   onChange={pagination.setPage}
                 />
               </Center>

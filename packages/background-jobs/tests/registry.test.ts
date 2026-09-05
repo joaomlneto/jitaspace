@@ -123,4 +123,46 @@ describe("background-jobs registry", () => {
       perFile,
     );
   });
+
+  // `bootstrapDatabase` sequences `scrape-sde-agents` INTO the SDE list by
+  // matching a literal id inside the loop, which the generic ctx.invoke scan
+  // above cannot see. The order is load-bearing: `Agent.stationId` FKs
+  // `Station` and only `ingest-sde-stations` fills the NPC station set, while
+  // `AgentInSpace.characterId` FKs `Agent` — so the agent scrape has to sit
+  // between the two. Renaming or dropping either id would otherwise make
+  // bootstrap skip the agent scrape SILENTLY, leaving the agent tables empty
+  // with no error, so assert the resulting invoke order directly.
+  it("bootstrapDatabase invokes scrape-sde-agents between stations and agents-in-space", async () => {
+    const invoked: string[] = [];
+    const bootstrap = registry.get("bootstrap-database");
+    const ctx = {
+      payload: {},
+      attempt: 1,
+      logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
+      run: (_name: string, fn: () => Promise<unknown>) => fn(),
+      sleep: jest.fn(),
+      send: jest.fn(),
+      invoke: (id: string) => {
+        invoked.push(id);
+        return Promise.resolve();
+      },
+    } as unknown as Parameters<typeof bootstrap.handler>[0];
+
+    await bootstrap.handler(ctx);
+
+    const stations = invoked.indexOf("ingest-sde-stations");
+    const agents = invoked.indexOf("scrape-sde-agents");
+    const agentsInSpace = invoked.indexOf("ingest-sde-agents-in-space");
+
+    expect(stations).toBeGreaterThan(-1);
+    expect(agents).toBeGreaterThan(-1);
+    expect(agentsInSpace).toBeGreaterThan(-1);
+    expect(stations).toBeLessThan(agents);
+    expect(agents).toBeLessThan(agentsInSpace);
+  });
 });
