@@ -2,15 +2,17 @@ import { Suspense } from "react";
 
 import type { SdeLastModifiedResponse, VercelStatusResponse } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
+import { pageMetadata } from "~/lib/metadata";
 import { getSdeIngestState } from "./actions";
 import StatusPageClient from "./page.client";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Server Status",
   description:
     "EVE Online Tranquility server status and JitaSpace service health.",
-  alternates: { canonical: "/status" },
-};
+  path: "/status",
+  badge: "JitaSpace",
+});
 
 async function getVercelStatus() {
   "use server";

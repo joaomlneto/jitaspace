@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { PageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import DogmaEffectPage from "./page.client";
 
@@ -102,13 +103,17 @@ export async function generateMetadata({
       where: { effectId },
     });
     if (!effect) return {};
-    const title = [effect.displayName, effect.name].find(Boolean) ?? undefined;
-    const description = effect.description?.slice(0, 200) ?? undefined;
-    return {
+    const title = [effect.displayName, effect.name].find(Boolean);
+    if (!title) return {};
+    return pageMetadata({
       title,
-      description,
-      alternates: { canonical: `/dogma/effect/${effectId}` },
-    };
+      description: toDescription(
+        effect.description,
+        `The ${title} dogma effect in EVE Online — what it does and which items apply it.`,
+      ),
+      path: `/dogma/effect/${effectId}`,
+      badge: "Dogma Effect",
+    });
   } catch {
     return {};
   }

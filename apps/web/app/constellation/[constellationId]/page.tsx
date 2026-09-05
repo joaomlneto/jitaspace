@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata, withArticle } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
 
@@ -24,11 +25,23 @@ export async function generateMetadata({
     // outside the cached scope, which is what makes that safe.
     const constellation = await readConstellation(id);
     if (!constellation) return {};
-    return {
+
+    const region = constellation.regionName;
+    const systems = constellation.solarSystemCount;
+
+    const inRegion = region ? ` in ${withArticle(region)} region` : "";
+    const spanning = systems ? `, spanning ${systems} solar systems` : "";
+
+    return pageMetadata({
       title: constellation.name,
-      description: `${constellation.name} constellation in EVE Online.`,
-      alternates: { canonical: `/constellation/${id}` },
-    };
+      description: `${constellation.name} is a constellation${inRegion} of EVE Online${spanning}.`,
+      path: `/constellation/${id}`,
+      badge: "Constellation",
+      facts: [
+        ...(region ? [{ label: "Region", value: region }] : []),
+        ...(systems ? [{ label: "Systems", value: String(systems) }] : []),
+      ],
+    });
   } catch {
     return {};
   }
@@ -36,6 +49,8 @@ export async function generateMetadata({
 
 interface ConstellationSummary {
   name: string;
+  /** How many solar systems it spans — stated on the OpenGraph card. */
+  solarSystemCount: number;
   regionId: number;
   regionName: string | null;
 }
@@ -58,7 +73,14 @@ async function readConstellation(
   cacheLife("days");
 
   const constellation = await prisma.constellation.findUnique({
-    select: { name: true, regionId: true, region: { select: { name: true } } },
+    select: {
+      name: true,
+      regionId: true,
+      region: { select: { name: true } },
+      // Counted here so the OpenGraph card can state the constellation's size
+      // without a second query outside this cache entry.
+      _count: { select: { solarSystems: true } },
+    },
     where: { constellationId },
   });
   if (!constellation) return null;
@@ -67,6 +89,7 @@ async function readConstellation(
     name: constellation.name,
     regionId: constellation.regionId,
     regionName: constellation.region?.name ?? null,
+    solarSystemCount: constellation._count.solarSystems,
   };
 }
 

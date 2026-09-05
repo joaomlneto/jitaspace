@@ -3,6 +3,12 @@
  * `generateMetadata`.  Client components (those starting with "use client")
  * are skipped because they cannot export metadata from the same file.
  *
+ * Also enforces that the metadata carries a full OpenGraph block. Next only
+ * re-resolves `openGraph` for a segment that declares one, so a page setting
+ * only `title`/`description` inherits the root layout's card and unfurls on
+ * Discord as the generic "JitaSpace" blurb whatever it points at. Routing
+ * through `pageMetadata` (see `lib/metadata.ts`) is what prevents that.
+ *
  * Pages that are auth-gated or intentionally excluded from search indexing are
  * listed in EXCLUDED_PAGES — add a comment explaining why when you add one.
  */
@@ -75,5 +81,36 @@ describe("page metadata coverage", () => {
     }
 
     expect(missing).toEqual([]);
+  });
+
+  it("every page's metadata carries its own OpenGraph block", () => {
+    const inheritingSiteCard: string[] = [];
+
+    for (const page of pages) {
+      if (EXCLUDED_PAGES.has(page)) continue;
+
+      const src = readFileSync(join(root, page), "utf-8");
+      if (src.trimStart().startsWith('"use client"')) continue;
+
+      const hasMetadata =
+        /\bexport\s+const\s+metadata\b/.test(src) ||
+        /\bexport\s+(async\s+)?function\s+generateMetadata\b/.test(src);
+      if (!hasMetadata) continue;
+
+      // The home page is the one page the root layout's own card describes
+      // correctly — it *is* the site — and its title is deliberately absolute
+      // rather than run through the "%s | JitaSpace" template.
+      if (page === "app/page.tsx") continue;
+
+      // Either built by the shared helper, or an explicit hand-rolled block.
+      const declaresOpenGraph =
+        /\bpageMetadata\s*\(/.test(src) || /\bopenGraph\s*:/.test(src);
+
+      if (!declaresOpenGraph) {
+        inheritingSiteCard.push(page);
+      }
+    }
+
+    expect(inheritingSiteCard).toEqual([]);
   });
 });

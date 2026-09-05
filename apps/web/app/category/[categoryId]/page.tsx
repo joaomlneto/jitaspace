@@ -15,6 +15,7 @@ import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata } from "~/lib/metadata";
 import { parseEntityId, parsePositiveEntityId } from "~/lib/routeParams";
 
 interface PageProps {
@@ -57,14 +58,15 @@ export async function generateMetadata({
   const categoryId = parsePositiveEntityId(categoryIdParam);
   if (categoryId === null) return {};
   try {
-    const { name } = await getCategoryData(categoryId);
-    return {
+    const { name, groups } = await getCategoryData(categoryId);
+    if (!name) return {};
+    return pageMetadata({
       title: name,
-      description: name
-        ? `Browse EVE Online ${name} items by group.`
-        : undefined,
-      alternates: { canonical: `/category/${categoryId}` },
-    };
+      description: `Browse EVE Online ${name} by group — ${groups.length} groups of items with attributes and market prices.`,
+      path: `/category/${categoryId}`,
+      badge: "Item Category",
+      facts: [{ label: "Groups", value: String(groups.length) }],
+    });
   } catch {
     return {};
   }

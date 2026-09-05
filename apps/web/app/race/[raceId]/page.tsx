@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata, resolveTypeImage, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
 
@@ -17,15 +18,32 @@ export async function generateMetadata({
   if (id === null) return {};
   try {
     const race = await prisma.race.findUnique({
-      select: { name: true, description: true },
+      select: {
+        name: true,
+        description: true,
+        shipTypeId: true,
+        faction: { select: { name: true } },
+      },
       where: { raceId: id },
     });
     if (!race) return {};
-    return {
+
+    return pageMetadata({
       title: race.name,
-      description: race.description?.slice(0, 200) ?? undefined,
-      alternates: { canonical: `/race/${id}` },
-    };
+      description: toDescription(
+        race.description,
+        `The ${race.name} race in EVE Online — its bloodlines, ships, and place in New Eden.`,
+      ),
+      path: `/race/${id}`,
+      badge: "Race",
+      // The race's starter hull is the closest thing a race has to a portrait.
+      image: race.shipTypeId
+        ? await resolveTypeImage(race.shipTypeId)
+        : undefined,
+      facts: race.faction
+        ? [{ label: "Faction", value: race.faction.name }]
+        : [],
+    });
   } catch {
     return {};
   }

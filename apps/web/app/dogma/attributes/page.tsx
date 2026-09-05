@@ -2,14 +2,16 @@ import { cacheLife } from "next/cache";
 
 import type { PageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import { pageMetadata } from "~/lib/metadata";
 import DogmaAttributesPage from "./page.client";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Dogma Attributes",
   description:
     "Browse all EVE Online dogma attributes used in ship and module balancing.",
-  alternates: { canonical: "/dogma/attributes" },
-};
+  path: "/dogma/attributes",
+  badge: "Dogma",
+});
 
 export default async function Page() {
   "use cache";

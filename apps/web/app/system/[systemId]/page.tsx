@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { SolarSystemSdeInfo } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata, withArticle } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
 
@@ -19,15 +20,39 @@ export async function generateMetadata({
   if (id === null) return {};
   try {
     const system = await prisma.solarSystem.findUnique({
-      select: { name: true },
+      select: {
+        name: true,
+        securityStatus: true,
+        constellation: {
+          select: { name: true, region: { select: { name: true } } },
+        },
+      },
       where: { solarSystemId: id },
     });
     if (!system) return {};
-    return {
+
+    // EVE rounds security to one decimal everywhere it's displayed, and the
+    // rounded value is what determines high/low/null-sec rules.
+    const securityValue = Number(system.securityStatus);
+    const security = Number.isFinite(securityValue)
+      ? securityValue.toFixed(1)
+      : undefined;
+    const region = system.constellation.region?.name;
+
+    const securityPhrase = security ? `${security} security ` : "";
+    const inRegion = region ? ` in ${withArticle(region)} region` : "";
+
+    return pageMetadata({
       title: system.name,
-      description: `${system.name} solar system in EVE Online.`,
-      alternates: { canonical: `/system/${id}` },
-    };
+      description: `${system.name} is a ${securityPhrase}solar system${inRegion} of EVE Online. Browse its stations, planets, and market activity.`,
+      path: `/system/${id}`,
+      badge: "Solar System",
+      facts: [
+        ...(security ? [{ label: "Security", value: security }] : []),
+        ...(region ? [{ label: "Region", value: region }] : []),
+        { label: "Constellation", value: system.constellation.name },
+      ],
+    });
   } catch {
     return {};
   }

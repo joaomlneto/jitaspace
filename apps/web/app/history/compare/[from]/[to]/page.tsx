@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { Loader } from "@mantine/core";
 
 import { getCachedHistoryIndex } from "~/lib/history-cache";
+import { pageMetadata } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import CompareBuildsClient from "../../page.client";
 
@@ -14,11 +15,12 @@ export async function generateMetadata({
   const fromBuild = parsePositiveEntityId(from);
   const toBuild = parsePositiveEntityId(to);
   if (fromBuild === null || toBuild === null) return {};
-  return {
+  return pageMetadata({
     title: `Compare builds ${fromBuild} → ${toBuild} — Change History`,
     description: `What changed in EVE Online static data between build ${fromBuild} and build ${toBuild}.`,
-    alternates: { canonical: `/history/compare/${fromBuild}/${toBuild}` },
-  };
+    path: `/history/compare/${fromBuild}/${toBuild}`,
+    badge: "Change History",
+  });
 }
 
 async function CompareData({

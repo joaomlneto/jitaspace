@@ -12,13 +12,15 @@ import { ItemsIcon } from "@jitaspace/eve-icons";
 import { CategoryAnchor } from "@jitaspace/ui";
 
 import { prisma } from "~/lib/db";
+import { pageMetadata } from "~/lib/metadata";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Item Categories",
   description:
     "Browse all EVE Online item categories — ships, modules, ammunition, structures, and more.",
-  alternates: { canonical: "/categories" },
-};
+  path: "/categories",
+  badge: "Items",
+});
 
 interface PageProps {
   categories: { categoryId: number; name: string }[];

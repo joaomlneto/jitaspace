@@ -3,12 +3,28 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
 import type { CharacterAgentData } from "@jitaspace/hooks";
-import { getCharactersDetail } from "@jitaspace/esi-client";
+import {
+  getAlliancesAllianceId,
+  getCharactersDetail,
+  getCorporationsCorporationId,
+} from "@jitaspace/esi-client";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { eveImage, pageMetadata } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
+
+/** Resolves a name, or nothing — an unfurl is never worth failing a page over. */
+async function nameOf<T extends { data: { name: string } }>(
+  fetcher: () => Promise<T>,
+): Promise<string | undefined> {
+  try {
+    return (await fetcher()).data.name;
+  } catch {
+    return undefined;
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -19,22 +35,30 @@ export async function generateMetadata({
   const id = parsePositiveEntityId(characterId);
   if (id === null) return {};
   try {
-    const res = await getCharactersDetail(id);
-    const name = res.data.name;
-    const portraitUrl = `https://images.evetech.net/characters/${id}/portrait`;
-    return {
-      title: name,
-      alternates: { canonical: `/character/${id}` },
-      openGraph: {
-        title: name,
-        images: [{ url: portraitUrl, width: 512, height: 512 }],
-      },
-      twitter: {
-        card: "summary",
-        title: name,
-        images: [portraitUrl],
-      },
-    };
+    const character = (await getCharactersDetail(id)).data;
+
+    // Affiliations are the interesting part of a shared character link, and
+    // they're two independent lookups — run them together.
+    const allianceId = character.alliance_id;
+    const [corporation, alliance] = await Promise.all([
+      nameOf(() => getCorporationsCorporationId(character.corporation_id)),
+      allianceId ? nameOf(() => getAlliancesAllianceId(allianceId)) : undefined,
+    ]);
+
+    const flyingWith = corporation ? ` flying with ${corporation}` : "";
+    const inAlliance = alliance ? ` (${alliance})` : "";
+
+    return pageMetadata({
+      title: character.name,
+      description: `${character.name} is an EVE Online capsuleer${flyingWith}${inAlliance}. View their corporation history, affiliations, and public record.`,
+      path: `/character/${id}`,
+      badge: "Character",
+      image: eveImage.character(id),
+      facts: [
+        ...(corporation ? [{ label: "Corporation", value: corporation }] : []),
+        ...(alliance ? [{ label: "Alliance", value: alliance }] : []),
+      ],
+    });
   } catch {
     return {};
   }

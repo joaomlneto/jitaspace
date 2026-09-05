@@ -3,14 +3,16 @@ import { connection } from "next/server";
 import { Loader } from "@mantine/core";
 
 import { getCachedHistoryIndex } from "~/lib/history-cache";
+import { pageMetadata } from "~/lib/metadata";
 import CompareBuildsClient from "./page.client";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Compare Builds — Change History",
   description:
     "Compare two EVE Online client builds and see how the static data changed between them.",
-  alternates: { canonical: "/history/compare" },
-};
+  path: "/history/compare",
+  badge: "Change History",
+});
 
 // The build picker is seeded from the day-cached index. `connection()` marks the
 // read as request-time so it stays out of the build-time prerender (which would

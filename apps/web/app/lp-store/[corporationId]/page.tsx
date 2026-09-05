@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { LPStoreCorporationPageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { eveImage, pageMetadata } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import LPStoreCorporationPage from "./page.client";
 
@@ -104,17 +105,28 @@ export async function generateMetadata({
   if (id === null) return {};
   try {
     const corporation = await prisma.corporation.findUnique({
-      select: { name: true },
+      select: { name: true, ticker: true },
       where: { corporationId: id },
     });
-    const name = corporation?.name;
-    // No corporation means the page itself 404s, so it gets no canonical.
-    if (!name) return { title: "LP Store" };
-    return {
-      title: `${name} LP Store`,
-      description: `Browse Loyalty Point store offers from ${name} in EVE Online.`,
-      alternates: { canonical: `/lp-store/${id}` },
-    };
+    if (!corporation) return {};
+
+    const offerCount = await prisma.loyaltyStoreOffer.count({
+      where: { corporationId: id },
+    });
+
+    return pageMetadata({
+      title: `${corporation.name} LP Store`,
+      description: `Browse the ${offerCount} Loyalty Point offers from ${corporation.name} in EVE Online — LP and ISK cost, required items, and item values.`,
+      path: `/lp-store/${id}`,
+      badge: "LP Store",
+      image: eveImage.corporation(id),
+      facts: [
+        { label: "Offers", value: String(offerCount) },
+        ...(corporation.ticker
+          ? [{ label: "Ticker", value: corporation.ticker }]
+          : []),
+      ],
+    });
   } catch {
     return {};
   }

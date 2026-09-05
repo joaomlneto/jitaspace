@@ -2,22 +2,15 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
-import { getCorporationsCorporationId } from "@jitaspace/esi-client";
+import {
+  getAlliancesAllianceId,
+  getCorporationsCorporationId,
+} from "@jitaspace/esi-client";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
+import { eveImage, pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
-
-function stripHtml(s: string): string {
-  let out = "";
-  let inTag = false;
-  for (const ch of s) {
-    if (ch === "<") inTag = true;
-    else if (ch === ">") inTag = false;
-    else if (!inTag) out += ch;
-  }
-  return out;
-}
 
 export async function generateMetadata({
   params,
@@ -29,28 +22,46 @@ export async function generateMetadata({
   if (id === null) return {};
 
   try {
-    const res = await getCorporationsCorporationId(id);
-    const name = res.data.name;
-    const description = res.data.description
-      ? stripHtml(res.data.description).slice(0, 200)
-      : undefined;
-    const logoUrl = `https://images.evetech.net/corporations/${id}/logo`;
-    return {
-      title: name,
-      description,
-      alternates: { canonical: `/corporation/${id}` },
-      openGraph: {
-        title: name,
-        description,
-        images: [{ url: logoUrl, width: 512, height: 512 }],
-      },
-      twitter: {
-        card: "summary",
-        title: name,
-        description,
-        images: [logoUrl],
-      },
-    };
+    const corporation = (await getCorporationsCorporationId(id)).data;
+
+    let alliance: string | undefined;
+    if (corporation.alliance_id) {
+      try {
+        alliance = (await getAlliancesAllianceId(corporation.alliance_id)).data
+          .name;
+      } catch {
+        // An unreachable alliance just means one fewer fact on the card.
+      }
+    }
+
+    const tickerSuffix = corporation.ticker ? ` [${corporation.ticker}]` : "";
+
+    return pageMetadata({
+      title: corporation.name,
+      description: toDescription(
+        corporation.description,
+        `${corporation.name}${tickerSuffix} is an EVE Online corporation. View its members, alliance history, and public record.`,
+      ),
+      path: `/corporation/${id}`,
+      badge: "Corporation",
+      image: eveImage.corporation(id),
+      facts: [
+        ...(corporation.ticker
+          ? [{ label: "Ticker", value: corporation.ticker }]
+          : []),
+        ...(typeof corporation.member_count === "number"
+          ? [
+              {
+                label: "Members",
+                // Explicit locale: the server's default would make the card
+                // text vary by host, and these URLs are cached.
+                value: corporation.member_count.toLocaleString("en-US"),
+              },
+            ]
+          : []),
+        ...(alliance ? [{ label: "Alliance", value: alliance }] : []),
+      ],
+    });
   } catch {
     return {};
   }

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Loader } from "@mantine/core";
 
+import { pageMetadata } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import BuildHistoryClient from "./page.client";
 
@@ -18,11 +19,12 @@ export async function generateMetadata({
   const { build } = await params;
   const buildNumber = parsePositiveEntityId(build);
   if (buildNumber === null) return {};
-  return {
+  return pageMetadata({
     title: `Build ${buildNumber} — Change History`,
     description: `Everything that changed in EVE Online client build ${buildNumber}.`,
-    alternates: { canonical: `/history/build/${buildNumber}` },
-  };
+    path: `/history/build/${buildNumber}`,
+    badge: "Change History",
+  });
 }
 
 async function PageContent({
