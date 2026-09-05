@@ -291,10 +291,12 @@ export function SolarSystemMap({
           setHover={setHover}
         />
       ) : (
-        <div style={unsupportedStyle} role="status">
+        // <output> carries an implicit `status` role, so it announces itself
+        // without an explicit ARIA role (SonarQube S6819).
+        <output style={unsupportedStyle}>
           This map needs WebGL, which this browser or device isn&apos;t
           providing. Check that hardware acceleration is enabled.
-        </div>
+        </output>
       )}
 
       {hover && (
