@@ -2,7 +2,7 @@
 "@jitaspace/db": minor
 ---
 
-Stored the remaining SDE fields that had no column. Roughly 105 nullable columns across 21 existing models plus five new ones — `GraphicSofLayout`, `RaceSkill`, `AgentSkill`, `FreelanceJobSchemaParameter` and `FreelanceJobSchemaParameterValueType` (with the `FreelanceJobParameterKind` enum).
+Stored the remaining SDE fields that had no column. Roughly 105 nullable columns across 21 existing models plus five new ones — `GraphicSofLayout`, `RaceSkill`, `NpcCharacterSkill`, `FreelanceJobSchemaParameter` and `FreelanceJobSchemaParameterValueType` (with the `FreelanceJobParameterKind` enum).
 
 Highlights: celestial geometry (`positionX/Y/Z`, `radius`) and the full `statistics` block on `Moon`, `Planet` and `AsteroidBelt`, so the universe is now spatially describable; `positionX/Y/Z` on `Stargate`, `Station`, `Region` and `Constellation`; `Type.raceId` / `metaGroupId` / `isRepackable` / `factionId`; `Ancestry`'s five character-creation attributes; `iconId` on `Category`, `Group`, `Faction`, `Bloodline` and `Race`; seven npcCorporations columns on `Corporation`; and `Character.ancestryId`.
 
