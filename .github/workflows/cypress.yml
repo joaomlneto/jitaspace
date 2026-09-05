@@ -37,8 +37,11 @@ jobs:
       # in the browser it reads as undefined and apps/web/env.ts runs the client
       # schema regardless. A build without the required NEXT_PUBLIC_* values
       # therefore produces a bundle that throws "Invalid environment variables"
-      # on module evaluation of every page. That went unnoticed because the old
-      # example specs never loaded the app; the smoke suite hit it immediately.
+      # on module evaluation of every page. The old example specs never loaded
+      # the app, so it went unnoticed; the smoke suite's original `cy.visit` on
+      # /about caught it at once. That assertion was dropped in 8cabf0d8 (see
+      # the header of smoke.cy.ts), so nothing re-checks this today: cy.request
+      # never executes page JS, and these placeholders are currently unguarded.
       SKIP_ENV_VALIDATION: "1"
       DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
       REDIS_URL: "redis://localhost:6379"
