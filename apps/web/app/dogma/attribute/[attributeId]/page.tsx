@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { PageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { firstNonEmpty } from "~/lib/strings";
 import DogmaAttributePage from "./page.client";
 
 async function getAttributeData(attributeId: number): Promise<PageProps> {
@@ -73,7 +74,7 @@ async function getAttributeData(attributeId: number): Promise<PageProps> {
 
   return {
     attributeId,
-    title: attribute.displayName ?? attribute.name ?? null,
+    title: firstNonEmpty(attribute.displayName, attribute.name) ?? null,
     name: attribute.name,
     displayName: attribute.displayName,
     description: attribute.description ?? null,
@@ -81,7 +82,11 @@ async function getAttributeData(attributeId: number): Promise<PageProps> {
     highIsGood: attribute.highIsGood ?? null,
     published: attribute.published ?? null,
     stackable: attribute.stackable ?? null,
-    unit: attribute.DogmaUnit?.displayName ?? attribute.DogmaUnit?.name ?? null,
+    unit:
+      firstNonEmpty(
+        attribute.DogmaUnit?.displayName,
+        attribute.DogmaUnit?.name,
+      ) ?? null,
     unitId: attribute.unitId ?? null,
     iconId: attribute.iconId ?? null,
     types: attribute.TypeAttributes.map((entry) => ({
@@ -106,8 +111,7 @@ export async function generateMetadata({
       where: { attributeId },
     });
     if (!attribute) return {};
-    const title =
-      [attribute.displayName, attribute.name].find(Boolean) ?? undefined;
+    const title = firstNonEmpty(attribute.displayName, attribute.name);
     const description = attribute.description?.slice(0, 200) ?? undefined;
     return { title, description };
   } catch {

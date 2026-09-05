@@ -291,7 +291,7 @@ model Graphic {
 }
 
 model DogmaAttribute {
-  attributeId                  Int                   @id
+  attributeId                  Int                     @id
   defaultValue                 Float?
   description                  String?
   displayName                  String?
@@ -316,27 +316,27 @@ model DogmaAttribute {
   // endpoint exposes no category.
   attributeCategory            DogmaAttributeCategory? @relation(fields: [attributeCategoryId], references: [attributeCategoryId])
   attributeCategoryId          Int?
-  Icon                         Icon?                 @relation(fields: [iconId], references: [iconId])
-  DogmaUnit                    DogmaUnit?            @relation(fields: [unitId], references: [unitId])
+  Icon                         Icon?                   @relation(fields: [iconId], references: [iconId])
+  DogmaUnit                    DogmaUnit?              @relation(fields: [unitId], references: [unitId])
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt                    DateTime              @default(now())
-  updatedAt                    DateTime              @updatedAt()
-  isDeleted                    Boolean               @default(false)
+  createdAt                    DateTime                @default(now())
+  updatedAt                    DateTime                @updatedAt()
+  isDeleted                    Boolean                 @default(false)
   TypeAttributes               TypeAttribute[]
-  DischargeAttribute           DogmaEffect[]         @relation("DischargeAttribute")
-  DurationAttribute            DogmaEffect[]         @relation("DurationAttribute")
-  FalloffAttribute             DogmaEffect[]         @relation("FalloffAttribute")
-  RangeAttribute               DogmaEffect[]         @relation("RangeAttribute")
-  TrackingSpeedAttribute       DogmaEffect[]         @relation("TrackingSpeedAttribute")
-  DogmaEffectsModified         DogmaEffectModifier[] @relation("DogmaEffectsModified")
-  DogmaEffectsModifying        DogmaEffectModifier[] @relation("DogmaEffectsModifying")
+  DischargeAttribute           DogmaEffect[]           @relation("DischargeAttribute")
+  DurationAttribute            DogmaEffect[]           @relation("DurationAttribute")
+  FalloffAttribute             DogmaEffect[]           @relation("FalloffAttribute")
+  RangeAttribute               DogmaEffect[]           @relation("RangeAttribute")
+  TrackingSpeedAttribute       DogmaEffect[]           @relation("TrackingSpeedAttribute")
+  DogmaEffectsModified         DogmaEffectModifier[]   @relation("DogmaEffectsModified")
+  DogmaEffectsModifying        DogmaEffectModifier[]   @relation("DogmaEffectsModifying")
   // Back-relations for the SDE-only attribute references on DogmaEffect.
-  ResistanceAttribute          DogmaEffect[]         @relation("ResistanceAttribute")
-  NpcActivationChanceAttribute DogmaEffect[]         @relation("NpcActivationChanceAttribute")
-  FittingUsageChanceAttribute  DogmaEffect[]         @relation("FittingUsageChanceAttribute")
-  NpcUsageChanceAttribute      DogmaEffect[]         @relation("NpcUsageChanceAttribute")
+  ResistanceAttribute          DogmaEffect[]           @relation("ResistanceAttribute")
+  NpcActivationChanceAttribute DogmaEffect[]           @relation("NpcActivationChanceAttribute")
+  FittingUsageChanceAttribute  DogmaEffect[]           @relation("FittingUsageChanceAttribute")
+  NpcUsageChanceAttribute      DogmaEffect[]           @relation("NpcUsageChanceAttribute")
 
   @@index([unitId])
   @@index([iconId])
@@ -344,16 +344,16 @@ model DogmaAttribute {
 }
 
 model DogmaAttributeCategory {
-  attributeCategoryId Int      @id
+  attributeCategoryId Int              @id
   name                String
   description         String?
   attributes          DogmaAttribute[]
   /**
    * When this record was created in our database. Note that this is not provided by ESI and should not be used to determine the order of records.
    */
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt()
-  isDeleted           Boolean  @default(false)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt()
+  isDeleted           Boolean          @default(false)
 }
 
 model DogmaEffectCategory {
@@ -541,7 +541,7 @@ model Faction {
   solarSystem          SolarSystem?        @relation("FactionSolarSystem", fields: [solarSystemId], references: [solarSystemId])
   solarSystemId        Int?
   // Systems held by this faction (inverse of SolarSystem.factionId).
-  heldSolarSystems     SolarSystem[]      @relation("SolarSystemFaction")
+  heldSolarSystems     SolarSystem[]       @relation("SolarSystemFaction")
   // do we need to store this?
   stationCount         Int
   // do we need to store this?
@@ -1161,7 +1161,6 @@ model KillmailVictimItems {
   quantityDropped   Int?
   /**
    * Whether the item was a blueprint copy: 0 = ordinary item, 2 = blueprint copy.
-   *
    * Despite the name this is not an item ID, and it is not the assets API's
    * `is_singleton` boolean either — fitted, assembled modules also report 0.
    * ESI documents no values for it, but across a full day of killmails
@@ -2123,6 +2122,32 @@ model DungeonAllowedShip {
   isDeleted  Boolean  @default(false)
 
   @@id([dungeonId, shipTypeId])
+}
+
+/// One generated, one-sentence description of what an EVE client build changed.
+///
+/// Produced by the `summarize-builds` background job from the change history and
+/// read wherever a build needs describing — the home page's patch-notes card and
+/// the build page's meta description — so the same sentence appears everywhere.
+///
+/// Keyed by build number because a past build's diff is immutable: each summary
+/// is generated once, then only read. To redo one, delete the row or bump
+/// `promptVersion`; never edit `summary` without updating `model`, or the
+/// provenance stops describing the text actually stored.
+model BuildSummary {
+  /// The EVE client build this describes. Mirrors the history database's build
+  /// numbers, which live in a separate database owned by the ingestion pipeline
+  /// — so there is deliberately no foreign key here.
+  buildNumber   Int      @id
+  /// The sentence shown to users.
+  summary       String
+  /// Model that produced it, so a bad batch can be identified and redone.
+  model         String
+  /// Bumped when the prompt changes, so stale summaries can be found.
+  promptVersion Int      @default(1)
+  createdAt     DateTime @default(now())
+  /// When the summary was last (re)generated.
+  updatedAt     DateTime @updatedAt()
 }
 
 /// An Alpha-clone skill grade (cloneGrades.yaml).

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { Loader } from "@mantine/core";
 
+import { getCachedBuildSummary } from "~/lib/history-cache";
 import BuildHistoryClient from "./page.client";
 
 export async function generateMetadata({
@@ -9,9 +10,19 @@ export async function generateMetadata({
   params: Promise<{ build: string }>;
 }>) {
   const { build } = await params;
+  // What search results and link previews show. The generated sentence says what
+  // this build actually changed; without one, the generic line still describes
+  // the page correctly.
+  let summary: string | null = null;
+  try {
+    summary = await getCachedBuildSummary(Number(build));
+  } catch {
+    summary = null;
+  }
   return {
     title: `Build ${build} — Change History`,
-    description: `Everything that changed in EVE Online client build ${build}.`,
+    description:
+      summary ?? `Everything that changed in EVE Online client build ${build}.`,
   };
 }
 

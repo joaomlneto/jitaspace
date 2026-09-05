@@ -162,6 +162,12 @@ const TIMELINE = {
 const BUILD_CHANGES = {
   build: 3383521,
   date: "2026-06-08",
+  // Names are resolved server-side and travel with the changes; 999 is left out
+  // to exercise the "no name known" fallback.
+  names: {
+    type: { 91920: "Cenotaph", 587: "Rifter" },
+    skin: { 1: "wolfNefantarSkin" },
+  },
   changes: [
     {
       entityId: 91920,
@@ -452,6 +458,14 @@ describe("BuildHistoryClient", () => {
     wrap(<BuildHistoryClient build={3383521} />);
     expect(screen.getByText("Build 3383521")).toBeTruthy();
     expect(screen.getByText("Resources")).toBeTruthy();
+
+    // Names come straight from the payload — no per-entity client lookup — and
+    // cover every kind, not just types.
+    expect(screen.getByText("Cenotaph")).toBeTruthy();
+    expect(screen.getByText("Rifter")).toBeTruthy();
+    expect(screen.getByText("wolfNefantarSkin")).toBeTruthy();
+    // An entity with no resolved name falls back to its kind, keeping the id.
+    expect(screen.getByText("#999")).toBeTruthy();
 
     // expand the Files + localization sections to cover the lazy query branches
     fireEvent.click(screen.getByText(/Files/));

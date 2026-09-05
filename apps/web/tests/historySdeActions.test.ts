@@ -15,6 +15,7 @@ jest.mock("~/lib/db", () => ({
     type: { findUnique: (a?: unknown) => findUnique(a) },
     marketGroup: { findUnique: (a?: unknown) => findUnique(a) },
     race: { findUnique: (a?: unknown) => findUnique(a) },
+    faction: { findUnique: (a?: unknown) => findUnique(a) },
     dogmaAttribute: { findUnique: (a?: unknown) => findUnique(a) },
     dogmaEffect: { findUnique: (a?: unknown) => findUnique(a) },
     dogmaUnit: { findUnique: (a?: unknown) => findUnique(a) },
@@ -60,6 +61,12 @@ const simpleCases = [
     row: { name: "Caldari" },
     expected: { name: "Caldari", parentId: null },
   },
+  {
+    name: "faction",
+    fn: () => actions.resolveFactionLabel(500001),
+    row: { name: "Caldari State" },
+    expected: { name: "Caldari State", parentId: null },
+  },
 ];
 
 describe("history SDE label actions", () => {
@@ -80,6 +87,31 @@ describe("history SDE label actions", () => {
     findUnique.mockRejectedValue(new Error("connection lost"));
     await expect(c.fn()).resolves.toEqual({ name: null, parentId: null });
   });
+
+  it.each(simpleCases)(
+    "$name reports a null name when the SDE stored a blank one",
+    async (c) => {
+      // Every SDE ingest writes `enString(record.name) ?? ""`, so an entity
+      // with no English name lands in its non-null column as the empty string
+      // rather than as null. Callers signal "no name" with null, and the
+      // breadcrumbs render `#id` for it.
+      for (const blank of ["", "   ", "\n\t "]) {
+        findUnique.mockResolvedValue({ ...c.row, name: blank });
+        await expect(c.fn()).resolves.toEqual({ ...c.expected, name: null });
+      }
+    },
+  );
+
+  it.each(simpleCases)(
+    "$name trims a padded name rather than passing it through",
+    async (c) => {
+      findUnique.mockResolvedValue({ ...c.row, name: "  Padded  " });
+      await expect(c.fn()).resolves.toEqual({
+        ...c.expected,
+        name: "Padded",
+      });
+    },
+  );
 
   it("market group reports a null parent for a root group", async () => {
     findUnique.mockResolvedValue({ name: "Ships", parentMarketGroupId: null });

@@ -6,15 +6,16 @@ import Link from "next/link";
 import { Anchor, Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
-import { resolveTypeLabel } from "./actions";
+import { firstNonEmpty } from "~/lib/strings";
+import { resolveFactionLabel, resolveTypeLabel } from "./actions";
 
 /**
  * Local stand-ins for the `@jitaspace/ui` name/anchor components that were
  * removed with the hooks refactor (commit f5e47407). The history UI resolves
  * most names itself and passes `name=`, so these mostly just render that text;
- * `TypeName` falls back to resolving the name from our database via a server
- * action when no `name` is supplied. The `*Anchor` components
- * link each resolved name to that entity's detail page (`/type/…`,
+ * `TypeName` and `FactionName` fall back to resolving the name from our
+ * database via a server action when no `name` is supplied. The `*Anchor`
+ * components link each resolved name to that entity's detail page (`/type/…`,
  * `/dogma/attribute/…`, …); the market group is the lone exception, with no
  * dedicated page yet, so it stays inline text.
  */
@@ -49,8 +50,13 @@ export function TypeName({
     retry: false,
     enabled: !name && !!typeId,
   });
+  // `firstNonEmpty`, not `??`: a type with no English name is stored as the
+  // empty string (the SDE ingest writes `enString(record.name) ?? ""`), and `??`
+  // would take that blank as a resolved name — rendering an empty, still
+  // clickable anchor instead of the `#id` placeholder below.
   const label =
-    name ?? q.data?.name ?? (q.isPending && typeId ? "…" : `#${typeId ?? "?"}`);
+    firstNonEmpty(name, q.data?.name) ??
+    (q.isPending && typeId ? "…" : `#${typeId ?? "?"}`);
   return <Text {...p}>{label}</Text>;
 }
 
@@ -59,7 +65,20 @@ export function FactionName({
   name,
   ...p
 }: { factionId?: number; name?: string } & TextProps) {
-  return <Text {...p}>{name ?? `#${factionId ?? "?"}`}</Text>;
+  const q = useQuery({
+    queryKey: ["history", "sde", "faction", factionId],
+    queryFn: () => resolveFactionLabel(factionId ?? 0),
+    staleTime: Infinity,
+    retry: false,
+    enabled: !name && !!factionId,
+  });
+  // Blank-safe for the same reason as `TypeName`: `Faction.name` comes from the
+  // same `enString(record.name) ?? ""` ingest, so an unnamed faction is stored
+  // as the empty string rather than as null.
+  const label =
+    firstNonEmpty(name, q.data?.name) ??
+    (q.isPending && factionId ? "…" : `#${factionId ?? "?"}`);
+  return <Text {...p}>{label}</Text>;
 }
 
 // ── anchors (link each resolved name to that entity's detail page) ───────────

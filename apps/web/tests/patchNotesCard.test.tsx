@@ -111,6 +111,20 @@ describe("patchNotesNewsItem", () => {
     );
   });
 
+  it("prefers the generated summary over the static wording", () => {
+    expect(
+      patchNotesNewsItem(
+        build({ summary: "Adds four Command Carriers and 208 SKINs." }),
+      ).message,
+    ).toBe("Adds four Command Carriers and 208 SKINs.");
+  });
+
+  it("falls back to the static wording when no summary exists yet", () => {
+    expect(patchNotesNewsItem(build()).message).toMatch(
+      /^12,345 changes to EVE's static data/,
+    );
+  });
+
   it("omits the date badge when the build has none", () => {
     expect(patchNotesNewsItem(build({ date: null }))).not.toHaveProperty(
       "date",

@@ -122,7 +122,9 @@ export default function BuildHistoryClient({
             No changes match the selected collections.
           </Text>
         )}
-        {data && <EntityChangeSections changes={visibleChanges} />}
+        {data && (
+          <EntityChangeSections changes={visibleChanges} names={data.names} />
+        )}
       </Stack>
     </Container>
   );

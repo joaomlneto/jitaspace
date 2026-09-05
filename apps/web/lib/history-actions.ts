@@ -20,6 +20,7 @@ import {
   getCachedBuildRangeChanges,
   getCachedEntityTimeline,
 } from "~/lib/history-cache";
+import { resolveEntityNames } from "~/lib/history-names";
 
 /**
  * Server functions backing the change-history viewer. Each queries the
@@ -101,7 +102,9 @@ export async function getBuildChanges(
     select: {
       op: true,
       data: true,
-      entity: { select: { kind: true, eveId: true } },
+      // `name` costs nothing extra here and backstops the SDE lookup below for
+      // entities our own tables cannot name.
+      entity: { select: { kind: true, eveId: true, name: true } },
       collection: { select: { name: true } },
     },
   });
@@ -115,7 +118,17 @@ export async function getBuildChanges(
     ...(c.op === "modified" ? { fields: c.data } : { values: c.data }),
   })) as BuildChanges["changes"];
 
-  return { build, date: ymd(b.releasedAt), changes };
+  // Resolve every listed entity's name here, in one query per kind, rather than
+  // letting the client fetch them one at a time as it renders the list.
+  const names = await resolveEntityNames(
+    rows.map((c) => ({
+      entityType: c.entity.kind,
+      entityId: c.entity.eveId,
+      fallbackName: c.entity.name,
+    })),
+  );
+
+  return { build, date: ymd(b.releasedAt), names, changes };
 }
 
 /**
@@ -131,7 +144,20 @@ export async function getBuildRangeChanges(
   to: number,
 ): Promise<BuildRangeChanges | null> {
   if (await isBot()) return null;
-  return getCachedBuildRangeChanges(from, to);
+  const range = await getCachedBuildRangeChanges(from, to);
+  if (!range) return null;
+
+  // Resolved here rather than inside the cached range query: that entry is
+  // `cacheLife("max")` because a pair of past builds can never differ again, but
+  // a name can be re-ingested at any time, and baking one into a permanent entry
+  // would freeze it forever.
+  const names = await resolveEntityNames(
+    range.changes.map((c) => ({
+      entityType: c.entityType ?? "type",
+      entityId: c.entityId,
+    })),
+  );
+  return { ...range, names };
 }
 
 /**

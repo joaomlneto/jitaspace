@@ -43,7 +43,7 @@ export async function resolveCategoryLabel(id: number): Promise<HistoryLabel> {
       select: { name: true },
       where: { categoryId: id },
     });
-    return row ? { name: row.name, parentId: null } : nullLabel;
+    return row ? { name: firstNonEmpty(row.name), parentId: null } : nullLabel;
   } catch {
     return nullLabel;
   }
@@ -55,7 +55,9 @@ export async function resolveGroupLabel(id: number): Promise<HistoryLabel> {
       select: { name: true, categoryId: true },
       where: { groupId: id },
     });
-    return row ? { name: row.name, parentId: row.categoryId } : nullLabel;
+    return row
+      ? { name: firstNonEmpty(row.name), parentId: row.categoryId }
+      : nullLabel;
   } catch {
     return nullLabel;
   }
@@ -67,7 +69,9 @@ export async function resolveTypeLabel(id: number): Promise<HistoryLabel> {
       select: { name: true, groupId: true },
       where: { typeId: id },
     });
-    return row ? { name: row.name, parentId: row.groupId } : nullLabel;
+    return row
+      ? { name: firstNonEmpty(row.name), parentId: row.groupId }
+      : nullLabel;
   } catch {
     return nullLabel;
   }
@@ -82,7 +86,7 @@ export async function resolveMarketGroupLabel(
       where: { marketGroupId: id },
     });
     return row
-      ? { name: row.name, parentId: row.parentMarketGroupId }
+      ? { name: firstNonEmpty(row.name), parentId: row.parentMarketGroupId }
       : nullLabel;
   } catch {
     return nullLabel;
@@ -95,7 +99,19 @@ export async function resolveRaceLabel(id: number): Promise<HistoryLabel> {
       select: { name: true },
       where: { raceId: id },
     });
-    return row ? { name: row.name, parentId: null } : nullLabel;
+    return row ? { name: firstNonEmpty(row.name), parentId: null } : nullLabel;
+  } catch {
+    return nullLabel;
+  }
+}
+
+export async function resolveFactionLabel(id: number): Promise<HistoryLabel> {
+  try {
+    const row = await prisma.faction.findUnique({
+      select: { name: true },
+      where: { factionId: id },
+    });
+    return row ? { name: firstNonEmpty(row.name), parentId: null } : nullLabel;
   } catch {
     return nullLabel;
   }

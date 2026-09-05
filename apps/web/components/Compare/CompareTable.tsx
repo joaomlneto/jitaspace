@@ -6,9 +6,27 @@ import { useDogmaAttributes, useTypes } from "@jitaspace/hooks";
 import { DogmaAttributeAnchor, formatDogmaAttributeValue } from "@jitaspace/ui";
 
 import { DogmaAttributeName } from "~/components/Text";
+import { firstNonEmpty } from "~/lib/strings";
 
 export interface CompareTableProps {
   typeIds: number[];
+}
+
+/**
+ * What to sort an attribute row by: its display name, else its raw name, else
+ * its id. Blank is not a name — ESI's `display_name` is frequently present but
+ * empty, and a `??` chain would take that empty string as the sort key and
+ * strand the row at the top of the table.
+ */
+function attributeSortKey(attribute: {
+  display_name?: string;
+  name?: string;
+  attribute_id: number;
+}): string {
+  return (
+    firstNonEmpty(attribute.display_name, attribute.name) ??
+    attribute.attribute_id.toString()
+  );
 }
 
 function findAttributeValue(
@@ -68,9 +86,7 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
   const sortedAttributes = useMemo(
     () =>
       Object.values(attributes).sort((a, b) =>
-        (a.display_name ?? a.name ?? a.attribute_id.toString()).localeCompare(
-          b.display_name ?? b.name ?? b.attribute_id.toString(),
-        ),
+        attributeSortKey(a).localeCompare(attributeSortKey(b)),
       ),
     [attributes],
   );

@@ -4,6 +4,7 @@ import type { TextProps } from "@mantine/core";
 import { Text } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 
+import { firstNonEmpty } from "~/lib/strings";
 import {
   CategoryAnchor,
   CategoryName,
@@ -313,7 +314,7 @@ export function TypeLabel({
           span
           size={size}
           typeId={id}
-          name={query.data?.name ?? undefined}
+          name={firstNonEmpty(query.data?.name)}
         />
       </TypeAnchor>
     </>

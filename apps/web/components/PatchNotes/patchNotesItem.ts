@@ -28,10 +28,16 @@ export const PATCH_NOTES_BANNER_IMAGE = "/wallpapers/jita-4-4-banner.jpeg";
 export function patchNotesNewsItem(latest: LatestChangedBuild): NewsItem {
   const count = latest.changeCount.toLocaleString("en-US");
   const noun = latest.changeCount === 1 ? "change" : "changes";
+  // The generated sentence says what actually changed; the static one can only
+  // count. Prefer it whenever the summarizer has written one — the count is on
+  // the card either way, via the date badge and the diff link.
+  const message =
+    latest.summary ??
+    `${count} ${noun} to EVE's static data — items, attributes, blueprints, SKINs and everything else the client ships.`;
   return {
     id: `patch-notes-${latest.build}`,
     title: `Patch Notes: Build ${latest.build}`,
-    message: `${count} ${noun} to EVE's static data — items, attributes, blueprints, SKINs and everything else the client ships.`,
+    message,
     ...(latest.date ? { date: latest.date } : {}),
     color: "blue",
     image: PATCH_NOTES_BANNER_IMAGE,
