@@ -29,11 +29,12 @@ export async function generateMetadata({
     const region = constellation.regionName;
     const systems = constellation.solarSystemCount;
 
+    const inRegion = region ? ` in ${withArticle(region)} region` : "";
+    const spanning = systems ? `, spanning ${systems} solar systems` : "";
+
     return pageMetadata({
       title: constellation.name,
-      description: `${constellation.name} is a constellation${
-        region ? ` in ${withArticle(region)} region` : ""
-      } of EVE Online${systems ? `, spanning ${systems} solar systems` : ""}.`,
+      description: `${constellation.name} is a constellation${inRegion} of EVE Online${spanning}.`,
       path: `/constellation/${id}`,
       badge: "Constellation",
       facts: [

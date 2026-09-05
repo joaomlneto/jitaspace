@@ -31,13 +31,16 @@ export async function generateMetadata({
 
     const system = star.solarSystem.name;
 
+    const classPhrase = star.spectralClass
+      ? `${star.spectralClass} class `
+      : "";
+    const atCentreOf = system
+      ? ` at the centre of the ${system} solar system`
+      : "";
+
     return pageMetadata({
       title: star.name,
-      description: `${star.name} is a ${
-        star.spectralClass ? `${star.spectralClass} class ` : ""
-      }star${
-        system ? ` at the centre of the ${system} solar system` : ""
-      } in EVE Online.`,
+      description: `${star.name} is a ${classPhrase}star${atCentreOf} in EVE Online.`,
       path: `/star/${id}`,
       badge: "Star",
       image: await resolveTypeImage(star.typeId),

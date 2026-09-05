@@ -66,11 +66,12 @@ export async function generateMetadata({
     const region = station.solarSystem?.constellation.region?.name;
     const owner = station.owner?.name;
 
+    const inSystem = system ? ` in ${system}` : "";
+    const operatedBy = owner ? `, operated by ${owner}` : "";
+
     return pageMetadata({
       title: station.name,
-      description: `${station.name} is an NPC station${
-        system ? ` in ${system}` : ""
-      }${owner ? `, operated by ${owner}` : ""}. Browse its services, market orders, and agents.`,
+      description: `${station.name} is an NPC station${inSystem}${operatedBy}. Browse its services, market orders, and agents.`,
       path: `/station/${id}`,
       badge: "Station",
       image: await resolveTypeImage(station.typeId),

@@ -32,11 +32,12 @@ export async function generateMetadata({
     const kind = planet.type.name;
     const system = planet.solarSystem.name;
 
+    const kindPhrase = kind ? ` ${kind}` : " planet";
+    const inSystem = system ? ` in the ${system} solar system` : "";
+
     return pageMetadata({
       title: planet.name,
-      description: `${planet.name} is a${kind ? ` ${kind}` : " planet"}${
-        system ? ` in the ${system} solar system` : ""
-      } of EVE Online.`,
+      description: `${planet.name} is a${kindPhrase}${inSystem} of EVE Online.`,
       path: `/planet/${id}`,
       badge: "Planet",
       image: await resolveTypeImage(planet.typeId),

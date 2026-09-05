@@ -36,11 +36,11 @@ export async function generateMetadata({
 
     const founded = alliance.date_founded.slice(0, 10);
 
+    const foundedOn = founded ? `, founded ${founded}` : "";
+
     return pageMetadata({
       title: alliance.name,
-      description: `${alliance.name} <${alliance.ticker}> is an EVE Online alliance${
-        founded ? `, founded ${founded}` : ""
-      }. View its member corporations, contacts, and public record.`,
+      description: `${alliance.name} <${alliance.ticker}> is an EVE Online alliance${foundedOn}. View its member corporations, contacts, and public record.`,
       path: `/alliance/${id}`,
       badge: "Alliance",
       image: eveImage.alliance(id),

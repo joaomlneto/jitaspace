@@ -69,11 +69,11 @@ export async function generateMetadata({
     const declared = war.declared.slice(0, 10);
     const kills = war.aggressor.ships_killed + war.defender.ships_killed;
 
+    const endedOn = war.finished ? `, ending ${war.finished.slice(0, 10)}` : "";
+
     return pageMetadata({
       title: `${aggressor.name} vs ${defender.name}`,
-      description: `EVE Online war #${id}: ${aggressor.name} declared war on ${defender.name} on ${declared}${
-        war.finished ? `, ending ${war.finished.slice(0, 10)}` : ""
-      }. ${kills} ships destroyed so far.`,
+      description: `EVE Online war #${id}: ${aggressor.name} declared war on ${defender.name} on ${declared}${endedOn}. ${kills} ships destroyed so far.`,
       path: `/war/${id}`,
       badge: war.finished ? "Finished War" : "Active War",
       // The aggressor's emblem: the side that started it is the one a reader

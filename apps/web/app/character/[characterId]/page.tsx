@@ -45,11 +45,12 @@ export async function generateMetadata({
       allianceId ? nameOf(() => getAlliancesAllianceId(allianceId)) : undefined,
     ]);
 
+    const flyingWith = corporation ? ` flying with ${corporation}` : "";
+    const inAlliance = alliance ? ` (${alliance})` : "";
+
     return pageMetadata({
       title: character.name,
-      description: `${character.name} is an EVE Online capsuleer${
-        corporation ? ` flying with ${corporation}` : ""
-      }${alliance ? ` (${alliance})` : ""}. View their corporation history, affiliations, and public record.`,
+      description: `${character.name} is an EVE Online capsuleer${flyingWith}${inAlliance}. View their corporation history, affiliations, and public record.`,
       path: `/character/${id}`,
       badge: "Character",
       image: eveImage.character(id),

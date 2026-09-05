@@ -34,13 +34,13 @@ export async function generateMetadata({
       }
     }
 
+    const tickerSuffix = corporation.ticker ? ` [${corporation.ticker}]` : "";
+
     return pageMetadata({
       title: corporation.name,
       description: toDescription(
         corporation.description,
-        `${corporation.name}${
-          corporation.ticker ? ` [${corporation.ticker}]` : ""
-        } is an EVE Online corporation. View its members, alliance history, and public record.`,
+        `${corporation.name}${tickerSuffix} is an EVE Online corporation. View its members, alliance history, and public record.`,
       ),
       path: `/corporation/${id}`,
       badge: "Corporation",

@@ -32,7 +32,23 @@ const MUTED = "#94a3b8";
  */
 const CACHE_CONTROL = "public, max-age=3600, s-maxage=86400, immutable";
 
-function Card({ title, subtitle, badge, image, facts = [] }: OgCardParams) {
+/**
+ * Long EVE names (station names run 60+ characters) step down a size rather
+ * than being ellipsised, so the whole name still fits the card.
+ */
+function titleFontSize(title: string): number {
+  if (title.length > 42) return 54;
+  if (title.length > 26) return 68;
+  return 82;
+}
+
+function Card({
+  title,
+  subtitle,
+  badge,
+  image,
+  facts = [],
+}: Readonly<OgCardParams>) {
   return (
     <div
       style={{
@@ -112,9 +128,7 @@ function Card({ title, subtitle, badge, image, facts = [] }: OgCardParams) {
           <div
             style={{
               display: "flex",
-              // Long EVE names (station names run 60+ chars) get a smaller size
-              // rather than an ellipsis, so the whole name still fits.
-              fontSize: title.length > 42 ? 54 : title.length > 26 ? 68 : 82,
+              fontSize: titleFontSize(title),
               lineHeight: 1.1,
               color: TEXT,
             }}

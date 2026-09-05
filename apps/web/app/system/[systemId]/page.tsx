@@ -39,13 +39,12 @@ export async function generateMetadata({
       : undefined;
     const region = system.constellation.region?.name;
 
+    const securityPhrase = security ? `${security} security ` : "";
+    const inRegion = region ? ` in ${withArticle(region)} region` : "";
+
     return pageMetadata({
       title: system.name,
-      description: `${system.name} is a ${
-        security ? `${security} security ` : ""
-      }solar system${
-        region ? ` in ${withArticle(region)} region` : ""
-      } of EVE Online. Browse its stations, planets, and market activity.`,
+      description: `${system.name} is a ${securityPhrase}solar system${inRegion} of EVE Online. Browse its stations, planets, and market activity.`,
       path: `/system/${id}`,
       badge: "Solar System",
       facts: [
