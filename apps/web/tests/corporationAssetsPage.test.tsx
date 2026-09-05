@@ -36,22 +36,6 @@ jest.mock("@jitaspace/hooks", () => ({
   useMarketPrices: () => mockUseMarketPrices(),
 }));
 
-jest.mock("@jitaspace/ui", () => ({
-  TypeAvatar: () => null,
-  TypeAnchor: ({ children }: { children: ReactNode }) => (
-    <span>{children}</span>
-  ),
-  TypeName: ({ typeId }: { typeId: number }) => (
-    <span data-testid={`type-name-${typeId}`}>{typeId}</span>
-  ),
-  EveEntityAnchor: ({ children }: { children: ReactNode }) => (
-    <span>{children}</span>
-  ),
-  EveEntityName: ({ entityId }: { entityId: number }) => (
-    <span data-testid={`entity-name-${entityId}`}>{entityId}</span>
-  ),
-}));
-
 jest.mock("@jitaspace/eve-components", () => ({
   ...jest.requireActual<Record<string, unknown>>(
     "../__mocks__/@jitaspace/eve-components",
@@ -134,6 +118,18 @@ const SAMPLE_ASSETS: TaggedAsset[] = [
   },
 ];
 
+/** Sits inside another item, so its location_id names a container, not a place. */
+const NESTED_IN_CONTAINER: TaggedAsset = {
+  item_id: 2005,
+  subjectId: CORP,
+  type_id: 38,
+  quantity: 2,
+  location_id: 9000001,
+  location_type: "item",
+  is_singleton: false,
+  is_blueprint_copy: false,
+};
+
 /**
  * `subjectIds` is the corporations that were queried; `data` is what came back.
  * They are deliberately separate arguments here, because every case worth
@@ -158,6 +154,13 @@ const failure = (subjectId: number) => ({
   subjectId,
   error: new Error("boom"),
 });
+
+/** Read one summary tile's figure by its label. */
+function stat(label: string): string {
+  const tile = screen.getByText(label).parentElement;
+  if (!tile) throw new Error(`no stat tile labelled "${label}"`);
+  return tile.textContent.slice(label.length).trim();
+}
 
 function renderPage() {
   const Page = require("~/app/assets/corporation/page").default;
@@ -192,10 +195,53 @@ describe("Corporation Assets Page", () => {
     expect(screen.queryByTestId("select:Filter by corporation")).toBeNull();
   });
 
-  it("shows total asset count", () => {
+  it("shows the item count", () => {
     renderPage();
-    // Object.keys(SAMPLE_ASSETS).length = 4
-    expect(screen.getByText("4 assets")).toBeInTheDocument();
+    // Every asset counts, including the location_type "item" one the table omits.
+    expect(stat("Items")).toBe("4");
+  });
+
+  it("sums the value of every asset, including those inside containers", () => {
+    // Asset 2002 sits inside another item, so the table never lists it — but
+    // the corporation still owns it. Summing over the table's rows instead of
+    // over every asset would silently omit a hangar full of packaged goods.
+    mockUseMarketPrices.mockReturnValue({
+      data: {
+        34: { adjusted_price: 5 },
+        35: { adjusted_price: 10 },
+        36: { adjusted_price: 2 },
+        37: { adjusted_price: 100 },
+      },
+    });
+    renderPage();
+
+    // 1000*5 + 50*10 (the nested one) + 300*2 + 1*100
+    expect(stat("Value")).toBe((6200).toLocaleString());
+    // ...and the nested asset is still absent from the table itself.
+    expect(screen.getAllByRole("row")).toHaveLength(4); // header + 3
+  });
+
+  it("treats an asset with no market price as zero, not NaN", () => {
+    // 35 is present but carries no adjusted_price; 36 and 37 are absent
+    // entirely. Both must contribute nothing rather than poison the total.
+    mockUseMarketPrices.mockReturnValue({
+      data: { 34: { adjusted_price: 5 }, 35: {} },
+    });
+    renderPage();
+
+    // An exact total is the NaN check: a leaked NaN renders as "NaN" here.
+    expect(stat("Value")).toBe((5000).toLocaleString()); // 1000 * 5
+  });
+
+  it("counts distinct locations, not the containers assets sit in", () => {
+    mockUseMultipleCorporationAssets.mockReturnValue(
+      envelope([CORP], [...SAMPLE_ASSETS, NESTED_IN_CONTAINER]),
+    );
+    renderPage();
+
+    // 60003760 and 60008526 are places; 9000001 is a container's item_id.
+    expect(stat("Locations")).toBe("2");
+    expect(stat("Items")).toBe("5");
   });
 
   it("filters out assets with location_type 'item'", () => {
@@ -249,7 +295,7 @@ describe("Corporation Assets Page", () => {
     ).toBeInTheDocument();
     // The readable corporation's assets still render — previously any error
     // replaced the whole table.
-    expect(screen.getByText("4 assets")).toBeInTheDocument();
+    expect(stat("Items")).toBe("4");
   });
 
   it("pluralises the failure notice", () => {
@@ -272,7 +318,7 @@ describe("Corporation Assets Page", () => {
     renderPage();
 
     expect(screen.getByText(/needs the Director role/)).toBeInTheDocument();
-    expect(screen.queryByText(/assets$/)).toBeNull();
+    expect(screen.queryByText("Items")).toBeNull();
   });
 
   it("shows an empty table, not the Director message, for a corporation that owns nothing", () => {
@@ -283,7 +329,7 @@ describe("Corporation Assets Page", () => {
     renderPage();
 
     expect(screen.queryByText(/needs the Director role/)).toBeNull();
-    expect(screen.getByText("0 assets")).toBeInTheDocument();
+    expect(stat("Items")).toBe("0");
   });
 
   it("reports only the failure when every readable corporation errors", () => {
@@ -327,11 +373,11 @@ describe("Corporation Assets Page", () => {
       envelope([CORP, OTHER_CORP], [...SAMPLE_ASSETS, OTHER_CORP_ASSET]),
     );
     renderPage();
-    expect(screen.getByText("5 assets")).toBeInTheDocument();
+    expect(stat("Items")).toBe("5");
 
     fireEvent.click(screen.getByTestId(`option:${OTHER_CORP}`));
 
-    expect(screen.getByText("1 assets")).toBeInTheDocument();
+    expect(stat("Items")).toBe("1");
   });
 
   it("offers a corporation that owns nothing, and shows it as empty", () => {
@@ -344,7 +390,7 @@ describe("Corporation Assets Page", () => {
 
     fireEvent.click(screen.getByTestId(`option:${OTHER_CORP}`));
 
-    expect(screen.getByText("0 assets")).toBeInTheDocument();
+    expect(stat("Items")).toBe("0");
   });
 
   it("ignores a pick for a corporation that is no longer readable", () => {
@@ -357,7 +403,7 @@ describe("Corporation Assets Page", () => {
     const { rerender } = renderPage();
 
     fireEvent.click(screen.getByTestId(`option:${OTHER_CORP}`));
-    expect(screen.getByText("1 assets")).toBeInTheDocument();
+    expect(stat("Items")).toBe("1");
 
     mockUseMultipleCorporationAssets.mockReturnValue(
       envelope([CORP], SAMPLE_ASSETS),
@@ -370,7 +416,7 @@ describe("Corporation Assets Page", () => {
       </MantineProvider>,
     );
 
-    expect(screen.getByText("4 assets")).toBeInTheDocument();
+    expect(stat("Items")).toBe("4");
   });
 
   it("returns to a valid page when narrowing to a smaller corporation", () => {
@@ -403,7 +449,7 @@ describe("Corporation Assets Page", () => {
     // OTHER_CORP has 40 assets, so page 2 no longer exists.
     fireEvent.click(screen.getByTestId(`option:${OTHER_CORP}`));
 
-    expect(screen.getByText("40 assets")).toBeInTheDocument();
+    expect(stat("Items")).toBe("40");
     expect(screen.getAllByRole("row")).toHaveLength(41); // header + 40
   });
 

@@ -9,6 +9,8 @@ import {
   Group,
   Loader,
   Pagination,
+  Paper,
+  SimpleGrid,
   Stack,
   Table,
   Text,
@@ -30,7 +32,9 @@ import {
   useMarketPrices,
   useMultipleCorporationAssets,
 } from "@jitaspace/hooks";
+import { ISKAmount } from "@jitaspace/ui";
 
+import { AssetStat } from "~/components/Assets/AssetStat";
 import { ScopeGuard } from "~/components/ScopeGuard";
 
 export default function Page() {
@@ -93,23 +97,42 @@ export default function Page() {
     () =>
       Object.values(assets)
         .filter((asset) => asset.location_type !== "item")
-        .map((asset) => {
-          const adjustedPrice = marketPrices[asset.type_id]?.adjusted_price;
-          return {
-            typeName: getNameFromCache(asset.type_id),
-            price: adjustedPrice ? adjustedPrice * asset.quantity : undefined,
-            ...asset,
-          };
-        })
+        .map((asset) => ({
+          typeName: getNameFromCache(asset.type_id),
+          ...asset,
+        }))
         .sort((a, b) =>
           (a.typeName ?? "").trim().localeCompare((b.typeName ?? "").trim()),
         ),
-    [assets, getNameFromCache, marketPrices],
+    [assets, getNameFromCache],
   );
 
-  const _totalPrice = useMemo(
-    () => entries.reduce((acc, { price }) => (price ? acc + price : acc), 0),
-    [entries],
+  // Every asset the corporation holds, including the ones nested inside
+  // containers and ships. `entries` deliberately lists only what sits directly
+  // in a location, so summing over it would silently omit a hangar full of
+  // packaged goods and understate the total.
+  const totalValue = useMemo(
+    () =>
+      Object.values(assets).reduce(
+        (total, asset) =>
+          total +
+          (marketPrices[asset.type_id]?.adjusted_price ?? 0) * asset.quantity,
+        0,
+      ),
+    [assets, marketPrices],
+  );
+
+  // An asset whose location_type is "item" is inside another item, so its
+  // location_id names a container rather than a place; counting those would
+  // report far more locations than the corporation actually occupies.
+  const locationCount = useMemo(
+    () =>
+      new Set(
+        Object.values(assets)
+          .filter((asset) => asset.location_type !== "item")
+          .map((asset) => asset.location_id),
+      ).size,
+    [assets],
   );
 
   const numUndefinedNames = entries.filter(
@@ -174,9 +197,30 @@ export default function Page() {
           )}
           {corporationIds.length > 0 && (
             <>
-              <Text size="sm" c="dimmed">
-                {`${Object.keys(assets).length} assets`}
-              </Text>
+              <Paper withBorder radius="md" p="md">
+                <SimpleGrid cols={3} spacing="md">
+                  <AssetStat
+                    label="Value"
+                    value={<ISKAmount amount={totalValue} fw={700} size="lg" />}
+                  />
+                  <AssetStat
+                    label="Items"
+                    value={
+                      <Text fw={700} size="lg">
+                        {Object.keys(assets).length.toLocaleString()}
+                      </Text>
+                    }
+                  />
+                  <AssetStat
+                    label="Locations"
+                    value={
+                      <Text fw={700} size="lg">
+                        {locationCount.toLocaleString()}
+                      </Text>
+                    }
+                  />
+                </SimpleGrid>
+              </Paper>
               {numUndefinedNames > 0 && (
                 <Text c="red" size="sm">
                   Failed to resolve names for {numUndefinedNames} items! This
