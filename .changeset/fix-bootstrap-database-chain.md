@@ -2,8 +2,8 @@
 "@jitaspace/background-jobs": patch
 ---
 
-Fixed two defects that stopped `bootstrap-database` completing against an empty
-database. Bootstrap invokes children with `ctx.invoke`, has `retries: 0`, and
+Fixed three defects that stopped `bootstrap-database` completing against an
+empty database. Bootstrap invokes children with `ctx.invoke`, has `retries: 0`, and
 deliberately propagates child failures, so either one aborted the whole chain.
 
 - `ingest-sde-stargates` failed with `deadlock detected` (PostgreSQL 40P01)
@@ -22,6 +22,17 @@ deliberately propagates child failures, so either one aborted the whole chain.
   home stations. The job is now sequenced into the FK-ordered SDE ingest loop,
   after `ingest-sde-stations` and before `ingest-sde-agents-in-space` (which FKs
   `Agent`) — still after every ESI scraper, since the loop runs after them.
+
+- `scrape-sde-agents` aborted the run on the first NPC character that is not an
+  agent. `npcCharacters.yaml` covers every NPC character and omits the whole
+  `agent` block on non-agents, but `optionalNumber(record.agent?.agentTypeID)`
+  collapses that missing container to `null`, which the required-field guard
+  reads as corrupt data and throws on. A real SDE holds hundreds of these — an
+  end-to-end run saw 11,325 NPC characters yield 10,897 agents. Those records
+  are now filtered out before the guard; the soft-delete scope stays the full id
+  list, so a character that loses its agent block still has its row marked
+  deleted. A record whose `agent` block exists but lacks the required fields
+  still throws, as before.
 
 The ordering is guarded by a test rather than a comment: it matches a literal id
 inside the loop, which the registry's generic `ctx.invoke` scan cannot see, so

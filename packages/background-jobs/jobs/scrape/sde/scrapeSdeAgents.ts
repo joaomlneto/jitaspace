@@ -13,7 +13,7 @@ import {
   optionalSdeDate,
   requiredNumber,
 } from "../../../helpers";
-import { isResearchAgent } from "../../../helpers/agents.ts";
+import { hasAgentData, isResearchAgent } from "../../../helpers/agents.ts";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
@@ -65,6 +65,15 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
       }))
       .sort((a, b) => a.characterId - b.characterId);
     const agentCharacterIds = npcCharacters.map((entry) => entry.characterId);
+    // Not every NPC character is an agent — the SDE omits the whole `agent`
+    // block on the ones that are not, and the required-field guard below reads
+    // a missing container as corrupt data and throws. Drop them here instead.
+    // `agentCharacterIds` deliberately stays the FULL list: it scopes the
+    // soft-delete, so a character that LOSES its agent block still has its
+    // existing row marked deleted rather than being silently orphaned.
+    const agentRecords = npcCharacters.filter(({ record }) =>
+      hasAgentData(record),
+    );
 
     await createCorpAndItsRefRecords({
       missingCharacterIds: new Set(agentCharacterIds),
@@ -101,7 +110,7 @@ export const scrapeSdeAgents = defineJob<ScrapeAgentsEventPayload["data"]>({
           ),
       fetchRemoteEntries: () =>
         Promise.resolve(
-          npcCharacters.map(({ characterId, record }) => {
+          agentRecords.map(({ characterId, record }) => {
             const agentTypeId = optionalNumber(record.agent?.agentTypeID);
             const agentDivisionId = optionalNumber(record.agent?.divisionID);
             const level = optionalNumber(record.agent?.level);
