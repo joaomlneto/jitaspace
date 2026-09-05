@@ -30,8 +30,18 @@ const RESEARCH_AGENT = {
   agent: { agentTypeID: 4, divisionID: 22, level: 3 },
   skills: [{ typeID: 11433 }, { typeID: 11441 }],
 };
-/** An NPC corporation CEO: no `agent`, and — like all of them — no `locationID`. */
-const CEO = { ceo: true, corporationID: 1000001, name: "Some CEO" };
+/**
+ * An NPC corporation CEO: no `agent`, and — like all of them — no `locationID`.
+ * It carries skills because that is the whole reason this table hangs off
+ * Character rather than Agent: 174 of the 421 skill-bearing NPC characters are
+ * CEOs with no Agent row, so a skills table keyed on Agent would drop them.
+ */
+const CEO = {
+  ceo: true,
+  corporationID: 1000001,
+  name: "Some CEO",
+  skills: [{ typeID: 3380 }],
+};
 
 /** A character CCP deleted from npcCharacters.yaml entirely — like 3009966. */
 const DELETED_CHARACTER_ID = 3009966;
@@ -167,10 +177,15 @@ describe("scrape-sde-agents", () => {
   });
 
   it("stores skills for every skill-bearing NPC character, CEOs included", () => {
-    // RESEARCH_AGENT is the only fixture with skills and it is an agent; the
-    // point of the table is that a CEO's skills would land here too.
-    expect(created.npcCharacterSkill!.map((r) => r.characterId)).toEqual([
-      3009002, 3009002,
+    // The CEO (3009001) has no Agent row at all, so its skill only survives
+    // because the table is keyed on Character. Keyed on Agent it would vanish,
+    // and every other assertion here would still pass.
+    expect(
+      created.npcCharacterSkill!.map((r) => [r.characterId, r.typeId]),
+    ).toEqual([
+      [3009001, 3380],
+      [3009002, 11433],
+      [3009002, 11441],
     ]);
   });
 

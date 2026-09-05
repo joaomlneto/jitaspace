@@ -29,10 +29,16 @@ const loadSdeFile = jest.fn<(filename: string) => Promise<SdeRecord>>();
 const recordSdeIngestStarted = jest.fn<(build: unknown) => Promise<void>>();
 const recordSdeIngestCompleted = jest.fn<(build: number) => Promise<void>>();
 const jobHandler = jest.fn<() => Promise<unknown>>();
+// The id every `registry.get` is called with, in order. Counting handler calls
+// is not enough: every job shares one stub, so a loop that ran the first id 102
+// times would satisfy a count while ingesting nothing else.
+const requestedJobIds: string[] = [];
 
 // `ingest-sde-all` reads the registry to diff it against the extracted archive.
-// The real barrel uses `.js` specifiers jest cannot resolve, so stub it — the
-// drift check's own behaviour is asserted below with a controlled registry.
+// The real barrel uses `.js` specifiers jest cannot resolve, so stub it with a
+// registry chosen to produce drift in both directions against the fixture dir
+// above: `brandNewFile.yaml` is present but unknown, `_sde.yaml` is known but
+// absent.
 jest.mock("@jitaspace/sde-utils", () => ({
   sdeInputFiles: { "types.yaml": {}, "_sde.yaml": {} },
 }));
@@ -48,7 +54,12 @@ jest.mock("../jobs/scrape/sde/sdeIngestState", () => ({
   recordSdeIngestCompleted,
 }));
 jest.mock("../jobs", () => ({
-  registry: { get: () => ({ handler: jobHandler }) },
+  registry: {
+    get: (jobId: string) => {
+      requestedJobIds.push(jobId);
+      return { handler: jobHandler };
+    },
+  },
 }));
 
 let ingestSde: typeof IngestSde;
@@ -79,6 +90,7 @@ const ctx = () =>
   }) as unknown as Parameters<typeof ingestSde.handler>[0];
 
 beforeEach(() => {
+  requestedJobIds.length = 0;
   loadSdeFile.mockResolvedValue({
     sde: { buildNumber: BUILD_NUMBER, releaseDate: "2026-07-31T11:29:31Z" },
   });
@@ -121,12 +133,33 @@ describe("ingest-sde-all", () => {
     // the first moment, and only means "loaded" once the last one succeeded.
     expect(order[0]).toBe("started");
     expect(order.at(-1)).toBe("completed");
-    // The post-ESI hybrids run in the same pass: leaving them out is how
-    // `scrape-sde-agents` went unreachable from a new SDE build.
+    // By identity and in order, not by count. The post-ESI hybrids run in the
+    // same pass: leaving them out is how `scrape-sde-agents` became unreachable
+    // from a new SDE build, and a count alone cannot tell that apart.
+    expect(requestedJobIds).toEqual([
+      ...SDE_INGEST_JOB_IDS,
+      ...SDE_POST_ESI_JOB_IDS,
+    ]);
     expect(order.filter((step) => step === "ingest")).toHaveLength(
-      SDE_INGEST_JOB_IDS.length + SDE_POST_ESI_JOB_IDS.length,
+      requestedJobIds.length,
     );
     expect(recordSdeIngestCompleted).toHaveBeenCalledWith(BUILD_NUMBER);
+  });
+
+  it("reports registry drift in both directions", async () => {
+    const context = ctx();
+
+    await ingestSde.handler(context);
+
+    // Diagnostic only — it must warn, never throw, or a stale registry would
+    // take down a 45-minute run over a file nobody reads yet.
+    expect(context.logger.warn).toHaveBeenCalledWith("SDE registry drift", {
+      // In the archive, missing from `sdeInputFiles`: the case that let CCP add
+      // files this pipeline silently never ingested.
+      unknown: ["brandNewFile.yaml"],
+      // In `sdeInputFiles`, missing from the archive: a file CCP has withdrawn.
+      absent: ["_sde.yaml"],
+    });
   });
 
   it("leaves the ingest un-completed when a step fails", async () => {

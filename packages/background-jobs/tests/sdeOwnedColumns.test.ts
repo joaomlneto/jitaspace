@@ -2,14 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "@jest/globals";
 
-import {
-  SDE_OWNED_CORPORATION_COLUMNS,
-  SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS,
-  SDE_OWNED_MOON_COLUMNS,
-  SDE_OWNED_PLANET_COLUMNS,
-  SDE_OWNED_SOLAR_SYSTEM_COLUMNS,
-  SDE_OWNED_TYPE_COLUMNS,
-} from "../helpers/sdeOwnedColumns";
+import * as sdeOwnedColumns from "../helpers/sdeOwnedColumns";
 
 /**
  * The `Esi*Row` types in the scrapers (`Omit<Model, timestamps | SDE-owned>`)
@@ -20,6 +13,10 @@ import {
  * strips nothing and reads as if it were still doing its job.
  *
  * So this reads the schema and asserts every listed column is real.
+ *
+ * The lists are discovered from the module rather than named one by one: they
+ * were hand-listed once and six of nineteen were covered, which is the same
+ * quiet gap in miniature.
  */
 
 const SCHEMA_PATH = join(
@@ -67,14 +64,23 @@ function scalarColumnsOf(schema: string, modelName: string): Set<string> {
   return new Set(columns);
 }
 
-const TABLES: [model: string, sdeOwned: readonly string[]][] = [
-  ["Corporation", SDE_OWNED_CORPORATION_COLUMNS],
-  ["DogmaAttribute", SDE_OWNED_DOGMA_ATTRIBUTE_COLUMNS],
-  ["Moon", SDE_OWNED_MOON_COLUMNS],
-  ["Planet", SDE_OWNED_PLANET_COLUMNS],
-  ["SolarSystem", SDE_OWNED_SOLAR_SYSTEM_COLUMNS],
-  ["Type", SDE_OWNED_TYPE_COLUMNS],
-];
+/** `SDE_OWNED_ASTEROID_BELT_COLUMNS` -> `AsteroidBelt`. */
+const modelNameOf = (listName: string) =>
+  listName
+    .replace(/^SDE_OWNED_|_COLUMNS$/g, "")
+    .split("_")
+    .map((word) => word[0] + word.slice(1).toLowerCase())
+    .join("");
+
+const TABLES: [model: string, sdeOwned: readonly string[]][] = Object.entries(
+  sdeOwnedColumns,
+)
+  .filter(([, columns]) => Array.isArray(columns))
+  // Each export is a distinct `as const` tuple, so widen to the common shape.
+  .map(([listName, columns]) => [
+    modelNameOf(listName),
+    columns as readonly string[],
+  ]);
 
 describe("SDE-owned column lists", () => {
   const schema = readFileSync(SCHEMA_PATH, "utf8");
@@ -90,6 +96,16 @@ describe("SDE-owned column lists", () => {
       expect(missing).toEqual([]);
     },
   );
+
+  it("covers every declared list", () => {
+    // A list nobody wired into this table is a list nobody checks.
+    expect(TABLES.length).toBe(
+      Object.keys(sdeOwnedColumns).filter((name) =>
+        /^SDE_OWNED_\w+_COLUMNS$/.test(name),
+      ).length,
+    );
+    expect(TABLES.length).toBeGreaterThan(15);
+  });
 
   it("finds the columns it claims to parse", () => {
     // Guards the parser itself: if a schema formatting change stopped it
