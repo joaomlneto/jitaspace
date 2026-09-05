@@ -16,6 +16,7 @@ import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
 import { GroupBreadcrumbs } from "~/components/Breadcrumbs";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { parseEntityId, parsePositiveEntityId } from "~/lib/routeParams";
 
 interface PageProps {
   name?: string;
@@ -57,8 +58,8 @@ export async function generateMetadata({
   params: Promise<{ groupId: string }>;
 }): Promise<Metadata> {
   const { groupId: groupIdParam } = await params;
-  const groupId = Number(groupIdParam);
-  if (!groupId) return {};
+  const groupId = parsePositiveEntityId(groupIdParam);
+  if (groupId === null) return {};
   try {
     const { name } = await getGroupData(groupId);
     return {
@@ -66,6 +67,7 @@ export async function generateMetadata({
       description: name
         ? `Browse EVE Online ${name} items and types.`
         : undefined,
+      alternates: { canonical: `/group/${groupId}` },
     };
   } catch {
     return {};
@@ -78,7 +80,15 @@ async function PageContent({
   params: Promise<{ groupId: string }>;
 }>) {
   const { groupId: groupIdParam } = await params;
-  const groupId = Number(groupIdParam);
+  // `parseEntityId`, not the positive variant `generateMetadata` uses: this
+  // page had no numeric guard at all, so `/group/0` — a real non-deleted row
+  // this site puts in its sitemap — renders today. Narrowing to match the
+  // metadata would turn that into a 404; widening the metadata to match the
+  // page is a separate decision.
+  const groupId = parseEntityId(groupIdParam);
+  if (groupId === null) {
+    notFound();
+  }
 
   let name: PageProps["name"] = undefined;
   let types: PageProps["types"] = [];

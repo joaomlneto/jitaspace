@@ -1,9 +1,43 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
+
+/**
+ * The station's own row, or null when there is no such station.
+ *
+ * Cached for days: these columns change only when an SDE release or the ESI
+ * station scraper lands. Nothing is caught inside this scope — a failed query
+ * must throw out of it, because the `notFound()` the caller would otherwise
+ * render is a *successful* response that Next stores for the full cacheLife
+ * (CLAUDE.md). `findUnique` plus a null test is what keeps a genuinely absent
+ * station — a real, legitimately cached 404 — distinguishable from an outage.
+ *
+ * `generateMetadata` and the page share this one read, as the type page shares
+ * `getTypeData`: the metadata pass and the render then resolve to the same
+ * cache entry, so 5,211 station routes keep costing one query per render
+ * rather than two.
+ */
+async function readStation(stationId: number) {
+  "use cache";
+  cacheLife("days");
+
+  return prisma.station.findUnique({
+    select: {
+      name: true,
+      solarSystemId: true,
+      typeId: true,
+      raceId: true,
+      ownerId: true,
+    },
+    where: { stationId },
+  });
+}
 
 export async function generateMetadata({
   params,
@@ -11,27 +45,58 @@ export async function generateMetadata({
   params: Promise<{ stationId: string }>;
 }): Promise<Metadata> {
   const { stationId } = await params;
-  const id = Number(stationId);
-  if (!Number.isSafeInteger(id) || id <= 0) return {};
+  const id = parsePositiveEntityId(stationId);
+  if (id === null) return {};
   try {
-    const station = await prisma.station.findUnique({
-      select: { name: true },
-      where: { stationId: id },
-    });
+    const station = await readStation(id);
     if (!station) return {};
     return {
       title: station.name,
       description: `${station.name} station in EVE Online.`,
+      alternates: { canonical: `/station/${id}` },
     };
   } catch {
     return {};
   }
 }
 
-export default function Page() {
+/**
+ * `await params` and the read both happen here, inside the Suspense boundary.
+ *
+ * Until now the read fed only `generateMetadata`: the body was a client shell
+ * filled in from ESI, so `/station/60003760` and `/station/999999999` both
+ * answered HTTP 200 with the same 416 words. That is both Search Console
+ * complaints at once — 5,211 sitemap URLs a crawler cannot tell apart, and
+ * nonexistent stations that never 404.
+ */
+async function PageContent({
+  params,
+}: Readonly<{ params: Promise<{ stationId: string }> }>) {
+  const { stationId } = await params;
+  const id = parsePositiveEntityId(stationId);
+  if (id === null) notFound();
+
+  const station = await readStation(id);
+  if (!station) notFound();
+
+  return (
+    <PageClient
+      stationId={id}
+      name={station.name}
+      solarSystemId={station.solarSystemId}
+      typeId={station.typeId}
+      raceId={station.raceId}
+      ownerId={station.ownerId}
+    />
+  );
+}
+
+export default function Page({
+  params,
+}: Readonly<{ params: Promise<{ stationId: string }> }>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <PageClient />
+      <PageContent params={params} />
     </Suspense>
   );
 }

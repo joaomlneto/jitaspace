@@ -11,7 +11,14 @@ jest.mock("next/navigation", () => ({
   useParams: () => ({ raceId: "1" }),
   useRouter: () => ({}),
   usePathname: () => "/",
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
 }));
+
+// The server page imports prisma for generateMetadata; the coverage CI job has
+// no generated Prisma client, so stub the module out.
+jest.mock("~/lib/db", () => ({ prisma: {} }));
 
 jest.mock("@jitaspace/hooks", () => ({
   useRace: (raceId: number) => mockUseRace(raceId),
@@ -100,4 +107,34 @@ describe("race page", () => {
       screen.queryByText("Founded by exiles of the Amarr Empire."),
     ).not.toBeInTheDocument();
   });
+});
+
+// `Page` returns <Suspense> wrapping the async <PageContent>, which is where
+// `await params` happens. jsdom's renderer will not await an async component,
+// so pull the inner element out and invoke it directly (the same approach
+// tests/groupPage.test.tsx uses).
+async function resolvePageContent(raceId: string) {
+  const Page = require("~/app/race/[raceId]/page").default;
+  const suspenseEl = Page({ params: Promise.resolve({ raceId }) });
+  const contentEl = suspenseEl.props.children as {
+    type: (props: unknown) => Promise<ReactNode>;
+    props: unknown;
+  };
+  return contentEl.type(contentEl.props);
+}
+
+describe("race page id validation", () => {
+  it("renders the client page for the canonical spelling of an id", async () => {
+    const tree = (await resolvePageContent("1")) as { type: unknown };
+    expect(tree.type).toBe(require("~/app/race/[raceId]/page.client").default);
+  });
+
+  it.each(["0", "-1", "01", "1.0", "bad", ""])(
+    "404s rather than serving a second URL for %p",
+    async (raceId) => {
+      await expect(resolvePageContent(raceId)).rejects.toThrow(
+        "NEXT_NOT_FOUND",
+      );
+    },
+  );
 });

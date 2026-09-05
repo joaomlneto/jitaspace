@@ -10,6 +10,7 @@ import { prisma } from "~/lib/db";
 export const metadata = {
   title: "Agents",
   description: "Browse EVE Online NPC agents and their locations.",
+  alternates: { canonical: "/agents" },
 };
 
 interface PageProps {

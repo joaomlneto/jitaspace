@@ -17,6 +17,7 @@ export const metadata = {
   title: "Item Categories",
   description:
     "Browse all EVE Online item categories — ships, modules, ammunition, structures, and more.",
+  alternates: { canonical: "/categories" },
 };
 
 interface PageProps {

@@ -9,6 +9,7 @@ export const metadata = {
   title: "Active Wars",
   description:
     "Live list of active wars in EVE Online — track ongoing conflicts between corporations and alliances.",
+  alternates: { canonical: "/active-wars" },
 };
 
 async function ActiveWarsContent() {

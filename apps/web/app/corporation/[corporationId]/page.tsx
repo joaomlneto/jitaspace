@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 
 import { getCorporationsCorporationId } from "@jitaspace/esi-client";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
 
 function stripHtml(s: string): string {
@@ -23,8 +25,8 @@ export async function generateMetadata({
   params: Promise<{ corporationId: string }>;
 }): Promise<Metadata> {
   const { corporationId } = await params;
-  const id = Number(corporationId);
-  if (!Number.isSafeInteger(id) || id <= 0) return {};
+  const id = parsePositiveEntityId(corporationId);
+  if (id === null) return {};
 
   try {
     const res = await getCorporationsCorporationId(id);
@@ -36,6 +38,7 @@ export async function generateMetadata({
     return {
       title: name,
       description,
+      alternates: { canonical: `/corporation/${id}` },
       openGraph: {
         title: name,
         description,
@@ -53,10 +56,20 @@ export async function generateMetadata({
   }
 }
 
-export default function Page() {
+async function PageContent({
+  params,
+}: Readonly<{ params: Promise<{ corporationId: string }> }>) {
+  const { corporationId } = await params;
+  if (parsePositiveEntityId(corporationId) === null) notFound();
+  return <PageClient />;
+}
+
+export default function Page({
+  params,
+}: Readonly<{ params: Promise<{ corporationId: string }> }>) {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <PageClient />
+      <PageContent params={params} />
     </Suspense>
   );
 }

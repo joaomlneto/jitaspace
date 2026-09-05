@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { PageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import DogmaAttributePage from "./page.client";
 
 async function getAttributeData(attributeId: number): Promise<PageProps> {
@@ -98,8 +99,8 @@ export async function generateMetadata({
   params: Promise<{ attributeId: string }>;
 }): Promise<Metadata> {
   const { attributeId: raw } = await params;
-  const attributeId = Number(raw);
-  if (!Number.isSafeInteger(attributeId) || attributeId <= 0) return {};
+  const attributeId = parsePositiveEntityId(raw);
+  if (attributeId === null) return {};
   try {
     const attribute = await prisma.dogmaAttribute.findUnique({
       select: { name: true, displayName: true, description: true },
@@ -109,7 +110,11 @@ export async function generateMetadata({
     const title =
       [attribute.displayName, attribute.name].find(Boolean) ?? undefined;
     const description = attribute.description?.slice(0, 200) ?? undefined;
-    return { title, description };
+    return {
+      title,
+      description,
+      alternates: { canonical: `/dogma/attribute/${attributeId}` },
+    };
   } catch {
     return {};
   }
@@ -121,8 +126,8 @@ async function PageContent({
   params: Promise<{ attributeId: string }>;
 }>) {
   const { attributeId: attributeIdParam } = await params;
-  const attributeId = Number(attributeIdParam);
-  if (!Number.isFinite(attributeId)) {
+  const attributeId = parsePositiveEntityId(attributeIdParam);
+  if (attributeId === null) {
     notFound();
   }
 

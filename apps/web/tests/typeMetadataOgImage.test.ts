@@ -30,7 +30,7 @@ function mockImageService(variations: string[] | "not-found") {
   ) as unknown as typeof fetch;
 }
 
-async function metadataFor(typeId: number) {
+async function metadataFor(typeId: number | string) {
   const { generateMetadata } = require("~/app/type/[typeId]/page") as {
     generateMetadata: (a: {
       params: Promise<{ typeId: string }>;
@@ -39,6 +39,7 @@ async function metadataFor(typeId: number) {
   return (await generateMetadata({
     params: Promise.resolve({ typeId: String(typeId) }),
   })) as {
+    alternates?: { canonical?: string };
     openGraph?: { images?: { url: string }[] };
     twitter?: { images?: string[] };
   };
@@ -102,4 +103,32 @@ describe("type/[typeId] generateMetadata og:image", () => {
       for (const url of urls) expect(url).not.toContain("undefined");
     }
   });
+});
+
+describe("type/[typeId] generateMetadata canonical", () => {
+  beforeEach(() => {
+    jest.resetModules();
+    typeFindUniqueOrThrow.mockReset();
+    typeFindUniqueOrThrow.mockResolvedValue({
+      typeId: 587,
+      name: "Rifter",
+      description: "A frigate.",
+    });
+    mockImageService(["icon"]);
+  });
+
+  it("points at the canonical spelling of the id, relative to metadataBase", async () => {
+    expect((await metadataFor(587)).alternates?.canonical).toBe("/type/587");
+  });
+
+  // Measured on production 2026-09-02: /type/587, /type/0587 and /type/587.0
+  // all returned 200 serving the Rifter. The duplicates now 404, and the guard
+  // rejects them before the query so no cache entry is minted for them either.
+  it.each(["0587", "587.0", "+587", "0"])(
+    "returns no metadata for the non-canonical id %p",
+    async (typeId) => {
+      expect(await metadataFor(typeId)).toEqual({});
+      expect(typeFindUniqueOrThrow).not.toHaveBeenCalled();
+    },
+  );
 });

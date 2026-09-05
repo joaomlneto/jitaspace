@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
@@ -15,11 +16,22 @@ let allianceId = "99000001";
 const mockUseEsiAllianceInformation = jest.fn();
 const mockUseEsiAllianceMemberCorporations = jest.fn();
 const mockUseSelectedCharacter = jest.fn();
+const mockGetAlliancesAllianceId =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("next/navigation", () => ({
   useParams: () => ({ allianceId }),
   useRouter: () => ({}),
   usePathname: () => "/",
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
+}));
+
+// The server page imports the ESI client for generateMetadata; the coverage CI
+// job runs install + test only (no `kubb:generate`), so stub the module out.
+jest.mock("@jitaspace/esi-client", () => ({
+  getAlliancesAllianceId: (...a: unknown[]) => mockGetAlliancesAllianceId(...a),
 }));
 
 jest.mock("@jitaspace/hooks", () => ({
@@ -122,5 +134,40 @@ describe("alliance page", () => {
     // page returns null -> none of its content is rendered
     expect(screen.queryByText("Member Corporations")).not.toBeInTheDocument();
     expect(screen.queryByText("Creator")).not.toBeInTheDocument();
+  });
+});
+
+describe("alliance page server wrapper", () => {
+  // `params` is awaited in the async child, never in `Page` itself, so the
+  // route keeps a synchronous shell that Next can prerender.
+  function runWrapper(id: string) {
+    const Page = require("~/app/alliance/[allianceId]/page").default;
+    const tree = Page({ params: Promise.resolve({ allianceId: id }) });
+    expect(tree.type).toBe(Suspense);
+    const child = tree.props.children;
+    return child.type(child.props) as Promise<unknown>;
+  }
+
+  it("renders the client page for a canonical id", async () => {
+    await expect(runWrapper("99005338")).resolves.toBeTruthy();
+  });
+
+  it("404s an id that isn't the canonical spelling", async () => {
+    // `/alliance/099005338` used to serve the same alliance as `/alliance/99005338`.
+    await expect(runWrapper("099005338")).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("canonicalises onto the parsed id", async () => {
+    mockGetAlliancesAllianceId.mockResolvedValue({
+      data: { name: "Pandemic Horde" },
+    });
+    const { generateMetadata } =
+      require("~/app/alliance/[allianceId]/page") as typeof import("~/app/alliance/[allianceId]/page");
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ allianceId: "99005338" }),
+    });
+
+    expect(metadata.alternates?.canonical).toBe("/alliance/99005338");
   });
 });

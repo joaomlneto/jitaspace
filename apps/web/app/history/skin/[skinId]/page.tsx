@@ -1,6 +1,8 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { Loader } from "@mantine/core";
 
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import SkinHistoryClient from "./page.client";
 
 export async function generateMetadata({
@@ -9,9 +11,12 @@ export async function generateMetadata({
   params: Promise<{ skinId: string }>;
 }>) {
   const { skinId } = await params;
+  const id = parsePositiveEntityId(skinId);
+  if (id === null) return {};
   return {
-    title: `SKIN ${skinId} — Change History`,
-    description: `How EVE Online SKIN ${skinId} has changed across client builds.`,
+    title: `SKIN ${id} — Change History`,
+    description: `How EVE Online SKIN ${id} has changed across client builds.`,
+    alternates: { canonical: `/history/skin/${id}` },
   };
 }
 
@@ -21,7 +26,9 @@ async function PageContent({
   params: Promise<{ skinId: string }>;
 }>) {
   const { skinId } = await params;
-  return <SkinHistoryClient skinId={Number(skinId)} />;
+  const id = parsePositiveEntityId(skinId);
+  if (id === null) notFound();
+  return <SkinHistoryClient skinId={id} />;
 }
 
 export default function Page({

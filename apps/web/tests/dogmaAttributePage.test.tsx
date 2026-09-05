@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
+import type { ReactNode } from "react";
 import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
@@ -13,6 +14,16 @@ import { render, screen } from "@testing-library/react";
 
 jest.mock("@jitaspace/tiptap-eve", () => ({
   sanitizeFormattedEveString: (s: string) => s,
+}));
+
+// The server page pulls in Prisma and `cacheLife`; the coverage CI job has no
+// generated Prisma client, so stub both out.
+jest.mock("~/lib/db", () => ({ prisma: {} }));
+jest.mock("next/cache", () => ({ cacheLife: () => undefined }));
+jest.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
 }));
 
 // DogmaAttributeValue renders its numeric value; TypeAnchor passes children
@@ -152,4 +163,31 @@ describe("Dogma attribute page (client)", () => {
     expect(screen.getByText("High is Good")).toBeInTheDocument();
     expect(screen.getByText("Types")).toBeInTheDocument();
   });
+});
+
+// The server wrapper resolves `params` inside the Suspense boundary, so reach
+// its content component the same way React would rather than rendering the
+// async function as a client component.
+async function resolvePageContent(attributeId: string) {
+  const Page = require("~/app/dogma/attribute/[attributeId]/page").default;
+  const suspenseEl = Page({ params: Promise.resolve({ attributeId }) });
+  const contentEl = suspenseEl.props.children as {
+    type: (props: unknown) => Promise<ReactNode>;
+    props: unknown;
+  };
+  return contentEl.type(contentEl.props);
+}
+
+// The guard used to be `Number.isFinite`, which let `/dogma/attribute/-1` and
+// `/dogma/attribute/04` render a 200 apiece — extra URLs for a page that is far
+// too heavy to be crawled twice (attribute 4 measures 29.8 MB).
+describe("dogma attribute page id validation", () => {
+  it.each(["0", "-1", "04", "4.0", "bad", ""])(
+    "404s rather than serving a second URL for %p",
+    async (attributeId) => {
+      await expect(resolvePageContent(attributeId)).rejects.toThrow(
+        "NEXT_NOT_FOUND",
+      );
+    },
+  );
 });

@@ -39,6 +39,9 @@ jest.mock("~/lib/db", () => ({
 }));
 
 jest.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
   useParams: () => mockUseParams(),
   useRouter: () => ({}),
   usePathname: () => "/",
@@ -387,5 +390,18 @@ describe("System page", () => {
     render(<MantineProvider>{resolved}</MantineProvider>);
 
     expect(screen.getByText("Stations")).toBeInTheDocument();
+  });
+
+  it("404s an id that isn't the canonical spelling", async () => {
+    // `/system/030000142` and `/system/30000142.0` used to serve Jita too, one
+    // extra indexable URL each. The wrapper rejects the spelling rather than
+    // normalising it, so the duplicates retire instead of persisting.
+    const WrapperPage = require("~/app/system/[systemId]/page").default;
+    const tree = WrapperPage({
+      params: Promise.resolve({ systemId: `0${SYSTEM_ID}` }),
+    });
+    const child = tree.props.children;
+
+    await expect(child.type(child.props)).rejects.toThrow("NEXT_NOT_FOUND");
   });
 });
