@@ -17,10 +17,12 @@ export async function generateMetadata({
   const id = parsePositiveEntityId(constellationId);
   if (id === null) return {};
   try {
-    const constellation = await prisma.constellation.findUnique({
-      select: { name: true },
-      where: { constellationId: id },
-    });
+    // Shares `readConstellation` with the page rather than issuing its own
+    // one-column query, as the station page shares `readStation`: the metadata
+    // pass and the render then resolve to the same cache entry, so the route
+    // costs one query per render instead of two. The `catch` stays out here,
+    // outside the cached scope, which is what makes that safe.
+    const constellation = await readConstellation(id);
     if (!constellation) return {};
     return {
       title: constellation.name,

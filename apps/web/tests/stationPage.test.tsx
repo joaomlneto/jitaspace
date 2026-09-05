@@ -196,7 +196,7 @@ describe("station page server read", () => {
     ).toBeInTheDocument();
   });
 
-  it("404s for a station id no row matches", async () => {
+  it("renders the not-found page for a station id no row matches", async () => {
     stationFindUnique.mockResolvedValue(null);
 
     await expect(resolvePageContent("999999999")).rejects.toThrow(
@@ -205,7 +205,7 @@ describe("station page server read", () => {
   });
 
   it.each(["0", "060003760", "60003760.0", "bad", ""])(
-    "404s rather than serving a second URL for %p",
+    "reaches not-found rather than serving a second URL for %p",
     async (stationId) => {
       await expect(resolvePageContent(stationId)).rejects.toThrow(
         "NEXT_NOT_FOUND",
@@ -214,7 +214,7 @@ describe("station page server read", () => {
     },
   );
 
-  it("lets a database failure escape the cached scope instead of 404ing", async () => {
+  it("lets a database failure escape the cached scope instead of reaching not-found", async () => {
     // A caught failure would be stored as a successful 404 for the whole
     // cacheLife("days") window; throwing keeps the route transient.
     stationFindUnique.mockRejectedValue(

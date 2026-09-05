@@ -106,20 +106,39 @@ const contentSecurityPolicy = [
  * main search crawler alone — is assumed to execute JavaScript and is left on
  * the streaming path.
  *
- * That assumption breaks under `cacheComponents`. Being a bot also sets
- * `supportsDynamicResponse: false`, so with streaming still enabled the async
- * `generateMetadata` boundary can never resolve and is *rejected*. Measured on
+ * That split breaks the crawler it was meant to accommodate. Measured on
  * production 2026-09-02: `curl -A "Googlebot/2.1" .../type/587` returned zero
  * `<title>`, zero `<meta name="description">`, zero `og:` tags and one
- * `$RX("B:0",…)` — on every dynamic route, i.e. ~69,900 of 69,924 sitemap URLs.
- * bingbot, which matches the list below, got all of them inside `<head>`.
+ * `$RX("B:0",…)` rejected boundary — on every dynamic route, i.e. ~69,900 of
+ * 69,924 sitemap URLs. bingbot, `Google-InspectionTool` and every other UA on
+ * the list below got all of them inside `<head>`. Membership in this list is
+ * the only thing that separates the two outcomes, so that is what the fix
+ * changes. Don't reason about the internals from `base-server.js`: the built
+ * lambda Vercel runs comes from `build/templates/app-page.js`, whose
+ * `serveStreamingMetadata` line differs from the self-hosted path.
  *
- * Adding Googlebot here puts it on that same working path. Verify with:
+ * Verify on the DEPLOYED site — no local check can prove this, because
+ * self-hosted `next start` already serves Googlebot blocking metadata:
  *   curl -A "Googlebot/2.1" https://www.jita.space/type/587 | grep -c '<title>'
  *
  * Do NOT check this with Search Console's URL Inspection: it requests as
  * `Google-InspectionTool`, which already matches `Google-[\w-]+` below and so
  * always took the working path — it showed a correct title throughout.
+ *
+ * SECOND EFFECT, and the reason not to extend this list casually: `next build`
+ * also compiles this exact regex into the prerender manifest's `bypassFor`
+ * (`build/index.js`, "selectively bypass the static cache and invoke the lambda
+ * directly"), which Vercel enforces as a CDN cache bypass. Measured the same
+ * day on `/type/587`: bingbot and Discordbot — both on the list — get
+ * `x-vercel-cache: BYPASS`, `age: 0`; Googlebot and Chrome get `HIT`. So this
+ * line also moves Googlebot's entire crawl from the CDN to the origin. That is
+ * inherent rather than incidental — one shared CDN entry cannot carry per-UA
+ * metadata placement — and it is affordable here because the lambda still
+ * answers from the `"use cache"` data cache rather than the database (measured
+ * TTFB 0.18s on the bypass path vs 0.08–0.19s on a CDN hit). What it does cost
+ * is the CDN copy that otherwise shields a crawler from a database outage
+ * (see the `"use cache"` section of CLAUDE.md), so revisit if Search Console's
+ * Crawl stats ever show Googlebot requesting at a rate the origin feels.
  *
  * Extending Next's own list rather than replacing it, so the ~25 other bots it
  * covers keep working; a Next upgrade that moves this module fails the build
