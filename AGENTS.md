@@ -47,7 +47,7 @@ pnpm db:push   # apply it — BEFORE merging the PR that changes the schema
 
 > Deploys run `db:generate` only. `db:push` reconciles the database down to the schema on the commit being deployed, so running it from a build makes any PR branched before a schema-adding PR propose **dropping** the newer tables — that broke 18 production deploys in 2026-08. Never pass `--accept-data-loss` to get past it, and note that `db:push` hits whatever `DATABASE_URL` names — in the root `.env` that is production.
 >
-> Forgetting to push is mostly **silent**: under `cacheComponents` a page that catches its own database error prerenders as a 404 with a green build. See CLAUDE.md → "Applying schema changes to the database" for which routes are loud, which are quiet, and the CockroachDB `schema_locked` recovery.
+> Forgetting to push used to be **silent**: under `cacheComponents` a page that catches its own database error prerenders as a 404 with a green build. The nine routes that did this were fixed on 2026-08-30 and now let the read throw, so this class fails loudly — never reintroduce a `catch` around a database read inside a `"use cache"` scope, because `notFound()` is a _successful_ render that Next stores and serves for the whole `cacheLife`. See CLAUDE.md → "Never catch a database error inside a `"use cache"` scope", and "Applying schema changes to the database" for the CockroachDB `schema_locked` recovery.
 
 - Regenerate API clients (Kubb) used by many packages. Example (root):
 

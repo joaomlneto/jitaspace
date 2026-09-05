@@ -109,8 +109,13 @@ export const baseConfig = defineConfig(
   // Build/tooling configuration and standalone scripts. These were previously
   // excluded from lint wholesale by an `**/*.config.*` ignore — which caught
   // real executed code, including next.config.mjs (the CSP, security headers
-  // and redirects) and the Sentry init files. They run in plain Node, and Next
-  // requires rewrites/redirects/headers to be `async` even with no await.
+  // and redirects) and the Sentry init files. They run in plain Node, and
+  // several hooks in them are written `async` while never awaiting: rewrites,
+  // redirects and headers in next.config.mjs, plus the `defineConfig(async
+  // () => …)` callbacks in the evetycoon and fuzzworks kubb configs. Neither
+  // requires it — Next types all three as `() => T | Promise<T>`, and Kubb's
+  // defineConfig takes a PossiblePromise. Turning require-await off here is
+  // our own convention rather than churning the call sites.
   {
     files: ["**/*.config.{js,cjs,mjs,ts}", "**/scripts/**/*.{js,cjs,mjs,ts}"],
     languageOptions: {
