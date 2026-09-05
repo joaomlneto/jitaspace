@@ -73,8 +73,52 @@ let _config: Partial<RequestConfig> = {
 
 export const getConfig = () => _config;
 
+/**
+ * Listeners notified when the globally configured Accept-Language changes.
+ *
+ * ESI localises the resources it serves — type, region, solar system and
+ * faction names all come back in the language this header asks for — so any
+ * cache holding those answers has to treat the language as part of the cache
+ * identity. Consumers backed by React Query can be invalidated by the app, but
+ * @jitaspace/hooks also keeps module-level caches that the app's provider tree
+ * cannot reach; those subscribe here instead.
+ */
+const acceptLanguageListeners = new Set<() => void>();
+
+const normalizeAcceptLanguage = (value: unknown): string | undefined =>
+  typeof value === "string" && value.trim() !== "" ? value : undefined;
+
+/** The globally configured Accept-Language, or `undefined` when unset. */
+export const getAcceptLanguage = (): string | undefined =>
+  normalizeAcceptLanguage(_config.acceptLanguage);
+
+/**
+ * Subscribe to Accept-Language changes. Returns an unsubscribe function, so it
+ * plugs directly into `useSyncExternalStore`.
+ */
+export const subscribeToAcceptLanguage = (
+  listener: () => void,
+): (() => void) => {
+  acceptLanguageListeners.add(listener);
+  return () => {
+    acceptLanguageListeners.delete(listener);
+  };
+};
+
+/**
+ * Notify subscribers if — and only if — the resolved language actually moved.
+ * Config writes happen on every request-adjacent update, and a listener that
+ * fired on all of them would invalidate caches that are still valid.
+ */
+const notifyIfAcceptLanguageChanged = (previous: string | undefined) => {
+  if (getAcceptLanguage() === previous) return;
+  acceptLanguageListeners.forEach((listener) => listener());
+};
+
 export const setConfig = (config: RequestConfig) => {
+  const previousAcceptLanguage = getAcceptLanguage();
   _config = config;
+  notifyIfAcceptLanguageChanged(previousAcceptLanguage);
   return getConfig();
 };
 
@@ -97,11 +141,13 @@ const mergeHeaders = (
 };
 
 export const updateConfig = (config: Partial<RequestConfig>) => {
+  const previousAcceptLanguage = getAcceptLanguage();
   _config = {
     ..._config,
     ...config,
     headers: mergeHeaders(_config.headers, config.headers),
   };
+  notifyIfAcceptLanguageChanged(previousAcceptLanguage);
 
   return getConfig();
 };

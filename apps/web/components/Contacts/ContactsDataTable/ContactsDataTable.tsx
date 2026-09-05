@@ -180,3 +180,5 @@ export const ContactsDataTable = memo(
     return <MantineReactTable table={table} />;
   },
 );
+
+ContactsDataTable.displayName = "ContactsDataTable";

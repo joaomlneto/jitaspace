@@ -6,6 +6,7 @@ import { Container, Group, Stack, Text, Title } from "@mantine/core";
 import {
   CorporationName,
   TypeAnchor,
+  TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import { useBloodline } from "@jitaspace/hooks";
@@ -14,7 +15,6 @@ import {
   CorporationAnchor,
   CorporationAvatar,
   RaceAnchor,
-  TypeAvatar,
 } from "@jitaspace/ui";
 
 import { RaceAvatar } from "~/components/Avatar";

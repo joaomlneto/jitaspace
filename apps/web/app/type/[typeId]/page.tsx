@@ -49,7 +49,14 @@ async function getTypeData(typeId: number): Promise<PageProps> {
 
   return {
     typeId,
-    ogImageUrl: `https://images.evetech.net/types/${typeId}/${variation}`,
+    // No variation means the image service has no image for this type at all —
+    // `/types/<id>` 404s, and so would any variation we guessed at. Leave the
+    // URL undefined so the `openGraph`/`twitter` blocks below drop the tag
+    // entirely; interpolating the missing variation shipped
+    // `.../types/2/undefined` as og:image on every such page.
+    ogImageUrl: variation
+      ? `https://images.evetech.net/types/${typeId}/${variation}`
+      : undefined,
     typeName: type.name,
     typeDescription: type.description,
   };

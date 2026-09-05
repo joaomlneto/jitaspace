@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { Group, Text, UnstyledButton } from "@mantine/core";
 
+import { TypeAvatar } from "@jitaspace/eve-components";
 import { useType } from "@jitaspace/hooks";
-import { TypeAvatar } from "@jitaspace/ui";
 
 import classes from "./Button.module.css";
 

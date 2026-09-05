@@ -26,8 +26,9 @@ jest.mock("@jitaspace/eve-icons", () => ({
   MarketIcon: () => <span data-testid="market-icon" />,
 }));
 
-// TypeAvatar/TypeName come from @jitaspace/ui — provide identifiable stubs.
-jest.mock("@jitaspace/ui", () => ({
+// TypeAvatar/TypeName come from @jitaspace/eve-components — provide
+// identifiable stubs.
+jest.mock("@jitaspace/eve-components", () => ({
   TypeAvatar: ({ typeId }: { typeId?: number }) => (
     <span data-testid="type-avatar">{`avatar-${typeId}`}</span>
   ),

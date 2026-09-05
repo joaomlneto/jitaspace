@@ -18,7 +18,10 @@ export async function createKv({ redisUrl }: CreateKvOptions) {
 
   const kv = {
     queues: {
-      allianceIds: new Queue<{ allianceIds: number[] }>("allianceIds", redisUrl),
+      allianceIds: new Queue<{ allianceIds: number[] }>(
+        "allianceIds",
+        redisUrl,
+      ),
       characterIds: new Queue<{ characterIds: number[] }>(
         "characterIds",
         redisUrl,

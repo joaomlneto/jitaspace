@@ -1,130 +1,51 @@
-"use client";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { connection } from "next/server";
 
-import { Burger, Container, SimpleGrid, Stack } from "@mantine/core";
-import { useShallow } from "zustand/shallow";
+import type { LatestChangedBuild } from "~/lib/history";
+import { NewsCarouselPlaceholder } from "~/components/News";
+import { PatchNotesNewsCarousel } from "~/components/PatchNotes";
+import { getLatestChangedBuild } from "~/lib/history-cache";
+import HomePage from "./page.client";
 
-import { AllianceCard } from "@jitaspace/eve-components";
-import { useAuthenticatedCharacterIds, useAuthStore } from "@jitaspace/hooks";
+export const metadata: Metadata = {
+  // The root layout's title template ("%s | JitaSpace") would turn a plain
+  // string into "JitaSpace | JitaSpace", so pin the home page's title.
+  title: { absolute: "JitaSpace" },
+};
 
-import { AuthenticatedCharacterCard, CorporationCard } from "~/components/Card";
-import { DevelopmentModeAlert } from "~/components/debug";
-import { AddPilotCard, AppCard, SectionHeader } from "~/components/Home";
-import { AllianceMenu, CorporationMenu } from "~/components/Menu";
-import { NewsCarousel } from "~/components/News";
-import { characterApps, universeApps } from "~/config/apps";
-import { env } from "~/env";
-
-const toolSections = [
-  { title: "Capsuleer Tools", apps: characterApps },
-  { title: "Universe", apps: universeApps },
-];
+/**
+ * The news carousel, with the latest EVE static-data diff read on the server and
+ * appended as a generated card.
+ *
+ * `connection()` marks the read as request-time — the same opt-out `/history`
+ * uses. Without it the day-cached `getLatestChangedBuild` would be resolved
+ * during the build prerender, which hits the history database (unprovisioned in
+ * CI ⇒ ECONNREFUSED) and, because the `catch` below sits outside the `"use cache"`
+ * scope, would fail the build rather than degrade.
+ */
+async function NewsCarouselWithPatchNotes() {
+  await connection();
+  let latest: LatestChangedBuild | null = null;
+  try {
+    latest = await getLatestChangedBuild();
+  } catch {
+    latest = null; // history DB unreachable ⇒ just the curated cards, no crash
+  }
+  return <PatchNotesNewsCarousel latest={latest} />;
+}
 
 export default function Page() {
-  const authenticatedCharacterIds = useAuthenticatedCharacterIds();
-  const authenticatedCorporationIds = useAuthStore(
-    useShallow((state) => {
-      return Array.from(
-        new Set(
-          authenticatedCharacterIds
-            .map((characterId) => state.characters[characterId]?.corporationId)
-            .filter(
-              (corporationId): corporationId is number => corporationId != null,
-            ),
-        ),
-      );
-    }),
-  );
-  const authenticatedAllianceIds = useAuthStore(
-    useShallow((state) => {
-      return Array.from(
-        new Set(
-          authenticatedCharacterIds
-            .map((characterId) => state.characters[characterId]?.allianceId)
-            .filter((allianceId): allianceId is number => allianceId != null),
-        ),
-      );
-    }),
-  );
-
   return (
-    <Container size="xl" py="md">
-      <Stack gap={48}>
-        <NewsCarousel />
-        {env.NODE_ENV === "development" && <DevelopmentModeAlert />}
-
-        <section>
-          <SectionHeader
-            title="Pilots"
-            count={authenticatedCharacterIds.length || undefined}
-          />
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
-            {authenticatedCharacterIds.map((characterId) => (
-              <AuthenticatedCharacterCard
-                characterId={characterId}
-                key={characterId}
-              />
-            ))}
-            <AddPilotCard />
-          </SimpleGrid>
-        </section>
-
-        {authenticatedCorporationIds.length > 0 && (
-          <section>
-            <SectionHeader
-              title="Corporations"
-              count={authenticatedCorporationIds.length}
-            />
-            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
-              {authenticatedCorporationIds.map((corporationId) => (
-                <CorporationCard
-                  corporationId={corporationId}
-                  key={corporationId}
-                  compact
-                  headerRightSection={
-                    <CorporationMenu corporationId={corporationId}>
-                      <Burger size="sm" />
-                    </CorporationMenu>
-                  }
-                />
-              ))}
-            </SimpleGrid>
-          </section>
-        )}
-
-        {authenticatedAllianceIds.length > 0 && (
-          <section>
-            <SectionHeader
-              title="Alliances"
-              count={authenticatedAllianceIds.length}
-            />
-            <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg">
-              {authenticatedAllianceIds.map((allianceId) => (
-                <AllianceCard
-                  allianceId={allianceId}
-                  key={allianceId}
-                  compact
-                  headerRightSection={
-                    <AllianceMenu allianceId={allianceId}>
-                      <Burger size="sm" />
-                    </AllianceMenu>
-                  }
-                />
-              ))}
-            </SimpleGrid>
-          </section>
-        )}
-
-        {toolSections.map(({ title, apps }) => (
-          <section key={title}>
-            <SectionHeader title={title} />
-            <SimpleGrid spacing="md" cols={{ base: 1, xs: 2, sm: 3, lg: 4 }}>
-              {Object.values(apps).map((app) => (
-                <AppCard app={app} key={app.name} />
-              ))}
-            </SimpleGrid>
-          </section>
-        ))}
-      </Stack>
-    </Container>
+    <HomePage
+      newsCarousel={
+        // The placeholder is the carousel's own height reservation, so the
+        // static shell holds the space open and the streamed-in carousel drops
+        // into it rather than pushing the page down.
+        <Suspense fallback={<NewsCarouselPlaceholder />}>
+          <NewsCarouselWithPatchNotes />
+        </Suspense>
+      }
+    />
   );
 }

@@ -56,6 +56,8 @@ export const SolarSystemAnchor = anchorStub("/system", "solarSystemId");
 export const StargateDestinationAnchor = childrenStub();
 export const StationAnchor = childrenStub();
 export const TypeAnchor = anchorStub("/type", "typeId", "type-anchor");
+export const TypeAvatar = () =>
+  React.createElement("span", { "data-testid": "type-avatar" });
 export const WarAggressorAnchor = childrenStub();
 export const WarDefenderAnchor = childrenStub();
 

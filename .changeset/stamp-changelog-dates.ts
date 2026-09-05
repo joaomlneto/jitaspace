@@ -62,9 +62,7 @@ for (const path of paths) {
         const rawVersion = line.replace("## ", "");
         const alreadyDated = /\d{4}-\d{2}-\d{2}$/.test(rawVersion);
         latestVersion = rawVersion;
-        newLines.push(
-          alreadyDated ? line : `## ${latestVersion} — ${today}`,
-        );
+        newLines.push(alreadyDated ? line : `## ${latestVersion} — ${today}`);
         continue;
       } else {
         entries.sort(byPrefixOrder);

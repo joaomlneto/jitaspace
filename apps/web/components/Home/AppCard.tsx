@@ -35,7 +35,11 @@ export function AppCard({ app }: Readonly<AppCardProps>) {
             <Text fz="sm" fw={600} truncate style={{ flex: 1, minWidth: 0 }}>
               {app.name}
             </Text>
-            <IconChevronRight size={16} stroke={1.5} className={classes.arrow} />
+            <IconChevronRight
+              size={16}
+              stroke={1.5}
+              className={classes.arrow}
+            />
           </Group>
         </Card>
       </UnstyledButton>

@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import { format } from "date-fns";
@@ -37,9 +37,13 @@ jest.mock("~/components/ActionIcon", () => ({
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ href, children }: { href?: string | object; children?: ReactNode }) => (
-    <a href={typeof href === "string" ? href : ""}>{children}</a>
-  ),
+  default: ({
+    href,
+    children,
+  }: {
+    href?: string | object;
+    children?: ReactNode;
+  }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
 function renderPage() {
@@ -89,10 +93,7 @@ describe("alliance page", () => {
     expect(screen.getByText("Member Corporations")).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "DOTLAN EveMaps" }),
-    ).toHaveAttribute(
-      "href",
-      "https://evemaps.dotlan.net/alliance/99000001",
-    );
+    ).toHaveAttribute("href", "https://evemaps.dotlan.net/alliance/99000001");
   });
 
   it("hides optional sections when data is sparse and no character is selected", () => {

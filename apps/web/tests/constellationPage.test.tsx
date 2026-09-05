@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -27,13 +27,18 @@ jest.mock("~/components/Badge", () => ({
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ href, children }: { href?: string | object; children?: ReactNode }) => (
-    <a href={typeof href === "string" ? href : ""}>{children}</a>
-  ),
+  default: ({
+    href,
+    children,
+  }: {
+    href?: string | object;
+    children?: ReactNode;
+  }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
 function renderPage() {
-  const Page = require("~/app/constellation/[constellationId]/page.client").default;
+  const Page =
+    require("~/app/constellation/[constellationId]/page.client").default;
   return render(
     <MantineProvider>
       <Page />
@@ -62,7 +67,9 @@ describe("constellation page", () => {
     expect(screen.getByText("Region")).toBeInTheDocument();
     expect(screen.getByText("Solar Systems:")).toBeInTheDocument();
     // region link built from constellation data
-    const links = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
+    const links = screen
+      .getAllByRole("link")
+      .map((a) => a.getAttribute("href"));
     expect(links).toContain("/region/10000002");
     // one list item link per system
     const systemLinks = screen

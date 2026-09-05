@@ -1,9 +1,8 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
-
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -22,7 +21,9 @@ export async function generateMetadata({
     if (!region) return {};
     return {
       title: region.name,
-      description: region.description?.slice(0, 200) ?? `${region.name} region in EVE Online.`,
+      description:
+        region.description?.slice(0, 200) ??
+        `${region.name} region in EVE Online.`,
     };
   } catch {
     return {};

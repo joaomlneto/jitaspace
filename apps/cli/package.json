@@ -13,12 +13,14 @@
   "scripts": {
     "build": "tsc --noEmit && esbuild index.ts --bundle --platform=node --format=cjs --outfile=./dist/index.cjs",
     "generate": "mkdir -p out && ts-node index.ts generate",
-    "prepublish": "tsc",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "lint:fix": "pnpm lint --fix",
+    "type-check": "tsc --noEmit",
     "validate": "ts-node index.ts validate"
   },
   "devDependencies": {
     "@asteasolutions/zod-to-openapi": "^4.8.0",
-    "@commander-js/extra-typings": "^14.0.0",
+    "@commander-js/extra-typings": "^15.0.0",
     "@jitaspace/eslint-config": "workspace:*",
     "@jitaspace/prettier-config": "workspace:*",
     "@jitaspace/sde-utils": "workspace:*",
@@ -36,6 +38,7 @@
     "checksum": "^1.0.0",
     "cli-progress": "^3.12.0",
     "commander": "^15.0.0",
+    "eslint": "^9.39.4",
     "figlet": "^1.11.0",
     "inquirer": "^9.3.8",
     "js-yaml": "^4.1.1",

@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -16,8 +16,12 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 jest.mock("@jitaspace/ui", () => ({
-  AllianceAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
-  CorporationAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
+  AllianceAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
+  CorporationAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
   AllianceAvatar: ({ allianceId }: { allianceId: number | string }) => (
     <span>{`Alliance Avatar ${allianceId}`}</span>
   ),
@@ -27,7 +31,9 @@ jest.mock("@jitaspace/ui", () => ({
 }));
 
 jest.mock("../../../packages/eve-components/Anchor", () => ({
-  CharacterAnchor: ({ children }: { children?: ReactNode }) => <a href="#">{children}</a>,
+  CharacterAnchor: ({ children }: { children?: ReactNode }) => (
+    <a href="#">{children}</a>
+  ),
 }));
 
 jest.mock("../../../packages/eve-components/Text", () => ({
@@ -44,9 +50,13 @@ jest.mock("../../../packages/eve-components/Text", () => ({
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ href, children }: { href?: string | object; children?: ReactNode }) => (
-    <a href={typeof href === "string" ? href : ""}>{children}</a>
-  ),
+  default: ({
+    href,
+    children,
+  }: {
+    href?: string | object;
+    children?: ReactNode;
+  }) => <a href={typeof href === "string" ? href : ""}>{children}</a>,
 }));
 
 describe("AllianceCard", () => {
@@ -73,7 +83,9 @@ describe("AllianceCard", () => {
       },
     });
 
-    const { AllianceCard } = require("../../../packages/eve-components/Card/AllianceCard");
+    const {
+      AllianceCard,
+    } = require("../../../packages/eve-components/Card/AllianceCard");
     render(
       <MantineProvider>
         <AllianceCard allianceId={9900} />
@@ -114,7 +126,9 @@ describe("AllianceCard", () => {
       },
     });
 
-    const { AllianceCard } = require("../../../packages/eve-components/Card/AllianceCard");
+    const {
+      AllianceCard,
+    } = require("../../../packages/eve-components/Card/AllianceCard");
     render(
       <MantineProvider>
         <AllianceCard allianceId={9901} />
@@ -141,7 +155,9 @@ describe("AllianceCard", () => {
       },
     });
 
-    const { AllianceCard } = require("../../../packages/eve-components/Card/AllianceCard");
+    const {
+      AllianceCard,
+    } = require("../../../packages/eve-components/Card/AllianceCard");
     render(
       <MantineProvider>
         <AllianceCard

@@ -1,7 +1,7 @@
 "use client";
 
-import { memo, useMemo  } from "react";
-import type {PropsWithChildren} from "react";
+import type { PropsWithChildren } from "react";
+import { memo, useMemo } from "react";
 import {
   Group,
   rem,
@@ -14,10 +14,6 @@ import { useColorScheme } from "@mantine/hooks";
 
 import { InfoIcon } from "@jitaspace/eve-icons";
 import { useSelectedCharacter } from "@jitaspace/hooks";
-
-
-
-
 
 export const JitaSpotlightActionsWrapper = memo(
   ({ children }: PropsWithChildren) => {

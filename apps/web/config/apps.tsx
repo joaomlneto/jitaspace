@@ -181,7 +181,7 @@ export const characterApps: Record<string, JitaApp> = {
   wallet: {
     name: "Wallet",
     description: "View your character's and your corporation's wallet.",
-    url: "/wallet/character",
+    url: "/wallet",
     Icon: (props) => React.createElement(WalletIcon, props),
     scopes: {
       optional: [
@@ -262,24 +262,6 @@ export const corporationApps: Record<string, JitaApp> = {
       ],
     },
   },*/
-  wallet: {
-    name: "Wallet",
-    description: "View your corporation's wallet balance and transactions.",
-    url: "/wallet/corporation",
-    Icon: (props) => React.createElement(WalletIcon, props),
-    scopes: {
-      optional: [
-        {
-          reason: "View your character wallet",
-          scopes: ["esi-wallet.read_character_wallet.v1"],
-        },
-        {
-          reason: "View your corporation wallet",
-          scopes: ["esi-wallet.read_corporation_wallets.v1"],
-        },
-      ],
-    },
-  },
 };
 
 export const allianceApps: Record<string, JitaApp> = {

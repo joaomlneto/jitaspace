@@ -45,15 +45,13 @@ EVE mail bodies need a few transformations before Tiptap can parse them:
 
 ```ts
 import {
-  convertEveMailLineBreaks,
   convertEveColorTags,
+  convertEveMailLineBreaks,
   convertEveUrlTags,
 } from "@jitaspace/tiptap-eve";
 
 const html = convertEveUrlTags(
-  convertEveColorTags(
-    convertEveMailLineBreaks(eveMailBody)
-  )
+  convertEveColorTags(convertEveMailLineBreaks(eveMailBody)),
 );
 
 const editor = useEveEditor({ content: html });
@@ -84,14 +82,14 @@ const appHref = renderEveHref(href);
 
 A thin wrapper around Tiptap's `useEditor` with EVE extensions pre-loaded:
 
-| Extension | Purpose |
-|---|---|
-| `StarterKit` | Core editing (bold, italic, lists, etc.) |
-| `HardBreak` | Maps `Enter` to `<br>` (EVE uses `\r\n`, not `<p>`) |
-| `TextStyle` | Base for font color marks |
-| `Underline` | `<u>` support |
-| `EveLink` | EVE custom link protocols (`showinfo:`, `warReport:`, etc.) |
-| `EveFontColor` | EVE `<font color="0xAARRGGBB">` tags |
+| Extension      | Purpose                                                     |
+| -------------- | ----------------------------------------------------------- |
+| `StarterKit`   | Core editing (bold, italic, lists, etc.)                    |
+| `HardBreak`    | Maps `Enter` to `<br>` (EVE uses `\r\n`, not `<p>`)         |
+| `TextStyle`    | Base for font color marks                                   |
+| `Underline`    | `<u>` support                                               |
+| `EveLink`      | EVE custom link protocols (`showinfo:`, `warReport:`, etc.) |
+| `EveFontColor` | EVE `<font color="0xAARRGGBB">` tags                        |
 
 ### `htmlToEveMail(html)`
 

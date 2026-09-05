@@ -36,7 +36,7 @@ export const SkillBar = memo(
       },
 
       missingStrong: {
-        backGroundColor: "#EC655F",
+        backgroundColor: "#EC655F",
       },
 
       notRequired: {

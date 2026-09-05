@@ -195,7 +195,6 @@ describe("Type page (client)", () => {
 
     // The type image-variations query — no variations (falls back to icon).
     mockUseQuery.mockReturnValue({ data: [] });
-
   });
 
   it("renders the hero and overview tab with full data", () => {

@@ -25,9 +25,8 @@ jest.mock("../db", () => ({ prisma: { agentType } }));
 let scrapeHoboleaksAgentTypes: typeof ScrapeHoboleaksAgentTypes;
 
 beforeAll(async () => {
-  ({ scrapeHoboleaksAgentTypes } = await import(
-    "../jobs/scrape/hoboleaks/scrapeHoboleaksAgentTypes"
-  ));
+  ({ scrapeHoboleaksAgentTypes } =
+    await import("../jobs/scrape/hoboleaks/scrapeHoboleaksAgentTypes"));
 });
 
 /** The upstream Hoboleaks payload: `{ [agentTypeId]: name }`. */

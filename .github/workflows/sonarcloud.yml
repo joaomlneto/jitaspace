@@ -7,9 +7,18 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
+# Checks out the repo, runs tests and uploads coverage. No write access needed.
+permissions:
+  contents: read
+
 jobs:
   sonarqube:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Repository secrets are not exposed to pull_request runs from forks, so the
+    # scan step cannot authenticate there. Skip the job rather than spend several
+    # minutes of runner time on tests and then fail on missing auth.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}

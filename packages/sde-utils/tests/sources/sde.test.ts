@@ -1,17 +1,23 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { afterEach, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 
+import type { SdeSourceFile } from "../../src/sources/sde";
 import {
   addIdToItem,
   fixObjectIndices,
   fromArrayOfObjectsToMap,
   loadFile,
-  sdeInputFiles
-  
+  sdeInputFiles,
 } from "../../src/sources/sde";
-import type {SdeSourceFile} from "../../src/sources/sde";
 
 describe("fromArrayOfObjectsToMap", () => {
   it("indexes an array of objects by the id attribute", () => {
@@ -30,7 +36,9 @@ describe("fromArrayOfObjectsToMap", () => {
 
   it("returns an empty map for an empty array", () => {
     expect(
-      fromArrayOfObjectsToMap([], { idAttributeName: "typeID" } as SdeSourceFile),
+      fromArrayOfObjectsToMap([], {
+        idAttributeName: "typeID",
+      } as SdeSourceFile),
     ).toEqual({});
   });
 
@@ -44,7 +52,9 @@ describe("fromArrayOfObjectsToMap", () => {
   });
 
   it("warns but keeps the last value when duplicate ids are present", () => {
-    const warn = jest.spyOn(console, "warn").mockImplementation(() => undefined);
+    const warn = jest
+      .spyOn(console, "warn")
+      .mockImplementation(() => undefined);
     const data = [
       { typeID: 1, name: "first" },
       { typeID: 1, name: "second" },
@@ -53,7 +63,9 @@ describe("fromArrayOfObjectsToMap", () => {
       idAttributeName: "typeID",
     } as SdeSourceFile);
     expect(result[1]).toEqual({ typeID: 1, name: "second" });
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining("Duplicate ID 1"));
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("Duplicate ID 1"),
+    );
     warn.mockRestore();
   });
 });
@@ -69,7 +81,9 @@ describe("addIdToItem", () => {
       idAttributeType: "number",
     } as SdeSourceFile);
     expect(result[34]).toEqual({ name: "Tritanium", typeID: 34 });
-    expect(typeof (result[34] as Record<string, unknown>).typeID).toBe("number");
+    expect(typeof (result[34] as Record<string, unknown>).typeID).toBe(
+      "number",
+    );
   });
 
   it("injects a string id when idAttributeType is string", () => {
@@ -227,8 +241,8 @@ describe("loadFile", () => {
   });
 
   it("throws for a filename not present in the registry", () => {
-    expect(() =>
-      loadFile("not-a-real-file.yaml", sdeRoot),
-    ).toThrow("not found in sdeInputFiles");
+    expect(() => loadFile("not-a-real-file.yaml", sdeRoot)).toThrow(
+      "not found in sdeInputFiles",
+    );
   });
 });

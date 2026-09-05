@@ -10,6 +10,7 @@ import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
 import {
+  esiTaxRateToFraction,
   SDE_OWNED_CHARACTER_COLUMNS,
   SDE_OWNED_CORPORATION_COLUMNS,
 } from "../../../helpers";
@@ -51,7 +52,10 @@ const processCorporationBatch = async (
 
   const characterIds = thisBatchCorporations
     .flatMap((corporation) => [corporation.ceo_id, corporation.creator_id])
-    .filter((characterId) => characterId !== 1);
+    .filter(
+      (characterId): characterId is number =>
+        characterId != null && characterId !== 1,
+    );
 
   await createCorpAndItsRefRecords({
     missingCharacterIds: new Set(characterIds.filter((id) => id > 1)),
@@ -70,7 +74,7 @@ const processCorporationBatch = async (
       corporationId: corporation.corporationId,
       memberCount: corporation.member_count,
       name: corporation.name,
-      taxRate: corporation.tax_rate,
+      taxRate: esiTaxRateToFraction(corporation.tax_rates.isk),
       ticker: corporation.ticker,
     })),
     skipDuplicates: true,
@@ -167,21 +171,27 @@ const processCorporationBatch = async (
         thisBatchCorporations.map((corporation) => ({
           corporationId: corporation.corporationId,
           allianceId: corporation.alliance_id ?? null,
-          ceoId: corporation.ceo_id > 1 ? corporation.ceo_id : null,
-          creatorId: corporation.creator_id > 1 ? corporation.creator_id : null,
+          ceoId:
+            corporation.ceo_id != null && corporation.ceo_id > 1
+              ? corporation.ceo_id
+              : null,
+          creatorId:
+            corporation.creator_id != null && corporation.creator_id > 1
+              ? corporation.creator_id
+              : null,
           dateFounded: corporation.date_founded
             ? new Date(corporation.date_founded)
             : null,
-          description: corporation.description ?? null,
-          factionId: corporation.faction_id ?? null,
-          homeStationId: corporation.home_station_id ?? null,
+          description: corporation.description,
+          factionId: corporation.enlisted_faction_id ?? null,
+          homeStationId: corporation.home_station_id,
           memberCount: corporation.member_count,
           name: corporation.name,
           shares: corporation.shares ? BigInt(corporation.shares) : null,
-          taxRate: corporation.tax_rate,
+          taxRate: esiTaxRateToFraction(corporation.tax_rates.isk),
           ticker: corporation.ticker,
           url: corporation.url ?? null,
-          warEligible: corporation.war_eligible ?? null,
+          warEligible: corporation.war_eligible,
           isDeleted: false,
         })),
       ),

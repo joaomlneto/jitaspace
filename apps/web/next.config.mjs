@@ -8,7 +8,9 @@ const jiti = createJiti(import.meta.url);
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation.
  * This is especially useful for Docker builds and Linting.
  */
-!process.env.SKIP_ENV_VALIDATION && (await jiti.import("./env"));
+if (!process.env.SKIP_ENV_VALIDATION) {
+  await jiti.import("./env");
+}
 
 /**
  * Content-Security-Policy for the web app.
@@ -194,11 +196,32 @@ const config = {
         source: "/market/:typeId",
         destination: "/market",
       },
+      {
+        // Market groups have no page of their own, but `MarketGroupAnchor`
+        // links to /market-group/<id> — from every type page and from the
+        // market breadcrumbs — so without this every one of those links is a
+        // 404. Serve the market browser instead. Its path parser only matches
+        // /market/<typeId> (page.client.tsx:38), so the id is simply ignored
+        // and the default view renders. Swap this for a real route if market
+        // groups ever get a page of their own.
+        source: "/market-group/:marketGroupId",
+        destination: "/market",
+      },
     ],
   }),
   skipTrailingSlashRedirect: true,
 
   redirects: async () => [
+    {
+      // /wallet/character and /wallet/corporation were separate pages; /wallet
+      // now shows every readable character and corporation wallet in one table.
+      // A redirect rather than a deletion because these are user-visible URLs
+      // that have been in the nav and may be bookmarked. Permanent: the old
+      // pages are gone for good.
+      source: "/wallet/:section(character|corporation)",
+      destination: "/wallet",
+      permanent: true,
+    },
     {
       // Deep-link to a specific tab on a type page: /type/<id>/<tab> sends the
       // browser to the canonical /type/<id>?tab=<tab>, which selects that tab.

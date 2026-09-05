@@ -16,9 +16,51 @@ import {
 } from "@jitaspace/eve-components";
 import { DateHoverCard, FormattedDateText, ISKAmount } from "@jitaspace/ui";
 
-function DateCell({
-  cell,
-}: Readonly<{ cell: MRT_Cell<CharacterWalletJournalEntry> }>) {
+/**
+ * A journal entry plus where it came from.
+ *
+ * Character and corporation journal entries have identical field sets (both are
+ * `…WalletJournalGet`, 13 fields each), so one table renders both; only the
+ * owner has to be carried alongside, because the entry itself never names it —
+ * the owner is the query parameter, not part of the response.
+ */
+export interface WalletJournalRow extends CharacterWalletJournalEntry {
+  /** Character id, or corporation id for a corporation wallet. */
+  subjectId: number;
+  /** Corporation wallet division. Absent for character wallets. */
+  division?: number;
+}
+
+/**
+ * A stable key for a row, unique across wallets.
+ *
+ * An ESI journal `id` is only unique *within* one wallet, so merging several
+ * wallets can collide — hence the owner and division in the key.
+ */
+export const walletRowKey = (row: WalletJournalRow) =>
+  `${row.subjectId}:${row.division ?? "c"}:${row.id}`;
+
+function OwnerCell({ row }: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
+  return (
+    <Group wrap="nowrap" gap="xs">
+      <EveEntityAvatar entityId={row.original.subjectId} size="sm" />
+      <EveEntityAnchor
+        size="sm"
+        entityId={row.original.subjectId}
+        target="_blank"
+      >
+        <EveEntityName entityId={row.original.subjectId} />
+      </EveEntityAnchor>
+      {row.original.division !== undefined && (
+        <Badge size="xs" variant="light">
+          Div {row.original.division}
+        </Badge>
+      )}
+    </Group>
+  );
+}
+
+function DateCell({ cell }: Readonly<{ cell: MRT_Cell<WalletJournalRow> }>) {
   return (
     <DateHoverCard date={cell.getValue<Date>()}>
       <FormattedDateText size="sm" date={cell.getValue<Date>()} />
@@ -28,13 +70,13 @@ function DateCell({
 
 function DateHeader({
   column,
-}: Readonly<{ column: MRT_Column<CharacterWalletJournalEntry> }>) {
+}: Readonly<{ column: MRT_Column<WalletJournalRow> }>) {
   return <em>{column.columnDef.header}</em>;
 }
 
 function ContextTypeCell({
   row,
-}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
+}: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
   return row.original.context_id_type ? (
     <Badge size="sm" variant="light">
       {row.original.context_id_type.replaceAll("_", " ")}
@@ -42,9 +84,7 @@ function ContextTypeCell({
   ) : undefined;
 }
 
-function FirstPartyCell({
-  row,
-}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
+function FirstPartyCell({ row }: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
   return (
     <Group>
       <Group wrap="nowrap">
@@ -63,7 +103,7 @@ function FirstPartyCell({
 
 function SecondPartyCell({
   row,
-}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
+}: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
   return (
     <Group>
       <Group wrap="nowrap">
@@ -82,7 +122,7 @@ function SecondPartyCell({
 
 function OtherPartyCell({
   cell,
-}: Readonly<{ cell: MRT_Cell<CharacterWalletJournalEntry> }>) {
+}: Readonly<{ cell: MRT_Cell<WalletJournalRow> }>) {
   return (
     <Group>
       <Group wrap="nowrap">
@@ -99,9 +139,7 @@ function OtherPartyCell({
   );
 }
 
-function AmountCell({
-  row,
-}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
+function AmountCell({ row }: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
   return row.original.amount === undefined ? undefined : (
     <ISKAmount
       size="sm"
@@ -113,7 +151,7 @@ function AmountCell({
 
 function TaxReceiverCell({
   row,
-}: Readonly<{ row: MRT_Row<CharacterWalletJournalEntry> }>) {
+}: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
   return row.original.tax_receiver_id ? (
     <Group>
       <Group wrap="nowrap">
@@ -130,12 +168,33 @@ function TaxReceiverCell({
 }
 
 interface WalletTableProps {
-  entries: CharacterWalletJournalEntry[];
+  entries: WalletJournalRow[];
 }
 
 export const WalletTable = memo(({ entries }: WalletTableProps) => {
-  const columns = useMemo<MRT_ColumnDef<CharacterWalletJournalEntry>[]>(
+  // One wallet needs no owner column — it would repeat the same name on every
+  // row. It earns its place only once entries come from more than one.
+  const hasMultipleOwners = useMemo(
+    () =>
+      new Set(
+        entries.map((entry) => `${entry.subjectId}:${entry.division ?? ""}`),
+      ).size > 1,
+    [entries],
+  );
+
+  const columns = useMemo<MRT_ColumnDef<WalletJournalRow>[]>(
     () => [
+      ...(hasMultipleOwners
+        ? [
+            {
+              id: "owner",
+              header: "Owner",
+              accessorKey: "subjectId",
+              size: 40,
+              Cell: OwnerCell,
+            } satisfies MRT_ColumnDef<WalletJournalRow>,
+          ]
+        : []),
       {
         id: "id",
         header: "ID",
@@ -235,11 +294,14 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         Cell: TaxReceiverCell,
       },
     ],
-    [],
+    [hasMultipleOwners],
   );
 
   const table = useMantineReactTable({
     columns,
+    // Journal ids repeat across wallets, so the default row id (the index into
+    // `data`) would be reused by React across re-sorts of a merged list.
+    getRowId: walletRowKey,
     positionPagination: "top",
     enableFacetedValues: true,
     // Reserve vertical space so the table doesn't grow (and push the page down)

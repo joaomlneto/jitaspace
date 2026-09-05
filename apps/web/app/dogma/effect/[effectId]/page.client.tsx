@@ -11,14 +11,10 @@ import {
   Title,
 } from "@mantine/core";
 
-import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/eve-components";
 import { useDogmaEffect } from "@jitaspace/hooks";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
-import {
-  DogmaAttributeAnchor,
-  DogmaEffectAnchor,
-  TypeAvatar,
-} from "@jitaspace/ui";
+import { DogmaAttributeAnchor, DogmaEffectAnchor } from "@jitaspace/ui";
 
 import { MailMessageViewer } from "~/components/EveMail";
 import { DogmaAttributeName, DogmaEffectName } from "~/components/Text";

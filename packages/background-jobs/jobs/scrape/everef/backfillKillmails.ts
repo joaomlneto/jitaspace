@@ -92,7 +92,7 @@ export const backfillEveRefKillmails = defineJob<
               remoteEntries
                 .flatMap((killmail) => [
                   ...killmail.attackers.map((a) => a.corporation_id),
-                  killmail.victim.alliance_id,
+                  killmail.victim.corporation_id,
                 ])
                 .filter((id) => id != null),
             ),

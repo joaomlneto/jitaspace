@@ -5,11 +5,13 @@ This tool converts the SDE data from the [EVE Static Data Export](https://develo
 ## Basic Usage
 
 The script can be invoked via `npx`:
+
 ```bash
 $ npx @jitaspace/sde-converter
 ```
 
 Or installed globally:
+
 ```bash
 $ npm install -g @jitaspace/sde-converter
 $ sde-converter

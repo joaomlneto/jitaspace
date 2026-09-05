@@ -20,9 +20,17 @@ export const EsiCurrentShipFittingCard = memo(
     characterId,
     fallback,
     hideFallback = false,
+    hideModules = false,
     ...otherProps
   }: EsiCurrentShipFittingCardProps) => {
-    const { hasToken, ...fit } = useCharacterCurrentFit(characterId);
+    // A card that hides the modules never renders them, so there is no reason
+    // to walk the character's whole asset collection to find them.
+    const { hasToken, isLoading, ...fit } = useCharacterCurrentFit(
+      characterId,
+      {
+        includeModules: !hideModules,
+      },
+    );
 
     if (!hasToken) {
       return hideFallback
@@ -39,6 +47,8 @@ export const EsiCurrentShipFittingCard = memo(
         name={fit.name}
         description="Current Ship"
         shipTypeId={fit.shipTypeId}
+        hideModules={hideModules}
+        isLoading={isLoading}
         items={(fit.items ?? []).map((item) => ({
           typeId: item.type_id,
           flag: item.location_flag,

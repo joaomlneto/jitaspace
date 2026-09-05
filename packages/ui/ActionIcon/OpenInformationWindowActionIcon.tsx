@@ -1,22 +1,31 @@
 "use client";
 
+import type { ActionIconProps } from "@mantine/core";
 import { memo } from "react";
-import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconAppWindowFilled } from "@tabler/icons-react";
 
-export interface OpenInformationWindowActionIconProps {
+import { TooltipActionIcon } from "./TooltipActionIcon";
+
+export type OpenInformationWindowActionIconProps = ActionIconProps & {
   onOpen?: () => void;
   disabled?: boolean;
-}
+};
 
 export const OpenInformationWindowActionIcon = memo(
-  ({ onOpen, disabled }: OpenInformationWindowActionIconProps) => {
+  ({
+    onOpen,
+    disabled,
+    ...actionIconProps
+  }: OpenInformationWindowActionIconProps) => {
     return (
-      <Tooltip color="dark" label="Open information window in the EVE client.">
-        <ActionIcon disabled={!onOpen || disabled} radius="xl" onClick={onOpen}>
-          <IconAppWindowFilled size={20} />
-        </ActionIcon>
-      </Tooltip>
+      <TooltipActionIcon
+        label="Open information window in the EVE client."
+        onActivate={onOpen}
+        disabled={disabled}
+        {...actionIconProps}
+      >
+        <IconAppWindowFilled size={20} />
+      </TooltipActionIcon>
     );
   },
 );

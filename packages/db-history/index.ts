@@ -13,7 +13,9 @@ const globalForHistory = globalThis as { historyDb?: PrismaClient };
 // not) — lets the same client target e.g. a `history` schema in another database.
 const adapter = new PrismaPg(
   { connectionString: env.HISTORY_DATABASE_URL },
-  env.HISTORY_DATABASE_SCHEMA ? { schema: env.HISTORY_DATABASE_SCHEMA } : undefined,
+  env.HISTORY_DATABASE_SCHEMA
+    ? { schema: env.HISTORY_DATABASE_SCHEMA }
+    : undefined,
 );
 
 export const historyDb =

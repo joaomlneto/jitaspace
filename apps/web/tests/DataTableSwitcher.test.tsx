@@ -1,7 +1,14 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import React from "react";
-import { beforeAll, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import {
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -38,7 +45,13 @@ interface Row {
 
 const columns: DataTableColumn<Row>[] = [
   { id: "name", header: "Name", accessor: "name", sortable: true },
-  { id: "score", header: "Score", accessor: "score", sortable: true, align: "right" },
+  {
+    id: "score",
+    header: "Score",
+    accessor: "score",
+    sortable: true,
+    align: "right",
+  },
 ];
 
 const data: Row[] = [

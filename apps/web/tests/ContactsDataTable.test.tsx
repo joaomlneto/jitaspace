@@ -11,10 +11,7 @@ import { render, screen } from "@testing-library/react";
 // EveEntity*/Standing children — stub them to no-ops; the assertable text
 // (the "watched" Badge, the "Unknown" blocked text, and the label Badge) is
 // produced by the cells / Mantine primitives themselves.
-jest.mock(
-  "@jitaspace/ui",
-  () => new Proxy({}, { get: () => () => null }),
-);
+jest.mock("@jitaspace/ui", () => new Proxy({}, { get: () => () => null }));
 jest.mock(
   "@jitaspace/eve-icons",
   () => new Proxy({}, { get: () => () => null }),
@@ -22,7 +19,7 @@ jest.mock(
 
 // Cast through unknown — the table reads a subset of the generated contact type.
 type Contact = Parameters<
-  typeof import("~/components/Contacts/ContactsDataTable/ContactsDataTable")["ContactsDataTable"]
+  (typeof import("~/components/Contacts/ContactsDataTable/ContactsDataTable"))["ContactsDataTable"]
 >[0]["contacts"] extends (infer T)[] | undefined
   ? T
   : never;

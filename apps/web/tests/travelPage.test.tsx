@@ -105,6 +105,35 @@ describe("Travel Page", () => {
     // stale waypoints array and dropped the change, lagging one interaction.
     expect(mockPush).toHaveBeenLastCalledWith("/travel/Delta/Alpha");
   });
+
+  it("does not push a URL while a waypoint slot is still empty", () => {
+    renderPage([]);
+
+    // Fill the SECOND select first, leaving slot 0 empty. Serializing that gap
+    // produced "/travel//Alpha": Next 308-redirects the empty segment away and
+    // parseInitialWaypoints drops it, so Alpha would come back in slot 0 —
+    // silently swapping which end of the route the user picked.
+    fireEvent.click(screen.getAllByText("Alpha")[1]!);
+    expect(mockPush).not.toHaveBeenCalled();
+
+    // The selection is still held in local state, so the form is correct...
+    expect(screen.getAllByRole("combobox")[1]).toHaveValue("Alpha");
+
+    // ...and the URL lands, in the right order, once the pair is complete.
+    fireEvent.click(screen.getAllByText("Delta")[0]!);
+    expect(mockPush).toHaveBeenLastCalledWith("/travel/Delta/Alpha");
+  });
+
+  it("never serializes an empty path segment", () => {
+    renderPage([]);
+    fireEvent.click(screen.getAllByText("Alpha")[1]!);
+    fireEvent.click(screen.getAllByText("Delta")[0]!);
+    fireEvent.click(screen.getAllByText("Beta")[1]!);
+
+    for (const call of mockPush.mock.calls) {
+      expect(call[0] as string).not.toMatch(/\/\//);
+    }
+  });
 });
 
 describe("Travel Page route preference URL sync", () => {

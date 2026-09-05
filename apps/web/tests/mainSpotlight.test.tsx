@@ -1,13 +1,15 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import type { ImgHTMLAttributes, ReactNode } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 const mockRouterPush = jest.fn<(url: string) => Promise<boolean>>();
 const mockUseEsiSearch =
-  jest.fn<(...args: unknown[]) => { data?: { data: Record<string, number[]> } }>();
+  jest.fn<
+    (...args: unknown[]) => { data?: { data: Record<string, number[]> } }
+  >();
 const mockUseEsiNameLookup = jest.fn<
   (...args: unknown[]) => Record<
     string,
@@ -191,7 +193,9 @@ describe("MainSpotlight", () => {
       fireEvent.change(screen.getByTestId("spotlight-search"), {
         target: { value: "mail" },
       });
-      expect(screen.getByTestId("action-app/Character/EveMail")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("action-app/Character/EveMail"),
+      ).toBeInTheDocument();
       expect(
         screen.queryByTestId("action-app/Character/Skills"),
       ).not.toBeInTheDocument();
@@ -203,7 +207,9 @@ describe("MainSpotlight", () => {
       fireEvent.change(screen.getByTestId("spotlight-search"), {
         target: { value: "correspondence" },
       });
-      expect(screen.getByTestId("action-app/Character/EveMail")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("action-app/Character/EveMail"),
+      ).toBeInTheDocument();
       expect(
         screen.queryByTestId("action-app/Character/Skills"),
       ).not.toBeInTheDocument();
@@ -214,8 +220,12 @@ describe("MainSpotlight", () => {
       const input = screen.getByTestId("spotlight-search");
       fireEvent.change(input, { target: { value: "mail" } });
       fireEvent.change(input, { target: { value: "" } });
-      expect(screen.getByTestId("action-app/Character/EveMail")).toBeInTheDocument();
-      expect(screen.getByTestId("action-app/Character/Skills")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("action-app/Character/EveMail"),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId("action-app/Character/Skills"),
+      ).toBeInTheDocument();
     });
 
     it("shows the empty state when no apps or results match", () => {
@@ -351,7 +361,9 @@ describe("MainSpotlight", () => {
       });
       renderSpotlight();
       fireEvent.click(screen.getByTestId("action-entity/30000142"));
-      expect(mockRouterPush).toHaveBeenCalledWith("/solar_system/30000142");
+      // The route is /system/, not /solar_system/ — this assertion used to
+      // pin the ESI category name and so kept a 404 in place.
+      expect(mockRouterPush).toHaveBeenCalledWith("/system/30000142");
     });
 
     it("navigates to the station page when a station result is clicked", () => {
@@ -415,4 +427,3 @@ describe("MainSpotlight", () => {
     });
   });
 });
-

@@ -15,6 +15,7 @@ permissions:
 jobs:
   type-check:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
@@ -34,7 +35,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       # No explicit codegen step: the Prisma client and the Kubb API clients are
-      # generated and gitignored, and the turbo `type-check` task depends on
-      # both, so it produces them itself on a clean checkout.
+      # generated and gitignored, and the turbo `type-check` task declares
+      # db:generate/^db:generate and kubb:generate/^kubb:generate, so it produces
+      # both itself on a clean checkout. (Before `^kubb:generate` was added, only
+      # a package's OWN kubb task was ordered and this held by accident, via the
+      # postinstall hooks in the generated-client packages.)
       - name: Type-check
         run: pnpm type-check

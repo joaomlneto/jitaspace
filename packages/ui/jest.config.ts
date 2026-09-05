@@ -26,9 +26,7 @@ const config: Config = {
     ],
   },
   // Transform ESM packages that need to be compiled
-  transformIgnorePatterns: [
-    "/node_modules/(?!(@mantine|@tabler|@jitaspace|@tiptap))",
-  ],
+  transformIgnorePatterns: ["/node_modules/(?!(@mantine|@tabler|@jitaspace))"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   collectCoverage: true,
   coverageDirectory: "coverage",

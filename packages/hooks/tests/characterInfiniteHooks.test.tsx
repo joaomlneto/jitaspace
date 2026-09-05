@@ -130,9 +130,17 @@ const page = (data: unknown[], xPages?: string): Page => ({
   headers: xPages == undefined ? {} : { "x-pages": xPages },
 });
 const fiftyMails = Array.from({ length: 50 }, (_, i) => ({ mail_id: 500 - i }));
-const fiftyEvents = Array.from({ length: 50 }, (_, i) => ({
-  event_id: 900 - i,
-}));
+// A full calendar page, in the chronological order ESI returns it. The ids are
+// deliberately neither ascending nor descending: they are assigned when an
+// event is created, so the chronologically-last event need not hold the highest
+// (or the lowest) id. The last entry is 925, the lowest is 900 and the highest
+// is 948, so a cursor taken by position is distinguishable from one taken by
+// Math.min (the mail rule) or Math.max.
+const fiftyEvents = [
+  ...Array.from({ length: 48 }, (_, i) => ({ event_id: 901 + i })),
+  { event_id: 900 },
+  { event_id: 925 },
+];
 
 beforeEach(() => {
   // clearMocks clears calls but not implementations, so reset every mock here
@@ -365,7 +373,7 @@ describe("useCharacterContacts", () => {
 });
 
 describe("useCharacterCalendar", () => {
-  it("flattens events and pages backwards from the oldest event id", () => {
+  it("flattens events and pages forward from the last event on the page", () => {
     const { result: query, nextPageParam } = driveInfinite(
       mockCalendarInfinite,
       infiniteResult([page([{ event_id: 900 }, { event_id: 901 }])], true),
@@ -380,13 +388,59 @@ describe("useCharacterCalendar", () => {
     expect(result.current.hasMoreEvents).toBe(true);
     expect(result.current.loadMoreEvents).toBe(query.fetchNextPage);
 
-    // A full page of 50 means there may be more, and the cursor is the oldest
-    // event id on it. Anything short of 50 is the last page.
-    expect(nextPageParam(page(fiftyEvents), [])).toBe(851);
+    // `from_event` pages FORWARD — ESI answers with "the next 50 chronological
+    // event summaries from after that event" — so a full page's cursor is its
+    // LAST entry. Taking the lowest id instead (the rule `last_mail_id`
+    // follows, where the cursor means "older than") advanced the window by a
+    // single event per request, so each page repeated 49 of the 50 before it.
+    expect(nextPageParam(page(fiftyEvents), [])).toBe(925);
+    // Not the lowest id on the page (the old, backwards cursor)...
+    expect(nextPageParam(page(fiftyEvents), [])).not.toBe(900);
+    // ...and not the highest either: only the array order is chronological.
+    expect(nextPageParam(page(fiftyEvents), [])).not.toBe(948);
+  });
+
+  it("stops paging on a short page", () => {
+    const { nextPageParam } = driveInfinite(
+      mockCalendarInfinite,
+      infiniteResult([page([{ event_id: 900 }])], false),
+    );
+    renderHook(() => useCharacterCalendar(CHARACTER_ID));
+
+    // Fewer than 50 summaries means ESI had nothing more to give.
     expect(nextPageParam(page([{ event_id: 900 }]), [])).toBeUndefined();
-    // A row without an id is skipped rather than poisoning the cursor with
-    // NaN: the oldest id still present wins.
-    expect(nextPageParam(page([{}, ...fiftyEvents.slice(1)]), [])).toBe(851);
+    expect(nextPageParam(page(fiftyEvents.slice(1)), [])).toBeUndefined();
+  });
+
+  it("stops paging when the last event on a full page carries no id", () => {
+    const { nextPageParam } = driveInfinite(
+      mockCalendarInfinite,
+      infiniteResult([page(fiftyEvents)], true),
+    );
+    renderHook(() => useCharacterCalendar(CHARACTER_ID));
+
+    // There is no cursor to continue from, and guessing one from an earlier row
+    // would re-read a window we have already seen.
+    expect(
+      nextPageParam(page([...fiftyEvents.slice(0, 49), {}]), []),
+    ).toBeUndefined();
+  });
+
+  it("omits from_event on the first request", () => {
+    driveInfinite(
+      mockCalendarInfinite,
+      infiniteResult([page([{ event_id: 900 }])], false),
+    );
+    renderHook(() => useCharacterCalendar(CHARACTER_ID));
+
+    // The generated default is 0, which esi-client's own kubb.config.ts flags
+    // as invalid: `from_event` is an event id and there is no event 0. Omitting
+    // it is what asks ESI for the first page.
+    const options = mockCalendarInfinite.mock.calls.at(-1)?.at(-1) as
+      | InfiniteOptions
+      | undefined;
+    expect(options?.query).toHaveProperty("initialPageParam");
+    expect(options?.query?.initialPageParam).toBeUndefined();
   });
 });
 

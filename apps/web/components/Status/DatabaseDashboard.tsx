@@ -14,8 +14,8 @@ import {
 import { IconAlertCircle, IconDatabase } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 
-import { DATABASE_STATUS_STALE_MINUTES } from "~/lib/databaseStatus";
 import { getDatabaseStatus } from "~/app/status/actions";
+import { DATABASE_STATUS_STALE_MINUTES } from "~/lib/databaseStatus";
 
 const REFETCH_INTERVAL_MS = DATABASE_STATUS_STALE_MINUTES * 60 * 1000;
 
@@ -129,8 +129,8 @@ export function DatabaseDashboard() {
           )}
 
           <Text size="xs" c="dimmed">
-            Updated {new Date(data.fetchedAt).toLocaleTimeString()} · approximate
-            counts from table statistics · refreshes every{" "}
+            Updated {new Date(data.fetchedAt).toLocaleTimeString()} ·
+            approximate counts from table statistics · refreshes every{" "}
             {DATABASE_STATUS_STALE_MINUTES} minutes
           </Text>
         </>

@@ -21,7 +21,7 @@ import { MobileNavDrawer } from "./MobileNavDrawer";
 
 /**
  * The nav group that owns the current route, chosen by the longest matching app
- * URL (so /wallet/corporation lights up Corporation, not Character). Falls back
+ * URL (so /contacts/corporation lights up Corporation, not Character). Falls back
  * to the first path segment for apps whose configured URL is a deeper default,
  * so e.g. Travel's "/travel/jita/amarr" still matches any /travel/* page.
  * Returns null on routes no group owns (e.g. the home page).

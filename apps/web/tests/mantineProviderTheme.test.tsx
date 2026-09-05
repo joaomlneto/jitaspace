@@ -29,7 +29,10 @@ describe("AppMantineProvider", () => {
   it("applies stored theme from localStorage", async () => {
     window.localStorage.setItem(
       PREFERENCES_STORAGE_KEY,
-      JSON.stringify({ state: { appTheme: "eve", esiAcceptLanguage: "en" }, version: 0 }),
+      JSON.stringify({
+        state: { appTheme: "eve", esiAcceptLanguage: "en" },
+        version: 0,
+      }),
     );
 
     render(

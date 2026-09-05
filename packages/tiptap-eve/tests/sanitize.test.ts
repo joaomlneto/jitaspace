@@ -16,8 +16,7 @@ describe("sanitizeFormattedEveString", () => {
     });
 
     it("returns an HTML string unchanged", () => {
-      const html =
-        '<font color="0x0ff0000"><b>Bold red text</b></font>';
+      const html = '<font color="0x0ff0000"><b>Bold red text</b></font>';
       expect(sanitizeFormattedEveString(html)).toBe(html);
     });
 
@@ -44,7 +43,9 @@ describe("sanitizeFormattedEveString", () => {
     });
 
     it("converts multiple unicode escapes in a row", () => {
-      expect(sanitizeFormattedEveString("\\u0048\\u0065\\u006c\\u006c\\u006f")).toBe("Hello");
+      expect(
+        sanitizeFormattedEveString("\\u0048\\u0065\\u006c\\u006c\\u006f"),
+      ).toBe("Hello");
     });
 
     it("converts unicode escapes mixed with plain text", () => {
@@ -137,9 +138,7 @@ describe("sanitizeFormattedEveString", () => {
 describe("convertEveMailLineBreaks", () => {
   describe("basic conversion", () => {
     it("converts a single \\r\\n to <br>", () => {
-      expect(convertEveMailLineBreaks("line1\r\nline2")).toBe(
-        "line1<br>line2",
-      );
+      expect(convertEveMailLineBreaks("line1\r\nline2")).toBe("line1<br>line2");
     });
 
     it("converts \\r\\n\\r\\n (blank line between paragraphs) to <br><br>", () => {
@@ -149,9 +148,7 @@ describe("convertEveMailLineBreaks", () => {
     });
 
     it("converts three consecutive \\r\\n to <br><br><br>", () => {
-      expect(convertEveMailLineBreaks("a\r\n\r\n\r\nb")).toBe(
-        "a<br><br><br>b",
-      );
+      expect(convertEveMailLineBreaks("a\r\n\r\n\r\nb")).toBe("a<br><br><br>b");
     });
 
     it("converts multiple single-line breaks throughout the body", () => {
@@ -223,9 +220,9 @@ describe("convertEveUrlTags", () => {
     });
 
     it("converts a url tag with an https href", () => {
-      expect(
-        convertEveUrlTags("<url=https://example.com>Example</url>"),
-      ).toBe('<a href="https://example.com">Example</a>');
+      expect(convertEveUrlTags("<url=https://example.com>Example</url>")).toBe(
+        '<a href="https://example.com">Example</a>',
+      );
     });
 
     it("converts a warReport url tag", () => {
@@ -257,15 +254,13 @@ describe("convertEveUrlTags", () => {
     });
 
     it("returns plain text unchanged", () => {
-      expect(convertEveUrlTags("Hello, capsuleer!")).toBe(
-        "Hello, capsuleer!",
-      );
+      expect(convertEveUrlTags("Hello, capsuleer!")).toBe("Hello, capsuleer!");
     });
 
     it("leaves existing <a> tags untouched", () => {
-      expect(
-        convertEveUrlTags('<a href="https://example.com">link</a>'),
-      ).toBe('<a href="https://example.com">link</a>');
+      expect(convertEveUrlTags('<a href="https://example.com">link</a>')).toBe(
+        '<a href="https://example.com">link</a>',
+      );
     });
 
     it("does not match unclosed url tags", () => {
@@ -277,17 +272,15 @@ describe("convertEveUrlTags", () => {
 
   describe("nested and multiline content", () => {
     it("converts a url tag whose body contains HTML formatting", () => {
-      expect(
-        convertEveUrlTags(
-          "<url=showinfo:34><b>Tritanium</b></url>",
-        ),
-      ).toBe('<a href="showinfo:34"><b>Tritanium</b></a>');
+      expect(convertEveUrlTags("<url=showinfo:34><b>Tritanium</b></url>")).toBe(
+        '<a href="showinfo:34"><b>Tritanium</b></a>',
+      );
     });
 
     it("converts url tags that span multiple lines", () => {
-      expect(
-        convertEveUrlTags("<url=showinfo:34>Tri\r\ntanium</url>"),
-      ).toBe('<a href="showinfo:34">Tri\r\ntanium</a>');
+      expect(convertEveUrlTags("<url=showinfo:34>Tri\r\ntanium</url>")).toBe(
+        '<a href="showinfo:34">Tri\r\ntanium</a>',
+      );
     });
   });
 
@@ -314,7 +307,9 @@ describe("convertEveColorTags", () => {
   describe("basic conversion", () => {
     it("converts a simple color tag to a font tag", () => {
       expect(
-        convertEveColorTags("<color=0xffFF0000>New JF Service Pricing Model</color>"),
+        convertEveColorTags(
+          "<color=0xffFF0000>New JF Service Pricing Model</color>",
+        ),
       ).toBe('<font color="0xffFF0000">New JF Service Pricing Model</font>');
     });
 
@@ -359,9 +354,9 @@ describe("convertEveColorTags", () => {
     });
 
     it("leaves existing <font> tags untouched", () => {
-      expect(
-        convertEveColorTags('<font color="#ff0000">red</font>'),
-      ).toBe('<font color="#ff0000">red</font>');
+      expect(convertEveColorTags('<font color="#ff0000">red</font>')).toBe(
+        '<font color="#ff0000">red</font>',
+      );
     });
 
     it("does not match unclosed color tags", () => {
@@ -391,9 +386,7 @@ describe("convertEveColorTags", () => {
         convertEveColorTags(
           "<color=0xffFF0000>New JF Service Pricing Model</color>",
         ),
-      ).toBe(
-        '<font color="0xffFF0000">New JF Service Pricing Model</font>',
-      );
+      ).toBe('<font color="0xffFF0000">New JF Service Pricing Model</font>');
     });
 
     it("handles a body with color tags alongside line breaks (after convertEveMailLineBreaks)", () => {

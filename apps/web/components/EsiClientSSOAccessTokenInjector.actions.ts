@@ -59,7 +59,8 @@ export async function refreshCharacterToken(
   } catch (error) {
     return {
       status: "error",
-      message: error instanceof Error ? error.message : "Unable to refresh token.",
+      message:
+        error instanceof Error ? error.message : "Unable to refresh token.",
     };
   }
 

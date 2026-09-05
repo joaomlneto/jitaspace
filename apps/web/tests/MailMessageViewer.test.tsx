@@ -194,7 +194,9 @@ describe("MailMessageViewer", () => {
         .spyOn(window, "alert")
         .mockImplementation(() => undefined);
       render(<MailMessageViewer content="" />);
-      await user.click(screen.getByRole("link", { name: "MC Deputy Training" }));
+      await user.click(
+        screen.getByRole("link", { name: "MC Deputy Training" }),
+      );
       expect(alertSpy).toHaveBeenCalledWith(
         expect.stringContaining("EVE Online client"),
       );

@@ -157,6 +157,7 @@ interface SitemapModule {
   default: (props: { id: Promise<string> }) => Promise<MetadataRoute.Sitemap>;
   generateSitemaps: () => Promise<{ id: number }[]>;
   getSitemapUrls: () => Promise<string[]>;
+  getSitemapPages: () => Promise<{ url: string; lastModified: Date }[]>;
 }
 
 function load(): SitemapModule {
@@ -183,6 +184,16 @@ function loadSitemapIndex(): SitemapIndexModule {
 }
 
 /** Every `<loc>` the sitemap would emit, across all of its pages. */
+/** Every emitted entry, across all sitemap pages. */
+async function allEntries(mod: SitemapModule): Promise<MetadataRoute.Sitemap> {
+  const pages = await mod.generateSitemaps();
+  const entries: MetadataRoute.Sitemap = [];
+  for (const { id } of pages) {
+    entries.push(...(await mod.default({ id: Promise.resolve(String(id)) })));
+  }
+  return entries;
+}
+
 async function allLocs(mod: SitemapModule): Promise<string[]> {
   const pages = await mod.generateSitemaps();
   const locs: string[] = [];
@@ -193,11 +204,19 @@ async function allLocs(mod: SitemapModule): Promise<string[]> {
   return locs;
 }
 
+/**
+ * Deliberately later than NEXT_PUBLIC_MODIFIED_DATE below, so the two sources of
+ * `lastmod` are distinguishable: rows carry their own date, source-tree routes
+ * carry the commit date.
+ */
+const ENTITY_UPDATED_AT = new Date("2026-06-15T12:00:00.000Z");
+const BUILD_DATE = "2026-01-01T00:00:00.000Z";
+
 describe("sitemap", () => {
   beforeEach(() => {
     jest.resetModules();
     mockEnv.NEXT_PUBLIC_SITE_URL = "https://www.jita.space";
-    mockEnv.NEXT_PUBLIC_MODIFIED_DATE = "2026-01-01T00:00:00.000Z";
+    mockEnv.NEXT_PUBLIC_MODIFIED_DATE = BUILD_DATE;
     // Reset rather than clear: a test that makes readdir reject would otherwise
     // leave that rejection in place for every test after it.
     mockReaddir.mockReset();
@@ -205,12 +224,93 @@ describe("sitemap", () => {
     for (const model of Object.keys(rows) as (keyof typeof rows)[]) {
       findManyMocks[model].mockReset();
       findManyMocks[model].mockResolvedValue(
-        rows[model].map((id) => ({ [idField[model]]: id })),
+        rows[model].map((id) => ({
+          [idField[model]]: id,
+          updatedAt: ENTITY_UPDATED_AT,
+        })),
       );
     }
     mockGroupBy.mockReset();
-    mockGroupBy.mockResolvedValue([{ corporationId: 1000035 }]);
+    // `_max` because the source aggregates: an LP store page is as fresh as its
+    // most recently changed offer.
+    mockGroupBy.mockResolvedValue([
+      { corporationId: 1000035, _max: { updatedAt: ENTITY_UPDATED_AT } },
+    ]);
     mockCaptureException.mockReset();
+  });
+
+  describe("lastmod", () => {
+    const iso = (value: MetadataRoute.Sitemap[number]["lastModified"]) =>
+      new Date(value as Date).toISOString();
+
+    it("dates a database-backed URL from its own row, not the deploy", async () => {
+      const entries = await allEntries(load());
+      const typeEntry = entries.find(
+        (entry) => entry.url === "https://www.jita.space/type/603",
+      );
+
+      expect(typeEntry).toBeDefined();
+      // The whole point of the change: reporting the build date here told
+      // crawlers all ~50k item pages changed on every deploy.
+      expect(iso(typeEntry!.lastModified)).toBe(
+        ENTITY_UPDATED_AT.toISOString(),
+      );
+      expect(iso(typeEntry!.lastModified)).not.toBe(BUILD_DATE);
+    });
+
+    it("dates a source-tree route from the commit", async () => {
+      const entries = await allEntries(load());
+      const home = entries.find(
+        (entry) => entry.url === "https://www.jita.space/",
+      );
+
+      expect(home).toBeDefined();
+      expect(iso(home!.lastModified)).toBe(BUILD_DATE);
+    });
+
+    it("aggregates the LP store page from its newest offer", async () => {
+      const entries = await allEntries(load());
+      const store = entries.find(
+        (entry) => entry.url === "https://www.jita.space/lp-store/1000035",
+      );
+
+      expect(store).toBeDefined();
+      expect(iso(store!.lastModified)).toBe(ENTITY_UPDATED_AT.toISOString());
+    });
+
+    it("falls back to the commit date when a row has no updatedAt", async () => {
+      findManyMocks.type.mockResolvedValue([{ typeId: 603, updatedAt: null }]);
+
+      const entries = await allEntries(load());
+      const typeEntry = entries.find(
+        (entry) => entry.url === "https://www.jita.space/type/603",
+      );
+
+      expect(iso(typeEntry!.lastModified)).toBe(BUILD_DATE);
+    });
+
+    it("never emits an invalid date", async () => {
+      findManyMocks.type.mockResolvedValue([
+        { typeId: 603, updatedAt: new Date("nonsense") },
+      ]);
+
+      const entries = await allEntries(load());
+      for (const entry of entries) {
+        expect(
+          Number.isNaN(new Date(entry.lastModified as Date).getTime()),
+        ).toBe(false);
+      }
+    });
+
+    it("dates each index page from the newest URL it contains", async () => {
+      const { getSitemapPages } = load();
+      const pages = await getSitemapPages();
+
+      expect(pages.length).toBeGreaterThan(0);
+      // Entity rows are newer than the commit, so the page they share must
+      // report the entity date rather than the deploy date.
+      expect(iso(pages[0]!.lastModified)).toBe(ENTITY_UPDATED_AT.toISOString());
+    });
   });
 
   it("emits only absolute URLs", async () => {

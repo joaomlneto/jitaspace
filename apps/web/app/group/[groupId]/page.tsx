@@ -11,8 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 
-import { TypeAnchor } from "@jitaspace/eve-components";
-import { TypeAvatar } from "@jitaspace/ui";
+import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
 
 import { GroupBreadcrumbs } from "~/components/Breadcrumbs";
 import { PageSkeleton } from "~/components/PageSkeleton";

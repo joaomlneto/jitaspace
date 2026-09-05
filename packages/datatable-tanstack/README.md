@@ -5,8 +5,8 @@
 (`Table`, `Popover`, `Pagination`, …).
 
 ```tsx
-import { DataTable } from "@jitaspace/datatable-tanstack";
 import type { DataTableColumn } from "@jitaspace/datatable";
+import { DataTable } from "@jitaspace/datatable-tanstack";
 ```
 
 See [`@jitaspace/datatable`](../datatable) for the full API and column descriptor

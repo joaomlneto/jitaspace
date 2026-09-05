@@ -11,25 +11,29 @@ export type StandingsBadgeProps = BadgeProps & {
 export const StandingsBadge = memo(
   ({ standing, ...otherProps }: StandingsBadgeProps) => {
     const theme = useMantineTheme();
-    const classes = {
-      darkblue: {
-        backgroundColor: "#051468",
-      },
-      lightblue: {
-        backgroundColor: "#224fb7",
-      },
-      gray: {
-        color: theme.black,
-        backgroundColor: "#808080",
-      },
-      orange: {
-        color: theme.black,
-        backgroundColor: "#b53209",
-      },
-      red: {
-        color: theme.black,
-        backgroundColor: "#800007",
-      },
+
+    /**
+     * Every tier pins BOTH its background and its text colour, and the badge
+     * forces `variant="filled"`.
+     *
+     * Relying on the variant's own text colour is not safe here: the app themes
+     * set `Badge.extend({ defaultProps: { variant: "outline" } })`, under which
+     * the text becomes the theme accent while these backgrounds stay forced —
+     * amber on dark red, well below WCAG AA. Pinning both makes a standings
+     * badge read the same under every theme, the way
+     * SolarSystemSecurityStatusBadge already does.
+     *
+     * Ratios against WCAG AA's 4.5:1 for normal text, asserted in the tests:
+     *   #051468 / white 16.1:1   #224fb7 / white 7.3:1
+     *   #808080 / black  5.3:1   (white would be 3.9:1 — black is the better pick)
+     *   #b53209 / white  6.1:1   #800007 / white 10.9:1
+     */
+    const tiers = {
+      darkblue: { color: theme.white, backgroundColor: "#051468" },
+      lightblue: { color: theme.white, backgroundColor: "#224fb7" },
+      gray: { color: theme.black, backgroundColor: "#808080" },
+      orange: { color: theme.white, backgroundColor: "#b53209" },
+      red: { color: theme.white, backgroundColor: "#800007" },
     };
 
     if (standing === undefined) {
@@ -40,24 +44,24 @@ export const StandingsBadge = memo(
       );
     }
 
-    const roundedSecStatus = (Math.round(standing * 10) / 10).toFixed(1);
+    const roundedStanding = (Math.round(standing * 10) / 10).toFixed(1);
 
-    let className: (typeof classes)[keyof typeof classes];
+    let tier: (typeof tiers)[keyof typeof tiers];
     if (standing > 5) {
-      className = classes.darkblue;
+      tier = tiers.darkblue;
     } else if (standing > 0) {
-      className = classes.lightblue;
+      tier = tiers.lightblue;
     } else if (standing == 0) {
-      className = classes.gray;
+      tier = tiers.gray;
     } else if (standing >= -5) {
-      className = classes.orange;
+      tier = tiers.orange;
     } else {
-      className = classes.red;
+      tier = tiers.red;
     }
 
     return (
-      <Badge style={className} {...otherProps}>
-        {roundedSecStatus}
+      <Badge variant="filled" style={tier} {...otherProps}>
+        {roundedStanding}
       </Badge>
     );
   },

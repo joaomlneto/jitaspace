@@ -1,6 +1,6 @@
 import { connection } from "next/server";
 
-import { getSitemapUrls, LAST_MODIFIED } from "../sitemap";
+import { getSitemapPages } from "../sitemap";
 
 /**
  * The sitemap index, served at `/sitemap.xml` via a `beforeFiles` rewrite in
@@ -16,8 +16,10 @@ import { getSitemapUrls, LAST_MODIFIED } from "../sitemap";
  * Why bother: `/sitemap.xml` is the path crawlers probe unprompted, and until
  * now it 404'd, so the numbered pages were reachable only via robots.txt.
  *
- * Built from the same `getSitemapUrls()` that robots.txt advertises, so index,
- * robots.txt and the servable pages cannot disagree about how many exist.
+ * Built from the same assembled list that robots.txt advertises, so index,
+ * robots.txt and the servable pages cannot disagree about how many exist — and
+ * each entry carries the newest `<lastmod>` on that page rather than the deploy
+ * date, so a crawler can skip pages that have not changed.
  */
 
 const XML_ESCAPES: Record<string, string> = {
@@ -39,11 +41,10 @@ export async function GET(): Promise<Response> {
   // `cacheComponents`-blessed opt-out — `export const dynamic` is disallowed.
   await connection();
 
-  const lastmod = LAST_MODIFIED.toISOString();
-  const entries = (await getSitemapUrls())
+  const entries = (await getSitemapPages())
     .map(
-      (url) =>
-        `  <sitemap>\n    <loc>${escapeXml(url)}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </sitemap>`,
+      ({ url, lastModified }) =>
+        `  <sitemap>\n    <loc>${escapeXml(url)}</loc>\n    <lastmod>${lastModified.toISOString()}</lastmod>\n  </sitemap>`,
     )
     .join("\n");
 

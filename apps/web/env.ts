@@ -39,7 +39,10 @@ const server = z.object({
   TRIGGER_API_URL: z.string().url().optional(),
   CRON_SECRET: z.string().min(16),
 
-  SKIP_BUILD_STATIC_GENERATION: z.string(),
+  // Optional: a diagnostic toggle surfaced on /debug that nothing branches
+  // on. Requiring it broke the README's one-click Vercel deploy, which
+  // does not prompt for it, with an opaque "Invalid environment variables".
+  SKIP_BUILD_STATIC_GENERATION: z.string().optional(),
 });
 
 /**

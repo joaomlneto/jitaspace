@@ -24,8 +24,7 @@ const config: Config = {
   // ERR_PACKAGE_PATH_NOT_EXPORTED for them. We bypass the exports map by
   // pointing directly at the dist entry point.
   moduleNameMapper: {
-    "^chat$":
-      "<rootDir>/../../node_modules/chat/dist/index.js",
+    "^chat$": "<rootDir>/../../node_modules/chat/dist/index.js",
     "^@chat-adapter/discord$":
       "<rootDir>/../../node_modules/@chat-adapter/discord/dist/index.js",
     "^@chat-adapter/state-redis$":

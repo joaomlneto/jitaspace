@@ -45,7 +45,9 @@ describe("keyLabel", () => {
 
 describe("restSummary", () => {
   it("returns the lone value when one field remains", () => {
-    expect(restSummary({ attributeID: 1, value: 42 }, "attributeID")).toBe("42");
+    expect(restSummary({ attributeID: 1, value: 42 }, "attributeID")).toBe(
+      "42",
+    );
   });
   it("joins remaining fields as key: value", () => {
     expect(restSummary({ id: 1, a: 2, b: 3 }, "id")).toBe("a: 2, b: 3");
@@ -59,7 +61,6 @@ describe("summarize", () => {
     expect(summarize(7)).toBe("7");
   });
 });
-
 
 describe("deepEqual", () => {
   it("compares by JSON value", () => {
@@ -140,7 +141,11 @@ describe("diffLeaves", () => {
       from: 10,
       to: 11,
     });
-    expect(leaves).toContainEqual({ path: ["3", "value"], kind: "added", to: 30 });
+    expect(leaves).toContainEqual({
+      path: ["3", "value"],
+      kind: "added",
+      to: 30,
+    });
     // attributeID 2 unchanged → no leaf
     expect(leaves.some((l) => l.path[0] === "2")).toBe(false);
   });

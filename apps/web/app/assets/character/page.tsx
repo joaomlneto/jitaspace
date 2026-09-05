@@ -46,11 +46,7 @@ function Stat({ label, value }: Readonly<{ label: string; value: ReactNode }>) {
 export default function Page() {
   // Every logged-in character that granted the assets scope, not just the
   // selected one. Each asset carries its owner as `subjectId`.
-  const {
-    data: allAssets,
-    isPending,
-    errors,
-  } = useMultipleCharacterAssets();
+  const { data: allAssets, isPending, errors } = useMultipleCharacterAssets();
   const { data: marketPrices } = useMarketPrices();
 
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
@@ -141,7 +137,9 @@ export default function Page() {
             <SimpleGrid cols={3} spacing="md">
               <Stat
                 label="Value"
-                value={<ISKAmount amount={tree.totalValue} fw={700} size="lg" />}
+                value={
+                  <ISKAmount amount={tree.totalValue} fw={700} size="lg" />
+                }
               />
               <Stat
                 label="Items"

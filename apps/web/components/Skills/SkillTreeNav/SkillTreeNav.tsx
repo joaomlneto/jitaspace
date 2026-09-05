@@ -3,7 +3,6 @@ import { Box, Container } from "@mantine/core";
 
 import { SkillTreeNavLink } from "./SkillTreeNavLink";
 
-
 interface SkillTreeNavProps {
   characterId: number;
   groups: {

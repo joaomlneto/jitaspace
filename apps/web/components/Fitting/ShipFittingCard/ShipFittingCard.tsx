@@ -1,6 +1,6 @@
 import type { CardProps } from "@mantine/core";
 import { memo, useMemo } from "react";
-import { Card } from "@mantine/core";
+import { Card, Skeleton, Stack } from "@mantine/core";
 
 import type { FittingItemFlag } from "@jitaspace/hooks";
 
@@ -22,6 +22,12 @@ export type ShipFittingCardProps = Omit<CardProps, "children"> & {
 
   hideHeader?: boolean;
   hideModules?: boolean;
+  /**
+   * Render placeholder rows in place of the module sections. Without it an
+   * empty `items` reads as "this ship has no modules" while they are still
+   * being fetched.
+   */
+  isLoading?: boolean;
 };
 
 export const ShipFittingCard = memo(
@@ -34,6 +40,7 @@ export const ShipFittingCard = memo(
     shipTypeId,
     hideHeader = false,
     hideModules = false,
+    isLoading = false,
     ...otherProps
   }: ShipFittingCardProps) => {
     const highSlotModules = useMemo(
@@ -124,15 +131,31 @@ export const ShipFittingCard = memo(
           />
         )}
         {!hideModules &&
-          moduleSections
-            .filter((section) => section.items.length > 0)
-            .map((section) => (
-              <ShipFittingCardModulesSection
-                key={section.name}
-                header={section.name}
-                items={section.items}
-              />
-            ))}
+          (isLoading ? (
+            <Card.Section
+              m={0}
+              p="xs"
+              className={classes.modulesSection}
+              data-testid="fitting-modules-skeleton"
+            >
+              <Stack gap={6}>
+                <Skeleton height={10} width="35%" radius="sm" />
+                <Skeleton height={16} radius="sm" />
+                <Skeleton height={16} radius="sm" />
+                <Skeleton height={16} width="70%" radius="sm" />
+              </Stack>
+            </Card.Section>
+          ) : (
+            moduleSections
+              .filter((section) => section.items.length > 0)
+              .map((section) => (
+                <ShipFittingCardModulesSection
+                  key={section.name}
+                  header={section.name}
+                  items={section.items}
+                />
+              ))
+          ))}
       </Card>
     );
   },

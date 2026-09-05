@@ -15,7 +15,6 @@ jest.mock("@jitaspace/hooks", () => ({
 // executes without the heavy rendering. TimeAgoText is replaced with a marker.
 jest.mock("@jitaspace/ui", () => ({
   TimeAgoText: () => <span>time-ago</span>,
-  TypeAvatar: () => null,
   TypeName: () => null,
 }));
 

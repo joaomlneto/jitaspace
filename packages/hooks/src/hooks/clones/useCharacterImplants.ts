@@ -1,8 +1,6 @@
 "use client";
 
-import {
-  useGetCharactersCharacterIdImplants,
-} from "@jitaspace/esi-client";
+import { useGetCharactersCharacterIdImplants } from "@jitaspace/esi-client";
 
 import { useAccessToken } from "../auth";
 

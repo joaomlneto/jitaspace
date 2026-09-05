@@ -54,6 +54,40 @@ export const HistoryIndex = z.object({
 });
 export type HistoryIndex = z.infer<typeof HistoryIndex>;
 
+/**
+ * The most recent build that recorded changes — i.e. the latest set of "patch
+ * notes" the change-history viewer can show, at `/history/build/{build}`.
+ */
+export interface LatestChangedBuild {
+  build: number;
+  date: string | null;
+  changeCount: number;
+}
+
+/**
+ * Picks the newest build in a {@link HistoryIndex} that actually recorded
+ * changes.
+ *
+ * Builds with a zero `changeCount` are skipped: the index lists every in-scope
+ * build, including ones a sweep touched without finding anything, and linking a
+ * banner at one of those would land the reader on an empty diff. `null` means
+ * there is nothing to link to (no index, or no build has changes yet).
+ *
+ * The index's `builds` are written oldest-first, but this scans for the maximum
+ * rather than reading the last entry, so it does not depend on that ordering.
+ */
+export function latestChangedBuild(
+  index: HistoryIndex | null | undefined,
+): LatestChangedBuild | null {
+  let latest: LatestChangedBuild | null = null;
+  for (const b of index?.builds ?? []) {
+    if (b.changeCount <= 0) continue;
+    if (!latest || b.build > latest.build)
+      latest = { build: b.build, date: b.date, changeCount: b.changeCount };
+  }
+  return latest;
+}
+
 export const BuildChanges = z.object({
   build: z.number(),
   date: z.string().nullable(),

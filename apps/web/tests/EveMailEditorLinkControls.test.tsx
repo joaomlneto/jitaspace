@@ -31,6 +31,7 @@ jest.mock("@mantine/tiptap", () => ({
 }));
 
 jest.mock("@jitaspace/eve-components", () => ({
+  TypeAvatar: () => <span>avatar</span>,
   EsiSearchSelect: (props: {
     placeholder?: string;
     value?: string;
@@ -62,7 +63,6 @@ jest.mock("@jitaspace/ui", () => ({
   CharacterAvatar: avatar,
   AllianceAvatar: avatar,
   CorporationAvatar: avatar,
-  TypeAvatar: avatar,
 }));
 
 const withProvider = (node: React.ReactNode) =>
@@ -138,11 +138,14 @@ describe("EveMail editor LinkControls", () => {
     mockEditor.getAttributes.mockReturnValue({ href: "" });
   });
 
-  it.each(CONTROLS)("$name renders its labelled control button", ({ name, label }) => {
-    const Control = load(name);
-    withProvider(<Control />);
-    expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
-  });
+  it.each(CONTROLS)(
+    "$name renders its labelled control button",
+    ({ name, label }) => {
+      const Control = load(name);
+      withProvider(<Control />);
+      expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
+    },
+  );
 
   it.each(CONTROLS)(
     "$name opens a search popover when clicked",

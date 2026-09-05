@@ -16,7 +16,6 @@ import {
 
 import { ContactsIcon } from "@jitaspace/eve-icons";
 
-
 export default function Page() {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
@@ -72,7 +71,7 @@ export default function Page() {
               </Text>
             </Group>
             <Text fz="sm" c="dimmed" mt="sm">
-              View your character's contacts.
+              View your character&apos;s contacts.
             </Text>
           </Card>
         </UnstyledButton>
@@ -120,7 +119,7 @@ export default function Page() {
               </Text>
             </Group>
             <Text fz="sm" c="dimmed" mt="sm">
-              View your corporation's contacts.
+              View your corporation&apos;s contacts.
             </Text>
           </Card>
         </UnstyledButton>
@@ -168,7 +167,7 @@ export default function Page() {
               </Text>
             </Group>
             <Text fz="sm" c="dimmed" mt="sm">
-              View your alliance's contacts.
+              View your alliance&apos;s contacts.
             </Text>
           </Card>
         </UnstyledButton>
