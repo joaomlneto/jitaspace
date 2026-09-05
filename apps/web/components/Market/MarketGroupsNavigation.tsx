@@ -1,7 +1,7 @@
 import { cacheLife } from "next/cache";
 
-import type { MarketGroupIndex } from "./MarketGroupNavLink";
 import { prisma } from "~/lib/db";
+import { buildMarketGroupIndex } from "./buildMarketGroupIndex";
 import { MarketGroupNavLink } from "./MarketGroupNavLink";
 
 export async function MarketGroupsNavigation() {
@@ -17,15 +17,15 @@ export async function MarketGroupsNavigation() {
   // ~1.3 MiB today, against a 2 MiB limit.)
   cacheLife("days");
 
-  // Two flat reads, assembled below, rather than one `findMany` with nested
-  // `children`/`types` relations. Prisma resolves each nested relation as its
-  // own `WHERE <fk> IN (…every one of the 2109 market group ids…)` statement,
-  // and CockroachDB will not plan a constrained scan against an IN list that
-  // large — the types query in particular degraded into a FULL SCAN of
-  // Type@Type_pkey (52k rows / 18 MiB / ~1400 RUs a go). Filtering on
-  // `IS NOT NULL` instead gives the planner a single span over the covering
-  // (marketGroupId, name) index, and the parent/child edges are already implied
-  // by `parentMarketGroupId`, so the `children` round trip is pure waste.
+  // Two flat reads, assembled by buildMarketGroupIndex, rather than one
+  // `findMany` with nested `children`/`types` relations. Prisma resolves each
+  // nested relation as its own `WHERE <fk> IN (…every one of the 2109 market
+  // group ids…)` statement, and CockroachDB will not plan a constrained scan
+  // against an IN list that large — the types query in particular degraded into
+  // a FULL SCAN of Type@Type_pkey (52k rows / 18 MiB / ~1400 RUs a go).
+  // Filtering on `IS NOT NULL` instead gives the planner a single span over the
+  // covering (marketGroupId, name) index, and the parent/child edges are already
+  // implied by `parentMarketGroupId`, so the `children` round trip is pure waste.
   const [marketGroups, types] = await Promise.all([
     prisma.marketGroup.findMany({
       select: {
@@ -46,33 +46,7 @@ export async function MarketGroupsNavigation() {
     }),
   ]);
 
-  const marketGroupsIndex: MarketGroupIndex = {};
-  marketGroups.forEach(
-    (marketGroup) =>
-      (marketGroupsIndex[marketGroup.marketGroupId] = {
-        name: marketGroup.name,
-        parentMarketGroupId: marketGroup.parentMarketGroupId,
-        childrenMarketGroupIds: [],
-        types: [],
-        iconId: marketGroup.iconId,
-      }),
-  );
-
-  marketGroups.forEach((marketGroup) => {
-    if (marketGroup.parentMarketGroupId === null) return;
-    marketGroupsIndex[
-      marketGroup.parentMarketGroupId
-    ]?.childrenMarketGroupIds.push(marketGroup.marketGroupId);
-  });
-
-  types.forEach((type) => {
-    // Narrowed by the `not: null` filter above; Prisma still types it nullable.
-    if (type.marketGroupId === null) return;
-    marketGroupsIndex[type.marketGroupId]?.types.push({
-      typeId: type.typeId,
-      name: type.name,
-    });
-  });
+  const marketGroupsIndex = buildMarketGroupIndex(marketGroups, types);
 
   const rootMarketGroupIds = marketGroups
     .filter((marketGroup) => marketGroup.parentMarketGroupId === null)
