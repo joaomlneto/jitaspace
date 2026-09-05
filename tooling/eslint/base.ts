@@ -112,9 +112,10 @@ export const baseConfig = defineConfig(
   // and redirects) and the Sentry init files. They run in plain Node, and
   // several hooks in them are written `async` while never awaiting: rewrites,
   // redirects and headers in next.config.mjs, plus the `defineConfig(async
-  // () => …)` callbacks in the evetycoon and fuzzworks kubb configs. Nothing
-  // requires that: Next types all three as `() => T | Promise<T>`. It is our
-  // own convention, so require-await is off here rather than churning them.
+  // () => …)` callbacks in the evetycoon and fuzzworks kubb configs. Neither
+  // requires it — Next types all three as `() => T | Promise<T>`, and Kubb's
+  // defineConfig takes a PossiblePromise. Turning require-await off here is
+  // our own convention rather than churning the call sites.
   {
     files: ["**/*.config.{js,cjs,mjs,ts}", "**/scripts/**/*.{js,cjs,mjs,ts}"],
     languageOptions: {
