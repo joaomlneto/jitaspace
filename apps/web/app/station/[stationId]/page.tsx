@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
 
@@ -34,6 +35,16 @@ async function readStation(stationId: number) {
       typeId: true,
       raceId: true,
       ownerId: true,
+      // Names, not just ids: the OpenGraph card labels the station with its
+      // system, region and owner, and riding along in this row keeps the
+      // route at one query rather than adding a second for the card.
+      owner: { select: { name: true } },
+      solarSystem: {
+        select: {
+          name: true,
+          constellation: { select: { region: { select: { name: true } } } },
+        },
+      },
     },
     where: { stationId },
   });
@@ -50,11 +61,25 @@ export async function generateMetadata({
   try {
     const station = await readStation(id);
     if (!station) return {};
-    return {
+
+    const system = station.solarSystem?.name;
+    const region = station.solarSystem?.constellation.region?.name;
+    const owner = station.owner?.name;
+
+    return pageMetadata({
       title: station.name,
-      description: `${station.name} station in EVE Online.`,
-      alternates: { canonical: `/station/${id}` },
-    };
+      description: `${station.name} is an NPC station${
+        system ? ` in ${system}` : ""
+      }${owner ? `, operated by ${owner}` : ""}. Browse its services, market orders, and agents.`,
+      path: `/station/${id}`,
+      badge: "Station",
+      image: await resolveTypeImage(station.typeId),
+      facts: [
+        ...(system ? [{ label: "System", value: system }] : []),
+        ...(region ? [{ label: "Region", value: region }] : []),
+        ...(owner ? [{ label: "Owner", value: owner }] : []),
+      ],
+    });
   } catch {
     return {};
   }

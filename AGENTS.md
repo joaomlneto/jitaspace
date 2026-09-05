@@ -27,6 +27,12 @@ Essential conventions (project-specific)
   - Prefer validating parsers (`parseAsInteger`, `parseAsStringLiteral`) over `parseAsString`; nuqs drops items/values a parser rejects, which keeps hand-edited URLs from reaching an API.
   - Page-owned params can use bare names (`status`, `sort`, `view`); a **shared** component adopting nuqs must namespace its keys via `urlKeys` so it can't collide with the page hosting it.
   - Tests must wrap renders in `withNuqsTestingAdapter` (`nuqs/adapters/testing`) with `{ hasMemory: true }` for interaction tests — without it URL writes don't round-trip and control clicks appear to do nothing.
+- Page metadata goes through `pageMetadata()` in `apps/web/lib/metadata.ts` — never hand-roll `export const metadata` on a public page:
+  - Next merges metadata per key and only re-resolves `openGraph` for a segment that declares one. A page setting only `title`/`description` silently inherits the root layout's card and unfurls on Discord as the generic site blurb; a page declaring `openGraph` itself replaces the root's wholesale, dropping `siteName` and `type`. `pageMetadata` states the whole block, so neither happens. `tests/pageMetadataCoverage.test.ts` enforces it.
+  - It also builds the `og:image`: a card rendered by `app/api/og/route.tsx` (Next's built-in `next/og` — **not** `@vercel/og`, whose native module previously 500'd in production) from query params the page already loaded. `lib/og.ts` owns both sides of that query string, clamps the text, and allow-lists the artwork host.
+  - A `"use client"` page can't export metadata; give it a sibling `layout.tsx` that does.
+  - `path` is what emits the canonical URL, so pass the value `parsePositiveEntityId` (`lib/routeParams.ts`) returned, never the raw segment — otherwise `/type/0587` canonicalises as a page of its own.
+  - Pass artwork via `eveImage.*`, or `resolveTypeImage(typeId)` for a type — the CDN 404s on a variation a type doesn't publish, which leaves an empty frame on the card.
 
 Key developer workflows (commands & examples)
 

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Loader } from "@mantine/core";
 
+import { pageMetadata } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import TypeHistoryClient from "./page.client";
 
@@ -13,11 +14,12 @@ export async function generateMetadata({
   const { typeId } = await params;
   const id = parsePositiveEntityId(typeId);
   if (id === null) return {};
-  return {
+  return pageMetadata({
     title: `Type ${id} — Change History`,
     description: `How EVE Online type ${id} has changed across client builds.`,
-    alternates: { canonical: `/history/type/${id}` },
-  };
+    path: `/history/type/${id}`,
+    badge: "Change History",
+  });
 }
 
 async function PageContent({

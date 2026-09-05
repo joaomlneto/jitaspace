@@ -3,10 +3,14 @@ import path from "node:path";
 import { Container, Typography } from "@mantine/core";
 import Markdown from "react-markdown";
 
-export const metadata = {
+import { pageMetadata } from "~/lib/metadata";
+
+export const metadata = pageMetadata({
   title: "Changelog",
-  alternates: { canonical: "/changelog" },
-};
+  description: "What's new in JitaSpace — release notes for every version.",
+  path: "/changelog",
+  badge: "JitaSpace",
+});
 
 export default function ChangelogPage() {
   const content = fs.readFileSync(

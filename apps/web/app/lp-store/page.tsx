@@ -2,14 +2,16 @@ import { cacheLife } from "next/cache";
 
 import type { LPStorePageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import { pageMetadata } from "~/lib/metadata";
 import LPStorePage from "./page.client";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "LP Store",
   description:
     "Browse EVE Online Loyalty Point store offers — find what you can buy with LP from NPC corporations.",
-  alternates: { canonical: "/lp-store" },
-};
+  path: "/lp-store",
+  badge: "Loyalty Points",
+});
 
 export default async function Page() {
   "use cache";

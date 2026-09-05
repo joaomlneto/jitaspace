@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { eveImage, pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
 
@@ -17,15 +18,39 @@ export async function generateMetadata({
   if (id === null) return {};
   try {
     const faction = await prisma.faction.findUnique({
-      select: { name: true, description: true },
+      select: {
+        name: true,
+        description: true,
+        corporationId: true,
+        stationCount: true,
+        militiaCorporation: { select: { name: true } },
+      },
       where: { factionId: id },
     });
     if (!faction) return {};
-    return {
+
+    return pageMetadata({
       title: faction.name,
-      description: faction.description.slice(0, 200),
-      alternates: { canonical: `/faction/${id}` },
-    };
+      description: toDescription(
+        faction.description,
+        `${faction.name} in EVE Online.`,
+      ),
+      path: `/faction/${id}`,
+      badge: "Faction",
+      // Factions have no artwork of their own on the image CDN; their holding
+      // corporation's logo is the emblem players recognise.
+      image: faction.corporationId
+        ? eveImage.corporation(faction.corporationId)
+        : undefined,
+      facts: [
+        ...(faction.stationCount
+          ? [{ label: "Stations", value: String(faction.stationCount) }]
+          : []),
+        ...(faction.militiaCorporation
+          ? [{ label: "Militia", value: faction.militiaCorporation.name }]
+          : []),
+      ],
+    });
   } catch {
     return {};
   }

@@ -163,6 +163,7 @@ describe("constellation page", () => {
       name: "Kimotoro",
       regionId: 10000002,
       region: { name: "The Forge" },
+      _count: { solarSystems: 8 },
     });
 
     render(
@@ -199,7 +200,10 @@ describe("constellation page", () => {
 
   describe("generateMetadata", () => {
     it("declares a canonical built from the parsed id", async () => {
-      mockConstellationFindUnique.mockResolvedValue({ name: "Kimotoro" });
+      mockConstellationFindUnique.mockResolvedValue({
+        name: "Kimotoro",
+        _count: { solarSystems: 8 },
+      });
       const { generateMetadata } =
         require("~/app/constellation/[constellationId]/page") as typeof import("~/app/constellation/[constellationId]/page");
 

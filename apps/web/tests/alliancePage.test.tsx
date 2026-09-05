@@ -159,7 +159,11 @@ describe("alliance page server wrapper", () => {
 
   it("canonicalises onto the parsed id", async () => {
     mockGetAlliancesAllianceId.mockResolvedValue({
-      data: { name: "Pandemic Horde" },
+      data: {
+        name: "Pandemic Horde",
+        ticker: "REKTD",
+        date_founded: "2015-05-20T10:00:00Z",
+      },
     });
     const { generateMetadata } =
       require("~/app/alliance/[allianceId]/page") as typeof import("~/app/alliance/[allianceId]/page");

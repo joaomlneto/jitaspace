@@ -261,6 +261,9 @@ describe("type route dogma metadata", () => {
       typeId: 587,
       name: "Rifter",
       description: "A frigate.",
+      // The route also selects the group/category the OpenGraph card labels
+      // the item with; without them `getTypeData` throws and the page 404s.
+      group: { name: "Frigate", category: { name: "Ship" } },
     });
   });
 

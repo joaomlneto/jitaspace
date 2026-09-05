@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import type { PageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import DogmaAttributePage from "./page.client";
 
@@ -107,14 +108,17 @@ export async function generateMetadata({
       where: { attributeId },
     });
     if (!attribute) return {};
-    const title =
-      [attribute.displayName, attribute.name].find(Boolean) ?? undefined;
-    const description = attribute.description?.slice(0, 200) ?? undefined;
-    return {
+    const title = [attribute.displayName, attribute.name].find(Boolean);
+    if (!title) return {};
+    return pageMetadata({
       title,
-      description,
-      alternates: { canonical: `/dogma/attribute/${attributeId}` },
-    };
+      description: toDescription(
+        attribute.description,
+        `The ${title} dogma attribute in EVE Online — what it does and which items have it.`,
+      ),
+      path: `/dogma/attribute/${attributeId}`,
+      badge: "Dogma Attribute",
+    });
   } catch {
     return {};
   }

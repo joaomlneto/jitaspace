@@ -4,14 +4,16 @@ import { Loader } from "@mantine/core";
 
 import type { HistoryIndex } from "~/lib/history";
 import { getCachedHistoryIndex } from "~/lib/history-cache";
+import { pageMetadata } from "~/lib/metadata";
 import HistoryIndexClient from "./page.client";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Type Change History",
   description:
     "Browse how EVE Online item types have changed across client builds over time.",
-  alternates: { canonical: "/history" },
-};
+  path: "/history",
+  badge: "Change History",
+});
 
 // Server-render the index from the day-cached `getCachedHistoryIndex` and pass it
 // to the client as a prop — no client fetch and no per-visit DB query.

@@ -6,13 +6,15 @@ import { RegionAnchor } from "@jitaspace/eve-components";
 import { MapIcon } from "@jitaspace/eve-icons";
 
 import { prisma } from "~/lib/db";
+import { pageMetadata } from "~/lib/metadata";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Regions",
   description:
     "Browse all regions in the EVE Online universe — New Eden's star clusters, systems, and constellations.",
-  alternates: { canonical: "/regions" },
-};
+  path: "/regions",
+  badge: "Universe",
+});
 
 interface PageProps {
   regions: { regionId: number; name: string }[];

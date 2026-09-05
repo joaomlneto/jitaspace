@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Loader } from "@mantine/core";
 
+import { pageMetadata } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import SkinMaterialHistoryClient from "./page.client";
 
@@ -13,11 +14,12 @@ export async function generateMetadata({
   const { skinMaterialId } = await params;
   const id = parsePositiveEntityId(skinMaterialId);
   if (id === null) return {};
-  return {
+  return pageMetadata({
     title: `SKIN Material ${id} — Change History`,
     description: `How EVE Online SKIN material ${id} has changed across client builds.`,
-    alternates: { canonical: `/history/skinMaterial/${id}` },
-  };
+    path: `/history/skinMaterial/${id}`,
+    badge: "Change History",
+  });
 }
 
 async function PageContent({

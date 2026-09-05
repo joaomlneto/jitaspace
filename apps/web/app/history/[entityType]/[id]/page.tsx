@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Loader } from "@mantine/core";
 
+import { pageMetadata } from "~/lib/metadata";
 import { parseEntityId } from "~/lib/routeParams";
 import EntityHistoryClient from "./page.client";
 
@@ -31,11 +32,12 @@ export async function generateMetadata({
   const { entityType, id } = await params;
   const entityId = parseEntityId(id);
   if (entityId === null || !isEntityKind(entityType)) return {};
-  return {
+  return pageMetadata({
     title: `${entityType} ${entityId} — Change History`,
     description: `Change history for EVE Online ${entityType} ${entityId} across client builds.`,
-    alternates: { canonical: `/history/${entityType}/${entityId}` },
-  };
+    path: `/history/${entityType}/${entityId}`,
+    badge: "Change History",
+  });
 }
 
 async function PageContent({

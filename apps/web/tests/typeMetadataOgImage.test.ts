@@ -1,3 +1,16 @@
+/**
+ * Guards the regression from aa2e305c: `/types/2` 404s, so the variation list is
+ * empty and the variation is `undefined`. Interpolating it shipped
+ * `https://images.evetech.net/types/2/undefined` as og:image and twitter:image
+ * on every image-less type page — all of which are in the sitemap.
+ *
+ * The og:image is now the generated card (`/api/og`) rather than a bare CDN
+ * URL, so the artwork travels in that card's `image` query param and these
+ * assertions follow it there. The invariant is unchanged and checked more
+ * broadly than before: no URL the page emits may contain "undefined", query
+ * string included.
+ */
+
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 type Row = Record<string, unknown>;
@@ -45,6 +58,36 @@ async function metadataFor(typeId: number | string) {
   };
 }
 
+/** Every URL the page emits, card URLs and the artwork they embed alike. */
+function emittedUrls(meta: {
+  openGraph?: { images?: { url: string }[] };
+  twitter?: { images?: string[] };
+}): string[] {
+  const cards = [
+    ...(meta.openGraph?.images ?? []).map((image) => image.url),
+    ...(meta.twitter?.images ?? []),
+  ];
+  const embedded = cards.flatMap((card) => {
+    const image = new URL(card, "https://www.jita.space").searchParams.get(
+      "image",
+    );
+    return image ? [image] : [];
+  });
+  return [...cards, ...embedded];
+}
+
+/** The artwork the card was told to draw, or undefined when it was given none. */
+function cardArtwork(meta: {
+  openGraph?: { images?: { url: string }[] };
+}): string | undefined {
+  const card = meta.openGraph?.images?.[0]?.url;
+  if (!card) return undefined;
+  return (
+    new URL(card, "https://www.jita.space").searchParams.get("image") ??
+    undefined
+  );
+}
+
 describe("type/[typeId] generateMetadata og:image", () => {
   beforeEach(() => {
     jest.resetModules();
@@ -53,38 +96,39 @@ describe("type/[typeId] generateMetadata og:image", () => {
       typeId: 34,
       name: "Tritanium",
       description: "The most common ore type in the known world.",
+      group: { name: "Mineral", category: { name: "Material" } },
     });
   });
 
-  it("prefers the icon variation when the image service offers one", async () => {
+  it("uses the icon variation when that is all the image service offers", async () => {
     mockImageService(["icon", "bp"]);
-    const meta = await metadataFor(34);
-    expect(meta.openGraph?.images?.[0]?.url).toBe(
-      "https://images.evetech.net/types/34/icon",
+    expect(cardArtwork(await metadataFor(34))).toBe(
+      "https://images.evetech.net/types/34/icon?size=512",
     );
-    expect(meta.twitter?.images?.[0]).toBe(
-      "https://images.evetech.net/types/34/icon",
+  });
+
+  it("prefers the render, which is what fills a 1200x630 card", async () => {
+    mockImageService(["icon", "render"]);
+    expect(cardArtwork(await metadataFor(34))).toBe(
+      "https://images.evetech.net/types/34/render?size=512",
     );
   });
 
   it("falls back to the first variation when there is no icon", async () => {
-    mockImageService(["render"]);
-    const meta = await metadataFor(34);
-    expect(meta.openGraph?.images?.[0]?.url).toBe(
-      "https://images.evetech.net/types/34/render",
+    mockImageService(["bp"]);
+    expect(cardArtwork(await metadataFor(34))).toBe(
+      "https://images.evetech.net/types/34/bp?size=512",
     );
   });
 
-  // The regression: /types/2 404s, so the variation list is empty and the
-  // variation is undefined. Interpolating it shipped
-  // `https://images.evetech.net/types/2/undefined` as og:image and
-  // twitter:image on every image-less type page — all of which are in the
-  // sitemap. Guessing a variation is no better: /types/2/icon 404s too.
-  it("emits no image at all when the image service has none", async () => {
+  // The regression: guessing a variation is no better than interpolating an
+  // undefined one — /types/2/icon 404s too. The card still renders, with the
+  // type's name and group in place of artwork.
+  it("draws a card with no artwork when the image service has none", async () => {
     mockImageService("not-found");
     const meta = await metadataFor(2);
-    expect(meta.openGraph?.images).toEqual([]);
-    expect(meta.twitter?.images).toEqual([]);
+    expect(meta.openGraph?.images?.[0]?.url).toBeDefined();
+    expect(cardArtwork(meta)).toBeUndefined();
   });
 
   it("never emits a URL containing 'undefined'", async () => {
@@ -95,12 +139,9 @@ describe("type/[typeId] generateMetadata og:image", () => {
       ["render"],
     ]) {
       mockImageService(variations);
-      const meta = await metadataFor(2);
-      const urls = [
-        ...(meta.openGraph?.images ?? []).map((i) => i.url),
-        ...(meta.twitter?.images ?? []),
-      ];
-      for (const url of urls) expect(url).not.toContain("undefined");
+      for (const url of emittedUrls(await metadataFor(2))) {
+        expect(url).not.toContain("undefined");
+      }
     }
   });
 });
@@ -113,6 +154,7 @@ describe("type/[typeId] generateMetadata canonical", () => {
       typeId: 587,
       name: "Rifter",
       description: "A frigate.",
+      group: { name: "Frigate", category: { name: "Ship" } },
     });
     mockImageService(["icon"]);
   });

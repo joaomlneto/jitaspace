@@ -16,6 +16,7 @@ import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
 import { GroupBreadcrumbs } from "~/components/Breadcrumbs";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
 import { parseEntityId, parsePositiveEntityId } from "~/lib/routeParams";
 
 interface PageProps {
@@ -61,14 +62,17 @@ export async function generateMetadata({
   const groupId = parsePositiveEntityId(groupIdParam);
   if (groupId === null) return {};
   try {
-    const { name } = await getGroupData(groupId);
-    return {
+    const { name, types } = await getGroupData(groupId);
+    if (!name) return {};
+    return pageMetadata({
       title: name,
-      description: name
-        ? `Browse EVE Online ${name} items and types.`
-        : undefined,
-      alternates: { canonical: `/group/${groupId}` },
-    };
+      description: `Browse the ${types.length} EVE Online items in the ${name} group — attributes, market prices, and where to buy them.`,
+      path: `/group/${groupId}`,
+      badge: "Item Group",
+      // The first type in the group stands in as artwork for the whole group.
+      image: types[0] ? await resolveTypeImage(types[0].typeId) : undefined,
+      facts: [{ label: "Items", value: String(types.length) }],
+    });
   } catch {
     return {};
   }

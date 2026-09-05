@@ -2,14 +2,16 @@ import { cacheLife } from "next/cache";
 
 import type { PageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import { pageMetadata } from "~/lib/metadata";
 import DogmaEffectsPage from "./page.client";
 
-export const metadata = {
+export const metadata = pageMetadata({
   title: "Dogma Effects",
   description:
     "Browse all EVE Online dogma effects applied by ships, modules, and skills.",
-  alternates: { canonical: "/dogma/effects" },
-};
+  path: "/dogma/effects",
+  badge: "Dogma",
+});
 
 export default async function Page() {
   "use cache";
