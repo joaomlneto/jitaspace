@@ -6,6 +6,7 @@ import {
   ingestSdeCompositeTable,
   ingestSdeTable,
   loadSdeFiles,
+  optionalBoolean,
   optionalNumber,
 } from "../../../helpers";
 
@@ -18,6 +19,8 @@ interface BonusBody {
   bonusText?: unknown;
   importance?: number;
   unitID?: number;
+  /** Only ever present on `miscBonuses` entries — null on role/skill lines. */
+  isPositive?: boolean;
 }
 interface TypeBonusRecord {
   iconID?: number;
@@ -78,6 +81,7 @@ export const ingestSdeTypeBonus = defineJob<
           bonusText: enString(body.bonusText),
           importance: optionalNumber(body.importance),
           unitId: optionalNumber(body.unitID),
+          isPositive: optionalBoolean(body.isPositive),
           isDeleted: false,
         });
       });

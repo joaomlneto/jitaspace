@@ -32,8 +32,23 @@ import type {
   War,
 } from "../db";
 import type { EsiCorporationRow } from "./mergeEntriesIntoCorporationsTable";
+import type {
+  SDE_OWNED_BLOODLINE_COLUMNS,
+  SDE_OWNED_CHARACTER_COLUMNS,
+  SDE_OWNED_FACTION_COLUMNS,
+  SDE_OWNED_RACE_COLUMNS,
+  SDE_OWNED_STATION_COLUMNS,
+} from "./sdeOwnedColumns";
 import { CharacterGender, prisma } from "../db";
 import { esiTaxRateToFraction } from "./mergeEntriesIntoCorporationsTable";
+
+// Columns on these ESI-scraped tables that only an SDE ingest writes, so the ESI
+// row builders here must not claim to supply them (see sdeOwnedColumns.ts).
+type SdeOwnedBloodlineColumn = (typeof SDE_OWNED_BLOODLINE_COLUMNS)[number];
+type SdeOwnedCharacterColumn = (typeof SDE_OWNED_CHARACTER_COLUMNS)[number];
+type SdeOwnedFactionColumn = (typeof SDE_OWNED_FACTION_COLUMNS)[number];
+type SdeOwnedRaceColumn = (typeof SDE_OWNED_RACE_COLUMNS)[number];
+type SdeOwnedStationColumn = (typeof SDE_OWNED_STATION_COLUMNS)[number];
 
 const limit = pLimit(1);
 
@@ -57,17 +72,23 @@ export const createCorpAndItsRefRecords = async ({
 }: {
   alliances?: Omit<Alliance, "updatedAt" | "createdAt">[];
   missingAllianceIds?: Set<number>;
-  bloodlines?: Omit<Bloodline, "updatedAt" | "createdAt">[];
+  bloodlines?: Omit<
+    Bloodline,
+    "updatedAt" | "createdAt" | SdeOwnedBloodlineColumn
+  >[];
   missingBloodlineIds?: Set<number>;
-  characters?: Omit<Character, "updatedAt" | "createdAt">[];
+  characters?: Omit<
+    Character,
+    "updatedAt" | "createdAt" | SdeOwnedCharacterColumn
+  >[];
   missingCharacterIds?: Set<number>;
   corporations?: EsiCorporationRow[];
   missingCorporationIds?: Set<number>;
-  factions?: Omit<Faction, "updatedAt" | "createdAt">[];
+  factions?: Omit<Faction, "updatedAt" | "createdAt" | SdeOwnedFactionColumn>[];
   missingFactionIds?: Set<number>;
-  races?: Omit<Race, "updatedAt" | "createdAt">[];
+  races?: Omit<Race, "updatedAt" | "createdAt" | SdeOwnedRaceColumn>[];
   missingRaceIds?: Set<number>;
-  stations?: Omit<Station, "updatedAt" | "createdAt">[];
+  stations?: Omit<Station, "updatedAt" | "createdAt" | SdeOwnedStationColumn>[];
   missingStationIds?: Set<number>;
   wars?: Omit<War, "updatedAt" | "createdAt">[];
   missingWarIds?: Set<number>;
@@ -666,7 +687,9 @@ const fetchBloodlinesFromEsi = () =>
 
 const fetchCharactersFromEsi = (
   characterIds: number[],
-): Promise<Omit<Character, "updatedAt" | "createdAt">[]> =>
+): Promise<
+  Omit<Character, "updatedAt" | "createdAt" | SdeOwnedCharacterColumn>[]
+> =>
   Promise.all(
     characterIds.map((characterId) =>
       limit(async () =>

@@ -54,9 +54,12 @@ export const ingestSdeDogmaAttributes = defineJob<
         minAttributeId: optionalNumber(record.minAttributeID),
         chargeRechargeTimeId: optionalNumber(record.chargeRechargeTimeID),
         // Guarded against dogmaAttributeCategories.yaml (ingested just before
-        // this job) so a dangling category lands as null.
+        // this job) so a dangling category lands as null. The SDE field is
+        // `attributeCategoryID` — reading `categoryID`, which the file has never
+        // contained, wrote null for every attribute and left both this column
+        // and the whole DogmaAttributeCategory table unused.
         attributeCategoryId: (() => {
-          const categoryId = optionalNumber(record.categoryID);
+          const categoryId = optionalNumber(record.attributeCategoryID);
           return categoryId != null && categoryIds.has(categoryId)
             ? categoryId
             : null;

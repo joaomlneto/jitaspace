@@ -4,6 +4,7 @@ import { getUniverseFactions } from "@jitaspace/esi-client";
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_FACTION_COLUMNS } from "../../../helpers";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
@@ -45,8 +46,7 @@ export const scrapeEsiFactions = defineJob<ScrapeFactionsEventPayload["data"]>({
               excludeObjectKeys(entry, [
                 "updatedAt",
                 "createdAt",
-                "flatLogo",
-                "flatLogoWithName",
+                ...SDE_OWNED_FACTION_COLUMNS,
               ]),
             ),
           ),

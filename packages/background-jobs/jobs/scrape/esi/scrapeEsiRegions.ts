@@ -7,6 +7,7 @@ import {
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_REGION_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeRegionEventPayload {
@@ -54,8 +55,7 @@ export const scrapeEsiRegions = defineJob<ScrapeRegionEventPayload["data"]>({
               excludeObjectKeys(entry, [
                 "updatedAt",
                 "createdAt",
-                "nebulaGraphicId",
-                "wormholeClassId",
+                ...SDE_OWNED_REGION_COLUMNS,
               ]),
             ),
           ),

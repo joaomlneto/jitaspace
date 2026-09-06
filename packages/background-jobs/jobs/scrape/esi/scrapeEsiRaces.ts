@@ -4,6 +4,7 @@ import { getUniverseRaces } from "@jitaspace/esi-client";
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_RACE_COLUMNS } from "../../../helpers";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
@@ -45,6 +46,7 @@ export const scrapeEsiRaces = defineJob<ScrapeRacesEventPayload["data"]>({
               excludeObjectKeys(entry, [
                 "updatedAt",
                 "createdAt",
+                ...SDE_OWNED_RACE_COLUMNS,
                 "shipTypeId",
               ]),
             ),

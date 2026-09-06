@@ -777,10 +777,10 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/universe/expertSystems": {
     datasource: {
-      type: "hoboleaks",
-      filename: "expertsystems.json",
+      type: "sde",
+      name: "expertSystems.yaml",
     },
-    idAttribute: "expertSystemID",
+    idAttribute: "typeID",
     model: {
       name: "ExpertSystem",
     },
@@ -799,8 +799,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/universe/schools": {
     datasource: {
-      type: "hoboleaks",
-      filename: "schools.json",
+      type: "sde",
+      name: "schools.yaml",
     },
     idAttribute: "schoolID",
     model: {
@@ -810,8 +810,10 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/universe/schoolMap": {
     datasource: {
-      type: "hoboleaks",
-      filename: "schoolmap.json",
+      type: "sde",
+      name: "schoolMap.yaml",
+      // The file is keyed by its own schoolMapID, so re-key by schoolID to keep
+      // this collection addressable by the school it maps.
       transformations: [fixObjectIndices],
     },
     idAttribute: "schoolID",
@@ -822,8 +824,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/characters/skillplans": {
     datasource: {
-      type: "hoboleaks",
-      filename: "skillplans.json",
+      type: "sde",
+      name: "skillPlans.yaml",
     },
     idAttribute: "skillPlanID",
     model: {
@@ -866,10 +868,10 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/industry/activities": {
     datasource: {
-      type: "hoboleaks",
-      filename: "industryactivities.json",
+      type: "sde",
+      name: "industryActivities.yaml",
     },
-    idAttribute: "activityID",
+    idAttribute: "industryActivityID",
     model: {
       name: "IndustryActivity",
     },
@@ -877,10 +879,10 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/industry/assemblyLines": {
     datasource: {
-      type: "hoboleaks",
-      filename: "industryassemblylines.json",
+      type: "sde",
+      name: "industryAssemblyLines.yaml",
     },
-    idAttribute: "assemblyLineTypeID",
+    idAttribute: "industryAssemblyLineID",
     model: {
       name: "IndustryAssemblyLine",
     },
@@ -888,8 +890,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/industry/installationTypes": {
     datasource: {
-      type: "hoboleaks",
-      filename: "industryinstallationtypes.json",
+      type: "sde",
+      name: "industryInstallationTypes.yaml",
     },
     idAttribute: "typeID",
     model: {
@@ -899,8 +901,8 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/industry/modifierSources": {
     datasource: {
-      type: "hoboleaks",
-      filename: "industrymodifiersources.json",
+      type: "sde",
+      name: "industryModifierSources.yaml",
     },
     idAttribute: "typeID",
     model: {
@@ -910,10 +912,10 @@ export const collections: Record<string, SdeCollection> = {
   },
   "/industry/targetFilters": {
     datasource: {
-      type: "hoboleaks",
-      filename: "industrytargetfilters.json",
+      type: "sde",
+      name: "industryTargetFilters.yaml",
     },
-    idAttribute: "targetTypeFilterID",
+    idAttribute: "industryTargetFilterID",
     model: {
       name: "IndustryTargetFilter",
     },

@@ -4,6 +4,7 @@ import { getUniverseAncestries } from "@jitaspace/esi-client";
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_ANCESTRY_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeAncestriesEventPayload {
@@ -38,7 +39,11 @@ export const scrapeEsiAncestries = defineJob<
           })
           .then((entries) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              excludeObjectKeys(entry, [
+                "updatedAt",
+                "createdAt",
+                ...SDE_OWNED_ANCESTRY_COLUMNS,
+              ]),
             ),
           ),
       fetchRemoteEntries: () =>

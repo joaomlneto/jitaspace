@@ -6,10 +6,14 @@ import type { Character } from "../db";
 import { MAX_DB_PARALLELISM } from "../config";
 import { prisma } from "../db";
 import { excludeObjectKeys, updateTable } from "../utils";
+import { SDE_OWNED_CHARACTER_COLUMNS } from "./sdeOwnedColumns";
+
+/** `ancestryId` / `isUnique` come from npcCharacters.yaml, never from ESI. */
+type SdeOwnedCharacterColumn = (typeof SDE_OWNED_CHARACTER_COLUMNS)[number];
 
 export const convertEsiCharacterToDomain = (
   character: GetCharactersDetailQueryResponse & { characterId: number },
-): Omit<Character, "updatedAt" | "createdAt"> => ({
+): Omit<Character, "updatedAt" | "createdAt" | SdeOwnedCharacterColumn> => ({
   characterId: character.characterId,
   birthday: new Date(character.birthday),
   bloodlineId: character.bloodline_id,
@@ -32,7 +36,10 @@ export const mergeEsiEntriesIntoCharactersTable = (
   mergeEntriesIntoCharactersTable(characters.map(convertEsiCharacterToDomain));
 
 export const mergeEntriesIntoCharactersTable = (
-  characters: Omit<Character, "updatedAt" | "createdAt">[],
+  characters: Omit<
+    Character,
+    "updatedAt" | "createdAt" | SdeOwnedCharacterColumn
+  >[],
   limit = pLimit(MAX_DB_PARALLELISM),
 ) =>
   updateTable({
@@ -47,7 +54,11 @@ export const mergeEntriesIntoCharactersTable = (
         })
         .then((entries) =>
           entries.map((entry) =>
-            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            excludeObjectKeys(entry, [
+              "updatedAt",
+              "createdAt",
+              ...SDE_OWNED_CHARACTER_COLUMNS,
+            ]),
           ),
         ),
     fetchRemoteEntries: () => Promise.resolve(characters),

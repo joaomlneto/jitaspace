@@ -12,6 +12,10 @@ export interface SdeNpcCharacterRecord {
     isLocator?: unknown;
   };
   skills?: { typeID?: unknown }[];
+  /// The third tier of race/bloodline/ancestry; absent on a few hundred.
+  ancestryID?: unknown;
+  /// Whether the character's name is globally unique.
+  uniqueName?: unknown;
   // Present on only a minority of NPC characters.
   ceo?: unknown;
   startDate?: unknown;

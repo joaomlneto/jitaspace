@@ -11,6 +11,7 @@ import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
 import {
   esiTaxRateToFraction,
+  SDE_OWNED_CHARACTER_COLUMNS,
   SDE_OWNED_CORPORATION_COLUMNS,
 } from "../../../helpers";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
@@ -91,7 +92,11 @@ const processCorporationBatch = async (
         })
         .then((entries) =>
           entries.map((entry) =>
-            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            excludeObjectKeys(entry, [
+              "updatedAt",
+              "createdAt",
+              ...SDE_OWNED_CHARACTER_COLUMNS,
+            ]),
           ),
         ),
     fetchRemoteEntries: () =>

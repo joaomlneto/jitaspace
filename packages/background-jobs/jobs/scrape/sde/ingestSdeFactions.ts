@@ -6,6 +6,7 @@ import {
   ingestSdeCompositeTable,
   ingestSdeTable,
   loadSdeFiles,
+  optionalNumber,
   plainString,
   requiredBoolean,
   requiredNumber,
@@ -80,6 +81,9 @@ export const ingestSdeFactions = defineJob<
         stationSystemCount: counts.get(id)?.systems.size ?? 0,
         flatLogo: plainString(record.flatLogo),
         flatLogoWithName: plainString(record.flatLogoWithName),
+        iconId: optionalNumber(record.iconID),
+        // Only the four empire factions carry a tagline.
+        shortDescription: enString(record.shortDescription),
         isDeleted: false,
       }),
     });
