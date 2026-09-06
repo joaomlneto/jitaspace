@@ -99,7 +99,7 @@ describe("SDE-owned column lists", () => {
 
   it("covers every declared list", () => {
     // A list nobody wired into this table is a list nobody checks.
-    expect(TABLES.length).toBe(
+    expect(TABLES).toHaveLength(
       Object.keys(sdeOwnedColumns).filter((name) =>
         /^SDE_OWNED_\w+_COLUMNS$/.test(name),
       ).length,
