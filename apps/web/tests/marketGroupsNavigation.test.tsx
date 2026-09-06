@@ -5,13 +5,18 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 // behaviour is Next's, what matters is the queries and the tree that comes out.
 jest.mock("next/cache", () => ({ cacheLife: jest.fn() }));
 
-const marketGroupFindMany = jest.fn<() => Promise<Record<string, unknown>[]>>();
-const typeFindMany = jest.fn<() => Promise<Record<string, unknown>[]>>();
+// Args are forwarded rather than swallowed: the `marketGroupId IS NOT NULL`
+// filter and the narrow `select` are the point of these queries, so they get
+// asserted on below — a mock that drops its arguments cannot catch their loss.
+const marketGroupFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const typeFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
-    marketGroup: { findMany: () => marketGroupFindMany() },
-    type: { findMany: () => typeFindMany() },
+    marketGroup: { findMany: (args: unknown) => marketGroupFindMany(args) },
+    type: { findMany: (args: unknown) => typeFindMany(args) },
   },
 }));
 
@@ -45,6 +50,31 @@ describe("MarketGroupsNavigation", () => {
   beforeEach(() => {
     marketGroupFindMany.mockReset();
     typeFindMany.mockReset();
+  });
+
+  it("reads only types in a market group, and only the columns the tree needs", async () => {
+    marketGroupFindMany.mockResolvedValue([]);
+    typeFindMany.mockResolvedValue([]);
+
+    await MarketGroupsNavigation();
+
+    // Dropping the filter would read all ~53k types instead of the ~20k that
+    // belong to a market group; widening the select would drag `description`
+    // (6.6 MiB) back into a read that exists to fetch names.
+    expect(typeFindMany).toHaveBeenCalledWith({
+      where: { marketGroupId: { not: null } },
+      select: { typeId: true, name: true, marketGroupId: true },
+    });
+    // iconId is bundled deliberately — resolving it client-side costs ~3
+    // requests per visible NavLink.
+    expect(marketGroupFindMany).toHaveBeenCalledWith({
+      select: {
+        marketGroupId: true,
+        name: true,
+        parentMarketGroupId: true,
+        iconId: true,
+      },
+    });
   });
 
   it("renders one nav link per root group, sorted by name", async () => {

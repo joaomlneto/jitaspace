@@ -11,21 +11,26 @@ export async function MarketGroupsNavigation() {
   // so it MUST stay cached: at "hours" it re-ran ~24×/day per region (and on
   // every deploy) and became ~30% of the database's request-unit usage. The
   // market taxonomy only moves when a new SDE build is ingested (rare), so cache
-  // it for a day. NB: if this payload ever exceeds the platform's per-entry
-  // data-cache limit it silently won't be stored and the queries run per request
-  // again — watch the DB's top statements after deploying. (Serialized index is
-  // ~1.3 MiB today, against a 2 MiB limit.)
+  // it for a day. Caching is not a guarantee though — the entry is per-region
+  // and dies on every deploy, and this statement still reached ~12% of database
+  // usage while nominally cached for a day, so treat the covering index (not
+  // cacheLife) as what actually bounds the cost. The serialized index is ~1.3
+  // MiB; if a payload ever grows past what the platform will store it silently
+  // won't be, so watch the DB's top statements after deploying.
   cacheLife("days");
 
   // Two flat reads, assembled by buildMarketGroupIndex, rather than one
   // `findMany` with nested `children`/`types` relations. Prisma resolves each
-  // nested relation as its own `WHERE <fk> IN (…every one of the 2109 market
-  // group ids…)` statement, and CockroachDB will not plan a constrained scan
-  // against an IN list that large — the types query in particular degraded into
-  // a FULL SCAN of Type@Type_pkey (52k rows / 18 MiB / ~1400 RUs a go).
-  // Filtering on `IS NOT NULL` instead gives the planner a single span over the
-  // covering (marketGroupId, name) index, and the parent/child edges are already
-  // implied by `parentMarketGroupId`, so the `children` round trip is pure waste.
+  // nested relation as its own `WHERE <fk> IN (…every one of the ~2100 market
+  // group ids…)` statement, so `children` costs a whole round trip for edges
+  // `parentMarketGroupId` already gives us — that round trip is what this saves.
+  //
+  // It is NOT what fixed the full scan, and the IN list was never the problem:
+  // measured on the production cluster, `marketGroupId IN (…2111 ids…)` plans a
+  // perfectly good constrained index scan. What tips Type@Type_pkey into a FULL
+  // SCAN is projecting `name` while no index covers it — see the index comment
+  // on Type.marketGroupId in schema.prisma. Both predicates behave identically
+  // either side of that: uncovered, both full-scan; covered, both scan the index.
   const [marketGroups, types] = await Promise.all([
     prisma.marketGroup.findMany({
       select: {

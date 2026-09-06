@@ -18,11 +18,12 @@ export interface MarketTypeRow {
 /**
  * Assemble the sidebar's market tree from two flat reads.
  *
- * Kept separate from the query so the shape can be tested without a database:
- * the alternative is Prisma's nested `children`/`types` relations, which cost
- * two extra `WHERE <fk> IN (…all 2109 market group ids…)` statements and push
- * CockroachDB off the covering index into a full scan of Type. See the index
- * comment on `Type.marketGroupId` in schema.prisma.
+ * Kept separate from the query so the shape can be tested without a database.
+ * Assembling here rather than through Prisma's nested `children`/`types`
+ * relations saves one round trip: `children` re-reads MarketGroup only to learn
+ * edges `parentMarketGroupId` already carries. That is the whole benefit — it
+ * does not affect the query plan, which turns on whether an index covers `name`
+ * (see the index comment on `Type.marketGroupId` in schema.prisma).
  *
  * Rows referencing a market group that isn't in `marketGroups` are dropped
  * rather than creating a placeholder, matching what the relation loads did —

@@ -241,6 +241,16 @@ model Type {
   /// it, and the query regresses to the full scan with nothing to show for it.
   /// Measured, the two forms are anyway indistinguishable: same plan, same 1.2
   /// MiB read, 3.00 vs 2.95 MiB of index, identical write cost.
+  ///
+  /// APPLYING THIS: `pnpm db:push` will NOT install it. Production's Type is
+  /// `WITH (schema_locked = true)` (CockroachDB v26 default), and Prisma's
+  /// schema engine emits the index swap in a form the server refuses to
+  /// auto-unlock — the push aborts with "this schema change is disallowed
+  /// because table Type is locked". Plain DDL does auto-unlock, so apply it
+  /// directly instead, which also avoids dragging in the unrelated schema drift
+  /// a full push would attempt:
+  ///   CREATE INDEX "Type_marketGroupId_name_idx" ON "Type" ("marketGroupId", "name");
+  ///   DROP INDEX "Type"@"Type_marketGroupId_idx";
   @@index([marketGroupId, name])
   @@index([graphicId])
   @@index([groupId])
