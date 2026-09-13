@@ -58,18 +58,23 @@ export async function generateMetadata({
   }
 }
 
+interface SolarSystemPageData {
+  name: string;
+  sde: SolarSystemSdeInfo;
+}
+
 /**
- * Read the SDE columns of a system from our database. Returns null for an
- * unknown id.
+ * Read the system identity and SDE columns from our database. Returns null for
+ * an unknown id.
  *
  * Cached for days, like the type page's dogma metadata: these columns only
  * change when a new SDE release is ingested. A failure throws rather than
- * degrading here, so a database blip is never what gets written into the
- * day-long cache entry — the caller catches it instead.
+ * degrading here, so a database blip is never mistaken for a missing system
+ * and written into a day-long cached 404.
  */
-async function readSolarSystemSdeInfo(
+async function readSolarSystemPageData(
   systemId: number,
-): Promise<SolarSystemSdeInfo | null> {
+): Promise<SolarSystemPageData | null> {
   "use cache";
   cacheLife("days");
 
@@ -77,6 +82,7 @@ async function readSolarSystemSdeInfo(
 
   const system = await prisma.solarSystem.findUnique({
     select: {
+      name: true,
       luminosity: true,
       radius: true,
       wormholeClassId: true,
@@ -97,36 +103,24 @@ async function readSolarSystemSdeInfo(
 
   const { positionX, positionY, positionZ } = system;
   return {
-    luminosity: system.luminosity,
-    radius: system.radius,
-    wormholeClassId: system.wormholeClassId,
-    position:
-      positionX != null && positionY != null && positionZ != null
-        ? { x: positionX, y: positionY, z: positionZ }
-        : null,
-    factionId: system.factionId,
-    isHub: system.isHub ?? false,
-    isBorder: system.isBorder ?? false,
-    isFringe: system.isFringe ?? false,
-    isCorridor: system.isCorridor ?? false,
-    isInternational: system.isInternational ?? false,
-    isRegional: system.isRegional ?? false,
+    name: system.name,
+    sde: {
+      luminosity: system.luminosity,
+      radius: system.radius,
+      wormholeClassId: system.wormholeClassId,
+      position:
+        positionX != null && positionY != null && positionZ != null
+          ? { x: positionX, y: positionY, z: positionZ }
+          : null,
+      factionId: system.factionId,
+      isHub: system.isHub ?? false,
+      isBorder: system.isBorder ?? false,
+      isFringe: system.isFringe ?? false,
+      isCorridor: system.isCorridor ?? false,
+      isInternational: system.isInternational ?? false,
+      isRegional: system.isRegional ?? false,
+    },
   };
-}
-
-/**
- * The page renders fine without this half, exactly as it did while the data
- * came from a client-side SDE request, so a database failure degrades to null
- * instead of erroring the route.
- */
-async function getSolarSystemSdeInfo(
-  systemId: number,
-): Promise<SolarSystemSdeInfo | null> {
-  try {
-    return await readSolarSystemSdeInfo(systemId);
-  } catch {
-    return null;
-  }
 }
 
 /**
@@ -139,9 +133,10 @@ async function PageContent({
   const { systemId } = await params;
   const id = parsePositiveEntityId(systemId);
   if (id === null) notFound();
-  const sde = await getSolarSystemSdeInfo(id);
+  const system = await readSolarSystemPageData(id);
+  if (!system) notFound();
 
-  return <PageClient sde={sde} />;
+  return <PageClient systemName={system.name} sde={system.sde} />;
 }
 
 export default function Page({

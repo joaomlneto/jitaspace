@@ -498,8 +498,9 @@ const EXTERNAL_TOOLS = [
 ];
 
 export default function Page({
+  systemName,
   sde,
-}: Readonly<{ sde: SolarSystemSdeInfo | null }>) {
+}: Readonly<{ systemName: string; sde: SolarSystemSdeInfo | null }>) {
   const params = useParams();
   const rawSystemId = params.systemId;
   const systemId = Number(
@@ -590,7 +591,7 @@ export default function Page({
               />
               <Group gap="sm" align="center">
                 <Title order={1} className={classes.title}>
-                  <SolarSystemName span solarSystemId={systemId} />
+                  {systemName}
                 </Title>
                 {character && (
                   <SetAutopilotDestinationActionIcon

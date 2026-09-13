@@ -245,13 +245,6 @@ const config = {
         destination: "https://eu.i.posthog.com/:path*",
       },
       {
-        // Serve a single static shell for every /market/<typeId> URL instead of
-        // rendering (and ISR-caching) one page per type id. The browser keeps the
-        // pretty /market/<typeId> URL; the client reads the id from the path.
-        source: "/market/:typeId",
-        destination: "/market",
-      },
-      {
         // Market groups have no page of their own, but `MarketGroupAnchor`
         // links to /market-group/<id> — from every type page and from the
         // market breadcrumbs — so without this every one of those links is a

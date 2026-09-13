@@ -98,6 +98,7 @@ beforeEach(() => {
 
 describe("system route server data", () => {
   const columns = {
+    name: "Jita",
     luminosity: 1.5,
     radius: 100,
     wormholeClassId: null,
@@ -120,6 +121,7 @@ describe("system route server data", () => {
       systemId: "30000142",
     });
 
+    expect(props.systemName).toBe("Jita");
     expect(props.sde).toEqual({
       luminosity: 1.5,
       radius: 100,
@@ -146,12 +148,11 @@ describe("system route server data", () => {
     expect((props.sde as { position: unknown }).position).toBeNull();
   });
 
-  it("passes null for an unknown system", async () => {
+  it("404s an unknown system", async () => {
     solarSystemFindUnique.mockResolvedValue(null);
-    const props = await runRoute("~/app/system/[systemId]/page", {
-      systemId: "30000142",
-    });
-    expect(props.sde).toBeNull();
+    await expect(
+      runRoute("~/app/system/[systemId]/page", { systemId: "30000142" }),
+    ).rejects.toThrow("NEXT_HTTP_ERROR_FALLBACK;404");
   });
 
   it("404s an id that isn't the canonical spelling, without querying", async () => {
@@ -164,12 +165,11 @@ describe("system route server data", () => {
     expect(solarSystemFindUnique).not.toHaveBeenCalled();
   });
 
-  it("passes null when the query fails", async () => {
+  it("lets a query failure escape instead of treating it as a missing system", async () => {
     solarSystemFindUnique.mockRejectedValue(new Error("connection lost"));
-    const props = await runRoute("~/app/system/[systemId]/page", {
-      systemId: "30000142",
-    });
-    expect(props.sde).toBeNull();
+    await expect(
+      runRoute("~/app/system/[systemId]/page", { systemId: "30000142" }),
+    ).rejects.toThrow("connection lost");
   });
 });
 
