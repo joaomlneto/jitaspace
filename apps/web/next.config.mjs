@@ -48,6 +48,7 @@ if (!process.env.SKIP_ENV_VALIDATION) {
  *   - img:     EVE image CDNs (`images.evetech.net`, `web.ccpgamescdn.com`) and
  *              the item-icon host (`icons.jita.space`).
  *   - script:  Google Tag Manager.
+ *   - font:    none — the app loads no web fonts.
  *   - worker:  `blob:` for Sentry Session Replay's compression Web Worker.
  *   - connect: data the client-side hooks (React Query / SWR) fetch directly —
  *              the EVE data plane (ESI, the self-hosted SDE, the EVE-Kill / EVE
@@ -74,6 +75,7 @@ const contentSecurityPolicy = [
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com",
   // Mantine emits inline styles; same per-request-nonce caveat as script-src.
   "style-src 'self' 'unsafe-inline'",
+  "font-src 'self'",
   // Sentry Session Replay (enabled in instrumentation-client.ts) compresses
   // events in a Web Worker loaded from a `blob:` URL. Without this it falls back
   // to default-src 'self', which blocks the blob worker.
@@ -83,11 +85,13 @@ const contentSecurityPolicy = [
   // zKillboard killmail API (kill page + Travel panel) — plus
   // images.evetech.net, which is also fetched as JSON to choose an image variant
   // and so needs connect-src in addition to img-src. Then Google Analytics
-  // (incl. regional `*.google-analytics.com` collectors) and the same-origin
-  // Sentry/Umami proxies. Static EVE reference data is no longer fetched from
+  // (incl. regional `*.google-analytics.com` collectors, plus the Google tag's
+  // `www.googletagmanager.com/td` requests, sent as fetch/beacon calls and so
+  // needing connect-src as well as img-src) and the same-origin Sentry/Umami
+  // proxies. Static EVE reference data is no longer fetched from
   // the self-hosted SDE service: it is resolved from our own database, on the
   // server or through same-origin server actions, both covered by 'self'.
-  "connect-src 'self' https://esi.evetech.net https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://gateway.umami.is https://www.google.com /monitoring /analytics /ingest",
+  "connect-src 'self' https://esi.evetech.net https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://gateway.umami.is https://www.google.com /monitoring /analytics /ingest",
   "frame-ancestors 'none'",
   // Sentry Security (CSP) endpoint derived from the browser DSN — see the note
   // above on why this is NOT the `/monitoring` tunnel. TODO: `report-uri` is
