@@ -182,6 +182,26 @@ describe("Group Page", () => {
     );
   });
 
+  // The metadata used to reject 0 while the page accepted it, so /group/0 —
+  // "#System" — rendered with the bare site title and no canonical.
+  it("titles and canonicalises group 0 like any other group", async () => {
+    mockFindUniqueOrThrow.mockResolvedValue({
+      groupId: 0,
+      name: "#System",
+      types: [],
+    });
+    const { generateMetadata } = require("~/app/group/[groupId]/page");
+
+    expect(
+      await generateMetadata({ params: Promise.resolve({ groupId: "0" }) }),
+    ).toEqual(
+      expect.objectContaining({
+        title: "#System",
+        alternates: { canonical: "/group/0" },
+      }),
+    );
+  });
+
   it("calls notFound() when the group lookup throws", async () => {
     mockFindUniqueOrThrow.mockRejectedValue(new Error("db error"));
 

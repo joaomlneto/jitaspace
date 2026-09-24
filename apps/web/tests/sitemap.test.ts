@@ -115,9 +115,13 @@ type QueryMock = jest.Mock<(args?: unknown) => Promise<unknown[]>>;
 
 const findManyMocks = {} as Record<keyof typeof rows, QueryMock>;
 const mockGroupBy = jest.fn<(args?: unknown) => Promise<unknown[]>>();
+// LP stores are advertised by name, so their family also reads the names.
+const mockCorporationFindMany =
+  jest.fn<(args?: unknown) => Promise<unknown[]>>();
 
 const prismaStub: Record<string, unknown> = {
   loyaltyStoreOffer: { groupBy: (args?: unknown) => mockGroupBy(args) },
+  corporation: { findMany: (args?: unknown) => mockCorporationFindMany(args) },
 };
 for (const model of Object.keys(rows) as (keyof typeof rows)[]) {
   const fn: QueryMock = jest.fn<(args?: unknown) => Promise<unknown[]>>();
@@ -236,6 +240,10 @@ describe("sitemap", () => {
     mockGroupBy.mockResolvedValue([
       { corporationId: 1000035, _max: { updatedAt: ENTITY_UPDATED_AT } },
     ]);
+    mockCorporationFindMany.mockReset();
+    mockCorporationFindMany.mockResolvedValue([
+      { corporationId: 1000035, name: "Caldari Navy" },
+    ]);
     mockCaptureException.mockReset();
   });
 
@@ -271,7 +279,7 @@ describe("sitemap", () => {
     it("aggregates the LP store page from its newest offer", async () => {
       const entries = await allEntries(load());
       const store = entries.find(
-        (entry) => entry.url === "https://www.jita.space/lp-store/1000035",
+        (entry) => entry.url === "https://www.jita.space/lp-store/Caldari_Navy",
       );
 
       expect(store).toBeDefined();
@@ -497,6 +505,61 @@ describe("sitemap", () => {
     expect(groupArgs.orderBy).toEqual({ corporationId: "asc" });
   });
 
+  describe("LP stores", () => {
+    const lpLocs = async () =>
+      (await allLocs(load())).filter((loc) => loc.includes("/lp-store/"));
+
+    // The index links stores by name and both forms of the page canonicalise
+    // to the name, so the sitemap must advertise that form — never the id.
+    it("advertises each store by name, in store order", async () => {
+      mockGroupBy.mockResolvedValue([
+        { corporationId: 1000035, _max: { updatedAt: ENTITY_UPDATED_AT } },
+        { corporationId: 1000180, _max: { updatedAt: ENTITY_UPDATED_AT } },
+      ]);
+      // Returned out of order on purpose: pagination must follow the sorted
+      // store list, not whatever order the name lookup happens to return.
+      mockCorporationFindMany.mockResolvedValue([
+        { corporationId: 1000180, name: "State Protectorate" },
+        { corporationId: 1000035, name: "Caldari Navy" },
+      ]);
+
+      expect(await lpLocs()).toEqual([
+        "https://www.jita.space/lp-store/Caldari_Navy",
+        "https://www.jita.space/lp-store/State_Protectorate",
+      ]);
+      expect(queryArgs(mockCorporationFindMany).where).toEqual({
+        corporationId: { in: [1000035, 1000180] },
+      });
+    });
+
+    it("keeps names with punctuation intact and encodes anything path-unsafe", async () => {
+      mockGroupBy.mockResolvedValue([
+        { corporationId: 1000140, _max: { updatedAt: ENTITY_UPDATED_AT } },
+        { corporationId: 1, _max: { updatedAt: ENTITY_UPDATED_AT } },
+      ]);
+      mockCorporationFindMany.mockResolvedValue([
+        { corporationId: 1000140, name: "Mordu's Legion" },
+        { corporationId: 1, name: "Hypothetical A&B / Co #1" },
+      ]);
+
+      expect(await lpLocs()).toEqual([
+        "https://www.jita.space/lp-store/Mordu's_Legion",
+        "https://www.jita.space/lp-store/Hypothetical_A%26B_%2F_Co_%231",
+      ]);
+    });
+
+    it("leaves out a store whose corporation row is missing", async () => {
+      mockGroupBy.mockResolvedValue([
+        { corporationId: 1000035, _max: { updatedAt: ENTITY_UPDATED_AT } },
+        { corporationId: 999, _max: { updatedAt: ENTITY_UPDATED_AT } },
+      ]);
+
+      expect(await lpLocs()).toEqual([
+        "https://www.jita.space/lp-store/Caldari_Navy",
+      ]);
+    });
+  });
+
   it("never emits a dynamic segment as a literal route", async () => {
     const locs = await allLocs(load());
 
@@ -521,7 +584,7 @@ describe("sitemap", () => {
         "https://www.jita.space/faction/500001",
         "https://www.jita.space/race/1",
         "https://www.jita.space/bloodline/1",
-        "https://www.jita.space/lp-store/1000035",
+        "https://www.jita.space/lp-store/Caldari_Navy",
       ]),
     );
   });

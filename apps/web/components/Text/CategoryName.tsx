@@ -12,7 +12,7 @@ export type CategoryNameProps = TextProps & {
 
 export const CategoryName = memo(
   ({ categoryId, ...otherProps }: CategoryNameProps) => {
-    const { data } = useCategory(categoryId ?? 0);
+    const { data } = useCategory(categoryId);
     return <UICategoryName name={data?.data.name} {...otherProps} />;
   },
 );

@@ -6,43 +6,54 @@ import { notFound } from "next/navigation";
 import type { LPStoreCorporationPageProps } from "./page.client";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import {
+  corporationNameFromLpStoreSegment,
+  lpStorePath,
+} from "~/lib/lpStorePath";
 import { eveImage, pageMetadata } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import LPStoreCorporationPage from "./page.client";
 
+/**
+ * The corporation an `/lp-store/<segment>` names, or null when nothing does.
+ *
+ * The segment is dual-purpose: a corporation id (`/lp-store/1000180`) or an
+ * underscored name (`/lp-store/State_Protectorate`). Both render the same
+ * store, and both canonicalise to the name form — see `lpStorePath`. Only the
+ * id arm can be shape-checked: a non-canonical id spelling ("01000180",
+ * "1000180.0") is tried as a name, matches nothing and reaches not-found.
+ *
+ * Shared by the page and `generateMetadata`, so the two can never resolve the
+ * same URL differently again — they did: the metadata understood only ids, so
+ * every store the index linked by name got the bare site title. Cached like
+ * the store it resolves, and it throws on a failed query rather than
+ * returning null, so an outage is never stored as a missing store.
+ */
+async function readLpStoreCorporation(segment: string) {
+  "use cache";
+  cacheLife("days");
+
+  const corporationId = parsePositiveEntityId(segment);
+  return prisma.corporation.findFirst({
+    select: { corporationId: true, name: true, ticker: true },
+    where:
+      corporationId === null
+        ? { name: corporationNameFromLpStoreSegment(segment) }
+        : { corporationId },
+  });
+}
+
 async function getLPStoreCorporationData(
-  corporationId: string,
+  segment: string,
 ): Promise<LPStoreCorporationPageProps> {
   "use cache";
   cacheLife("days");
 
-  // The segment is dual-purpose: `/lp-store` links each store by underscored
-  // corporation name, while the sitemap advertises the numeric id (183 URLs).
-  // So only the numeric arm can be shape-checked — a non-canonical spelling
-  // ("01000035", "1000035.0") falls through to the name lookup, matches nothing
-  // and 404s. That is why this route validates here rather than in
-  // `PageContent` like the single-purpose id routes do.
-  const requestedCorporationId =
-    parsePositiveEntityId(corporationId) ?? undefined;
-
-  const corporation = await prisma.corporation.findFirstOrThrow({
-    select: {
-      corporationId: true,
-      name: true,
-    },
-    where: {
-      OR: [
-        {
-          corporationId: requestedCorporationId,
-        },
-        {
-          name: {
-            equals: corporationId.replaceAll("_", " "),
-          },
-        },
-      ],
-    },
-  });
+  const store = await readLpStoreCorporation(segment);
+  // Thrown rather than returned so `PageContent` renders not-found exactly as
+  // it did when this was a `findFirstOrThrow`.
+  if (!store) throw new Error(`No LP store corporation matches "${segment}"`);
+  const corporation = { corporationId: store.corporationId, name: store.name };
 
   const offersRaw = await prisma.loyaltyStoreOffer.findMany({
     select: {
@@ -100,15 +111,11 @@ export async function generateMetadata({
 }: {
   params: Promise<{ corporationId: string }>;
 }): Promise<Metadata> {
-  const { corporationId } = await params;
-  const id = parsePositiveEntityId(corporationId);
-  if (id === null) return {};
+  const { corporationId: segment } = await params;
   try {
-    const corporation = await prisma.corporation.findUnique({
-      select: { name: true, ticker: true },
-      where: { corporationId: id },
-    });
+    const corporation = await readLpStoreCorporation(segment);
     if (!corporation) return {};
+    const id = corporation.corporationId;
 
     const offerCount = await prisma.loyaltyStoreOffer.count({
       where: { corporationId: id },
@@ -117,7 +124,9 @@ export async function generateMetadata({
     return pageMetadata({
       title: `${corporation.name} LP Store`,
       description: `Browse the ${offerCount} Loyalty Point offers from ${corporation.name} in EVE Online — LP and ISK cost, required items, and item values.`,
-      path: `/lp-store/${id}`,
+      // The name form, whichever form was requested, so `/lp-store/1000180`
+      // and `/lp-store/State_Protectorate` declare the same canonical.
+      path: lpStorePath(corporation.name),
       badge: "LP Store",
       image: eveImage.corporation(id),
       facts: [

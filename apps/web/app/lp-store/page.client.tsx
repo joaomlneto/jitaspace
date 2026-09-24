@@ -21,6 +21,8 @@ import {
 } from "@jitaspace/hooks";
 import { CorporationAvatar } from "@jitaspace/ui";
 
+import { lpStorePath } from "~/lib/lpStorePath";
+
 export interface LPStorePageProps {
   corporations: { corporationId: number; name: string }[];
 }
@@ -54,7 +56,7 @@ export default function LPStorePage({
             return (
               <Anchor
                 component={Link}
-                href={`/lp-store/${corporation.name.replaceAll(" ", "_")}`}
+                href={lpStorePath(corporation.name)}
                 key={corporation.corporationId}
                 onClick={() =>
                   posthog.capture("lp_store_corporation_selected", {
