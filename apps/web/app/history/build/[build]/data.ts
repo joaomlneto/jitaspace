@@ -130,7 +130,8 @@ async function readStringChanges(
     const { from, to } = (r.data ?? {}) as { from?: string; to?: string };
     // Absent sides are omitted rather than set to `undefined`, which the RSC
     // payload would spell out for each of what can be tens of thousands of rows.
-    (byLang[lang] ??= []).push({
+    byLang[lang] ??= [];
+    byLang[lang].push({
       id: r.entity.eveId,
       kind: opKey(r.op),
       ...(from === undefined ? {} : { from }),
