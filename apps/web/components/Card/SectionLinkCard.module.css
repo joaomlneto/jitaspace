@@ -1,7 +1,7 @@
-/* The linked cards on the section landing pages (/assets, /contacts, /dogma).
-   The border stays in each Card's `styles` prop, next to the theme's own
-   inline panel styles; this module holds what inline styles cannot express:
-   the hover/focus lift and the accent bar under the title. */
+/* The border stays in SectionLinkCard's `styles` prop: the theme gives Card
+   its panel look as inline styles, which a class here could not override.
+   This module holds what inline styles cannot express: the hover/focus lift
+   and the accent bar under the title. */
 
 .card {
   transition: transform 200ms ease;
