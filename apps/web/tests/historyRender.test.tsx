@@ -10,6 +10,8 @@ import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
+import type { BuildPage } from "~/lib/history";
+
 // ── mocks ────────────────────────────────────────────────────────────────────
 
 // Only the two fields the tests drive off are named; everything else the
@@ -32,12 +34,8 @@ jest.mock("@mantine/charts", () => ({
 // Stub the server functions so the Prisma-backed @jitaspace/db-history module is
 // never loaded; they're only passed as queryFn to the (mocked) useQuery anyway.
 jest.mock("~/lib/history-actions", () => ({
-  getBuildChanges: jest.fn(),
   getBuildRangeChanges: jest.fn(),
   getEntityTimeline: jest.fn(),
-  getResourceIndex: jest.fn(),
-  getFileDiff: jest.fn(),
-  getStringChanges: jest.fn(),
 }));
 
 // The index page server-renders the day-cached index from ~/lib/history-cache
@@ -162,56 +160,40 @@ const TIMELINE = {
   ],
 };
 
-const BUILD_CHANGES = {
+const BUILD_PAGE: BuildPage = {
   build: 3383521,
   date: "2026-06-08",
   changes: [
-    {
-      entityId: 91920,
-      entityType: "type",
-      collection: "types",
-      v: 1,
-      kind: "added",
-      values: {},
-    },
+    { entityId: 91920, entityType: "type", collection: "types", kind: "added" },
     {
       entityId: 587,
       entityType: "type",
       collection: "typeDogma",
-      v: 1,
       kind: "modified",
-      fields: {},
     },
-    {
-      entityId: 999,
-      entityType: "type",
-      collection: "types",
-      v: 1,
-      kind: "removed",
-      values: {},
-    },
-    {
-      entityId: 1,
-      entityType: "skin",
-      collection: "skins",
-      v: 1,
-      kind: "added",
-      values: {},
-    },
+    { entityId: 999, entityType: "type", collection: "types", kind: "removed" },
+    { entityId: 1, entityType: "skin", collection: "skins", kind: "added" },
   ],
+  // 999 is left unnamed: a type newer than the ingested SDE.
+  typeNames: { 91920: "Pochven Spawner", 587: "Rifter" },
+  files: { added: ["res:/a.png"], changed: ["res:/b.png"], removed: [] },
+  strings: {
+    "en-us": [
+      { id: 1, kind: "added", to: "Hello" },
+      { id: 2, kind: "changed", from: "Old name", to: "New name" },
+      { id: 3, kind: "removed", from: "Gone" },
+    ],
+    de: [{ id: 1, kind: "added", to: "Hallo" }],
+  },
 };
 
-const RESOURCE_INDEX = {
-  generatedAt: "x",
-  languages: ["en-us"],
-  builds: [
-    {
-      build: 3383521,
-      date: "2026-06-08",
-      files: { added: 5, changed: 2, removed: 0 },
-      strings: { "en-us": { added: 3, changed: 1, removed: 0 } },
-    },
-  ],
+const EMPTY_BUILD_PAGE: BuildPage = {
+  build: 3383522,
+  date: null,
+  changes: [],
+  typeNames: {},
+  files: { added: [], changed: [], removed: [] },
+  strings: {},
 };
 
 const HISTORY_INDEX = {
@@ -259,16 +241,7 @@ function dataFor(opts: { queryKey?: unknown[] }) {
   const ready = { isLoading: false, isPending: false, isFetching: false };
   if (k === "history-index") return { data: HISTORY_INDEX, ...ready };
   if (k === "history-entity") return { data: TIMELINE, ...ready };
-  if (k === "history-build") return { data: BUILD_CHANGES, ...ready };
   if (k === "history-compare") return { data: RANGE_CHANGES, ...ready };
-  if (k === "resource-index") return { data: RESOURCE_INDEX, ...ready };
-  if (k === "res-files")
-    return {
-      data: { added: ["res:/a.png"], changed: ["res:/b.png"], removed: [] },
-      ...ready,
-    };
-  if (k === "res-strings")
-    return { data: [{ id: 1, kind: "added", to: "Hello" }], ...ready };
   // SDE name lookups (getTypeByIdQueryOptions etc.)
   return { data: { data: { name: "Rifter" } }, ...ready };
 }
@@ -449,17 +422,127 @@ describe("EntityHistory", () => {
 });
 
 describe("BuildHistoryClient", () => {
-  it("renders new/removed/changed sections + resources, and expands lazy lists", async () => {
+  it("renders the server-read build without fetching anything", async () => {
     const { default: BuildHistoryClient } =
       await import("~/app/history/build/[build]/page.client");
-    wrap(<BuildHistoryClient build={3383521} />);
+    wrap(<BuildHistoryClient data={BUILD_PAGE} />);
     expect(screen.getByText("Build 3383521")).toBeTruthy();
-    expect(screen.getByText("Resources")).toBeTruthy();
+    expect(screen.getByText(/2026-06-08 · 4 changes/)).toBeTruthy();
+    expect(screen.getByText("New types")).toBeTruthy();
+    expect(screen.getByText("Removed types")).toBeTruthy();
+    expect(screen.getByText("Changed types")).toBeTruthy();
+    expect(screen.getByText("New skins")).toBeTruthy();
 
-    // expand the Files + localization sections to cover the lazy query branches
+    // Names come from the page data, not from a lookup per row.
+    expect(screen.getByText("Pochven Spawner")).toBeTruthy();
+    expect(screen.getByText("Rifter")).toBeTruthy();
+    // An unnamed type falls back to its kind; the row still carries its id.
+    const row = (id: number) =>
+      document.querySelector(`a[href="/history/type/${id}"]`)?.textContent;
+    expect(row(999)).toBe("Type #999");
+    expect(row(587)).toBe("Rifter #587");
+    expect(mockUseQuery).not.toHaveBeenCalled();
+  });
+
+  it("expands the file and localization lists from the page data", async () => {
+    const { default: BuildHistoryClient } =
+      await import("~/app/history/build/[build]/page.client");
+    wrap(<BuildHistoryClient data={BUILD_PAGE} />);
+    expect(screen.getByText("Resources")).toBeTruthy();
+    // Counts are derived from the lists themselves.
+    expect(screen.getByText(/\+1 · 1 changed · −1/)).toBeTruthy();
+    expect(screen.queryByText("res:/a.png")).toBeNull();
+
     fireEvent.click(screen.getByText(/Files/));
+    expect(screen.getByText("res:/a.png")).toBeTruthy();
+    expect(screen.getByText("res:/b.png")).toBeTruthy();
+
+    // en-us sorts ahead of the other languages.
+    const langs = screen.getAllByText(/English|German/);
+    expect(langs.map((el) => el.textContent)).toEqual([
+      "▸ English",
+      "▸ German",
+    ]);
     fireEvent.click(screen.getByText(/English/));
-    expect(screen.getAllByText(/res:\//).length).toBeGreaterThan(0);
+    expect(screen.getByText("Hello")).toBeTruthy();
+    expect(screen.getByText("Old name")).toBeTruthy();
+    expect(screen.getByText("New name")).toBeTruthy();
+    expect(screen.getByText("Gone")).toBeTruthy();
+    expect(mockUseQuery).not.toHaveBeenCalled();
+  });
+
+  it("narrows the change lists to the collections in the URL", async () => {
+    const { default: BuildHistoryClient } =
+      await import("~/app/history/build/[build]/page.client");
+    wrap(<BuildHistoryClient data={BUILD_PAGE} />, "?collections=skins");
+    expect(screen.getByText(/1 changes/)).toBeTruthy();
+    expect(screen.getByText("New skins")).toBeTruthy();
+    expect(screen.queryByText("New types")).toBeNull();
+
+    cleanup();
+    wrap(<BuildHistoryClient data={BUILD_PAGE} />, "?collections=");
+    expect(
+      screen.getByText(/No changes match the selected collections/),
+    ).toBeTruthy();
+  });
+
+  it("mounts only the first rows of a long list until it is expanded", async () => {
+    const { RowSpoiler } =
+      await import("~/app/history/build/[build]/_row-spoiler");
+    // jsdom has no layout, so the Spoiler would measure the list as 0px tall and
+    // hide its control; report a list taller than the clip instead.
+    const original = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class {
+      constructor(private readonly callback: ResizeObserverCallback) {}
+      observe = () =>
+        this.callback(
+          [{ contentRect: { height: 1000 } } as ResizeObserverEntry],
+          this,
+        );
+      unobserve = () => undefined;
+      disconnect = () => undefined;
+    };
+    try {
+      const items = Array.from({ length: 100 }, (_, i) => i);
+      wrap(
+        <RowSpoiler items={items} fz="sm">
+          {(visible) => visible.map((i) => <div key={i}>row {i}</div>)}
+        </RowSpoiler>,
+      );
+      const rows = () => screen.getAllByText(/^row \d+$/).length;
+      expect(rows()).toBe(40);
+
+      fireEvent.click(await screen.findByText("Show all 100"));
+      expect(rows()).toBe(100);
+
+      fireEvent.click(screen.getByText("Show less"));
+      expect(rows()).toBe(40);
+    } finally {
+      globalThis.ResizeObserver = original;
+    }
+  });
+
+  it("renders the empty state for a build with nothing recorded", async () => {
+    const { default: BuildHistoryClient } =
+      await import("~/app/history/build/[build]/page.client");
+    wrap(<BuildHistoryClient data={EMPTY_BUILD_PAGE} />);
+    expect(screen.getByText(/No recorded changes for this build/)).toBeTruthy();
+    expect(screen.getByText(/Back to history/)).toBeTruthy();
+  });
+
+  it("shows only the resources of a build with no decoded-SDE changes", async () => {
+    const { default: BuildHistoryClient } =
+      await import("~/app/history/build/[build]/page.client");
+    wrap(
+      <BuildHistoryClient
+        data={{ ...EMPTY_BUILD_PAGE, files: BUILD_PAGE.files }}
+      />,
+    );
+    expect(screen.getByText("Resources")).toBeTruthy();
+    expect(screen.getByText("date unknown")).toBeTruthy();
+    expect(screen.queryByText(/changes ·/)).toBeNull();
+    expect(screen.queryByText(/No changes match/)).toBeNull();
+    expect(screen.queryByText(/Localization strings/)).toBeNull();
   });
 });
 
