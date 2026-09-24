@@ -1,0 +1,30 @@
+/* The linked cards on the section landing pages (/assets, /contacts, /dogma).
+   The border stays in each Card's `styles` prop, next to the theme's own
+   inline panel styles; this module holds what inline styles cannot express:
+   the hover/focus lift and the accent bar under the title. */
+
+.card {
+  transition: transform 200ms ease;
+}
+
+/* The card sits directly inside the <a> (UnstyledButton), which is what takes
+   keyboard focus. */
+.card:hover,
+:focus-visible > .card {
+  transform: scale(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}
+
+.title::after {
+  content: "";
+  display: block;
+  background-color: var(--mantine-primary-color-filled);
+  width: rem(45px);
+  height: rem(2px);
+  margin-top: var(--mantine-spacing-sm);
+}

@@ -16,6 +16,8 @@ import {
 
 import { AssetsIcon, CorporationAssetsIcon } from "@jitaspace/eve-icons";
 
+import classes from "~/components/Card/SectionLinkCard.module.css";
+
 export default function Page() {
   const theme = useMantineTheme();
   const { colorScheme } = useMantineColorScheme();
@@ -32,18 +34,14 @@ export default function Page() {
             shadow="md"
             radius="md"
             mih={200}
+            className={classes.card}
             styles={{
               root: {
-                transition: "transform 0.2s",
                 border: `${rem(1)} solid ${
                   colorScheme === "dark"
                     ? theme.colors.dark[5]
                     : theme.colors.gray[1]
                 }`,
-                /* // FIXME Mantine v7 migration
-              "&:hover": {
-                transform: "scale(1.05)",
-              },*/
               },
             }}
             padding="xl"
@@ -52,21 +50,7 @@ export default function Page() {
               <AssetsIcon height={64} width={64} color={theme.primaryColor} />
             </Container>
             <Group>
-              <Text
-                fz="lg"
-                fw={500}
-                style={{
-                  "&::after": {
-                    content: '""',
-                    display: "block",
-                    backgroundColor: theme.primaryColor,
-                    width: rem(45),
-                    height: rem(2),
-                    marginTop: theme.spacing.sm,
-                  },
-                }}
-                mt="md"
-              >
+              <Text fz="lg" fw={500} className={classes.title} mt="md">
                 Character Assets
               </Text>
             </Group>
@@ -80,18 +64,14 @@ export default function Page() {
             shadow="md"
             radius="md"
             mih={200}
+            className={classes.card}
             styles={{
               root: {
-                transition: "transform 0.2s",
                 border: `${rem(1)} solid ${
                   colorScheme === "dark"
                     ? theme.colors.dark[5]
                     : theme.colors.gray[1]
                 }`,
-                /* // FIXME Mantine v7 migration
-                  "&:hover": {
-                    transform: "scale(1.05)",
-                  },*/
               },
             }}
             padding="xl"
@@ -104,21 +84,7 @@ export default function Page() {
               />
             </Container>
             <Group>
-              <Text
-                fz="lg"
-                fw={500}
-                style={{
-                  "&::after": {
-                    content: '""',
-                    display: "block",
-                    backgroundColor: theme.primaryColor,
-                    width: rem(45),
-                    height: rem(2),
-                    marginTop: theme.spacing.sm,
-                  },
-                }}
-                mt="md"
-              >
+              <Text fz="lg" fw={500} className={classes.title} mt="md">
                 Corporation Assets
               </Text>
             </Group>

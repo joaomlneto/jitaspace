@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import {
+  Box,
   Button,
   Container,
   Group,
@@ -23,36 +24,27 @@ export default function Page() {
         paddingBottom: rem(80),
       }}
     >
-      <div
+      <Box
+        fz={{ base: 120, sm: 220 }}
         style={{
           textAlign: "center",
           fontWeight: 900,
-          fontSize: rem(220),
           lineHeight: 1,
           marginBottom: `calc(${theme.spacing.xl} * 1.5)`,
           color:
             colorScheme === "dark"
               ? theme.colors.dark[4]
               : theme.colors.gray[2],
-
-          /*
-        [theme.fn.smallerThan("sm")]: {
-          fontSize: rem(120),
-        },*/ // FIXME Mantine v7 migration
         }}
       >
         404
-      </div>
+      </Box>
       <Title
+        fz={{ base: 32, sm: 38 }}
         style={{
           fontFamily: `Greycliff CF, ${theme.fontFamily}`,
           textAlign: "center",
           fontWeight: 900,
-          fontSize: rem(38),
-          /*
-        [theme.fn.smallerThan("sm")]: {
-          fontSize: rem(32),
-        },*/ // FIXME Mantine v7 migration
         }}
       >
         You have found a secret place.
