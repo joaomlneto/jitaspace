@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { FileDiff, StringChange } from "~/lib/resource-history";
+
 /**
  * Reader-side schemas, types and display metadata for the change-history
  * viewer. The data is produced by the change-history pipeline and read from the
@@ -105,6 +107,41 @@ export const BuildChanges = z.object({
   ),
 });
 export type BuildChanges = z.infer<typeof BuildChanges>;
+
+/**
+ * One row of a change list: which entity changed, in which collection, and how.
+ * A {@link BuildChanges} entry without its per-field payload (`fields` /
+ * `values`) — the change lists name entities and never render their diffs, and
+ * on a large build that payload runs to megabytes.
+ */
+export interface EntityChangeRow {
+  entityId: number;
+  /** Entity kind ("type", "skin", …); absent ⇒ "type". */
+  entityType?: string;
+  /** Source dataset ("types", "typeDogma", …); absent ⇒ "types". */
+  collection?: string;
+  kind: EntityChange["kind"];
+}
+
+/**
+ * Everything `/history/build/[build]` renders, read on the server in one pass so
+ * the page arrives complete and the browser makes no further requests for it.
+ */
+export interface BuildPage {
+  build: number;
+  date: string | null;
+  /** Decoded-SDE changes (localization strings excluded — see `strings`). */
+  changes: EntityChangeRow[];
+  /**
+   * Names of the `type` entities in `changes`, by typeId. A type missing here is
+   * newer than the ingested SDE (history is decoded from the game client).
+   */
+  typeNames: Record<number, string>;
+  /** Raw resource-file paths the build added / changed / removed. */
+  files: FileDiff;
+  /** Localization-string changes per language; only languages that changed. */
+  strings: Record<string, StringChange[]>;
+}
 
 /**
  * The net difference between two builds — every entity that differs at the `to`
