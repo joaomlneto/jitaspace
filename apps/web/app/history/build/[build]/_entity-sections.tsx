@@ -11,9 +11,8 @@ import {
   Title,
 } from "@mantine/core";
 
-import type { BuildChanges } from "~/lib/history";
+import type { BuildChanges, TypeNames } from "~/lib/history";
 import { collectionMeta, entityTypeMeta } from "~/lib/history";
-import { TypeName } from "../../_sde-ui";
 
 // Collapse change lists past ~20 rows (Mantine Spoiler).
 const SPOILER_MAX_HEIGHT = 520;
@@ -131,20 +130,21 @@ function badgeSuffix(kind: string): string {
 function EntityRow({
   entityType,
   id,
+  name,
   badges,
 }: Readonly<{
   entityType: string;
   id: number;
+  name?: string;
   badges?: { collection: string; kind: string }[];
 }>) {
   return (
     <Group gap="xs" wrap="nowrap">
       <Anchor component={Link} href={`/history/${entityType}/${id}`}>
-        {entityType === "type" ? (
-          <TypeName span typeId={id} />
-        ) : (
-          <Text span>{entityTypeMeta(entityType).label}</Text>
-        )}{" "}
+        {/* Names arrive resolved from the server; a row never fetches its own
+            (one server action per row queued for minutes on a large diff).
+            Without a name the kind still labels the row, and the id follows. */}
+        <Text span>{name ?? entityTypeMeta(entityType).label}</Text>{" "}
         <Text span c="dimmed">
           #{id}
         </Text>
@@ -171,11 +171,13 @@ function ChangeList({
   title,
   color,
   entityType,
+  names,
   rows,
 }: Readonly<{
   title: string;
   color: string;
   entityType: string;
+  names?: TypeNames;
   rows: { id: number; badges?: { collection: string; kind: string }[] }[];
 }>) {
   if (rows.length === 0) return null;
@@ -196,7 +198,12 @@ function ChangeList({
         <List size="sm" spacing={2}>
           {rows.map((r) => (
             <List.Item key={r.id}>
-              <EntityRow entityType={entityType} id={r.id} badges={r.badges} />
+              <EntityRow
+                entityType={entityType}
+                id={r.id}
+                name={names?.[r.id]}
+                badges={r.badges}
+              />
             </List.Item>
           ))}
         </List>
@@ -208,9 +215,11 @@ function ChangeList({
 /** New / Removed / Changed sections for one entity kind within a build. */
 function EntityTypeSection({
   entityType,
+  names,
   changes,
 }: Readonly<{
   entityType: string;
+  names?: TypeNames;
   changes: BuildChanges["changes"];
 }>) {
   const primary = primaryOf(entityType);
@@ -243,18 +252,21 @@ function EntityTypeSection({
         title={`New ${plural}`}
         color="green"
         entityType={entityType}
+        names={names}
         rows={newRows}
       />
       <ChangeList
         title={`Removed ${plural}`}
         color="red"
         entityType={entityType}
+        names={names}
         rows={removedRows}
       />
       <ChangeList
         title={`Changed ${plural}`}
         color="blue"
         entityType={entityType}
+        names={names}
         rows={changedRows}
       />
     </>
@@ -267,8 +279,11 @@ function EntityTypeSection({
  */
 export function EntityChangeSections({
   changes,
+  typeNames,
 }: Readonly<{
   changes: BuildChanges["changes"];
+  /** Server-resolved names for the `type` rows (see `readTypeNames`). */
+  typeNames?: TypeNames;
 }>) {
   const byEntityType = new Map<string, BuildChanges["changes"]>();
   for (const c of changes) {
@@ -284,7 +299,12 @@ export function EntityChangeSections({
   return (
     <>
       {entityTypes.map(([et, etChanges]) => (
-        <EntityTypeSection key={et} entityType={et} changes={etChanges} />
+        <EntityTypeSection
+          key={et}
+          entityType={et}
+          names={et === "type" ? typeNames : undefined}
+          changes={etChanges}
+        />
       ))}
     </>
   );

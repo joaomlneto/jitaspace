@@ -15,10 +15,11 @@ import type {
   ResourceIndex,
   StringChange,
 } from "~/lib/resource-history";
-import { isBuildInHistoryScope } from "~/lib/history";
+import { isBuildInHistoryScope, typeIdsOf } from "~/lib/history";
 import {
   getCachedBuildRangeChanges,
   getCachedEntityTimeline,
+  readTypeNames,
 } from "~/lib/history-cache";
 
 /**
@@ -115,16 +116,25 @@ export async function getBuildChanges(
     ...(c.op === "modified" ? { fields: c.data } : { values: c.data }),
   })) as BuildChanges["changes"];
 
-  return { build, date: ymd(b.releasedAt), changes };
+  // Every changed type's name in one query, so the list renders named instead
+  // of each row fetching its own. Uncached, like the rest of this reader, so the
+  // failure can be caught right here: names are decorative, and without them the
+  // rows still render by id.
+  const typeNames = await readTypeNames(typeIdsOf(changes)).catch(
+    () => undefined,
+  );
+
+  return { build, date: ymd(b.releasedAt), typeNames, changes };
 }
 
 /**
  * Net decoded-SDE differences between two builds -- everything that is
  * different at build `to` vs. build `from`.
  *
- * Delegates to the immutable, cached {@link getCachedBuildRangeChanges} (keyed on
- * the pair, `cacheLife("max")`) so the expensive range aggregation runs once per
- * `(from, to)` and is served from cache afterwards.
+ * Delegates to {@link getCachedBuildRangeChanges}, keyed on the pair: the
+ * expensive range aggregation is `cacheLife("max")`, so it runs once per
+ * `(from, to)` and is served from cache afterwards, while the changed types'
+ * names ride along from a separate day-long entry.
  */
 export async function getBuildRangeChanges(
   from: number,

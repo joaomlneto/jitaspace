@@ -48,7 +48,10 @@ function CompareResults({ data }: Readonly<{ data: BuildRangeChanges }>) {
           Nothing changed in the tracked static data between these builds.
         </Alert>
       ) : (
-        <EntityChangeSections changes={data.changes} />
+        <EntityChangeSections
+          changes={data.changes}
+          typeNames={data.typeNames}
+        />
       )}
     </Stack>
   );

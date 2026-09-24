@@ -88,9 +88,22 @@ export function latestChangedBuild(
   return latest;
 }
 
+/**
+ * Display names for the `type` entities in a change list, keyed by type id.
+ * Resolved on the server in one query and shipped with the changes, so the
+ * lists render named without each row fetching its own. A missing entry means
+ * no usable name is known — a type newer than our SDE tables, one stored with a
+ * blank name, or names that could not be read at all — and the row falls back
+ * to its id.
+ */
+export const TypeNames = z.record(z.coerce.number(), z.string());
+export type TypeNames = z.infer<typeof TypeNames>;
+
 export const BuildChanges = z.object({
   build: z.number(),
   date: z.string().nullable(),
+  /** Names for the `type` entities below; absent when they could not be read. */
+  typeNames: TypeNames.optional(),
   changes: z.array(
     z.intersection(
       z.object({
@@ -117,9 +130,22 @@ export const BuildRangeChanges = z.object({
   to: z.number(),
   fromDate: z.string().nullable(),
   toDate: z.string().nullable(),
+  typeNames: BuildChanges.shape.typeNames,
   changes: BuildChanges.shape.changes,
 });
 export type BuildRangeChanges = z.infer<typeof BuildRangeChanges>;
+
+/**
+ * The distinct ids of the `type` entities in a change list — the ids a
+ * {@link TypeNames} map covers. A change with no `entityType` is a type, per
+ * {@link BuildChanges}.
+ */
+export function typeIdsOf(changes: BuildChanges["changes"]): number[] {
+  const ids = new Set<number>();
+  for (const c of changes)
+    if ((c.entityType ?? "type") === "type") ids.add(c.entityId);
+  return [...ids];
+}
 
 export const TimelineEvent = z.intersection(
   z.object({

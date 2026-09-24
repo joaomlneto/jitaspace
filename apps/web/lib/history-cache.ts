@@ -7,12 +7,15 @@ import type {
   EntityTimeline,
   HistoryIndex,
   LatestChangedBuild,
+  TypeNames,
 } from "~/lib/history";
+import { prisma } from "~/lib/db";
 import {
   HISTORY_MIN_RELEASE_DATE,
   isBuildInHistoryScope,
   latestChangedBuild,
   netOp,
+  typeIdsOf,
 } from "~/lib/history";
 
 /**
@@ -229,7 +232,90 @@ export async function getCachedEntityTimeline(
 }
 
 /**
- * Cached net {@link BuildRangeChanges} between two builds.
+ * Net {@link BuildRangeChanges} between two builds, with the display name of
+ * every changed type.
+ *
+ * Composed from two cache entries with deliberately different lifetimes, so it
+ * is not a `"use cache"` entry itself:
+ * - the changes ({@link readBuildRangeChanges}) are `cacheLife("max")` — a fixed
+ *   pair of past builds can never differ;
+ * - the type names ({@link readBuildRangeTypeNames}) are `cacheLife("days")` —
+ *   they come from our own SDE tables, which are re-ingested, so a name baked
+ *   into the permanent entry would be frozen there for good.
+ *
+ * The names are decorative. If they cannot be read (our database down while the
+ * history one is up) the comparison is still returned, without `typeNames`, and
+ * its rows render by id. That catch sits here, outside both cache scopes, so a
+ * failed read is never what gets cached.
+ *
+ * Returns `null` for invalid input, as {@link readBuildRangeChanges} does.
+ */
+export async function getCachedBuildRangeChanges(
+  from: number,
+  to: number,
+): Promise<BuildRangeChanges | null> {
+  const range = await readBuildRangeChanges(from, to);
+  if (!range) return null;
+  const typeNames = await readBuildRangeTypeNames(from, to).catch(
+    () => undefined,
+  );
+  return { ...range, typeNames };
+}
+
+/**
+ * Day-cached {@link TypeNames} for the types changed between two builds.
+ *
+ * Keyed on the pair rather than on the id list, which for a range years wide
+ * can run to tens of thousands of ids — far too large to be a cache key.
+ * The ids are re-derived from the permanent range entry instead, which
+ * {@link getCachedBuildRangeChanges} has just populated before asking for these.
+ *
+ * Lets a failed read throw — see {@link readTypeNames}.
+ */
+async function readBuildRangeTypeNames(
+  from: number,
+  to: number,
+): Promise<TypeNames> {
+  "use cache";
+  cacheLife("days");
+
+  const range = await readBuildRangeChanges(from, to);
+  return range ? readTypeNames(typeIdsOf(range.changes)) : {};
+}
+
+/**
+ * Display names for the given type ids, read from our own SDE tables in a
+ * single query (Prisma itself splits an `in` list past the driver's bind-value
+ * limit).
+ *
+ * An id with no row — history is generated from the game client and can
+ * reference types newer than the ingested SDE — or whose stored name is blank
+ * (the ingest writes `""` for a type with no English name) is left out of the
+ * map, and its row falls back to the id.
+ *
+ * A failed query throws rather than degrading to `{}`: this runs inside
+ * {@link readBuildRangeTypeNames}' cache scope, where a swallowed failure would
+ * be stored as a day of missing names. Callers outside a cache scope catch it.
+ */
+export async function readTypeNames(
+  typeIds: readonly number[],
+): Promise<TypeNames> {
+  if (typeIds.length === 0) return {};
+  const rows = await prisma.type.findMany({
+    where: { typeId: { in: [...typeIds] } },
+    select: { typeId: true, name: true },
+  });
+  const names: TypeNames = {};
+  for (const { typeId, name } of rows) {
+    const trimmed = name.trim();
+    if (trimmed) names[typeId] = trimmed;
+  }
+  return names;
+}
+
+/**
+ * Cached net {@link BuildRangeChanges} between two builds, without names (see
+ * {@link getCachedBuildRangeChanges}).
  *
  * A fixed `(from, to)` pair is immutable — the diffs between two past builds
  * never change (new builds only add future diffs) — so this is cached with the
@@ -247,10 +333,10 @@ export async function getCachedEntityTimeline(
  * Returns `null` for invalid input (a missing or out-of-scope endpoint, or
  * `from >= to`); an empty `changes` list means nothing changed between them.
  */
-export async function getCachedBuildRangeChanges(
+async function readBuildRangeChanges(
   from: number,
   to: number,
-): Promise<BuildRangeChanges | null> {
+): Promise<Omit<BuildRangeChanges, "typeNames"> | null> {
   "use cache";
   cacheLife("max");
 

@@ -84,12 +84,39 @@ let mockBuildUnique: {
 // which would otherwise leave the refusal branch — the actual security control —
 // unreachable. `mock`-prefixed so the jest factory may close over it.
 let mockIsBot = false;
-// Counts every historyDb access, to prove the guard refuses before touching the
-// database rather than after doing the expensive work.
+// Counts every historyDb (and main-DB name) access, to prove the guard refuses
+// before touching a database rather than after doing the expensive work.
 let mockDbCalls = 0;
+
+// prisma.type.findMany fixture — our own SDE tables, which the build and range
+// readers query for the changed types' names. The stub honours the `in` filter,
+// so an id with no row is absent from the result, as in the real query. Each
+// call's id list is recorded, and `mockTypeNamesFail` makes the read reject.
+let mockTypeRows: { typeId: number; name: string }[] = [];
+let mockTypeNamesFail = false;
+let mockTypeQueries: number[][] = [];
+// Every cacheLife() profile requested, in order.
+let mockCacheLifeCalls: string[] = [];
 
 jest.mock("botid/server", () => ({
   checkBotId: () => Promise.resolve({ isBot: mockIsBot }),
+}));
+
+jest.mock("~/lib/db", () => ({
+  prisma: {
+    type: {
+      findMany: (args: { where: { typeId: { in: number[] } } }) => {
+        mockDbCalls++;
+        const ids = args.where.typeId.in;
+        mockTypeQueries.push(ids);
+        if (mockTypeNamesFail)
+          return Promise.reject(new Error("Too many database connections"));
+        return Promise.resolve(
+          mockTypeRows.filter((r) => ids.includes(r.typeId)),
+        );
+      },
+    },
+  },
 }));
 
 jest.mock("@jitaspace/db-history", () => ({
@@ -168,7 +195,9 @@ jest.mock("@jitaspace/db-history", () => ({
 // ~/lib/history-cache, which call cacheLife() — a no-op outside the Next.js
 // cache runtime, so stub it.
 jest.mock("next/cache", () => ({
-  cacheLife: () => undefined,
+  cacheLife: (profile: string) => {
+    mockCacheLifeCalls.push(profile);
+  },
   unstable_cacheLife: () => undefined,
 }));
 
@@ -565,6 +594,72 @@ describe("getBuildChanges", () => {
 
     expect(await getBuildChanges(700001)).toBeNull();
   });
+
+  describe("type names", () => {
+    const change = (
+      kind: string,
+      eveId: number,
+      collection: string,
+      op: "added" | "modified" | "removed" = "modified",
+    ) => ({
+      op,
+      data: {},
+      diffId: 10,
+      collection: { name: collection },
+      entity: { kind, eveId },
+    });
+
+    beforeEach(() => {
+      mockBuildUnique = {
+        buildNumber: 700003,
+        releasedAt: new Date("2024-06-04"),
+        server: "tranquility",
+      };
+      mockChangeRows = [
+        change("type", 587, "types"),
+        change("type", 587, "typeDogma"), // same type, second collection
+        change("type", 588, "types", "added"),
+        change("type", 591, "types", "added"), // newer than our SDE: no row
+        change("type", 592, "types"), // stored with a blank name
+        change("skin", 587, "skins", "added"), // not a type, despite the id
+      ];
+      mockTypeRows = [
+        { typeId: 587, name: "Rifter" },
+        { typeId: 588, name: " Slasher " },
+        { typeId: 592, name: "   " },
+      ];
+      mockTypeNamesFail = false;
+      mockTypeQueries = [];
+    });
+
+    it("names every changed type in a single query", async () => {
+      const result = await getBuildChanges(700003);
+
+      // One query for all of them — the per-row lookups this replaces queued one
+      // server action per type — with each type id asked for once, and the
+      // skin sharing an id with a type not asked for at all.
+      expect(mockTypeQueries).toEqual([[587, 588, 591, 592]]);
+      // Missing and blank names are left out, so those rows fall back to ids.
+      expect(result?.typeNames).toEqual({ 587: "Rifter", 588: "Slasher" });
+      expect(result?.changes).toHaveLength(6);
+    });
+
+    it("still serves the build when the names cannot be read", async () => {
+      mockTypeNamesFail = true;
+
+      const result = await getBuildChanges(700003);
+      expect(result?.changes).toHaveLength(6);
+      expect(result?.typeNames).toBeUndefined();
+    });
+
+    it("skips the names query when no type changed", async () => {
+      mockChangeRows = [change("skin", 1, "skins", "added")];
+
+      const result = await getBuildChanges(700003);
+      expect(mockTypeQueries).toEqual([]);
+      expect(result?.typeNames).toEqual({});
+    });
+  });
 });
 
 describe("getResourceIndex", () => {
@@ -763,6 +858,64 @@ describe("getBuildRangeChanges", () => {
     expect(result?.changes).toEqual([]);
     expect(result?.fromDate).toBe("2024-06-01");
     expect(result?.toDate).toBe("2024-06-04");
+  });
+
+  describe("type names", () => {
+    beforeEach(() => {
+      mockBuildUnique = null;
+      mockBuilds = [tq(700000, "2024-06-01"), tq(700003, "2024-06-04")];
+      mockRangeRows = [
+        agg("type", 587, "types", "modified", "modified"),
+        agg("type", 587, "typeDogma", "modified", "modified"),
+        agg("type", "588", "types", "added", "added"), // id as string
+        agg("type", 589, "types", "added", "removed"), // transient -> dropped
+        agg("type", 591, "types", "added", "added"), // newer than our SDE
+        agg("type", 592, "types", "modified", "modified"), // blank name
+        agg("skin", 587, "skins", "added", "added"), // not a type
+      ];
+      mockTypeRows = [
+        { typeId: 587, name: "Rifter" },
+        { typeId: 588, name: "Slasher" },
+        { typeId: 589, name: "Breacher" },
+        { typeId: 592, name: "" },
+      ];
+      mockTypeNamesFail = false;
+      mockTypeQueries = [];
+      mockCacheLifeCalls = [];
+    });
+
+    it("names every type in the net result in a single query", async () => {
+      const result = await getBuildRangeChanges(700000, 700003);
+
+      // Only types that survive the net fold are asked for (not the transient
+      // 589), each once, and the numeric-string id arrives coerced.
+      expect(mockTypeQueries).toEqual([[587, 588, 591, 592]]);
+      expect(result?.typeNames).toEqual({ 587: "Rifter", 588: "Slasher" });
+      expect(result?.changes).toHaveLength(6);
+    });
+
+    it("keeps the names out of the permanent range entry", async () => {
+      await getBuildRangeChanges(700000, 700003);
+
+      // The range is `max` — a pair of past builds never differs — but names are
+      // re-ingested with the SDE, so they must come from an entry that expires.
+      // Folding them into the `max` entry would drop the "days" profile here.
+      expect(mockCacheLifeCalls).toContain("max");
+      expect(mockCacheLifeCalls).toContain("days");
+    });
+
+    it("still serves the comparison when the names cannot be read", async () => {
+      mockTypeNamesFail = true;
+
+      const result = await getBuildRangeChanges(700000, 700003);
+      expect(result?.changes).toHaveLength(6);
+      expect(result?.typeNames).toBeUndefined();
+    });
+
+    it("does not look names up for an invalid pair", async () => {
+      expect(await getBuildRangeChanges(700003, 700000)).toBeNull();
+      expect(mockTypeQueries).toEqual([]);
+    });
   });
 });
 

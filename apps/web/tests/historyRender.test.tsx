@@ -165,6 +165,8 @@ const TIMELINE = {
 const BUILD_CHANGES = {
   build: 3383521,
   date: "2026-06-08",
+  // 999 has no entry: a type our SDE tables cannot name.
+  typeNames: { 91920: "Pioneer", 587: "Rifter" },
   changes: [
     {
       entityId: 91920,
@@ -235,6 +237,8 @@ const RANGE_CHANGES = {
   to: 200,
   fromDate: "2025-01-01",
   toDate: "2025-02-01",
+  // 588 has no entry: a type our SDE tables cannot name.
+  typeNames: { 587: "Vexor" },
   changes: [
     {
       entityId: 587,
@@ -287,6 +291,16 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+
+/**
+ * The per-type name lookups (`<TypeName>`'s `resolveTypeLabel` query) issued
+ * while rendering. The change lists must issue none: names arrive with the
+ * changes, and a lookup per row queues one server action per changed type.
+ */
+const typeNameLookups = () =>
+  mockUseQuery.mock.calls.filter(
+    ([o]) => o.queryKey?.[1] === "sde" && o.queryKey[2] === "type",
+  );
 
 // ── tests ────────────────────────────────────────────────────────────────────
 
@@ -461,6 +475,20 @@ describe("BuildHistoryClient", () => {
     fireEvent.click(screen.getByText(/English/));
     expect(screen.getAllByText(/res:\//).length).toBeGreaterThan(0);
   });
+
+  it("labels type rows with the server-resolved names, without a lookup per row", async () => {
+    const { default: BuildHistoryClient } =
+      await import("~/app/history/build/[build]/page.client");
+    wrap(<BuildHistoryClient build={3383521} />);
+
+    const row = (name: string) => screen.getByRole("link", { name });
+    expect(row("Pioneer #91920")).toBeTruthy();
+    expect(row("Rifter #587")).toBeTruthy();
+    // An unnamed type (999) and a non-type (skin 1) fall back to their kind.
+    expect(row("Type #999")).toBeTruthy();
+    expect(row("Skin #1")).toBeTruthy();
+    expect(typeNameLookups()).toEqual([]);
+  });
 });
 
 describe("detail page clients + index page", () => {
@@ -516,6 +544,35 @@ describe("CompareBuildsClient", () => {
     expect(screen.getByText(/Changed types/)).toBeTruthy();
     // the Compare button navigates to the /history/compare/<from>/<to> route
     fireEvent.click(screen.getByText("Compare"));
+  });
+
+  it("labels type rows with the server-resolved names, without a lookup per row", async () => {
+    const { default: CompareBuildsClient } =
+      await import("~/app/history/compare/page.client");
+    wrap(<CompareBuildsClient from={100} to={200} builds={[]} />);
+
+    const row = (name: string) => screen.getByRole("link", { name });
+    expect(row("Vexor #587")).toBeTruthy();
+    // 588 has no name, so its kind labels it, followed by its id.
+    expect(row("Type #588")).toBeTruthy();
+    expect(typeNameLookups()).toEqual([]);
+  });
+
+  it("falls back to kind and id for every row when names are unavailable", async () => {
+    mockUseQuery.mockImplementation((opts: { queryKey?: unknown[] }) =>
+      opts.queryKey?.[0] === "history-compare"
+        ? { data: { ...RANGE_CHANGES, typeNames: undefined }, isLoading: false }
+        : dataFor(opts),
+    );
+    const { default: CompareBuildsClient } =
+      await import("~/app/history/compare/page.client");
+    wrap(<CompareBuildsClient from={100} to={200} builds={[]} />);
+
+    const row = (name: string) => screen.getByRole("link", { name });
+    expect(row("Type #587")).toBeTruthy();
+    expect(row("Type #588")).toBeTruthy();
+    // Degrading must not bring the per-row lookups back.
+    expect(typeNameLookups()).toEqual([]);
   });
 
   it("renders the loading / error / not-found / empty / out-of-order states", async () => {
