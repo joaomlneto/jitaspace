@@ -2,4 +2,4 @@
 "@jitaspace/web": patch
 ---
 
-Killmail links now unfurl the way zKillboard and EVE-Kill do: the ship's own render as a small thumbnail, with the victim, corporation/alliance, system, attacker count, final blow, and total ISK value in the description — instead of the generic branded card most kill links previously fell back to (the rich card required a `?hash=` query parameter that nothing in the app ever added, so ordinary shared links never got past "Killmail #12345").
+Killmail links now unfurl the way zKillboard and EVE-Kill links do: the ship's picture as a small thumbnail, a headline like "Rifter | Victim Name | 45.6M ISK", and a single line saying who lost what, where, for how much, and who landed the final blow. Previously most kill links showed only a generic "Killmail #12345" card.

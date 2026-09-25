@@ -47,6 +47,14 @@ export interface PageMetadataInput {
    * generated card (using `image`/`badge`/`facts` above) when unset.
    */
   rawImage?: string;
+  /**
+   * Emit `og:title`/`twitter:title` as given, without the root layout's
+   * `%s | JitaSpace` template. An unfurl already names the site (`og:site_name`
+   * is the provider line above the title on Discord), so the suffix only repeats
+   * it — killboards leave it off their kill cards. The document `<title>` keeps
+   * the template either way, for browser tabs and search results.
+   */
+  plainSocialTitle?: boolean;
 }
 
 /**
@@ -63,6 +71,7 @@ export function pageMetadata({
   facts,
   type = "website",
   rawImage,
+  plainSocialTitle = false,
 }: PageMetadataInput): Metadata {
   const ogImage =
     rawImage ??
@@ -76,6 +85,7 @@ export function pageMetadata({
   const imageSize = rawImage
     ? { width: RAW_IMAGE_SIZE, height: RAW_IMAGE_SIZE }
     : { width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT };
+  const socialTitle = plainSocialTitle ? { absolute: title } : title;
 
   return {
     title,
@@ -85,7 +95,7 @@ export function pageMetadata({
       type,
       siteName: SITE_NAME,
       url: path,
-      title,
+      title: socialTitle,
       description,
       images: [
         {
@@ -100,7 +110,7 @@ export function pageMetadata({
       // thumbnail unfurls the way zKillboard/EVE-Kill declare their own kill
       // images — as "summary", not stretched into the large-image slot.
       card: rawImage ? "summary" : "summary_large_image",
-      title,
+      title: socialTitle,
       description,
       images: [ogImage],
     },

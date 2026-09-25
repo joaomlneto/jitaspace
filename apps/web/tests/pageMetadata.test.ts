@@ -241,3 +241,24 @@ describe("resolveTypeImage", () => {
     },
   );
 });
+
+describe("pageMetadata plainSocialTitle", () => {
+  it("pins og:title and twitter:title past the root `%s | JitaSpace` template", () => {
+    const meta = pageMetadata({
+      title: "Rifter | Victim Vic | 45.6M ISK",
+      path: "/kill/12345",
+      plainSocialTitle: true,
+    });
+    const absolute = { absolute: "Rifter | Victim Vic | 45.6M ISK" };
+    expect(meta.openGraph?.title).toEqual(absolute);
+    expect(meta.twitter?.title).toEqual(absolute);
+    // The document <title> still gets the template, for tabs and search.
+    expect(meta.title).toBe("Rifter | Victim Vic | 45.6M ISK");
+  });
+
+  it("leaves the social titles templated by default", () => {
+    const meta = pageMetadata({ title: "Jita", path: "/system/30000142" });
+    expect(meta.openGraph?.title).toBe("Jita");
+    expect(meta.twitter?.title).toBe("Jita");
+  });
+});
