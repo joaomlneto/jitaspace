@@ -106,28 +106,55 @@ export const eveImage = {
 };
 
 /**
+ * Asks the CDN which image variations a type publishes. Throws on anything but
+ * a well-formed answer, so a transient failure is never stored as "this type
+ * has no artwork" for the whole `cacheLife` window — only a genuine answer
+ * (including an empty list) reaches the cache.
+ */
+export async function readTypeImageVariations(
+  typeId: number,
+): Promise<string[]> {
+  "use cache";
+  cacheLife("days");
+  const res = await fetch(`https://images.evetech.net/types/${typeId}`, {
+    signal: AbortSignal.timeout(5_000),
+  });
+  if (!res.ok) {
+    throw new Error(
+      `images.evetech.net answered ${res.status} for type ${typeId}`,
+    );
+  }
+  const variations: unknown = await res.json();
+  if (!Array.isArray(variations)) {
+    throw new Error(`images.evetech.net sent a non-list for type ${typeId}`);
+  }
+  return variations.filter((v): v is string => typeof v === "string");
+}
+
+/**
  * Picks the best artwork a type actually has: the CDN 404s on a variation a
  * type doesn't publish (ships have renders, modules only icons), which would
  * leave an empty frame on the card.
+ *
+ * Deliberately uncached: the failure is caught here, outside the cache scope of
+ * `readTypeImageVariations`, so a CDN blip degrades this one render to "no
+ * image" without being remembered.
  */
 export async function resolveTypeImage(
   typeId: number | null | undefined,
 ): Promise<string | undefined> {
-  "use cache";
-  cacheLife("days");
   if (typeId == null || !Number.isSafeInteger(typeId) || typeId <= 0) {
     return undefined;
   }
+  let variations: string[];
   try {
-    const res = await fetch(`https://images.evetech.net/types/${typeId}`);
-    if (!res.ok) return undefined;
-    const variations = (await res.json()) as string[];
-    if (variations.includes("render")) return eveImage.type(typeId, "render");
-    if (variations.includes("icon")) return eveImage.type(typeId, "icon");
-    return undefined;
+    variations = await readTypeImageVariations(typeId);
   } catch {
     return undefined;
   }
+  if (variations.includes("render")) return eveImage.type(typeId, "render");
+  if (variations.includes("icon")) return eveImage.type(typeId, "icon");
+  return undefined;
 }
 
 /**
