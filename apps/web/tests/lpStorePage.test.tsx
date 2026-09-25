@@ -32,8 +32,14 @@ jest.mock(
     ),
 );
 
-const corporationFindFirstOrThrow =
-  jest.fn<(a?: unknown) => Promise<{ corporationId: number; name: string }>>();
+const corporationFindFirst = jest.fn<
+  (a?: unknown) => Promise<{
+    corporationId: number;
+    name: string;
+    ticker?: string | null;
+  } | null>
+>();
+const loyaltyStoreOfferCount = jest.fn<(a?: unknown) => Promise<number>>();
 const loyaltyStoreOfferFindMany =
   jest.fn<(a?: unknown) => Promise<Record<string, unknown>[]>>();
 const typeFindMany =
@@ -42,10 +48,11 @@ const typeFindMany =
 jest.mock("~/lib/db", () => ({
   prisma: {
     corporation: {
-      findFirstOrThrow: (a?: unknown) => corporationFindFirstOrThrow(a),
+      findFirst: (a?: unknown) => corporationFindFirst(a),
     },
     loyaltyStoreOffer: {
       findMany: (a?: unknown) => loyaltyStoreOfferFindMany(a),
+      count: (a?: unknown) => loyaltyStoreOfferCount(a),
     },
     type: { findMany: (a?: unknown) => typeFindMany(a) },
   },
@@ -158,55 +165,114 @@ async function resolvePageContent(corporationId: string) {
   return contentEl.type(contentEl.props);
 }
 
-/** The `corporationId` arm of the OR the route looks the store up by. */
-function requestedCorporationId() {
-  const arg = corporationFindFirstOrThrow.mock.calls[0]?.[0] as {
-    where: { OR: [{ corporationId?: number }, unknown] };
+/** The `where` the route looked the store's corporation up by. */
+function lookupWhere(call = 0) {
+  const arg = corporationFindFirst.mock.calls[call]?.[0] as {
+    where: Record<string, unknown>;
   };
-  return arg.where.OR[0].corporationId;
+  return arg.where;
 }
 
-// This segment is dual-purpose — the sitemap advertises `/lp-store/1000035`
-// while `/lp-store` links `/lp-store/Caldari_Navy` — so unlike the pure-id
-// routes it cannot reject everything non-numeric. What it must reject is a
-// second *spelling* of a real id, which now falls through to the name lookup
-// and 404s there.
+function metadataFor(corporationId: string) {
+  const { generateMetadata } = require("~/app/lp-store/[corporationId]/page");
+  return generateMetadata({ params: Promise.resolve({ corporationId }) });
+}
+
+// This segment is dual-purpose — a store is reachable as `/lp-store/1000035`
+// and as `/lp-store/Caldari_Navy` — so unlike the pure-id routes it cannot
+// reject everything non-numeric. What it must reject is a second *spelling* of
+// a real id, which falls through to the name lookup and reaches not-found.
 describe("LP Store corporation lookup", () => {
   beforeEach(() => {
-    corporationFindFirstOrThrow.mockReset();
+    corporationFindFirst.mockReset();
     loyaltyStoreOfferFindMany.mockReset().mockResolvedValue([]);
+    loyaltyStoreOfferCount.mockReset().mockResolvedValue(12);
     typeFindMany.mockReset().mockResolvedValue([]);
   });
 
   it("looks the corporation up by id for the canonical spelling", async () => {
-    corporationFindFirstOrThrow.mockResolvedValue(CORPORATION);
+    corporationFindFirst.mockResolvedValue(CORPORATION);
 
     const tree = (await resolvePageContent("1000035")) as { type: unknown };
 
-    expect(requestedCorporationId()).toBe(1000035);
+    expect(lookupWhere()).toEqual({ corporationId: 1000035 });
     expect(tree.type).toBe(
       require("~/app/lp-store/[corporationId]/page.client").default,
     );
   });
 
-  it("still resolves a store linked by underscored corporation name", async () => {
-    corporationFindFirstOrThrow.mockResolvedValue(CORPORATION);
+  it("resolves a store linked by underscored corporation name", async () => {
+    corporationFindFirst.mockResolvedValue(CORPORATION);
 
     await resolvePageContent("Caldari_Navy");
 
-    // No numeric arm, so only the name arm can match.
-    expect(requestedCorporationId()).toBeUndefined();
+    expect(lookupWhere()).toEqual({ name: "Caldari Navy" });
   });
 
   it.each(["01000035", "1000035.0", "+1000035"])(
-    "does not resolve %p by id, so the duplicate URL 404s",
+    "does not resolve %p by id, so the duplicate URL reaches not-found",
     async (corporationId) => {
-      corporationFindFirstOrThrow.mockRejectedValue(new Error("no rows"));
+      corporationFindFirst.mockResolvedValue(null);
 
       await expect(resolvePageContent(corporationId)).rejects.toThrow(
         "NEXT_NOT_FOUND",
       );
-      expect(requestedCorporationId()).toBeUndefined();
+      expect(lookupWhere()).toEqual({ name: corporationId });
     },
   );
+});
+
+// The index links stores by name, the sitemap advertises them by name, and the
+// id form still resolves — so both must declare the same title and the same
+// canonical, the name form. Only the id form used to get any metadata at all.
+describe("LP Store corporation metadata", () => {
+  beforeEach(() => {
+    corporationFindFirst.mockReset();
+    loyaltyStoreOfferCount.mockReset().mockResolvedValue(12);
+  });
+
+  it("gives the id and name forms identical metadata, canonical to the name", async () => {
+    corporationFindFirst.mockResolvedValue({ ...CORPORATION, ticker: "CN" });
+
+    const byId = await metadataFor("1000035");
+    const byName = await metadataFor("Caldari_Navy");
+
+    expect(byId).toEqual(byName);
+    expect(byId).toEqual(
+      expect.objectContaining({
+        title: `${CORPORATION.name} LP Store`,
+        alternates: { canonical: "/lp-store/Caldari_Navy" },
+      }),
+    );
+    expect(lookupWhere(0)).toEqual({ corporationId: 1000035 });
+    expect(lookupWhere(1)).toEqual({ name: "Caldari Navy" });
+  });
+
+  it("keeps punctuation in the canonical exactly as the index links it", async () => {
+    corporationFindFirst.mockResolvedValue({
+      corporationId: 1000140,
+      name: "Mordu's Legion",
+      ticker: null,
+    });
+
+    expect(await metadataFor("Mordu's_Legion")).toEqual(
+      expect.objectContaining({
+        alternates: { canonical: "/lp-store/Mordu's_Legion" },
+      }),
+    );
+    expect(lookupWhere()).toEqual({ name: "Mordu's Legion" });
+  });
+
+  it("emits nothing for a segment that names no store", async () => {
+    corporationFindFirst.mockResolvedValue(null);
+
+    expect(await metadataFor("No_Such_Corp")).toEqual({});
+    expect(loyaltyStoreOfferCount).not.toHaveBeenCalled();
+  });
+
+  it("emits nothing when the lookup fails, so a failed read is never canonicalised", async () => {
+    corporationFindFirst.mockRejectedValue(new Error("db down"));
+
+    expect(await metadataFor("1000035")).toEqual({});
+  });
 });

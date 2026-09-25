@@ -136,12 +136,9 @@ describe("Category Page", () => {
     await expect(resolveServerTree("7")).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
-  // The page and its generateMetadata disagree about `0` on purpose: the page
-  // has always rendered /category/0 — a real non-deleted row the sitemap
-  // advertises, since that block carries no `gt: 0` filter — while the
-  // metadata's pre-existing falsy guard rejected it. These two cases pin both
-  // halves so a later "tidy-up" to one shared parser reddens here instead of
-  // silently 404ing a URL the sitemap points at.
+  // /category/0 is "#System", a real non-deleted row the sitemap advertises.
+  // The page and its metadata must both accept it: the metadata used to reject
+  // 0, so the URL rendered with the bare site title and no canonical.
   it("still serves category 0, which the sitemap advertises", async () => {
     mockFindUniqueOrThrow.mockResolvedValue({
       categoryId: 0,
@@ -159,9 +156,19 @@ describe("Category Page", () => {
     );
   });
 
-  it("emits no metadata for category 0", async () => {
-    expect(await metadataFor("0")).toEqual({});
-    expect(mockFindUniqueOrThrow).not.toHaveBeenCalled();
+  it("titles and canonicalises category 0 like any other category", async () => {
+    mockFindUniqueOrThrow.mockResolvedValue({
+      categoryId: 0,
+      name: "#System",
+      groups: [],
+    });
+
+    expect(await metadataFor("0")).toEqual(
+      expect.objectContaining({
+        title: "#System",
+        alternates: { canonical: "/category/0" },
+      }),
+    );
   });
 
   it("points the canonical at the parsed id, relative to metadataBase", async () => {

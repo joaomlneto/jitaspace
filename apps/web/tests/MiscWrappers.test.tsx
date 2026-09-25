@@ -365,10 +365,25 @@ describe("GroupBreadcrumbs", () => {
     expect(props.categoryName).toBe("Ship");
   });
 
-  it("defaults missing ids to 0 when no group data is available", () => {
+  // Not `0`: group and category 0 are both "#System", a real row, so a `?? 0`
+  // placeholder would fetch and briefly render it while the id is unknown.
+  it("passes undefined, not 0, while the ids are unknown", () => {
     const { GroupBreadcrumbs } = require("~/components/Breadcrumbs");
 
     renderWithMantine(<GroupBreadcrumbs />);
+
+    expect(mockUseGroup).toHaveBeenCalledWith(undefined);
+    expect(mockUseCategory).toHaveBeenCalledWith(undefined);
+  });
+
+  it("asks for group 0 and its category 0 like any other ids", () => {
+    mockUseGroup.mockReturnValue({
+      data: { data: { name: "#System", category_id: 0 } },
+    });
+    mockUseCategory.mockReturnValue({ data: { data: { name: "#System" } } });
+    const { GroupBreadcrumbs } = require("~/components/Breadcrumbs");
+
+    renderWithMantine(<GroupBreadcrumbs groupId={0} />);
 
     expect(mockUseGroup).toHaveBeenCalledWith(0);
     expect(mockUseCategory).toHaveBeenCalledWith(0);
@@ -449,12 +464,26 @@ describe("TypeInventoryBreadcrumbs", () => {
     expect(props.showType).toBe(true);
   });
 
-  it("parses a string type id and defaults the chain to 0", () => {
+  it("parses a string type id and leaves the unresolved chain undefined", () => {
     const { TypeInventoryBreadcrumbs } = require("~/components/Breadcrumbs");
 
     renderWithMantine(<TypeInventoryBreadcrumbs typeId="587" />);
 
     expect(mockUseType).toHaveBeenCalledWith(587);
+    expect(mockUseGroup).toHaveBeenCalledWith(undefined);
+    expect(mockUseCategory).toHaveBeenCalledWith(undefined);
+  });
+
+  it("walks a type in group 0 up to category 0", () => {
+    mockUseType.mockReturnValue({ data: { data: { group_id: 0 } } });
+    mockUseGroup.mockReturnValue({
+      data: { data: { name: "#System", category_id: 0 } },
+    });
+    mockUseCategory.mockReturnValue({ data: { data: { name: "#System" } } });
+    const { TypeInventoryBreadcrumbs } = require("~/components/Breadcrumbs");
+
+    renderWithMantine(<TypeInventoryBreadcrumbs typeId={48464} />);
+
     expect(mockUseGroup).toHaveBeenCalledWith(0);
     expect(mockUseCategory).toHaveBeenCalledWith(0);
   });

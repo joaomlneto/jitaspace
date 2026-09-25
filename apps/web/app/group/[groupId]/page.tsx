@@ -17,7 +17,7 @@ import { GroupBreadcrumbs } from "~/components/Breadcrumbs";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
-import { parseEntityId, parsePositiveEntityId } from "~/lib/routeParams";
+import { parseEntityId } from "~/lib/routeParams";
 
 interface PageProps {
   name?: string;
@@ -59,7 +59,11 @@ export async function generateMetadata({
   params: Promise<{ groupId: string }>;
 }): Promise<Metadata> {
   const { groupId: groupIdParam } = await params;
-  const groupId = parsePositiveEntityId(groupIdParam);
+  // `parseEntityId`, not the positive variant: group ids start at 0, and
+  // `/group/0` ("#System") is a real row the sitemap advertises. The page and
+  // this metadata must accept the same ids, or that URL renders with the bare
+  // site title and no canonical.
+  const groupId = parseEntityId(groupIdParam);
   if (groupId === null) return {};
   try {
     const { name, types } = await getGroupData(groupId);
@@ -84,11 +88,7 @@ async function PageContent({
   params: Promise<{ groupId: string }>;
 }>) {
   const { groupId: groupIdParam } = await params;
-  // `parseEntityId`, not the positive variant `generateMetadata` uses: this
-  // page had no numeric guard at all, so `/group/0` — a real non-deleted row
-  // this site puts in its sitemap — renders today. Narrowing to match the
-  // metadata would turn that into a 404; widening the metadata to match the
-  // page is a separate decision.
+  // Same parser as `generateMetadata`, for the same reason: 0 is a real id.
   const groupId = parseEntityId(groupIdParam);
   if (groupId === null) {
     notFound();
