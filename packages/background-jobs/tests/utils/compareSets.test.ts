@@ -10,6 +10,12 @@ interface Item {
   name: string;
 }
 
+/** Ids are `string | number` in the signature, so both can reach one call. */
+interface LooseItem {
+  id: string | number;
+  name: string;
+}
+
 const getId = (item: Item) => item.id;
 const isEqual = (a: Item, b: Item) => a.name === b.name;
 
@@ -110,6 +116,66 @@ describe("compareSets", () => {
     expect(result.deleted[0]).toEqual({ id: 3, name: "will-delete" });
     expect(result.created).toHaveLength(1);
     expect(result.created[0]).toEqual({ id: 4, name: "new-record" });
+  });
+
+  it("keeps a numeric id and its string spelling distinct", () => {
+    // Membership is SameValueZero (what both `Array.includes` and `Set.has`
+    // use), so 1 and "1" are two ids, not one: the numeric row is deleted and
+    // the string row created. The end-of-function sanity check disagrees — it
+    // counts its union with `String(key)`, which folds them back into one — so
+    // this combination is rejected rather than silently mis-partitioned.
+    const before: LooseItem[] = [{ id: 1, name: "numeric" }];
+    const after: LooseItem[] = [{ id: "1", name: "stringly" }];
+    expect(() =>
+      compareSets({
+        recordsBefore: before,
+        recordsAfter: after,
+        getId: (item: LooseItem) => item.id,
+        recordsAreEqual: (a: LooseItem, b: LooseItem) => a.name === b.name,
+      }),
+    ).toThrow("compareSets: input and output length do not match");
+  });
+
+  it("matches ids of one consistent type, string ids included", () => {
+    // The composite ingest helper keys rows by `keyFields.join(":")`, so whole
+    // tables come through here with string ids; they must diff normally.
+    const before: LooseItem[] = [
+      { id: "587:9", name: "unchanged" },
+      { id: "587:38", name: "will-change" },
+    ];
+    const after: LooseItem[] = [
+      { id: "587:9", name: "unchanged" },
+      { id: "587:38", name: "changed" },
+      { id: "588:9", name: "new" },
+    ];
+    const result = compareSets({
+      recordsBefore: before,
+      recordsAfter: after,
+      getId: (item: LooseItem) => item.id,
+      recordsAreEqual: (a: LooseItem, b: LooseItem) => a.name === b.name,
+    });
+    expect(result.equal.map((r) => r.id)).toEqual(["587:9"]);
+    expect(result.modified.map((r) => r.id)).toEqual(["587:38"]);
+    expect(result.created.map((r) => r.id)).toEqual(["588:9"]);
+    expect(result.deleted).toHaveLength(0);
+  });
+
+  it("does not treat a key named like an Object prototype member as present", () => {
+    // `indexBefore` is a plain object, so an id such as `__proto__` or
+    // `constructor` is a live prototype key rather than an own property.
+    // Membership must come from the key sets, never from the object index.
+    const before: LooseItem[] = [{ id: "constructor", name: "a" }];
+    const after: LooseItem[] = [{ id: "__proto__", name: "b" }];
+    const result = compareSets({
+      recordsBefore: before,
+      recordsAfter: after,
+      getId: (item: LooseItem) => item.id,
+      recordsAreEqual: (a: LooseItem, b: LooseItem) => a.name === b.name,
+    });
+    expect(result.created.map((r) => r.id)).toEqual(["__proto__"]);
+    expect(result.deleted.map((r) => r.id)).toEqual(["constructor"]);
+    expect(result.equal).toHaveLength(0);
+    expect(result.modified).toHaveLength(0);
   });
 
   it("throws NonRetriableError when count sanity check fails", () => {
