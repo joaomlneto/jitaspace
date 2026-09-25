@@ -86,6 +86,44 @@ describe("pageMetadata", () => {
   });
 });
 
+describe("pageMetadata rawImage", () => {
+  const rawImageUrl = "https://images.evetech.net/types/587/render?size=512";
+  const meta = pageMetadata({
+    title: "Rifter destroyed",
+    description: "Someone lost their Rifter.",
+    path: "/kill/12345",
+    badge: "Killmail",
+    rawImage: rawImageUrl,
+  });
+
+  it("unfurls the artwork directly instead of the generated /api/og card", () => {
+    const images = meta.openGraph?.images as { url: string }[];
+    expect(images).toHaveLength(1);
+    expect(images[0]!.url).toBe(rawImageUrl);
+  });
+
+  it("sizes the image square, matching the EVE CDN artwork it is", () => {
+    const images = meta.openGraph?.images as {
+      width: number;
+      height: number;
+    }[];
+    expect(images[0]!.width).toBe(512);
+    expect(images[0]!.height).toBe(512);
+  });
+
+  it("uses the small Twitter card, not the large-image slot a square doesn't fill", () => {
+    expect(meta.twitter).toHaveProperty("card", "summary");
+    expect(meta.twitter?.images).toEqual([rawImageUrl]);
+  });
+
+  it("still states title/description/canonical/siteName in full", () => {
+    expect(meta.title).toBe("Rifter destroyed");
+    expect(meta.openGraph?.description).toBe("Someone lost their Rifter.");
+    expect(meta.alternates?.canonical).toBe("/kill/12345");
+    expect(meta.openGraph?.siteName).toBe("JitaSpace");
+  });
+});
+
 describe("toDescription", () => {
   it("strips EVE's in-game HTML markup", () => {
     expect(toDescription("<p>Hello <b>world</b></p>")).toBe("Hello world");
