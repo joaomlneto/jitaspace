@@ -1,5 +1,6 @@
 "use server";
 
+import * as Sentry from "@sentry/nextjs";
 import { checkBotId } from "botid/server";
 
 import type { BuildRangeChanges, EntityTimeline } from "~/lib/history";
@@ -7,6 +8,7 @@ import {
   getCachedBuildRangeChanges,
   getCachedEntityTimeline,
 } from "~/lib/history-cache";
+import { readTypeNames } from "~/lib/history-type-names";
 
 /**
  * Server functions backing the change-history viewer. Each queries the
@@ -52,14 +54,48 @@ const isBot = async (): Promise<boolean> => {
  *
  * Delegates to the immutable, cached {@link getCachedBuildRangeChanges} (keyed on
  * the pair, `cacheLife("max")`) so the expensive range aggregation runs once per
- * `(from, to)` and is served from cache afterwards.
+ * `(from, to)` and is served from cache afterwards. The changed types' names are
+ * added per request, outside that entry — see {@link readRangeTypeNames}.
  */
 export async function getBuildRangeChanges(
   from: number,
   to: number,
 ): Promise<BuildRangeChanges | null> {
   if (await isBot()) return null;
-  return getCachedBuildRangeChanges(from, to);
+  const range = await getCachedBuildRangeChanges(from, to);
+  if (!range) return null;
+  return { ...range, typeNames: await readRangeTypeNames(range.changes) };
+}
+
+/**
+ * Names of the types in a comparison, read per request rather than cached.
+ *
+ * They cannot join the range's `cacheLife("max")` entry: names change when the
+ * SDE is re-ingested, and one baked in there would be frozen for good. Nor do
+ * they get an entry of their own — keyed on the build pair, it would have to
+ * re-read the range entry for its ids, re-running the heavy aggregation whenever
+ * the in-memory cache had dropped that entry (likeliest for the widest ranges);
+ * keyed on the ids, a wide range's key would run to tens of thousands of them.
+ * Uncached, this is one indexed lookup per comparison.
+ *
+ * Names are decorative, so a failed read degrades to `undefined` — rows labelled
+ * by kind and id — rather than failing the comparison. It is reported first:
+ * silent, a lasting failure would look exactly like types our tables lack.
+ */
+async function readRangeTypeNames(
+  changes: BuildRangeChanges["changes"],
+): Promise<Record<number, string> | undefined> {
+  const typeIds = new Set(
+    changes
+      .filter((c) => (c.entityType ?? "type") === "type")
+      .map((c) => c.entityId),
+  );
+  try {
+    return await readTypeNames([...typeIds]);
+  } catch (error) {
+    Sentry.captureException(error, { tags: { area: "history-compare" } });
+    return undefined;
+  }
 }
 
 /**
