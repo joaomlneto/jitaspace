@@ -5,12 +5,12 @@ import { Anchor, Badge, Group, List, Text, Title } from "@mantine/core";
 
 import type { EntityChangeRow } from "~/lib/history";
 import { collectionMeta, entityTypeMeta } from "~/lib/history";
-import { TypeName } from "../../_sde-ui";
 import { RowSpoiler } from "./_row-spoiler";
 
 /**
- * Resolved type names, by typeId. The build page passes these in from the
- * server; without them (the compare page) each type row resolves its own name.
+ * Resolved type names, by typeId, read on the server by both callers (the build
+ * page and the compare page). Rows never fetch their own: one server action per
+ * row, run one at a time, took minutes on a large list.
  */
 type TypeNames = Record<number, string>;
 
@@ -131,9 +131,9 @@ function EntityName({
 }: Readonly<{ entityType: string; id: number; typeNames?: TypeNames }>) {
   const label = entityTypeMeta(entityType).label;
   if (entityType !== "type") return <Text span>{label}</Text>;
-  if (!typeNames) return <TypeName span typeId={id} />;
-  // Unnamed ⇒ newer than the ingested SDE; the row still shows its #id.
-  return <Text span>{typeNames[id] ?? label}</Text>;
+  // Unnamed ⇒ newer than the ingested SDE (or, on the compare page, names that
+  // could not be read); the row still shows its #id. Never fetched per row.
+  return <Text span>{typeNames?.[id] ?? label}</Text>;
 }
 
 function EntityRow({

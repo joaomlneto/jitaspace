@@ -4,8 +4,8 @@ import { historyDb } from "@jitaspace/db-history";
 
 import type { BuildPage, EntityChangeRow } from "~/lib/history";
 import type { FileDiff, StringChange } from "~/lib/resource-history";
-import { prisma } from "~/lib/db";
 import { isBuildInHistoryScope } from "~/lib/history";
+import { readTypeNames } from "~/lib/history-type-names";
 
 /**
  * The build page's data, read on the server so the page is served complete: no
@@ -81,22 +81,6 @@ async function readEntityChanges(build: number) {
     changes.filter((c) => c.entityType === "type").map((c) => c.entityId),
   );
   return { changes, typeNames: await readTypeNames([...typeIds]) };
-}
-
-/** Type names from our SDE tables; blank names are left out, like unknown ids. */
-async function readTypeNames(
-  typeIds: number[],
-): Promise<Record<number, string>> {
-  if (typeIds.length === 0) return {};
-  const rows = await prisma.type.findMany({
-    select: { typeId: true, name: true },
-    where: { typeId: { in: typeIds } },
-  });
-  const names: Record<number, string> = {};
-  for (const { typeId, name } of rows) {
-    if (name.trim() !== "") names[typeId] = name;
-  }
-  return names;
 }
 
 async function readFileDiff(build: number): Promise<FileDiff> {
