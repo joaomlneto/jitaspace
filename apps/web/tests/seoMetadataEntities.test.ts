@@ -334,7 +334,9 @@ describe("kill/[killId] generateMetadata", () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
     expect(result.title).toBe("Killmail #12345");
-    expect(result.description).toContain("12345");
+    expect(result.description).toBe("EVE Online killmail #12345.");
+    // Same as the full card: og:site_name names the site, the title doesn't.
+    expect(result.openGraph?.title).toEqual({ absolute: "Killmail #12345" });
   });
 
   it("returns empty for id = 0", async () => {
@@ -356,11 +358,27 @@ describe("kill/[killId] generateMetadata", () => {
     );
   });
 
-  it("builds a killboard-style card from just the numeric id, via zKillboard's hash lookup", async () => {
-    mockKillFetches({
-      zkb: { hash: "abc123", totalValue: 128_500_000 },
-      imageVariations: ["render"],
+  // Type names by ID, so a test can name both the victim's and the final
+  // blow's ship through the single mocked `prisma.type.findUnique`.
+  const TYPE_NAMES: Record<number, string> = {
+    587: "Rifter",
+    4310: "Tornado",
+    17738: "Ishtar",
+    35833: "Fortizar",
+  };
+  function mockTypeNames(names: Record<number, string> = TYPE_NAMES) {
+    mockTypeFindUnique.mockImplementation((...args: unknown[]) => {
+      const { where } = args[0] as { where: { typeId: number } };
+      const name = names[where.typeId];
+      return Promise.resolve(name ? { name } : null);
     });
+  }
+  const JITA = {
+    name: "Jita",
+    constellation: { region: { name: "The Forge" } },
+  };
+
+  function mockGangKill() {
     mockGetKillmail.mockResolvedValue({
       data: {
         killmail_id: 12345,
@@ -375,6 +393,7 @@ describe("kill/[killId] generateMetadata", () => {
           {
             character_id: 90000002,
             corporation_id: 98000002,
+            ship_type_id: 4310,
             final_blow: true,
             damage_done: 100,
           },
@@ -382,16 +401,179 @@ describe("kill/[killId] generateMetadata", () => {
         ],
       },
     });
-    mockTypeFindUnique.mockResolvedValue({ name: "Rifter" });
-    mockSolarSystemFindUnique.mockResolvedValue({ name: "Jita" });
+    mockTypeNames();
+    mockSolarSystemFindUnique.mockResolvedValue(JITA);
     mockGetCharactersDetail.mockImplementation((...args: unknown[]) =>
       Promise.resolve({
-        data:
-          args[0] === 90000001
-            ? { name: "Victim Vic", corporation_id: 98000001 }
-            : { name: "Final Blow Fred", corporation_id: 98000002 },
+        data: { name: args[0] === 90000001 ? "Victim Vic" : "Final Blow Fred" },
       }),
     );
+    mockGetCorporationsCorporationId.mockImplementation((...args: unknown[]) =>
+      Promise.resolve({
+        data: {
+          name: args[0] === 98000001 ? "Victim Corp" : "Attacker Corp",
+        },
+      }),
+    );
+  }
+
+  it("unfurls like a killboard: ship | victim | value, and one line of who/where/how much", async () => {
+    mockKillFetches({
+      zkb: { hash: "abc123", totalValue: 128_500_000 },
+      imageVariations: ["render"],
+    });
+    mockGangKill();
+
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+
+    expect(mockGetKillmail).toHaveBeenCalledWith("abc123", 12345);
+    expect(result.title).toBe("Rifter | Victim Vic | 128.5M ISK");
+    expect(result.description).toBe(
+      "Victim Vic (Victim Corp) lost their Rifter in Jita (The Forge) worth 128.5M ISK. " +
+        "2 attackers, final blow by Final Blow Fred (Attacker Corp) in a Tornado.",
+    );
+    // og:site_name already says JitaSpace; the unfurl title doesn't repeat it.
+    expect(result.openGraph?.title).toEqual({
+      absolute: "Rifter | Victim Vic | 128.5M ISK",
+    });
+    expect(result.twitter?.title).toEqual({
+      absolute: "Rifter | Victim Vic | 128.5M ISK",
+    });
+
+    // The image is the ship's own render, unfurled directly — no generated
+    // /api/og card, no text on it — mirroring zKillboard/EVE-Kill.
+    const images = result.openGraph?.images as {
+      url: string;
+      width: number;
+      height: number;
+    }[];
+    expect(images).toHaveLength(1);
+    expect(images[0]?.url).toBe(
+      "https://images.evetech.net/types/587/render?size=512",
+    );
+    expect(images[0]?.width).toBe(512);
+    expect(images[0]?.height).toBe(512);
+    expect(result.twitter).toHaveProperty("card", "summary");
+  });
+
+  it("names each pilot's corporation as recorded on the killmail, not their current one", async () => {
+    mockKillFetches({ zkb: { hash: "abc123" } });
+    mockGangKill();
+    // Both pilots have since moved on; ESI's character record says so.
+    mockGetCharactersDetail.mockImplementation((...args: unknown[]) =>
+      Promise.resolve({
+        data: {
+          name: args[0] === 90000001 ? "Victim Vic" : "Final Blow Fred",
+          corporation_id: 98000999,
+        },
+      }),
+    );
+
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+
+    expect(result.description).toContain("Victim Vic (Victim Corp)");
+    expect(result.description).toContain("Final Blow Fred (Attacker Corp)");
+    expect(mockGetCorporationsCorporationId).not.toHaveBeenCalledWith(98000999);
+  });
+
+  it("still asks zKillboard for the value when the link carries ?hash=, preferring its hash", async () => {
+    mockKillFetches({ zkb: { hash: "zkb-hash", totalValue: 2_500_000_000 } });
+    mockGangKill();
+
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({
+      params: rp({ killId: "12345" }),
+      searchParams: rp({ hash: "link-hash" }),
+    });
+
+    expect(mockGetKillmail).toHaveBeenCalledWith("zkb-hash", 12345);
+    expect(result.title).toBe("Rifter | Victim Vic | 2.5B ISK");
+    expect(result.description).toContain("worth 2.5B ISK.");
+  });
+
+  it("falls back to the link's ?hash= when zKillboard is down", async () => {
+    mockKillFetches({ zkb: "error" });
+    mockGangKill();
+
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({
+      params: rp({ killId: "12345" }),
+      searchParams: rp({ hash: "link-hash" }),
+    });
+
+    expect(mockGetKillmail).toHaveBeenCalledWith("link-hash", 12345);
+    // No value without zKillboard — the clause is dropped, not faked.
+    expect(result.title).toBe("Rifter | Victim Vic");
+    expect(result.description).toBe(
+      "Victim Vic (Victim Corp) lost their Rifter in Jita (The Forge). " +
+        "2 attackers, final blow by Final Blow Fred (Attacker Corp) in a Tornado.",
+    );
+  });
+
+  it("caches zKillboard's answers: a miss briefly, a hit for the long haul", async () => {
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const { cacheLife } = await import("next/cache");
+    await generateMetadata({ params: rp({ killId: "12345" }) });
+    expect(cacheLife).toHaveBeenCalledWith("minutes");
+    expect(cacheLife).not.toHaveBeenCalledWith("max");
+
+    jest.resetModules();
+    mockKillFetches({ zkb: { hash: "abc123" } });
+    mockGangKill();
+    const { generateMetadata: generateAgain } =
+      await import("~/app/kill/[killId]/page");
+    const { cacheLife: cacheLifeAgain } = await import("next/cache");
+    await generateAgain({ params: rp({ killId: "12345" }) });
+    expect(cacheLifeAgain).toHaveBeenCalledWith("max");
+    expect(cacheLifeAgain).not.toHaveBeenCalledWith("minutes");
+  });
+
+  it("falls back to the plain card when zKillboard is down and the link has no hash", async () => {
+    mockKillFetches({ zkb: "error" });
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+    expect(result.title).toBe("Killmail #12345");
+    expect(mockGetKillmail).not.toHaveBeenCalled();
+  });
+
+  it("falls back to the plain card when ESI is unavailable after the hash resolves", async () => {
+    mockKillFetches({ zkb: { hash: "abc123" } });
+    mockGetKillmail.mockRejectedValue(new Error("esi down"));
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+    expect(result.title).toBe("Killmail #12345");
+  });
+
+  it("names a structure victim by its corporation and calls a lone attacker a solo kill", async () => {
+    mockKillFetches({ zkb: { hash: "abc123", totalValue: 10_000_000_000 } });
+    mockGetKillmail.mockResolvedValue({
+      data: {
+        killmail_id: 12345,
+        killmail_time: "2026-01-02T03:04:05Z",
+        solar_system_id: 30000142,
+        victim: {
+          corporation_id: 98000001,
+          alliance_id: 99000001,
+          ship_type_id: 35833,
+        },
+        attackers: [
+          {
+            character_id: 90000002,
+            corporation_id: 98000002,
+            ship_type_id: 17738,
+            final_blow: true,
+            damage_done: 100,
+          },
+        ],
+      },
+    });
+    mockTypeNames();
+    mockSolarSystemFindUnique.mockResolvedValue(JITA);
+    mockGetCharactersDetail.mockResolvedValue({
+      data: { name: "Final Blow Fred" },
+    });
     mockGetCorporationsCorporationId.mockImplementation((...args: unknown[]) =>
       Promise.resolve({
         data: {
@@ -403,110 +585,45 @@ describe("kill/[killId] generateMetadata", () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
 
-    expect(result.title).toBe("Rifter destroyed");
-    expect(result.description).toContain("Victim Vic (Victim Corp)");
-    expect(result.description).toContain("their Rifter");
-    expect(result.description).toContain("in Jita");
-    expect(result.description).toContain("2 attackers");
-    expect(result.description).toContain(
-      "Final blow by Final Blow Fred (Attacker Corp)",
+    expect(result.title).toBe("Fortizar | Victim Corp | 10B ISK");
+    expect(result.description).toBe(
+      "Victim Corp lost their Fortizar in Jita (The Forge) worth 10B ISK. " +
+        "Solo kill by Final Blow Fred (Attacker Corp) in an Ishtar.",
     );
-    expect(result.description).toContain("128.5M ISK");
-
-    // The image is the ship's own render, unfurled directly — no generated
-    // /api/og card, no brand chrome — mirroring zKillboard/EVE-Kill.
-    const images = result.openGraph?.images as {
-      url: string;
-      width: number;
-      height: number;
-    }[];
-    expect(images[0]?.url).toBe(
-      "https://images.evetech.net/types/587/render?size=512",
-    );
-    expect(images[0]?.width).toBe(512);
-    expect(images[0]?.height).toBe(512);
-    expect(result.twitter).toHaveProperty("card", "summary");
+    expect(mockGetAlliancesAllianceId).not.toHaveBeenCalled();
   });
 
-  it("uses an explicit ?hash= without ever calling zKillboard", async () => {
-    // zKillboard is mocked to error — the test fails if the hash-recovery path
-    // is reached at all.
-    mockKillFetches({ zkb: "error" });
+  it("names an NPC final blow by its faction", async () => {
+    mockKillFetches({ zkb: { hash: "abc123" } });
     mockGetKillmail.mockResolvedValue({
       data: {
         killmail_id: 12345,
         killmail_time: "2026-01-02T03:04:05Z",
         solar_system_id: 30000142,
         victim: { corporation_id: 98000001, ship_type_id: 587 },
-        attackers: [{ faction_id: 500001, final_blow: true, damage_done: 100 }],
+        attackers: [
+          { faction_id: 500010, final_blow: true, damage_done: 100 },
+          { faction_id: 500010, final_blow: false, damage_done: 100 },
+        ],
       },
     });
-    mockTypeFindUnique.mockResolvedValue({ name: "Rifter" });
-    mockSolarSystemFindUnique.mockResolvedValue({ name: "Jita" });
+    mockTypeNames();
+    mockSolarSystemFindUnique.mockResolvedValue(JITA);
     mockGetCorporationsCorporationId.mockResolvedValue({
       data: { name: "Victim Corp" },
     });
     mockFactionFindUnique.mockResolvedValue({ name: "Guristas Pirates" });
 
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
-    const result = await generateMetadata({
-      params: rp({ killId: "12345" }),
-      searchParams: rp({ hash: "explicit-hash" }),
-    });
-
-    expect(mockGetKillmail).toHaveBeenCalledWith("explicit-hash", 12345);
-    const fetchMock = global.fetch as jest.Mock;
-    expect(
-      fetchMock.mock.calls.some((call: unknown[]) =>
-        String(call[0]).includes("zkillboard.com"),
-      ),
-    ).toBe(false);
-    expect(result.description).toContain("Victim Corp");
-    expect(result.description).toContain("Final blow by Guristas Pirates");
-  });
-
-  it("falls back to the plain card when ESI is unavailable after the hash resolves", async () => {
-    mockKillFetches({ zkb: { hash: "abc123" } });
-    mockGetKillmail.mockRejectedValue(new Error("esi down"));
-    const { generateMetadata } = await import("~/app/kill/[killId]/page");
-    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
-    expect(result.title).toBe("Killmail #12345");
-  });
-
-  it("names a structure victim by its alliance, not its corporation", async () => {
-    mockKillFetches({ zkb: { hash: "abc123" } });
-    mockGetKillmail.mockResolvedValue({
-      data: {
-        killmail_id: 12345,
-        killmail_time: "2026-01-02T03:04:05Z",
-        solar_system_id: 30000142,
-        victim: {
-          corporation_id: 98000001,
-          alliance_id: 99000001,
-          ship_type_id: 35833,
-        },
-        attackers: [{ damage_done: 100, final_blow: true }],
-      },
-    });
-    mockTypeFindUnique.mockResolvedValue({ name: "Fortizar" });
-    mockSolarSystemFindUnique.mockResolvedValue({ name: "Brybier" });
-    mockGetAlliancesAllianceId.mockResolvedValue({
-      data: { name: "Some Alliance" },
-    });
-
-    const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
 
-    expect(result.description).toContain("Some Alliance lost");
-    // Exactly one attacker — the singular form, not "1 attackers".
-    expect(result.description).toContain("1 attacker.");
-    expect(mockGetCorporationsCorporationId).not.toHaveBeenCalled();
-    // No character/faction on either side to name the final blow — the
-    // sentence just states the loss.
-    expect(result.description).not.toContain("Final blow");
+    expect(result.description).toBe(
+      "Victim Corp lost their Rifter in Jita (The Forge). " +
+        "2 attackers, final blow by Guristas Pirates.",
+    );
   });
 
-  it("omits the victim clause rather than failing the card when ESI errors", async () => {
+  it("says Unknown rather than failing the card when ESI can't name the victim", async () => {
     mockKillFetches({ zkb: { hash: "abc123" } });
     mockGetKillmail.mockResolvedValue({
       data: {
@@ -517,18 +634,20 @@ describe("kill/[killId] generateMetadata", () => {
         attackers: [{ damage_done: 100, final_blow: true }],
       },
     });
-    mockTypeFindUnique.mockResolvedValue({ name: "Rifter" });
-    mockSolarSystemFindUnique.mockResolvedValue({ name: "Jita" });
+    mockTypeNames();
+    mockSolarSystemFindUnique.mockResolvedValue(JITA);
     mockGetCorporationsCorporationId.mockRejectedValue(new Error("esi down"));
 
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
 
-    expect(result.title).toBe("Rifter destroyed");
-    expect(result.description).toContain("A capsuleer lost");
+    expect(result.title).toBe("Rifter");
+    expect(result.description).toBe(
+      "Unknown lost their Rifter in Jita (The Forge). Solo kill.",
+    );
   });
 
-  it("falls back to a generic ship/title clause when the ship type isn't in our database", async () => {
+  it("falls back to a generic ship clause and title when the ship type isn't in our database", async () => {
     mockKillFetches({ zkb: { hash: "abc123", totalValue: 1_000_000 } });
     mockGetKillmail.mockResolvedValue({
       data: {
@@ -544,8 +663,8 @@ describe("kill/[killId] generateMetadata", () => {
     });
     // Not yet ingested into the local Type table — a real scenario for a
     // brand-new hull.
-    mockTypeFindUnique.mockResolvedValue(null);
-    mockSolarSystemFindUnique.mockResolvedValue({ name: "Jita" });
+    mockTypeNames();
+    mockSolarSystemFindUnique.mockResolvedValue(JITA);
     mockGetCorporationsCorporationId.mockResolvedValue({
       data: { name: "Victim Corp" },
     });
@@ -553,13 +672,14 @@ describe("kill/[killId] generateMetadata", () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
 
-    expect(result.title).toBe("Killmail #12345");
-    expect(result.description).toContain("Victim Corp lost their ship");
-    expect(result.description).toContain("in Jita");
-    expect(result.description).toContain("2 attackers");
+    // The headline keeps what it does know rather than going generic.
+    expect(result.title).toBe("Victim Corp | 1M ISK");
+    expect(result.description).toBe(
+      "Victim Corp lost their ship in Jita (The Forge) worth 1M ISK. 2 attackers.",
+    );
   });
 
-  it("omits the system clause when the solar system isn't in our database", async () => {
+  it("omits the location when the solar system isn't in our database", async () => {
     mockKillFetches({ zkb: { hash: "abc123" } });
     mockGetKillmail.mockResolvedValue({
       data: {
@@ -571,7 +691,7 @@ describe("kill/[killId] generateMetadata", () => {
         attackers: [{ damage_done: 100, final_blow: true }],
       },
     });
-    mockTypeFindUnique.mockResolvedValue({ name: "Rifter" });
+    mockTypeNames();
     mockSolarSystemFindUnique.mockResolvedValue(null);
     mockGetCorporationsCorporationId.mockResolvedValue({
       data: { name: "Victim Corp" },
@@ -580,9 +700,10 @@ describe("kill/[killId] generateMetadata", () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
 
-    expect(result.title).toBe("Rifter destroyed");
-    expect(result.description).toContain("Victim Corp lost their Rifter to");
-    expect(result.description).not.toContain(" in ");
+    expect(result.title).toBe("Rifter | Victim Corp");
+    expect(result.description).toBe(
+      "Victim Corp lost their Rifter. Solo kill.",
+    );
   });
 
   it("keeps the rest of the card when only a database lookup rejects", async () => {
@@ -604,7 +725,7 @@ describe("kill/[killId] generateMetadata", () => {
       },
     });
     mockTypeFindUnique.mockRejectedValue(new Error("db timeout"));
-    mockSolarSystemFindUnique.mockResolvedValue({ name: "Jita" });
+    mockSolarSystemFindUnique.mockResolvedValue(JITA);
     mockGetCorporationsCorporationId.mockResolvedValue({
       data: { name: "Victim Corp" },
     });
@@ -612,19 +733,19 @@ describe("kill/[killId] generateMetadata", () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
 
-    // The ship name specifically is unavailable, so the title falls back —
+    // The ship name specifically is unavailable, so the title leaves it out —
     // but everything else the DB blip didn't touch survives.
-    expect(result.title).toBe("Killmail #12345");
-    expect(result.description).toContain("Victim Corp lost their ship");
-    expect(result.description).toContain("in Jita");
-    expect(result.description).toContain("1M ISK");
+    expect(result.title).toBe("Victim Corp | 1M ISK");
+    expect(result.description).toBe(
+      "Victim Corp lost their ship in Jita (The Forge) worth 1M ISK. Solo kill.",
+    );
     const images = result.openGraph?.images as { url: string }[];
     expect(images[0]?.url).toBe(
       "https://images.evetech.net/types/587/render?size=512",
     );
   });
 
-  it("omits the final blow clause when no attacker is flagged as the final blow", async () => {
+  it("omits the final blow when no attacker is flagged as the final blow", async () => {
     mockKillFetches({ zkb: { hash: "abc123" } });
     mockGetKillmail.mockResolvedValue({
       data: {
@@ -633,11 +754,14 @@ describe("kill/[killId] generateMetadata", () => {
         solar_system_id: 30000142,
         victim: { corporation_id: 98000001, ship_type_id: 587 },
         // No attacker carries `final_blow: true` — incomplete/edge-case data.
-        attackers: [{ damage_done: 100, final_blow: false }],
+        attackers: [
+          { damage_done: 100, final_blow: false },
+          { damage_done: 50, final_blow: false },
+        ],
       },
     });
-    mockTypeFindUnique.mockResolvedValue({ name: "Rifter" });
-    mockSolarSystemFindUnique.mockResolvedValue({ name: "Jita" });
+    mockTypeNames();
+    mockSolarSystemFindUnique.mockResolvedValue(JITA);
     mockGetCorporationsCorporationId.mockResolvedValue({
       data: { name: "Victim Corp" },
     });
@@ -645,9 +769,94 @@ describe("kill/[killId] generateMetadata", () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
 
-    expect(result.description).toContain("Victim Corp lost their Rifter");
-    expect(result.description).not.toContain("Final blow");
+    expect(result.description).toBe(
+      "Victim Corp lost their Rifter in Jita (The Forge). 2 attackers.",
+    );
     expect(mockGetCharactersDetail).not.toHaveBeenCalled();
+  });
+
+  it("leaves the value out when zKillboard appraises the kill at zero", async () => {
+    mockKillFetches({ zkb: { hash: "abc123", totalValue: 0 } });
+    mockGangKill();
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+    expect(result.title).toBe("Rifter | Victim Vic");
+    expect(result.description).not.toContain("worth");
+  });
+
+  it("still unfurls the ship's render, not the generated text card, when the image CDN lookup fails", async () => {
+    mockKillFetches({ zkb: { hash: "abc123" }, imageVariations: [] });
+    mockGangKill();
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+    const images = result.openGraph?.images as { url: string }[];
+    expect(images[0]?.url).toBe(
+      "https://images.evetech.net/types/587/render?size=512",
+    );
+    expect(result.twitter).toHaveProperty("card", "summary");
+  });
+
+  it("names an alliance-only party by its alliance", async () => {
+    mockKillFetches({ zkb: { hash: "abc123" } });
+    mockGetKillmail.mockResolvedValue({
+      data: {
+        killmail_id: 12345,
+        killmail_time: "2026-01-02T03:04:05Z",
+        solar_system_id: 30000142,
+        victim: { alliance_id: 99000001, ship_type_id: 35833 },
+        attackers: [{ damage_done: 100, final_blow: true }],
+      },
+    });
+    mockTypeNames();
+    mockSolarSystemFindUnique.mockResolvedValue(JITA);
+    mockGetAlliancesAllianceId.mockResolvedValue({
+      data: { name: "Some Alliance" },
+    });
+
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+
+    expect(result.description).toBe(
+      "Some Alliance lost their Fortizar in Jita (The Forge). Solo kill.",
+    );
+  });
+
+  it("names a pilot without a corporation on the killmail by name alone", async () => {
+    mockKillFetches({ zkb: { hash: "abc123" } });
+    mockGangKill();
+    const { data } = (await mockGetKillmail.getMockImplementation()?.()) as {
+      data: { attackers: { corporation_id?: number }[] };
+    };
+    delete data.attackers[0]!.corporation_id;
+    mockGetKillmail.mockResolvedValue({ data });
+
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+
+    expect(result.description).toContain(
+      "final blow by Final Blow Fred in a Tornado.",
+    );
+  });
+
+  it.each([
+    [950, "950 ISK"],
+    [960, "960 ISK"],
+    [999.6, "1K ISK"],
+    [1_500, "1.5K ISK"],
+    [960_000, "960K ISK"],
+    // Rounding that carries into the next tier moves up to it.
+    [999_960, "1M ISK"],
+    [45_600_000, "45.6M ISK"],
+    [970_000_000, "970M ISK"],
+    [999_960_000, "1B ISK"],
+    [128_000_000_000, "128B ISK"],
+    [1_200_000_000_000, "1.2T ISK"],
+  ])("abbreviates a %d ISK value as %s", async (totalValue, expected) => {
+    mockKillFetches({ zkb: { hash: "abc123", totalValue } });
+    mockGangKill();
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+    expect(result.description).toContain(`worth ${expected}.`);
   });
 });
 
