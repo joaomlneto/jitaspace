@@ -334,7 +334,9 @@ describe("kill/[killId] generateMetadata", () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
     expect(result.title).toBe("Killmail #12345");
-    expect(result.description).toContain("12345");
+    expect(result.description).toBe("EVE Online killmail #12345.");
+    // Same as the full card: og:site_name names the site, the title doesn't.
+    expect(result.openGraph?.title).toEqual({ absolute: "Killmail #12345" });
   });
 
   it("returns empty for id = 0", async () => {
@@ -670,7 +672,8 @@ describe("kill/[killId] generateMetadata", () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
 
-    expect(result.title).toBe("Killmail #12345");
+    // The headline keeps what it does know rather than going generic.
+    expect(result.title).toBe("Victim Corp | 1M ISK");
     expect(result.description).toBe(
       "Victim Corp lost their ship in Jita (The Forge) worth 1M ISK. 2 attackers.",
     );
@@ -730,9 +733,9 @@ describe("kill/[killId] generateMetadata", () => {
     const { generateMetadata } = await import("~/app/kill/[killId]/page");
     const result = await generateMetadata({ params: rp({ killId: "12345" }) });
 
-    // The ship name specifically is unavailable, so the title falls back —
+    // The ship name specifically is unavailable, so the title leaves it out —
     // but everything else the DB blip didn't touch survives.
-    expect(result.title).toBe("Killmail #12345");
+    expect(result.title).toBe("Victim Corp | 1M ISK");
     expect(result.description).toBe(
       "Victim Corp lost their ship in Jita (The Forge) worth 1M ISK. Solo kill.",
     );
@@ -772,11 +775,79 @@ describe("kill/[killId] generateMetadata", () => {
     expect(mockGetCharactersDetail).not.toHaveBeenCalled();
   });
 
+  it("leaves the value out when zKillboard appraises the kill at zero", async () => {
+    mockKillFetches({ zkb: { hash: "abc123", totalValue: 0 } });
+    mockGangKill();
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+    expect(result.title).toBe("Rifter | Victim Vic");
+    expect(result.description).not.toContain("worth");
+  });
+
+  it("still unfurls the ship's render, not the generated text card, when the image CDN lookup fails", async () => {
+    mockKillFetches({ zkb: { hash: "abc123" }, imageVariations: [] });
+    mockGangKill();
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+    const images = result.openGraph?.images as { url: string }[];
+    expect(images[0]?.url).toBe(
+      "https://images.evetech.net/types/587/render?size=512",
+    );
+    expect(result.twitter).toHaveProperty("card", "summary");
+  });
+
+  it("names an alliance-only party by its alliance", async () => {
+    mockKillFetches({ zkb: { hash: "abc123" } });
+    mockGetKillmail.mockResolvedValue({
+      data: {
+        killmail_id: 12345,
+        killmail_time: "2026-01-02T03:04:05Z",
+        solar_system_id: 30000142,
+        victim: { alliance_id: 99000001, ship_type_id: 35833 },
+        attackers: [{ damage_done: 100, final_blow: true }],
+      },
+    });
+    mockTypeNames();
+    mockSolarSystemFindUnique.mockResolvedValue(JITA);
+    mockGetAlliancesAllianceId.mockResolvedValue({
+      data: { name: "Some Alliance" },
+    });
+
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+
+    expect(result.description).toBe(
+      "Some Alliance lost their Fortizar in Jita (The Forge). Solo kill.",
+    );
+  });
+
+  it("names a pilot without a corporation on the killmail by name alone", async () => {
+    mockKillFetches({ zkb: { hash: "abc123" } });
+    mockGangKill();
+    const { data } = (await mockGetKillmail.getMockImplementation()?.()) as {
+      data: { attackers: { corporation_id?: number }[] };
+    };
+    delete data.attackers[0]!.corporation_id;
+    mockGetKillmail.mockResolvedValue({ data });
+
+    const { generateMetadata } = await import("~/app/kill/[killId]/page");
+    const result = await generateMetadata({ params: rp({ killId: "12345" }) });
+
+    expect(result.description).toContain(
+      "final blow by Final Blow Fred in a Tornado.",
+    );
+  });
+
   it.each([
     [950, "950 ISK"],
+    [960, "960 ISK"],
+    [999.6, "1K ISK"],
     [1_500, "1.5K ISK"],
+    [960_000, "960K ISK"],
+    // Rounding that carries into the next tier moves up to it.
     [999_960, "1M ISK"],
     [45_600_000, "45.6M ISK"],
+    [970_000_000, "970M ISK"],
     [999_960_000, "1B ISK"],
     [128_000_000_000, "128B ISK"],
     [1_200_000_000_000, "1.2T ISK"],

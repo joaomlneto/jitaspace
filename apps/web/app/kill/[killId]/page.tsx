@@ -12,7 +12,7 @@ import {
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
-import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
+import { eveImage, pageMetadata, resolveTypeImage } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
 import PageClient from "./page.client";
 
@@ -82,28 +82,32 @@ function withIndefiniteArticle(name: string): string {
   return `${/^[aeiou]/i.test(name) ? "an" : "a"} ${name}`;
 }
 
+const ISK_TIERS = [
+  { value: 1e12, symbol: "T" },
+  { value: 1e9, symbol: "B" },
+  { value: 1e6, symbol: "M" },
+  { value: 1e3, symbol: "K" },
+  { value: 1, symbol: "" },
+];
+
 /**
  * ISK abbreviated the way the client's `ISKAmount` does, for plain text —
- * except that a value rounding up to 1000 of one tier is promoted to the next
+ * except that rounding which carries into the next tier moves up to it
  * (999.96M reads "1B", not "1000M").
  */
 function formatIskShort(amount: number): string {
-  const tiers = [
-    { value: 1e12, symbol: "T" },
-    { value: 1e9, symbol: "B" },
-    { value: 1e6, symbol: "M" },
-    { value: 1e3, symbol: "K" },
-  ];
-  const fixed = (n: number) => n.toFixed(1).replace(/\.0$/, "");
-  for (const [i, tier] of tiers.entries()) {
-    const scaled = fixed(amount / tier.value);
-    if (Math.abs(Number(scaled)) < 1) continue;
-    const larger = tiers[i - 1];
-    return Math.abs(Number(scaled)) >= 1000 && larger
-      ? `${fixed(amount / larger.value)}${larger.symbol}`
-      : `${scaled}${tier.symbol}`;
-  }
-  return amount.toFixed(0);
+  const digits = (tier: { value: number }) =>
+    tier.value === 1
+      ? Math.round(amount).toFixed(0)
+      : (amount / tier.value).toFixed(1).replace(/\.0$/, "");
+  const found = ISK_TIERS.findIndex((t) => Math.abs(amount) >= t.value);
+  // Below 1 ISK (or NaN): the base tier.
+  const i = found < 0 ? ISK_TIERS.length - 1 : found;
+  const current = ISK_TIERS[i] ?? { value: 1, symbol: "" };
+  const larger = ISK_TIERS[i - 1];
+  const tier =
+    larger && Math.abs(Number(digits(current))) >= 1000 ? larger : current;
+  return `${digits(tier)}${tier.symbol}`;
 }
 
 interface ZkbLookup {
@@ -161,9 +165,10 @@ export async function generateMetadata({
 
   const fallback = pageMetadata({
     title: `Killmail #${id}`,
-    description: `EVE Online killmail #${id} — victim, ship, attackers, and dropped loot.`,
+    description: `EVE Online killmail #${id}.`,
     path: `/kill/${id}`,
     badge: "Killmail",
+    plainSocialTitle: true,
   });
 
   // ESI needs the killmail hash, which isn't in the path. zKillboard's lookup
@@ -223,7 +228,8 @@ export async function generateMetadata({
     ]);
 
     const value =
-      totalValue !== undefined
+      // zKillboard reports 0 for an unappraised kill — say nothing, not "0 ISK".
+      totalValue && Number.isFinite(totalValue) && totalValue > 0
         ? `${formatIskShort(totalValue)} ISK`
         : undefined;
     const regionName = system?.constellation.region?.name;
@@ -250,13 +256,16 @@ export async function generateMetadata({
 
     return pageMetadata({
       // "Rifter | Alduin Vok | 45.6M ISK" — zKillboard/EVE-Kill's headline.
-      title: shipName
-        ? [shipName, victimLabel?.name, value].filter(Boolean).join(" | ")
-        : `Killmail #${id}`,
+      title:
+        [shipName, victimLabel?.name, value].filter(Boolean).join(" | ") ||
+        `Killmail #${id}`,
       description,
       path: `/kill/${id}`,
       badge: "Killmail",
-      rawImage: shipImage,
+      // Never the generated text card: if the CDN lookup failed, point at the
+      // render anyway (every hull has one) rather than paint the description
+      // onto a 1200x630 card.
+      rawImage: shipImage ?? eveImage.type(victim.ship_type_id, "render"),
       plainSocialTitle: true,
     });
   } catch {
