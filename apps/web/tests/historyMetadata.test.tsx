@@ -1,5 +1,9 @@
+import type { ReactElement } from "react";
 import { describe, expect, it, jest } from "@jest/globals";
 import { render } from "@testing-library/react";
+import { NuqsAdapter } from "nuqs/adapters/react";
+
+import type { BuildPage } from "~/lib/history";
 
 jest.mock("@mantine/core", () => ({ Loader: () => null }));
 
@@ -10,6 +14,13 @@ jest.mock("~/app/history/type/[typeId]/page.client", () => ({
 }));
 jest.mock("~/app/history/build/[build]/page.client", () => ({
   default: () => null,
+}));
+// The build page reads its data on the server; stub the (Prisma-backed) read.
+const mockGetCachedBuildPage = jest.fn<(build: number) => Promise<unknown>>(
+  () => Promise.resolve(null),
+);
+jest.mock("~/app/history/build/[build]/data", () => ({
+  getCachedBuildPage: (build: number) => mockGetCachedBuildPage(build),
 }));
 jest.mock("~/app/history/[entityType]/[id]/page.client", () => ({
   default: () => null,
@@ -126,4 +137,62 @@ describe("history page metadata + wrappers", () => {
       }
     });
   }
+});
+
+describe("build page server read", () => {
+  // The default export is the sync <Suspense> wrapper; render its async child.
+  const renderContent = async (build: string) => {
+    const mod = (await import("~/app/history/build/[build]/page")) as {
+      default: (p: { params: Promise<{ build: string }> }) => {
+        props: {
+          children: {
+            type: (p: {
+              params: Promise<{ build: string }>;
+            }) => Promise<ReactElement<{ children: ReactElement }>>;
+          };
+        };
+      };
+    };
+    const wrapper = mod.default({ params: rp({ build }) });
+    return wrapper.props.children.type({ params: rp({ build }) });
+  };
+
+  it("prerenders only a placeholder the page 404s before reading any data", async () => {
+    const mod = (await import("~/app/history/build/[build]/page")) as {
+      generateStaticParams: () => { build: string }[];
+    };
+    const params = mod.generateStaticParams();
+    expect(params.length).toBeGreaterThan(0); // Cache Components rejects []
+    for (const { build } of params) {
+      mockGetCachedBuildPage.mockClear();
+      await expect(renderContent(build)).rejects.toThrow();
+      // CI's build has no history DB, so the placeholder must not query it.
+      expect(mockGetCachedBuildPage).not.toHaveBeenCalled();
+    }
+  });
+
+  it("404s a well-formed build number the history does not have", async () => {
+    mockGetCachedBuildPage.mockResolvedValueOnce(null);
+    await expect(renderContent("3383521")).rejects.toThrow();
+    expect(mockGetCachedBuildPage).toHaveBeenCalledWith(3383521);
+  });
+
+  it("hands the page data to the client under nuqs's React adapter", async () => {
+    const data: BuildPage = {
+      build: 3383521,
+      date: "2026-06-08",
+      changes: [],
+      typeNames: {},
+      files: { added: [], changed: [], removed: [] },
+      strings: {},
+    };
+    mockGetCachedBuildPage.mockResolvedValueOnce(data);
+
+    const element = await renderContent("3383521");
+
+    // Not the Next adapter: its useSearchParams() drops the lists out of the
+    // cached page, which would then hold only the loader.
+    expect(element.type).toBe(NuqsAdapter);
+    expect(element.props.children.props).toEqual({ data });
+  });
 });

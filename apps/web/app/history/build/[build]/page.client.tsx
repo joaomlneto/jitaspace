@@ -7,32 +7,21 @@ import {
   Chip,
   Container,
   Group,
-  Loader,
   Stack,
   Text,
   Title,
 } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 
+import type { BuildPage } from "~/lib/history";
 import { collectionMeta } from "~/lib/history";
-import { getBuildChanges, getResourceIndex } from "~/lib/history-actions";
 import { EntityChangeSections } from "./_entity-sections";
-import { ResourceChanges } from "./_resource-sections";
+import { hasResourceChanges, ResourceChanges } from "./_resource-sections";
 
 export default function BuildHistoryClient({
-  build,
-}: Readonly<{ build: number }>) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["history-build", build],
-    queryFn: () => getBuildChanges(build),
-    staleTime: Infinity,
-  });
-  const { data: resourceIndex, isLoading: resLoading } = useQuery({
-    queryKey: ["resource-index"],
-    queryFn: getResourceIndex,
-    staleTime: Infinity,
-  });
+  data,
+}: Readonly<{ data: BuildPage }>) {
+  const { build, date, changes, typeNames, files, strings } = data;
   // Collections currently checked; null ⇒ all (until the user unchecks one).
   // No .withDefault(): an absent param is null, matching the "all" sentinel.
   const [selected, setSelected] = useQueryState(
@@ -40,12 +29,10 @@ export default function BuildHistoryClient({
     parseAsArrayOf(parseAsString).withOptions({ history: "replace" }),
   );
 
-  if (isLoading || resLoading) return <Loader />;
-
-  const resourceBuild = resourceIndex?.builds.find((b) => b.build === build);
+  const hasEntityChanges = changes.length > 0;
 
   // No decoded-SDE changes and no resource-level changes ⇒ nothing to show.
-  if (!data && !resourceBuild) {
+  if (!hasEntityChanges && !hasResourceChanges(files, strings)) {
     return (
       <Container size="md" py="xl">
         <Stack gap="md">
@@ -63,11 +50,11 @@ export default function BuildHistoryClient({
 
   // which collections contributed to this build (for the filter chips); empty
   // for a build that only touched raw files / localization strings.
-  const seenCollections = data
-    ? [...new Set(data.changes.map((c) => c.collection ?? "types"))]
-    : [];
+  const seenCollections = [
+    ...new Set(changes.map((c) => c.collection ?? "types")),
+  ];
   const active = selected ?? seenCollections;
-  const visibleChanges = (data?.changes ?? []).filter((c) =>
+  const visibleChanges = changes.filter((c) =>
     active.includes(c.collection ?? "types"),
   );
 
@@ -78,12 +65,12 @@ export default function BuildHistoryClient({
           <Title order={2}>Build {build}</Title>
           <Group gap="xs" mt={4}>
             <Text c="dimmed" size="sm">
-              {data?.date ?? resourceBuild?.date ?? "date unknown"}
-              {data
+              {date ?? "date unknown"}
+              {hasEntityChanges
                 ? ` · ${visibleChanges.length.toLocaleString()} changes ·`
                 : ""}
             </Text>
-            {data && (
+            {hasEntityChanges && (
               <Chip.Group
                 multiple
                 value={active}
@@ -109,25 +96,14 @@ export default function BuildHistoryClient({
           </Group>
         </div>
 
-        {resourceBuild && (
-          <ResourceChanges
-            build={build}
-            files={resourceBuild.files}
-            strings={resourceBuild.strings}
-          />
-        )}
+        <ResourceChanges files={files} strings={strings} />
 
-        {data && visibleChanges.length === 0 && (
+        {hasEntityChanges && visibleChanges.length === 0 && (
           <Text size="sm" c="dimmed">
             No changes match the selected collections.
           </Text>
         )}
-        {data && (
-          <EntityChangeSections
-            changes={visibleChanges}
-            typeNames={data.typeNames}
-          />
-        )}
+        <EntityChangeSections changes={visibleChanges} typeNames={typeNames} />
       </Stack>
     </Container>
   );
