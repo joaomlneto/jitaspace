@@ -79,6 +79,7 @@ export const ingestSdeTypes = defineJob<IngestSdeTypesEventPayload["data"]>({
         raceId: optionalNumber(record.raceID),
         metaGroupId: optionalNumber(record.metaGroupID),
         isRepackable: optionalBoolean(record.isRepackable),
+        isDynamicType: optionalBoolean(record.isDynamicType),
         factionId: present(factionIds, optionalNumber(record.factionID)),
         isDeleted: false,
       }),

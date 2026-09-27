@@ -2,6 +2,7 @@ import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import {
+  asteroidBeltNames,
   ingestSdeTable,
   loadSdeFiles,
   optionalBoolean,
@@ -23,7 +24,7 @@ export const ingestSdeAsteroidBelts = defineJob<
   id: "ingest-sde-asteroid-belts",
   name: "Ingest SDE Asteroid Belts",
   description:
-    "Download the SDE and ingest mapAsteroidBelts.yaml into the AsteroidBelt table (name = '<planet> - Asteroid Belt <orbitIndex>'; planetId = orbitID).",
+    "Download the SDE and ingest mapAsteroidBelts.yaml into the AsteroidBelt table (name = its uniqueName, else '<planet> - Asteroid Belt <orbitIndex>'; planetId = orbitID).",
   trigger: { type: "event" },
   singleton: true,
   maxDurationSeconds: 3600,
@@ -38,6 +39,12 @@ export const ingestSdeAsteroidBelts = defineJob<
       files["mapPlanets.yaml"],
       solarSystemNames(files["mapSolarSystems.yaml"]),
     );
+    // Through the shared helper, not an inline template: a named asteroid belt keeps
+    // its `uniqueName`, which need not follow the "<planet> - Asteroid Belt <n>" pattern.
+    const beltNameById = asteroidBeltNames(
+      files["mapAsteroidBelts.yaml"],
+      planetNameById,
+    );
 
     const asteroidBelts = await ingestSdeTable({
       filename: "mapAsteroidBelts.yaml",
@@ -47,13 +54,12 @@ export const ingestSdeAsteroidBelts = defineJob<
       toRow: (record, id): Prisma.AsteroidBeltCreateManyInput => {
         // An asteroid belt orbits its planet, so orbitID is the parent planetId.
         const planetId = requiredNumber(record.orbitID);
-        const planet = planetNameById.get(planetId) ?? "";
         // The 702 belts CCP ships without `radius`/`statistics` read as null.
         const position = subRecord(record.position);
         const stats = subRecord(record.statistics);
         return {
           asteroidBeltId: id,
-          name: `${planet} - Asteroid Belt ${requiredNumber(record.orbitIndex)}`,
+          name: beltNameById.get(id) ?? "",
           planetId,
           typeId: optionalNumber(record.typeID),
           radius: optionalNumber(record.radius),

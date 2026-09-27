@@ -222,6 +222,11 @@ model Type {
   /// Whether an assembled item can be repackaged (types.yaml `isRepackable`).
   /// CCP only ever serializes this as true, never false.
   isRepackable                    Boolean?
+  /// Whether this is a mutated ("Abyssal") module — a type a mutaplasmid
+  /// produces (types.yaml `isDynamicType`). The set is exactly the
+  /// `resultingType`s in dynamicItemAttributes.yaml. Like `isRepackable`, CCP
+  /// only ever serializes it as true, never false.
+  isDynamicType                   Boolean?
   /// The faction a faction/pirate item belongs to (types.yaml `factionID`).
   /// FK-guarded on ingest: 59 of the 1,376 values name a faction the SDE's own
   /// factions.yaml does not contain, and those land null.

@@ -16,6 +16,12 @@ import { enString, requiredNumber } from "./sdeFields";
  *
  * A moon's / belt's parent planet is its `orbitID` (the body it orbits), which
  * is also the value stored in `Moon.planetId` / `AsteroidBelt.planetId`.
+ *
+ * Except: a celestial CCP ships a `uniqueName` for is called exactly that, and it
+ * need not follow the pattern — "Kor-Azor Prime IV (Eclipticum) - Moon
+ * Griklaeum", or "… - Asteroid Belt 3" on a belt whose `orbitIndex` is 5. Every
+ * name below is built through these helpers so that rule lives in one place;
+ * the moon and belt jobs once built their own and got 19 such rows wrong.
  */
 
 const ROMAN: readonly [number, string][] = [
@@ -100,6 +106,29 @@ export function moonNames(
       Number(id),
       enString(record.uniqueName) ??
         `${planet} - Moon ${requiredNumber(record.orbitIndex)}`,
+    );
+  }
+  return names;
+}
+
+/**
+ * Map of `asteroidBeltID` → display name, from `mapAsteroidBelts.yaml` plus the
+ * planet names from {@link planetNames}. A named belt uses its full
+ * `uniqueName`; otherwise it is "<planetName> - Asteroid Belt <orbitIndex>". A
+ * belt's parent planet is its `orbitID`.
+ */
+export function asteroidBeltNames(
+  belts: SdeRecord,
+  planetNameById: Map<number, string>,
+): Map<number, string> {
+  const names = new Map<number, string>();
+  for (const [id, value] of Object.entries(belts)) {
+    const record = value as Record<string, unknown>;
+    const planet = planetNameById.get(requiredNumber(record.orbitID)) ?? "";
+    names.set(
+      Number(id),
+      enString(record.uniqueName) ??
+        `${planet} - Asteroid Belt ${requiredNumber(record.orbitIndex)}`,
     );
   }
   return names;
