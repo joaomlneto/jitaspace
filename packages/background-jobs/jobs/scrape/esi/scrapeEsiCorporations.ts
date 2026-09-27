@@ -50,12 +50,19 @@ const processCorporationBatch = async (
     ),
   );
 
-  const characterIds = thisBatchCorporations
-    .flatMap((corporation) => [corporation.ceo_id, corporation.creator_id])
-    .filter(
-      (characterId): characterId is number =>
-        characterId != null && characterId !== 1,
-    );
+  // Deduplicated: a founder who is still CEO, or a character who founded several
+  // corporations in this batch, would otherwise be synced twice — and
+  // compareSets rejects a duplicated record, failing the whole batch.
+  const characterIds = [
+    ...new Set(
+      thisBatchCorporations
+        .flatMap((corporation) => [corporation.ceo_id, corporation.creator_id])
+        .filter(
+          (characterId): characterId is number =>
+            characterId != null && characterId !== 1,
+        ),
+    ),
+  ];
 
   await createCorpAndItsRefRecords({
     missingCharacterIds: new Set(characterIds.filter((id) => id > 1)),
