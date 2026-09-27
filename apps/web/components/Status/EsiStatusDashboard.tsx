@@ -15,7 +15,7 @@ import {
 } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
 
-import type { MetaStatusRoutestatus } from "@jitaspace/esi-client";
+import type { MetaStatusRoute } from "@jitaspace/esi-client";
 import { useGetMetaStatus } from "@jitaspace/esi-client";
 
 const statusToColor: Record<string, string> = {
@@ -45,7 +45,7 @@ export function EsiStatusDashboard({
 
   // Group routes by first path segment
   const esiStatusByGroup = useMemo(() => {
-    const result: Record<string, MetaStatusRoutestatus[]> = {};
+    const result: Record<string, MetaStatusRoute[]> = {};
     const routes = esiStatus?.data.routes ?? [];
 
     routes
