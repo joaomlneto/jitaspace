@@ -14,17 +14,20 @@ import {
   latestChangedBuild,
   netOp,
 } from "~/lib/history";
+import { readTypeNames } from "~/lib/history-type-names";
 
 /**
  * Day-cached reads of the change-history data.
  *
  * The underlying queries hit the standalone history database
- * (@jitaspace/db-history) and the data only moves when a new EVE client build is
- * processed (rare, via the background jobs), so each result is cached for a day
- * (`cacheLife("days")`). The matching `"use server"` actions in
- * `history-actions.ts` delegate here, so every entry point (the `/history`
- * server component and the React Query client paths) shares one cache entry and
- * the DB is queried at most once per revalidation window per cache key.
+ * (@jitaspace/db-history) — all but {@link getCachedRangeTypeNames}, which names
+ * a comparison's types from our main one — and the data only moves when a new
+ * EVE client build is processed (rare, via the background jobs), so each result
+ * is cached for a day (`cacheLife("days")`). The matching `"use server"`
+ * actions in `history-actions.ts` delegate here, so every entry point (the
+ * `/history` server component and the React Query client paths) shares one
+ * cache entry and the DB is queried at most once per revalidation window per
+ * cache key.
  *
  * Kept in its own module (not the `"use server"` `history-actions.ts`) because a
  * function cannot be both a `"use cache"` entry and a `"use server"` action.
@@ -325,4 +328,30 @@ export async function getCachedBuildRangeChanges(
     toDate: ymd(toB.releasedAt),
     changes,
   };
+}
+
+/**
+ * Names of the types in the {@link getCachedBuildRangeChanges} comparison of
+ * `(from, to)`, by typeId ({@link readTypeNames}).
+ *
+ * An entry of their own: the range's is `cacheLife("max")`, and names change
+ * when the SDE is re-ingested, so a name baked in there would be frozen for
+ * good. Keyed on the pair like the range, so the key stays small however wide
+ * the range is; the range read here is the one the caller has just read, so a
+ * miss costs the names query alone — unless that range is too large for the
+ * cache to keep, when it is aggregated again, at most once a day, since this
+ * small entry is kept.
+ *
+ * Throws on failure, like the range read; the caller degrades, so nothing wrong
+ * is cached.
+ */
+export async function getCachedRangeTypeNames(
+  from: number,
+  to: number,
+): Promise<Record<number, string>> {
+  "use cache";
+  cacheLife("days");
+
+  const range = await getCachedBuildRangeChanges(from, to);
+  return range ? readTypeNames(range.changes) : {};
 }

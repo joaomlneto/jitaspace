@@ -7,7 +7,8 @@ import { env } from "~/env";
 /**
  * Vercel BotID — invisible bot protection for the expensive `/history` server
  * actions ({@link ~/lib/history-actions}). They are unauthenticated, run heavy
- * range SQL against the build-history database, and `getBuildRangeChanges`
+ * range SQL against the build-history database (plus a day-cached read of the
+ * compared types' names from the main one), and `getBuildRangeChanges`
  * mints a `cacheLife("max")` entry that effectively never expires — the app's
  * most attractive target for automated abuse. The matching `checkBotId()`
  * guards live in `lib/history-actions.ts`.

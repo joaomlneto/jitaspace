@@ -155,6 +155,11 @@ export const BuildRangeChanges = z.object({
   fromDate: z.string().nullable(),
   toDate: z.string().nullable(),
   changes: BuildChanges.shape.changes,
+  /**
+   * Names of the `type` entities in `changes`, by typeId (missing ⇒ unknown to
+   * our SDE tables). Absent when the names could not be read at all.
+   */
+  typeNames: z.record(z.coerce.number(), z.string()).optional(),
 });
 export type BuildRangeChanges = z.infer<typeof BuildRangeChanges>;
 
