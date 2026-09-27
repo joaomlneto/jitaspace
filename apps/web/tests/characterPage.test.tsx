@@ -58,16 +58,9 @@ jest.mock("@jitaspace/hooks", () => ({
   useAuthenticatedCharacter: (...args: unknown[]) =>
     mockUseAuthenticatedCharacter(...args),
   useCharacterSkills: (...args: unknown[]) => mockUseCharacterSkills(...args),
+  useCharacterWalletBalance: (...args: unknown[]) =>
+    mockUseCharacterWalletBalance(...args),
 }));
-
-// Imported via its deep path (not re-exported from the package root).
-jest.mock(
-  "@jitaspace/hooks/src/hooks/character/useCharacterWalletBalance",
-  () => ({
-    useCharacterWalletBalance: (...args: unknown[]) =>
-      mockUseCharacterWalletBalance(...args),
-  }),
-);
 
 jest.mock("@jitaspace/tiptap-eve", () => ({
   sanitizeFormattedEveString: (s: string) => `sanitized:${s}`,

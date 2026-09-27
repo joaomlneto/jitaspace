@@ -14,7 +14,6 @@ import {
   getUniverseRegionsRegionId,
   getUniverseStargatesStargateId,
   getUniverseStationsStationId,
-  getUniverseStructuresStructureId,
   getUniverseSystemsSystemId,
   getUniverseTypesTypeId,
   postUniverseNames,
@@ -130,10 +129,14 @@ const resolveNameOfKnownCategory = async (
         return data.data.name;
       });
     case "structure":
-      return getUniverseStructuresStructureId(Number(id), {}, {}).then(
-        (data) => {
-          return data.data.name;
-        },
+      // `/universe/structures/{id}` needs `esi-universe.read_structures.v1` and
+      // a character on the structure's access list. This cache resolves
+      // without a token, so the request could only ever fail — and every
+      // failure counts against ESI's error limit. Structure names come from
+      // useStructure instead (see StructureName in eve-components), which
+      // signs the request with a character that holds the scope.
+      throw new Error(
+        "Structure names need an authenticated lookup; use useStructure",
       );
     default: {
       const exhaustiveCategory: never = category;
