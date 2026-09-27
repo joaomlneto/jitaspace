@@ -190,7 +190,7 @@ describe("resolveTypeImage", () => {
       variations === "unavailable"
         ? Promise.resolve({
             ok: false,
-            status: 404,
+            status: 503,
             json: () => Promise.resolve([]),
           })
         : Promise.resolve({
@@ -300,7 +300,22 @@ describe("readTypeImageVariations", () => {
     await expect(readTypeImageVariations(2)).resolves.toEqual([]);
   });
 
-  it("throws on a non-2xx instead of caching an empty answer", async () => {
+  it("caches a 404 as 'no artwork' — the CDN's answer for a type it has none for", async () => {
+    // images.evetech.net 404s /types/<id> for every type it has never had art
+    // for. That is a real answer, not an outage: throwing would re-ask the CDN
+    // on every render and log each one as a runtime error.
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: false,
+        status: 404,
+        json: () => Promise.resolve({ error: "not found" }),
+      }),
+    ) as unknown as typeof fetch;
+    await expect(readTypeImageVariations(36364)).resolves.toEqual([]);
+    expect(await resolveTypeImage(36364)).toBeUndefined();
+  });
+
+  it("throws on any other non-2xx instead of caching an empty answer", async () => {
     global.fetch = jest.fn(() =>
       Promise.resolve({
         ok: false,
