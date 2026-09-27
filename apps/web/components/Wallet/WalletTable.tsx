@@ -256,6 +256,15 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         // on what is actually displayed rather than on the raw ESI ref_type.
         accessorFn: (row) => getAccountingEntryTypeName(row.ref_type),
         filterVariant: "multi-select",
+        // Exact match. The multi-select variant defaults to arrIncludesSome,
+        // which calls `.includes` on the cell value — a string here, so it
+        // matched substrings: picking "Brokers Fee" also kept both contract
+        // broker fees, and "Bounty" kept six other types. A custom filterFn
+        // loses arrIncludesSome's autoRemove, so an emptied selection has to
+        // mean "no filter" in here.
+        filterFn: (row, columnId, filterValue: string[] | undefined) =>
+          !filterValue?.length ||
+          filterValue.includes(row.getValue<string>(columnId)),
         size: 40,
         Cell: RefTypeCell,
       },

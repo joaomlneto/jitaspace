@@ -46,6 +46,7 @@ async function fetchText(url) {
  */
 /** @param {string} python */
 function parseRefTypeIds(python) {
+  /** @type {Map<string, number>} */
   const ids = new Map();
   // The parenthesised alternative captures the whole group rather than digging
   // the number out inline: `[^)]*` cannot match the closing paren, so there is
@@ -57,7 +58,10 @@ function parseRefTypeIds(python) {
     // Inside the parens the number is last, after an optional lint comment.
     const wrappedValue = wrapped?.match(/(?:^|\s)(\d+)\s*$/)?.[1];
     const resolved = value ?? wrappedValue;
-    if (resolved !== undefined) ids.set(name, Number(resolved));
+    // `name` is a required group, so this only narrows the type.
+    if (name !== undefined && resolved !== undefined) {
+      ids.set(name, Number(resolved));
+    }
   }
   // `[ \t]+` rather than `\s+`: `\s` matches newlines, so under /m a run of
   // blank lines contains many `^` positions and each one re-walks the whole
@@ -66,7 +70,9 @@ function parseRefTypeIds(python) {
   for (const [, name, value] of python.matchAll(
     /^[ \t]+"([a-z_0-9]+)": (\d+),/gm,
   )) {
-    ids.set(name, Number(value));
+    if (name !== undefined && value !== undefined) {
+      ids.set(name, Number(value));
+    }
   }
   return ids;
 }
@@ -76,7 +82,21 @@ const [entryTypesJson, refTypePython] = await Promise.all([
   fetchText(REF_TYPE_MAP_URL),
 ]);
 
-const entryTypes = JSON.parse(entryTypesJson);
+/**
+ * The subset of an SDE accounting entry type this script reads.
+ *
+ * @typedef {object} SdeAccountingEntryType
+ * @property {string} [name]
+ * @property {string} [entryTypeNameTranslated]
+ * @property {string} [description]
+ * @property {string} [entryTypeDescriptionTranslated]
+ */
+/** @type {unknown} */
+const parsedEntryTypes = JSON.parse(entryTypesJson);
+const entryTypes =
+  /** @type {Record<string, SdeAccountingEntryType | undefined>} */ (
+    parsedEntryTypes
+  );
 const refTypeIds = parseRefTypeIds(refTypePython);
 
 /**
@@ -108,9 +128,9 @@ for (const [refType, id] of [...refTypeIds].sort(([a], [b]) =>
   entries.push({
     refType,
     id,
-    name: entryType.entryTypeNameTranslated || entryType.name,
+    name: entryType.entryTypeNameTranslated ?? entryType.name,
     description: usableDescription(
-      entryType.entryTypeDescriptionTranslated || entryType.description,
+      entryType.entryTypeDescriptionTranslated ?? entryType.description,
     ),
   });
 }

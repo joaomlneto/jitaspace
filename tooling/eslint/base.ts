@@ -125,6 +125,8 @@ export const baseConfig = defineConfig(
         __filename: "readonly",
         console: "readonly",
         exports: "writable",
+        // Global in every Node the repo supports (engines: >=24.15.0).
+        fetch: "readonly",
         module: "writable",
         process: "readonly",
         require: "readonly",
