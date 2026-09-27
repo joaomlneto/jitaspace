@@ -110,6 +110,55 @@ function formatIskShort(amount: number): string {
   return `${digits(tier)}${tier.symbol}`;
 }
 
+/** "45.6M ISK", or nothing when zKillboard hasn't appraised the kill. */
+function formatKillValue(totalValue: number | undefined): string | undefined {
+  // zKillboard reports 0 for an unappraised kill — say nothing, not "0 ISK".
+  if (!totalValue || !Number.isFinite(totalValue) || totalValue <= 0) {
+    return undefined;
+  }
+  return `${formatIskShort(totalValue)} ISK`;
+}
+
+interface KillSummary {
+  victim?: PartyLabel;
+  shipName?: string;
+  systemName?: string;
+  regionName?: string;
+  value?: string;
+  attackerCount: number;
+  finalBlow?: PartyLabel;
+  finalBlowShipName?: string;
+}
+
+/**
+ * Killboard phrasing (zKillboard, EVE-Kill): who lost what, where, for how
+ * much; then who got the final blow in what. Nothing else. Every missing piece
+ * drops its own clause.
+ */
+function describeKill(kill: KillSummary): string {
+  const victim = kill.victim ? formatParty(kill.victim) : "Unknown";
+  let loss = `${victim} lost their ${kill.shipName ?? "ship"}`;
+  if (kill.systemName) {
+    loss += ` in ${kill.systemName}`;
+    if (kill.regionName) loss += ` (${kill.regionName})`;
+  }
+  if (kill.value) loss += ` worth ${kill.value}`;
+
+  let finalBlow = kill.finalBlow ? formatParty(kill.finalBlow) : undefined;
+  if (finalBlow && kill.finalBlowShipName) {
+    finalBlow += ` in ${withIndefiniteArticle(kill.finalBlowShipName)}`;
+  }
+
+  let attackers: string;
+  if (kill.attackerCount === 1) {
+    attackers = finalBlow ? `Solo kill by ${finalBlow}` : "Solo kill";
+  } else {
+    const count = `${kill.attackerCount} attackers`;
+    attackers = finalBlow ? `${count}, final blow by ${finalBlow}` : count;
+  }
+  return `${loss}. ${attackers}.`;
+}
+
 interface ZkbLookup {
   hash: string;
   totalValue?: number;
@@ -227,32 +276,17 @@ export async function generateMetadata({
       finalBlow ? describeKillmailParty(finalBlow) : undefined,
     ]);
 
-    const value =
-      // zKillboard reports 0 for an unappraised kill — say nothing, not "0 ISK".
-      totalValue && Number.isFinite(totalValue) && totalValue > 0
-        ? `${formatIskShort(totalValue)} ISK`
-        : undefined;
-    const regionName = system?.constellation.region?.name;
-    const where = system
-      ? ` in ${system.name}${regionName ? ` (${regionName})` : ""}`
-      : "";
-    const fbShip = finalBlowShipName
-      ? ` in ${withIndefiniteArticle(finalBlowShipName)}`
-      : "";
-    const fbClause = fbLabel ? `${formatParty(fbLabel)}${fbShip}` : undefined;
-
-    // Killboard phrasing (zKillboard, EVE-Kill): who lost what, where, for how
-    // much; then who got the final blow in what. Nothing else.
-    const description = [
-      `${victimLabel ? formatParty(victimLabel) : "Unknown"} lost their ${
-        shipName ?? "ship"
-      }${where}${value ? ` worth ${value}` : ""}.`,
-      attackerCount === 1
-        ? `Solo kill${fbClause ? ` by ${fbClause}` : ""}.`
-        : `${attackerCount} attackers${
-            fbClause ? `, final blow by ${fbClause}` : ""
-          }.`,
-    ].join(" ");
+    const value = formatKillValue(totalValue);
+    const description = describeKill({
+      victim: victimLabel,
+      shipName,
+      systemName: system?.name,
+      regionName: system?.constellation.region?.name,
+      value,
+      attackerCount,
+      finalBlow: fbLabel,
+      finalBlowShipName,
+    });
 
     return pageMetadata({
       // "Rifter | Alduin Vok | 45.6M ISK" — zKillboard/EVE-Kill's headline.
