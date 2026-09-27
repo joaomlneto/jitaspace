@@ -222,7 +222,7 @@ beforeEach(() => {
   mockUseGroup.mockReturnValue({ data: undefined });
   mockUseCategory.mockReturnValue({ data: undefined });
   mockUseType.mockReturnValue({ data: undefined });
-  mockUseMarketGroup.mockReturnValue(undefined);
+  mockUseMarketGroup.mockReturnValue({ data: undefined });
   mockUseCharacterMailLabels.mockReturnValue({ data: undefined });
   mockUseAccessToken.mockReturnValue({
     accessToken: "token",
@@ -498,13 +498,13 @@ describe("TypeMarketBreadcrumbs", () => {
     mockUseMarketGroup.mockImplementation((id: number) => {
       switch (id) {
         case 1:
-          return { name: "Frigates", parent_group_id: 2 };
+          return { data: { name: "Frigates", parent_group_id: 2 } };
         case 2:
-          return { name: "Ships", parent_group_id: 3 };
+          return { data: { name: "Ships", parent_group_id: 3 } };
         case 3:
-          return { name: "Market", parent_group_id: 0 };
+          return { data: { name: "Market", parent_group_id: 0 } };
         default:
-          return undefined;
+          return { data: undefined };
       }
     });
 
@@ -523,6 +523,29 @@ describe("TypeMarketBreadcrumbs", () => {
     expect(props.marketGroups).toEqual([
       { market_group_id: 3, name: "Market" },
       { market_group_id: 2, name: "Ships" },
+      { market_group_id: 1, name: "Frigates" },
+    ]);
+  });
+
+  it("drops a level whose market group failed to load instead of crashing", () => {
+    mockUseType.mockReturnValue({
+      data: { data: { market_group_id: 1 } },
+    });
+    // Group 1 resolves; its parent (2) failed, so there is no data for it.
+    mockUseMarketGroup.mockImplementation((id: number) =>
+      id === 1
+        ? { data: { name: "Frigates", parent_group_id: 2 } }
+        : { data: undefined, isLoading: false, error: new Error("500") },
+    );
+
+    const { TypeMarketBreadcrumbs } = require("~/components/Breadcrumbs");
+
+    renderWithMantine(<TypeMarketBreadcrumbs typeId={587} />);
+
+    const props = JSON.parse(
+      screen.getByTestId("ui-type-market-breadcrumbs").textContent,
+    );
+    expect(props.marketGroups).toEqual([
       { market_group_id: 1, name: "Frigates" },
     ]);
   });

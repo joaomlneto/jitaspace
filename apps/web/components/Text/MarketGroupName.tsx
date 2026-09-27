@@ -12,8 +12,8 @@ export type MarketGroupNameProps = TextProps & {
 
 export const MarketGroupName = memo(
   ({ marketGroupId, ...otherProps }: MarketGroupNameProps) => {
-    const marketGroup = useMarketGroup(marketGroupId ?? 0);
-    return <UIMarketGroupName name={marketGroup.name} {...otherProps} />;
+    const { data: marketGroup } = useMarketGroup(marketGroupId ?? 0);
+    return <UIMarketGroupName name={marketGroup?.name} {...otherProps} />;
   },
 );
 MarketGroupName.displayName = "MarketGroupName";

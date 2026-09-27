@@ -50,7 +50,7 @@ jest.mock("@jitaspace/hooks", () => ({
   useRace: () => ({ data: { name: "Race Value" } }),
 
   // returns the object directly (no `data` wrapper)
-  useMarketGroup: () => ({ name: "Market Group Value" }),
+  useMarketGroup: () => ({ data: { name: "Market Group Value" } }),
 
   // LabelName: data?.data.labels?.find((l) => l.label_id === labelId)
   useCharacterMailLabels: () => ({

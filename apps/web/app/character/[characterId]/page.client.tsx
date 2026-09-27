@@ -48,9 +48,9 @@ import {
   useAuthenticatedCharacter,
   useCharacter,
   useCharacterSkills,
+  useCharacterWalletBalance,
   useSelectedCharacter,
 } from "@jitaspace/hooks";
-import { useCharacterWalletBalance } from "@jitaspace/hooks/src/hooks/character/useCharacterWalletBalance";
 import { sanitizeFormattedEveString } from "@jitaspace/tiptap-eve";
 import {
   AllianceAvatar,

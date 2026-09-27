@@ -29,18 +29,13 @@ const mockRemoveCharacter = jest.fn<(characterId: number) => void>();
 jest.mock("@jitaspace/hooks", () => ({
   useAuthenticatedCharacter: () => character,
   useCharacterSkills: () => ({ data: undefined, hasToken: false }),
+  useCharacterWalletBalance: () => ({ data: undefined, isAllowed: false }),
   useAuthStore: (
     selector: (state: {
       removeCharacter: typeof mockRemoveCharacter;
     }) => unknown,
   ) => selector({ removeCharacter: mockRemoveCharacter }),
 }));
-jest.mock(
-  "@jitaspace/hooks/src/hooks/character/useCharacterWalletBalance",
-  () => ({
-    useCharacterWalletBalance: () => ({ data: undefined, isAllowed: false }),
-  }),
-);
 jest.mock(
   "@jitaspace/eve-components",
   () => new Proxy({}, { get: () => () => null }),

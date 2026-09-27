@@ -9,12 +9,22 @@ Builds on top of `@jitaspace/esi-client` to provide ergonomic, auth-aware React 
 ## Usage
 
 ```tsx
-import { useCharacterName, useCharacterPortrait } from "@jitaspace/hooks";
+import { useCharacter, useCharacterSkills } from "@jitaspace/hooks";
 
 function CharacterCard({ characterId }: { characterId: number }) {
-  const { data: name } = useCharacterName(characterId);
-  const { data: portrait } = useCharacterPortrait(characterId);
-  return <img src={portrait?.px128x128} alt={name} />;
+  // Public data — no login needed.
+  const { data: character, isLoading } = useCharacter(characterId);
+  // Authenticated data — resolves only when a logged-in character holds the
+  // `esi-skills.read_skills.v1` scope; `hasToken` says whether one does.
+  const { data: skills, hasToken } = useCharacterSkills(characterId);
+
+  if (isLoading) return <p>Loading…</p>;
+  return (
+    <p>
+      {character?.name}
+      {hasToken && ` — ${skills?.data.total_sp.toLocaleString()} SP`}
+    </p>
+  );
 }
 ```
 
