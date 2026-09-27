@@ -21,6 +21,9 @@ import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "./og";
 
 export const SITE_NAME = "JitaSpace";
 
+/** EVE CDN artwork is always requested at this size (see `eveImage.type`). */
+const RAW_IMAGE_SIZE = 512;
+
 export interface PageMetadataInput {
   /** Page/entity name. The root layout's `%s | JitaSpace` template is applied. */
   title: string;
@@ -36,11 +39,28 @@ export interface PageMetadataInput {
   facts?: OgFact[];
   /** `article` for changelog-style pages; defaults to `website`. */
   type?: "website" | "article";
+  /**
+   * Unfurl this artwork directly, square, instead of compositing the generated
+   * `/api/og` card — how killboards (zKillboard, EVE-Kill) present a kill: the
+   * ship's own render as a small thumbnail, with the story told by
+   * title/description rather than overlaid card text. Falls back to the
+   * generated card (using `image`/`badge`/`facts` above) when unset.
+   */
+  rawImage?: string;
+  /**
+   * Emit `og:title`/`twitter:title` as given, without the root layout's
+   * `%s | JitaSpace` template. An unfurl already names the site (`og:site_name`
+   * is the provider line above the title on Discord), so the suffix only repeats
+   * it — killboards leave it off their kill cards. The document `<title>` keeps
+   * the template either way, for browser tabs and search results.
+   */
+  plainSocialTitle?: boolean;
 }
 
 /**
  * Assembles `title`, `description`, canonical URL, OpenGraph and Twitter tags
- * from one description of the page, with a generated card as the image.
+ * from one description of the page, with a generated card — or, when
+ * `rawImage` is given, that artwork directly — as the image.
  */
 export function pageMetadata({
   title,
@@ -50,14 +70,22 @@ export function pageMetadata({
   image,
   facts,
   type = "website",
+  rawImage,
+  plainSocialTitle = false,
 }: PageMetadataInput): Metadata {
-  const ogImage = buildOgImageUrl({
-    title,
-    subtitle: description,
-    badge,
-    image,
-    facts,
-  });
+  const ogImage =
+    rawImage ??
+    buildOgImageUrl({
+      title,
+      subtitle: description,
+      badge,
+      image,
+      facts,
+    });
+  const imageSize = rawImage
+    ? { width: RAW_IMAGE_SIZE, height: RAW_IMAGE_SIZE }
+    : { width: OG_IMAGE_WIDTH, height: OG_IMAGE_HEIGHT };
+  const socialTitle = plainSocialTitle ? { absolute: title } : title;
 
   return {
     title,
@@ -67,21 +95,22 @@ export function pageMetadata({
       type,
       siteName: SITE_NAME,
       url: path,
-      title,
+      title: socialTitle,
       description,
       images: [
         {
           url: ogImage,
-          width: OG_IMAGE_WIDTH,
-          height: OG_IMAGE_HEIGHT,
+          ...imageSize,
           alt: title,
         },
       ],
     },
     twitter: {
-      // The generated card is 1.91:1, so it fills the large card properly.
-      card: "summary_large_image",
-      title,
+      // The generated card is 1.91:1 and wants the large card; a raw square
+      // thumbnail unfurls the way zKillboard/EVE-Kill declare their own kill
+      // images — as "summary", not stretched into the large-image slot.
+      card: rawImage ? "summary" : "summary_large_image",
+      title: socialTitle,
       description,
       images: [ogImage],
     },
