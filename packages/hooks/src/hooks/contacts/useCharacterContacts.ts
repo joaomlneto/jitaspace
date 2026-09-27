@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-
 import type {
   GetCharactersCharacterIdContactsLabelsQueryResponse,
   GetCharactersCharacterIdContactsQueryResponse,
@@ -15,6 +13,7 @@ import {
 
 import { useAccessToken } from "../auth";
 import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
+import { useEagerlyFetchAllPages } from "../utils/useEagerlyFetchAllPages";
 
 export type CharacterContact =
   GetCharactersCharacterIdContactsQueryResponse[number];
@@ -72,10 +71,7 @@ export function useCharacterContacts(characterId: number) {
       },
     );
 
-  // fetch everything immediately
-  useEffect(() => {
-    if (hasNextPage) void fetchNextPage();
-  }, [hasNextPage, fetchNextPage]);
+  useEagerlyFetchAllPages({ data, error, hasNextPage, fetchNextPage });
 
   return {
     data: (data?.pages ?? []).flatMap((res) => res.data),

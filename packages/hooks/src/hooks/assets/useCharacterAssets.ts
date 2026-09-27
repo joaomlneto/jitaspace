@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import type { GetCharactersCharacterIdAssetsQueryResponse } from "@jitaspace/esi-client";
 import {
@@ -11,6 +11,7 @@ import {
 
 import { useAccessToken } from "../auth";
 import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
+import { useEagerlyFetchAllPages } from "../utils/useEagerlyFetchAllPages";
 
 export type CharacterAsset =
   GetCharactersCharacterIdAssetsQueryResponse[number];
@@ -54,10 +55,7 @@ export const useCharacterAssets = (characterId?: number) => {
       },
     );
 
-  // fetch everything immediately
-  useEffect(() => {
-    if (hasNextPage) void fetchNextPage();
-  }, [hasNextPage, fetchNextPage]);
+  useEagerlyFetchAllPages({ data, error, hasNextPage, fetchNextPage });
 
   const assets: Record<
     string,
@@ -118,10 +116,11 @@ export const useCharacterAssets = (characterId?: number) => {
      * Whether pages are still outstanding.
      *
      * `isLoading` only covers the *first* page: react-query settles the query
-     * once page one lands, and the eager effect above then walks the rest with
-     * `fetchNextPage`, which reports through `isFetchingNextPage` instead. A
-     * consumer that needs the whole collection — rather than whatever has
-     * arrived so far — has to wait on this too.
+     * once page one lands, and `useEagerlyFetchAllPages` then walks the rest
+     * with `fetchNextPage`, which reports through `isFetchingNextPage` instead.
+     * A consumer that needs the whole collection — rather than whatever has
+     * arrived so far — has to wait on this too. It stays `true` after a page
+     * fails, so pair it with `error`.
      */
     hasNextPage,
     mutate: refetch,

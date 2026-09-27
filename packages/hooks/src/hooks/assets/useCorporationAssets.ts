@@ -59,7 +59,7 @@ export const useCorporationAssets = (corporationId?: number) => {
     );
 
   // eagerly load every page so the whole corporation inventory is available
-  useEagerlyFetchAllPages({ hasNextPage, fetchNextPage });
+  useEagerlyFetchAllPages({ data, error, hasNextPage, fetchNextPage });
 
   const errorMessage = useMemo(() => {
     if (error) {
