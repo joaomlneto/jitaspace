@@ -161,9 +161,10 @@ describe("compareSets", () => {
   });
 
   it("does not treat a key named like an Object prototype member as present", () => {
-    // `indexBefore` is a plain object, so an id such as `__proto__` or
-    // `constructor` is a live prototype key rather than an own property.
-    // Membership must come from the key sets, never from the object index.
+    // Guards membership asked of the object index with `in` or a bracket read:
+    // both find `__proto__` and `constructor` on Object.prototype, so the new
+    // `__proto__` row would never be created and the gone `constructor` row
+    // never deleted.
     const before: LooseItem[] = [{ id: "constructor", name: "a" }];
     const after: LooseItem[] = [{ id: "__proto__", name: "b" }];
     const result = compareSets({
@@ -175,6 +176,24 @@ describe("compareSets", () => {
     expect(result.created.map((r) => r.id)).toEqual(["__proto__"]);
     expect(result.deleted.map((r) => r.id)).toEqual(["constructor"]);
     expect(result.equal).toHaveLength(0);
+    expect(result.modified).toHaveLength(0);
+  });
+
+  it("recognises a key named __proto__ that is present on both sides", () => {
+    // The opposite hazard, and the one the tempting `Object.hasOwn(indexBefore,
+    // id)` rewrite hits: `indexBefore.__proto__ = record` replaces the prototype
+    // instead of adding an own key, so hasOwn calls this row absent — it is
+    // re-created on every run and never compared. The case above passes under
+    // that rewrite; this one does not.
+    const result = compareSets({
+      recordsBefore: [{ id: "__proto__", name: "same" }] as LooseItem[],
+      recordsAfter: [{ id: "__proto__", name: "same" }] as LooseItem[],
+      getId: (item: LooseItem) => item.id,
+      recordsAreEqual: (a: LooseItem, b: LooseItem) => a.name === b.name,
+    });
+    expect(result.equal.map((r) => r.id)).toEqual(["__proto__"]);
+    expect(result.created).toHaveLength(0);
+    expect(result.deleted).toHaveLength(0);
     expect(result.modified).toHaveLength(0);
   });
 

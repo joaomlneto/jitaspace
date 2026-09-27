@@ -17,9 +17,12 @@ export const compareSets = <T extends object>({
 
   // Membership is tested against sets, not the key arrays. `Set.prototype.has`
   // and `Array.prototype.includes` both use SameValueZero, so this is an exact
-  // swap for the linear scans — and it must stay a set keyed on `getId`'s own
-  // values rather than `indexBefore`, whose plain-object keys would both coerce
-  // 1 and "1" together and report inherited names like `constructor` as present.
+  // swap for the linear scans. Keep it a set keyed on `getId`'s own values
+  // rather than routing it through `indexBefore`: that plain object coerces 1
+  // and "1" into one key, and its prototype defeats either way of asking it —
+  // `in` or a bracket read reports inherited names like `constructor` as
+  // present, while `Object.hasOwn` misses `__proto__`, which assignment turns
+  // into the prototype instead of an own key.
   //
   // What they replace is three O(n*m) scans. `ingestSdeCompositeTable` chunks
   // by parent id (5000 at a time), which bounds parents but NOT rows, so the
