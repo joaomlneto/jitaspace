@@ -12,6 +12,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import {
   eveImage,
   pageMetadata,
+  readTypeImageVariations,
   resolveTypeImage,
   toDescription,
   withArticle,
@@ -193,6 +194,23 @@ describe("resolveTypeImage", () => {
     expect(await resolveTypeImage(587)).toBeUndefined();
   });
 
+  it("bounds the request with a timeout, so a hung CDN cannot stall the render", async () => {
+    mockImageService(["render"]);
+    await resolveTypeImage(587);
+    const init = (global.fetch as jest.Mock).mock.calls[0]?.[1] as
+      | RequestInit
+      | undefined;
+    expect(init?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("catches a failure outside the cached read, so the blip is never stored", async () => {
+    // The cached helper must reject — that is what keeps the failure out of
+    // the cache entry — while the uncached wrapper degrades to no image.
+    mockImageService("unavailable");
+    await expect(readTypeImageVariations(587)).rejects.toThrow();
+    expect(await resolveTypeImage(587)).toBeUndefined();
+  });
+
   it.each([0, -1, 1.5, Number.NaN, null, undefined])(
     "never asks the service about %p",
     async (typeId) => {
@@ -202,4 +220,47 @@ describe("resolveTypeImage", () => {
       expect(fetchSpy).not.toHaveBeenCalled();
     },
   );
+});
+
+describe("readTypeImageVariations", () => {
+  // The cached half of the split. A failure must throw out of it rather than
+  // resolve: whatever this returns is stored under `cacheLife("days")`, so a
+  // swallowed CDN blip would leave the type's unfurl imageless for a day.
+
+  it("returns the variations the type publishes", async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve(["icon"]) }),
+    ) as unknown as typeof fetch;
+    await expect(readTypeImageVariations(34)).resolves.toEqual(["icon"]);
+  });
+
+  it("caches a genuine empty answer, since that is a real 'no artwork'", async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve([]) }),
+    ) as unknown as typeof fetch;
+    await expect(readTypeImageVariations(2)).resolves.toEqual([]);
+  });
+
+  it("throws on a non-2xx instead of caching an empty answer", async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        ok: false,
+        status: 503,
+        json: () => Promise.resolve([]),
+      }),
+    ) as unknown as typeof fetch;
+    await expect(readTypeImageVariations(587)).rejects.toThrow("503");
+  });
+
+  it("throws when the request itself fails", async () => {
+    global.fetch = jest.fn(() => Promise.reject(new Error("network")));
+    await expect(readTypeImageVariations(587)).rejects.toThrow("network");
+  });
+
+  it("throws on a malformed body rather than trusting it", async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve({}) }),
+    ) as unknown as typeof fetch;
+    await expect(readTypeImageVariations(587)).rejects.toThrow();
+  });
 });
