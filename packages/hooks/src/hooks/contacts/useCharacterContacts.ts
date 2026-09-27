@@ -13,7 +13,10 @@ import {
 
 import { useAccessToken } from "../auth";
 import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
-import { useEagerlyFetchAllPages } from "../utils/useEagerlyFetchAllPages";
+import {
+  EAGER_WALK_STALE_TIME_MS,
+  useEagerlyFetchAllPages,
+} from "../utils/useEagerlyFetchAllPages";
 
 export type CharacterContact =
   GetCharactersCharacterIdContactsQueryResponse[number];
@@ -52,6 +55,7 @@ export function useCharacterContacts(characterId: number) {
           ),
           enabled: accessToken !== null,
           initialPageParam: 1,
+          staleTime: EAGER_WALK_STALE_TIME_MS,
           queryFn: ({ pageParam }) =>
             getCharactersCharacterIdContacts(
               characterId,

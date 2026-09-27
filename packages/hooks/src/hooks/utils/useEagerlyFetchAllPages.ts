@@ -3,6 +3,18 @@
 import { useEffect } from "react";
 
 /**
+ * How long an eagerly-walked collection counts as fresh.
+ *
+ * A refetch of an infinite query re-requests EVERY page it holds, and with
+ * react-query's default staleTime of 0 that happened on every window focus and
+ * every remount — a full re-walk of a character's assets each time the user
+ * alt-tabbed back. ESI caches these collections server-side (contacts for 5
+ * minutes, assets for an hour), so a refetch sooner than that only returns the
+ * same cached pages. This is the shorter of the two.
+ */
+export const EAGER_WALK_STALE_TIME_MS = 5 * 60 * 1000;
+
+/**
  * Eagerly fetches every remaining page of an infinite query.
  *
  * ESI paginates large collections (assets, contacts, ...) but the consumers of

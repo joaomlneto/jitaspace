@@ -263,6 +263,45 @@ describe("useEsiNamePrefetch under a language switch", () => {
   });
 });
 
+describe("useEsiNamePrefetch with a changing entries array", () => {
+  it("does not re-request names that have already resolved", async () => {
+    // Callers rebuild the entries array whenever their data changes — each
+    // debounced search result, each assets page. The cache's load() only
+    // skips keys that are still loading, so every resolved name was fetched
+    // again on every new array.
+    const { rerender } = renderHook(
+      ({
+        entries,
+      }: {
+        entries: { id: number; category: "inventory_type" }[];
+      }) => useEsiNamePrefetch(entries),
+      {
+        initialProps: {
+          entries: [{ id: 609, category: "inventory_type" as const }],
+        },
+      },
+    );
+    await waitFor(() =>
+      expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(1),
+    );
+
+    // Same id, fresh array, plus one new id: only the new one is requested.
+    rerender({
+      entries: [
+        { id: 609, category: "inventory_type" as const },
+        { id: 610, category: "inventory_type" as const },
+      ],
+    });
+    await waitFor(() =>
+      expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(2),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(2);
+    expect(mockGetUniverseTypesTypeId).toHaveBeenLastCalledWith(610, {}, {});
+  });
+});
+
 describe("useEsiAcceptLanguage", () => {
   function LanguageProbe() {
     return <span>{useEsiAcceptLanguage() ?? "(unset)"}</span>;

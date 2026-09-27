@@ -68,10 +68,20 @@ describe("useAuthStoreHasHydrated", () => {
   });
 
   it("unsubscribes on unmount", () => {
-    const { unmount } = renderHook(() => useAuthStoreHasHydrated());
+    // This used to assert only that unmount() does not throw, which holds for
+    // an effect with no cleanup at all. Force the not-yet-hydrated path so the
+    // hook subscribes, then check the subscription it got is torn down.
+    const unsubscribe = jest.fn();
+    jest.spyOn(useAuthStore.persist, "hasHydrated").mockReturnValue(false);
+    jest
+      .spyOn(useAuthStore.persist, "onFinishHydration")
+      .mockReturnValue(unsubscribe);
 
-    // The effect returns the unsubscribe function directly; calling unmount
-    // must not throw.
-    expect(() => unmount()).not.toThrow();
+    const { unmount } = renderHook(() => useAuthStoreHasHydrated());
+    expect(unsubscribe).not.toHaveBeenCalled();
+
+    unmount();
+
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 });

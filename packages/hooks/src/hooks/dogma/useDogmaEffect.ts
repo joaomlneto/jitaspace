@@ -1,19 +1,11 @@
 "use client";
 
-import {
-  useGetDogmaEffects,
-  useGetDogmaEffectsEffectId,
-} from "@jitaspace/esi-client";
+import { useGetDogmaEffectsEffectId } from "@jitaspace/esi-client";
 
-export const useDogmaEffect = (effectId: number) => {
-  const { data: effectIds } = useGetDogmaEffects();
-  return useGetDogmaEffectsEffectId(
-    effectId,
-    {},
-    {
-      query: {
-        enabled: effectIds?.data.includes(effectId),
-      },
-    },
-  );
-};
+/**
+ * See useDogmaAttribute: the id-list gate this used to carry never gated (it
+ * was `undefined` while the list loaded), fetched the whole /dogma/effects list
+ * for nothing, and overrode the generated hook's `!!effect_id` guard.
+ */
+export const useDogmaEffect = (effectId: number) =>
+  useGetDogmaEffectsEffectId(effectId);

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "@jest/globals";
 
 import type { EsiOperation } from "../kubb/multiEsiEndpoints";
-import { describeEndpoint, renderEndpoint } from "../kubb/multiEsiEndpoints";
+import {
+  assertUniqueHookNames,
+  describeEndpoint,
+  renderEndpoint,
+} from "../kubb/multiEsiEndpoints";
 
 // The codegen's decision logic: which ESI operations can be fanned out over
 // subjects, and what the emitted hook looks like. 55 generated files depend on
@@ -271,6 +275,44 @@ describe("describeEndpoint — single-value endpoints", () => {
     );
 
     expect(source).toContain("defineMultiEsiValueQuery({");
+  });
+});
+
+describe("generator guards", () => {
+  it("refuses a paginated endpoint that returns scalars", () => {
+    // renderEndpoint's paginated branch always emits the list primitive, whose
+    // tagging would replace every scalar with { subjectId } behind a cast that
+    // hides it from TypeScript. Stop instead of emitting that.
+    expect(() =>
+      describeAt("/corporations/{corporation_id}/members", {
+        operationId: "GetCorporationsCorporationIdMembers",
+        responses: SCALAR_ARRAY_RESPONSE,
+        parameters: [{ name: "page", in: "query" }],
+      }),
+    ).toThrow(/paginated AND returns a non-object array/);
+  });
+
+  it("refuses two routes that would generate the same hook name", () => {
+    const hookName = "useMultipleCorporationMiningExtractions";
+
+    expect(() =>
+      assertUniqueHookNames([
+        { hookName, route: "/corporation/{corporation_id}/mining/extractions" },
+        {
+          hookName,
+          route: "/corporations/{corporation_id}/mining/extractions",
+        },
+      ]),
+    ).toThrow(/generated for both/);
+  });
+
+  it("accepts distinct hook names", () => {
+    expect(() =>
+      assertUniqueHookNames([
+        { hookName: "useMultipleA", route: "/a/{character_id}" },
+        { hookName: "useMultipleB", route: "/b/{character_id}" },
+      ]),
+    ).not.toThrow();
   });
 });
 

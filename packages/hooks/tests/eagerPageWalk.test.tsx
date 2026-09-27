@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { describe, expect, it, jest } from "@jest/globals";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 
 // The eager page walk, driven through the REAL react-query useInfiniteQuery.
 //
@@ -49,7 +49,7 @@ jest.mock("../src/hooks/location", () => ({
     mockUseCharacterCurrentShip(...args),
 }));
 
-const { QueryClient, QueryClientProvider } =
+const { QueryClient, QueryClientProvider, focusManager } =
   require("@tanstack/react-query") as typeof import("@tanstack/react-query");
 const { createElement } = require("react") as typeof import("react");
 const { useCharacterAssets } =
@@ -129,6 +129,29 @@ describe("eager page walk against the real useInfiniteQuery", () => {
       expect(mockGetAssets).toHaveBeenCalledTimes(total);
     },
   );
+
+  it("does not re-walk every page when the window regains focus", async () => {
+    // A refetch of an infinite query re-requests every page it holds. With
+    // the default staleTime of 0 that happened on every focus — alt-tabbing
+    // back re-fetched a character's whole asset list.
+    setUp(3);
+    const { result } = renderHook(() => useCharacterAssets(CHARACTER_ID), {
+      wrapper,
+    });
+    await waitFor(() =>
+      expect(Object.keys(result.current.assets)).toHaveLength(3),
+    );
+    expect(mockGetAssets).toHaveBeenCalledTimes(3);
+
+    act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(mockGetAssets).toHaveBeenCalledTimes(3);
+    focusManager.setFocused(undefined);
+  });
 
   it("useCharacterCurrentFit stops loading and shows modules from every page", async () => {
     // The user-visible regression: with more than two pages the walk stalled,

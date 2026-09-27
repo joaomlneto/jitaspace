@@ -82,6 +82,8 @@ function deref(
 }
 
 export interface MultiEsiEndpoint {
+  /** The spec path this was generated from, for diagnostics. */
+  route: string;
   hookName: string;
   fileName: string;
   kind: SubjectKind;
@@ -186,7 +188,21 @@ export function describeEndpoint(
     .join("");
   const hookName = `useMultiple${pascal(kind)}${resource}`;
 
+  // renderEndpoint relies on these being mutually exclusive: its paginated
+  // branch always emits the LIST primitive, whose tagging spreads each item
+  // (`{ ...item, subjectId }`). For an array of scalars that replaces every
+  // value with its own tag, and TypeScript cannot see it because the select is
+  // cast. A spec change that pages a scalar list (a corporation's member ids,
+  // say) must stop the generator rather than emit that.
+  const paginated = queryParams.includes("page");
+  if (paginated && single) {
+    throw new Error(
+      `${operation.operationId} (${route}) is paginated AND returns a non-object array; renderEndpoint has no primitive for that — teach it one before regenerating.`,
+    );
+  }
+
   return {
+    route,
     hookName,
     fileName: `${hookName}.ts`,
     kind,
@@ -199,11 +215,35 @@ export function describeEndpoint(
     // holding a valid alternative would be silently excluded.
     scopes: operation.security.flatMap((entry) => Object.values(entry).flat()),
     roles: operation["x-required-roles"] ?? [],
-    paginated: queryParams.includes("page"),
+    paginated,
     single,
     hasQueryParams: queryParams.length > 0,
     operationName: camel(operation.operationId),
   };
+}
+
+/**
+ * Fail if two routes would generate the same hook.
+ *
+ * Routes that differ only in their leading collection segment map to one name
+ * (`/corporation/{id}/mining/...` next to a `/corporations/...` twin). kubb
+ * merges same-path files and dedupes sources by name, so one route would win
+ * silently — decided by JSON key order in the spec — and every caller of that
+ * hook would query the wrong URL with a clean type-check.
+ */
+export function assertUniqueHookNames(
+  endpoints: Pick<MultiEsiEndpoint, "hookName" | "route">[],
+): void {
+  const routeByHookName = new Map<string, string>();
+  for (const { hookName, route } of endpoints) {
+    const existing = routeByHookName.get(hookName);
+    if (existing !== undefined) {
+      throw new Error(
+        `${hookName} is generated for both ${existing} and ${route}; give one of them a distinct name.`,
+      );
+    }
+    routeByHookName.set(hookName, route);
+  }
 }
 
 /** The generated hook's module source. */

@@ -14,7 +14,10 @@ import {
 
 import { useAccessToken } from "../auth";
 import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
-import { useEagerlyFetchAllPages } from "../utils/useEagerlyFetchAllPages";
+import {
+  EAGER_WALK_STALE_TIME_MS,
+  useEagerlyFetchAllPages,
+} from "../utils/useEagerlyFetchAllPages";
 
 export const useCorporationAssets = (corporationId?: number) => {
   const { accessToken, authHeaders } = useAccessToken({
@@ -39,6 +42,7 @@ export const useCorporationAssets = (corporationId?: number) => {
           ),
           enabled: corporationId !== undefined && accessToken !== null,
           initialPageParam: 1,
+          staleTime: EAGER_WALK_STALE_TIME_MS,
           queryFn: ({ pageParam }) =>
             getCorporationsCorporationIdAssets(
               corporationId ?? 0,

@@ -273,10 +273,13 @@ export function useEsiNamePrefetch(
     entries.forEach((entry) => {
       if (!entry.id) return;
       const entityId = entry.id.toString();
-      void fetchCache.load(esiNameCacheKey(entityId, language), {
-        category: entry.category,
-        entityId,
-      });
+      const cacheKey = esiNameCacheKey(entityId, language);
+      // The cache's `load` only short-circuits while a key is still loading —
+      // a resolved one is fetched again. Callers rebuild `entries` whenever
+      // their data changes (each debounced search, each assets page), so
+      // without this every name already on screen was re-requested each time.
+      if (fetchCache.read(cacheKey)?.status === "success") return;
+      void fetchCache.load(cacheKey, { category: entry.category, entityId });
     });
   }, [entries, language]);
 }
