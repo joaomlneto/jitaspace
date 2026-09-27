@@ -5,6 +5,10 @@ import type { ESIScope, KnownESIScope } from "./scopes";
 // generator warns when one is). Keys must be scopes the spec still lists.
 export const scopeDescriptions: Partial<Record<KnownESIScope, string>> = {
   //publicData: "Allows access to public data.",
+  "esi-access.read_lists.v1":
+    "Allows reading the access lists a character manages, including their membership",
+  "esi-activities.read_character.v1":
+    "Allows reading a character's mercenary tactical operations",
   "esi-alliances.read_contacts.v1":
     "Allows reading of an alliance's contact list and standings.",
   "esi-assets.read_assets.v1":
@@ -31,6 +35,8 @@ export const scopeDescriptions: Partial<Record<KnownESIScope, string>> = {
     "Allows reading the character's corporation roles",
   "esi-characters.read_fatigue.v1":
     "Allows reading a character's jump fatigue information",
+  "esi-characters.read_freelance_jobs.v1":
+    "Allows reading the freelance jobs a character is participating in",
   "esi-characters.read_fw_stats.v1":
     "Allows reading of a character's faction warfare statistics",
   "esi-characters.read_loyalty.v1":
@@ -63,10 +69,14 @@ export const scopeDescriptions: Partial<Record<KnownESIScope, string>> = {
     "Allows reading of a character's corporation's division names, if the character has roles to do so.",
   "esi-corporations.read_facilities.v1":
     "Allows reading a corporation's facilities",
+  "esi-corporations.read_freelance_jobs.v1":
+    "Allows reading of a character's corporation's freelance jobs and their participants, if the character has the Project Manager role.",
   "esi-corporations.read_fw_stats.v1":
     "Allows reading of a corporation's faction warfare statistics",
   "esi-corporations.read_medals.v1":
     "Allows reading medals created and issued by a corporation",
+  "esi-corporations.read_projects.v1":
+    "Allows reading a character's corporation's projects, and the character's own contribution to them. Listing a project's other contributors also requires the Project Manager role.",
   "esi-corporations.read_standings.v1":
     "Allows reading a corporation's standings",
   "esi-corporations.read_starbases.v1":
@@ -118,6 +128,10 @@ export const scopeDescriptions: Partial<Record<KnownESIScope, string>> = {
     "Allows reading of a character's currently training skill queue.",
   "esi-skills.read_skills.v1":
     "Allows reading of a character's currently known skills.",
+  "esi-structures.read_character.v1":
+    "Allows reading a character's mercenary dens",
+  "esi-structures.read_corporation.v1":
+    "Allows reading of a character's corporation's skyhooks and sovereignty hubs. Every part except the sovereignty hub listing also requires the Station Manager role.",
   "esi-ui.open_window.v1": "Allows open window in game client remotely",
   "esi-ui.write_waypoint.v1":
     "Allows manipulating waypoints in game client remotely",
@@ -128,6 +142,10 @@ export const scopeDescriptions: Partial<Record<KnownESIScope, string>> = {
   //"esi-wallet.read_corporation_wallet.v1": "EVE Mobile legacy scope",
   "esi-wallet.read_corporation_wallets.v1":
     "Allows reading of a character's corporation's wallets, journal and transaction history, if the character has roles to do so.",
+  "esi.activity.char:read":
+    "Allows reading a character's participation in military campaign objectives",
+  "esi.cosmetic.char:read":
+    "Allows reading a character's SKINR and SKINR component licenses, along with their Paragon Hub SKINR listings",
 };
 
 export function getScopeDescription(scope: ESIScope): string {
