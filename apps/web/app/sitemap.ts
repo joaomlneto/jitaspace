@@ -12,6 +12,7 @@ import {
   lastModifiedOf,
   latestLastModified,
 } from "~/lib/lastModified";
+import { lpStoreSegment } from "~/lib/lpStorePath";
 
 const MAX_URLS_PER_SITEMAP = 50000;
 
@@ -78,8 +79,11 @@ interface EntitySource {
    * Each row carries its own `updatedAt` so the sitemap can report a real
    * per-URL `<lastmod>`. Selecting it costs one extra column on a query that
    * already returns every row, and the assembled list is cached for an hour.
+   *
+   * `id` is the final path segment, already URL-safe: a numeric id for every
+   * family except `/lp-store`, which is advertised by name (`lpStoreSegment`).
    */
-  rows: () => Promise<{ id: number; updatedAt: Date | null }[]>;
+  rows: () => Promise<{ id: number | string; updatedAt: Date | null }[]>;
 }
 
 /**
@@ -233,20 +237,36 @@ const ENTITY_SOURCES: EntitySource[] = [
   {
     // One page per NPC corporation that actually sells something, rather than
     // per corporation — a corp with no offers renders an empty store.
+    //
+    // Advertised by name, not id: the name form is what the `/lp-store` index
+    // links and what both forms of the page declare as canonical, so listing
+    // the id form would point crawlers at a URL that canonicalises elsewhere.
     path: "/lp-store",
-    rows: async () =>
-      (
-        await prisma.loyaltyStoreOffer.groupBy({
-          by: ["corporationId"],
-          where: { isDeleted: false },
-          // A store page is as fresh as its most recently changed offer.
-          _max: { updatedAt: true },
-          orderBy: { corporationId: "asc" },
-        })
-      ).map((row) => ({
-        id: row.corporationId,
-        updatedAt: row._max.updatedAt,
-      })),
+    rows: async () => {
+      const stores = await prisma.loyaltyStoreOffer.groupBy({
+        by: ["corporationId"],
+        where: { isDeleted: false },
+        // A store page is as fresh as its most recently changed offer.
+        _max: { updatedAt: true },
+        orderBy: { corporationId: "asc" },
+      });
+      const corporations = await prisma.corporation.findMany({
+        select: { corporationId: true, name: true },
+        where: { corporationId: { in: stores.map((s) => s.corporationId) } },
+      });
+      const nameOf = new Map(
+        corporations.map((c) => [c.corporationId, c.name] as const),
+      );
+      // Order comes from `stores`, which is sorted, so pagination stays stable.
+      // A store whose corporation row is missing has no name to advertise, and
+      // its page reaches not-found anyway, so it is left out.
+      return stores.flatMap((store) => {
+        const name = nameOf.get(store.corporationId);
+        return name === undefined
+          ? []
+          : [{ id: lpStoreSegment(name), updatedAt: store._max.updatedAt }];
+      });
+    },
   },
 ];
 

@@ -23,7 +23,7 @@ import { env } from "~/env";
  * root layout mounts <EsiClientSSOAccessTokenInjector>, whose EVE token-refresh
  * action would otherwise be gated behind a challenge fetch on every type page.
  * The reader that <EntityHistory> calls, `getEntityTimeline`, is consequently
- * left unguarded — it is the cheapest of the six and only `cacheLife("days")`,
+ * left unguarded — it is the cheaper of the two and only `cacheLife("days")`,
  * so it expires on its own rather than accumulating.
  *
  * Residual, accepted: Server Actions invoked from `/history/*` pages (including
@@ -32,8 +32,8 @@ import { env } from "~/env";
  * readers behind `/api/history/*` route handlers and protect those paths, so
  * BotID intercepts only the reader fetches.
  *
- * The `/history` index needs no entry: it is server-rendered via
- * `getCachedHistoryIndex`, not a client-invoked action.
+ * The `/history` index and the `/history/build/*` pages need no guard of their
+ * own: both are server-rendered from cached reads, not client-invoked actions.
  */
 initBotId({
   protect: [{ path: "/history/*", method: "POST" }],

@@ -16,7 +16,7 @@ import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
-import { parseEntityId, parsePositiveEntityId } from "~/lib/routeParams";
+import { parseEntityId } from "~/lib/routeParams";
 
 interface PageProps {
   name?: string;
@@ -55,7 +55,11 @@ export async function generateMetadata({
   params: Promise<{ categoryId: string }>;
 }): Promise<Metadata> {
   const { categoryId: categoryIdParam } = await params;
-  const categoryId = parsePositiveEntityId(categoryIdParam);
+  // `parseEntityId`, not the positive variant: category ids start at 0, and
+  // `/category/0` ("#System") is a real row the sitemap advertises. The page
+  // and this metadata must accept the same ids, or that URL renders with the
+  // bare site title and no canonical.
+  const categoryId = parseEntityId(categoryIdParam);
   if (categoryId === null) return {};
   try {
     const { name, groups } = await getCategoryData(categoryId);
@@ -78,11 +82,7 @@ async function PageContent({
   params: Promise<{ categoryId: string }>;
 }>) {
   const { categoryId: categoryIdParam } = await params;
-  // `parseEntityId`, not the positive variant `generateMetadata` uses: the old
-  // `Number.isNaN` guard here accepted `0` while the metadata's falsy test
-  // rejected it, and `/category/0` is a real non-deleted row this site puts in
-  // its sitemap. Narrowing the page to match the metadata would turn that into
-  // a 404; widening the metadata to match the page is a separate decision.
+  // Same parser as `generateMetadata`, for the same reason: 0 is a real id.
   const categoryId = parseEntityId(categoryIdParam);
   if (categoryId === null) {
     notFound();

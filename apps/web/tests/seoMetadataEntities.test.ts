@@ -67,7 +67,7 @@ const mockDogmaAttributeFindUnique =
   jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockDogmaEffectFindUnique =
   jest.fn<(...args: unknown[]) => Promise<unknown>>();
-const mockCorporationFindUnique =
+const mockCorporationFindFirst =
   jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockLoyaltyStoreOfferCount =
   jest.fn<(...args: unknown[]) => Promise<number>>();
@@ -89,7 +89,7 @@ jest.mock("~/lib/db", () => ({
       findUnique: (...a: unknown[]) => mockDogmaEffectFindUnique(...a),
     },
     corporation: {
-      findUnique: (...a: unknown[]) => mockCorporationFindUnique(...a),
+      findFirst: (...a: unknown[]) => mockCorporationFindFirst(...a),
     },
     loyaltyStoreOffer: {
       count: (...a: unknown[]) => mockLoyaltyStoreOfferCount(...a),
@@ -1066,13 +1066,13 @@ describe("dogma/effect/[effectId] generateMetadata", () => {
 describe("lp-store/[corporationId] generateMetadata", () => {
   beforeEach(() => {
     jest.resetModules();
-    mockCorporationFindUnique.mockReset();
+    mockCorporationFindFirst.mockReset();
     mockLoyaltyStoreOfferCount.mockReset();
     mockLoyaltyStoreOfferCount.mockResolvedValue(0);
   });
 
   it("returns corporation LP store title", async () => {
-    mockCorporationFindUnique.mockResolvedValue({
+    mockCorporationFindFirst.mockResolvedValue({
       corporationId: 1000035,
       name: "Caldari Navy",
       ticker: "CN",
@@ -1091,7 +1091,7 @@ describe("lp-store/[corporationId] generateMetadata", () => {
   it("returns empty when corporation not found", async () => {
     // An unknown corporation has no LP store page to describe, so there is
     // nothing to unfurl — the page itself 404s.
-    mockCorporationFindUnique.mockResolvedValue(null);
+    mockCorporationFindFirst.mockResolvedValue(null);
     const { generateMetadata } =
       await import("~/app/lp-store/[corporationId]/page");
     expect(
@@ -1099,16 +1099,22 @@ describe("lp-store/[corporationId] generateMetadata", () => {
     ).toEqual({});
   });
 
+  // "0" is not a corporation id, so it is tried as a name — and no
+  // corporation is called "0".
   it("returns empty for id = 0", async () => {
+    mockCorporationFindFirst.mockResolvedValue(null);
     const { generateMetadata } =
       await import("~/app/lp-store/[corporationId]/page");
     expect(
       await generateMetadata({ params: rp({ corporationId: "0" }) }),
     ).toEqual({});
+    expect(mockCorporationFindFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { name: "0" } }),
+    );
   });
 
   it("returns empty when Prisma throws", async () => {
-    mockCorporationFindUnique.mockRejectedValue(new Error("db"));
+    mockCorporationFindFirst.mockRejectedValue(new Error("db"));
     const { generateMetadata } =
       await import("~/app/lp-store/[corporationId]/page");
     expect(

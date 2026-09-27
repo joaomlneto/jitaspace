@@ -1,22 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Anchor,
-  Badge,
-  Group,
-  List,
-  Spoiler,
-  Text,
-  Title,
-} from "@mantine/core";
+import { Anchor, Badge, Group, List, Text, Title } from "@mantine/core";
 
-import type { BuildChanges } from "~/lib/history";
+import type { EntityChangeRow } from "~/lib/history";
 import { collectionMeta, entityTypeMeta } from "~/lib/history";
 import { TypeName } from "../../_sde-ui";
+import { RowSpoiler } from "./_row-spoiler";
 
-// Collapse change lists past ~20 rows (Mantine Spoiler).
-const SPOILER_MAX_HEIGHT = 520;
+/**
+ * Resolved type names, by typeId. The build page passes these in from the
+ * server; without them (the compare page) each type row resolves its own name.
+ */
+type TypeNames = Record<number, string>;
 
 // The "primary" collection per entity kind — its add/remove there means the
 // entity itself was born/retired (vs. a secondary collection like typeDogma,
@@ -128,23 +124,39 @@ function badgeSuffix(kind: string): string {
   return "";
 }
 
+function EntityName({
+  entityType,
+  id,
+  typeNames,
+}: Readonly<{ entityType: string; id: number; typeNames?: TypeNames }>) {
+  const label = entityTypeMeta(entityType).label;
+  if (entityType !== "type") return <Text span>{label}</Text>;
+  if (!typeNames) return <TypeName span typeId={id} />;
+  // Unnamed ⇒ newer than the ingested SDE; the row still shows its #id.
+  return <Text span>{typeNames[id] ?? label}</Text>;
+}
+
 function EntityRow({
   entityType,
   id,
   badges,
+  typeNames,
 }: Readonly<{
   entityType: string;
   id: number;
   badges?: { collection: string; kind: string }[];
+  typeNames?: TypeNames;
 }>) {
   return (
     <Group gap="xs" wrap="nowrap">
-      <Anchor component={Link} href={`/history/${entityType}/${id}`}>
-        {entityType === "type" ? (
-          <TypeName span typeId={id} />
-        ) : (
-          <Text span>{entityTypeMeta(entityType).label}</Text>
-        )}{" "}
+      {/* No prefetch: a build lists hundreds of these, and prefetching every
+          visible one fired a request per row. */}
+      <Anchor
+        component={Link}
+        href={`/history/${entityType}/${id}`}
+        prefetch={false}
+      >
+        <EntityName entityType={entityType} id={id} typeNames={typeNames} />{" "}
         <Text span c="dimmed">
           #{id}
         </Text>
@@ -172,11 +184,13 @@ function ChangeList({
   color,
   entityType,
   rows,
+  typeNames,
 }: Readonly<{
   title: string;
   color: string;
   entityType: string;
   rows: { id: number; badges?: { collection: string; kind: string }[] }[];
+  typeNames?: TypeNames;
 }>) {
   if (rows.length === 0) return null;
   return (
@@ -187,20 +201,22 @@ function ChangeList({
           {rows.length.toLocaleString()}
         </Badge>
       </Group>
-      <Spoiler
-        maxHeight={SPOILER_MAX_HEIGHT}
-        showLabel={`Show all ${rows.length.toLocaleString()}`}
-        hideLabel="Show less"
-        fz="sm"
-      >
-        <List size="sm" spacing={2}>
-          {rows.map((r) => (
-            <List.Item key={r.id}>
-              <EntityRow entityType={entityType} id={r.id} badges={r.badges} />
-            </List.Item>
-          ))}
-        </List>
-      </Spoiler>
+      <RowSpoiler items={rows} fz="sm">
+        {(visible) => (
+          <List size="sm" spacing={2}>
+            {visible.map((r) => (
+              <List.Item key={r.id}>
+                <EntityRow
+                  entityType={entityType}
+                  id={r.id}
+                  badges={r.badges}
+                  typeNames={typeNames}
+                />
+              </List.Item>
+            ))}
+          </List>
+        )}
+      </RowSpoiler>
     </div>
   );
 }
@@ -209,9 +225,11 @@ function ChangeList({
 function EntityTypeSection({
   entityType,
   changes,
+  typeNames,
 }: Readonly<{
   entityType: string;
-  changes: BuildChanges["changes"];
+  changes: EntityChangeRow[];
+  typeNames?: TypeNames;
 }>) {
   const primary = primaryOf(entityType);
   const isPrimary = (c?: string) => (c ?? "types") === primary;
@@ -244,18 +262,21 @@ function EntityTypeSection({
         color="green"
         entityType={entityType}
         rows={newRows}
+        typeNames={typeNames}
       />
       <ChangeList
         title={`Removed ${plural}`}
         color="red"
         entityType={entityType}
         rows={removedRows}
+        typeNames={typeNames}
       />
       <ChangeList
         title={`Changed ${plural}`}
         color="blue"
         entityType={entityType}
         rows={changedRows}
+        typeNames={typeNames}
       />
     </>
   );
@@ -267,10 +288,12 @@ function EntityTypeSection({
  */
 export function EntityChangeSections({
   changes,
+  typeNames,
 }: Readonly<{
-  changes: BuildChanges["changes"];
+  changes: EntityChangeRow[];
+  typeNames?: TypeNames;
 }>) {
-  const byEntityType = new Map<string, BuildChanges["changes"]>();
+  const byEntityType = new Map<string, EntityChangeRow[]>();
   for (const c of changes) {
     const et = c.entityType ?? "type";
     const list = byEntityType.get(et) ?? [];
@@ -284,7 +307,12 @@ export function EntityChangeSections({
   return (
     <>
       {entityTypes.map(([et, etChanges]) => (
-        <EntityTypeSection key={et} entityType={et} changes={etChanges} />
+        <EntityTypeSection
+          key={et}
+          entityType={et}
+          changes={etChanges}
+          typeNames={typeNames}
+        />
       ))}
     </>
   );
