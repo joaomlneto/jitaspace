@@ -15,20 +15,35 @@ export const compareSets = <T extends object>({
   const keysBefore = recordsBefore.map((record) => getId(record));
   const keysAfter = recordsAfter.map((record) => getId(record));
 
+  // Membership is tested against sets, not the key arrays. `Set.prototype.has`
+  // and `Array.prototype.includes` both use SameValueZero, so this is an exact
+  // swap for the linear scans. Keep it a set keyed on `getId`'s own values
+  // rather than routing it through `indexBefore`: that plain object coerces 1
+  // and "1" into one key, and its prototype defeats either way of asking it —
+  // `in` or a bracket read reports inherited names like `constructor` as
+  // present, while `Object.hasOwn` misses `__proto__`, which assignment turns
+  // into the prototype instead of an own key.
+  //
+  // What they replace is three O(n*m) scans. `ingestSdeCompositeTable` chunks
+  // by parent id (5000 at a time), which bounds parents but NOT rows, so the
+  // widest typeDogma chunk carries 148,292 TypeAttribute rows: one call on it
+  // measured 175.9s before and 0.09s after, and the table's six chunks together
+  // account for ~618s of the job's 1800s ceiling. Keep membership O(1) — the
+  // row count per chunk is set by SDE fan-out, not by anything we cap here.
+  const keySetBefore = new Set(keysBefore);
+  const keySetAfter = new Set(keysAfter);
+
   const indexBefore: Record<string | number | symbol, T> = {};
   recordsBefore.forEach((record) => (indexBefore[getId(record)] = record));
 
-  const indexAfter: Record<string | number | symbol, T> = {};
-  recordsAfter.forEach((record) => (indexAfter[getId(record)] = record));
-
   // determine which records were created
   const created: T[] = recordsAfter.filter(
-    (record) => !keysBefore.includes(getId(record)),
+    (record) => !keySetBefore.has(getId(record)),
   );
 
   // determine which records were deleted
   const deleted = recordsBefore.filter(
-    (record) => !keysAfter.includes(getId(record)),
+    (record) => !keySetAfter.has(getId(record)),
   );
 
   // validate that object keys are the same
@@ -58,9 +73,7 @@ export const compareSets = <T extends object>({
   }
 
   // get the records that are common to both sets
-  const commonKeys = new Set(
-    keysAfter.filter((key) => keysBefore.includes(key)),
-  );
+  const commonKeys = new Set(keysAfter.filter((key) => keySetBefore.has(key)));
   const commonRecords = recordsAfter.filter((record) =>
     commonKeys.has(getId(record)),
   );
@@ -78,13 +91,6 @@ export const compareSets = <T extends object>({
   const modified = commonRecords.filter(
     (record) => !equalKeys.has(getId(record)),
   );
-
-  /*
-    modified.map((record) => {
-      const before = indexBefore[getId(record)];
-      const after = indexAfter[getId(record)];
-      console.log({ before, after });
-    });*/
 
   // sanity check
   const numInputs = new Set([

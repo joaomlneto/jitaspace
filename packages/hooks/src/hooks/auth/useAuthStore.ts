@@ -330,10 +330,19 @@ export const useAuthStore = create(
           delete remainingCharacters[characterId];
           const remainingCharacterIds =
             Object.keys(remainingCharacters).map(Number);
+          // Keep the selection whenever it still points at a logged-in
+          // character. Reassigning it unconditionally meant removing any
+          // character from the menu silently switched every hook keyed on the
+          // selected character — mail, wallet, skills — to someone else.
+          const selectionSurvives =
+            state.selectedCharacter !== null &&
+            remainingCharacters[state.selectedCharacter] !== undefined;
           return {
             ...state,
             characters: remainingCharacters,
-            selectedCharacter: remainingCharacterIds[0] ?? null,
+            selectedCharacter: selectionSurvives
+              ? state.selectedCharacter
+              : (remainingCharacterIds[0] ?? null),
           };
         }),
       markCharacterSessionExpired: (characterId: number) =>

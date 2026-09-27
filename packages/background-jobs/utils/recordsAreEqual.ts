@@ -2,8 +2,9 @@ import Decimal from "decimal.js";
 
 /**
  * Structural equality over a record's own enumerable keys, with the quirks the
- * ESI/SDE scrapers need: `Decimal` values compare by value, and floats compare
- * by their string form so `1.10` and `1.1` don't read as a change.
+ * ESI/SDE scrapers need: `Decimal` values compare by value, `Date`s by the
+ * instant they hold, and floats by their string form so `1.10` and `1.1` don't
+ * read as a change.
  *
  * `T` is constrained to `object`, not `Record<string, unknown>`: Prisma model
  * types are interfaces with no index signature, so they don't satisfy the
@@ -39,6 +40,17 @@ export const recordsAreEqual = <T extends object>(
       // typeof returns "object" because javascript
       if (aValue === null || bValue === null) {
         return aValue === null && bValue === null;
+      }
+
+      // A Date has no own enumerable keys, so the object branch below would
+      // call any two of them equal. Compare the instants; Object.is keeps two
+      // Invalid Dates (NaN) equal rather than rewriting them on every sync.
+      if (aValue instanceof Date || bValue instanceof Date) {
+        return (
+          aValue instanceof Date &&
+          bValue instanceof Date &&
+          Object.is(aValue.getTime(), bValue.getTime())
+        );
       }
 
       // check if we are comparing objects

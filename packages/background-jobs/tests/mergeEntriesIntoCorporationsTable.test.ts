@@ -31,7 +31,7 @@ beforeAll(async () => {
     await import("../helpers/mergeEntriesIntoCorporationsTable"));
 });
 
-// A corporation record as produced by convertEsiCorporationToDomain: it has no
+// A corporation row as the ESI scrapers build it: it has no
 // createdAt/updatedAt.
 const remoteRecord: EsiCorporationRow = {
   corporationId: 1000,

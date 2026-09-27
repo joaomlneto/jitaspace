@@ -70,8 +70,11 @@ export const useCharacterCurrentFit = (
      * its FIRST page lands — the remaining pages are walked eagerly afterwards
      * and report through `isFetchingNextPage`. Modules are filtered out of the
      * whole collection, so a fit assembled from page one alone is missing
-     * whatever sits on the pages still in flight. An errored walk stops
-     * counting, otherwise a failed page would pin this true forever.
+     * whatever sits on the pages still in flight. This relies on the walk in
+     * useEagerlyFetchAllPages actually reaching the last page so that
+     * `hasNextPage` goes false — tests/eagerPageWalk.test.tsx pins that against
+     * the real useInfiniteQuery. A failed page stops the walk, and the error
+     * term stops this counting it as still in flight.
      */
     isLoading:
       shipQuery.isLoading ||

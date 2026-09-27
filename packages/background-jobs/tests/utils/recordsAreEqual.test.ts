@@ -47,6 +47,46 @@ describe("recordsAreEqual", () => {
     const a = { id: 1, updatedAt: new Date("2020-01-01"), name: "foo" };
     const b = { id: 1, updatedAt: new Date("2023-12-31"), name: "foo" };
     expect(recordsAreEqual(a, b, { ignoreKeys: ["updatedAt"] })).toBe(true);
+    // Without this, the assertion above passed even when ignoreKeys did
+    // nothing, because every pair of Dates used to compare equal.
+    expect(recordsAreEqual(a, b)).toBe(false);
+  });
+
+  it("returns true for distinct Date objects holding the same instant", () => {
+    const a = { id: 1, finishedDate: new Date("2026-08-20T12:00:00Z") };
+    const b = { id: 1, finishedDate: new Date("2026-08-20T12:00:00.000Z") };
+    expect(recordsAreEqual(a, b)).toBe(true);
+  });
+
+  it("returns false for Dates holding different instants", () => {
+    const a = { id: 1, finishedDate: new Date("2026-08-20T12:00:00Z") };
+    const b = { id: 1, finishedDate: new Date("2026-08-21T12:00:00Z") };
+    expect(recordsAreEqual(a, b)).toBe(false);
+  });
+
+  it("returns false for Dates a millisecond apart", () => {
+    const a = { id: 1, birthday: new Date(1_700_000_000_000) };
+    const b = { id: 1, birthday: new Date(1_700_000_000_001) };
+    expect(recordsAreEqual(a, b)).toBe(false);
+  });
+
+  it("returns false when a Date is compared with a non-Date object", () => {
+    const a: { id: number; when: object } = { id: 1, when: new Date(0) };
+    const b: { id: number; when: object } = { id: 1, when: {} };
+    expect(recordsAreEqual(a, b)).toBe(false);
+    expect(recordsAreEqual(b, a)).toBe(false);
+  });
+
+  it("treats two Invalid Dates as equal", () => {
+    const a = { id: 1, dateFounded: new Date("not a date") };
+    const b = { id: 1, dateFounded: new Date("also not a date") };
+    expect(recordsAreEqual(a, b)).toBe(true);
+  });
+
+  it("compares Dates inside nested objects", () => {
+    const a = { id: 1, meta: { seenAt: new Date("2026-01-01T00:00:00Z") } };
+    const b = { id: 1, meta: { seenAt: new Date("2026-06-01T00:00:00Z") } };
+    expect(recordsAreEqual(a, b)).toBe(false);
   });
 
   it("Compares Decimal.js values correctly: equal amounts -> true", () => {

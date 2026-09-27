@@ -17,16 +17,18 @@ export const TypeMarketBreadcrumbs = memo(
       typeof typeId === "string" ? Number.parseInt(typeId) : typeId;
     const { data: type } = useType(typeIdNum ?? 0);
 
+    // `.data` is react-query's own object, so it keeps its identity between
+    // renders and the memo below only recomputes when a group actually lands.
     const level1Id = type?.data.market_group_id ?? 0;
-    const level1 = useMarketGroup(level1Id);
-    const level2Id = (level1Id && level1.parent_group_id) ?? 0;
-    const level2 = useMarketGroup(level2Id);
-    const level3Id = (level2Id && level2.parent_group_id) ?? 0;
-    const level3 = useMarketGroup(level3Id);
-    const level4Id = (level3Id && level3.parent_group_id) ?? 0;
-    const level4 = useMarketGroup(level4Id);
-    const level5Id = (level4Id && level4.parent_group_id) ?? 0;
-    const level5 = useMarketGroup(level5Id);
+    const level1 = useMarketGroup(level1Id).data;
+    const level2Id = (level1Id && level1?.parent_group_id) ?? 0;
+    const level2 = useMarketGroup(level2Id).data;
+    const level3Id = (level2Id && level2?.parent_group_id) ?? 0;
+    const level3 = useMarketGroup(level3Id).data;
+    const level4Id = (level3Id && level3?.parent_group_id) ?? 0;
+    const level4 = useMarketGroup(level4Id).data;
+    const level5Id = (level4Id && level4?.parent_group_id) ?? 0;
+    const level5 = useMarketGroup(level5Id).data;
 
     const marketGroups = useMemo(() => {
       const groups: { market_group_id: number; name: string }[] = [];
@@ -38,7 +40,7 @@ export const TypeMarketBreadcrumbs = memo(
         { id: level1Id, data: level1 },
       ];
       for (const { id, data } of levels) {
-        if (id && data.name) {
+        if (id && data?.name) {
           groups.push({ market_group_id: id, name: data.name });
         }
       }

@@ -25,8 +25,8 @@ import {
   useAuthenticatedCharacter,
   useAuthStore,
   useCharacterSkills,
+  useCharacterWalletBalance,
 } from "@jitaspace/hooks";
-import { useCharacterWalletBalance } from "@jitaspace/hooks/src/hooks/character/useCharacterWalletBalance";
 import {
   AllianceAnchor,
   AllianceAvatar,

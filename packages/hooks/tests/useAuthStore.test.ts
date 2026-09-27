@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
+import type { CharacterSsoSession } from "../src/hooks/auth/useAuthStore";
+
 // @swc/jest does not hoist jest.mock above imports, so the store is required
 // lazily below, after these mocks are registered. We replace the generated ESI
 // client (so axios never loads) and the access-token decoder.
@@ -416,5 +418,61 @@ describe("useAuthStore.refreshStaleCharacterData", () => {
       data: [{ character_id: CHARACTER_ID, corporation_id: 98 }],
     });
     await first;
+  });
+});
+
+describe("useAuthStore.removeCharacter", () => {
+  // Only characterId matters to removeCharacter; the rest of the session is
+  // irrelevant here, so seed the store directly rather than through
+  // addCharacter's token parsing and ESI reads.
+  const session = (characterId: number) =>
+    ({ characterId }) as unknown as CharacterSsoSession;
+  const seed = (selectedCharacter: number | null) =>
+    useAuthStore.setState({
+      characters: { 100: session(100), 101: session(101), 102: session(102) },
+      selectedCharacter,
+    });
+
+  it("keeps the selection when a different character is removed", () => {
+    // The menu removes arbitrary characters, not just the selected one. This
+    // used to switch the selection to the first remaining character.
+    seed(102);
+
+    useAuthStore.getState().removeCharacter(101);
+
+    expect(useAuthStore.getState().selectedCharacter).toBe(102);
+    expect(Object.keys(useAuthStore.getState().characters)).toEqual([
+      "100",
+      "102",
+    ]);
+  });
+
+  it("selects a remaining character when the selected one is removed", () => {
+    seed(101);
+
+    useAuthStore.getState().removeCharacter(101);
+
+    expect([100, 102]).toContain(useAuthStore.getState().selectedCharacter);
+  });
+
+  it("clears the selection when the last character is removed", () => {
+    useAuthStore.setState({
+      characters: { 100: session(100) },
+      selectedCharacter: 100,
+    });
+
+    useAuthStore.getState().removeCharacter(100);
+
+    expect(useAuthStore.getState().selectedCharacter).toBeNull();
+    expect(useAuthStore.getState().characters).toEqual({});
+  });
+
+  it("leaves the state object untouched for an unknown character", () => {
+    seed(100);
+    const before = useAuthStore.getState();
+
+    useAuthStore.getState().removeCharacter(999);
+
+    expect(useAuthStore.getState()).toBe(before);
   });
 });

@@ -11,9 +11,9 @@ export default defineConfig(
       name: "esi-client",
       root: ".",
       input: {
-        // Cannot use the spec directly, as the parser cannot parse the routes endpoint.
-        // We remove it using jq (see package.json scripts) before feeding it into kubb.
-        //path: "https://esi.evetech.net/latest/swagger.json",
+        // A local copy rather than the live spec: `download-schema` pins it to
+        // a compatibility date and marks the X-Compatibility-Date header
+        // optional, since the client sends it by default (see client.ts).
         path: "./swagger.json",
       },
       output: {

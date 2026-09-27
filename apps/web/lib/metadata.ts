@@ -138,7 +138,8 @@ export const eveImage = {
  * Asks the CDN which image variations a type publishes. Throws on anything but
  * a well-formed answer, so a transient failure is never stored as "this type
  * has no artwork" for the whole `cacheLife` window — only a genuine answer
- * (including an empty list) reaches the cache.
+ * (including an empty list, or a 404 for a type the CDN has never heard of)
+ * reaches the cache.
  */
 export async function readTypeImageVariations(
   typeId: number,
@@ -148,6 +149,11 @@ export async function readTypeImageVariations(
   const res = await fetch(`https://images.evetech.net/types/${typeId}`, {
     signal: AbortSignal.timeout(5_000),
   });
+  // A 404 is the CDN's own answer that it has no artwork for this type at all
+  // (production sees it for e.g. types 36364 and 48543), so it is cached like
+  // an empty list. Throwing on it would re-ask the CDN on every render and log
+  // each one as a runtime error.
+  if (res.status === 404) return [];
   if (!res.ok) {
     throw new Error(
       `images.evetech.net answered ${res.status} for type ${typeId}`,

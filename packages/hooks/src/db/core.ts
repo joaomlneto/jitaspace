@@ -5,12 +5,7 @@ import { createCollection } from "@tanstack/db";
 import { parseLoadSubsetOptions } from "@tanstack/query-db-collection";
 import { QueryClient } from "@tanstack/react-query";
 
-import type { GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
 import { subscribeToAcceptLanguage } from "@jitaspace/esi-client";
-
-export type ResolvableEntityCategory =
-  | GetCharactersCharacterIdSearchQueryParamsCategoriesEnum
-  | "stargate";
 
 export type WithId<T, K extends string> = T & Record<K, number | string>;
 
