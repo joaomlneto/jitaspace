@@ -7,13 +7,14 @@ import type { BuildRangeChanges, EntityTimeline } from "~/lib/history";
 import {
   getCachedBuildRangeChanges,
   getCachedEntityTimeline,
+  getCachedRangeTypeNames,
 } from "~/lib/history-cache";
-import { readTypeNames } from "~/lib/history-type-names";
 
 /**
  * Server functions backing the change-history viewer. Each queries the
- * standalone history database (@jitaspace/db-history) directly on the server
- * and returns the shaped, typed payload — there is no public REST surface.
+ * standalone history database (@jitaspace/db-history) directly on the server —
+ * `getBuildRangeChanges` also names the compared types from our main database —
+ * and returns the shaped, typed payload; there is no public REST surface.
  * Client components invoke these (e.g. as React Query `queryFn`s); Next.js
  * keeps the Prisma client and the connection string server-side.
  *
@@ -55,7 +56,7 @@ const isBot = async (): Promise<boolean> => {
  * Delegates to the immutable, cached {@link getCachedBuildRangeChanges} (keyed on
  * the pair, `cacheLife("max")`) so the expensive range aggregation runs once per
  * `(from, to)` and is served from cache afterwards. The changed types' names are
- * added per request, outside that entry — see {@link readRangeTypeNames}.
+ * added from an entry of their own — see {@link readRangeTypeNames}.
  */
 export async function getBuildRangeChanges(
   from: number,
@@ -64,37 +65,41 @@ export async function getBuildRangeChanges(
   if (await isBot()) return null;
   const range = await getCachedBuildRangeChanges(from, to);
   if (!range) return null;
-  return { ...range, typeNames: await readRangeTypeNames(range.changes) };
+  return { ...range, typeNames: await readRangeTypeNames(from, to) };
 }
 
+/** How long a comparison waits for its type names before going without. */
+const TYPE_NAMES_TIMEOUT_MS = 10_000;
+
 /**
- * Names of the types in a comparison, read per request rather than cached.
- *
- * They cannot join the range's `cacheLife("max")` entry: names change when the
- * SDE is re-ingested, and one baked in there would be frozen for good. Nor do
- * they get an entry of their own — keyed on the build pair, it would have to
- * re-read the range entry for its ids, re-running the heavy aggregation whenever
- * the in-memory cache had dropped that entry (likeliest for the widest ranges);
- * keyed on the ids, a wide range's key would run to tens of thousands of them.
- * Uncached, this is one indexed lookup per comparison.
+ * Names of the types in a comparison ({@link getCachedRangeTypeNames}).
  *
  * Names are decorative, so a failed read degrades to `undefined` — rows labelled
- * by kind and id — rather than failing the comparison. It is reported first:
+ * by kind and id — rather than failing the comparison. So does a slow one, cut
+ * off after {@link TYPE_NAMES_TIMEOUT_MS}: the names come from our main
+ * database, the comparison from the history one, and a stalled main database
+ * must not hold up a comparison it has no part in. Either is reported first:
  * silent, a lasting failure would look exactly like types our tables lack.
  */
 async function readRangeTypeNames(
-  changes: BuildRangeChanges["changes"],
+  from: number,
+  to: number,
 ): Promise<Record<number, string> | undefined> {
-  const typeIds = new Set(
-    changes
-      .filter((c) => (c.entityType ?? "type") === "type")
-      .map((c) => c.entityId),
-  );
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(
+      () =>
+        reject(new Error(`Type names took over ${TYPE_NAMES_TIMEOUT_MS} ms`)),
+      TYPE_NAMES_TIMEOUT_MS,
+    );
+  });
   try {
-    return await readTypeNames([...typeIds]);
+    return await Promise.race([getCachedRangeTypeNames(from, to), timeout]);
   } catch (error) {
     Sentry.captureException(error, { tags: { area: "history-compare" } });
     return undefined;
+  } finally {
+    clearTimeout(timer);
   }
 }
 

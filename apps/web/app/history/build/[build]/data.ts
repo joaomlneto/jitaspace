@@ -77,10 +77,7 @@ async function readEntityChanges(build: number) {
     collection: c.collection.name,
     kind: c.op,
   }));
-  const typeIds = new Set(
-    changes.filter((c) => c.entityType === "type").map((c) => c.entityId),
-  );
-  return { changes, typeNames: await readTypeNames([...typeIds]) };
+  return { changes, typeNames: await readTypeNames(changes) };
 }
 
 async function readFileDiff(build: number): Promise<FileDiff> {

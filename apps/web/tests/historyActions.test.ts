@@ -85,9 +85,10 @@ let mockDbCalls = 0;
 // prisma.type.findMany fixture — our own SDE tables, which the build-range
 // reader queries for the changed types' names. The stub honours the `in` filter,
 // so an id with no row is absent from the result, as in the real query. Each
-// call's id list is recorded, and `mockTypeNamesFail` makes the read reject.
+// call's id list is recorded, and `mockTypeNamesRead` makes the read reject or
+// never settle. All three are reset before every test (below).
 let mockTypeRows: { typeId: number; name: string }[] = [];
-let mockTypeNamesFail = false;
+let mockTypeNamesRead: "ok" | "fail" | "hang" = "ok";
 let mockTypeQueries: number[][] = [];
 // A failed names read degrades the comparison but is reported, not hidden.
 const mockCaptureException = jest.fn();
@@ -108,8 +109,9 @@ jest.mock("~/lib/db", () => ({
         mockDbCalls++;
         const ids = args.where.typeId.in;
         mockTypeQueries.push(ids);
-        if (mockTypeNamesFail)
+        if (mockTypeNamesRead === "fail")
           return Promise.reject(new Error("Too many database connections"));
+        if (mockTypeNamesRead === "hang") return new Promise(() => undefined);
         return Promise.resolve(
           mockTypeRows.filter((r) => ids.includes(r.typeId)),
         );
@@ -200,8 +202,21 @@ jest.mock("next/cache", () => ({
 // the build-range/entity readers live in history-actions.
 const { getEntityTimeline, getBuildRangeChanges } =
   require("~/lib/history-actions") as typeof HistoryActions;
-const { getCachedBuildRangeChanges, getCachedHistoryIndex } =
-  require("~/lib/history-cache") as typeof HistoryCache;
+const {
+  getCachedBuildRangeChanges,
+  getCachedHistoryIndex,
+  getCachedRangeTypeNames,
+} = require("~/lib/history-cache") as typeof HistoryCache;
+
+// The type-name fixtures are module-wide, so reset them for every test — not
+// just the ones about names — lest one test's stalled or failing read leak into
+// another's.
+beforeEach(() => {
+  mockTypeRows = [];
+  mockTypeNamesRead = "ok";
+  mockTypeQueries = [];
+  mockCaptureException.mockClear();
+});
 
 describe("isBuildInHistoryScope", () => {
   it("excludes builds released before the floor, includes the floor onward", () => {
@@ -676,9 +691,6 @@ describe("getBuildRangeChanges", () => {
         { typeId: 589, name: "Breacher" },
         { typeId: 592, name: "  " },
       ];
-      mockTypeNamesFail = false;
-      mockTypeQueries = [];
-      mockCaptureException.mockClear();
     });
 
     it("names every type in the net result in a single query", async () => {
@@ -696,27 +708,48 @@ describe("getBuildRangeChanges", () => {
     it("keeps the names out of the permanent range entry", async () => {
       // The range entry is `cacheLife("max")` — a pair of past builds never
       // differs — but names change when the SDE is re-ingested, so a name baked
-      // in there would be frozen for good. The entry itself carries none...
+      // in there would be frozen for good. The names are an entry of their own
+      // (`cacheLife("days")`). The directives are inert under Jest, so this pins
+      // the split between the two reads, not their lifetimes.
       const cached = await getCachedBuildRangeChanges(700000, 700003);
       expect(cached).not.toBeNull();
       expect(cached).not.toHaveProperty("typeNames");
       expect(mockTypeQueries).toEqual([]);
 
-      // ...and the action reads them afresh each time, so a rename shows up.
-      await getBuildRangeChanges(700000, 700003);
-      mockTypeRows = [{ typeId: 587, name: "Rifter II" }];
-      const renamed = await getBuildRangeChanges(700000, 700003);
-      expect(renamed?.typeNames).toEqual({ 587: "Rifter II" });
-      expect(mockTypeQueries).toHaveLength(2);
+      expect(await getCachedRangeTypeNames(700000, 700003)).toEqual({
+        587: "Rifter",
+        588: "Slasher",
+      });
+      // A pair with no comparison has no names to read.
+      expect(await getCachedRangeTypeNames(700003, 700000)).toEqual({});
+      expect(mockTypeQueries).toHaveLength(1);
     });
 
     it("still serves the comparison when the names cannot be read, and reports it", async () => {
-      mockTypeNamesFail = true;
+      mockTypeNamesRead = "fail";
 
       const result = await getBuildRangeChanges(700000, 700003);
       expect(result?.changes).toHaveLength(6);
       expect(result?.typeNames).toBeUndefined();
       expect(mockCaptureException).toHaveBeenCalledTimes(1);
+    });
+
+    it("serves the comparison without names rather than wait on a stalled read", async () => {
+      // The names come from the main database, the comparison from the history
+      // one: a main database that hangs rather than fails must not hold the
+      // comparison until the function times out.
+      mockTypeNamesRead = "hang";
+      jest.useFakeTimers();
+      try {
+        const pending = getBuildRangeChanges(700000, 700003);
+        await jest.advanceTimersByTimeAsync(10_000);
+        const result = await pending;
+        expect(result?.changes).toHaveLength(6);
+        expect(result?.typeNames).toBeUndefined();
+        expect(mockCaptureException).toHaveBeenCalledTimes(1);
+      } finally {
+        jest.useRealTimers();
+      }
     });
 
     it("skips the names query when no type changed", async () => {

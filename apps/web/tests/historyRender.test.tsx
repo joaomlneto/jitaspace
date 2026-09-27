@@ -14,11 +14,12 @@ import type { BuildPage } from "~/lib/history";
 
 // ── mocks ────────────────────────────────────────────────────────────────────
 
-// Only the two fields the tests drive off are named; everything else the
-// component passes to `useQuery` is irrelevant here.
+// Only the fields the tests drive off are named; everything else the component
+// passes to `useQuery` is irrelevant here.
 interface MockQueryOptions {
   queryKey?: unknown[];
   queryFn?: () => unknown;
+  staleTime?: number | ((query: { state: { data: unknown } }) => number);
 }
 const mockUseQuery = jest.fn<(opts: MockQueryOptions) => unknown>();
 jest.mock("@tanstack/react-query", () => ({
@@ -640,6 +641,26 @@ describe("CompareBuildsClient", () => {
     expect(row("Type #588")).toBeTruthy();
     // Degrading must not bring the per-row lookups back.
     expect(typeNameLookups()).toEqual([]);
+  });
+
+  it("refetches a comparison that came back without its names, and keeps a complete one", async () => {
+    const { default: CompareBuildsClient } =
+      await import("~/app/history/compare/page.client");
+    wrap(<CompareBuildsClient from={100} to={200} builds={[]} />);
+
+    const { staleTime } =
+      mockUseQuery.mock.calls
+        .map(([o]) => o)
+        .find((o) => o.queryKey?.[0] === "history-compare") ?? {};
+    const staleFor = (data: unknown) =>
+      typeof staleTime === "function"
+        ? staleTime({ state: { data } })
+        : staleTime;
+    expect(staleFor(RANGE_CHANGES)).toBe(Infinity);
+    // Kept, a names-less result would label every row by id for the session.
+    expect(staleFor({ ...RANGE_CHANGES, typeNames: undefined })).toBe(0);
+    // A pair outside the history has nothing more to fetch.
+    expect(staleFor(null)).toBe(Infinity);
   });
 
   it("renders the loading / error / not-found / empty / out-of-order states", async () => {

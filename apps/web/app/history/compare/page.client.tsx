@@ -93,7 +93,11 @@ export default function CompareBuildsClient({
         ? getBuildRangeChanges(from, to)
         : Promise.resolve(null),
     enabled: ready,
-    staleTime: Infinity,
+    // A past pair never changes, so a complete result is kept for the session.
+    // One that came back without its names (the read failed) is not: it is
+    // refetched on the next mount or window focus.
+    staleTime: ({ state }) =>
+      state.data && !state.data.typeNames ? 0 : Infinity,
   });
 
   const outOfOrder = !!fromSel && !!toSel && Number(fromSel) >= Number(toSel);
