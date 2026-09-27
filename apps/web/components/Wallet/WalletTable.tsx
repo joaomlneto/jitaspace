@@ -5,7 +5,7 @@ import type {
   MRT_Row,
 } from "mantine-react-table";
 import { memo, useMemo } from "react";
-import { Badge, Group, rem } from "@mantine/core";
+import { Badge, Group, rem, Text, Tooltip } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
 import type { CharacterWalletJournalEntry } from "@jitaspace/hooks";
@@ -15,6 +15,11 @@ import {
   EveEntityName,
 } from "@jitaspace/eve-components";
 import { DateHoverCard, FormattedDateText, ISKAmount } from "@jitaspace/ui";
+
+import {
+  getAccountingEntryType,
+  getAccountingEntryTypeName,
+} from "./accountingEntryTypes";
 
 /**
  * A journal entry plus where it came from.
@@ -57,6 +62,35 @@ function OwnerCell({ row }: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
         </Badge>
       )}
     </Group>
+  );
+}
+
+function RefTypeCell({ row }: Readonly<{ row: MRT_Row<WalletJournalRow> }>) {
+  const refType = row.original.ref_type;
+  const name = getAccountingEntryTypeName(refType);
+  const description = getAccountingEntryType(refType)?.description;
+
+  if (!description) {
+    return <Text size="sm">{name}</Text>;
+  }
+
+  return (
+    <Tooltip
+      label={description}
+      multiline
+      w={260}
+      withArrow
+      events={{ hover: true, focus: false, touch: true }}
+    >
+      {/* Dotted underline: the only hint that there is more to read here. */}
+      <Text
+        size="sm"
+        span
+        style={{ cursor: "help", textDecoration: "underline dotted" }}
+      >
+        {name}
+      </Text>
+    </Tooltip>
   );
 }
 
@@ -214,6 +248,25 @@ export const WalletTable = memo(({ entries }: WalletTableProps) => {
         enableColumnFilterModes: false, //keep this as only date-range filter with between inclusive filterFn
         Cell: DateCell, //render Date as a string
         Header: DateHeader, //custom header markup
+      },
+      {
+        id: "refType",
+        header: "Type",
+        // The entry type name EVE itself uses, so the column sorts and filters
+        // on what is actually displayed rather than on the raw ESI ref_type.
+        accessorFn: (row) => getAccountingEntryTypeName(row.ref_type),
+        filterVariant: "multi-select",
+        // Exact match. The multi-select variant defaults to arrIncludesSome,
+        // which calls `.includes` on the cell value — a string here, so it
+        // matched substrings: picking "Brokers Fee" also kept both contract
+        // broker fees, and "Bounty" kept six other types. A custom filterFn
+        // loses arrIncludesSome's autoRemove, so an emptied selection has to
+        // mean "no filter" in here.
+        filterFn: (row, columnId, filterValue: string[] | undefined) =>
+          !filterValue?.length ||
+          filterValue.includes(row.getValue<string>(columnId)),
+        size: 40,
+        Cell: RefTypeCell,
       },
       {
         id: "context_id",

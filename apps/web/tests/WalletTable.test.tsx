@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { describe, expect, it, jest } from "@jest/globals";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import {
   fireEvent,
@@ -23,11 +23,37 @@ jest.mock(
   () => new Proxy({}, { get: () => () => null }),
 );
 
+// Pass-through to the real mantine-react-table that can seed column filters —
+// the same state the Type column's multi-select writes when a user picks
+// entries. Empty by default, so every other test renders exactly as before.
+let mockColumnFilters: { id: string; value: unknown }[] = [];
+jest.mock("mantine-react-table", () => {
+  const actual = jest.requireActual<typeof import("mantine-react-table")>(
+    "mantine-react-table",
+  );
+  return {
+    ...actual,
+    useMantineReactTable: (
+      options: Parameters<typeof actual.useMantineReactTable>[0],
+    ) =>
+      actual.useMantineReactTable({
+        ...options,
+        initialState: {
+          ...options.initialState,
+          columnFilters: mockColumnFilters,
+        },
+      }),
+  };
+});
+
 // Minimal shape — the table reads a subset of fields. Cast through unknown so we
 // don't have to satisfy the full generated ESI response type.
 const ENTRY_POSITIVE = {
   id: 5001,
   date: "2024-01-01T12:00:00Z",
+  // transaction_tax has a description in the SDE -> Type cell takes its
+  // tooltip branch.
+  ref_type: "transaction_tax",
   context_id: 88,
   context_id_type: "market_transaction_id",
   first_party_id: 100,
@@ -46,6 +72,8 @@ const ENTRY_POSITIVE = {
 const ENTRY_NEGATIVE = {
   id: 5002,
   date: "2024-01-02T12:00:00Z",
+  // bounty_prizes has no SDE description -> Type cell takes its plain branch.
+  ref_type: "bounty_prizes",
   context_id: undefined,
   context_id_type: undefined,
   first_party_id: 400,
@@ -89,6 +117,95 @@ describe("WalletTable", () => {
     renderTable([ENTRY_POSITIVE]);
     // ContextTypeCell: context_id_type.replaceAll("_", " ")
     expect(screen.getByText("market transaction id")).toBeInTheDocument();
+  });
+
+  // The Type column filters via a multi-select, whose faceted options render the
+  // same labels outside the table body — so match the occurrence in a cell.
+  function typeCell(label: string) {
+    return screen
+      .getAllByText(label)
+      .find((node) => node.closest("td") !== null);
+  }
+
+  it("renders the entry type using EVE's own name for the ref_type", () => {
+    renderTable([ENTRY_POSITIVE, ENTRY_NEGATIVE]);
+    expect(typeCell("Transaction Tax")).toBeInTheDocument();
+    expect(typeCell("Bounty Prizes")).toBeInTheDocument();
+  });
+
+  it("marks entry types that carry a description as hoverable", () => {
+    renderTable([ENTRY_POSITIVE, ENTRY_NEGATIVE]);
+    // Mantine's Tooltip only mounts its label once opened (and floating-ui does
+    // not position in jsdom), so assert the affordance the tooltip branch adds
+    // instead: transaction_tax has a description, bounty_prizes does not.
+    expect(typeCell("Transaction Tax")).toHaveStyle({ cursor: "help" });
+    expect(typeCell("Bounty Prizes")).not.toHaveStyle({ cursor: "help" });
+  });
+
+  describe("filtering by entry type", () => {
+    const entry = (id: number, ref_type: string) =>
+      ({ ...ENTRY_POSITIVE, id, ref_type }) as CharacterWalletJournalEntry;
+    // "Brokers Fee" is a substring of both contract variants — one of 20 such
+    // names in the generated table.
+    const ENTRIES = [
+      entry(1, "brokers_fee"),
+      entry(2, "contract_brokers_fee"),
+      entry(3, "contract_brokers_fee_corp"),
+      entry(4, "transaction_tax"),
+    ];
+    const typeCells = () =>
+      [
+        "Brokers Fee",
+        "Contract Brokers Fee",
+        "Contract Brokers Fee (corp)",
+        "Transaction Tax",
+      ].filter((label) => typeCell(label) !== undefined);
+
+    afterEach(() => {
+      mockColumnFilters = [];
+    });
+
+    it("keeps only the selected entry type, not every type containing its name", () => {
+      // The multi-select variant defaults to arrIncludesSome, which runs
+      // String.prototype.includes against the display name — so picking
+      // "Brokers Fee" also kept both contract broker fees.
+      mockColumnFilters = [{ id: "refType", value: ["Brokers Fee"] }];
+
+      renderTable(ENTRIES);
+
+      expect(typeCells()).toEqual(["Brokers Fee"]);
+    });
+
+    it("keeps every selected entry type", () => {
+      mockColumnFilters = [
+        { id: "refType", value: ["Brokers Fee", "Transaction Tax"] },
+      ];
+
+      renderTable(ENTRIES);
+
+      expect(typeCells()).toEqual(["Brokers Fee", "Transaction Tax"]);
+    });
+
+    it("shows every row when the selection is emptied", () => {
+      // arrIncludesSome relies on its autoRemove hook to drop an emptied
+      // filter; the exact-match filterFn does not have one, so it has to treat
+      // an empty selection as "no filter" itself or the table goes blank.
+      mockColumnFilters = [{ id: "refType", value: [] }];
+
+      renderTable(ENTRIES);
+
+      expect(typeCells()).toHaveLength(4);
+    });
+  });
+
+  it("humanizes a ref_type that has no known entry type", () => {
+    renderTable([
+      {
+        ...ENTRY_POSITIVE,
+        ref_type: "some_future_fee",
+      } as unknown as CharacterWalletJournalEntry,
+    ]);
+    expect(typeCell("Some Future Fee")).toBeInTheDocument();
   });
 
   it("renders multiple rows including a negative-amount entry", () => {
