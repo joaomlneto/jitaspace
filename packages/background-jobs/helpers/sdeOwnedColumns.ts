@@ -134,6 +134,7 @@ export const SDE_OWNED_TYPE_COLUMNS = [
   "raceId",
   "metaGroupId",
   "isRepackable",
+  "isDynamicType",
   "factionId",
 ] as const;
 

@@ -6,11 +6,25 @@ import {
   getUniverseTypesTypeId,
 } from "@jitaspace/esi-client";
 
+import type { Type } from "../../../db";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
 import { SDE_OWNED_TYPE_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
+
+/**
+ * A Type row as ESI knows it: the model minus the timestamps and the SDE-owned
+ * columns. Annotating the builder below with it makes the compiler enforce the
+ * split — a new Type column is an error here until it is either supplied from
+ * ESI or listed in `SDE_OWNED_TYPE_COLUMNS`. Unlisted, it would silently make
+ * the diff below report rows as modified on every run. The same guard as
+ * `EsiRow` in scrapeEsiSolarSystems.ts; this scraper had been left without it.
+ */
+type EsiTypeRow = Omit<
+  Type,
+  "updatedAt" | "createdAt" | (typeof SDE_OWNED_TYPE_COLUMNS)[number]
+>;
 
 export interface ScrapeTypesEventPayload {
   data: {
@@ -84,7 +98,7 @@ async function processTypeBatch(
     fetchRemoteEntries: async () =>
       Promise.all(
         thisBatchTypeIds.map((typeId) =>
-          limit(async () => {
+          limit(async (): Promise<EsiTypeRow> => {
             const { data: type } = await getUniverseTypesTypeId(typeId);
             return {
               typeId: type.type_id,
