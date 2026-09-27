@@ -4,6 +4,7 @@ import { prisma } from "../../../db";
 import {
   ingestSdeTable,
   loadSdeFiles,
+  moonNames,
   optionalBoolean,
   optionalNumber,
   plainString,
@@ -21,7 +22,7 @@ export const ingestSdeMoons = defineJob<IngestSdeMoonsEventPayload["data"]>({
   id: "ingest-sde-moons",
   name: "Ingest SDE Moons",
   description:
-    "Download the SDE and ingest mapMoons.yaml into the Moon table (name = '<planet> - Moon <orbitIndex>'; planetId = orbitID).",
+    "Download the SDE and ingest mapMoons.yaml into the Moon table (name = its uniqueName, else '<planet> - Moon <orbitIndex>'; planetId = orbitID).",
   trigger: { type: "event" },
   singleton: true,
   maxDurationSeconds: 3600,
@@ -36,6 +37,9 @@ export const ingestSdeMoons = defineJob<IngestSdeMoonsEventPayload["data"]>({
       files["mapPlanets.yaml"],
       solarSystemNames(files["mapSolarSystems.yaml"]),
     );
+    // Through the shared helper, not an inline template: a named moon keeps
+    // its `uniqueName`, which need not follow the "<planet> - Moon <n>" pattern.
+    const moonNameById = moonNames(files["mapMoons.yaml"], planetNameById);
 
     const moons = await ingestSdeTable({
       filename: "mapMoons.yaml",
@@ -45,7 +49,6 @@ export const ingestSdeMoons = defineJob<IngestSdeMoonsEventPayload["data"]>({
       toRow: (record, id): Prisma.MoonCreateManyInput => {
         // A moon orbits its planet, so orbitID is the parent planetId.
         const planetId = requiredNumber(record.orbitID);
-        const planet = planetNameById.get(planetId) ?? "";
         const attributes = subRecord(record.attributes);
         // Coordinates and physical statistics are nested one level down; the
         // 1,364 moons CCP ships without a `statistics` block read as all-null.
@@ -53,7 +56,7 @@ export const ingestSdeMoons = defineJob<IngestSdeMoonsEventPayload["data"]>({
         const stats = subRecord(record.statistics);
         return {
           moonId: id,
-          name: `${planet} - Moon ${requiredNumber(record.orbitIndex)}`,
+          name: moonNameById.get(id) ?? "",
           planetId,
           heightMap1: optionalNumber(attributes.heightMap1),
           heightMap2: optionalNumber(attributes.heightMap2),
