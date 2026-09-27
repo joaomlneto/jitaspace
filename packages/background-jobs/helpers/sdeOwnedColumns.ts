@@ -43,6 +43,7 @@ export const SDE_OWNED_CORPORATION_COLUMNS = [
 
 /** Written by `ingestSdePlanets` (the `attributes` sub-object of mapPlanets.yaml). */
 export const SDE_OWNED_PLANET_COLUMNS = [
+  "celestialIndex",
   "heightMap1",
   "heightMap2",
   "shaderPreset",
@@ -68,6 +69,8 @@ export const SDE_OWNED_PLANET_COLUMNS = [
 
 /** Written by `ingestSdeMoons` (the `attributes` sub-object of mapMoons.yaml). */
 export const SDE_OWNED_MOON_COLUMNS = [
+  "celestialIndex",
+  "orbitIndex",
   "heightMap1",
   "heightMap2",
   "shaderPreset",
@@ -224,6 +227,7 @@ export const SDE_OWNED_ASTEROID_BELT_COLUMNS = [
   "radius",
   "solarSystemId",
   "celestialIndex",
+  "orbitIndex",
   "positionX",
   "positionY",
   "positionZ",

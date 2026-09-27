@@ -969,6 +969,10 @@ model Planet {
   solarSystemId   Int
   type            Type           @relation("PlanetType", fields: [typeId], references: [typeId])
   typeId          Int
+  /// Position from the star, 1..n within the system with no gaps (mapPlanets.yaml
+  /// `celestialIndex`) — the order planets appear in-game, and the Roman numeral
+  /// in an unnamed planet's name.
+  celestialIndex  Int?
   // SDE-only render attributes (mapPlanets.yaml `attributes`), owned by
   // ingestSdePlanets. `population` is a flag, not a count.
   heightMap1      Int?
@@ -1015,6 +1019,13 @@ model Moon {
   name            String
   planet          Planet     @relation("PlanetMoons", fields: [planetId], references: [planetId])
   planetId        Int
+  /// The parent planet's `celestialIndex` (mapMoons.yaml `celestialIndex`), so
+  /// the moons of a whole system sort by (celestialIndex, orbitIndex) alone.
+  celestialIndex  Int?
+  /// Order around the planet, 1..n per planet with no gaps (mapMoons.yaml
+  /// `orbitIndex`). The only ordering a named moon keeps: "Moon Griklaeum"
+  /// carries no number.
+  orbitIndex      Int?
   // SDE-only render attributes (mapMoons.yaml `attributes`), owned by ingestSdeMoons.
   heightMap1      Int?
   heightMap2      Int?
@@ -1066,7 +1077,12 @@ model AsteroidBelt {
   typeId          Int?
   radius          Float?
   solarSystemId   Int?
+  /// The parent planet's `celestialIndex` (mapAsteroidBelts.yaml `celestialIndex`).
   celestialIndex  Int?
+  /// Order around the planet, 1..n per planet with no gaps, numbered apart from
+  /// the moons (mapAsteroidBelts.yaml `orbitIndex`). A named belt's own number
+  /// can differ: orbitIndex 5 is "Uplingur IV (Ndoria) - Asteroid Belt 3".
+  orbitIndex      Int?
   /// In-system coordinates (mapAsteroidBelts.yaml `position`).
   positionX       Float?
   positionY       Float?

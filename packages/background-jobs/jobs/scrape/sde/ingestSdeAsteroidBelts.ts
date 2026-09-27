@@ -65,6 +65,7 @@ export const ingestSdeAsteroidBelts = defineJob<
           radius: optionalNumber(record.radius),
           solarSystemId: optionalNumber(record.solarSystemID),
           celestialIndex: optionalNumber(record.celestialIndex),
+          orbitIndex: optionalNumber(record.orbitIndex),
           positionX: optionalNumber(position.x),
           positionY: optionalNumber(position.y),
           positionZ: optionalNumber(position.z),
