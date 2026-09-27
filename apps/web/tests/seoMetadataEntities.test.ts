@@ -117,7 +117,9 @@ function mockKillFetches({
 }: KillFetchMocks) {
   global.fetch = jest.fn((url: string | URL) => {
     const href = String(url);
-    if (href.includes("zkillboard.com")) {
+    // Route on the exact host, not a substring of the URL.
+    const { host } = new URL(href);
+    if (host === "zkillboard.com") {
       if (zkb === "not-found") {
         return Promise.resolve({
           ok: true,
@@ -136,7 +138,7 @@ function mockKillFetches({
         json: () => Promise.resolve([{ killmail_id: 1, zkb }]),
       } as unknown as Response);
     }
-    if (href.includes("images.evetech.net")) {
+    if (host === "images.evetech.net") {
       return Promise.resolve({
         ok: true,
         status: 200,
