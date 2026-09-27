@@ -86,7 +86,9 @@ describe("DbCollectionsDashboard", () => {
 
     const dialog = screen.getByRole("dialog");
     // "Showing 1-5 of 5 entries" summary line.
-    expect(within(dialog).getByText(/Showing 1-5 of 5 entries/)).toBeInTheDocument();
+    expect(
+      within(dialog).getByText(/Showing 1-5 of 5 entries/),
+    ).toBeInTheDocument();
 
     // Row keys: object with id -> "42"; object with *_id -> "character_id:99";
     // fallback row index for the object lacking id/*_id.
@@ -96,7 +98,9 @@ describe("DbCollectionsDashboard", () => {
     // Preview for the plain-string item is the string itself.
     expect(within(dialog).getByText("a-plain-string-item")).toBeInTheDocument();
     // Preview for an object is its JSON serialisation.
-    expect(within(dialog).getByText('{"id":42,"name":"Jita"}')).toBeInTheDocument();
+    expect(
+      within(dialog).getByText('{"id":42,"name":"Jita"}'),
+    ).toBeInTheDocument();
   });
 
   it("shows the empty-collection message inside the modal when there are no entries", () => {

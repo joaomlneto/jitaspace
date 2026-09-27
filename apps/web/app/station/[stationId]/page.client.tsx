@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
 import { Button, Container, Group, Stack, Text, Title } from "@mantine/core";
 import { IconExternalLink } from "@tabler/icons-react";
 
@@ -10,7 +9,6 @@ import {
   EveEntityName,
   SolarSystemAnchor,
   SolarSystemName,
-  StationName,
   TypeAnchor,
   TypeName,
 } from "@jitaspace/eve-components";
@@ -22,27 +20,41 @@ import { StationAvatar } from "~/components/Avatar";
 import { SolarSystemSecurityStatusBadge } from "~/components/Badge";
 import { RaceName } from "~/components/Text";
 
-export default function Page() {
-  const params = useParams();
-  const rawStationId = params.stationId;
-  const stationId = Number(
-    typeof rawStationId === "string" ? rawStationId : rawStationId?.[0],
-  );
+/**
+ * The station row the server read, handed down so the page has an identity
+ * before any ESI request resolves.
+ */
+export interface StationPageProps {
+  stationId: number;
+  name: string;
+  solarSystemId: number | null;
+  typeId: number;
+  raceId: number | null;
+  ownerId: number | null;
+}
+
+export default function Page(props: Readonly<StationPageProps>) {
+  const { stationId } = props;
   const character = useSelectedCharacter();
   const { data: station } = useStation(stationId);
 
-  if (!Number.isFinite(stationId)) {
-    return null;
-  }
+  // ESI stays the fresher source — a station can be renamed or change hands
+  // between SDE ingests — but it only answers on the client. Falling back to
+  // the server-read row is what puts the station's name and its outgoing links
+  // in the HTML a crawler is served, the same shape the type page uses.
+  const esi = station?.data;
+  const name = esi?.name ?? props.name;
+  const solarSystemId = esi?.system_id ?? props.solarSystemId ?? undefined;
+  const typeId = esi?.type_id ?? props.typeId;
+  const raceId = esi?.race_id ?? props.raceId ?? undefined;
+  const ownerId = esi?.owner ?? props.ownerId ?? undefined;
 
   return (
     <Container size="sm">
       <Stack>
         <Group gap="xl">
           <StationAvatar stationId={stationId} size="xl" radius={256} />
-          <Title order={3}>
-            <StationName span stationId={stationId} />
-          </Title>
+          <Title order={3}>{name}</Title>
           {character && (
             <SetAutopilotDestinationActionIcon
               characterId={character.characterId}
@@ -67,30 +79,30 @@ export default function Page() {
           <Text>Solar System</Text>
           <Group gap="xs">
             <SolarSystemSecurityStatusBadge
-              solarSystemId={station?.data.system_id}
+              solarSystemId={solarSystemId}
               size="sm"
             />
-            <SolarSystemAnchor solarSystemId={station?.data.system_id}>
-              <SolarSystemName span solarSystemId={station?.data.system_id} />
+            <SolarSystemAnchor solarSystemId={solarSystemId}>
+              <SolarSystemName span solarSystemId={solarSystemId} />
             </SolarSystemAnchor>
           </Group>
         </Group>
         <Group justify="space-between">
           <Text>Station Type</Text>
-          <TypeAnchor typeId={station?.data.type_id}>
-            <TypeName span typeId={station?.data.type_id} />
+          <TypeAnchor typeId={typeId}>
+            <TypeName span typeId={typeId} />
           </TypeAnchor>
         </Group>
         <Group justify="space-between">
           <Text>Race</Text>
-          <RaceAnchor raceId={station?.data.race_id}>
-            <RaceName span raceId={station?.data.race_id} />
+          <RaceAnchor raceId={raceId}>
+            <RaceName span raceId={raceId} />
           </RaceAnchor>
         </Group>
         <Group justify="space-between">
           <Text>Owner</Text>
-          <EveEntityAnchor entityId={station?.data.owner}>
-            <EveEntityName entityId={station?.data.owner} />
+          <EveEntityAnchor entityId={ownerId}>
+            <EveEntityName entityId={ownerId} />
           </EveEntityAnchor>
         </Group>
       </Stack>

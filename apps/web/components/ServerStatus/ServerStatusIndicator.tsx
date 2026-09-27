@@ -30,3 +30,5 @@ export const ServerStatusIndicator = memo(() => {
     </Group>
   );
 });
+
+ServerStatusIndicator.displayName = "ServerStatusIndicator";

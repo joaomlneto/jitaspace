@@ -93,14 +93,12 @@ describe("latestSdeBuild", () => {
 
   it("throws when the index request fails", async () => {
     const fetchMock = mockFetch();
-    fetchMock
-      .mockResolvedValueOnce(redirectResponse({}))
-      .mockResolvedValueOnce(
-        jsonResponse("nope", {
-          status: 503,
-          statusText: "Service Unavailable",
-        }),
-      );
+    fetchMock.mockResolvedValueOnce(redirectResponse({})).mockResolvedValueOnce(
+      jsonResponse("nope", {
+        status: 503,
+        statusText: "Service Unavailable",
+      }),
+    );
 
     await expect(latestSdeBuild()).rejects.toThrow("503");
   });

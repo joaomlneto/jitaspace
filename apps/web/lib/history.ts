@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { FileDiff, StringChange } from "~/lib/resource-history";
+
 /**
  * Reader-side schemas, types and display metadata for the change-history
  * viewer. The data is produced by the change-history pipeline and read from the
@@ -107,6 +109,41 @@ export const BuildChanges = z.object({
 export type BuildChanges = z.infer<typeof BuildChanges>;
 
 /**
+ * One row of a change list: which entity changed, in which collection, and how.
+ * A {@link BuildChanges} entry without its per-field payload (`fields` /
+ * `values`) — the change lists name entities and never render their diffs, and
+ * on a large build that payload runs to megabytes.
+ */
+export interface EntityChangeRow {
+  entityId: number;
+  /** Entity kind ("type", "skin", …); absent ⇒ "type". */
+  entityType?: string;
+  /** Source dataset ("types", "typeDogma", …); absent ⇒ "types". */
+  collection?: string;
+  kind: EntityChange["kind"];
+}
+
+/**
+ * Everything `/history/build/[build]` renders, read on the server in one pass so
+ * the page arrives complete and the browser makes no further requests for it.
+ */
+export interface BuildPage {
+  build: number;
+  date: string | null;
+  /** Decoded-SDE changes (localization strings excluded — see `strings`). */
+  changes: EntityChangeRow[];
+  /**
+   * Names of the `type` entities in `changes`, by typeId. A type missing here is
+   * newer than the ingested SDE (history is decoded from the game client).
+   */
+  typeNames: Record<number, string>;
+  /** Raw resource-file paths the build added / changed / removed. */
+  files: FileDiff;
+  /** Localization-string changes per language; only languages that changed. */
+  strings: Record<string, StringChange[]>;
+}
+
+/**
  * The net difference between two builds — every entity that differs at the `to`
  * build vs. the `from` build, folded across all the intermediate diffs. Reuses
  * {@link BuildChanges}' `changes` shape so the same New / Removed / Changed
@@ -118,6 +155,11 @@ export const BuildRangeChanges = z.object({
   fromDate: z.string().nullable(),
   toDate: z.string().nullable(),
   changes: BuildChanges.shape.changes,
+  /**
+   * Names of the `type` entities in `changes`, by typeId (missing ⇒ unknown to
+   * our SDE tables). Absent when the names could not be read at all.
+   */
+  typeNames: z.record(z.coerce.number(), z.string()).optional(),
 });
 export type BuildRangeChanges = z.infer<typeof BuildRangeChanges>;
 
@@ -286,11 +328,14 @@ export const COLLECTION_META: Record<string, { label: string; color: string }> =
     groups: { label: "Group", color: "cyan" },
     marketGroups: { label: "Market group", color: "teal" },
     metaGroups: { label: "Meta group", color: "green" },
+    typeLists: { label: "Type list", color: "orange" },
     dogmaAttributes: { label: "Dogma attribute", color: "violet" },
     dogmaAttributeCategories: { label: "Attribute category", color: "grape" },
+    dogmaUnits: { label: "Dogma unit", color: "teal" },
     dogmaEffects: { label: "Dogma effect", color: "indigo" },
     dbuffCollections: { label: "Dbuff", color: "pink" },
     graphicIDs: { label: "Graphic", color: "lime" },
+    graphicMaterialSets: { label: "Material set", color: "violet" },
     iconIDs: { label: "Icon", color: "yellow" },
     factions: { label: "Faction", color: "red" },
     races: { label: "Race", color: "orange" },
@@ -301,6 +346,10 @@ export const COLLECTION_META: Record<string, { label: string; color: string }> =
     npcCorporationDivisions: { label: "NPC corp division", color: "blue" },
     npcCharacters: { label: "NPC character", color: "indigo" },
     agentsInSpace: { label: "Agent in space", color: "green" },
+    missions: { label: "Mission", color: "orange" },
+    epicArcs: { label: "Epic arc", color: "indigo" },
+    dungeons: { label: "Dungeon", color: "red" },
+    archetypes: { label: "Site archetype", color: "cyan" },
     schematics: { label: "Schematic", color: "lime" },
     stationOperations: { label: "Station operation", color: "teal" },
     stationServices: { label: "Station service", color: "cyan" },
@@ -312,7 +361,9 @@ export const COLLECTION_META: Record<string, { label: string; color: string }> =
     asteroidBelts: { label: "Asteroid belt", color: "orange" },
     npcStations: { label: "Station", color: "cyan" },
     stars: { label: "Star", color: "yellow" },
+    secondarySuns: { label: "Secondary sun", color: "red" },
     stargates: { label: "Stargate", color: "grape" },
+    landmarks: { label: "Landmark", color: "green" },
     expertSystems: { label: "Expert system", color: "grape" },
     cloneGrades: { label: "Clone state", color: "teal" },
   };
@@ -320,6 +371,11 @@ export const COLLECTION_META: Record<string, { label: string; color: string }> =
 /**
  * Display label for an entity kind (the `/history/{entityType}` dimension).
  * "type" is the default/implicit kind; skins & skin materials are separate.
+ *
+ * Not every collection is a kind of its own: the type-keyed ones (typeDogma,
+ * typeMaterials, blueprints, expertSystems, …) decorate an existing `type`
+ * rather than introducing an entity, so they have a {@link COLLECTION_META}
+ * entry — the badge on a changed type — but deliberately none here.
  */
 export const ENTITY_TYPE_META: Record<
   string,
@@ -332,14 +388,17 @@ export const ENTITY_TYPE_META: Record<
   group: { label: "Group", plural: "Groups" },
   marketGroup: { label: "Market group", plural: "Market groups" },
   metaGroup: { label: "Meta group", plural: "Meta groups" },
+  typeList: { label: "Type list", plural: "Type lists" },
   dogmaAttribute: { label: "Dogma attribute", plural: "Dogma attributes" },
   dogmaAttributeCategory: {
     label: "Attribute category",
     plural: "Attribute categories",
   },
+  dogmaUnit: { label: "Dogma unit", plural: "Dogma units" },
   dogmaEffect: { label: "Dogma effect", plural: "Dogma effects" },
   dbuffCollection: { label: "Dbuff", plural: "Dbuffs" },
   graphic: { label: "Graphic", plural: "Graphics" },
+  graphicMaterialSet: { label: "Material set", plural: "Material sets" },
   icon: { label: "Icon", plural: "Icons" },
   faction: { label: "Faction", plural: "Factions" },
   race: { label: "Race", plural: "Races" },
@@ -356,6 +415,10 @@ export const ENTITY_TYPE_META: Record<
   },
   npcCharacter: { label: "NPC character", plural: "NPC characters" },
   agentInSpace: { label: "Agent in space", plural: "Agents in space" },
+  mission: { label: "Mission", plural: "Missions" },
+  epicArc: { label: "Epic arc", plural: "Epic arcs" },
+  dungeon: { label: "Dungeon", plural: "Dungeons" },
+  archetype: { label: "Site archetype", plural: "Site archetypes" },
   schematic: { label: "Schematic", plural: "Schematics" },
   stationOperation: {
     label: "Station operation",
@@ -370,7 +433,9 @@ export const ENTITY_TYPE_META: Record<
   asteroidBelt: { label: "Asteroid belt", plural: "Asteroid belts" },
   npcStation: { label: "Station", plural: "Stations" },
   star: { label: "Star", plural: "Stars" },
+  secondarySun: { label: "Secondary sun", plural: "Secondary suns" },
   stargate: { label: "Stargate", plural: "Stargates" },
+  landmark: { label: "Landmark", plural: "Landmarks" },
   cloneGrade: { label: "Clone state", plural: "Clone states" },
 };
 

@@ -10,13 +10,16 @@ import { MantineProvider } from "@mantine/core";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 
+import type { BuildPage } from "~/lib/history";
+
 // ── mocks ────────────────────────────────────────────────────────────────────
 
-// Only the two fields the tests drive off are named; everything else the
-// component passes to `useQuery` is irrelevant here.
+// Only the fields the tests drive off are named; everything else the component
+// passes to `useQuery` is irrelevant here.
 interface MockQueryOptions {
   queryKey?: unknown[];
   queryFn?: () => unknown;
+  staleTime?: number | ((query: { state: { data: unknown } }) => number);
 }
 const mockUseQuery = jest.fn<(opts: MockQueryOptions) => unknown>();
 jest.mock("@tanstack/react-query", () => ({
@@ -32,12 +35,8 @@ jest.mock("@mantine/charts", () => ({
 // Stub the server functions so the Prisma-backed @jitaspace/db-history module is
 // never loaded; they're only passed as queryFn to the (mocked) useQuery anyway.
 jest.mock("~/lib/history-actions", () => ({
-  getBuildChanges: jest.fn(),
   getBuildRangeChanges: jest.fn(),
   getEntityTimeline: jest.fn(),
-  getResourceIndex: jest.fn(),
-  getFileDiff: jest.fn(),
-  getStringChanges: jest.fn(),
 }));
 
 // The index page server-renders the day-cached index from ~/lib/history-cache
@@ -70,6 +69,9 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
   // The compare page reads the selected builds from the URL.
   useSearchParams: () => new URLSearchParams("from=100&to=200"),
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
 }));
 
 jest.mock("next/link", () => ({
@@ -159,56 +161,40 @@ const TIMELINE = {
   ],
 };
 
-const BUILD_CHANGES = {
+const BUILD_PAGE: BuildPage = {
   build: 3383521,
   date: "2026-06-08",
   changes: [
-    {
-      entityId: 91920,
-      entityType: "type",
-      collection: "types",
-      v: 1,
-      kind: "added",
-      values: {},
-    },
+    { entityId: 91920, entityType: "type", collection: "types", kind: "added" },
     {
       entityId: 587,
       entityType: "type",
       collection: "typeDogma",
-      v: 1,
       kind: "modified",
-      fields: {},
     },
-    {
-      entityId: 999,
-      entityType: "type",
-      collection: "types",
-      v: 1,
-      kind: "removed",
-      values: {},
-    },
-    {
-      entityId: 1,
-      entityType: "skin",
-      collection: "skins",
-      v: 1,
-      kind: "added",
-      values: {},
-    },
+    { entityId: 999, entityType: "type", collection: "types", kind: "removed" },
+    { entityId: 1, entityType: "skin", collection: "skins", kind: "added" },
   ],
+  // 999 is left unnamed: a type newer than the ingested SDE.
+  typeNames: { 91920: "Pochven Spawner", 587: "Rifter" },
+  files: { added: ["res:/a.png"], changed: ["res:/b.png"], removed: [] },
+  strings: {
+    "en-us": [
+      { id: 1, kind: "added", to: "Hello" },
+      { id: 2, kind: "changed", from: "Old name", to: "New name" },
+      { id: 3, kind: "removed", from: "Gone" },
+    ],
+    de: [{ id: 1, kind: "added", to: "Hallo" }],
+  },
 };
 
-const RESOURCE_INDEX = {
-  generatedAt: "x",
-  languages: ["en-us"],
-  builds: [
-    {
-      build: 3383521,
-      date: "2026-06-08",
-      files: { added: 5, changed: 2, removed: 0 },
-      strings: { "en-us": { added: 3, changed: 1, removed: 0 } },
-    },
-  ],
+const EMPTY_BUILD_PAGE: BuildPage = {
+  build: 3383522,
+  date: null,
+  changes: [],
+  typeNames: {},
+  files: { added: [], changed: [], removed: [] },
+  strings: {},
 };
 
 const HISTORY_INDEX = {
@@ -232,6 +218,8 @@ const RANGE_CHANGES = {
   to: 200,
   fromDate: "2025-01-01",
   toDate: "2025-02-01",
+  // 588 has no entry: a type our SDE tables cannot name.
+  typeNames: { 587: "Vexor" },
   changes: [
     {
       entityId: 587,
@@ -251,21 +239,22 @@ const RANGE_CHANGES = {
   ],
 };
 
+/**
+ * The per-type name lookups (`<TypeName>`'s `resolveTypeLabel` query) issued
+ * while rendering. The change lists must issue none: names arrive with the
+ * changes, and a lookup per row queues one server action per changed type.
+ */
+const typeNameLookups = () =>
+  mockUseQuery.mock.calls.filter(
+    ([o]) => o.queryKey?.[1] === "sde" && o.queryKey[2] === "type",
+  );
+
 function dataFor(opts: { queryKey?: unknown[] }) {
   const k = opts.queryKey?.[0];
   const ready = { isLoading: false, isPending: false, isFetching: false };
   if (k === "history-index") return { data: HISTORY_INDEX, ...ready };
   if (k === "history-entity") return { data: TIMELINE, ...ready };
-  if (k === "history-build") return { data: BUILD_CHANGES, ...ready };
   if (k === "history-compare") return { data: RANGE_CHANGES, ...ready };
-  if (k === "resource-index") return { data: RESOURCE_INDEX, ...ready };
-  if (k === "res-files")
-    return {
-      data: { added: ["res:/a.png"], changed: ["res:/b.png"], removed: [] },
-      ...ready,
-    };
-  if (k === "res-strings")
-    return { data: [{ id: 1, kind: "added", to: "Hello" }], ...ready };
   // SDE name lookups (getTypeByIdQueryOptions etc.)
   return { data: { data: { name: "Rifter" } }, ...ready };
 }
@@ -446,17 +435,127 @@ describe("EntityHistory", () => {
 });
 
 describe("BuildHistoryClient", () => {
-  it("renders new/removed/changed sections + resources, and expands lazy lists", async () => {
+  it("renders the server-read build without fetching anything", async () => {
     const { default: BuildHistoryClient } =
       await import("~/app/history/build/[build]/page.client");
-    wrap(<BuildHistoryClient build={3383521} />);
+    wrap(<BuildHistoryClient data={BUILD_PAGE} />);
     expect(screen.getByText("Build 3383521")).toBeTruthy();
-    expect(screen.getByText("Resources")).toBeTruthy();
+    expect(screen.getByText(/2026-06-08 · 4 changes/)).toBeTruthy();
+    expect(screen.getByText("New types")).toBeTruthy();
+    expect(screen.getByText("Removed types")).toBeTruthy();
+    expect(screen.getByText("Changed types")).toBeTruthy();
+    expect(screen.getByText("New skins")).toBeTruthy();
 
-    // expand the Files + localization sections to cover the lazy query branches
+    // Names come from the page data, not from a lookup per row.
+    expect(screen.getByText("Pochven Spawner")).toBeTruthy();
+    expect(screen.getByText("Rifter")).toBeTruthy();
+    // An unnamed type falls back to its kind; the row still carries its id.
+    const row = (id: number) =>
+      document.querySelector(`a[href="/history/type/${id}"]`)?.textContent;
+    expect(row(999)).toBe("Type #999");
+    expect(row(587)).toBe("Rifter #587");
+    expect(mockUseQuery).not.toHaveBeenCalled();
+  });
+
+  it("expands the file and localization lists from the page data", async () => {
+    const { default: BuildHistoryClient } =
+      await import("~/app/history/build/[build]/page.client");
+    wrap(<BuildHistoryClient data={BUILD_PAGE} />);
+    expect(screen.getByText("Resources")).toBeTruthy();
+    // Counts are derived from the lists themselves.
+    expect(screen.getByText(/\+1 · 1 changed · −1/)).toBeTruthy();
+    expect(screen.queryByText("res:/a.png")).toBeNull();
+
     fireEvent.click(screen.getByText(/Files/));
+    expect(screen.getByText("res:/a.png")).toBeTruthy();
+    expect(screen.getByText("res:/b.png")).toBeTruthy();
+
+    // en-us sorts ahead of the other languages.
+    const langs = screen.getAllByText(/English|German/);
+    expect(langs.map((el) => el.textContent)).toEqual([
+      "▸ English",
+      "▸ German",
+    ]);
     fireEvent.click(screen.getByText(/English/));
-    expect(screen.getAllByText(/res:\//).length).toBeGreaterThan(0);
+    expect(screen.getByText("Hello")).toBeTruthy();
+    expect(screen.getByText("Old name")).toBeTruthy();
+    expect(screen.getByText("New name")).toBeTruthy();
+    expect(screen.getByText("Gone")).toBeTruthy();
+    expect(mockUseQuery).not.toHaveBeenCalled();
+  });
+
+  it("narrows the change lists to the collections in the URL", async () => {
+    const { default: BuildHistoryClient } =
+      await import("~/app/history/build/[build]/page.client");
+    wrap(<BuildHistoryClient data={BUILD_PAGE} />, "?collections=skins");
+    expect(screen.getByText(/1 changes/)).toBeTruthy();
+    expect(screen.getByText("New skins")).toBeTruthy();
+    expect(screen.queryByText("New types")).toBeNull();
+
+    cleanup();
+    wrap(<BuildHistoryClient data={BUILD_PAGE} />, "?collections=");
+    expect(
+      screen.getByText(/No changes match the selected collections/),
+    ).toBeTruthy();
+  });
+
+  it("mounts only the first rows of a long list until it is expanded", async () => {
+    const { RowSpoiler } =
+      await import("~/app/history/build/[build]/_row-spoiler");
+    // jsdom has no layout, so the Spoiler would measure the list as 0px tall and
+    // hide its control; report a list taller than the clip instead.
+    const original = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class {
+      constructor(private readonly callback: ResizeObserverCallback) {}
+      observe = () =>
+        this.callback(
+          [{ contentRect: { height: 1000 } } as ResizeObserverEntry],
+          this,
+        );
+      unobserve = () => undefined;
+      disconnect = () => undefined;
+    };
+    try {
+      const items = Array.from({ length: 100 }, (_, i) => i);
+      wrap(
+        <RowSpoiler items={items} fz="sm">
+          {(visible) => visible.map((i) => <div key={i}>row {i}</div>)}
+        </RowSpoiler>,
+      );
+      const rows = () => screen.getAllByText(/^row \d+$/).length;
+      expect(rows()).toBe(40);
+
+      fireEvent.click(await screen.findByText("Show all 100"));
+      expect(rows()).toBe(100);
+
+      fireEvent.click(screen.getByText("Show less"));
+      expect(rows()).toBe(40);
+    } finally {
+      globalThis.ResizeObserver = original;
+    }
+  });
+
+  it("renders the empty state for a build with nothing recorded", async () => {
+    const { default: BuildHistoryClient } =
+      await import("~/app/history/build/[build]/page.client");
+    wrap(<BuildHistoryClient data={EMPTY_BUILD_PAGE} />);
+    expect(screen.getByText(/No recorded changes for this build/)).toBeTruthy();
+    expect(screen.getByText(/Back to history/)).toBeTruthy();
+  });
+
+  it("shows only the resources of a build with no decoded-SDE changes", async () => {
+    const { default: BuildHistoryClient } =
+      await import("~/app/history/build/[build]/page.client");
+    wrap(
+      <BuildHistoryClient
+        data={{ ...EMPTY_BUILD_PAGE, files: BUILD_PAGE.files }}
+      />,
+    );
+    expect(screen.getByText("Resources")).toBeTruthy();
+    expect(screen.getByText("date unknown")).toBeTruthy();
+    expect(screen.queryByText(/changes ·/)).toBeNull();
+    expect(screen.queryByText(/No changes match/)).toBeNull();
+    expect(screen.queryByText(/Localization strings/)).toBeNull();
   });
 });
 
@@ -513,6 +612,55 @@ describe("CompareBuildsClient", () => {
     expect(screen.getByText(/Changed types/)).toBeTruthy();
     // the Compare button navigates to the /history/compare/<from>/<to> route
     fireEvent.click(screen.getByText("Compare"));
+  });
+
+  it("labels type rows with the server-resolved names, without a lookup per row", async () => {
+    const { default: CompareBuildsClient } =
+      await import("~/app/history/compare/page.client");
+    wrap(<CompareBuildsClient from={100} to={200} builds={[]} />);
+
+    const row = (name: string) => screen.getByRole("link", { name });
+    expect(row("Vexor #587")).toBeTruthy();
+    // 588 has no name, so its kind labels it, followed by its id.
+    expect(row("Type #588")).toBeTruthy();
+    expect(typeNameLookups()).toEqual([]);
+  });
+
+  it("falls back to kind and id for every row when names are unavailable", async () => {
+    mockUseQuery.mockImplementation((opts: { queryKey?: unknown[] }) =>
+      opts.queryKey?.[0] === "history-compare"
+        ? { data: { ...RANGE_CHANGES, typeNames: undefined }, isLoading: false }
+        : dataFor(opts),
+    );
+    const { default: CompareBuildsClient } =
+      await import("~/app/history/compare/page.client");
+    wrap(<CompareBuildsClient from={100} to={200} builds={[]} />);
+
+    const row = (name: string) => screen.getByRole("link", { name });
+    expect(row("Type #587")).toBeTruthy();
+    expect(row("Type #588")).toBeTruthy();
+    // Degrading must not bring the per-row lookups back.
+    expect(typeNameLookups()).toEqual([]);
+  });
+
+  it("refetches a comparison that came back without its names, and keeps a complete one", async () => {
+    const { default: CompareBuildsClient } =
+      await import("~/app/history/compare/page.client");
+    wrap(<CompareBuildsClient from={100} to={200} builds={[]} />);
+
+    const { staleTime } =
+      mockUseQuery.mock.calls
+        .map(([o]) => o)
+        .find((o) => o.queryKey?.[0] === "history-compare") ?? {};
+    const staleFor = (data: unknown) =>
+      typeof staleTime === "function"
+        ? staleTime({ state: { data } })
+        : staleTime;
+    expect(staleFor(RANGE_CHANGES)).toBe(Infinity);
+    // Kept, a names-less result would label every row by id for the session.
+    expect(staleFor({ ...RANGE_CHANGES, typeNames: undefined })).toBe(0);
+    // A pair outside the history has nothing more to fetch.
+    expect(staleFor(null)).toBe(Infinity);
   });
 
   it("renders the loading / error / not-found / empty / out-of-order states", async () => {
@@ -579,7 +727,7 @@ describe("CompareBuildsClient", () => {
       (await import("~/app/history/compare/[from]/[to]/page")) as unknown as {
         generateMetadata: (a: {
           params: Promise<{ from: string; to: string }>;
-        }) => Promise<{ title: string }>;
+        }) => Promise<{ title?: string; alternates?: { canonical?: string } }>;
         default: (p: {
           params: Promise<{ from: string; to: string }>;
         }) => React.ReactNode;
@@ -588,9 +736,43 @@ describe("CompareBuildsClient", () => {
       params: Promise.resolve({ from: "100", to: "200" }),
     });
     expect(meta.title).toContain("Compare builds 100");
+    expect(meta.alternates?.canonical).toBe("/history/compare/100/200");
     const Page = mod.default;
     expect(() =>
       wrap(<Page params={Promise.resolve({ from: "100", to: "200" })} />),
     ).not.toThrow();
+  });
+
+  // Both segments are build numbers; a re-spelled pair is a duplicate of the
+  // real comparison, and garbage used to render the bare picker at HTTP 200.
+  it("refuses to canonicalise — and 404s — a non-canonical build pair", async () => {
+    const mod =
+      (await import("~/app/history/compare/[from]/[to]/page")) as unknown as {
+        generateMetadata: (a: {
+          params: Promise<{ from: string; to: string }>;
+        }) => Promise<Record<string, unknown>>;
+        default: (p: { params: Promise<{ from: string; to: string }> }) => {
+          props: {
+            children: {
+              type: (p: {
+                params: Promise<{ from: string; to: string }>;
+              }) => Promise<unknown>;
+            };
+          };
+        };
+      };
+    for (const params of [
+      { from: "0100", to: "200" },
+      { from: "100", to: "200.0" },
+      { from: "100", to: "newest" },
+    ]) {
+      expect(
+        await mod.generateMetadata({ params: Promise.resolve(params) }),
+      ).toEqual({});
+      const wrapper = mod.default({ params: Promise.resolve(params) });
+      await expect(
+        wrapper.props.children.type({ params: Promise.resolve(params) }),
+      ).rejects.toThrow("NEXT_NOT_FOUND");
+    }
   });
 });

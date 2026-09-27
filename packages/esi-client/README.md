@@ -21,12 +21,12 @@ function CharacterInfo({ characterId }: { characterId: number }) {
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm kubb:generate` | Regenerate client from the latest ESI OpenAPI spec |
-| `pnpm download-schema` | Download the latest `swagger.json` from ESI |
-| `pnpm build` | Compile TypeScript to `dist/` |
-| `pnpm dev` | Watch mode build |
+| Command                | Description                                        |
+| ---------------------- | -------------------------------------------------- |
+| `pnpm kubb:generate`   | Regenerate client from the latest ESI OpenAPI spec |
+| `pnpm download-schema` | Download the latest `swagger.json` from ESI        |
+| `pnpm build`           | Compile TypeScript to `dist/`                      |
+| `pnpm dev`             | Watch mode build                                   |
 
 ## Building
 

@@ -12,9 +12,9 @@ export type GroupBreadcrumbsProps = Omit<BreadcrumbsProps, "children"> & {
 
 export const GroupBreadcrumbs = memo(
   ({ groupId, ...otherProps }: GroupBreadcrumbsProps) => {
-    const { data: group } = useGroup(groupId ?? 0);
+    const { data: group } = useGroup(groupId);
     const categoryId = group?.data.category_id;
-    const { data: category } = useCategory(categoryId ?? 0);
+    const { data: category } = useCategory(categoryId);
 
     return (
       <UIGroupBreadcrumbs

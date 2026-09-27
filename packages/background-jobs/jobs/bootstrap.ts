@@ -1,5 +1,5 @@
 import { defineJob } from "../core";
-import { SDE_INGEST_JOB_IDS } from "./scrape";
+import { SDE_INGEST_JOB_IDS, SDE_POST_ESI_JOB_IDS } from "./scrape";
 
 export interface BootstrapDatabaseEventPayload {
   data: Record<string, never>;
@@ -36,7 +36,6 @@ export const bootstrapDatabase = defineJob<
     await ctx.invoke("scrape-esi-bloodlines", {});
     await ctx.invoke("scrape-esi-ancestries", {});
     await ctx.invoke("scrape-esi-npc-corporations", {});
-    await ctx.invoke("scrape-sde-agents", {});
     await ctx.invoke("scrape-esi-loyalty-store-offers", {});
 
     // Direct SDE-archive ingest pipeline — the full FK-ordered set, shared with
@@ -54,6 +53,25 @@ export const bootstrapDatabase = defineJob<
     // and the ingest jobs then set those columns authoritatively, in FK order,
     // within this same bootstrap run.
     for (const jobId of SDE_INGEST_JOB_IDS) {
+      // `scrape-sde-agents` is sequenced INTO this list rather than run with the
+      // scrapers above: `Agent.stationId` is a real FK and agents sit in NPC
+      // stations, but `ingest-sde-stations` (earlier in this list) is the only
+      // thing bootstrap AWAITS that fills the NPC station set. The ESI station
+      // scrape is reached only via a fire-and-forget `ctx.send` from
+      // `scrape-esi-solar-systems`, so racing it leaves just the handful of
+      // corporation home stations and the agent write fails with P2003. It has
+      // to come before `ingest-sde-agents-in-space` in turn, which FKs `Agent`.
+      if (jobId === "ingest-sde-agents-in-space") {
+        await ctx.invoke("scrape-sde-agents", {});
+      }
+      await ctx.invoke(jobId, {});
+    }
+
+    // SDE jobs that reference ESI-owned tables, so they run last: `Agent` points
+    // at Character and Station, both of which the scrapers above and the ingest
+    // loop have now filled. Driven from the shared list rather than hardcoded
+    // here, so `ingest-sde-all` runs them on every new SDE build too.
+    for (const jobId of SDE_POST_ESI_JOB_IDS) {
       await ctx.invoke(jobId, {});
     }
 

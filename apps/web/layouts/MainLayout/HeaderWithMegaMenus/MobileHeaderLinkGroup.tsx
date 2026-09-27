@@ -80,3 +80,5 @@ export const MobileHeaderLinkGroup = memo(
     );
   },
 );
+
+MobileHeaderLinkGroup.displayName = "MobileHeaderLinkGroup";

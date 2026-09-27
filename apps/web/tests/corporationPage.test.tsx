@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
@@ -10,11 +11,23 @@ let corporationId = "98000001";
 
 const mockUseCorporation = jest.fn();
 const mockUseSelectedCharacter = jest.fn();
+const mockGetCorporationsCorporationId =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 jest.mock("next/navigation", () => ({
   useParams: () => ({ corporationId }),
   useRouter: () => ({}),
   usePathname: () => "/",
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
+}));
+
+// The server page imports the ESI client for generateMetadata; the coverage CI
+// job runs install + test only (no `kubb:generate`), so stub the module out.
+jest.mock("@jitaspace/esi-client", () => ({
+  getCorporationsCorporationId: (...a: unknown[]) =>
+    mockGetCorporationsCorporationId(...a),
 }));
 
 jest.mock("@jitaspace/hooks", () => ({
@@ -146,5 +159,40 @@ describe("corporation page", () => {
     // page returns null -> none of its content is rendered
     expect(screen.queryByText("Description")).not.toBeInTheDocument();
     expect(screen.queryByText("Alliance History")).not.toBeInTheDocument();
+  });
+});
+
+describe("corporation page server wrapper", () => {
+  // `params` is awaited in the async child, never in `Page` itself, so the
+  // route keeps a synchronous shell that Next can prerender.
+  function runWrapper(id: string) {
+    const Page = require("~/app/corporation/[corporationId]/page").default;
+    const tree = Page({ params: Promise.resolve({ corporationId: id }) });
+    expect(tree.type).toBe(Suspense);
+    const child = tree.props.children;
+    return child.type(child.props) as Promise<unknown>;
+  }
+
+  it("renders the client page for a canonical id", async () => {
+    await expect(runWrapper("98000001")).resolves.toBeTruthy();
+  });
+
+  it("404s an id that isn't the canonical spelling", async () => {
+    // `/corporation/98000001.0` used to serve the same corporation.
+    await expect(runWrapper("98000001.0")).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("canonicalises onto the parsed id", async () => {
+    mockGetCorporationsCorporationId.mockResolvedValue({
+      data: { name: "Jita Corp" },
+    });
+    const { generateMetadata } =
+      require("~/app/corporation/[corporationId]/page") as typeof import("~/app/corporation/[corporationId]/page");
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ corporationId: "98000001" }),
+    });
+
+    expect(metadata.alternates?.canonical).toBe("/corporation/98000001");
   });
 });

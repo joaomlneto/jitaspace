@@ -9,10 +9,7 @@ import { render, screen } from "@testing-library/react";
 // EveEntity*/Standing children — stub them to no-ops; the assertable text (the
 // "watched" Badge, the resolved label name, and the blocked cell text) comes
 // from the row-mapping logic itself.
-jest.mock(
-  "@jitaspace/ui",
-  () => new Proxy({}, { get: () => () => null }),
-);
+jest.mock("@jitaspace/ui", () => new Proxy({}, { get: () => () => null }));
 jest.mock(
   "@jitaspace/eve-icons",
   () => new Proxy({}, { get: () => () => null }),
@@ -20,12 +17,12 @@ jest.mock(
 
 type Contact = NonNullable<
   Parameters<
-    typeof import("~/components/Contacts/ContactsTable/ContactsTable")["ContactsTable"]
+    (typeof import("~/components/Contacts/ContactsTable/ContactsTable"))["ContactsTable"]
   >[0]["contacts"]
 >[number];
 type Label = NonNullable<
   Parameters<
-    typeof import("~/components/Contacts/ContactsTable/ContactsTable")["ContactsTable"]
+    (typeof import("~/components/Contacts/ContactsTable/ContactsTable"))["ContactsTable"]
   >[0]["labels"]
 >[number];
 

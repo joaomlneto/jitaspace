@@ -32,7 +32,23 @@ import type {
   War,
 } from "../db";
 import type { EsiCorporationRow } from "./mergeEntriesIntoCorporationsTable";
+import type {
+  SDE_OWNED_BLOODLINE_COLUMNS,
+  SDE_OWNED_CHARACTER_COLUMNS,
+  SDE_OWNED_FACTION_COLUMNS,
+  SDE_OWNED_RACE_COLUMNS,
+  SDE_OWNED_STATION_COLUMNS,
+} from "./sdeOwnedColumns";
 import { CharacterGender, prisma } from "../db";
+import { esiTaxRateToFraction } from "./mergeEntriesIntoCorporationsTable";
+
+// Columns on these ESI-scraped tables that only an SDE ingest writes, so the ESI
+// row builders here must not claim to supply them (see sdeOwnedColumns.ts).
+type SdeOwnedBloodlineColumn = (typeof SDE_OWNED_BLOODLINE_COLUMNS)[number];
+type SdeOwnedCharacterColumn = (typeof SDE_OWNED_CHARACTER_COLUMNS)[number];
+type SdeOwnedFactionColumn = (typeof SDE_OWNED_FACTION_COLUMNS)[number];
+type SdeOwnedRaceColumn = (typeof SDE_OWNED_RACE_COLUMNS)[number];
+type SdeOwnedStationColumn = (typeof SDE_OWNED_STATION_COLUMNS)[number];
 
 const limit = pLimit(1);
 
@@ -56,17 +72,23 @@ export const createCorpAndItsRefRecords = async ({
 }: {
   alliances?: Omit<Alliance, "updatedAt" | "createdAt">[];
   missingAllianceIds?: Set<number>;
-  bloodlines?: Omit<Bloodline, "updatedAt" | "createdAt">[];
+  bloodlines?: Omit<
+    Bloodline,
+    "updatedAt" | "createdAt" | SdeOwnedBloodlineColumn
+  >[];
   missingBloodlineIds?: Set<number>;
-  characters?: Omit<Character, "updatedAt" | "createdAt">[];
+  characters?: Omit<
+    Character,
+    "updatedAt" | "createdAt" | SdeOwnedCharacterColumn
+  >[];
   missingCharacterIds?: Set<number>;
   corporations?: EsiCorporationRow[];
   missingCorporationIds?: Set<number>;
-  factions?: Omit<Faction, "updatedAt" | "createdAt">[];
+  factions?: Omit<Faction, "updatedAt" | "createdAt" | SdeOwnedFactionColumn>[];
   missingFactionIds?: Set<number>;
-  races?: Omit<Race, "updatedAt" | "createdAt">[];
+  races?: Omit<Race, "updatedAt" | "createdAt" | SdeOwnedRaceColumn>[];
   missingRaceIds?: Set<number>;
-  stations?: Omit<Station, "updatedAt" | "createdAt">[];
+  stations?: Omit<Station, "updatedAt" | "createdAt" | SdeOwnedStationColumn>[];
   missingStationIds?: Set<number>;
   wars?: Omit<War, "updatedAt" | "createdAt">[];
   missingWarIds?: Set<number>;
@@ -665,7 +687,9 @@ const fetchBloodlinesFromEsi = () =>
 
 const fetchCharactersFromEsi = (
   characterIds: number[],
-): Promise<Omit<Character, "updatedAt" | "createdAt">[]> =>
+): Promise<
+  Omit<Character, "updatedAt" | "createdAt" | SdeOwnedCharacterColumn>[]
+> =>
   Promise.all(
     characterIds.map((characterId) =>
       limit(async () =>
@@ -717,22 +741,27 @@ const fetchCorporationsFromEsi = (
           .then((corporation) => ({
             corporationId,
             allianceId: corporation.alliance_id ?? null,
-            ceoId: corporation.ceo_id > 1 ? corporation.ceo_id : null,
+            ceoId:
+              corporation.ceo_id != null && corporation.ceo_id > 1
+                ? corporation.ceo_id
+                : null,
             creatorId:
-              corporation.creator_id > 1 ? corporation.creator_id : null,
+              corporation.creator_id != null && corporation.creator_id > 1
+                ? corporation.creator_id
+                : null,
             dateFounded: corporation.date_founded
               ? new Date(corporation.date_founded)
               : null,
-            description: corporation.description ?? null,
-            factionId: corporation.faction_id ?? null,
-            homeStationId: corporation.home_station_id ?? null,
+            description: corporation.description,
+            factionId: corporation.enlisted_faction_id ?? null,
+            homeStationId: corporation.home_station_id,
             memberCount: corporation.member_count,
             name: corporation.name,
             shares: corporation.shares ? BigInt(corporation.shares) : null,
-            taxRate: corporation.tax_rate,
+            taxRate: esiTaxRateToFraction(corporation.tax_rates.isk),
             ticker: corporation.ticker,
             url: corporation.url ?? null,
-            warEligible: corporation.war_eligible ?? null,
+            warEligible: corporation.war_eligible,
             isDeleted: false,
           }))
           .catch((err) => {

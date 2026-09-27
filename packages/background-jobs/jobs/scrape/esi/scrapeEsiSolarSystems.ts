@@ -9,14 +9,22 @@ import {
   getUniverseSystemsSystemId,
 } from "@jitaspace/esi-client";
 
-import type { Moon, Planet, SolarSystem } from "../../../db";
+import type {
+  AsteroidBelt,
+  Moon,
+  Planet,
+  SolarSystem,
+  Star,
+} from "../../../db";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob } from "../../../core";
 import { Prisma, prisma } from "../../../db";
 import {
+  SDE_OWNED_ASTEROID_BELT_COLUMNS,
   SDE_OWNED_MOON_COLUMNS,
   SDE_OWNED_PLANET_COLUMNS,
   SDE_OWNED_SOLAR_SYSTEM_COLUMNS,
+  SDE_OWNED_STAR_COLUMNS,
 } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
@@ -36,13 +44,31 @@ type StatsKey =
 
 type Limit = ReturnType<typeof pLimit>;
 
-// Strip the local-only timestamp columns so DB rows can be compared against
-// the ESI payloads. Extracted to module scope to keep the per-table callbacks
-// from nesting functions too deeply (sonar S2004).
-const stripTimestamps = <T extends { createdAt: unknown; updatedAt: unknown }>(
-  entries: T[],
-) =>
-  entries.map((entry) => excludeObjectKeys(entry, ["updatedAt", "createdAt"]));
+// Strip the local-only timestamp columns AND the SDE-owned ones so DB rows can
+// be compared against the ESI payloads. Extracted to module scope to keep the
+// per-table callbacks from nesting functions too deeply (sonar S2004).
+//
+// Every table here has SDE-owned columns. A shared timestamps-only helper used
+// to sit alongside these, and the only two call sites it had left were asteroid
+// belts and stars — both of which were supposed to strip SDE columns and did
+// not, so every belt and star diffed as modified on every run.
+const stripAsteroidBeltSdeColumns = (entries: AsteroidBelt[]) =>
+  entries.map((entry) =>
+    excludeObjectKeys(entry, [
+      "updatedAt",
+      "createdAt",
+      ...SDE_OWNED_ASTEROID_BELT_COLUMNS,
+    ]),
+  );
+
+const stripStarSdeColumns = (entries: Star[]) =>
+  entries.map((entry) =>
+    excludeObjectKeys(entry, [
+      "updatedAt",
+      "createdAt",
+      ...SDE_OWNED_STAR_COLUMNS,
+    ]),
+  );
 
 // SolarSystem, Planet and Moon additionally carry SDE-only columns (owned by
 // the matching ingest jobs). ESI exposes none of them, so they must be stripped
@@ -547,7 +573,7 @@ export const scrapeEsiSolarSystems = defineJob<
                     },
                   },
                 })
-                .then(stripTimestamps),
+                .then(stripAsteroidBeltSdeColumns),
             fetchRemoteEntries: async () =>
               Promise.all(
                 thisBatchAsteroidBeltIds.map((asteroidBeltId) =>
@@ -592,7 +618,7 @@ export const scrapeEsiSolarSystems = defineJob<
                     },
                   },
                 })
-                .then(stripTimestamps),
+                .then(stripStarSdeColumns),
             fetchRemoteEntries: async () =>
               Promise.all(
                 thisBatchStarIds.map((starId) => fetchStarRow(limit, starId)),

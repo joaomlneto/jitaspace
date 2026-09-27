@@ -178,7 +178,10 @@ export const useAuthStore = create(
         // "token too old" lockout. Both reads are gated on the cached copy
         // having expired, because this runs on every token refresh (~every 20
         // minutes) while ESI caches both answers for an hour.
-        const refreshAffiliation = hasExpired(cached?.affiliationExpiresOn, now);
+        const refreshAffiliation = hasExpired(
+          cached?.affiliationExpiresOn,
+          now,
+        );
         // Without the scope ESI answers 403, so don't even ask.
         const refreshRoles =
           hasExpired(cached?.corporationRolesExpireOn, now) &&
@@ -248,7 +251,9 @@ export const useAuthStore = create(
           (character) => !character.sessionExpired,
         );
         const staleAffiliations = candidates
-          .filter((character) => hasExpired(character.affiliationExpiresOn, now))
+          .filter((character) =>
+            hasExpired(character.affiliationExpiresOn, now),
+          )
           .map((character) => character.characterId);
         const staleRoles = candidates.filter(
           (character) =>

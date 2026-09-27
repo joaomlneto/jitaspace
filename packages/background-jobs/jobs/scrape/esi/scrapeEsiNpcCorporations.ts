@@ -8,7 +8,11 @@ import {
 
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { SDE_OWNED_CORPORATION_COLUMNS } from "../../../helpers";
+import {
+  esiTaxRateToFraction,
+  SDE_OWNED_CHARACTER_COLUMNS,
+  SDE_OWNED_CORPORATION_COLUMNS,
+} from "../../../helpers";
 import { createCorpAndItsRefRecords } from "../../../helpers/createCorpAndItsRefs.ts";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
@@ -78,7 +82,7 @@ export const scrapeEsiNpcCorporations = defineJob<
         corporationId: corporation.corporationId,
         memberCount: corporation.member_count,
         name: corporation.name,
-        taxRate: corporation.tax_rate,
+        taxRate: esiTaxRateToFraction(corporation.tax_rates.isk),
         ticker: corporation.ticker,
       })),
       skipDuplicates: true,
@@ -90,7 +94,6 @@ export const scrapeEsiNpcCorporations = defineJob<
       missingStationIds: new Set(
         npcCorporations
           .map((corporation) => corporation.home_station_id)
-          .filter((stationId) => stationId != undefined)
           .filter((stationId) => stationId > 1)
           .map((id) => id),
       ),
@@ -111,7 +114,11 @@ export const scrapeEsiNpcCorporations = defineJob<
           })
           .then((entries) =>
             entries.map((entry) =>
-              excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+              excludeObjectKeys(entry, [
+                "updatedAt",
+                "createdAt",
+                ...SDE_OWNED_CHARACTER_COLUMNS,
+              ]),
             ),
           ),
       fetchRemoteEntries: () =>
@@ -189,24 +196,24 @@ export const scrapeEsiNpcCorporations = defineJob<
           npcCorporations.map((corporation) => ({
             corporationId: corporation.corporationId,
             allianceId: corporation.alliance_id ?? null,
-            ceoId: corporation.ceo_id,
-            creatorId: corporation.creator_id,
+            ceoId: corporation.ceo_id ?? null,
+            creatorId: corporation.creator_id ?? null,
             dateFounded: corporation.date_founded
               ? new Date(corporation.date_founded)
               : null,
-            description: corporation.description ?? null,
-            factionId: corporation.faction_id ?? null,
+            description: corporation.description,
+            factionId: corporation.enlisted_faction_id ?? null,
             homeStationId:
-              (corporation.home_station_id ?? 0) > 1
+              corporation.home_station_id > 1
                 ? corporation.home_station_id
                 : null,
             memberCount: corporation.member_count,
             name: corporation.name,
             shares: corporation.shares ? BigInt(corporation.shares) : null,
-            taxRate: corporation.tax_rate,
+            taxRate: esiTaxRateToFraction(corporation.tax_rates.isk),
             ticker: corporation.ticker,
             url: corporation.url ?? null,
-            warEligible: corporation.war_eligible ?? null,
+            warEligible: corporation.war_eligible,
             isDeleted: false,
           })),
         ),

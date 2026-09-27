@@ -45,6 +45,10 @@ export const ingestSdeStars = defineJob<IngestSdeStarsEventPayload["data"]>({
           typeId: requiredNumber(record.typeID),
           radius: requiredBigInt(record.radius),
           age: requiredBigInt(stats.age),
+          // `life` is the main-sequence lifespan in seconds, `age`'s sibling.
+          // It runs to ~3.1e18, past what a Prisma Int holds, which is why the
+          // column is a Float rather than the BigInt `age` uses.
+          life: optionalNumber(stats.life),
           luminosity: new Decimal(optionalNumber(stats.luminosity) ?? 0),
           spectralClass: plainString(stats.spectralClass) ?? "",
           temperature: requiredBigInt(stats.temperature),

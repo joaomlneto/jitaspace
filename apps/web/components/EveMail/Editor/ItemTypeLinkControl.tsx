@@ -5,9 +5,8 @@ import { Button, Popover, useMantineTheme, useProps } from "@mantine/core";
 import { useDisclosure, useInputState, useWindowEvent } from "@mantine/hooks";
 import { useRichTextEditorContext } from "@mantine/tiptap";
 
-import { EsiSearchSelect } from "@jitaspace/eve-components";
+import { EsiSearchSelect, TypeAvatar } from "@jitaspace/eve-components";
 import { ItemsIcon } from "@jitaspace/eve-icons";
-import { TypeAvatar } from "@jitaspace/ui";
 
 import type { RichTextEditorControlBaseProps } from "~/components/EveMail/Editor/ControlBase";
 import { ControlBase } from "~/components/EveMail/Editor/ControlBase";
@@ -113,7 +112,7 @@ export const ItemTypeLinkControl = forwardRef<
             unstyled={unstyled}
             comboboxProps={{ withinPortal: false }}
             leftSection={
-              <TypeAvatar size={24} typeId={itemTypeId} variant="render" />
+              <TypeAvatar size={24} typeId={itemTypeId} variation="render" />
             }
           />
 

@@ -1,7 +1,12 @@
 import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { enString, ingestSdeTable, requiredNumber } from "../../../helpers";
+import {
+  enString,
+  ingestSdeTable,
+  optionalNumber,
+  requiredNumber,
+} from "../../../helpers";
 
 export interface IngestSdeBloodlinesEventPayload {
   data: Record<string, never>;
@@ -34,6 +39,9 @@ export const ingestSdeBloodlines = defineJob<
         memory: requiredNumber(record.memory),
         perception: requiredNumber(record.perception),
         willpower: requiredNumber(record.willpower),
+        // A plain id, not a relation — and all 15 present ones resolve in
+        // icons.yaml, so no `present()` guard is warranted.
+        iconId: optionalNumber(record.iconID),
         isDeleted: false,
       }),
     });

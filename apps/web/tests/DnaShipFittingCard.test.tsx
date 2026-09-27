@@ -18,53 +18,50 @@ jest.mock("@jitaspace/hooks", () => ({
   useTypes: (typeIds: number[]) => mockUseTypes(typeIds),
 }));
 
-jest.mock(
-  "~/components/Fitting/ShipFittingCard/ShipFittingCard",
-  () => {
-    const React = require("react");
-    return {
-      ShipFittingCard: ({
-        name,
-        shipTypeId,
-        items,
-        hideHeader,
-        hideModules,
-      }: {
-        name?: string;
-        shipTypeId?: number;
-        items: { typeId: number; quantity: number; flag: string }[];
-        hideHeader?: boolean;
-        hideModules?: boolean;
-      }) =>
+jest.mock("~/components/Fitting/ShipFittingCard/ShipFittingCard", () => {
+  const React = require("react");
+  return {
+    ShipFittingCard: ({
+      name,
+      shipTypeId,
+      items,
+      hideHeader,
+      hideModules,
+    }: {
+      name?: string;
+      shipTypeId?: number;
+      items: { typeId: number; quantity: number; flag: string }[];
+      hideHeader?: boolean;
+      hideModules?: boolean;
+    }) =>
+      React.createElement(
+        "div",
+        { "data-testid": "ship-fitting-card" },
         React.createElement(
-          "div",
-          { "data-testid": "ship-fitting-card" },
+          "span",
+          { "data-testid": "ship-type-id" },
+          `ship-${shipTypeId}`,
+        ),
+        React.createElement(
+          "span",
+          { "data-testid": "ship-name" },
+          `name-${name ?? "none"}`,
+        ),
+        React.createElement(
+          "span",
+          { "data-testid": "hide-flags" },
+          `header-${String(!!hideHeader)}-modules-${String(!!hideModules)}`,
+        ),
+        items.map((item, index) =>
           React.createElement(
             "span",
-            { "data-testid": "ship-type-id" },
-            `ship-${shipTypeId}`,
-          ),
-          React.createElement(
-            "span",
-            { "data-testid": "ship-name" },
-            `name-${name ?? "none"}`,
-          ),
-          React.createElement(
-            "span",
-            { "data-testid": "hide-flags" },
-            `header-${String(!!hideHeader)}-modules-${String(!!hideModules)}`,
-          ),
-          items.map((item, index) =>
-            React.createElement(
-              "span",
-              { "data-testid": "fitting-item", key: index },
-              `${item.flag}|${item.typeId}|x${item.quantity}`,
-            ),
+            { "data-testid": "fitting-item", key: index },
+            `${item.flag}|${item.typeId}|x${item.quantity}`,
           ),
         ),
-    };
-  },
-);
+      ),
+  };
+});
 
 // A type entry carrying the dogma effect that marks a given slot.
 function typeWithEffect(typeId: number, effectId: number) {

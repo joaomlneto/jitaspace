@@ -31,9 +31,11 @@ const noTransform = (
 
 export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "_sde.yaml": noTransform("XXXX"),
+  "accountingEntryTypes.yaml": addId("accountingEntryTypeID"),
   "agentTypes.yaml": addId("agentTypeID"),
   "agentsInSpace.yaml": addId("characterID"),
   "ancestries.yaml": addId("ancestryID"),
+  "appliedProximityEffects.yaml": addId("typeID"),
   "archetypes.yaml": addId("archetypeID"),
   "bloodlines.yaml": addId("bloodlineID"),
   "blueprints.yaml": noTransform("blueprintTypeID"),
@@ -46,6 +48,8 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "contrabandTypes.yaml": addId("typeID"),
   "controlTowerResources.yaml": addId("typeID"),
   "corporationActivities.yaml": addId("corporationActivityID"),
+  "corporationRoleGroups.yaml": addId("corporationRoleGroupID"),
+  "corporationRoles.yaml": addId("corporationRoleID"),
   "dbuffCollections.yaml": addId("dbuffCollectionID"),
   "dogmaAttributeCategories.yaml": addId("attributeCategoryID"),
   "dogmaAttributes.yaml": noTransform("attributeID"),
@@ -54,7 +58,12 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "dungeons.yaml": addId("dungeonID"),
   "dynamicItemAttributes.yaml": addId("dynamicItemAttributeID"),
   "epicArcs.yaml": addId("epicArcID"),
+  "expertSystems.yaml": addId("typeID"),
   "factions.yaml": addId("factionID"),
+  "fighterAbilities.yaml": addId("fighterAbilityID"),
+  // Records are keyed by `abilitySlot0..2`, so the id stays the map key:
+  // injecting it would sit alongside the slot keys.
+  "fighterAbilitiesByType.yaml": noTransform("typeID"),
   "freelanceJobSchemas.yaml": addId("freelanceJobSchemaGroupID"),
   // Keyed by the id `skinMaterials.materialSetID` / `graphics.sofMaterialSetID`
   // point at, so it keeps CCP's `materialSetID` name rather than the filename.
@@ -62,7 +71,15 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "graphics.yaml": addId("graphicID"),
   "groups.yaml": addId("groupID"),
   "icons.yaml": addId("iconID"),
+  "industryActivities.yaml": addId("industryActivityID"),
+  "industryAssemblyLines.yaml": addId("industryAssemblyLineID"),
+  "industryInstallationTypes.yaml": addId("typeID"),
+  // Records are keyed by activity name (`manufacturing`, `invention`, …) —
+  // same reason as fighterAbilitiesByType.
+  "industryModifierSources.yaml": noTransform("typeID"),
+  "industryTargetFilters.yaml": addId("industryTargetFilterID"),
   "landmarks.yaml": addId("landmarkID"),
+  "linkWithShip.yaml": addId("typeID"),
   "mapAsteroidBelts.yaml": addId("asteroidBeltID"),
   "mapConstellations.yaml": addId("constellationID"),
   "mapMoons.yaml": addId("moonID"),
@@ -76,6 +93,7 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "masteries.yaml": addId("typeID"),
   "mercenaryTacticalOperations.yaml": addId("mercenaryTacticalOperationID"),
   "metaGroups.yaml": addId("metaGroupID"),
+  "metenoxMoonDrill.yaml": addId("typeID"),
   // The military-campaign files are keyed by UUID, not by an integer id.
   "militaryCampaignObjectives.yaml": addId(
     "militaryCampaignObjectiveID",
@@ -83,17 +101,22 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   ),
   "militaryCampaigns.yaml": addId("militaryCampaignID", "string"),
   "missions.yaml": addId("missionID"),
+  "notificationTypes.yaml": addId("notificationTypeID"),
   "npcCharacters.yaml": addId("characterID"),
   "npcCorporationDivisions.yaml": addId("npcCorporationDivisionID"),
   "npcCorporations.yaml": addId("corporationID"),
   "npcStations.yaml": addId("stationID"),
   "planetResources.yaml": addId("planetID"),
   "planetSchematics.yaml": addId("planetSchematicID"),
+  "proximityTrap.yaml": addId("typeID"),
   "races.yaml": addId("raceID"),
+  "schoolMap.yaml": addId("schoolMapID"),
+  "schools.yaml": addId("schoolID"),
   "shipTreeElements.yaml": addId("shipTreeElementID"),
   // Keyed by faction, not by a ship-tree id of its own.
   "shipTreeFactions.yaml": addId("factionID"),
   "shipTreeGroups.yaml": addId("shipTreeGroupID"),
+  "skillPlans.yaml": addId("skillPlanID"),
   "skinLicenses.yaml": noTransform("licenseTypeID"),
   "skinMaterials.yaml": noTransform("skinMaterialID"),
   "skinrComponentCategories.yaml": addId("skinrComponentCategoryID"),
@@ -106,6 +129,9 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "skinrSlotConfigurations.yaml": addId("skinrSlotConfigurationID"),
   "skinrSlotNames.yaml": addId("skinrSlotNameID"),
   "skinrSlots.yaml": addId("skinrSlotID"),
+  // Each record is a bare ARRAY of {slotID, materialID}; `addId` would set a
+  // property on that array, so the faction id stays the map key.
+  "skinrSlotsToMaterials.yaml": noTransform("factionID"),
   // A bare `tier -> points` map per ship-tree group — same reason as
   // skinrComponentPointValues.
   "skinrTierThresholds.yaml": noTransform("shipTreeGroupID"),
@@ -113,6 +139,9 @@ export const sdeInputFiles: Record<string, SdeSourceFile> = {
   "sovereigntyUpgrades.yaml": addId("typeID"),
   "stationOperations.yaml": addId("stationOperationID"),
   "stationServices.yaml": addId("stationServiceID"),
+  "stationStandingsRestrictions.yaml": addId("factionID"),
+  "systemDbuffEmitters.yaml": addId("typeID"),
+  "systemWideEffects.yaml": addId("typeID"),
   "translationLanguages.yaml": noTransform("translationLanguageID", "string"),
   "typeBonus.yaml": addId("typeID"),
   "typeDogma.yaml": addId("typeID"),

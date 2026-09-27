@@ -93,7 +93,7 @@ const dataRows = (): HTMLElement[] =>
     .filter((row) => /Alice|Bob|Charlie|Row \d+/.test(row.textContent));
 
 const nameOrder = (): string[] =>
-  dataRows().map((row) => /Alice|Bob|Charlie/.exec((row.textContent))![0]);
+  dataRows().map((row) => /Alice|Bob|Charlie/.exec(row.textContent)![0]);
 
 describe("DataTable — basic rendering", () => {
   it("renders all column headers by their header text", () => {
@@ -282,7 +282,7 @@ describe("DataTable — sorting", () => {
     const ascending = screen
       .getAllByRole("row")
       .filter((row) => row.querySelectorAll("td").length > 0)
-      .map((row) => /Zed|Ann|Mel/.exec((row.textContent))![0]);
+      .map((row) => /Zed|Ann|Mel/.exec(row.textContent)![0]);
     // "false" sorts before "true": Ann first, then the two active rows.
     expect(ascending[0]).toBe("Ann");
   });
@@ -491,7 +491,9 @@ describe("DataTable — pagination", () => {
     // Mantine transition settles (which never visibly resolves under jsdom), so
     // the menu items are present but "hidden" to the a11y tree — query with
     // { hidden: true } to reach them.
-    await user.click(screen.getByRole("menuitem", { name: "25", hidden: true }));
+    await user.click(
+      screen.getByRole("menuitem", { name: "25", hidden: true }),
+    );
 
     expect(dataRows()).toHaveLength(25);
     expect(screen.getByText("1 - 25 / 30")).toBeInTheDocument();
@@ -527,6 +529,8 @@ describe("DataTable — row click", () => {
   it("does not throw when a row is clicked without an onRowClick handler", async () => {
     const user = userEvent.setup();
     renderWithMantine(<DataTable columns={columns} data={data} />);
-    await expect(user.click(screen.getByText("Alice"))).resolves.toBeUndefined();
+    await expect(
+      user.click(screen.getByText("Alice")),
+    ).resolves.toBeUndefined();
   });
 });

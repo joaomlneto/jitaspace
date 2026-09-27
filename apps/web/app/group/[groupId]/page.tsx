@@ -11,12 +11,13 @@ import {
   Title,
 } from "@mantine/core";
 
-import { TypeAnchor } from "@jitaspace/eve-components";
-import { TypeAvatar } from "@jitaspace/ui";
+import { TypeAnchor, TypeAvatar } from "@jitaspace/eve-components";
 
 import { GroupBreadcrumbs } from "~/components/Breadcrumbs";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
+import { parseEntityId } from "~/lib/routeParams";
 
 interface PageProps {
   name?: string;
@@ -58,16 +59,24 @@ export async function generateMetadata({
   params: Promise<{ groupId: string }>;
 }): Promise<Metadata> {
   const { groupId: groupIdParam } = await params;
-  const groupId = Number(groupIdParam);
-  if (!groupId) return {};
+  // `parseEntityId`, not the positive variant: group ids start at 0, and
+  // `/group/0` ("#System") is a real row the sitemap advertises. The page and
+  // this metadata must accept the same ids, or that URL renders with the bare
+  // site title and no canonical.
+  const groupId = parseEntityId(groupIdParam);
+  if (groupId === null) return {};
   try {
-    const { name } = await getGroupData(groupId);
-    return {
+    const { name, types } = await getGroupData(groupId);
+    if (!name) return {};
+    return pageMetadata({
       title: name,
-      description: name
-        ? `Browse EVE Online ${name} items and types.`
-        : undefined,
-    };
+      description: `Browse the ${types.length} EVE Online items in the ${name} group — attributes, market prices, and where to buy them.`,
+      path: `/group/${groupId}`,
+      badge: "Item Group",
+      // The first type in the group stands in as artwork for the whole group.
+      image: types[0] ? await resolveTypeImage(types[0].typeId) : undefined,
+      facts: [{ label: "Items", value: String(types.length) }],
+    });
   } catch {
     return {};
   }
@@ -79,7 +88,11 @@ async function PageContent({
   params: Promise<{ groupId: string }>;
 }>) {
   const { groupId: groupIdParam } = await params;
-  const groupId = Number(groupIdParam);
+  // Same parser as `generateMetadata`, for the same reason: 0 is a real id.
+  const groupId = parseEntityId(groupIdParam);
+  if (groupId === null) {
+    notFound();
+  }
 
   let name: PageProps["name"] = undefined;
   let types: PageProps["types"] = [];

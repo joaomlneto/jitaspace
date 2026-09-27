@@ -41,7 +41,8 @@ export const formatSecurityStatus = (securityStatus: number): string =>
 
 /** Hex background colour for a security status. */
 export const securityStatusColor = (securityStatus: number): string =>
-  SECURITY_STATUS_COLORS[formatSecurityStatus(securityStatus)] ?? NULL_SEC_COLOR;
+  SECURITY_STATUS_COLORS[formatSecurityStatus(securityStatus)] ??
+  NULL_SEC_COLOR;
 
 /** Whether a tier's background is bright enough to require dark text. */
 export const isLightSecurityStatus = (securityStatus: number): boolean =>

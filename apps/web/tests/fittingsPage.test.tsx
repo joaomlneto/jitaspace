@@ -97,12 +97,10 @@ describe("Fittings page", () => {
     captureMock.mockClear();
     mockOpenContextModal.mockReset();
     mockUseSelectedCharacter.mockReset().mockReturnValue(CHARACTER);
-    mockUseMultipleCharacterFittings
-      .mockReset()
-      .mockReturnValue({
-        data: [FITTING, OTHER_CHARACTER_FITTING],
-        errors: [],
-      });
+    mockUseMultipleCharacterFittings.mockReset().mockReturnValue({
+      data: [FITTING, OTHER_CHARACTER_FITTING],
+      errors: [],
+    });
   });
 
   it("captures current_ship_fitting_viewed and opens the modal", () => {

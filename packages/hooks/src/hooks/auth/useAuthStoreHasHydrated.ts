@@ -31,6 +31,9 @@ export const useAuthStoreHasHydrated = (): boolean => {
     // initializer running and this effect, in which case onFinishHydration
     // never fires and the hook would stay false forever.
     if (useAuthStore.persist.hasHydrated()) {
+      // Syncing with an external store (zustand persist). The race described
+      // above makes this set unavoidable, and it runs at most once.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasHydrated(true);
       return;
     }

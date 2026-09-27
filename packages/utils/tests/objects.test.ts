@@ -1,7 +1,7 @@
 import {
-  toArrayIfNot,
   randomProperty,
   removeUndefinedFields,
+  toArrayIfNot,
 } from "../src/objects";
 
 describe("toArrayIfNot", () => {
@@ -39,8 +39,14 @@ describe("toArrayIfNot", () => {
   });
 
   it("preserves a nested array as-is (not double-wrapped)", () => {
-    const nested = [[1, 2], [3, 4]];
-    expect(toArrayIfNot(nested)).toEqual([[1, 2], [3, 4]]);
+    const nested = [
+      [1, 2],
+      [3, 4],
+    ];
+    expect(toArrayIfNot(nested)).toEqual([
+      [1, 2],
+      [3, 4],
+    ]);
   });
 });
 

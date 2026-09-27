@@ -4,7 +4,6 @@ import { useMemo } from "react";
 
 import { useCharacterFittings } from "./useCharacterFittings";
 
-
 export const useCharacterFitting = (characterId: number, fittingId: number) => {
   const { data, ...others } = useCharacterFittings(characterId);
 

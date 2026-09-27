@@ -1,7 +1,6 @@
 import type { MenuProps } from "@mantine/core";
 import Link from "next/link";
 import { Menu } from "@mantine/core";
-
 import { useShallow } from "zustand/shallow";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
@@ -25,15 +24,17 @@ export const AllianceMenu = ({
   children,
   ...otherProps
 }: AllianceMenuProps) => {
-  const grantedScopes = useAuthStore(useShallow((state) => {
-    return Array.from(
-      new Set(
-        Object.values(state.characters)
-          .filter((character) => character.allianceId === allianceId)
-          .flatMap((character) => character.accessTokenPayload.scp),
-      ),
-    );
-  }));
+  const grantedScopes = useAuthStore(
+    useShallow((state) => {
+      return Array.from(
+        new Set(
+          Object.values(state.characters)
+            .filter((character) => character.allianceId === allianceId)
+            .flatMap((character) => character.accessTokenPayload.scp),
+        ),
+      );
+    }),
+  );
 
   const enabledAllianceApps = getEnabledAllianceApps(grantedScopes);
 

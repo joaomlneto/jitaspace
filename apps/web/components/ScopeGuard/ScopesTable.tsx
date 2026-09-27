@@ -6,6 +6,29 @@ import { getScopeDescription } from "@jitaspace/esi-metadata";
 
 import classes from "./ScopesTable.module.css";
 
+/**
+ * Splits a scope into the category and permission shown in its badges.
+ *
+ * ESI names scopes in two conventions: the legacy `esi-{domain}.{action}.v{N}`
+ * (`esi-skills.read_skills.v1`) and, since compatibility date 2026-08-18,
+ * `esi.{domain}.{subject}:{action}` (`esi.cosmetic.char:read`). The second is
+ * rendered verb-first ("read char") to read like the first ("read skills").
+ */
+const parseScope = (scope: string) => {
+  const parts = scope.split(".");
+  if (parts[0] === "esi") {
+    const [subject = "", action = ""] = (parts[2] ?? "").split(":");
+    return {
+      category: parts[1] ?? "",
+      rawPermission: [action, subject].filter(Boolean).join(" "),
+    };
+  }
+  return {
+    category: (parts[0] ?? "").slice(4),
+    rawPermission: parts[1] ?? "",
+  };
+};
+
 export interface ScopesTableProps {
   scopes?: ESIScope[];
   showRawScopeNames?: boolean;
@@ -31,9 +54,8 @@ export function ScopesTable({
   }[] = useMemo(
     () =>
       normalizedScopes.map((scope: ESIScope) => {
-        const parts = scope.split(".");
-        const category = (parts[0] ?? "").slice(4);
-        const rawPermission = (parts[1] ?? "").replaceAll("_", " ");
+        const { category, rawPermission: unspaced } = parseScope(scope);
+        const rawPermission = unspaced.replaceAll("_", " ");
         const permission = category
           ? rawPermission.replaceAll(category, "")
           : rawPermission;

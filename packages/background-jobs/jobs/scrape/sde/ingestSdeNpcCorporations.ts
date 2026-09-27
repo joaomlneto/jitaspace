@@ -99,6 +99,18 @@ export const ingestSdeNpcCorporations = defineJob<
         secondaryActivityId: optionalNumber(record.secondaryActivityID),
         enemyId: optionalNumber(record.enemyID),
         friendId: optionalNumber(record.friendID),
+        size: plainString(record.size),
+        sizeFactor: optionalNumber(record.sizeFactor),
+        isUnique: optionalBoolean(record.uniqueName),
+        // CCP's own `deleted` marker, kept apart from the ingest's `isDeleted`
+        // soft-delete flag (which this job does not own — the ESI scraper does).
+        isDeletedByCcp: optionalBoolean(record.deleted),
+        // Plain ids, not relations: nothing dangles today (0 of 261 / 257 / 252
+        // miss mapSolarSystems.yaml / races.yaml / icons.yaml) and the columns
+        // carry no FK, so no `present()` guard is needed.
+        solarSystemId: optionalNumber(record.solarSystemID),
+        raceId: optionalNumber(record.raceID),
+        iconId: optionalNumber(record.iconID),
         // NOTE: no `name`, `memberCount`, `ticker`, `taxRate` or `ceoId` — those are
         // ESI-owned. Omitting them also keeps them out of ingestSdeTable's managed
         // key set, so the diff leaves them untouched.

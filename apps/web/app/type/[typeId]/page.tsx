@@ -8,21 +8,19 @@ import type { PageProps } from "./page.client";
 import type { TypeDogmaMeta } from "./types";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
+import { pageMetadata, toDescription } from "~/lib/metadata";
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import TypePage from "./page.client";
 import { emptyTypeDogmaMeta } from "./types";
 
-function stripHtml(s: string): string {
-  let out = "";
-  let inTag = false;
-  for (const ch of s) {
-    if (ch === "<") inTag = true;
-    else if (ch === ">") inTag = false;
-    else if (!inTag) out += ch;
-  }
-  return out;
-}
+type TypeData = PageProps & {
+  /** 512px artwork for the OpenGraph card — a ship render where one exists. */
+  cardImageUrl?: string;
+  groupName?: string;
+  categoryName?: string;
+};
 
-async function getTypeData(typeId: number): Promise<PageProps> {
+async function getTypeData(typeId: number): Promise<TypeData> {
   "use cache";
   cacheLife("days");
 
@@ -31,6 +29,9 @@ async function getTypeData(typeId: number): Promise<PageProps> {
       typeId: true,
       name: true,
       description: true,
+      group: {
+        select: { name: true, category: { select: { name: true } } },
+      },
     },
     where: {
       typeId,
@@ -47,6 +48,13 @@ async function getTypeData(typeId: number): Promise<PageProps> {
     ? "icon"
     : typeImageVariations[0];
 
+  // The page UI wants the small icon, but a 64px icon unfurls as a postage
+  // stamp — the card gets the 512px `render` (a 3/4 view of the hull) when the
+  // type publishes one.
+  const cardVariation = typeImageVariations.includes("render")
+    ? "render"
+    : variation;
+
   return {
     typeId,
     // No variation means the image service has no image for this type at all —
@@ -57,8 +65,13 @@ async function getTypeData(typeId: number): Promise<PageProps> {
     ogImageUrl: variation
       ? `https://images.evetech.net/types/${typeId}/${variation}`
       : undefined,
+    cardImageUrl: cardVariation
+      ? `https://images.evetech.net/types/${typeId}/${cardVariation}?size=512`
+      : undefined,
     typeName: type.name,
     typeDescription: type.description,
+    groupName: type.group.name,
+    categoryName: type.group.category.name,
   };
 }
 
@@ -148,29 +161,28 @@ export async function generateMetadata({
   params: Promise<{ typeId: string }>;
 }): Promise<Metadata> {
   const { typeId: typeIdParam } = await params;
-  const typeId = Number(typeIdParam);
-  if (!typeId) return {};
+  const typeId = parsePositiveEntityId(typeIdParam);
+  if (typeId === null) return {};
 
   try {
-    const { typeName, typeDescription, ogImageUrl } = await getTypeData(typeId);
-    const description = typeDescription
-      ? stripHtml(typeDescription).slice(0, 200)
-      : undefined;
-    return {
-      title: typeName ?? undefined,
-      description,
-      openGraph: {
-        title: typeName ?? undefined,
-        description,
-        images: ogImageUrl ? [{ url: ogImageUrl, width: 64, height: 64 }] : [],
-      },
-      twitter: {
-        card: "summary",
-        title: typeName ?? undefined,
-        description,
-        images: ogImageUrl ? [ogImageUrl] : [],
-      },
-    };
+    const { typeName, typeDescription, cardImageUrl, groupName, categoryName } =
+      await getTypeData(typeId);
+    if (!typeName) return {};
+
+    return pageMetadata({
+      title: typeName,
+      description: toDescription(
+        typeDescription,
+        `${typeName} in EVE Online — attributes, market prices, and where to buy it.`,
+      ),
+      path: `/type/${typeId}`,
+      badge: categoryName ?? "Item",
+      image: cardImageUrl,
+      facts: [
+        ...(groupName ? [{ label: "Group", value: groupName }] : []),
+        ...(categoryName ? [{ label: "Category", value: categoryName }] : []),
+      ],
+    });
   } catch {
     return {};
   }
@@ -182,17 +194,25 @@ async function PageContent({
   params: Promise<{ typeId: string }>;
 }>) {
   const { typeId: typeIdParam } = await params;
-  const typeId = Number(typeIdParam);
-  if (!typeId) {
+  const typeId = parsePositiveEntityId(typeIdParam);
+  if (typeId === null) {
     notFound();
   }
 
-  let props: PageProps;
+  let data: TypeData;
   try {
-    props = await getTypeData(typeId);
+    data = await getTypeData(typeId);
   } catch {
     notFound();
   }
+  // Only the client component's own props cross the boundary; the extra fields
+  // `getTypeData` returns exist for the OpenGraph card and stay on the server.
+  const props: PageProps = {
+    typeId: data.typeId,
+    ogImageUrl: data.ogImageUrl,
+    typeName: data.typeName,
+    typeDescription: data.typeDescription,
+  };
   const dogmaMeta = await getTypeDogmaMeta(typeId);
   return <TypePage {...props} dogmaMeta={dogmaMeta} />;
 }

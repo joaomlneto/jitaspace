@@ -18,16 +18,16 @@ yarn add @jitaspace/eve-data
 import {
   incursion_constellations,
   incursion_payouts_isk,
-  incursion_payouts_lp
-} from '@jitaspace/eve-data';
+  incursion_payouts_lp,
+} from "@jitaspace/eve-data";
 
 // Example: Accessing incursion constellation data
-const vanguards = incursion_constellations['Agiesseson'].Vanguards;
-console.log('Vanguard systems in Agiesseson:', vanguards);
+const vanguards = incursion_constellations["Agiesseson"].Vanguards;
+console.log("Vanguard systems in Agiesseson:", vanguards);
 
 // Example: Checking ISK payouts for a Vanguard site in Highsec
 const iskPayout = incursion_payouts_isk.Vanguard.H[10];
-console.log('ISK Payout for Vanguard (10 people):', iskPayout);
+console.log("ISK Payout for Vanguard (10 people):", iskPayout);
 ```
 
 ## Data Included

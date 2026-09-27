@@ -100,7 +100,12 @@ const ROUTES = [
     Page: require("~/app/lp-store/[corporationId]/page").default,
   },
   { name: "mail", Page: require("~/app/mail/page").default },
-  { name: "market", Page: require("~/app/market/page").default },
+  // /market is a static landing page; item routes stream their database-backed
+  // identity inside the shared loading boundary.
+  {
+    name: "market/[typeId]",
+    Page: require("~/app/market/[typeId]/page").default,
+  },
   { name: "planet", Page: require("~/app/planet/[planetId]/page").default },
   { name: "race", Page: require("~/app/race/[raceId]/page").default },
   { name: "region", Page: require("~/app/region/[regionId]/page").default },

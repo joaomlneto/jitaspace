@@ -5,7 +5,8 @@ import Link from "next/link";
 import { NavLink } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
-import { EveIconAvatar, TypeAvatar } from "@jitaspace/ui";
+import { TypeAvatar } from "@jitaspace/eve-components";
+import { EveIconAvatar } from "@jitaspace/ui";
 
 /**
  * The whole market tree, bundled by `MarketGroupsNavigation` from a single

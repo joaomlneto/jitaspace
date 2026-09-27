@@ -22,6 +22,9 @@ jest.mock("next/navigation", () => ({
   useParams: () => ({ warId: String(WAR_ID) }),
   useRouter: () => ({}),
   usePathname: () => "/",
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
 }));
 
 jest.mock("@jitaspace/hooks", () => ({
@@ -90,6 +93,19 @@ function renderPage() {
       <Page />
     </MantineProvider>,
   );
+}
+
+// The server wrapper resolves `params` inside the Suspense boundary, so reach
+// its content component the same way React would rather than rendering the
+// async function as a client component.
+async function resolvePageContent(warId: string) {
+  const Page = require("~/app/war/[warId]/page").default;
+  const suspenseEl = Page({ params: Promise.resolve({ warId }) });
+  const contentEl = suspenseEl.props.children as {
+    type: (props: unknown) => Promise<ReactNode>;
+    props: unknown;
+  };
+  return contentEl.type(contentEl.props);
 }
 
 describe("War page", () => {
@@ -278,18 +294,25 @@ describe("War page", () => {
     expect(screen.getByText("Killmails (0)")).toBeInTheDocument();
   });
 
-  it("renders the server wrapper (page.tsx) inside a Suspense boundary", () => {
+  it("renders the server wrapper (page.tsx) inside a Suspense boundary", async () => {
     mockUseSelectedCharacter.mockReturnValue(undefined);
     mockUseWar.mockReturnValue({ data: undefined });
     mockUseWarKillmails.mockReturnValue({ data: undefined });
 
-    const WrapperPage = require("~/app/war/[warId]/page").default;
-    render(
-      <MantineProvider>
-        <WrapperPage />
-      </MantineProvider>,
-    );
+    const tree = await resolvePageContent(String(WAR_ID));
+    render(<MantineProvider>{tree}</MantineProvider>);
 
     expect(screen.getByText("War Report")).toBeInTheDocument();
   });
+});
+
+// Every non-canonical spelling of the id is rejected, so `/war/07777` no longer
+// serves the same war report as `/war/7777` under a second URL.
+describe("war page id validation", () => {
+  it.each(["0", "-1", "07777", "7777.0", "Infinity", ""])(
+    "404s rather than serving a second URL for %p",
+    async (warId) => {
+      await expect(resolvePageContent(warId)).rejects.toThrow("NEXT_NOT_FOUND");
+    },
+  );
 });

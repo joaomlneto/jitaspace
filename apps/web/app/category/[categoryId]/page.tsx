@@ -1,12 +1,22 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import { cacheLife } from "next/cache";
 import type { Metadata } from "next";
-import { Container, Group, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { Suspense } from "react";
+import { cacheLife } from "next/cache";
+import { notFound } from "next/navigation";
+import {
+  Container,
+  Group,
+  SimpleGrid,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
+
+import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
-import { CategoryBreadcrumbs, GroupAnchor } from "@jitaspace/ui";
+import { pageMetadata } from "~/lib/metadata";
+import { parseEntityId } from "~/lib/routeParams";
 
 interface PageProps {
   name?: string;
@@ -45,16 +55,22 @@ export async function generateMetadata({
   params: Promise<{ categoryId: string }>;
 }): Promise<Metadata> {
   const { categoryId: categoryIdParam } = await params;
-  const categoryId = Number(categoryIdParam);
-  if (!categoryId) return {};
+  // `parseEntityId`, not the positive variant: category ids start at 0, and
+  // `/category/0` ("#System") is a real row the sitemap advertises. The page
+  // and this metadata must accept the same ids, or that URL renders with the
+  // bare site title and no canonical.
+  const categoryId = parseEntityId(categoryIdParam);
+  if (categoryId === null) return {};
   try {
-    const { name } = await getCategoryData(categoryId);
-    return {
+    const { name, groups } = await getCategoryData(categoryId);
+    if (!name) return {};
+    return pageMetadata({
       title: name,
-      description: name
-        ? `Browse EVE Online ${name} items by group.`
-        : undefined,
-    };
+      description: `Browse EVE Online ${name} by group — ${groups.length} groups of items with attributes and market prices.`,
+      path: `/category/${categoryId}`,
+      badge: "Item Category",
+      facts: [{ label: "Groups", value: String(groups.length) }],
+    });
   } catch {
     return {};
   }
@@ -66,8 +82,9 @@ async function PageContent({
   params: Promise<{ categoryId: string }>;
 }>) {
   const { categoryId: categoryIdParam } = await params;
-  const categoryId = Number(categoryIdParam);
-  if (!categoryIdParam || Number.isNaN(categoryId)) {
+  // Same parser as `generateMetadata`, for the same reason: 0 is a real id.
+  const categoryId = parseEntityId(categoryIdParam);
+  if (categoryId === null) {
     notFound();
   }
 
@@ -81,9 +98,7 @@ async function PageContent({
     notFound();
   }
 
-  const sortedGroups = [...groups].sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+  const sortedGroups = [...groups].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <Container size="md">

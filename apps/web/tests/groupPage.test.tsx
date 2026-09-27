@@ -1,8 +1,8 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { Suspense } from "react";
 import type { ReactNode } from "react";
+import { Suspense } from "react";
+import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen, waitFor } from "@testing-library/react";
 
@@ -13,7 +13,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 // next/navigation, the UI anchors/avatars and the breadcrumbs component.
 // ---------------------------------------------------------------------------
 
-const mockFindUniqueOrThrow = jest.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockFindUniqueOrThrow =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
 const mockNotFound = jest.fn((..._args: unknown[]) => {
   throw new Error("NEXT_NOT_FOUND");
 });
@@ -21,8 +22,7 @@ const mockNotFound = jest.fn((..._args: unknown[]) => {
 jest.mock("~/lib/db", () => ({
   prisma: {
     group: {
-      findUniqueOrThrow: (...args: unknown[]) =>
-        mockFindUniqueOrThrow(...args),
+      findUniqueOrThrow: (...args: unknown[]) => mockFindUniqueOrThrow(...args),
     },
   },
 }));
@@ -36,7 +36,7 @@ jest.mock("next/navigation", () => ({
   notFound: () => mockNotFound(),
 }));
 
-jest.mock("@jitaspace/ui", () => ({
+jest.mock("@jitaspace/eve-components", () => ({
   TypeAvatar: ({ typeId }: { typeId: number }) => (
     <span>{`TypeAvatar ${typeId}`}</span>
   ),
@@ -149,6 +149,57 @@ describe("Group Page", () => {
       expect(screen.getByText("Nullish Types")).toBeInTheDocument(),
     );
     expect(screen.queryByText(/TypeAvatar/)).not.toBeInTheDocument();
+  });
+
+  // The page had no numeric guard, so every alternative spelling of an id
+  // rendered the same document at 200 — Search Console counts those as
+  // "Duplicate without user-selected canonical". `"0"` stays accepted because
+  // it is a real non-deleted row the sitemap advertises.
+  it.each(["0587", "587.0", "+587", "abc", ""])(
+    "404s the non-canonical id %p without querying",
+    async (groupId) => {
+      await expect(resolveServerTree(groupId)).rejects.toThrow(
+        "NEXT_NOT_FOUND",
+      );
+      expect(mockFindUniqueOrThrow).not.toHaveBeenCalled();
+    },
+  );
+
+  it("still serves group 0, which the sitemap advertises", async () => {
+    mockFindUniqueOrThrow.mockResolvedValue({
+      groupId: 0,
+      name: "Group Zero",
+      types: [],
+    });
+
+    await renderPage("0");
+
+    await waitFor(() =>
+      expect(screen.getByText("Group Zero")).toBeInTheDocument(),
+    );
+    expect(mockFindUniqueOrThrow).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { groupId: 0 } }),
+    );
+  });
+
+  // The metadata used to reject 0 while the page accepted it, so /group/0 —
+  // "#System" — rendered with the bare site title and no canonical.
+  it("titles and canonicalises group 0 like any other group", async () => {
+    mockFindUniqueOrThrow.mockResolvedValue({
+      groupId: 0,
+      name: "#System",
+      types: [],
+    });
+    const { generateMetadata } = require("~/app/group/[groupId]/page");
+
+    expect(
+      await generateMetadata({ params: Promise.resolve({ groupId: "0" }) }),
+    ).toEqual(
+      expect.objectContaining({
+        title: "#System",
+        alternates: { canonical: "/group/0" },
+      }),
+    );
   });
 
   it("calls notFound() when the group lookup throws", async () => {

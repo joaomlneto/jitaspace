@@ -46,7 +46,8 @@ export interface AssetTree {
 const unitValue = (
   marketPrices: MarketPriceIndex,
   asset: CharacterAsset,
-): number => (marketPrices[asset.type_id]?.adjusted_price ?? 0) * asset.quantity;
+): number =>
+  (marketPrices[asset.type_id]?.adjusted_price ?? 0) * asset.quantity;
 
 function pushInto<K, V>(map: Map<K, V[]>, key: K, value: V): void {
   const existing = map.get(key);
@@ -93,7 +94,8 @@ export function buildAssetTree(
     asset: CharacterAsset,
     inProgress: Set<number>,
   ): void => {
-    if (subtreeValue.has(asset.item_id) || inProgress.has(asset.item_id)) return;
+    if (subtreeValue.has(asset.item_id) || inProgress.has(asset.item_id))
+      return;
     inProgress.add(asset.item_id);
     let value = unitValue(marketPrices, asset);
     let stacks = 1;
@@ -169,9 +171,8 @@ export interface AssetSection {
 
 /** Convert a raw ESI `location_flag` into a friendly, sortable section. */
 export function assetSection(flag: string): AssetSection {
-  const slot = /^(HiSlot|MedSlot|LoSlot|RigSlot|SubSystemSlot|ServiceSlot)\d+$/.exec(
-    flag,
-  );
+  const slot =
+    /^(HiSlot|MedSlot|LoSlot|RigSlot|SubSystemSlot|ServiceSlot)\d+$/.exec(flag);
   if (slot) {
     switch (slot[1]) {
       case "HiSlot":
@@ -260,7 +261,8 @@ export function groupBySection(
   );
   for (const group of ordered) {
     group.items.sort(
-      (a, b) => valueOf(b.item_id) - valueOf(a.item_id) || a.type_id - b.type_id,
+      (a, b) =>
+        valueOf(b.item_id) - valueOf(a.item_id) || a.type_id - b.type_id,
     );
   }
   return ordered;

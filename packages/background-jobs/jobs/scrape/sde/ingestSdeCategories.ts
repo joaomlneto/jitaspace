@@ -1,7 +1,12 @@
 import type { Prisma } from "../../../db";
 import { defineJob } from "../../../core";
 import { prisma } from "../../../db";
-import { enString, ingestSdeTable, requiredBoolean } from "../../../helpers";
+import {
+  enString,
+  ingestSdeTable,
+  optionalNumber,
+  requiredBoolean,
+} from "../../../helpers";
 
 export interface IngestSdeCategoriesEventPayload {
   data: Record<string, never>;
@@ -27,6 +32,7 @@ export const ingestSdeCategories = defineJob<
         categoryId: id,
         name: enString(record.name) ?? "",
         published: requiredBoolean(record.published),
+        iconId: optionalNumber(record.iconID),
         isDeleted: false,
       }),
     });

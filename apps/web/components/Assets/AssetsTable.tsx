@@ -6,9 +6,10 @@ import {
   EveEntityAnchor,
   EveEntityName,
   TypeAnchor,
+  TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
-import { ISKAmount, TypeAvatar } from "@jitaspace/ui";
+import { ISKAmount } from "@jitaspace/ui";
 
 interface AssetsTableProps {
   assets: (CharacterAsset & {

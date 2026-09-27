@@ -1,4 +1,5 @@
-import { describe, it, expect } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
+
 import { incursion_constellations } from "../src/incursions";
 
 // Full entries have a non-empty Headquarters. Entries with an empty Headquarters
@@ -16,7 +17,12 @@ describe("incursion_constellations", () => {
     });
 
     it("has all 4 required keys on every entry", () => {
-      const required = ["Staging", "Vanguards", "Assaults", "Headquarters"] as const;
+      const required = [
+        "Staging",
+        "Vanguards",
+        "Assaults",
+        "Headquarters",
+      ] as const;
       for (const [, entry] of Object.entries(incursion_constellations)) {
         for (const key of required) {
           expect(Object.prototype.hasOwnProperty.call(entry, key)).toBe(true);
@@ -79,7 +85,9 @@ describe("incursion_constellations", () => {
       // (e.g. "2747-4" has HQ "A-" but Vanguards: [""]).
       // We only enforce non-empty Vanguards where actual system names are present.
       for (const [, entry] of fullEntries) {
-        const populatedVanguards = entry.Vanguards.filter((s) => s.trim().length > 0);
+        const populatedVanguards = entry.Vanguards.filter(
+          (s) => s.trim().length > 0,
+        );
         if (entry.Vanguards.length > 0 && populatedVanguards.length === 0) {
           // skip — entry has placeholder empty strings in Vanguards
           continue;

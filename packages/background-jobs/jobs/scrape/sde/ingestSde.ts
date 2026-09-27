@@ -1,5 +1,11 @@
+import * as fs from "node:fs";
+
+import { sdeInputFiles } from "@jitaspace/sde-utils";
+
 import { defineJob } from "../../../core";
-import { loadSdeFile } from "../../../helpers/loadSdeFile";
+// Imported from the module, not the helpers barrel: the barrel pulls in
+// ESM-only deps that jest cannot load, and this job has unit tests.
+import { loadSdeFile, sdeExtractRoot } from "../../../helpers/loadSdeFile";
 import {
   recordSdeIngestCompleted,
   recordSdeIngestStarted,
@@ -118,6 +124,55 @@ export const SDE_INGEST_JOB_IDS: string[] = [
   "ingest-sde-archetypes",
   "ingest-sde-landmarks",
   "ingest-sde-translation-languages",
+  // The 23 files CCP added in SDE build 3475087 (2026-08-20). Every cross-file
+  // id in this batch is a plain column rather than a real foreign key (see the
+  // section comment in schema.prisma), so none of these jobs depends on another
+  // one's table — the grouping below is for readability only. Parent/child
+  // tables fed by the SAME file (expert systems, schools, the assembly-line
+  // details) are ordered inside their own handler.
+  "ingest-sde-accounting-entry-types",
+  "ingest-sde-notification-types",
+  "ingest-sde-corporation-role-groups",
+  "ingest-sde-corporation-roles",
+  "ingest-sde-expert-systems",
+  "ingest-sde-fighter-abilities",
+  "ingest-sde-fighter-abilities-by-type",
+  "ingest-sde-industry-activities",
+  "ingest-sde-industry-target-filters",
+  "ingest-sde-industry-assembly-lines",
+  "ingest-sde-industry-installation-types",
+  "ingest-sde-industry-modifier-sources",
+  "ingest-sde-schools",
+  "ingest-sde-school-map",
+  "ingest-sde-skill-plans",
+  "ingest-sde-skinr-slots-to-materials",
+  "ingest-sde-station-standings-restrictions",
+  "ingest-sde-applied-proximity-effects",
+  "ingest-sde-proximity-trap",
+  "ingest-sde-system-dbuff-emitters",
+  "ingest-sde-system-wide-effects",
+  "ingest-sde-link-with-ship",
+  "ingest-sde-metenox-moon-drill",
+];
+
+/**
+ * SDE-derived jobs that must run AFTER the ESI scrapers, because the tables they
+ * write reference ESI-owned rows.
+ *
+ * These cannot live in {@link SDE_INGEST_JOB_IDS}: that list is asserted to be
+ * exactly the `ingest-sde-*` set (see `tests/registry.test.ts`), and these jobs
+ * keep a `scrape-` id precisely because they are hybrids. Keeping them in their
+ * own list rather than as a hardcoded line in `bootstrapDatabase` is what makes
+ * them reachable from `ingest-sde-all` too — without it, a new SDE build
+ * refreshed every table EXCEPT these, which is how the `Agent` table came to sit
+ * untouched from 2024-07-03 while every other SDE table was current.
+ */
+export const SDE_POST_ESI_JOB_IDS: string[] = [
+  // npcCharacters.yaml -> Agent / ResearchAgent / NpcCharacterSkill, plus the
+  // SDE-owned columns on the ESI-owned Character rows. Needs Character and
+  // Station to exist, so it runs after the ESI scrapers and after the ingest
+  // loop that fills Station.
+  "scrape-sde-agents",
 ];
 
 export interface IngestSdeEventPayload {
@@ -126,7 +181,8 @@ export interface IngestSdeEventPayload {
 
 /**
  * On-demand, end-to-end SDE ingest: downloads the latest SDE ONCE and runs every
- * `ingest-sde-*` job in FK dependency order, all within this single task — so the
+ * `ingest-sde-*` job in FK dependency order — then the `SDE_POST_ESI_JOB_IDS`
+ * hybrids, which need ESI-owned tables — all within this single task, so the
  * ~97MB archive is fetched a single time (`loadSdeFile` caches the extract per
  * process). Populates a fresh database or updates an existing one (the per-file
  * ingests are diff-based, chunked, and idempotent). Unlike `bootstrapDatabase`
@@ -166,13 +222,37 @@ export const ingestSde = defineJob<IngestSdeEventPayload["data"]>({
     await recordSdeIngestStarted(build);
     ctx.logger.info(`ingest-sde-all: SDE build ${build.buildNumber}`);
 
+    // Nothing else in the pipeline ever compares the archive against the
+    // registry: `loadFile` is registry-first and throws only for a file we ASK
+    // for, so a file CCP *removes* fails loudly while a file CCP *adds* is
+    // silent. Build 3475087 added 23 files that went unnoticed until someone
+    // diffed the zip by hand. The extract is already on disk here (reading
+    // `_sde.yaml` above warmed it), so this costs one readdir.
+    // Diagnostic only, so it must never be what fails a 45-minute run: an
+    // unreadable extract is reported and stepped over, not thrown.
+    try {
+      const known = new Set(Object.keys(sdeInputFiles));
+      const present = fs
+        .readdirSync(await sdeExtractRoot())
+        .filter((name) => name.endsWith(".yaml"));
+      const unknown = present.filter((name) => !known.has(name));
+      const absent = [...known].filter((name) => !present.includes(name));
+      if (unknown.length > 0 || absent.length > 0) {
+        ctx.logger.warn("SDE registry drift", { unknown, absent });
+      }
+    } catch (error) {
+      ctx.logger.warn("SDE registry drift check skipped", {
+        error: String(error),
+      });
+    }
+
     // Run every ingest in THIS process (not as child tasks) so the SDE archive
     // is downloaded only once. The lazy import breaks the module cycle (the
     // registry is built from the jobs array, which includes this job) and is
     // resolved at run time, after the graph is fully loaded.
     const { registry } = await import("../../index");
     const results: Record<string, unknown> = {};
-    for (const jobId of SDE_INGEST_JOB_IDS) {
+    for (const jobId of [...SDE_INGEST_JOB_IDS, ...SDE_POST_ESI_JOB_IDS]) {
       ctx.logger.info(`ingest-sde-all: ${jobId}`);
       results[jobId] = await registry.get(jobId).handler(ctx);
     }

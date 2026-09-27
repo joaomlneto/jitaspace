@@ -4,7 +4,6 @@ import { Group, Text, UnstyledButton } from "@mantine/core";
 import { useSolarSystem } from "@jitaspace/hooks";
 
 import { SolarSystemStarAvatar } from "~/components/Avatar";
-
 import classes from "./Button.module.css";
 
 export interface SolarSystemButtonProps {

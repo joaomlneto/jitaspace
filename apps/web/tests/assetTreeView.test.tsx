@@ -27,18 +27,68 @@ const CONTAINER = 1003;
 const asset = (
   a: Pick<
     CharacterAsset,
-    "item_id" | "type_id" | "quantity" | "location_id" | "location_flag" | "location_type"
+    | "item_id"
+    | "type_id"
+    | "quantity"
+    | "location_id"
+    | "location_flag"
+    | "location_type"
   > &
     Partial<CharacterAsset>,
 ): CharacterAsset => ({ is_singleton: false, ...a });
 
 const fixture: Record<string, CharacterAsset> = {
-  1001: asset({ item_id: SHIP, type_id: 641, quantity: 1, location_id: JITA, location_flag: "Hangar", location_type: "station", is_singleton: true }),
-  2001: asset({ item_id: 2001, type_id: 3001, quantity: 1, location_id: SHIP, location_flag: "HiSlot0", location_type: "item", is_singleton: true }),
-  2002: asset({ item_id: 2002, type_id: 222, quantity: 5000, location_id: SHIP, location_flag: "Cargo", location_type: "item" }),
-  1002: asset({ item_id: 1002, type_id: 34, quantity: 1_000_000, location_id: JITA, location_flag: "Hangar", location_type: "station" }),
-  1003: asset({ item_id: CONTAINER, type_id: 3465, quantity: 1, location_id: AMARR, location_flag: "Hangar", location_type: "station", is_singleton: true }),
-  2003: asset({ item_id: 2003, type_id: 34, quantity: 50, location_id: CONTAINER, location_flag: "Unlocked", location_type: "item" }),
+  1001: asset({
+    item_id: SHIP,
+    type_id: 641,
+    quantity: 1,
+    location_id: JITA,
+    location_flag: "Hangar",
+    location_type: "station",
+    is_singleton: true,
+  }),
+  2001: asset({
+    item_id: 2001,
+    type_id: 3001,
+    quantity: 1,
+    location_id: SHIP,
+    location_flag: "HiSlot0",
+    location_type: "item",
+    is_singleton: true,
+  }),
+  2002: asset({
+    item_id: 2002,
+    type_id: 222,
+    quantity: 5000,
+    location_id: SHIP,
+    location_flag: "Cargo",
+    location_type: "item",
+  }),
+  1002: asset({
+    item_id: 1002,
+    type_id: 34,
+    quantity: 1_000_000,
+    location_id: JITA,
+    location_flag: "Hangar",
+    location_type: "station",
+  }),
+  1003: asset({
+    item_id: CONTAINER,
+    type_id: 3465,
+    quantity: 1,
+    location_id: AMARR,
+    location_flag: "Hangar",
+    location_type: "station",
+    is_singleton: true,
+  }),
+  2003: asset({
+    item_id: 2003,
+    type_id: 34,
+    quantity: 50,
+    location_id: CONTAINER,
+    location_flag: "Unlocked",
+    location_type: "item",
+  }),
 };
 
 const names: Record<number, string> = {
@@ -113,7 +163,11 @@ describe("AssetSearchResults", () => {
   function renderSearch(query: string) {
     return render(
       <MantineProvider>
-        <AssetSearchResults query={query} tree={tree} getTypeName={getTypeName} />
+        <AssetSearchResults
+          query={query}
+          tree={tree}
+          getTypeName={getTypeName}
+        />
       </MantineProvider>,
     );
   }

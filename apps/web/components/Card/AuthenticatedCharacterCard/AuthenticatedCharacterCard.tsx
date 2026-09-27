@@ -18,6 +18,7 @@ import {
   CharacterName,
   CharacterOnlineIndicator,
   CorporationName,
+  TypeAvatar,
 } from "@jitaspace/eve-components";
 import { RecruitmentIcon, WalletIcon } from "@jitaspace/eve-icons";
 import {
@@ -33,7 +34,6 @@ import {
   CorporationAnchor,
   CorporationAvatar,
   ISKAmount,
-  TypeAvatar,
 } from "@jitaspace/ui";
 
 import {

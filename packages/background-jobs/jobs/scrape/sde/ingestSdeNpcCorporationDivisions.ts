@@ -28,6 +28,10 @@ export const ingestSdeNpcCorporationDivisions = defineJob<
         name: enString(record.name) ?? plainString(record.displayName) ?? "",
         internalName: plainString(record.internalName) ?? "",
         leaderTypeName: enString(record.leaderTypeName),
+        // `displayName` is a plain (already-English) string; `description` is a
+        // localized map, unlike the plain `displayName` beside it.
+        displayName: plainString(record.displayName),
+        description: enString(record.description),
         isDeleted: false,
       }),
     });

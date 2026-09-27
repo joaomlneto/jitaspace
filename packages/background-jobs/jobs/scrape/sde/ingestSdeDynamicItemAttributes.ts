@@ -5,6 +5,7 @@ import {
   ingestSdeCompositeTable,
   ingestSdeTable,
   loadSdeFiles,
+  optionalBoolean,
   requiredNumber,
 } from "../../../helpers";
 
@@ -13,7 +14,10 @@ export interface IngestSdeDynamicItemAttributesEventPayload {
 }
 
 interface DynamicItemAttributesRecord {
-  attributeIDs?: Record<string, { min: number; max: number }>;
+  attributeIDs?: Record<
+    string,
+    { min: number; max: number; highIsGood?: boolean }
+  >;
   inputOutputMapping?: { applicableTypes?: number[]; resultingType: number }[];
 }
 
@@ -62,6 +66,8 @@ export const ingestSdeDynamicItemAttributes = defineJob<
           attributeId: Number(attrKey),
           min: requiredNumber(range.min),
           max: requiredNumber(range.max),
+          // Only 12 of the 2124 ranges override the attribute's own polarity.
+          highIsGood: optionalBoolean(range.highIsGood),
           isDeleted: false,
         });
       }

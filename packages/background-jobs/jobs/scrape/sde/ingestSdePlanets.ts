@@ -6,6 +6,7 @@ import {
   loadSdeFiles,
   optionalBoolean,
   optionalNumber,
+  plainString,
   planetNames,
   requiredNumber,
   solarSystemNames,
@@ -43,6 +44,8 @@ export const ingestSdePlanets = defineJob<IngestSdePlanetsEventPayload["data"]>(
         delegate: prisma.planet,
         toRow: (record, id): Prisma.PlanetCreateManyInput => {
           const attributes = subRecord(record.attributes);
+          const position = subRecord(record.position);
+          const stats = subRecord(record.statistics);
           return {
             planetId: id,
             name: names.get(id) ?? "",
@@ -52,6 +55,23 @@ export const ingestSdePlanets = defineJob<IngestSdePlanetsEventPayload["data"]>(
             heightMap2: optionalNumber(attributes.heightMap2),
             shaderPreset: optionalNumber(attributes.shaderPreset),
             population: optionalBoolean(attributes.population),
+            radius: optionalNumber(record.radius),
+            positionX: optionalNumber(position.x),
+            positionY: optionalNumber(position.y),
+            positionZ: optionalNumber(position.z),
+            density: optionalNumber(stats.density),
+            eccentricity: optionalNumber(stats.eccentricity),
+            escapeVelocity: optionalNumber(stats.escapeVelocity),
+            isTidallyLocked: optionalBoolean(stats.locked),
+            massDust: optionalNumber(stats.massDust),
+            massGas: optionalNumber(stats.massGas),
+            orbitPeriod: optionalNumber(stats.orbitPeriod),
+            orbitRadius: optionalNumber(stats.orbitRadius),
+            pressure: optionalNumber(stats.pressure),
+            rotationRate: optionalNumber(stats.rotationRate),
+            surfaceGravity: optionalNumber(stats.surfaceGravity),
+            temperature: optionalNumber(stats.temperature),
+            spectralClass: plainString(stats.spectralClass),
             isDeleted: false,
           };
         },

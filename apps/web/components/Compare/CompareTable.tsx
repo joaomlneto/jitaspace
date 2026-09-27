@@ -1,13 +1,9 @@
 import { memo, useMemo } from "react";
 import { Group, JsonInput, Table } from "@mantine/core";
 
-import { TypeAnchor, TypeName } from "@jitaspace/eve-components";
+import { TypeAnchor, TypeAvatar, TypeName } from "@jitaspace/eve-components";
 import { useDogmaAttributes, useTypes } from "@jitaspace/hooks";
-import {
-  DogmaAttributeAnchor,
-  formatDogmaAttributeValue,
-  TypeAvatar,
-} from "@jitaspace/ui";
+import { DogmaAttributeAnchor, formatDogmaAttributeValue } from "@jitaspace/ui";
 
 import { DogmaAttributeName } from "~/components/Text";
 
@@ -147,3 +143,5 @@ export const CompareTable = memo(({ typeIds }: CompareTableProps) => {
     </>
   );
 });
+
+CompareTable.displayName = "CompareTable";

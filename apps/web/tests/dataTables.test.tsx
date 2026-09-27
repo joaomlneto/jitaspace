@@ -49,13 +49,13 @@ jest.mock("@jitaspace/ui", () => ({
     <span data-testid="attr-anchor">{children}</span>
   ),
   formatDogmaAttributeValue: (value: number) => value.toLocaleString(),
-  TypeAvatar: ({ typeId }: { typeId?: number }) => (
-    <span data-testid="type-avatar">{`type-avatar-${typeId ?? "?"}`}</span>
-  ),
 }));
 
 // Components that moved to @jitaspace/eve-components are stubbed there.
 jest.mock("@jitaspace/eve-components", () => ({
+  TypeAvatar: ({ typeId }: { typeId?: number }) => (
+    <span data-testid="type-avatar">{`type-avatar-${typeId ?? "?"}`}</span>
+  ),
   CharacterAnchor: ({ children }: { children?: ReactNode }) => (
     <span data-testid="char-anchor">{children}</span>
   ),

@@ -4,7 +4,9 @@ import { prisma } from "../../../db";
 import {
   ingestSdeTable,
   loadSdeFiles,
+  optionalBoolean,
   optionalNumber,
+  plainString,
   planetNames,
   requiredNumber,
   solarSystemNames,
@@ -45,6 +47,10 @@ export const ingestSdeMoons = defineJob<IngestSdeMoonsEventPayload["data"]>({
         const planetId = requiredNumber(record.orbitID);
         const planet = planetNameById.get(planetId) ?? "";
         const attributes = subRecord(record.attributes);
+        // Coordinates and physical statistics are nested one level down; the
+        // 1,364 moons CCP ships without a `statistics` block read as all-null.
+        const position = subRecord(record.position);
+        const stats = subRecord(record.statistics);
         return {
           moonId: id,
           name: `${planet} - Moon ${requiredNumber(record.orbitIndex)}`,
@@ -52,6 +58,24 @@ export const ingestSdeMoons = defineJob<IngestSdeMoonsEventPayload["data"]>({
           heightMap1: optionalNumber(attributes.heightMap1),
           heightMap2: optionalNumber(attributes.heightMap2),
           shaderPreset: optionalNumber(attributes.shaderPreset),
+          typeId: optionalNumber(record.typeID),
+          radius: optionalNumber(record.radius),
+          positionX: optionalNumber(position.x),
+          positionY: optionalNumber(position.y),
+          positionZ: optionalNumber(position.z),
+          density: optionalNumber(stats.density),
+          eccentricity: optionalNumber(stats.eccentricity),
+          escapeVelocity: optionalNumber(stats.escapeVelocity),
+          isTidallyLocked: optionalBoolean(stats.locked),
+          massDust: optionalNumber(stats.massDust),
+          massGas: optionalNumber(stats.massGas),
+          orbitPeriod: optionalNumber(stats.orbitPeriod),
+          orbitRadius: optionalNumber(stats.orbitRadius),
+          pressure: optionalNumber(stats.pressure),
+          rotationRate: optionalNumber(stats.rotationRate),
+          surfaceGravity: optionalNumber(stats.surfaceGravity),
+          temperature: optionalNumber(stats.temperature),
+          spectralClass: plainString(stats.spectralClass),
           isDeleted: false,
         };
       },

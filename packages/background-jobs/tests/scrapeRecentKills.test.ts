@@ -1,4 +1,11 @@
-import { beforeAll, beforeEach, describe, expect, it, jest } from "@jest/globals";
+import {
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 
 import type { scrapeZkillboardRecentKills as ScrapeRecentKills } from "../jobs/scrape/zkillboard/scrapeRecentKills";
 
@@ -61,13 +68,12 @@ const prisma = {
     ),
   },
   solarSystem: {
-    findMany: jest.fn(
-      (args: { where: { solarSystemId: { in: number[] } } }) =>
-        Promise.resolve(
-          args.where.solarSystemId.in
-            .filter((id) => knownSolarSystemIds.has(id))
-            .map((solarSystemId) => ({ solarSystemId })),
-        ),
+    findMany: jest.fn((args: { where: { solarSystemId: { in: number[] } } }) =>
+      Promise.resolve(
+        args.where.solarSystemId.in
+          .filter((id) => knownSolarSystemIds.has(id))
+          .map((solarSystemId) => ({ solarSystemId })),
+      ),
     ),
   },
   moon: {
@@ -91,9 +97,8 @@ jest.mock("../helpers/createCorpAndItsRefs.ts", () => ({
 let scrapeZkillboardRecentKills: typeof ScrapeRecentKills;
 
 beforeAll(async () => {
-  ({ scrapeZkillboardRecentKills } = await import(
-    "../jobs/scrape/zkillboard/scrapeRecentKills"
-  ));
+  ({ scrapeZkillboardRecentKills } =
+    await import("../jobs/scrape/zkillboard/scrapeRecentKills"));
 });
 
 /** A minimal but schema-shaped R2Z2 package for `sequence`. */

@@ -1,22 +1,22 @@
 import async from "async";
 import { parse } from "node-html-parser";
 
-type File = {
+interface File {
   name: string;
   size: number;
   lastModified: Date;
   url: string;
-};
-type Directory = {
+}
+interface Directory {
   name: string;
   url: string;
   children: DirectoryContents;
-};
+}
 
-type DirectoryContents = {
+interface DirectoryContents {
   files: File[];
   directories: Directory[];
-};
+}
 
 export async function getEveRefDataDirectoryContents(
   url: string,
@@ -49,7 +49,7 @@ export async function getEveRefDataDirectoryContents(
     return { name, size, lastModified, url: url + name };
   });
 
-  let directories = inner.querySelectorAll(".data-dir").map((entry) => {
+  const directories = inner.querySelectorAll(".data-dir").map((entry) => {
     const name = entry.querySelector(".url")!.text;
     return {
       name,

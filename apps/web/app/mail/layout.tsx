@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { ScopeGuard } from "~/components/ScopeGuard";
+
 export default function RouteLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {

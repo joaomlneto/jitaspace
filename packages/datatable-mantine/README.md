@@ -4,8 +4,8 @@
 implementation of the [`@jitaspace/datatable`](../datatable) contract.
 
 ```tsx
-import { DataTable } from "@jitaspace/datatable-mantine";
 import type { DataTableColumn } from "@jitaspace/datatable";
+import { DataTable } from "@jitaspace/datatable-mantine";
 ```
 
 Sorting, global filtering, pagination, and column visibility are managed in the

@@ -8,7 +8,6 @@ import { useCharacterLocation } from "@jitaspace/hooks";
 import { SolarSystemCard } from "~/components/Card";
 import { StationCard } from "~/components/Card/StationCard";
 
-
 export interface CharacterLocationCardProps {
   characterId: number;
   fallback?: React.ReactNode;
@@ -25,11 +24,11 @@ export const CharacterLocationCard = ({
   if (!data) {
     return hideFallback
       ? null
-      : fallback ?? (
+      : (fallback ?? (
           <Text size="xs" c="dimmed">
             Character location not available
           </Text>
-        );
+        ));
   }
 
   if (data.data.station_id) {

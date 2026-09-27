@@ -23,7 +23,9 @@ jest.mock("~/components/EveMail/EveMailComposeForm", () => ({
 
 describe("ComposeMailModal", () => {
   it("renders the compose form", () => {
-    const { ComposeMailModal } = require("~/components/Modals/ComposeMailModal");
+    const {
+      ComposeMailModal,
+    } = require("~/components/Modals/ComposeMailModal");
     render(
       <MantineProvider>
         <ComposeMailModal
@@ -39,7 +41,9 @@ describe("ComposeMailModal", () => {
   it("closes the modal with its own id when the form reports a send", async () => {
     const user = userEvent.setup();
     const closeModal = jest.fn();
-    const { ComposeMailModal } = require("~/components/Modals/ComposeMailModal");
+    const {
+      ComposeMailModal,
+    } = require("~/components/Modals/ComposeMailModal");
     render(
       <MantineProvider>
         <ComposeMailModal

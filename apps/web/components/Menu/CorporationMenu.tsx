@@ -1,7 +1,6 @@
 import type { MenuProps } from "@mantine/core";
 import Link from "next/link";
 import { Menu } from "@mantine/core";
-
 import { useShallow } from "zustand/shallow";
 
 import type { ESIScope } from "@jitaspace/esi-metadata";
@@ -26,15 +25,17 @@ export const CorporationMenu = ({
   children,
   ...otherProps
 }: CorporationMenuProps) => {
-  const grantedScopes = useAuthStore(useShallow((state) => {
-    return Array.from(
-      new Set(
-        Object.values(state.characters)
-          .filter((character) => character.corporationId === corporationId)
-          .flatMap((character) => character.accessTokenPayload.scp),
-      ),
-    );
-  }));
+  const grantedScopes = useAuthStore(
+    useShallow((state) => {
+      return Array.from(
+        new Set(
+          Object.values(state.characters)
+            .filter((character) => character.corporationId === corporationId)
+            .flatMap((character) => character.accessTokenPayload.scp),
+        ),
+      );
+    }),
+  );
 
   const enabledCorporationApps = getEnabledCorporationApps(grantedScopes);
 

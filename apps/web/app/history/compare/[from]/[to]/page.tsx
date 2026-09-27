@@ -1,18 +1,26 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Loader } from "@mantine/core";
 
 import { getCachedHistoryIndex } from "~/lib/history-cache";
+import { pageMetadata } from "~/lib/metadata";
+import { parsePositiveEntityId } from "~/lib/routeParams";
 import CompareBuildsClient from "../../page.client";
 
 export async function generateMetadata({
   params,
 }: Readonly<{ params: Promise<{ from: string; to: string }> }>) {
   const { from, to } = await params;
-  return {
-    title: `Compare builds ${from} → ${to} — Change History`,
-    description: `What changed in EVE Online static data between build ${from} and build ${to}.`,
-  };
+  const fromBuild = parsePositiveEntityId(from);
+  const toBuild = parsePositiveEntityId(to);
+  if (fromBuild === null || toBuild === null) return {};
+  return pageMetadata({
+    title: `Compare builds ${fromBuild} → ${toBuild} — Change History`,
+    description: `What changed in EVE Online static data between build ${fromBuild} and build ${toBuild}.`,
+    path: `/history/compare/${fromBuild}/${toBuild}`,
+    badge: "Change History",
+  });
 }
 
 async function CompareData({
@@ -20,8 +28,13 @@ async function CompareData({
 }: Readonly<{ params: Promise<{ from: string; to: string }> }>) {
   await connection();
   const { from, to } = await params;
-  const fromNum = Number(from);
-  const toNum = Number(to);
+  // Both segments are `Build.buildNumber` (Int @id), so the entity-id parser is
+  // the right shape check. The previous `Number.isFinite` test passed the pair
+  // through as `undefined` on garbage, which rendered the bare build picker at
+  // HTTP 200 — a soft 404, and one reachable from any spelling of a valid pair.
+  const fromBuild = parsePositiveEntityId(from);
+  const toBuild = parsePositiveEntityId(to);
+  if (fromBuild === null || toBuild === null) notFound();
   let builds: { build: number; date: string | null }[] = [];
   try {
     const index = await getCachedHistoryIndex();
@@ -29,13 +42,7 @@ async function CompareData({
   } catch {
     builds = []; // DB unreachable ⇒ render with an empty picker rather than crash
   }
-  return (
-    <CompareBuildsClient
-      builds={builds}
-      from={Number.isFinite(fromNum) ? fromNum : undefined}
-      to={Number.isFinite(toNum) ? toNum : undefined}
-    />
-  );
+  return <CompareBuildsClient builds={builds} from={fromBuild} to={toBuild} />;
 }
 
 export default function Page({

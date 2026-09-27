@@ -1,22 +1,31 @@
 "use client";
 
+import type { ActionIconProps } from "@mantine/core";
 import { memo } from "react";
-import { ActionIcon, Tooltip } from "@mantine/core";
 import { IconRocket } from "@tabler/icons-react";
 
-export interface SetAutopilotDestinationActionIconProps {
+import { TooltipActionIcon } from "./TooltipActionIcon";
+
+export type SetAutopilotDestinationActionIconProps = ActionIconProps & {
   onSet?: () => void;
   disabled?: boolean;
-}
+};
 
 export const SetAutopilotDestinationActionIcon = memo(
-  ({ onSet, disabled }: SetAutopilotDestinationActionIconProps) => {
+  ({
+    onSet,
+    disabled,
+    ...actionIconProps
+  }: SetAutopilotDestinationActionIconProps) => {
     return (
-      <Tooltip color="dark" label="Set autopilot destination">
-        <ActionIcon disabled={!onSet || disabled} radius="xl" onClick={onSet}>
-          <IconRocket size={20} />
-        </ActionIcon>
-      </Tooltip>
+      <TooltipActionIcon
+        label="Set autopilot destination"
+        onActivate={onSet}
+        disabled={disabled}
+        {...actionIconProps}
+      >
+        <IconRocket size={20} />
+      </TooltipActionIcon>
     );
   },
 );

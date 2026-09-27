@@ -1,13 +1,13 @@
 import {
-  nextPowerOfTwo,
   esiImageSizeClamp,
   getRandomArbitrary,
-  getRandomInt,
-  shuffleArray,
   getRandomArrayEntry,
+  getRandomInt,
+  nextPowerOfTwo,
   randomBoolean,
   randomExponential,
   randomGeometric,
+  shuffleArray,
 } from "../src/math";
 
 describe("nextPowerOfTwo", () => {

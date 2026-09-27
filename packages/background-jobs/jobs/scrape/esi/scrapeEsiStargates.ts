@@ -5,6 +5,7 @@ import { getUniverseStargatesStargateId } from "@jitaspace/esi-client";
 import type { BatchStepResult, CrudStatistics } from "../../../types";
 import { defineJob, NonRetriableError } from "../../../core";
 import { prisma } from "../../../db";
+import { SDE_OWNED_STARGATE_COLUMNS } from "../../../helpers";
 import { excludeObjectKeys, updateTable } from "../../../utils";
 
 export interface ScrapeStargatesEventPayload {
@@ -77,7 +78,11 @@ const processStargateBatch = async (
         })
         .then((entries) =>
           entries.map((entry) =>
-            excludeObjectKeys(entry, ["updatedAt", "createdAt"]),
+            excludeObjectKeys(entry, [
+              "updatedAt",
+              "createdAt",
+              ...SDE_OWNED_STARGATE_COLUMNS,
+            ]),
           ),
         ),
     fetchRemoteEntries: () => Promise.resolve(thisBatchStargates),

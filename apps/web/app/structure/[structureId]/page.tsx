@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+
 import { PageSkeleton } from "~/components/PageSkeleton";
 import PageClient from "./page.client";
 

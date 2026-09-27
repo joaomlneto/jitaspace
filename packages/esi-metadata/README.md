@@ -20,24 +20,24 @@ Provides TypeScript constants and types describing ESI entity ID ranges and OAut
 
 ## Exports
 
-| Export | Description |
-|---|---|
-| `scopes` | Array of every EVE Online ESI OAuth2 scope string |
-| `ESIScope` | Union type of all scope strings (`(typeof scopes)[number]`) |
-| `scopeDescriptions` / `getScopeDescription(scope)` | Human-readable descriptions for each scope |
-| `endpointScopes` | Mapping of ESI endpoints to the scopes they require |
-| `characterIdRanges`, `corporationIdRanges`, `allianceIdRanges`, `regionIdRanges`, `constellationIdRanges`, `solarSystemRanges`, `stargateRanges`, `stationRanges`, `npcCharacterIdRanges` | Min/max numeric ID boundaries for EVE entity types |
-| `isIdInRanges(id, ranges)` | Helper to test whether an ID falls within a set of ranges |
+| Export                                                                                                                                                                                    | Description                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `scopes`                                                                                                                                                                                  | Array of every EVE Online ESI OAuth2 scope string           |
+| `ESIScope`                                                                                                                                                                                | Union type of all scope strings (`(typeof scopes)[number]`) |
+| `scopeDescriptions` / `getScopeDescription(scope)`                                                                                                                                        | Human-readable descriptions for each scope                  |
+| `endpointScopes`                                                                                                                                                                          | Mapping of ESI endpoints to the scopes they require         |
+| `characterIdRanges`, `corporationIdRanges`, `allianceIdRanges`, `regionIdRanges`, `constellationIdRanges`, `solarSystemRanges`, `stargateRanges`, `stationRanges`, `npcCharacterIdRanges` | Min/max numeric ID boundaries for EVE entity types          |
+| `isIdInRanges(id, ranges)`                                                                                                                                                                | Helper to test whether an ID falls within a set of ranges   |
 
 ## Usage
 
 ```ts
+import type { ESIScope } from "@jitaspace/esi-metadata";
 import {
-  scopes,
   characterIdRanges,
-  isIdInRanges,
   getScopeDescription,
-  type ESIScope,
+  isIdInRanges,
+  scopes,
 } from "@jitaspace/esi-metadata";
 
 const scope: ESIScope = "esi-mail.read_mail.v1";

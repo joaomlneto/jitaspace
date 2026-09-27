@@ -4,6 +4,8 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
+import type { War } from "~/components/Wars/WarsTable";
+
 // WarsTable takes `wars` directly as a prop (no internal data hook). Its column
 // Cell renderers are module-scope components; rendering the real
 // mantine-react-table with row data executes them. @jitaspace/ui supplies the
@@ -14,15 +16,15 @@ import { render, screen } from "@testing-library/react";
 jest.mock("@jitaspace/ui", () => {
   const React = require("react");
   const passThrough = ({ children }: { children?: unknown }) =>
-    children == null ? null : React.createElement(React.Fragment, null, children);
+    children == null
+      ? null
+      : React.createElement(React.Fragment, null, children);
   return new Proxy({}, { get: () => passThrough });
 });
 jest.mock(
   "@jitaspace/eve-icons",
   () => new Proxy({}, { get: () => () => null }),
 );
-
-import type { War } from "~/components/Wars/WarsTable";
 
 const BASE_WAR: War = {
   warId: 9001,

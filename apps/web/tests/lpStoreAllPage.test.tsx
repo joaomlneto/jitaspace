@@ -14,9 +14,13 @@ import { render, screen } from "@testing-library/react";
 
 jest.mock("next/link", () => ({
   __esModule: true,
-  default: ({ children, href }: { children?: React.ReactNode; href?: string }) => (
-    <a href={typeof href === "string" ? href : "#"}>{children}</a>
-  ),
+  default: ({
+    children,
+    href,
+  }: {
+    children?: React.ReactNode;
+    href?: string;
+  }) => <a href={typeof href === "string" ? href : "#"}>{children}</a>,
 }));
 
 jest.mock("@jitaspace/eve-icons", () => ({

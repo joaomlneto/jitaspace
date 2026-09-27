@@ -7,6 +7,7 @@ import {
   loadSdeFileIds,
   loadSdeFiles,
   optionalNumber,
+  subRecord,
 } from "../../../helpers";
 
 export interface IngestSdeRegionsEventPayload {
@@ -37,6 +38,9 @@ export const ingestSdeRegions = defineJob<IngestSdeRegionsEventPayload["data"]>(
         delegate: prisma.region,
         toRow: (record, id): Prisma.RegionCreateManyInput => {
           const nebulaGraphicId = optionalNumber(record.nebulaID);
+          // Galactic coordinates of the region centre, flattened into three
+          // columns the way ingestSdeSolarSystems flattens `position`.
+          const position = subRecord(record.position);
           return {
             regionId: id,
             name: enString(record.name) ?? "",
@@ -46,6 +50,12 @@ export const ingestSdeRegions = defineJob<IngestSdeRegionsEventPayload["data"]>(
                 ? nebulaGraphicId
                 : null,
             wormholeClassId: optionalNumber(record.wormholeClassID),
+            positionX: optionalNumber(position.x),
+            positionY: optionalNumber(position.y),
+            positionZ: optionalNumber(position.z),
+            // A plain id, not a relation — no FK to dangle against, and every
+            // one of the 33 values resolves in factions.yaml today anyway.
+            factionId: optionalNumber(record.factionID),
             isDeleted: false,
           };
         },

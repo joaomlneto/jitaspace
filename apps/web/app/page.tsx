@@ -12,6 +12,7 @@ export const metadata: Metadata = {
   // The root layout's title template ("%s | JitaSpace") would turn a plain
   // string into "JitaSpace | JitaSpace", so pin the home page's title.
   title: { absolute: "JitaSpace" },
+  alternates: { canonical: "/" },
 };
 
 /**

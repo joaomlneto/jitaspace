@@ -11,7 +11,9 @@ import {
   jest,
 } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+
+import type { SolarSystemSdeInfo } from "~/app/system/[systemId]/types";
 
 const SYSTEM_ID = 30000142;
 
@@ -26,19 +28,22 @@ const mockUseStar = jest.fn();
 const mockUseStargate = jest.fn();
 const mockUseGetFwSystems = jest.fn();
 const mockUseGetIncursions = jest.fn();
+const mockSolarSystemFindUnique =
+  jest.fn<(...args: unknown[]) => Promise<unknown>>();
 
 // system/[systemId]/page.tsx imports prisma for generateMetadata
 jest.mock("~/lib/db", () => ({
   prisma: {
     solarSystem: {
-      findUnique: jest
-        .fn<(...args: unknown[]) => Promise<unknown>>()
-        .mockResolvedValue(null),
+      findUnique: (...args: unknown[]) => mockSolarSystemFindUnique(...args),
     },
   },
 }));
 
 jest.mock("next/navigation", () => ({
+  notFound: () => {
+    throw new Error("NEXT_NOT_FOUND");
+  },
   useParams: () => mockUseParams(),
   useRouter: () => ({}),
   usePathname: () => "/",
@@ -101,6 +106,10 @@ jest.mock("~/components/Text", () => ({
   StarName: () => <span>Star</span>,
 }));
 
+jest.mock("~/components/SolarSystem3D", () => ({
+  SolarSystem3D: () => <div data-testid="solar-system-3d" />,
+}));
+
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({
@@ -114,15 +123,13 @@ jest.mock("next/link", () => ({
 
 // The SDE half of a system is resolved on the server (page.tsx reads Prisma) and
 // handed to the client page as a plain prop, so tests pass it in directly.
-type SdeProp = Parameters<
-  typeof import("~/app/system/[systemId]/page.client").default
->[0]["sde"];
+type SdeProp = SolarSystemSdeInfo | null;
 
 function renderPage(sde: SdeProp = null) {
   const Page = require("~/app/system/[systemId]/page.client").default;
   return render(
     <MantineProvider>
-      <Page sde={sde} />
+      <Page systemName="Jita" sde={sde} />
     </MantineProvider>,
   );
 }
@@ -144,6 +151,22 @@ describe("System page", () => {
     mockUseStargate.mockReset().mockReturnValue({ data: undefined });
     mockUseGetFwSystems.mockReset().mockReturnValue({ data: { data: [] } });
     mockUseGetIncursions.mockReset().mockReturnValue({ data: { data: [] } });
+    mockSolarSystemFindUnique.mockReset().mockResolvedValue({
+      name: "Jita",
+      luminosity: null,
+      radius: null,
+      wormholeClassId: null,
+      positionX: null,
+      positionY: null,
+      positionZ: null,
+      factionId: null,
+      isHub: false,
+      isBorder: false,
+      isFringe: false,
+      isCorridor: false,
+      isInternational: false,
+      isRegional: false,
+    });
   });
 
   afterEach(() => {
@@ -371,11 +394,9 @@ describe("System page", () => {
     expect(screen.queryByText("Celestials")).not.toBeInTheDocument();
   });
 
-  it("renders the server wrapper (page.tsx) inside a Suspense boundary", async () => {
-    // page.tsx returns <Suspense><PageContent/></Suspense>, where PageContent is
-    // the async server component that reads Prisma (mocked to null here). The
-    // read must sit inside the boundary or the route can't prerender, so resolve
-    // that child the way the server would and render its output.
+  it("server-renders the system name inside a Suspense boundary", async () => {
+    // PageContent validates the id and reads the system identity inside the
+    // boundary so a crawler receives entity-specific HTML on the first load.
     const WrapperPage = require("~/app/system/[systemId]/page").default;
     const tree = WrapperPage({
       params: Promise.resolve({ systemId: String(SYSTEM_ID) }),
@@ -386,6 +407,67 @@ describe("System page", () => {
     const resolved = await child.type(child.props);
     render(<MantineProvider>{resolved}</MantineProvider>);
 
+    expect(screen.getByRole("heading", { name: "Jita" })).toBeInTheDocument();
     expect(screen.getByText("Stations")).toBeInTheDocument();
+  });
+
+  it("404s when the system does not exist", async () => {
+    mockSolarSystemFindUnique.mockResolvedValue(null);
+    const WrapperPage = require("~/app/system/[systemId]/page").default;
+    const tree = WrapperPage({
+      params: Promise.resolve({ systemId: String(SYSTEM_ID) }),
+    });
+    const child = tree.props.children;
+
+    await expect(child.type(child.props)).rejects.toThrow("NEXT_NOT_FOUND");
+  });
+
+  it("lets a database failure escape instead of caching it as a 404", async () => {
+    mockSolarSystemFindUnique.mockRejectedValue(
+      new Error("database unavailable"),
+    );
+    const WrapperPage = require("~/app/system/[systemId]/page").default;
+    const tree = WrapperPage({
+      params: Promise.resolve({ systemId: String(SYSTEM_ID) }),
+    });
+    const child = tree.props.children;
+
+    await expect(child.type(child.props)).rejects.toThrow(
+      "database unavailable",
+    );
+  });
+
+  it("toggles the 3D system map on and off", () => {
+    mockUseSolarSystem.mockReturnValue({
+      data: { data: { security_status: 0.9 } },
+    });
+
+    renderPage();
+
+    // Collapsed by default: the section header shows but the map is not mounted.
+    expect(screen.getByText("System Map")).toBeInTheDocument();
+    expect(screen.queryByTestId("solar-system-3d")).not.toBeInTheDocument();
+
+    // Show -> the map mounts and a "Hide 3D map" control appears.
+    fireEvent.click(screen.getByRole("button", { name: /Show 3D map/ }));
+    expect(screen.getByTestId("solar-system-3d")).toBeInTheDocument();
+
+    // Hide -> the map unmounts again.
+    fireEvent.click(screen.getByRole("button", { name: /Hide 3D map/ }));
+    expect(screen.queryByTestId("solar-system-3d")).not.toBeInTheDocument();
+  });
+
+  it("404s an id that isn't the canonical spelling", async () => {
+    // `/system/030000142` and `/system/30000142.0` used to serve Jita too, one
+    // extra indexable URL each. The wrapper rejects the spelling rather than
+    // normalising it, so the duplicates retire instead of persisting.
+    const WrapperPage = require("~/app/system/[systemId]/page").default;
+    const tree = WrapperPage({
+      params: Promise.resolve({ systemId: `0${SYSTEM_ID}` }),
+    });
+    const child = tree.props.children;
+
+    await expect(child.type(child.props)).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(mockSolarSystemFindUnique).not.toHaveBeenCalled();
   });
 });

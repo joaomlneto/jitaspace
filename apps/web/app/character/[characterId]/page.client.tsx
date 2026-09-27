@@ -41,6 +41,7 @@ import {
   StationAnchor,
   StationName,
   TypeAnchor,
+  TypeAvatar,
   TypeName,
 } from "@jitaspace/eve-components";
 import {
@@ -62,7 +63,6 @@ import {
   FormattedDateText,
   ISKAmount,
   RaceAnchor,
-  TypeAvatar,
 } from "@jitaspace/ui";
 
 import { OpenInformationWindowActionIcon } from "~/components/ActionIcon";

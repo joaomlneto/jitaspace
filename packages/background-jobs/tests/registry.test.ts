@@ -32,12 +32,14 @@ jest.mock("p-limit", () => ({
 let jobs: typeof Jobs;
 let registry: typeof Registry;
 let sdeIngestJobIds: string[];
+let sdePostEsiJobIds: string[];
 
 beforeAll(async () => {
   const mod = await import("../jobs");
   jobs = mod.jobs;
   registry = mod.registry;
   sdeIngestJobIds = mod.SDE_INGEST_JOB_IDS;
+  sdePostEsiJobIds = mod.SDE_POST_ESI_JOB_IDS;
 });
 
 const JOBS_DIR = join(__dirname, "..", "jobs");
@@ -112,6 +114,20 @@ describe("background-jobs registry", () => {
     expect(unknown).toEqual([]);
   });
 
+  it("SDE_POST_ESI_JOB_IDS all resolve, and none of them is an ingest-sde job", () => {
+    // The post-ESI list exists for SDE jobs that reference ESI-owned tables and
+    // therefore keep a `scrape-` id. An `ingest-sde-*` id appearing here would
+    // mean it runs twice per build (once from each list).
+    expect(sdePostEsiJobIds.length).toBeGreaterThan(0);
+    expect(sdePostEsiJobIds.filter((id) => !registry.has(id))).toEqual([]);
+    expect(
+      sdePostEsiJobIds.filter((id) => id.startsWith("ingest-sde-")),
+    ).toEqual([]);
+    expect(
+      sdePostEsiJobIds.filter((id) => sdeIngestJobIds.includes(id)),
+    ).toEqual([]);
+  });
+
   it("SDE_INGEST_JOB_IDS covers exactly the per-file ingest-sde jobs", () => {
     // Catches a new `ingest-sde-*` job left out of the shared pipeline list
     // (and the orchestrator id leaking into its own list).
@@ -122,5 +138,47 @@ describe("background-jobs registry", () => {
     expect([...sdeIngestJobIds].sort((a, b) => a.localeCompare(b))).toEqual(
       perFile,
     );
+  });
+
+  // `bootstrapDatabase` sequences `scrape-sde-agents` INTO the SDE list by
+  // matching a literal id inside the loop, which the generic ctx.invoke scan
+  // above cannot see. The order is load-bearing: `Agent.stationId` FKs
+  // `Station` and only `ingest-sde-stations` fills the NPC station set, while
+  // `AgentInSpace.characterId` FKs `Agent` — so the agent scrape has to sit
+  // between the two. Renaming or dropping either id would otherwise make
+  // bootstrap skip the agent scrape SILENTLY, leaving the agent tables empty
+  // with no error, so assert the resulting invoke order directly.
+  it("bootstrapDatabase invokes scrape-sde-agents between stations and agents-in-space", async () => {
+    const invoked: string[] = [];
+    const bootstrap = registry.get("bootstrap-database");
+    const ctx = {
+      payload: {},
+      attempt: 1,
+      logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
+      run: (_name: string, fn: () => Promise<unknown>) => fn(),
+      sleep: jest.fn(),
+      send: jest.fn(),
+      invoke: (id: string) => {
+        invoked.push(id);
+        return Promise.resolve();
+      },
+    } as unknown as Parameters<typeof bootstrap.handler>[0];
+
+    await bootstrap.handler(ctx);
+
+    const stations = invoked.indexOf("ingest-sde-stations");
+    const agents = invoked.indexOf("scrape-sde-agents");
+    const agentsInSpace = invoked.indexOf("ingest-sde-agents-in-space");
+
+    expect(stations).toBeGreaterThan(-1);
+    expect(agents).toBeGreaterThan(-1);
+    expect(agentsInSpace).toBeGreaterThan(-1);
+    expect(stations).toBeLessThan(agents);
+    expect(agents).toBeLessThan(agentsInSpace);
   });
 });

@@ -17,7 +17,10 @@ jest.mock("@jitaspace/hooks", () => ({
 }));
 
 // GroupListIcon is decorative — stub the whole package to no-op components.
-jest.mock("@jitaspace/eve-icons", () => new Proxy({}, { get: () => () => null }));
+jest.mock(
+  "@jitaspace/eve-icons",
+  () => new Proxy({}, { get: () => () => null }),
+);
 
 function renderTable(characterId = 1) {
   const {
@@ -63,9 +66,9 @@ describe("MailingListsTable", () => {
     renderTable();
 
     // both the alert title and body render the same copy
-    expect(screen.getAllByText("Error loading messages").length).toBeGreaterThan(
-      0,
-    );
+    expect(
+      screen.getAllByText("Error loading messages").length,
+    ).toBeGreaterThan(0);
   });
 
   it("renders nothing in the list when there is neither data nor error", () => {
@@ -76,7 +79,9 @@ describe("MailingListsTable", () => {
 
     renderTable();
 
-    expect(screen.queryByText("Error loading messages")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Error loading messages"),
+    ).not.toBeInTheDocument();
   });
 
   it("renders an empty list (no rows) when the data array is empty", () => {
@@ -88,7 +93,9 @@ describe("MailingListsTable", () => {
     const { container } = renderTable();
 
     // no error and no mailing-list text — just an empty Stack
-    expect(screen.queryByText("Error loading messages")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Error loading messages"),
+    ).not.toBeInTheDocument();
     // The Stack still renders; assert the component mounted without crashing.
     expect(container).toBeInTheDocument();
   });

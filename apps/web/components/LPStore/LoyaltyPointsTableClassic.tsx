@@ -10,13 +10,16 @@ import { memo, useMemo } from "react";
 import { Group, Stack, Text, Tooltip } from "@mantine/core";
 import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
-import { EveEntitySelect, TypeAnchor } from "@jitaspace/eve-components";
+import {
+  EveEntitySelect,
+  TypeAnchor,
+  TypeAvatar,
+} from "@jitaspace/eve-components";
 import {
   CorporationAnchor,
   CorporationAvatar,
   EveEntityNameDisplay,
   ISKAmount,
-  TypeAvatar,
 } from "@jitaspace/ui";
 
 import type { AugmentedOffer } from "./pricing";

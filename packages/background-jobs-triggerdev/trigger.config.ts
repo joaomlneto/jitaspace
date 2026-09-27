@@ -46,6 +46,9 @@ export default defineConfig({
       ...(process.env.SENTRY_AUTH_TOKEN
         ? [
             esbuildPlugin(
+              // The Sentry plugin's return type is looser than esbuild's
+              // `Plugin`; the shapes are compatible at runtime.
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
               sentryEsbuildPlugin({
                 org: process.env.SENTRY_ORG,
                 project: process.env.SENTRY_PROJECT,

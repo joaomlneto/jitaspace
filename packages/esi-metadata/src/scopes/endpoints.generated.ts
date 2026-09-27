@@ -67,6 +67,12 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
     get: ["esi-contracts.read_character_contracts.v1"],
   },
   "/characters/{character_id}/corporationhistory/": { get: [] },
+  "/characters/{character_id}/cosmetics/skinr/": {
+    get: ["esi.cosmetic.char:read"],
+  },
+  "/characters/{character_id}/cosmetics/skinr/components/": {
+    get: ["esi.cosmetic.char:read"],
+  },
   "/characters/{character_id}/cspa/": {
     post: ["esi-characters.read_contacts.v1"],
   },
@@ -131,6 +137,12 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/characters/{character_id}/mercenary-tactical-operations/{operation_id}/": {
     get: ["esi-activities.read_character.v1"],
   },
+  "/characters/{character_id}/military-campaigns/objectives/": {
+    get: ["esi.activity.char:read"],
+  },
+  "/characters/{character_id}/military-campaigns/objectives/{objective_id}/": {
+    get: ["esi.activity.char:read"],
+  },
   "/characters/{character_id}/mining/": {
     get: ["esi-industry.read_character_mining.v1"],
   },
@@ -148,6 +160,9 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   },
   "/characters/{character_id}/orders/history/": {
     get: ["esi-markets.read_character_orders.v1"],
+  },
+  "/characters/{character_id}/paragon-hub/skinr/": {
+    get: ["esi.cosmetic.char:read"],
   },
   "/characters/{character_id}/planets/": {
     get: ["esi-planets.manage_planets.v1"],
@@ -340,6 +355,7 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
     get: ["esi-wallet.read_corporation_wallets.v1"],
   },
   "/corporations/npccorps/": { get: [] },
+  "/cosmetics/skinr/{skinr_id}/": { get: [] },
   "/dogma/attributes/": { get: [] },
   "/dogma/attributes/{attribute_id}/": { get: [] },
   "/dogma/dynamic/items/{type_id}/{item_id}/": { get: [] },
@@ -399,6 +415,20 @@ export const endpointScopes: Record<string, Record<string, ESIScope[]>> = {
   "/meta/compatibility-dates/": { get: [] },
   "/meta/name/": { get: [] },
   "/meta/status/": { get: [] },
+  "/military-campaigns/": { get: [] },
+  "/military-campaigns/{campaign_id}/": { get: [] },
+  "/military-campaigns/{campaign_id}/objectives/": { get: [] },
+  "/military-campaigns/{campaign_id}/objectives/{objective_id}/": { get: [] },
+  "/paragon-hub/skinr/": { get: [] },
+  "/paragon-hub/skinr/alliances/{alliance_id}/": {
+    get: ["esi.cosmetic.char:read"],
+  },
+  "/paragon-hub/skinr/characters/{character_id}/": {
+    get: ["esi.cosmetic.char:read"],
+  },
+  "/paragon-hub/skinr/corporations/{corporation_id}/": {
+    get: ["esi.cosmetic.char:read"],
+  },
   "/route/{origin_system_id}/{destination_system_id}/": { post: [] },
   "/skyhooks/raidable/": { get: [] },
   "/sovereignty/campaigns/": { get: [] },

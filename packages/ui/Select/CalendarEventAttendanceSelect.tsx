@@ -36,8 +36,10 @@ export const CalendarEventAttendanceSelect = memo(
     ...otherProps
   }: CalendarEventAttendanceSelectProps) => {
     const [value, setValue] = useState<CalendarEventAttendanceResponse | null>(
-      (otherProps.value as CalendarEventAttendanceResponse | null | undefined) ??
-        null,
+      (otherProps.value as
+        | CalendarEventAttendanceResponse
+        | null
+        | undefined) ?? null,
     );
 
     useEffect(() => {

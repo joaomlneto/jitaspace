@@ -20,14 +20,13 @@ interface TaggedAsset {
   subjectId: number;
   [key: string]: unknown;
 }
-const mockUseMultipleCharacterAssets =
-  jest.fn<
-    () => {
-      data: TaggedAsset[];
-      isPending: boolean;
-      errors: { subjectId: number; error: Error }[];
-    }
-  >();
+const mockUseMultipleCharacterAssets = jest.fn<
+  () => {
+    data: TaggedAsset[];
+    isPending: boolean;
+    errors: { subjectId: number; error: Error }[];
+  }
+>();
 const mockUseEsiNameLookup =
   jest.fn<() => Record<string, { value?: { name: string } } | undefined>>();
 const mockUseMarketPrices =
@@ -68,7 +67,10 @@ jest.mock("@jitaspace/eve-components", () => ({
   ),
 }));
 
-jest.mock("@jitaspace/eve-icons", () => new Proxy({}, { get: () => () => null }));
+jest.mock(
+  "@jitaspace/eve-icons",
+  () => new Proxy({}, { get: () => () => null }),
+);
 
 // Render past the scope gate; ScopeGuard itself is unit-tested elsewhere.
 jest.mock("~/components/ScopeGuard", () => ({
@@ -82,9 +84,36 @@ const SHIP = 1001;
 const MAIN = 123456789;
 const ALT = 987654321;
 const SAMPLE_ASSETS: TaggedAsset[] = [
-  { item_id: SHIP, subjectId: MAIN, type_id: 587, quantity: 1, location_id: JITA, location_flag: "Hangar", location_type: "station", is_singleton: true },
-  { item_id: 2001, subjectId: MAIN, type_id: 3001, quantity: 1, location_id: SHIP, location_flag: "HiSlot0", location_type: "item", is_singleton: true },
-  { item_id: 1002, subjectId: ALT, type_id: 34, quantity: 500, location_id: JITA, location_flag: "Hangar", location_type: "station", is_singleton: false },
+  {
+    item_id: SHIP,
+    subjectId: MAIN,
+    type_id: 587,
+    quantity: 1,
+    location_id: JITA,
+    location_flag: "Hangar",
+    location_type: "station",
+    is_singleton: true,
+  },
+  {
+    item_id: 2001,
+    subjectId: MAIN,
+    type_id: 3001,
+    quantity: 1,
+    location_id: SHIP,
+    location_flag: "HiSlot0",
+    location_type: "item",
+    is_singleton: true,
+  },
+  {
+    item_id: 1002,
+    subjectId: ALT,
+    type_id: 34,
+    quantity: 500,
+    location_id: JITA,
+    location_flag: "Hangar",
+    location_type: "station",
+    is_singleton: false,
+  },
 ];
 
 function renderPage() {
@@ -219,5 +248,4 @@ describe("Character Assets Page", () => {
       screen.getByText(/No assets found for any of your characters/),
     ).toBeInTheDocument();
   });
-
 });

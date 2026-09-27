@@ -42,9 +42,6 @@ jest.mock("@jitaspace/ui", () => ({
   FactionAvatar: ({ factionId }: { factionId?: number }) => (
     <span data-testid="faction-avatar">{`faction-avatar-${factionId ?? "?"}`}</span>
   ),
-  TypeAvatar: ({ typeId }: { typeId?: number }) => (
-    <span data-testid="type-avatar">{`type-avatar-${typeId ?? "?"}`}</span>
-  ),
   TimeAgoText: ({ date }: { date: Date }) => (
     <span data-testid="time-ago">{date.toISOString()}</span>
   ),
@@ -55,6 +52,9 @@ jest.mock("@jitaspace/ui", () => ({
 
 // Components that moved to @jitaspace/eve-components are stubbed there.
 jest.mock("@jitaspace/eve-components", () => ({
+  TypeAvatar: ({ typeId }: { typeId?: number }) => (
+    <span data-testid="type-avatar">{`type-avatar-${typeId ?? "?"}`}</span>
+  ),
   CharacterName: ({ characterId }: { characterId?: number }) => (
     <span data-testid="char-name">{`char-${characterId ?? "?"}`}</span>
   ),

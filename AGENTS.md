@@ -15,7 +15,7 @@ Essential conventions (project-specific)
 - Package imports use the internal scope `@jitaspace/*` and `workspace:*` version specifiers in package.json. Respect this when adding new packages.
 - pnpm only: root `preinstall` enforces `only-allow pnpm`. Use pnpm (root package.json sets `packageManager: pnpm@...`).
 - Generated artifacts are authoritative: `prisma` client, `kubb`-generated API clients. The repo's build depends on these being present.
-- **Stale ESLint cache after codegen.** `pnpm lint` runs ESLint with `--cache`, and that cache keys on each linted file's own contents — not on the generated types it imports. So linting _before_ the Prisma/kubb clients exist caches a pile of `no-unsafe-*` / "type that could not be resolved" errors against source files that then never change, and every later lint replays them: your fix is correct and the cache silently disagrees. `db:generate`, `db:push` and `kubb:generate` clear it for you, but `build`/`dev`/`test`/`type-check` also regenerate (via their turbo task deps) and do **not**, nor do the per-package `postinstall` hooks. If lint reports errors you cannot reproduce — especially `prisma.*` member accesses — run `pnpm clean:eslint-cache` and re-lint. Use that script rather than the `rm` inside it: its globs abort under zsh (`no matches found`) and delete nothing.
+- **Stale ESLint cache after codegen.** `pnpm lint` runs ESLint with `--cache`, and that cache keys on each linted file's own contents — not on the generated types it imports. So linting _before_ the Prisma/kubb clients exist caches a pile of `no-unsafe-*` / "type that could not be resolved" errors against source files that then never change, and every later lint replays them: your fix is correct and the cache silently disagrees. `db:generate`, `db:push` and `kubb:generate` clear it for you, but `build`/`dev`/`test`/`type-check` also regenerate (via their turbo task deps) and do **not**, nor do the per-package `postinstall` hooks. The turbo `lint` task now declares those codegen edges too, so `pnpm lint` no longer runs ahead of the generators — but a cache written by an older checkout, or by invoking `eslint` directly in a package, still bites. If lint reports errors you cannot reproduce — especially `prisma.*` member accesses — run `pnpm clean:eslint-cache` and re-lint. Use that script rather than the `rm` inside it: its globs abort under zsh (`no matches found`) and delete nothing.
 - `apps/web/next.config.mjs` config patterns:
   - `transpilePackages` lists local packages that are imported directly without a build step.
   - `serverExternalPackages` contains server-only packages to avoid bundling into the client (e.g. `bull`).
@@ -27,6 +27,14 @@ Essential conventions (project-specific)
   - Prefer validating parsers (`parseAsInteger`, `parseAsStringLiteral`) over `parseAsString`; nuqs drops items/values a parser rejects, which keeps hand-edited URLs from reaching an API.
   - Page-owned params can use bare names (`status`, `sort`, `view`); a **shared** component adopting nuqs must namespace its keys via `urlKeys` so it can't collide with the page hosting it.
   - Tests must wrap renders in `withNuqsTestingAdapter` (`nuqs/adapters/testing`) with `{ hasMemory: true }` for interaction tests — without it URL writes don't round-trip and control clicks appear to do nothing.
+  - In a page cached whole (ISR), wrap the consumer in `NuqsAdapter` from `nuqs/adapters/react`: the Next adapter's `useSearchParams()` drops its subtree out of the cached HTML, leaving only the loader (see `app/history/build/[build]/page.tsx`).
+- ISR for a dynamic `[param]` route (Next 16.2): an unlisted param re-renders everything after `await params` on every request unless the segment has `generateStaticParams` (at least one entry — a placeholder the page 404s before querying when the DB is unreachable at build) and `experimental.partialFallbacks` is on (it is, in `next.config.mjs`). Reference: `app/history/build/[build]/page.tsx`; verify with `next start` that the second request carries `x-nextjs-cache: HIT`. An ISR route caches its `notFound()` output, so drop any catch-DB-error-into-`notFound()` first.
+- Page metadata goes through `pageMetadata()` in `apps/web/lib/metadata.ts` — never hand-roll `export const metadata` on a public page:
+  - Next merges metadata per key and only re-resolves `openGraph` for a segment that declares one. A page setting only `title`/`description` silently inherits the root layout's card and unfurls on Discord as the generic site blurb; a page declaring `openGraph` itself replaces the root's wholesale, dropping `siteName` and `type`. `pageMetadata` states the whole block, so neither happens. `tests/pageMetadataCoverage.test.ts` enforces it.
+  - It also builds the `og:image`: a card rendered by `app/api/og/route.tsx` (Next's built-in `next/og` — **not** `@vercel/og`, whose native module previously 500'd in production) from query params the page already loaded. `lib/og.ts` owns both sides of that query string, clamps the text, and allow-lists the artwork host.
+  - A `"use client"` page can't export metadata; give it a sibling `layout.tsx` that does.
+  - `path` is what emits the canonical URL, so pass the value `parsePositiveEntityId` (`lib/routeParams.ts`) returned, never the raw segment — otherwise `/type/0587` canonicalises as a page of its own.
+  - Pass artwork via `eveImage.*`, or `resolveTypeImage(typeId)` for a type — the CDN 404s on a variation a type doesn't publish, which leaves an empty frame on the card.
 
 Key developer workflows (commands & examples)
 
@@ -47,7 +55,7 @@ pnpm db:push   # apply it — BEFORE merging the PR that changes the schema
 
 > Deploys run `db:generate` only. `db:push` reconciles the database down to the schema on the commit being deployed, so running it from a build makes any PR branched before a schema-adding PR propose **dropping** the newer tables — that broke 18 production deploys in 2026-08. Never pass `--accept-data-loss` to get past it, and note that `db:push` hits whatever `DATABASE_URL` names — in the root `.env` that is production.
 >
-> Forgetting to push is mostly **silent**: under `cacheComponents` a page that catches its own database error prerenders as a 404 with a green build. See CLAUDE.md → "Applying schema changes to the database" for which routes are loud, which are quiet, and the CockroachDB `schema_locked` recovery.
+> Forgetting to push used to be **silent**: under `cacheComponents` a page that catches its own database error prerenders as a 404 with a green build. The nine routes that did this were fixed on 2026-08-30 and now let the read throw, so this class fails loudly — never reintroduce a `catch` around a database read inside a `"use cache"` scope, because `notFound()` is a _successful_ render that Next stores and serves for the whole `cacheLife`. See CLAUDE.md → "Never catch a database error inside a `"use cache"` scope", and "Applying schema changes to the database" for the CockroachDB `schema_locked` recovery.
 
 - Regenerate API clients (Kubb) used by many packages. Example (root):
 
@@ -76,9 +84,10 @@ pnpm build
 pnpm test           # turbo test across workspaces
 pnpm test:watch     # watch mode
 # Cypress: apps/web has cypress scripts; root package.json exposes `cypress:run`/`cypress:open` that cd into apps/web.
-# NOT E2E coverage — the specs under apps/web/cypress/e2e/ are still the stock Cypress
-# example suite and target example.cypress.io, so CI's Cypress job gates only that the
-# build succeeds and the server boots.
+# NOT feature coverage — apps/web/cypress/e2e/smoke.cy.ts is a four-assertion smoke
+# suite (homepage not 5xx, /about server-renders, manifest served, unknown route 404s),
+# so CI's Cypress job gates that the build succeeds, the server boots and real routes
+# respond. Nothing exercises application behaviour.
 ```
 
 - Lint & format:

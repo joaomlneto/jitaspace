@@ -1,13 +1,9 @@
-
-
-
 import "@testing-library/jest-dom/jest-globals";
 
 import { describe, expect, it } from "@jest/globals";
 
 import { getEnabledApps } from "~/components/Menu/appAccess";
 import { characterApps } from "~/config/apps";
-
 
 const getEnabledCharacterApps = (
   scopes: Parameters<typeof getEnabledApps>[1],

@@ -36,6 +36,13 @@ export const ingestSdeAncestries = defineJob<
         shortDescription: plainString(record.shortDescription),
         bloodlineId: requiredNumber(record.bloodlineID),
         iconId: optionalNumber(record.iconID),
+        // Character-creation attribute bonuses. On all 43 records today, but the
+        // columns are nullable, so read them optionally rather than as NaN.
+        charisma: optionalNumber(record.charisma),
+        intelligence: optionalNumber(record.intelligence),
+        memory: optionalNumber(record.memory),
+        perception: optionalNumber(record.perception),
+        willpower: optionalNumber(record.willpower),
         isDeleted: false,
       }),
     });
