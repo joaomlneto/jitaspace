@@ -4,18 +4,12 @@ import type { CacheState } from "@react-hook/cache";
 import { useEffect, useMemo, useState } from "react";
 import { createCache, useCache } from "@react-hook/cache";
 
-import type { GetCharactersCharacterIdSearchQueryParamsCategoriesEnum } from "@jitaspace/esi-client";
+import type {
+  GetCharactersCharacterIdSearchQueryParamsCategoriesEnum,
+  UniverseNamesPost,
+} from "@jitaspace/esi-client";
 import {
-  getAlliancesAllianceId,
-  getCharactersDetail,
-  getCorporationsCorporationId,
-  getUniverseConstellationsConstellationId,
-  getUniverseFactions,
-  getUniverseRegionsRegionId,
   getUniverseStargatesStargateId,
-  getUniverseStationsStationId,
-  getUniverseSystemsSystemId,
-  getUniverseTypesTypeId,
   postUniverseNames,
 } from "@jitaspace/esi-client";
 import {
@@ -64,70 +58,124 @@ const inferCategoryFromId = (
   }
 };
 
-const resolveNameOfUnknownCategory = async (
-  id: number | string,
-): Promise<{
-  name?: string;
-  category: GetCharactersCharacterIdSearchQueryParamsCategoriesEnum;
-}> =>
-  postUniverseNames([Number(id)], {}, {}).then((data) => ({
-    name: data.data[0]?.name,
-    category: data.data[0]
-      ?.category as GetCharactersCharacterIdSearchQueryParamsCategoriesEnum,
-  }));
+/**
+ * The categories POST /universe/names resolves. Agents are NPC characters and
+ * come back as "character". Stargates and structures need their own endpoint.
+ */
+const UNIVERSE_NAMES_CATEGORIES = new Set<ResolvableEntityCategory>([
+  "agent",
+  "alliance",
+  "character",
+  "constellation",
+  "corporation",
+  "faction",
+  "inventory_type",
+  "region",
+  "solar_system",
+  "station",
+]);
 
-const resolveNameOfKnownCategory = async (
-  id: number | string,
-  category: ResolvableEntityCategory,
+/** POST /universe/names takes at most this many ids per request. */
+const UNIVERSE_NAMES_MAX_IDS = 1000;
+
+/**
+ * Statuses on which a batch is split rather than failed. ESI rejects the whole
+ * request when any one id is unresolvable, so bisecting isolates the bad id and
+ * lets the rest resolve. Not on 5xx, 420 or 429: splitting a request that
+ * failed because ESI is down or rate-limiting us would multiply the load.
+ */
+const BISECT_ON_STATUS = new Set([400, 404]);
+
+type UniverseName = UniverseNamesPost[number];
+
+interface NameWaiter {
+  resolve: (name: UniverseName | undefined) => void;
+  reject: (error: unknown) => void;
+}
+
+let queuedIds = new Map<number, NameWaiter[]>();
+let flushScheduled = false;
+
+/**
+ * Resolve one id through POST /universe/names, batched with every other id
+ * requested in the same tick.
+ *
+ * Names used to be resolved one request per id, against an endpoint that takes
+ * a thousand: a corporation hangar with 800 item types cost 800 requests, and
+ * rows sat on "Unknown" while they trickled in. Every name lookup a render
+ * triggers happens synchronously inside effects, so one microtask collects
+ * them all.
+ */
+function resolveViaUniverseNames(
+  id: number,
+): Promise<UniverseName | undefined> {
+  return new Promise((resolve, reject) => {
+    const waiters = queuedIds.get(id) ?? [];
+    waiters.push({ resolve, reject });
+    queuedIds.set(id, waiters);
+    if (!flushScheduled) {
+      flushScheduled = true;
+      queueMicrotask(flushUniverseNames);
+    }
+  });
+}
+
+function flushUniverseNames() {
+  const batch = queuedIds;
+  queuedIds = new Map();
+  flushScheduled = false;
+  const ids = [...batch.keys()];
+  for (let start = 0; start < ids.length; start += UNIVERSE_NAMES_MAX_IDS) {
+    void resolveUniverseNamesChunk(
+      ids.slice(start, start + UNIVERSE_NAMES_MAX_IDS),
+      batch,
+    );
+  }
+}
+
+const statusOf = (error: unknown): number | undefined =>
+  (error as { response?: { status?: number } } | null)?.response?.status;
+
+async function resolveUniverseNamesChunk(
+  ids: number[],
+  waiters: Map<number, NameWaiter[]>,
+): Promise<void> {
+  try {
+    const response = await postUniverseNames(ids, {}, {});
+    const byId = new Map(response.data.map((entry) => [entry.id, entry]));
+    for (const id of ids) {
+      waiters.get(id)?.forEach((waiter) => waiter.resolve(byId.get(id)));
+    }
+  } catch (error) {
+    const status = statusOf(error);
+    if (
+      ids.length > 1 &&
+      status !== undefined &&
+      BISECT_ON_STATUS.has(status)
+    ) {
+      const middle = Math.ceil(ids.length / 2);
+      await Promise.all([
+        resolveUniverseNamesChunk(ids.slice(0, middle), waiters),
+        resolveUniverseNamesChunk(ids.slice(middle), waiters),
+      ]);
+      return;
+    }
+    for (const id of ids) {
+      waiters.get(id)?.forEach((waiter) => waiter.reject(error));
+    }
+  }
+}
+
+/** The two categories /universe/names cannot resolve. */
+const resolveNameViaOwnEndpoint = async (
+  id: number,
+  category: "stargate" | "structure",
 ): Promise<string> => {
   switch (category) {
-    case "alliance":
-      return getAlliancesAllianceId(Number(id), {}, {}).then(
-        (data) => data.data.name,
-      );
-    case "corporation":
-      return getCorporationsCorporationId(Number(id), {}, {}).then(
-        (data) => data.data.name,
-      );
-    case "agent":
-    case "character":
-      return getCharactersDetail(Number(id), {}, {}).then((data) => {
-        return data.data.name;
-      });
-    case "inventory_type":
-      return getUniverseTypesTypeId(Number(id), {}, {}).then((data) => {
-        return data.data.name;
-      });
-    case "constellation":
-      return getUniverseConstellationsConstellationId(Number(id), {}, {}).then(
-        (data) => {
-          return data.data.name;
-        },
-      );
-    case "region":
-      return getUniverseRegionsRegionId(Number(id), {}, {}).then((data) => {
-        return data.data.name;
-      });
-    case "solar_system":
-      return getUniverseSystemsSystemId(Number(id), {}, {}).then((data) => {
-        return data.data.name;
-      });
-    case "faction":
-      return getUniverseFactions().then((data) => {
-        const faction = data.data.find(
-          (faction) => faction.faction_id == Number(id),
-        );
-        if (faction === undefined) throw new Error("Faction ID Invalid");
-        return faction.name;
-      });
     case "stargate":
-      return getUniverseStargatesStargateId(Number(id), {}, {}).then((data) => {
-        return data.data.name;
-      });
-    case "station":
-      return getUniverseStationsStationId(Number(id), {}, {}).then((data) => {
-        return data.data.name;
-      });
+      return getUniverseStargatesStargateId(id, {}, {}).then(
+        (response) => response.data.name,
+      );
     case "structure":
       // `/universe/structures/{id}` needs `esi-universe.read_structures.v1` and
       // a character on the structure's access list. This cache resolves
@@ -138,10 +186,6 @@ const resolveNameOfKnownCategory = async (
       throw new Error(
         "Structure names need an authenticated lookup; use useStructure",
       );
-    default: {
-      const exhaustiveCategory: never = category;
-      throw new Error(`Unknown category ${String(exhaustiveCategory)}!`);
-    }
   }
 };
 
@@ -180,26 +224,28 @@ const fetchCache = createCache(
     { category: requestedCategory, entityId: id }: EsiNameCacheArgs,
   ) => {
     if (id.length === 0) throw new Error("No ID provided");
-    let name: string | undefined;
+    const numericId = Number(id);
 
-    // let's figure out the category first
-    const category: ResolvableEntityCategory =
-      // is the category provided?
-      requestedCategory ??
-      // can we infer it from the id?
-      inferCategoryFromId(typeof id === "string" ? Number(id) : id) ??
-      // otherwise, we need to resolve it to get the name
-      (await resolveNameOfUnknownCategory(id).then((result) => {
-        // since the name is also returned, we can save it and skip fetching it in the next part
-        name = result.name;
-        return result.category;
-      }));
+    // A caller-supplied category wins, then one inferred from the id range;
+    // /universe/names reports the category itself for anything else.
+    const knownCategory = requestedCategory ?? inferCategoryFromId(numericId);
+    if (
+      knownCategory !== undefined &&
+      !UNIVERSE_NAMES_CATEGORIES.has(knownCategory)
+    ) {
+      const ownEndpointCategory = knownCategory as "stargate" | "structure";
+      return {
+        category: ownEndpointCategory,
+        name: await resolveNameViaOwnEndpoint(numericId, ownEndpointCategory),
+      };
+    }
 
-    // if we already got the name, return it
-    if (name) return { name, category };
-
-    // otherwise, fetch it
-    return { category, name: await resolveNameOfKnownCategory(id, category) };
+    const resolved = await resolveViaUniverseNames(numericId);
+    if (!resolved) throw new Error(`ESI returned no name for ${id}`);
+    return {
+      name: resolved.name,
+      category: knownCategory ?? resolved.category,
+    };
   },
   100000,
 );
