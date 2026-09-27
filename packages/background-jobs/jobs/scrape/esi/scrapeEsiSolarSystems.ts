@@ -118,6 +118,10 @@ type EsiSolarSystemRow = EsiRow<
 >;
 type EsiPlanetRow = EsiRow<Planet, (typeof SDE_OWNED_PLANET_COLUMNS)[number]>;
 type EsiMoonRow = EsiRow<Moon, (typeof SDE_OWNED_MOON_COLUMNS)[number]>;
+type EsiAsteroidBeltRow = EsiRow<
+  AsteroidBelt,
+  (typeof SDE_OWNED_ASTEROID_BELT_COLUMNS)[number]
+>;
 
 const fetchSolarSystem = (limit: Limit, solarSystemId: number) =>
   limit(async () =>
@@ -186,7 +190,7 @@ const fetchAsteroidBeltRow = (
   limit(async () =>
     getUniverseAsteroidBeltsAsteroidBeltId(asteroidBeltId)
       .then((res) => res.data)
-      .then((asteroidBelt) => {
+      .then((asteroidBelt): EsiAsteroidBeltRow => {
         const planetId = asteroidBeltPlanetIndex[asteroidBeltId];
         if (planetId === undefined) {
           throw new Error(

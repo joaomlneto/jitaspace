@@ -58,6 +58,8 @@ export const ingestSdeMoons = defineJob<IngestSdeMoonsEventPayload["data"]>({
           moonId: id,
           name: moonNameById.get(id) ?? "",
           planetId,
+          celestialIndex: optionalNumber(record.celestialIndex),
+          orbitIndex: optionalNumber(record.orbitIndex),
           heightMap1: optionalNumber(attributes.heightMap1),
           heightMap2: optionalNumber(attributes.heightMap2),
           shaderPreset: optionalNumber(attributes.shaderPreset),

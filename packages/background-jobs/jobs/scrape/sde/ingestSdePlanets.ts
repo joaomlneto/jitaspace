@@ -51,6 +51,7 @@ export const ingestSdePlanets = defineJob<IngestSdePlanetsEventPayload["data"]>(
             name: names.get(id) ?? "",
             solarSystemId: requiredNumber(record.solarSystemID),
             typeId: requiredNumber(record.typeID),
+            celestialIndex: optionalNumber(record.celestialIndex),
             heightMap1: optionalNumber(attributes.heightMap1),
             heightMap2: optionalNumber(attributes.heightMap2),
             shaderPreset: optionalNumber(attributes.shaderPreset),
