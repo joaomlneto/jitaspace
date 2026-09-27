@@ -110,4 +110,39 @@ describe("updateTable", () => {
 
     expect(order).toEqual(["create", "update", "delete"]);
   });
+
+  it("updates a row whose only change is a Date moving to a new instant", async () => {
+    // e.g. a war whose finish date ESI moved after we first stored it. Dates
+    // used to compare equal regardless of value, so this update was dropped.
+    interface WarRow {
+      warId: number;
+      finishedDate: Date | null;
+    }
+    const warBatchUpdate = jest.fn<(entries: WarRow[]) => Promise<void>>(() =>
+      Promise.resolve(),
+    );
+    const noop = () => Promise.resolve();
+
+    const stats = await updateTable<WarRow, number>({
+      idAccessor: (row) => row.warId,
+      fetchLocalEntries: () =>
+        Promise.resolve([
+          { warId: 1, finishedDate: new Date("2026-08-20T12:00:00Z") },
+          { warId: 2, finishedDate: new Date("2026-08-20T12:00:00Z") },
+        ]),
+      fetchRemoteEntries: () =>
+        Promise.resolve([
+          { warId: 1, finishedDate: new Date("2026-08-21T12:00:00Z") },
+          { warId: 2, finishedDate: new Date("2026-08-20T12:00:00Z") },
+        ]),
+      batchCreate: noop,
+      batchUpdate: warBatchUpdate,
+      batchDelete: noop,
+    });
+
+    expect(stats).toEqual({ created: 0, modified: 1, deleted: 0, equal: 1 });
+    expect(warBatchUpdate).toHaveBeenCalledWith([
+      { warId: 1, finishedDate: new Date("2026-08-21T12:00:00Z") },
+    ]);
+  });
 });
