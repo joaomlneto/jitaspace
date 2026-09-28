@@ -1,4 +1,4 @@
 export * from "./useCharacter";
-export * from "./useCharacterNotifications";
+export * from "./useEsiCharacterNotifications";
 export * from "./useCharacterWalletBalance";
 export * from "./useEsiCharacter";

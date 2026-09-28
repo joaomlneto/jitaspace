@@ -1,3 +1,3 @@
-export * from "./useCharacterCurrentLocation";
+export * from "./useCharacterLocation";
 export * from "./useCharacterCurrentShip";
 export * from "./useCharacterOnlineStatus";
