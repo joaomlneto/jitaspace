@@ -26,8 +26,9 @@ import { readTypeNames } from "~/lib/history-type-names";
  * is cached for a day (`cacheLife("days")`). The matching `"use server"`
  * actions in `history-actions.ts` delegate here, so every entry point (the
  * `/history` server component and the React Query client paths) shares one
- * cache entry and the DB is queried at most once per revalidation window per
- * cache key.
+ * cache entry per key. Plain `"use cache"` entries read at request time are
+ * per-instance memory, though, so on Vercel they seldom hit — a hot reader
+ * needs `"use cache: remote"` (see {@link getLatestChangedBuild}).
  *
  * Kept in its own module (not the `"use server"` `history-actions.ts`) because a
  * function cannot be both a `"use cache"` entry and a `"use server"` action.
@@ -126,12 +127,23 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
  * The newest build with recorded changes — the "latest patch notes" the home
  * page banner links to. `null` when nothing has been recorded yet.
  *
- * Deliberately NOT its own `"use cache"` entry: it folds the already-cached
- * {@link getCachedHistoryIndex}, so the home page and `/history` share a single
- * day-cached read of the history DB rather than each minting one. Only the small
- * derived summary crosses to the client.
+ * A `"use cache: remote"` entry, not a plain `"use cache"` one. The home page
+ * reads this at request time (behind `connection()`), and a plain entry read at
+ * request time lives in the serving instance's memory — on Vercel that almost
+ * never survives to the next request. So the day-cached index below was rebuilt,
+ * full scans of `Change` and `Entity` included, on ~every home page view (and
+ * every per-minute uptime check): ~2,800 times a day against the CockroachDB
+ * cluster whose Request Unit budget the main database shares. The remote entry
+ * lives in Vercel's Runtime Cache, shared across instances.
+ *
+ * Only the small derived summary is stored remotely (Runtime Cache caps an entry
+ * at 2 MB, which the full index is not guaranteed to fit). A miss still folds
+ * {@link getCachedHistoryIndex}, so the banner and `/history` agree.
  */
 export async function getLatestChangedBuild(): Promise<LatestChangedBuild | null> {
+  "use cache: remote";
+  cacheLife("days");
+
   return latestChangedBuild(await getCachedHistoryIndex());
 }
 

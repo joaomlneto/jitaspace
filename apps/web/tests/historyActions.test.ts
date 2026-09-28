@@ -206,6 +206,7 @@ const {
   getCachedBuildRangeChanges,
   getCachedHistoryIndex,
   getCachedRangeTypeNames,
+  getLatestChangedBuild,
 } = require("~/lib/history-cache") as typeof HistoryCache;
 
 // The type-name fixtures are module-wide, so reset them for every test — not
@@ -342,6 +343,45 @@ describe("getCachedHistoryIndex", () => {
 
     expect(builds).not.toContain(700001);
     expect(builds).toEqual([700000, 700002]);
+  });
+});
+
+// The home page's banner summary: a "use cache: remote" entry that folds the
+// index. The directive is inert here, so this covers the fold.
+describe("getLatestChangedBuild", () => {
+  beforeEach(() => {
+    mockCollections = [{ id: 1, name: "types" }];
+    mockEntities = [];
+  });
+
+  it("returns the newest build with changes, skipping later change-less builds", async () => {
+    mockBuilds = [
+      { buildNumber: 700000, releasedAt: new Date("2024-06-01") },
+      { buildNumber: 700001, releasedAt: new Date("2024-06-08") },
+      { buildNumber: 700002, releasedAt: new Date("2024-06-15") }, // no changes
+    ];
+    mockDiffs = [
+      { id: 10, toBuild: 700000 },
+      { id: 11, toBuild: 700001 },
+    ];
+    mockGrouped = [
+      { diffId: 10, collectionId: 1, _count: 2 },
+      { diffId: 11, collectionId: 1, _count: 7 },
+    ];
+
+    await expect(getLatestChangedBuild()).resolves.toEqual({
+      build: 700001,
+      date: "2024-06-08",
+      changeCount: 7,
+    });
+  });
+
+  it("returns null when no build has recorded changes", async () => {
+    mockBuilds = [{ buildNumber: 700000, releasedAt: new Date("2024-06-01") }];
+    mockDiffs = [];
+    mockGrouped = [];
+
+    await expect(getLatestChangedBuild()).resolves.toBeNull();
   });
 });
 
