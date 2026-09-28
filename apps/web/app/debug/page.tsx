@@ -7,6 +7,28 @@ import { env } from "~/env";
 import { prisma } from "~/lib/db";
 import DebugPage from "./page.client";
 
+/**
+ * Whether a secret is set, never its value: these props are serialised into
+ * the page sent to the browser. The page only renders outside production
+ * (`notFound()` below), but a dev server reading the root `.env` runs with the
+ * real production credentials.
+ */
+const describeSecret = (value: string | undefined) =>
+  value ? "set (redacted)" : undefined;
+
+/** A connection URL with its credentials masked, so the host stays visible. */
+const withoutCredentials = (value: string | undefined) => {
+  if (!value) return undefined;
+  try {
+    const url = new URL(value);
+    if (url.username) url.username = "redacted";
+    if (url.password) url.password = "redacted";
+    return url.toString();
+  } catch {
+    return describeSecret(value);
+  }
+};
+
 export async function DebugPageContent() {
   if (env.NODE_ENV === "production") {
     notFound();
@@ -62,12 +84,12 @@ export async function DebugPageContent() {
     queues: queuesStatus,
     vars: {
       NODE_ENV: env.NODE_ENV,
-      NEXTAUTH_SECRET: env.NEXTAUTH_SECRET,
-      DATABASE_URL: env.DATABASE_URL,
-      REDIS_URL: env.REDIS_URL,
+      NEXTAUTH_SECRET: describeSecret(env.NEXTAUTH_SECRET),
+      DATABASE_URL: withoutCredentials(env.DATABASE_URL),
+      REDIS_URL: withoutCredentials(env.REDIS_URL),
       EVE_CLIENT_ID: env.EVE_CLIENT_ID,
-      EVE_CLIENT_SECRET: env.EVE_CLIENT_SECRET,
-      CRON_SECRET: env.CRON_SECRET,
+      EVE_CLIENT_SECRET: describeSecret(env.EVE_CLIENT_SECRET),
+      CRON_SECRET: describeSecret(env.CRON_SECRET),
       SKIP_BUILD_STATIC_GENERATION: env.SKIP_BUILD_STATIC_GENERATION,
       NEXT_PUBLIC_GOOGLE_TAG_ID: env.NEXT_PUBLIC_GOOGLE_TAG_ID,
       NEXT_PUBLIC_DISCORD_INVITE_LINK: env.NEXT_PUBLIC_DISCORD_INVITE_LINK,

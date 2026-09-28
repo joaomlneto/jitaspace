@@ -19,7 +19,7 @@ const mockSeenQueries: {
   _kind: string;
   _id: number;
   staleTime?: number;
-  retry?: number;
+  retry?: number | ((failureCount: number, error: unknown) => boolean);
 }[] = [];
 
 // Query ids the stub should report as still in-flight, so a test can drive the
@@ -100,6 +100,14 @@ jest.mock("@jitaspace/esi-client", () => ({
   }),
 }));
 
+// The app-wide retry policy, reduced to what these assertions need: 404 is
+// never retried, anything else up to three times.
+jest.mock("~/lib/queryRetry", () => ({
+  shouldRetryQuery: (failureCount: number, error: unknown) =>
+    failureCount < 3 &&
+    (error as { response?: { status?: number } }).response?.status !== 404,
+}));
+
 jest.mock("@tanstack/react-query", () => {
   // ESI universe bodies keyed by kind+id. A body without a `position` models a
   // record that hasn't resolved (or lacks coordinates) and must be dropped. Only
@@ -126,7 +134,7 @@ jest.mock("@tanstack/react-query", () => {
     _kind: string;
     _id: number;
     staleTime?: number;
-    retry?: number;
+    retry?: number | ((failureCount: number, error: unknown) => boolean);
   }) => {
     mockSeenQueries.push(q);
     const body = BODIES[q._kind]?.[q._id];
@@ -304,8 +312,17 @@ describe("SolarSystem3D adapter", () => {
     );
     // SDE data is immutable, so nothing here may refetch on window focus…
     expect(mockSeenQueries.filter((q) => q.staleTime !== Infinity)).toEqual([]);
-    // …and one flaky request must not hold the loader through the default 3 retries
-    expect(mockSeenQueries.filter((q) => q.retry !== 1)).toEqual([]);
+    // …one flaky request must not hold the loader through the default 3
+    // retries, and a 404/420 — which the app policy never retries — must not
+    // be retried here either: a per-query `retry` replaces that policy.
+    const httpError = (status: number) => ({ response: { status } });
+    for (const query of mockSeenQueries) {
+      expect(typeof query.retry).toBe("function");
+      const retry = query.retry as (n: number, error: unknown) => boolean;
+      expect(retry(0, httpError(503))).toBe(true);
+      expect(retry(1, httpError(503))).toBe(false);
+      expect(retry(0, httpError(404))).toBe(false);
+    }
   });
 
   it("does not resolve a star name when the system has no star", () => {
