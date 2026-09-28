@@ -44,15 +44,6 @@ export default function PageClient() {
           users cannot be identified and are never tracked across websites.
           Information is processed and stored by: <br />
           <Anchor
-            href="https://www.umami.is/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Umami Cloud
-          </Anchor>
-          ;
-          <br />
-          <Anchor
             href="https://www.vercel.com/"
             target="_blank"
             rel="noopener noreferrer"
@@ -126,12 +117,11 @@ export default function PageClient() {
           <List.Item>
             We collect the usual information (IP, browser, URL, location, date)
             for statistical purposes. Information is processed and stored by{" "}
-            <Anchor inherit href="https://www.umami.is/" target="_blank">
-              Umami Cloud
+            <Anchor inherit href="https://www.vercel.com/" target="_blank">
+              Vercel Analytics
             </Anchor>
-            , a privacy-focused web analytics service. The information collected
-            is anonymized - users cannot be identified and are never tracked
-            across websites.
+            . The information collected is anonymized - users cannot be
+            identified and are never tracked across websites.
           </List.Item>
           <List.Item>
             We use cookies and local storage to store your authentication and

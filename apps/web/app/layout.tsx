@@ -15,7 +15,6 @@ import "./globals.css";
 import type { Viewport } from "next";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import Script from "next/script";
 import { ColorSchemeScript } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
@@ -136,19 +135,6 @@ export default function RootLayout({
         })}
       </head>
       <body>
-        <Script
-          strategy="afterInteractive"
-          async
-          defer
-          // /analytics is a proxy to the umami server - set in next.config.mjs.
-          // data-host-url routes the event beacon (`<host-url>/api/send`)
-          // back through the same-origin proxy too, so it stays off the CSP
-          // third-party allow-list and survives ad blockers that block umami.is.
-          src={"/analytics/script.js"}
-          data-host-url="/analytics"
-          data-website-id={env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-          data-domains="www.jita.space"
-        ></Script>
         {env.NEXT_PUBLIC_GOOGLE_TAG_ID && (
           <GoogleAnalytics gaId={env.NEXT_PUBLIC_GOOGLE_TAG_ID} />
         )}
