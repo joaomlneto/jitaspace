@@ -16,8 +16,8 @@ import {
 
 // Capture the real timer globals before any test installs fake timers. Jest's
 // `useRealTimers()` does not reliably restore them in this @swc/jest + node
-// setup, which would leave `setTimeout` undefined for later tests (the rate
-// limiter calls it internally). Restored in afterEach below.
+// setup, which would leave `setTimeout` undefined for later tests (the
+// client's rate-limit wait calls it). Restored in afterEach below.
 const realTimerGlobals = {
   setTimeout: globalThis.setTimeout,
   clearTimeout: globalThis.clearTimeout,
@@ -97,7 +97,8 @@ describe("client rate-limit integration", () => {
 
     expect(bucket?.limit).toBe(10);
     expect(bucket?.remaining).toBe(7);
-    expect(bucket?.consumedTokens).toHaveLength(3);
+    // ESI reports how much is used, not when: one ledger entry of 3 tokens.
+    expect(bucket?.consumedTokens).toEqual([{ timestamp: now, tokens: 3 }]);
     expect(bucket?.requestHistory[0]?.tokenCost).toBe(3);
     expect(bucket?.requestHistory[0]?.endpoint).toBe("/status");
   });
@@ -162,6 +163,25 @@ describe("client rate-limit integration", () => {
 
     expect(bucket?.remaining).toBe(595);
     expect(bucket?.requestHistory[1]?.tokenCost).toBe(0);
+  });
+
+  it("releases the in-flight reservation when a request gets no response", async () => {
+    // An aborted request, or one whose connection failed, has no response to
+    // settle its reservation against; it used to hold 5 tokens until another
+    // response's headers resynced the bucket.
+    const canceled = Object.assign(new Error("canceled"), {
+      code: "ERR_CANCELED",
+    });
+    jest.spyOn(axiosInstance, "request").mockRejectedValueOnce(canceled);
+
+    await expect(client({ method: "GET", url: "/status" })).rejects.toBe(
+      canceled,
+    );
+
+    const bucket =
+      getRateLimitState()[getRateLimitBucketKey(STATUS_GROUP, TEST_USER)];
+    expect(bucket?.remaining).toBe(bucket?.limit);
+    expect(bucket?.requestHistory).toHaveLength(0);
   });
 
   it("stores retry-after delays from 429 responses", async () => {

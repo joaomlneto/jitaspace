@@ -1,5 +1,3 @@
-import { LiteRateLimiter } from "@tanstack/pacer-lite/lite-rate-limiter";
-
 import buildData from "./build-data.json";
 
 interface BuildData {
@@ -13,7 +11,6 @@ interface BuildData {
   >;
   operationRateLimitGroups?: Record<string, string>;
   routeOperationIds?: Record<string, string>;
-  routeRateLimitGroups?: Record<string, string>;
 }
 
 const buildDataTyped = buildData as BuildData;
@@ -109,12 +106,6 @@ for (const [routeKey, operationId] of Object.entries(
   addRouteMatcher(group, routeMatcher);
 }
 
-for (const [routeKey, group] of Object.entries(
-  buildDataTyped.routeRateLimitGroups ?? {},
-)) {
-  addRouteMatcher(group, routeKey);
-}
-
 for (const [operationId, group] of Object.entries(
   buildDataTyped.operationRateLimitGroups ?? {},
 )) {
@@ -158,29 +149,31 @@ const notify = () => {
   listeners.forEach((listener) => listener(rateLimitState));
 };
 
-const createRuntime = (limit: number, windowSeconds: number) => {
-  const safeLimit = Math.max(1, Math.floor(limit));
-  const safeWindowMs = Math.max(1000, Math.floor(windowSeconds * 1000));
-
-  return {
-    // The limiter is used purely for token accounting (maybeExecute /
-    // getRemainingInWindow); it never runs work, so the callback is a no-op.
-    limiter: new LiteRateLimiter(() => undefined, {
-      limit: safeLimit,
-      window: safeWindowMs,
-      windowType: "sliding",
-    }),
-    limit: safeLimit,
-    windowSeconds: Math.max(1, Math.floor(safeWindowMs / 1000)),
-    windowMs: safeWindowMs,
-  };
-};
-
-type RateLimitRuntime = ReturnType<typeof createRuntime>;
-
-const rateLimitRuntimes: Record<RateLimitBucketKey, RateLimitRuntime> = {};
-
 const rateLimitState: Record<RateLimitBucketKey, RateLimitState> = {};
+
+/**
+ * Token accounting is plain arithmetic over each bucket's `consumedTokens`
+ * ledger: `remaining` is the limit minus whatever the ledger holds inside the
+ * sliding window.
+ *
+ * It used to be kept in a `@tanstack/pacer-lite` rate limiter as well, which
+ * can only record one execution at a time, stamped `Date.now()`, and scans its
+ * whole history on each one. Every response rebuilt that limiter token by
+ * token from the used count in its headers — quadratic work that blocked the
+ * main thread ~190 ms per response at 1,000 tokens used and ~2.4 s at 4,000,
+ * which one `/market/[typeId]` view (~230 tokens) reaches after a handful of
+ * items. Each of those executions also armed a 15-minute timer that was never
+ * cleared.
+ */
+const windowMsOf = (state: RateLimitState) =>
+  Math.max(1000, Math.floor(state.windowSeconds * 1000));
+
+/** A ledger entry still counts against the bucket until its window elapses. */
+const isInWindow = (timestamp: number, windowMs: number, now: number) =>
+  now - timestamp < windowMs;
+
+const tokensInLedger = (consumedTokens: RateLimitState["consumedTokens"]) =>
+  consumedTokens.reduce((total, entry) => total + entry.tokens, 0);
 
 const toHeaderValue = (value: unknown): string | undefined => {
   if (typeof value === "string") return value;
@@ -209,28 +202,6 @@ const getHeader = (
 
   return undefined;
 };
-
-const getRuntimeRemaining = (runtime: RateLimitRuntime) =>
-  Math.max(0, Math.min(runtime.limit, runtime.limiter.getRemainingInWindow()));
-
-const executeRuntimeTokens = (runtime: RateLimitRuntime, tokens: number) => {
-  const integerTokens = Math.max(0, Math.floor(tokens));
-  let executed = 0;
-
-  for (; executed < integerTokens; executed += 1) {
-    if (!runtime.limiter.maybeExecute()) {
-      break;
-    }
-  }
-
-  return executed;
-};
-
-const createConsumedTokens = (
-  count: number,
-  timestamp: number,
-): RateLimitState["consumedTokens"] =>
-  Array.from({ length: count }, () => ({ timestamp, tokens: 1 }));
 
 const releaseConsumedTokens = (
   consumedTokens: RateLimitState["consumedTokens"],
@@ -272,15 +243,16 @@ const cleanupRequestHistory = (state: RateLimitState, now: number): boolean => {
   return changed;
 };
 
-const cleanupState = (
-  state: RateLimitState,
-  windowMs: number,
-  now: number,
-): boolean => {
+/**
+ * Drop what has aged out and recompute `remaining` from the ledger. Returns
+ * whether anything a subscriber can see changed.
+ */
+const syncState = (state: RateLimitState, now: number): boolean => {
   let changed = cleanupRequestHistory(state, now);
 
-  const nextConsumedTokens = state.consumedTokens.filter(
-    (token) => now - token.timestamp <= windowMs,
+  const windowMs = windowMsOf(state);
+  const nextConsumedTokens = state.consumedTokens.filter((token) =>
+    isInWindow(token.timestamp, windowMs, now),
   );
   if (nextConsumedTokens.length !== state.consumedTokens.length) {
     state.consumedTokens = nextConsumedTokens;
@@ -292,22 +264,14 @@ const cleanupState = (
     changed = true;
   }
 
-  return changed;
-};
-
-const applyRuntimeToState = (
-  state: RateLimitState,
-  runtime: RateLimitRuntime,
-): boolean => {
-  const remaining = getRuntimeRemaining(runtime);
-  const changed =
-    state.limit !== runtime.limit ||
-    state.windowSeconds !== runtime.windowSeconds ||
-    state.remaining !== remaining;
-
-  state.limit = runtime.limit;
-  state.windowSeconds = runtime.windowSeconds;
-  state.remaining = remaining;
+  const remaining = Math.max(
+    0,
+    state.limit - tokensInLedger(state.consumedTokens),
+  );
+  if (state.remaining !== remaining) {
+    state.remaining = remaining;
+    changed = true;
+  }
 
   return changed;
 };
@@ -329,10 +293,6 @@ const ensureBucketState = (
   const windowSeconds = config.windowSeconds > 0 ? config.windowSeconds : 60;
   const limit = Math.max(0, config.maxTokens);
 
-  if (limit > 0 && windowSeconds > 0) {
-    rateLimitRuntimes[bucketKey] = createRuntime(limit, windowSeconds);
-  }
-
   rateLimitState[bucketKey] = {
     bucketKey,
     group,
@@ -348,44 +308,12 @@ const ensureBucketState = (
   return bucketKey;
 };
 
-const syncStateWithRuntime = (bucketKey: RateLimitBucketKey): boolean => {
-  const state = rateLimitState[bucketKey];
-  const runtime = rateLimitRuntimes[bucketKey];
-  if (!state || !runtime) return false;
-
-  const now = Date.now();
-  const stateCleaned = cleanupState(state, runtime.windowMs, now);
-  const runtimeApplied = applyRuntimeToState(state, runtime);
-
-  return stateCleaned || runtimeApplied;
-};
-
-const rebuildRuntimeFromState = (
-  bucketKey: RateLimitBucketKey,
-  now: number = Date.now(),
-): boolean => {
-  const state = rateLimitState[bucketKey];
-  if (!state) return false;
-
-  const runtime = createRuntime(state.limit, state.windowSeconds);
-  rateLimitRuntimes[bucketKey] = runtime;
-
-  const stateCleaned = cleanupState(state, runtime.windowMs, now);
-
-  const sortedTokens = [...state.consumedTokens].sort(
-    (a, b) => a.timestamp - b.timestamp,
-  );
-
-  for (const token of sortedTokens) {
-    executeRuntimeTokens(runtime, token.tokens);
-  }
-
-  const runtimeApplied = applyRuntimeToState(state, runtime);
-
-  return stateCleaned || runtimeApplied;
-};
-
-const resetRuntimeFromHeaders = (
+/**
+ * Replace a bucket's ledger with what ESI reports. ESI says how much of the
+ * window is used, not when, so the used tokens are recorded as one entry
+ * stamped now.
+ */
+const resetStateFromHeaders = (
   group: RateLimitGroup,
   userId: RateLimitUserId,
   limit: number,
@@ -394,16 +322,10 @@ const resetRuntimeFromHeaders = (
 ) => {
   const bucketKey = getRateLimitBucketKey(group, userId);
   const existingState = rateLimitState[bucketKey];
-  const runtime = createRuntime(limit, windowSeconds);
-  rateLimitRuntimes[bucketKey] = runtime;
-
-  const safeRemaining = Math.max(0, Math.min(runtime.limit, remaining));
-  const used = Math.max(0, runtime.limit - safeRemaining);
+  const safeLimit = Math.max(1, Math.floor(limit));
+  const safeRemaining = Math.max(0, Math.min(safeLimit, Math.floor(remaining)));
+  const used = safeLimit - safeRemaining;
   const now = Date.now();
-  const consumedTokens = createConsumedTokens(
-    executeRuntimeTokens(runtime, used),
-    now,
-  );
 
   const requestHistory = (existingState?.requestHistory ?? []).filter(
     (requestEntry) =>
@@ -414,11 +336,11 @@ const resetRuntimeFromHeaders = (
     bucketKey,
     group,
     userId,
-    limit: runtime.limit,
-    remaining: getRuntimeRemaining(runtime),
-    windowSeconds: runtime.windowSeconds,
+    limit: safeLimit,
+    remaining: safeRemaining,
+    windowSeconds: Math.max(1, Math.floor(windowSeconds)),
     retryAfterUntil: 0,
-    consumedTokens,
+    consumedTokens: used > 0 ? [{ timestamp: now, tokens: used }] : [],
     requestHistory,
   };
 };
@@ -483,7 +405,7 @@ export const updateRateLimitState = (
     RATE_LIMIT_BUCKET_CONFIGS[group]?.windowSeconds,
   );
 
-  resetRuntimeFromHeaders(group, userId, limit, windowSeconds, remaining);
+  resetStateFromHeaders(group, userId, limit, windowSeconds, remaining);
   notify();
   return true;
 };
@@ -559,44 +481,42 @@ export const consumeTokens = (
 ) => {
   const bucketKey = ensureBucketState(group, userId);
   const state = rateLimitState[bucketKey];
-  const runtime = rateLimitRuntimes[bucketKey];
 
-  if (!state || !runtime || tokens === 0) return;
+  if (!state || state.limit <= 0 || tokens === 0) return;
 
   const integerTokens = Math.max(0, Math.floor(Math.abs(tokens)));
   if (integerTokens <= 0) return;
 
-  let consumedOrReleased = false;
   const now = Date.now();
+  let changed = syncState(state, now);
 
   if (tokens > 0) {
-    const consumed = executeRuntimeTokens(runtime, integerTokens);
-    if (consumed > 0) {
-      state.consumedTokens.push(...createConsumedTokens(consumed, now));
-      consumedOrReleased = true;
+    // Grants at most what the window has left, as the limiter did.
+    const granted = Math.min(integerTokens, state.remaining);
+    if (granted > 0) {
+      state.consumedTokens.push({ timestamp: now, tokens: granted });
+      changed = true;
     }
   } else {
     const remainingToRelease = releaseConsumedTokens(
       state.consumedTokens,
       integerTokens,
     );
-    consumedOrReleased = remainingToRelease !== integerTokens;
+    if (remainingToRelease !== integerTokens) {
+      changed = true;
+    }
   }
 
-  const stateChanged =
-    tokens > 0
-      ? syncStateWithRuntime(bucketKey)
-      : rebuildRuntimeFromState(bucketKey, now);
-
-  if (consumedOrReleased || stateChanged) {
+  if (syncState(state, now) || changed) {
     notify();
   }
 };
 
 export const cleanupTokens = () => {
+  const now = Date.now();
   let changed = false;
-  for (const bucketKey of Object.keys(rateLimitState) as RateLimitBucketKey[]) {
-    if (syncStateWithRuntime(bucketKey)) {
+  for (const state of Object.values(rateLimitState)) {
+    if (syncState(state, now)) {
       changed = true;
     }
   }
@@ -633,9 +553,8 @@ export const getWaitTime = (
   const state = rateLimitState[bucketKey];
   if (!state) return 0;
 
-  syncStateWithRuntime(bucketKey);
-
   const now = Date.now();
+  syncState(state, now);
   const retryAfterWaitTime = Math.max(0, state.retryAfterUntil - now);
 
   if (state.remaining >= tokensNeeded) return retryAfterWaitTime;
@@ -644,7 +563,7 @@ export const getWaitTime = (
     (a, b) => a.timestamp - b.timestamp,
   );
   let temporaryRemaining = state.remaining;
-  const windowMs = state.windowSeconds * 1000;
+  const windowMs = windowMsOf(state);
 
   for (const token of sortedTokens) {
     temporaryRemaining += token.tokens;

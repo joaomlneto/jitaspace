@@ -1038,9 +1038,6 @@ importers:
 
   packages/esi-client:
     dependencies:
-      '@tanstack/pacer-lite':
-        specifier: ^0.2.2
-        version: 0.2.2
       '@tanstack/react-query':
         specifier: ^5.100.14
         version: 5.100.14(react@19.2.6)
