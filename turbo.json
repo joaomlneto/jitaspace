@@ -30,7 +30,6 @@
     // not infer it either, and without this entry the
     // turbo/no-undeclared-env-vars rule fails `pnpm lint`.
     "NEXT_PUBLIC_SENTRY_DSN",
-    "NEXT_PUBLIC_UMAMI_WEBSITE_ID",
     "REDIS_URL",
     "SENTRY_AUTH_TOKEN",
     "SENTRY_ORG",

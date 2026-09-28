@@ -55,8 +55,8 @@ if (!process.env.SKIP_ENV_VALIDATION) {
  *              Tycoon / Fuzzwork market APIs, and the zKillboard killmail API),
  *              `images.evetech.net` (also fetched as JSON to choose an image
  *              variant, so it's in `connect-src` as well as `img-src`), Google
- *              Analytics, and the same-origin Sentry (`/monitoring`) and Umami
- *              (`/analytics`) proxies. (`report-uri` is exempt from
+ *              Analytics, and the same-origin Sentry (`/monitoring`) and PostHog
+ *              (`/ingest`) proxies. (`report-uri` is exempt from
  *              `connect-src`, so the Sentry ingest host isn't listed here.)
  */
 const contentSecurityPolicy = [
@@ -87,11 +87,11 @@ const contentSecurityPolicy = [
   // and so needs connect-src in addition to img-src. Then Google Analytics
   // (incl. regional `*.google-analytics.com` collectors, plus the Google tag's
   // `www.googletagmanager.com/td` requests, sent as fetch/beacon calls and so
-  // needing connect-src as well as img-src) and the same-origin Sentry/Umami
+  // needing connect-src as well as img-src) and the same-origin Sentry/PostHog
   // proxies. Static EVE reference data is no longer fetched from
   // the self-hosted SDE service: it is resolved from our own database, on the
   // server or through same-origin server actions, both covered by 'self'.
-  "connect-src 'self' https://esi.evetech.net https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://gateway.umami.is https://www.google.com /monitoring /analytics /ingest",
+  "connect-src 'self' https://esi.evetech.net https://eve-kill.com https://evetycoon.com https://market.fuzzwork.co.uk https://images.evetech.net https://zkillboard.com https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://www.google.com /monitoring /ingest",
   "frame-ancestors 'none'",
   // Sentry Security (CSP) endpoint derived from the browser DSN — see the note
   // above on why this is NOT the `/monitoring` tunnel. TODO: `report-uri` is
@@ -227,26 +227,6 @@ const config = {
       { source: "/sitemap.xml", destination: "/sitemap-index.xml" },
     ],
     afterFiles: [
-      {
-        // Umami's tracker sends events to `<data-host-url>/api/send`, which
-        // defaults to the cloud collection gateway. The layout sets
-        // `data-host-url="/analytics"` so the beacon is same-origin (kept off
-        // `connect-src`'s third-party list and invisible to ad blockers that
-        // block `*.umami.is`); this rewrite forwards it to the gateway. Must
-        // come BEFORE the catch-all below — that one targets the script host,
-        // which does not serve `/api/send`.
-        source: "/analytics/api/send",
-        destination: "https://gateway.umami.is/api/send", // Umami event gateway
-      },
-      {
-        // Must target `cloud.umami.is` (the canonical script host), NOT
-        // `analytics.umami.is` — the latter 301-redirects to `cloud.umami.is`,
-        // and Next.js forwards that redirect to the browser, which then loads a
-        // cross-origin script that `script-src 'self'` rejects (a CSP violation
-        // even though the proxied URL is same-origin). See JITASPACE-3T.
-        source: "/analytics/:match*",
-        destination: "https://cloud.umami.is/:match*", // Proxy to Umami script
-      },
       {
         source: "/ingest/static/:path*",
         destination: "https://eu-assets.i.posthog.com/static/:path*",

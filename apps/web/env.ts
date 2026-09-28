@@ -59,10 +59,6 @@ const client = z.object({
    */
   NODE_ENV: z.enum(["development", "test", "production"]),
 
-  NEXT_PUBLIC_UMAMI_WEBSITE_ID:
-    process.env.NODE_ENV === "production"
-      ? z.string().min(1)
-      : z.string().min(1).optional(),
   NEXT_PUBLIC_GOOGLE_TAG_ID:
     process.env.NODE_ENV === "production"
       ? z.string().min(1)
@@ -96,7 +92,6 @@ const processEnv = {
   TRIGGER_API_URL: process.env.TRIGGER_API_URL,
   CRON_SECRET: process.env.CRON_SECRET,
   SKIP_BUILD_STATIC_GENERATION: process.env.SKIP_BUILD_STATIC_GENERATION,
-  NEXT_PUBLIC_UMAMI_WEBSITE_ID: process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID,
   NEXT_PUBLIC_GOOGLE_TAG_ID: process.env.NEXT_PUBLIC_GOOGLE_TAG_ID,
   NEXT_PUBLIC_DISCORD_INVITE_LINK: process.env.NEXT_PUBLIC_DISCORD_INVITE_LINK,
   NEXT_PUBLIC_MODIFIED_DATE: process.env.NEXT_PUBLIC_MODIFIED_DATE,

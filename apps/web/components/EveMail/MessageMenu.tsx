@@ -164,7 +164,6 @@ export function MessageMenu({
           .map((label) => (
             <Menu.Item
               key={label.label_id}
-              className="umami--click--modify-label-menu-item"
               onClick={() => void handleToggleLabel(label)}
             >
               <Group>
@@ -185,9 +184,6 @@ export function MessageMenu({
           ))}
         <Menu.Divider />
         <Menu.Item
-          className={`umami--click--mark-as-${
-            mail.is_read ? "unread" : "read"
-          }-menu-item`}
           leftSection={
             mail.is_read ? <IconMailOpened size={16} /> : <IconMail size={16} />
           }
@@ -198,7 +194,6 @@ export function MessageMenu({
         <Menu.Item
           leftSection={<IconTrash size={16} />}
           color="red"
-          className="umami--click--delete-message-menu-item"
           onClick={() => {
             openConfirmModal({
               title: "Delete Message",

@@ -178,7 +178,7 @@ tooling/
 - **API codegen:** Kubb 4 (OpenAPI → TypeScript). Keep `@kubb/*` at `>=4.38.0` — 4.37.x had codegen bugs (object-array collapse, `#`-prefixed keys).
 - **Rich text:** Tiptap + EVE HTML extensions
 - **Testing:** Jest 30 (unit). Cypress 15 runs a small smoke suite (`apps/web/cypress/e2e/smoke.cy.ts`) whose assertions are request-level: the homepage does not 5xx, `/about` server-renders, the PWA manifest is served, and an unknown route 404s. It gates "this deploy came up and serves real routes", not feature behaviour — there is still no meaningful E2E coverage.
-- **Monitoring:** Sentry + Umami
+- **Monitoring:** Sentry + PostHog
 
 ## Key Conventions
 

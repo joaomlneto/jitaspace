@@ -46,11 +46,10 @@ jobs:
       DATABASE_URL: "postgresql://root@localhost:26257/jitaspace?sslmode=disable"
       REDIS_URL: "redis://localhost:6379"
       # Placeholders that satisfy the client schema so the built bundle is
-      # loadable. DISCORD_INVITE_LINK must parse as a URL; the other two are
+      # loadable. DISCORD_INVITE_LINK must parse as a URL; GOOGLE_TAG_ID is
       # required only because `next build` sets NODE_ENV=production, which the
-      # schema branches on. None of them are real credentials.
+      # schema branches on. Neither is a real credential.
       NEXT_PUBLIC_DISCORD_INVITE_LINK: "https://discord.gg/ci-placeholder"
-      NEXT_PUBLIC_UMAMI_WEBSITE_ID: "ci-placeholder"
       NEXT_PUBLIC_GOOGLE_TAG_ID: "ci-placeholder"
     strategy:
       fail-fast: false # https://github.com/cypress-io/github-action/issues/48
