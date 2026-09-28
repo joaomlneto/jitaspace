@@ -1,4 +1,5 @@
 export * from "./celestialNames";
+export * from "./exactFloats";
 export * from "./ingestSdeCompositeTable";
 export * from "./ingestSdeTable";
 export * from "./loadSdeFile";

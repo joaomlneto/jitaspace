@@ -4,6 +4,7 @@ import type { sdeInputFiles, SdeRecord } from "@jitaspace/sde-utils";
 
 import type { CrudStatistics } from "../types";
 import { updateTable } from "../utils";
+import { exactFloats } from "./exactFloats";
 import { loadSdeFile } from "./loadSdeFile";
 
 /**
@@ -102,13 +103,14 @@ export async function ingestSdeTable<
         return rows.map(toManagedRow);
       },
       fetchRemoteEntries: () => Promise.resolve(chunk),
-      batchCreate: (rows) => limit(() => delegate.createMany({ data: rows })),
+      batchCreate: (rows) =>
+        limit(() => delegate.createMany({ data: rows.map(exactFloats) })),
       batchUpdate: (rows) =>
         Promise.all(
           rows.map((row) =>
             limit(() =>
               delegate.update({
-                data: row,
+                data: exactFloats(row),
                 where: { [idField]: row[idField] },
               }),
             ),
