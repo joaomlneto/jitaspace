@@ -13,7 +13,7 @@ export const useFuzzworkTypeMarketStats = (
   const data = useMemo(() => {
     if (!query.data?.[typeId]) return null;
     return query.data[typeId];
-  }, [query.data]);
+  }, [query.data, typeId]);
 
   return {
     ...query,

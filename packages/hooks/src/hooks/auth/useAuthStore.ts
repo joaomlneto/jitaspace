@@ -80,6 +80,9 @@ type CharacterAffiliation = CharactersAffiliationPost[number];
 const hasExpired = (expiresOn: number | undefined, now: number) =>
   expiresOn === undefined || expiresOn <= now;
 
+const accessTokenHasExpired = (character: CharacterSsoSession, now: number) =>
+  new Date(character.accessTokenExpirationDate).getTime() <= now;
+
 /**
  * Next expiry stamp for a cached read. A failure that has no earlier success to
  * fall back on leaves the stamp unset, so the next sweep retries immediately
@@ -258,7 +261,16 @@ export const useAuthStore = create(
         const staleRoles = candidates.filter(
           (character) =>
             hasExpired(character.corporationRolesExpireOn, now) &&
-            character.accessTokenPayload.scp.includes(CORPORATION_ROLES_SCOPE),
+            character.accessTokenPayload.scp.includes(
+              CORPORATION_ROLES_SCOPE,
+            ) &&
+            // The roles read is signed with the character's own access token.
+            // The first sweep runs straight after rehydration — before the
+            // refresh timer's first tick — so after any idle over 20 minutes
+            // that token has expired and the read is a guaranteed 401. Skip
+            // it: addCharacter re-reads stale roles as soon as the refresh
+            // lands. Affiliation is unauthenticated, so it is still read.
+            !accessTokenHasExpired(character, now),
         );
         // Nothing stale: return the store untouched so subscribers keyed on the
         // identity of `characters` (the token-refresh effect) do not re-run.

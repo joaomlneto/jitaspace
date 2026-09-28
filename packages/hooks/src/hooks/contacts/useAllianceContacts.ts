@@ -14,6 +14,7 @@ import {
 import { useAccessToken } from "../auth";
 import { esiInfiniteQueryNextPageParam } from "../utils/esiInfiniteQueryNextPageParam";
 import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
+import { EAGER_WALK_STALE_TIME_MS } from "../utils/useEagerlyFetchAllPages";
 import { useEsiContacts } from "../utils/useEsiContacts";
 
 export type AllianceContact =
@@ -52,6 +53,7 @@ export function useAllianceContacts(allianceId: number) {
         ),
         enabled: accessToken !== null,
         initialPageParam: 1,
+        staleTime: EAGER_WALK_STALE_TIME_MS,
         queryFn: ({ pageParam }) =>
           getAlliancesAllianceIdContacts(
             allianceId,

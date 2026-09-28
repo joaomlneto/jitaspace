@@ -11,7 +11,10 @@ import {
 
 import { useAccessToken } from "../auth";
 import { esiInfiniteQueryKey } from "../utils/esiQueryKeys";
-import { useEagerlyFetchAllPages } from "../utils/useEagerlyFetchAllPages";
+import {
+  EAGER_WALK_STALE_TIME_MS,
+  useEagerlyFetchAllPages,
+} from "../utils/useEagerlyFetchAllPages";
 
 export type CharacterAsset =
   GetCharactersCharacterIdAssetsQueryResponse[number];
@@ -36,6 +39,7 @@ export const useCharacterAssets = (characterId?: number) => {
           ),
           enabled: characterId !== undefined && accessToken !== null,
           initialPageParam: 1,
+          staleTime: EAGER_WALK_STALE_TIME_MS,
           queryFn: ({ pageParam }) =>
             getCharactersCharacterIdAssets(
               characterId ?? 0,

@@ -12,12 +12,19 @@ import type {
 import type { ESIScope } from "@jitaspace/esi-metadata";
 
 import type { EsiSubject, EsiSubjectKind } from "../auth";
+import type { EsiPageCeilingError } from "./esiPagedQueryOptions";
 import { useAuthStoreHasHydrated, useEsiSubjects } from "../auth";
 
 /** A failure, attributed to the subject whose query produced it. */
 export interface EsiSubjectError {
   subjectId: number;
-  error: ResponseErrorConfig<Error>;
+  /**
+   * Usually a failed ESI response. A paginated subject above the page ceiling
+   * fails with EsiPageCeilingError instead — thrown before any request, so it
+   * has no `response`: check `instanceof EsiPageCeilingError` before reading
+   * one.
+   */
+  error: ResponseErrorConfig<Error> | EsiPageCeilingError;
 }
 
 /**

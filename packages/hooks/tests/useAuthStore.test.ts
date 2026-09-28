@@ -58,6 +58,11 @@ const ROLES_SCOPE: ESIScope = "esi-characters.read_corporation_roles.v1";
 
 const expirationOf = (exp: number) => new Date(exp * 1000).toString();
 
+/** A token that is still valid (2096). */
+const LIVE_EXP = 4_000_000_000;
+/** A token that expired long ago (2001) — the shared fixture's default. */
+const EXPIRED_EXP = 1_000_000_000;
+
 const payload = (exp: number, scp: ESIScope[] = []): Payload => ({
   sub: SUB,
   exp,
@@ -304,6 +309,13 @@ describe("useAuthStore — corporation roles", () => {
 });
 
 describe("useAuthStore.refreshStaleCharacterData", () => {
+  // The shared fixture's default token expired in 2001. The sweep skips roles
+  // reads for expired tokens, so these tests seed a live one unless a test is
+  // about the expired case.
+  const seedLiveCharacter = (
+    options: Parameters<typeof seedCharacter>[0] = {},
+  ) => seedCharacter({ exp: LIVE_EXP, ...options });
+
   beforeEach(() => {
     mockGetPayload.mockReset();
     mockAffiliation.mockReset();
@@ -325,7 +337,7 @@ describe("useAuthStore.refreshStaleCharacterData", () => {
     }));
 
   it("does nothing — and leaves the store untouched — when nothing is stale", async () => {
-    await seedCharacter({ scopes: [ROLES_SCOPE], roles: ["Director"] });
+    await seedLiveCharacter({ scopes: [ROLES_SCOPE], roles: ["Director"] });
     const before = useAuthStore.getState().characters;
 
     await useAuthStore.getState().refreshStaleCharacterData();
@@ -340,7 +352,7 @@ describe("useAuthStore.refreshStaleCharacterData", () => {
   it("picks up a corporation change once the affiliation cache expires", async () => {
     // The whole point: a character who switched corporation kept matching the
     // old one in useAccessToken until they re-authenticated.
-    await seedCharacter({ scopes: [ROLES_SCOPE], roles: ["Director"] });
+    await seedLiveCharacter({ scopes: [ROLES_SCOPE], roles: ["Director"] });
     expireCaches();
 
     mockAffiliation.mockResolvedValueOnce({
@@ -357,7 +369,7 @@ describe("useAuthStore.refreshStaleCharacterData", () => {
   });
 
   it("skips characters whose session EVE will not renew", async () => {
-    await seedCharacter({ scopes: [ROLES_SCOPE], roles: ["Director"] });
+    await seedLiveCharacter({ scopes: [ROLES_SCOPE], roles: ["Director"] });
     expireCaches();
     useAuthStore.getState().markCharacterSessionExpired(CHARACTER_ID);
 
@@ -368,7 +380,7 @@ describe("useAuthStore.refreshStaleCharacterData", () => {
   });
 
   it("re-arms a shorter retry when a read fails", async () => {
-    await seedCharacter({ scopes: [ROLES_SCOPE], roles: ["Director"] });
+    await seedLiveCharacter({ scopes: [ROLES_SCOPE], roles: ["Director"] });
     expireCaches();
 
     const consoleError = jest
@@ -396,7 +408,7 @@ describe("useAuthStore.refreshStaleCharacterData", () => {
   });
 
   it("does not start a second sweep while one is in flight", async () => {
-    await seedCharacter({ scopes: [ROLES_SCOPE], roles: ["Director"] });
+    await seedLiveCharacter({ scopes: [ROLES_SCOPE], roles: ["Director"] });
     expireCaches();
 
     // Expiry stamps are only written once the reads settle, so a sweep firing
@@ -418,6 +430,22 @@ describe("useAuthStore.refreshStaleCharacterData", () => {
       data: [{ character_id: CHARACTER_ID, corporation_id: 98 }],
     });
     await first;
+  });
+
+  it("does not read roles with an expired access token", async () => {
+    // On a cold load the sweep runs before the refresh timer's first tick, so
+    // the stored token is usually expired: the roles read was a guaranteed 401
+    // per character. Affiliation needs no token, so it is still refreshed.
+    await seedCharacter({ exp: EXPIRED_EXP, scopes: [ROLES_SCOPE] });
+    expireCaches();
+    mockAffiliation.mockResolvedValueOnce({
+      data: [{ character_id: CHARACTER_ID, corporation_id: 98 }],
+    });
+
+    await useAuthStore.getState().refreshStaleCharacterData();
+
+    expect(mockRoles).toHaveBeenCalledTimes(1); // the seeding call only
+    expect(mockAffiliation).toHaveBeenCalledTimes(2);
   });
 });
 

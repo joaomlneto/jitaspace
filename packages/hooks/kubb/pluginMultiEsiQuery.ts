@@ -3,7 +3,11 @@ import path from "node:path";
 import { definePlugin } from "@kubb/core";
 
 import type { EsiOperation, MultiEsiEndpoint } from "./multiEsiEndpoints";
-import { describeEndpoint, renderEndpoint } from "./multiEsiEndpoints";
+import {
+  assertUniqueHookNames,
+  describeEndpoint,
+  renderEndpoint,
+} from "./multiEsiEndpoints";
 
 export const pluginMultiEsiQueryName = "plugin-multi-esi-query";
 
@@ -44,6 +48,8 @@ export const pluginMultiEsiQuery = definePlugin(() => ({
       if (endpoint) endpoints.push(endpoint);
     }
     endpoints.sort((a, b) => a.hookName.localeCompare(b.hookName));
+
+    assertUniqueHookNames(endpoints);
 
     for (const endpoint of endpoints) {
       await this.upsertFile({
