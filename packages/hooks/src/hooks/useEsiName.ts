@@ -133,12 +133,27 @@ function flushUniverseNames() {
   }
 }
 
+/**
+ * A batch that fails transiently — no response, or a 5xx — is retried this
+ * many times before its names are failed. Batching means one blip would
+ * otherwise fail every name in the batch (up to 1000) at once, and the name
+ * cache never re-fetches a failed entry, so the whole page would read
+ * "Unknown" for the rest of the session. 420 and 429 are not transient in this
+ * sense: retrying spends the very budget ESI is protecting.
+ */
+const TRANSIENT_RETRIES = 1;
+const TRANSIENT_RETRY_DELAY_MS = 1000;
+
+const isTransient = (status: number | undefined) =>
+  status === undefined || status >= 500;
+
 const statusOf = (error: unknown): number | undefined =>
   (error as { response?: { status?: number } } | null)?.response?.status;
 
 async function resolveUniverseNamesChunk(
   ids: number[],
   waiters: Map<number, NameWaiter[]>,
+  attempt = 0,
 ): Promise<void> {
   try {
     const response = await postUniverseNames(ids, {}, {});
@@ -158,6 +173,13 @@ async function resolveUniverseNamesChunk(
         resolveUniverseNamesChunk(ids.slice(0, middle), waiters),
         resolveUniverseNamesChunk(ids.slice(middle), waiters),
       ]);
+      return;
+    }
+    if (attempt < TRANSIENT_RETRIES && isTransient(status)) {
+      await new Promise((resolve) =>
+        setTimeout(resolve, TRANSIENT_RETRY_DELAY_MS),
+      );
+      await resolveUniverseNamesChunk(ids, waiters, attempt + 1);
       return;
     }
     for (const id of ids) {

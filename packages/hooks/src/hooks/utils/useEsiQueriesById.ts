@@ -23,7 +23,18 @@ interface EsiQueryByIdSource<TItem> {
   queryFn?: (
     ...args: never[]
   ) => ResponseConfig<TItem> | Promise<ResponseConfig<TItem>>;
+  staleTime?: number;
 }
+
+/**
+ * How long static reference data (types, dogma attributes) counts as fresh.
+ *
+ * The app's QueryClient uses react-query's defaults — staleTime 0 and refetch
+ * on window focus — so without this every id refetched on every focus. For the
+ * hand-rolled hooks this replaced that meant one request per id per alt-tab
+ * (150+ on /compare) for data that only changes when CCP patches the game.
+ */
+export const REFERENCE_DATA_STALE_TIME_MS = 24 * 60 * 60 * 1000;
 
 export interface EsiQueriesById<TItem> {
   /** Every resource that has resolved, keyed by its own id. */

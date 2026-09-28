@@ -6,7 +6,10 @@ import type {
 } from "@jitaspace/esi-client";
 import { getUniverseTypesTypeIdQueryOptions } from "@jitaspace/esi-client";
 
-import { useEsiQueriesById } from "../utils/useEsiQueriesById";
+import {
+  REFERENCE_DATA_STALE_TIME_MS,
+  useEsiQueriesById,
+} from "../utils/useEsiQueriesById";
 
 const typeIdOf = (type: GetUniverseTypesTypeIdQueryResponse) => type.type_id;
 
@@ -17,6 +20,9 @@ export const useTypes = (
 ) =>
   useEsiQueriesById(
     typeIds,
-    (typeId) => getUniverseTypesTypeIdQueryOptions(typeId, headers),
+    (typeId) => ({
+      ...getUniverseTypesTypeIdQueryOptions(typeId, headers),
+      staleTime: REFERENCE_DATA_STALE_TIME_MS,
+    }),
     typeIdOf,
   );

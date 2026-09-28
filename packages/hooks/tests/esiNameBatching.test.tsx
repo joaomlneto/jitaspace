@@ -1,3 +1,4 @@
+import type { RenderHookResult } from "@testing-library/react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 import { renderHook, waitFor } from "@testing-library/react";
 
@@ -63,11 +64,17 @@ const answer = (ids: number[]) =>
   });
 
 /**
- * The cache's own record of one id. useEsiNameLookup's record only ever holds
- * entries that carry a value, so a failed lookup has to be read here.
+ * Reads the cache's own record, since useEsiNameLookup's record only ever holds
+ * entries that carry a value and a failed lookup has to be read here. One probe
+ * per test, re-rendered per read: mounting a fresh one inside waitFor adds a
+ * DOM node per poll, and waitFor re-polls on every DOM mutation, so a status
+ * that stays pending for a while spins until the heap runs out.
  */
-const cacheStatusOf = (id: number) =>
-  renderHook(() => useEsiNamesCache()).result.current[`en\u0000${id}`]?.status;
+let cacheProbe: RenderHookResult<ReturnType<typeof useEsiNamesCache>, unknown>;
+const cacheStatusOf = (id: number) => {
+  cacheProbe.rerender();
+  return cacheProbe.result.current[`en\u0000${id}`]?.status;
+};
 
 const httpError = (status: number) =>
   Object.assign(new Error(`HTTP ${status}`), { response: { status } });
@@ -76,6 +83,7 @@ describe("batched name resolution", () => {
   beforeEach(() => {
     mockPostUniverseNames.mockReset();
     mockGetStargate.mockReset();
+    cacheProbe = renderHook(() => useEsiNamesCache());
   });
 
   it("resolves every name a render asks for in one request", async () => {
@@ -124,16 +132,48 @@ describe("batched name resolution", () => {
     expect(mockPostUniverseNames).toHaveBeenCalledTimes(7);
   });
 
-  it("does not split a batch that failed because ESI is down", async () => {
-    // Bisecting a 5xx (or a 420 error-limit response) would multiply the load
-    // on an API that is already failing.
+  it("retries a transient failure once instead of failing the batch", async () => {
+    // One 5xx would otherwise fail every name in the batch at once, and failed
+    // names are never re-fetched — the whole page would read "Unknown".
+    mockPostUniverseNames
+      .mockRejectedValueOnce(httpError(503))
+      .mockImplementation(answer);
+    const entries = types(300, 4);
+
+    const { result } = renderHook(() => useEsiNameLookup(entries));
+
+    await waitFor(
+      () => expect(result.current["303"]?.value?.name).toBe("Type 303"),
+      { timeout: 3000 },
+    );
+    expect(mockPostUniverseNames).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not split a batch that keeps failing because ESI is down", async () => {
+    // Bisecting a 5xx would multiply the load on an API that is already
+    // failing: one retry, then the batch fails as a whole.
     mockPostUniverseNames.mockRejectedValue(httpError(503));
-    const entries = types(300, 8);
+    const entries = types(310, 8);
 
     renderHook(() => useEsiNameLookup(entries));
 
-    await waitFor(() => expect(cacheStatusOf(300)).toBe("error"));
-    expect(cacheStatusOf(307)).toBe("error");
+    await waitFor(() => expect(cacheStatusOf(310)).toBe("error"), {
+      timeout: 3000,
+    });
+    expect(cacheStatusOf(317)).toBe("error");
+    expect(mockPostUniverseNames).toHaveBeenCalledTimes(2);
+  });
+
+  it("neither retries nor splits when ESI's error limit is hit", async () => {
+    // 420 means ESI is already rationing our errors; another request, or a
+    // bisection's worth of them, only spends more of that budget.
+    mockPostUniverseNames.mockRejectedValue(httpError(420));
+    const entries = types(320, 8);
+
+    renderHook(() => useEsiNameLookup(entries));
+
+    await waitFor(() => expect(cacheStatusOf(320)).toBe("error"));
+    await new Promise((resolve) => setTimeout(resolve, 50));
     expect(mockPostUniverseNames).toHaveBeenCalledTimes(1);
   });
 

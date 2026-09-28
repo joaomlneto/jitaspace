@@ -6,7 +6,10 @@ import type {
 } from "@jitaspace/esi-client";
 import { getDogmaAttributesAttributeIdQueryOptions } from "@jitaspace/esi-client";
 
-import { useEsiQueriesById } from "../utils/useEsiQueriesById";
+import {
+  REFERENCE_DATA_STALE_TIME_MS,
+  useEsiQueriesById,
+} from "../utils/useEsiQueriesById";
 
 const attributeIdOf = (attribute: GetDogmaAttributesAttributeIdQueryResponse) =>
   attribute.attribute_id;
@@ -18,7 +21,9 @@ export const useDogmaAttributes = (
 ) =>
   useEsiQueriesById(
     attributeIds,
-    (attributeId) =>
-      getDogmaAttributesAttributeIdQueryOptions(attributeId, headers),
+    (attributeId) => ({
+      ...getDogmaAttributesAttributeIdQueryOptions(attributeId, headers),
+      staleTime: REFERENCE_DATA_STALE_TIME_MS,
+    }),
     attributeIdOf,
   );

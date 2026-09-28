@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, jest } from "@jest/globals";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 
 // useTypes / useDogmaAttributes against a real QueryClient. The ESI fetchers
 // are mocked both as generated query options (what the hooks use now) and as
@@ -30,7 +30,7 @@ jest.mock("@jitaspace/esi-client", () => ({
   }),
 }));
 
-const { QueryClient, QueryClientProvider } =
+const { QueryClient, QueryClientProvider, focusManager } =
   require("@tanstack/react-query") as typeof import("@tanstack/react-query");
 const { createElement } = require("react") as typeof import("react");
 const { useTypes } =
@@ -83,6 +83,32 @@ describe("useTypes", () => {
     );
     await waitFor(() => expect(result.current.errors).toHaveLength(1));
     expect(result.current.isLoading).toBe(false);
+  });
+});
+
+describe("useTypes on window focus", () => {
+  it("does not refetch every type when the window regains focus", async () => {
+    // The app's QueryClient uses react-query's defaults (staleTime 0, refetch
+    // on focus), so without a staleTime every id refetched on every alt-tab —
+    // 150+ requests on /compare for data that only changes with a game patch.
+    mockGetType.mockReset();
+    mockGetType.mockImplementation((id) =>
+      Promise.resolve({ data: { type_id: id, name: `Type ${id}` } }),
+    );
+    const { result } = renderHook(() => useTypes(TYPE_IDS), { wrapper });
+    await waitFor(() =>
+      expect(Object.keys(result.current.data)).toHaveLength(3),
+    );
+    expect(mockGetType).toHaveBeenCalledTimes(3);
+
+    act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(mockGetType).toHaveBeenCalledTimes(3);
+    focusManager.setFocused(undefined);
   });
 });
 
