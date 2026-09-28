@@ -1,4 +1,5 @@
 import type { ResponseConfig } from "@jitaspace/esi-client";
+import { shouldRetryEsiRequest } from "@jitaspace/esi-client";
 
 import { ESI_QUERY_KEY_MARKER, markEsiQueryKey } from "../utils/esiQueryKeys";
 
@@ -113,10 +114,13 @@ export function esiPagedQueryOptions<TItem>(config: {
     enabled,
     // The ceiling refusal is deterministic — it is decided from page 1's
     // headers — so retrying it just re-fetches page 1 to fail the same way,
-    // three more times by React Query's default. Everything else keeps the
-    // app's normal retry behaviour.
+    // three more times by React Query's default. Everything else follows the
+    // app-wide ESI policy: an override replaces the default rather than
+    // extending it, so restating React Query's count here would retry the
+    // 404s and 420s that policy exists to stop.
     retry: (failureCount: number, error: Error) =>
-      !(error instanceof EsiPageCeilingError) && failureCount < 3,
+      !(error instanceof EsiPageCeilingError) &&
+      shouldRetryEsiRequest(failureCount, error),
     // The signal is threaded into every page so an unmount or refetch cancels
     // the whole fan-out rather than leaving pages in flight against ESI.
     queryFn: async ({ signal }: { signal?: AbortSignal } = {}): Promise<

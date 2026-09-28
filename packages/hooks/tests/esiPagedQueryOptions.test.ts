@@ -13,6 +13,9 @@ const page = (data: number[], xPages?: string): ResponseConfig<number[]> =>
     headers: xPages == undefined ? {} : { "x-pages": xPages },
   }) as unknown as ResponseConfig<number[]>;
 
+const httpError = (status: number) =>
+  Object.assign(new Error(`HTTP ${status}`), { response: { status } });
+
 const runQueryFn = async (
   fetchPage: (page: number) => Promise<ResponseConfig<number[]>>,
 ) => {
@@ -125,9 +128,13 @@ describe("esiPagedQueryOptions", () => {
     // Deterministic from page 1's headers, so React Query's default of three
     // retries would just re-fetch page 1 to fail the same way each time.
     expect(options.retry(0, new EsiPageCeilingError(500))).toBe(false);
-    // Everything else keeps the normal retry behaviour.
+    // Everything else follows the app-wide ESI policy: a paged fan-out is
+    // where ESI's error limit is likeliest to run out, so a 420 or a 404 must
+    // not be retried here either.
     expect(options.retry(0, new Error("network"))).toBe(true);
     expect(options.retry(3, new Error("network"))).toBe(false);
+    expect(options.retry(0, httpError(404))).toBe(false);
+    expect(options.retry(0, httpError(420))).toBe(false);
   });
 
   it("fetches right up to the ceiling", async () => {
