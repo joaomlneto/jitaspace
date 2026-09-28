@@ -12,6 +12,7 @@ import {
   DEFAULT_ESI_ACCEPT_LANGUAGE,
   usePreferencesStore,
 } from "~/lib/preferences";
+import { shouldRetryQuery } from "~/lib/queryRetry";
 
 // Seed the ESI language at module scope — before React renders anything, on the
 // server pass and in the browser alike.
@@ -34,7 +35,14 @@ export const MyQueryClientProvider = ({
   children,
   esiUserAgent,
 }: MyQueryClientProviderProps) => {
-  const [client] = useState(new QueryClient());
+  // Built once: `useState(new QueryClient())` constructed — and discarded — a
+  // new client, caches and all, on every render.
+  const [client] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: { queries: { retry: shouldRetryQuery } },
+      }),
+  );
 
   useEffect(() => {
     void (async () => {
