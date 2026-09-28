@@ -276,24 +276,29 @@ const syncState = (state: RateLimitState, now: number): boolean => {
   return changed;
 };
 
+/**
+ * The bucket's state, created from the group's configuration on first use.
+ * Undefined for a group with no configuration, which has no bucket to track.
+ */
 const ensureBucketState = (
   group: RateLimitGroup,
   userId: RateLimitUserId,
-): RateLimitBucketKey => {
+): RateLimitState | undefined => {
   const bucketKey = getRateLimitBucketKey(group, userId);
-  if (rateLimitState[bucketKey]) {
-    return bucketKey;
+  const existingState = rateLimitState[bucketKey];
+  if (existingState) {
+    return existingState;
   }
 
   const config = RATE_LIMIT_BUCKET_CONFIGS[group];
   if (!config) {
-    return bucketKey;
+    return undefined;
   }
 
   const windowSeconds = config.windowSeconds > 0 ? config.windowSeconds : 60;
   const limit = Math.max(0, config.maxTokens);
 
-  rateLimitState[bucketKey] = {
+  const state: RateLimitState = {
     bucketKey,
     group,
     userId,
@@ -304,8 +309,9 @@ const ensureBucketState = (
     consumedTokens: [],
     requestHistory: [],
   };
+  rateLimitState[bucketKey] = state;
 
-  return bucketKey;
+  return state;
 };
 
 /**
@@ -419,8 +425,7 @@ export const updateRetryAfter = (
     return false;
   }
 
-  const bucketKey = ensureBucketState(group, userId);
-  const state = rateLimitState[bucketKey];
+  const state = ensureBucketState(group, userId);
   if (!state) {
     return false;
   }
@@ -454,8 +459,7 @@ export const recordRateLimitRequest = (
     typeof request.timestamp === "number" && Number.isFinite(request.timestamp)
       ? request.timestamp
       : Date.now();
-  const bucketKey = ensureBucketState(group, userId);
-  const state = rateLimitState[bucketKey];
+  const state = ensureBucketState(group, userId);
   if (!state) {
     return false;
   }
@@ -479,8 +483,7 @@ export const consumeTokens = (
   tokens: number,
   userId: RateLimitUserId = DEFAULT_RATE_LIMIT_USER_ID,
 ) => {
-  const bucketKey = ensureBucketState(group, userId);
-  const state = rateLimitState[bucketKey];
+  const state = ensureBucketState(group, userId);
 
   if (!state || state.limit <= 0 || tokens === 0) return;
 
@@ -549,8 +552,7 @@ export const getWaitTime = (
 ) => {
   if (tokensNeeded <= 0) return 0;
 
-  const bucketKey = ensureBucketState(group, userId);
-  const state = rateLimitState[bucketKey];
+  const state = ensureBucketState(group, userId);
   if (!state) return 0;
 
   const now = Date.now();
