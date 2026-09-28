@@ -1,4 +1,4 @@
-import { isServer } from "@tanstack/react-query";
+import { environmentManager } from "@tanstack/react-query";
 
 import { shouldRetryEsiRequest } from "@jitaspace/esi-client";
 
@@ -10,4 +10,5 @@ import { shouldRetryEsiRequest } from "@jitaspace/esi-client";
 export const shouldRetryQuery = (
   failureCount: number,
   error: unknown,
-): boolean => !isServer && shouldRetryEsiRequest(failureCount, error);
+): boolean =>
+  !environmentManager.isServer() && shouldRetryEsiRequest(failureCount, error);

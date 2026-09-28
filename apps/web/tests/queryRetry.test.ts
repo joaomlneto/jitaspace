@@ -1,4 +1,5 @@
-import { describe, expect, it } from "@jest/globals";
+import { afterEach, describe, expect, it } from "@jest/globals";
+import { environmentManager } from "@tanstack/react-query";
 
 import { shouldRetryQuery } from "~/lib/queryRetry";
 
@@ -8,6 +9,16 @@ const httpError = (status: number) =>
   Object.assign(new Error(`HTTP ${status}`), { response: { status } });
 
 describe("shouldRetryQuery", () => {
+  afterEach(() => {
+    environmentManager.setIsServer(() => typeof window === "undefined");
+  });
+
+  it("never retries while rendering on the server, as React Query's default", () => {
+    environmentManager.setIsServer(() => true);
+
+    expect(shouldRetryQuery(0, httpError(503))).toBe(false);
+  });
+
   it("applies the ESI retry policy in the browser", () => {
     expect(shouldRetryQuery(0, httpError(404))).toBe(false);
     expect(shouldRetryQuery(0, httpError(503))).toBe(true);
