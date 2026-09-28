@@ -22,6 +22,8 @@ const { useGetUniverseRegions, getMarketsRegionIdOrders } =
       (
         regionId: number,
         params: unknown,
+        headers?: unknown,
+        config?: { signal?: AbortSignal },
       ) => Promise<{ data: unknown[]; headers: Record<string, string> }>
     >;
   };
@@ -220,5 +222,51 @@ describe("useTypeMarketOrders", () => {
     // shows skeletons rather than stale rows that would resize on arrival.
     expect(result.current.isLoading).toBe(true);
     expect(result.current.data).toEqual({});
+  });
+
+  it("aborts the previous type's requests when the type changes", async () => {
+    // Only the results used to be ignored: the requests themselves kept
+    // downloading every region for a type the user had already left.
+    useGetUniverseRegions.mockReturnValue({ data: { data: UNSORTED_REGIONS } });
+    const signals: AbortSignal[] = [];
+    getMarketsRegionIdOrders.mockImplementation(
+      (_region, _params, _h, config) => {
+        if (config?.signal) signals.push(config.signal);
+        return new Promise(() => undefined); // never settles
+      },
+    );
+
+    const { rerender } = renderHook(
+      ({ typeId }: { typeId: number }) => useTypeMarketOrders(typeId),
+      { initialProps: { typeId: 34 } },
+    );
+    await waitFor(() => expect(signals).toHaveLength(HUBS.length));
+    expect(signals.every((signal) => !signal.aborted)).toBe(true);
+
+    rerender({ typeId: 35 });
+
+    expect(signals.slice(0, HUBS.length).every((s) => s.aborted)).toBe(true);
+  });
+
+  it("keeps at most 16 long-tail regions in flight at once", async () => {
+    const TAIL = Array.from({ length: 40 }, (_, index) => 20000000 + index);
+    useGetUniverseRegions.mockReturnValue({ data: { data: TAIL } });
+    let inFlight = 0;
+    let peak = 0;
+    getMarketsRegionIdOrders.mockImplementation(async () => {
+      inFlight++;
+      peak = Math.max(peak, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      inFlight--;
+      return { data: [], headers: { "x-pages": "1" } };
+    });
+
+    renderHook(() => useTypeMarketOrders(34));
+
+    await waitFor(() =>
+      expect(getMarketsRegionIdOrders).toHaveBeenCalledTimes(TAIL.length),
+    );
+    expect(peak).toBeLessThanOrEqual(16);
+    expect(peak).toBeGreaterThan(1);
   });
 });

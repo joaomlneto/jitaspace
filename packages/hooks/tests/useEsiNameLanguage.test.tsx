@@ -39,12 +39,11 @@ let currentLanguage: string | undefined = "en";
 const acceptLanguageListeners = new Set<() => void>();
 
 const mockUseEsiAcceptLanguage = jest.fn();
-const mockGetUniverseTypesTypeId = jest.fn();
+const mockPostUniverseNames = jest.fn();
 
 jest.mock("@jitaspace/esi-client", () => ({
   __esModule: true,
-  getUniverseTypesTypeId: (...args: unknown[]) =>
-    mockGetUniverseTypesTypeId(...args),
+  postUniverseNames: (...args: unknown[]) => mockPostUniverseNames(...args),
   // Consumed by the real useEsiAcceptLanguage in the last describe block.
   getAcceptLanguage: () => currentLanguage,
   subscribeToAcceptLanguage: (listener: () => void) => {
@@ -94,9 +93,17 @@ beforeEach(() => {
   mockUseEsiAcceptLanguage.mockReset();
   mockUseEsiAcceptLanguage.mockImplementation(() => currentLanguage);
 
-  mockGetUniverseTypesTypeId.mockReset();
-  mockGetUniverseTypesTypeId.mockImplementation(() =>
-    Promise.resolve({ data: { name: localisedName() } }),
+  mockPostUniverseNames.mockReset();
+  // Names now resolve in batches through POST /universe/names, which answers
+  // in the configured language like the per-type GET it replaced.
+  mockPostUniverseNames.mockImplementation((ids: unknown) =>
+    Promise.resolve({
+      data: (ids as number[]).map((id) => ({
+        id,
+        name: localisedName(),
+        category: "inventory_type",
+      })),
+    }),
   );
 });
 
@@ -115,15 +122,15 @@ describe("useEsiName under a language switch", () => {
     );
 
     await waitFor(() => expect(result.current.name).toBe("Rifter [en]"));
-    expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(1);
+    expect(mockPostUniverseNames).toHaveBeenCalledTimes(1);
 
     switchLanguageTo("de", rerender);
 
     // Before the fix this stayed "Rifter [en]" forever and no second request
     // was ever issued — the half-translated UI the fix is about.
     await waitFor(() => expect(result.current.name).toBe("Rifter [de]"));
-    expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(2);
-    expect(mockGetUniverseTypesTypeId).toHaveBeenNthCalledWith(2, 601, {}, {});
+    expect(mockPostUniverseNames).toHaveBeenCalledTimes(2);
+    expect(mockPostUniverseNames).toHaveBeenNthCalledWith(2, [601], {}, {});
   });
 
   it("reuses the already-cached entry when switching back to the first language", async () => {
@@ -135,7 +142,7 @@ describe("useEsiName under a language switch", () => {
 
     switchLanguageTo("de", rerender);
     await waitFor(() => expect(result.current.name).toBe("Rifter [de]"));
-    expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(2);
+    expect(mockPostUniverseNames).toHaveBeenCalledTimes(2);
 
     switchLanguageTo("en", rerender);
 
@@ -144,7 +151,7 @@ describe("useEsiName under a language switch", () => {
     // flicker and no third request.
     expect(result.current.name).toBe("Rifter [en]");
     expect(result.current.loading).toBe(false);
-    expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(2);
+    expect(mockPostUniverseNames).toHaveBeenCalledTimes(2);
   });
 
   it("holds independent entries for the same id under two languages at once", async () => {
@@ -179,7 +186,7 @@ describe("useEsiName id normalisation", () => {
 
     await waitFor(() => expect(result.current.name).toBe("Rifter [en]"));
     // The resolver coerces to a number before it reaches ESI.
-    expect(mockGetUniverseTypesTypeId).toHaveBeenCalledWith(607, {}, {});
+    expect(mockPostUniverseNames).toHaveBeenCalledWith([607], {}, {});
   });
 
   it("stays idle for an undefined id instead of resolving one", async () => {
@@ -191,7 +198,7 @@ describe("useEsiName id normalisation", () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.name).toBeUndefined();
-    expect(mockGetUniverseTypesTypeId).not.toHaveBeenCalled();
+    expect(mockPostUniverseNames).not.toHaveBeenCalled();
   });
 });
 
@@ -242,17 +249,13 @@ describe("useEsiNamePrefetch under a language switch", () => {
   it("loads under the current language and loads again when the language changes", async () => {
     const { rerender } = renderHook(() => useEsiNamePrefetch(PREFETCH_ENTRIES));
 
-    await waitFor(() =>
-      expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(1),
-    );
+    await waitFor(() => expect(mockPostUniverseNames).toHaveBeenCalledTimes(1));
 
     // The entries array is referentially stable, so before the fix the effect's
     // `[entries]` deps never changed and the prefetch simply never ran again.
     switchLanguageTo("de", rerender);
 
-    await waitFor(() =>
-      expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(2),
-    );
+    await waitFor(() => expect(mockPostUniverseNames).toHaveBeenCalledTimes(2));
 
     const { result: cache } = renderHook(() => useEsiNamesCache());
     const namesForThisId = Object.entries(cache.current)
@@ -281,9 +284,7 @@ describe("useEsiNamePrefetch with a changing entries array", () => {
         },
       },
     );
-    await waitFor(() =>
-      expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(1),
-    );
+    await waitFor(() => expect(mockPostUniverseNames).toHaveBeenCalledTimes(1));
 
     // Same id, fresh array, plus one new id: only the new one is requested.
     rerender({
@@ -292,13 +293,11 @@ describe("useEsiNamePrefetch with a changing entries array", () => {
         { id: 610, category: "inventory_type" as const },
       ],
     });
-    await waitFor(() =>
-      expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(2),
-    );
+    await waitFor(() => expect(mockPostUniverseNames).toHaveBeenCalledTimes(2));
     await new Promise((resolve) => setTimeout(resolve, 20));
 
-    expect(mockGetUniverseTypesTypeId).toHaveBeenCalledTimes(2);
-    expect(mockGetUniverseTypesTypeId).toHaveBeenLastCalledWith(610, {}, {});
+    expect(mockPostUniverseNames).toHaveBeenCalledTimes(2);
+    expect(mockPostUniverseNames).toHaveBeenLastCalledWith([610], {}, {});
   });
 });
 

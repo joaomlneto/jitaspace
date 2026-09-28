@@ -40,47 +40,93 @@ function splitMarketHubs(regionIds: number[]): {
   };
 }
 
+/**
+ * How many regions of the long tail are requested at once. The hubs go out
+ * together regardless — there are at most five and they are what the tables
+ * show first — but the other ~100 regions used to be fired in one burst, all
+ * of it still running after the user had moved on to another type.
+ */
+const REGION_CONCURRENCY = 16;
+
 /** Every page of orders for one type in one region. */
 async function fetchRegionOrders(
   regionId: number,
   typeId: number,
+  signal: AbortSignal,
 ): Promise<GetMarketsRegionIdOrdersQueryResponse> {
-  const firstPage = await getMarketsRegionIdOrders(regionId, {
-    page: 1,
-    type_id: typeId,
-    order_type: "all",
-  });
+  const params = { type_id: typeId, order_type: "all" } as const;
+  const firstPage = await getMarketsRegionIdOrders(
+    regionId,
+    { ...params, page: 1 },
+    undefined,
+    { signal },
+  );
   const orders = firstPage.data;
   const xPages: unknown = firstPage.headers["x-pages"];
   const numPages = typeof xPages === "string" ? Number(xPages) : 0;
   for (let page = 2; page <= numPages; page++) {
-    const pageResults = await getMarketsRegionIdOrders(regionId, {
-      page,
-      type_id: typeId,
-      order_type: "all",
-    });
+    const pageResults = await getMarketsRegionIdOrders(
+      regionId,
+      { ...params, page },
+      undefined,
+      { signal },
+    );
     orders.push(...pageResults.data);
   }
   return orders;
 }
 
 /**
- * Requests a whole batch of regions in parallel, resolving once every one has
- * settled so the caller can commit them in a single state update. A region that
- * fails (ESI 5xx, timeout) is left out instead of rejecting the whole batch.
+ * Run `task` for every index with at most `concurrency` in flight, settling
+ * each rather than failing fast. Stops starting new work once `signal` aborts;
+ * indices never started are left unset.
+ */
+async function settleInPool<T>(
+  count: number,
+  concurrency: number,
+  signal: AbortSignal,
+  task: (index: number) => Promise<T>,
+): Promise<(PromiseSettledResult<T> | undefined)[]> {
+  const results = new Array<PromiseSettledResult<T> | undefined>(count);
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < count && !signal.aborted) {
+      const index = next++;
+      try {
+        results[index] = { status: "fulfilled", value: await task(index) };
+      } catch (reason) {
+        results[index] = { status: "rejected", reason };
+      }
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, count) }, worker),
+  );
+  return results;
+}
+
+/**
+ * Requests a whole batch of regions, resolving once every one has settled so
+ * the caller can commit them in a single state update. A region that fails
+ * (ESI 5xx, timeout, or an abort) is left out instead of rejecting the batch.
  */
 async function fetchRegionsOrders(
   regionIds: number[],
   typeId: number,
+  signal: AbortSignal,
+  concurrency: number,
 ): Promise<RegionOrders> {
-  const results = await Promise.allSettled(
-    regionIds.map((regionId) => fetchRegionOrders(regionId, typeId)),
+  const results = await settleInPool(
+    regionIds.length,
+    concurrency,
+    signal,
+    (index) => fetchRegionOrders(regionIds[index] ?? 0, typeId, signal),
   );
 
   const orders: RegionOrders = {};
   results.forEach((result, index) => {
     const regionId = regionIds[index];
-    if (regionId !== undefined && result.status === "fulfilled") {
+    if (regionId !== undefined && result?.status === "fulfilled") {
       orders[regionId] = result.value;
     }
   });
@@ -115,6 +161,9 @@ export function useTypeMarketOrders(typeId?: number) {
     // cancellation checks look statically dead.
     let cancelled = false;
     const isCancelled = () => cancelled;
+    // Aborting stops the requests themselves, not just their results: switching
+    // types used to leave every region of the previous type still downloading.
+    const controller = new AbortController();
     const { hubs, rest } = splitMarketHubs(regionIds);
 
     // Orders are committed in two batches — the hubs, then the long tail —
@@ -123,11 +172,21 @@ export function useTypeMarketOrders(typeId?: number) {
     // and every one of those steps shifted everything below the table down. That
     // was the bulk of the market page's Cumulative Layout Shift.
     void (async () => {
-      const hubOrders = await fetchRegionsOrders(hubs, typeId);
+      const hubOrders = await fetchRegionsOrders(
+        hubs,
+        typeId,
+        controller.signal,
+        hubs.length,
+      );
       if (isCancelled()) return;
       setState({ typeId, hubsLoaded: true, orders: hubOrders });
 
-      const restOrders = await fetchRegionsOrders(rest, typeId);
+      const restOrders = await fetchRegionsOrders(
+        rest,
+        typeId,
+        controller.signal,
+        REGION_CONCURRENCY,
+      );
       if (isCancelled()) return;
       setState({
         typeId,
@@ -136,10 +195,11 @@ export function useTypeMarketOrders(typeId?: number) {
       });
     })();
 
-    // Requests already in flight can't be recalled, but their results must not
-    // land in the next type's order tables.
+    // Abort what is in flight, and make sure nothing that still lands ends up
+    // in the next type's order tables.
     return () => {
       cancelled = true;
+      controller.abort();
     };
   }, [typeId, regionIds]);
 

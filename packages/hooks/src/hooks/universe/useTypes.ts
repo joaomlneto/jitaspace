@@ -1,32 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
 import type {
   GetUniverseTypesTypeIdHeaderParams,
   GetUniverseTypesTypeIdQueryResponse,
 } from "@jitaspace/esi-client";
-import { getUniverseTypesTypeId } from "@jitaspace/esi-client";
+import { getUniverseTypesTypeIdQueryOptions } from "@jitaspace/esi-client";
 
+import {
+  REFERENCE_DATA_STALE_TIME_MS,
+  useEsiQueriesById,
+} from "../utils/useEsiQueriesById";
+
+const typeIdOf = (type: GetUniverseTypesTypeIdQueryResponse) => type.type_id;
+
+/** Several types at once, keyed by type id. See useEsiQueriesById. */
 export const useTypes = (
   typeIds: number[],
   headers?: GetUniverseTypesTypeIdHeaderParams,
-) => {
-  const [results, setResults] = useState<
-    Record<number, GetUniverseTypesTypeIdQueryResponse>
-  >({});
-
-  useEffect(() => {
-    const fetchResults = async () => {
-      const responses = await Promise.all(
-        typeIds.map((typeId) => getUniverseTypesTypeId(typeId, headers)),
-      );
-      const results: Record<number, GetUniverseTypesTypeIdQueryResponse> = {};
-      responses.forEach((res) => (results[res.data.type_id] = res.data));
-      setResults(results);
-    };
-    void fetchResults();
-  }, [typeIds, headers]);
-
-  return { data: results };
-};
+) =>
+  useEsiQueriesById(
+    typeIds,
+    (typeId) => ({
+      ...getUniverseTypesTypeIdQueryOptions(typeId, headers),
+      staleTime: REFERENCE_DATA_STALE_TIME_MS,
+    }),
+    typeIdOf,
+  );
