@@ -15,6 +15,7 @@ import {
 } from "./rate-limit";
 
 const STATUS_GROUP = "status";
+const MARKET_GROUP = "market-order";
 const TEST_USER_A = "pilot-a";
 const TEST_USER_B = "pilot-b";
 
@@ -93,6 +94,64 @@ describe("rate-limit", () => {
     const bucket = state[getRateLimitBucketKey(STATUS_GROUP, TEST_USER_A)];
     expect(bucket?.remaining).toBe(5);
     expect(getWaitTime(STATUS_GROUP, 1, TEST_USER_A)).toBe(0);
+  });
+
+  it("syncs a heavily used bucket without replaying its tokens one by one", () => {
+    // One /market/[typeId] view spends ~230 tokens, so a few items in every
+    // response carried thousands of used tokens. Syncing replayed them one at
+    // a time through a limiter that rescans its history per token — ~190 ms of
+    // blocked main thread per response at 1,000 used, ~2.4 s at 4,000 — and
+    // armed a 15-minute timer for each.
+    const setTimeoutSpy = jest.spyOn(globalThis, "setTimeout");
+
+    updateRateLimitState(
+      MARKET_GROUP,
+      {
+        "x-ratelimit-limit": "12000/15m",
+        "x-ratelimit-remaining": "8000",
+      },
+      TEST_USER_A,
+    );
+    consumeTokens(MARKET_GROUP, 5, TEST_USER_A);
+    consumeTokens(MARKET_GROUP, -3, TEST_USER_A);
+
+    const bucket =
+      getRateLimitState()[getRateLimitBucketKey(MARKET_GROUP, TEST_USER_A)];
+    expect(bucket?.remaining).toBe(7998);
+    expect(bucket?.consumedTokens).toEqual([
+      { timestamp: now, tokens: 4000 },
+      { timestamp: now, tokens: 2 },
+    ]);
+    expect(setTimeoutSpy).not.toHaveBeenCalled();
+  });
+
+  it("keeps released buckets' tokens on the time they were spent", () => {
+    // Releasing tokens used to rebuild the limiter by re-executing every
+    // remaining token at the current time, so they expired a full window after
+    // the release instead of after they were spent.
+    updateRateLimitState(
+      STATUS_GROUP,
+      {
+        "x-ratelimit-limit": "5/1m",
+        "x-ratelimit-remaining": "5",
+      },
+      TEST_USER_A,
+    );
+    consumeTokens(STATUS_GROUP, 3, TEST_USER_A);
+    now += 30_000;
+    consumeTokens(STATUS_GROUP, 2, TEST_USER_A);
+    now += 10_000;
+    consumeTokens(STATUS_GROUP, -1, TEST_USER_A);
+
+    // A window after the first three were spent, only the one left from the
+    // second spend still counts.
+    now += 20_000;
+    cleanupTokens();
+
+    const bucket =
+      getRateLimitState()[getRateLimitBucketKey(STATUS_GROUP, TEST_USER_A)];
+    expect(bucket?.remaining).toBe(4);
+    expect(getWaitTime(STATUS_GROUP, 4, TEST_USER_A)).toBe(0);
   });
 
   it("honors retry-after and keeps the strictest active delay", () => {

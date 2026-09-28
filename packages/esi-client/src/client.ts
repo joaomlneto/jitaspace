@@ -164,7 +164,6 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 interface BuildData {
   operationRateLimitGroups?: Record<string, string>;
   routeOperationIds?: Record<string, string>;
-  routeRateLimitGroups?: Record<string, string>;
 }
 
 interface RouteOperationMapping {
@@ -172,12 +171,6 @@ interface RouteOperationMapping {
   pathSegments: string[];
   operationId: string;
   specificity: number;
-}
-
-interface RouteGroupMapping {
-  method: string;
-  routeRegex: RegExp;
-  group: string;
 }
 
 const buildDataTyped = buildData as BuildData;
@@ -242,37 +235,6 @@ const routeOperationMappings: RouteOperationMapping[] = Object.entries(
     return b.pathSegments.length - a.pathSegments.length;
   });
 
-const routeGroupMappings: RouteGroupMapping[] = Object.entries(
-  buildDataTyped.routeRateLimitGroups ?? {},
-)
-  .map(([routeKey, group]) => {
-    const separatorIndex = routeKey.indexOf(":");
-    if (separatorIndex === -1) {
-      return null;
-    }
-
-    const method = routeKey.slice(0, separatorIndex).toLowerCase();
-    const routePattern = routeKey.slice(separatorIndex + 1);
-    if (!method || !routePattern) {
-      return null;
-    }
-
-    const normalizedRoutePattern = routePattern.startsWith("^")
-      ? routePattern
-      : `^${routePattern}`;
-
-    try {
-      return {
-        method,
-        routeRegex: new RegExp(normalizedRoutePattern),
-        group,
-      };
-    } catch {
-      return null;
-    }
-  })
-  .filter((mapping): mapping is RouteGroupMapping => mapping !== null);
-
 const getRequestEndpoint = (url: string): string => {
   let path = url.split("?")[0] ?? "";
   if (path.startsWith("https://esi.evetech.net")) {
@@ -320,27 +282,8 @@ const getRouteGroup = (
   explicitOperationId?: string,
 ): string | undefined => {
   const operationId = explicitOperationId ?? getRouteOperationId(method, url);
-  if (operationId) {
-    const operationGroup =
-      buildDataTyped.operationRateLimitGroups?.[operationId];
-    if (operationGroup) {
-      return operationGroup;
-    }
-  }
-
-  const methodLower = method.toLowerCase();
-  const endpoint = getRequestEndpoint(url);
-  for (const mapping of routeGroupMappings) {
-    if (mapping.method !== methodLower) {
-      continue;
-    }
-
-    if (mapping.routeRegex.test(endpoint)) {
-      return mapping.group;
-    }
-  }
-
-  return undefined;
+  if (!operationId) return undefined;
+  return buildDataTyped.operationRateLimitGroups?.[operationId];
 };
 
 const getHeaderValue = (
@@ -752,6 +695,13 @@ export const client = async <TData, TError = unknown, TVariables = unknown>(
         config.params,
         userId,
       );
+    } else if (group) {
+      // No response: aborted, or the connection failed. Nothing will settle
+      // the reservation, so release it here rather than let it hold budget
+      // until the next response's headers resync the bucket. Aborts are
+      // routine — the market page cancels its region fan-out on every item
+      // change.
+      consumeTokens(group, -MAX_IN_FLIGHT_TOKEN_COST, userId);
     }
     throw e;
   }
