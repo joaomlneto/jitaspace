@@ -260,6 +260,21 @@ export const ingestSde = defineJob<IngestSdeEventPayload["data"]>({
     // Only now is the database actually on this build. A failure above leaves
     // the claim un-completed, which `watch-sde` retries once it goes stale.
     await recordSdeIngestCompleted(build.buildNumber);
+
+    // The web app keeps SDE pages until told otherwise (`cacheLife("max")`),
+    // including any it rendered while the tables above were half-updated, so
+    // it has to be told now. That call runs as its own task, retried on its
+    // own. Failing to enqueue it must not fail this run: the ingest is
+    // recorded complete, and a retry would redo 45 minutes of work only to
+    // enqueue it again.
+    try {
+      await ctx.send("revalidate-sde-cache", {});
+    } catch (error) {
+      ctx.logger.error(
+        "Could not enqueue revalidate-sde-cache; the web app is still serving the previous SDE build. Run revalidate-sde-cache by hand.",
+        { error: String(error) },
+      );
+    }
     return { results, buildNumber: build.buildNumber };
   },
 });

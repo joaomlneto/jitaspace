@@ -1,6 +1,5 @@
-import { cacheLife } from "next/cache";
-
 import { prisma } from "~/lib/db";
+import { cacheSdeRead } from "~/lib/sdeCache";
 import { buildMarketGroupIndex } from "./buildMarketGroupIndex";
 import { MarketGroupNavLink } from "./MarketGroupNavLink";
 
@@ -10,14 +9,14 @@ export async function MarketGroupsNavigation() {
   // group is instant — no per-group loading spinner. That is ~19.7k type rows,
   // so it MUST stay cached: at "hours" it re-ran ~24×/day per region (and on
   // every deploy) and became ~30% of the database's request-unit usage. The
-  // market taxonomy only moves when a new SDE build is ingested (rare), so cache
-  // it for a day. Caching is not a guarantee though — the entry is per-region
+  // market taxonomy only moves when a new SDE build is ingested, so it is cached
+  // until then. Caching is not a guarantee though — the entry is per-region
   // and dies on every deploy, and this statement still reached ~12% of database
   // usage while nominally cached for a day, so treat the covering index (not
   // cacheLife) as what actually bounds the cost. The serialized index is ~1.3
   // MiB; if a payload ever grows past what the platform will store it silently
   // won't be, so watch the DB's top statements after deploying.
-  cacheLife("days");
+  cacheSdeRead();
 
   // Two flat reads, assembled by buildMarketGroupIndex, rather than one
   // `findMany` with nested `children`/`types` relations. Prisma resolves each

@@ -10,6 +10,14 @@ const server = z.object({
   REDIS_URL: z.string(),
   DISCORD_BOT_TOKEN: z.string().optional(),
   DISCORD_UPDATES_CHANNEL_ID: z.string().optional(),
+  /**
+   * The web app's `CRON_SECRET`: `revalidate-sde-cache` sends it to
+   * `/api/revalidate/sde`. Optional so every other job still starts without
+   * it; that job fails, and says why, when it is unset.
+   */
+  CRON_SECRET: z.string().optional(),
+  /** The web app's origin. Defaults to production, as the web app's does. */
+  NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
 });
 
 /**
@@ -28,6 +36,8 @@ const processEnv = {
   REDIS_URL: process.env.REDIS_URL,
   DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN,
   DISCORD_UPDATES_CHANNEL_ID: process.env.DISCORD_UPDATES_CHANNEL_ID,
+  CRON_SECRET: process.env.CRON_SECRET,
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
 };
 
 // Don't touch the part below

@@ -1,15 +1,15 @@
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 
 import type { PageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import { cacheSdeRead } from "~/lib/sdeCache";
 import ShipScannerPage from "./page.client";
 
 const SHIP_CATEGORY_ID = 6;
 
 export default async function Page() {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
   // Database errors are deliberately uncaught: catching them inside this
   // `"use cache"` scope would make `notFound()` a *successful* render that Next
   // stores and serves for the whole `cacheLife` window. Throwing writes nothing

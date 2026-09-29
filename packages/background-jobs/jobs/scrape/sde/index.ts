@@ -79,5 +79,6 @@ export * from "./ingestSdeTypeDogma";
 export * from "./ingestSdeTypeLists";
 export * from "./ingestSdeTypeMaterials";
 export * from "./ingestSdeTypes";
+export * from "./revalidateSdeCache";
 export * from "./scrapeSdeAgents";
 export * from "./watchSde";

@@ -1,4 +1,3 @@
-import { cacheLife } from "next/cache";
 import {
   Container,
   Group,
@@ -13,6 +12,7 @@ import { CategoryAnchor } from "@jitaspace/ui";
 
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
+import { cacheSdeRead } from "~/lib/sdeCache";
 
 export const metadata = pageMetadata({
   title: "Item Categories",
@@ -28,7 +28,7 @@ interface PageProps {
 
 export default async function Page() {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
   // Deliberately uncaught. A catch here — inside the `"use cache"` scope —
   // would make `notFound()` a *successful* render that Next stores and serves
   // for the whole `cacheLife` window. Throwing writes nothing to the cache, so

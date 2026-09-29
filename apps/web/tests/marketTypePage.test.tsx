@@ -38,6 +38,7 @@ jest.mock("~/lib/db", () => ({
 jest.mock("next/cache", () => ({
   cacheLife: () => undefined,
   unstable_cacheLife: () => undefined,
+  cacheTag: () => undefined,
 }));
 jest.mock("next/navigation", () => ({ notFound: () => mockNotFound() }));
 jest.mock("~/lib/metadata", () => ({

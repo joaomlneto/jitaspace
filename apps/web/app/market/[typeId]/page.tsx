@@ -1,22 +1,22 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
+import { cacheSdeRead } from "~/lib/sdeCache";
 import MarketTypePage from "./page.client";
 
 /**
  * The marketable type row shared by metadata and the page render. A rejected
  * query is deliberately not caught inside this cache scope, so a database
- * outage cannot become a day-long cached 404.
+ * outage cannot become a cached 404.
  */
 async function readMarketType(typeId: number) {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
 
   const type = await prisma.type.findUnique({
     select: {

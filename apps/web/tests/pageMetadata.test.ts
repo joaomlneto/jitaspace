@@ -19,7 +19,7 @@ import {
 } from "~/lib/metadata";
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "~/lib/og";
 
-jest.mock("next/cache", () => ({ cacheLife: jest.fn() }));
+jest.mock("next/cache", () => ({ cacheLife: jest.fn(), cacheTag: jest.fn() }));
 
 describe("pageMetadata", () => {
   const meta = pageMetadata({

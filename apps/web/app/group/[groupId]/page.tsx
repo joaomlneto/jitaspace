@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import {
   Container,
@@ -18,6 +17,7 @@ import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
 import { parseEntityId } from "~/lib/routeParams";
+import { cacheSdeRead } from "~/lib/sdeCache";
 
 interface PageProps {
   name?: string;
@@ -26,7 +26,7 @@ interface PageProps {
 
 async function getGroupData(groupId: number): Promise<PageProps> {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
 
   const group = await prisma.group.findUniqueOrThrow({
     select: {

@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, withArticle } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
+import { cacheSdeRead } from "~/lib/sdeCache";
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -59,9 +59,9 @@ interface ConstellationSummary {
  * Read a constellation and its parent region from our database. Returns null
  * for an unknown id — the caller turns that into a 404.
  *
- * Cached for days: these rows only change when a new SDE release is ingested.
- * A failed query throws rather than returning null, so a database blip can
- * never be mistaken for a missing constellation and stored as a day-long 404
+ * Cached until the next SDE build is ingested, which is the only time these
+ * rows change. A failed query throws rather than returning null, so a database
+ * blip can never be mistaken for a missing constellation and stored as a 404
  * (see "Never catch a database error inside a `"use cache"` scope" in
  * CLAUDE.md). That is also why this uses `findUnique` plus a null test rather
  * than `findUniqueOrThrow`, which would collapse the two cases into one error.
@@ -70,7 +70,7 @@ async function readConstellation(
   constellationId: number,
 ): Promise<ConstellationSummary | null> {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
 
   const constellation = await prisma.constellation.findUnique({
     select: {

@@ -1,9 +1,8 @@
-import { cacheLife } from "next/cache";
-
 import { toArrayIfNot } from "@jitaspace/utils";
 
 import type { TravelPageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import { cacheSdeRead } from "~/lib/sdeCache";
 
 // The New Eden solar-system graph is invariant across every /travel/<...> URL,
 // so it is fetched and cached ONCE under an argument-free key and shared by all
@@ -14,7 +13,7 @@ export async function getSolarSystems(): Promise<
   TravelPageProps["solarSystems"]
 > {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
 
   const solarSystems: TravelPageProps["solarSystems"] = {};
 

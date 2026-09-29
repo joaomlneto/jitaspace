@@ -1,5 +1,4 @@
 import React from "react";
-import { cacheLife } from "next/cache";
 import { Container, Group, SimpleGrid, Stack, Title } from "@mantine/core";
 
 import { RegionAnchor } from "@jitaspace/eve-components";
@@ -7,6 +6,7 @@ import { MapIcon } from "@jitaspace/eve-icons";
 
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
+import { cacheSdeRead } from "~/lib/sdeCache";
 
 export const metadata = pageMetadata({
   title: "Regions",
@@ -22,7 +22,7 @@ interface PageProps {
 
 export default async function Page() {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
   // Deliberately uncaught. A catch here — inside the `"use cache"` scope —
   // would make `notFound()` a *successful* render that Next stores and serves
   // for the whole `cacheLife` window. Throwing writes nothing to the cache, so
