@@ -3,6 +3,7 @@ import pLimit from "p-limit";
 import type { CrudStatistics } from "../types";
 import type { SoftDeleteDelegate } from "./ingestSdeTable";
 import { excludeObjectKeys, updateTable } from "../utils";
+import { exactFloats } from "./exactFloats";
 
 // CockroachDB/Postgres cap bind parameters per statement (Postgres wire limit:
 // 65535). The composite soft-delete builds an `OR` of N composite keys, spending
@@ -133,12 +134,15 @@ export async function ingestSdeCompositeTable<
           }),
       fetchRemoteEntries: () => Promise.resolve(chunkRows),
       batchCreate: (created) =>
-        limit(() => delegate.createMany({ data: created })),
+        limit(() => delegate.createMany({ data: created.map(exactFloats) })),
       batchUpdate: (modified) =>
         Promise.all(
           modified.map((row) =>
             limit(() =>
-              delegate.update({ data: row, where: whereUnique(row) }),
+              delegate.update({
+                data: exactFloats(row),
+                where: whereUnique(row),
+              }),
             ),
           ),
         ),
