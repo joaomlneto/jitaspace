@@ -16,8 +16,13 @@ const server = z.object({
    * it; that job fails, and says why, when it is unset.
    */
   CRON_SECRET: z.string().optional(),
-  /** The web app's origin. Defaults to production, as the web app's does. */
-  NEXT_PUBLIC_SITE_URL: z.string().url().optional(),
+  /**
+   * The web app's origin; production when unset, as in the web app. Checked by
+   * `revalidate-sde-cache` rather than here: this schema is validated when
+   * `db.ts` loads, so a malformed value would stop every job, not just that
+   * one.
+   */
+  NEXT_PUBLIC_SITE_URL: z.string().optional(),
 });
 
 /**

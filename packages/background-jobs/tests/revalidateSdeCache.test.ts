@@ -70,6 +70,25 @@ describe("postSdeCacheRevalidation", () => {
     },
   );
 
+  it("treats an empty site URL as unset", async () => {
+    await expect(
+      postSdeCacheRevalidation({ siteUrl: "", cronSecret: SECRET }),
+    ).resolves.toBe("https://www.jita.space/api/revalidate/sde");
+  });
+
+  it("refuses a site URL that is not absolute, and does not retry", async () => {
+    // The shared env schema accepts any string on purpose (it is validated when
+    // every job loads), so this job is where a bad value has to be caught.
+    const attempt = postSdeCacheRevalidation({
+      siteUrl: "www.jita.space",
+      cronSecret: SECRET,
+    });
+
+    await expect(attempt).rejects.toBeInstanceOf(NonRetriableError);
+    await expect(attempt).rejects.toThrow("not an absolute URL");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("refuses to run without a secret, and does not retry", async () => {
     const attempt = postSdeCacheRevalidation({
       siteUrl: undefined,
