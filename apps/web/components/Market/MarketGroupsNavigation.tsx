@@ -1,67 +1,47 @@
-import { prisma } from "~/lib/db";
-import { cacheSdeRead } from "~/lib/sdeCache";
-import { buildMarketGroupIndex } from "./buildMarketGroupIndex";
+"use client";
+
+import { Loader, Text } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
+
+import type { MarketTree } from "./readMarketTree";
 import { MarketGroupNavLink } from "./MarketGroupNavLink";
 
-export async function MarketGroupsNavigation() {
-  "use cache";
-  // Load the whole market tree (groups + their types) up front so expanding a
-  // group is instant — no per-group loading spinner. That is ~19.7k type rows,
-  // so it MUST stay cached: at "hours" it re-ran ~24×/day per region (and on
-  // every deploy) and became ~30% of the database's request-unit usage. The
-  // market taxonomy only moves when a new SDE build is ingested, so it is cached
-  // until then. Caching is not a guarantee though — the entry is per-region
-  // and dies on every deploy, and this statement still reached ~12% of database
-  // usage while nominally cached for a day, so treat the covering index (not
-  // cacheLife) as what actually bounds the cost. The serialized index is ~1.3
-  // MiB; if a payload ever grows past what the platform will store it silently
-  // won't be, so watch the DB's top statements after deploying.
-  cacheSdeRead();
+async function fetchMarketTree(): Promise<MarketTree> {
+  const response = await fetch("/api/market-tree");
+  if (!response.ok) {
+    throw new Error(`Failed to load the market tree: ${response.status}`);
+  }
+  return (await response.json()) as MarketTree;
+}
 
-  // Two flat reads, assembled by buildMarketGroupIndex, rather than one
-  // `findMany` with nested `children`/`types` relations. Prisma resolves each
-  // nested relation as its own `WHERE <fk> IN (…every one of the ~2100 market
-  // group ids…)` statement, so `children` costs a whole round trip for edges
-  // `parentMarketGroupId` already gives us — that round trip is what this saves.
-  //
-  // It is NOT what fixed the full scan, and the IN list was never the problem:
-  // measured on the production cluster, `marketGroupId IN (…2111 ids…)` plans a
-  // perfectly good constrained index scan. What tips Type@Type_pkey into a FULL
-  // SCAN is projecting `name` while no index covers it — see the index comment
-  // on Type.marketGroupId in schema.prisma. Both predicates behave identically
-  // either side of that: uncovered, both full-scan; covered, both scan the index.
-  const [marketGroups, types] = await Promise.all([
-    prisma.marketGroup.findMany({
-      select: {
-        marketGroupId: true,
-        name: true,
-        parentMarketGroupId: true,
-        // Bundling the icon id here is what keeps the sidebar request-free:
-        // resolving it client-side used to cost two SDE lookups per group (the
-        // group, then its icon) plus an ESI market group call, i.e. ~3 requests
-        // per visible NavLink on load and on every expand. The icon server
-        // addresses images by icon id, so the id alone is enough — no join.
-        iconId: true,
-      },
-    }),
-    prisma.type.findMany({
-      where: { marketGroupId: { not: null } },
-      select: { typeId: true, name: true, marketGroupId: true },
-    }),
-  ]);
+/**
+ * The market sidebar. Its tree is fetched from `/api/market-tree` — one
+ * CDN-served document — rather than read on the server while rendering each
+ * market page: see `readMarketTree` for why. The tree only changes with a new
+ * SDE build, so it is fetched once per session and kept across market pages.
+ */
+export function MarketGroupsNavigation() {
+  const { data, isError } = useQuery({
+    queryKey: ["market-tree"],
+    queryFn: fetchMarketTree,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
 
-  const marketGroupsIndex = buildMarketGroupIndex(marketGroups, types);
-
-  const rootMarketGroupIds = marketGroups
-    .filter((marketGroup) => marketGroup.parentMarketGroupId === null)
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((marketGroup) => marketGroup.marketGroupId);
+  if (isError) {
+    return (
+      <Text size="sm" c="dimmed">
+        Could not load market groups.
+      </Text>
+    );
+  }
+  if (!data) return <Loader />;
 
   return (
     <>
-      {rootMarketGroupIds.map((marketGroupId) => (
+      {data.rootMarketGroupIds.map((marketGroupId) => (
         <MarketGroupNavLink
-          marketGroups={marketGroupsIndex}
+          marketGroups={data.marketGroups}
           marketGroupId={marketGroupId}
           key={marketGroupId}
         />

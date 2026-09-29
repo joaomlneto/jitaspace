@@ -9,8 +9,8 @@ import { TypeAvatar } from "@jitaspace/eve-components";
 import { EveIconAvatar } from "@jitaspace/ui";
 
 /**
- * The whole market tree, bundled by `MarketGroupsNavigation` from a single
- * server-side query. Everything a NavLink renders — including the group icon —
+ * The whole market tree, served in one document by `/api/market-tree` (see
+ * `readMarketTree`). Everything a NavLink renders — including the group icon —
  * comes from here, so expanding the tree never hits the network.
  */
 export type MarketGroupIndex = Record<
