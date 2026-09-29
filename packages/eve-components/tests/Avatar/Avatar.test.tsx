@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import type { ReactElement } from "react";
 import { describe, expect, it } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 
 import {
   AllianceAvatar,
@@ -377,11 +377,63 @@ describe("TypeAvatar", () => {
     );
   });
 
-  it("falls back to the swr-provided variation when none is passed", () => {
-    useSWRImmutable.mockReturnValue({ data: ["render"] });
+  it("renders the icon without asking the image server first", () => {
+    // Nearly every type has an icon. Looking the variations up front cost one
+    // request per type in every list, then swapped ships from their icon to
+    // their render — two image downloads per avatar.
+    useSWRImmutable.mockReturnValue({ data: ["render", "icon"] });
     const { container } = renderWithMantine(<TypeAvatar typeId={587} />);
+    expect(useSWRImmutable.mock.calls.every(([key]) => key === null)).toBe(
+      true,
+    );
     expect(container.querySelector("img")?.getAttribute("src")).toContain(
-      "/types/587/render",
+      "/types/587/icon",
+    );
+  });
+
+  it("looks the variations up only once the icon fails to load", () => {
+    // Blueprints have only bp/bpc, and the image server answers their /icon
+    // with a 400.
+    useSWRImmutable.mockReturnValue({ data: ["bpc", "bp"] });
+    const { container } = renderWithMantine(<TypeAvatar typeId={691} />);
+    const icon = container.querySelector("img");
+    expect(icon?.getAttribute("src")).toContain("/types/691/icon");
+
+    fireEvent.error(icon!);
+
+    expect(useSWRImmutable.mock.calls.at(-1)?.[0]).toBe(
+      "https://images.evetech.net/types/691",
+    );
+    expect(container.querySelector("img")?.getAttribute("src")).toContain(
+      "/types/691/bpc",
+    );
+  });
+
+  it("skips the failing icon for a type already known to lack one", () => {
+    useSWRImmutable.mockReturnValue({ data: ["bp"] });
+    const first = renderWithMantine(<TypeAvatar typeId={692} />);
+    fireEvent.error(first.container.querySelector("img")!);
+    first.unmount();
+    useSWRImmutable.mockClear();
+
+    const { container } = renderWithMantine(<TypeAvatar typeId={692} />);
+
+    expect(useSWRImmutable.mock.calls[0]?.[0]).toBe(
+      "https://images.evetech.net/types/692",
+    );
+    expect(container.querySelector("img")?.getAttribute("src")).toContain(
+      "/types/692/bp",
+    );
+  });
+
+  it("never looks up a pinned variation, even when it fails to load", () => {
+    useSWRImmutable.mockReturnValue({ data: ["bp"] });
+    const { container } = renderWithMantine(
+      <TypeAvatar typeId={693} variation="render" />,
+    );
+    fireEvent.error(container.querySelector("img")!);
+    expect(useSWRImmutable.mock.calls.every(([key]) => key === null)).toBe(
+      true,
     );
   });
 
