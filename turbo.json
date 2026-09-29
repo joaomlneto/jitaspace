@@ -30,6 +30,9 @@
     // not infer it either, and without this entry the
     // turbo/no-undeclared-env-vars rule fails `pnpm lint`.
     "NEXT_PUBLIC_SENTRY_DSN",
+    // Same reason: packages/background-jobs reads it (env.ts) to find the web
+    // app it tells to revalidate its SDE cache.
+    "NEXT_PUBLIC_SITE_URL",
     "REDIS_URL",
     "SENTRY_AUTH_TOKEN",
     "SENTRY_ORG",

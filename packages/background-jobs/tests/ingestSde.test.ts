@@ -29,6 +29,9 @@ const loadSdeFile = jest.fn<(filename: string) => Promise<SdeRecord>>();
 const recordSdeIngestStarted = jest.fn<(build: unknown) => Promise<void>>();
 const recordSdeIngestCompleted = jest.fn<(build: number) => Promise<void>>();
 const jobHandler = jest.fn<() => Promise<unknown>>();
+// Held here rather than read back off the context: `send` is a method of
+// `JobContext`, and asserting on it detached trips `unbound-method`.
+const send = jest.fn<(jobId: string, payload: unknown) => Promise<void>>();
 // The id every `registry.get` is called with, in order. Counting handler calls
 // is not enough: every job shares one stub, so a loop that ran the first id 102
 // times would satisfy a count while ingesting nothing else.
@@ -83,7 +86,7 @@ const ctx = () =>
       warn: jest.fn(),
       error: jest.fn(),
     },
-    send: jest.fn(),
+    send,
     invoke: jest.fn(),
     run: jest.fn(),
     sleep: jest.fn(),
@@ -97,6 +100,8 @@ beforeEach(() => {
   recordSdeIngestStarted.mockResolvedValue(undefined);
   recordSdeIngestCompleted.mockResolvedValue(undefined);
   jobHandler.mockResolvedValue({});
+  send.mockReset();
+  send.mockResolvedValue(undefined);
 });
 
 describe("ingest-sde-all", () => {
@@ -171,6 +176,49 @@ describe("ingest-sde-all", () => {
     // goes stale instead of believing it is loaded.
     expect(recordSdeIngestStarted).toHaveBeenCalled();
     expect(recordSdeIngestCompleted).not.toHaveBeenCalled();
+  });
+
+  it("tells the web app to revalidate once the build is recorded", async () => {
+    const order: string[] = [];
+    recordSdeIngestCompleted.mockImplementation(() => {
+      order.push("completed");
+      return Promise.resolve();
+    });
+    send.mockImplementation(() => {
+      order.push("send");
+      return Promise.resolve();
+    });
+
+    await ingestSde.handler(ctx());
+
+    // After, not before: pages the web app re-renders must see every table on
+    // the new build, and pages it rendered mid-ingest must be the ones dropped.
+    expect(order).toEqual(["completed", "send"]);
+    expect(send).toHaveBeenCalledWith("revalidate-sde-cache", {});
+  });
+
+  it("does not revalidate when a step fails", async () => {
+    jobHandler.mockRejectedValueOnce(new Error("ingest-sde-types blew up"));
+
+    await expect(ingestSde.handler(ctx())).rejects.toThrow("blew up");
+
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("still succeeds when the revalidation cannot be enqueued", async () => {
+    const context = ctx();
+    send.mockRejectedValue(new Error("trigger.dev unavailable"));
+
+    // Failing here would retry the whole 45-minute ingest just to enqueue one
+    // small task; the error is logged for someone to run it by hand instead.
+    await expect(ingestSde.handler(context)).resolves.toMatchObject({
+      buildNumber: BUILD_NUMBER,
+    });
+    expect(recordSdeIngestCompleted).toHaveBeenCalledWith(BUILD_NUMBER);
+    expect(context.logger.error).toHaveBeenCalledWith(
+      expect.stringContaining("revalidate-sde-cache"),
+      { error: "Error: trigger.dev unavailable" },
+    );
   });
 
   it("does not claim anything when the archive metadata is unusable", async () => {

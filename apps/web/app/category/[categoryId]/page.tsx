@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import {
   Container,
@@ -17,6 +16,7 @@ import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
 import { parseEntityId } from "~/lib/routeParams";
+import { cacheSdeRead } from "~/lib/sdeCache";
 
 interface PageProps {
   name?: string;
@@ -25,7 +25,7 @@ interface PageProps {
 
 async function getCategoryData(categoryId: number): Promise<PageProps> {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
 
   const category = await prisma.category.findUniqueOrThrow({
     select: {

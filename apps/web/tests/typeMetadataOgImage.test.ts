@@ -28,6 +28,7 @@ jest.mock("~/lib/db", () => ({
 jest.mock("next/cache", () => ({
   cacheLife: () => undefined,
   unstable_cacheLife: () => undefined,
+  cacheTag: () => undefined,
 }));
 
 jest.mock("~/app/type/[typeId]/page.client", () => ({ default: () => null }));

@@ -149,7 +149,7 @@ Open `http://localhost:3000`.
 | `EVE_CLIENT_SECRET`               | EVE Online SSO client secret                                   |
 | `DATABASE_URL`                    | PostgreSQL connection string                                   |
 | `REDIS_URL`                       | Redis URL (default: `redis://127.0.0.1:6379`)                  |
-| `CRON_SECRET`                     | Secret for Vercel Cron route protection                        |
+| `CRON_SECRET`                     | Secret for internal routes (e.g. SDE cache revalidation)       |
 | `ESI_USER_AGENT`                  | User-agent for ESI API requests                                |
 | `ZKILLBOARD_USER_AGENT`           | User-agent for zKillboard requests                             |
 | `NEXT_PUBLIC_DISCORD_INVITE_LINK` | Discord server invite URL                                      |

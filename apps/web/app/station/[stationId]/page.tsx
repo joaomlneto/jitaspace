@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, resolveTypeImage } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
+import { cacheSdeRead } from "~/lib/sdeCache";
 import PageClient from "./page.client";
 
 /**
  * The station's own row, or null when there is no such station.
  *
- * Cached for days: these columns change only when an SDE release or the ESI
- * station scraper lands. Nothing is caught inside this scope — a failed query
+ * Cached until the next SDE build is ingested. The ESI station scraper also
+ * writes these rows, but it only runs by hand, and its changes show up at the
+ * next SDE ingest. Nothing is caught inside this scope — a failed query
  * must throw out of it, because the `notFound()` the caller would otherwise
  * render is a *successful* response that Next stores for the full cacheLife
  * (CLAUDE.md). `findUnique` plus a null test is what keeps a genuinely absent
@@ -26,7 +27,7 @@ import PageClient from "./page.client";
  */
 async function readStation(stationId: number) {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
 
   return prisma.station.findUnique({
     select: {

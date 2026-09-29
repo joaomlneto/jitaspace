@@ -1,14 +1,13 @@
-import { cacheLife } from "next/cache";
-
 import type { SkillsPageProps } from "./page.client";
 import { prisma } from "~/lib/db";
+import { cacheSdeRead } from "~/lib/sdeCache";
 import SkillsPage from "./page.client";
 
 const SKILLS_CATEGORY_ID = 16;
 
 export default async function Page() {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
   // Deliberately uncaught. A catch here — inside the `"use cache"` scope —
   // would make `notFound()` a *successful* render that Next stores and serves
   // for the whole `cacheLife` window. Throwing writes nothing to the cache, so

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 
 import type { PageProps } from "./page.client";
@@ -8,11 +7,12 @@ import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
+import { cacheSdeRead } from "~/lib/sdeCache";
 import DogmaAttributePage from "./page.client";
 
 async function getAttributeData(attributeId: number): Promise<PageProps> {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
 
   const attribute = await prisma.dogmaAttribute.findUnique({
     select: {

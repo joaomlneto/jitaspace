@@ -145,6 +145,7 @@ When a new `@jitaspace/*` package exports TypeScript source and needs to be impo
 - **TypeScript:** `moduleResolution: Bundler`, `strict: true`, `noUncheckedIndexedAccess: true`. All packages extend `tooling/tsconfig/base.json`.
 - **Prettier + import sorting:** Import order enforced via `@ianvs/prettier-plugin-sort-imports`: React/Next first, then third-party, then `@jitaspace/*` types, then `@jitaspace/*` values, then relative imports.
 - **Environment validation:** `apps/web/env.ts` uses Zod. All new server env vars go in the server schema, client vars (prefixed `NEXT_PUBLIC_`) go in the client schema.
+- **SDE cache policy:** a `"use cache"` scope that reads only SDE-ingested tables calls `cacheSdeRead()` (`apps/web/lib/sdeCache.ts`), which tags it `sde` with `cacheLife("max")`; `ingest-sde-all` purges the tag through the `revalidate-sde-cache` job and `/api/revalidate/sde` (authenticated with `CRON_SECRET`). Never use it for data the ingest does not write (LP offers, wars, prices, history) — that data would go stale for up to a month. Details in `CLAUDE.md`.
 
 ---
 

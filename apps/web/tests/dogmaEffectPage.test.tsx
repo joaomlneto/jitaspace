@@ -20,7 +20,10 @@ jest.mock("next/navigation", () => ({
 // The server page pulls in Prisma and `cacheLife`; the coverage CI job has no
 // generated Prisma client, so stub both out.
 jest.mock("~/lib/db", () => ({ prisma: {} }));
-jest.mock("next/cache", () => ({ cacheLife: () => undefined }));
+jest.mock("next/cache", () => ({
+  cacheLife: () => undefined,
+  cacheTag: () => undefined,
+}));
 
 // ---------------------------------------------------------------------------
 // Hooks

@@ -24,6 +24,10 @@ Trigger.dev task (or a scheduled task for the cron job) and exported from
    placeholder in `trigger.config.ts`).
 2. Provide the worker's runtime env in the Trigger.dev project: `DATABASE_URL`,
    `REDIS_URL`, and optionally `DISCORD_BOT_TOKEN` / `DISCORD_UPDATES_CHANNEL_ID`.
+   `revalidate-sde-cache` also needs the web app's `CRON_SECRET` (the same
+   value), and `NEXT_PUBLIC_SITE_URL` if the app is not at
+   `https://www.jita.space`. Without them that job fails and SDE pages keep
+   serving the previous build.
 
 ## Commands
 

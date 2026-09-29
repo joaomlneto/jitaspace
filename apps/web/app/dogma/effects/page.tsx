@@ -1,8 +1,7 @@
-import { cacheLife } from "next/cache";
-
 import type { PageProps } from "./page.client";
 import { prisma } from "~/lib/db";
 import { pageMetadata } from "~/lib/metadata";
+import { cacheSdeRead } from "~/lib/sdeCache";
 import DogmaEffectsPage from "./page.client";
 
 export const metadata = pageMetadata({
@@ -15,7 +14,7 @@ export const metadata = pageMetadata({
 
 export default async function Page() {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
   // Deliberately uncaught. A catch here — inside the `"use cache"` scope —
   // would make `notFound()` a *successful* render that Next stores and serves
   // for the whole `cacheLife` window. Throwing writes nothing to the cache, so

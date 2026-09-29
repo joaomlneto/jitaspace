@@ -34,7 +34,7 @@ jest.mock("~/app/lp-store/[corporationId]/page.client", () => ({
 }));
 
 // next/cache — make cacheLife a no-op so "use cache" functions run in tests
-jest.mock("next/cache", () => ({ cacheLife: jest.fn() }));
+jest.mock("next/cache", () => ({ cacheLife: jest.fn(), cacheTag: jest.fn() }));
 
 // ESI mock. The war page resolves its two sides through ESI; without this the
 // suite makes real network calls (and its assertions depend on live game state).

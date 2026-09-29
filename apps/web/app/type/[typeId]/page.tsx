@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 import { HttpStatusCode } from "axios";
 
@@ -10,6 +9,7 @@ import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, toDescription } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
+import { cacheSdeRead } from "~/lib/sdeCache";
 import TypePage from "./page.client";
 import { emptyTypeDogmaMeta } from "./types";
 
@@ -22,7 +22,7 @@ type TypeData = PageProps & {
 
 async function getTypeData(typeId: number): Promise<TypeData> {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
 
   const type = await prisma.type.findUniqueOrThrow({
     select: {
@@ -90,11 +90,11 @@ function nonEmpty(value: string | null | undefined): string | undefined {
  * which is the same thing the old per-attribute 404 produced.
  *
  * A failure throws rather than degrading here: the caller catches it, so a
- * database blip is never what gets written into the day-long cache entry.
+ * database blip is never what gets written into the cache entry.
  */
 async function readTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
 
   const rows = await prisma.typeAttribute.findMany({
     select: {

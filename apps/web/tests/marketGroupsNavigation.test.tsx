@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, jest } from "@jest/globals";
 // @swc/jest does not hoist jest.mock above imports, so register the mocks first
 // and lazy-require the component. `cacheLife` is a no-op here — the caching
 // behaviour is Next's, what matters is the queries and the tree that comes out.
-jest.mock("next/cache", () => ({ cacheLife: jest.fn() }));
+jest.mock("next/cache", () => ({ cacheLife: jest.fn(), cacheTag: jest.fn() }));
 
 // Args are forwarded rather than swallowed: the `marketGroupId IS NOT NULL`
 // filter and the narrow `select` are the point of these queries, so they get

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { cacheLife } from "next/cache";
 import { notFound } from "next/navigation";
 
 import type { SolarSystemSdeInfo } from "./types";
@@ -8,6 +7,7 @@ import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, withArticle } from "~/lib/metadata";
 import { parsePositiveEntityId } from "~/lib/routeParams";
+import { cacheSdeRead } from "~/lib/sdeCache";
 import PageClient from "./page.client";
 
 export async function generateMetadata({
@@ -67,16 +67,16 @@ interface SolarSystemPageData {
  * Read the system identity and SDE columns from our database. Returns null for
  * an unknown id.
  *
- * Cached for days, like the type page's dogma metadata: these columns only
- * change when a new SDE release is ingested. A failure throws rather than
- * degrading here, so a database blip is never mistaken for a missing system
- * and written into a day-long cached 404.
+ * Cached until the next SDE build is ingested, like the type page's dogma
+ * metadata: that is the only time these columns change. A failure throws
+ * rather than degrading here, so a database blip is never mistaken for a
+ * missing system and written into a cached 404.
  */
 async function readSolarSystemPageData(
   systemId: number,
 ): Promise<SolarSystemPageData | null> {
   "use cache";
-  cacheLife("days");
+  cacheSdeRead();
 
   if (!Number.isSafeInteger(systemId) || systemId <= 0) return null;
 
