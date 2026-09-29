@@ -76,6 +76,17 @@ describe("ServerStatusIndicator", () => {
     expect(screen.getByText("Online")).toBeInTheDocument();
   });
 
+  it("survives a null player count too", () => {
+    mockUseServerStatus.mockReturnValue({
+      data: { data: { players: null, vip: false } },
+      isError: false,
+      isLoading: false,
+      isSuccess: true,
+    });
+    renderIndicator();
+    expect(screen.getByText("Online")).toBeInTheDocument();
+  });
+
   it("colours VIP mode yellow, not green", () => {
     // A server in VIP mode answers the status request successfully too, so
     // checking success first made the VIP colour unreachable.

@@ -42,7 +42,7 @@ export const ServerStatusIndicator = memo(() => {
       {isLoading && <Text size="xs">Checking...</Text>}
       {!isLoading && isSuccess && !isVip && (
         <Text size="xs">
-          {players === undefined ? "Online" : players.toLocaleString()}
+          {typeof players === "number" ? players.toLocaleString() : "Online"}
         </Text>
       )}
       {!isLoading && isSuccess && isVip && <Text size="xs">VIP Mode</Text>}
