@@ -28,6 +28,7 @@ import {
   StargateName,
   StarName,
 } from "~/components/Text";
+import { shouldRetryQuery } from "~/lib/queryRetry";
 
 // The map renders a WebGL canvas and pulls in three.js, so it is loaded lazily
 // on the client only. This fallback lives at module scope and so cannot see the
@@ -64,6 +65,16 @@ interface EsiPosition {
  * not exist rather than requesting id 0 from ESI.
  */
 const NO_STAR_ID = 0;
+
+/**
+ * One retry rather than React Query's three: `settled` below waits on every
+ * query, so a single flaky request would otherwise hold the whole map behind
+ * the default 3-retry backoff (~7s) rather than ~2s. Built on the app-wide
+ * policy, because a per-query `retry` replaces it — a bare `retry: 1` retried
+ * the 404s and 420s that policy never retries.
+ */
+const retryOnce = (failureCount: number, error: unknown) =>
+  failureCount < 1 && shouldRetryQuery(failureCount, error);
 
 function toVec(position: EsiPosition | undefined): Vec3 {
   return [position?.x ?? 0, position?.y ?? 0, position?.z ?? 0];
@@ -139,21 +150,18 @@ export function SolarSystem3D({
   // ESI universe data is immutable, so these never go stale (staleTime: Infinity);
   // without it the app-wide QueryClient defaults (staleTime 0 +
   // refetchOnWindowFocus) re-fire the whole fan-out — ~60 requests for a system
-  // like Jita — every time the user tabs back. `retry: 1` keeps the all-or-
-  // nothing loading gate below in check: `settled` waits on every query, so a
-  // single flaky request would otherwise hold the whole map behind the default
-  // 3-retry backoff (~7s) rather than ~2s.
+  // like Jita — every time the user tabs back. See `retryOnce` for the retry.
   const starQuery = useQuery({
     ...getUniverseStarsStarIdQueryOptions(starId ?? NO_STAR_ID),
     enabled: starId !== undefined,
     staleTime: Infinity,
-    retry: 1,
+    retry: retryOnce,
   });
   const { bodies: planetBodies, isLoading: planetsLoading } = useQueries({
     queries: planetEntries.map((planet) => ({
       ...getUniversePlanetsPlanetIdQueryOptions(planet.planet_id),
       staleTime: Infinity,
-      retry: 1,
+      retry: retryOnce,
     })),
     combine: combineEsiQueries,
   });
@@ -161,7 +169,7 @@ export function SolarSystem3D({
     queries: moonIds.map((id) => ({
       ...getUniverseMoonsMoonIdQueryOptions(id),
       staleTime: Infinity,
-      retry: 1,
+      retry: retryOnce,
     })),
     combine: combineEsiQueries,
   });
@@ -169,7 +177,7 @@ export function SolarSystem3D({
     queries: stationIds.map((id) => ({
       ...getUniverseStationsStationIdQueryOptions(id),
       staleTime: Infinity,
-      retry: 1,
+      retry: retryOnce,
     })),
     combine: combineEsiQueries,
   });
@@ -177,7 +185,7 @@ export function SolarSystem3D({
     queries: stargateIds.map((id) => ({
       ...getUniverseStargatesStargateIdQueryOptions(id),
       staleTime: Infinity,
-      retry: 1,
+      retry: retryOnce,
     })),
     combine: combineEsiQueries,
   });

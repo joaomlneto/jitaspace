@@ -3,6 +3,7 @@ import { initBotId } from "botid/client/core";
 import posthog from "posthog-js";
 
 import { env } from "~/env";
+import { SENTRY_DENY_URLS, SENTRY_IGNORE_ERRORS } from "~/lib/sentryNoise";
 
 /**
  * Vercel BotID — invisible bot protection for the expensive `/history` server
@@ -46,6 +47,10 @@ Sentry.init({
 
   // Add optional integrations for additional features
   integrations: [Sentry.replayIntegration()],
+
+  // Extensions and injected userscripts throw on our pages; see sentryNoise.ts.
+  denyUrls: SENTRY_DENY_URLS,
+  ignoreErrors: SENTRY_IGNORE_ERRORS,
 
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
   tracesSampleRate: 1,
