@@ -8,6 +8,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { TypeAvatar } from "@jitaspace/eve-components";
 import { EveIconAvatar } from "@jitaspace/ui";
 
+import type { MarketTreeFilter } from "./filterMarketTree";
+
 /**
  * The whole market tree, served in one document by `/api/market-tree` (see
  * `readMarketTree`). Everything a NavLink renders — including the group icon —
@@ -28,6 +30,10 @@ interface MarketGroupNavLinkProps {
   marketGroups: MarketGroupIndex;
   marketGroupId: number;
   expand?: boolean;
+  /** The sidebar search, or `null` to show everything. */
+  filter?: MarketTreeFilter | null;
+  /** Open the groups the search lists in `expandedGroupIds`. */
+  autoExpand?: boolean;
 }
 
 export const MarketGroupNavLink = memo(
@@ -35,9 +41,15 @@ export const MarketGroupNavLink = memo(
     marketGroups,
     marketGroupId,
     expand: _expand = true,
+    filter = null,
+    autoExpand = false,
   }: MarketGroupNavLinkProps) => {
     const marketGroup = marketGroups[marketGroupId];
-    const [opened, { toggle }] = useDisclosure(false);
+    // Only the initial state: the sidebar remounts the tree when the search
+    // changes, and a click still toggles a group the search opened.
+    const [opened, { toggle }] = useDisclosure(
+      autoExpand && (filter?.expandedGroupIds.has(marketGroupId) ?? false),
+    );
 
     const childrenMarketGroups = useMemo(
       () =>
@@ -45,6 +57,9 @@ export const MarketGroupNavLink = memo(
           (childMarketGroupId) => {
             const childMarketGroup = marketGroups[childMarketGroupId];
             if (!childMarketGroup) return [];
+            if (filter && !filter.visibleGroupIds.has(childMarketGroupId)) {
+              return [];
+            }
             return [
               {
                 marketGroupId: childMarketGroupId,
@@ -53,7 +68,7 @@ export const MarketGroupNavLink = memo(
             ];
           },
         ),
-      [marketGroups, marketGroup],
+      [marketGroups, marketGroup, filter],
     );
 
     const sortedChildrenMarketGroups = useMemo(
@@ -64,10 +79,10 @@ export const MarketGroupNavLink = memo(
 
     const sortedChildrenTypes = useMemo(
       () =>
-        [...(marketGroup?.types ?? [])].sort((a, b) =>
-          a.name.localeCompare(b.name),
-        ),
-      [],
+        (marketGroup?.types ?? [])
+          .filter((type) => !filter || filter.visibleTypeIds.has(type.typeId))
+          .sort((a, b) => a.name.localeCompare(b.name)),
+      [marketGroup, filter],
     );
 
     if (marketGroup == undefined) return null;
@@ -93,6 +108,8 @@ export const MarketGroupNavLink = memo(
               marketGroupId={childMarketGroup.marketGroupId}
               key={childMarketGroup.marketGroupId}
               expand={opened}
+              filter={filter}
+              autoExpand={autoExpand}
             />
           ))}
         {opened &&
