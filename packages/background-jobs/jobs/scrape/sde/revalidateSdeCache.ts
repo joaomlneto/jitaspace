@@ -12,8 +12,9 @@ const DEFAULT_SITE_URL = "https://www.jita.space";
  * POSTs to the web app's `/api/revalidate/sde`, which drops every page and
  * cache entry built from SDE data. Returns the URL it called.
  *
- * Misconfiguration (no secret, or a secret the app rejects) throws
- * {@link NonRetriableError}: retrying cannot fix it, and the failed run (which
+ * Misconfiguration (no secret, a secret the app rejects, or a site URL that is
+ * not an absolute URL) throws {@link NonRetriableError}: retrying cannot fix
+ * it, and the failed run (which
  * the Trigger.dev adapter reports to Sentry) is the only sign that SDE pages
  * are still serving the previous build. Anything else (a 5xx, a timeout, a
  * network error) throws a plain error so the run is retried.
@@ -30,7 +31,16 @@ export async function postSdeCacheRevalidation({
       "CRON_SECRET is not set, so the web app's SDE cache cannot be revalidated. Set it to the web app's CRON_SECRET.",
     );
   }
-  const url = new URL("/api/revalidate/sde", siteUrl ?? DEFAULT_SITE_URL).href;
+  // A blank value (a cleared env var) means unset, too, which `??` would miss.
+  const base = siteUrl?.trim() ? siteUrl : DEFAULT_SITE_URL;
+  let url: string;
+  try {
+    url = new URL("/api/revalidate/sde", base).href;
+  } catch {
+    throw new NonRetriableError(
+      `NEXT_PUBLIC_SITE_URL is not an absolute URL ("${base}"). Set it to the web app's origin, e.g. https://www.jita.space.`,
+    );
+  }
   const res = await fetch(url, {
     method: "POST",
     headers: { authorization: `Bearer ${cronSecret}` },
