@@ -1,124 +1,188 @@
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import "@testing-library/jest-dom/jest-globals";
 
-// @swc/jest does not hoist jest.mock above imports, so register the mocks first
-// and lazy-require the component. `cacheLife` is a no-op here — the caching
-// behaviour is Next's, what matters is the queries and the tree that comes out.
-jest.mock("next/cache", () => ({ cacheLife: jest.fn(), cacheTag: jest.fn() }));
+import type { ReactNode } from "react";
+import { afterEach, describe, expect, it, jest } from "@jest/globals";
+import { MantineProvider } from "@mantine/core";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
-// Args are forwarded rather than swallowed: the `marketGroupId IS NOT NULL`
-// filter and the narrow `select` are the point of these queries, so they get
-// asserted on below — a mock that drops its arguments cannot catch their loss.
-const marketGroupFindMany =
-  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
-const typeFindMany =
-  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+import type { MarketTree } from "~/components/Market/readMarketTree";
+import { MarketGroupsNavigation } from "~/components/Market/MarketGroupsNavigation";
 
-jest.mock("~/lib/db", () => ({
-  prisma: {
-    marketGroup: { findMany: (args: unknown) => marketGroupFindMany(args) },
-    type: { findMany: (args: unknown) => typeFindMany(args) },
+jest.mock("@jitaspace/eve-components", () => ({ TypeAvatar: () => null }));
+jest.mock("@jitaspace/ui", () => ({ EveIconAvatar: () => null }));
+
+const group = (
+  name: string,
+  parentMarketGroupId: number | null,
+  childrenMarketGroupIds: number[],
+  types: { typeId: number; name: string }[] = [],
+) => ({
+  name,
+  parentMarketGroupId,
+  childrenMarketGroupIds,
+  types,
+  iconId: null,
+});
+
+const tree: MarketTree = {
+  rootMarketGroupIds: [11, 4],
+  marketGroups: {
+    4: group("Ships", null, [1361]),
+    1361: group(
+      "Frigates",
+      4,
+      [],
+      [
+        { typeId: 587, name: "Rifter" },
+        { typeId: 603, name: "Merlin" },
+      ],
+    ),
+    11: group("Ammunition & Charges", null, []),
   },
-}));
+};
 
-jest.mock("~/components/Market/MarketGroupNavLink", () => ({
-  MarketGroupNavLink: () => null,
-}));
-
-const { MarketGroupsNavigation } =
-  require("~/components/Market/MarketGroupsNavigation") as {
-    MarketGroupsNavigation: () => Promise<{
-      props: {
-        children: {
-          key: string | null;
-          props: {
-            marketGroupId: number;
-            marketGroups: Record<
-              number,
-              {
-                name: string;
-                childrenMarketGroupIds: number[];
-                types: { typeId: number; name: string }[];
-              }
-            >;
-          };
-        }[];
-      };
-    }>;
+// jsdom has no fetch Response; the component reads only `ok`, `status` and
+// `json()`.
+function jsonResponse(body: unknown, status = 200) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: () => Promise.resolve(body),
   };
+}
+
+function mockFetch(response: ReturnType<typeof jsonResponse>) {
+  const fetchMock = jest.fn((_url: string) => Promise.resolve(response));
+  global.fetch = fetchMock as unknown as typeof fetch;
+  return fetchMock;
+}
+
+function renderNavigation() {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <MantineProvider>
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    </MantineProvider>
+  );
+  return { client, ...render(<MarketGroupsNavigation />, { wrapper }) };
+}
 
 describe("MarketGroupsNavigation", () => {
-  beforeEach(() => {
-    marketGroupFindMany.mockReset();
-    typeFindMany.mockReset();
+  const originalFetch = global.fetch;
+  afterEach(() => {
+    global.fetch = originalFetch;
   });
 
-  it("reads only types in a market group, and only the columns the tree needs", async () => {
-    marketGroupFindMany.mockResolvedValue([]);
-    typeFindMany.mockResolvedValue([]);
+  it("fetches the tree from /api/market-tree and lists the root groups", async () => {
+    const fetchMock = mockFetch(jsonResponse(tree));
+    renderNavigation();
 
-    await MarketGroupsNavigation();
+    expect(await screen.findByText("Ammunition & Charges")).toBeInTheDocument();
+    expect(screen.getByText("Ships")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith("/api/market-tree");
+    // Groups start closed.
+    expect(screen.queryByText("Frigates")).not.toBeInTheDocument();
+  });
 
-    // Dropping the filter would read all ~53k types instead of the ~20k that
-    // belong to a market group; widening the select would drag `description`
-    // (6.6 MiB) back into a read that exists to fetch names.
-    expect(typeFindMany).toHaveBeenCalledWith({
-      where: { marketGroupId: { not: null } },
-      select: { typeId: true, name: true, marketGroupId: true },
+  it("filters to a matching item and opens the groups above it", async () => {
+    mockFetch(jsonResponse(tree));
+    renderNavigation();
+    await screen.findByText("Ships");
+
+    await userEvent.type(screen.getByLabelText(/search market/i), "rift");
+
+    expect(await screen.findByText("Rifter")).toBeInTheDocument();
+    expect(screen.getByText("Frigates")).toBeInTheDocument();
+    expect(screen.queryByText("Merlin")).not.toBeInTheDocument();
+    expect(screen.queryByText("Ammunition & Charges")).not.toBeInTheDocument();
+  });
+
+  it("restores the whole tree when the search is cleared", async () => {
+    mockFetch(jsonResponse(tree));
+    renderNavigation();
+    await screen.findByText("Ships");
+
+    await userEvent.type(screen.getByLabelText(/search market/i), "rift");
+    await screen.findByText("Rifter");
+    await userEvent.click(screen.getByLabelText("Clear search"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Ammunition & Charges")).toBeInTheDocument();
     });
-    // iconId is bundled deliberately — resolving it client-side costs ~3
-    // requests per visible NavLink.
-    expect(marketGroupFindMany).toHaveBeenCalledWith({
-      select: {
-        marketGroupId: true,
-        name: true,
-        parentMarketGroupId: true,
-        iconId: true,
+    expect(screen.queryByText("Rifter")).not.toBeInTheDocument();
+  });
+
+  it("says so when nothing matches", async () => {
+    mockFetch(jsonResponse(tree));
+    renderNavigation();
+    await screen.findByText("Ships");
+
+    await userEvent.type(screen.getByLabelText(/search market/i), "titan");
+
+    expect(
+      await screen.findByText("No market groups or items match."),
+    ).toBeInTheDocument();
+  });
+
+  it("filters without opening groups when a query matches too much", async () => {
+    const many: MarketTree = {
+      rootMarketGroupIds: [1],
+      marketGroups: {
+        1: group(
+          "Things",
+          null,
+          [],
+          Array.from({ length: 201 }, (_, i) => ({
+            typeId: i + 1,
+            name: `Item ${i + 1}`,
+          })),
+        ),
       },
+    };
+    mockFetch(jsonResponse(many));
+    renderNavigation();
+    await screen.findByText("Things");
+
+    await userEvent.type(screen.getByLabelText(/search market/i), "item");
+
+    expect(await screen.findByText(/201 matches/)).toBeInTheDocument();
+    expect(screen.getByText("Things")).toBeInTheDocument();
+    expect(screen.queryByText("Item 1")).not.toBeInTheDocument();
+  });
+
+  it("keeps a loaded tree when a background refetch fails", async () => {
+    mockFetch(jsonResponse(tree));
+    const { client } = renderNavigation();
+    await screen.findByText("Ships");
+
+    // MyQueryClientProvider refetches every query when the ESI language changes.
+    const failingFetch = mockFetch(jsonResponse(null, 500));
+    await client.invalidateQueries({ refetchType: "all" });
+
+    expect(failingFetch).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(client.getQueryState(["market-tree"])?.status).toBe("error");
     });
+    // Let React render the error state before asserting it was not shown.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(screen.getByText("Ships")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Could not load market groups."),
+    ).not.toBeInTheDocument();
   });
 
-  it("renders one nav link per root group, sorted by name", async () => {
-    marketGroupFindMany.mockResolvedValue([
-      { marketGroupId: 1, name: "Ships", parentMarketGroupId: null, iconId: 1 },
-      {
-        marketGroupId: 2,
-        name: "Ammunition",
-        parentMarketGroupId: null,
-        iconId: 2,
-      },
-      { marketGroupId: 3, name: "Frigates", parentMarketGroupId: 1, iconId: 3 },
-    ]);
-    typeFindMany.mockResolvedValue([]);
+  it("reports a failed fetch instead of spinning forever", async () => {
+    mockFetch(jsonResponse(null, 500));
+    renderNavigation();
 
-    const result = await MarketGroupsNavigation();
-    const links = result.props.children;
-
-    // Only roots get a link, and "Ammunition" sorts before "Ships".
-    expect(links.map((link) => link.props.marketGroupId)).toEqual([2, 1]);
-  });
-
-  it("hands each link the whole assembled tree", async () => {
-    marketGroupFindMany.mockResolvedValue([
-      { marketGroupId: 1, name: "Ships", parentMarketGroupId: null, iconId: 1 },
-      { marketGroupId: 3, name: "Frigates", parentMarketGroupId: 1, iconId: 3 },
-    ]);
-    typeFindMany.mockResolvedValue([
-      { typeId: 587, name: "Rifter", marketGroupId: 3 },
-    ]);
-
-    const result = await MarketGroupsNavigation();
-    const index = result.props.children[0]!.props.marketGroups;
-
-    expect(index[1]?.childrenMarketGroupIds).toEqual([3]);
-    expect(index[3]?.types).toEqual([{ typeId: 587, name: "Rifter" }]);
-  });
-
-  it("renders nothing when there are no market groups", async () => {
-    marketGroupFindMany.mockResolvedValue([]);
-    typeFindMany.mockResolvedValue([]);
-
-    const result = await MarketGroupsNavigation();
-
-    expect(result.props.children).toEqual([]);
+    expect(
+      await screen.findByText("Could not load market groups."),
+    ).toBeInTheDocument();
   });
 });
