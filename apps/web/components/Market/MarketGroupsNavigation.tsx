@@ -51,7 +51,9 @@ export function MarketGroupsNavigation() {
     [data, deferredQuery],
   );
 
-  if (isError) {
+  // Only without a tree: a failed background refetch (the provider refetches
+  // every query when the ESI language changes) keeps the tree it already has.
+  if (isError && !data) {
     return (
       <Text size="sm" c="dimmed">
         Could not load market groups.

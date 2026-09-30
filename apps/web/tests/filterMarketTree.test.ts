@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 
 import type { MarketTree } from "~/components/Market/readMarketTree";
 import { filterMarketTree } from "~/components/Market/filterMarketTree";
@@ -59,6 +59,33 @@ describe("filterMarketTree", () => {
     expect(filterMarketTree(tree, "  RLI ")?.visibleTypeIds).toEqual(
       new Set([603]),
     );
+  });
+
+  it("does not depend on the browser's locale", () => {
+    // Under a Turkish locale, toLocaleLowerCase turns "I" into a dotless "ı".
+    const spy = jest
+      .spyOn(String.prototype, "toLocaleLowerCase")
+      .mockImplementation(function (this: string) {
+        return this.replace(/I/g, "ı").toLowerCase();
+      });
+    try {
+      const turkish: MarketTree = {
+        rootMarketGroupIds: [1],
+        marketGroups: {
+          1: group(
+            "Ship Equipment",
+            null,
+            [],
+            [[11577, "Improved Cloaking Device II"]],
+          ),
+        },
+      };
+      expect(filterMarketTree(turkish, "imp")?.visibleTypeIds).toEqual(
+        new Set([11577]),
+      );
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it("keeps a matching group's whole subtree, but opens only its parents", () => {

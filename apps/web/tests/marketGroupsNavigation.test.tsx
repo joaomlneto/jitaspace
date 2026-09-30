@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { MarketTree } from "~/components/Market/readMarketTree";
@@ -68,7 +68,7 @@ function renderNavigation() {
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     </MantineProvider>
   );
-  return render(<MarketGroupsNavigation />, { wrapper });
+  return { client, ...render(<MarketGroupsNavigation />, { wrapper }) };
 }
 
 describe("MarketGroupsNavigation", () => {
@@ -152,6 +152,29 @@ describe("MarketGroupsNavigation", () => {
     expect(await screen.findByText(/201 matches/)).toBeInTheDocument();
     expect(screen.getByText("Things")).toBeInTheDocument();
     expect(screen.queryByText("Item 1")).not.toBeInTheDocument();
+  });
+
+  it("keeps a loaded tree when a background refetch fails", async () => {
+    mockFetch(jsonResponse(tree));
+    const { client } = renderNavigation();
+    await screen.findByText("Ships");
+
+    // MyQueryClientProvider refetches every query when the ESI language changes.
+    const failingFetch = mockFetch(jsonResponse(null, 500));
+    await client.invalidateQueries({ refetchType: "all" });
+
+    expect(failingFetch).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(client.getQueryState(["market-tree"])?.status).toBe("error");
+    });
+    // Let React render the error state before asserting it was not shown.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(screen.getByText("Ships")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Could not load market groups."),
+    ).not.toBeInTheDocument();
   });
 
   it("reports a failed fetch instead of spinning forever", async () => {

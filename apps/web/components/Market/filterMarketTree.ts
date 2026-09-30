@@ -25,7 +25,9 @@ export function filterMarketTree(
   tree: MarketTree,
   query: string,
 ): MarketTreeFilter | null {
-  const needle = query.trim().toLocaleLowerCase();
+  // `toLowerCase`, not `toLocaleLowerCase`: EVE names are English, and under a
+  // Turkish locale "Improved" lowercases to "ımproved", which "imp" misses.
+  const needle = query.trim().toLowerCase();
   if (needle === "") return null;
 
   const filter: MarketTreeFilter = {
@@ -34,7 +36,7 @@ export function filterMarketTree(
     expandedGroupIds: new Set(),
     matchCount: 0,
   };
-  const matches = (name: string) => name.toLocaleLowerCase().includes(needle);
+  const matches = (name: string) => name.toLowerCase().includes(needle);
 
   /** Returns whether the group or anything beneath it matched by name. */
   const visit = (marketGroupId: number, insideMatch: boolean): boolean => {
