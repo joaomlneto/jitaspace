@@ -39,6 +39,17 @@ export const CorporationAnchor = anchorStub(
   "corp-anchor",
 );
 
+// --- Dogma (the value formatter is pure, so the real one is used) ---
+export {
+  dogmaAttributeDisplayValue,
+  formatDogmaAttributeValue,
+} from "../../../../packages/ui/Text/DogmaAttributeValue";
+export const DogmaAttributeAnchor = anchorStub(
+  "/dogma/attribute",
+  "attributeId",
+);
+export const GroupAnchor = anchorStub("/group", "groupId");
+
 // --- Race / Bloodline (SDE reference data, not ESI-resolvable entities) ---
 export const RaceAnchor = anchorStub("/race", "raceId");
 export const BloodlineAnchor = anchorStub("/bloodline", "bloodlineId");
