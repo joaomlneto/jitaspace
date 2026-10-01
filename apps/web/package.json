@@ -32,6 +32,7 @@
     "@jitaspace/eve-icons": "workspace:*",
     "@jitaspace/hooks": "workspace:*",
     "@jitaspace/kv": "workspace:*",
+    "@jitaspace/ship-tree": "workspace:*",
     "@jitaspace/solar-system-map": "workspace:*",
     "@jitaspace/tiptap-eve": "workspace:*",
     "@jitaspace/ui": "workspace:*",

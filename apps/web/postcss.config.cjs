@@ -1,5 +1,8 @@
 module.exports = {
   plugins: {
+    // Drops the empty `url("")`s in the ship tree library's stylesheet, which
+    // Turbopack refuses to resolve. See the plugin for the details.
+    "@jitaspace/ship-tree/postcss": {},
     "postcss-preset-mantine": {},
     "postcss-simple-vars": {
       variables: {
