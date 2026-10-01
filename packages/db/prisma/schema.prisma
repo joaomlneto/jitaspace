@@ -281,6 +281,8 @@ model Type {
   @@index([graphicId])
   @@index([groupId])
   @@index([iconId])
+  /// The variations of a base item (the type page's Variations tab).
+  @@index([variationParentTypeId])
 }
 
 model TypeAttribute {

@@ -2,6 +2,7 @@
 export const TYPE_PAGE_TABS = [
   "overview",
   "attributes",
+  "variations",
   "market",
   "description",
   "history",

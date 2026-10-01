@@ -62,6 +62,11 @@ jest.mock(
     ),
 );
 
+jest.mock("~/components/Compare/ItemVariations", () => ({
+  ItemVariations: ({ typeId }: { typeId: number }) => (
+    <div data-testid="item-variations">{`variations of ${typeId}`}</div>
+  ),
+}));
 jest.mock("~/components/ActionIcon", () => ({
   OpenMarketWindowActionIcon: () => null,
 }));
@@ -133,6 +138,12 @@ interface TypePageProps {
   typeName?: string;
   typeDescription?: string;
   dogmaMeta?: DogmaMetaStub;
+  variations?: {
+    typeId: number;
+    name: string;
+    categoryId: number;
+    metaLevel?: number;
+  }[];
 }
 
 /** Attributes 4 and 161 sit in category 7 ("Armor"); 999 is uncategorized. */
@@ -243,6 +254,45 @@ describe("Type page (client)", () => {
     expect(
       screen.getByRole("link", { name: /EVE Workbench/i }),
     ).toHaveAttribute("href", "https://eveworkbench.com/fits?ship=30");
+  });
+
+  it("offers Compare for comparable items, and Variations when there are some", () => {
+    mockUseGetUniverseGroupsGroupId.mockReturnValue({
+      data: { data: { category_id: 7 } },
+    });
+    renderPage(
+      {
+        variations: [
+          { typeId: 29, name: "Base", categoryId: 7, metaLevel: 0 },
+          { typeId: 30, name: "Variant", categoryId: 7, metaLevel: 5 },
+        ],
+      },
+      { searchParams: "?tab=variations" },
+    );
+    expect(screen.getByRole("tab", { name: /Variations/ })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByTestId("item-variations")).toHaveTextContent(
+      "variations of 30",
+    );
+    expect(screen.getByRole("link", { name: /^Compare$/ })).toHaveAttribute(
+      "href",
+      "/compare?types=30",
+    );
+  });
+
+  it("hides Variations without other versions, and Compare for materials", () => {
+    // category 4 (Material) is set in beforeEach.
+    renderPage({
+      variations: [{ typeId: 30, name: "Only", categoryId: 4 }],
+    });
+    expect(
+      screen.queryByRole("tab", { name: /Variations/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /^Compare$/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("exposes Overview, Attributes, Market and Description tabs for full data", () => {

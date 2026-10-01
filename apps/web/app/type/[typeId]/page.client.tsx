@@ -22,12 +22,14 @@ import {
   Title,
 } from "@mantine/core";
 import {
+  IconArrowsDiff,
   IconCoin,
   IconExternalLink,
   IconFileText,
   IconHistory,
   IconInfoCircle,
   IconListDetails,
+  IconVersions,
 } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
@@ -53,11 +55,14 @@ import {
 } from "@jitaspace/ui";
 
 import type { TypeDogmaAttributeMeta, TypeDogmaMeta } from "./types";
+import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import { OpenMarketWindowActionIcon } from "~/components/ActionIcon";
 import {
   TypeInventoryBreadcrumbs,
   TypeMarketBreadcrumbs,
 } from "~/components/Breadcrumbs";
+import { COMPARABLE_CATEGORY_IDS } from "~/components/Compare/catalog";
+import { ItemVariations } from "~/components/Compare/ItemVariations";
 import { MailMessageViewer } from "~/components/EveMail";
 import {
   CategoryName,
@@ -256,7 +261,10 @@ export default function TypePage({
   typeName,
   typeDescription,
   dogmaMeta,
-}: Readonly<PageProps & { dogmaMeta: TypeDogmaMeta }>) {
+  variations = [],
+}: Readonly<
+  PageProps & { dogmaMeta: TypeDogmaMeta; variations?: ItemVariation[] }
+>) {
   const character = useSelectedCharacter();
   // Deep-link support: `/type/{typeId}/{tab}` redirects here with `?tab=` set.
   // The param was previously read once into <Tabs defaultValue>, so switching
@@ -288,6 +296,11 @@ export default function TypePage({
   const name = typeData?.name ?? typeName;
   const description = typeData?.description ?? typeDescription;
   const categoryId = group?.data.category_id;
+  // Ships, modules and the like: comparable, and the items with variations.
+  const isComparable =
+    categoryId !== undefined && COMPARABLE_CATEGORY_IDS.includes(categoryId);
+  // The item and at least one other version of it.
+  const hasVariations = variations.length > 1;
 
   // Determine the best image variation: prefer the 3D render (ships), then a
   // blueprint, otherwise fall back to the icon.
@@ -539,6 +552,17 @@ export default function TypePage({
               </Group>
 
               <Group gap="xs">
+                {isComparable && (
+                  <Button
+                    component={Link}
+                    href={`/compare?types=${typeId}`}
+                    size="xs"
+                    variant="light"
+                    leftSection={<IconArrowsDiff size={14} />}
+                  >
+                    Compare
+                  </Button>
+                )}
                 <Button
                   component={Link}
                   href={`https://www.everef.net/type/${typeId}`}
@@ -597,6 +621,14 @@ export default function TypePage({
                 leftSection={<IconListDetails size={16} />}
               >
                 Attributes
+              </Tabs.Tab>
+            )}
+            {hasVariations && (
+              <Tabs.Tab
+                value="variations"
+                leftSection={<IconVersions size={16} />}
+              >
+                Variations
               </Tabs.Tab>
             )}
             {hasMarket && (
@@ -802,6 +834,13 @@ export default function TypePage({
                   </Stack>
                 )}
               </Stack>
+            </Tabs.Panel>
+          )}
+
+          {/* Variations — Tech I base, Tech II, faction, deadspace, officer */}
+          {hasVariations && (
+            <Tabs.Panel value="variations" pt="lg">
+              <ItemVariations typeId={typeId} variations={variations} />
             </Tabs.Panel>
           )}
 

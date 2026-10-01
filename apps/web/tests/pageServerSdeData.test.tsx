@@ -16,6 +16,10 @@ const researchSkillsFindMany =
 const typeFindUniqueOrThrow = jest.fn<(args?: unknown) => Promise<Row>>();
 const typeAttributeFindMany =
   jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const typeFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
+const metaGroupFindMany =
+  jest.fn<(args?: unknown) => Promise<Record<string, unknown>[]>>();
 
 jest.mock("~/lib/db", () => ({
   prisma: {
@@ -24,8 +28,12 @@ jest.mock("~/lib/db", () => ({
     researchAgentSkills: {
       findMany: (a?: unknown) => researchSkillsFindMany(a),
     },
-    type: { findUniqueOrThrow: (a?: unknown) => typeFindUniqueOrThrow(a) },
+    type: {
+      findUniqueOrThrow: (a?: unknown) => typeFindUniqueOrThrow(a),
+      findMany: (a?: unknown) => typeFindMany(a),
+    },
     typeAttribute: { findMany: (a?: unknown) => typeAttributeFindMany(a) },
+    metaGroup: { findMany: (a?: unknown) => metaGroupFindMany(a) },
   },
 }));
 
@@ -92,6 +100,8 @@ beforeEach(() => {
   researchSkillsFindMany.mockReset().mockResolvedValue([]);
   typeFindUniqueOrThrow.mockReset();
   typeAttributeFindMany.mockReset().mockResolvedValue([]);
+  typeFindMany.mockReset().mockResolvedValue([]);
+  metaGroupFindMany.mockReset().mockResolvedValue([]);
   globalThis.fetch = jest.fn(() =>
     Promise.resolve({ status: 200, json: () => Promise.resolve([]) }),
   ) as unknown as typeof globalThis.fetch;
@@ -371,5 +381,124 @@ describe("type route dogma metadata", () => {
       unitSymbols: {},
       categoryNames: {},
     });
+  });
+});
+
+describe("type route variations", () => {
+  const typeRow = (variationParentTypeId: number | null) => ({
+    typeId: 3841,
+    name: "Large Shield Extender II",
+    description: "",
+    variationParentTypeId,
+    group: { name: "Shield Extender", category: { name: "Module" } },
+  });
+  const variationRow = (
+    typeId: number,
+    name: string,
+    metaGroupId: number | null,
+    metaLevel: number | null,
+  ) => ({ typeId, name, metaGroupId, metaLevel, group: { categoryId: 7 } });
+
+  it("lists the base item's family by meta level, with meta group names", async () => {
+    typeFindUniqueOrThrow.mockResolvedValue(typeRow(3839));
+    typeFindMany.mockResolvedValue([
+      variationRow(31930, "Caldari Navy Large Shield Extender", 4, 8),
+      variationRow(3841, "Large Shield Extender II", 2, 5),
+      variationRow(3839, "Large Shield Extender I", 1, 0),
+      variationRow(99, "Unlevelled Oddity", null, null),
+    ]);
+    metaGroupFindMany.mockResolvedValue([
+      { metaGroupId: 1, name: "Tech I" },
+      { metaGroupId: 2, name: "Tech II" },
+      { metaGroupId: 4, name: "Faction" },
+    ]);
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "3841",
+    });
+
+    // Keyed by the base (3839), through the variationParentTypeId index.
+    expect(typeFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          isDeleted: false,
+          published: true,
+          OR: [{ typeId: 3839 }, { variationParentTypeId: 3839 }],
+        },
+      }),
+    );
+    expect(metaGroupFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { metaGroupId: { in: [4, 2, 1] } } }),
+    );
+    expect(props.variations).toEqual([
+      {
+        typeId: 3839,
+        name: "Large Shield Extender I",
+        categoryId: 7,
+        metaGroupName: "Tech I",
+        metaLevel: 0,
+      },
+      {
+        typeId: 99,
+        name: "Unlevelled Oddity",
+        categoryId: 7,
+        metaGroupName: undefined,
+        metaLevel: undefined,
+      },
+      {
+        typeId: 3841,
+        name: "Large Shield Extender II",
+        categoryId: 7,
+        metaGroupName: "Tech II",
+        metaLevel: 5,
+      },
+      {
+        typeId: 31930,
+        name: "Caldari Navy Large Shield Extender",
+        categoryId: 7,
+        metaGroupName: "Faction",
+        metaLevel: 8,
+      },
+    ]);
+  });
+
+  it("treats an item without a parent as the base of its family", async () => {
+    typeFindUniqueOrThrow.mockResolvedValue(typeRow(null));
+
+    await runRoute("~/app/type/[typeId]/page", { typeId: "3841" });
+
+    expect(typeFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: [{ typeId: 3841 }, { variationParentTypeId: 3841 }],
+        }),
+      }),
+    );
+  });
+
+  it("returns nothing, and skips the meta group lookup, for a lone item", async () => {
+    typeFindUniqueOrThrow.mockResolvedValue(typeRow(null));
+    typeFindMany.mockResolvedValue([
+      variationRow(3841, "Large Shield Extender II", 2, 5),
+    ]);
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "3841",
+    });
+
+    expect(props.variations).toEqual([]);
+    expect(metaGroupFindMany).not.toHaveBeenCalled();
+  });
+
+  it("hides the tab rather than failing the page when the query fails", async () => {
+    typeFindUniqueOrThrow.mockResolvedValue(typeRow(3839));
+    typeFindMany.mockRejectedValue(new Error("connection lost"));
+
+    const props = await runRoute("~/app/type/[typeId]/page", {
+      typeId: "3841",
+    });
+
+    expect(props.variations).toEqual([]);
+    expect(props.typeName).toBe("Large Shield Extender II");
   });
 });
