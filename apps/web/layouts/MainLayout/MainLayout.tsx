@@ -16,7 +16,7 @@ export function MainLayout({
 }: PropsWithChildren<AppShellProps>) {
   const pinned = usePinnedHeader({ fixedAt: 120 });
   const theme = useMantineTheme();
-  const appBackground = theme.other.appBackground;
+  const { appBackground, appBackgroundMobile = appBackground } = theme.other;
   return (
     <AppShell
       header={{
@@ -35,7 +35,10 @@ export function MainLayout({
         <Box
           aria-hidden
           className={classes.background}
-          style={{ background: appBackground }}
+          style={{
+            "--app-background": appBackground,
+            "--app-background-mobile": appBackgroundMobile,
+          }}
         />
       )}
       <AppShell.Header>

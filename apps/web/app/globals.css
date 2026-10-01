@@ -66,6 +66,16 @@ html[data-app-theme-pending] body::before {
   background: var(--app-pending-background, none);
 }
 
+/* Same switch as MainLayout.module.css: portrait phones get the small copy. */
+@media (max-width: 47.99em) and (orientation: portrait) {
+  html[data-app-theme-pending] body::before {
+    background: var(
+      --app-pending-background-mobile,
+      var(--app-pending-background, none)
+    );
+  }
+}
+
 html[data-app-theme-pending] .mantine-AppShell-root {
   visibility: hidden;
   animation: app-theme-pending-timeout 0s 4s forwards;

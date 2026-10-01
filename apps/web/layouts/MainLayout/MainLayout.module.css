@@ -20,4 +20,14 @@
   height: 100lvh;
   z-index: -1;
   pointer-events: none;
+  background: var(--app-background);
+}
+
+/* Portrait phones get the smaller portrait-cropped copy (themes/wallpapers.ts).
+   Landscape keeps the full image: there `cover` shows a wide band of it, which
+   the portrait crop would have to stretch to fill. */
+@media (max-width: 47.99em) and (orientation: portrait) {
+  .background {
+    background: var(--app-background-mobile);
+  }
 }

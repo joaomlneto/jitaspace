@@ -28,7 +28,18 @@ interface ThemePreload {
   body: string;
   /** The theme's `other.appBackground`, if it has one. */
   background?: string;
+  /** Its `other.appBackgroundMobile`, for portrait phones. */
+  backgroundMobile?: string;
 }
+
+const preload = (
+  body: string,
+  wallpaper: { appBackground: string; appBackgroundMobile: string },
+): ThemePreload => ({
+  body,
+  background: wallpaper.appBackground,
+  backgroundMobile: wallpaper.appBackgroundMobile,
+});
 
 /**
  * What each selectable non-default theme looks like before hydration. Kept in
@@ -39,13 +50,17 @@ export const THEME_PRELOAD: Record<
   Exclude<AppTheme, typeof DEFAULT_APP_THEME>,
   ThemePreload
 > = {
-  eve: { body: "#111111", background: WALLPAPERS.cradleOfWar },
-  eve_v2: { body: "#111111", background: WALLPAPERS.cradleOfWar },
-  amarr: { body: "#111111", background: WALLPAPERS.amarr },
-  caldari: { body: "#111111", background: WALLPAPERS.caldari },
-  gallente: { body: "#111111", background: WALLPAPERS.gallente },
-  minmatar: { body: "#111111", background: WALLPAPERS.minmatar },
-  whpd: { body: "#080c18", background: "#000" },
+  eve: preload("#111111", WALLPAPERS.cradleOfWar),
+  eve_v2: preload("#111111", WALLPAPERS.cradleOfWar),
+  amarr: preload("#111111", WALLPAPERS.amarr),
+  caldari: preload("#111111", WALLPAPERS.caldari),
+  gallente: preload("#111111", WALLPAPERS.gallente),
+  minmatar: preload("#111111", WALLPAPERS.minmatar),
+  whpd: {
+    body: "#080c18",
+    background: "#000",
+    backgroundMobile: "#000",
+  },
 };
 
 /** JSON for embedding in a <script>: `<` escaped so no value can close the tag. */
@@ -70,6 +85,9 @@ const script = (key: string, themes: Record<string, ThemePreload>) => `(() => {
     if (themes[theme].background) {
       html.style.setProperty("--app-pending-background", themes[theme].background);
     }
+    if (themes[theme].backgroundMobile) {
+      html.style.setProperty("--app-pending-background-mobile", themes[theme].backgroundMobile);
+    }
   } catch {}
 })();`;
 
@@ -85,4 +103,5 @@ export function revealPrePaintTheme() {
   html.removeAttribute(THEME_PENDING_ATTRIBUTE);
   html.style.removeProperty("--app-pending-body");
   html.style.removeProperty("--app-pending-background");
+  html.style.removeProperty("--app-pending-background-mobile");
 }
