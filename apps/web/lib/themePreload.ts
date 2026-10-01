@@ -1,0 +1,88 @@
+import type { AppTheme, DEFAULT_APP_THEME } from "~/lib/preferences";
+import { PREFERENCES_STORAGE_KEY } from "~/lib/preferences";
+import { WALLPAPERS } from "~/themes/wallpapers";
+
+/**
+ * Pre-paint theme: stops the default theme from flashing on load for anyone who
+ * picked another one.
+ *
+ * The theme preference lives in localStorage, which the server cannot see, and
+ * the pages are prerendered, so the HTML always arrives styled with the default
+ * theme; the real one only applies once React hydrates. Mantine themes are
+ * JavaScript (component defaultProps and styles, not just CSS variables), so
+ * they cannot be applied before that.
+ *
+ * Instead, an inline <head> script ({@link THEME_PRELOAD_SCRIPT}) runs before
+ * the first paint and, for a non-default theme, marks <html> as pending: the
+ * page shows that theme's background and wallpaper (globals.css) with the app
+ * shell hidden. AppMantineProvider applies the theme in a layout effect and
+ * then calls {@link revealPrePaintTheme}, all before the browser paints the
+ * hydrated page, so the default theme is never on screen. If JavaScript never
+ * gets that far, a CSS animation reveals the shell after 4s regardless.
+ */
+
+export const THEME_PENDING_ATTRIBUTE = "data-app-theme-pending";
+
+interface ThemePreload {
+  /** The theme's `--mantine-color-body` (dark scheme: `colors.dark[7]`). */
+  body: string;
+  /** The theme's `other.appBackground`, if it has one. */
+  background?: string;
+}
+
+/**
+ * What each selectable non-default theme looks like before hydration. Kept in
+ * step with the Mantine themes by `tests/themePreload.test.ts`, since this
+ * module cannot import them (they are "use client").
+ */
+export const THEME_PRELOAD: Record<
+  Exclude<AppTheme, typeof DEFAULT_APP_THEME>,
+  ThemePreload
+> = {
+  eve: { body: "#111111", background: WALLPAPERS.cradleOfWar },
+  eve_v2: { body: "#111111", background: WALLPAPERS.cradleOfWar },
+  amarr: { body: "#111111", background: WALLPAPERS.amarr },
+  caldari: { body: "#111111", background: WALLPAPERS.caldari },
+  gallente: { body: "#111111", background: WALLPAPERS.gallente },
+  minmatar: { body: "#111111", background: WALLPAPERS.minmatar },
+  whpd: { body: "#080c18", background: "#000" },
+};
+
+/** JSON for embedding in a <script>: `<` escaped so no value can close the tag. */
+const json = (value: unknown) =>
+  JSON.stringify(value).replaceAll("<", "\\u003c");
+
+// Mirrors the persist middleware's storage format ({ state: { appTheme } })
+// and sanitizeAppTheme's normalisation. Anything unexpected leaves the page
+// untouched, i.e. exactly as it behaved before this script existed.
+const script = (key: string, themes: Record<string, ThemePreload>) => `(() => {
+  try {
+    const raw = localStorage.getItem(${json(key)});
+    if (!raw) return;
+    let theme = JSON.parse(raw)?.state?.appTheme;
+    if (typeof theme !== "string") return;
+    theme = theme.trim().toLowerCase();
+    const themes = ${json(themes)};
+    if (!Object.prototype.hasOwnProperty.call(themes, theme)) return;
+    const html = document.documentElement;
+    html.setAttribute(${json(THEME_PENDING_ATTRIBUTE)}, theme);
+    html.style.setProperty("--app-pending-body", themes[theme].body);
+    if (themes[theme].background) {
+      html.style.setProperty("--app-pending-background", themes[theme].background);
+    }
+  } catch {}
+})();`;
+
+/** The inline script for <head>. */
+export const THEME_PRELOAD_SCRIPT = script(
+  PREFERENCES_STORAGE_KEY,
+  THEME_PRELOAD,
+);
+
+/** Undoes the pre-paint script once the real theme has been rendered. */
+export function revealPrePaintTheme() {
+  const html = document.documentElement;
+  html.removeAttribute(THEME_PENDING_ATTRIBUTE);
+  html.style.removeProperty("--app-pending-body");
+  html.style.removeProperty("--app-pending-background");
+}
