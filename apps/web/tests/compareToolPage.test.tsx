@@ -15,11 +15,18 @@ import { captureMock } from "../__mocks__/posthogMocks";
 // the components have their own tests, so here they are stubs that expose the
 // callbacks the page hands them.
 const mockUseTypes = jest.fn<(ids: number[]) => unknown>();
-const mockUseMarket = jest.fn<(ids: number[], regionId: number) => unknown>();
+const mockUseMarket =
+  jest.fn<(ids: number[], regionId: number, options?: object) => unknown>();
 jest.mock("@jitaspace/hooks", () => ({
-  useTypes: (ids: number[]) => mockUseTypes(ids),
-  useFuzzworkRegionalMarketAggregates: (ids: number[], regionId: number) =>
-    mockUseMarket(ids, regionId),
+  useTypes: (ids: number[]) => ({
+    failedIds: [],
+    ...(mockUseTypes(ids) as object),
+  }),
+  useFuzzworkRegionalMarketAggregates: (
+    ids: number[],
+    regionId: number,
+    options?: object,
+  ) => mockUseMarket(ids, regionId, options),
 }));
 
 jest.mock("@jitaspace/eve-icons", () => ({
@@ -160,7 +167,7 @@ function renderPage(
 beforeEach(() => {
   captureMock.mockClear();
   mockRefetch.mockClear();
-  mockUseTypes.mockReturnValue({ data: {}, isLoading: true });
+  mockUseTypes.mockReturnValue({ data: {} });
   mockUseMarket.mockReturnValue({ data: null, isError: false });
   mockUseCompareCatalog.mockReturnValue({
     catalog: { attributes: {}, typesById: new Map() },
@@ -255,16 +262,15 @@ describe("Compare tool page", () => {
   });
 
   it("feeds each item's type and Jita prices to the comparison", () => {
-    mockUseTypes.mockReturnValue({
-      data: { 34: { group_id: 18 } },
-      isLoading: true,
-    });
+    mockUseTypes.mockReturnValue({ data: { 34: { group_id: 18 } } });
     mockUseMarket.mockReturnValue({
       data: { 34: { buy: { percentile: 4 }, sell: { percentile: 5 } } },
       isError: false,
     });
     renderPage({ searchParams: "?types=34,35" });
-    expect(mockUseMarket).toHaveBeenCalledWith([34, 35], 10000002);
+    expect(mockUseMarket).toHaveBeenCalledWith([34, 35], 10000002, {
+      keepPreviousData: true,
+    });
     const [items] = mockBuildComparison.mock.calls.at(-1)!;
     expect(items).toEqual([
       {
@@ -294,10 +300,10 @@ describe("Compare tool page", () => {
     expect((items as { market?: unknown }[])[1]!.market).toBeUndefined();
   });
 
-  it("flags an item that failed to load once every type has settled", () => {
+  it("flags an item that failed to load", () => {
     mockUseTypes.mockReturnValue({
       data: { 34: { group_id: 18 } },
-      isLoading: false,
+      failedIds: [99],
     });
     renderPage({ searchParams: "?types=34,99" });
     const [items] = mockBuildComparison.mock.calls.at(-1)!;
@@ -354,6 +360,21 @@ describe("Compare tool page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(mockRefetch).toHaveBeenCalled();
     expect(screen.getByTestId("compare-table")).toBeInTheDocument();
+  });
+
+  it("does not call failed items identical", () => {
+    mockUseTypes.mockReturnValue({ data: {}, failedIds: [34, 35] });
+    mockBuildComparison.mockReturnValue({
+      sections: [],
+      totalRows: 0,
+      shownRows: 0,
+      identicalRows: 0,
+    });
+    renderPage({ searchParams: "?types=34,35" });
+    expect(screen.queryByText(/identical/)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Type IDs 34, 35 could not be loaded/),
+    ).toBeInTheDocument();
   });
 
   it("says so when nothing is left to show", () => {

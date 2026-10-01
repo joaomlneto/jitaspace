@@ -415,6 +415,32 @@ describe("buildComparison", () => {
     expect(row.cells[1]).toEqual({});
   });
 
+  it("shows every row when only one item loaded and the rest failed", () => {
+    const failed: CompareItemInput = { typeId: 5, failed: true };
+    const comparison = buildComparison([rifter, failed], catalog, {
+      ...allRows,
+      onlyDifferences: true,
+    });
+    // One item has nothing to differ from: hiding rows would empty the table.
+    expect(findRow(comparison, "attribute:9")).toBeDefined();
+    expect(comparison.identicalRows).toBe(0);
+  });
+
+  it("does not count an item that failed to load as a difference", () => {
+    const failed: CompareItemInput = { typeId: 5, failed: true };
+    const items = [rifter, { ...rifter, typeId: 6 }, failed];
+    expect(
+      findRow(buildComparison(items, catalog, allRows), "attribute:9"),
+    ).toBeDefined();
+    // Identical across the items that loaded, so hidden.
+    expect(
+      findRow(
+        buildComparison(items, catalog, { ...allRows, onlyDifferences: true }),
+        "attribute:9",
+      ),
+    ).toBeUndefined();
+  });
+
   it("prices the cheaper sell order best and hides a side with no orders", () => {
     const comparison = buildComparison([rifter, slasher], catalog, allRows);
     const sell = findRow(comparison, "market:sell")!.row;

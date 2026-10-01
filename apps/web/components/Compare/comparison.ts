@@ -442,13 +442,14 @@ function measureAgainstBaseline(cells: CompareCell[], spec: RowSpec): void {
 
 function buildRow(spec: RowSpec, items: CompareItemInput[]): CompareRow {
   const cells = items.map((item) => readCell(spec, item));
-  const loadedCells = cells.filter((cell) => !cell.loading);
   // A row still loading may yet differ, so it stays in view: otherwise a
   // shared link opened with "Differences" on shows an empty table, called
-  // identical, until every item has arrived.
+  // identical, until every item has arrived. An item that failed to load has
+  // nothing to compare, so its empty cells don't make a row differ.
+  const comparedCells = cells.filter((_, index) => !items[index]?.failed);
   const differs =
-    loadedCells.length < cells.length ||
-    new Set(loadedCells.map(cellKey)).size > 1;
+    comparedCells.some((cell) => cell.loading) ||
+    new Set(comparedCells.map(cellKey)).size > 1;
   if (spec.highIsGood !== undefined) rankCells(cells, spec.highIsGood);
   if (spec.hasDelta) measureAgainstBaseline(cells, spec);
 
@@ -574,7 +575,10 @@ export function buildComparison(
   ];
 
   const needle = options.filter.trim().toLowerCase();
-  const onlyDifferences = options.onlyDifferences && items.length > 1;
+  // A difference needs two items to differ between: one that failed to load
+  // has nothing to compare.
+  const comparableItems = items.filter((item) => !item.failed).length;
+  const onlyDifferences = options.onlyDifferences && comparableItems > 1;
   let totalRows = 0;
   let shownRows = 0;
   let identicalRows = 0;

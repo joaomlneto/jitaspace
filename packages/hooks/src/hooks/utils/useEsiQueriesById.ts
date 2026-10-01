@@ -5,7 +5,7 @@ import type {
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 
 import type {
@@ -43,6 +43,13 @@ export interface EsiQueriesById<TItem> {
   isLoading: boolean;
   /** Failures, one per id that failed; the other ids are unaffected. */
   errors: ResponseErrorConfig<Error>[];
+  /**
+   * The ids that have failed and have nothing to show. Unlike `errors` and
+   * `isLoading`, this holds through a refetch of the failed id (on window
+   * focus, say) and is unaffected by other ids loading; an id whose first
+   * fetch is paused (offline) is not in it.
+   */
+  failedIds: number[];
 }
 
 /**
@@ -61,6 +68,13 @@ export function useEsiQueriesById<TItem>(
   queryOptions: (id: number) => EsiQueryByIdSource<TItem>,
   idOf: (item: TItem) => number,
 ): EsiQueriesById<TItem> {
+  // Keyed by content, so a caller passing a fresh array each render keeps one
+  // combine, and so one stable result for its memos.
+  const idsKey = ids.join(",");
+  const stableIds = useMemo(
+    () => (idsKey === "" ? [] : idsKey.split(",").map(Number)),
+    [idsKey],
+  );
   const combine = useCallback(
     (
       results: UseQueryResult<
@@ -70,17 +84,24 @@ export function useEsiQueriesById<TItem>(
     ): EsiQueriesById<TItem> => {
       const data: Record<number, TItem> = {};
       const errors: ResponseErrorConfig<Error>[] = [];
-      for (const result of results) {
+      const failedIds: number[] = [];
+      for (const [index, result] of results.entries()) {
         if (result.data) data[idOf(result.data.data)] = result.data.data;
         if (result.error) errors.push(result.error);
+        // A refetch clears `error` while it runs; the count survives it.
+        const id = stableIds[index];
+        if (!result.data && result.errorUpdateCount > 0 && id !== undefined) {
+          failedIds.push(id);
+        }
       }
       return {
         data,
         isLoading: results.some((result) => result.isLoading),
         errors,
+        failedIds,
       };
     },
-    [idOf],
+    [idOf, stableIds],
   );
 
   return useQueries({

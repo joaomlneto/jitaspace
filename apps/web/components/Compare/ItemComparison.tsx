@@ -18,7 +18,11 @@ import {
   useTypes,
 } from "@jitaspace/hooks";
 
-import type { CompareItemInput, CompareMarketData } from "./comparison";
+import type {
+  CompareItemInput,
+  CompareMarketData,
+  Comparison,
+} from "./comparison";
 import { CompareItemPicker } from "./CompareItemPicker";
 import { CompareTable } from "./CompareTable";
 import { CompareToolbar } from "./CompareToolbar";
@@ -110,6 +114,60 @@ export interface ItemComparisonProps {
   onItemsAdded?: (event: CompareItemsAddedEvent) => void;
 }
 
+type MarketAggregates = ReturnType<
+  typeof useFuzzworkRegionalMarketAggregates
+>["data"];
+
+/**
+ * An item's Jita prices; "no orders" once the prices are known to lack it (or
+ * failed); undefined while they load — including while the previous item
+ * list's prices stand in for an added item's.
+ */
+function marketData(
+  typeId: number,
+  market: {
+    aggregates: MarketAggregates;
+    isPlaceholder: boolean;
+    isError: boolean;
+  },
+): CompareMarketData | undefined {
+  const aggregate = market.aggregates?.[typeId];
+  if (aggregate) {
+    return { buy: aggregate.buy.percentile, sell: aggregate.sell.percentile };
+  }
+  const settled = market.aggregates && !market.isPlaceholder;
+  return settled || market.isError ? NO_ORDERS : undefined;
+}
+
+/**
+ * Why the table shows no rows: the filter matches nothing, or every row was
+ * hidden as identical. Nothing when all the items failed to load — the
+ * failure notice says so.
+ */
+function emptyTableMessage(
+  comparison: Comparison,
+  filter: string,
+): string | undefined {
+  if (comparison.shownRows > 0) return undefined;
+  if (filter) return `No attribute matches “${filter}”.`;
+  if (comparison.identicalRows > 0) {
+    return "These items are identical in every shown attribute.";
+  }
+  return undefined;
+}
+
+function FailedItemsAlert({ typeIds }: Readonly<{ typeIds: number[] }>) {
+  if (typeIds.length === 0) return null;
+  const plural = typeIds.length > 1;
+  return (
+    <Alert color="yellow" variant="light" title="Some items didn't load">
+      <Text size="sm">
+        {`Type ID${plural ? "s" : ""} ${typeIds.join(", ")} could not be loaded: ${plural ? "they" : "it"} may not exist, or ESI may be unavailable. ${plural ? "Their columns stay" : "Its column stays"} empty until ${plural ? "they load" : "it loads"}.`}
+      </Text>
+    </Alert>
+  );
+}
+
 /**
  * A complete, self-contained item comparison: it loads the catalog, the items'
  * attributes and their Jita prices itself, and renders the toolbar, the table
@@ -157,7 +215,7 @@ export function ItemComparison({
     isError: isCatalogError,
     refetch: refetchCatalog,
   } = useCompareCatalog();
-  const { data: types, isLoading: isTypesLoading } = useTypes(typeIds);
+  const { data: types, failedIds: failedTypeIds } = useTypes(typeIds);
   // Prices of the items already shown stay put while an added item's load.
   const {
     data: marketAggregates,
@@ -170,36 +228,26 @@ export function ItemComparison({
   const items = useMemo<CompareItemInput[]>(
     () =>
       typeIds.map((typeId) => {
-        const aggregate = marketAggregates?.[typeId];
-        let market: CompareMarketData | undefined;
-        if (aggregate) {
-          market = {
-            buy: aggregate.buy.percentile,
-            sell: aggregate.sell.percentile,
-          };
-        } else if (
-          (marketAggregates && !isMarketPlaceholder) ||
-          isMarketError
-        ) {
-          market = NO_ORDERS;
-        }
-        const type = types[typeId];
-        // Once every type has settled, one still missing failed to load.
-        const failed = type === undefined && !isTypesLoading;
-        return { typeId, type, market, failed };
+        return {
+          typeId,
+          type: types[typeId],
+          market: marketData(typeId, {
+            aggregates: marketAggregates,
+            isPlaceholder: isMarketPlaceholder,
+            isError: isMarketError,
+          }),
+          failed: failedTypeIds.includes(typeId),
+        };
       }),
     [
       typeIds,
       types,
-      isTypesLoading,
+      failedTypeIds,
       marketAggregates,
       isMarketPlaceholder,
       isMarketError,
     ],
   );
-  const failedTypeIds = items
-    .filter((item) => item.failed)
-    .map((item) => item.typeId);
 
   const comparison = useMemo(
     () =>
@@ -283,6 +331,7 @@ export function ItemComparison({
     setAnnouncement("Comparison cleared.");
   }, [setRawTypeIds]);
 
+  const emptyMessage = emptyTableMessage(comparison, filter);
   const isFull = typeIds.length >= maxItems;
   const lastTypeId = typeIds.at(-1);
 
@@ -384,19 +433,11 @@ export function ItemComparison({
     );
   }
 
-  const failedAlert = failedTypeIds.length > 0 && (
-    <Alert color="yellow" variant="light" title="Some items didn't load">
-      <Text size="sm">
-        {`Type ID${failedTypeIds.length > 1 ? "s" : ""} ${failedTypeIds.join(", ")} could not be loaded, so ${failedTypeIds.length > 1 ? "their columns stay" : "its column stays"} empty. Check the ID, or remove the column.`}
-      </Text>
-    </Alert>
-  );
-
   return (
     <Stack gap="sm">
       {liveRegion}
       {catalogError}
-      {failedAlert}
+      <FailedItemsAlert typeIds={failedTypeIds} />
       {withToolbar && (
         <CompareToolbar
           itemCount={typeIds.length}
@@ -430,11 +471,9 @@ export function ItemComparison({
           Add another item to see which comes out ahead.
         </Text>
       )}
-      {comparison.shownRows === 0 && catalog && (
+      {emptyMessage && catalog && (
         <Text size="sm" c="dimmed" ta="center">
-          {filter
-            ? `No attribute matches “${filter}”.`
-            : "These items are identical in every shown attribute."}
+          {emptyMessage}
         </Text>
       )}
     </Stack>
