@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 import { act, renderHook } from "@testing-library/react";
 
 import { usePinnedHeader } from "~/layouts/MainLayout/usePinnedHeader";
@@ -75,10 +75,18 @@ describe("usePinnedHeader", () => {
     expect(renders() - initial).toBeLessThanOrEqual(2);
   });
 
-  it("stops listening on unmount", () => {
-    const { result, unmount } = setup({ fixedAt: 120 });
-    unmount();
-    scrollTo(1000);
-    expect(result.current).toBe(true);
+  it("removes the same scroll listener it added on unmount", () => {
+    const add = jest.spyOn(window, "addEventListener");
+    const remove = jest.spyOn(window, "removeEventListener");
+    try {
+      const { unmount } = setup({ fixedAt: 120 });
+      const added = add.mock.calls.find(([type]) => type === "scroll")?.[1];
+      if (!added) throw new Error("no scroll listener was added");
+      unmount();
+      expect(remove).toHaveBeenCalledWith("scroll", added);
+    } finally {
+      add.mockRestore();
+      remove.mockRestore();
+    }
   });
 });
