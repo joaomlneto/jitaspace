@@ -7,7 +7,12 @@ import { createQueryCollection, extractIdFromCtx, queryClient } from "./core";
 
 export type EsiName = UniverseNamesPost[number];
 
-export const esiNamesCollection = createQueryCollection<EsiName, number>(
+// No explicit type arguments: given only <EsiName, number>, TypeScript does not
+// infer the third (TUtils) but defaults it to UtilsRecord, which the config's
+// QueryCollectionUtils is not assignable to. Whether tsc reports that depends
+// on the order it checks files in, so it surfaced only on some changes. The
+// item and key types are fixed by `select` and `getKey` below.
+export const esiNamesCollection = createQueryCollection(
   queryCollectionOptions({
     queryKey: ["esi", "names"],
     queryFn: async (ctx) => {
