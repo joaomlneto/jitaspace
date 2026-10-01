@@ -24,11 +24,15 @@ const RANK_ICONS = { best: IconThumbUp, worst: IconThumbDown } as const;
 
 const ROMAN_LEVELS = ["0", "I", "II", "III", "IV", "V"];
 
-/** "+19%", "−4.5%"; tiny changes keep a decimal so they don't read as 0%. */
+/**
+ * "+19%", "-4.5%"; small changes keep a decimal, and one too small for that
+ * reads "+<0.1%" rather than a "0%" coloured as better or worse.
+ */
 export function formatDelta(delta: number): string {
   const percent = delta * 100;
   const digits = Math.abs(percent) < 10 ? 1 : 0;
   const rounded = Number(percent.toFixed(digits));
+  if (rounded === 0 && percent !== 0) return percent > 0 ? "+<0.1%" : "-<0.1%";
   const sign = rounded > 0 ? "+" : "";
   return `${sign}${rounded.toLocaleString(undefined, {
     maximumFractionDigits: digits,

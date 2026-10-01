@@ -136,8 +136,11 @@ describe("ItemVariations", () => {
     );
     // One item is not a comparison.
     expect(
-      screen.getByRole("link", { name: "Compare 1 selected" }),
-    ).toHaveAttribute("data-disabled", "true");
+      screen.queryByRole("link", { name: "Compare 1 selected" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Compare 1 selected" }),
+    ).toBeDisabled();
   });
 
   it("caps the selection at what one comparison holds", () => {

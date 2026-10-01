@@ -107,16 +107,28 @@ export function ItemVariations({
           {typeIds.length > MAX_COMPARE_ITEMS &&
             ` · up to ${MAX_COMPARE_ITEMS} can be compared at once`}
         </Text>
-        <Button
-          component={Link}
-          href={compareHref(compared)}
-          size="xs"
-          variant="light"
-          leftSection={<IconArrowsDiff size={14} />}
-          disabled={compared.length < 2}
-        >
-          Compare {compared.length} selected
-        </Button>
+        {compared.length < 2 ? (
+          // A disabled link still navigates, so below two items it is a
+          // plain disabled button.
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<IconArrowsDiff size={14} />}
+            disabled
+          >
+            Compare {compared.length} selected
+          </Button>
+        ) : (
+          <Button
+            component={Link}
+            href={compareHref(compared)}
+            size="xs"
+            variant="light"
+            leftSection={<IconArrowsDiff size={14} />}
+          >
+            Compare {compared.length} selected
+          </Button>
+        )}
       </Group>
       <div className={classes.scroll} style={{ maxHeight: "none" }}>
         <table className={classes.ledger} aria-label="Variations">

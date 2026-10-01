@@ -22,6 +22,7 @@ import type {
 } from "~/components/Compare";
 import type * as CompareModule from "~/components/Compare";
 import type * as CompareItemHeaderModule from "~/components/Compare/CompareItemHeader";
+import type * as CompareItemPickerModule from "~/components/Compare/CompareItemPicker";
 import type * as CompareValueModule from "~/components/Compare/CompareValue";
 
 jest.mock("~/components/Text", () => ({
@@ -46,6 +47,8 @@ const { CompareItemHeader } =
   require("~/components/Compare/CompareItemHeader") as typeof CompareItemHeaderModule;
 const { CompareValue, formatDelta } =
   require("~/components/Compare/CompareValue") as typeof CompareValueModule;
+const { ComparePickerPortalContext } =
+  require("~/components/Compare/CompareItemPicker") as typeof CompareItemPickerModule;
 
 // Mantine's combobox scrolls the highlighted option into view; jsdom has no
 // layout, so give it a no-op.
@@ -376,6 +379,27 @@ describe("CompareTable", () => {
     fireEvent.drop(target, { dataTransfer });
   });
 
+  it("keeps a section that appears later expanded after another is collapsed", () => {
+    const filtered = buildComparison(items, rawCatalog, {
+      onlyDifferences: false,
+      showHidden: false,
+      filter: "velocity",
+    });
+    const { view } = renderTable({ comparison: filtered });
+    fireEvent.click(screen.getByRole("button", { name: /Speed and Travel/ }));
+    view.rerender(
+      <MantineProvider env="test">
+        <CompareTable {...tableProps()} />
+      </MantineProvider>,
+    );
+    const toggles = screen.getAllByRole("button", { expanded: true });
+    expect(toggles.length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("button", { name: /Speed and Travel/ }),
+    ).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByText("Maximum Velocity")).not.toBeInTheDocument();
+  });
+
   describe("when the columns fill the width", () => {
     const originalResizeObserver = global.ResizeObserver;
     afterEach(() => {
@@ -544,7 +568,9 @@ describe("CompareValue", () => {
   it.each([
     [0.19, "+19%"],
     [-0.045, "-4.5%"],
-    [0.0004, "0%"],
+    [0.0004, "+<0.1%"],
+    [-0.0004, "-<0.1%"],
+    [0, "0%"],
     [1.5, "+150%"],
   ])("formats a delta of %p as %s", (delta, expected) => {
     expect(formatDelta(delta)).toBe(expected);
@@ -570,6 +596,36 @@ describe("CompareItemPicker", () => {
     fireEvent.click(option);
     expect(onAdd).toHaveBeenCalledWith(585, "search");
     expect(input).toHaveValue("");
+  });
+
+  it("can take focus when it mounts", () => {
+    renderUi(
+      <CompareItemPicker
+        catalog={catalog}
+        isLoading={false}
+        selectedTypeIds={[]}
+        onAdd={jest.fn()}
+        autoFocus
+      />,
+    );
+    expect(screen.getByLabelText("Add an item to compare")).toHaveFocus();
+  });
+
+  it("renders its results in place inside a popover", async () => {
+    const { container } = renderUi(
+      <ComparePickerPortalContext value={false}>
+        <CompareItemPicker
+          catalog={catalog}
+          isLoading={false}
+          selectedTypeIds={[]}
+          onAdd={jest.fn()}
+        />
+      </ComparePickerPortalContext>,
+    );
+    const input = screen.getByLabelText("Add an item to compare");
+    fireEvent.focus(input);
+    fireEvent.change(input, { target: { value: "sla" } });
+    expect(container).toContainElement(await screen.findByText("Slasher"));
   });
 
   it("explains an empty result", async () => {

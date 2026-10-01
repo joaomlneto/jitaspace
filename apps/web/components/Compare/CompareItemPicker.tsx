@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useMemo, useState } from "react";
+import { createContext, memo, use, useEffect, useMemo, useState } from "react";
 import {
   Badge,
   Combobox,
@@ -32,7 +32,17 @@ export interface CompareItemPickerProps {
    */
   suggestions?: CatalogType[];
   suggestionsLabel?: string;
+  /** Focus the box on mount, e.g. after the last item was removed. */
+  autoFocus?: boolean;
 }
+
+/**
+ * Whether the results list is portalled to the body (the default). A picker
+ * inside a popover renders it in place instead: a press on a portalled result
+ * lands outside the popover, which then closes and unmounts the picker before
+ * the pick registers.
+ */
+export const ComparePickerPortalContext = createContext(true);
 
 const MAX_RESULTS = 40;
 
@@ -51,7 +61,9 @@ export const CompareItemPicker = memo(
     size = "sm",
     suggestions = [],
     suggestionsLabel,
+    autoFocus,
   }: CompareItemPickerProps) => {
+    const withinPortal = use(ComparePickerPortalContext);
     const combobox = useCombobox({
       onDropdownClose: () => combobox.resetSelectedOption(),
     });
@@ -89,6 +101,7 @@ export const CompareItemPicker = memo(
     return (
       <Combobox
         store={combobox}
+        withinPortal={withinPortal}
         width={size === "xs" ? 320 : undefined}
         position="bottom-start"
         onOptionSubmit={(value) => {
@@ -100,6 +113,8 @@ export const CompareItemPicker = memo(
         <Combobox.Target>
           <TextInput
             aria-label="Add an item to compare"
+            // Only to put focus back after the control holding it was removed.
+            autoFocus={autoFocus}
             placeholder={placeholder}
             size={size}
             leftSection={<IconSearch size={16} />}

@@ -5,6 +5,7 @@ import type {
   ColumnDef,
   ExpandedState,
   HeaderContext,
+  Updater,
 } from "@tanstack/react-table";
 import type { CSSProperties, DragEvent, ReactNode } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -36,6 +37,7 @@ import type { CompareRow, CompareSection, Comparison } from "./comparison";
 import { draggedTypeId, isColumnDrag } from "./columnDrag";
 import classes from "./Compare.module.css";
 import { CompareItemHeader } from "./CompareItemHeader";
+import { ComparePickerPortalContext } from "./CompareItemPicker";
 import { CompareValue } from "./CompareValue";
 
 export interface CompareTableProps {
@@ -230,7 +232,11 @@ function CollapsedAddColumn({ children }: Readonly<{ children: ReactNode }>) {
           Add item
         </Button>
       </Popover.Target>
-      <Popover.Dropdown>{children}</Popover.Dropdown>
+      <Popover.Dropdown>
+        <ComparePickerPortalContext value={false}>
+          {children}
+        </ComparePickerPortalContext>
+      </Popover.Dropdown>
     </Popover>
   );
 }
@@ -255,7 +261,13 @@ export const CompareTable = memo(
     addColumn,
     maxHeight,
   }: CompareTableProps) => {
-    const [expanded, setExpanded] = useState<ExpandedState>(true);
+    // Tracked as the sections the user collapsed, not TanStack's expanded
+    // record: toggling one turns `true` into a record of only the sections
+    // present then, so any that appear later (another filter, a new item's
+    // attribute categories) would arrive collapsed.
+    const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(
+      () => new Set(),
+    );
     const [dropTarget, setDropTarget] = useState<number>();
     const [containerWidth, setContainerWidth] = useState<number>();
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -370,6 +382,36 @@ export const CompareTable = memo(
       [typeIds, addCollapsed],
     );
 
+    const expanded = useMemo<ExpandedState>(
+      () =>
+        Object.fromEntries(
+          comparison.sections.map((section) => [
+            section.key,
+            !collapsed.has(section.key),
+          ]),
+        ),
+      [comparison.sections, collapsed],
+    );
+    const onExpandedChange = useCallback(
+      (updater: Updater<ExpandedState>) => {
+        const next =
+          typeof updater === "function" ? updater(expanded) : updater;
+        if (next === true) {
+          setCollapsed(new Set());
+          return;
+        }
+        setCollapsed((current) => {
+          const updated = new Set(current);
+          for (const section of comparison.sections) {
+            if (next[section.key]) updated.delete(section.key);
+            else updated.add(section.key);
+          }
+          return updated;
+        });
+      },
+      [expanded, comparison.sections],
+    );
+
     const table = useReactTable({
       data,
       columns,
@@ -383,7 +425,7 @@ export const CompareTable = memo(
         ],
         columnPinning: { left: [LABEL_COLUMN_ID] },
       },
-      onExpandedChange: setExpanded,
+      onExpandedChange,
       getSubRows: (row) => (row.kind === "section" ? row.subRows : undefined),
       getRowId: (row) =>
         row.kind === "section" ? row.section.key : row.row.key,

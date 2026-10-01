@@ -44,10 +44,12 @@ jest.mock("~/components/Compare/search", () => ({
 jest.mock("~/components/Compare/CompareItemPicker", () => ({
   CompareItemPicker: ({
     onAdd,
+    autoFocus,
   }: {
     onAdd: (typeId: number, source: "search" | "suggestion") => void;
+    autoFocus?: boolean;
   }) => (
-    <div>
+    <div data-testid="picker" data-autofocus={autoFocus ? "yes" : "no"}>
       <button data-testid="picker-add" onClick={() => onAdd(34, "search")}>
         add 34
       </button>
@@ -158,7 +160,7 @@ function renderPage(
 beforeEach(() => {
   captureMock.mockClear();
   mockRefetch.mockClear();
-  mockUseTypes.mockReturnValue({ data: {} });
+  mockUseTypes.mockReturnValue({ data: {}, isLoading: true });
   mockUseMarket.mockReturnValue({ data: null, isError: false });
   mockUseCompareCatalog.mockReturnValue({
     catalog: { attributes: {}, typesById: new Map() },
@@ -253,7 +255,10 @@ describe("Compare tool page", () => {
   });
 
   it("feeds each item's type and Jita prices to the comparison", () => {
-    mockUseTypes.mockReturnValue({ data: { 34: { group_id: 18 } } });
+    mockUseTypes.mockReturnValue({
+      data: { 34: { group_id: 18 } },
+      isLoading: true,
+    });
     mockUseMarket.mockReturnValue({
       data: { 34: { buy: { percentile: 4 }, sell: { percentile: 5 } } },
       isError: false,
@@ -262,16 +267,54 @@ describe("Compare tool page", () => {
     expect(mockUseMarket).toHaveBeenCalledWith([34, 35], 10000002);
     const [items] = mockBuildComparison.mock.calls.at(-1)!;
     expect(items).toEqual([
-      { typeId: 34, type: { group_id: 18 }, market: { buy: 4, sell: 5 } },
+      {
+        typeId: 34,
+        type: { group_id: 18 },
+        market: { buy: 4, sell: 5 },
+        failed: false,
+      },
       // Loaded, but no orders: a known absence, not a pending load.
-      { typeId: 35, type: undefined, market: { buy: 0, sell: 0 } },
+      {
+        typeId: 35,
+        type: undefined,
+        market: { buy: 0, sell: 0 },
+        failed: false,
+      },
     ]);
+  });
+
+  it("keeps an added item's price pending while the previous prices stand in", () => {
+    mockUseMarket.mockReturnValue({
+      data: { 34: { buy: { percentile: 4 }, sell: { percentile: 5 } } },
+      isError: false,
+      isPlaceholderData: true,
+    });
+    renderPage({ searchParams: "?types=34,35" });
+    const [items] = mockBuildComparison.mock.calls.at(-1)!;
+    expect((items as { market?: unknown }[])[1]!.market).toBeUndefined();
+  });
+
+  it("flags an item that failed to load once every type has settled", () => {
+    mockUseTypes.mockReturnValue({
+      data: { 34: { group_id: 18 } },
+      isLoading: false,
+    });
+    renderPage({ searchParams: "?types=34,99" });
+    const [items] = mockBuildComparison.mock.calls.at(-1)!;
+    expect(
+      (items as { failed?: boolean }[]).map((item) => item.failed),
+    ).toEqual([false, true]);
+    expect(
+      screen.getByText(/Type ID 99 could not be loaded/),
+    ).toBeInTheDocument();
   });
 
   it("leaves prices pending while they load", () => {
     renderPage({ searchParams: "?types=34" });
     const [items] = mockBuildComparison.mock.calls.at(-1)!;
-    expect(items).toEqual([{ typeId: 34, type: undefined, market: undefined }]);
+    expect(items).toEqual([
+      { typeId: 34, type: undefined, market: undefined, failed: false },
+    ]);
   });
 
   it("treats a failed price request as no orders", () => {
@@ -279,7 +322,12 @@ describe("Compare tool page", () => {
     renderPage({ searchParams: "?types=34" });
     const [items] = mockBuildComparison.mock.calls.at(-1)!;
     expect(items).toEqual([
-      { typeId: 34, type: undefined, market: { buy: 0, sell: 0 } },
+      {
+        typeId: 34,
+        type: undefined,
+        market: { buy: 0, sell: 0 },
+        failed: false,
+      },
     ]);
   });
 
@@ -391,6 +439,11 @@ describe("Compare tool page announcements", () => {
     expect(status()).toHaveTextContent("Removed Slasher. Comparing 1 item.");
     fireEvent.click(screen.getByRole("button", { name: "Clear all" }));
     expect(status()).toHaveTextContent("Comparison cleared.");
+    // The control that held focus is gone: the search box takes it.
+    expect(screen.getByTestId("picker")).toHaveAttribute(
+      "data-autofocus",
+      "yes",
+    );
   });
 });
 

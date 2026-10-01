@@ -28,6 +28,11 @@ export interface CompareItemInput {
   /** The ESI type; undefined while it loads. */
   type?: CompareTypeData;
   market?: CompareMarketData;
+  /**
+   * The item could not be loaded (an unknown or deleted type id): its cells
+   * are empty rather than loading forever.
+   */
+  failed?: boolean;
 }
 
 export type CompareRank = "best" | "worst";
@@ -382,7 +387,7 @@ function cellKey(cell: CompareCell): string {
 
 /** One item's cell of a row: its value, or the attribute's default. */
 function readCell(spec: RowSpec, item: CompareItemInput): CompareCell {
-  if (!spec.isLoaded(item)) return { loading: true };
+  if (!spec.isLoaded(item)) return item.failed ? {} : { loading: true };
   const value = spec.read(item);
   if (value === undefined && spec.defaultValue !== undefined) {
     return { value: spec.defaultValue, isDefault: true };
@@ -438,7 +443,12 @@ function measureAgainstBaseline(cells: CompareCell[], spec: RowSpec): void {
 function buildRow(spec: RowSpec, items: CompareItemInput[]): CompareRow {
   const cells = items.map((item) => readCell(spec, item));
   const loadedCells = cells.filter((cell) => !cell.loading);
-  const differs = new Set(loadedCells.map(cellKey)).size > 1;
+  // A row still loading may yet differ, so it stays in view: otherwise a
+  // shared link opened with "Differences" on shows an empty table, called
+  // identical, until every item has arrived.
+  const differs =
+    loadedCells.length < cells.length ||
+    new Set(loadedCells.map(cellKey)).size > 1;
   if (spec.highIsGood !== undefined) rankCells(cells, spec.highIsGood);
   if (spec.hasDelta) measureAgainstBaseline(cells, spec);
 

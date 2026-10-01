@@ -392,14 +392,27 @@ describe("buildComparison", () => {
     ]);
   });
 
-  it("marks cells of an item still loading, and keeps them out of differs", () => {
+  it("marks cells of an item still loading, and keeps their rows in view", () => {
     const loading: CompareItemInput = { typeId: 5 };
+    const comparison = buildComparison([rifter, loading], catalog, {
+      ...allRows,
+      onlyDifferences: true,
+    });
+    const { row } = findRow(comparison, "attribute:9")!;
+    expect(row.cells[1]).toEqual({ loading: true });
+    // It may yet differ: hiding it would show an empty table, called
+    // identical, until the item arrives.
+    expect(row.differs).toBe(true);
+    expect(comparison.identicalRows).toBe(0);
+  });
+
+  it("leaves the cells of an item that failed to load empty, not loading", () => {
+    const failed: CompareItemInput = { typeId: 5, failed: true };
     const { row } = findRow(
-      buildComparison([rifter, loading], catalog, allRows),
+      buildComparison([rifter, failed], catalog, allRows),
       "attribute:9",
     )!;
-    expect(row.cells[1]).toEqual({ loading: true });
-    expect(row.differs).toBe(false);
+    expect(row.cells[1]).toEqual({});
   });
 
   it("prices the cheaper sell order best and hides a side with no orders", () => {

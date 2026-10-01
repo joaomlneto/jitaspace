@@ -157,9 +157,15 @@ export function ItemComparison({
     isError: isCatalogError,
     refetch: refetchCatalog,
   } = useCompareCatalog();
-  const { data: types } = useTypes(typeIds);
-  const { data: marketAggregates, isError: isMarketError } =
-    useFuzzworkRegionalMarketAggregates(typeIds, THE_FORGE_REGION_ID);
+  const { data: types, isLoading: isTypesLoading } = useTypes(typeIds);
+  // Prices of the items already shown stay put while an added item's load.
+  const {
+    data: marketAggregates,
+    isError: isMarketError,
+    isPlaceholderData: isMarketPlaceholder,
+  } = useFuzzworkRegionalMarketAggregates(typeIds, THE_FORGE_REGION_ID, {
+    keepPreviousData: true,
+  });
 
   const items = useMemo<CompareItemInput[]>(
     () =>
@@ -171,13 +177,29 @@ export function ItemComparison({
             buy: aggregate.buy.percentile,
             sell: aggregate.sell.percentile,
           };
-        } else if (marketAggregates || isMarketError) {
+        } else if (
+          (marketAggregates && !isMarketPlaceholder) ||
+          isMarketError
+        ) {
           market = NO_ORDERS;
         }
-        return { typeId, type: types[typeId], market };
+        const type = types[typeId];
+        // Once every type has settled, one still missing failed to load.
+        const failed = type === undefined && !isTypesLoading;
+        return { typeId, type, market, failed };
       }),
-    [typeIds, types, marketAggregates, isMarketError],
+    [
+      typeIds,
+      types,
+      isTypesLoading,
+      marketAggregates,
+      isMarketPlaceholder,
+      isMarketError,
+    ],
   );
+  const failedTypeIds = items
+    .filter((item) => item.failed)
+    .map((item) => item.typeId);
 
   const comparison = useMemo(
     () =>
@@ -227,10 +249,15 @@ export function ItemComparison({
     [typeIds, maxItems, setRawTypeIds, nameOf, onItemsAdded],
   );
 
+  // Removing the last item (or clearing) swaps the table for the empty state,
+  // taking the focused control with it: focus goes to the search box there.
+  const [focusEmptyPicker, setFocusEmptyPicker] = useState(false);
+
   const removeType = useCallback(
     (typeId: number) => {
       const next = typeIds.filter((id) => id !== typeId);
       setRawTypeIds(next);
+      if (next.length === 0) setFocusEmptyPicker(true);
       setAnnouncement(`Removed ${nameOf(typeId)}. ${itemCount(next.length)}.`);
     },
     [typeIds, setRawTypeIds, nameOf],
@@ -252,6 +279,7 @@ export function ItemComparison({
 
   const clearTypes = useCallback(() => {
     setRawTypeIds([]);
+    setFocusEmptyPicker(true);
     setAnnouncement("Comparison cleared.");
   }, [setRawTypeIds]);
 
@@ -344,6 +372,7 @@ export function ItemComparison({
             selectedTypeIds={typeIds}
             onAdd={(typeId) => addTypes([typeId], "search")}
             size="md"
+            autoFocus={focusEmptyPicker}
           />
         ) : (
           <Text size="sm" c="dimmed" ta="center">
@@ -355,10 +384,19 @@ export function ItemComparison({
     );
   }
 
+  const failedAlert = failedTypeIds.length > 0 && (
+    <Alert color="yellow" variant="light" title="Some items didn't load">
+      <Text size="sm">
+        {`Type ID${failedTypeIds.length > 1 ? "s" : ""} ${failedTypeIds.join(", ")} could not be loaded, so ${failedTypeIds.length > 1 ? "their columns stay" : "its column stays"} empty. Check the ID, or remove the column.`}
+      </Text>
+    </Alert>
+  );
+
   return (
     <Stack gap="sm">
       {liveRegion}
       {catalogError}
+      {failedAlert}
       {withToolbar && (
         <CompareToolbar
           itemCount={typeIds.length}
