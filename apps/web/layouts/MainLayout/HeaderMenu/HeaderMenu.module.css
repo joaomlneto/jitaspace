@@ -1,9 +1,9 @@
+/* Fills AppShell.Header, which already draws the bottom border and owns the
+   height (grown for the status-bar inset in standalone mode, see globals.css). */
 .header {
-  height: rem(60px);
+  height: 100%;
   padding-left: var(--mantine-spacing-md);
   padding-right: var(--mantine-spacing-md);
-  border-bottom: rem(1px) solid
-    light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
 
 /* In the installed app the header background is grown to cover the status-bar /
@@ -11,7 +11,6 @@
    landscape notch on the sides. */
 @media (display-mode: standalone), (display-mode: fullscreen) {
   .header {
-    height: calc(rem(60px) + env(safe-area-inset-top));
     padding-top: env(safe-area-inset-top);
     padding-left: max(var(--mantine-spacing-md), env(safe-area-inset-left));
     padding-right: max(var(--mantine-spacing-md), env(safe-area-inset-right));

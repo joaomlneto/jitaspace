@@ -1,0 +1,23 @@
+/* The themed wallpaper, painted on its own viewport-sized fixed layer rather
+   than with `background-attachment: fixed` on the (page-tall) AppShell root.
+
+   WebKit cannot composite a fixed-attachment background: desktop Safari falls
+   back to repainting the whole viewport on every scroll frame (the scrolled
+   content and the background then drift out of sync, which reads as flicker),
+   and iOS ignores `fixed` outright, so `cover` sizes the image to the full page
+   height instead of the screen. A `position: fixed` layer is promoted to its own
+   compositing layer and never repaints on scroll.
+
+   Sized to 100lvh (the viewport with the mobile browser toolbar retracted) so
+   the image keeps one size while iOS/Android show and hide the toolbar, instead
+   of rescaling on every direction change. */
+.background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+}

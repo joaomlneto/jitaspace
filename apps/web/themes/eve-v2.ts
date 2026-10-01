@@ -17,7 +17,7 @@ const rem = (px: number): string => `${px / 16}rem`;
 // EVE v2 background — the same Cradle of War wallpaper the EVE theme uses, with
 // a 55% black overlay, so v2 reads as a sibling of v1.
 const appBackground =
-  "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg) center/cover fixed no-repeat";
+  "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg) center/cover no-repeat";
 
 /* ---- Color tuples (index 0 = lightest … 9 = darkest) ---------- */
 

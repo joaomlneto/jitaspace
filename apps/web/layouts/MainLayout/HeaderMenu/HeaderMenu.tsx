@@ -100,9 +100,9 @@ export function HeaderMenu() {
   const characterIds = useAuthenticatedCharacterIds();
 
   return (
-    <Box h="100%" px="md">
+    <Box h="100%">
       <div className={classes.header}>
-        <Container size="xl" h={60} p={0}>
+        <Container size="xl" h="100%" p={0}>
           <Group justify="space-between" h="100%" gap="xs" wrap="nowrap">
             <Group h="100%" gap="lg" wrap="nowrap">
               <Group h="100%" gap="sm" wrap="nowrap">
