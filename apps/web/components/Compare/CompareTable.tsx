@@ -117,8 +117,8 @@ interface CompareTableMeta {
   addCollapsed: boolean;
 }
 
-type CompareHeaderContext = HeaderContext<TableRow, unknown>;
-type CompareCellContext = CellContext<TableRow, unknown>;
+type CompareHeaderContext = Readonly<HeaderContext<TableRow, unknown>>;
+type CompareCellContext = Readonly<CellContext<TableRow, unknown>>;
 
 const tableMeta = ({
   table,
