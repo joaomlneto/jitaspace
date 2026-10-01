@@ -6,6 +6,8 @@ import {
   SHIP_TREE_DATA_FILE_NAMES,
 } from "@jitaspace/ship-tree/server";
 
+const ONE_YEAR = 365 * 24 * 60 * 60;
+
 /**
  * The ship tree's data tables (`/api/ship-tree-data/types.jsonl` and friends),
  * served out of the installed `@eve-online-tools/eve-ship-tree` package.
@@ -27,8 +29,16 @@ export function generateStaticParams() {
 
 async function readTable(file: string): Promise<string | null> {
   "use cache";
-  // The tables change only when the library is upgraded, which is a new deploy.
-  cacheLife("max");
+  // The tables change only when the library is upgraded, which is a new deploy,
+  // so a deployment's copy should never be regenerated. That matters: the
+  // regeneration would run inside the deployed function, whose file trace does
+  // not include `node_modules` (`findPackageJSON` is invisible to the tracer),
+  // so it would fail. `"max"` revalidates after 30 days, which a quiet
+  // deployment can reach; a year outlives any deployment. `expire` has to
+  // exceed `revalidate`, so it matches the longest the SDE reads already use.
+  // `outputFileTracingIncludes` is not an alternative: it had no effect on the
+  // trace in this Turbopack build.
+  cacheLife({ stale: 300, revalidate: ONE_YEAR, expire: ONE_YEAR });
   return readShipTreeDataFile(file);
 }
 
