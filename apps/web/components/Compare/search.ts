@@ -66,7 +66,7 @@ export function searchCatalogTypes(
   }
 
   return matches
-    .sort(
+    .toSorted(
       (a, b) =>
         a.rank - b.rank ||
         a.name.length - b.name.length ||

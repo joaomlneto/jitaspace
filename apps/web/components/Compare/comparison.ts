@@ -380,53 +380,67 @@ function cellKey(cell: CompareCell): string {
   return `${cell.value ?? "-"}:${cell.level ?? "-"}`;
 }
 
-function buildRow(spec: RowSpec, items: CompareItemInput[]): CompareRow {
-  const cells: CompareCell[] = items.map((item) => {
-    if (!spec.isLoaded(item)) return { loading: true };
-    const value = spec.read(item);
-    if (value === undefined && spec.defaultValue !== undefined) {
-      return { value: spec.defaultValue, isDefault: true };
-    }
-    return { value, level: spec.readLevel?.(item) };
-  });
+/** One item's cell of a row: its value, or the attribute's default. */
+function readCell(spec: RowSpec, item: CompareItemInput): CompareCell {
+  if (!spec.isLoaded(item)) return { loading: true };
+  const value = spec.read(item);
+  if (value === undefined && spec.defaultValue !== undefined) {
+    return { value: spec.defaultValue, isDefault: true };
+  }
+  return { value, level: spec.readLevel?.(item) };
+}
 
+/** A cell a default fills is shown but neither ranked nor measured. */
+const isMeasured = (
+  cell: CompareCell,
+): cell is CompareCell & { value: number } =>
+  cell.value !== undefined && !cell.isDefault;
+
+/**
+ * Mark the best and worst measured values of a row. A default stands in for
+ * an attribute the item does not have at all — a launcher's turret tracking,
+ * a module's capacitor need — so ranking it would compare nothing: "0 m
+ * optimal" on a launcher next to a railgun is not a worse optimal.
+ */
+function rankCells(cells: CompareCell[], highIsGood: boolean): void {
+  const values = cells.filter(isMeasured).map((cell) => cell.value);
+  if (new Set(values).size < 2) return;
+  const best = highIsGood ? Math.max(...values) : Math.min(...values);
+  const worst = highIsGood ? Math.min(...values) : Math.max(...values);
+  for (const cell of cells.filter(isMeasured)) {
+    if (cell.value === best) cell.rank = "best";
+    else if (cell.value === worst) cell.rank = "worst";
+  }
+}
+
+/**
+ * Each measured cell's change against the baseline (the first cell), on the
+ * displayed scale: milliseconds as the seconds they read as.
+ */
+function measureAgainstBaseline(cells: CompareCell[], spec: RowSpec): void {
+  const [first, ...rest] = cells;
+  if (!first || !isMeasured(first)) return;
+  const baseline = first.value;
+  const baselineDisplay = dogmaAttributeDisplayValue(baseline, spec.unitId);
+  if (baselineDisplay === 0) return;
+  for (const cell of rest.filter(isMeasured)) {
+    if (cell.value === baseline) continue;
+    const display = dogmaAttributeDisplayValue(cell.value, spec.unitId);
+    cell.delta = (display - baselineDisplay) / Math.abs(baselineDisplay);
+    if (spec.highIsGood !== undefined) {
+      cell.deltaIsBetter = spec.highIsGood
+        ? cell.value > baseline
+        : cell.value < baseline;
+    }
+  }
+}
+
+function buildRow(spec: RowSpec, items: CompareItemInput[]): CompareRow {
+  const cells = items.map((item) => readCell(spec, item));
   const loadedCells = cells.filter((cell) => !cell.loading);
   const differs = new Set(loadedCells.map(cellKey)).size > 1;
-
-  // A default stands in for an attribute the item does not have at all — a
-  // launcher's turret tracking, a module's capacitor need — so it is shown,
-  // but neither ranked nor measured against: "0 m optimal, −100%" on a
-  // launcher next to a railgun is not a comparison.
-  const values = cells.flatMap((cell) =>
-    cell.value === undefined || cell.isDefault ? [] : [cell.value],
-  );
-  const { highIsGood } = spec;
-  if (highIsGood !== undefined && new Set(values).size > 1) {
-    const best = highIsGood ? Math.max(...values) : Math.min(...values);
-    const worst = highIsGood ? Math.min(...values) : Math.max(...values);
-    for (const cell of cells) {
-      if (cell.isDefault) continue;
-      if (cell.value === best) cell.rank = "best";
-      else if (cell.value === worst) cell.rank = "worst";
-    }
-  }
-
-  const baseline = cells[0]?.isDefault ? undefined : cells[0]?.value;
-  if (spec.hasDelta && baseline !== undefined) {
-    const baselineDisplay = dogmaAttributeDisplayValue(baseline, spec.unitId);
-    for (const cell of cells.slice(1)) {
-      if (cell.value === undefined || cell.isDefault) continue;
-      if (cell.value === baseline) continue;
-      if (baselineDisplay === 0) continue;
-      const display = dogmaAttributeDisplayValue(cell.value, spec.unitId);
-      cell.delta = (display - baselineDisplay) / Math.abs(baselineDisplay);
-      if (highIsGood !== undefined) {
-        cell.deltaIsBetter = highIsGood
-          ? cell.value > baseline
-          : cell.value < baseline;
-      }
-    }
-  }
+  if (spec.highIsGood !== undefined) rankCells(cells, spec.highIsGood);
+  if (spec.hasDelta) measureAgainstBaseline(cells, spec);
 
   return {
     key: spec.key,

@@ -1,6 +1,11 @@
 "use client";
 
-import type { ColumnDef, ExpandedState } from "@tanstack/react-table";
+import type {
+  CellContext,
+  ColumnDef,
+  ExpandedState,
+  HeaderContext,
+} from "@tanstack/react-table";
 import type { CSSProperties, DragEvent, ReactNode } from "react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -98,6 +103,82 @@ function RowLabel({ row }: Readonly<{ row: CompareRow }>) {
       )}
     </Group>
   );
+}
+
+/** What the column renderers below read, passed through the table's `meta`. */
+interface CompareTableMeta {
+  typeIds: number[];
+  names: Record<number, string>;
+  catalog?: IndexedCompareCatalog;
+  groupIds: Record<number, number | undefined>;
+  onMove?: (typeId: number, index: number) => void;
+  onRemove?: (typeId: number) => void;
+  addColumn?: ReactNode;
+  addCollapsed: boolean;
+}
+
+type CompareHeaderContext = HeaderContext<TableRow, unknown>;
+type CompareCellContext = CellContext<TableRow, unknown>;
+
+const tableMeta = ({
+  table,
+}: CompareHeaderContext | CompareCellContext): CompareTableMeta =>
+  table.options.meta as CompareTableMeta;
+
+function LabelHeader(context: CompareHeaderContext) {
+  const { addColumn, addCollapsed } = tableMeta(context);
+  return (
+    <Stack gap={6} align="flex-start">
+      {addColumn && addCollapsed && (
+        <CollapsedAddColumn>{addColumn}</CollapsedAddColumn>
+      )}
+      <span className={classes.columnLabel}>Attribute</span>
+    </Stack>
+  );
+}
+
+function LabelCell({ row }: CompareCellContext) {
+  return row.original.kind === "row" ? (
+    <RowLabel row={row.original.row} />
+  ) : null;
+}
+
+function ItemHeader(context: CompareHeaderContext) {
+  const { typeIds, names, catalog, groupIds, onMove, onRemove } =
+    tableMeta(context);
+  const typeId = columnTypeId(context.column.id);
+  return (
+    <CompareItemHeader
+      typeId={typeId}
+      name={names[typeId] ?? `item ${typeId}`}
+      catalog={catalog}
+      fallbackGroupId={groupIds[typeId]}
+      index={typeIds.indexOf(typeId)}
+      count={typeIds.length}
+      onMove={onMove ? (target) => onMove(typeId, target) : undefined}
+      onRemove={onRemove ? () => onRemove(typeId) : undefined}
+    />
+  );
+}
+
+function ItemCell(context: CompareCellContext) {
+  const original = context.row.original;
+  if (original.kind !== "row") return null;
+  const { typeIds, catalog } = tableMeta(context);
+  const cell =
+    original.row.cells[typeIds.indexOf(columnTypeId(context.column.id))];
+  if (!cell) return null;
+  return (
+    <CompareValue
+      row={original.row}
+      cell={cell}
+      attributes={catalog?.attributes ?? {}}
+    />
+  );
+}
+
+function AddHeader(context: CompareHeaderContext) {
+  return tableMeta(context).addColumn ?? null;
 }
 
 /** "3", or "3 of 9" when filters hide some of the section's rows. */
@@ -250,69 +331,21 @@ export const CompareTable = memo(
       [comparison.sections],
     );
 
-    const attributes = catalog?.attributes;
-    const columns = useMemo<ColumnDef<TableRow>[]>(
-      () => [
-        {
-          id: LABEL_COLUMN_ID,
-          header: () => (
-            <Stack gap={6} align="flex-start">
-              {addColumn && addCollapsed && (
-                <CollapsedAddColumn>{addColumn}</CollapsedAddColumn>
-              )}
-              <span className={classes.columnLabel}>Attribute</span>
-            </Stack>
-          ),
-          cell: ({ row }) =>
-            row.original.kind === "row" ? (
-              <RowLabel row={row.original.row} />
-            ) : null,
-        },
-        ...typeIds.map<ColumnDef<TableRow>>((typeId, index) => ({
-          id: typeColumnId(typeId),
-          header: () => (
-            <CompareItemHeader
-              typeId={typeId}
-              name={names[typeId] ?? `item ${typeId}`}
-              catalog={catalog}
-              fallbackGroupId={groupIds[typeId]}
-              index={index}
-              count={typeIds.length}
-              onMove={
-                onMove ? (target) => handleMove(typeId, target) : undefined
-              }
-              onRemove={onRemove ? () => handleRemove(typeId) : undefined}
-            />
-          ),
-          cell: ({ row }) => {
-            const original = row.original;
-            const cell =
-              original.kind === "row" ? original.row.cells[index] : undefined;
-            if (original.kind !== "row" || !cell) return null;
-            return (
-              <CompareValue
-                row={original.row}
-                cell={cell}
-                attributes={attributes ?? {}}
-              />
-            );
-          },
-        })),
-        ...(addCollapsed
-          ? []
-          : [
-              {
-                id: ADD_COLUMN_ID,
-                header: () => addColumn ?? null,
-                cell: () => null,
-              },
-            ]),
-      ],
+    const meta = useMemo<CompareTableMeta>(
+      () => ({
+        typeIds,
+        names,
+        catalog,
+        groupIds,
+        onMove: onMove ? handleMove : undefined,
+        onRemove: onRemove ? handleRemove : undefined,
+        addColumn,
+        addCollapsed,
+      }),
       [
         typeIds,
         names,
         catalog,
-        attributes,
         groupIds,
         onMove,
         onRemove,
@@ -322,10 +355,25 @@ export const CompareTable = memo(
         addCollapsed,
       ],
     );
+    const columns = useMemo<ColumnDef<TableRow>[]>(
+      () => [
+        { id: LABEL_COLUMN_ID, header: LabelHeader, cell: LabelCell },
+        ...typeIds.map<ColumnDef<TableRow>>((typeId) => ({
+          id: typeColumnId(typeId),
+          header: ItemHeader,
+          cell: ItemCell,
+        })),
+        ...(addCollapsed
+          ? []
+          : [{ id: ADD_COLUMN_ID, header: AddHeader, cell: () => null }]),
+      ],
+      [typeIds, addCollapsed],
+    );
 
     const table = useReactTable({
       data,
       columns,
+      meta,
       state: {
         expanded,
         columnOrder: [
@@ -373,12 +421,12 @@ export const CompareTable = memo(
     const tableName = `Comparison of ${itemNames.join(", ")}`;
 
     return (
-      <div
+      <section
         ref={scrollRef}
-        role="region"
         aria-label="Comparison table"
-        // Keyboard users scroll the table like any other scrollable region.
-        tabIndex={0}
+        // Keyboard users scroll the table like any other scrollable region,
+        // which needs it focusable: axe's scrollable-region-focusable.
+        tabIndex={0} // NOSONAR(typescript:S6845)
         className={classes.scroll}
         style={maxHeight === undefined ? undefined : { maxHeight }}
       >
@@ -499,7 +547,7 @@ export const CompareTable = memo(
             })}
           </tbody>
         </table>
-      </div>
+      </section>
     );
   },
 );

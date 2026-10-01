@@ -46,6 +46,25 @@ export interface CompareItemHeaderProps {
 }
 
 /**
+ * The item's group: its catalog name, else looked up from ESI, else a
+ * placeholder until the item's group is known.
+ */
+function GroupLabel({
+  name,
+  groupId,
+}: Readonly<{ name?: string; groupId?: number }>) {
+  if (name !== undefined) {
+    return (
+      <Text fz={10.5} c="dimmed" truncate>
+        {name}
+      </Text>
+    );
+  }
+  if (groupId === undefined) return <Skeleton height={8} width={50} />;
+  return <GroupName fz={10.5} c="dimmed" truncate groupId={groupId} />;
+}
+
+/**
  * A compared item's column header: picture, name, group and actions. Every
  * action is reachable three ways: the grip (drag, or ← → when focused), the
  * actions menu (which also serves touch screens, where dragging does not
@@ -195,15 +214,7 @@ export const CompareItemHeader = memo(
               {type?.name ?? <TypeName span typeId={typeId} />}
             </TypeAnchor>
             <Group gap={4} wrap="nowrap">
-              {group ? (
-                <Text fz={10.5} c="dimmed" truncate>
-                  {group.name}
-                </Text>
-              ) : groupId === undefined ? (
-                <Skeleton height={8} width={50} />
-              ) : (
-                <GroupName fz={10.5} c="dimmed" truncate groupId={groupId} />
-              )}
+              <GroupLabel name={group?.name} groupId={groupId} />
               {metaGroupName && (
                 <Badge size="xs" variant="light" color="gray" radius="sm">
                   {metaGroupName}

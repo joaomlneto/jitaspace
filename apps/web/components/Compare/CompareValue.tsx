@@ -79,6 +79,105 @@ function ReferenceValue({
   );
 }
 
+/** The value's colour: its rank's, or dimmed for a default (never ranked). */
+function valueColor(cell: CompareCell): string | undefined {
+  if (cell.isDefault) return "dimmed";
+  return cell.rank ? RANK_COLORS[cell.rank] : undefined;
+}
+
+/** Whether a change against the baseline is better, worse, or neither. */
+function deltaColor(cell: CompareCell): string {
+  if (cell.deltaIsBetter === undefined) return "dimmed";
+  return cell.deltaIsBetter ? "teal.6" : "red.6";
+}
+
+/** A thumb beside the change: up when it is better, down when worse. */
+function DeltaIcon({ isBetter }: Readonly<{ isBetter?: boolean }>) {
+  if (isBetter === undefined) return null;
+  const Icon = isBetter ? IconThumbUp : IconThumbDown;
+  return (
+    <Box
+      component="span"
+      aria-hidden
+      mr={2}
+      style={{ display: "inline-flex", verticalAlign: "-1px" }}
+    >
+      <Icon size={10} />
+    </Box>
+  );
+}
+
+/**
+ * A numeric value, formatted for its unit, with its rank and its change
+ * against the baseline. A default is dimmed and italic — two cues, not colour
+ * alone — and is never ranked (see buildComparison).
+ */
+function MeasuredValue({
+  row,
+  cell,
+}: Readonly<{ row: CompareRow; cell: CompareCell & { value: number } }>) {
+  const color = valueColor(cell);
+  const RankIcon = cell.rank ? RANK_ICONS[cell.rank] : undefined;
+  return (
+    <Group
+      gap={6}
+      justify="center"
+      wrap="nowrap"
+      title={cell.isDefault ? "Default value: not set on this item" : undefined}
+    >
+      {RankIcon && (
+        <Box
+          component="span"
+          c={color}
+          aria-hidden
+          style={{ display: "inline-flex" }}
+        >
+          <RankIcon size={12} />
+        </Box>
+      )}
+      {row.isk ? (
+        <ISKAmount
+          amount={cell.value}
+          fz={12.5}
+          fw={600}
+          c={color}
+          className={classes.figure}
+        />
+      ) : (
+        <Text
+          fz={12.5}
+          fw={600}
+          c={color}
+          className={classes.figure}
+          fs={cell.isDefault ? "italic" : undefined}
+        >
+          {formatDogmaAttributeValue(cell.value, {
+            unitId: row.unitId,
+            symbol: row.unitSymbol,
+          })}
+        </Text>
+      )}
+      {cell.rank && (
+        <VisuallyHidden>{` (${RANK_LABELS[cell.rank]})`}</VisuallyHidden>
+      )}
+      {cell.isDefault && (
+        <VisuallyHidden> (default, not set on this item)</VisuallyHidden>
+      )}
+      {cell.delta !== undefined && (
+        <Text fz={10.5} c={deltaColor(cell)} className={classes.figure}>
+          <DeltaIcon isBetter={cell.deltaIsBetter} />
+          {formatDelta(cell.delta)}
+          {cell.deltaIsBetter !== undefined && (
+            <VisuallyHidden>
+              {cell.deltaIsBetter ? " better" : " worse"} than the first column
+            </VisuallyHidden>
+          )}
+        </Text>
+      )}
+    </Group>
+  );
+}
+
 /** One cell of the comparison: the value, its rank and its baseline delta. */
 export const CompareValue = memo(
   ({
@@ -113,91 +212,7 @@ export const CompareValue = memo(
       );
     }
 
-    // A default is dimmed and italic — two cues, not colour alone — and is
-    // never ranked (see buildComparison).
-    let color: string | undefined = cell.rank
-      ? RANK_COLORS[cell.rank]
-      : undefined;
-    if (cell.isDefault) color = "dimmed";
-    let deltaColor = "dimmed";
-    if (cell.deltaIsBetter === true) deltaColor = "teal.6";
-    if (cell.deltaIsBetter === false) deltaColor = "red.6";
-    const RankIcon = cell.rank ? RANK_ICONS[cell.rank] : undefined;
-    const DeltaIcon =
-      cell.deltaIsBetter === undefined
-        ? undefined
-        : RANK_ICONS[cell.deltaIsBetter ? "best" : "worst"];
-
-    return (
-      <Group
-        gap={6}
-        justify="center"
-        wrap="nowrap"
-        title={
-          cell.isDefault ? "Default value: not set on this item" : undefined
-        }
-      >
-        {RankIcon && (
-          <Box
-            component="span"
-            c={color}
-            aria-hidden
-            style={{ display: "inline-flex" }}
-          >
-            <RankIcon size={12} />
-          </Box>
-        )}
-        {row.isk ? (
-          <ISKAmount
-            amount={cell.value}
-            fz={12.5}
-            fw={600}
-            c={color}
-            className={classes.figure}
-          />
-        ) : (
-          <Text
-            fz={12.5}
-            fw={600}
-            c={color}
-            className={classes.figure}
-            fs={cell.isDefault ? "italic" : undefined}
-          >
-            {formatDogmaAttributeValue(cell.value, {
-              unitId: row.unitId,
-              symbol: row.unitSymbol,
-            })}
-          </Text>
-        )}
-        {cell.rank && (
-          <VisuallyHidden>{` (${RANK_LABELS[cell.rank]})`}</VisuallyHidden>
-        )}
-        {cell.isDefault && (
-          <VisuallyHidden> (default, not set on this item)</VisuallyHidden>
-        )}
-        {cell.delta !== undefined && (
-          <Text fz={10.5} c={deltaColor} className={classes.figure}>
-            {DeltaIcon && (
-              <Box
-                component="span"
-                aria-hidden
-                mr={2}
-                style={{ display: "inline-flex", verticalAlign: "-1px" }}
-              >
-                <DeltaIcon size={10} />
-              </Box>
-            )}
-            {formatDelta(cell.delta)}
-            {cell.deltaIsBetter !== undefined && (
-              <VisuallyHidden>
-                {cell.deltaIsBetter ? " better" : " worse"} than the first
-                column
-              </VisuallyHidden>
-            )}
-          </Text>
-        )}
-      </Group>
-    );
+    return <MeasuredValue row={row} cell={{ ...cell, value: cell.value }} />;
   },
 );
 CompareValue.displayName = "CompareValue";
