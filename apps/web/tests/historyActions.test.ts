@@ -64,6 +64,9 @@ let mockRangeRows: {
   firstOp: string;
   lastOp: string;
 }[] = [];
+// Every $queryRaw call as made — template strings plus interpolated values — so
+// a test can inspect the SQL a reader builds, which the stub below cannot run.
+let mockRawQueries: { strings: string[]; values: unknown[] }[] = [];
 // build.findUnique fixture (the build-addressed readers' scope gate); null ⇒
 // "build not found".
 let mockBuildUnique: {
@@ -121,6 +124,10 @@ jest.mock("~/lib/db", () => ({
 }));
 
 jest.mock("@jitaspace/db-history", () => ({
+  // What ~/lib/history-sql reads: the schema the history tables live in (not
+  // `public`, as in production) and Prisma's `raw` fragment constructor.
+  historySchema: "hist",
+  Prisma: { raw: (sql: string) => ({ raw: sql }) },
   historyDb: {
     build: {
       findMany: () => {
@@ -181,8 +188,9 @@ jest.mock("@jitaspace/db-history", () => ({
       },
     },
     // The build-range reader aggregates in one raw SQL query.
-    $queryRaw: () => {
+    $queryRaw: (strings: readonly string[], ...values: unknown[]) => {
       mockDbCalls++;
+      mockRawQueries.push({ strings: [...strings], values });
       return Promise.resolve(mockRangeRows);
     },
   },
@@ -216,6 +224,7 @@ beforeEach(() => {
   mockTypeRows = [];
   mockTypeNamesRead = "ok";
   mockTypeQueries = [];
+  mockRawQueries = [];
   mockCaptureException.mockClear();
 });
 
@@ -679,6 +688,47 @@ describe("getBuildRangeChanges", () => {
     expect(find(590, "typeDogma")?.kind).toBe("removed");
     expect(find(589, "types")).toBeUndefined(); // transient dropped
     expect(result?.changes).toHaveLength(3);
+  });
+
+  // Prisma schema-qualifies its own SQL but sends raw SQL as written, so a bare
+  // table name resolves through the connection's search_path and fails with 42P01
+  // wherever the history tables are outside `public` — only on this reader, as
+  // every other one is generated. The stub above runs no SQL, so assert on the
+  // text instead: every table the query reads must go through historyTable().
+  it("schema-qualifies every table in its raw SQL", async () => {
+    mockBuildUnique = null;
+    mockBuilds = [tq(700000, "2024-06-01"), tq(700003, "2024-06-04")];
+    mockRangeRows = [];
+
+    await getBuildRangeChanges(700000, 700003);
+
+    // `"use cache"` is inert here, so the range is read more than once (directly
+    // and again for the type names): every one of those reads must qualify.
+    expect(mockRawQueries.length).toBeGreaterThan(0);
+    for (const { strings, values } of mockRawQueries) {
+      const sql = strings.reduce((out, part, i) => {
+        const value = values[i];
+        const isRaw =
+          typeof value === "object" && value !== null && "raw" in value;
+        return (
+          out +
+          part +
+          (isRaw ? String(value.raw) : i < values.length ? "?" : "")
+        );
+      }, "");
+
+      // `IS DISTINCT FROM 'singularity'` is a comparison, not a table.
+      const tables = [
+        ...sql.matchAll(/\b(?<!DISTINCT )(?:FROM|JOIN)\s+(\S+)/g),
+      ].map((m) => m[1]);
+      expect(tables).toEqual([
+        '"hist"."Change"',
+        '"hist"."BuildDiff"',
+        '"hist"."Build"',
+        '"hist"."Entity"',
+        '"hist"."Collection"',
+      ]);
+    }
   });
 
   it("returns null for from >= to, a non-integer, or a missing/out-of-scope endpoint", async () => {

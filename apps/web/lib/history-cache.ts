@@ -14,6 +14,7 @@ import {
   latestChangedBuild,
   netOp,
 } from "~/lib/history";
+import { historyTable } from "~/lib/history-sql";
 import { readTypeNames } from "~/lib/history-type-names";
 
 /**
@@ -302,11 +303,11 @@ export async function getCachedBuildRangeChanges(
       col."name" AS "collection",
       (array_agg(c."op"::text ORDER BY d."toBuild" ASC))[1]  AS "firstOp",
       (array_agg(c."op"::text ORDER BY d."toBuild" DESC))[1] AS "lastOp"
-    FROM "Change" c
-    JOIN "BuildDiff" d ON d."id" = c."diffId"
-    JOIN "Build" b ON b."buildNumber" = d."toBuild"
-    JOIN "Entity" e ON e."id" = c."entityId"
-    JOIN "Collection" col ON col."id" = c."collectionId"
+    FROM ${historyTable("Change")} c
+    JOIN ${historyTable("BuildDiff")} d ON d."id" = c."diffId"
+    JOIN ${historyTable("Build")} b ON b."buildNumber" = d."toBuild"
+    JOIN ${historyTable("Entity")} e ON e."id" = c."entityId"
+    JOIN ${historyTable("Collection")} col ON col."id" = c."collectionId"
     WHERE d."toBuild" > ${from}
       AND d."toBuild" <= ${to}
       AND col."name" NOT LIKE 'strings:%'
