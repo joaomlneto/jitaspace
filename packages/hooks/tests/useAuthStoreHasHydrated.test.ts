@@ -1,5 +1,9 @@
+import type { Root } from "react-dom/client";
+import { createElement } from "react";
 import { describe, expect, it, jest } from "@jest/globals";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { hydrateRoot } from "react-dom/client";
+import { renderToString } from "react-dom/server";
 
 // @swc/jest does not hoist jest.mock above imports, so the hook and the store
 // it pulls in are required lazily below. The generated ESI client is replaced
@@ -65,6 +69,37 @@ describe("useAuthStoreHasHydrated", () => {
     });
 
     await waitFor(() => expect(result.current).toBe(true));
+  });
+
+  it("hydrates server HTML as not-hydrated even once the store has", async () => {
+    // A <Suspense> boundary can hydrate after the auth store has rehydrated.
+    // Reading the live value there rendered the client differently from the
+    // server — a hydration error on every load of /mail — so hydration must use
+    // the server's answer, and the real one must follow straight after.
+    const Probe = () =>
+      createElement("span", null, String(useAuthStoreHasHydrated()));
+
+    const html = renderToString(createElement(Probe));
+    expect(html).toBe("<span>false</span>");
+
+    await useAuthStore.persist.rehydrate();
+    expect(useAuthStore.persist.hasHydrated()).toBe(true);
+
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    document.body.append(container);
+    const onRecoverableError = jest.fn();
+    let root: Root | undefined;
+    act(() => {
+      root = hydrateRoot(container, createElement(Probe), {
+        onRecoverableError,
+      });
+    });
+
+    expect(onRecoverableError).not.toHaveBeenCalled();
+    expect(container.innerHTML).toBe("<span>true</span>");
+    act(() => root?.unmount());
+    container.remove();
   });
 
   it("unsubscribes on unmount", () => {
