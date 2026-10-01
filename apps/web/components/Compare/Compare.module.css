@@ -1,0 +1,138 @@
+/* ============================================================================
+   Compare table — the same compact, data-first ledger as the Active Wars
+   table (components/Wars/WarRoom/WarRoom.module.css): hairline rules,
+   monospace figures, small uppercase section labels, tight rows.
+   ========================================================================== */
+
+.scroll {
+  --line: rgba(150, 172, 200, 0.13);
+  --surface: var(--mantine-color-body);
+  --surface-2: color-mix(in srgb, var(--mantine-color-body), white 3%);
+
+  overflow: auto;
+  max-height: calc(100dvh - 180px);
+  min-height: rem(240px);
+  border: 1px solid var(--line);
+  border-radius: var(--mantine-radius-sm);
+  background: var(--surface);
+}
+
+.ledger {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: rem(12.5px);
+}
+
+/* ---- Header ---- */
+.ledger thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  padding: rem(6px) rem(10px);
+  vertical-align: middle;
+  font-weight: 400;
+  text-align: left;
+}
+
+/* The corner cell sticks both ways, above the item headers and row labels. */
+.ledger thead th.corner {
+  left: 0;
+  z-index: 4;
+}
+
+.columnLabel {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: rem(10px);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}
+
+/* ---- Rows ---- */
+.ledger td,
+.ledger tbody th {
+  padding: rem(4px) rem(10px);
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+/* The hover tint is an image layered over each cell's own background, not a
+   replacement for it: the sticky label cell's background must stay opaque, or
+   the columns scrolling under it show through while the row is hovered. */
+.ledger tbody tr:hover > * {
+  background-image: linear-gradient(
+    rgba(150, 172, 200, 0.06),
+    rgba(150, 172, 200, 0.06)
+  );
+}
+
+/* The label column stays put while the items scroll sideways. */
+.label {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: clamp(150px, 24vw, 260px);
+  min-width: clamp(150px, 24vw, 260px);
+  background: var(--surface);
+  font-weight: 400;
+  text-align: left;
+}
+
+.value {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.best {
+  background: var(--mantine-color-teal-light);
+}
+
+.ledger tbody tr:hover > .best {
+  background: var(--mantine-color-teal-light-hover);
+}
+
+/* Never wrap a figure: a narrow column grows (the table scrolls sideways)
+   rather than splitting "0 hardpoints" over two lines. */
+.figure {
+  white-space: nowrap;
+  font-family: var(--mantine-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ---- Section rows ---- */
+.section {
+  padding: 0 !important;
+  background: var(--surface-2);
+}
+
+.sectionToggle {
+  position: sticky;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: rem(6px);
+  padding: rem(5px) rem(10px);
+  font-family: var(--mantine-font-family-monospace);
+  font-size: rem(10px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mantine-color-gray-4);
+}
+
+.sectionCount {
+  color: var(--mantine-color-dimmed);
+  letter-spacing: 0;
+}
+
+.dropTarget {
+  box-shadow: inset 3px 0 0 var(--mantine-primary-color-filled);
+}
+
+/* The row of the item a table is shown for (e.g. on its own type page). */
+.ledger tbody tr.current > * {
+  background-color: var(--mantine-primary-color-light);
+}

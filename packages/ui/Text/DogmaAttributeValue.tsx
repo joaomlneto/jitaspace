@@ -35,6 +35,36 @@ function prettifyUnitSymbol(symbol?: string): string | undefined {
 }
 
 /**
+ * The number the EVE client shows for a raw dogma value, before any unit symbol
+ * is attached: resistances become the percentage resisted, multipliers the
+ * percentage they add, milliseconds whole seconds. Units without a transform
+ * pass through unchanged.
+ */
+export function dogmaAttributeDisplayValue(
+  value: number,
+  unitId?: number,
+): number {
+  switch (unitId) {
+    // Milliseconds — the client shows seconds (its unit symbol is "s").
+    case 101:
+      return value / 1000;
+    // Inverse Absolute Percent (resistances) and Inversed Modifier Percent
+    // (resistance bonuses): 0.75 => 25%.
+    case 108:
+    case 111:
+      return (1 - value) * 100;
+    // Absolute Percent. 0.0 => 0%, 1.0 => 100%.
+    case 127:
+      return value * 100;
+    // Modifier Percent — a multiplier shown as the percentage it adds.
+    case 109:
+      return (value - 1) * 100;
+    default:
+      return value;
+  }
+}
+
+/**
  * Format a dogma attribute value the way the EVE client does: applying the
  * well-known unit transforms (resistances, percentages, multipliers, booleans)
  * and otherwise appending the unit's display symbol. The numeric ids are the
@@ -44,21 +74,31 @@ export function formatDogmaAttributeValue(
   value: number,
   unit?: { unitId?: number; symbol?: string },
 ): string {
+  const displayValue = dogmaAttributeDisplayValue(value, unit?.unitId);
   switch (unit?.unitId) {
-    // Inverse Absolute Percent — resistances. 0.0 => 100%, 1.0 => 0%.
+    // Milliseconds. 125000 => 125 s.
+    case 101:
+      return `${formatNumber(displayValue)} s`;
+    // Resistances (108) and resistance bonuses (111), 0.25 => 75%, and
+    // Absolute Percent (127), 0.5 => 50%.
     case 108:
-      return `${formatNumber((1 - value) * 100)}%`;
-    // Absolute Percent. 0.0 => 0%, 1.0 => 100%.
+    case 111:
     case 127:
-      return `${formatNumber(value * 100)}%`;
+      return `${formatNumber(displayValue)}%`;
     // Modifier Percent — multiplier shown as a signed %. 1.1 => +10%, 0.9 => -10%.
-    case 109: {
-      const percent = (value - 1) * 100;
-      return `${percent > 0 ? "+" : ""}${formatNumber(percent)}%`;
-    }
+    case 109:
+      return `${displayValue > 0 ? "+" : ""}${formatNumber(displayValue)}%`;
     // Boolean flag.
     case 137:
       return value >= 1 ? "Yes" : "No";
+    // Sizeclass and Level: the SDE "symbols" are a legend ("1=small 2=medium
+    // 3=l") and the word "Level", neither of which belongs after the number.
+    case 117:
+    case 140:
+      return formatNumber(value);
+    // Bonus — an additive bonus, written the way the client does: +2.
+    case 139:
+      return `${value > 0 ? "+" : ""}${formatNumber(value)}`;
     default: {
       const symbol = prettifyUnitSymbol(unit?.symbol);
       if (!symbol) return formatNumber(value);

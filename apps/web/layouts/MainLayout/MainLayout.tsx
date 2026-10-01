@@ -3,17 +3,18 @@
 import type { AppShellProps } from "@mantine/core";
 import type { PropsWithChildren } from "react";
 import { AppShell, Box, rem, useMantineTheme } from "@mantine/core";
-import { useHeadroom } from "@mantine/hooks";
 
 import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
 import { HeaderMenu } from "~/layouts/MainLayout/HeaderMenu";
 import { MobileTabBar } from "~/layouts/MainLayout/MobileTabBar";
+import classes from "./MainLayout.module.css";
+import { usePinnedHeader } from "./usePinnedHeader";
 
 export function MainLayout({
   children,
   ...otherProps
 }: PropsWithChildren<AppShellProps>) {
-  const { pinned } = useHeadroom({ fixedAt: 120 });
+  const pinned = usePinnedHeader({ fixedAt: 120 });
   const theme = useMantineTheme();
   const appBackground = theme.other.appBackground;
   return (
@@ -28,9 +29,15 @@ export function MainLayout({
         height: { base: 64, sm: 60 },
         offset: true,
       }}
-      style={appBackground ? { background: appBackground } : undefined}
       {...otherProps}
     >
+      {appBackground && (
+        <Box
+          aria-hidden
+          className={classes.background}
+          style={{ background: appBackground }}
+        />
+      )}
       <AppShell.Header>
         <HeaderMenu />
       </AppShell.Header>

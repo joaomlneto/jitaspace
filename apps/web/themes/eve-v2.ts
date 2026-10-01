@@ -1,6 +1,8 @@
 import type { MantineColorsTuple } from "@mantine/core";
 import { createTheme } from "@mantine/core";
 
+import { WALLPAPERS } from "./wallpapers";
+
 /**
  * EVE v2 — a refined take on the EVE theme.
  *
@@ -16,8 +18,17 @@ const rem = (px: number): string => `${px / 16}rem`;
 
 // EVE v2 background — the same Cradle of War wallpaper the EVE theme uses, with
 // a 55% black overlay, so v2 reads as a sibling of v1.
-const appBackground =
-  "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg) center/cover fixed no-repeat";
+const appBackground = WALLPAPERS.cradleOfWar;
+
+// Font stacks. The `--font-*` variables come from next/font (app/fonts.ts, set
+// on <html> by the root layout). Their fallback is the plain family name, so
+// the stack stays valid — and a locally installed copy still applies — where
+// the variable is unset: a `var()` with no fallback that fails to resolve
+// invalidates the whole `font-family` declaration, not just its first entry.
+const displayFont =
+  'var(--font-rajdhani, "Rajdhani"), "Inter", "Segoe UI", sans-serif';
+const monoFont =
+  'var(--font-jetbrains-mono, "JetBrains Mono"), "SFMono-Regular", ui-monospace, monospace';
 
 /* ---- Color tuples (index 0 = lightest … 9 = darkest) ---------- */
 
@@ -138,12 +149,11 @@ export const eveV2Theme = createTheme({
   },
 
   /* Type — Rajdhani everywhere, JetBrains Mono for numerics/code */
-  fontFamily: '"Rajdhani", "Inter", "Segoe UI", sans-serif',
-  fontFamilyMonospace:
-    '"JetBrains Mono", "SFMono-Regular", ui-monospace, monospace',
+  fontFamily: displayFont,
+  fontFamilyMonospace: monoFont,
 
   headings: {
-    fontFamily: '"Rajdhani", "Inter", "Segoe UI", sans-serif',
+    fontFamily: displayFont,
     fontWeight: "600",
     textWrap: "balance",
     sizes: {
@@ -259,7 +269,7 @@ export const eveV2Theme = createTheme({
       },
       styles: {
         root: {
-          fontFamily: '"Rajdhani", sans-serif',
+          fontFamily: displayFont,
           fontWeight: 600,
           letterSpacing: "0.035em",
           textTransform: "uppercase",
@@ -273,7 +283,7 @@ export const eveV2Theme = createTheme({
       defaultProps: { radius: "xs" },
       styles: {
         root: {
-          fontFamily: '"Rajdhani", sans-serif',
+          fontFamily: displayFont,
           fontWeight: 600,
           letterSpacing: "0.05em",
           textTransform: "uppercase",
@@ -325,9 +335,9 @@ export const eveV2Theme = createTheme({
   other: {
     appBackground,
     fonts: {
-      display: '"Rajdhani", "Inter", "Segoe UI", sans-serif',
-      body: '"Rajdhani", "Inter", "Segoe UI", sans-serif',
-      mono: '"JetBrains Mono", "SFMono-Regular", ui-monospace, monospace',
+      display: displayFont,
+      body: displayFont,
+      mono: monoFont,
     },
     letterSpacing: {
       tight: "-0.01em",

@@ -1,10 +1,19 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import { Text, useMantineTheme } from "@mantine/core";
+import {
+  createTheme,
+  DEFAULT_THEME,
+  mergeMantineTheme,
+  Text,
+  useMantineTheme,
+} from "@mantine/core";
 import { act, render, screen, waitFor } from "@testing-library/react";
 
-import { AppMantineProvider } from "~/app/mantine-provider";
+import {
+  AppMantineProvider,
+  cssVariablesResolver,
+} from "~/app/mantine-provider";
 import {
   PREFERENCES_STORAGE_KEY,
   setStoredAppTheme,
@@ -64,5 +73,20 @@ describe("AppMantineProvider", () => {
         "gallente_primary",
       );
     });
+  });
+});
+
+describe("cssVariablesResolver", () => {
+  it("lightens dark-scheme dimmed text to meet WCAG AA contrast", () => {
+    const resolved = cssVariablesResolver(
+      mergeMantineTheme(DEFAULT_THEME, createTheme({})),
+    );
+    expect(resolved.dark["--mantine-color-dimmed"]).toBe(
+      "color-mix(in srgb, var(--mantine-color-dark-2), white 18%)",
+    );
+    // The light scheme is left as Mantine resolves it.
+    expect(resolved.light["--mantine-color-dimmed"]).toBe(
+      "var(--mantine-color-gray-6)",
+    );
   });
 });

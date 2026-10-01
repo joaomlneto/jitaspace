@@ -5,6 +5,7 @@ import { HttpStatusCode } from "axios";
 
 import type { PageProps } from "./page.client";
 import type { TypeDogmaMeta } from "./types";
+import type { ItemVariation } from "~/components/Compare/ItemVariations";
 import { PageSkeleton } from "~/components/PageSkeleton";
 import { prisma } from "~/lib/db";
 import { pageMetadata, toDescription } from "~/lib/metadata";
@@ -18,6 +19,8 @@ type TypeData = PageProps & {
   cardImageUrl?: string;
   groupName?: string;
   categoryName?: string;
+  /** The base item of this item's variations — itself when it is the base. */
+  variationBaseTypeId: number;
 };
 
 async function getTypeData(typeId: number): Promise<TypeData> {
@@ -29,6 +32,7 @@ async function getTypeData(typeId: number): Promise<TypeData> {
       typeId: true,
       name: true,
       description: true,
+      variationParentTypeId: true,
       group: {
         select: { name: true, category: { select: { name: true } } },
       },
@@ -72,6 +76,7 @@ async function getTypeData(typeId: number): Promise<TypeData> {
     typeDescription: type.description,
     groupName: type.group.name,
     categoryName: type.group.category.name,
+    variationBaseTypeId: type.variationParentTypeId ?? typeId,
   };
 }
 
@@ -155,6 +160,79 @@ async function getTypeDogmaMeta(typeId: number): Promise<TypeDogmaMeta> {
   }
 }
 
+/**
+ * Every variation of a base item — the base itself and each Tech II, faction,
+ * storyline, deadspace and officer version whose `variationParentTypeId`
+ * points at it — ordered by meta level, then name. Keyed by the base, so every
+ * item of a family shares one cache entry; the lookup uses the
+ * `variationParentTypeId` index.
+ *
+ * A failure throws rather than degrading here: the caller catches it, so a
+ * database blip is never what gets written into the cache entry.
+ */
+async function readTypeVariations(
+  baseTypeId: number,
+): Promise<ItemVariation[]> {
+  "use cache";
+  cacheSdeRead();
+
+  const types = await prisma.type.findMany({
+    select: {
+      typeId: true,
+      name: true,
+      metaGroupId: true,
+      metaLevel: true,
+      group: { select: { categoryId: true } },
+    },
+    where: {
+      isDeleted: false,
+      published: true,
+      OR: [{ typeId: baseTypeId }, { variationParentTypeId: baseTypeId }],
+    },
+  });
+  // A lone item has no variations; skip the meta group lookup.
+  if (types.length < 2) return [];
+
+  const metaGroupIds = [
+    ...new Set(types.flatMap((type) => type.metaGroupId ?? [])),
+  ];
+  const metaGroups = await prisma.metaGroup.findMany({
+    select: { metaGroupId: true, name: true },
+    where: { metaGroupId: { in: metaGroupIds } },
+  });
+  const metaGroupNames = new Map(
+    metaGroups.map((metaGroup) => [metaGroup.metaGroupId, metaGroup.name]),
+  );
+
+  return types
+    .map((type) => ({
+      typeId: type.typeId,
+      name: type.name,
+      categoryId: type.group.categoryId,
+      metaGroupName:
+        type.metaGroupId === null
+          ? undefined
+          : metaGroupNames.get(type.metaGroupId),
+      metaLevel: type.metaLevel ?? undefined,
+    }))
+    .sort(
+      (a, b) =>
+        (a.metaLevel ?? 0) - (b.metaLevel ?? 0) || a.name.localeCompare(b.name),
+    );
+}
+
+/**
+ * The page renders fine without its Variations tab, so a database failure
+ * hides the tab instead of erroring the route.
+ */
+async function getTypeVariations(baseTypeId: number): Promise<ItemVariation[]> {
+  try {
+    return await readTypeVariations(baseTypeId);
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -213,8 +291,11 @@ async function PageContent({
     typeName: data.typeName,
     typeDescription: data.typeDescription,
   };
-  const dogmaMeta = await getTypeDogmaMeta(typeId);
-  return <TypePage {...props} dogmaMeta={dogmaMeta} />;
+  const [dogmaMeta, variations] = await Promise.all([
+    getTypeDogmaMeta(typeId),
+    getTypeVariations(data.variationBaseTypeId),
+  ]);
+  return <TypePage {...props} dogmaMeta={dogmaMeta} variations={variations} />;
 }
 
 export default function Page({

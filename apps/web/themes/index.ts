@@ -17,6 +17,7 @@ import {
 
 import { colors } from "./colors";
 import { eveV2Theme } from "./eve-v2";
+import { WALLPAPERS } from "./wallpapers";
 
 declare module "@mantine/core" {
   interface MantineThemeOther {
@@ -81,8 +82,7 @@ const eveTheme = mergeThemeOverrides(
   baseTheme,
   createTheme({
     other: {
-      appBackground:
-        "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg) center/cover fixed no-repeat",
+      appBackground: WALLPAPERS.cradleOfWar,
     },
     black: "#04070c",
     white: "#f2f7fb",
@@ -262,8 +262,7 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        appBackground:
-          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/amarr_wallpaper.jpg) center/cover fixed no-repeat",
+        appBackground: WALLPAPERS.amarr,
       },
       primaryColor: "amarr_primary",
       primaryShade: 6,
@@ -274,8 +273,7 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        appBackground:
-          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/caldari_wallpaper.jpg) center/cover fixed no-repeat",
+        appBackground: WALLPAPERS.caldari,
       },
       primaryColor: "caldari_primary",
       colors,
@@ -285,8 +283,7 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        appBackground:
-          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/gallente_wallpaper.jpg) center/cover fixed no-repeat",
+        appBackground: WALLPAPERS.gallente,
       },
       primaryColor: "gallente_primary",
       colors,
@@ -296,8 +293,7 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        appBackground:
-          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/minmatar_wallpaper.jpg) center/cover fixed no-repeat",
+        appBackground: WALLPAPERS.minmatar,
       },
       primaryColor: "minmatar_primary",
       colors,

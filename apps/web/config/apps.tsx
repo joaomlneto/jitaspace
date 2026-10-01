@@ -17,6 +17,7 @@ import {
   LPStoreIcon,
   MapIcon,
   MarketIcon,
+  ShipsIcon,
   SkillsIcon,
   WalletIcon,
   WarsIcon,
@@ -310,6 +311,14 @@ export const universeApps: Record<string, JitaApp> = {
       "Navigate EVE's inventory system, containing all items in the game.",
     url: "/categories",
     Icon: (props) => <ItemsIcon {...props} />,
+    scopes: {},
+  },
+  shipTree: {
+    name: "Ship Tree",
+    description:
+      "Browse every faction's ship tree and see which ships you can fly.",
+    url: "/ship-tree",
+    Icon: (props) => <ShipsIcon {...props} />,
     scopes: {},
   },
   agents: {

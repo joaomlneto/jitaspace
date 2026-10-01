@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, jest } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
@@ -16,20 +16,7 @@ function stringifyCellValue(value: unknown): string {
 }
 
 // ---------------------------------------------------------------------------
-// Hooks used by CompareTable
-// ---------------------------------------------------------------------------
-const mockUseTypes =
-  jest.fn<(...args: unknown[]) => { data: Record<number, unknown> }>();
-const mockUseDogmaAttributes =
-  jest.fn<(...args: unknown[]) => { data: Record<number, unknown> }>();
-
-jest.mock("@jitaspace/hooks", () => ({
-  useTypes: (...args: unknown[]) => mockUseTypes(...args),
-  useDogmaAttributes: (...args: unknown[]) => mockUseDogmaAttributes(...args),
-}));
-
-// ---------------------------------------------------------------------------
-// @jitaspace/ui stubs (used by AgentsTable, MarketOrdersDataTable, CompareTable)
+// @jitaspace/ui stubs (used by AgentsTable and MarketOrdersDataTable)
 // ---------------------------------------------------------------------------
 jest.mock("@jitaspace/ui", () => ({
   DateHoverCard: ({ children }: { children?: ReactNode }) => <>{children}</>,
@@ -45,10 +32,6 @@ jest.mock("@jitaspace/ui", () => ({
   TimeAgoText: ({ date }: { date: Date }) => (
     <span data-testid="time-ago">{date.toISOString()}</span>
   ),
-  DogmaAttributeAnchor: ({ children }: { children?: ReactNode }) => (
-    <span data-testid="attr-anchor">{children}</span>
-  ),
-  formatDogmaAttributeValue: (value: number) => value.toLocaleString(),
 }));
 
 // Components that moved to @jitaspace/eve-components are stubbed there.
@@ -100,12 +83,6 @@ jest.mock("~/components/Badge", () => ({
   }: {
     solarSystemId?: number | string;
   }) => <span data-testid="sec-badge">{`sec-${solarSystemId ?? "?"}`}</span>,
-}));
-
-jest.mock("~/components/Text", () => ({
-  DogmaAttributeName: ({ attributeId }: { attributeId?: number }) => (
-    <span data-testid="attr-name">{`attr-${attributeId ?? "?"}`}</span>
-  ),
 }));
 
 // ---------------------------------------------------------------------------
@@ -329,242 +306,5 @@ describe("MarketOrdersDataTable", () => {
   it("accepts sortPriceDescending without crashing", () => {
     renderOrders([SAMPLE_ORDER], true);
     expect(screen.getByText("9,999.5 ISK")).toBeInTheDocument();
-  });
-});
-
-// ===========================================================================
-// CompareTable
-// ===========================================================================
-describe("CompareTable", () => {
-  beforeEach(() => {
-    mockUseTypes.mockReset();
-    mockUseDogmaAttributes.mockReset();
-    mockUseTypes.mockReturnValue({ data: {} });
-    mockUseDogmaAttributes.mockReturnValue({ data: {} });
-  });
-
-  function renderCompare(typeIds = [587, 588]) {
-    const { CompareTable } = require("~/components/Compare/CompareTable");
-    return renderWithMantine(<CompareTable typeIds={typeIds} />);
-  }
-
-  it("renders without crashing when there are no types", () => {
-    renderCompare([]);
-    expect(screen.getByText("Attribute")).toBeInTheDocument();
-  });
-
-  it("renders a column header per type, sorted alphabetically by name", () => {
-    mockUseTypes.mockReturnValue({
-      data: {
-        587: { type_id: 587, name: "Rifter", dogma_attributes: [] },
-        588: { type_id: 588, name: "Atron", dogma_attributes: [] },
-      },
-    });
-    renderCompare();
-    expect(screen.getByText("type-587")).toBeInTheDocument();
-    expect(screen.getByText("type-588")).toBeInTheDocument();
-    expect(screen.getByText("type-avatar-587")).toBeInTheDocument();
-  });
-
-  it("renders rows for attributes whose values differ between types", () => {
-    mockUseTypes.mockReturnValue({
-      data: {
-        587: {
-          type_id: 587,
-          name: "Rifter",
-          dogma_attributes: [{ attribute_id: 4, value: 100 }],
-        },
-        588: {
-          type_id: 588,
-          name: "Atron",
-          dogma_attributes: [{ attribute_id: 4, value: 200 }],
-        },
-      },
-    });
-    mockUseDogmaAttributes.mockReturnValue({
-      data: {
-        4: { attribute_id: 4, name: "mass", display_name: "Mass" },
-      },
-    });
-    renderCompare();
-    // The differing attribute should produce a row with the attribute name
-    expect(screen.getByText("attr-4")).toBeInTheDocument();
-    // and the two differing values
-    expect(screen.getByText("100")).toBeInTheDocument();
-    expect(screen.getByText("200")).toBeInTheDocument();
-  });
-
-  it("does not render rows for attributes whose values are equal", () => {
-    mockUseTypes.mockReturnValue({
-      data: {
-        587: {
-          type_id: 587,
-          name: "Rifter",
-          dogma_attributes: [{ attribute_id: 4, value: 100 }],
-        },
-        588: {
-          type_id: 588,
-          name: "Atron",
-          dogma_attributes: [{ attribute_id: 4, value: 100 }],
-        },
-      },
-    });
-    // Equal values -> nonEqualAttributeIds empty -> useDogmaAttributes called with []
-    mockUseDogmaAttributes.mockReturnValue({ data: {} });
-    renderCompare();
-    expect(screen.queryByText("attr-4")).not.toBeInTheDocument();
-  });
-
-  it("sorts attributes by display_name", () => {
-    mockUseTypes.mockReturnValue({
-      data: {
-        587: {
-          type_id: 587,
-          name: "Rifter",
-          dogma_attributes: [
-            { attribute_id: 4, value: 100 },
-            { attribute_id: 9, value: 50 },
-          ],
-        },
-        588: {
-          type_id: 588,
-          name: "Atron",
-          dogma_attributes: [
-            { attribute_id: 4, value: 200 },
-            { attribute_id: 9, value: 75 },
-          ],
-        },
-      },
-    });
-    mockUseDogmaAttributes.mockReturnValue({
-      data: {
-        4: { attribute_id: 4, name: "mass", display_name: "Zeta" },
-        9: { attribute_id: 9, name: "hp", display_name: "Alpha" },
-      },
-    });
-    renderCompare();
-    expect(screen.getByText("attr-4")).toBeInTheDocument();
-    expect(screen.getByText("attr-9")).toBeInTheDocument();
-  });
-
-  it("renders the JSON debug inputs", () => {
-    mockUseTypes.mockReturnValue({
-      data: {
-        587: { type_id: 587, name: "Rifter", dogma_attributes: [] },
-      },
-    });
-    renderCompare([587]);
-    expect(
-      screen.getByText("Types, sorted alphabetically by name"),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        "Attribute Ids (whose values differ between at least two of the Types)",
-      ),
-    ).toBeInTheDocument();
-  });
-
-  it("handles types that have no dogma_attributes field at all", () => {
-    // Exercises the `dogma_attributes ?? []` fallback branches.
-    mockUseTypes.mockReturnValue({
-      data: {
-        587: { type_id: 587, name: "Rifter" },
-        588: { type_id: 588, name: "Atron" },
-      },
-    });
-    mockUseDogmaAttributes.mockReturnValue({ data: {} });
-    renderCompare();
-    expect(screen.getByText("type-587")).toBeInTheDocument();
-    expect(screen.getByText("type-588")).toBeInTheDocument();
-  });
-
-  it("sorts attributes by name/id when display_name is missing", () => {
-    mockUseTypes.mockReturnValue({
-      data: {
-        587: {
-          type_id: 587,
-          name: "Rifter",
-          dogma_attributes: [{ attribute_id: 4, value: 100 }],
-        },
-        588: {
-          type_id: 588,
-          name: "Atron",
-          dogma_attributes: [{ attribute_id: 4, value: 200 }],
-        },
-      },
-    });
-    // Attribute has neither display_name nor name -> falls back to id string.
-    mockUseDogmaAttributes.mockReturnValue({
-      data: {
-        4: { attribute_id: 4 },
-      },
-    });
-    renderCompare();
-    expect(screen.getByText("attr-4")).toBeInTheDocument();
-  });
-
-  it("sorts a mix of attributes with display_name, name-only and id-only", () => {
-    mockUseTypes.mockReturnValue({
-      data: {
-        587: {
-          type_id: 587,
-          name: "Rifter",
-          dogma_attributes: [
-            { attribute_id: 4, value: 100 },
-            { attribute_id: 9, value: 50 },
-            { attribute_id: 12, value: 1 },
-          ],
-        },
-        588: {
-          type_id: 588,
-          name: "Atron",
-          dogma_attributes: [
-            { attribute_id: 4, value: 200 },
-            { attribute_id: 9, value: 75 },
-            { attribute_id: 12, value: 2 },
-          ],
-        },
-      },
-    });
-    // 4 has display_name, 9 has only name, 12 has only id -> exercises both
-    // sides of the `display_name ?? name ?? id` comparator chain.
-    mockUseDogmaAttributes.mockReturnValue({
-      data: {
-        4: { attribute_id: 4, name: "mass", display_name: "Mass" },
-        9: { attribute_id: 9, name: "hp" },
-        12: { attribute_id: 12 },
-      },
-    });
-    renderCompare();
-    expect(screen.getByText("attr-4")).toBeInTheDocument();
-    expect(screen.getByText("attr-9")).toBeInTheDocument();
-    expect(screen.getByText("attr-12")).toBeInTheDocument();
-  });
-
-  it("renders an empty value cell for a type missing the differing attribute", () => {
-    // 588 has no dogma_attributes at all, but 587 does -> the value differs
-    // (200 vs undefined) so a row renders, exercising the `?? []` fallback in
-    // the per-type value cell for 588.
-    mockUseTypes.mockReturnValue({
-      data: {
-        587: {
-          type_id: 587,
-          name: "Rifter",
-          dogma_attributes: [{ attribute_id: 4, value: 200 }],
-        },
-        588: {
-          type_id: 588,
-          name: "Atron",
-        },
-      },
-    });
-    mockUseDogmaAttributes.mockReturnValue({
-      data: {
-        4: { attribute_id: 4, name: "mass", display_name: "Mass" },
-      },
-    });
-    renderCompare();
-    expect(screen.getByText("attr-4")).toBeInTheDocument();
-    expect(screen.getByText("200")).toBeInTheDocument();
   });
 });

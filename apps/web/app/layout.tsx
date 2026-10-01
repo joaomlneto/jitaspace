@@ -32,6 +32,8 @@ import { MainLayout } from "~/layouts";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "~/lib/og";
 import { DEFAULT_ESI_ACCEPT_LANGUAGE } from "~/lib/preferences";
+import { THEME_PRELOAD_SCRIPT } from "~/lib/themePreload";
+import { jetBrainsMono, rajdhani } from "./fonts";
 import { AppMantineProvider } from "./mantine-provider";
 import { splashScreenLink, splashScreens } from "./splashScreens";
 
@@ -115,9 +117,20 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   const defaultColorScheme = "dark";
   return (
-    <html lang="en" dir="ltr" data-mantine-color-scheme={defaultColorScheme}>
+    <html
+      lang="en"
+      dir="ltr"
+      data-mantine-color-scheme={defaultColorScheme}
+      className={`${rajdhani.variable} ${jetBrainsMono.variable}`}
+      // The color-scheme and pre-paint theme scripts write to <html> before
+      // hydration; Mantine's own Next.js setup suppresses this element too.
+      suppressHydrationWarning
+    >
       <head>
         <ColorSchemeScript defaultColorScheme={defaultColorScheme} />
+        {/* Before first paint: keeps the prerendered default theme off screen
+            for anyone who picked another one. See lib/themePreload.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_PRELOAD_SCRIPT }} />
         <meta
           name="viewport"
           content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no, viewport-fit=cover"

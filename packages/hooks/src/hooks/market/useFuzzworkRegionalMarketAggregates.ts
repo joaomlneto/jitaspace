@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import type { GetAggregatesQueryResponse } from "@jitaspace/fuzzworks-market-client";
 import { getAggregates } from "@jitaspace/fuzzworks-market-client";
@@ -13,9 +13,19 @@ export type {
   FuzzworkTypeMarketAggregate,
 } from "./fuzzworkAggregates";
 
+export interface FuzzworkRegionalMarketAggregatesOptions {
+  /**
+   * Keep the previous ids' aggregates while a changed id list loads, rather
+   * than dropping every price. Check `isPlaceholderData`: until it clears, an
+   * id missing from `data` is still loading, not without orders.
+   */
+  keepPreviousData?: boolean;
+}
+
 export const useFuzzworkRegionalMarketAggregates = (
   typeIds: number[],
   regionId: number,
+  options: FuzzworkRegionalMarketAggregatesOptions = {},
 ) => {
   const sortedTypeIds = useMemo(
     () => typeIds.toSorted((a, b) => a - b),
@@ -29,6 +39,7 @@ export const useFuzzworkRegionalMarketAggregates = (
       sortedTypeIds,
     ] as const,
     enabled: sortedTypeIds.length > 0,
+    placeholderData: options.keepPreviousData ? keepPreviousData : undefined,
     // max every 5 minutes
     refetchInterval: 5 * 60 * 1000,
     queryFn: async () => {

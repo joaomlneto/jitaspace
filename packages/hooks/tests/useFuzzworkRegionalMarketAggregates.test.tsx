@@ -84,6 +84,38 @@ describe("useFuzzworkRegionalMarketAggregates", () => {
     expect(typeof result.current.data?.["2099"]?.sell.volume).toBe("number");
   });
 
+  it("keeps the previous prices while a changed list loads, when asked", async () => {
+    const { result, rerender } = renderHook(
+      ({ ids }: { ids: number[] }) =>
+        useFuzzworkRegionalMarketAggregates(ids, REGION, {
+          keepPreviousData: true,
+        }),
+      { wrapper: createWrapper(), initialProps: { ids: [34] } },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    rerender({ ids: [34, 35] });
+    // The previous list's prices stand in, flagged as placeholders.
+    expect(result.current.isPlaceholderData).toBe(true);
+    expect(result.current.data?.["34"]?.buy.percentile).toBe(34);
+    expect(result.current.data?.["35"]).toBeUndefined();
+
+    await waitFor(() => expect(result.current.isPlaceholderData).toBe(false));
+    expect(result.current.data?.["35"]?.buy.percentile).toBe(35);
+  });
+
+  it("drops the previous prices while a changed list loads by default", async () => {
+    const { result, rerender } = renderHook(
+      ({ ids }: { ids: number[] }) =>
+        useFuzzworkRegionalMarketAggregates(ids, REGION),
+      { wrapper: createWrapper(), initialProps: { ids: [34] } },
+    );
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    rerender({ ids: [34, 35] });
+    expect(result.current.data).toBeNull();
+  });
+
   it("is disabled and fetches nothing when there are no type ids", () => {
     const { result } = renderHook(
       () => useFuzzworkRegionalMarketAggregates([], REGION),

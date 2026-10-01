@@ -83,6 +83,35 @@ describe("useTypes", () => {
     );
     await waitFor(() => expect(result.current.errors).toHaveLength(1));
     expect(result.current.isLoading).toBe(false);
+    expect(result.current.failedIds).toEqual([588]);
+  });
+
+  it("keeps a failed id failed while another id loads", async () => {
+    let resolveLate: (() => void) | undefined;
+    mockGetType.mockImplementation((id) => {
+      if (id === 588) return Promise.reject(new Error("ESI 404"));
+      if (id === 600) {
+        return new Promise((resolve) => {
+          resolveLate = () =>
+            resolve({ data: { type_id: id, name: `Type ${id}` } });
+        });
+      }
+      return Promise.resolve({ data: { type_id: id, name: `Type ${id}` } });
+    });
+
+    const { result, rerender } = renderHook(
+      ({ ids }: { ids: number[] }) => useTypes(ids),
+      { wrapper, initialProps: { ids: [587, 588] } },
+    );
+    await waitFor(() => expect(result.current.failedIds).toEqual([588]));
+
+    rerender({ ids: [587, 588, 600] });
+    expect(result.current.isLoading).toBe(true);
+    // `isLoading` covers every id; the failure is still known.
+    expect(result.current.failedIds).toEqual([588]);
+    act(() => resolveLate?.());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.failedIds).toEqual([588]);
   });
 });
 
