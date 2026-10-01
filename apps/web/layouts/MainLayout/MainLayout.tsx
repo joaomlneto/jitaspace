@@ -7,6 +7,7 @@ import { AppShell, Box, rem, useMantineTheme } from "@mantine/core";
 import { FooterWithLinks } from "~/layouts/MainLayout/FooterWithLinks";
 import { HeaderMenu } from "~/layouts/MainLayout/HeaderMenu";
 import { MobileTabBar } from "~/layouts/MainLayout/MobileTabBar";
+import classes from "./MainLayout.module.css";
 import { usePinnedHeader } from "./usePinnedHeader";
 
 export function MainLayout({
@@ -28,9 +29,15 @@ export function MainLayout({
         height: { base: 64, sm: 60 },
         offset: true,
       }}
-      style={appBackground ? { background: appBackground } : undefined}
       {...otherProps}
     >
+      {appBackground && (
+        <Box
+          aria-hidden
+          className={classes.background}
+          style={{ background: appBackground }}
+        />
+      )}
       <AppShell.Header>
         <HeaderMenu />
       </AppShell.Header>
