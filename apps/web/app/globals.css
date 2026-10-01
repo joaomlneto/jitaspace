@@ -7,10 +7,9 @@
 html {
   /* No grey flash when tapping links/buttons. */
   -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  /* No rubber-band bounce / pull-to-refresh on the document. */
+  /* No rubber-band bounce / pull-to-refresh on the document. This must sit on
+     the root element: the viewport takes overscroll-behavior from <html> only,
+     and unlike overflow it is not propagated from <body>. */
   overscroll-behavior-y: none;
 }
 
