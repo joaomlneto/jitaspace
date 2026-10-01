@@ -1,10 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, Button, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import Link from "next/link";
+import {
+  Anchor,
+  Badge,
+  Button,
+  Group,
+  Paper,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 
 import type { FileDiff, StringChange } from "~/lib/resource-history";
+import { TextDiff } from "~/components/History";
 import { LANGUAGE_LABEL } from "~/lib/resource-history";
+import { filePageHref, stringPageHref } from "~/lib/resource-pages";
 import { RowSpoiler } from "./_row-spoiler";
 
 const fileCount = (f: FileDiff) =>
@@ -45,9 +57,16 @@ function PathList({
         {(visible) => (
           <Stack gap={0}>
             {visible.map((p) => (
-              <Text key={p} size="xs" ff="monospace" c="dimmed">
+              <Anchor
+                key={p}
+                component={Link}
+                href={filePageHref(p)}
+                size="xs"
+                ff="monospace"
+                c="dimmed"
+              >
                 {p}
-              </Text>
+              </Anchor>
             ))}
           </Stack>
         )}
@@ -106,7 +125,10 @@ function stringChangePrefix(kind: StringChange["kind"]): string {
   return "~";
 }
 
-function StringList({ changes }: Readonly<{ changes: StringChange[] }>) {
+function StringList({
+  changes,
+  lang,
+}: Readonly<{ changes: StringChange[]; lang: string }>) {
   return (
     <RowSpoiler items={changes} fz="xs">
       {(visible) => (
@@ -123,23 +145,16 @@ function StringList({ changes }: Readonly<{ changes: StringChange[] }>) {
                 <Text size="xs" c={color}>
                   {stringChangePrefix(c.kind)}
                 </Text>
-                <Text size="xs" c="dimmed">
+                <Anchor
+                  component={Link}
+                  href={stringPageHref(c.id)}
+                  size="xs"
+                  c="dimmed"
+                >
                   #{c.id}
-                </Text>
+                </Anchor>
                 {c.kind === "changed" ? (
-                  <Text size="xs">
-                    <Text
-                      span
-                      c="red"
-                      style={{ textDecoration: "line-through" }}
-                    >
-                      {c.from}
-                    </Text>{" "}
-                    →{" "}
-                    <Text span c="green">
-                      {c.to}
-                    </Text>
-                  </Text>
+                  <TextDiff from={c.from} to={c.to} lang={lang} size="xs" />
                 ) : (
                   <Text
                     size="xs"
@@ -188,7 +203,7 @@ function StringLang({
       </Group>
       {open && (
         <div style={{ paddingLeft: "var(--mantine-spacing-md)" }}>
-          <StringList changes={changes} />
+          <StringList changes={changes} lang={lang} />
         </div>
       )}
     </div>
