@@ -50,8 +50,10 @@ export const newsItems: NewsItem[] = [
     date: "2026-06-09",
     publishAt: "2026-06-09T11:00:00Z",
     color: "#e6923f", // rgb(230, 146, 63)
+    // A 1600x900 WebP (52 KB) of the 4K key art (504 KB): the card is never
+    // wider than ~520 CSS px, so the original is ~7x more pixels than it can show.
     image:
-      "/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg",
+      "/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed-banner.webp",
     link: {
       label: "Read the expansion notes",
       href: "https://www.eveonline.com/news/view/the-cradle-of-war-expansion-is-here",
