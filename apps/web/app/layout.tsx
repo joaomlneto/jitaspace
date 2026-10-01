@@ -32,6 +32,7 @@ import { MainLayout } from "~/layouts";
 import { MyQueryClientProvider } from "~/lib/MyQueryClientProvider";
 import { buildOgImageUrl, OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH } from "~/lib/og";
 import { DEFAULT_ESI_ACCEPT_LANGUAGE } from "~/lib/preferences";
+import { jetBrainsMono, rajdhani } from "./fonts";
 import { AppMantineProvider } from "./mantine-provider";
 import { splashScreenLink, splashScreens } from "./splashScreens";
 
@@ -115,7 +116,12 @@ export default function RootLayout({
 }: Readonly<{ children: ReactNode }>) {
   const defaultColorScheme = "dark";
   return (
-    <html lang="en" dir="ltr" data-mantine-color-scheme={defaultColorScheme}>
+    <html
+      lang="en"
+      dir="ltr"
+      data-mantine-color-scheme={defaultColorScheme}
+      className={`${rajdhani.variable} ${jetBrainsMono.variable}`}
+    >
       <head>
         <ColorSchemeScript defaultColorScheme={defaultColorScheme} />
         <meta
