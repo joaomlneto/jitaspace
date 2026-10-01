@@ -1,6 +1,8 @@
 import type { MantineColorsTuple } from "@mantine/core";
 import { createTheme } from "@mantine/core";
 
+import { WALLPAPERS } from "./wallpapers";
+
 /**
  * EVE v2 — a refined take on the EVE theme.
  *
@@ -16,8 +18,7 @@ const rem = (px: number): string => `${px / 16}rem`;
 
 // EVE v2 background — the same Cradle of War wallpaper the EVE theme uses, with
 // a 55% black overlay, so v2 reads as a sibling of v1.
-const appBackground =
-  "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg) center/cover no-repeat";
+const appBackground = WALLPAPERS.cradleOfWar;
 
 // Font stacks. The `--font-*` variables come from next/font (app/fonts.ts, set
 // on <html> by the root layout). Their fallback is the plain family name, so

@@ -41,3 +41,38 @@ html {
     padding-right: max(var(--app-shell-padding, 1rem), env(safe-area-inset-right));
   }
 }
+
+/* --- Pre-paint theme (lib/themePreload.ts) ------------------------------ */
+/* Until React has applied a non-default theme, the prerendered HTML is styled
+   with the default one. The <head> script marks <html> as pending; show the
+   chosen theme's background and wallpaper (laid out like MainLayout's own
+   wallpaper layer, so the reveal does not shift it) and keep the app shell
+   hidden until AppMantineProvider reveals it. The animation is a backstop for
+   when that never happens (a script error, JavaScript disabled mid-load). */
+html[data-app-theme-pending] body {
+  background-color: var(--app-pending-body);
+}
+
+html[data-app-theme-pending] body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100lvh;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--app-pending-background, none);
+}
+
+html[data-app-theme-pending] .mantine-AppShell-root {
+  visibility: hidden;
+  animation: app-theme-pending-timeout 0s 4s forwards;
+}
+
+@keyframes app-theme-pending-timeout {
+  to {
+    visibility: visible;
+  }
+}
