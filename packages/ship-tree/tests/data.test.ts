@@ -9,6 +9,7 @@ import {
   SHIP_TREE_DATA_BASE_URL,
   SHIP_TREE_DATA_FILE_NAMES,
 } from "../data";
+import { ALL_TABLE_FILES, byName, fileName } from "./helpers";
 
 describe("SHIP_TREE_DATA_FILE_NAMES", () => {
   it("lists thirteen distinct .jsonl files", () => {
@@ -32,9 +33,7 @@ describe("SHIP_TREE_DATA_FILE_NAMES", () => {
       },
     });
 
-    expect(requested.map((url) => url.split("/").pop()).sort()).toEqual(
-      [...SHIP_TREE_DATA_FILE_NAMES].sort(),
-    );
+    expect(requested.map(fileName).sort(byName)).toEqual(ALL_TABLE_FILES);
     for (const url of requested) {
       expect(url.startsWith("http://data.invalid/tables/")).toBe(true);
     }

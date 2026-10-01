@@ -47,8 +47,9 @@ describe("SHIP_TREE_FACTIONS", () => {
       .filter((line) => line !== "")
       .map((line) => (JSON.parse(line) as { _key: number })._key);
 
-    expect([...idsInData].sort()).toEqual(
-      SHIP_TREE_FACTIONS.map((f) => f.id as number).sort(),
+    const numerically = (a: number, b: number) => a - b;
+    expect([...idsInData].sort(numerically)).toEqual(
+      SHIP_TREE_FACTIONS.map((f) => f.id as number).sort(numerically),
     );
   });
 });

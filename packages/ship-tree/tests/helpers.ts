@@ -27,4 +27,10 @@ export function createFakeFetch() {
   return { fetch: fakeFetch as typeof fetch, requested };
 }
 
-export const ALL_TABLE_FILES = [...SHIP_TREE_DATA_FILE_NAMES].sort();
+/** Orders strings alphabetically; `Array#sort` without one compares UTF-16 code units. */
+export const byName = (a: string, b: string) => a.localeCompare(b);
+
+/** The file a data URL points at: everything after the last `/`. */
+export const fileName = (url: string) => url.split("/").pop() ?? "";
+
+export const ALL_TABLE_FILES = [...SHIP_TREE_DATA_FILE_NAMES].sort(byName);

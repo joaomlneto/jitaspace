@@ -7,7 +7,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 
 import { SHIP_TREE_DATA_BASE_URL } from "../data";
 import { ShipTreeView } from "../ShipTreeView";
-import { ALL_TABLE_FILES, createFakeFetch } from "./helpers";
+import { ALL_TABLE_FILES, byName, createFakeFetch, fileName } from "./helpers";
 
 // What the adapter hands the library, recorded by pass-through wrappers that
 // still render the real thing, so the same tests can also look at real output.
@@ -76,9 +76,7 @@ describe("ShipTreeView", () => {
     expect(content).toHaveAttribute("data-faction", "500003");
     // Hundreds of ship and frame sprites: an empty or failed tree has none.
     expect(container.querySelectorAll("image").length).toBeGreaterThan(300);
-    expect(requested.map((url) => url.split("/").pop()).sort()).toEqual(
-      ALL_TABLE_FILES,
-    );
+    expect(requested.map(fileName).sort(byName)).toEqual(ALL_TABLE_FILES);
   });
 
   it("labels the frame after the faction, with none of the library's placeholder text", async () => {
