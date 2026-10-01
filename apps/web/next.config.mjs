@@ -162,7 +162,8 @@ const config = {
   // ones are served from the cache. Only routes with `generateStaticParams` get
   // that upgrade — today just `/history/build/[build]`; see its page.tsx. Other
   // dynamic routes still take a changed internal cache key, but checked under
-  // `next start` (`/category`, `/history/type`) they respond as before. Without
+  // `next start` (`/category`, and `/history/type` while it existed) they
+  // respond as before. Without
   // this, a route with `generateStaticParams` silently re-renders unlisted
   // params on every request. Next 16.3 documents this as `partialPrefetching`,
   // so re-check it on upgrade: request a build page twice and expect

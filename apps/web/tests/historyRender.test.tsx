@@ -451,7 +451,8 @@ describe("BuildHistoryClient", () => {
     expect(screen.getByText("Rifter")).toBeTruthy();
     // An unnamed type falls back to its kind; the row still carries its id.
     const row = (id: number) =>
-      document.querySelector(`a[href="/history/type/${id}"]`)?.textContent;
+      // An item's history is its item page's History tab.
+      document.querySelector(`a[href="/type/${id}/history"]`)?.textContent;
     expect(row(999)).toBe("Type #999");
     expect(row(587)).toBe("Rifter #587");
     expect(mockUseQuery).not.toHaveBeenCalled();
@@ -565,16 +566,13 @@ describe("BuildHistoryClient", () => {
 });
 
 describe("detail page clients + index page", () => {
-  it("renders the type / skin / skinMaterial / entity history clients", async () => {
-    const { default: TypeHistoryClient } =
-      await import("~/app/history/type/[typeId]/page.client");
+  it("renders the skin / skinMaterial / entity history clients", async () => {
     const { default: SkinHistoryClient } =
       await import("~/app/history/skin/[skinId]/page.client");
     const { default: SkinMaterialHistoryClient } =
       await import("~/app/history/skinMaterial/[skinMaterialId]/page.client");
     const { default: EntityHistoryClient } =
       await import("~/app/history/[entityType]/[id]/page.client");
-    expect(() => wrap(<TypeHistoryClient typeId={587} />)).not.toThrow();
     expect(() => wrap(<SkinHistoryClient skinId={1} />)).not.toThrow();
     expect(() =>
       wrap(<SkinMaterialHistoryClient skinMaterialId={1} />),

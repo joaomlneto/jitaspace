@@ -26,7 +26,11 @@ import {
 } from "nuqs";
 
 import type { HistoryIndex } from "~/lib/history";
-import { collectionMeta, entityTypeMeta } from "~/lib/history";
+import {
+  collectionMeta,
+  entityHistoryHref,
+  entityTypeMeta,
+} from "~/lib/history";
 import { HistoryTimelineChart } from "./_timeline-chart";
 
 type VisibleBuild = HistoryIndex["builds"][number] & { visibleCount: number };
@@ -300,7 +304,8 @@ export default function HistoryIndexClient({
           />
           <Button
             onClick={() =>
-              entityId && router.push(`/history/${entityType}/${entityId}`)
+              entityId &&
+              router.push(entityHistoryHref(entityType, Number(entityId)))
             }
             disabled={!entityId}
           >

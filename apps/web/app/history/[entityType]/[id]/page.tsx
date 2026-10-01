@@ -22,6 +22,13 @@ import EntityHistoryClient from "./page.client";
  */
 const isEntityKind = (raw: string) => /^[a-z][A-Za-z0-9]*$/.test(raw);
 
+/**
+ * Whether this route serves `raw`'s history. Not an item's: that is the History
+ * tab of its item page (`/type/{id}/history`), so `/history/type/{id}` 404s
+ * rather than serving a second copy of it.
+ */
+const isServedHere = (raw: string) => isEntityKind(raw) && raw !== "type";
+
 // `parseEntityId` rather than the positive variant: this catch-all also serves
 // `category` and `group`, whose id 0 is a real row (see `~/lib/routeParams`).
 export async function generateMetadata({
@@ -31,7 +38,7 @@ export async function generateMetadata({
 }>) {
   const { entityType, id } = await params;
   const entityId = parseEntityId(id);
-  if (entityId === null || !isEntityKind(entityType)) return {};
+  if (entityId === null || !isServedHere(entityType)) return {};
   return pageMetadata({
     title: `${entityType} ${entityId} — Change History`,
     description: `Change history for EVE Online ${entityType} ${entityId} across client builds.`,
@@ -47,7 +54,7 @@ async function PageContent({
 }>) {
   const { entityType, id } = await params;
   const entityId = parseEntityId(id);
-  if (entityId === null || !isEntityKind(entityType)) notFound();
+  if (entityId === null || !isServedHere(entityType)) notFound();
   return <EntityHistoryClient entityType={entityType} entityId={entityId} />;
 }
 
