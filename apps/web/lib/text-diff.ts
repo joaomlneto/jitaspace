@@ -44,10 +44,7 @@ const CHAR_CHUNKS = new RegExp(
   String.raw`${MARKUP}|\s+|${LATIN_RUN}|[^\s<{\p{Script=Latin}\p{M}\p{Nd}_'’]+|[^\s]`,
   "gu",
 );
-const SPLIT_CHUNK = new RegExp(
-  String.raw`^[^\s<{\p{Script=Latin}\p{M}\p{Nd}_'’]{2,}$`,
-  "u",
-);
+const SPLIT_CHUNK = /^[^\s<{\p{Script=Latin}\p{M}\p{Nd}_'’]{2,}$/u;
 
 const graphemes =
   typeof Intl.Segmenter === "function"
@@ -65,8 +62,10 @@ function splitCharacters(run: string): string[] {
 
 /** Split `text` into the tokens {@link diffText} compares. */
 export function tokenize(text: string, mode: DiffMode): string[] {
-  if (mode === "word") return text.match(WORD_TOKENS) ?? [];
-  return (text.match(CHAR_CHUNKS) ?? []).flatMap((chunk) =>
+  const matches = (pattern: RegExp) =>
+    Array.from(text.matchAll(pattern), (match) => match[0]);
+  if (mode === "word") return matches(WORD_TOKENS);
+  return matches(CHAR_CHUNKS).flatMap((chunk) =>
     SPLIT_CHUNK.test(chunk) ? splitCharacters(chunk) : [chunk],
   );
 }
@@ -89,6 +88,14 @@ function pushPart(parts: DiffPart[], op: DiffPart["op"], text: string): void {
 }
 
 /**
+ * Whether the furthest path onto diagonal `k` at edit `d` comes down from
+ * diagonal k+1 (an insertion) rather than across from k−1 (a deletion).
+ * `at(k)` is the furthest x reached on diagonal k after edit d−1.
+ */
+const comesDown = (at: (k: number) => number, k: number, d: number) =>
+  k === -d || (k !== d && at(k - 1) < at(k + 1));
+
+/**
  * Myers' O(ND) shortest edit script between two token lists. `trace[d]` is the
  * furthest-reaching x on each diagonal k (−d−1 … d+1) before edit `d`; walking
  * it backwards from the end recovers the edits. Undefined past `MAX_EDITS`.
@@ -102,17 +109,12 @@ function shortestEditTrace(
   const maxEdits = Math.min(n + m, MAX_EDITS);
   const offset = maxEdits + 1;
   const furthest = new Int32Array(2 * maxEdits + 3);
+  const at = (k: number) => furthest[offset + k] ?? 0;
   const trace: Int32Array[] = [];
   for (let d = 0; d <= maxEdits; d++) {
     trace.push(furthest.slice(offset - d - 1, offset + d + 2));
     for (let k = -d; k <= d; k += 2) {
-      const down =
-        k === -d ||
-        (k !== d &&
-          (furthest[offset + k - 1] ?? 0) < (furthest[offset + k + 1] ?? 0));
-      let x = down
-        ? (furthest[offset + k + 1] ?? 0)
-        : (furthest[offset + k - 1] ?? 0) + 1;
+      let x = comesDown(at, k, d) ? at(k + 1) : at(k - 1) + 1;
       let y = x - k;
       while (x < n && y < m && a[x] === b[y]) {
         x++;
@@ -123,6 +125,39 @@ function shortestEditTrace(
     }
   }
   return undefined;
+}
+
+/** The edit script a {@link shortestEditTrace} encodes, in reading order. */
+function editsFromTrace(
+  trace: readonly Int32Array[],
+  a: readonly string[],
+  b: readonly string[],
+): DiffPart[] {
+  const reversed: DiffPart[] = [];
+  let x = a.length;
+  let y = b.length;
+  for (let d = trace.length - 1; d >= 0; d--) {
+    const before = trace[d] ?? new Int32Array();
+    const at = (k: number) => before[k + d + 1] ?? 0;
+    const k = x - y;
+    const down = comesDown(at, k, d);
+    const previousK = down ? k + 1 : k - 1;
+    const previousX = at(previousK);
+    const previousY = previousX - previousK;
+    for (; x > previousX && y > previousY; x--, y--) {
+      reversed.push({ op: "equal", text: a[x - 1] ?? "" });
+    }
+    if (d > 0) {
+      reversed.push(
+        down
+          ? { op: "insert", text: b[y - 1] ?? "" }
+          : { op: "delete", text: a[x - 1] ?? "" },
+      );
+    }
+    x = previousX;
+    y = previousY;
+  }
+  return reversed.reverse();
 }
 
 /** Align two token lists, appending the edits to `parts` in reading order. */
@@ -138,33 +173,8 @@ function alignTokens(
     pushPart(parts, "insert", b.join(""));
     return;
   }
-  // Walk back from the end, collecting the edits in reverse.
-  const reversed: DiffPart[] = [];
-  let x = a.length;
-  let y = b.length;
-  for (let d = trace.length - 1; d >= 0; d--) {
-    const before = trace[d] ?? new Int32Array();
-    const at = (k: number) => before[k + d + 1] ?? 0;
-    const k = x - y;
-    const down = k === -d || (k !== d && at(k - 1) < at(k + 1));
-    const previousK = down ? k + 1 : k - 1;
-    const previousX = at(previousK);
-    const previousY = previousX - previousK;
-    while (x > previousX && y > previousY) {
-      reversed.push({ op: "equal", text: a[x - 1] ?? "" });
-      x--;
-      y--;
-    }
-    if (d > 0) {
-      if (down) reversed.push({ op: "insert", text: b[y - 1] ?? "" });
-      else reversed.push({ op: "delete", text: a[x - 1] ?? "" });
-    }
-    x = previousX;
-    y = previousY;
-  }
-  for (let index = reversed.length - 1; index >= 0; index--) {
-    const part = reversed[index];
-    if (part) pushPart(parts, part.op, part.text);
+  for (const part of editsFromTrace(trace, a, b)) {
+    pushPart(parts, part.op, part.text);
   }
 }
 

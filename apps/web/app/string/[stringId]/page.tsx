@@ -31,9 +31,9 @@ export async function generateMetadata({
   try {
     const history = await getCachedStringHistory(stringId);
     // Live text, as the page opens on: not a Singularity build's draft.
-    const latest = history?.events
-      .filter((e) => e.lang === "en-us" && isTranquilityEvent(e))
-      .at(-1);
+    const latest = history?.events.findLast(
+      (e) => e.lang === "en-us" && isTranquilityEvent(e),
+    );
     english = latest?.to ?? latest?.from;
   } catch {
     // The page itself throws on the same failure; the metadata just goes

@@ -173,6 +173,25 @@ function SizeTooltip({
   );
 }
 
+/** A change's effect on the size: "+2 KB" in teal, "−1 KB" in red, else "—". */
+function SizeDeltaCell({
+  delta,
+}: Readonly<{ delta: number | null | undefined }>) {
+  if (delta == null || delta === 0) {
+    return (
+      <Table.Td ta="right" ff="monospace" c="dimmed">
+        —
+      </Table.Td>
+    );
+  }
+  const grew = delta > 0;
+  return (
+    <Table.Td ta="right" ff="monospace" c={grew ? "teal" : "red"}>
+      {`${grew ? "+" : "−"}${formatBytes(Math.abs(delta))}`}
+    </Table.Td>
+  );
+}
+
 export default function FileHistoryPage({
   history,
 }: Readonly<{ history: FileHistory }>) {
@@ -293,9 +312,7 @@ export default function FileHistoryPage({
                 color: "gray.6",
                 strokeDasharray: "4 4",
               }))}
-              tooltipProps={{
-                content: ({ payload }) => <SizeTooltip payload={payload} />,
-              }}
+              tooltipProps={{ content: SizeTooltip }}
             />
           )}
         </Paper>
@@ -343,21 +360,7 @@ export default function FileHistoryPage({
                       <Table.Td ta="right" ff="monospace">
                         {event.size === null ? "—" : formatBytes(event.size)}
                       </Table.Td>
-                      <Table.Td
-                        ta="right"
-                        ff="monospace"
-                        c={
-                          delta == null || delta === 0
-                            ? "dimmed"
-                            : delta > 0
-                              ? "teal"
-                              : "red"
-                        }
-                      >
-                        {delta == null || delta === 0
-                          ? "—"
-                          : `${delta > 0 ? "+" : "−"}${formatBytes(Math.abs(delta))}`}
-                      </Table.Td>
+                      <SizeDeltaCell delta={delta} />
                       <Table.Td ff="monospace" c="dimmed" fz="xs">
                         {event.hash ?? "—"}
                       </Table.Td>
