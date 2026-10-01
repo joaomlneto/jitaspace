@@ -16,10 +16,6 @@ import { WALLPAPERS } from "./wallpapers";
 
 const rem = (px: number): string => `${px / 16}rem`;
 
-// EVE v2 background — the same Cradle of War wallpaper the EVE theme uses, with
-// a 55% black overlay, so v2 reads as a sibling of v1.
-const appBackground = WALLPAPERS.cradleOfWar;
-
 // Font stacks. The `--font-*` variables come from next/font (app/fonts.ts, set
 // on <html> by the root layout). Their fallback is the plain family name, so
 // the stack stays valid — and a locally installed copy still applies — where
@@ -333,7 +329,9 @@ export const eveV2Theme = createTheme({
   /* Escape hatch — design tokens not modeled by Mantine props.
      Read via theme.other.* */
   other: {
-    appBackground,
+    // The same Cradle of War wallpaper the EVE theme uses, with a 55% black
+    // overlay, so v2 reads as a sibling of v1.
+    ...WALLPAPERS.cradleOfWar,
     fonts: {
       display: displayFont,
       body: displayFont,

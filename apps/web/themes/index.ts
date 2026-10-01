@@ -22,6 +22,8 @@ import { WALLPAPERS } from "./wallpapers";
 declare module "@mantine/core" {
   interface MantineThemeOther {
     appBackground?: string;
+    /** Same wallpaper, cropped and sized for portrait phones. */
+    appBackgroundMobile?: string;
   }
 }
 
@@ -82,7 +84,7 @@ const eveTheme = mergeThemeOverrides(
   baseTheme,
   createTheme({
     other: {
-      appBackground: WALLPAPERS.cradleOfWar,
+      ...WALLPAPERS.cradleOfWar,
     },
     black: "#04070c",
     white: "#f2f7fb",
@@ -262,7 +264,7 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        appBackground: WALLPAPERS.amarr,
+        ...WALLPAPERS.amarr,
       },
       primaryColor: "amarr_primary",
       primaryShade: 6,
@@ -273,7 +275,7 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        appBackground: WALLPAPERS.caldari,
+        ...WALLPAPERS.caldari,
       },
       primaryColor: "caldari_primary",
       colors,
@@ -283,7 +285,7 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        appBackground: WALLPAPERS.gallente,
+        ...WALLPAPERS.gallente,
       },
       primaryColor: "gallente_primary",
       colors,
@@ -293,7 +295,7 @@ export const themes = {
     eveTheme,
     createTheme({
       other: {
-        appBackground: WALLPAPERS.minmatar,
+        ...WALLPAPERS.minmatar,
       },
       primaryColor: "minmatar_primary",
       colors,
@@ -316,7 +318,9 @@ export const themes = {
   whpd: mergeThemeOverrides(
     eveTheme,
     createTheme({
-      other: { appBackground: "#000" },
+      // Spelled out: other.* deep-merges over eveTheme, so leaving the mobile
+      // one unset would show eveTheme's wallpaper on phones over this black.
+      other: { appBackground: "#000", appBackgroundMobile: "#000" },
       black: "#000002",
       white: "#eef2ff",
       primaryColor: "whpd_primary",

@@ -90,6 +90,7 @@ describe("THEME_PRELOAD", () => {
     expect(THEME_PRELOAD[name]).toEqual({
       body: theme.colors.dark[7],
       background: theme.other.appBackground,
+      backgroundMobile: theme.other.appBackgroundMobile,
     });
   });
 });
@@ -102,6 +103,9 @@ describe("THEME_PRELOAD_SCRIPT", () => {
     expect(html.style.getPropertyValue("--app-pending-body")).toBe("#111111");
     expect(html.style.getPropertyValue("--app-pending-background")).toBe(
       THEME_PRELOAD.caldari.background,
+    );
+    expect(html.style.getPropertyValue("--app-pending-background-mobile")).toBe(
+      THEME_PRELOAD.caldari.backgroundMobile,
     );
   });
 
@@ -152,6 +156,9 @@ describe("AppMantineProvider", () => {
     expect(html.hasAttribute(THEME_PENDING_ATTRIBUTE)).toBe(false);
     expect(html.style.getPropertyValue("--app-pending-body")).toBe("");
     expect(html.style.getPropertyValue("--app-pending-background")).toBe("");
+    expect(html.style.getPropertyValue("--app-pending-background-mobile")).toBe(
+      "",
+    );
   });
 
   it("reveals once for the default theme too", () => {
