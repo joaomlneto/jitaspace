@@ -439,6 +439,16 @@ export const ENTITY_TYPE_META: Record<
   cloneGrade: { label: "Clone state", plural: "Clone states" },
 };
 
+/**
+ * Where an entity's change history is shown. An item's is the History tab of
+ * its item page; every other kind has a page of its own under `/history`.
+ */
+export function entityHistoryHref(entityType: string, id: number): string {
+  return entityType === "type"
+    ? `/type/${id}/history`
+    : `/history/${entityType}/${id}`;
+}
+
 export function entityTypeMeta(entityType: string): {
   label: string;
   plural: string;

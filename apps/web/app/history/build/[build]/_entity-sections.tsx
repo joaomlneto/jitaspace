@@ -4,7 +4,11 @@ import Link from "next/link";
 import { Anchor, Badge, Group, List, Text, Title } from "@mantine/core";
 
 import type { EntityChangeRow } from "~/lib/history";
-import { collectionMeta, entityTypeMeta } from "~/lib/history";
+import {
+  collectionMeta,
+  entityHistoryHref,
+  entityTypeMeta,
+} from "~/lib/history";
 import { RowSpoiler } from "./_row-spoiler";
 
 /**
@@ -153,7 +157,7 @@ function EntityRow({
           visible one fired a request per row. */}
       <Anchor
         component={Link}
-        href={`/history/${entityType}/${id}`}
+        href={entityHistoryHref(entityType, id)}
         prefetch={false}
       >
         <EntityName entityType={entityType} id={id} typeNames={typeNames} />{" "}

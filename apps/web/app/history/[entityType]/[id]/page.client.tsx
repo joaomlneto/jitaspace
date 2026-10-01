@@ -7,9 +7,10 @@ import { EntityHistory } from "../../EntityHistory";
 
 /**
  * Generic per-entity timeline for any kind without a bespoke route (category,
- * group, dogmaAttribute, region, …). The explicit `type`/`skin`/`skinMaterial`
- * routes — with richer, icon'd headers — take precedence over this catch-all
- * (Next.js matches static segments before the dynamic `[entityType]`).
+ * group, dogmaAttribute, region, …). The explicit `skin`/`skinMaterial` routes
+ * — with richer, icon'd headers — take precedence over this catch-all (Next.js
+ * matches static segments before the dynamic `[entityType]`), and an item's
+ * `/history/type/{id}` redirects to its item page's History tab.
  */
 export default function EntityHistoryClient({
   entityType,

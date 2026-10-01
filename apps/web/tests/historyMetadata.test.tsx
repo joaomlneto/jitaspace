@@ -9,9 +9,6 @@ jest.mock("@mantine/core", () => ({ Loader: () => null }));
 
 // Mock each client component so rendering the server page wrappers doesn't pull
 // in React Query / Mantine / the Prisma-backed history actions.
-jest.mock("~/app/history/type/[typeId]/page.client", () => ({
-  default: () => null,
-}));
 jest.mock("~/app/history/build/[build]/page.client", () => ({
   default: () => null,
 }));
@@ -35,14 +32,6 @@ jest.mock("~/app/history/skinMaterial/[skinMaterialId]/page.client", () => ({
 const rp = <T,>(o: T): Promise<T> => Promise.resolve(o);
 
 const cases = [
-  {
-    mod: "~/app/history/type/[typeId]/page",
-    params: { typeId: "587" },
-    title: "Type 587 — Change History",
-    needle: "587",
-    canonical: "/history/type/587",
-    bad: [{ typeId: "0587" }, { typeId: "587.0" }, { typeId: "0" }],
-  },
   {
     mod: "~/app/history/build/[build]/page",
     params: { build: "3383521" },

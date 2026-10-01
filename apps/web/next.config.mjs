@@ -162,7 +162,8 @@ const config = {
   // ones are served from the cache. Only routes with `generateStaticParams` get
   // that upgrade — today just `/history/build/[build]`; see its page.tsx. Other
   // dynamic routes still take a changed internal cache key, but checked under
-  // `next start` (`/category`, `/history/type`) they respond as before. Without
+  // `next start` (`/category`, and `/history/type` while it was a page) they
+  // respond as before. Without
   // this, a route with `generateStaticParams` silently re-renders unlisted
   // params on every request. Next 16.3 documents this as `partialPrefetching`,
   // so re-check it on upgrade: request a build page twice and expect
@@ -273,6 +274,16 @@ const config = {
       source: "/type/:typeId/:tab",
       destination: "/type/:typeId?tab=:tab",
       permanent: false,
+    },
+    {
+      // An item's change history is the History tab of its item page; the
+      // standalone /history/type/<id> page it duplicated is gone. Straight to
+      // the tab, rather than through /type/<id>/history and a second hop.
+      // Permanent: the old URL is not coming back. Digits only, so anything
+      // else still reaches /history/[entityType]/[id] and 404s there.
+      source: "/history/type/:typeId(\\d+)",
+      destination: "/type/:typeId?tab=history",
+      permanent: true,
     },
   ],
 
