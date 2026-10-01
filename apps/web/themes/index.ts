@@ -82,7 +82,7 @@ const eveTheme = mergeThemeOverrides(
   createTheme({
     other: {
       appBackground:
-        "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg) center/cover fixed no-repeat",
+        "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/cradle-of-war-nologo-compressed.jpeg) center/cover no-repeat",
     },
     black: "#04070c",
     white: "#f2f7fb",
@@ -263,7 +263,7 @@ export const themes = {
     createTheme({
       other: {
         appBackground:
-          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/amarr_wallpaper.jpg) center/cover fixed no-repeat",
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/amarr_wallpaper.jpg) center/cover no-repeat",
       },
       primaryColor: "amarr_primary",
       primaryShade: 6,
@@ -275,7 +275,7 @@ export const themes = {
     createTheme({
       other: {
         appBackground:
-          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/caldari_wallpaper.jpg) center/cover fixed no-repeat",
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/caldari_wallpaper.jpg) center/cover no-repeat",
       },
       primaryColor: "caldari_primary",
       colors,
@@ -286,7 +286,7 @@ export const themes = {
     createTheme({
       other: {
         appBackground:
-          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/gallente_wallpaper.jpg) center/cover fixed no-repeat",
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/gallente_wallpaper.jpg) center/cover no-repeat",
       },
       primaryColor: "gallente_primary",
       colors,
@@ -297,7 +297,7 @@ export const themes = {
     createTheme({
       other: {
         appBackground:
-          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/minmatar_wallpaper.jpg) center/cover fixed no-repeat",
+          "linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)),url(/wallpapers/2026-cradle-of-war/minmatar_wallpaper.jpg) center/cover no-repeat",
       },
       primaryColor: "minmatar_primary",
       colors,
