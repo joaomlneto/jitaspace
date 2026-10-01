@@ -54,11 +54,16 @@ model BuildDiff {
   toBuild   Int
   to        Build    @relation("diffTo", fields: [toBuild], references: [buildNumber])
   createdAt   DateTime     @default(now())
+  /// When this diff's client files and localization strings were recorded
+  /// (null ⇒ not yet, or not recordable: an SDE-era side has no client files).
+  resourcesAt DateTime?
   changes     Change[]
   fileChanges FileChange[]
 
   @@unique([fromBuild, toBuild])
-  @@index([toBuild])
+  /// Exactly one incoming diff per build, enforced by the DB (replaces the
+  /// former @@index([toBuild])).
+  @@unique([toBuild])
   @@index([fromBuild])
 }
 
@@ -71,12 +76,21 @@ model FileChange {
   diffId Int
   path   String
   op     Op
+  /// Uncompressed size / MD5 of the new file (null when removed).
+  size   BigInt?
+  hash   String?
 
   @@index([diffId])
   // Covering index for the build-page file-change count (getResourceIndex):
   // COUNT(*) GROUP BY (diffId, op). `@@index([diffId])` above is now a redundant
   // prefix. Owned by the upstream ingestion pipeline; mirrored here for parity.
   @@index([diffId, op])
+  // One file's history across builds (the /file/[...path] page). NOT yet
+  // created on the history DB, which the ingestion pipeline owns: without it
+  // that page's lookup scans the whole FileChange table. Create it there,
+  // qualified with the history schema (HISTORY_DATABASE_SCHEMA, "history"):
+  //   CREATE INDEX "FileChange_path_idx" ON history."FileChange" ("path");
+  @@index([path])
 }
 
 /// The registry of tracked datasets (≈ resource-server files). Add a row → track more.

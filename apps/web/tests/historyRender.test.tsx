@@ -479,8 +479,13 @@ describe("BuildHistoryClient", () => {
     ]);
     fireEvent.click(screen.getByText(/English/));
     expect(screen.getByText("Hello")).toBeTruthy();
-    expect(screen.getByText("Old name")).toBeTruthy();
-    expect(screen.getByText("New name")).toBeTruthy();
+    // A changed string is one word-level diff: only the changed word is
+    // struck and inserted; the shared " name" appears once.
+    expect(screen.getByText("Old", { selector: "del" })).toBeTruthy();
+    expect(screen.getByText("New", { selector: "ins" })).toBeTruthy();
+    expect(screen.getByText("#2").closest("a")?.getAttribute("href")).toBe(
+      "/string/2",
+    );
     expect(screen.getByText("Gone")).toBeTruthy();
     expect(mockUseQuery).not.toHaveBeenCalled();
   });
