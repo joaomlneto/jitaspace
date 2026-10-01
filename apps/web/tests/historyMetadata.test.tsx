@@ -52,6 +52,8 @@ const cases = [
       { entityType: "group", id: "025" },
       { entityType: "GROUP", id: "25" },
       { entityType: "Group", id: "25" },
+      // An item's history is its item page's History tab, not served here.
+      { entityType: "type", id: "587" },
     ],
   },
   {

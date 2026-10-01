@@ -30,7 +30,7 @@ fetch, no scan, no join:
 `{entityType}` is `type`, `skin`, or `skinMaterial`; e.g. `history/type/587.json`,
 `history/skin/12747.json`. The index lists `entityTypes` and `entityIdsByType`.
 An item's (`type`) history is shown on its item page's History tab,
-`/type/{id}/history`; `/history/type/{id}` redirects there.
+`/type/{id}/history`, not under `/history`.
 
 The same change events are written into both the by-build and by-entity files.
 Each carries an `entityType` (absent ⇒ `type`) and a `collection` (the source
