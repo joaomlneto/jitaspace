@@ -60,6 +60,7 @@ function PathList({
               <Anchor
                 key={p}
                 component={Link}
+                prefetch={false}
                 href={filePageHref(p)}
                 size="xs"
                 ff="monospace"
@@ -147,6 +148,7 @@ function StringList({
                 </Text>
                 <Anchor
                   component={Link}
+                  prefetch={false}
                   href={stringPageHref(c.id)}
                   size="xs"
                   c="dimmed"

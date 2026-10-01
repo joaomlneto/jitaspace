@@ -21,9 +21,10 @@ export type TextDiffProps = TextProps & {
 
 /**
  * Two versions of a string as one text, with what was removed struck through
- * in red and what was added in green — as `<del>`/`<ins>`, so assistive tech
- * announces the edits too. The markup is shown raw: a changed tag is part of
- * the diff.
+ * in red and what was added underlined in green, so neither relies on colour
+ * alone. Each edit also carries visually hidden "[added: …]" / "[removed: …]"
+ * text for screen readers, which do not announce `<ins>`/`<del>` themselves.
+ * The markup is shown raw: a changed tag is part of the diff.
  */
 export const TextDiff = memo(({ from, to, lang, ...props }: TextDiffProps) => {
   const parts = useMemo(

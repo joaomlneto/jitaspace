@@ -87,8 +87,9 @@ model FileChange {
   @@index([diffId, op])
   // One file's history across builds (the /file/[...path] page). NOT yet
   // created on the history DB, which the ingestion pipeline owns: without it
-  // that page's lookup scans the whole FileChange table. Create it there with
-  //   CREATE INDEX "FileChange_path_idx" ON "FileChange" ("path");
+  // that page's lookup scans the whole FileChange table. Create it there,
+  // qualified with the history schema (HISTORY_DATABASE_SCHEMA, "history"):
+  //   CREATE INDEX "FileChange_path_idx" ON history."FileChange" ("path");
   @@index([path])
 }
 

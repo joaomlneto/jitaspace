@@ -129,3 +129,51 @@ describe("diffText", () => {
     expect(parts[3]?.text).toBe(" end");
   });
 });
+
+describe("diffText on long strings and odd input", () => {
+  it("aligns a few small edits anywhere in a long string", () => {
+    const words = Array.from({ length: 5000 }, (_, i) => `word${i}`);
+    const from = words.join(" ");
+    const to = from.replace("word10 ", "WORD10 ").replace("word4990", "W4990");
+    const edits = diffText(from, to, "word").filter((p) => p.op !== "equal");
+    expect(edits.map((p) => `${p.op}:${p.text}`)).toEqual([
+      "delete:word10",
+      "insert:WORD10",
+      "delete:word4990",
+      "insert:W4990",
+    ]);
+  });
+
+  it("replaces a near-total rewrite of a long string wholesale", () => {
+    const from = Array.from({ length: 2000 }, (_, i) => `a${i}`).join(" ");
+    const to = Array.from({ length: 2000 }, (_, i) => `b${i}`).join(" ");
+    expect(diffText(from, to, "word").map((p) => p.op)).toEqual([
+      "delete",
+      "insert",
+    ]);
+  });
+
+  it("does not read angle brackets in prose as markup", () => {
+    expect(
+      show(
+        diffText(
+          "Range < 10 km and speed > 5",
+          "Range < 20 km and speed > 5",
+          "word",
+        ),
+      ),
+    ).toBe("=Range < |-10|+20|= km and speed > 5");
+  });
+
+  it("keeps characters whole and Latin words together in character mode", () => {
+    expect(tokenize("A👨‍👩‍👧 e\u0301 Ship10個", "char")).toEqual([
+      "A",
+      "👨‍👩‍👧",
+      " ",
+      "e\u0301",
+      " ",
+      "Ship10",
+      "個",
+    ]);
+  });
+});

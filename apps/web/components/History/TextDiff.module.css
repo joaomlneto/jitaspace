@@ -13,6 +13,37 @@
 .insert {
   background: var(--mantine-color-green-light);
   color: var(--mantine-color-green-light-color);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
   border-radius: 2px;
+}
+
+/*
+ * Screen readers do not announce <ins> and <del> by default, so each edit
+ * says where it starts and ends — in pseudo-elements, which stay out of the
+ * visible text and out of a copy.
+ */
+.delete::before,
+.delete::after,
+.insert::before,
+.insert::after {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(100%);
+  white-space: nowrap;
+}
+
+.delete::before {
+  content: " [removed: ";
+}
+
+.insert::before {
+  content: " [added: ";
+}
+
+.delete::after,
+.insert::after {
+  content: "] ";
 }

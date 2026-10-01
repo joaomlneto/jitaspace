@@ -54,6 +54,31 @@ export function matchesServer(
   return (server ?? "tranquility") === filter;
 }
 
+/**
+ * The view a string opens on: Tranquility, unless it never reached it (a
+ * Singularity-only string), and English, unless that has no changes there.
+ */
+export function defaultFilters(history: StringHistory): {
+  defaultServer: ServerFilter;
+  defaultLanguages: string[];
+} {
+  const defaultServer: ServerFilter = history.events.some((event) =>
+    matchesServer(event.server, "tranquility"),
+  )
+    ? "tranquility"
+    : "all";
+  const shown = history.languages.filter((lang) =>
+    history.events.some(
+      (event) =>
+        event.lang === lang && matchesServer(event.server, defaultServer),
+    ),
+  );
+  return {
+    defaultServer,
+    defaultLanguages: shown.includes("en-us") ? ["en-us"] : shown.slice(0, 1),
+  };
+}
+
 /** The latest event per language, i.e. each language's current state. */
 export function latestByLanguage(
   events: readonly StringEvent[],
@@ -94,7 +119,13 @@ function BuildLink({
   server,
 }: Readonly<{ build: number; server: HistoryServer }>) {
   // The build pages cover Tranquility (and SDE) builds only.
-  if (server === "singularity") return <Text fw={600}>Build {build}</Text>;
+  if (server === "singularity") {
+    return (
+      <Text span fw={600}>
+        Build {build}
+      </Text>
+    );
+  }
   return (
     <Anchor component={Link} href={`/history/build/${build}`} fw={600}>
       Build {build}
@@ -123,6 +154,7 @@ function CurrentText({ event }: Readonly<{ event: StringEvent }>) {
         <Switch
           size="xs"
           label="Markup"
+          aria-label={`Show the ${languageLabel(event.lang)} markup`}
           checked={raw}
           onChange={(e) => setRaw(e.currentTarget.checked)}
         />
@@ -149,9 +181,10 @@ export default function StringHistoryPage({
   history,
 }: Readonly<{ history: StringHistory }>) {
   const { languages, events } = history;
-  const defaultLanguages = languages.includes("en-us")
-    ? ["en-us"]
-    : languages.slice(0, 1);
+  const { defaultServer, defaultLanguages } = useMemo(
+    () => defaultFilters(history),
+    [history],
+  );
 
   // Filters live in the URL so a filtered view can be shared.
   const [selected, setSelected] = useQueryState(
@@ -163,7 +196,7 @@ export default function StringHistoryPage({
   const [server, setServer] = useQueryState(
     "server",
     parseAsStringLiteral(SERVER_FILTERS)
-      .withDefault("tranquility")
+      .withDefault(defaultServer)
       .withOptions({ history: "replace" }),
   );
 
@@ -202,7 +235,7 @@ export default function StringHistoryPage({
               void setSelected(value.filter((lang) => languages.includes(lang)))
             }
           >
-            <Group gap={6} aria-label="Languages">
+            <Group gap={6} role="group" aria-label="Languages">
               {languages.map((lang) => (
                 <Chip key={lang} value={lang} size="xs">
                   {languageLabel(lang)}
@@ -233,7 +266,12 @@ export default function StringHistoryPage({
             <Stack gap="sm">
               <Title order={4}>Current text</Title>
               {current.map((event) => (
-                <CurrentText key={event.lang} event={event} />
+                // Keyed by build too: the formatted view takes its text only
+                // when it mounts, so a filter change must remount it.
+                <CurrentText
+                  key={`${event.lang}-${event.build}`}
+                  event={event}
+                />
               ))}
             </Stack>
 

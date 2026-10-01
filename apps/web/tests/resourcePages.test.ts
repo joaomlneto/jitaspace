@@ -4,6 +4,7 @@ import {
   compareLanguages,
   filePageHref,
   formatBytes,
+  isTranquilityEvent,
   parseFilePathSegments,
   stringPageHref,
 } from "~/lib/resource-pages";
@@ -67,6 +68,14 @@ describe("parseFilePathSegments", () => {
   });
 });
 
+describe("isTranquilityEvent", () => {
+  it("counts Tranquility and SDE-era builds, not Singularity's", () => {
+    expect(isTranquilityEvent({ server: "tranquility" })).toBe(true);
+    expect(isTranquilityEvent({ server: null })).toBe(true);
+    expect(isTranquilityEvent({ server: "singularity" })).toBe(false);
+  });
+});
+
 describe("formatBytes", () => {
   it.each([
     [0, "0 B"],
@@ -76,6 +85,10 @@ describe("formatBytes", () => {
     [1.4 * 1024 * 1024, "1.4 MB"],
     [3 * 1024 ** 3, "3 GB"],
     [5000 * 1024 ** 3, "5,000 GB"],
+    // The unit is picked after rounding.
+    [1024 ** 2 - 1, "1 MB"],
+    [1024 ** 3 - 1, "1 GB"],
+    [10_239, "10 KB"],
   ])("formats %p bytes as %s", (bytes, expected) => {
     expect(formatBytes(bytes)).toBe(expected);
   });

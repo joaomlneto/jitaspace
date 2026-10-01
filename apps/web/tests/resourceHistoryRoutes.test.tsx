@@ -103,6 +103,35 @@ describe("/string/[stringId]", () => {
     expect(mockStringHistory).toHaveBeenCalledWith(7);
   });
 
+  it("404s an id too large to name a string, without querying", async () => {
+    await expect(
+      renderContent(StringRoute.default, { stringId: "2147483648" }),
+    ).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(mockStringHistory).not.toHaveBeenCalled();
+  });
+
+  it("describes itself with the live English text, not Singularity's", async () => {
+    mockStringHistory.mockResolvedValue({
+      ...history,
+      events: [
+        ...history.events,
+        {
+          build: 3,
+          date: null,
+          server: "singularity",
+          lang: "en-us",
+          op: "changed",
+          from: "Hi there",
+          to: "Draft text",
+        },
+      ],
+    });
+    const metadata = await StringRoute.generateMetadata({
+      params: Promise.resolve({ stringId: "7" }),
+    });
+    expect(metadata.description).toBe("Hi there");
+  });
+
   it("describes itself with the English text", async () => {
     mockStringHistory.mockResolvedValue(history);
     const metadata = await StringRoute.generateMetadata({

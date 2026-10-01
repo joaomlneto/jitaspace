@@ -27,6 +27,8 @@ import { formatBytes } from "~/lib/resource-pages";
 const OP_COLOR = { added: "green", modified: "blue", removed: "red" } as const;
 const OP_LABEL = { added: "Added", modified: "Changed", removed: "Removed" };
 
+const formatMonth = (time: number) => new Date(time).toISOString().slice(0, 7);
+
 /** One point of the size chart: the file's size from a dated build on. */
 export interface SizePoint {
   /** Release time, ms since the epoch. */
@@ -65,6 +67,30 @@ export function sizePoints(events: readonly FileEvent[]): SizePoint[] {
       },
     ];
   });
+}
+
+/**
+ * Where the chart marks a change: every dated change, including those whose
+ * size was not recorded, once per release date.
+ */
+export function changeTimes(events: readonly FileEvent[]): number[] {
+  const times = events.flatMap((event) =>
+    event.date === null ? [] : [Date.parse(`${event.date}T00:00:00Z`)],
+  );
+  return [...new Set(times)];
+}
+
+/**
+ * One x-axis tick per month, at the first point in it: ticks at every point
+ * repeat a month's label once per change in it.
+ */
+export function monthTicks(points: readonly SizePoint[]): number[] {
+  const byMonth = new Map<string, number>();
+  for (const point of points) {
+    const month = formatMonth(point.time);
+    if (!byMonth.has(month)) byMonth.set(month, point.time);
+  }
+  return [...byMonth.values()];
 }
 
 /**
@@ -147,8 +173,6 @@ function SizeTooltip({
   );
 }
 
-const formatMonth = (time: number) => new Date(time).toISOString().slice(0, 7);
-
 export default function FileHistoryPage({
   history,
 }: Readonly<{ history: FileHistory }>) {
@@ -158,6 +182,8 @@ export default function FileHistoryPage({
   const removed = latest?.op === "removed";
   const points = useMemo(() => sizePoints(events), [events]);
   const deltas = useMemo(() => sizeDeltas(events), [events]);
+  const changes = useMemo(() => changeTimes(events), [events]);
+  const ticks = useMemo(() => monthTicks(points), [points]);
   const name = path.split("/").at(-1) ?? path;
 
   return (
@@ -187,7 +213,7 @@ export default function FileHistoryPage({
               </Text>
             ) : (
               <Tooltip
-                label={`${latest.size.toLocaleString()} bytes`}
+                label={`${latest.size.toLocaleString("en-US")} bytes`}
                 withArrow
               >
                 <span>{formatBytes(latest.size)}</span>
@@ -224,7 +250,7 @@ export default function FileHistoryPage({
             )}
           </Stat>
           <Stat label="Changes recorded">
-            {events.length.toLocaleString()}
+            {events.length.toLocaleString("en-US")}
             {first && (
               <Text size="xs" c="dimmed" fw={400}>
                 since build {first.build}
@@ -259,10 +285,11 @@ export default function FileHistoryPage({
                 type: "number",
                 scale: "time",
                 domain: ["dataMin", "dataMax"],
+                ticks,
                 tickFormatter: formatMonth,
               }}
-              referenceLines={points.map((point) => ({
-                x: point.time,
+              referenceLines={changes.map((time) => ({
+                x: time,
                 color: "gray.6",
                 strokeDasharray: "4 4",
               }))}

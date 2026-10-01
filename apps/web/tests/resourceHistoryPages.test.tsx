@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/jest-globals";
 
 import type { OnUrlUpdateFunction } from "nuqs/adapters/testing";
+import type * as ReactModule from "react";
 import type { ReactElement } from "react";
 import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
@@ -11,10 +12,13 @@ import type * as FilePageModule from "~/app/file/[...path]/page.client";
 import type * as StringPageModule from "~/app/string/[stringId]/page.client";
 import type { FileHistory, StringHistory } from "~/lib/resource-pages";
 
+// Like the real viewer, whose editor takes its content only when it mounts.
 jest.mock("~/components/EveMail", () => ({
-  MailMessageViewer: ({ content }: { content: string }) => (
-    <div data-testid="formatted">{content}</div>
-  ),
+  MailMessageViewer: ({ content }: { content: string }) => {
+    const { useState } = require("react") as typeof ReactModule;
+    const [mounted] = useState(content);
+    return <div data-testid="formatted">{mounted}</div>;
+  },
 }));
 jest.mock("@jitaspace/tiptap-eve", () => ({
   sanitizeFormattedEveString: (s: string) => `sanitized:${s}`,
@@ -162,6 +166,51 @@ describe("string page", () => {
     expect(screen.getByText("capsuleer", { selector: "ins" })).toBeVisible();
   });
 
+  it("updates the formatted text when the server filter changes", () => {
+    renderString();
+    expect(screen.getByTestId("formatted")).toHaveTextContent(
+      "Greetings pilot",
+    );
+    fireEvent.click(screen.getByRole("radio", { name: "Singularity" }));
+    expect(screen.getByTestId("formatted")).toHaveTextContent(
+      "Hello capsuleer",
+    );
+  });
+
+  it("opens a Singularity-only string on all servers", () => {
+    const sisiOnly: StringHistory = {
+      stringId: 9,
+      languages: ["en-us"],
+      events: [
+        {
+          build: 150,
+          date: null,
+          server: "singularity",
+          lang: "en-us",
+          op: "added",
+          to: "Test text",
+        },
+      ],
+    };
+    expect(StringPage.defaultFilters(sisiOnly)).toEqual({
+      defaultServer: "all",
+      defaultLanguages: ["en-us"],
+    });
+    renderString(sisiOnly);
+    expect(screen.getByTestId("formatted")).toHaveTextContent("Test text");
+  });
+
+  it("opens on a language that changed on the default server", () => {
+    expect(
+      StringPage.defaultFilters({
+        ...stringHistory,
+        events: stringHistory.events.filter(
+          (e) => e.lang !== "en-us" || e.server === "singularity",
+        ),
+      }).defaultLanguages,
+    ).toEqual(["de"]);
+  });
+
   it("adds languages, writing them to the URL", async () => {
     const onUrlUpdate = jest.fn<OnUrlUpdateFunction>();
     renderString(stringHistory, { onUrlUpdate });
@@ -176,7 +225,9 @@ describe("string page", () => {
 
   it("shows a removed string's last text, struck, in markup mode", () => {
     renderString(stringHistory, { searchParams: "?lang=zh" });
-    fireEvent.click(screen.getByRole("switch", { name: "Markup" }));
+    fireEvent.click(
+      screen.getByRole("switch", { name: "Show the Chinese markup" }),
+    );
     const raw = screen.getByText("你好", { selector: "p" });
     expect(raw).toHaveStyle({ textDecoration: "line-through" });
   });
@@ -248,6 +299,25 @@ describe("file page helpers", () => {
         date: "2024-04-01",
         size: 0,
       },
+    ]);
+  });
+
+  it("marks every dated change, once per date, and ticks once per month", () => {
+    const events = [
+      { build: 1, date: "2024-03-01", op: "added", size: 10, hash: null },
+      { build: 2, date: "2024-03-01", op: "modified", size: null, hash: null },
+      { build: 3, date: "2024-03-20", op: "modified", size: 12, hash: null },
+      { build: 4, date: null, op: "modified", size: 14, hash: null },
+      { build: 5, date: "2024-05-02", op: "modified", size: 9, hash: null },
+    ] as const;
+    expect(FilePage.changeTimes(events)).toEqual([
+      Date.parse("2024-03-01T00:00:00Z"),
+      Date.parse("2024-03-20T00:00:00Z"),
+      Date.parse("2024-05-02T00:00:00Z"),
+    ]);
+    expect(FilePage.monthTicks(FilePage.sizePoints(events))).toEqual([
+      Date.parse("2024-03-01T00:00:00Z"),
+      Date.parse("2024-05-02T00:00:00Z"),
     ]);
   });
 

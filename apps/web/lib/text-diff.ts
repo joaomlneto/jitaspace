@@ -29,26 +29,56 @@ export function diffModeForLanguage(lang: string): DiffMode {
     : "word";
 }
 
-// Markup first, so a tag is never split into word and punctuation tokens.
-const MARKUP = String.raw`<[^<>]*>|\{[^{}]*\}`;
+// Markup first, so a tag is never split into word and punctuation tokens. A
+// tag starts with a letter (`<b>`, `</color>`, `<a href=…>`), so prose such
+// as "range < 10 km and speed > 5" is not mistaken for one.
+const MARKUP = String.raw`<\/?[A-Za-z][^<>]*>|\{[^{}]*\}`;
 const WORD_TOKENS = new RegExp(
   String.raw`${MARKUP}|\s+|[\p{L}\p{M}\p{N}_'’]+|[^\s]`,
   "gu",
 );
-const CHAR_TOKENS = new RegExp(String.raw`${MARKUP}|\s+|[^\s]`, "gu");
+// In character mode, Latin words and numbers inside Chinese or Japanese text
+// stay whole; every other run is split into characters below.
+const LATIN_RUN = String.raw`[\p{Script=Latin}\p{M}\p{Nd}_'’]+`;
+const CHAR_CHUNKS = new RegExp(
+  String.raw`${MARKUP}|\s+|${LATIN_RUN}|[^\s<{\p{Script=Latin}\p{M}\p{Nd}_'’]+|[^\s]`,
+  "gu",
+);
+const SPLIT_CHUNK = new RegExp(
+  String.raw`^[^\s<{\p{Script=Latin}\p{M}\p{Nd}_'’]{2,}$`,
+  "u",
+);
+
+const graphemes =
+  typeof Intl.Segmenter === "function"
+    ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    : undefined;
+
+/**
+ * A run's user-perceived characters, so an emoji sequence or a character
+ * with combining marks is one token rather than several code points.
+ */
+function splitCharacters(run: string): string[] {
+  if (!graphemes) return Array.from(run);
+  return Array.from(graphemes.segment(run), (segment) => segment.segment);
+}
 
 /** Split `text` into the tokens {@link diffText} compares. */
 export function tokenize(text: string, mode: DiffMode): string[] {
-  return text.match(mode === "char" ? CHAR_TOKENS : WORD_TOKENS) ?? [];
+  if (mode === "word") return text.match(WORD_TOKENS) ?? [];
+  return (text.match(CHAR_CHUNKS) ?? []).flatMap((chunk) =>
+    SPLIT_CHUNK.test(chunk) ? splitCharacters(chunk) : [chunk],
+  );
 }
 
 /**
- * Past this many cells (tokens × tokens) the changed middle is shown as one
- * deletion and one insertion rather than aligned: the alignment table would
- * cost more than it is worth in the browser. Common prefixes and suffixes are
- * trimmed first, so only a wholesale rewrite of a very long string gets here.
+ * Past this many edits between the two versions the changed middle is shown
+ * as one deletion and one insertion rather than aligned. The alignment costs
+ * time in proportion to the length times the number of edits, so a few small
+ * edits anywhere in a long string are always aligned; only a near-total
+ * rewrite of a long string gets here, where an alignment would be noise.
  */
-const MAX_TABLE_CELLS = 4_000_000;
+const MAX_EDITS = 1_000;
 
 /** Merge adjacent parts with the same op. */
 function pushPart(parts: DiffPart[], op: DiffPart["op"], text: string): void {
@@ -58,48 +88,84 @@ function pushPart(parts: DiffPart[], op: DiffPart["op"], text: string): void {
   else parts.push({ op, text });
 }
 
-/** Longest-common-subsequence alignment of two token lists. */
-function alignTokens(a: string[], b: string[], parts: DiffPart[]): void {
+/**
+ * Myers' O(ND) shortest edit script between two token lists. `trace[d]` is the
+ * furthest-reaching x on each diagonal k (−d−1 … d+1) before edit `d`; walking
+ * it backwards from the end recovers the edits. Undefined past `MAX_EDITS`.
+ */
+function shortestEditTrace(
+  a: readonly string[],
+  b: readonly string[],
+): Int32Array[] | undefined {
   const n = a.length;
   const m = b.length;
-  if (n === 0 || m === 0 || n * m > MAX_TABLE_CELLS) {
+  const maxEdits = Math.min(n + m, MAX_EDITS);
+  const offset = maxEdits + 1;
+  const furthest = new Int32Array(2 * maxEdits + 3);
+  const trace: Int32Array[] = [];
+  for (let d = 0; d <= maxEdits; d++) {
+    trace.push(furthest.slice(offset - d - 1, offset + d + 2));
+    for (let k = -d; k <= d; k += 2) {
+      const down =
+        k === -d ||
+        (k !== d &&
+          (furthest[offset + k - 1] ?? 0) < (furthest[offset + k + 1] ?? 0));
+      let x = down
+        ? (furthest[offset + k + 1] ?? 0)
+        : (furthest[offset + k - 1] ?? 0) + 1;
+      let y = x - k;
+      while (x < n && y < m && a[x] === b[y]) {
+        x++;
+        y++;
+      }
+      furthest[offset + k] = x;
+      if (x >= n && y >= m) return trace;
+    }
+  }
+  return undefined;
+}
+
+/** Align two token lists, appending the edits to `parts` in reading order. */
+function alignTokens(
+  a: readonly string[],
+  b: readonly string[],
+  parts: DiffPart[],
+): void {
+  const trace =
+    a.length > 0 && b.length > 0 ? shortestEditTrace(a, b) : undefined;
+  if (!trace) {
     pushPart(parts, "delete", a.join(""));
     pushPart(parts, "insert", b.join(""));
     return;
   }
-  // lengths[i * (m + 1) + j] = LCS length of a[i..] and b[j..].
-  const width = m + 1;
-  const lengths = new Uint32Array((n + 1) * width);
-  for (let i = n - 1; i >= 0; i--) {
-    for (let j = m - 1; j >= 0; j--) {
-      lengths[i * width + j] =
-        a[i] === b[j]
-          ? (lengths[(i + 1) * width + j + 1] ?? 0) + 1
-          : Math.max(
-              lengths[(i + 1) * width + j] ?? 0,
-              lengths[i * width + j + 1] ?? 0,
-            );
+  // Walk back from the end, collecting the edits in reverse.
+  const reversed: DiffPart[] = [];
+  let x = a.length;
+  let y = b.length;
+  for (let d = trace.length - 1; d >= 0; d--) {
+    const before = trace[d] ?? new Int32Array();
+    const at = (k: number) => before[k + d + 1] ?? 0;
+    const k = x - y;
+    const down = k === -d || (k !== d && at(k - 1) < at(k + 1));
+    const previousK = down ? k + 1 : k - 1;
+    const previousX = at(previousK);
+    const previousY = previousX - previousK;
+    while (x > previousX && y > previousY) {
+      reversed.push({ op: "equal", text: a[x - 1] ?? "" });
+      x--;
+      y--;
     }
-  }
-  let i = 0;
-  let j = 0;
-  while (i < n && j < m) {
-    if (a[i] === b[j]) {
-      pushPart(parts, "equal", a[i] ?? "");
-      i++;
-      j++;
-    } else if (
-      (lengths[(i + 1) * width + j] ?? 0) >= (lengths[i * width + j + 1] ?? 0)
-    ) {
-      pushPart(parts, "delete", a[i] ?? "");
-      i++;
-    } else {
-      pushPart(parts, "insert", b[j] ?? "");
-      j++;
+    if (d > 0) {
+      if (down) reversed.push({ op: "insert", text: b[y - 1] ?? "" });
+      else reversed.push({ op: "delete", text: a[x - 1] ?? "" });
     }
+    x = previousX;
+    y = previousY;
   }
-  pushPart(parts, "delete", a.slice(i).join(""));
-  pushPart(parts, "insert", b.slice(j).join(""));
+  for (let index = reversed.length - 1; index >= 0; index--) {
+    const part = reversed[index];
+    if (part) pushPart(parts, part.op, part.text);
+  }
 }
 
 /**

@@ -24,6 +24,13 @@ export interface StringEvent {
   to?: string;
 }
 
+/**
+ * Whether an event shipped on Tranquility. SDE-era builds (no server) count:
+ * they are what the live server shipped.
+ */
+export const isTranquilityEvent = (event: Pick<StringEvent, "server">) =>
+  (event.server ?? "tranquility") === "tranquility";
+
 export interface StringHistory {
   stringId: number;
   /** Languages with recorded changes, English first. */
@@ -102,17 +109,27 @@ export function parseFilePathSegments(
   return `${scheme.toLowerCase()}/${rest.join("/")}`;
 }
 
+/**
+ * Sizes render on the server and again in the browser, so they use one fixed
+ * locale: a browser's own ("1,4 MB" in German) would not match the server's
+ * HTML and fail hydration.
+ */
+const BYTES_LOCALE = "en-US";
+
 /** "1.4 MB", "830 B" — binary multiples, as file sizes usually are. */
 export function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes.toLocaleString()} B`;
+  if (bytes < 1024) return `${bytes.toLocaleString(BYTES_LOCALE)} B`;
   const units = ["KB", "MB", "GB"];
+  const digits = (value: number) => (value < 10 ? 1 : 0);
+  // Pick the unit after rounding, so 1,048,575 B is "1 MB", not "1,024 KB".
+  const rounded = (value: number) => Number(value.toFixed(digits(value)));
   let value = bytes / 1024;
   let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
+  while (rounded(value) >= 1024 && unit < units.length - 1) {
     value /= 1024;
     unit++;
   }
-  return `${value.toLocaleString(undefined, {
-    maximumFractionDigits: value < 10 ? 1 : 0,
+  return `${value.toLocaleString(BYTES_LOCALE, {
+    maximumFractionDigits: digits(value),
   })} ${units[unit]}`;
 }
