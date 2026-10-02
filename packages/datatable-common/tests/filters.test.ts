@@ -125,12 +125,22 @@ describe("filterKeys / toLocalDay", () => {
 
   it("formats a local day and rejects non-dates", () => {
     expect(toLocalDay(new Date(2024, 1, 3, 23, 59))).toBe("2024-02-03");
-    // A date-only string is already a day; parsing it would read UTC midnight,
-    // the previous day anywhere west of Greenwich.
-    expect(toLocalDay("2024-01-09")).toBe("2024-01-09");
     expect(toLocalDay("2024-13-45")).toBeUndefined();
+    // Date rolls an impossible day over into the next month; it is not a day.
+    expect(toLocalDay("2024-02-30")).toBeUndefined();
+    expect(toLocalDay("2023-02-29")).toBeUndefined();
+    expect(toLocalDay("2024-02-29")).toBe("2024-02-29");
     expect(toLocalDay({})).toBeUndefined();
     expect(toLocalDay("nope")).toBeUndefined();
+  });
+});
+
+describe("toLocalDay west of Greenwich", () => {
+  // jest.config.ts runs this package in America/Los_Angeles: in UTC (where CI
+  // runs) or anywhere east of it, the bug this guards against is invisible.
+  it("keeps a date-only string on its own day, not the UTC-shifted one", () => {
+    expect(new Date("2024-01-09").getDate()).toBe(8); // the trap itself
+    expect(toLocalDay("2024-01-09")).toBe("2024-01-09");
   });
 });
 
@@ -148,6 +158,19 @@ describe("facetOptions / numericBounds", () => {
     expect(
       facetOptions([-1, -10, 2, 1.5, 1.25]).map((option) => option.value),
     ).toEqual(["-10", "-1", "1.25", "1.5", "2"]);
+  });
+
+  it("orders mixed numbers and strings the same whatever the input order", () => {
+    const orders = [
+      [-10, "-5", -1],
+      ["-5", -1, -10],
+      [-1, -10, "-5"],
+    ].map((input) => facetOptions(input).map((option) => option.value));
+    expect(orders).toEqual([
+      ["-10", "-1", "-5"],
+      ["-10", "-1", "-5"],
+      ["-10", "-1", "-5"],
+    ]);
   });
 
   it("finds the numeric extremes, ignoring non-numbers", () => {

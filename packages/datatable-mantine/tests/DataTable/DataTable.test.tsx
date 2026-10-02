@@ -710,7 +710,76 @@ describe("DataTable — loading keeps the footer", () => {
   });
 });
 
+describe("DataTable — sort direction matches TanStack", () => {
+  // mantine-datatable carries the current direction over to a newly clicked
+  // column; the contract starts every column ascending.
+  it("sorts a newly clicked column ascending after a descending sort", async () => {
+    const user = userEvent.setup();
+    renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={data}
+        initialSort={{ columnId: "score", direction: "desc" }}
+      />,
+    );
+    await user.click(screen.getByText("Name").closest("th")!);
+    expect(nameOrder()).toEqual(["Alice", "Bob", "Charlie"]);
+    await user.click(screen.getByText("Name").closest("th")!);
+    expect(nameOrder()).toEqual(["Charlie", "Bob", "Alice"]);
+  });
+});
+
+describe("DataTable — page size", () => {
+  beforeAll(() => {
+    Element.prototype.scrollTo = () => {
+      /* no-op: jsdom does not scroll */
+    };
+  });
+
+  it("keeps the first row in view when the page size changes, as TanStack does", async () => {
+    const user = userEvent.setup();
+    const rows: Row[] = Array.from({ length: 100 }, (_, i) => ({
+      id: i,
+      name: `Row ${String(i).padStart(2, "0")}`,
+      score: i,
+    }));
+    render(
+      <MantineProvider env="test">
+        <DataTable
+          columns={columns}
+          data={rows}
+          rowId={(row) => row.id}
+          withPagination
+          defaultPageSize={25}
+        />
+      </MantineProvider>,
+    );
+    await user.click(screen.getByRole("button", { name: "3" }));
+    expect(screen.getByText("51 - 75 / 100")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "25" }));
+    await user.click(screen.getByRole("menuitem", { name: "10" }));
+    expect(screen.getByText("51 - 60 / 100")).toBeInTheDocument();
+  });
+});
+
 describe("DataTable — initialSort", () => {
+  it("shows no sort arrow for an unsortable initialSort column", () => {
+    renderWithMantine(
+      <DataTable
+        columns={[
+          { id: "name", header: "Name", accessor: "name" },
+          { id: "score", header: "Score", accessor: "score", sortable: true },
+        ]}
+        data={data}
+        initialSort={{ columnId: "name", direction: "asc" }}
+      />,
+    );
+    // mantine-datatable labels its arrow ("Sorted ascending", "Not sorted").
+    expect(
+      screen.queryByRole("img", { name: /^Sorted (ascending|descending)$/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("is ignored for a column that is not sortable, as in TanStack", () => {
     renderWithMantine(
       <DataTable

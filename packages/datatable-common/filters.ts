@@ -91,9 +91,11 @@ const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 /** A date-like value as a local `YYYY-MM-DD` day, or `undefined` if it is not one. */
 export function toLocalDay(value: unknown): string | undefined {
   // A date-only string is already a day. `new Date` would read it as UTC
-  // midnight, which is the previous day anywhere west of Greenwich.
+  // midnight, which is the previous day anywhere west of Greenwich. Parsed as
+  // local midnight instead, it must round-trip: `Date` rolls an impossible day
+  // ("2024-02-30") over into the next month rather than rejecting it.
   if (typeof value === "string" && DATE_ONLY.test(value)) {
-    return Number.isNaN(new Date(value).getTime()) ? undefined : value;
+    return toLocalDay(new Date(`${value}T00:00`)) === value ? value : undefined;
   }
   let date: Date;
   if (value instanceof Date) date = value;
@@ -150,9 +152,9 @@ export function matchesColumnFilter(
 }
 
 /**
- * Every distinct value present, as select options: numbers in numeric order
- * (so -10 comes before -1, and 1.25 before 1.5), everything else in natural
- * order.
+ * Every distinct value present, as select options: numbers first, in numeric
+ * order (so -10 comes before -1, and 1.25 before 1.5), then everything else in
+ * natural order.
  */
 export function facetOptions(
   values: Iterable<unknown>,
@@ -167,9 +169,13 @@ export function facetOptions(
     }
   }
   return [...raw]
-    .sort(([keyA, a], [keyB, b]) =>
-      isNumber(a) && isNumber(b) ? a - b : compareSortKeys(keyA, keyB),
-    )
+    .sort(([keyA, a], [keyB, b]) => {
+      // Numbers first, numerically; then everything else, naturally. One
+      // consistent order, whatever order mixed values arrive in.
+      if (isNumber(a) && isNumber(b)) return a - b;
+      if (isNumber(a) !== isNumber(b)) return isNumber(a) ? -1 : 1;
+      return compareSortKeys(keyA, keyB);
+    })
     .map(([key]) => ({ value: key, label: key }));
 }
 

@@ -207,6 +207,19 @@ describe("WalletTable", () => {
     });
   });
 
+  // mantine-react-table sorted every column with a value; these are sortable
+  // again ("none" = sortable, not yet sorted).
+  it.each(["Description", "Reason", "Other Party", "Amount", "Date"])(
+    "lets the %s column be sorted",
+    (header) => {
+      renderTable([ENTRY_POSITIVE, ENTRY_NEGATIVE]);
+      const th = screen
+        .getAllByRole("columnheader")
+        .find((cell) => cell.textContent.startsWith(header));
+      expect(th).toHaveAttribute("aria-sort", "none");
+    },
+  );
+
   it("humanizes a ref_type that has no known entry type", () => {
     renderTable([
       {

@@ -161,15 +161,24 @@ export function DataTable<TData>({
     [visibleColumns, columnFilters, data, setColumnFilter],
   );
 
+  // Only a sortable column shows the sort arrow: an `initialSort` naming
+  // another one is ignored (as TanStack does), so it must not look applied.
+  const sortedColumn =
+    sort && columns.find((col) => col.id === sort.columnId)?.sortable
+      ? sort.columnId
+      : "";
   const sortStatus: DataTableSortStatus<TData> = {
-    columnAccessor: sort?.columnId ?? "",
+    columnAccessor: sortedColumn,
     direction: sort?.direction ?? "asc",
   };
 
   const handleSortStatusChange = (status: DataTableSortStatus<TData>) => {
+    const columnId = String(status.columnAccessor);
     setSort({
-      columnId: String(status.columnAccessor),
-      direction: status.direction,
+      columnId,
+      // mantine-datatable carries the previous column's direction over to a
+      // newly clicked one; the contract (and TanStack) starts it ascending.
+      direction: columnId === sortedColumn ? status.direction : "asc",
     });
     setPage(1);
   };
@@ -206,9 +215,11 @@ export function DataTable<TData>({
     recordsPerPageOptions: [
       ...new Set([...PAGE_SIZE_OPTIONS, defaultPageSize]),
     ].sort((a, b) => a - b),
+    // Keep the first row in view, as TanStack does: page 3 of 25 rows (rows
+    // 51-75) becomes page 6 of 10 (rows 51-60).
     onRecordsPerPageChange: (size: number) => {
+      setPage(Math.floor(((page - 1) * pageSize) / size) + 1);
       setPageSize(size);
-      setPage(1);
     },
   });
 
@@ -222,6 +233,12 @@ export function DataTable<TData>({
   const skeletonPaginationProps = withPagination
     ? {
         ...paginationFor(skeletonRecords.length),
+        // One page of placeholders: show it as the current one, whatever page
+        // the real data was on, and leave that page alone.
+        page: 1,
+        onPageChange: () => {
+          /* nothing to page through while loading */
+        },
         paginationText: () => "Loading…",
       }
     : {};

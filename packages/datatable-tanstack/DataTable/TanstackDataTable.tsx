@@ -71,10 +71,11 @@ function alignToJustify(
   return "flex-start";
 }
 
+/** For a sortable header; "none" tells assistive tech it can be sorted. */
 function ariaSort(sorted: "asc" | "desc" | false) {
   if (sorted === "asc") return "ascending";
   if (sorted === "desc") return "descending";
-  return undefined;
+  return "none";
 }
 
 /**

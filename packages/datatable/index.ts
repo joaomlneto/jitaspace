@@ -80,10 +80,10 @@ export interface DataTableColumn<TData> {
    */
   cell?: (row: TData, value: unknown) => ReactNode;
   /**
-   * Allow sorting by this column from its header (click, or Enter / Space).
-   * One column at a time: ascending first, then toggling. Rows without a sort
-   * value (`null`, `undefined`, `""`, an invalid date) sort last in either
-   * direction. Default: `false`.
+   * Allow sorting by this column from its header (click, or Enter on the
+   * focused header). One column at a time: ascending first, then toggling.
+   * Rows without a sort value (`null`, `undefined`, `""`, an invalid date)
+   * sort last in either direction. Default: `false`.
    */
   sortable?: boolean;
   /**

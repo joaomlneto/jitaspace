@@ -103,8 +103,9 @@ combine with each other and with the global search, and the toolbar shows a
 
 ## Sorting and loading
 
-- One column at a time, from the header (click, or Enter / Space): ascending on
-  the first click, then toggling. `initialSort` must name a sortable column.
+- One column at a time, from the header (click, or Enter on the focused header;
+  TanStack also takes Space): ascending on the first click, then toggling.
+  `initialSort` must name a sortable column.
 - Rows without a sort value (`null`, `undefined`, `""`, an invalid date) sort
   **last in either direction**. Dates sort chronologically, booleans as 0/1,
   strings naturally ("Item 9" before "Item 10").

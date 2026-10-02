@@ -132,6 +132,14 @@ describe("ContactsDataTable", () => {
     expect(bodyRows).toHaveLength(1);
   });
 
+  it("lets the Contact column be sorted", () => {
+    renderTable([CONTACT_WATCHED, CONTACT_PLAIN]);
+    const th = screen
+      .getAllByRole("columnheader")
+      .find((cell) => cell.textContent.startsWith("Contact"));
+    expect(th).toHaveAttribute("aria-sort", "none");
+  });
+
   it("renders multiple rows for multiple contacts", () => {
     renderTable([CONTACT_WATCHED, CONTACT_PLAIN]);
     // Both rows render: the watched badge (row 1) plus a body with >1 data row.

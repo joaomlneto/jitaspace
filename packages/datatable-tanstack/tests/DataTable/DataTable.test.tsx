@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -175,7 +175,9 @@ describe("DataTable — sorting", () => {
     await user.keyboard("{Shift>}");
     await user.click(screen.getByText("Score").closest("th")!);
     await user.keyboard("{/Shift}");
-    expect(document.querySelectorAll("th[aria-sort]").length).toBe(1);
+    expect(
+      document.querySelectorAll('th[aria-sort]:not([aria-sort="none"])').length,
+    ).toBe(1);
   });
 
   it("sorts from the keyboard", async () => {
@@ -198,15 +200,26 @@ describe("DataTable — sorting", () => {
     );
     screen.getByRole("button", { name: "Filter Name" }).focus();
     await userEvent.keyboard("{Enter}");
-    expect(screen.getByText("Name").closest("th")).not.toHaveAttribute(
+    expect(screen.getByText("Name").closest("th")).toHaveAttribute(
       "aria-sort",
+      "none",
     );
   });
 
   it("does not make unsortable headers focusable", () => {
     renderWithMantine(<DataTable columns={unsortableColumns} data={data} />);
-    expect(screen.getByText("Name").closest("th")).not.toHaveAttribute(
-      "tabindex",
+    const header = screen.getByText("Name").closest("th");
+    expect(header).not.toHaveAttribute("tabindex");
+    expect(header).not.toHaveAttribute("aria-sort");
+  });
+
+  // "none" is how a header says it can be sorted but is not, so assistive
+  // tech announces it as sortable before the first sort.
+  it("marks sortable but unsorted headers aria-sort=none", () => {
+    renderWithMantine(<DataTable columns={columns} data={data} />);
+    expect(screen.getByText("Name").closest("th")).toHaveAttribute(
+      "aria-sort",
+      "none",
     );
   });
 
@@ -724,6 +737,12 @@ describe("DataTable — the current page", () => {
     expect(screen.getByText("Row 10")).toBeInTheDocument();
 
     rerender(table(rowsOf(30))); // equal rows, new identity
+    // TanStack queues its auto-reset in a microtask; let it run, or this would
+    // pass even with the reset on.
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
     expect(screen.getByText("Row 10")).toBeInTheDocument();
     expect(screen.queryByText("Row 00")).not.toBeInTheDocument();
   });
