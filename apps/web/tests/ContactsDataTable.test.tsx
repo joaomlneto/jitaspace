@@ -3,6 +3,7 @@ import "@testing-library/jest-dom/jest-globals";
 import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 // ContactsDataTable takes `contacts` / `labels` directly (no internal data
 // hook). Rendering the real DataTable executes the module-scope cell renderers
@@ -118,6 +119,17 @@ describe("ContactsDataTable", () => {
     // page crashed client-side when the `?.` was dropped.
     renderTable([CONTACT_NO_LABELS]);
     expect(screen.getByRole("table")).toBeInTheDocument();
+  });
+
+  it("finds contacts by label name in the search box", async () => {
+    renderTable([CONTACT_WATCHED, CONTACT_PLAIN]);
+    await userEvent.type(screen.getByPlaceholderText("Search..."), "friends");
+    // CONTACT_WATCHED carries the "Friends" label; CONTACT_PLAIN has none.
+    expect(screen.getByText("watched")).toBeInTheDocument();
+    const bodyRows = screen
+      .getAllByRole("row")
+      .filter((r) => r.querySelector("td"));
+    expect(bodyRows).toHaveLength(1);
   });
 
   it("renders multiple rows for multiple contacts", () => {

@@ -60,6 +60,8 @@ export function isColumnFilterActive(
 ): value is ColumnFilterValue {
   switch (filter.type) {
     case "text":
+      // Whitespace alone matches everything, so it does not count as a filter.
+      return typeof value === "string" && value.trim() !== "";
     case "select":
       return typeof value === "string" && value !== "";
     case "multi-select":
@@ -84,8 +86,15 @@ export function filterKeys(value: unknown): string[] {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
 /** A date-like value as a local `YYYY-MM-DD` day, or `undefined` if it is not one. */
 export function toLocalDay(value: unknown): string | undefined {
+  // A date-only string is already a day. `new Date` would read it as UTC
+  // midnight, which is the previous day anywhere west of Greenwich.
+  if (typeof value === "string" && DATE_ONLY.test(value)) {
+    return Number.isNaN(new Date(value).getTime()) ? undefined : value;
+  }
   let date: Date;
   if (value instanceof Date) date = value;
   else if (typeof value === "string" || typeof value === "number")
@@ -140,17 +149,28 @@ export function matchesColumnFilter(
   }
 }
 
-/** Every distinct value present, as select options in natural sort order. */
+/**
+ * Every distinct value present, as select options: numbers in numeric order
+ * (so -10 comes before -1, and 1.25 before 1.5), everything else in natural
+ * order.
+ */
 export function facetOptions(
   values: Iterable<unknown>,
 ): DataTableFilterOption[] {
-  const keys = new Set<string>();
+  // Each key's first raw value, so numbers can sort as numbers.
+  const raw = new Map<string, unknown>();
   for (const value of values) {
-    for (const key of filterKeys(value)) keys.add(key);
+    const items: unknown[] = Array.isArray(value) ? value : [value];
+    for (const item of items) {
+      const key = primitiveString(item);
+      if (key !== "" && !raw.has(key)) raw.set(key, item);
+    }
   }
-  return [...keys]
-    .sort((a, b) => compareSortKeys(a, b))
-    .map((key) => ({ value: key, label: key }));
+  return [...raw]
+    .sort(([keyA, a], [keyB, b]) =>
+      isNumber(a) && isNumber(b) ? a - b : compareSortKeys(keyA, keyB),
+    )
+    .map(([key]) => ({ value: key, label: key }));
 }
 
 /** The smallest and largest number present, or `undefined` if there are none. */

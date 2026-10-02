@@ -640,3 +640,88 @@ describe("DataTable — column filters", () => {
     expect(nameOrder()).toEqual(["Charlie", "Alice", "Bob"]);
   });
 });
+
+describe("DataTable — the current page", () => {
+  // mantine-datatable scrolls its viewport back to the top on a page change;
+  // jsdom has no layout, so it has no Element.scrollTo either.
+  beforeAll(() => {
+    Element.prototype.scrollTo = () => {
+      /* no-op: jsdom does not scroll */
+    };
+  });
+
+  const rowsOf = (n: number): Row[] =>
+    Array.from({ length: n }, (_, i) => ({
+      id: i,
+      name: `Row ${String(i).padStart(2, "0")}`,
+      score: i,
+    }));
+  const table = (rows: Row[]) => (
+    <MantineProvider>
+      <DataTable
+        columns={columns}
+        data={rows}
+        rowId={(row) => row.id}
+        withPagination
+        defaultPageSize={10}
+      />
+    </MantineProvider>
+  );
+
+  it("steps back to the last page when the data shrinks under it", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(table(rowsOf(30)));
+    await user.click(screen.getByRole("button", { name: "3" }));
+    expect(screen.getByText("Row 20")).toBeInTheDocument();
+
+    rerender(table(rowsOf(15)));
+    // Page 3 no longer exists: the table shows page 2 rather than an empty
+    // slice. (Not asserted through "No data": under jsdom mantine-datatable
+    // leaves its empty-state node mounted after any page change.)
+    expect(screen.getByText("Row 10")).toBeInTheDocument();
+    expect(screen.getByText("Row 14")).toBeInTheDocument();
+    expect(screen.getByText("11 - 15 / 15")).toBeInTheDocument();
+  });
+
+  it("survives a new data array (a refetch)", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(table(rowsOf(30)));
+    await user.click(screen.getByRole("button", { name: "2" }));
+    rerender(table(rowsOf(30)));
+    expect(screen.getByText("Row 10")).toBeInTheDocument();
+  });
+});
+
+describe("DataTable — loading keeps the footer", () => {
+  it("renders the pagination footer while loading, as when loaded", () => {
+    const { container } = renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={[]}
+        isLoading
+        withPagination
+        defaultPageSize={20}
+      />,
+    );
+    expect(
+      container.querySelector(".mantine-datatable-pagination"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Loading…")).toBeInTheDocument();
+  });
+});
+
+describe("DataTable — initialSort", () => {
+  it("is ignored for a column that is not sortable, as in TanStack", () => {
+    renderWithMantine(
+      <DataTable
+        columns={[
+          { id: "name", header: "Name", accessor: "name" },
+          { id: "score", header: "Score", accessor: "score" },
+        ]}
+        data={data}
+        initialSort={{ columnId: "name", direction: "asc" }}
+      />,
+    );
+    expect(nameOrder()).toEqual(["Charlie", "Alice", "Bob"]);
+  });
+});

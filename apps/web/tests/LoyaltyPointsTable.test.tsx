@@ -409,6 +409,45 @@ describe("LoyaltyPointsTable — mantine-datatable engine", () => {
   });
 });
 
+describe("LoyaltyPointsTable — offers shared between stores", () => {
+  // An offer id is only unique within one corporation's store; most offers
+  // are in several. /lp-store/all lists every store in one table, and keying
+  // rows by offer id alone duplicated and dropped rows once they were sorted.
+  const shared = [
+    { ...offers[0]!, offerId: 7, corporationId: 1, lpCost: 1111 },
+    { ...offers[0]!, offerId: 7, corporationId: 2, lpCost: 2222 },
+    { ...offers[1]!, offerId: 8, corporationId: 2, lpCost: 3333 },
+  ];
+
+  beforeEach(() => {
+    (useFuzzworkRegionalMarketAggregates as jest.Mock).mockReturnValue({
+      data: {},
+    });
+  });
+
+  it.each(["tanstack", "mantine-datatable"] as const)(
+    "renders each offer exactly once after sorting — %s engine",
+    async (engine) => {
+      usePreferencesStore.setState({ dataTableEngine: engine });
+      wrap(
+        React.createElement(LoyaltyPointsTable, {
+          corporations,
+          types,
+          offers: shared,
+        }),
+      );
+      const lpCostHeader = screen.getByText("LP Cost").closest("th")!;
+      await userEvent.click(lpCostHeader);
+      await userEvent.click(lpCostHeader);
+
+      const lpCells = screen
+        .getAllByText(/^[\d,]+ LP$/)
+        .map((cell) => cell.textContent);
+      expect(lpCells.sort()).toEqual(["1,111 LP", "2,222 LP", "3,333 LP"]);
+    },
+  );
+});
+
 describe("LoyaltyPointsTable — column filters", () => {
   beforeEach(() => {
     (useFuzzworkRegionalMarketAggregates as jest.Mock).mockReturnValue({

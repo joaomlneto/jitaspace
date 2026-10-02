@@ -45,11 +45,11 @@ export function primitiveString(value: unknown): string {
 /**
  * Normalise a value into something comparable: numbers and strings as they
  * are, dates by timestamp, booleans as 0/1. Everything else — including
- * `null`, an invalid date and `NaN` — has no sort key.
+ * `null`, `""`, an invalid date and `NaN` — has no sort key, so it sorts last.
  */
 export function toSortKey(value: unknown): SortKey {
   if (typeof value === "number") return Number.isNaN(value) ? undefined : value;
-  if (typeof value === "string") return value;
+  if (typeof value === "string") return value === "" ? undefined : value;
   if (typeof value === "boolean") return value ? 1 : 0;
   if (value instanceof Date) {
     const time = value.getTime();
@@ -111,12 +111,16 @@ export function sortRows<TData>(
 
 /**
  * Whether a column value matches the global search. Case-insensitive substring
- * match on primitives; a blank query matches everything.
+ * match on primitives, and on each element of an array (a list of label names
+ * is searchable); a blank query matches everything.
  */
 export function matchesGlobalFilter(value: unknown, query: string): boolean {
   const needle = query.trim().toLowerCase();
   if (needle === "") return true;
-  return primitiveString(value).toLowerCase().includes(needle);
+  const items: unknown[] = Array.isArray(value) ? value : [value];
+  return items.some((item) =>
+    primitiveString(item).toLowerCase().includes(needle),
+  );
 }
 
 /** Whether any of the row's accessor columns matches the global search. */

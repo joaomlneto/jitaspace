@@ -120,6 +120,7 @@ export const ContactsDataTable = memo(
           id: "name",
           header: "Contact",
           accessor: "contact_id",
+          sortable: true,
           cell: contactNameCell,
         },
         {

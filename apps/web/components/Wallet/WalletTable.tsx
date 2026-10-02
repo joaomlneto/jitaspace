@@ -207,6 +207,7 @@ export const WalletTable = memo(
           id: "firstParty",
           header: "First Party",
           accessor: "first_party_id",
+          sortable: true,
           defaultVisible: false,
           cell: partyCell,
         },
@@ -214,6 +215,7 @@ export const WalletTable = memo(
           id: "secondParty",
           header: "Second Party",
           accessor: "second_party_id",
+          sortable: true,
           defaultVisible: false,
           cell: partyCell,
         },
@@ -222,6 +224,7 @@ export const WalletTable = memo(
           header: "Other Party",
           accessor: (row) =>
             (row.amount ?? 0) < 0 ? row.second_party_id : row.first_party_id,
+          sortable: true,
           cell: partyCell,
         },
         {
@@ -245,11 +248,13 @@ export const WalletTable = memo(
           id: "description",
           header: "Description",
           accessor: "description",
+          sortable: true,
         },
         {
           id: "reason",
           header: "Reason",
           accessor: "reason",
+          sortable: true,
         },
         {
           id: "tax",
@@ -263,6 +268,7 @@ export const WalletTable = memo(
           id: "taxReceiverId",
           header: "Tax Receiver",
           accessor: "tax_receiver_id",
+          sortable: true,
           defaultVisible: false,
           cell: partyCell,
         },

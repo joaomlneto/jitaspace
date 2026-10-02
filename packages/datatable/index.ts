@@ -80,8 +80,10 @@ export interface DataTableColumn<TData> {
    */
   cell?: (row: TData, value: unknown) => ReactNode;
   /**
-   * Allow click-to-sort on this column's header. Default: `false`. Rows whose
-   * sort value is `null` or `undefined` sort last in either direction.
+   * Allow sorting by this column from its header (click, or Enter / Space).
+   * One column at a time: ascending first, then toggling. Rows without a sort
+   * value (`null`, `undefined`, `""`, an invalid date) sort last in either
+   * direction. Default: `false`.
    */
   sortable?: boolean;
   /**
@@ -142,10 +144,15 @@ export interface DataTableProps<TData> {
   withColumnVisibility?: boolean;
   /** Render pagination controls and a page-size selector. */
   withPagination?: boolean;
-  /** Page size used when {@link withPagination} is enabled. Default: `10`. */
+  /**
+   * Page size used when {@link withPagination} is enabled; offered in the
+   * rows-per-page choices even when it is not a standard size. The current
+   * page survives a change of `data` identity, and steps back if the data
+   * shrinks under it. Default: `10`.
+   */
   defaultPageSize?: number;
 
-  /** Initial sort applied on first render. */
+  /** Initial sort applied on first render. Must name a sortable column. */
   initialSort?: DataTableSort;
   /** Called with the row's data when a row is clicked. */
   onRowClick?: (row: TData) => void;

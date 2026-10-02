@@ -138,6 +138,25 @@ describe("ColumnFilterControl", () => {
     expect(changes.at(-1)).toEqual([2, 3]);
   });
 
+  it("range: decimals and negatives can be typed key by key", async () => {
+    // NumberInput reports "1." and "-" as strings; echoing the filter value
+    // back used to wipe the box, so "1.5" came out as 5.
+    const changes = renderControl({ type: "range" }, "level");
+    await userEvent.type(screen.getByRole("textbox", { name: "Min" }), "1.5");
+    expect(changes.at(-1)).toEqual([1.5, null]);
+    await userEvent.type(screen.getByRole("textbox", { name: "Max" }), "-2.25");
+    expect(changes.at(-1)).toEqual([1.5, -2.25]);
+  });
+
+  it("range: Clear empties the boxes too", async () => {
+    const changes = renderControl({ type: "range" }, "level", [2, 3]);
+    expect(screen.getByRole("textbox", { name: "Min" })).toHaveValue("2");
+    await userEvent.click(screen.getByRole("button", { name: "Clear" }));
+    expect(changes.at(-1)).toBeUndefined();
+    expect(screen.getByRole("textbox", { name: "Min" })).toHaveValue("");
+    expect(screen.getByRole("textbox", { name: "Max" })).toHaveValue("");
+  });
+
   it("boolean: Yes, No, and back to Any", async () => {
     const changes = renderControl({ type: "boolean" }, "active");
     await userEvent.click(screen.getByText("Yes"));

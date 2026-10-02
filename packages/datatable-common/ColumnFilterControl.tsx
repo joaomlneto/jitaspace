@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Button,
   Group,
@@ -72,6 +72,8 @@ export function ColumnFilterControl<TData>({
 }: Readonly<ColumnFilterControlProps<TData>>) {
   const filter = column.filter;
   const type = filter?.type;
+  // Bumped by Clear, to remount the input and drop any draft it holds.
+  const [resetCount, setResetCount] = useState(0);
   // Only computed while the popover is open (the control is not mounted
   // otherwise), only for the types that use it, and once rather than per
   // keystroke: faceting walks every row, and /lp-store/all has thousands.
@@ -97,6 +99,7 @@ export function ColumnFilterControl<TData>({
   return (
     <Stack gap="xs" miw={220}>
       <FilterInput
+        key={resetCount}
         filter={filter}
         label={label}
         values={values}
@@ -109,7 +112,10 @@ export function ColumnFilterControl<TData>({
           <Button
             variant="subtle"
             size="compact-xs"
-            onClick={() => onChange(undefined)}
+            onClick={() => {
+              setResetCount((count) => count + 1);
+              onChange(undefined);
+            }}
           >
             Clear
           </Button>
@@ -234,14 +240,26 @@ function RangeInput({
   filter,
   label,
   values,
-  value: [min, max],
+  value,
   emit,
 }: Readonly<RangeInputProps>) {
   // The data's own extremes, shown as placeholders so an open bound says what
   // it currently means.
   const bounds = useMemo(() => numericBounds(values), [values]);
+  // What each box shows, held here rather than derived from the filter value.
+  // NumberInput reports a half-typed number ("1.", "-") as a string; that is
+  // not a bound yet, and echoing the filter value back would wipe the box
+  // mid-keystroke, making decimals and negatives impossible to type.
+  const [draft, setDraft] = useState<[number | string, number | string]>(() => [
+    value[0] ?? "",
+    value[1] ?? "",
+  ]);
   const toBound = (input: number | string) =>
     typeof input === "number" ? input : null;
+  const update = (next: [number | string, number | string]) => {
+    setDraft(next);
+    emit([toBound(next[0]), toBound(next[1])]);
+  };
   const common = {
     size: "xs",
     min: filter.min,
@@ -256,15 +274,15 @@ function RangeInput({
         {...common}
         label="Min"
         placeholder={bounds?.min.toLocaleString()}
-        value={min ?? ""}
-        onChange={(input) => emit([toBound(input), max])}
+        value={draft[0]}
+        onChange={(input) => update([input, draft[1]])}
       />
       <NumberInput
         {...common}
         label="Max"
         placeholder={bounds?.max.toLocaleString()}
-        value={max ?? ""}
-        onChange={(input) => emit([min, toBound(input)])}
+        value={draft[1]}
+        onChange={(input) => update([draft[0], input])}
       />
     </Group>
   );

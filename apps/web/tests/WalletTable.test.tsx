@@ -189,6 +189,22 @@ describe("WalletTable", () => {
       );
       expect(typeCells()).toHaveLength(4);
     });
+
+    it("shows every row when the last selected type is removed", async () => {
+      // An emptied selection has to mean "no filter" rather than "match
+      // nothing", or the table goes blank.
+      renderTable(ENTRIES);
+      await pickTypes("Brokers Fee");
+      expect(typeCells()).toEqual(["Brokers Fee"]);
+      await userEvent.type(
+        screen.getByRole("combobox", { name: "Filter Type" }),
+        "{Backspace}",
+      );
+      expect(typeCells()).toHaveLength(4);
+      expect(
+        screen.queryByRole("button", { name: /Clear filters/ }),
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("humanizes a ref_type that has no known entry type", () => {

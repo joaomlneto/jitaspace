@@ -13,8 +13,9 @@ cannot drift apart:
   and `ColumnFilterButton` (the header button TanStack uses to open it;
   mantine-datatable brings its own).
 
-Engines depend on this package; apps should not need to. Render
-`~/components/DataTable` in the web app instead.
+Engines depend on this package; app code should not import it. Render
+`~/components/DataTable` in the web app instead. (`apps/web` still lists it as
+a dependency, so `transpilePackages` can resolve it.)
 
 > **Note:** the `date-range` filter uses `@mantine/dates`, so apps must import
 > its stylesheet once at the app root:

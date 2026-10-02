@@ -103,9 +103,14 @@ combine with each other and with the global search, and the toolbar shows a
 
 ## Sorting and loading
 
-- Rows whose sort value is `null` or `undefined` sort **last in either
-  direction**. Dates sort chronologically, booleans as 0/1, strings naturally
-  ("Item 9" before "Item 10").
+- One column at a time, from the header (click, or Enter / Space): ascending on
+  the first click, then toggling. `initialSort` must name a sortable column.
+- Rows without a sort value (`null`, `undefined`, `""`, an invalid date) sort
+  **last in either direction**. Dates sort chronologically, booleans as 0/1,
+  strings naturally ("Item 9" before "Item 10").
+- The global search matches primitives and each element of an array value.
+- The current page survives a new `data` identity (a refetch), and steps back
+  to the last page if the data shrinks under it.
 - `isLoading` renders a full page of skeleton rows (the page size, or 10 without
   pagination) in place of the data, so the table is already at its loaded height
   and the rows arriving do not shift the page.

@@ -64,6 +64,8 @@ describe("toSortKey", () => {
   it("normalises dates, booleans and missing values", () => {
     expect(toSortKey(5)).toBe(5);
     expect(toSortKey("x")).toBe("x");
+    // An unresolved name is "no value", not a value that sorts first.
+    expect(toSortKey("")).toBeUndefined();
     expect(toSortKey(true)).toBe(1);
     expect(toSortKey(false)).toBe(0);
     expect(toSortKey(new Date(1000))).toBe(1000);
@@ -132,6 +134,12 @@ describe("global filter", () => {
     expect(matchesGlobalFilter(42, "4")).toBe(true);
     expect(matchesGlobalFilter({ name: "Alice" }, "alice")).toBe(false);
     expect(matchesGlobalFilter("anything", "   ")).toBe(true);
+  });
+
+  it("matches any element of an array value", () => {
+    expect(matchesGlobalFilter(["Friends", "Corp mates"], "mates")).toBe(true);
+    expect(matchesGlobalFilter(["Friends"], "foes")).toBe(false);
+    expect(matchesGlobalFilter([], "x")).toBe(false);
   });
 
   it("searches every accessor column of a row, skipping display-only ones", () => {

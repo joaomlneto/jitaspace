@@ -21,7 +21,8 @@ const dates: DataTableColumnFilter = { type: "date-range" };
 describe("isColumnFilterActive", () => {
   it.each([
     [text, "", false],
-    [text, " ", true],
+    [text, " ", false],
+    [text, " a ", true],
     [select, "", false],
     [select, "a", true],
     [multi, [], false],
@@ -46,6 +47,10 @@ describe("matchesColumnFilter", () => {
   it("passes every row while the filter value is inactive or malformed", () => {
     expect(matchesColumnFilter(select, "a", undefined)).toBe(true);
     expect(matchesColumnFilter(range, 5, "not a range")).toBe(true);
+  });
+
+  it("text: whitespace alone matches every row, even blank ones", () => {
+    expect(matchesColumnFilter(text, null, "   ")).toBe(true);
   });
 
   it("text: case-insensitive substring", () => {
@@ -120,6 +125,10 @@ describe("filterKeys / toLocalDay", () => {
 
   it("formats a local day and rejects non-dates", () => {
     expect(toLocalDay(new Date(2024, 1, 3, 23, 59))).toBe("2024-02-03");
+    // A date-only string is already a day; parsing it would read UTC midnight,
+    // the previous day anywhere west of Greenwich.
+    expect(toLocalDay("2024-01-09")).toBe("2024-01-09");
+    expect(toLocalDay("2024-13-45")).toBeUndefined();
     expect(toLocalDay({})).toBeUndefined();
     expect(toLocalDay("nope")).toBeUndefined();
   });
@@ -133,6 +142,12 @@ describe("facetOptions / numericBounds", () => {
       { value: "a", label: "a" },
       { value: "b", label: "b" },
     ]);
+  });
+
+  it("orders numbers numerically, negatives and decimals included", () => {
+    expect(
+      facetOptions([-1, -10, 2, 1.5, 1.25]).map((option) => option.value),
+    ).toEqual(["-10", "-1", "1.25", "1.5", "2"]);
   });
 
   it("finds the numeric extremes, ignoring non-numbers", () => {

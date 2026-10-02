@@ -4,11 +4,12 @@ import type {
   ColumnDef,
   ColumnFiltersState,
   FilterFn,
+  OnChangeFn,
   PaginationState,
   SortingState,
   VisibilityState,
 } from "@tanstack/react-table";
-import type { ReactNode } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
   Center,
@@ -44,10 +45,17 @@ import {
   readFilterValue,
 } from "@jitaspace/datatable-common";
 
-const PAGE_SIZE_OPTIONS = ["10", "25", "50", "100"];
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 /** Skeleton rows rendered while loading without pagination. */
 const UNPAGINATED_SKELETON_ROWS = 10;
+
+/** The standard page sizes, plus the table's own default if it is not one. */
+function pageSizeOptions(defaultPageSize: number): string[] {
+  return [...new Set([...PAGE_SIZE_OPTIONS, defaultPageSize])]
+    .sort((a, b) => a - b)
+    .map(String);
+}
 
 function getSortIcon(sorted: "asc" | "desc" | false): string {
   if (sorted === "asc") return "↑";
@@ -163,6 +171,22 @@ export function DataTable<TData>({
     pageSize: defaultPageSize,
   });
 
+  // Back to the first page when what the rows are (search, filters) or their
+  // order changes — but not when `data` merely gets a new identity. Callers
+  // refetch (the LP store re-prices every 5 minutes) and some hooks return a
+  // fresh array on every render; TanStack's own auto-reset would bounce the
+  // reader to page 1 each time, so it is off and this replaces it.
+  const resetPage = () =>
+    setPagination((current) =>
+      current.pageIndex === 0 ? current : { ...current, pageIndex: 0 },
+    );
+  const andResetPage =
+    <T,>(setState: OnChangeFn<T>): OnChangeFn<T> =>
+    (updater) => {
+      setState(updater);
+      resetPage();
+    };
+
   const table = useReactTable({
     data,
     columns: columnDefs,
@@ -174,11 +198,20 @@ export function DataTable<TData>({
       columnVisibility,
       ...(withPagination ? { pagination } : {}),
     },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    onColumnFiltersChange: setColumnFilters,
+    onSortingChange: andResetPage(setSorting),
+    onGlobalFilterChange: andResetPage(setGlobalFilter),
+    onColumnFiltersChange: andResetPage(setColumnFilters),
     onColumnVisibilityChange: setColumnVisibility,
     ...(withPagination ? { onPaginationChange: setPagination } : {}),
+    autoResetPageIndex: false,
+    // Sort the way mantine-datatable does, so the engines agree: one column at
+    // a time, ascending on the first click, then toggling between directions.
+    // TanStack's defaults would start numeric columns descending and add an
+    // "unsorted" step — so a column that starts ascending (the market's sell
+    // orders, by price) would lose its sort on the first click.
+    enableMultiSort: false,
+    enableSortingRemoval: false,
+    sortDescFirst: false,
     // Search the raw value, not the sort key TanStack holds (a date column's
     // key is a timestamp nobody would type).
     globalFilterFn: (row, columnId, query: string) => {
@@ -198,6 +231,14 @@ export function DataTable<TData>({
       ? { getPaginationRowModel: getPaginationRowModel() }
       : {}),
   });
+
+  // Data shrinking under the current page (a refetch, a wallet deselected)
+  // would leave it past the end, showing "No data" while rows exist. Step back
+  // to the last page — during render, so the empty page is never painted.
+  const lastPageIndex = Math.max(table.getPageCount() - 1, 0);
+  if (withPagination && pagination.pageIndex > lastPageIndex) {
+    setPagination({ ...pagination, pageIndex: lastPageIndex });
+  }
 
   const rows = table.getRowModel().rows;
   const visibleColumns = table.getVisibleLeafColumns();
@@ -258,7 +299,8 @@ export function DataTable<TData>({
       <DataTableToolbar
         withGlobalFilter={withGlobalFilter}
         globalFilter={globalFilter}
-        onGlobalFilterChange={setGlobalFilter}
+        // Through the table, so the search goes back to the first page.
+        onGlobalFilterChange={(value) => table.setGlobalFilter(value)}
         withColumnVisibility={withColumnVisibility}
         hideableColumns={hideableColumns}
         onToggleColumn={(id) => table.getColumn(id)?.toggleVisibility()}
@@ -286,14 +328,28 @@ export function DataTable<TData>({
                   const canSort = column.getCanSort();
                   const sorted = column.getIsSorted();
                   const meta = columnsById.get(column.id);
+                  const toggleSorting = column.getToggleSortingHandler();
                   return (
                     <Table.Th
                       key={header.id}
                       ta={meta?.align}
                       w={meta?.width}
                       aria-sort={canSort ? ariaSort(sorted) : undefined}
-                      onClick={
-                        canSort ? column.getToggleSortingHandler() : undefined
+                      onClick={canSort ? toggleSorting : undefined}
+                      // Sortable from the keyboard too: focusable, and Enter or
+                      // Space sorts — unless it was pressed on the filter
+                      // button inside the header.
+                      tabIndex={canSort ? 0 : undefined}
+                      onKeyDown={
+                        canSort
+                          ? (event: KeyboardEvent<HTMLTableCellElement>) => {
+                              if (event.target !== event.currentTarget) return;
+                              if (event.key !== "Enter" && event.key !== " ")
+                                return;
+                              event.preventDefault();
+                              toggleSorting?.(event);
+                            }
+                          : undefined
                       }
                       style={
                         canSort
@@ -353,7 +409,8 @@ export function DataTable<TData>({
               onChange={(value) =>
                 table.setPageSize(Number(value ?? defaultPageSize))
               }
-              data={PAGE_SIZE_OPTIONS}
+              data={pageSizeOptions(defaultPageSize)}
+              allowDeselect={false}
               w={80}
               size="xs"
             />

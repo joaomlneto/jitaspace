@@ -47,7 +47,7 @@ export function DataTable<TData>({
   highlightOnHover,
   withTableBorder,
   withColumnBorders,
-  verticalSpacing,
+  verticalSpacing = "sm",
   fontSize,
 }: Readonly<DataTableProps<TData>>) {
   const [globalFilter, setGlobalFilter] = useState("");
@@ -94,14 +94,21 @@ export function DataTable<TData>({
     );
   }, [data, columns, columnFilters, withGlobalFilter, globalFilter]);
 
-  // 2. sort
+  // 2. sort (only by a sortable column, as TanStack does with `initialSort`)
   const sorted = useMemo(() => {
     const col = sort && columns.find((c) => c.id === sort.columnId);
-    return sort && col ? sortRows(filtered, col, sort.direction) : filtered;
+    return sort && col?.sortable
+      ? sortRows(filtered, col, sort.direction)
+      : filtered;
   }, [filtered, sort, columns]);
 
   // 3. paginate (client-side slice; mantine-datatable renders the controls)
   const totalRecords = sorted.length;
+  // Data shrinking under the current page (a refetch, a wallet deselected)
+  // would leave it past the end, showing "No data" while rows exist. Step back
+  // to the last page — during render, so the empty page is never painted.
+  const lastPage = Math.max(Math.ceil(totalRecords / pageSize), 1);
+  if (withPagination && page > lastPage) setPage(lastPage);
   const pageRecords = useMemo(() => {
     if (!withPagination) return sorted;
     const start = (page - 1) * pageSize;
@@ -190,17 +197,32 @@ export function DataTable<TData>({
         : new Set(),
     );
 
-  const paginationProps = withPagination
+  const paginationFor = (total: number) => ({
+    page,
+    onPageChange: setPage,
+    totalRecords: total,
+    recordsPerPage: pageSize,
+    // The standard sizes, plus the table's own default if it is not one.
+    recordsPerPageOptions: [
+      ...new Set([...PAGE_SIZE_OPTIONS, defaultPageSize]),
+    ].sort((a, b) => a - b),
+    onRecordsPerPageChange: (size: number) => {
+      setPageSize(size);
+      setPage(1);
+    },
+  });
+
+  const skeletonRecords: SkeletonRecord[] = Array.from(
+    { length: withPagination ? pageSize : UNPAGINATED_SKELETON_ROWS },
+    (_, key) => ({ key }),
+  );
+  const paginationProps = withPagination ? paginationFor(totalRecords) : {};
+  // The footer is rendered while loading too, or it would appear with the
+  // data and shift the page after all.
+  const skeletonPaginationProps = withPagination
     ? {
-        page,
-        onPageChange: setPage,
-        totalRecords,
-        recordsPerPage: pageSize,
-        recordsPerPageOptions: PAGE_SIZE_OPTIONS,
-        onRecordsPerPageChange: (size: number) => {
-          setPageSize(size);
-          setPage(1);
-        },
+        ...paginationFor(skeletonRecords.length),
+        paginationText: () => "Loading…",
       }
     : {};
 
@@ -239,12 +261,7 @@ export function DataTable<TData>({
         // A full page of placeholders, so the table is at its loaded height
         // from the first paint and the rows arriving do not shift the page.
         <MantineDataTable<SkeletonRecord>
-          records={Array.from(
-            {
-              length: withPagination ? pageSize : UNPAGINATED_SKELETON_ROWS,
-            },
-            (_, key) => ({ key }),
-          )}
+          records={skeletonRecords}
           columns={visibleColumns.map((col) => ({
             accessor: col.id,
             title: col.header,
@@ -254,6 +271,7 @@ export function DataTable<TData>({
           }))}
           idAccessor="key"
           {...presentation}
+          {...skeletonPaginationProps}
         />
       ) : (
         <MantineDataTable<TData>

@@ -419,7 +419,9 @@ export const LoyaltyPointsTable = memo(
         withGlobalFilter
         withColumnVisibility
         initialSort={{ columnId: "id", direction: "desc" }}
-        rowId={(row) => row.offerId}
+        // An offer id is only unique within one corporation's store: most
+        // offers appear in several, and /lp-store/all lists every store.
+        rowId={(row) => `${row.corporationId}:${row.offerId}`}
         verticalSpacing="xs"
         withTableBorder
         highlightOnHover

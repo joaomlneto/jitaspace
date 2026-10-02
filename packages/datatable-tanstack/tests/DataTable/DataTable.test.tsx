@@ -131,14 +131,83 @@ describe("DataTable — sorting", () => {
     expect(screen.getByText("↓")).toBeInTheDocument();
   });
 
-  it("resets sort indicator to ⇅ after clicking three times", async () => {
+  // As mantine-datatable does: two states, never back to unsorted.
+  it("toggles between ascending and descending on further clicks", async () => {
     renderWithMantine(<DataTable columns={columns} data={data} />);
     const nameHeader = screen.getByText("Name").closest("th")!;
     await userEvent.click(nameHeader);
     await userEvent.click(nameHeader);
     await userEvent.click(nameHeader);
-    const indicators = screen.getAllByText("⇅");
-    expect(indicators.length).toBe(2);
+    expect(screen.getByText("↑")).toBeInTheDocument();
+    expect(screen.getAllByText("⇅")).toHaveLength(1);
+  });
+
+  it("sorts a numeric column ascending on the first click", async () => {
+    renderWithMantine(<DataTable columns={columns} data={data} />);
+    await userEvent.click(screen.getByText("Score").closest("th")!);
+    const rows = screen.getAllByRole("row");
+    expect(rows[1]).toHaveTextContent("Bob"); // 75
+    expect(rows[3]).toHaveTextContent("Alice"); // 90
+  });
+
+  // The market's sell orders start sorted ascending by price; TanStack's
+  // defaults (numbers descending first, then unsorted) made the first click on
+  // that header drop the sort altogether.
+  it("flips an initial ascending sort to descending on the first click", async () => {
+    renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={data}
+        initialSort={{ columnId: "score", direction: "asc" }}
+      />,
+    );
+    const header = screen.getByText("Score").closest("th")!;
+    expect(header).toHaveAttribute("aria-sort", "ascending");
+    await userEvent.click(header);
+    expect(header).toHaveAttribute("aria-sort", "descending");
+    expect(screen.getAllByRole("row")[1]).toHaveTextContent("Alice");
+  });
+
+  it("sorts by one column at a time, even with Shift held", async () => {
+    renderWithMantine(<DataTable columns={columns} data={data} />);
+    await userEvent.click(screen.getByText("Name").closest("th")!);
+    const user = userEvent.setup();
+    await user.keyboard("{Shift>}");
+    await user.click(screen.getByText("Score").closest("th")!);
+    await user.keyboard("{/Shift}");
+    expect(document.querySelectorAll("th[aria-sort]").length).toBe(1);
+  });
+
+  it("sorts from the keyboard", async () => {
+    renderWithMantine(<DataTable columns={columns} data={data} />);
+    const nameHeader = screen.getByText("Name").closest("th")!;
+    expect(nameHeader).toHaveAttribute("tabindex", "0");
+    nameHeader.focus();
+    await userEvent.keyboard("{Enter}");
+    expect(nameHeader).toHaveAttribute("aria-sort", "ascending");
+    await userEvent.keyboard(" ");
+    expect(nameHeader).toHaveAttribute("aria-sort", "descending");
+  });
+
+  it("does not sort when Enter is pressed on the header's filter button", async () => {
+    renderWithMantine(
+      <DataTable
+        columns={[{ ...columns[0]!, filter: { type: "text" } }]}
+        data={data}
+      />,
+    );
+    screen.getByRole("button", { name: "Filter Name" }).focus();
+    await userEvent.keyboard("{Enter}");
+    expect(screen.getByText("Name").closest("th")).not.toHaveAttribute(
+      "aria-sort",
+    );
+  });
+
+  it("does not make unsortable headers focusable", () => {
+    renderWithMantine(<DataTable columns={unsortableColumns} data={data} />);
+    expect(screen.getByText("Name").closest("th")).not.toHaveAttribute(
+      "tabindex",
+    );
   });
 
   it("sorts rows ascending by name", async () => {
@@ -400,15 +469,14 @@ describe("DataTable — custom sortAccessor & display-only columns", () => {
     renderWithMantine(<DataTable columns={cols} data={data} />);
     const rankHeader = screen.getByText("Rank").closest("th")!;
 
-    // Numeric columns sort descending on the first click (TanStack default).
-    await userEvent.click(rankHeader);
-    let rows = screen.getAllByRole("row");
-    expect(rows[1]).toHaveTextContent("Alice"); // 90
-    expect(rows[3]).toHaveTextContent("Bob"); // 75
-
     await userEvent.click(rankHeader); // ascending
+    let rows = screen.getAllByRole("row");
+    expect(rows[1]).toHaveTextContent("Bob"); // 75
+    expect(rows[3]).toHaveTextContent("Alice"); // 90
+
+    await userEvent.click(rankHeader); // descending
     rows = screen.getAllByRole("row");
-    expect(rows[1]).toHaveTextContent("Bob");
+    expect(rows[1]).toHaveTextContent("Alice");
   });
 
   it("sorts a sortAccessor returning string and null values", async () => {
@@ -492,10 +560,10 @@ describe("DataTable — missing values sort last", () => {
   it("in both directions", async () => {
     renderWithMantine(<DataTable columns={cols} data={mdata} />);
     const header = screen.getByText("Value").closest("th")!;
-    await userEvent.click(header); // numbers sort descending first
-    expect(order()).toEqual(["two2", "one1", "none"]);
     await userEvent.click(header);
     expect(order()).toEqual(["one1", "two2", "none"]);
+    await userEvent.click(header);
+    expect(order()).toEqual(["two2", "one1", "none"]);
   });
 });
 
@@ -594,5 +662,94 @@ describe("DataTable — column filters", () => {
       screen.getByRole("button", { name: "Clear filters (1)" }),
     );
     expect(screen.getByText("3 rows")).toBeInTheDocument();
+  });
+});
+
+describe("DataTable — page size choices", () => {
+  const many: Row[] = Array.from({ length: 30 }, (_, i) => ({
+    name: `Row ${i}`,
+    score: i,
+  }));
+
+  it("offers the table's own default page size", () => {
+    renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={many}
+        withPagination
+        defaultPageSize={20}
+      />,
+    );
+    expect(screen.getByRole("combobox", { name: "Rows per page" })).toHaveValue(
+      "20",
+    );
+  });
+
+  it("keeps the size when the current one is picked again", async () => {
+    render(
+      <MantineProvider env="test">
+        <DataTable columns={columns} data={many} withPagination />
+      </MantineProvider>,
+    );
+    const select = screen.getByRole("combobox", { name: "Rows per page" });
+    await userEvent.click(select);
+    await userEvent.click(screen.getByRole("option", { name: "25" }));
+    await userEvent.click(select);
+    await userEvent.click(screen.getByRole("option", { name: "25" }));
+    expect(select).toHaveValue("25");
+  });
+});
+
+describe("DataTable — the current page", () => {
+  const rowsOf = (n: number): Row[] =>
+    Array.from({ length: n }, (_, i) => ({
+      name: `Row ${String(i).padStart(2, "0")}`,
+      score: i,
+    }));
+  const table = (rows: Row[]) => (
+    <MantineProvider>
+      <DataTable
+        columns={columns}
+        data={rows}
+        withGlobalFilter
+        withPagination
+        defaultPageSize={10}
+      />
+    </MantineProvider>
+  );
+
+  it("survives a new data array (a refetch)", async () => {
+    const { rerender } = render(table(rowsOf(30)));
+    await userEvent.click(screen.getByRole("button", { name: "2" }));
+    expect(screen.getByText("Row 10")).toBeInTheDocument();
+
+    rerender(table(rowsOf(30))); // equal rows, new identity
+    expect(screen.getByText("Row 10")).toBeInTheDocument();
+    expect(screen.queryByText("Row 00")).not.toBeInTheDocument();
+  });
+
+  it("steps back to the last page when the data shrinks under it", async () => {
+    const { rerender } = render(table(rowsOf(30)));
+    await userEvent.click(screen.getByRole("button", { name: "3" }));
+    expect(screen.getByText("Row 20")).toBeInTheDocument();
+
+    rerender(table(rowsOf(15)));
+    expect(screen.queryByText("No data")).not.toBeInTheDocument();
+    expect(screen.getByText("Row 10")).toBeInTheDocument();
+    expect(screen.getByText("Row 14")).toBeInTheDocument();
+  });
+
+  it("returns to the first page when the search changes", async () => {
+    render(table(rowsOf(30)));
+    await userEvent.click(screen.getByRole("button", { name: "3" }));
+    await userEvent.type(screen.getByPlaceholderText("Search..."), "Row");
+    expect(screen.getByText("Row 00")).toBeInTheDocument();
+  });
+
+  it("returns to the first page when the sort changes", async () => {
+    render(table(rowsOf(30)));
+    await userEvent.click(screen.getByRole("button", { name: "3" }));
+    await userEvent.click(screen.getByText("Name").closest("th")!);
+    expect(screen.getByText("Row 00")).toBeInTheDocument();
   });
 });
