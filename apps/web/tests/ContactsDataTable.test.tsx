@@ -5,12 +5,11 @@ import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
 // ContactsDataTable takes `contacts` / `labels` directly (no internal data
-// hook). Rendering the real mantine-react-table executes the module-scope Cell
-// renderers (ContactNameCell, ContactWatchedCell, ContactBlockedCell,
-// ContactStandingsCell, labels cell). @jitaspace/ui supplies decorative
-// EveEntity*/Standing children — stub them to no-ops; the assertable text
-// (the "watched" Badge, the "Unknown" blocked text, and the label Badge) is
-// produced by the cells / Mantine primitives themselves.
+// hook). Rendering the real DataTable executes the module-scope cell renderers
+// (name, watched, blocked, standings and labels). @jitaspace/ui supplies
+// decorative EveEntity*/Standing children — stub them to no-ops; the
+// assertable text (the "watched" Badge, the "Unknown" blocked text, and the
+// label Badge) is produced by the cells / Mantine primitives themselves.
 jest.mock("@jitaspace/ui", () => new Proxy({}, { get: () => () => null }));
 jest.mock(
   "@jitaspace/eve-icons",

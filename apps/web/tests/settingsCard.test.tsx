@@ -174,8 +174,8 @@ describe("SettingsCard", () => {
     ).toBeInTheDocument();
   });
 
-  it("toggles experimental data tables from the Experimental tab", async () => {
-    usePreferencesStore.setState({ experimentalDataTables: false });
+  it("chooses the data table engine from the General tab", async () => {
+    usePreferencesStore.setState({ dataTableEngine: "tanstack" });
 
     const { SettingsCard } = require("~/components/Settings/SettingsCard");
 
@@ -185,15 +185,23 @@ describe("SettingsCard", () => {
       </AppMantineProvider>,
     );
 
-    fireEvent.click(screen.getByRole("tab", { name: "Experimental" }));
+    const control = screen.getByRole("button", { name: "Data tables" });
+    expect(control).toHaveTextContent("TanStack");
 
-    const toggle = await screen.findByLabelText(
-      "Enable experimental data tables",
+    fireEvent.click(control);
+    fireEvent.click(await screen.findByText("mantine-datatable"));
+
+    expect(usePreferencesStore.getState().dataTableEngine).toBe(
+      "mantine-datatable",
     );
-    expect(toggle).not.toBeChecked();
+    const stored = JSON.parse(
+      window.localStorage.getItem(PREFERENCES_STORAGE_KEY) ?? "{}",
+    );
+    expect(stored.state?.dataTableEngine).toBe("mantine-datatable");
 
-    fireEvent.click(toggle);
-    expect(usePreferencesStore.getState().experimentalDataTables).toBe(true);
+    // It is no longer an experiment.
+    fireEvent.click(screen.getByRole("tab", { name: "Experimental" }));
+    expect(screen.queryByText("New data tables")).not.toBeInTheDocument();
   });
 
   it("toggles the new Active Wars page from the Experimental tab", async () => {

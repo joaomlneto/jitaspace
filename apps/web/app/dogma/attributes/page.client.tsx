@@ -1,12 +1,13 @@
 "use client";
 
-import type { MRT_ColumnDef, MRT_Row } from "mantine-react-table";
 import { useMemo } from "react";
 import { Container, Group, Stack, Title } from "@mantine/core";
-import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
+import type { DataTableColumn } from "@jitaspace/datatable";
 import { AttributesIcon } from "@jitaspace/eve-icons";
 import { DogmaAttributeAnchor } from "@jitaspace/ui";
+
+import { DataTable } from "~/components/DataTable";
 
 interface DogmaAttributeRow {
   attributeId: number;
@@ -19,62 +20,48 @@ export interface PageProps {
   attributes: Record<number, DogmaAttributeRow>;
 }
 
-function NameCell({ row }: Readonly<{ row: MRT_Row<DogmaAttributeRow> }>) {
+function nameCell(attribute: DogmaAttributeRow) {
   return (
-    <DogmaAttributeAnchor
-      attributeId={row.original.attributeId}
-      target="_blank"
-    >
-      {row.original.name}
+    <DogmaAttributeAnchor attributeId={attribute.attributeId} target="_blank">
+      {attribute.name}
     </DogmaAttributeAnchor>
   );
 }
+
+const columns: DataTableColumn<DogmaAttributeRow>[] = [
+  {
+    id: "id",
+    header: "Attribute ID",
+    accessor: "attributeId",
+    sortable: true,
+  },
+  {
+    id: "name",
+    header: "Name",
+    accessor: "name",
+    sortable: true,
+    cell: nameCell,
+  },
+  {
+    id: "displayName",
+    header: "Display Name",
+    accessor: "displayName",
+    sortable: true,
+  },
+  {
+    id: "numTypes",
+    header: "# Types",
+    accessor: "numTypeIds",
+    sortable: true,
+    filter: { type: "range", min: 0 },
+    align: "right",
+  },
+];
 
 export default function DogmaAttributesPage({
   attributes,
 }: Readonly<PageProps>) {
   const data = useMemo(() => Object.values(attributes), [attributes]);
-  const columns = useMemo<MRT_ColumnDef<DogmaAttributeRow>[]>(
-    () => [
-      {
-        id: "id",
-        header: "Attribute ID",
-        accessorKey: "attributeId",
-        size: 40,
-      },
-      {
-        id: "name",
-        header: "Name",
-        accessorKey: "name",
-        size: 40,
-        Cell: NameCell,
-      },
-      {
-        id: "displayName",
-        header: "Display Name",
-        accessorKey: "displayName",
-        size: 40,
-      },
-      {
-        id: "numTypes",
-        header: "# Types",
-        accessorKey: "numTypeIds",
-        size: 40,
-      },
-    ],
-    [],
-  );
-
-  const table = useMantineReactTable({
-    columns,
-    positionPagination: "top",
-    enableFacetedValues: true,
-    data,
-    initialState: {
-      density: "xs",
-      showColumnFilters: true,
-    },
-  });
 
   return (
     <Container size="xl">
@@ -83,7 +70,18 @@ export default function DogmaAttributesPage({
           <AttributesIcon width={48} />
           <Title>Dogma Attributes</Title>
         </Group>
-        <MantineReactTable table={table} />
+        <DataTable
+          data={data}
+          columns={columns}
+          rowId={(attribute) => attribute.attributeId}
+          withGlobalFilter
+          withColumnVisibility
+          withPagination
+          defaultPageSize={25}
+          verticalSpacing="xs"
+          highlightOnHover
+          striped
+        />
       </Stack>
     </Container>
   );

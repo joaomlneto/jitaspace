@@ -7,7 +7,7 @@ import { render, screen } from "@testing-library/react";
 // ---------------------------------------------------------------------------
 // apps/web/app/dogma/attributes/page.client.tsx is presentational: it receives
 // a Record<number, DogmaAttributeRow> as props (the route's async Server
-// Component builds it from Prisma) and renders a MantineReactTable listing every
+// Component builds it from Prisma) and renders a DataTable listing every
 // attribute. No hooks/params are read, so it renders directly with props.
 // ---------------------------------------------------------------------------
 

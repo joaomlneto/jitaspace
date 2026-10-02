@@ -224,10 +224,10 @@ export default function PageClient() {
           <List.Item>
             <Anchor
               inherit
-              href="https://www.mantine-react-table.com"
+              href="https://icflorescu.github.io/mantine-datatable/"
               target="_blank"
             >
-              Mantine React Table
+              Mantine DataTable
             </Anchor>
           </List.Item>
           <List.Item>

@@ -1,8 +1,9 @@
 "use client";
 
 import type {
-  Column,
   ColumnDef,
+  ColumnFiltersState,
+  FilterFn,
   PaginationState,
   SortingState,
   VisibilityState,
@@ -10,19 +11,14 @@ import type {
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import {
-  Button,
   Center,
-  Checkbox,
-  Divider,
   Group,
-  Loader,
   Pagination,
-  Popover,
   Select,
+  Skeleton,
   Stack,
   Table,
   Text,
-  TextInput,
 } from "@mantine/core";
 import {
   flexRender,
@@ -34,24 +30,29 @@ import {
 } from "@tanstack/react-table";
 
 import type { DataTableColumn, DataTableProps } from "@jitaspace/datatable";
+import type { SortKey } from "@jitaspace/datatable-common";
+import {
+  ColumnFilterButton,
+  ColumnFilterControl,
+  columnSortKey,
+  compareSortKeys,
+  DataTableToolbar,
+  matchesColumnFilter,
+  matchesGlobalFilter,
+  primitiveString,
+  readColumnValue,
+  readFilterValue,
+} from "@jitaspace/datatable-common";
 
 const PAGE_SIZE_OPTIONS = ["10", "25", "50", "100"];
+
+/** Skeleton rows rendered while loading without pagination. */
+const UNPAGINATED_SKELETON_ROWS = 10;
 
 function getSortIcon(sorted: "asc" | "desc" | false): string {
   if (sorted === "asc") return "↑";
   if (sorted === "desc") return "↓";
   return "⇅";
-}
-
-function renderValue(value: unknown): ReactNode {
-  if (
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  ) {
-    return String(value);
-  }
-  return "";
 }
 
 function alignToJustify(
@@ -62,62 +63,60 @@ function alignToJustify(
   return "flex-start";
 }
 
-/** Resolve the agnostic accessor into TanStack's accessorFn/accessorKey shape. */
-function accessorPartFor<TData>(
-  accessor: DataTableColumn<TData>["accessor"],
-): Record<string, unknown> {
-  if (typeof accessor === "function") return { accessorFn: accessor };
-  if (typeof accessor === "string" || typeof accessor === "number") {
-    return { accessorKey: String(accessor) };
-  }
-  return {};
+function ariaSort(sorted: "asc" | "desc" | false) {
+  if (sorted === "asc") return "ascending";
+  if (sorted === "desc") return "descending";
+  return undefined;
 }
 
-function compareValues(
-  a: string | number | null | undefined,
-  b: string | number | null | undefined,
-): number {
-  if (a == null && b == null) return 0;
-  if (a == null) return -1;
-  if (b == null) return 1;
-  if (typeof a === "number" && typeof b === "number") return a - b;
-  return String(a).localeCompare(String(b));
-}
-
-/** Translate the engine-agnostic columns into TanStack column defs. */
+/**
+ * Translate the engine-agnostic columns into TanStack column defs.
+ *
+ * TanStack's own notion of a column's value is the *sort key*: that lets its
+ * `sortUndefined: "last"` keep rows without one at the bottom in both
+ * directions, which a comparator alone cannot (it is never told the
+ * direction). Rendering, searching and filtering read the raw value through
+ * `@jitaspace/datatable-common` instead, exactly as the mantine-datatable
+ * engine does.
+ */
 function buildColumnDefs<TData>(
   columns: DataTableColumn<TData>[],
-): ColumnDef<TData>[] {
+): ColumnDef<TData, SortKey>[] {
   return columns.map((col) => {
-    // Capture into a local so the closure below keeps the narrowed type
-    // (control-flow narrowing on `col.sortAccessor` does not reach into the
-    // nested `sortingFn` arrow).
-    const sortAccessor = col.sortAccessor;
+    const filter = col.filter;
+    const filterFn: FilterFn<TData> | undefined = filter
+      ? (row, _columnId, filterValue) =>
+          matchesColumnFilter(
+            filter,
+            readFilterValue(col, row.original),
+            filterValue,
+          )
+      : undefined;
     return {
       id: col.id,
       header: col.header,
+      accessorFn: (row: TData) => columnSortKey(col, row),
       enableSorting: col.sortable ?? false,
+      sortUndefined: "last",
+      sortingFn: (a, b, columnId) =>
+        // Only reached when both keys are present (see `sortUndefined`).
+        compareSortKeys(
+          a.getValue<string | number>(columnId),
+          b.getValue<string | number>(columnId),
+        ),
       enableHiding: col.enableHiding ?? true,
-      ...accessorPartFor(col.accessor),
+      enableColumnFilter: filterFn !== undefined,
+      enableGlobalFilter: col.accessor != null,
+      ...(filterFn ? { filterFn } : {}),
       ...(typeof col.width === "number" ? { size: col.width } : {}),
-      ...(sortAccessor
-        ? {
-            sortingFn: (a, b) =>
-              compareValues(sortAccessor(a.original), sortAccessor(b.original)),
-          }
-        : {}),
-      cell: (ctx) =>
-        col.cell
-          ? col.cell(ctx.row.original, ctx.getValue())
-          : renderValue(ctx.getValue()),
-    } satisfies ColumnDef<TData>;
+      cell: (ctx) => {
+        const value = readColumnValue(col, ctx.row.original);
+        return col.cell
+          ? col.cell(ctx.row.original, value)
+          : primitiveString(value);
+      },
+    } satisfies ColumnDef<TData, SortKey>;
   });
-}
-
-// Prefer a string header for the visibility menu label; fall back to the id.
-function columnLabel<TData>(column: Column<TData>): string {
-  const header = column.columnDef.header;
-  return typeof header === "string" && header.length > 0 ? header : column.id;
 }
 
 export function DataTable<TData>({
@@ -158,7 +157,7 @@ export function DataTable<TData>({
       }, {}),
   );
   const [globalFilter, setGlobalFilter] = useState("");
-  const [columnsMenuOpened, setColumnsMenuOpened] = useState(false);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: defaultPageSize,
@@ -171,13 +170,27 @@ export function DataTable<TData>({
     state: {
       sorting,
       globalFilter,
+      columnFilters,
       columnVisibility,
       ...(withPagination ? { pagination } : {}),
     },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     ...(withPagination ? { onPaginationChange: setPagination } : {}),
+    // Search the raw value, not the sort key TanStack holds (a date column's
+    // key is a timestamp nobody would type).
+    globalFilterFn: (row, columnId, query: string) => {
+      const col = columnsById.get(columnId);
+      return (
+        col !== undefined &&
+        matchesGlobalFilter(readColumnValue(col, row.original), query)
+      );
+    },
+    // TanStack only searches columns whose first value is a string or number
+    // by default; `enableGlobalFilter` per column already says which to search.
+    getColumnCanGlobalFilter: () => true,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -187,22 +200,28 @@ export function DataTable<TData>({
   });
 
   const rows = table.getRowModel().rows;
+  const visibleColumns = table.getVisibleLeafColumns();
 
   let tbodyContent: ReactNode;
   if (isLoading) {
-    tbodyContent = (
-      <Table.Tr>
-        <Table.Td colSpan={columns.length}>
-          <Center py="xl">
-            <Loader />
-          </Center>
-        </Table.Td>
+    // A full page of placeholders, so the table is at its loaded height from
+    // the first paint and the rows arriving do not shift the page.
+    const skeletonRows = withPagination
+      ? pagination.pageSize
+      : UNPAGINATED_SKELETON_ROWS;
+    tbodyContent = Array.from({ length: skeletonRows }, (_, index) => (
+      <Table.Tr key={index} data-skeleton>
+        {visibleColumns.map((column) => (
+          <Table.Td key={column.id}>
+            <Skeleton height={20} />
+          </Table.Td>
+        ))}
       </Table.Tr>
-    );
+    ));
   } else if (rows.length === 0) {
     tbodyContent = (
       <Table.Tr>
-        <Table.Td colSpan={columns.length}>
+        <Table.Td colSpan={Math.max(visibleColumns.length, 1)}>
           <Center py="xl">
             <Text c="dimmed">{emptyText}</Text>
           </Center>
@@ -227,69 +246,28 @@ export function DataTable<TData>({
 
   const hideableColumns = table
     .getAllLeafColumns()
-    .filter((column) => column.getCanHide());
+    .filter((column) => column.getCanHide())
+    .map((column) => ({
+      id: column.id,
+      label: columnsById.get(column.id)?.header ?? column.id,
+      visible: column.getIsVisible(),
+    }));
 
   return (
     <Stack gap="sm">
-      {(withGlobalFilter || withColumnVisibility) && (
-        <Group justify="space-between" align="flex-start">
-          {withGlobalFilter ? (
-            <TextInput
-              placeholder="Search..."
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.currentTarget.value)}
-              style={{ flex: 1, maxWidth: 320 }}
-            />
-          ) : (
-            <span />
-          )}
-          {withColumnVisibility && (
-            <Popover
-              opened={columnsMenuOpened}
-              onChange={setColumnsMenuOpened}
-              position="bottom-end"
-              shadow="md"
-              withinPortal
-            >
-              <Popover.Target>
-                <Button
-                  variant="default"
-                  size="xs"
-                  onClick={() => setColumnsMenuOpened((opened) => !opened)}
-                >
-                  Columns
-                </Button>
-              </Popover.Target>
-              <Popover.Dropdown>
-                <div style={{ maxHeight: 360, overflowY: "auto" }}>
-                  <Stack gap="xs">
-                    <Checkbox
-                      size="xs"
-                      label="Toggle all"
-                      checked={table.getIsAllColumnsVisible()}
-                      indeterminate={
-                        table.getIsSomeColumnsVisible() &&
-                        !table.getIsAllColumnsVisible()
-                      }
-                      onChange={table.getToggleAllColumnsVisibilityHandler()}
-                    />
-                    <Divider />
-                    {hideableColumns.map((column) => (
-                      <Checkbox
-                        key={column.id}
-                        size="xs"
-                        label={columnLabel(column)}
-                        checked={column.getIsVisible()}
-                        onChange={column.getToggleVisibilityHandler()}
-                      />
-                    ))}
-                  </Stack>
-                </div>
-              </Popover.Dropdown>
-            </Popover>
-          )}
-        </Group>
-      )}
+      <DataTableToolbar
+        withGlobalFilter={withGlobalFilter}
+        globalFilter={globalFilter}
+        onGlobalFilterChange={setGlobalFilter}
+        withColumnVisibility={withColumnVisibility}
+        hideableColumns={hideableColumns}
+        onToggleColumn={(id) => table.getColumn(id)?.toggleVisibility()}
+        onToggleAllColumns={() =>
+          table.toggleAllColumnsVisible(!table.getIsAllColumnsVisible())
+        }
+        activeFilterCount={columnFilters.length}
+        onClearFilters={() => table.resetColumnFilters(true)}
+      />
 
       <Table.ScrollContainer minWidth={400}>
         <Table
@@ -304,18 +282,18 @@ export function DataTable<TData>({
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.Tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
-                  const canSort = header.column.getCanSort();
-                  const sorted = header.column.getIsSorted();
-                  const meta = columnsById.get(header.column.id);
+                  const column = header.column;
+                  const canSort = column.getCanSort();
+                  const sorted = column.getIsSorted();
+                  const meta = columnsById.get(column.id);
                   return (
                     <Table.Th
                       key={header.id}
                       ta={meta?.align}
                       w={meta?.width}
+                      aria-sort={canSort ? ariaSort(sorted) : undefined}
                       onClick={
-                        canSort
-                          ? header.column.getToggleSortingHandler()
-                          : undefined
+                        canSort ? column.getToggleSortingHandler() : undefined
                       }
                       style={
                         canSort
@@ -330,13 +308,28 @@ export function DataTable<TData>({
                           justify={alignToJustify(meta?.align)}
                         >
                           {flexRender(
-                            header.column.columnDef.header,
+                            column.columnDef.header,
                             header.getContext(),
                           )}
                           {canSort && (
                             <Text size="xs" c="dimmed" component="span">
                               {getSortIcon(sorted)}
                             </Text>
+                          )}
+                          {meta?.filter && (
+                            <ColumnFilterButton
+                              label={meta.header}
+                              active={column.getIsFiltered()}
+                            >
+                              <ColumnFilterControl
+                                column={meta}
+                                rows={data}
+                                value={column.getFilterValue()}
+                                onChange={(value) =>
+                                  column.setFilterValue(value)
+                                }
+                              />
+                            </ColumnFilterButton>
                           )}
                         </Group>
                       )}
@@ -355,6 +348,7 @@ export function DataTable<TData>({
           <Group gap="xs">
             <Text size="sm">Rows per page:</Text>
             <Select
+              aria-label="Rows per page"
               value={String(table.getState().pagination.pageSize)}
               onChange={(value) =>
                 table.setPageSize(Number(value ?? defaultPageSize))

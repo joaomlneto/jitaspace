@@ -2,8 +2,8 @@ import "@testing-library/jest-dom/jest-globals";
 
 import React from "react";
 import {
+  afterEach,
   beforeAll,
-  beforeEach,
   describe,
   expect,
   it,
@@ -16,7 +16,10 @@ import userEvent from "@testing-library/user-event";
 import type { DataTableColumn } from "@jitaspace/datatable";
 
 import { DataTable } from "~/components/DataTable";
-import { usePreferencesStore } from "~/lib/preferences";
+import {
+  DEFAULT_DATA_TABLE_ENGINE,
+  usePreferencesStore,
+} from "~/lib/preferences";
 
 // mantine-datatable hides every cell behind a media-query check; the shared
 // matchMedia stub reports all queries unmatched, which blanks the table. Make an
@@ -37,6 +40,10 @@ beforeAll(() => {
   });
 });
 
+afterEach(() => {
+  usePreferencesStore.setState({ dataTableEngine: DEFAULT_DATA_TABLE_ENGINE });
+});
+
 interface Row {
   id: number;
   name: string;
@@ -51,6 +58,7 @@ const columns: DataTableColumn<Row>[] = [
     accessor: "score",
     sortable: true,
     align: "right",
+    filter: { type: "range" },
   },
 ];
 
@@ -76,45 +84,49 @@ const wrap = () =>
     ),
   );
 
-describe("DataTable switcher — experimental disabled (classic MRT)", () => {
-  beforeEach(() => {
-    usePreferencesStore.setState({ experimentalDataTables: false });
-  });
+// Each engine leaves a recognisable trace: TanStack draws its own filter
+// button and sort glyphs; mantine-datatable renders its own classed table.
+const isTanstack = () =>
+  screen.queryByRole("button", { name: "Filter Score" }) !== null;
+const isMantineDatatable = () =>
+  document.querySelector(".mantine-datatable") !== null;
 
-  it("renders the classic engine with the data and no engine selector", () => {
+describe("DataTable engine switch", () => {
+  it("defaults to TanStack", () => {
+    expect(DEFAULT_DATA_TABLE_ENGINE).toBe("tanstack");
     wrap();
-    expect(screen.getByText("Alice")).toBeInTheDocument();
-    expect(screen.getByText("Bob")).toBeInTheDocument();
-    // No per-table engine selector when experimental is off.
-    expect(screen.queryByText("Table engine")).not.toBeInTheDocument();
-  });
-});
-
-describe("DataTable switcher — experimental enabled", () => {
-  beforeEach(() => {
-    usePreferencesStore.setState({ experimentalDataTables: true });
-  });
-
-  it("shows the engine selector and renders the default (TanStack) engine", () => {
-    wrap();
-    expect(screen.getByText("Table engine")).toBeInTheDocument();
-    expect(screen.getByText("TanStack")).toBeInTheDocument();
-    expect(screen.getByText("Classic")).toBeInTheDocument();
-    expect(screen.getByText("mantine-datatable")).toBeInTheDocument();
+    expect(isTanstack()).toBe(true);
+    expect(isMantineDatatable()).toBe(false);
     expect(screen.getByText("Alice")).toBeInTheDocument();
   });
 
-  it("switches to the mantine-datatable engine", async () => {
+  it("renders mantine-datatable when that engine is selected", () => {
+    usePreferencesStore.setState({ dataTableEngine: "mantine-datatable" });
     wrap();
-    await userEvent.click(screen.getByText("mantine-datatable"));
+    expect(isMantineDatatable()).toBe(true);
+    expect(isTanstack()).toBe(false);
     expect(screen.getByText("Alice")).toBeInTheDocument();
     expect(screen.getByText("Bob")).toBeInTheDocument();
   });
 
-  it("switches to the classic engine", async () => {
+  it("switches live when the setting changes", () => {
     wrap();
-    await userEvent.click(screen.getByText("Classic"));
-    expect(screen.getByText("Alice")).toBeInTheDocument();
-    expect(screen.getByText("Bob")).toBeInTheDocument();
+    expect(isTanstack()).toBe(true);
+    React.act(() => {
+      usePreferencesStore.setState({ dataTableEngine: "mantine-datatable" });
+    });
+    expect(isMantineDatatable()).toBe(true);
   });
+
+  it.each(["tanstack", "mantine-datatable"] as const)(
+    "%s: renders the shared toolbar and searches the same way",
+    async (engine) => {
+      usePreferencesStore.setState({ dataTableEngine: engine });
+      wrap();
+      expect(screen.getByRole("button", { name: "Columns" })).toBeVisible();
+      await userEvent.type(screen.getByPlaceholderText("Search..."), "bob");
+      expect(screen.getByText("Bob")).toBeInTheDocument();
+      expect(screen.queryByText("Alice")).not.toBeInTheDocument();
+    },
+  );
 });

@@ -25,6 +25,7 @@ import { setAcceptLanguage } from "@jitaspace/esi-client";
 import { useDismissedNews } from "~/components/News";
 import {
   APP_THEME_OPTIONS,
+  DATA_TABLE_ENGINE_OPTIONS,
   ESI_ACCEPT_LANGUAGE_OPTIONS,
   usePreferencesStore,
 } from "~/lib/preferences";
@@ -33,13 +34,12 @@ import classes from "./SettingsCard.module.css";
 export function SettingsCard() {
   const [languageMenuOpened, setLanguageMenuOpened] = useState(false);
   const [themeMenuOpened, setThemeMenuOpened] = useState(false);
+  const [dataTableMenuOpened, setDataTableMenuOpened] = useState(false);
   const acceptLanguage = usePreferencesStore(
     (state) => state.esiAcceptLanguage,
   );
   const selectedTheme = usePreferencesStore((state) => state.appTheme);
-  const experimentalDataTables = usePreferencesStore(
-    (state) => state.experimentalDataTables,
-  );
+  const dataTableEngine = usePreferencesStore((state) => state.dataTableEngine);
   const experimentalActiveWars = usePreferencesStore(
     (state) => state.experimentalActiveWars,
   );
@@ -47,8 +47,8 @@ export function SettingsCard() {
     (state) => state.setEsiAcceptLanguage,
   );
   const setSelectedTheme = usePreferencesStore((state) => state.setAppTheme);
-  const setExperimentalDataTables = usePreferencesStore(
-    (state) => state.setExperimentalDataTables,
+  const setDataTableEngine = usePreferencesStore(
+    (state) => state.setDataTableEngine,
   );
   const setExperimentalActiveWars = usePreferencesStore(
     (state) => state.setExperimentalActiveWars,
@@ -110,6 +110,21 @@ export function SettingsCard() {
     </Menu.Item>
   ));
 
+  const selectedDataTableEngine =
+    DATA_TABLE_ENGINE_OPTIONS.find((item) => item.value === dataTableEngine) ??
+    DATA_TABLE_ENGINE_OPTIONS[0];
+
+  const dataTableEngineItems = DATA_TABLE_ENGINE_OPTIONS.map((item) => (
+    <Menu.Item
+      key={item.value}
+      onClick={() => {
+        setDataTableEngine(item.value);
+      }}
+    >
+      {item.label}
+    </Menu.Item>
+  ));
+
   const handleResetHiddenNews = () => {
     resetHiddenNews();
     showNotification({
@@ -141,7 +156,8 @@ export function SettingsCard() {
 
       <Tabs.Panel value="general">
         <Text fz="xs" c="dimmed" mt={3} mb="md">
-          Choose the language for ESI requests and the UI theme.
+          Choose the language for ESI requests, the UI theme and how data tables
+          are drawn.
         </Text>
 
         <Group
@@ -230,12 +246,6 @@ export function SettingsCard() {
             <Menu.Dropdown>{themeItems}</Menu.Dropdown>
           </Menu>
         </Group>
-      </Tabs.Panel>
-
-      <Tabs.Panel value="experimental">
-        <Text fz="xs" c="dimmed" mt={3} mb="md">
-          Try out features that are still in development.
-        </Text>
 
         <Group
           justify="space-between"
@@ -244,22 +254,46 @@ export function SettingsCard() {
           gap="xl"
         >
           <div>
-            <Text>New data tables</Text>
+            <Text>Data tables</Text>
             <Text size="xs" c="dimmed">
-              Enable the experimental DataTable components. When on, each table
-              shows an engine selector (TanStack or mantine-datatable). When
-              off, the classic mantine-react-table is used everywhere.
+              The engine every table is drawn with. Both offer the same sorting,
+              search, filters and column choices.
             </Text>
           </div>
-          <Switch
-            className={classes.switch}
-            checked={experimentalDataTables}
-            onChange={(event) =>
-              setExperimentalDataTables(event.currentTarget.checked)
-            }
-            aria-label="Enable experimental data tables"
-          />
+
+          <Menu
+            onOpen={() => setDataTableMenuOpened(true)}
+            onClose={() => setDataTableMenuOpened(false)}
+            radius="md"
+            width="target"
+          >
+            <Menu.Target>
+              <UnstyledButton
+                className={classes.control}
+                data-expanded={dataTableMenuOpened || undefined}
+                aria-label="Data tables"
+              >
+                <Group gap="xs">
+                  <span className={classes.label}>
+                    {selectedDataTableEngine.label}
+                  </span>
+                </Group>
+                <IconChevronDown
+                  size={16}
+                  className={classes.icon}
+                  stroke={1.5}
+                />
+              </UnstyledButton>
+            </Menu.Target>
+            <Menu.Dropdown>{dataTableEngineItems}</Menu.Dropdown>
+          </Menu>
         </Group>
+      </Tabs.Panel>
+
+      <Tabs.Panel value="experimental">
+        <Text fz="xs" c="dimmed" mt={3} mb="md">
+          Try out features that are still in development.
+        </Text>
 
         <Group
           justify="space-between"

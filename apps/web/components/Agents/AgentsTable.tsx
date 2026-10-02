@@ -1,10 +1,9 @@
 "use client";
 
-import type { MRT_ColumnDef } from "mantine-react-table";
 import { useMemo } from "react";
-import { Group, Text } from "@mantine/core";
-import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
+import { Group } from "@mantine/core";
 
+import type { DataTableColumn } from "@jitaspace/datatable";
 import {
   CharacterAnchor,
   CharacterName,
@@ -19,6 +18,7 @@ import {
 } from "@jitaspace/ui";
 
 import { StationAvatar } from "~/components/Avatar";
+import { DataTable } from "~/components/DataTable";
 
 export interface Agent {
   characterId: number;
@@ -35,6 +35,43 @@ export interface ContactsTableProps {
   agents: Agent[];
   agentDivisions: { name: string; npcCorporationDivisionId: number }[];
   agentTypes: { name: string; agentTypeId: number }[];
+}
+
+function nameCell(agent: Agent) {
+  return (
+    <Group wrap="nowrap">
+      <CharacterAvatar characterId={agent.characterId} size="sm" />
+      <CharacterAnchor inherit characterId={agent.characterId} target="_blank">
+        <CharacterName inherit characterId={agent.characterId} />
+      </CharacterAnchor>
+    </Group>
+  );
+}
+
+function corporationCell(agent: Agent) {
+  return (
+    <Group wrap="nowrap">
+      <CorporationAvatar corporationId={agent.corporationId} size="sm" />
+      <CorporationAnchor
+        inherit
+        corporationId={agent.corporationId}
+        target="_blank"
+      >
+        <CorporationName inherit corporationId={agent.corporationId} />
+      </CorporationAnchor>
+    </Group>
+  );
+}
+
+function locationCell(agent: Agent) {
+  return (
+    <Group wrap="nowrap" gap="xs">
+      <StationAvatar stationId={agent.stationId} size="xs" />
+      <StationAnchor inherit target="_blank" stationId={agent.stationId}>
+        <StationName inherit stationId={agent.stationId} />
+      </StationAnchor>
+    </Group>
+  );
 }
 
 export const AgentsTable = ({
@@ -55,137 +92,83 @@ export const AgentsTable = ({
           typeof division.name === "string" ? division.name : "Unknown"),
     );
     return index;
-  }, [agentTypes]);
+  }, [agentDivisions]);
 
-  const columns = useMemo<MRT_ColumnDef<Agent>[]>(
+  const columns = useMemo<DataTableColumn<Agent>[]>(
     () => [
       {
         id: "id",
         header: "Character ID",
-        accessorKey: "characterId",
-        size: 40,
+        accessor: "characterId",
+        sortable: true,
+        defaultVisible: false,
       },
       {
         id: "name",
         header: "Name",
-        accessorKey: "name",
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-          <Group>
-            <Group wrap="nowrap">
-              <CharacterAvatar
-                characterId={row.original.characterId}
-                size="sm"
-              />
-              <CharacterAnchor
-                inherit
-                characterId={row.original.characterId}
-                target="_blank"
-              >
-                <CharacterName inherit characterId={row.original.characterId} />
-              </CharacterAnchor>
-            </Group>
-          </Group>
-        ),
+        accessor: "name",
+        sortable: true,
+        cell: nameCell,
       },
       {
         id: "corporation",
         header: "Corporation",
-        accessorKey: "corporationId",
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-          <Group>
-            <Group wrap="nowrap">
-              <CorporationAvatar
-                corporationId={row.original.corporationId}
-                size="sm"
-              />
-              <CorporationAnchor
-                inherit
-                corporationId={row.original.corporationId}
-                target="_blank"
-              >
-                <CorporationName
-                  inherit
-                  corporationId={row.original.corporationId}
-                />
-              </CorporationAnchor>
-            </Group>
-          </Group>
-        ),
+        accessor: "corporationId",
+        sortable: true,
+        cell: corporationCell,
       },
       {
         id: "type",
         header: "Type",
-        accessorKey: "agentTypeId",
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-          <Text inherit>{agentTypeNames[row.original.agentTypeId]}</Text>
-        ),
+        accessor: (agent) => agentTypeNames[agent.agentTypeId],
+        sortable: true,
+        filter: { type: "select" },
       },
       {
         id: "division",
-        header: "Type",
-        accessorKey: "agentDivisionId",
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-          <Text inherit>{divisionNames[row.original.agentDivisionId]}</Text>
-        ),
+        header: "Division",
+        accessor: (agent) => divisionNames[agent.agentDivisionId],
+        sortable: true,
+        filter: { type: "select" },
       },
       {
         id: "isLocator",
         header: "Locator",
-        accessorKey: "isLocator",
-        size: 1,
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-          <Text inherit>{row.original.isLocator ? "Yes" : "No"}</Text>
-        ),
+        accessor: "isLocator",
+        sortable: true,
+        filter: { type: "boolean" },
+        cell: (agent) => (agent.isLocator ? "Yes" : "No"),
       },
       {
         id: "level",
         header: "Level",
-        accessorKey: "level",
-        size: 1,
+        accessor: "level",
+        sortable: true,
+        filter: { type: "multi-select" },
       },
       {
         id: "location",
         header: "Location",
-        accessorKey: "stationId",
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) => (
-          <Group wrap="nowrap" gap="xs">
-            <StationAvatar stationId={row.original.stationId} size="xs" />
-            <StationAnchor
-              inherit
-              target="_blank"
-              stationId={row.original.stationId}
-            >
-              <StationName inherit stationId={row.original.stationId} />
-            </StationAnchor>
-          </Group>
-        ),
+        accessor: "stationId",
+        sortable: true,
+        cell: locationCell,
       },
     ],
-    [],
+    [agentTypeNames, divisionNames],
   );
 
-  const table = useMantineReactTable({
-    columns,
-    positionPagination: "top",
-    enableFacetedValues: true,
-    data: agents,
-    initialState: {
-      showColumnFilters: true,
-      density: "xs",
-      pagination: {
-        pageIndex: 0,
-        pageSize: 25,
-      },
-      columnVisibility: {
-        id: false,
-        tax: false,
-        taxReceiverId: false,
-        firstParty: false,
-        secondParty: false,
-        context_id: false,
-      },
-    },
-  });
-
-  return <MantineReactTable table={table} />;
+  return (
+    <DataTable
+      data={agents}
+      columns={columns}
+      rowId={(agent) => agent.characterId}
+      withGlobalFilter
+      withColumnVisibility
+      withPagination
+      defaultPageSize={25}
+      verticalSpacing="xs"
+      highlightOnHover
+      striped
+    />
+  );
 };

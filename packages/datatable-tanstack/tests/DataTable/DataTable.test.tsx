@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/jest-globals";
 
 import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import type { DataTableColumn } from "@jitaspace/datatable";
@@ -79,6 +79,28 @@ describe("DataTable — loading state", () => {
       <DataTable columns={columns} data={[]} isLoading emptyText="No data" />,
     );
     expect(screen.queryByText("No data")).not.toBeInTheDocument();
+  });
+
+  // A full page of placeholders keeps the table at its loaded height, so rows
+  // arriving do not push the page down (the market page's CLS fix needs this).
+  it("renders one skeleton row per row of the page size", () => {
+    const { container } = renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={[]}
+        isLoading
+        withPagination
+        defaultPageSize={20}
+      />,
+    );
+    expect(container.querySelectorAll("tr[data-skeleton]")).toHaveLength(20);
+  });
+
+  it("renders 10 skeleton rows without pagination", () => {
+    const { container } = renderWithMantine(
+      <DataTable columns={columns} data={[]} isLoading />,
+    );
+    expect(container.querySelectorAll("tr[data-skeleton]")).toHaveLength(10);
   });
 });
 
@@ -444,5 +466,133 @@ describe("DataTable — pagination interaction", () => {
     );
     await userEvent.click(screen.getByRole("button", { name: "2" }));
     expect(screen.getByText("Row 10")).toBeInTheDocument();
+  });
+});
+
+describe("DataTable — missing values sort last", () => {
+  interface MRow {
+    name: string;
+    value: number | null;
+  }
+  const cols: DataTableColumn<MRow>[] = [
+    { id: "name", header: "Name", accessor: "name" },
+    { id: "value", header: "Value", accessor: "value", sortable: true },
+  ];
+  const mdata: MRow[] = [
+    { name: "none", value: null },
+    { name: "one", value: 1 },
+    { name: "two", value: 2 },
+  ];
+  const order = () =>
+    screen
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => row.textContent);
+
+  it("in both directions", async () => {
+    renderWithMantine(<DataTable columns={cols} data={mdata} />);
+    const header = screen.getByText("Value").closest("th")!;
+    await userEvent.click(header); // numbers sort descending first
+    expect(order()).toEqual(["two2", "one1", "none"]);
+    await userEvent.click(header);
+    expect(order()).toEqual(["one1", "two2", "none"]);
+  });
+});
+
+describe("DataTable — global filter reads the displayed value", () => {
+  it("does not match a date column's timestamp", async () => {
+    interface DRow {
+      label: string;
+      when: Date;
+    }
+    const when = new Date(1_700_000_000_000);
+    renderWithMantine(
+      <DataTable<DRow>
+        columns={[
+          { id: "label", header: "Label", accessor: "label" },
+          { id: "when", header: "When", accessor: "when", sortable: true },
+        ]}
+        data={[{ label: "x", when }]}
+        withGlobalFilter
+      />,
+    );
+    await userEvent.type(screen.getByPlaceholderText("Search..."), "1700");
+    expect(screen.getByText("No data")).toBeInTheDocument();
+  });
+});
+
+describe("DataTable — column filters", () => {
+  const filterColumns: DataTableColumn<Row>[] = [
+    {
+      id: "name",
+      header: "Name",
+      accessor: "name",
+      sortable: true,
+      filter: { type: "select" },
+    },
+    {
+      id: "score",
+      header: "Score",
+      accessor: "score",
+      filter: { type: "range" },
+    },
+  ];
+  const renderFiltered = () =>
+    render(
+      <MantineProvider env="test">
+        <DataTable
+          columns={filterColumns}
+          data={data}
+          withGlobalFilter
+          withPagination
+        />
+      </MantineProvider>,
+    );
+
+  it("adds a filter button only to filterable columns", () => {
+    renderWithMantine(
+      <DataTable columns={[filterColumns[0]!, columns[1]!]} data={data} />,
+    );
+    expect(
+      screen
+        .getAllByRole("button", { name: /^Filter / })
+        .map((b) => b.getAttribute("aria-label")),
+    ).toEqual(["Filter Name"]);
+  });
+
+  it("filters rows through the header popover, without sorting the column", async () => {
+    renderFiltered();
+    await userEvent.click(screen.getByRole("button", { name: "Filter Name" }));
+    await userEvent.click(
+      await screen.findByRole("combobox", { name: "Filter Name" }),
+    );
+    await userEvent.click(screen.getByRole("option", { name: "Bob" }));
+
+    const body = screen.getAllByRole("rowgroup")[1]!;
+    expect(within(body).getByText("Bob")).toBeInTheDocument();
+    expect(within(body).queryByText("Alice")).not.toBeInTheDocument();
+    expect(screen.getByText("1 rows")).toBeInTheDocument();
+    // Clicks inside the popover bubble (through React) to the header cell.
+    expect(screen.getByText("⇅")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filter Name" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  it("combines with other filters and clears them all from the toolbar", async () => {
+    renderFiltered();
+    await userEvent.click(screen.getByRole("button", { name: "Filter Score" }));
+    await userEvent.type(
+      await screen.findByRole("textbox", { name: "Min" }),
+      "80",
+    );
+    expect(screen.getByText("2 rows")).toBeInTheDocument(); // 90, 82
+    expect(screen.queryByText("Bob")).not.toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Clear filters (1)" }),
+    );
+    expect(screen.getByText("3 rows")).toBeInTheDocument();
   });
 });

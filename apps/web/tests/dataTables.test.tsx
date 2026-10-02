@@ -5,16 +5,6 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
-/** Safely stringify an arbitrary cell value for the table-render stub. */
-function stringifyCellValue(value: unknown): string {
-  if (value == null) return "";
-  if (typeof value === "object") return JSON.stringify(value);
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean")
-    return String(value);
-  return "";
-}
-
 // ---------------------------------------------------------------------------
 // @jitaspace/ui stubs (used by AgentsTable and MarketOrdersDataTable)
 // ---------------------------------------------------------------------------
@@ -85,64 +75,16 @@ jest.mock("~/components/Badge", () => ({
   }) => <span data-testid="sec-badge">{`sec-${solarSystemId ?? "?"}`}</span>,
 }));
 
-// ---------------------------------------------------------------------------
-// mantine-react-table mock: renders one row per data entry, invoking each
-// column's Cell renderer with row.original / cell.getValue / renderedCellValue.
-// ---------------------------------------------------------------------------
-interface Col {
-  id: string;
-  header?: string;
-  accessorKey?: string;
-  accessorFn?: (row: unknown) => unknown;
-  Cell?: (args: {
-    renderedCellValue: ReactNode;
-    row: { original: unknown };
-    cell: { getValue: <T>() => T };
-  }) => ReactNode;
-}
-
-jest.mock("mantine-react-table", () => ({
-  MantineReactTable: ({
-    table,
-  }: {
-    table: { columns: Col[]; data: unknown[] };
-  }) => (
-    <table>
-      <thead>
-        <tr>
-          {table.columns.map((col) => (
-            <th key={col.id}>{col.header}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {table.data.map((row, i) => (
-          <tr key={i} data-testid="table-row">
-            {table.columns.map((col) => {
-              const value = col.accessorKey
-                ? (row as Record<string, unknown>)[col.accessorKey]
-                : col.accessorFn?.(row);
-              const content = col.Cell
-                ? col.Cell({
-                    renderedCellValue: stringifyCellValue(value),
-                    row: { original: row },
-                    cell: { getValue: <T,>() => value as T },
-                  })
-                : stringifyCellValue(value);
-              return <td key={col.id}>{content}</td>;
-            })}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  ),
-  // Simply pass the config through; the MantineReactTable mock reads from it.
-  useMantineReactTable: (config: { columns: Col[]; data: unknown[] }) => config,
-}));
-
 function renderWithMantine(ui: ReactNode) {
   return render(<MantineProvider>{ui}</MantineProvider>);
 }
+
+/** The rendered data rows: body rows, minus the empty-state row. */
+const dataRows = () =>
+  screen
+    .getAllByRole("row")
+    .slice(1)
+    .filter((row) => !row.textContent.includes("No data"));
 
 // ===========================================================================
 // AgentsTable
@@ -175,12 +117,12 @@ describe("AgentsTable", () => {
 
   it("renders without crashing with no agents", () => {
     renderAgents([]);
-    expect(screen.queryAllByTestId("table-row")).toHaveLength(0);
+    expect(dataRows()).toHaveLength(0);
   });
 
   it("renders a row per agent", () => {
     renderAgents([SAMPLE_AGENT, { ...SAMPLE_AGENT, characterId: 3000002 }]);
-    expect(screen.getAllByTestId("table-row")).toHaveLength(2);
+    expect(dataRows()).toHaveLength(2);
   });
 
   it("renders the agent name column with character avatar/anchor/name", () => {
@@ -268,12 +210,12 @@ describe("MarketOrdersDataTable", () => {
 
   it("renders without crashing with no orders", () => {
     renderOrders([]);
-    expect(screen.queryAllByTestId("table-row")).toHaveLength(0);
+    expect(dataRows()).toHaveLength(0);
   });
 
   it("renders a row per order", () => {
     renderOrders([SAMPLE_ORDER, { ...SAMPLE_ORDER, order_id: 2 }]);
-    expect(screen.getAllByTestId("table-row")).toHaveLength(2);
+    expect(dataRows()).toHaveLength(2);
   });
 
   it("formats the remaining volume with locale separators", () => {

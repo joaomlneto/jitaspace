@@ -15,8 +15,12 @@ table engine freely.
 | [`@jitaspace/datatable-mantine`](../datatable-mantine)   | [`mantine-datatable`](https://icflorescu.github.io/mantine-datatable/) | Batteries-included third-party component.                        |
 
 Both export a `DataTable` component assignable to `DataTableComponent` and behave
-identically for the shared feature set (sorting, global filter, pagination,
-column visibility, loading/empty states, row clicks).
+identically for the shared feature set (sorting, global filter, column filters,
+pagination, column visibility, loading/empty states, row clicks). They get there
+by sharing code, not by convention: how a value sorts, what a filter or search
+matches, the toolbar and the filter inputs all live in
+[`@jitaspace/datatable-common`](../datatable-common). In the web app, render
+`~/components/DataTable`, which picks the engine from the user's settings.
 
 ## Usage
 
@@ -75,3 +79,33 @@ const Table: DataTableComponent = DataTable;
 | `defaultVisible` | Initial visibility. Default `true`.                                                                                               |
 | `align`          | `"left" \| "center" \| "right"`.                                                                                                  |
 | `width`          | Fixed width in px.                                                                                                                |
+| `filter`         | A filter control in the column header — see below.                                                                                |
+| `filterAccessor` | The value the filter tests, when it should differ from the accessor value.                                                        |
+
+## Column filters
+
+Set `filter` on a column to put a filter button in its header. Every type tests
+the column's filter value (`filterAccessor`, else the `accessor` value):
+
+| `filter`                               | Matches                                                                                        |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `{ type: "text" }`                     | Case-insensitive substring.                                                                    |
+| `{ type: "select", options? }`         | Exactly one chosen value.                                                                      |
+| `{ type: "multi-select", options? }`   | Exactly any of the chosen values — never a substring ("Brokers Fee" ≠ "Contract Brokers Fee"). |
+| `{ type: "range", min?, max?, step? }` | An inclusive numeric range; either end may be open. Non-numbers drop out while it is set.      |
+| `{ type: "boolean" }`                  | Yes / No, by truthiness.                                                                       |
+| `{ type: "date-range" }`               | Whole local days, inclusive; the value may be a `Date`, ISO string or timestamp.               |
+
+Without `options`, the select types offer every distinct value in the data, in
+natural order; an array value matches when any element does. Active filters
+combine with each other and with the global search, and the toolbar shows a
+"Clear filters" button while any is set.
+
+## Sorting and loading
+
+- Rows whose sort value is `null` or `undefined` sort **last in either
+  direction**. Dates sort chronologically, booleans as 0/1, strings naturally
+  ("Item 9" before "Item 10").
+- `isLoading` renders a full page of skeleton rows (the page size, or 10 without
+  pagination) in place of the data, so the table is already at its loaded height
+  and the rows arriving do not shift the page.

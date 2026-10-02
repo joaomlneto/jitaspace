@@ -1,15 +1,26 @@
 import "@testing-library/jest-dom/jest-globals";
 
-import type { jest } from "@jest/globals";
 import React from "react";
-import { beforeEach, describe, expect, it } from "@jest/globals";
+import {
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
 import type { FuzzworkTypeMarketAggregate } from "@jitaspace/hooks";
 import { useFuzzworkRegionalMarketAggregates } from "@jitaspace/hooks";
 
-import { usePreferencesStore } from "~/lib/preferences";
+import {
+  DEFAULT_DATA_TABLE_ENGINE,
+  usePreferencesStore,
+} from "~/lib/preferences";
 // @jitaspace/ui is redirected to __mocks__/@jitaspace/ui.tsx via moduleNameMapper
 // (same reason as hooks — real source pulls in @tabler/icons-react ESM bundles).
 
@@ -84,11 +95,30 @@ const offers = [
 const wrap = (ui: React.ReactElement) =>
   render(React.createElement(MantineProvider, null, ui));
 
-// LoyaltyPointsTable renders via the app DataTable switcher. Enable the
-// experimental setting so it uses the TanStack engine these tests assert
-// against (the classic mantine-react-table engine renders different DOM).
-beforeEach(() => {
-  usePreferencesStore.setState({ experimentalDataTables: true });
+// LoyaltyPointsTable renders through the app DataTable, so it uses whichever
+// engine the preferences select. Most tests assert against the default
+// (TanStack); the engine-specific ones below set it explicitly.
+afterEach(() => {
+  usePreferencesStore.setState({ dataTableEngine: DEFAULT_DATA_TABLE_ENGINE });
+});
+
+// mantine-datatable hides every cell behind a media-query check; the shared
+// matchMedia stub reports all queries unmatched, which blanks the table. Make an
+// empty / no-constraint query match so its cells render under jsdom.
+beforeAll(() => {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: (query: string) => ({
+      matches: query.trim() === "",
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }),
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -356,16 +386,15 @@ describe("LoyaltyPointsTable — single corporation", () => {
   });
 });
 
-describe("LoyaltyPointsTable — classic engine (experimental off)", () => {
+describe("LoyaltyPointsTable — mantine-datatable engine", () => {
   beforeEach(() => {
     (useFuzzworkRegionalMarketAggregates as jest.Mock).mockReturnValue({
       data: {},
     });
-    // Disable experimental → the chooser renders the classic MRT table.
-    usePreferencesStore.setState({ experimentalDataTables: false });
+    usePreferencesStore.setState({ dataTableEngine: "mantine-datatable" });
   });
 
-  it("renders the classic table (no engine selector)", () => {
+  it("renders the same columns and rows", () => {
     wrap(
       React.createElement(LoyaltyPointsTable, {
         corporations,
@@ -373,10 +402,61 @@ describe("LoyaltyPointsTable — classic engine (experimental off)", () => {
         offers,
       }),
     );
-    expect(screen.getByRole("table")).toBeInTheDocument();
+    expect(document.querySelector(".mantine-datatable")).toBeInTheDocument();
     expect(screen.getByText("LP Cost")).toBeInTheDocument();
-    // The per-table engine selector only appears in the experimental version.
-    expect(screen.queryByText("Table engine")).not.toBeInTheDocument();
+    expect(screen.getByText("5,000 LP")).toBeInTheDocument();
+    expect(screen.getByText("2,500 LP")).toBeInTheDocument();
+  });
+});
+
+describe("LoyaltyPointsTable — column filters", () => {
+  beforeEach(() => {
+    (useFuzzworkRegionalMarketAggregates as jest.Mock).mockReturnValue({
+      data: {},
+    });
+  });
+
+  const renderFilterable = () =>
+    render(
+      React.createElement(
+        MantineProvider,
+        { env: "test" },
+        React.createElement(LoyaltyPointsTable, {
+          corporations,
+          types,
+          offers,
+        }),
+      ),
+    );
+  const body = () => screen.getAllByRole("rowgroup")[1]!;
+
+  it("filters offers by corporation name", async () => {
+    renderFilterable();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Filter Corporation" }),
+    );
+    await userEvent.click(
+      await screen.findByRole("combobox", { name: "Filter Corporation" }),
+    );
+    // The options are the corporations' names, not their ids.
+    await userEvent.click(screen.getByRole("option", { name: "Corp B" }));
+
+    expect(within(body()).getByText("2,500 LP")).toBeInTheDocument();
+    expect(within(body()).queryByText("5,000 LP")).not.toBeInTheDocument();
+  });
+
+  it("filters offers by an LP cost range", async () => {
+    renderFilterable();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Filter LP Cost" }),
+    );
+    await userEvent.type(
+      await screen.findByRole("textbox", { name: "Min" }),
+      "3000",
+    );
+
+    expect(within(body()).getByText("5,000 LP")).toBeInTheDocument();
+    expect(within(body()).queryByText("2,500 LP")).not.toBeInTheDocument();
   });
 });
 
@@ -398,15 +478,10 @@ describe("LoyaltyPointsTable — zero-LP offers (divide-by-zero guard)", () => {
     });
   });
 
-  it.each([
-    ["experimental", true],
-    ["classic", false],
-  ])(
+  it.each(["tanstack", "mantine-datatable"] as const)(
     "renders a blank ISK/LP (never Infinity) for a 0 LP cost offer — %s engine",
-    (_label, experimental) => {
-      usePreferencesStore.setState({
-        experimentalDataTables: experimental,
-      });
+    (engine) => {
+      usePreferencesStore.setState({ dataTableEngine: engine });
       wrap(
         React.createElement(LoyaltyPointsTable, {
           corporations: singleCorp,

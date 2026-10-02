@@ -4,7 +4,7 @@ import { describe, expect, it, jest } from "@jest/globals";
 import { MantineProvider } from "@mantine/core";
 import { render, screen } from "@testing-library/react";
 
-// ContactsTable is a plain Mantine <Table> (not mantine-react-table). It maps
+// ContactsTable is a plain Mantine <Table> (not the app DataTable). It maps
 // `contacts` to rows inline. @jitaspace/ui supplies decorative
 // EveEntity*/Standing children — stub them to no-ops; the assertable text (the
 // "watched" Badge, the resolved label name, and the blocked cell text) comes

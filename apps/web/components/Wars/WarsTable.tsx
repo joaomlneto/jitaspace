@@ -1,10 +1,8 @@
 "use client";
 
-import type { MRT_ColumnDef, MRT_Row } from "mantine-react-table";
-import { useMemo } from "react";
 import { Group } from "@mantine/core";
-import { MantineReactTable, useMantineReactTable } from "mantine-react-table";
 
+import type { DataTableColumn } from "@jitaspace/datatable";
 import { AllianceName, CorporationName } from "@jitaspace/eve-components";
 import {
   AllianceAnchor,
@@ -16,6 +14,8 @@ import {
   TimeAgoText,
   WarAnchor,
 } from "@jitaspace/ui";
+
+import { DataTable } from "~/components/DataTable";
 
 export interface War {
   warId: number;
@@ -42,50 +42,44 @@ export interface WarsTableProps {
   wars: War[];
 }
 
-function WarIdCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
+function warIdCell(war: War) {
   return (
-    <WarAnchor inherit warId={row.original.warId} target="_blank">
-      {row.original.warId}
+    <WarAnchor inherit warId={war.warId} target="_blank">
+      {war.warId}
     </WarAnchor>
   );
 }
 
-function AggressorCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
+function aggressorCell(war: War) {
   return (
     <Group>
-      {row.original.aggressorCorporationId && (
+      {war.aggressorCorporationId && (
         <Group wrap="nowrap">
           <CorporationAvatar
-            corporationId={row.original.aggressorCorporationId}
+            corporationId={war.aggressorCorporationId}
             size="sm"
           />
           <CorporationAnchor
             inherit
-            corporationId={row.original.aggressorCorporationId}
+            corporationId={war.aggressorCorporationId}
             target="_blank"
           >
             <CorporationName
               inherit
-              corporationId={row.original.aggressorCorporationId}
+              corporationId={war.aggressorCorporationId}
             />
           </CorporationAnchor>
         </Group>
       )}
-      {row.original.aggressorAllianceId && (
+      {war.aggressorAllianceId && (
         <Group wrap="nowrap">
-          <AllianceAvatar
-            allianceId={row.original.aggressorAllianceId}
-            size="sm"
-          />
+          <AllianceAvatar allianceId={war.aggressorAllianceId} size="sm" />
           <AllianceAnchor
             inherit
-            allianceId={row.original.aggressorAllianceId}
+            allianceId={war.aggressorAllianceId}
             target="_blank"
           >
-            <AllianceName
-              inherit
-              allianceId={row.original.aggressorAllianceId}
-            />
+            <AllianceName inherit allianceId={war.aggressorAllianceId} />
           </AllianceAnchor>
         </Group>
       )}
@@ -93,42 +87,36 @@ function AggressorCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   );
 }
 
-function DefenderCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
+function defenderCell(war: War) {
   return (
     <Group>
-      {row.original.defenderCorporationId && (
+      {war.defenderCorporationId && (
         <Group wrap="nowrap">
           <CorporationAvatar
-            corporationId={row.original.defenderCorporationId}
+            corporationId={war.defenderCorporationId}
             size="sm"
           />
           <CorporationAnchor
             inherit
-            corporationId={row.original.defenderCorporationId}
+            corporationId={war.defenderCorporationId}
             target="_blank"
           >
             <CorporationName
               inherit
-              corporationId={row.original.defenderCorporationId}
+              corporationId={war.defenderCorporationId}
             />
           </CorporationAnchor>
         </Group>
       )}
-      {row.original.defenderAllianceId && (
+      {war.defenderAllianceId && (
         <Group wrap="nowrap">
-          <AllianceAvatar
-            allianceId={row.original.defenderAllianceId}
-            size="sm"
-          />
+          <AllianceAvatar allianceId={war.defenderAllianceId} size="sm" />
           <AllianceAnchor
             inherit
-            allianceId={row.original.defenderAllianceId}
+            allianceId={war.defenderAllianceId}
             target="_blank"
           >
-            <AllianceName
-              inherit
-              allianceId={row.original.defenderAllianceId}
-            />
+            <AllianceName inherit allianceId={war.defenderAllianceId} />
           </AllianceAnchor>
         </Group>
       )}
@@ -136,10 +124,10 @@ function DefenderCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   );
 }
 
-function AlliesCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
+function alliesCell(war: War) {
   return (
     <Group>
-      {row.original.allianceAllies.map((allyAllianceId) => (
+      {war.allianceAllies.map((allyAllianceId) => (
         <AllianceAnchor
           key={allyAllianceId}
           inherit
@@ -149,7 +137,7 @@ function AlliesCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
           <AllianceAvatar allianceId={allyAllianceId} />
         </AllianceAnchor>
       ))}
-      {row.original.corporationAllies.map((allyCorporationId) => (
+      {war.corporationAllies.map((allyCorporationId) => (
         <CorporationAnchor
           key={allyCorporationId}
           inherit
@@ -163,186 +151,171 @@ function AlliesCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
   );
 }
 
-function DeclaredDateCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
+function declaredDateCell(war: War) {
   return (
-    <DateHoverCard date={new Date(row.original.declaredDate)}>
-      <FormattedDateText inherit date={new Date(row.original.declaredDate)} />
+    <DateHoverCard date={new Date(war.declaredDate)}>
+      <FormattedDateText inherit date={new Date(war.declaredDate)} />
     </DateHoverCard>
   );
 }
 
-function StartedDateCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
+function startedDateCell(war: War) {
   return (
-    row.original.startedDate && (
-      <DateHoverCard date={new Date(row.original.startedDate)}>
-        <FormattedDateText inherit date={new Date(row.original.startedDate)} />
+    war.startedDate && (
+      <DateHoverCard date={new Date(war.startedDate)}>
+        <FormattedDateText inherit date={new Date(war.startedDate)} />
       </DateHoverCard>
     )
   );
 }
 
-function RetractedDateCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
+function retractedDateCell(war: War) {
   return (
-    row.original.retractedDate && (
-      <DateHoverCard date={new Date(row.original.retractedDate)}>
-        <FormattedDateText
-          inherit
-          date={new Date(row.original.retractedDate)}
-        />
+    war.retractedDate && (
+      <DateHoverCard date={new Date(war.retractedDate)}>
+        <FormattedDateText inherit date={new Date(war.retractedDate)} />
       </DateHoverCard>
     )
   );
 }
 
-function FinishedDateCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
+function finishedDateCell(war: War) {
   return (
-    row.original.finishedDate && (
-      <DateHoverCard date={new Date(row.original.finishedDate)}>
-        <FormattedDateText inherit date={new Date(row.original.finishedDate)} />
+    war.finishedDate && (
+      <DateHoverCard date={new Date(war.finishedDate)}>
+        <FormattedDateText inherit date={new Date(war.finishedDate)} />
       </DateHoverCard>
     )
   );
 }
 
-function UpdatedAtCell({ row }: Readonly<{ row: MRT_Row<War> }>) {
+function updatedAtCell(war: War) {
   return (
-    <DateHoverCard date={new Date(row.original.updatedAt)}>
-      <TimeAgoText inherit date={new Date(row.original.updatedAt)} addSuffix />
+    <DateHoverCard date={new Date(war.updatedAt)}>
+      <TimeAgoText inherit date={new Date(war.updatedAt)} addSuffix />
     </DateHoverCard>
   );
 }
 
-export const WarsTable = ({ wars }: WarsTableProps) => {
-  const columns = useMemo<MRT_ColumnDef<War>[]>(
-    () => [
-      {
-        id: "id",
-        header: "War ID",
-        accessorKey: "warId",
-        Cell: WarIdCell,
-      },
-      {
-        id: "aggressor",
-        header: "Aggressor",
-        //accessorKey: "aggressorCorporationId",
-        Cell: AggressorCell,
-      },
-      {
-        id: "aggressorIskDestroyed",
-        header: "Aggressor ISK Destroyed",
-        accessorKey: "aggressorIskDestroyed",
-        size: 40,
-        mantineTableHeadCellProps: {
-          align: "right",
-        },
-        mantineTableBodyCellProps: {
-          align: "right",
-        },
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
-          `${row.original.aggressorIskDestroyed.toLocaleString()} ISK`,
-      },
-      {
-        id: "aggressorShipsKilled",
-        header: "Aggressor Ships Killed",
-        accessorKey: "aggressorShipsKilled",
-      },
-      {
-        id: "defender",
-        header: "Defender",
-        //accessorKey: "aggressorCorporationId",
-        Cell: DefenderCell,
-      },
-      {
-        id: "defenderIskDestroyed",
-        header: "Defender ISK Destroyed",
-        accessorKey: "defenderIskDestroyed",
-        size: 40,
-        mantineTableHeadCellProps: {
-          align: "right",
-        },
-        mantineTableBodyCellProps: {
-          align: "right",
-        },
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
-          `${row.original.defenderIskDestroyed.toLocaleString()} ISK`,
-      },
-      {
-        id: "defenderShipsKilled",
-        header: "Defender Ships Killed",
-        accessorKey: "defenderShipsKilled",
-      },
-      {
-        id: "isOpenForAllies",
-        header: "Open for Allies",
-        accessorKey: "isOpenForAllies",
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
-          row.original.isOpenForAllies ? "Yes" : "No",
-      },
-      {
-        id: "allies",
-        header: "Allies",
-        size: 40,
-        Cell: AlliesCell,
-      },
-      // is mutual
-      {
-        id: "isMutual",
-        header: "Mutual",
-        accessorKey: "isMutual",
-        Cell: ({ renderedCellValue: _renderedCellValue, row, cell: _cell }) =>
-          row.original.isMutual ? "Yes" : "No",
-      },
-      {
-        id: "declaredDate",
-        header: "Declared On",
-        accessorKey: "declaredDate",
-        Cell: DeclaredDateCell,
-      },
-      {
-        id: "startedDate",
-        header: "Started On",
-        accessorKey: "startedDate",
-        Cell: StartedDateCell,
-      },
-      {
-        id: "retractedDate",
-        header: "Retracted On",
-        accessorKey: "retractedDate",
-        Cell: RetractedDateCell,
-      },
-      {
-        id: "finishedDate",
-        header: "Finished On",
-        accessorKey: "finishedDate",
-        Cell: FinishedDateCell,
-      },
-      {
-        id: "updatedAt",
-        header: "Last Updated",
-        accessorKey: "updatedAt",
-        Cell: UpdatedAtCell,
-      },
-    ],
-    [],
-  );
+const columns: DataTableColumn<War>[] = [
+  {
+    id: "id",
+    header: "War ID",
+    accessor: "warId",
+    sortable: true,
+    cell: warIdCell,
+  },
+  {
+    id: "aggressor",
+    header: "Aggressor",
+    cell: aggressorCell,
+  },
+  {
+    id: "aggressorIskDestroyed",
+    header: "Aggressor ISK Destroyed",
+    accessor: "aggressorIskDestroyed",
+    sortable: true,
+    align: "right",
+    cell: (war) => `${war.aggressorIskDestroyed.toLocaleString()} ISK`,
+  },
+  {
+    id: "aggressorShipsKilled",
+    header: "Aggressor Ships Killed",
+    accessor: "aggressorShipsKilled",
+    sortable: true,
+    align: "right",
+  },
+  {
+    id: "defender",
+    header: "Defender",
+    cell: defenderCell,
+  },
+  {
+    id: "defenderIskDestroyed",
+    header: "Defender ISK Destroyed",
+    accessor: "defenderIskDestroyed",
+    sortable: true,
+    align: "right",
+    cell: (war) => `${war.defenderIskDestroyed.toLocaleString()} ISK`,
+  },
+  {
+    id: "defenderShipsKilled",
+    header: "Defender Ships Killed",
+    accessor: "defenderShipsKilled",
+    sortable: true,
+    align: "right",
+  },
+  {
+    id: "isOpenForAllies",
+    header: "Open for Allies",
+    accessor: "isOpenForAllies",
+    sortable: true,
+    filter: { type: "boolean" },
+    cell: (war) => (war.isOpenForAllies ? "Yes" : "No"),
+  },
+  {
+    id: "allies",
+    header: "Allies",
+    cell: alliesCell,
+  },
+  {
+    id: "isMutual",
+    header: "Mutual",
+    accessor: "isMutual",
+    sortable: true,
+    filter: { type: "boolean" },
+    cell: (war) => (war.isMutual ? "Yes" : "No"),
+  },
+  {
+    id: "declaredDate",
+    header: "Declared On",
+    accessor: "declaredDate",
+    sortable: true,
+    filter: { type: "date-range" },
+    cell: declaredDateCell,
+  },
+  {
+    id: "startedDate",
+    header: "Started On",
+    accessor: "startedDate",
+    sortable: true,
+    filter: { type: "date-range" },
+    cell: startedDateCell,
+  },
+  {
+    id: "retractedDate",
+    header: "Retracted On",
+    accessor: "retractedDate",
+    sortable: true,
+    cell: retractedDateCell,
+  },
+  {
+    id: "finishedDate",
+    header: "Finished On",
+    accessor: "finishedDate",
+    sortable: true,
+    cell: finishedDateCell,
+  },
+  {
+    id: "updatedAt",
+    header: "Last Updated",
+    accessor: "updatedAt",
+    sortable: true,
+    cell: updatedAtCell,
+  },
+];
 
-  const table = useMantineReactTable({
-    columns,
-    positionPagination: "top",
-    enableFacetedValues: true,
-    data: wars,
-    initialState: {
-      showColumnFilters: true,
-      density: "xs",
-      pagination: {
-        pageIndex: 0,
-        pageSize: 25,
-      },
-      columnVisibility: {
-        //id: false,
-      },
-    },
-  });
-
-  return <MantineReactTable table={table} />;
-};
+export const WarsTable = ({ wars }: WarsTableProps) => (
+  <DataTable
+    data={wars}
+    columns={columns}
+    rowId={(war) => war.warId}
+    withGlobalFilter
+    withColumnVisibility
+    withPagination
+    defaultPageSize={25}
+    verticalSpacing="xs"
+    highlightOnHover
+    striped
+  />
+);

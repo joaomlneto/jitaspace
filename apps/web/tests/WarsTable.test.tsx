@@ -7,12 +7,11 @@ import { render, screen } from "@testing-library/react";
 import type { War } from "~/components/Wars/WarsTable";
 
 // WarsTable takes `wars` directly as a prop (no internal data hook). Its column
-// Cell renderers are module-scope components; rendering the real
-// mantine-react-table with row data executes them. @jitaspace/ui supplies the
-// avatar/name/anchor/date children. Stub every export to a pass-through that
-// renders its `children` — wrapper components (e.g. WarAnchor, which wraps the
-// war id) forward their text, while leaf components (avatars) get no children
-// and render nothing.
+// cell renderers are module-scope functions; rendering the real DataTable with
+// row data executes them. @jitaspace/ui supplies the avatar/name/anchor/date
+// children. Stub every export to a pass-through that renders its `children` —
+// wrapper components (e.g. WarAnchor, which wraps the war id) forward their
+// text, while leaf components (avatars) get no children and render nothing.
 jest.mock("@jitaspace/ui", () => {
   const React = require("react");
   const passThrough = ({ children }: { children?: unknown }) =>

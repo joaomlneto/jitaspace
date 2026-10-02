@@ -152,7 +152,13 @@ export default function WalletPageClient() {
           </Alert>
         )}
 
-        <WalletTable entries={entries} />
+        <WalletTable
+          entries={entries}
+          // Skeleton rows until the first entries land, so the table holds
+          // its height instead of growing into place. Once any wallet has
+          // loaded, its entries show while the rest settle.
+          isLoading={isPending && entries.length === 0}
+        />
       </Stack>
     </Container>
   );

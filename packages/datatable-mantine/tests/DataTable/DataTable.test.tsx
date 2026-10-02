@@ -163,26 +163,41 @@ describe("DataTable — empty state", () => {
 });
 
 describe("DataTable — loading state", () => {
-  // mantine-datatable always keeps a `.mantine-datatable-loader` element in the
-  // DOM; it adds the `--fetching` modifier (and the actual <Loader>) only while
-  // `fetching` is true. So we key off the modifier class, not mere presence.
-  it("renders without crashing while loading and shows the loader overlay", () => {
-    const { container } = renderWithMantine(
-      <DataTable columns={columns} data={data} isLoading />,
+  // A full page of placeholders keeps the table at its loaded height, so rows
+  // arriving do not push the page down — the same contract as TanStack.
+  const skeletonRows = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll("tbody tr")).filter(
+      (row) => row.querySelector(".mantine-Skeleton-root") !== null,
     );
-    expect(
-      container.querySelector(".mantine-datatable-loader-fetching"),
-    ).toBeInTheDocument();
+
+  it("renders a page of skeleton rows instead of the data", () => {
+    const { container } = renderWithMantine(
+      <DataTable
+        columns={columns}
+        data={data}
+        isLoading
+        withPagination
+        defaultPageSize={25}
+      />,
+    );
+    expect(skeletonRows(container)).toHaveLength(25);
+    expect(screen.queryByText("Alice")).not.toBeInTheDocument();
     expect(screen.getByRole("table")).toBeInTheDocument();
   });
 
-  it("does not show the active loader overlay when not loading", () => {
+  it("renders 10 skeleton rows without pagination", () => {
+    const { container } = renderWithMantine(
+      <DataTable columns={columns} data={[]} isLoading emptyText="No data" />,
+    );
+    expect(skeletonRows(container)).toHaveLength(10);
+    expect(screen.queryByText("No data")).not.toBeInTheDocument();
+  });
+
+  it("renders no skeleton rows when not loading", () => {
     const { container } = renderWithMantine(
       <DataTable columns={columns} data={data} />,
     );
-    expect(
-      container.querySelector(".mantine-datatable-loader-fetching"),
-    ).not.toBeInTheDocument();
+    expect(skeletonRows(container)).toHaveLength(0);
   });
 });
 
@@ -532,5 +547,96 @@ describe("DataTable — row click", () => {
     await expect(
       user.click(screen.getByText("Alice")),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe("DataTable — missing values sort last", () => {
+  interface MRow {
+    id: number;
+    name: string;
+    value: number | null;
+  }
+  const cols: DataTableColumn<MRow>[] = [
+    { id: "name", header: "Name", accessor: "name" },
+    { id: "value", header: "Value", accessor: "value", sortable: true },
+  ];
+  const mdata: MRow[] = [
+    { id: 1, name: "Charlie", value: null },
+    { id: 2, name: "Alice", value: 1 },
+    { id: 3, name: "Bob", value: 2 },
+  ];
+
+  it("in both directions", async () => {
+    const user = userEvent.setup();
+    renderWithMantine(<DataTable columns={cols} data={mdata} />);
+    const header = screen.getByText("Value").closest("th")!;
+    await user.click(header);
+    expect(nameOrder()).toEqual(["Alice", "Bob", "Charlie"]);
+    await user.click(header);
+    expect(nameOrder()).toEqual(["Bob", "Alice", "Charlie"]);
+  });
+});
+
+describe("DataTable — column filters", () => {
+  const filterColumns: DataTableColumn<Row>[] = [
+    {
+      id: "name",
+      header: "Name",
+      accessor: "name",
+      filter: { type: "select" },
+    },
+    {
+      id: "score",
+      header: "Score",
+      accessor: "score",
+      filter: { type: "range" },
+    },
+  ];
+
+  // mantine-datatable renders its own header filter button, without an
+  // accessible name; find it by its class, in column order.
+  const filterButtons = () =>
+    Array.from(
+      document.querySelectorAll<HTMLElement>(
+        ".mantine-datatable-header-cell-filter-action-icon",
+      ),
+    );
+
+  const renderFiltered = () =>
+    render(
+      <MantineProvider env="test">
+        <DataTable columns={filterColumns} data={data} withGlobalFilter />
+      </MantineProvider>,
+    );
+
+  it("adds a filter button only to filterable columns", () => {
+    renderWithMantine(
+      <DataTable columns={[filterColumns[0]!, columns[1]!]} data={data} />,
+    );
+    expect(filterButtons()).toHaveLength(1);
+  });
+
+  it("filters rows through the header popover and marks the column", async () => {
+    const user = userEvent.setup();
+    renderFiltered();
+    await user.click(filterButtons()[0]!);
+    await user.click(
+      await screen.findByRole("combobox", { name: "Filter Name" }),
+    );
+    await user.click(screen.getByRole("option", { name: "Bob" }));
+
+    expect(nameOrder()).toEqual(["Bob"]);
+    expect(filterButtons()[0]).toHaveAttribute("data-active", "true");
+  });
+
+  it("filters by range and clears every filter from the toolbar", async () => {
+    const user = userEvent.setup();
+    renderFiltered();
+    await user.click(filterButtons()[1]!);
+    await user.type(await screen.findByRole("textbox", { name: "Min" }), "80");
+    expect(nameOrder()).toEqual(["Charlie", "Alice"]);
+
+    await user.click(screen.getByRole("button", { name: "Clear filters (1)" }));
+    expect(nameOrder()).toEqual(["Charlie", "Alice", "Bob"]);
   });
 });
