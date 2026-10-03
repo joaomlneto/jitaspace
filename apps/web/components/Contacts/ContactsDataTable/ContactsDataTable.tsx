@@ -79,6 +79,19 @@ function contactBlockedCell(contact: Contact) {
   return contact.is_blocked ? "Yes" : "No";
 }
 
+/** The label names the accessor resolved, as badges. */
+function contactLabelsCell(_contact: Contact, value: unknown) {
+  return (
+    <Group gap="xs">
+      {(value as string[] | undefined)?.map((name) => (
+        <Badge size="sm" key={name}>
+          {name}
+        </Badge>
+      ))}
+    </Group>
+  );
+}
+
 function contactStandingsCell(contact: Contact) {
   return <StandingsBadge standing={contact.standing} />;
 }
@@ -149,15 +162,7 @@ export const ContactsDataTable = memo(
               (labelId) => labelName[labelId] ?? String(labelId),
             ),
           filter: { type: "multi-select" },
-          cell: (_contact, value) => (
-            <Group gap="xs">
-              {(value as string[] | undefined)?.map((name) => (
-                <Badge size="sm" key={name}>
-                  {name}
-                </Badge>
-              ))}
-            </Group>
-          ),
+          cell: contactLabelsCell,
         },
         {
           id: "standings",

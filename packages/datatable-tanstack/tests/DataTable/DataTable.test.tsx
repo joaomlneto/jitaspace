@@ -176,8 +176,8 @@ describe("DataTable — sorting", () => {
     await user.click(screen.getByText("Score").closest("th")!);
     await user.keyboard("{/Shift}");
     expect(
-      document.querySelectorAll('th[aria-sort]:not([aria-sort="none"])').length,
-    ).toBe(1);
+      document.querySelectorAll('th[aria-sort]:not([aria-sort="none"])'),
+    ).toHaveLength(1);
   });
 
   it("sorts from the keyboard", async () => {
