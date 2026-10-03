@@ -14,9 +14,13 @@ import {
  * Server functions backing the change-history viewer. Each queries the
  * standalone history database (@jitaspace/db-builds) directly on the server —
  * `getBuildRangeChanges` also names the compared types from our main database —
- * and returns the shaped, typed payload; there is no public REST surface.
- * Client components invoke these (e.g. as React Query `queryFn`s); Next.js
- * keeps the Prisma client and the connection string server-side.
+ * and returns the shaped, typed payload. Client components invoke these (e.g.
+ * as React Query `queryFn`s); Next.js keeps the Prisma client and the
+ * connection string server-side. The one public REST surface is the build-diff
+ * API (`app/api/history/diff/`), which serves only the diffs the database
+ * stores between adjacent builds — never a composed range like
+ * {@link getBuildRangeChanges} — and so needs no BotID guard
+ * (see `~/lib/history-diff`).
  *
  * A change/file-change hangs off an immutable {@link BuildDiff} (an ordered
  * build pair), not a single build — so "changes in build N" is the diff whose
