@@ -44,7 +44,3 @@
 .control[data-expanded] .icon {
   transform: rotate(180deg);
 }
-
-.switch {
-  flex-shrink: 0;
-}

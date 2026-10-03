@@ -8,7 +8,6 @@ export const PREFERENCES_STORAGE_KEY = "jitaspace.preferences";
 export const DEFAULT_ESI_ACCEPT_LANGUAGE = "en";
 export const DEFAULT_APP_THEME = "default";
 export const DEFAULT_DATA_TABLE_ENGINE = "tanstack";
-export const DEFAULT_EXPERIMENTAL_ACTIVE_WARS = false;
 
 export const ESI_ACCEPT_LANGUAGE_OPTIONS = [
   { languageCode: "en", label: "English", countryCode: "GB" },
@@ -48,11 +47,9 @@ interface PreferencesState {
   esiAcceptLanguage: EsiAcceptLanguage;
   appTheme: AppTheme;
   dataTableEngine: DataTableEngine;
-  experimentalActiveWars: boolean;
   setEsiAcceptLanguage: (value: EsiAcceptLanguage) => void;
   setAppTheme: (value: AppTheme) => void;
   setDataTableEngine: (value: DataTableEngine) => void;
-  setExperimentalActiveWars: (value: boolean) => void;
 }
 
 export const sanitizeAppTheme = (
@@ -94,12 +91,9 @@ export const usePreferencesStore = create<PreferencesState>()(
       esiAcceptLanguage: DEFAULT_ESI_ACCEPT_LANGUAGE,
       appTheme: DEFAULT_APP_THEME,
       dataTableEngine: DEFAULT_DATA_TABLE_ENGINE,
-      experimentalActiveWars: DEFAULT_EXPERIMENTAL_ACTIVE_WARS,
       setEsiAcceptLanguage: (value) => set({ esiAcceptLanguage: value }),
       setAppTheme: (value) => set({ appTheme: value }),
       setDataTableEngine: (value) => set({ dataTableEngine: value }),
-      setExperimentalActiveWars: (value) =>
-        set({ experimentalActiveWars: value }),
     }),
     {
       name: PREFERENCES_STORAGE_KEY,
@@ -116,10 +110,6 @@ export const usePreferencesStore = create<PreferencesState>()(
           dataTableEngine:
             sanitizeDataTableEngine(persisted.dataTableEngine) ??
             DEFAULT_DATA_TABLE_ENGINE,
-          experimentalActiveWars:
-            typeof persisted.experimentalActiveWars === "boolean"
-              ? persisted.experimentalActiveWars
-              : DEFAULT_EXPERIMENTAL_ACTIVE_WARS,
         };
       },
     },

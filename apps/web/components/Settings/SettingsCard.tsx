@@ -1,15 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  Button,
-  Group,
-  Menu,
-  Switch,
-  Tabs,
-  Text,
-  UnstyledButton,
-} from "@mantine/core";
+import { Button, Group, Menu, Tabs, Text, UnstyledButton } from "@mantine/core";
 import { showNotification } from "@mantine/notifications";
 import {
   IconChevronDown,
@@ -40,18 +32,12 @@ export function SettingsCard() {
   );
   const selectedTheme = usePreferencesStore((state) => state.appTheme);
   const dataTableEngine = usePreferencesStore((state) => state.dataTableEngine);
-  const experimentalActiveWars = usePreferencesStore(
-    (state) => state.experimentalActiveWars,
-  );
   const setSelectedAcceptLanguage = usePreferencesStore(
     (state) => state.setEsiAcceptLanguage,
   );
   const setSelectedTheme = usePreferencesStore((state) => state.setAppTheme);
   const setDataTableEngine = usePreferencesStore(
     (state) => state.setDataTableEngine,
-  );
-  const setExperimentalActiveWars = usePreferencesStore(
-    (state) => state.setExperimentalActiveWars,
   );
 
   const {
@@ -295,29 +281,9 @@ export function SettingsCard() {
           Try out features that are still in development.
         </Text>
 
-        <Group
-          justify="space-between"
-          className={classes.item}
-          wrap="nowrap"
-          gap="xl"
-        >
-          <div>
-            <Text>New Active Wars page</Text>
-            <Text size="xs" c="dimmed">
-              Replace the Active Wars table with the redesigned overview —
-              headline stats, aggressor and defender leaderboards, and a
-              filterable list you can switch between rows and a compact table.
-            </Text>
-          </div>
-          <Switch
-            className={classes.switch}
-            checked={experimentalActiveWars}
-            onChange={(event) =>
-              setExperimentalActiveWars(event.currentTarget.checked)
-            }
-            aria-label="Enable the new Active Wars page"
-          />
-        </Group>
+        <Text className={classes.item} size="sm" c="dimmed" ta="center">
+          No experimental features right now — stay tuned!
+        </Text>
       </Tabs.Panel>
 
       <Tabs.Panel value="reset">

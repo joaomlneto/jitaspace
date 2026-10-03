@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
 import { PageSkeleton } from "~/components/PageSkeleton";
-import { ActiveWarsView } from "~/components/Wars/ActiveWarsView";
+import { WarRoom } from "~/components/Wars/WarRoom";
 import { pageMetadata } from "~/lib/metadata";
 import { getWarRoomData } from "./data";
 
@@ -22,7 +22,7 @@ async function ActiveWarsContent() {
     notFound();
   }
 
-  return <ActiveWarsView data={data} />;
+  return <WarRoom data={data} />;
 }
 
 export default function Page() {
