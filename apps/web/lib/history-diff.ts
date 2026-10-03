@@ -11,9 +11,8 @@ import type { BuildServer } from "~/lib/history";
  * `BuildDiff` row per ordered pair of adjacent builds — and never composes a
  * range. That is what makes it safe to leave public: the set of answerable
  * keys is the set of stored diffs (at most one into each build), each answered
- * by one indexed read, so a caller
- * enumerating pairs can neither run a range aggregation nor mint unbounded
- * cache entries. `/history/compare`'s arbitrary-range fold stays behind BotID
+ * by one indexed read, so a caller enumerating pairs can neither run a range
+ * aggregation nor mint unbounded cache entries. `/history/compare`'s arbitrary-range fold stays behind BotID
  * (`lib/history-actions.ts`).
  *
  * To keep it that way, a request is checked against the cached
@@ -96,12 +95,13 @@ export const diffUrl = (from: number, to: number) =>
 
 /**
  * Every stored diff between two builds, plus every build's date and server.
- * Small (one row per build and per diff), and only grows when a build is
- * processed, hence `"hours"`: a new diff is answerable within the hour.
+ * Small (one row per build and per diff), so `"minutes"`: matching
+ * `GET /api/history` (`~/lib/history-meta`), which would otherwise link a
+ * newly recorded build whose diffs these routes still answered 404 for.
  */
 export async function getCachedDiffGraph(): Promise<DiffGraph> {
   "use cache";
-  cacheLife("hours");
+  cacheLife("minutes");
 
   const [diffs, builds] = await Promise.all([
     buildsDb.buildDiff.findMany({

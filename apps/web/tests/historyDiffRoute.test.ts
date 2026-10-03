@@ -338,10 +338,10 @@ describe("GET /api/history/diff/[build]", () => {
     expect(mockChangeReads).toEqual([]);
   });
 
-  it("lets the CDN cache a build's listing for an hour", async () => {
+  it("lets the CDN cache a build's listing for five minutes", async () => {
     const res = await getBuild("200");
 
-    expect(res.headers.get("cache-control")).toMatch(/\bs-maxage=3600\b/);
+    expect(res.headers.get("cache-control")).toMatch(/\bs-maxage=300\b/);
   });
 
   it("404s on an unknown build without reading any changes", async () => {

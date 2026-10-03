@@ -17,11 +17,10 @@ import {
  */
 
 /**
- * Shorter than a diff's: a build gains an outgoing diff when the next one is
- * processed, and the diff list behind this is itself cached for an hour.
+ * Much shorter than a diff's: a build gains an outgoing diff when the next one
+ * is processed. Five minutes, like `GET /api/history`, which links here.
  */
-const CACHE_OK =
-  "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400";
+const CACHE_OK = "public, max-age=60, s-maxage=300, stale-while-revalidate=600";
 
 export async function GET(
   _request: Request,
