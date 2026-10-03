@@ -144,7 +144,6 @@ apps/
 packages/
   auth/ auth-utils/          # EVE Online SSO (OAuth2 PKCE + state), token seal/refresh
   db/                        # Prisma 7 client + PostgreSQL schema
-  db-history/                # Separate Prisma client for the EVE build-history DB (/history)
   kv/                        # Redis client + Bull job queues
   esi-client/                # Kubb-generated ESI API client
   evekill-client/ evetycoon-client/ fuzzworks-market-client/  # more generated clients
@@ -184,6 +183,7 @@ tooling/
 ## Key Conventions
 
 - **Internal imports:** `@jitaspace/<name>` with `workspace:*` version specifiers in `package.json`.
+- **`@jitaspace/db-builds` is an npm dependency, not a workspace package.** jovespace writes the build-history DB (`/history`), owns its schema, and publishes this package with the Prisma client already generated, so there is no `db:generate` for it here. Schema changes arrive as Renovate PRs, which `apps/web/tests/historySchemaContract.test.ts` and type-check gate. Don't copy the schema into this repo.
 - **Adding a new `@jitaspace/*` package to the web app:** if it ships TypeScript source, add it to `transpilePackages` in `apps/web/next.config.mjs`; server-only/Node-only deps go in `serverExternalPackages` instead (e.g. `bull`).
 - **New dependencies** go in the consuming package's `package.json`, not root.
 - **ESLint:** flat config only (`eslint.config.ts`); never `.eslintrc.*`. `apps/web` lints with `--flag unstable_native_nodejs_ts_config`.

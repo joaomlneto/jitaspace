@@ -2,12 +2,12 @@ import { describe, expect, it, jest } from "@jest/globals";
 
 import type * as HistorySql from "~/lib/history-sql";
 
-// `@jitaspace/db-history` builds a real Prisma client on import, so stub the two
+// `@jitaspace/db-builds` builds a real Prisma client on import, so stub the two
 // exports the helper reads. `schema` is switched per test through `doMock`.
 const load = (schema: string) => {
   jest.resetModules();
-  jest.doMock("@jitaspace/db-history", () => ({
-    historySchema: schema,
+  jest.doMock("@jitaspace/db-builds", () => ({
+    buildsSchema: schema,
     Prisma: { raw: (sql: string) => ({ raw: sql }) },
   }));
   return (require("~/lib/history-sql") as typeof HistorySql).historyTable;

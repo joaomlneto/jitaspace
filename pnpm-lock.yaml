@@ -167,9 +167,9 @@ importers:
       '@jitaspace/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@jitaspace/db-history':
-        specifier: workspace:*
-        version: link:../../packages/db-history
+      '@jitaspace/db-builds':
+        specifier: ^0.1.0
+        version: 0.1.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.3.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
       '@jitaspace/esi-client':
         specifier: workspace:*
         version: link:../../packages/esi-client
@@ -1077,52 +1077,6 @@ importers:
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(@swc/core@1.15.40)(jiti@2.7.0)(postcss@8.5.15)(tsx@4.22.3)(typescript@5.9.3)(yaml@2.8.3)
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-
-  packages/db-history:
-    dependencies:
-      '@prisma/adapter-pg':
-        specifier: ^7.8.0
-        version: 7.8.0
-      '@prisma/client':
-        specifier: ^7.8.0
-        version: 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.3.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
-      dotenv:
-        specifier: ^17.4.2
-        version: 17.4.2
-      pg:
-        specifier: ^8.21.0
-        version: 8.21.0
-    devDependencies:
-      '@jitaspace/eslint-config':
-        specifier: workspace:*
-        version: link:../../tooling/eslint
-      '@jitaspace/prettier-config':
-        specifier: workspace:*
-        version: link:../../tooling/prettier
-      '@jitaspace/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-      '@types/node':
-        specifier: ^24.12.4
-        version: 24.12.4
-      '@types/pg':
-        specifier: ^8.20.0
-        version: 8.20.0
-      concurrently:
-        specifier: ^9.2.1
-        version: 9.2.1
-      eslint:
-        specifier: ^9.39.4
-        version: 9.39.4(jiti@2.7.0)
-      prettier:
-        specifier: ^3.8.3
-        version: 3.8.3
-      prisma:
-        specifier: ^7.8.0
-        version: 7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.3.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -3901,6 +3855,10 @@ packages:
   '@jest/types@30.4.1':
     resolution: {integrity: sha512-f1x/vJXIfjOlEmejYpbkbgw1gOqpPECwMvMEtBqe47j7H2Hg8h8w3o3ikhSXq3MI15kg+oQ0exWO0uCtTNJLoQ==}
     engines: {node: ^18.14.0 || ^20.0.0 || ^22.0.0 || >=24.0.0}
+
+  '@jitaspace/db-builds@0.1.0':
+    resolution: {integrity: sha512-JneRxTdxbEr9UhMqJsXzmHAex0ltoOnMDy0dNqJp0yXaznhLmydqhKic9cXtcnPdMlbNMOhQjtyeLI6McBLYJg==}
+    engines: {node: ^20.19 || ^22.12 || >=24.0}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -13516,6 +13474,16 @@ snapshots:
       '@types/node': 24.13.3
       '@types/yargs': 17.0.35
       chalk: 4.1.2
+
+  '@jitaspace/db-builds@0.1.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.3.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)':
+    dependencies:
+      '@prisma/adapter-pg': 7.8.0
+      '@prisma/client': 7.8.0(prisma@7.8.0(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(magicast@0.3.5)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
+      pg: 8.21.0
+    transitivePeerDependencies:
+      - pg-native
+      - prisma
+      - typescript
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:

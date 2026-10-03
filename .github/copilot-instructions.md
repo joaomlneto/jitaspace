@@ -161,7 +161,7 @@ When a new `@jitaspace/*` package exports TypeScript source and needs to be impo
 - **Missing generated files:** If you see import errors for `@jitaspace/db` or `@jitaspace/esi-client`, run `pnpm db:generate` and/or `pnpm kubb:generate` first.
 - **Env validation crash:** Build or dev server crashes with env errors → set `SKIP_ENV_VALIDATION=1`.
 - **Wrong package manager:** Any `npm install` or `yarn` command will fail with a preinstall error — use pnpm only.
-- **Prisma client generation:** `packages/db` has **no** `postinstall` hook — the Prisma client is produced by the turbo `db:generate` edges that `build`, `lint` and `type-check` declare. `packages/db-history` and the generated-client packages (`esi-client`, `evekill-client`, `evetycoon-client`, `fuzzworks-market-client`, `hooks`) do run codegen on `postinstall`. CI sets a dummy `DATABASE_URL` so those succeed without a real database. After `pnpm install --ignore-scripts`, run `pnpm db:generate` and `pnpm kubb:generate` explicitly.
+- **Prisma client generation:** `packages/db` has **no** `postinstall` hook — the Prisma client is produced by the turbo `db:generate` edges that `build`, `lint` and `type-check` declare. The generated-client packages (`esi-client`, `evekill-client`, `evetycoon-client`, `fuzzworks-market-client`, `hooks`) do run codegen on `postinstall`. CI sets a dummy `DATABASE_URL` so those succeed without a real database. After `pnpm install --ignore-scripts`, run `pnpm db:generate` and `pnpm kubb:generate` explicitly.
 - **`apps/web` lint command:** Uses `--flag unstable_native_nodejs_ts_config` for native ESM TypeScript config support.
 
 ---

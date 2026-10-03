@@ -19,7 +19,7 @@ import {
 } from "~/lib/history";
 
 // Exercises the query logic in ~/lib/history-actions (the change-history server
-// functions) by stubbing @jitaspace/db-history so the real Prisma client is
+// functions) by stubbing @jitaspace/db-builds so the real Prisma client is
 // never loaded. Mutable fixtures are reassigned per-test; the stub closes over
 // them by reference (mock-prefixed so the jest factory accepts them).
 
@@ -81,7 +81,7 @@ let mockBuildUnique: {
 // which would otherwise leave the refusal branch — the actual security control —
 // unreachable. `mock`-prefixed so the jest factory may close over it.
 let mockIsBot = false;
-// Counts every historyDb (and type-name) access, to prove the guard refuses
+// Counts every buildsDb (and type-name) access, to prove the guard refuses
 // before touching a database rather than after doing the expensive work.
 let mockDbCalls = 0;
 
@@ -123,12 +123,12 @@ jest.mock("~/lib/db", () => ({
   },
 }));
 
-jest.mock("@jitaspace/db-history", () => ({
+jest.mock("@jitaspace/db-builds", () => ({
   // What ~/lib/history-sql reads: the schema the history tables live in (not
   // `public`, as in production) and Prisma's `raw` fragment constructor.
-  historySchema: "hist",
+  buildsSchema: "hist",
   Prisma: { raw: (sql: string) => ({ raw: sql }) },
-  historyDb: {
+  buildsDb: {
     build: {
       findMany: () => {
         mockDbCalls++;
@@ -902,7 +902,7 @@ describe("BotID gate", () => {
   it("refuses before touching the history database", async () => {
     await getBuildRangeChanges(700000, 700003);
     // The whole point of the guard: a bot costs us nothing. Every stubbed
-    // historyDb method increments this counter, so a query on any path trips it.
+    // buildsDb method increments this counter, so a query on any path trips it.
     expect(mockDbCalls).toBe(0);
 
     // ...and a human does reach the database, so the counter is wired up.

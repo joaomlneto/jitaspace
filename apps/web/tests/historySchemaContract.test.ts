@@ -1,5 +1,4 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import { describe, expect, it } from "@jest/globals";
 
 /**
@@ -7,23 +6,22 @@ import { describe, expect, it } from "@jest/globals";
  *
  * The history pages read the shared `eve-builds` DB through
  * `apps/web/lib/history-cache.ts` and `app/history/build/[build]/data.ts`,
- * whose Prisma queries assume a specific shape of `@jitaspace/db-history`'s
- * schema. That schema mirrors the upstream
- * writer (jovespace); when the writer changes it, this repo's
- * `packages/db-history/prisma/schema.prisma` gets synced to match — and the
+ * whose Prisma queries assume a specific shape of `@jitaspace/db-builds`'s
+ * schema. That package is published to npm by the upstream writer (jovespace),
+ * which owns the schema; a version bump here (Renovate) can change it, and the
  * reader can silently break (PR #619 moved `Change` off `buildNumber` onto
  * `BuildDiff` + `diffId`; PR #627 fixed a crash that a changed relation caused).
  *
  * The unit tests in `historyActions.test.ts` mock the DB, so they cannot see
- * schema drift. This test parses the committed schema and asserts the exact
- * surface each reader depends on. If it fails, the db-history schema changed in
- * a way that affects the reader: update the reader AND these
- * assertions together, then run `pnpm db:generate` + `pnpm type-check` (the
- * complementary code↔generated-client guard).
+ * schema drift. This test parses the schema the installed package ships and
+ * asserts the exact surface each reader depends on. If it fails, the
+ * db-builds schema changed in a way that affects the reader: update the reader
+ * AND these assertions together, then run `pnpm type-check` (the complementary
+ * code↔client guard: the package ships its generated client's types).
  *
- * Scope: this catches drift in the committed schema file. It cannot detect the
- * live shared DB diverging from that file without a connection — that needs an
- * integration test against HISTORY_DATABASE_URL, which CI does not run.
+ * Scope: this catches drift in the published schema. It cannot detect the live
+ * shared DB diverging from that schema without a connection — that needs an
+ * integration test against EVE_BUILDS_DATABASE_URL, which CI does not run.
  */
 
 interface Field {
@@ -33,10 +31,7 @@ interface Field {
 }
 type Models = Record<string, Record<string, Field>>;
 
-const SCHEMA_PATH = join(
-  __dirname,
-  "../../../packages/db-history/prisma/schema.prisma",
-);
+const SCHEMA_PATH = require.resolve("@jitaspace/db-builds/schema.prisma");
 const schema = readFileSync(SCHEMA_PATH, "utf8");
 
 /** Minimal Prisma-schema parser: model → field → {type, optional, list}. */
@@ -90,16 +85,20 @@ const relation = (type: string): Field => ({
   list: false,
 });
 
-describe("db-history schema ↔ history reader contract", () => {
-  it("exposes exactly the expected models", () => {
-    expect(Object.keys(models).sort()).toEqual([
-      "Build",
-      "BuildDiff",
-      "Change",
-      "Collection",
-      "Entity",
-      "FileChange",
-    ]);
+describe("db-builds schema ↔ history reader contract", () => {
+  // The writer owns the schema and may add models only it uses (e.g.
+  // IconReference), so require the reader's models rather than an exact set.
+  it("declares every model the reader uses", () => {
+    expect(Object.keys(models)).toEqual(
+      expect.arrayContaining([
+        "Build",
+        "BuildDiff",
+        "Change",
+        "Collection",
+        "Entity",
+        "FileChange",
+      ]),
+    );
   });
 
   it("Op enum carries exactly the values the reader maps", () => {
