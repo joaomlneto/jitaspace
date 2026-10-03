@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { useId } from "react";
 
 import { AllianceName, CorporationName } from "@jitaspace/eve-components";
 import {
@@ -151,5 +152,51 @@ export function StatusPill({ status }: Readonly<{ status: WarStatus }>) {
       <span className={cx(classes.dot, statusDotClass(status))} />
       {STATUS_LABEL[status]}
     </span>
+  );
+}
+
+/**
+ * A segmented control: one choice from a few, as a row of radio buttons.
+ *
+ * Not Mantine's SegmentedControl, which calls `useState(randomId())` — that is
+ * `Math.random()` during render, and under `cacheComponents` a client component
+ * doing that makes its Suspense boundary dynamic. /active-wars is otherwise
+ * static, so the boundary (the whole page) dropped out of the cached HTML and
+ * rendered only in the browser. Native radios need no IDs of their own and
+ * keep arrow-key navigation and screen-reader semantics.
+ */
+export function Segmented<T extends string>({
+  label,
+  value,
+  onChange,
+  data,
+}: Readonly<{
+  /** Names the group for assistive tech. */
+  label: string;
+  value: T;
+  onChange: (value: T) => void;
+  data: readonly { value: T; label: string }[];
+}>) {
+  const name = useId();
+  return (
+    <div role="radiogroup" aria-label={label} className={classes.segmented}>
+      {data.map((option) => (
+        <label
+          key={option.value}
+          className={classes.segment}
+          data-active={option.value === value || undefined}
+        >
+          <input
+            type="radio"
+            className={classes.segmentInput}
+            name={name}
+            value={option.value}
+            checked={option.value === value}
+            onChange={() => onChange(option.value)}
+          />
+          {option.label}
+        </label>
+      ))}
+    </div>
   );
 }

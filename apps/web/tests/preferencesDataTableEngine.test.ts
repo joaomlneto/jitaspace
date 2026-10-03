@@ -52,6 +52,18 @@ describe("dataTableEngine preference", () => {
     }
   });
 
+  it("ignores the retired Active Wars switch", async () => {
+    // The redesigned Active Wars page is the only one now; a stored choice
+    // from the old "New Active Wars page" switch must not linger in state.
+    persist({ experimentalActiveWars: true });
+    await usePreferencesStore.persist.rehydrate();
+    const state = usePreferencesStore.getState() as unknown as Record<
+      string,
+      unknown
+    >;
+    expect(state.experimentalActiveWars).toBeUndefined();
+  });
+
   it("ignores the retired experimental switch", async () => {
     // Stored by the old "New data tables" toggle. On or off, every table now
     // renders with the chosen engine, so it must not select anything.

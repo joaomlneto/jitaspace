@@ -1,18 +1,22 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button, Chip, SegmentedControl, Select } from "@mantine/core";
+import { Button, Chip, Select } from "@mantine/core";
 import { parseAsBoolean, parseAsStringLiteral, useQueryStates } from "nuqs";
 
 import type { WarRoomWar } from "./types";
 import type { SortKey } from "./utils";
-import { cx } from "./parts";
+import { cx, Segmented } from "./parts";
 import { filterWars, SORT_OPTIONS, sortWars, STATUS_FILTERS } from "./utils";
 import classes from "./WarRoom.module.css";
 import { WarRow } from "./WarRow";
 import { WarTable } from "./WarTable";
 
 const VIEW_MODES = ["rows", "table"] as const;
+const VIEW_OPTIONS = [
+  { value: "rows", label: "Rows" },
+  { value: "table", label: "Table" },
+] as const;
 
 const INITIAL_VISIBLE = 24;
 const VISIBLE_STEP = 24;
@@ -132,28 +136,22 @@ export function WarList({ wars }: Readonly<{ wars: WarRoomWar[] }>) {
             allowDeselect={false}
             checkIconPosition="right"
           />
-          <SegmentedControl
-            size="xs"
+          <Segmented
+            label="View"
             value={view}
             onChange={(value) => void setControls({ view: value })}
-            data={[
-              { value: "rows", label: "Rows" },
-              { value: "table", label: "Table" },
-            ]}
+            data={VIEW_OPTIONS}
           />
         </div>
       </div>
 
       <div className={classes.controls}>
         <div className={classes.controlsGroup}>
-          <SegmentedControl
-            size="xs"
+          <Segmented
+            label="Status"
             value={status}
             onChange={(value) => void setControls({ status: value })}
-            data={STATUS_FILTERS.map((option) => ({
-              value: option.value,
-              label: option.label,
-            }))}
+            data={STATUS_FILTERS}
           />
           <Chip
             size="xs"

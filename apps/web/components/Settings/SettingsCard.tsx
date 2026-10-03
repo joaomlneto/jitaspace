@@ -277,11 +277,7 @@ export function SettingsCard() {
       </Tabs.Panel>
 
       <Tabs.Panel value="experimental">
-        <Text fz="xs" c="dimmed" mt={3} mb="md">
-          Try out features that are still in development.
-        </Text>
-
-        <Text className={classes.item} size="sm" c="dimmed" ta="center">
+        <Text size="sm" c="dimmed" ta="center" py="md">
           No experimental features right now — stay tuned!
         </Text>
       </Tabs.Panel>
