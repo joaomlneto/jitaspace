@@ -1,6 +1,6 @@
 import { cacheLife } from "next/cache";
 
-import { historyDb } from "@jitaspace/db-history";
+import { buildsDb } from "@jitaspace/db-builds";
 
 import type {
   BuildRangeChanges,
@@ -21,7 +21,7 @@ import { readTypeNames } from "~/lib/history-type-names";
  * Day-cached reads of the change-history data.
  *
  * The underlying queries hit the standalone history database
- * (@jitaspace/db-history) — all but {@link getCachedRangeTypeNames}, which names
+ * (@jitaspace/db-builds) — all but {@link getCachedRangeTypeNames}, which names
  * a comparison's types from our main one — and the data only moves when a new
  * EVE client build is processed (rare, via the background jobs), so each result
  * is cached for a day (`cacheLife("days")`). The matching `"use server"`
@@ -45,15 +45,15 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
   const notStr = { name: { not: { startsWith: "strings:" } } };
   const [builds, collections, grouped, entityGroups, diffs] = await Promise.all(
     [
-      historyDb.build.findMany({
+      buildsDb.build.findMany({
         orderBy: { buildNumber: "asc" },
         select: { buildNumber: true, releasedAt: true, server: true },
       }),
-      historyDb.collection.findMany({
+      buildsDb.collection.findMany({
         where: notStr,
         select: { id: true, name: true },
       }),
-      historyDb.change.groupBy({
+      buildsDb.change.groupBy({
         by: ["diffId", "collectionId"],
         where: { collection: notStr },
         _count: true,
@@ -62,12 +62,12 @@ export async function getCachedHistoryIndex(): Promise<HistoryIndex> {
       // entity's id: the client only needs the population size, and shipping the
       // full id lists bloated the index payload (re-transferred on every refresh,
       // since the page fetches it through a server action).
-      historyDb.entity.groupBy({
+      buildsDb.entity.groupBy({
         by: ["kind"],
         where: { kind: { not: { startsWith: "string:" } } },
         _count: true,
       }),
-      historyDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
+      buildsDb.buildDiff.findMany({ select: { id: true, toBuild: true } }),
     ],
   );
 
@@ -173,7 +173,7 @@ export async function getCachedEntityTimeline(
 
   if (!Number.isInteger(entityId)) return null;
 
-  const rows = await historyDb.change.findMany({
+  const rows = await buildsDb.change.findMany({
     where: { entity: { kind: entityType, eveId: entityId } },
     select: {
       op: true,
@@ -192,17 +192,17 @@ export async function getCachedEntityTimeline(
   // whose diff is gone can't be placed on the axis (skip it); a missing Build
   // row yields a null date.
   const [diffs, builds, resfileDiffs] = await Promise.all([
-    historyDb.buildDiff.findMany({
+    buildsDb.buildDiff.findMany({
       select: { id: true, fromBuild: true, toBuild: true },
     }),
-    historyDb.build.findMany({
+    buildsDb.build.findMany({
       select: { buildNumber: true, releasedAt: true, server: true },
     }),
     // Which diffs carry resource-file changes → they came from the resource
     // server (CDN); diffs with none are SDE-backfill diffs (the SDE produces no
     // res files). This presence/absence is the only provenance signal — there is
     // no explicit source field.
-    historyDb.fileChange.groupBy({ by: ["diffId"], _count: true }),
+    buildsDb.fileChange.groupBy({ by: ["diffId"], _count: true }),
   ]);
   const toBuildOf = new Map(diffs.map((d) => [d.id, d.toBuild]));
   const fromBuildOf = new Map(diffs.map((d) => [d.id, d.fromBuild]));
@@ -274,11 +274,11 @@ export async function getCachedBuildRangeChanges(
     return null;
 
   const [fromB, toB] = await Promise.all([
-    historyDb.build.findUnique({
+    buildsDb.build.findUnique({
       where: { buildNumber: from },
       select: { releasedAt: true, server: true },
     }),
-    historyDb.build.findUnique({
+    buildsDb.build.findUnique({
       where: { buildNumber: to },
       select: { releasedAt: true, server: true },
     }),
@@ -288,7 +288,7 @@ export async function getCachedBuildRangeChanges(
   if (!toB || !isBuildInHistoryScope(toB.releasedAt, toB.server)) return null;
 
   const floor = new Date(`${HISTORY_MIN_RELEASE_DATE}T00:00:00.000Z`);
-  const rows = await historyDb.$queryRaw<
+  const rows = await buildsDb.$queryRaw<
     {
       entityType: string;
       entityId: number | bigint | string;

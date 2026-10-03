@@ -62,3 +62,5 @@ allowBuilds:
   sharp: true
   turbo: true
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@jitaspace/db-builds@0.1.0'

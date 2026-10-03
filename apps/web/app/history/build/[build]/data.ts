@@ -1,6 +1,6 @@
 import { cacheLife } from "next/cache";
 
-import { historyDb } from "@jitaspace/db-history";
+import { buildsDb } from "@jitaspace/db-builds";
 
 import type { BuildPage, EntityChangeRow } from "~/lib/history";
 import type { FileDiff, StringChange } from "~/lib/resource-history";
@@ -44,7 +44,7 @@ export async function getCachedBuildPage(
   "use cache";
   cacheLife("days");
 
-  const b = await historyDb.build.findUnique({
+  const b = await buildsDb.build.findUnique({
     where: { buildNumber: build },
     select: { releasedAt: true, server: true },
   });
@@ -60,7 +60,7 @@ export async function getCachedBuildPage(
 
 /** Decoded-SDE changes, plus the names of the types among them. */
 async function readEntityChanges(build: number) {
-  const rows = await historyDb.change.findMany({
+  const rows = await buildsDb.change.findMany({
     where: {
       diff: { toBuild: build },
       collection: { name: { not: { startsWith: STRINGS_PREFIX } } },
@@ -81,7 +81,7 @@ async function readEntityChanges(build: number) {
 }
 
 async function readFileDiff(build: number): Promise<FileDiff> {
-  const rows = await historyDb.fileChange.findMany({
+  const rows = await buildsDb.fileChange.findMany({
     where: { diff: { toBuild: build } },
     select: { path: true, op: true },
   });
@@ -93,7 +93,7 @@ async function readFileDiff(build: number): Promise<FileDiff> {
 async function readStringChanges(
   build: number,
 ): Promise<Record<string, StringChange[]>> {
-  const rows = await historyDb.change.findMany({
+  const rows = await buildsDb.change.findMany({
     where: {
       diff: { toBuild: build },
       collection: { name: { startsWith: STRINGS_PREFIX } },

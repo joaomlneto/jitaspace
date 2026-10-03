@@ -1,11 +1,11 @@
-import { historySchema, Prisma } from "@jitaspace/db-history";
+import { buildsSchema, Prisma } from "@jitaspace/db-builds";
 
 const quote = (identifier: string) => `"${identifier.replaceAll('"', '""')}"`;
 
 /**
  * A history table's schema-qualified name, for interpolating into `$queryRaw`.
  *
- * Prisma qualifies its own SQL with {@link historySchema}, but raw SQL is sent
+ * Prisma qualifies its own SQL with {@link buildsSchema}, but raw SQL is sent
  * as written and resolved through the connection's `search_path`. A bare
  * `FROM "Change"` therefore fails with `42P01 relation "Change" does not exist`
  * wherever the history tables are outside `public`, while every generated query
@@ -18,4 +18,4 @@ const quote = (identifier: string) => `"${identifier.replaceAll('"', '""')}"`;
  * table the schema does not declare.
  */
 export const historyTable = (table: Prisma.ModelName) =>
-  Prisma.raw(`${quote(historySchema)}.${quote(table)}`);
+  Prisma.raw(`${quote(buildsSchema)}.${quote(table)}`);

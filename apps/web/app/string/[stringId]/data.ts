@@ -1,6 +1,6 @@
 import { cacheLife } from "next/cache";
 
-import { historyDb } from "@jitaspace/db-history";
+import { buildsDb } from "@jitaspace/db-builds";
 
 import type { StringEvent, StringHistory } from "~/lib/resource-pages";
 import { readDiffBuilds } from "~/lib/history-build-axis";
@@ -28,7 +28,7 @@ export async function getCachedStringHistory(
   "use cache";
   cacheLife("days");
 
-  const collections = await historyDb.collection.findMany({
+  const collections = await buildsDb.collection.findMany({
     where: { name: { startsWith: STRINGS_PREFIX } },
     select: { id: true, name: true },
   });
@@ -37,7 +37,7 @@ export async function getCachedStringHistory(
   );
   if (langOf.size === 0) return null;
 
-  const entities = await historyDb.entity.findMany({
+  const entities = await buildsDb.entity.findMany({
     where: {
       kind: { in: [...langOf.values()].map((lang) => `string:${lang}`) },
       eveId: stringId,
@@ -46,7 +46,7 @@ export async function getCachedStringHistory(
   });
   if (entities.length === 0) return null;
 
-  const changes = await historyDb.change.findMany({
+  const changes = await buildsDb.change.findMany({
     where: { entityId: { in: entities.map((e) => e.id) } },
     select: { diffId: true, collectionId: true, op: true, data: true },
   });

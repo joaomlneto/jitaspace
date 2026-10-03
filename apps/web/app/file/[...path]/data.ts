@@ -1,6 +1,6 @@
 import { cacheLife } from "next/cache";
 
-import { historyDb } from "@jitaspace/db-history";
+import { buildsDb } from "@jitaspace/db-builds";
 
 import type { FileEvent, FileHistory } from "~/lib/resource-pages";
 import { readDiffBuilds } from "~/lib/history-build-axis";
@@ -23,7 +23,7 @@ export async function getCachedFileHistory(
   "use cache";
   cacheLife("days");
 
-  const rows = await historyDb.fileChange.findMany({
+  const rows = await buildsDb.fileChange.findMany({
     where: { path },
     select: { diffId: true, op: true, size: true, hash: true },
   });

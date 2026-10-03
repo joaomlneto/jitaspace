@@ -18,6 +18,13 @@
       "description": "Workspace packages are linked, not published; never update them.",
       "matchPackageNames": ["@jitaspace/**"],
       "enabled": false
+    },
+    {
+      "description": "Except @jitaspace/db-builds, which jovespace (the history DB's writer and schema owner) publishes to npm. Take its updates as soon as they're released, in their own PR, so the /history reader never lags the schema; the schema contract test and type-check gate them.",
+      "matchPackageNames": ["@jitaspace/db-builds"],
+      "enabled": true,
+      "groupName": "@jitaspace/db-builds",
+      "schedule": ["at any time"]
     }
   ],
   "updateInternalDeps": true

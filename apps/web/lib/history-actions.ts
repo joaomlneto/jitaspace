@@ -12,7 +12,7 @@ import {
 
 /**
  * Server functions backing the change-history viewer. Each queries the
- * standalone history database (@jitaspace/db-history) directly on the server —
+ * standalone history database (@jitaspace/db-builds) directly on the server —
  * `getBuildRangeChanges` also names the compared types from our main database —
  * and returns the shaped, typed payload; there is no public REST surface.
  * Client components invoke these (e.g. as React Query `queryFn`s); Next.js

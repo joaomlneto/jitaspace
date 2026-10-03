@@ -1,4 +1,4 @@
-import { historyDb } from "@jitaspace/db-history";
+import { buildsDb } from "@jitaspace/db-builds";
 
 import type { HistoryServer } from "~/lib/resource-pages";
 
@@ -24,11 +24,11 @@ export async function readDiffBuilds(
 ): Promise<Map<number, DiffBuild>> {
   const ids = [...new Set(diffIds)];
   if (ids.length === 0) return new Map();
-  const diffs = await historyDb.buildDiff.findMany({
+  const diffs = await buildsDb.buildDiff.findMany({
     where: { id: { in: ids } },
     select: { id: true, toBuild: true },
   });
-  const builds = await historyDb.build.findMany({
+  const builds = await buildsDb.build.findMany({
     where: { buildNumber: { in: [...new Set(diffs.map((d) => d.toBuild))] } },
     select: { buildNumber: true, releasedAt: true, server: true },
   });

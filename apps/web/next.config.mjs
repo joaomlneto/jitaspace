@@ -195,6 +195,10 @@ const config = {
     // can append to that list but not relax it), so jest can down-compile the ESM.
     // The Next build/dev bundler consumes nuqs's ESM fine without this.
     "nuqs",
+    // Same reason: @jitaspace/db-builds is an ESM-only npm package (published
+    // by jovespace), and suites that render history-backed routes without
+    // mocking it (typePage, routeLoadingFallback) need jest to down-compile it.
+    "@jitaspace/db-builds",
   ],
 
   /** Avoid bundling server-only worker dependencies */

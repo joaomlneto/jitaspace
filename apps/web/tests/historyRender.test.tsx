@@ -32,7 +32,7 @@ jest.mock("@mantine/charts", () => ({
   BarChart: () => <div data-testid="barchart" />,
 }));
 
-// Stub the server functions so the Prisma-backed @jitaspace/db-history module is
+// Stub the server functions so the Prisma-backed @jitaspace/db-builds module is
 // never loaded; they're only passed as queryFn to the (mocked) useQuery anyway.
 jest.mock("~/lib/history-actions", () => ({
   getBuildRangeChanges: jest.fn(),
@@ -41,7 +41,7 @@ jest.mock("~/lib/history-actions", () => ({
 
 // The index page server-renders the day-cached index from ~/lib/history-cache
 // (via _load-index); stub it and next/server's connection() so importing the page
-// doesn't pull in @jitaspace/db-history or need the Next request runtime.
+// doesn't pull in @jitaspace/db-builds or need the Next request runtime.
 jest.mock("~/lib/history-cache", () => ({
   getCachedHistoryIndex: jest.fn(),
   getCachedEntityTimeline: jest.fn(),

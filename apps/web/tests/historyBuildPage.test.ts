@@ -41,8 +41,8 @@ const mockTypeFindMany = jest.fn((args: TypeQuery) =>
   ),
 );
 
-jest.mock("@jitaspace/db-history", () => ({
-  historyDb: {
+jest.mock("@jitaspace/db-builds", () => ({
+  buildsDb: {
     build: { findUnique: () => Promise.resolve(mockBuild) },
     // One findMany serves both change reads; they differ only in whether the
     // collection filter selects the `strings:*` collections or excludes them.

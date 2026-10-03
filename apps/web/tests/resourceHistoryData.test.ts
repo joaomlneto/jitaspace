@@ -16,8 +16,8 @@ const fileChangeFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
 const buildDiffFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
 const buildFindMany = jest.fn<(a?: unknown) => Promise<Rows>>();
 
-jest.mock("@jitaspace/db-history", () => ({
-  historyDb: {
+jest.mock("@jitaspace/db-builds", () => ({
+  buildsDb: {
     collection: { findMany: (a?: unknown) => collectionFindMany(a) },
     entity: { findMany: (a?: unknown) => entityFindMany(a) },
     change: { findMany: (a?: unknown) => changeFindMany(a) },
