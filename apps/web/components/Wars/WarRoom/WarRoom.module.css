@@ -355,9 +355,14 @@
   );
   box-shadow: var(--mantine-shadow-xs);
 }
-.segment:has(:focus-visible) {
+/* Ring on focus (:focus-within works everywhere), then dropped again for
+   mouse focus where :has() is supported, leaving it for keyboard users. */
+.segment:focus-within {
   outline: 2px solid var(--mantine-primary-color-filled);
   outline-offset: 1px;
+}
+.segment:has(:focus:not(:focus-visible)) {
+  outline: none;
 }
 /* Visually hidden, but still focusable and announced. */
 .segmentInput {

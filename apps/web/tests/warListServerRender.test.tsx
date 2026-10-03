@@ -8,8 +8,9 @@ import type { WarRoomWar } from "~/components/Wars/WarRoom";
 // /active-wars is prerendered whole (ISR) under `cacheComponents`. Two things
 // kept the war list, the page's main content, out of its cached HTML:
 //  - Reading the URL through the app-wide Next nuqs adapter
-//    (`useSearchParams()`). WarRoom wraps the list in nuqs's React adapter
-//    instead, which renders the default view on the server.
+//    (`useSearchParams()`). The page (app/active-wars/page.tsx) wraps WarRoom
+//    in nuqs's React adapter instead, which renders the default view on the
+//    server — the last test pins that wrapper.
 //  - Mantine's SegmentedControl, which calls Math.random() while rendering
 //    (`useState(randomId())`). That makes its Suspense boundary dynamic; on
 //    this static route the whole page then rendered only in the browser.
@@ -24,6 +25,10 @@ const passThroughProxy = () => {
 };
 jest.mock("@jitaspace/ui", () => passThroughProxy());
 jest.mock("@jitaspace/eve-components", () => passThroughProxy());
+// The page's data read hits Prisma; the wrapper test only needs a value back.
+jest.mock("~/app/active-wars/data", () => ({
+  getWarRoomData: () => Promise.resolve({ wars: [] }),
+}));
 
 function war(warId: number, iskDestroyed: number): WarRoomWar {
   const iso = new Date("2026-06-01T00:00:00Z").toISOString();
@@ -77,15 +82,34 @@ describe("WarList server render", () => {
     // static page out of the cached HTML (see above). Mantine's
     // SegmentedControl did; the list's own Segmented must not.
     const random = jest.spyOn(Math, "random");
-    const { WarList } = require("~/components/Wars/WarRoom/WarList");
-    renderToString(
-      <MantineProvider>
-        <NuqsAdapter>
-          <WarList wars={[war(1, 5e9)]} />
-        </NuqsAdapter>
-      </MantineProvider>,
-    );
-    expect(random).not.toHaveBeenCalled();
-    random.mockRestore();
+    try {
+      const { WarList } = require("~/components/Wars/WarRoom/WarList");
+      renderToString(
+        <MantineProvider>
+          <NuqsAdapter>
+            <WarList wars={[war(1, 5e9)]} />
+          </NuqsAdapter>
+        </MantineProvider>,
+      );
+      expect(random).not.toHaveBeenCalled();
+    } finally {
+      random.mockRestore();
+    }
+  });
+
+  it("is wrapped in nuqs's React adapter by the page, not left to the Next one", async () => {
+    // Without this wrapper the list falls back to the app-wide Next adapter,
+    // whose useSearchParams() leaves it out of the cached page. It looks
+    // redundant next to the layout's adapter, which is why it is pinned here.
+    const Page = require("~/app/active-wars/page").default as () => {
+      props: { children: { type: () => Promise<unknown> } };
+    };
+    const { WarRoom } = require("~/components/Wars/WarRoom");
+    const content = (await Page().props.children.type()) as {
+      type: unknown;
+      props: { children: { type: unknown } };
+    };
+    expect(content.type).toBe(NuqsAdapter);
+    expect(content.props.children.type).toBe(WarRoom);
   });
 });
