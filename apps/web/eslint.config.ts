@@ -17,4 +17,26 @@ export default defineConfig(
   reactConfig,
   nextjsConfig,
   restrictEnvAccess,
+  {
+    // Same scope as restrictEnvAccess, whose `process.env` entry is repeated
+    // here: a later config replaces a rule's options rather than merging them.
+    ignores: ["**/env.ts", "**/*.config.{js,cjs,mjs,ts}", "**/scripts/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          name: "process",
+          importNames: ["env"],
+          message:
+            "Use `import { env } from '~/env'` instead to ensure validated types.",
+        },
+        {
+          name: "@mantine/core",
+          importNames: ["SegmentedControl"],
+          message:
+            "Use `Segmented` from '~/components/Segmented'. SegmentedControl calls Math.random() while rendering, which drops a prerendered or ISR page's content out of its cached HTML (see apps/web/CLAUDE.md).",
+        },
+      ],
+    },
+  },
 );

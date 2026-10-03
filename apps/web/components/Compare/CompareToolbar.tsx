@@ -5,7 +5,6 @@ import {
   Button,
   CloseButton,
   Group,
-  SegmentedControl,
   Switch,
   Text,
   TextInput,
@@ -13,6 +12,7 @@ import {
 import { IconFilter, IconTrash } from "@tabler/icons-react";
 
 import type { Comparison } from "./comparison";
+import { Segmented } from "~/components/Segmented";
 
 export interface CompareToolbarProps {
   itemCount: number;
@@ -44,9 +44,8 @@ export const CompareToolbar = memo(
     return (
       <Group justify="space-between" gap="sm" wrap="wrap">
         <Group gap="sm" wrap="wrap">
-          <SegmentedControl
-            size="xs"
-            aria-label="Rows to show"
+          <Segmented
+            label="Rows to show"
             value={canDiff && onlyDifferences ? "differences" : "all"}
             onChange={(value) =>
               onOnlyDifferencesChange(value === "differences")

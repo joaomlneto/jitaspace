@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   Container,
   Group,
-  SegmentedControl,
   Select,
   SimpleGrid,
   Slider,
@@ -26,6 +25,7 @@ import {
 
 import { MapIcon } from "@jitaspace/eve-icons";
 
+import { Segmented } from "~/components/Segmented";
 import { RouteTable } from "~/components/Travel";
 
 export interface TravelPageProps {
@@ -255,7 +255,9 @@ export default function TravelPage({
             <Text size="sm" fw={500}>
               Prefer
             </Text>
-            <SegmentedControl
+            <Segmented
+              label="Route preference"
+              size="sm"
               value={routePreference}
               data={ROUTE_PREFERENCE_OPTIONS}
               onChange={(value) => {
@@ -267,7 +269,7 @@ export default function TravelPage({
                   value === "custom"
                     ? { pref: "custom", ...penalties }
                     : {
-                        pref: value as RoutePreference,
+                        pref: value,
                         nullSec: null,
                         lowSec: null,
                         highSec: null,

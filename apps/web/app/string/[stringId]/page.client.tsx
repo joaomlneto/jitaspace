@@ -9,7 +9,6 @@ import {
   Container,
   Group,
   Paper,
-  SegmentedControl,
   Stack,
   Switch,
   Text,
@@ -26,6 +25,7 @@ import type {
 } from "~/lib/resource-pages";
 import { MailMessageViewer } from "~/components/EveMail";
 import { TextDiff } from "~/components/History";
+import { Segmented } from "~/components/Segmented";
 import { LANGUAGE_LABEL } from "~/lib/resource-history";
 import { compareLanguages } from "~/lib/resource-pages";
 
@@ -243,17 +243,17 @@ export default function StringHistoryPage({
               ))}
             </Group>
           </Chip.Group>
-          <SegmentedControl
-            size="xs"
-            aria-label="Server"
-            value={server}
-            onChange={(value) => void setServer(value)}
-            data={SERVER_FILTERS.map((value) => ({
-              value,
-              label: SERVER_LABEL[value],
-            }))}
-            style={{ alignSelf: "flex-start" }}
-          />
+          <div style={{ alignSelf: "flex-start" }}>
+            <Segmented
+              label="Server"
+              value={server}
+              onChange={(value) => void setServer(value)}
+              data={SERVER_FILTERS.map((value) => ({
+                value,
+                label: SERVER_LABEL[value],
+              }))}
+            />
+          </div>
         </Stack>
 
         {filtered.length === 0 ? (

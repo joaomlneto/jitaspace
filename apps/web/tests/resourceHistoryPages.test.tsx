@@ -98,6 +98,31 @@ const stringHistory: StringHistory = {
   ],
 };
 
+// The page is ISR: whatever the server render draws is what every later
+// visitor gets from the cache. A control calling Math.random() while
+// rendering (Mantine's SegmentedControl did) makes that render drop the page's
+// content, so cached visitors saw it only after hydration.
+describe("string page server render", () => {
+  it("draws its controls without Math.random()", () => {
+    const { NuqsAdapter } = require("nuqs/adapters/react");
+    const { renderToString } = require("react-dom/server");
+    const random = jest.spyOn(Math, "random");
+    try {
+      const html: string = renderToString(
+        <MantineProvider>
+          <NuqsAdapter>
+            <StringPage.default history={stringHistory} />
+          </NuqsAdapter>
+        </MantineProvider>,
+      );
+      expect(html).toContain('role="radiogroup"');
+      expect(random).not.toHaveBeenCalled();
+    } finally {
+      random.mockRestore();
+    }
+  });
+});
+
 function renderString(
   history: StringHistory = stringHistory,
   adapter: { searchParams?: string; onUrlUpdate?: OnUrlUpdateFunction } = {},

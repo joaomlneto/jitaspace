@@ -6,7 +6,8 @@ import { parseAsBoolean, parseAsStringLiteral, useQueryStates } from "nuqs";
 
 import type { WarRoomWar } from "./types";
 import type { SortKey } from "./utils";
-import { cx, Segmented } from "./parts";
+import { Segmented } from "~/components/Segmented";
+import { cx } from "./parts";
 import { filterWars, SORT_OPTIONS, sortWars, STATUS_FILTERS } from "./utils";
 import classes from "./WarRoom.module.css";
 import { WarRow } from "./WarRow";
