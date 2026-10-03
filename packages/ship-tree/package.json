@@ -22,8 +22,8 @@
   },
   "dependencies": {
     "@eve-online-tools/eve-ship-tree": "0.0.2",
-    "@mantine/core": "9.3.0",
-    "@mantine/hooks": "9.3.0",
+    "@mantine/core": "^9.3.0",
+    "@mantine/hooks": "^9.3.0",
     "@use-gesture/react": "^10.3.1",
     "motion": "^12.41.0",
     "react": "^19.2.6",

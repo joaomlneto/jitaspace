@@ -213,7 +213,7 @@ importers:
         specifier: ^9.3.0
         version: 9.3.0(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@mantine/core':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@mantine/dates':
         specifier: ^9.3.0
@@ -225,7 +225,7 @@ importers:
         specifier: ^9.3.0
         version: 9.3.0(react@19.2.6)
       '@mantine/hooks':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(react@19.2.6)
       '@mantine/modals':
         specifier: ^9.3.0
@@ -798,13 +798,13 @@ importers:
         specifier: workspace:*
         version: link:../datatable
       '@mantine/core':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@mantine/dates':
         specifier: ^9.3.0
         version: 9.3.0(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(dayjs@1.11.20)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@mantine/hooks':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(react@19.2.6)
       dayjs:
         specifier: ^1.11.20
@@ -880,10 +880,10 @@ importers:
         specifier: workspace:*
         version: link:../datatable-common
       '@mantine/core':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@mantine/hooks':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(react@19.2.6)
       clsx:
         specifier: ^2.1.1
@@ -962,10 +962,10 @@ importers:
         specifier: workspace:*
         version: link:../datatable-common
       '@mantine/core':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@mantine/hooks':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(react@19.2.6)
       '@tanstack/react-table':
         specifier: ^8.21.3
@@ -1263,10 +1263,10 @@ importers:
         specifier: workspace:*
         version: link:../utils
       '@mantine/core':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@mantine/hooks':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(react@19.2.6)
       date-fns:
         specifier: ^4.3.0
@@ -1801,10 +1801,10 @@ importers:
         specifier: 0.0.2
         version: 0.0.2(@mantine/core@9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@mantine/hooks@9.3.0(react@19.2.6))(@use-gesture/react@10.3.1(react@19.2.6))(motion@12.43.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(rollup@4.60.4)
       '@mantine/core':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@mantine/hooks':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(react@19.2.6)
       '@use-gesture/react':
         specifier: ^10.3.1
@@ -2031,10 +2031,10 @@ importers:
         specifier: workspace:*
         version: link:../utils
       '@mantine/core':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(@mantine/hooks@9.3.0(react@19.2.6))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@mantine/hooks':
-        specifier: 9.3.0
+        specifier: ^9.3.0
         version: 9.3.0(react@19.2.6)
       '@mantine/modals':
         specifier: ^9.3.0

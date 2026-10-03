@@ -17,8 +17,8 @@
   "dependencies": {
     "@jitaspace/datatable": "workspace:*",
     "@jitaspace/datatable-common": "workspace:*",
-    "@mantine/core": "9.3.0",
-    "@mantine/hooks": "9.3.0",
+    "@mantine/core": "^9.3.0",
+    "@mantine/hooks": "^9.3.0",
     "clsx": "^2.1.1",
     "mantine-datatable": "^9.2.2",
     "react": "^19.2.6",

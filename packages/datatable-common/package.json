@@ -16,9 +16,9 @@
   },
   "dependencies": {
     "@jitaspace/datatable": "workspace:*",
-    "@mantine/core": "9.3.0",
+    "@mantine/core": "^9.3.0",
     "@mantine/dates": "^9.3.0",
-    "@mantine/hooks": "9.3.0",
+    "@mantine/hooks": "^9.3.0",
     "dayjs": "^1.11.20",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
