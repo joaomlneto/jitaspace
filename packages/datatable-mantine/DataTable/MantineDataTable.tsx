@@ -243,6 +243,12 @@ export function DataTable<TData>({
       }
     : {};
 
+  const rowClickProps = onRowClick
+    ? {
+        onRowClick: ({ record }: { record: TData }) => onRowClick(record),
+      }
+    : {};
+
   const presentation = {
     striped,
     highlightOnHover,
@@ -299,12 +305,7 @@ export function DataTable<TData>({
           sortStatus={sortStatus}
           onSortStatusChange={handleSortStatusChange}
           {...presentation}
-          {...(onRowClick
-            ? {
-                onRowClick: ({ record }: { record: TData }) =>
-                  onRowClick(record),
-              }
-            : {})}
+          {...rowClickProps}
           {...paginationProps}
         />
       )}
